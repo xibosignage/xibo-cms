@@ -22,15 +22,19 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 class Debug
 {
+    private static $_logSql = null;
     private static $_level = NULL;
     private static $pdo = NULL;
 
     public function __construct()
     {
         if (self::$_level == NULL) {
-
             // Determine the auditing level
             self::$_level = Debug::getLevel(Config::GetSetting('audit'));
+        }
+
+        if (self::$_logSql == NULL) {
+            self::$_logSql = 1;
         }
     }
 
@@ -239,6 +243,23 @@ class Debug
         $caller = $trace[1];
 
         Debug::LogEntry('error', $message, (isset($caller['class'])) ? $caller['class'] : 'Global', $caller['function']);
+    }
+
+    /**
+     * Log the SQL statement
+     * @param $sql string The SQL
+     * @param $params array The Params
+     */
+    public static function sql($sql, $params)
+    {
+        if (self::$_logSql != 1)
+            return;
+
+        // Get the calling class / function
+        $trace = debug_backtrace();
+        $caller = $trace[1];
+
+        Debug::LogEntry('error', 'SQL: ' . $sql . '. Params: ' . var_export($params, true) . '.', (isset($caller['class'])) ? $caller['class'] : 'Global', $caller['function']);
     }
 }
 ?>

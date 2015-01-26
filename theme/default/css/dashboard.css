@@ -261,6 +261,9 @@ ul.sidebar .sidebar-list a:hover .menu-icon {
   padding-left: 7px;
   padding-right: 7px;
 }
+.row.header .user > .item ul.dropdown-menu div {
+  padding: 15px;
+}
 
 /* Widgets */
 .widget {

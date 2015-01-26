@@ -92,14 +92,21 @@ class scheduleDAO extends baseDAO {
             $SQL.= " WHERE 1=1 ";
 
             // If we have minus 1, then show all
-            if (!in_array(-1, $displayGroupIds)) {
-                $sanitized = array();
-                foreach ($displayGroupIds as $displayGroupId) {
-                    $sanitized[] = "'" . $displayGroupId . "'";
+            if (in_array(-1, $displayGroupIds)) {
+                // Get all display groups this user has permission to view
+                $displayGroupIdsThisUser = $this->user->DisplayGroupList(-1);
+
+                foreach ($displayGroupIdsThisUser as $row) {
+                    $displayGroupIds[] = $row['displaygroupid'];
                 }
-                
-                $SQL .= "   AND schedule_detail.DisplayGroupID IN (" . implode(',', $sanitized) . ")";
             }
+
+            $sanitized = array();
+            foreach ($displayGroupIds as $displayGroupId) {
+                $sanitized[] = sprintf("'%d'", $displayGroupId);
+            }
+
+            $SQL .= "   AND schedule_detail.DisplayGroupID IN (" . implode(',', $sanitized) . ")";
 
             // Events that fall inside the two dates
             $SQL.= "   AND schedule_detail.ToDT > :start ";
@@ -117,13 +124,15 @@ class scheduleDAO extends baseDAO {
             // Ordering
             $SQL.= " ORDER BY schedule_detail.FromDT DESC";
 
-            // Debug::LogEntry('audit', $SQL . '. Start=' . $start . '. End=' . $end, get_class(), __FUNCTION__);
-        
-            $sth = $dbh->prepare($SQL);
-            $sth->execute(array(
+            $params = array(
                     'start' => $start,
                     'end' => $end
-                ));
+                );
+
+            Debug::sql($SQL, $params);
+        
+            $sth = $dbh->prepare($SQL);
+            $sth->execute($params);
 
             $events = array();
 
