@@ -74,11 +74,12 @@ class Kit
     /**
      * Gets the appropriate Param, making sure its valid
      * Based on code from Joomla! 1.5
-     * @return 
-     * @param $param Object
-     * @param $source Object[optional]
-     * @param $type Object[optional]
-     * @param $default Object[optional]
+     * @return mixed
+     * @param $param string
+     * @param $source string[optional]
+     * @param $type string[optional]
+     * @param $default mixed[optional]
+     * @param $sanitize bool[optional]
      */
     static public function GetParam($param, $source = _POST, $type = _STRING, $default = '', $sanitize = true)
     {
@@ -455,9 +456,10 @@ class Kit
 
     /**
      * GetXiboRoot
-     * @return <string> The Root of the Xibo installation
+     * @param bool $trimPage Trim Page
+     * @return string The Root of the Xibo installation
      */
-    public static function GetXiboRoot()
+    public static function GetXiboRoot($trimPage = false)
     {
 
         # Check REQUEST_URI is set. IIS doesn't set it so we need to build it

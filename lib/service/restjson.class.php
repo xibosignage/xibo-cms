@@ -21,9 +21,9 @@
 class RestJson extends Rest
 {
     /**
-     *
-     * @param DOMElement $xmlElement
-     * @return <string>
+     * Output the Response
+     * @param array $array
+     * @return string
      */
     public function Respond($array)
     {
@@ -37,8 +37,6 @@ class RestJson extends Rest
         catch (Exception $e) {
             Debug::LogEntry('audit', 'Unable to commit');
         }
-
-        $array['status'] = 'ok';
 
         // Create a response
         $response = json_encode($array);

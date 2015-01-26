@@ -58,6 +58,7 @@ $(document).ready(function() {
 
     // Calendar is initialised without any event_source (that is changed when the selector is used)
     if (($('#Calendar').length > 0)) {
+        options.type = ($('#CalendarContainer').data().calendarType);
         calendar = $('#Calendar').calendar(options);
 
         // Set up our display selector control

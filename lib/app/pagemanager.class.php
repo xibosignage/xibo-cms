@@ -92,6 +92,9 @@ class PageManager
 
             // Any actions to run before we get started?
             $this->processActions();
+
+            // Process notifications
+            $this->processNotifications();
         }
     }
 
@@ -103,6 +106,13 @@ class PageManager
             $layout->importFolder('theme' . DIRECTORY_SEPARATOR . Theme::ThemeFolder() . DIRECTORY_SEPARATOR . 'layouts');
 
             Config::ChangeSetting('DEFAULTS_IMPORTED', 1);
+        }
+    }
+
+    private function processNotifications()
+    {
+        if ($this->user->usertypeid == 1 && file_exists('install.php')) {
+            Theme::Set('notifications', array(__('There is a problem with this installation. "install.php" should be deleted.')));
         }
     }
 	

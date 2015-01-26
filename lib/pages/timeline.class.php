@@ -106,52 +106,51 @@ class timelineDAO extends baseDAO {
      */
     function ManualRegionPositionForm()
     {
-        $db 	=& $this->db;
-        $user 	=& $this->user;
+        $db =& $this->db;
+        $user =& $this->user;
         $response = new ResponseManager();
 
-        $regionid 	= Kit::GetParam('regionid', _GET, _STRING);
-        $layoutid 	= Kit::GetParam('layoutid', _GET, _INT);
-        $top 	= Kit::GetParam('top', _GET, _DOUBLE);
-        $left 	= Kit::GetParam('left', _GET, _DOUBLE);
-        $width 	= Kit::GetParam('width', _GET, _DOUBLE);
-        $height 	= Kit::GetParam('height', _GET, _DOUBLE);
-        $layoutWidth = Kit::GetParam('layoutWidth', _GET, _INT);
-        $layoutHeight = Kit::GetParam('layoutHeight', _GET, _INT);
+        $regionid = Kit::GetParam('regionid', _GET, _STRING);
+        $layoutid = Kit::GetParam('layoutid', _GET, _INT);
         $scale = Kit::GetParam('scale', _GET, _DOUBLE);
-        $zindex = Kit::GetParam('zindex', _GET, _INT, NULL);
+        $zoom = Kit::GetParam('zoom', _GET, _DOUBLE);
 
+        // Load the region and get the dimensions, applying the scale factor if necessary (only v1 layouts will have a scale factor != 1)
         $region = new region($db);
+        $regionNode = $region->getRegion($layoutid, $regionid);
+
+        $top = round($regionNode->getAttribute('top') * $scale, 0);
+        $left = round($regionNode->getAttribute('left') * $scale, 0);
+        $width = round($regionNode->getAttribute('width') * $scale, 0);
+        $height = round($regionNode->getAttribute('height') * $scale, 0);
+        $zindex = $regionNode->getAttribute('zindex');
+
         $ownerId = $region->GetOwnerId($layoutid, $regionid);
-        $regionName = $region->GetRegionName($layoutid, $regionid);
+        $regionName = $regionNode->getAttribute('name');
 
         $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutid, $regionid, true);
         if (!$regionAuth->edit)
             trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
 
-        // Scale the layout width / height
-        $layoutWidth = round($layoutWidth * $scale, 0);
-        $layoutHeight = round($layoutHeight * $scale, 0);
-
         // Set some information about the form
         Theme::Set('form_id', 'RegionProperties');
         Theme::Set('form_action', 'index.php?p=timeline&q=ManualRegionPosition');
-        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid .'"><input type="hidden" name="regionid" value="' . $regionid . '"><input id="layoutWidth" type="hidden" name="layoutWidth" value="' . $layoutWidth . '"><input id="layoutHeight" type="hidden" name="layoutHeight" value="' . $layoutHeight . '"><input type="hidden" name="scale" value="' . $scale .'">');
+        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid .'"><input type="hidden" name="regionid" value="' . $regionid . '"><input type="hidden" name="scale" value="' . $scale .'"><input type="hidden" name="zoom" value="' . $zoom .'">');
         
         $formFields = array();
         $formFields[] = FormManager::AddText('name', __('Name'), $regionName, 
             __('Name of the Region'), 'n', 'maxlength="50"');
 
-        $formFields[] = FormManager::AddNumber('top', __('Top'), round($top * $scale, 0), 
+        $formFields[] = FormManager::AddNumber('top', __('Top'), $top, 
             __('Offset from the Top Corner'), 't');
 
-        $formFields[] = FormManager::AddNumber('left', __('Left'), round($left * $scale, 0), 
+        $formFields[] = FormManager::AddNumber('left', __('Left'), $left, 
             __('Offset from the Left Corner'), 'l');
 
-        $formFields[] = FormManager::AddNumber('width', __('Width'), round($width * $scale, 0), 
+        $formFields[] = FormManager::AddNumber('width', __('Width'), $width, 
             __('Width of the Region'), 'w');
 
-        $formFields[] = FormManager::AddNumber('height', __('Height'), round($height * $scale, 0), 
+        $formFields[] = FormManager::AddNumber('height', __('Height'), $height, 
             __('Height of the Region'), 'h');
 
         // Transitions
@@ -237,8 +236,11 @@ class timelineDAO extends baseDAO {
         $width      = Kit::GetParam('width', _POST, _INT);
         $height 	= Kit::GetParam('height', _POST, _INT);
         $scale = Kit::GetParam('scale', _POST, _DOUBLE);
+        $zoom = Kit::GetParam('zoom', _POST, _DOUBLE);
 
         // Adjust the dimensions
+        // For version 2 layouts and above, the scale will always be 1.
+        // Version 1 layouts need to use scale because the values in the XLF should be scaled down
         $top = $top / $scale;
         $left = $left / $scale;
         $width = $width / $scale;
@@ -276,7 +278,7 @@ class timelineDAO extends baseDAO {
         if (!$region->EditRegion($layoutid, $regionid, $width, $height, $top, $left, $regionName, $options, Kit::GetParam('zindex', _POST, _INT, NULL)))
             trigger_error($region->GetErrorMessage(), E_USER_ERROR);
 
-        $response->SetFormSubmitResponse('Region Resized', true, "index.php?p=layout&modify=true&layoutid=$layoutid");
+        $response->SetFormSubmitResponse('Region Resized', true, "index.php?p=layout&modify=true&layoutid=$layoutid&zoom=$zoom");
         $response->Respond();
     }
 	
@@ -474,7 +476,7 @@ class timelineDAO extends baseDAO {
         // Create a module to deal with this
         if (!file_exists('modules/' . $type . '.module.php'))
         {
-            $return .= 'Unknow module type';
+            $return .= 'Unknown module type';
         }
 
         require_once("modules/$type.module.php");

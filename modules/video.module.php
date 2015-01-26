@@ -114,6 +114,19 @@ class video extends Module
 
         return $this->EditLibraryMedia();
     }
+
+    /**
+     * Preview code for a module
+     * @param int $width
+     * @param int $height
+     * @param int $scaleOverride The Scale Override
+     * @return string The Rendered Content
+     */
+    public function Preview($width, $height, $scaleOverride = 0)
+    {
+        // Videos are never previewed in the browser.
+        return '<div style="text-align:center;"><img alt="' . $this->type . ' thumbnail" src="theme/default/img/forms/' . $this->type . '.gif" /></div>';
+    }
     
     /**
      * Get Resource

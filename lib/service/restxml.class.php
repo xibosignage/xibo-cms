@@ -108,10 +108,10 @@ class RestXml extends Rest
 
     /**
      * Returns an ID only response
-     * @param <string> $nodeName
-     * @param <string> $id
-     * @param <string> $idAttributeName
-     * @return <DOMDocument::XmlElement>
+     * @param string $nodeName
+     * @param string $id
+     * @param string $idAttributeName
+     * @return DOMElement
      */
     protected function ReturnId($nodeName, $id, $idAttributeName = 'id')
     {
@@ -124,9 +124,9 @@ class RestXml extends Rest
 
     /**
      * Returns a single node with the attributes contained in a key/value array
-     * @param <type> $nodeName
-     * @param <type> $attributes
-     * @return <DOMDocument::XmlElement>
+     * @param string $nodeName
+     * @param array $attributes
+     * @return DOMElement
      */
     protected function ReturnAttributes($nodeName, $attributes)
     {
@@ -143,8 +143,9 @@ class RestXml extends Rest
 
     /**
      * Creates a node list from an array
-     * @param <type> $array
-     * @param <type> $node
+     * @param array $array
+     * @param string $nodeName
+     * @return DOMElement
      */
     protected function NodeListFromArray($array, $nodeName)
     {

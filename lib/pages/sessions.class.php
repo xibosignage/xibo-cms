@@ -143,7 +143,7 @@ class sessionsDAO extends baseDAO {
 
             $row['userid'] = Kit::ValidateParam($row['userID'], _INT);
 			$row['username'] = Kit::ValidateParam($row['UserName'], _STRING);
-			$row['isexpired'] = Kit::ValidateParam($row['IsExpired'], _INT);
+			$row['isexpired'] = (Kit::ValidateParam($row['IsExpired'], _INT) == 1) ? 0 : 1;
 			$row['lastpage'] = Kit::ValidateParam($row['LastPage'], _STRING);
 			$row['lastaccessed'] = Kit::ValidateParam($row['LastAccessed'], _STRING);
 			$row['ip'] = Kit::ValidateParam($row['RemoteAddr'], _STRING);

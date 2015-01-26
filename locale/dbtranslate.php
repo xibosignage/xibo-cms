@@ -123,6 +123,7 @@ echo __('The Time to Live (maxage) of the STS header expressed in minutes.');
 echo __('Maintenance Alerts for Users');
 echo __('Email maintenance alerts for users with view permissions to effected Displays.');
 echo __('Set the level of logging the CMS should record. In production systems "error" is recommended.');
+echo __('Which Calendar Type should the CMS use?');
 
 
 // Transitions

@@ -147,6 +147,15 @@ if (defined('XMDS') || $method != '')
                         Kit::ClassLoader($userClass[0]);
 
                         // Create a user.
+                        // We need to set up our user with an old style database object
+                        $db = new database();
+
+                        if (!$db->connect_db($dbhost, $dbuser, $dbpass))
+                            die('Database connection problem.');
+
+                        if (!$db->select_db($dbname))
+                            die('Database connection problem.');
+
                         $user = new User($db);
 
                         // Log this user in.
@@ -182,14 +191,14 @@ if (defined('XMDS') || $method != '')
                 case 'json':
                     Kit::ClassLoader('RestJson');
                     
-                    $rest = new RestJson($db, $user, $_REQUEST);
+                    $rest = new RestJson($user, $_REQUEST);
 
                     break;
 
                 case 'xml':
                     Kit::ClassLoader('RestXml');
 
-                    $rest = new RestXml($db, $user, $_REQUEST);
+                    $rest = new RestXml($user, $_REQUEST);
 
                     break;
 

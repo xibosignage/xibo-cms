@@ -20,7 +20,7 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-define('WEBSITE_VERSION', 83);
+define('WEBSITE_VERSION', 84);
 
 // No errors reported until we read the settings from the DB
 error_reporting(0);
@@ -49,6 +49,7 @@ require_once("lib/app/cache.class.php");
 require_once("lib/app/thememanager.class.php");
 require_once("lib/pages/base.class.php");
 require_once("3rdparty/parsedown/parsedown.php");
+require_once("3rdparty/jdatetime/jdatetime.class.php");
 
 // Required Config Files
 require_once("config/config.class.php");
