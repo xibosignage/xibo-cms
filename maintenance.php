@@ -28,6 +28,7 @@ ini_set('display_errors', 0);
 ini_set('gd.jpeg_ignore_warning', 1);
 
 // Required Library Files
+require_once("lib/app/app_functions.php");
 require_once("lib/app/translationengine.class.php");
 require_once("lib/app/pdoconnect.class.php");
 require_once("lib/app/debug.class.php");
