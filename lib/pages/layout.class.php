@@ -1003,7 +1003,7 @@ class layoutDAO extends baseDAO
             // Version 2 layouts have the layout resolution in the XLF and therefore need to be scaled back by the designer.
 
             $tipScale = ($version == 1) ? min($resolution['intended_width'] / $resolution['width'], $resolution['intended_height'] / $resolution['height']) : 1;
-            $designerScale = ($version == 1) ? 1 : min($resolution['width'] / $resolution['intended_width'], $resolution['intended_height'] / $resolution['height']);
+            $designerScale = ($version == 1) ? 1 : min($resolution['width'] / $resolution['intended_width'], $resolution['height'] / $resolution['height']);
 
             // To do - version 2 layout can support zooming?
             if ($version > 1) {
