@@ -8,13 +8,13 @@ ALTER TABLE  `resolution` CHANGE  `resolution`  `resolution` VARCHAR( 254 ) CHAR
 
 UPDATE `resolution` SET enabled = 0;
 
-INSERT INTO `resolution` (`resolutionID`, `resolution`, `width`, `height`, `intended_width`, `intended_height`, `version`, `enabled`) VALUES
-(9, '1080p HD Landscape', 800, 450, 1920, 1080, 2, 1),
-(10, '720p HD Landscape', 800, 450, 1280, 720, 2, 1),
-(11, '1080p HD Portrait', 450, 800, 1080, 1920, 2, 1),
-(12, '720p HD Portrait', 450, 800, 720, 1280, 2, 1),
-(13, '4k', 800, 450, 4096, 2304, 2, 1),
-(14, 'Common PC Monitor 4:3', 800, 600, 1024, 768, 2, 1);
+INSERT INTO `resolution` (`resolution`, `width`, `height`, `intended_width`, `intended_height`, `version`, `enabled`) VALUES
+('1080p HD Landscape', 800, 450, 1920, 1080, 2, 1),
+('720p HD Landscape', 800, 450, 1280, 720, 2, 1),
+('1080p HD Portrait', 450, 800, 1080, 1920, 2, 1),
+('720p HD Portrait', 450, 800, 720, 1280, 2, 1),
+('4k', 800, 450, 4096, 2304, 2, 1),
+('Common PC Monitor 4:3', 800, 600, 1024, 768, 2, 1);
 
 DELETE FROM `lktemplategroup` WHERE TemplateID IN (SELECT TemplateID FROM `template` WHERE isSystem = 1);
 DELETE FROM `template` WHERE isSystem = 1;
