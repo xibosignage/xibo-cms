@@ -107,8 +107,8 @@ function EmbedInit()
         $this->response->html           = Theme::RenderReturn('form_render');
         $this->response->dialogTitle    = 'Add Embedded HTML';
         $this->response->dialogSize     = true;
-        $this->response->dialogWidth    = '980px';
-        $this->response->dialogHeight   = '600px';
+        $this->response->dialogWidth    = '650px';
+        $this->response->dialogHeight   = '450px';
         $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
 
         return $this->response;
@@ -183,8 +183,8 @@ function EmbedInit()
         $this->response->html           = Theme::RenderReturn('form_render');;
         $this->response->dialogTitle    = __('Edit Embedded HTML');
         $this->response->dialogSize     = true;
-        $this->response->dialogWidth    = '980px';
-        $this->response->dialogHeight   = '600px';
+        $this->response->dialogWidth    = '650px';
+        $this->response->dialogHeight   = '450px';
         $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
 
         return $this->response;
