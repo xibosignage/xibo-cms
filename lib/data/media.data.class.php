@@ -860,7 +860,10 @@ class Media extends Data
      * Module files are hidden from the UI and supplementary files that will be used
      * by the module that added them.
      * @param string  $file  The path to the file that needs adding
-     * @param boolean $force Whether to force an update to the file or not
+     * @param int[Optional] $expires Expiry time in seconds - default 0
+     * @param boolean[Optional] $moduleSystemFile Is this a system file - default true
+     * @param boolean[Optional] $force Whether to force an update to the file or not
+     * @return array Media File Added
      */
     public function addModuleFile($file, $expires = 0, $moduleSystemFile = true, $force = false)
     {
