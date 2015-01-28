@@ -28,6 +28,7 @@ ini_set('display_errors', 0);
 ini_set('gd.jpeg_ignore_warning', 1);
 
 // Required Library Files
+require_once("lib/app/app_functions.php");
 require_once("lib/app/translationengine.class.php");
 require_once("lib/app/pdoconnect.class.php");
 require_once("lib/app/debug.class.php");
@@ -38,6 +39,9 @@ require_once("lib/app/datemanager.class.php");
 require_once("lib/app/helpmanager.class.php");
 require_once("lib/app/thememanager.class.php");
 require_once("lib/data/display.data.class.php");
+require_once("lib/modules/module.interface.php");
+require_once("lib/modules/module.class.php");
+require_once('modules/module_user_general.php');
 
 // Required Config Files
 require_once("config/config.class.php");
@@ -291,6 +295,11 @@ else
 
         // Keep tidy
         Media::removeExpiredFiles();
+
+        // Install module files
+        if (Kit::GetParam('quick', _REQUEST, _INT) != 1) {
+            Media::installAllModuleFiles();
+        }
     }
     else {
         print __("Maintenance key invalid.");

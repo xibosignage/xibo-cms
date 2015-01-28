@@ -74,7 +74,8 @@ class Twitter extends Module
         $media->addModuleFile('modules/preview/vendor/jquery-1.11.1.min.js');
         $media->addModuleFile('modules/preview/xibo-text-render.js');
         $media->addModuleFile('modules/preview/xibo-layout-scaler.js');
-        $media->addModuleFileFromFolder('modules/theme/twitter/');
+        $media->addModuleFile('modules/theme/twitter/emoji.css');
+        $media->addModuleFile('modules/theme/twitter/emoji.png');
     }
 
     /** 
