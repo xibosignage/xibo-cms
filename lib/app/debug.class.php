@@ -248,9 +248,9 @@ class Debug
     /**
      * Log the SQL statement
      * @param $sql string The SQL
-     * @param $params array The Params
+     * @param $params[Optional] array The Params
      */
-    public static function sql($sql, $params)
+    public static function sql($sql, $params = array())
     {
         if (self::$_logSql != 1)
             return;

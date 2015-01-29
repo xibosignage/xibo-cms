@@ -188,6 +188,9 @@ class statsDAO extends baseDAO
         $SQL .= 'GROUP BY display.Display, layout.Layout ';
         $SQL .= 'ORDER BY display.Display, layout.Layout';
 
+        // Log
+        Debug::sql($SQL);
+
         if (!$results = $this->db->query($SQL))
         {
             trigger_error($db->error());
