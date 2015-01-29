@@ -114,7 +114,7 @@ INSERT INTO `module` (`ModuleID`, `Module`, `Name`, `Enabled`, `RegionSpecific`,
 (14, 'genericfile', 'Generic File', 1, 0, 'A generic file to be stored in the library', 'forms/library.gif', 1, 'apk,js,html,htm', 0, 0, NULL, NULL),
 (15, 'clock', 'Clock', 1, 1, 'Display a Clock', 'forms/library.gif', 1, NULL, 1, 1, 'html', '[]'),
 (16, 'font', 'Font', 1, 0, 'A font to use in other Modules', 'forms/library.gif', 1, 'ttf,otf,eot,svg,woff', 0, 0, NULL, NULL),
-(17, 'clock', 'Clock', 1, 1, 'Display a Clock', 'forms/library.gif', 1, NULL, 1, 1, NULL);
+(17, 'clock', 'Clock', 1, 1, 'Display a Clock', 'forms/library.gif', 1, NULL, 1, 1, 'html', NULL);
 
 INSERT INTO `pagegroup` (`pagegroupID`, `pagegroup`) VALUES
 (1, 'Schedule'),
