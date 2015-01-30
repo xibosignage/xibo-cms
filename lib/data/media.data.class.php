@@ -1055,12 +1055,9 @@ class Media extends Data
 
         // Do this for all enabled modules
         foreach ($media->ModuleList() as $module) {
-            $type = ucfirst($module['module']);
-
-            include_once('modules/' . strtolower($type) . '.module.php');
-            $moduleObject = new $type(new database(), new User());
 
             // Install Files for this module
+            $moduleObject = ModuleFactory::create($module['module']);
             $moduleObject->InstallFiles();
         }
     }

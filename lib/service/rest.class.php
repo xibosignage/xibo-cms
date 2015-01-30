@@ -910,11 +910,12 @@ class Rest
             return $this->Error(1, 'Access Denied');
 
         // Create a new module based on the XLF we have been given
-        require_once("modules/$type.module.php");
-
-        // Create the media object without any region and layout information
-        if (!$module = new $type(new Database(), $this->user, '', $layoutId, $regionId))
-            return $this->Error($module->GetErrorNumber(), $module->GetErrorMessage());
+        try {
+            $module = ModuleFactory::createForLayout($type, $layoutId, $regionId);
+        }
+        catch (Exception $e) {
+            return $this->Error($e->getMessage());
+        }
 
         // Set the XML (causes save)
         if (!$id = $module->SetMediaXml($xlf))
@@ -951,12 +952,13 @@ class Rest
         if (!$regionAuth->edit)
             return $this->Error(1, 'Access Denied');
 
-        // Include the media type
-        require_once("modules/$type.module.php");
-
-        // Create the media object without any region and layout information
-        if (!$module = new $type(new Database(), $this->user, $mediaId, $layoutId, $regionId))
-            return $this->Error($module->GetErrorNumber(), $module->GetErrorMessage());
+        // Create the module
+        try {
+            $module = ModuleFactory::load($type, $layoutId, $regionId, $mediaId);
+        }
+        catch (Exception $e) {
+            return $this->Error($e->getMessage());
+        }
 
         if (!$module->auth->edit)
             return $this->Error(1, 'Access Denied');
@@ -995,12 +997,13 @@ class Rest
         if (!$regionAuth->edit)
             return $this->Error(1, 'Access Denied');
 
-        // Load the media information from the provided ids
-        require_once("modules/$type.module.php");
-
-        // Create the media object without any region and layout information
-        if (!$module = new $type(new Database(), $this->user, $mediaId, $layoutId, $regionId))
-            return $this->Error($module->GetErrorNumber(), $module->GetErrorMessage());
+        // Create the module
+        try {
+            $module = ModuleFactory::load($type, $layoutId, $regionId, $mediaId);
+        }
+        catch (Exception $e) {
+            return $this->Error($e->getMessage());
+        }
 
         if (!$module->auth->view)
             return $this->Error(1, 'Access Denied');

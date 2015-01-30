@@ -271,8 +271,7 @@ class moduleDAO extends baseDAO
             'b');
 
         // Set any module specific form fields
-        include_once('modules/' . $type . '.module.php');
-        $module = new $type($this->db, $this->user);
+        $module = ModuleFactory::create($type, $this->db, $this->user);
 
         // Merge in the fields from the settings
         foreach($module->ModuleSettingsForm() as $field)
@@ -318,8 +317,7 @@ class moduleDAO extends baseDAO
             trigger_error(__('Image Uri is a required field.'), E_USER_ERROR);
 
         // Process any module specific form fields
-        include_once('modules/' . $type . '.module.php');
-        $module = new $type($this->db, $this->user);
+        $module = ModuleFactory::create($type, $this->db, $this->user);
 
         // Install Files for this module
         $module->InstallFiles();
@@ -444,7 +442,7 @@ class moduleDAO extends baseDAO
 
         try {
             Debug::LogEntry('audit', 'Validation passed, installing module.', 'module', 'Install');
-            $moduleObject = new $type($this->db, $this->user);
+            $moduleObject = ModuleFactory::create($type, $this->db, $this->user);
             $moduleObject->InstallOrUpdate();
         }
         catch (Exception $e) {

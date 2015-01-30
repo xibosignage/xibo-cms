@@ -213,7 +213,7 @@ class Debug
         }
     }
 
-    public static function Audit($message)
+    public static function Audit($message, $displayId = 0)
     {
         if (self::$_level < 10)
             return;
@@ -222,18 +222,18 @@ class Debug
         $trace = debug_backtrace();
         $caller = $trace[1];
 
-        Debug::LogEntry('audit', $message, (isset($caller['class'])) ? $caller['class'] : 'Global', $caller['function']);
+        Debug::LogEntry('audit', $message, (isset($caller['class'])) ? $caller['class'] : 'Global', $caller['function'], '', $displayId);
     }
 
-    public static function Info($message)
+    public static function Info($message, $displayId = 0)
     {
         if (self::$_level < 5)
             return;
 
-        Debug::LogEntry('info', $message, (isset($caller['class'])) ? $caller['class'] : 'Global', $caller['function']);
+        Debug::LogEntry('info', $message, (isset($caller['class'])) ? $caller['class'] : 'Global', $caller['function'], '', $displayId);
     }
 
-    public static function Error($message)
+    public static function Error($message, $displayId = 0)
     {
         if (self::$_level < 1)
             return;
@@ -242,15 +242,16 @@ class Debug
         $trace = debug_backtrace();
         $caller = $trace[1];
 
-        Debug::LogEntry('error', $message, (isset($caller['class'])) ? $caller['class'] : 'Global', $caller['function']);
+        Debug::LogEntry('error', $message, (isset($caller['class'])) ? $caller['class'] : 'Global', $caller['function'], '', $displayId);
     }
 
     /**
      * Log the SQL statement
-     * @param $sql string The SQL
-     * @param $params[Optional] array The Params
+     * @param string $sql
+     * @param array $params[Optional] The Params
+     * @param int[Optional] $displayId
      */
-    public static function sql($sql, $params = array())
+    public static function sql($sql, $params = array(), $displayId = 0)
     {
         if (self::$_logSql != 1)
             return;
@@ -259,7 +260,7 @@ class Debug
         $trace = debug_backtrace();
         $caller = $trace[1];
 
-        Debug::LogEntry('audit', 'SQL: ' . $sql . '. Params: ' . var_export($params, true) . '.', (isset($caller['class'])) ? $caller['class'] : 'Global', $caller['function']);
+        Debug::LogEntry('audit', 'SQL: ' . $sql . '. Params: ' . var_export($params, true) . '.', (isset($caller['class'])) ? $caller['class'] : 'Global', $caller['function'], '', $displayId);
     }
 }
 ?>

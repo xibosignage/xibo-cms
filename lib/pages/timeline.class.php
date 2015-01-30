@@ -474,15 +474,12 @@ class timelineDAO extends baseDAO {
         $lkId = (string) $node->getAttribute("lkid");
 
         // Create a module to deal with this
-        if (!file_exists('modules/' . $type . '.module.php'))
-        {
-            $return .= 'Unknown module type';
+        try {
+            $moduleObject = ModuleFactory::load($type, $layoutid, $regionid, $mediaid, $lkId, $this->db, $this->user);
         }
-
-        require_once("modules/$type.module.php");
-
-        if (!$moduleObject = new $type($db, $user, $mediaid, $layoutid, $regionid, $lkId))
-            trigger_error($moduleObject->GetErrorMessage(), E_USER_ERROR);
+        catch (Exception $e) {
+            trigger_error($e->getMessage(), E_USER_ERROR);
+        }
 
         $return .= '<div class="regionPreviewOverlay"></div>';
         $return .= $moduleObject->Preview($width, $height, $scale_override);

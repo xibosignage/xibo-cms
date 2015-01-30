@@ -43,6 +43,7 @@ require_once("lib/app/datemanager.class.php");
 require_once("lib/app/app_functions.php");
 require_once("lib/data/data.class.php");
 require_once("lib/modules/module.interface.php");
+require_once("lib/modules/modulefactory.class.php");
 require_once("lib/modules/module.class.php");
 require_once("lib/app/session.class.php");
 require_once("lib/app/cache.class.php");

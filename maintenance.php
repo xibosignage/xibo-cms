@@ -41,6 +41,7 @@ require_once("lib/app/thememanager.class.php");
 require_once("lib/data/display.data.class.php");
 require_once("lib/modules/module.interface.php");
 require_once("lib/modules/module.class.php");
+require_once("lib/modules/modulefactory.class.php");
 require_once('modules/module_user_general.php');
 
 // Required Config Files
