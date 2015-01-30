@@ -259,7 +259,7 @@ class Debug
         $trace = debug_backtrace();
         $caller = $trace[1];
 
-        Debug::LogEntry('error', 'SQL: ' . $sql . '. Params: ' . var_export($params, true) . '.', (isset($caller['class'])) ? $caller['class'] : 'Global', $caller['function']);
+        Debug::LogEntry('audit', 'SQL: ' . $sql . '. Params: ' . var_export($params, true) . '.', (isset($caller['class'])) ? $caller['class'] : 'Global', $caller['function']);
     }
 }
 ?>

@@ -25,9 +25,9 @@ $config = array(
 		'theme_title' => 'Xibo Digital Signage',
 		'app_name' => 'Xibo',
 		'theme_url' => 'http://xibo.org.uk',
-		'cms_source_url' => 'https://launchpad.net/xibo/1.7',
-		'cms_install_url' => 'manual/index.php?toc=getting_started&p=install/install_server',
-		'cms_release_notes_url' => 'manual/index.php?toc=developer_releasenotes&p=admin/release_notes',
+		'cms_source_url' => 'https://github.com/xibosignage/xibo/',
+		'cms_install_url' => 'http://xibo.org.uk/manual/en/install_windows_client.html',
+		'cms_release_notes_url' => 'http://xibo.org.uk/manual/en/release_notes.html',
 		'latest_news_url' => 'http://xibo.org.uk/feed/'
 	);
 ?>
