@@ -291,7 +291,7 @@ class ticker extends Module
                     __('Text direction'), 
                     $this->GetOption('textDirection'),
                     array(
-                        array('textdirectionid' => 'ltr', 'textdirection' => __('Left to Right (LRT)')),
+                        array('textdirectionid' => 'ltr', 'textdirection' => __('Left to Right (LTR)')),
                         array('textdirectionid' => 'rtl', 'textdirection' => __('Right to Left (RTL)'))
                     ),
                     'textdirectionid',
