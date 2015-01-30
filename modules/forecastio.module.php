@@ -177,11 +177,11 @@ class ForecastIo extends Module
             __('Use the location configured on the display'), 'd');
 
         // Any values for the form fields should be added to the theme here.
-        $formFields['general'][] = FormManager::AddNumber('longitude', __('Longitude'), $this->GetOption('longitude'), 
-            __('The Longitude for this weather module'), 'g', '', 'locationControls');
-
-        $formFields['general'][] = FormManager::AddNumber('latitude', __('Latitude'), $this->GetOption('latitude'), 
+        $formFields['general'][] = FormManager::AddNumber('latitude', __('Latitude'), $this->GetOption('latitude'),
             __('The Latitude for this weather module'), 'l', '', 'locationControls');
+
+        $formFields['general'][] = FormManager::AddNumber('longitude', __('Longitude'), $this->GetOption('longitude'),
+            __('The Longitude for this weather module'), 'g', '', 'locationControls');
 
         $formFields['advanced'][] = FormManager::AddCombo('templateId', __('Weather Template'), $this->GetOption('templateId'), 
             $this->settings['templates'], 
@@ -334,13 +334,13 @@ class ForecastIo extends Module
             __('Use the location configured on the display'), 'd');
 
         // Any values for the form fields should be added to the theme here.
-        $formFields['general'][] = FormManager::AddNumber('longitude', __('Longitude'), $this->GetOption('longitude'), 
-            __('The Longitude for this weather module'), 'g', '', 'locationControls');
-
-        $formFields['general'][] = FormManager::AddNumber('latitude', __('Latitude'), $this->GetOption('latitude'), 
+        $formFields['general'][] = FormManager::AddNumber('latitude', __('Latitude'), $this->GetOption('latitude'),
             __('The Latitude for this weather module'), 'l', '', 'locationControls');
 
-        $formFields['advanced'][] = FormManager::AddCombo('templateId', __('Weather Template'), $this->GetOption('templateId'), 
+        $formFields['general'][] = FormManager::AddNumber('longitude', __('Longitude'), $this->GetOption('longitude'),
+            __('The Longitude for this weather module'), 'g', '', 'locationControls');
+
+        $formFields['advanced'][] = FormManager::AddCombo('templateId', __('Weather Template'), $this->GetOption('templateId'),
             $this->settings['templates'], 
             'id', 
             'value', 
