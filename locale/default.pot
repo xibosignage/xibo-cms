@@ -4875,7 +4875,7 @@ msgid "Text direction"
 msgstr ""
 
 #: modules/ticker.module.php:294
-msgid "Left to Right (LRT)"
+msgid "Left to Right (LTR)"
 msgstr ""
 
 #: modules/ticker.module.php:295
