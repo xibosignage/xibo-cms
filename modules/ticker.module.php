@@ -930,6 +930,9 @@ class ticker extends Module
 
                     // Are we an image place holder?
                     if (strstr($namespace, 'image') != false) {
+                        // Try to get a link for the image
+                        $link = null;
+
                         switch (str_replace('[', '', $tag)) {
                             case 'Link':
                                 if ($enclosure = $item->get_enclosure()) {

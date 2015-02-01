@@ -113,7 +113,8 @@ INSERT INTO `module` (`ModuleID`, `Module`, `Name`, `Enabled`, `RegionSpecific`,
 (13, 'localvideo', 'Local Video', 1, 1, 'Play a video locally stored on the client', 'forms/video.gif', 1, NULL, 1, 1, NULL, NULL),
 (14, 'genericfile', 'Generic File', 1, 0, 'A generic file to be stored in the library', 'forms/library.gif', 1, 'apk,js,html,htm', 0, 0, NULL, NULL),
 (15, 'clock', 'Clock', 1, 1, 'Display a Clock', 'forms/library.gif', 1, NULL, 1, 1, 'html', '[]'),
-(16, 'font', 'Font', 1, 0, 'A font to use in other Modules', 'forms/library.gif', 1, 'ttf,otf,eot,svg,woff', 0, 0, NULL, NULL);
+(16, 'font', 'Font', 1, 0, 'A font to use in other Modules', 'forms/library.gif', 1, 'ttf,otf,eot,svg,woff', 0, 0, NULL, NULL),
+(17, 'clock', 'Clock', 1, 1, 'Display a Clock', 'forms/library.gif', 1, NULL, 1, 1, 'html', NULL);
 
 INSERT INTO `pagegroup` (`pagegroupID`, `pagegroup`) VALUES
 (1, 'Schedule'),
@@ -224,7 +225,7 @@ INSERT INTO `setting` (`settingid`, `setting`, `value`, `fieldType`, `helptext`,
 (30, 'audit', 'error', 'dropdown', 'Set the level of logging the CMS should record. In production systems "error" is recommended.', 'error|info|audit|off', 'troubleshooting', 1, 'Log Level', '', 20, 'error', 1, 'word'),
 (33, 'LIBRARY_LOCATION', '', 'text', 'The fully qualified path to the CMS library location.', NULL, 'configuration', 1, 'Library Location', 'required', 10, '', 1, 'string'),
 (34, 'SERVER_KEY', '', 'text', NULL, NULL, 'configuration', 1, 'CMS Secret Key', 'required', 20, '', 1, 'string'),
-(35, 'HELP_BASE', 'http://www.xibo.org.uk/manual/', 'text', NULL, NULL, 'general', 1, 'Location of the Manual', 'required', 10, 'http://www.xibo.org.uk/manual/', 1, 'string'),
+(35, 'HELP_BASE', 'http://www.xibo.org.uk/manual/en/', 'text', NULL, NULL, 'general', 1, 'Location of the Manual', 'required', 10, 'http://www.xibo.org.uk/manual/', 1, 'string'),
 (36, 'PHONE_HOME', 'On', 'dropdown', 'Should the server send anonymous statistics back to the Xibo project?', 'On|Off', 'general', 1, 'Allow usage tracking?', '', 10, 'On', 1, 'word'),
 (37, 'PHONE_HOME_KEY', '', 'text', 'Key used to distinguish each Xibo instance. This is generated randomly based on the time you first installed Xibo, and is completely untraceable.', NULL, 'general', 0, 'Phone home key', '', 20, '', 0, 'string'),
 (38, 'PHONE_HOME_URL', 'http://www.xibo.org.uk/stats/track.php', 'text', 'The URL to connect to to PHONE_HOME (if enabled)', NULL, 'network', 0, 'Phone home URL', '', 60, 'http://www.xibo.org.uk/stats/track.php', 0, 'string'),

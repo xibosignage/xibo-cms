@@ -84,7 +84,7 @@ UPDATE `setting` SET cat = 'general', ordering = 60, usersee = '1', userchange =
 UPDATE `setting` SET cat = 'general', ordering = 70, usersee = '1', userchange = '0', `default` = '', `title` = 'Status Dashboard Widget' WHERE setting = 'EMBEDDED_STATUS_WIDGET';
 UPDATE `setting` SET cat = 'general', ordering = 80, usersee = '1', userchange = '1', `default` = '1', `title` = 'Allow Import?' WHERE setting = 'SETTING_IMPORT_ENABLED';
 UPDATE `setting` SET cat = 'general', ordering = 90, usersee = '1', userchange = '1', `default` = '1', `title` = 'Enable Library Tidy?' WHERE setting = 'SETTING_LIBRARY_TIDY_ENABLED';
-UPDATE `setting` SET cat = 'general', ordering = 10, usersee = '1', userchange = '1', `default` = 'http://www.xibo.org.uk/manual/', `title` = 'Location of the Manual' WHERE setting = 'HELP_BASE';
+UPDATE `setting` SET cat = 'general', ordering = 10, usersee = '1', userchange = '1', `default` = 'http://www.xibo.org.uk/manual/en/', `title` = 'Location of the Manual' WHERE setting = 'HELP_BASE';
 UPDATE `setting` SET cat = 'maintenance', ordering = 10, usersee = '1', userchange = '1', `default` = 'Off', `title` = 'Enable Maintenance?' WHERE setting = 'MAINTENANCE_ENABLED';
 UPDATE `setting` SET cat = 'maintenance', ordering = 20, usersee = '1', userchange = '1', `default` = 'On', `title` = 'Enable Email Alerts?' WHERE setting = 'MAINTENANCE_EMAIL_ALERTS';
 UPDATE `setting` SET cat = 'maintenance', ordering = 30, usersee = '1', userchange = '1', `default` = 'mail@yoursite.com', `title` = 'Admin email address' WHERE setting = 'mail_to';

@@ -1129,10 +1129,13 @@ class XMDSSoap4
         Theme::SetPagename('module');
 
         // Get the resource from the module
-        require_once('modules/' . $type . '.module.php');
-        
-        if (!$module = new $type(new Database(), $user, $mediaId, $layoutId, $regionId))
+        try {
+            $module = ModuleFactory::load($type, $layoutId, $regionId, $mediaId, null, null, $user);
+        }
+        catch (Exception $e) {
+            Debug::Error($e->getMessage(), $this->displayId);
             throw new SoapFault('Receiver', 'Cannot create module. Check CMS Log');
+        }
 
         $resource = $module->GetResource($this->displayId);
 

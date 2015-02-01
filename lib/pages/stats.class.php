@@ -28,7 +28,7 @@ class statsDAO extends baseDAO
 	function displayPage() 
 	{
         // Render a Bandwidth Widget
-        $id = uniqid();
+        $id = Kit::uniqueId();
         Theme::Set('id', $id);
         Theme::Set('form_meta', '<input type="hidden" name="p" value="stats"><input type="hidden" name="q" value="BandwidthGrid">');
         
@@ -54,7 +54,7 @@ class statsDAO extends baseDAO
         Theme::Render('grid_render');
 
         // Render an Availability Widget
-        $id = uniqid();
+        $id = Kit::uniqueId();
         Theme::Set('id', $id);
         Theme::Set('form_meta', '<input type="hidden" name="p" value="stats"><input type="hidden" name="q" value="AvailabilityGrid">');
         
@@ -81,7 +81,7 @@ class statsDAO extends baseDAO
 
 
 		// Proof of Play stats widget
-        $id = uniqid();
+        $id = Kit::uniqueId();
         Theme::Set('id', $id);
         Theme::Set('form_meta', '<input type="hidden" name="p" value="stats"><input type="hidden" name="q" value="StatsGrid">');
         
@@ -187,6 +187,9 @@ class statsDAO extends baseDAO
 
         $SQL .= 'GROUP BY display.Display, layout.Layout ';
         $SQL .= 'ORDER BY display.Display, layout.Layout';
+
+        // Log
+        Debug::sql($SQL);
 
         if (!$results = $this->db->query($SQL))
         {

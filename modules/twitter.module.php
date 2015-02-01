@@ -652,15 +652,18 @@ class Twitter extends Module
         );
 
         $curl = curl_init();
+
+        // Set options
         curl_setopt_array($curl, $httpOptions);
-        $result = curl_exec($curl);
 
-        // Parse out header and body
-        list($header, $body) = explode("\r\n\r\n", $result, 2);
+        // Call exec
+        if (!$result = curl_exec($curl)) {
+            // Log the error
+            Debug::Error('Error contacting Twitter API: ' . curl_error($curl));
+            return false;
+        }
 
-        // See if we can parse the error.
-        $body = json_decode($body);
-
+        // We want to check for a 200
         $outHeaders = curl_getinfo($curl);
 
         if ($outHeaders['http_code'] != 200) {
@@ -676,6 +679,12 @@ class Twitter extends Module
 
             return false;
         }
+
+        // Parse out header and body
+        list($header, $body) = explode("\r\n\r\n", $result, 2);
+
+        // See if we can parse the body as JSON.
+        $body = json_decode($body);
 
         // We have a 200 - therefore we want to think about caching the bearer token
         // First, lets check its a bearer token

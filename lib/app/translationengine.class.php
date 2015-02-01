@@ -71,6 +71,10 @@ class TranslationEngine
                 }
             }
         }
+        else if ($requestedLanguage == '') {
+            // Set the language to the default
+            $foundLanguage = $default;
+        }
         else {
             // Requested language is not empty, so check it
             // This may also be because the headers are empty for some reason
@@ -94,6 +98,7 @@ class TranslationEngine
 
         //Debug::LogEntry('audit', 'Creating new file streamer for '. $localeDir . '/' . $foundLanguage . '.mo', 'TranslationEngine', 'InitLocal');
         if (!$stream = new CachedFileReader($localeDir . '/' . $foundLanguage . '.mo')) {
+            Debug::Info('Resolved language ' . $foundLanguage . ' not available.');
             $transEngine = false;
             return;
         }
