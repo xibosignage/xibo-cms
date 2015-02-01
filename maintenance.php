@@ -1,4 +1,4 @@
-<?php
+<?php 
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
  * Copyright (C) 2010-13 Alex Harrington
