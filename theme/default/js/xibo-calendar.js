@@ -41,7 +41,7 @@ $(document).ready(function() {
     var options = {
         events_source: function () { return []; },
         view: 'month',
-        tmpl_path: "theme/default/libraries/calendar/tmpls/",
+        tmpl_path: "theme/mobile/libraries/calendar/tmpls/",
         tmpl_cache: true,
         onAfterEventsLoad: function(events) {
             if(!events) {

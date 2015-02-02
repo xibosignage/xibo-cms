@@ -29,18 +29,18 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 <div class="row">
     <div class="col-sm-12">
         <div class="btn-group pull-right xibo-calendar-controls">
-            <button type="button" class="btn btn-warning" data-calendar-view="year"><?php echo Theme::Translate('Year'); ?></button>
-            <button type="button" class="btn btn-warning active" data-calendar-view="month"><?php echo Theme::Translate('Month'); ?></button>
-            <button type="button" class="btn btn-warning" data-calendar-view="week"><?php echo Theme::Translate('Week'); ?></button>
-            <button type="button" class="btn btn-warning" data-calendar-view="day"><?php echo Theme::Translate('Day'); ?></button>
+            <button type="button" class="btn btn-primary" data-calendar-view="year"><?php echo Theme::Translate('Year'); ?></button>
+            <button type="button" class="btn btn-primary active" data-calendar-view="month"><?php echo Theme::Translate('Month'); ?></button>
+            <button type="button" class="btn btn-primary" data-calendar-view="week"><?php echo Theme::Translate('Week'); ?></button>
+            <button type="button" class="btn btn-primary" data-calendar-view="day"><?php echo Theme::Translate('Day'); ?></button>
         </div>
         <div class="btn-group pull-right xibo-calendar-controls">
-            <button type="button" class="btn btn-primary" data-calendar-nav="prev"><span class="glyphicon glyphicon-backward"></span> <?php echo Theme::Translate('Prev'); ?></button>
+            <button type="button" class="btn btn-default" data-calendar-nav="prev"><span class="glyphicon glyphicon-backward"></span> <?php echo Theme::Translate('Prev'); ?></button>
             <button type="button" class="btn btn-default" data-calendar-nav="today"><?php echo Theme::Translate('Today'); ?></button>
-            <button type="button" class="btn btn-primary" data-calendar-nav="next"><?php echo Theme::Translate('Next'); ?> <span class="glyphicon glyphicon-forward"></span></button>
+            <button type="button" class="btn btn-default" data-calendar-nav="next"><?php echo Theme::Translate('Next'); ?> <span class="glyphicon glyphicon-forward"></span></button>
         </div>
         <div class="btn-group pull-right xibo-calendar-controls">
-            <button class="btn btn-success XiboFormButton" href="<?php echo Theme::Get('event_add_url'); ?>"><?php echo Theme::Translate('Add Event'); ?></button>
+            <button class="btn btn-primary XiboFormButton" href="<?php echo Theme::Get('event_add_url'); ?>"><?php echo Theme::Translate('Add Event'); ?></button>
         </div>
         <div class="xibo-calendar-controls dropdown pull-right">
             <select id="<?php echo Theme::Get('id'); ?>" type="form-control" name="DisplayGroupIDs[]" data-live-search="true" data-selected-text-format="count > 4" title="<?php echo Theme::Translate('Nothing Selected'); ?>" multiple>

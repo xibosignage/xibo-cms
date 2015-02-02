@@ -1,0 +1,116 @@
+ body
+ {
+	font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+ }
+ /* Misc */
+.noMargin
+{
+	margin:0 !important;
+}
+h3
+{
+	font-weight: 100;
+	text-transform: uppercase;
+	font-size:20px !important;
+}
+
+
+ /* index - tela de gráfico */
+ h3 > i
+ {
+	font-size: 19px !important;
+	margin-right:5px;
+}
+.modal-body label, .FilterDiv label 
+{
+	margin-right:5px;
+}
+.FilterDiv input[type="text"], .FilterDiv select
+{
+	margin-right:10px;
+	margin-bottom:10px;
+}
+.filterform td
+{
+	padding-right:5px;
+}
+.filterform td input[type="checkbox"]
+{
+	vertical-align: baseline;
+}
+ .panel
+ {
+	background-color: aliceblue;
+	border: 1px solid rgba(0, 0, 0, 0.05);
+	border-radius: 2px;
+	padding: 10px;
+}
+.box-icon
+{
+	display: block;
+	float: left;
+	margin: 0 10px 0 0;
+	width: 65px;
+	height: 65px;
+	border-radius: 50%;
+	line-height: 65px;
+	vertical-align: middle;
+	text-align: center;
+	font-size: 35px;
+	background-color:#2aa8df;
+	color:#fff;
+} 
+ .bold-counter
+ {
+	text-shadow:none;
+	line-height: 65px;
+	font-size: 40px;
+	margin:0;
+}
+
+/* Schedule page */
+.lbl-style input[type="text"]
+{
+	margin-left:5px;
+}
+.lbl-style label
+{
+	display: initial;
+	margin-left: 10px;
+	margin-right:5px;
+}
+.lbl-style input[type="checkbox"]
+{
+	margin:0;
+}
+.lbl-style .pull-right 
+{
+	margin-top:10px;
+}
+.lbl-style .pull-right input
+{
+	margin-right: 5px;
+}
+
+/* Design */
+#LayoutJumpList
+{
+	z-index:60 !important;
+}
+.well-small, #timelinePreview .well
+{
+	padding:3px !important;
+}
+ul.timelineSortableListOfMedia 
+{
+	margin-left:0 !important;
+}
+
+.timelineMediaInTransition, .timelineMediaOutTransition
+{
+	font-size:11px;
+	display:none;
+}
+
+
+

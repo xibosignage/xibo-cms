@@ -40,7 +40,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 	            <i class="glyphicon glyphicon-upload glyphicon glyphicon-white"></i>
 	            <span><?php echo Theme::Translate('Start upload'); ?></span>
 	        </button>
-	        <button type="reset" class="btn btn-warning cancel">
+	        <button type="reset" class="btn btn-danger cancel">
 	            <i class="glyphicon glyphicon-ban-circle glyphicon glyphicon-white"></i>
 	            <span><?php echo Theme::Translate('Cancel upload'); ?></span>
 	        </button>
@@ -97,7 +97,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
                 </button>
             {% } %}
             {% if (!i) { %}
-                <button class="btn btn-warning cancel">
+                <button class="btn btn-danger cancel">
                     <i class="glyphicon glyphicon-ban-circle glyphicon glyphicon-white"></i>
                     <span><?php echo Theme::Translate('Cancel'); ?></span>
                 </button>

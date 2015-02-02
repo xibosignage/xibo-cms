@@ -39,5 +39,5 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
         <option value="100">100</option>
     </select>
     <select class="pagenum input-mini form-control" title="Select page number"></select>
-    <button type="button" class="btn remove"><i class="fa fa-ban"></i></button>
+    <button type="button" class="btn remove"><i class="glyphicon glyphicon-eye-close"></i></button>
 </div>
