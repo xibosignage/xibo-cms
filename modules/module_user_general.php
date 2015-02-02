@@ -1665,13 +1665,13 @@ class User {
         if ($this->usertypeid == 3) {
             $filterBy['userId'] = $this->userid;
         }
-        // Super admins can only see users from their groups.
+        // Group admins can only see users from their groups.
         else if ($this->usertypeid == 2) {
             $filterBy['groupIds'] = $this->GetUserGroups($this->userid, true);
         }
 
         try {
-            $user = Userdata::Entries($sortOrder, $filterBy);
+            $user = Userdata::entries($sortOrder, $filterBy);
             $parsedUser = array();
 
             foreach ($user as $row) {
@@ -1687,6 +1687,7 @@ class User {
                 $userItem['lastaccessed'] = $row->lastAccessed;
                 $userItem['loggedin'] = $row->loggedIn;
                 $userItem['retired'] = $row->retired;
+                $userItem['object'] = $row;
                 
                 // Add to the collection
                 $parsedUser[] = $userItem;
