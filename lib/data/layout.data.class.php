@@ -1651,6 +1651,14 @@ class Layout extends Data
             return false;
         }
 
+        // Get the width and height
+        $xml = new DOMDocument();
+        $xml->loadXML($row['xml']);
+
+        // get the width and the height
+        $info['width'] = $xml->documentElement->getAttribute('width');
+        $info['height'] = $xml->documentElement->getAttribute('height');
+
         // Use the Region class to help
         Kit::ClassLoader('region');
 

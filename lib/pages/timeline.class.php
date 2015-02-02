@@ -210,6 +210,11 @@ class timelineDAO extends baseDAO {
             __('The layering order of this region (z-index). Advanced use only. '), 'z');
 
         Theme::Set('form_fields', $formFields);
+
+        // Add some information about the whole layout to this request.
+        $layout = new Layout();
+        $layoutInformation = $layout->LayoutInformation($layoutid);
+        $response->extra['layoutInformation'] = array('width' => $layoutInformation['width'], 'height' => $layoutInformation['height']);
         
         $response->SetFormRequestResponse(NULL, __('Region Options'), '350px', '275px');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
