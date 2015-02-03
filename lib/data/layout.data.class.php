@@ -1554,9 +1554,9 @@ class Layout extends Data
 
                     // Replace heights
                     $mediaXml = preg_replace_callback(
-                        '/height=(.*?)/',
+                        '/height:(.*?)/',
                         function ($matches) use ($ratio) {
-                            return "height=" . $matches[1] * $ratio;
+                            return "height:" . $matches[1] * $ratio;
                         }, $mediaXml);
 
                     // Replace fonts
