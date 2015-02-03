@@ -76,21 +76,25 @@ class powerpoint extends Module
     }
 
     /**
-     * Add Media to the Database
-     * @return
-     */
-    public function AddMedia()
-    {
-        return $this->AddLibraryMedia();
-    }
-
-    /**
      * Edit Media in the Database
      * @return
      */
     public function EditMedia()
     {
         return $this->EditLibraryMedia();
+    }
+
+    /**
+     * Preview code for a module
+     * @param int $width
+     * @param int $height
+     * @param int $scaleOverride The Scale Override
+     * @return string The Rendered Content
+     */
+    public function Preview($width, $height, $scaleOverride = 0)
+    {
+        // PowerPoint cannot be previewed
+        return '<div style="text-align:center;"><img alt="' . $this->type . ' thumbnail" src="theme/default/img/forms/' . $this->type . '.gif" /></div>';
     }
     
     public function IsValid() {
