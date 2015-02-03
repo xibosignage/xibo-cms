@@ -133,7 +133,7 @@ class datasetview extends Module
         $formFields[] = FormManager::AddNumber('duration', __('Duration'), $this->duration, 
             __('The duration in seconds this item should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
 
-        $formFields[] = FormManager::AddNumber('ordering', __('Order'), $this->GetOption('ordering'), 
+        $formFields[] = FormManager::AddText('ordering', __('Order'), $this->GetOption('ordering'),
             __('Please enter a SQL clause for how this dataset should be ordered'), 'o');
 
         $formFields[] = FormManager::AddText('filter', __('Filter'), $this->GetOption('filter'), 

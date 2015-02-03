@@ -256,7 +256,7 @@ class ticker extends Module
             $formFields['advanced'][] = $field_updateInterval;
 
             // Extra Fields for the DataSet
-            $formFields['general'][] = FormManager::AddNumber('ordering', __('Order'), $this->GetOption('ordering'), 
+            $formFields['general'][] = FormManager::AddText('ordering', __('Order'), $this->GetOption('ordering'),
                 __('Please enter a SQL clause for how this dataset should be ordered'), 'o');
 
             $formFields['general'][] = FormManager::AddText('filter', __('Filter'), $this->GetOption('filter'), 
