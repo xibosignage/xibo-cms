@@ -17,3 +17,55 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */ 
+ 
+.navbar-collapse{
+	padding-left: 0;
+	padding-right: 0;
+	height: 100%;
+	border: none
+}
+
+#page-wrapper{
+	padding-left: 0
+}
+
+.navbar-toggle{
+	border-color: #FFFFFF;
+	 margin-top: 13px
+}
+.navbar-toggle .icon-bar{
+	background-color: #FFFFFF
+}
+
+@media (max-width: 768px){
+	ul.sidebar li a {
+		float: none; 	
+		width: auto;
+	}
+	ul.sidebar{
+		width: 100%;
+		position: static
+	}
+	#sidebar-wrapper{
+		position: static;
+		width: 100%;
+		left: 0;
+		margin-left: 0;
+	}
+	.sidebar-footer{
+		position: static
+	}
+	.row.header{
+		position: fixed;
+		top: 0;
+		width: 100%;
+	}
+	.navbar-collapse{		
+		position: relative
+	}
+	#page-wrapper.active{
+		padding-top: 60px;
+		padding-left: 0
+	}
+
+}
