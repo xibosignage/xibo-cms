@@ -404,15 +404,15 @@ function XiboGridRender(gridId, autoRefresh) {
 
                         // Bind to enable / disable
                         $("#XiboPager_" + gridId).find('.remove').click(function(){
-                            var enabled = $(this).find('i').hasClass("glyphicon-eye-close");
+                            var enabled = $(this).find('i').hasClass("fa-ban");
 
                             $('table').trigger( (enabled ? 'disable' : 'enable') + '.pager');
                             
                             if (enabled) {
-                                $('.remove').find('i').removeClass("glyphicon-eye-open").addClass(" glyphicon-eye-close");
+                                $('.remove').find('i').removeClass("fa-ban").addClass("fa-check-circle-o");
                             }
                             else {
-                                $('.remove').find('i').removeClass("glyphicon-eye-close ").addClass("glyphicon-eye-open");
+                                $('.remove').find('i').removeClass("fa-check-circle-o").addClass("fa-ban");
                             }
                             return false;
                         });

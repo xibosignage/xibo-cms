@@ -478,6 +478,3 @@ var settingsUpdated = function(response) {
         SystemMessage((response.message == "") ? translation.failure : response.message, true);
     }
 };
-
-
-

@@ -3,9 +3,9 @@
 */
 
 /* Base */
-/*html {
+html {
   overflow-y: scroll;
-}*/
+}
 body {
   background: #f3f3f3;
   color: #333333 !important;
@@ -114,17 +114,6 @@ ul.sidebar .sidebar-list a:hover {
   border-left: 3px solid #e99d1a;
   text-indent: 22px;
 }
-
-.main-menu .sidebar-title {
-	font-size: 12px;		
-	text-transform: uppercase;
-	background: #f7f7f7;
-}
-
-body .page-container .sidebar-menu #main-menu li.sidebar-title a:hover{
-	background-color: transparent
-}
-
 #page-wrapper:not(.active) ul.sidebar .sidebar-list a:hover span {
   border-left: 3px solid #e99d1a;
   text-indent: 22px;
@@ -138,8 +127,10 @@ ul.sidebar .sidebar-list .menu-icon {
 ul.sidebar .sidebar-list a:hover .menu-icon {
   text-indent: 25px;
 }
-.sidebar-footer {  
-  height: 40px;  
+.sidebar-footer {
+  position: absolute;
+  height: 40px;
+  bottom: 0;
   width: 100%;
   padding: 0;
   margin: 0;
@@ -181,10 +172,9 @@ ul.sidebar .sidebar-list a:hover .menu-icon {
 
 /* Header */
 .row.header {
-  	height: 65px;
-	/* background: #273759; */
-	margin-bottom: 15px;
-	border-bottom: 1px solid #eeeeee;
+  height: 60px;
+  background: #273759;
+  margin-bottom: 15px;
 }
 .row.header > div:last-child {
   padding-right: 0;
@@ -366,7 +356,7 @@ ul.sidebar .sidebar-main a,
 ul.sidebar .sidebar-list a:hover,
 #page-wrapper:not(.active) ul.sidebar .sidebar-title.separator {
   /* Sidebar header and footer color */
-  background: #f7f7f7;
+  background: #273759;
 }
 #sidebar-wrapper {
   /* Sidebar background color */

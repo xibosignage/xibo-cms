@@ -72,24 +72,17 @@ Theme::SetTranslation('enterText', Theme::Translate('Enter text...'));
         <script src="theme/default/libraries/momentjs/moment.js"></script>
         <script src="theme/default/libraries/morrisjs/raphael.min.js"></script>
         <script src="theme/default/libraries/morrisjs/morris.min.js"></script>
-        <script src="theme/default/libraries/colors/colors.min.js"></script>        
+        <script src="theme/default/libraries/colors/colors.min.js"></script>
         <script src="theme/default/js/xibo-cms.js"></script>
     	<script src="theme/default/js/xibo-forms.js"></script>
     	<script src="theme/default/js/xibo-layout-designer.js"></script>
     	<script src="theme/default/js/xibo-preview-timeline.js"></script>
     	<script src="theme/default/js/xibo-calendar.js"></script>
     	<script src="theme/default/js/xibo-datasets.js"></script>
-
-    	
-    	
-    	
         <script type="text/javascript">
         var translations = <?php echo ((Theme::Get('translations') == '') ? '{}' : Theme::Get('translations')); ?>;
         var language = "<?php echo TranslationEngine::GetJsLocale(); ?>";
         var dateFormat = "<?php echo Config::GetSetting('DATE_FORMAT', 'Y-m-d h:i'); ?>";
-        
         </script>
-        
-
 	</body>
 </html>

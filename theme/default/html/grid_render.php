@@ -35,7 +35,6 @@ if (!$tabs)
     <div class="widget-body">
         <?php echo Theme::Get('prepend'); ?>
         <div class="XiboGrid" id="<?php echo Theme::Get('id'); ?>">
-        	<?php echo Theme::Get('append'); ?>
             <div class="XiboFilter">
                 <div class="FilterDiv" id="Filter">
                     <?php if ($tabs) { // Add tabs if they have been provided ?>
@@ -203,6 +202,6 @@ if (!$tabs)
             <div class="XiboData"></div>
             <?php echo Theme::Get('pager'); ?>
         </div>
-        
+        <?php echo Theme::Get('append'); ?>
     </div>
 </div>
