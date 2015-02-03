@@ -65,6 +65,7 @@ class Display extends Data {
     public function Load() {
         try {
             $dbh = PDOConnect::init();
+            $params = array();
 
             $SQL = '
               SELECT display.*, displaygroup.displaygroupid, displaygroup.description, X(display.GeoLocation) AS Latitude, Y(display.GeoLocation) AS Longitude
@@ -73,7 +74,7 @@ class Display extends Data {
                     ON lkdisplaydg.displayid = display.displayId
                     INNER JOIN `displaygroup`
                     ON displaygroup.displaygroupid = lkdisplaydg.displaygroupid
-                        AND isdisplayspecific = 1';
+                        AND isdisplayspecific = 1 ';
 
             if ($this->displayId != null && $this->displayId != 0) {
                 $SQL .= 'WHERE display.displayid = :displayId';
@@ -89,7 +90,7 @@ class Display extends Data {
 
             $sth = $dbh->prepare($SQL);
             
-            $sth->execute(array('display_id' => $this->displayId));
+            $sth->execute($params);
           
             if (!$row = $sth->fetch())
                 $this->ThrowError(25004, __('Cannot find display record'));
