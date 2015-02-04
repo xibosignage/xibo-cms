@@ -375,7 +375,7 @@ class displayDAO extends baseDAO
         $cols = array(
                 array('name' => 'displayid', 'title' => __('ID')),
                 array('name' => 'displayWithLink', 'title' => __('Display')),
-                array('name' => 'status', 'title' => __('Status'), 'icons' => true),
+                array('name' => 'status', 'title' => __('Status'), 'icons' => true, 'iconDescription' => 'statusDescription'),
                 array('name' => 'licensed', 'title' => __('License'), 'icons' => true),
                 array('name' => 'description', 'title' => __('Description'), 'hidden' => ($filter_showThumbnail == 1 || $filter_showThumbnail == 2)),
                 array('name' => 'layout', 'title' => __('Default Layout'), 'hidden' => ($filter_showThumbnail == 1 || $filter_showThumbnail == 2)),
@@ -412,6 +412,24 @@ class displayDAO extends baseDAO
             // Create some login lights
             $row['rowColor'] = ($row['mediainventorystatus'] == 1) ? 'success' : (($row['mediainventorystatus'] == 2) ? 'danger' : 'warning');
             $row['status'] = ($row['mediainventorystatus'] == 1) ? 1 : (($row['mediainventorystatus'] == 2) ? 0 : -1);
+
+            // Set some text for the display status
+            switch ($row['status']) {
+                case 1:
+                    $row['statusDescription'] = __('Display is up to date');
+                    break;
+
+                case 2:
+                    $row['statusDescription'] = __('Display is downloading new files');
+                    break;
+
+                case 3:
+                    $row['statusDescription'] = __('Display is out of date but has not yet checked in with the server');
+                    break;
+
+                default:
+                    $row['statusDescription'] = __('Unknown Display Status');
+            }
 
             // Thumbnail
             $row['thumbnail'] = '';

@@ -561,7 +561,7 @@ class layoutDAO extends baseDAO
                 array('name' => 'thumbnail', 'title' => __('Thumbnail'), 'hidden' => ($showThumbnail == 0)),
                 array('name' => 'owner', 'title' => __('Owner')),
                 array('name' => 'permissions', 'title' => __('Permissions')),
-                array('name' => 'status', 'title' => __('Status'))
+                array('name' => 'status', 'title' => __('Status'), 'icons' => true, 'iconDescription' => 'statusDescription')
             );
         Theme::Set('table_cols', $cols);
 
@@ -595,19 +595,23 @@ class layoutDAO extends baseDAO
             switch ($layout['status']) {
 
                 case 1:
-                    $row['status'] = '<span title="' . __('This Layout is ready to play') . '" class="glyphicon glyphicon-ok-circle"></span>';
+                    $row['status'] = 1;
+                    $row['statusDescription'] = __('This Layout is ready to play');
                     break;
 
                 case 2:
-                    $row['status'] = '<span title="' . __('There are items on this Layout that can only be assessed by the client') . '" class="glyphicon glyphicon-question-sign"></span>';
+                    $row['status'] = 2;
+                    $row['statusDescription'] = __('There are items on this Layout that can only be assessed by the Display');
                     break;
 
                 case 3:
-                    $row['status'] = '<span title="' . __('This Layout is invalid and should not be scheduled') . '" class="glyphicon glyphicon-remove-sign"></span>';
+                    $row['status'] = 0;
+                    $row['statusDescription'] = __('This Layout is invalid and should not be scheduled');
                     break;
 
                 default:
-                    $row['status'] = '<span title="' . __('The Status of this Layout is not known') . '" class="glyphicon glyphicon-warning-sign"></span>';
+                    $row['status'] = 0;
+                    $row['statusDescription'] = __('The Status of this Layout is not known');
             }
 
             
