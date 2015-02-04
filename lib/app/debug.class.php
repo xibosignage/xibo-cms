@@ -230,6 +230,10 @@ class Debug
         if (self::$_level < 5)
             return;
 
+        // Get the calling class / function
+        $trace = debug_backtrace();
+        $caller = $trace[1];
+
         Debug::LogEntry('info', $message, (isset($caller['class'])) ? $caller['class'] : 'Global', $caller['function'], '', $displayId);
     }
 
