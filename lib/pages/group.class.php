@@ -714,46 +714,31 @@ END;
         Theme::Set('users_assigned_url', 'index.php?p=group&q=SetMembers&GroupID=' . $groupID);
 
         // Users in group
-        $SQL  = "";
-        $SQL .= "SELECT user.UserID, ";
-        $SQL .= "       user.UserName, ";
-        $SQL .= "       CONCAT('UserID_', user.userID) AS list_id ";
-        $SQL .= "FROM   `user` ";
-        $SQL .= "       INNER JOIN lkusergroup ";
-        $SQL .= "       ON     lkusergroup.UserID = user.UserID ";
-        $SQL .= sprintf("WHERE  lkusergroup.GroupID   = %d", $groupID);
+        if (!$usersAssigned = $this->user->userList(null, array('groupIds' => array($groupID))))
+			trigger_error(__('Error getting users'), E_USER_ERROR);
 
-        $usersAssigned = $db->GetArray($SQL);
-
-        if (!is_array($usersAssigned))
-        {
-            trigger_error($db->error());
-            trigger_error(__('Error getting users'), E_USER_ERROR);
-        }
-
-        Theme::Set('users_assigned', $usersAssigned);
+		Theme::Set('users_assigned', $usersAssigned);
 
         // Users not in group
-        $SQL  = "";
-        $SQL .= "SELECT user.UserID, ";
-        $SQL .= "       user.UserName, ";
-        $SQL .= "       CONCAT('UserID_', user.userID) AS list_id ";
-        $SQL .= "FROM   `user` ";
-        $SQL .= " WHERE user.UserID NOT       IN ( ";
-        $SQL .= "   SELECT user.UserID ";
-        $SQL .= "  FROM   `user` ";
-        $SQL .= "  INNER JOIN lkusergroup ";
-        $SQL .= "  ON     lkusergroup.UserID = user.UserID ";
-        $SQL .= sprintf("WHERE  lkusergroup.GroupID   = %d", $groupID);
-        $SQL .= "       )";
+        if (!$allUsers = $this->user->userList())
+			trigger_error(__('Error getting all users'), E_USER_ERROR);
 
-        $usersAvailable = $db->GetArray($SQL);
-		
-		if (!is_array($usersAvailable))
-        {
-            trigger_error($db->error());
-            trigger_error(__('Error getting users'), E_USER_ERROR);
-        }
+        // The available users are all users except users already in assigned users
+		$usersAvailable = array();
+
+		foreach ($allUsers as $user) {
+			// Check to see if it exists in $usersAssigned
+			$exists = false;
+			foreach ($usersAssigned as $userAssigned) {
+				if ($userAssigned['userid'] == $user['userid']) {
+					$exists = true;
+					break;
+				}
+			}
+
+			if (!$exists)
+				$usersAvailable[] = $user;
+		}
 
         Theme::Set('users_available', $usersAvailable);
 		
@@ -766,9 +751,8 @@ END;
         $response->Respond();
 	}
 
-        /**
+	/**
 	 * Sets the Members of a group
-	 * @return
 	 */
 	public function SetMembers()
 	{
@@ -776,55 +760,52 @@ END;
         $response       = new ResponseManager();
         $groupObject    = new UserGroup($db);
 
-        $groupID	= Kit::GetParam('GroupID', _REQUEST, _INT);
-        $users	= Kit::GetParam('UserID', _POST, _ARRAY, array());
-        $members	= array();
+        $groupId = Kit::GetParam('GroupID', _REQUEST, _INT);
+        $users = Kit::GetParam('UserID', _POST, _ARRAY, array());
 
-        // Users in group
-        $SQL  = "";
-        $SQL .= "SELECT user.UserID, ";
-        $SQL .= "       user.UserName ";
-        $SQL .= "FROM   `user` ";
-        $SQL .= "       INNER JOIN lkusergroup ";
-        $SQL .= "       ON     lkusergroup.UserID = user.UserID ";
-        $SQL .= sprintf("WHERE  lkusergroup.GroupID   = %d", $groupID);
+		// We will receive a list of users from the UI which are in the "assign column" at the time the form is
+		// submitted.
+		// We want to go through and unlink any users that are NOT in that list, but that the current user has access
+		// to edit.
+		// We want to add any users that are in that list (but aren't already assigned)
 
-        if(!$resultIn = $db->query($SQL))
-        {
-            trigger_error($db->error());
-            trigger_error(__('Error getting Users'));
-        }
+		// All users that this session has access to
+		if (!$allUsers = $this->user->userList())
+			trigger_error(__('Error getting all users'), E_USER_ERROR);
 
-        while($row = $db->get_assoc_row($resultIn))
-        {
-            // Test whether this ID is in the array or not
-            $userID	= Kit::ValidateParam($row['UserID'], _INT);
+		// Convert to an array of ID's for convenience
+		$allUserIds = array_map(function ($array) { return $array['userid']; }, $allUsers);
 
-            if (!in_array($userID, $users))
-            {
-                // Its currently assigned but not in the $displays array
-                //  so we unassign
-                if (!$groupObject->Unlink($groupID, $userID))
-                {
-                    trigger_error($groupObject->GetErrorMessage(), E_USER_ERROR);
-                }
+		// Users in group
+		if (!$usersAssigned = $this->user->userList(null, array('groupIds' => array($groupId))))
+			trigger_error(__('Error getting users'), E_USER_ERROR);
+
+        foreach ($usersAssigned as $row) {
+			// Did this session have permission to do anything to this user?
+			// If not, move on
+			if (!in_array($row['userid'], $allUserIds))
+				continue;
+
+            // Is this user in the provided list of users?
+			if (in_array($row['userid'], $users)) {
+                // This user is already assigned, so we remove it from the $users array
+				unset($users[$row['userid']]);
             }
             else
             {
-                $members[] = $userID;
+				// It isn't therefore needs to be removed
+				if (!$groupObject->Unlink($groupId, $row['userid']))
+					trigger_error($groupObject->GetErrorMessage(), E_USER_ERROR);
             }
         }
 
-        foreach($users as $userID)
-        {
+		// Add any users that are still missing after tha assignment process
+        foreach($users as $userId) {
             // Add any that are missing
-            if(!in_array($userID, $members))
-            {
-                if (!$groupObject->Link($groupID, $userID))
-                {
-                    trigger_error($groupObject->GetErrorMessage(), E_USER_ERROR);
-                }
-            }
+			if (!$groupObject->Link($groupId, $userId))
+			{
+				trigger_error($groupObject->GetErrorMessage(), E_USER_ERROR);
+			}
         }
 
         $response->SetFormSubmitResponse(__('Group membership set'), false);

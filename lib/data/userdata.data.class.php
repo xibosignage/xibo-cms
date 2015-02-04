@@ -48,6 +48,10 @@ class Userdata extends Data
     {
         $entries = array();
 
+        // Default sort order
+        if (count($sortOrder) <= 0)
+            $sortOrder = array('username');
+
         try {
             $dbh = PDOConnect::init();
 
@@ -76,9 +80,9 @@ class Userdata extends Data
 
             // Groups Provided
             $groups = Kit::GetParam('groupIds', $filterBy, _ARRAY_INT);
-            Debug::Audit(var_export($groups, true));
+
             if (count($groups) > 0) {
-                $SQL .= " AND user.groupIds IN (" . implode($groups, ',') . ") ";
+                $SQL .= " AND user.userId IN (SELECT userId FROM `lkusergroup` WHERE groupid IN (" . implode($groups, ',') . ")) ";
             }
 
             // Retired users?

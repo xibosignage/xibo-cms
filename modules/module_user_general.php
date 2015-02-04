@@ -1667,7 +1667,8 @@ class User {
         }
         // Group admins can only see users from their groups.
         else if ($this->usertypeid == 2) {
-            $filterBy['groupIds'] = $this->GetUserGroups($this->userid, true);
+            $groups = $this->GetUserGroups($this->userid, true);
+            $filterBy['groupIds'] = (isset($filterBy['groupIds'])) ? array_merge($filterBy['groupIds'], $groups) : $groups;
         }
 
         try {
