@@ -66,6 +66,11 @@ class powerpoint extends Module
         return $this->AddFormForLibraryMedia();
     }
 
+    public function AddMedia()
+    {
+        // Never called
+    }
+
     /**
      * Return the Edit Form as HTML
      * @return
