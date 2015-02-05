@@ -756,8 +756,7 @@ class timelineDAO extends baseDAO {
 
             // Create a media module to handle all the complex stuff
             try {
-                require_once("modules/$mediaType.module.php");
-                $tmpModule = new $mediaType($db, $user, $mediaId, $layoutId, $regionId, $lkId);
+                $tmpModule = ModuleFactory::load($mediaType, $layoutId, $regionId, $mediaId, $lkId, $this->db, $this->user);
             }
             catch (Exception $e) {
                 Debug::Audit('Caught exception from Module Create');
@@ -968,8 +967,7 @@ class timelineDAO extends baseDAO {
             $i++;
 
             // Create a media module to handle all the complex stuff
-            require_once("modules/$mediaType.module.php");
-            $tmpModule = new $mediaType($this->db, $this->user, $mediaId, $layoutId, $regionId, $lkId);
+            $tmpModule = ModuleFactory::load($mediaType, $layoutId, $regionId, $mediaId, $lkId, $this->db, $this->user);
 
             $mediaName = $tmpModule->GetName();
             $row['order'] = $i;

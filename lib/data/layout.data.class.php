@@ -1426,9 +1426,7 @@ class Layout extends Data
                     $mediaType = $mediaNode->getAttribute('type');
                     
                     // Create a media module to handle all the complex stuff
-                    require_once("modules/$mediaType.module.php");
-                    $tmpModule = new $mediaType($this->db, $user, $mediaId, $layoutId, $region['regionid'], $lkId);
-    
+                    $tmpModule = ModuleFactory::load($mediaType, $layoutId, $region['regionid'], $mediaId, $lkId, $this->db, $this->user);
                     $status = $tmpModule->IsValid();
     
                     if ($status != 1)
@@ -1539,8 +1537,7 @@ class Layout extends Data
                     $mediaType = $mediaNode->getAttribute('type');
 
                     // Create a media module to handle all the complex stuff
-                    require_once("modules/$mediaType.module.php");
-                    $tmpModule = new $mediaType(new Database(), new User(), $mediaId, $layoutId, $region['regionid'], $lkId);
+                    $tmpModule = ModuleFactory::load($mediaType, $layoutId, $region['regionid'], $mediaId, $lkId);
 
                     // Get the XML
                     $mediaXml = $tmpModule->asXml();

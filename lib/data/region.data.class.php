@@ -1044,17 +1044,19 @@ class Region extends Data
                 
                 $mod = Kit::ValidateParam($row['type'], _WORD);
 
-                require_once("modules/$mod.module.php");
+                try {
+                    // Create the media object without any region and layout information
+                    $module = ModuleFactory::createForMedia($mod, $mediaId);
+                }
+                catch (Exception $e) {
+                    return $this->SetError($e->getMessage());
+                }
     
-                // Create the media object without any region and layout information
-                if (!$this->module = new $mod($this->db, $user, $mediaId))
-                    return $this->SetError($this->module->GetErrorMessage());
+                if (!$module->SetRegionInformation($layoutId, $regionId))
+                    return $this->SetError($module->GetErrorMessage());
     
-                if (!$this->module->SetRegionInformation($layoutId, $regionId))
-                    return $this->SetError($this->module->GetErrorMessage());
-    
-                if (!$this->module->UpdateRegion())
-                    return $this->SetError($this->module->GetErrorMessage());
+                if (!$module->UpdateRegion())
+                    return $this->SetError($module->GetErrorMessage());
     
                 // Need to copy over the permissions from this media item & also the delete permission
                 Kit::ClassLoader('layoutmediagroupsecurity');
