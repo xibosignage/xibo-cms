@@ -98,8 +98,8 @@ if (defined('XMDS') || $method != '')
                     $serviceResponse->ErrorServerError('Your client is not the correct version to communicate with this CMS.');
                 }
 
-                //$soap = new SoapServer($wsdl);
-                $soap = new SoapServer($wsdl, array('cache_wsdl' => WSDL_CACHE_NONE));
+                $soap = new SoapServer($wsdl);
+                //$soap = new SoapServer($wsdl, array('cache_wsdl' => WSDL_CACHE_NONE));
                 $soap->setClass('XMDSSoap' . $version);
                 $soap->handle();
             }

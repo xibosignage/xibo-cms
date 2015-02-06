@@ -28,7 +28,6 @@ class XMDSSoap4
     private $isAuditing;
     private $displayId;
     private $defaultLayoutId;
-    private $version_instructions;
     private $clientType;
     private $clientVersion;
     private $clientCode;
@@ -1328,7 +1327,6 @@ class XMDSSoap4
             $this->isAuditing = $row['isAuditing'];
             $this->displayId = $row['displayID'];
             $this->defaultLayoutId = $row['defaultlayoutid'];
-            $this->version_instructions = $row['version_instructions'];
             $this->clientType = $row['client_type'];
             $this->clientVersion = $row['client_version'];
             $this->clientCode = $row['client_code'];
