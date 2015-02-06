@@ -42,6 +42,9 @@ if (isset($_GET['xrds']))
 if (defined('XMDS'))
     $service = 'soap';
 
+// We need a theme
+new Theme(new User());
+
 // Check to see if we are going to consume a service (if we came from xmds.php then we will always use the SOAP service)
 if (defined('XMDS') || $method != '')
 {

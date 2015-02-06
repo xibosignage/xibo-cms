@@ -438,7 +438,7 @@ class displayDAO extends baseDAO
                 $row['thumbnail'] = '<i class="fa fa-times-circle"></i>';
             }
             else if ($filter_showThumbnail <> 0 && file_exists(Config::GetSetting('LIBRARY_LOCATION') . 'screenshots/' . $row['displayid'] . '_screenshot.jpg')) {
-                $row['thumbnail'] = '<a data-toggle="lightbox" data-type="image" href="index.php?p=display&q=ScreenShot&DisplayId=' . $row['displayid'] . '"><img class="display-screenshot" src="index.php?p=display&q=ScreenShot&DisplayId=' . $row['displayid'] . '" /></a>';
+                $row['thumbnail'] = '<a data-toggle="lightbox" data-type="image" href="index.php?p=display&q=ScreenShot&DisplayId=' . $row['displayid'] . '"><img class="display-screenshot" src="index.php?p=display&q=ScreenShot&DisplayId=' . $row['displayid'] . '&' . Kit::uniqueId() . '" /></a>';
             }
 
             // Edit and Delete buttons first
