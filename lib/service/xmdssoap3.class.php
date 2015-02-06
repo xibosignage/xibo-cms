@@ -542,7 +542,7 @@ class XMDSSoap3
                 $todt = date('Y-m-d H:i:s', $row[2]);
                 $scheduleid = $row[3];
                 $is_priority = Kit::ValidateParam($row[4], _INT);
-                $dependents = implode(',', $moduleDependents) . ',' . Kit::ValidateParam($row[5], _STRING);
+                $dependents = Kit::ValidateParam($row[5], _STRING);
     
                 // Add a layout node to the schedule
                 $layout = $scheduleXml->createElement("layout");
@@ -552,7 +552,6 @@ class XMDSSoap3
                 $layout->setAttribute("todt", $todt);
                 $layout->setAttribute("scheduleid", $scheduleid);
                 $layout->setAttribute("priority", $is_priority);
-                $layout->setAttribute("dependents", $dependents);
     
                 $layoutElements->appendChild($layout);
             }
