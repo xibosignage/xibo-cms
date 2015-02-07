@@ -49,14 +49,17 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
         <!-- Copyright 2006-2013 Daniel Garner. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
     </head>
     <body>
-        <div id="page-wrapper" class="active">
-        
+    	
+       	 <div id="page-wrapper" class="active">
+          <div class="collapse navbar-collapse" id="navbar-collapse-1">
             <div id="sidebar-wrapper">
                 <?php
                 if (Theme::Get('sidebar_html' != NULL)) {
                     echo Theme::Get('sidebar_html');
                 }
                 ?>
+                
+			    
                 <ul class="sidebar">
                     <li class="sidebar-main"><a href="<?php echo Theme::GetUserHomeLink(); ?>"><?php echo Theme::Translate('Dashboard'); ?></a></li>
                     <?php
@@ -99,6 +102,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
                         }
                     ?>
                 </ul>
+	              
                 <div class="sidebar-footer">
                     <div class="col-sm-6">
                         <a class="XiboFormButton" href="index.php?p=index&q=About" title="<?php echo Theme::Translate('About the CMS'); ?>"><?php echo Theme::Translate('About'); ?></a>
@@ -107,15 +111,23 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
                         <a href="<?php echo Config::GetSetting('HELP_BASE'); ?>" target="_blank" title="<?php echo Theme::Translate('Open the Manual in a new Window'); ?>"><?php echo Theme::Translate('Manual'); ?></a>
                     </div>
                 </div>
-            </div>
+             </div>
+            </div>  
             <div id="content-wrapper">
                 <div class="page-content">
                     <div class="row header">
                         <div class="col-sm-12">
                             <div class="meta pull-left">
+                            	
                                 <div class="page"><img class="xibo-logo" src='<?php echo Theme::ImageUrl('xibologo.png'); ?>'></div>
                             </div>
                             <div class="user pull-right">
+                            	<button type="button"  class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse-1">
+							        <span class="sr-only">Toggle navigation</span>
+							        <span class="icon-bar"></span>
+							        <span class="icon-bar"></span>
+							        <span class="icon-bar"></span>
+							    </button>
                                 <div class="item dropdown">
                                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                                         <img src="<?php echo Theme::ImageUrl('avatar.jpg'); ?>" />
