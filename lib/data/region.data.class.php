@@ -83,7 +83,7 @@ class Region extends Data
      * @param $regionid Object[optional]
      * @return string The region id
      */
-    public function AddRegion($layoutid, $userid, $regionid = "", $width = 100, $height = 100, $top = 50, $left = 50, $name = '')
+    public function AddRegion($layoutid, $userid, $regionid = "", $width = 250, $height = 250, $top = 50, $left = 50, $name = '')
     {
         Debug::LogEntry('audit', 'LayoutId: ' . $layoutid . ', Width: ' . $width . ', Height: ' . $height . ', Top: ' . $top . ', Left: ' . $left . ', Name: ' . $name . '.', 'region', 'AddRegion');
 
