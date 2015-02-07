@@ -58,6 +58,8 @@ class Display extends Data {
     public $displayProfileId;
     public $currentLayoutId;
     public $screenShotRequested;
+    public $storageAvailableSpace;
+    public $storageTotalSpace;
 
     public $displayGroupId;
     private $_config;
@@ -127,7 +129,9 @@ class Display extends Data {
             $this->displayProfileId = Kit::ValidateParam($row['displayprofileid'], _INT);
             $this->currentLayoutId = Kit::ValidateParam($row['currentLayoutId'], _INT);
             $this->screenShotRequested = Kit::ValidateParam($row['screenShotRequested'], _INT);
-            
+            $this->storageAvailableSpace = Kit::ValidateParam($row['storageAvailableSpace'], _INT);
+            $this->storageTotalSpace = Kit::ValidateParam($row['storageTotalSpace'], _INT);
+
             $this->displayGroupId = Kit::ValidateParam($row['displaygroupid'], _INT);
 
             // Store the current licensed flag, in case we are changing it and need to check it.
@@ -400,8 +404,9 @@ class Display extends Data {
 
     /**
      * Sets the information required on the display to indicate that it is still logged in
-     * @param int  $displayId The Display ID
-     * @param array  $status The Display Status
+     * @param int $displayId The Display ID
+     * @param array $status The Display Status
+     * @return bool
      */
     public function Touch($displayId, $status = array())
     {
@@ -426,6 +431,8 @@ class Display extends Data {
             $this->clientCode = (Kit::GetParam('clientCode', $status, _INT) == 0) ? $this->clientCode : Kit::GetParam('clientCode', $status, _INT);
             $this->currentLayoutId = (Kit::GetParam('currentLayoutId', $status, _INT) == 0) ? $this->currentLayoutId : Kit::GetParam('currentLayoutId', $status, _INT);
             $this->screenShotRequested = (Kit::GetParam('screenShotRequested', $status, _INT, -1) == -1) ? $this->screenShotRequested : Kit::GetParam('screenShotRequested', $status, _INT);
+            $this->storageAvailableSpace = (Kit::GetParam('availableSpace', $status, _INT, -1) == -1) ? $this->storageAvailableSpace : Kit::GetParam('availableSpace', $status, _INT);
+            $this->storageTotalSpace = (Kit::GetParam('totalSpace', $status, _INT, -1) == -1) ? $this->storageTotalSpace : Kit::GetParam('totalSpace', $status, _INT);
 
             // Has the mac address changed
             if (Kit::GetParam('macAddress', $status, _STRING) != '') {
@@ -451,7 +458,9 @@ class Display extends Data {
                         LastChanged = :lastChanged,
                         NumberOfMacAddressChanges = :numberOfMacAddressChanges,
                         currentLayoutId = :currentLayoutId,
-                        screenShotRequested = :screenShotRequested
+                        screenShotRequested = :screenShotRequested,
+                        storageAvailableSpace = :storageAvailableSpace,
+                        storageTotalSpace = :storageTotalSpace
                      WHERE displayId = :displayId
                 ';
 
@@ -471,7 +480,9 @@ class Display extends Data {
                     'lastChanged' => $this->lastChanged,
                     'numberOfMacAddressChanges' => $this->numberOfMacAddressChanges,
                     'currentLayoutId' => $this->currentLayoutId,
-                    'screenShotRequested' => $this->screenShotRequested
+                    'screenShotRequested' => $this->screenShotRequested,
+                    'storageAvailableSpace' => $this->storageAvailableSpace,
+                    'storageTotalSpace' => $this->storageTotalSpace
                 ));
 
             return true;

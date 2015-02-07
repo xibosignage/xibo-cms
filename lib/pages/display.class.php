@@ -53,45 +53,47 @@ class displayDAO extends baseDAO
             $filter_pinned = 1;
             $filter_displaygroup = Session::Get('display', 'filter_displaygroup');
             $filter_display = Session::Get('display', 'filter_display');
-            $filter_showThumbnail = Session::Get('display', 'filter_showThumbnail');
+            $filter_showView = Session::Get('display', 'filter_showView');
             $filter_autoRefresh = Session::Get('display', 'filter_autoRefresh');
         }
         else {
             $filter_pinned = 0;
             $filter_displaygroup = NULL;
             $filter_display = NULL;
-            $filter_showThumbnail = 0;
+            $filter_showView = 0;
             $filter_autoRefresh = 0;
         }
 
         $formFields = array();
+
+        $formFields[] = FormManager::AddCombo(
+            'filter_showView',
+            __('View'),
+            $filter_showView,
+            array(
+                array('key' => 0, 'value' => __('Default')),
+                array('key' => 1, 'value' => __('Screen shot thumbnails')),
+                array('key' => 2, 'value' => __('Screen shot thumbnails when Logged In')),
+                array('key' => 3, 'value' => __('Extended Display Status')),
+            ),
+            'key',
+            'value',
+            NULL,
+            't');
+
         $formFields[] = FormManager::AddText('filter_display', __('Name'), $filter_display, NULL, 'n');
 
         $displayGroups = $this->user->DisplayGroupList(0);
         array_unshift($displayGroups, array('displaygroupid' => '0', 'displaygroup' => 'All'));
         $formFields[] = FormManager::AddCombo(
-            'filter_displaygroup', 
-            __('Owner'), 
+            'filter_displaygroup',
+            __('Display Group'),
             $filter_displaygroup,
             $displayGroups,
             'displaygroupid',
             'displaygroup',
             NULL,
             'd');
-
-        $formFields[] = FormManager::AddCombo(
-            'filter_showThumbnail', 
-            __('Screen Shot Thumbnails'), 
-            $filter_showThumbnail,
-            array(
-                array('key' => 0, 'value' => __('None')),
-                array('key' => 1, 'value' => __('Always')),
-                array('key' => 2, 'value' => __('When Logged In')),
-                ),
-            'key',
-            'value',
-            NULL, 
-            't');
 
         $formFields[] = FormManager::AddNumber('filter_autoRefresh', __('Auto Refresh'), $filter_autoRefresh, 
             NULL, 'r');
@@ -350,8 +352,8 @@ class displayDAO extends baseDAO
         setSession('display', 'filter_displaygroup', $filter_displaygroupid);
 
         // Thumbnail?
-        $filter_showThumbnail = Kit::GetParam('filter_showThumbnail', _REQUEST, _INT);
-        setSession('display', 'filter_showThumbnail', $filter_showThumbnail);
+        $filter_showView = Kit::GetParam('filter_showView', _REQUEST, _INT);
+        setSession('display', 'filter_showView', $filter_showView);
 
         // filter_autoRefresh?
         $filter_autoRefresh = Kit::GetParam('filter_autoRefresh', _REQUEST, _INT, 0);
@@ -377,16 +379,20 @@ class displayDAO extends baseDAO
                 array('name' => 'displayWithLink', 'title' => __('Display')),
                 array('name' => 'status', 'title' => __('Status'), 'icons' => true, 'iconDescription' => 'statusDescription'),
                 array('name' => 'licensed', 'title' => __('License'), 'icons' => true),
-                array('name' => 'description', 'title' => __('Description'), 'hidden' => ($filter_showThumbnail == 1 || $filter_showThumbnail == 2)),
-                array('name' => 'layout', 'title' => __('Default Layout'), 'hidden' => ($filter_showThumbnail == 1 || $filter_showThumbnail == 2)),
-                array('name' => 'inc_schedule', 'title' => __('Interleave Default'), 'icons' => true, 'hidden' => ($filter_showThumbnail == 1 || $filter_showThumbnail == 2)),
-                array('name' => 'email_alert', 'title' => __('Email Alert'), 'icons' => true, 'hidden' => ($filter_showThumbnail == 1 || $filter_showThumbnail == 2)),
+                array('name' => 'currentLayout', 'title' => __('Current Layout'), 'hidden' => ($filter_showView != 3)),
+                array('name' => 'storageAvailableSpaceFormatted', 'title' => __('Storage Available'), 'hidden' => ($filter_showView != 3)),
+                array('name' => 'storageTotalSpaceFormatted', 'title' => __('Storage Total'), 'hidden' => ($filter_showView != 3)),
+                array('name' => 'storagePercentage', 'title' => __('Storage Free %'), 'hidden' => ($filter_showView != 3)),
+                array('name' => 'description', 'title' => __('Description'), 'hidden' => ($filter_showView != 0)),
+                array('name' => 'layout', 'title' => __('Default Layout'), 'hidden' => ($filter_showView == 1 || $filter_showView == 2)),
+                array('name' => 'inc_schedule', 'title' => __('Interleave Default'), 'icons' => true, 'hidden' => ($filter_showView == 1 || $filter_showView == 2)),
+                array('name' => 'email_alert', 'title' => __('Email Alert'), 'icons' => true, 'hidden' => ($filter_showView != 0)),
                 array('name' => 'loggedin', 'title' => __('Logged In'), 'icons' => true),
                 array('name' => 'lastaccessed', 'title' => __('Last Accessed')),
-                array('name' => 'clientaddress', 'title' => __('IP Address'), 'hidden' => ($filter_showThumbnail == 1)),
-                array('name' => 'macaddress', 'title' => __('Mac Address'), 'hidden' => ($filter_showThumbnail == 1)),
-                array('name' => 'screenShotRequested', 'title' => __('Screen shot?'), 'icons' => true, 'hidden' => ($filter_showThumbnail == 0)),
-                array('name' => 'thumbnail', 'title' => __('Thumbnail'), 'hidden' => ($filter_showThumbnail == 0))
+                array('name' => 'clientaddress', 'title' => __('IP Address'), 'hidden' => ($filter_showView == 1)),
+                array('name' => 'macaddress', 'title' => __('Mac Address'), 'hidden' => ($filter_showView == 1)),
+                array('name' => 'screenShotRequested', 'title' => __('Screen shot?'), 'icons' => true, 'hidden' => ($filter_showView != 1 && $filter_showView != 2)),
+                array('name' => 'thumbnail', 'title' => __('Thumbnail'), 'hidden' => ($filter_showView != 1 && $filter_showView != 2))
             );
         
         Theme::Set('table_cols', $cols);
@@ -434,12 +440,17 @@ class displayDAO extends baseDAO
             // Thumbnail
             $row['thumbnail'] = '';
             // If we aren't logged in, and we are showThumbnail == 2, then show a circle
-            if ($filter_showThumbnail == 2 && $row['loggedin'] == 0) {
+            if ($filter_showView == 2 && $row['loggedin'] == 0) {
                 $row['thumbnail'] = '<i class="fa fa-times-circle"></i>';
             }
-            else if ($filter_showThumbnail <> 0 && file_exists(Config::GetSetting('LIBRARY_LOCATION') . 'screenshots/' . $row['displayid'] . '_screenshot.jpg')) {
+            else if ($filter_showView <> 0 && file_exists(Config::GetSetting('LIBRARY_LOCATION') . 'screenshots/' . $row['displayid'] . '_screenshot.jpg')) {
                 $row['thumbnail'] = '<a data-toggle="lightbox" data-type="image" href="index.php?p=display&q=ScreenShot&DisplayId=' . $row['displayid'] . '"><img class="display-screenshot" src="index.php?p=display&q=ScreenShot&DisplayId=' . $row['displayid'] . '&' . Kit::uniqueId() . '" /></a>';
             }
+
+            // Format the storage available / total space
+            $row['storageAvailableSpaceFormatted'] = Kit::formatBytes($row['storageAvailableSpace']);
+            $row['storageTotalSpaceFormatted'] = Kit::formatBytes($row['storageTotalSpace']);
+            $row['storagePercentage'] = round(($row['storageTotalSpace'] - $row['storageAvailableSpace']) / $row['storageTotalSpace'] * 100.0, 2);
 
             // Edit and Delete buttons first
             if ($row['edit'] == 1) {

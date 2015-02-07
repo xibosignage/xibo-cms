@@ -52,13 +52,16 @@ class DisplayProfile extends Data {
             if (!$row = $sth->fetch())
                 $this->ThrowError(25004, __('Cannot find display profile'));
 
-            $this->name = Kit::ValidateParam($row['name'], _STRING);
+            // Get the type so we can load the defaults in from file
             $this->type = Kit::ValidateParam($row['type'], _STRING);
-            $this->isDefault = Kit::ValidateParam($row['isdefault'], _INT);
-            $this->userId = Kit::ValidateParam($row['userid'], _INT);
 
             // Load the config from disk
             $this->loadFromFile();
+
+            // Overwrite the defaults with the values from this specific record
+            $this->name = Kit::ValidateParam($row['name'], _STRING);
+            $this->isDefault = Kit::ValidateParam($row['isdefault'], _INT);
+            $this->userId = Kit::ValidateParam($row['userid'], _INT);
 
             // Load the client settings into an array
             $config = Kit::ValidateParam($row['config'], _HTMLSTRING);
@@ -88,7 +91,6 @@ class DisplayProfile extends Data {
         
             return false;
         }
-
     }
 
     public function LoadDefault() {

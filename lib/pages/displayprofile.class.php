@@ -161,7 +161,7 @@ class displayprofileDAO extends baseDAO {
             trigger_error(__('Unknown Client Type'), E_USER_ERROR);
 
         // Capture and validate the posted form parameters in accordance with the display config object.
-        include_once('config/client.config.php');
+        include('config/client.config.php');
 
         if (!isset($CLIENT_CONFIG[$displayProfile->type]))
             trigger_error(__('CMS Config not supported for ' . $displayProfile->type . ' displays.'), E_USER_ERROR);
