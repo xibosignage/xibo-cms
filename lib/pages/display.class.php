@@ -29,10 +29,6 @@ class displayDAO extends baseDAO
 
         $this->sub_page = Kit::GetParam('sp', _GET, _WORD, 'view');
         $this->ajax     = Kit::GetParam('ajax', _REQUEST, _WORD, 'false');
-        $displayid      = Kit::GetParam('displayid', _REQUEST, _INT, 0);
-
-        // validate displays so we get a realistic view of the table
-        Display::ValidateDisplays();
     }
 
     /**
@@ -170,13 +166,10 @@ class displayDAO extends baseDAO
 
     /**
      * Modify Display form
-     * @return
      */
     function displayForm()
     {
-        $db             =& $this->db;
-        $user           =& $this->user;
-        $response       = new ResponseManager();
+        $response = new ResponseManager();
 
         // Get the display Id
         $displayObject = new Display();
@@ -268,7 +261,7 @@ class displayDAO extends baseDAO
             __('The IP address of the remote host\'s broadcast address (or gateway)'), 'b');
 
         $formFields[] = FormManager::AddText('secureOn', __('Wake on LAN SecureOn'), $displayObject->secureOn, 
-            __('Enter a hexidecimal password of a SecureOn enabled Network Interface Card (NIC) of the remote host. Enter a value in this pattern: \'xx-xx-xx-xx-xx-xx\'. Leave the following field empty, if SecureOn is not used (for example, because the NIC of the remote host does not support SecureOn).'), 's');
+            __('Enter a hexadecimal password of a SecureOn enabled Network Interface Card (NIC) of the remote host. Enter a value in this pattern: \'xx-xx-xx-xx-xx-xx\'. Leave the following field empty, if SecureOn is not used (for example, because the NIC of the remote host does not support SecureOn).'), 's');
 
         $formFields[] = FormManager::AddText('wakeOnLanTime', __('Wake on LAN Time'), $displayObject->wakeOnLanTime, 
             __('The time this display should receive the WOL command, using the 24hr clock - e.g. 19:00. Maintenance must be enabled.'), 't');
@@ -314,6 +307,37 @@ class displayDAO extends baseDAO
                     __('Collect auditing from this client. Should only be used if there is a problem with the display.'), 
                     'a');
 
+        // Show the resolved settings for this display.
+        $formFields[] = FormManager::AddMessage(__('The settings for this display are shown below. They are taken from the active Display Profile for this Display, which can be changed in Display Settings. If you have altered the Settings Profile above, you will need to save and re-show the form.'));
+
+        // Build a table for the settings to be shown in
+        $cols = array(
+            array('name' => 'title', 'title' => __('Setting')),
+            array('name' => 'valueString', 'title' => __('Value'))
+        );
+
+        // Get the settings from the profile
+        $profile = $displayObject->getSettingsProfile();
+
+        // Go through each one, and see if it is a drop down
+        for ($i = 0; $i < count($profile); $i++) {
+            // Always update the value string with the source value
+            $profile[$i]['valueString'] = $profile[$i]['value'];
+
+            // Overwrite the value string when we are dealing with dropdowns
+            if ($profile[$i]['fieldType'] == 'dropdown') {
+                // Update our value
+                foreach ($profile[$i]['options'] as $option) {
+                    if ($option['id'] == $profile[$i]['value'])
+                        $profile[$i]['valueString'] = $option['value'];
+                }
+            }
+        }
+
+        Theme::Set('table_cols', $cols);
+        Theme::Set('table_rows',$profile);
+        $formFields[] = FormManager::AddRaw(Theme::RenderReturn('table_render'));
+
         Theme::Set('form_fields_advanced', $formFields);
 
         // Two tabs
@@ -339,6 +363,9 @@ class displayDAO extends baseDAO
      */
     function DisplayGrid()
     {
+        // validate displays so we get a realistic view of the table
+        Display::ValidateDisplays();
+
         $db         =& $this->db;
         $user       =& $this->user;
         $response   = new ResponseManager();
@@ -450,7 +477,7 @@ class displayDAO extends baseDAO
             // Format the storage available / total space
             $row['storageAvailableSpaceFormatted'] = Kit::formatBytes($row['storageAvailableSpace']);
             $row['storageTotalSpaceFormatted'] = Kit::formatBytes($row['storageTotalSpace']);
-            $row['storagePercentage'] = round(($row['storageTotalSpace'] - $row['storageAvailableSpace']) / $row['storageTotalSpace'] * 100.0, 2);
+            $row['storagePercentage'] = ($row['storageTotalSpace'] == 0) ? 0 : round(($row['storageTotalSpace'] - $row['storageAvailableSpace']) / $row['storageTotalSpace'] * 100.0, 2);
 
             // Edit and Delete buttons first
             if ($row['edit'] == 1) {

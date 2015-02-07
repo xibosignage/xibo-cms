@@ -659,8 +659,8 @@ class Display extends Data {
         }
     }
 
-    public function GetSetting($key, $default) {
-
+    public function GetSetting($key, $default)
+    {
         if (!$this->SetConfig())
             return false;
 
@@ -677,11 +677,10 @@ class Display extends Data {
         return $return;
     }
 
-    private function SetConfig() {
+    private function SetConfig()
+    {
         if ($this->_config == null) {
             try {
-                $dbh = PDOConnect::init();
-
                 $displayProfile = new DisplayProfile();
                 $displayProfile->displayProfileId = $this->displayProfileId;
             
@@ -710,6 +709,19 @@ class Display extends Data {
             }
         }
     }
+
+    /**
+     * Get the Settings Profile for this Display
+     * @return array|bool
+     */
+    public function getSettingsProfile()
+    {
+        if (!$this->SetConfig())
+            return false;
+
+        return $this->_config;
+    }
+
     /**
      * Assess each Display to correctly set the logged in flag based on last accessed time
      * @return
