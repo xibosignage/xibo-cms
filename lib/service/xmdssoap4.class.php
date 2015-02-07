@@ -28,17 +28,22 @@ class XMDSSoap4
     private $isAuditing;
     private $displayId;
     private $defaultLayoutId;
-    private $version_instructions;
     private $clientType;
     private $clientVersion;
     private $clientCode;
 
     /**
      * Registers a new display
-     * @param <type> $serverKey
-     * @param <type> $hardwareKey
-     * @param <type> $displayName
-     * @return <type>
+     * @param string $serverKey
+     * @param string $hardwareKey
+     * @param string $displayName
+     * @param string $clientType
+     * @param string $clientVersion
+     * @param int $clientCode
+     * @param string $operatingSystem
+     * @param string $macAddress
+     * @return string
+     * @throws SoapFault
      */
     public function RegisterDisplay($serverKey, $hardwareKey, $displayName, $clientType, $clientVersion, $clientCode, $operatingSystem, $macAddress)
     {
@@ -52,7 +57,8 @@ class XMDSSoap4
         $macAddress = Kit::ValidateParam($macAddress, _STRING);
         $clientAddress = Kit::GetParam('REMOTE_ADDR', $_SERVER, _STRING);
 
-        Debug::LogEntry('audit', "[IN] serverKey [$serverKey], hardwareKey [$hardwareKey], displayName [$displayName]", 'xmds', 'RegisterDisplay');
+        // Audit in
+        Debug::Audit('serverKey: ' . $serverKey . ', hardwareKey: ' . $hardwareKey . ', displayName: ' . $displayName);
 
         // Check the serverKey matches
         if ($serverKey != Config::GetSetting('SERVER_KEY'))
@@ -66,7 +72,7 @@ class XMDSSoap4
         try {
             $dbh = PDOConnect::init();
             $sth = $dbh->prepare('
-                SELECT licensed, display, displayid, displayprofileid, client_type, version_instructions, screenShotRequested, email_alert, loggedin
+                SELECT licensed, display, displayid, displayprofileid, client_type, version_instructions, screenShotRequested, email_alert, loggedin, isAuditing
                   FROM display 
                 WHERE license = :hardwareKey');
 
@@ -77,8 +83,7 @@ class XMDSSoap4
             $result = $sth->fetchAll();
         }
         catch (Exception $e) {
-         
-            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+            Debug::Error('Error trying to check hardware key. ' . $e->getMessage());
             throw new SoapFault('Sender', 'Cannot check client key.');
         }
 
@@ -97,24 +102,28 @@ class XMDSSoap4
             $defaultLayoutId = 4;
 
             // Add this display record
-            if (!$displayid = $displayObject->Add($displayName, 0, $defaultLayoutId, $hardwareKey, 0, 0))
+            if (!$displayId = $displayObject->Add($displayName, 0, $defaultLayoutId, $hardwareKey, 0, 0))
                 throw new SoapFault('Sender', 'Error adding display');
 
             $displayElement->setAttribute('status', 1);
             $displayElement->setAttribute('code', 'ADDED');
             $displayElement->setAttribute('message', 'Display added and is awaiting licensing approval from an Administrator.');
+
+            // New displays don't audit
+            $isAuditing = 0;
         }
         else {
             // We have seen this display before, so check the licensed value
             $row = $result[0];
 
-            $displayid = Kit::ValidateParam($row['displayid'], _INT);
+            $displayId = Kit::ValidateParam($row['displayid'], _INT);
             $display = Kit::ValidateParam($row['display'], _STRING);
             $clientType = Kit::ValidateParam($row['client_type'], _WORD);
             $versionInstructions = Kit::ValidateParam($row['version_instructions'], _HTMLSTRING);
             $screenShotRequested = Kit::ValidateParam($row['screenShotRequested'], _INT);
             $emailAlert = Kit::ValidateParam($row['email_alert'], _INT);
             $loggedIn = Kit::ValidateParam($row['loggedin'], _INT);
+            $isAuditing = Kit::ValidateParam($row['isAuditing'], _INT);
 
             // Determine if we are licensed or not
             if ($row['licensed'] == 0) {
@@ -132,15 +141,10 @@ class XMDSSoap4
 
                 // Use the display profile and type to get this clients settings
                 try {
-                    $dbh = PDOConnect::init();
-
                     $displayProfile = new DisplayProfile();
                     $displayProfile->displayProfileId = (empty($row['displayprofileid']) ? 0 : Kit::ValidateParam($row['displayprofileid'], _INT));
                     
                     if ($displayProfile->displayProfileId == 0) {
-                        // We need a theme
-                        new Theme(new User());
-                        
                         // Load the default profile
                         $displayProfile->type = $clientType;
                         $displayProfile->LoadDefault();
@@ -184,44 +188,49 @@ class XMDSSoap4
                     }
                 }
                 catch (Exception $e) {
-                    Debug::LogEntry('error', $e->getMessage());
+                    Debug::Error('Error loading display config. ' . $e->getMessage());
                     throw new SoapFault('Sender', 'Error after display found');
                 }
 
                 // Send Notification if required
-                $this->AlertDisplayUp($displayid, $display, $loggedIn, $emailAlert);
+                $this->AlertDisplayUp($displayId, $display, $loggedIn, $emailAlert);
             }
         }
 
         // Touch the display record
-        $displayObject->Touch($displayid, array(
+        $displayObject->Touch($displayId, array(
             'clientAddress' => $clientAddress,
             'macAddress' => $macAddress,
             'clientType' => $clientType,
             'clientVersion' => $clientVersion,
-            'clientCode' => $clientCode
+            'clientCode' => $clientCode,
+            'operatingSystem' => $operatingSystem
             ));
 
         // Log Bandwidth
         $returnXml = $return->saveXML();
-        $this->LogBandwidth($displayid, Bandwidth::$REGISTER, strlen($returnXml));
+        $this->LogBandwidth($displayId, Bandwidth::$REGISTER, strlen($returnXml));
 
-        Debug::LogEntry('audit', $returnXml, get_class(), __FUNCTION__);
+        // Audit our return
+        if ($isAuditing == 1)
+            Debug::Audit($returnXml, $displayId);
 
         return $return->saveXML();
     }
 
     /**
      * Returns a string containing the required files xml for the requesting display
+     * @param string $serverKey The Server Key
      * @param string $hardwareKey Display Hardware Key
      * @return string $requiredXml Xml Formatted String
+     * @throws SoapFault
      */
     function RequiredFiles($serverKey, $hardwareKey)
     {
         // Sanitize
         $serverKey = Kit::ValidateParam($serverKey, _STRING);
         $hardwareKey = Kit::ValidateParam($hardwareKey, _STRING);
-        $rfLookahead = Kit::ValidateParam(Config::GetSetting('REQUIRED_FILES_LOOKAHEAD'), _INT);
+        $rfLookAhead = Kit::ValidateParam(Config::GetSetting('REQUIRED_FILES_LOOKAHEAD'), _INT);
 
         // Check the serverKey matches
         if ($serverKey != Config::GetSetting('SERVER_KEY'))
@@ -229,7 +238,7 @@ class XMDSSoap4
 
         // Make sure we are sticking to our bandwidth limit
         if (!$this->CheckBandwidth())
-            throw new SoapFault('Receiver', "Bandwidth Limit exceeded");
+            throw new SoapFault('Receiver', 'Bandwidth Limit exceeded');
 
         $libraryLocation = Config::GetSetting("LIBRARY_LOCATION");
 
@@ -238,7 +247,7 @@ class XMDSSoap4
             throw new SoapFault('Sender', 'This display is not licensed.');
 
         if ($this->isAuditing == 1)
-            Debug::LogEntry("audit", '[IN] with hardware key: ' . $hardwareKey, "xmds", "RequiredFiles");
+            Debug::Audit('hardwareKey = ' . $hardwareKey, $this->displayId);
 
         // Remove all Nonces for this display
         $nonce = new Nonce();
@@ -252,14 +261,14 @@ class XMDSSoap4
         // Hour to hour time bands for the query
         // Start at the current hour
         $fromFilter = time();
-        // Move forwards an hour and the rf lookahead
-        $rfLookahead = $fromFilter + 3600 + $rfLookahead;
+        // Move forwards an hour and the rf look ahead
+        $rfLookAhead = $fromFilter + 3600 + $rfLookAhead;
         // Dial both items back to the top of the hour
         $fromFilter = $fromFilter - ($fromFilter % 3600);
-        $toFilter = $rfLookahead - ($rfLookahead % 3600);
+        $toFilter = $rfLookAhead - ($rfLookAhead % 3600);
 
         if ($this->isAuditing == 1)
-            Debug::LogEntry('audit', sprintf('FromDT = %s. ToDt = %s', date('Y-m-d h:i:s', $fromFilter), date('Y-m-d h:i:s', $toFilter)), 'xmds', 'RequiredFiles', '', $this->displayId);
+            Debug::Audit(sprintf('Required files date criteria. FromDT = %s. ToDt = %s', date('Y-m-d h:i:s', $fromFilter), date('Y-m-d h:i:s', $toFilter)), $this->displayId);
 
         try {
             $dbh = PDOConnect::init();
@@ -291,8 +300,8 @@ class XMDSSoap4
             foreach ($sth->fetchAll() as $row)
                 $layouts[] = Kit::ValidateParam($row['layoutID'], _INT);  
         }
-        catch (Exception $e) {            
-            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+        catch (Exception $e) {
+            Debug::Error('Error getting layout listing. ' . $e->getMessage(), $this->displayId);
             return new SoapFault('Sender', 'Unable to get a list of layouts');
         }
 
@@ -346,10 +355,10 @@ class XMDSSoap4
 
             foreach ($sth->fetchAll() as $row) {
                 $recordType = Kit::ValidateParam($row['RecordType'], _WORD);
-                $path   = Kit::ValidateParam($row['path'], _STRING);
-                $id     = Kit::ValidateParam($row['id'], _STRING);
-                $md5    = Kit::ValidateParam($row['MD5'], _HTMLSTRING);
-                $fileSize   = Kit::ValidateParam($row['FileSize'], _INT);
+                $path = Kit::ValidateParam($row['path'], _STRING);
+                $id = Kit::ValidateParam($row['id'], _STRING);
+                $md5 = Kit::ValidateParam($row['MD5'], _HTMLSTRING);
+                $fileSize = Kit::ValidateParam($row['FileSize'], _INT);
                 $xml = Kit::ValidateParam($row['xml'], _HTMLSTRING);
                 $mediaNonce = '';
 
@@ -357,8 +366,8 @@ class XMDSSoap4
                     // For layouts the MD5 column is the layout xml
                     $fileSize = strlen($xml);
                     
-                    if ($this->isAuditing == 1) 
-                        Debug::LogEntry("audit", 'MD5 for layoutid ' . $id . ' is: [' . $md5 . ']', "xmds", "RequiredFiles");
+                    if ($this->isAuditing == 1)
+                        Debug::Audit('MD5 for layoutId ' . $id . ' is: [' . $md5 . ']', $this->displayId);
 
                     // Add nonce
                     $nonce->AddXmdsNonce('layout', $this->displayId, NULL, $fileSize, NULL, $id);
@@ -403,15 +412,13 @@ class XMDSSoap4
             }
         }
         catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage());
+            Debug::Error('Unable to get a list of required files. ' . $e->getMessage(), $this->displayId);
             return new SoapFault('Sender', 'Unable to get a list of files');
         }
 
-        Kit::ClassLoader('layout');
-
         // Go through each layout and see if we need to supply any resource nodes.
         foreach ($layouts as $layoutId) {
-            // Load the layout XML and work out if we have any ticker / text / dataset media items
+            // Load the layout XML and work out if we have any ticker / text / data set media items
             $layout = new Layout();
 
             $layoutInformation = $layout->LayoutInformation($layoutId);
@@ -459,7 +466,7 @@ class XMDSSoap4
             }  
         }
         catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage());
+            Debug::Error('Unable to get a list of blacklisted files. ' . $e->getMessage(), $this->displayId);
             return new SoapFault('Sender', 'Unable to get a list of blacklisted files');
         }
 
@@ -467,7 +474,7 @@ class XMDSSoap4
         $this->PhoneHome();
 
         if ($this->isAuditing == 1)
-            Debug::LogEntry("audit", "[OUT]" . $requiredFilesXml->saveXML(), "xmds", "RequiredFiles");
+            Debug::Audit($requiredFilesXml->saveXML(), $this->displayId);
 
         // Return the results of requiredFiles()
         $requiredFilesXml->formatOutput = true;
@@ -481,12 +488,14 @@ class XMDSSoap4
 
     /**
      * Get File
-     * @param string $serverKey   The ServerKey for this CMS
+     * @param string $serverKey The ServerKey for this CMS
      * @param string $hardwareKey The HardwareKey for this Display
-     * @param int $mediaId     The ID
-     * @param string $fileType    The File Type
+     * @param int $fileId The ID
+     * @param string $fileType The File Type
      * @param int $chunkOffset The Offset of the Chunk Requested
-     * @param string $chunkSize   The Size of the Chunk Requested
+     * @param string $chunkSize  The Size of the Chunk Requested
+     * @return mixed
+     * @throws SoapFault
      */
     function GetFile($serverKey, $hardwareKey, $fileId, $fileType, $chunkOffset, $chunkSize)
     {
@@ -513,7 +522,7 @@ class XMDSSoap4
             throw new SoapFault('Receiver', "This display client is not licensed");
 
         if ($this->isAuditing == 1)
-            Debug::LogEntry("audit", "[IN] Params: [$hardwareKey] [$fileId] [$fileType] [$chunkOffset] [$chunkSize]", "xmds", "GetFile");
+            Debug::Audit('hardwareKey: ' . $hardwareKey . ', fileId: ' . $fileId . ', fileType: ' . $fileType . ', chunkOffset: ' . $chunkOffset . ', chunkSize: ' . $chunkSize, $this->displayId);
         
         $nonce = new Nonce();
 
@@ -539,7 +548,7 @@ class XMDSSoap4
                 $chunkSize = strlen($file);
             }
             catch (Exception $e) {
-                Debug::LogEntry('error', $e->getMessage());
+                Debug::Error('Unable to find the layout to download. ' . $e->getMessage(), $this->displayId);
                 return new SoapFault('Receiver', 'Unable the find layout.');
             }
         }
@@ -569,7 +578,7 @@ class XMDSSoap4
                 $chunkSize = strlen($file);
             }
             catch (Exception $e) {
-                Debug::LogEntry('error', $e->getMessage());
+                Debug::Error('Unable to find the media to download. ' . $e->getMessage(), $this->displayId);
                 return new SoapFault('Receiver', 'Unable the find media.');
             }
         }
@@ -585,15 +594,17 @@ class XMDSSoap4
 
     /**
      * Returns the schedule for the hardware key specified
-     * @return
-     * @param $hardwareKey Object
+     * @return string
+     * @param string $serverKey
+     * @param string $hardwareKey
+     * @throws SoapFault
      */
     function Schedule($serverKey, $hardwareKey)
     {
         // Sanitize
         $serverKey = Kit::ValidateParam($serverKey, _STRING);
         $hardwareKey = Kit::ValidateParam($hardwareKey, _STRING);
-        $rfLookahead = Kit::ValidateParam(Config::GetSetting('REQUIRED_FILES_LOOKAHEAD'), _INT);
+        $rfLookAhead = Kit::ValidateParam(Config::GetSetting('REQUIRED_FILES_LOOKAHEAD'), _INT);
 
         // Check the serverKey matches
         if ($serverKey != Config::GetSetting('SERVER_KEY'))
@@ -616,17 +627,17 @@ class XMDSSoap4
         // Start at the current hour
         $fromFilter = time();
         // Move forwards an hour and the rf lookahead
-        $rfLookahead = $fromFilter + 3600 + $rfLookahead;
+        $rfLookAhead = $fromFilter + 3600 + $rfLookAhead;
         // Dial both items back to the top of the hour
         $fromFilter = $fromFilter - ($fromFilter % 3600);
 
         if (Config::GetSetting('SCHEDULE_LOOKAHEAD') == 'On')
-            $toFilter = $rfLookahead - ($rfLookahead % 3600);
+            $toFilter = $rfLookAhead - ($rfLookAhead % 3600);
         else 
             $toFilter = ($fromFilter + 3600) - (($fromFilter + 3600) % 3600);
 
         if ($this->isAuditing == 1)
-            Debug::LogEntry('audit', sprintf('FromDT = %s. ToDt = %s', date('Y-m-d h:i:s', $fromFilter), date('Y-m-d h:i:s', $toFilter)), 'xmds', 'Schedule', '', $this->displayId);
+            Debug::Audit(sprintf('FromDT = %s. ToDt = %s', date('Y-m-d h:i:s', $fromFilter), date('Y-m-d h:i:s', $toFilter)), $this->displayId);
         
         try {
             $dbh = PDOConnect::init();
@@ -664,20 +675,20 @@ class XMDSSoap4
     
             // We must have some results in here by this point
             foreach ($sth->fetchAll() as $row) {
-                $layoutid = $row[0];
-                $fromdt = date('Y-m-d H:i:s', $row[1]);
-                $todt = date('Y-m-d H:i:s', $row[2]);
-                $scheduleid = $row[3];
+                $layoutId = $row[0];
+                $fromDt = date('Y-m-d H:i:s', $row[1]);
+                $toDt = date('Y-m-d H:i:s', $row[2]);
+                $scheduleId = $row[3];
                 $is_priority = Kit::ValidateParam($row[4], _INT);
-                $dependents = implode(',', $moduleDependents) . ',' . Kit::ValidateParam($row[5], _STRING);
+                $dependents = Kit::ValidateParam($row[5], _STRING);
     
                 // Add a layout node to the schedule
                 $layout = $scheduleXml->createElement("layout");
     
-                $layout->setAttribute("file", $layoutid);
-                $layout->setAttribute("fromdt", $fromdt);
-                $layout->setAttribute("todt", $todt);
-                $layout->setAttribute("scheduleid", $scheduleid);
+                $layout->setAttribute("file", $layoutId);
+                $layout->setAttribute("fromdt", $fromDt);
+                $layout->setAttribute("todt", $toDt);
+                $layout->setAttribute("scheduleid", $scheduleId);
                 $layout->setAttribute("priority", $is_priority);
                 $layout->setAttribute("dependents", $dependents);
     
@@ -685,8 +696,8 @@ class XMDSSoap4
             }
         }
         catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage());
-            return new SoapFault('Unable to get A list of layouts for the schedule');
+            Debug::Error('Error getting a list of layouts for the schedule. ' . $e->getMessage(), $this->displayId);
+            return new SoapFault('Sender', 'Unable to get A list of layouts for the schedule');
         }
 
         // Are we interleaving the default?
@@ -699,7 +710,6 @@ class XMDSSoap4
             $layout->setAttribute("todt", '2030-01-19 00:00:00');
             $layout->setAttribute("scheduleid", 0);
             $layout->setAttribute("priority", 0);
-            $layout->setAttribute("dependents", implode(',', $moduleDependents));
 
             $layoutElements->appendChild($layout);
         }
@@ -722,7 +732,7 @@ class XMDSSoap4
         $scheduleXml->formatOutput = true;
         
         if ($this->isAuditing == 1)
-            Debug::LogEntry("audit", $scheduleXml->saveXML(), "xmds", "Schedule");
+            Debug::Audit($scheduleXml->saveXML(), $this->displayId);
 
         $output = $scheduleXml->saveXML();
 
@@ -733,11 +743,14 @@ class XMDSSoap4
     }
 
     /**
-     *
-     * @return
-     * @param $hardwareKey Object
-     * @param $mediaId Object
-     * @param $type Object
+     * Black List
+     * @param string $serverKey
+     * @param string $hardwareKey
+     * @param string $mediaId
+     * @param string $type
+     * @param string $reason
+     * @return bool
+     * @throws SoapFault
      */
     function BlackList($serverKey, $hardwareKey, $mediaId, $type, $reason)
     {
@@ -760,8 +773,8 @@ class XMDSSoap4
         if (!$this->AuthDisplay($hardwareKey))
             throw new SoapFault('Receiver', "This display client is not licensed", $hardwareKey);
 
-        if ($this->isAuditing == 1) 
-            Debug::LogEntry( "audit", "[IN] $xml", "xmds", "BlackList", "", $this->displayId);
+        if ($this->isAuditing == 1)
+            Debug::Audit('Blacklisting ' . $mediaId . ' for ' . $reason, $this->displayId);
 
         try {
             $dbh = PDOConnect::init();
@@ -786,7 +799,7 @@ class XMDSSoap4
                 if ($type == BLACKLIST_SINGLE) {
                     $insertSth->execute(array(
                             'mediaid' => $mediaId, 
-                            'displayid' => $displayId, 
+                            'displayid' => $this->displayId,
                             'reportingdisplayid' => $this->displayId, 
                             'reason' => $reason
                         ));
@@ -807,13 +820,13 @@ class XMDSSoap4
                 }
             }
             else {
-                if ($this->isAuditing == 1) 
-                    Debug::LogEntry( "audit", "Media Already BlackListed [$mediaId]", "xmds", "BlackList", "", $this->displayId);
+                if ($this->isAuditing == 1)
+                    Debug::Audit($mediaId . ' already black listed', $this->displayId);
             }
         }
         catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage());
-            return new SoapFault("Unable to query for BlackList records.");
+            Debug::Error('Unable to query for Blacklist records. ' . $e->getMessage(), $this->displayId);
+            return new SoapFault('Sender', "Unable to query for BlackList records.");
         }
 
         $this->LogBandwidth($this->displayId, Bandwidth::$BLACKLIST, strlen($reason));
@@ -823,10 +836,11 @@ class XMDSSoap4
 
     /**
      * Submit client logging
-     * @return
-     * @param $serverKey Object
-     * @param $hardwareKey Object
-     * @param $logXml Object
+     * @return bool
+     * @param string $serverKey
+     * @param string $hardwareKey
+     * @param string $logXml
+     * @throws SoapFault
      */
     function SubmitLog($serverKey, $hardwareKey, $logXml)
     {
@@ -847,43 +861,37 @@ class XMDSSoap4
         if (!$this->AuthDisplay($hardwareKey))
             throw new SoapFault('Sender', 'This display client is not licensed.');
         
-        if ($this->isAuditing == 1) 
-            Debug::LogEntry( "audit", 'IN. XML [' . $logXml . ']', "xmds", "SubmitLog", "", $this->displayId);
+        if ($this->isAuditing == 1)
+            Debug::Audit('XML log: ' . $logXml, $this->displayId);
 
         // Load the XML into a DOMDocument
         $document = new DOMDocument("1.0");
 
         if (!$document->loadXML($logXml))
-            throw new SoapFault('Receiver', "XML Cannot be loaded into DOM Document.");
+            throw new SoapFault('Receiver', 'XML Cannot be loaded into DOM Document.');
 
         foreach ($document->documentElement->childNodes as $node) {
             
-            // Make sure we dont consider any text nodes
+            // Make sure we don't consider any text nodes
             if ($node->nodeType == XML_TEXT_NODE) 
                 continue;
 
             // Zero out the common vars
-            $date = "";
-            $message = "";
-            $scheduleID = "";
-            $layoutID = "";
-            $mediaID = "";
-            $cat = '';
+            $scheduleId = "";
+            $layoutId = "";
+            $mediaId = "";
             $method = '';
             $thread = '';
 
             // This will be a bunch of trace nodes
             $message = $node->textContent;
 
-            // if ($this->isAuditing == 1) 
-            //    Debug::LogEntry("audit", 'Trace Message: [' . $message . ']', "xmds", "SubmitLog", "", $this->displayId);
-
             // Each element should have a category and a date
             $date = $node->getAttribute('date');
             $cat = strtolower($node->getAttribute('category'));
 
             if ($date == '' || $cat == '') {
-                trigger_error('Log submitted without a date or category attribute');
+                Debug::Error('Log submitted without a date or category attribute', $this->displayId);
                 continue;
             }
 
@@ -891,13 +899,13 @@ class XMDSSoap4
             foreach ($node->childNodes as $nodeElements) {
 
                 if ($nodeElements->nodeName == "scheduleID") {
-                    $scheduleID = $nodeElements->textContent;
+                    $scheduleId = $nodeElements->textContent;
                 }
                 else if ($nodeElements->nodeName == "layoutID") {
-                    $layoutID = $nodeElements->textContent;
+                    $layoutId = $nodeElements->textContent;
                 }
                 else if ($nodeElements->nodeName == "mediaID") {
-                    $mediaID = $nodeElements->textContent;
+                    $mediaId = $nodeElements->textContent;
                 }
                 else if ($nodeElements->nodeName == "type") {
                     $type = $nodeElements->textContent;
@@ -921,7 +929,7 @@ class XMDSSoap4
             // We should have enough information to log this now.
             $logType = ($cat == 'error') ? 'error' : 'audit';
             
-            Debug::LogEntry($logType, $message, 'Client', $thread . $method, $date, $this->displayId, $scheduleID, $layoutID, $mediaID);
+            Debug::LogEntry($logType, $message, 'Client', $thread . $method . $type, $date, $this->displayId, $scheduleId, $layoutId, $mediaId);
         }
 
         $this->LogBandwidth($this->displayId, Bandwidth::$SUBMITLOG, strlen($logXml));
@@ -931,10 +939,11 @@ class XMDSSoap4
 
     /**
      * Submit display statistics to the server
-     * @return
-     * @param $serverKey Object
-     * @param $hardwareKey Object
-     * @param $statXml Object
+     * @return bool
+     * @param string $serverKey
+     * @param string $hardwareKey
+     * @param string $statXml
+     * @throws SoapFault
      */
     function SubmitStats($serverKey, $hardwareKey, $statXml)
     {
@@ -955,8 +964,8 @@ class XMDSSoap4
         if (!$this->AuthDisplay($hardwareKey))
             throw new SoapFault('Receiver', "This display client is not licensed");
         
-        if ($this->isAuditing == 1) 
-            Debug::LogEntry( "audit", "IN. StatXml: [" . $statXml . "]", "xmds", "SubmitStats", "", $this->displayId);
+        if ($this->isAuditing == 1)
+            Debug::Audit('Received XML. ' . $statXml, $this->displayId);
 
         if ($statXml == "")
             throw new SoapFault('Receiver', "Stat XML is empty.");
@@ -964,28 +973,14 @@ class XMDSSoap4
         // Log
         $statObject = new Stat();
 
-        // Log
-        if ($this->isAuditing == 1) 
-            Debug::LogEntry( "audit", "About to Create DOMDocument.", "xmds", "SubmitStats", "", $this->displayId);
-
         // Load the XML into a DOMDocument
         $document = new DOMDocument("1.0");
         $document->loadXML($statXml);
 
         foreach ($document->documentElement->childNodes as $node) {
-            // Make sure we dont consider any text nodes
+            // Make sure we don't consider any text nodes
             if ($node->nodeType == XML_TEXT_NODE) 
                 continue;
-
-            // Zero out the common vars
-            $fromdt = '';
-            $todt = '';
-            $type = '';
-
-            $scheduleID = 0;
-            $layoutID = 0;
-            $mediaID = '';
-            $tag = '';
 
             // Each element should have these attributes
             $fromdt = $node->getAttribute('fromdt');
@@ -993,7 +988,7 @@ class XMDSSoap4
             $type = $node->getAttribute('type');
 
             if ($fromdt == '' || $todt == '' || $type == '') {
-                trigger_error('Stat submitted without the fromdt, todt or type attributes.');
+                Debug::Error('Stat submitted without the fromdt, todt or type attributes.', $this->displayId);
                 continue;
             }
 
@@ -1004,7 +999,7 @@ class XMDSSoap4
 
             // Write the stat record with the information we have available to us.
             if (!$statObject->Add($type, $fromdt, $todt, $scheduleID, $this->displayId, $layoutID, $mediaID, $tag)) {
-                trigger_error(sprintf('Stat Add failed with error: %s', $statObject->GetErrorMessage()));
+                Debug::Error(sprintf('Stat Add failed with error: %s', $statObject->GetErrorMessage()), $this->displayId);
                 continue;
             }
         }
@@ -1016,8 +1011,11 @@ class XMDSSoap4
 
     /**
      * Store the media inventory for a client
-     * @param <type> $hardwareKey
-     * @param <type> $inventory
+     * @param string $serverKey
+     * @param string $hardwareKey
+     * @param string $inventory
+     * @throws SoapFault
+     * @return bool
      */
     public function MediaInventory($serverKey, $hardwareKey, $inventory)
     {
@@ -1039,7 +1037,7 @@ class XMDSSoap4
             throw new SoapFault('Receiver', 'This display client is not licensed');
 
         if ($this->isAuditing == 1) 
-            Debug::LogEntry( 'audit', $inventory, 'xmds', 'MediaInventory', '', $this->displayId);
+            Debug::Audit($inventory, $this->displayId);
 
         // Check that the $inventory contains something
         if ($inventory == '')
@@ -1079,11 +1077,13 @@ class XMDSSoap4
 
     /**
      * Gets additional resources for assigned media
-     * @param <type> $serverKey
-     * @param <type> $hardwareKey
-     * @param <type> $layoutId
-     * @param <type> $regionId
-     * @param <type> $mediaId
+     * @param string $serverKey
+     * @param string $hardwareKey
+     * @param int $layoutId
+     * @param string $regionId
+     * @param string $mediaId
+     * @return mixed
+     * @throws SoapFault
      */
     function GetResource($serverKey, $hardwareKey, $layoutId, $regionId, $mediaId)
     {
@@ -1112,7 +1112,6 @@ class XMDSSoap4
             throw new SoapFault('Receiver', 'Requested an invalid file.');
 
         // What type of module is this?
-        Kit::ClassLoader('region');
         $region = new region();
         $type = $region->GetMediaNodeType($layoutId, $regionId, $mediaId);
 
@@ -1148,6 +1147,14 @@ class XMDSSoap4
         return $resource;
     }
 
+    /**
+     * Notify Status
+     * @param string $serverKey
+     * @param string $hardwareKey
+     * @param string $status
+     * @return bool
+     * @throws SoapFault
+     */
     public function NotifyStatus($serverKey, $hardwareKey, $status)
     {
         // Sanitize
@@ -1168,7 +1175,7 @@ class XMDSSoap4
             throw new SoapFault('Receiver', 'This display client is not licensed');
 
         if ($this->isAuditing == 1) 
-            Debug::LogEntry('audit', $status, 'xmds', 'Status', '', $this->displayId);
+            Debug::Audit($status, $this->displayId);
 
         $this->LogBandwidth($this->displayId, Bandwidth::$NOTIFYSTATUS, strlen($status));
 
@@ -1179,6 +1186,14 @@ class XMDSSoap4
         return true;
     }
 
+    /**
+     * Submit ScreenShot
+     * @param string $serverKey
+     * @param string $hardwareKey
+     * @param string $screenShot
+     * @return bool
+     * @throws SoapFault
+     */
     public function SubmitScreenShot($serverKey, $hardwareKey, $screenShot)
     {
         // Sanitize
@@ -1199,7 +1214,7 @@ class XMDSSoap4
             throw new SoapFault('Receiver', 'This display client is not licensed');
 
         if ($this->isAuditing == 1) 
-            Debug::LogEntry('audit', 'Received Screenshot', 'xmds', 'SubmitScreenShot', '', $this->displayId);
+            Debug::Audit('Received Screen shot', $this->displayId);
 
         // Open this displays screen shot file and save this.
         File::EnsureLibraryExists();
@@ -1254,12 +1269,10 @@ class XMDSSoap4
                     @file_get_contents($PHONE_HOME_URL);
                 
                     if ($this->isAuditing == 1)
-                        Debug::LogEntry("audit", "PHONE_HOME [OUT]", "xmds", "RequiredFiles");
+                        Debug::Audit("PHONE_HOME [OUT]", $this->displayId);
                 }
                 catch (Exception $e) {
-                    
-                    Debug::LogEntry('error', $e->getMessage());
-
+                    Debug::Error($e->getMessage(), $this->displayId);
                     return false;
                 }
             }
@@ -1268,8 +1281,9 @@ class XMDSSoap4
 
     /**
      * Authenticates the display
-     * @param <type> $hardwareKey
-     * @return <type>
+     * @param string $hardwareKey
+     * @param string $status
+     * @return bool
      */
     private function AuthDisplay($hardwareKey, $status = NULL)
     {
@@ -1309,7 +1323,6 @@ class XMDSSoap4
             $this->isAuditing = $row['isAuditing'];
             $this->displayId = $row['displayID'];
             $this->defaultLayoutId = $row['defaultlayoutid'];
-            $this->version_instructions = $row['version_instructions'];
             $this->clientType = $row['client_type'];
             $this->clientVersion = $row['client_version'];
             $this->clientCode = $row['client_code'];
@@ -1321,11 +1334,18 @@ class XMDSSoap4
             return true;
         }
         catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage());
+            Debug::Error('hardwareKey: ' . $hardwareKey . '. ' . $e->getMessage());
             return false;
         }
     }
 
+    /**
+     * Alert when a Display is up
+     * @param int $displayId
+     * @param string $display
+     * @param int $loggedIn
+     * @param int $emailAlert
+     */
     private function AlertDisplayUp($displayId, $display, $loggedIn, $emailAlert)
     {
         $maintenanceEnabled = Config::GetSetting('MAINTENANCE_ENABLED');
@@ -1337,8 +1357,7 @@ class XMDSSoap4
             $statObject->displayUp($displayId);
 
             // Do we need to email?
-            if ($emailAlert == 1 && ($maintenanceEnabled == 'On' || $maintenanceEnabled == 'Protected') 
-                && Config::GetSetting('MAINTENANCE_EMAIL_ALERTS') == 'On') {
+            if ($emailAlert == 1 && ($maintenanceEnabled == 'On' || $maintenanceEnabled == 'Protected') && Config::GetSetting('MAINTENANCE_EMAIL_ALERTS') == 'On') {
 
                 $msgTo = Kit::ValidateParam(Config::GetSetting("mail_to") ,_PASSWORD);
                 $msgFrom = Kit::ValidateParam(Config::GetSetting("mail_from"), _PASSWORD);
@@ -1362,7 +1381,7 @@ class XMDSSoap4
     }
 
     /**
-     * Check we havent exceeded the bandwidth limits
+     * Check we haven't exceeded the bandwidth limits
      */
     private function CheckBandwidth()
     {
@@ -1385,7 +1404,7 @@ class XMDSSoap4
             return ($bandwidthUsage >= ($xmdsLimit * 1024)) ? false : true;  
         }
         catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage());
+            Debug::Error($e->getMessage(), $this->displayId);
             return false;
         }
     }

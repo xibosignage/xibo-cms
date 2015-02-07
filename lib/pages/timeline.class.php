@@ -210,6 +210,11 @@ class timelineDAO extends baseDAO {
             __('The layering order of this region (z-index). Advanced use only. '), 'z');
 
         Theme::Set('form_fields', $formFields);
+
+        // Add some information about the whole layout to this request.
+        $layout = new Layout();
+        $layoutInformation = $layout->LayoutInformation($layoutid);
+        $response->extra['layoutInformation'] = array('width' => $layoutInformation['width'], 'height' => $layoutInformation['height']);
         
         $response->SetFormRequestResponse(NULL, __('Region Options'), '350px', '275px');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
@@ -751,8 +756,7 @@ class timelineDAO extends baseDAO {
 
             // Create a media module to handle all the complex stuff
             try {
-                require_once("modules/$mediaType.module.php");
-                $tmpModule = new $mediaType($db, $user, $mediaId, $layoutId, $regionId, $lkId);
+                $tmpModule = ModuleFactory::load($mediaType, $layoutId, $regionId, $mediaId, $lkId, $this->db, $this->user);
             }
             catch (Exception $e) {
                 Debug::Audit('Caught exception from Module Create');
@@ -963,8 +967,7 @@ class timelineDAO extends baseDAO {
             $i++;
 
             // Create a media module to handle all the complex stuff
-            require_once("modules/$mediaType.module.php");
-            $tmpModule = new $mediaType($this->db, $this->user, $mediaId, $layoutId, $regionId, $lkId);
+            $tmpModule = ModuleFactory::load($mediaType, $layoutId, $regionId, $mediaId, $lkId, $this->db, $this->user);
 
             $mediaName = $tmpModule->GetName();
             $row['order'] = $i;

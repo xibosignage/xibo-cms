@@ -959,7 +959,10 @@ if(!String.prototype.formatNum) {
 
 
 		this._init_position();
-		this._loadEvents();
+		this._loadEvents(function(calendar){
+			calendar._render();
+			calendar.options.onAfterViewLoad.call(this, calendar.options.view);
+		});
 		this._render();
 
 		this.options.onAfterViewLoad.call(this, this.options.view);
@@ -1092,7 +1095,7 @@ if(!String.prototype.formatNum) {
 		return this.options.position.end;
 	}
 
-	Calendar.prototype._loadEvents = function() {
+	Calendar.prototype._loadEvents = function(callback) {
 		var self = this;
 		var source = null;
 		if('events_source' in this.options && this.options.events_source !== '') {
@@ -1105,18 +1108,18 @@ if(!String.prototype.formatNum) {
 		var loader;
 		switch($.type(source)) {
 			case 'function':
-				loader = function() {
-					return source(self.options.position.start, self.options.position.end, browser_timezone);
+				loader = function(callback) {
+					return callback(source(self.options.position.start, self.options.position.end, browser_timezone));
 				};
 				break;
 			case 'array':
-				loader = function() {
-					return [].concat(source);
+				loader = function(callback) {
+					return callback([].concat(source));
 				};
 				break;
 			case 'string':
 				if(source.length) {
-					loader = function() {
+					loader = function(callback) {
 						var events = [];
 						var params = {from: self.options.position.start.getTime(), to: self.options.position.end.getTime()};
 						if(browser_timezone.length) {
@@ -1126,7 +1129,7 @@ if(!String.prototype.formatNum) {
 							url:      buildEventsUrl(source, params),
 							dataType: 'json',
 							type:     'GET',
-							async:    false
+							async:    true
 						}).done(function(json) {
 							if(!json.success) {
 								$.error(json.error);
@@ -1134,8 +1137,8 @@ if(!String.prototype.formatNum) {
 							if(json.result) {
 								events = json.result;
 							}
+							callback(events);
 						});
-						return events;
 					};
 				}
 				break;
@@ -1144,16 +1147,20 @@ if(!String.prototype.formatNum) {
 			$.error(this.locale.error_loadurl);
 		}
 		this.options.onBeforeEventsLoad.call(this, function() {
-			self.options.events = loader();
-			self.options.events.sort(function(a, b) {
-				var delta;
-				delta = a.start - b.start;
-				if(delta == 0) {
-					delta = a.end - b.end;
-				}
-				return delta;
+			loader(function(events){
+				self.options.events = events;
+
+				self.options.events.sort(function(a, b) {
+					var delta;
+					delta = a.start - b.start;
+					if(delta == 0) {
+						delta = a.end - b.end;
+					}
+					return delta;
+				});
+				self.options.onAfterEventsLoad.call(self, self.options.events);
+				callback(self);
 			});
-			self.options.onAfterEventsLoad.call(self, self.options.events);
 		});
 	};
 

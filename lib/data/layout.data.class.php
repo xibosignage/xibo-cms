@@ -1426,9 +1426,7 @@ class Layout extends Data
                     $mediaType = $mediaNode->getAttribute('type');
                     
                     // Create a media module to handle all the complex stuff
-                    require_once("modules/$mediaType.module.php");
-                    $tmpModule = new $mediaType($this->db, $user, $mediaId, $layoutId, $region['regionid'], $lkId);
-    
+                    $tmpModule = ModuleFactory::load($mediaType, $layoutId, $region['regionid'], $mediaId, $lkId, $this->db, $this->user);
                     $status = $tmpModule->IsValid();
     
                     if ($status != 1)
@@ -1539,8 +1537,7 @@ class Layout extends Data
                     $mediaType = $mediaNode->getAttribute('type');
 
                     // Create a media module to handle all the complex stuff
-                    require_once("modules/$mediaType.module.php");
-                    $tmpModule = new $mediaType(new Database(), new User(), $mediaId, $layoutId, $region['regionid'], $lkId);
+                    $tmpModule = ModuleFactory::load($mediaType, $layoutId, $region['regionid'], $mediaId, $lkId);
 
                     // Get the XML
                     $mediaXml = $tmpModule->asXml();
@@ -1554,9 +1551,9 @@ class Layout extends Data
 
                     // Replace heights
                     $mediaXml = preg_replace_callback(
-                        '/height=(.*?)/',
+                        '/height:(.*?)/',
                         function ($matches) use ($ratio) {
-                            return "height=" . $matches[1] * $ratio;
+                            return "height:" . $matches[1] * $ratio;
                         }, $mediaXml);
 
                     // Replace fonts
@@ -1650,6 +1647,14 @@ class Layout extends Data
         
             return false;
         }
+
+        // Get the width and height
+        $xml = new DOMDocument();
+        $xml->loadXML($row['xml']);
+
+        // get the width and the height
+        $info['width'] = $xml->documentElement->getAttribute('width');
+        $info['height'] = $xml->documentElement->getAttribute('height');
 
         // Use the Region class to help
         Kit::ClassLoader('region');

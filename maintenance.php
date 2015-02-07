@@ -145,6 +145,9 @@ else
         $msgTo = Kit::ValidateParam(Config::GetSetting("mail_to"), _PASSWORD);
         $msgFrom = Kit::ValidateParam(Config::GetSetting("mail_from"), _PASSWORD);
 
+        // We need a theme
+        new Theme(new User());
+
         foreach (Display::ValidateDisplays() as $display) {
             // Is this the first time this display has gone "off-line"
             $displayGoneOffline = (Kit::ValidateParam($display['loggedin'], _INT) == 1);

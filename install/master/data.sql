@@ -343,3 +343,6 @@ INSERT INTO `tag` (`tagId`, `tag`) VALUES
 (1, 'template'),
 (2, 'background'),
 (3, 'thumbnail');
+
+INSERT INTO `displayprofile` (`name`, `type`, `config`, `isdefault`, `userid`)
+VALUES ('Windows', 'windows', '[]', '1', '1'), (NULL, 'Android', 'android', '[]', '1', '1');

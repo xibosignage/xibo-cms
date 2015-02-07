@@ -48,6 +48,10 @@ class Userdata extends Data
     {
         $entries = array();
 
+        // Default sort order
+        if (count($sortOrder) <= 0)
+            $sortOrder = array('username');
+
         try {
             $dbh = PDOConnect::init();
 
@@ -76,9 +80,9 @@ class Userdata extends Data
 
             // Groups Provided
             $groups = Kit::GetParam('groupIds', $filterBy, _ARRAY_INT);
-            Debug::Audit(var_export($groups, true));
+
             if (count($groups) > 0) {
-                $SQL .= " AND user.groupIds IN (" . implode($groups, ',') . ") ";
+                $SQL .= " AND user.userId IN (SELECT userId FROM `lkusergroup` WHERE groupid IN (" . implode($groups, ',') . ")) ";
             }
 
             // Retired users?
@@ -121,7 +125,135 @@ class Userdata extends Data
         }
     }
 
-    public function Delete() {
+    /**
+     * Adds a user
+     * @param string $password
+     * @param int $initialGroupId
+     * @return bool
+     */
+    public function add($password, $initialGroupId)
+    {
+        // Validation
+        if ($this->userName == '' || strlen($this->userName) > 50)
+            return $this->SetError(__('User name must be between 1 and 50 characters.'));
+
+        if ($password == '')
+            return $this->SetError(__('Please enter a Password.'));
+
+        if ($this->homePage == '')
+            $this->homePage = "dashboard";
+
+        // Test the password
+        if (!$this->testPasswordAgainstPolicy($password))
+            return false;
+
+        try {
+            $dbh = PDOConnect::init();
+
+            // Check for duplicate user name
+            $sth = $dbh->prepare('SELECT UserName FROM `user` WHERE UserName = :userName');
+            $sth->execute(array('userName' => $this->userName));
+
+            $results = $sth->fetchAll();
+            if (count($results) > 0)
+                $this->ThrowError(__('There is already a user with this name. Please choose another.'));
+
+            // Ready to enter the user into the database
+            $password = md5($password);
+
+            // Run the INSERT statement
+            $SQL = 'INSERT INTO user (UserName, UserPassword, usertypeid, email, homepage)
+                     VALUES (:userName, :password, :userTypeId, :email, :homePage)';
+
+            $insertSth = $dbh->prepare($SQL);
+            $insertSth->execute(array(
+                'userName' => $this->userName,
+                'password' => $password,
+                'userTypeId' => $this->userTypeId,
+                'email' => $this->email,
+                'homePage' => $this->homePage
+            ));
+
+            // Get the ID of the record we just inserted
+            $this->userId = $dbh->lastInsertId();
+
+            // Add the user group
+            $userGroupObject = new UserGroup();
+            $groupId = $userGroupObject->Add($this->userName, 1);
+
+            // Link them
+            $userGroupObject->Link($groupId, $this->userId);
+
+            // Link the initial group
+            $userGroupObject->Link($initialGroupId, $this->userId);
+
+            return true;
+        }
+        catch (Exception $e) {
+
+            Debug::Error($e->getMessage());
+
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+
+            return false;
+        }
+    }
+
+    public function edit()
+    {
+        // Validation
+        if ($this->userName == '' || strlen($this->userName) > 50)
+            return $this->SetError(__('User name must be between 1 and 50 characters.'));
+
+        if ($this->homePage == '')
+            $this->homePage = "dashboard";
+
+        try {
+            $dbh = PDOConnect::init();
+
+            // Check for duplicate user name
+            $sth = $dbh->prepare('SELECT UserName FROM `user` WHERE UserName = :userName AND userId <> :userId');
+            $sth->execute(array('userName' => $this->userName, 'userId' => $this->userId));
+
+            $results = $sth->fetchAll();
+            if (count($results) > 0)
+                $this->ThrowError(__('There is already a user with this name. Please choose another.'));
+
+            // Run the UPDATE statement
+            $SQL = 'UPDATE user SET UserName = :userName, HomePage = :homePage, Email = :email, Retired = :retired, userTypeId = :userTypeId
+                     WHERE userId = :userId ';
+
+            $updateSth = $dbh->prepare($SQL);
+            $updateSth->execute(array(
+                'userName' => $this->userName,
+                'userTypeId' => $this->userTypeId,
+                'email' => $this->email,
+                'homePage' => $this->homePage,
+                'retired' => $this->retired,
+                'userId' => $this->userId
+            ));
+
+            // Update the user group
+            $userGroup = new UserGroup();
+            if (!$userGroup->EditUserGroup($this->userId, $this->userName))
+                $this->ThrowError($userGroup->GetErrorNumber(), $userGroup->GetErrorMessage());
+
+            return true;
+        }
+        catch (Exception $e) {
+
+            Debug::Error($e->getMessage());
+
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+
+            return false;
+        }
+    }
+
+    public function Delete()
+    {
         if (!isset($this->userId) || $this->userId == 0)
             return $this->SetError(__('Missing userId'));
 
@@ -189,7 +321,7 @@ class Userdata extends Data
                 $this->ThrowError(26001, __('New Passwords do not match'));
     
             // Check password complexity
-            if (!$this->TestPasswordAgainstPolicy($newPassword))
+            if (!$this->testPasswordAgainstPolicy($newPassword))
                 throw new Exception("Error Processing Request", 1);
                 
             // Generate a new SALT and Password
@@ -216,9 +348,10 @@ class Userdata extends Data
 
     /**
      * Tests the supplied password against the password policy
-     * @param <type> $password
+     * @param string $password
+     * @return bool
      */
-    public function TestPasswordAgainstPolicy($password)
+    public function testPasswordAgainstPolicy($password)
     {
         // Check password complexity
         $policy = Config::GetSetting('USER_PASSWORD_POLICY');

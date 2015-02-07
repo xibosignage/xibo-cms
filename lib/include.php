@@ -94,7 +94,7 @@ try {
     PDOConnect::init();
 }
 catch (PDOException $e) {
-    die('Database connection problem. ' . $e->getMessage());
+    die('Database connection problem.');
 }
 
 // create a database class instance (legacy)

@@ -216,8 +216,9 @@ function XiboAssignToLayout(layoutId, regionId) {
  * Sets the layout to full screen
  */
 function setFullScreenLayout() {
-    $('#width', '.XiboForm').val($('#layoutWidth').val());
-    $('#height', '.XiboForm').val($('#layoutHeight').val());
+    var layoutInformation = $('.bootbox').data().extra.layoutInformation;
+    $('#width', '.XiboForm').val(layoutInformation.width);
+    $('#height', '.XiboForm').val(layoutInformation.height);
     $('#top', '.XiboForm').val('0');
     $('#left', '.XiboForm').val('0');
 }

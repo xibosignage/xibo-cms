@@ -57,10 +57,9 @@ class scheduleDAO extends baseDAO {
     
     /**
      * Generates the calendar that we draw events on
-     * @return 
      */
-    function GenerateCalendar() {
-
+    function GenerateCalendar()
+    {
         $displayGroupIds = Kit::GetParam('DisplayGroupIDs', _GET, _ARRAY);
         $start = Kit::GetParam('from', _REQUEST, _INT) / 1000;
         $end = Kit::GetParam('to', _REQUEST, _INT) / 1000;
