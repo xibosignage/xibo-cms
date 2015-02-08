@@ -32,8 +32,6 @@ class UserGroup extends Data
             $SQL .= '  FROM (
                     SELECT `group`.*
                       FROM `group`
-                        LEFT OUTER JOIN lkusergroup
-                        ON lkusergroup.GroupID = group.GroupID
                      WHERE IsUserSpecific = 0
                     UNION ALL
                     SELECT `group`.*
@@ -57,6 +55,8 @@ class UserGroup extends Data
             }
 
             $SQL .= 'ORDER BY joinedGroup.IsEveryone DESC, joinedGroup.IsUserSpecific, joinedGroup.`Group`; ';
+
+            Debug::sql($SQL, $params);
         
             $sth = $dbh->prepare($SQL);
             $sth->execute($params);

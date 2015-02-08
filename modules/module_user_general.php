@@ -1306,11 +1306,16 @@ class User {
         $SQL .= '    display.client_type, ';
         $SQL .= '    display.client_version, ';
         $SQL .= '    display.client_code, ';
-        $SQL .= '    display.screenShotRequested ';
+        $SQL .= '    display.screenShotRequested, ';
+        $SQL .= '    display.storageAvailableSpace, ';
+        $SQL .= '    display.storageTotalSpace, ';
+        $SQL .= '    currentLayout.layout AS currentLayout, ';
+        $SQL .= '    currentLayout.layoutId AS currentLayoutId ';
         $SQL .= '  FROM display ';
         $SQL .= '    INNER JOIN lkdisplaydg ON lkdisplaydg.DisplayID = display.DisplayID ';
         $SQL .= '    INNER JOIN displaygroup ON displaygroup.DisplayGroupID = lkdisplaydg.DisplayGroupID ';
         $SQL .= '    LEFT OUTER JOIN layout ON layout.layoutid = display.defaultlayoutid ';
+        $SQL .= '    LEFT OUTER JOIN layout currentLayout ON currentLayout.layoutId = display.currentLayoutId';
 
         if (Kit::GetParam('displaygroupid', $filter_by, _INT) != 0) {
             // Restrict to a specific display group
@@ -1386,6 +1391,10 @@ class User {
             $displayItem['client_version'] = Kit::ValidateParam($row['client_version'], _STRING);
             $displayItem['client_code'] = Kit::ValidateParam($row['client_code'], _STRING);
             $displayItem['screenShotRequested'] = Kit::ValidateParam($row['screenShotRequested'], _INT);
+            $displayItem['storageAvailableSpace'] = Kit::ValidateParam($row['storageAvailableSpace'], _INT);
+            $displayItem['storageTotalSpace'] = Kit::ValidateParam($row['storageTotalSpace'], _INT);
+            $displayItem['currentLayoutId'] = Kit::ValidateParam($row['currentLayoutId'], _INT);
+            $displayItem['currentLayout'] = Kit::ValidateParam($row['currentLayout'], _STRING);
 
             $auth = $this->DisplayGroupAuth($displayItem['displaygroupid'], true);
 
@@ -1665,13 +1674,14 @@ class User {
         if ($this->usertypeid == 3) {
             $filterBy['userId'] = $this->userid;
         }
-        // Super admins can only see users from their groups.
+        // Group admins can only see users from their groups.
         else if ($this->usertypeid == 2) {
-            $filterBy['groupIds'] = $this->GetUserGroups($this->userid, true);
+            $groups = $this->GetUserGroups($this->userid, true);
+            $filterBy['groupIds'] = (isset($filterBy['groupIds'])) ? array_merge($filterBy['groupIds'], $groups) : $groups;
         }
 
         try {
-            $user = Userdata::Entries($sortOrder, $filterBy);
+            $user = Userdata::entries($sortOrder, $filterBy);
             $parsedUser = array();
 
             foreach ($user as $row) {
@@ -1687,6 +1697,7 @@ class User {
                 $userItem['lastaccessed'] = $row->lastAccessed;
                 $userItem['loggedin'] = $row->loggedIn;
                 $userItem['retired'] = $row->retired;
+                $userItem['object'] = $row;
                 
                 // Add to the collection
                 $parsedUser[] = $userItem;

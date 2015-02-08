@@ -26,8 +26,8 @@ class moduleDAO extends baseDAO
 
     /**
      * Module constructor.
-     * @return
-     * @param $db Object
+     * @param $db database
+     * @param $user user
      */
     function __construct(database $db, user $user)
     {
@@ -40,18 +40,20 @@ class moduleDAO extends baseDAO
         // This will only be true when we are displaying the Forms
         if ($mod != '')
         {
-            require_once("modules/$mod.module.php");
-
             // Try to get the layout, region and media id's
-            $layoutid   = Kit::GetParam('layoutid', _REQUEST, _INT);
-            $regionid   = Kit::GetParam('regionid', _REQUEST, _STRING);
-            $mediaid    = Kit::GetParam('mediaid', _REQUEST, _STRING);
-            $lkid       = Kit::GetParam('lkid', _REQUEST, _INT);
+            $layoutId   = Kit::GetParam('layoutid', _REQUEST, _INT);
+            $regionId   = Kit::GetParam('regionid', _REQUEST, _STRING);
+            $mediaId    = Kit::GetParam('mediaid', _REQUEST, _STRING);
+            $lkId       = Kit::GetParam('lkid', _REQUEST, _INT);
 
-            Debug::LogEntry('audit', 'Creating new module with MediaID: ' . $mediaid . ' LayoutID: ' . $layoutid . ' and RegionID: ' . $regionid);
+            Debug::LogEntry('audit', 'Creating new module with MediaID: ' . $mediaId . ' LayoutID: ' . $layoutId . ' and RegionID: ' . $regionId);
 
-            if (!$this->module = new $mod($db, $user, $mediaid, $layoutid, $regionid, $lkid))
-                trigger_error($this->module->GetErrorMessage(), E_USER_ERROR);
+            try {
+                $this->module = ModuleFactory::load($mod, $layoutId, $regionId, $mediaId, $lkId, $this->db, $this->user);
+            }
+            catch (Exception $e) {
+                trigger_error($e->getMessage(), E_USER_ERROR);
+            }
         }
 
         return true;
@@ -67,9 +69,9 @@ class moduleDAO extends baseDAO
                     'help' => __('Verify all modules have been installed correctly.'),
                     'onclick' => ''
                     )
-            );                   
+            );
     }
-    
+
     /**
      * Display the module page
      * @return
@@ -90,7 +92,7 @@ class moduleDAO extends baseDAO
             // Get a list of all currently installed modules
             try {
                 $dbh = PDOConnect::init();
-            
+
                 $sth = $dbh->prepare("SELECT CONCAT('modules/', LOWER(Module), '.module.php') AS Module FROM `module`");
                 $sth->execute();
 
@@ -271,8 +273,7 @@ class moduleDAO extends baseDAO
             'b');
 
         // Set any module specific form fields
-        include_once('modules/' . $type . '.module.php');
-        $module = new $type($this->db, $this->user);
+        $module = ModuleFactory::create($type, $this->db, $this->user);
 
         // Merge in the fields from the settings
         foreach($module->ModuleSettingsForm() as $field)
@@ -318,8 +319,7 @@ class moduleDAO extends baseDAO
             trigger_error(__('Image Uri is a required field.'), E_USER_ERROR);
 
         // Process any module specific form fields
-        include_once('modules/' . $type . '.module.php');
-        $module = new $type($this->db, $this->user);
+        $module = ModuleFactory::create($type, $this->db, $this->user);
 
         // Install Files for this module
         $module->InstallFiles();
@@ -444,7 +444,7 @@ class moduleDAO extends baseDAO
 
         try {
             Debug::LogEntry('audit', 'Validation passed, installing module.', 'module', 'Install');
-            $moduleObject = new $type($this->db, $this->user);
+            $moduleObject = ModuleFactory::create($type, $this->db, $this->user);
             $moduleObject->InstallOrUpdate();
         }
         catch (Exception $e) {

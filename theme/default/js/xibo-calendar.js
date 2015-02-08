@@ -49,7 +49,9 @@ $(document).ready(function() {
             }
         },
         onAfterViewLoad: function(view) {
-            $('h1.page-header').text(this.getTitle());
+            if (typeof this.getTitle === "function")
+                $('h1.page-header').text(this.getTitle());
+
             $('.btn-group button').removeClass('active');
             $('button[data-calendar-view="' + view + '"]').addClass('active');
         },
@@ -63,7 +65,7 @@ $(document).ready(function() {
 
         // Set up our display selector control
         $('#DisplayList').on('change', function(){
-            CallGenerateCalendar();
+            setTimeout(CallGenerateCalendar(), 1000);
         });
 
         // Make the select list nicer

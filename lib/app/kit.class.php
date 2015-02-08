@@ -214,9 +214,10 @@ class Kit
     /**
      * Validates a Parameter
      * Based on code from Joomla! 1.5
-     * @return 
-     * @param $param Object
-     * @param $type Object
+     * @return mixed
+     * @param string $param
+     * @param string $type
+     * @param bool $sanitize
      */
     static function ValidateParam($param, $type, $sanitize = true)
     {

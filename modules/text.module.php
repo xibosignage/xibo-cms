@@ -106,7 +106,7 @@ class text extends Module
                 array('Substitute' => 'Clock'),
                 array('Substitute' => 'Clock|HH:mm'),
                 array('Substitute' => 'Date'),
-                array('Substitute' => 'Clock|dd-mm-yy')
+                array('Substitute' => 'Clock|DD/MM/YYYY')
             );
         Theme::Set('substitutions', $subs);
         $formFields['general'][] = FormManager::AddRaw(Theme::RenderReturn('media_form_text_edit'));

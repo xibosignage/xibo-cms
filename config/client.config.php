@@ -355,7 +355,7 @@ $CLIENT_CONFIG = array(
                                 array('id' => 14400, 'value' => __('4 hours')),
                                 array('id' => 43200, 'value' => __('12 hours'))
                             ),
-                        'default' => 900,
+                        'default' => 300,
                         'helpText' => __('How often should the Player check for new content.'),
                         'validation' => 'numeric',
                         'enabled' => true,
@@ -493,7 +493,18 @@ $CLIENT_CONFIG = array(
                         'helpText' => __('The duration between status screen shots in minutes. 0 to disable. Warning: This is bandwidth intensive.'),
                         'enabled' => Theme::GetConfig('client_screenShotRequestInterval_enabled', true),
                         'groupClass' => NULL
-                    )
+                    ),
+                    array(
+                        'name' => 'expireModifiedLayouts',
+                        'tabId' => 'advanced',
+                        'title' => __('Expire Modified Layouts?'),
+                        'type' => _CHECKBOX,
+                        'fieldType' => 'checkbox',
+                        'default' => 0,
+                        'helpText' => __('When enabled the client will send the current layout to the CMS each time it changes. Warning: This is bandwidth intensive and should be disabled unless on a LAN.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
                 )
             )
     );

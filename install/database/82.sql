@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS `lktagmedia` (
   `tagId` int(11) NOT NULL,
   `mediaId` int(11) NOT NULL,
   PRIMARY KEY (`lkTagMediaId`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf16 AUTO_INCREMENT=1 ;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 /* Clear the un-used template id field */
 UPDATE `layout` SET templateID = NULL;

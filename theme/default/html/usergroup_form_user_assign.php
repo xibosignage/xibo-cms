@@ -38,7 +38,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 		<p class="text-info"><?php echo Theme::Translate('Assigned'); ?></p>
 		<ul id="<?php echo Theme::Get('users_assigned_id'); ?>" href="<?php echo Theme::Get('users_assigned_url'); ?>" class="connectedSortable">
 			<?php foreach(Theme::Get('users_assigned') as $row) { ?>
-			<li id="<?php echo $row['list_id']; ?>" class="li-sortable"><?php echo $row['UserName']; ?></li>
+			<li id="<?php echo 'UserID_' . $row['userid']; ?>" class="li-sortable"><?php echo $row['username']; ?></li>
 			<?php } ?>
 		</ul>
 	</div>
@@ -46,7 +46,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 		<p class="text-info"><?php echo Theme::Translate('Available'); ?></p>
 		<ul id="<?php echo Theme::Get('users_available_id'); ?>" class="connectedSortable">
 			<?php foreach(Theme::Get('users_available') as $row) { ?>
-			<li id="<?php echo $row['list_id']; ?>" class="li-sortable"><?php echo $row['UserName']; ?></li>
+			<li id="<?php echo 'UserID_' . $row['userid']; ?>" class="li-sortable"><?php echo $row['username']; ?></li>
 			<?php } ?>
 		</ul>
 	</div>

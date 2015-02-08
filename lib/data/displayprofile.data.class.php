@@ -39,11 +39,11 @@ class DisplayProfile extends Data {
 
     public function Load() {
 
-        Debug::Audit('Load ' . $this->displayProfileId);
+        Debug::Audit('Load DisplayProfileId: ' . $this->displayProfileId);
 
         try {
             $dbh = PDOConnect::init();
-        
+
             $sth = $dbh->prepare('SELECT * FROM `displayprofile` WHERE displayprofileid = :displayprofileid');
             $sth->execute(array(
                     'displayprofileid' => $this->displayProfileId
@@ -52,14 +52,31 @@ class DisplayProfile extends Data {
             if (!$row = $sth->fetch())
                 $this->ThrowError(25004, __('Cannot find display profile'));
 
-            $this->name = Kit::ValidateParam($row['name'], _STRING);
+            // Get the type so we can load the defaults in from file
             $this->type = Kit::ValidateParam($row['type'], _STRING);
-            $this->config = Kit::ValidateParam($row['config'], _HTMLSTRING);
+
+            // Load the config from disk
+            $this->loadFromFile();
+
+            // Overwrite the defaults with the values from this specific record
+            $this->name = Kit::ValidateParam($row['name'], _STRING);
             $this->isDefault = Kit::ValidateParam($row['isdefault'], _INT);
             $this->userId = Kit::ValidateParam($row['userid'], _INT);
 
             // Load the client settings into an array
-            $this->config = ($this->config == '') ? array() : json_decode($this->config, true);
+            $config = Kit::ValidateParam($row['config'], _HTMLSTRING);
+            $config = ($config == '') ? array() : json_decode($config, true);
+
+            // We have an array of settings that we must use to overwrite the values in our global config
+            for ($i = 0; $i < count($this->config); $i++) {
+                // Does this setting exist in our store?
+                for ($j = 0; $j < count($config); $j++) {
+                    if ($config[$j]['name'] == $this->config[$i]['name']) {
+                        $this->config[$i]['value'] = $config[$j]['value'];
+                        break;
+                    }
+                }
+            }
 
             $this->isNew = false;
 
@@ -74,7 +91,6 @@ class DisplayProfile extends Data {
         
             return false;
         }
-
     }
 
     public function LoadDefault() {
@@ -83,37 +99,41 @@ class DisplayProfile extends Data {
 
         try {
             $dbh = PDOConnect::init();
-        
+
+            // Load the config from disk
+            $this->loadFromFile();
+
+            // See if we have a default for this player type
             $sth = $dbh->prepare('SELECT * FROM `displayprofile` WHERE `type` = :type AND isdefault = 1');
             $sth->execute(array(
                     'type' => $this->type
                 ));
           
             if (!$row = $sth->fetch()) {
+                // We don't so we should stick with the global default
                 Debug::Audit('Fall back to global default');
-
-                // Return the client default
-                include('config/client.config.php');
-                $this->name = $CLIENT_CONFIG[$this->type]['synonym'];
-                $this->type = $this->type;
-                $this->config = $CLIENT_CONFIG[$this->type]['settings'];
-                $this->isDefault = 1;
-                $this->userId = 1;
-
-                // Just populate the values with the defaults if the values aren't set already
-                for ($i = 0; $i < count($this->config); $i++) { 
-                    $this->config[$i]['value'] = isset($this->config[$i]['value']) ? $this->config[$i]['value'] : $this->config[$i]['default'];
-                }
             }
             else {
+                // We do, so we should overwrite the global default with our stored preferences
                 $this->name = Kit::ValidateParam($row['name'], _STRING);
                 $this->type = Kit::ValidateParam($row['type'], _STRING);
-                $this->config = Kit::ValidateParam($row['config'], _HTMLSTRING);
                 $this->isDefault = Kit::ValidateParam($row['isdefault'], _INT);
                 $this->userId = Kit::ValidateParam($row['userid'], _INT);
 
                 // Load the client settings into an array
-                $this->config = ($this->config == '') ? array() : json_decode($this->config, true);
+                $config = Kit::ValidateParam($row['config'], _HTMLSTRING);
+                $config = ($config == '') ? array() : json_decode($config, true);
+
+                // We have an array of settings that we must use to overwrite the values in our global config
+                for ($i = 0; $i < count($this->config); $i++) {
+                    // Does this setting exist in our store?
+                    for ($j = 0; $j < count($config); $j++) {
+                        if ($config[$j]['name'] == $this->config[$i]['name']) {
+                            $this->config[$i]['value'] = $config[$j]['value'];
+                            break;
+                        }
+                    }
+                }
 
                 $this->isNew = false;
             }
@@ -129,7 +149,23 @@ class DisplayProfile extends Data {
         
             return false;
         }
+    }
 
+    /**
+     * Load the config from the file
+     */
+    private function loadFromFile()
+    {
+        include('config/client.config.php');
+        $this->name = $CLIENT_CONFIG[$this->type]['synonym'];
+        $this->config = $CLIENT_CONFIG[$this->type]['settings'];
+        $this->isDefault = 1;
+        $this->userId = 1;
+
+        // Just populate the values with the defaults if the values aren't set already
+        for ($i = 0; $i < count($this->config); $i++) {
+            $this->config[$i]['value'] = isset($this->config[$i]['value']) ? $this->config[$i]['value'] : $this->config[$i]['default'];
+        }
     }
 
     public function Save() {

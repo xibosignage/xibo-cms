@@ -177,11 +177,11 @@ class ForecastIo extends Module
             __('Use the location configured on the display'), 'd');
 
         // Any values for the form fields should be added to the theme here.
-        $formFields['general'][] = FormManager::AddNumber('longitude', __('Longitude'), $this->GetOption('longitude'), 
-            __('The Longitude for this weather module'), 'g', '', 'locationControls');
-
-        $formFields['general'][] = FormManager::AddNumber('latitude', __('Latitude'), $this->GetOption('latitude'), 
+        $formFields['general'][] = FormManager::AddNumber('latitude', __('Latitude'), $this->GetOption('latitude'),
             __('The Latitude for this weather module'), 'l', '', 'locationControls');
+
+        $formFields['general'][] = FormManager::AddNumber('longitude', __('Longitude'), $this->GetOption('longitude'),
+            __('The Longitude for this weather module'), 'g', '', 'locationControls');
 
         $formFields['advanced'][] = FormManager::AddCombo('templateId', __('Weather Template'), $this->GetOption('templateId'), 
             $this->settings['templates'], 
@@ -334,13 +334,13 @@ class ForecastIo extends Module
             __('Use the location configured on the display'), 'd');
 
         // Any values for the form fields should be added to the theme here.
-        $formFields['general'][] = FormManager::AddNumber('longitude', __('Longitude'), $this->GetOption('longitude'), 
-            __('The Longitude for this weather module'), 'g', '', 'locationControls');
-
-        $formFields['general'][] = FormManager::AddNumber('latitude', __('Latitude'), $this->GetOption('latitude'), 
+        $formFields['general'][] = FormManager::AddNumber('latitude', __('Latitude'), $this->GetOption('latitude'),
             __('The Latitude for this weather module'), 'l', '', 'locationControls');
 
-        $formFields['advanced'][] = FormManager::AddCombo('templateId', __('Weather Template'), $this->GetOption('templateId'), 
+        $formFields['general'][] = FormManager::AddNumber('longitude', __('Longitude'), $this->GetOption('longitude'),
+            __('The Longitude for this weather module'), 'g', '', 'locationControls');
+
+        $formFields['advanced'][] = FormManager::AddCombo('templateId', __('Weather Template'), $this->GetOption('templateId'),
             $this->settings['templates'], 
             'id', 
             'value', 
@@ -631,12 +631,19 @@ class ForecastIo extends Module
         if (!Cache::has($key)) {
             Debug::LogEntry('audit', 'Getting Forecast from the API', $this->type, __FUNCTION__);
             $data = $forecast->get($defaultLat, $defaultLong, null, $apiOptions);
-            Cache::put($key, $data, $this->GetSetting('cachePeriod'));
+
+            // If the response is empty, cache it for less time
+            $cacheDuration = (isset($data->currently)) ? $this->GetSetting('cachePeriod') : 30;
+
+            // Cache
+            Cache::put($key, $data, $cacheDuration);
         }
         else {
             Debug::LogEntry('audit', 'Getting Forecast from the Cache with key: ' . $key, $this->type, __FUNCTION__);
             $data = Cache::get($key);
         }
+
+        //Debug::Audit('Data: ' . var_export($data, true));
 
         // Icon Mappings
         $icons = array(
@@ -666,8 +673,6 @@ class ForecastIo extends Module
             $data['daily']['data'][$i]['wicon'] = (isset($icons[$data['daily']['data'][$i]['icon']]) ? $icons[$data['daily']['data'][$i]['icon']] : $icons['unmapped']);
             $data['daily']['data'][$i]['temperatureFloor'] = (isset($data['daily']['data'][$i]['temperature']) ? $data['daily']['data'][$i]['temperature'] : '--');
         }
-
-        //Debug::LogEntry('audit', 'Data: ' . var_export($data, true), $this->type, __FUNCTION__);
 
         return $data;
     }
