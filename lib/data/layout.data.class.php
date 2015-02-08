@@ -1426,7 +1426,7 @@ class Layout extends Data
                     $mediaType = $mediaNode->getAttribute('type');
                     
                     // Create a media module to handle all the complex stuff
-                    $tmpModule = ModuleFactory::load($mediaType, $layoutId, $region['regionid'], $mediaId, $lkId, $this->db, $this->user);
+                    $tmpModule = ModuleFactory::load($mediaType, $layoutId, $region['regionid'], $mediaId, $lkId, $this->db, $user);
                     $status = $tmpModule->IsValid();
     
                     if ($status != 1)

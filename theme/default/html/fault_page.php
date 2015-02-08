@@ -54,8 +54,8 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 			</form>
 		</li>
 
-		<li><p><?php echo Theme::Translate('Click on the below link to open the bug report page for this Xibo release.'); ?> <?php echo Theme::Translate('Describe the problem and upload the file you obtained earlier.'); ?></p>
-		<a class="btn btn-default" href="https://answers.launchpad.net/xibo/+addquestion" title="Ask a Question" target="_blank"><?php echo Theme::Translate('Ask a question in Launchpad'); ?></a>
+		<li><p><?php echo Theme::Translate('Click on the below link to open the bug report page for this release.'); ?> <?php echo Theme::Translate('Describe the problem and upload the file you obtained earlier.'); ?></p>
+		<a class="btn btn-default" href="https://github.com/xibosignage/xibo/issues/new" title="<?php echo Theme::Translate('Ask a question'); ?>" target="_blank"><?php echo Theme::Translate('Ask a question'); ?></a>
 		</li>
 
 		</ol>
