@@ -345,4 +345,4 @@ INSERT INTO `tag` (`tagId`, `tag`) VALUES
 (3, 'thumbnail');
 
 INSERT INTO `displayprofile` (`name`, `type`, `config`, `isdefault`, `userid`)
-VALUES ('Windows', 'windows', '[]', '1', '1'), (NULL, 'Android', 'android', '[]', '1', '1');
+VALUES ('Windows', 'windows', '[]', '1', '1'), ('Android', 'android', '[]', '1', '1');
