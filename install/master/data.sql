@@ -1,5 +1,5 @@
 INSERT INTO `version` (`app_ver`, `XmdsVersion`, `XlfVersion`, `DBVersion`) VALUES
-('1.7.0', 4, 2, 84);
+('1.7.1', 4, 2, 85);
 
 INSERT INTO `group` (`groupID`, `group`, `IsUserSpecific`, `IsEveryone`) VALUES
 (1, 'Users', 0, 0),
@@ -345,4 +345,4 @@ INSERT INTO `tag` (`tagId`, `tag`) VALUES
 (3, 'thumbnail');
 
 INSERT INTO `displayprofile` (`name`, `type`, `config`, `isdefault`, `userid`)
-VALUES ('Windows', 'windows', '[]', '1', '1'), (NULL, 'Android', 'android', '[]', '1', '1');
+VALUES ('Windows', 'windows', '[]', '1', '1'), ('Android', 'android', '[]', '1', '1');
