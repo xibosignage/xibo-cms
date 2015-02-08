@@ -41,10 +41,10 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
         <link href="theme/default/libraries/jquery/jquery-ui/css/ui-lightness/jquery-ui-1.10.2.custom.min.css" rel="stylesheet">
         <link href="theme/default/libraries/jquery-file-upload/css/jquery.fileupload-ui.css" rel="stylesheet">
         <link href="modules/preview/fonts.css" rel="stylesheet">
-        <link href="<?php echo Theme::ItemPath('css/xibo.css'); ?>" rel="stylesheet" media="screen">
         <link href="<?php echo Theme::ItemPath('css/dashboard.css'); ?>" rel="stylesheet" media="screen">
         <link href="<?php echo Theme::ItemPath('css/timeline.css'); ?>" rel="stylesheet" media="screen">
         <link href="<?php echo Theme::ItemPath('css/calendar.css'); ?>" rel="stylesheet" media="screen">
+        <link href="<?php echo Theme::ItemPath('css/xibo.css'); ?>" rel="stylesheet" media="screen">
         <link href="<?php echo Theme::ItemPath('css/override.css'); ?>" rel="stylesheet" media="screen">
         <!-- Copyright 2006-2013 Daniel Garner. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
     </head>
