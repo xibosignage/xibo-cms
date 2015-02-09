@@ -42,7 +42,6 @@ class TranslationEngine
         global $transEngine;
         global $stream;
 
-        //Debug::LogEntry('audit', 'IN', 'TranslationEngine', 'InitLocal');
         // Build an array of supported languages
         $supportedLanguages = scandir($localeDir);
 
@@ -50,8 +49,18 @@ class TranslationEngine
         $requestedLanguage = Kit::GetParam('lang', _REQUEST, _WORD, '');
         $foundLanguage = '';
 
-        // If we don't have a language, try from HTTP accept
-        if ($requestedLanguage == '' && Config::GetSetting('DETECT_LANGUAGE') == 1) {
+        if ($requestedLanguage != '') {
+            // Serve only the requested language
+            // Firstly, Sanitize it
+            $requestedLanguage = str_replace('-', '_', $requestedLanguage);
+
+            // Check its valid
+            if (in_array($requestedLanguage . '.mo', $supportedLanguages)) {
+                $foundLanguage = $requestedLanguage;
+            }
+        }
+        else if (Config::GetSetting('DETECT_LANGUAGE') == 1) {
+            // Detect the language, try from HTTP accept
             // Parse the language header and build a preference array
             $languagePreferenceArray = TranslationEngine::parseHttpAcceptLanguageHeader();
 
@@ -64,36 +73,33 @@ class TranslationEngine
                     if ($languagePreference == 'en')
                         $languagePreference = 'en_GB';
 
-                    if (in_array(str_replace('-', '_', $languagePreference) . '.mo', $supportedLanguages)) {
+                    // Sanitize
+                    $languagePreference = str_replace('-', '_', $languagePreference);
+
+                    // Check it is valid
+                    if (in_array($languagePreference . '.mo', $supportedLanguages)) {
                         $foundLanguage = $languagePreference;
                         break;
                     }
                 }
             }
         }
-        else {
-            // Requested language is not empty, so check it
-            // This may also be because the headers are empty for some reason
 
-            // Firstly, Sanitize it
-            $requestedLanguage = str_replace('-', '_', $requestedLanguage);
+        // Are we still empty, then default language from settings
+        if ($foundLanguage == '') {
+            // Check the default
+            if (!in_array($default . '.mo', $supportedLanguages)) {
+                Debug::Info('Resolved language ' . $default . ' not available.');
+                return;
+            }
 
-            // Check its valid
-            if (in_array($requestedLanguage . '.mo', $supportedLanguages)) {
-                $foundLanguage = $requestedLanguage;
-            }
-            else {
-                // Fall back
-                $foundLanguage = 'en_GB';
-            }
+            // The default is valid
+            $foundLanguage = $default;
         }
 
-        // Are we still empty?
-        if ($foundLanguage == '')
-            $foundLanguage = $default;
-
-        //Debug::LogEntry('audit', 'Creating new file streamer for '. $localeDir . '/' . $foundLanguage . '.mo', 'TranslationEngine', 'InitLocal');
+        // Debug::LogEntry('audit', 'Creating new file streamer for '. $localeDir . '/' . $foundLanguage . '.mo', 'TranslationEngine', 'InitLocal');
         if (!$stream = new CachedFileReader($localeDir . '/' . $foundLanguage . '.mo')) {
+            Debug::Info('Resolved language ' . $foundLanguage . ' not available.');
             $transEngine = false;
             return;
         }

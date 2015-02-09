@@ -569,7 +569,7 @@ function XiboFormRender(formUrl, data) {
                     // Call paging
                     if ($(response.sortingDiv + ' tbody', dialog).html() != "") {
                         $(response.sortingDiv, dialog).tablesorter({
-                            sortList: [[0, 0]],
+                            sortList: [[response.initialSortColumn,response.initialSortOrder]],
                             widthFixed: true
                         });
                     }

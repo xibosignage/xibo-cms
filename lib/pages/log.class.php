@@ -282,13 +282,13 @@ class logDAO extends baseDAO {
             Theme::Set('table_rows', $rows);
                 
             $output = Theme::RenderReturn('table_render');
-                
+
             $response->initialSortOrder = 2;
             $response->dialogClass = 'modal-big';
             $response->dialogTitle = __('Recent Log Messages');
             $response->pageSize = 10;
             $response->SetGridResponse($output);
-            $response->Respond();  
+            $response->Respond();
         }
         catch (Exception $e) {
             trigger_error($e->getMessage(), E_USER_ERROR);

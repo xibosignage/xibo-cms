@@ -8,13 +8,13 @@ ALTER TABLE  `resolution` CHANGE  `resolution`  `resolution` VARCHAR( 254 ) CHAR
 
 UPDATE `resolution` SET enabled = 0;
 
-INSERT INTO `resolution` (`resolutionID`, `resolution`, `width`, `height`, `intended_width`, `intended_height`, `version`, `enabled`) VALUES
-(9, '1080p HD Landscape', 800, 450, 1920, 1080, 2, 1),
-(10, '720p HD Landscape', 800, 450, 1280, 720, 2, 1),
-(11, '1080p HD Portrait', 450, 800, 1080, 1920, 2, 1),
-(12, '720p HD Portrait', 450, 800, 720, 1280, 2, 1),
-(13, '4k', 800, 450, 4096, 2304, 2, 1),
-(14, 'Common PC Monitor 4:3', 800, 600, 1024, 768, 2, 1);
+INSERT INTO `resolution` (`resolution`, `width`, `height`, `intended_width`, `intended_height`, `version`, `enabled`) VALUES
+('1080p HD Landscape', 800, 450, 1920, 1080, 2, 1),
+('720p HD Landscape', 800, 450, 1280, 720, 2, 1),
+('1080p HD Portrait', 450, 800, 1080, 1920, 2, 1),
+('720p HD Portrait', 450, 800, 720, 1280, 2, 1),
+('4k', 800, 450, 4096, 2304, 2, 1),
+('Common PC Monitor 4:3', 800, 600, 1024, 768, 2, 1);
 
 DELETE FROM `lktemplategroup` WHERE TemplateID IN (SELECT TemplateID FROM `template` WHERE isSystem = 1);
 DELETE FROM `template` WHERE isSystem = 1;
@@ -84,7 +84,7 @@ UPDATE `setting` SET cat = 'general', ordering = 60, usersee = '1', userchange =
 UPDATE `setting` SET cat = 'general', ordering = 70, usersee = '1', userchange = '0', `default` = '', `title` = 'Status Dashboard Widget' WHERE setting = 'EMBEDDED_STATUS_WIDGET';
 UPDATE `setting` SET cat = 'general', ordering = 80, usersee = '1', userchange = '1', `default` = '1', `title` = 'Allow Import?' WHERE setting = 'SETTING_IMPORT_ENABLED';
 UPDATE `setting` SET cat = 'general', ordering = 90, usersee = '1', userchange = '1', `default` = '1', `title` = 'Enable Library Tidy?' WHERE setting = 'SETTING_LIBRARY_TIDY_ENABLED';
-UPDATE `setting` SET cat = 'general', ordering = 10, usersee = '1', userchange = '1', `default` = 'http://www.xibo.org.uk/manual/', `title` = 'Location of the Manual' WHERE setting = 'HELP_BASE';
+UPDATE `setting` SET cat = 'general', ordering = 10, usersee = '1', userchange = '1', `default` = 'http://www.xibo.org.uk/manual/en/', `title` = 'Location of the Manual' WHERE setting = 'HELP_BASE';
 UPDATE `setting` SET cat = 'maintenance', ordering = 10, usersee = '1', userchange = '1', `default` = 'Off', `title` = 'Enable Maintenance?' WHERE setting = 'MAINTENANCE_ENABLED';
 UPDATE `setting` SET cat = 'maintenance', ordering = 20, usersee = '1', userchange = '1', `default` = 'On', `title` = 'Enable Email Alerts?' WHERE setting = 'MAINTENANCE_EMAIL_ALERTS';
 UPDATE `setting` SET cat = 'maintenance', ordering = 30, usersee = '1', userchange = '1', `default` = 'mail@yoursite.com', `title` = 'Admin email address' WHERE setting = 'mail_to';

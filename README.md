@@ -15,6 +15,9 @@ GNU Affero General Public License for more details.
 You should have received a copy of the GNU Affero General Public License
 along with Xibo.  If not, see <http://www.gnu.org/licenses/>. 
 
+# Contributing
+The standard licence for Xibo is the [AGPLv3](LICENSE). For more information please see [CONTRIBUTING.md](CONTRIBUTING.md).
+
 # Repository
 This folder contains the Xibo CMS application.
 

@@ -42,6 +42,9 @@ if (isset($_GET['xrds']))
 if (defined('XMDS'))
     $service = 'soap';
 
+// We need a theme
+new Theme(new User());
+
 // Check to see if we are going to consume a service (if we came from xmds.php then we will always use the SOAP service)
 if (defined('XMDS') || $method != '')
 {
@@ -98,8 +101,8 @@ if (defined('XMDS') || $method != '')
                     $serviceResponse->ErrorServerError('Your client is not the correct version to communicate with this CMS.');
                 }
 
-                //$soap = new SoapServer($wsdl);
-                $soap = new SoapServer($wsdl, array('cache_wsdl' => WSDL_CACHE_NONE));
+                $soap = new SoapServer($wsdl);
+                //$soap = new SoapServer($wsdl, array('cache_wsdl' => WSDL_CACHE_NONE));
                 $soap->setClass('XMDSSoap' . $version);
                 $soap->handle();
             }
