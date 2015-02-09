@@ -1027,12 +1027,6 @@ class Region extends Data
 
                 $mediaId = Kit::ValidateParam($mediaId, _INT);
     
-                // Check we have permissions to use this media (we will use this to copy the media later)
-                $mediaAuth = $user->MediaAuth($mediaId, true);
-    
-                if (!$mediaAuth->view)
-                    return $this->SetError(__('You have selected media that you no longer have permission to use. Please reload Library form.'));
-    
                 // Get the type from this media
                 $sth = $dbh->prepare('SELECT type FROM media WHERE mediaID = :mediaid');
                 $sth->execute(array(
@@ -1046,11 +1040,15 @@ class Region extends Data
 
                 try {
                     // Create the media object without any region and layout information
-                    $module = ModuleFactory::createForMedia($mod, $mediaId);
+                    $module = ModuleFactory::createForMedia($mod, $mediaId, null, $user);
                 }
                 catch (Exception $e) {
                     return $this->SetError($e->getMessage());
                 }
+
+                // Check we have permissions to use this media (we will use this to copy the media later)
+                if (!$module->auth->view)
+                    return $this->SetError(__('You have selected media that you no longer have permission to use. Please reload Library form.'));
     
                 if (!$module->SetRegionInformation($layoutId, $regionId))
                     return $this->SetError($module->GetErrorMessage());
@@ -1059,13 +1057,11 @@ class Region extends Data
                     return $this->SetError($module->GetErrorMessage());
     
                 // Need to copy over the permissions from this media item & also the delete permission
-                Kit::ClassLoader('layoutmediagroupsecurity');
                 $security = new LayoutMediaGroupSecurity($this->db);
-                $security->Link($layoutId, $regionId, $mediaId, $user->getGroupFromID($user->userid, true), $mediaAuth->view, $mediaAuth->edit, 1);
+                $security->Link($layoutId, $regionId, $mediaId, $user->getGroupFromID($user->userid, true), $module->auth->view, $module->auth->edit, 1);
             }
     
             // Update layout status
-            Kit::ClassLoader('Layout');
             $layout = new Layout($this->db);
             $layout->SetValid($layoutId, true);
     
