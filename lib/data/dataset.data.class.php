@@ -442,7 +442,7 @@ class DataSet extends Data
                         $order .= ' :order' . $i . ' DESC,';
                     }
                     else {
-                        $order .= ' :order,' . $i;
+                        $order .= ' :order' . $i . ',';
                     }
 
                     $params['order' . $i] = $orderPair;
