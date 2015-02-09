@@ -1,6 +1,3 @@
-INSERT INTO `module` (`ModuleID`, `Module`, `Name`, `Enabled`, `RegionSpecific`, `Description`, `ImageUri`, `SchemaVersion`, `ValidExtensions`, `PreviewEnabled`, `assignable`, `render_as`) VALUES
-(NULL, 'clock', 'Clock', '1', '1', 'Display a Clock', 'forms/library.gif', '1', '', '1', '1', 'html');
-
 ALTER TABLE  `display` ADD  `storageAvailableSpace` INT NULL ,
 ADD  `storageTotalSpace` INT NULL;
 
