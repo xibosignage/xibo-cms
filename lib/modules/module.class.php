@@ -298,8 +298,6 @@ abstract class Module implements ModuleInterface
                 $this->assignedMedia = false;
 
                 try {
-                    $dbh = PDOConnect::init();
-                
                     // Load what we know about this media into the object
                     // this is unauthenticated at this point
                     $rows = Media::Entries(NULL, array('mediaId' => $mediaid, 'allModules' => 1));
