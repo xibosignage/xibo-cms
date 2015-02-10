@@ -104,6 +104,8 @@ var setupScheduleForm = function(form) {
     $('#CampaignID', form).selectpicker();
     $('select[name="DisplayGroupIDs[]"]', form).selectpicker();
 
+    var calendarType = $('#CalendarContainer').data().calendarType;
+
     // Set up any date fields we have with the date picker
     $('#starttimeControl', form).datetimepicker({
         format: "dd MM yyyy - hh:ii",
@@ -111,7 +113,8 @@ var setupScheduleForm = function(form) {
         linkFormat: "yyyy-mm-dd hh:ii",
         minuteStep: 5,
         autoClose: true,
-        language: language
+        language: language,
+        calendarType: calendarType
     });
 
     $('#endtimeControl', form).datetimepicker({
@@ -120,7 +123,8 @@ var setupScheduleForm = function(form) {
         linkFormat: "yyyy-mm-dd hh:ii",
         minuteStep: 5,
         autoClose: true,
-        language: language
+        language: language,
+        calendarType: calendarType
     });
 
     $('#rec_rangeControl', form).datetimepicker({
@@ -129,7 +133,8 @@ var setupScheduleForm = function(form) {
         linkFormat: "yyyy-mm-dd hh:ii",
         minuteStep: 5,
         autoClose: true,
-        language: language
+        language: language,
+        calendarType: calendarType
     });
 };
 

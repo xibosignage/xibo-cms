@@ -42,6 +42,7 @@ Theme::SetTranslation('enterText', Theme::Translate('Enter text...'));
 		<script src="theme/default/libraries/jquery/additional-methods.min.js"></script>
         <script src="theme/default/libraries/bootstrap/js/bootstrap.min.js"></script>
         <script src="theme/default/libraries/bootstrap/js/bootbox.min.js"></script>
+        <script src="theme/default/libraries/bootstrap-datetimepicker/js/jalali-date.js"></script>
         <script src="theme/default/libraries/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
         <?php echo Theme::Script('libraries/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.' . TranslationEngine::GetJsLocale() . '.js'); ?>
         <script src="theme/default/libraries/jquery-tablesorter/js/jquery.tablesorter.min.js"></script>
