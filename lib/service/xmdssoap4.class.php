@@ -882,6 +882,7 @@ class XMDSSoap4
             $mediaId = "";
             $method = '';
             $thread = '';
+            $type = '';
 
             // This will be a bunch of trace nodes
             $message = $node->textContent;
