@@ -143,7 +143,7 @@ class XMDSSoap4
                 try {
                     $displayProfile = new DisplayProfile();
                     $displayProfile->displayProfileId = (empty($row['displayprofileid']) ? 0 : Kit::ValidateParam($row['displayprofileid'], _INT));
-                    
+
                     if ($displayProfile->displayProfileId == 0) {
                         // Load the default profile
                         $displayProfile->type = $clientType;
@@ -215,7 +215,7 @@ class XMDSSoap4
         if ($isAuditing == 1)
             Debug::Audit($returnXml, $displayId);
 
-        return $return->saveXML();
+        return $returnXml;
     }
 
     /**
