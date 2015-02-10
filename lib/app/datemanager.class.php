@@ -85,10 +85,15 @@ class DateManager
         // If we are Jalali, then we want to convert from Jalali back to Gregorian. Otherwise assume input is already Gregorian.
         if (Config::GetSetting('CALENDAR_TYPE') == 'Jalali') {
             // Split the time stamp into its component parts and pass it to the conversion.
-            $date = jDateTime::toGregorian(date('Y', $timestamp), date('m', $timestamp), date('d', $timestamp));
+            $split = explode(' ', $date);
+            $dateSplit = explode('-', $split[0]);
+
+            $date = jDateTime::toGregorian($dateSplit[0], $dateSplit[1], $dateSplit[2]);
+
+            //Debug::Audit('Converted to Gregorian from Jalali: ' . var_export($date, true));
 
             // Convert that back into a date using strtotime - the date is now Gregorian
-            $timestamp = strtotime($date[0] . '-' . $date[1] . '-' . $date[2] . ' ' . date('H') . ':' . date('i') . ':' . date('s'));
+            $timestamp = strtotime($date[0] . '-' . $date[1] . '-' . $date[2] . ' ' . $split[1]);
         }
 
         return $timestamp;

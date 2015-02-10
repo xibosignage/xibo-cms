@@ -392,7 +392,9 @@ class scheduleDAO extends baseDAO {
         
         $displayOrder = Kit::GetParam('DisplayOrder', _POST, _INT);
         $isNextButton = Kit::GetParam('next', _GET, _BOOL, false);
-        
+
+        Debug::Audit('Times received are: FromDt=' . $fromDT . '. ToDt=' . $toDT . '. RepeatToDt=' . $repeatToDt);
+
         // Convert our dates
         $fromDT = DateManager::getDateFromString($fromDT);
         $toDT = DateManager::getDateFromString($toDT);
@@ -400,7 +402,7 @@ class scheduleDAO extends baseDAO {
         if ($repeatToDt != '')
             $repeatToDt = DateManager::getDateFromString($repeatToDt);
 
-        Debug::Audit('Times received are: FromDt=' . $fromDT . '. ToDt=' . $toDT . '. RepeatToDt=' . $repeatToDt);
+        Debug::Audit('Converted Times received are: FromDt=' . $fromDT . '. ToDt=' . $toDT . '. RepeatToDt=' . $repeatToDt);
         
         // Validate layout
         if ($campaignId == 0)

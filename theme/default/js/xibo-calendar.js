@@ -108,7 +108,7 @@ var setupScheduleForm = function(form) {
 
     // Set up any date fields we have with the date picker
     $('#starttimeControl', form).datetimepicker({
-        format: "dd MM yyyy - hh:ii",
+        format: "yyyy-mm-dd hh:ii",
         linkField: "starttime",
         linkFormat: "yyyy-mm-dd hh:ii",
         minuteStep: 5,
@@ -118,7 +118,7 @@ var setupScheduleForm = function(form) {
     });
 
     $('#endtimeControl', form).datetimepicker({
-        format: "dd MM yyyy - hh:ii",
+        format: "yyyy-mm-dd hh:ii",
         linkField: "endtime",
         linkFormat: "yyyy-mm-dd hh:ii",
         minuteStep: 5,
@@ -128,7 +128,7 @@ var setupScheduleForm = function(form) {
     });
 
     $('#rec_rangeControl', form).datetimepicker({
-        format: "dd MM yyyy - hh:ii",
+        format: "yyyy-mm-dd hh:ii",
         linkField: "rec_range",
         linkFormat: "yyyy-mm-dd hh:ii",
         minuteStep: 5,
