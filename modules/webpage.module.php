@@ -63,7 +63,7 @@ class webpage extends Module
             __('The Location (URL) of the webpage'), 'l', 'required');
 
         $formFields[] = FormManager::AddNumber('duration', __('Duration'), NULL, 
-            __('The duration in seconds this counter should be displayed'), 'd', 'required');
+            __('The duration in seconds this item should be displayed'), 'd', 'required');
 
         $formFields[] = FormManager::AddCombo(
             'modeid', 
@@ -171,7 +171,7 @@ class webpage extends Module
             __('The Location (URL) of the webpage'), 'l', 'required');
 
         $formFields[] = FormManager::AddNumber('duration', __('Duration'), $this->duration, 
-            __('The duration in seconds this counter should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
+            __('The duration in seconds this item should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
 
         $formFields[] = FormManager::AddCombo(
             'modeid', 
