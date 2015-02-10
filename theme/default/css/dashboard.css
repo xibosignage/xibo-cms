@@ -88,10 +88,9 @@ ul.sidebar .sidebar-main .menu-icon {
 }
 ul.sidebar .sidebar-title {
   font-size: 12px;
-  height: 34px;
-  line-height: 24px;
+  height: 35px;
+  line-height: 40px;
   text-transform: uppercase;
-  padding: 10px 0;
 }
 #page-wrapper:not(.active) ul.sidebar .sidebar-title {
   display: none;
@@ -102,13 +101,13 @@ ul.sidebar .sidebar-title {
   margin: 13px 0;
 }
 ul.sidebar .sidebar-list {
-  height: 24px;
+  height: 40px;
 }
 ul.sidebar .sidebar-list a {
   text-indent: 25px;
   font-size: 15px;
   color: #b2bfdc;
-  line-height: 24px;
+  line-height: 40px;
 }
 ul.sidebar .sidebar-list a:hover {
   color: #fff;
@@ -122,7 +121,7 @@ ul.sidebar .sidebar-list a:hover {
 ul.sidebar .sidebar-list .menu-icon {
   float: right;
   padding-right: 29px;
-  line-height: 20px;
+  line-height: 40px;
   width: 70px;
 }
 ul.sidebar .sidebar-list a:hover .menu-icon {
