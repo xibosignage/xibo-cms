@@ -225,6 +225,10 @@ class upgradeDAO extends baseDAO {
         if ($doBackup == 0)
             throw new Exception(__('You MUST have a valid database backup to continue. Please take and verify a backup and upgrade again.'));
 
+        $sql_file = '';
+        $sql = '';
+        $i = 0;
+
         // Now loop over the entire upgrade. Run the SQLs and PHP interleaved.
         try {
             $dbh = PDOConnect::init();
@@ -255,8 +259,7 @@ class upgradeDAO extends baseDAO {
         }
         catch (Exception $e) {
             //$dbh->rollBack();
-
-            throw new Exception(sprintf(__('An error occurred running the upgrade. Please take a screen shot of this page and seek help. Statement number: %d. Error Message = [%s]'), $i, $e->getMessage()));
+            throw new Exception(sprintf(__('An error occurred running the upgrade. Please take a screen shot of this page and seek help. Statement number: %d. Error Message = [%s]. File = [%s]. SQL = [%s].'), $i, $e->getMessage(), $sql_file, $sql));
         }
 
         // Install files
