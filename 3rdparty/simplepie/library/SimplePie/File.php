@@ -144,7 +144,7 @@ class SimplePie_File
 					
 					// DG: Patch to strip double headers for HTTPS Proxies (they add headers without incrementing redirect count)
 					$this->headers = SimplePie_HTTP_Parser::strip_double_headers($this->headers);
-					Debug::Audit('Headers: ' . var_export($this->headers, true));
+					//Debug::Audit('Headers: ' . var_export($this->headers, true));
 					
 					$parser = new SimplePie_HTTP_Parser($this->headers);
 					if ($parser->parse())
