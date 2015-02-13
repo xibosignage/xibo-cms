@@ -546,8 +546,8 @@ class statsDAO extends baseDAO
         Theme::Set('form_action', 'index.php?p=stats&q=OutputCSV');
         
         $formFields = array();
-        $formFields[] = FormManager::AddText('fromdt', __('From Date'), date("Y-m-d", time() - (86400 * 35)), NULL, 'f');
-        $formFields[] = FormManager::AddText('todt', __('To Date'), date("Y-m-d"), NULL, 't');
+        $formFields[] = FormManager::AddText('fromdt', __('From Date'),DateManager::getLocalDate(time() - (86400 * 35), 'Y-m-d'), NULL, 'f');
+        $formFields[] = FormManager::AddText('todt', __('To Date'), DateManager::getLocalDate(null, 'Y-m-d'), NULL, 't');
 
         // List of Displays this user has permission for
         $displays = $this->user->DisplayGroupList(1);
@@ -566,7 +566,7 @@ class statsDAO extends baseDAO
         Theme::Set('form_fields', $formFields);
         Theme::Set('form_class', 'XiboManualSubmit');
         
-        $response->SetFormRequestResponse(NULL, __('Export Database Backup'), '550px', '275px');
+        $response->SetFormRequestResponse(NULL, __('Export Statistics'), '550px', '275px');
         $response->AddButton(__('Export'), '$("#OutputCsvForm").submit()');
         $response->AddButton(__('Close'), 'XiboDialogClose()');
         $response->Respond();
@@ -582,9 +582,9 @@ class statsDAO extends baseDAO
 		$output		= '';
 		
 		// We are expecting some parameters
-		$fromdt		= Kit::GetParam('fromdt', _POST, _STRING);
-		$todt		= Kit::GetParam('todt', _POST, _STRING);
-		$displayID	= Kit::GetParam('displayid', _POST, _INT);
+		$fromdt	= DateManager::getIsoDateFromString(Kit::GetParam('fromdt', _POST, _STRING));
+		$todt = DateManager::getIsoDateFromString(Kit::GetParam('todt', _POST, _STRING));
+		$displayID = Kit::GetParam('displayid', _POST, _INT);
 
         if ($fromdt == $todt) {
             $todt = date("Y-m-d", strtotime($todt) + 86399);
