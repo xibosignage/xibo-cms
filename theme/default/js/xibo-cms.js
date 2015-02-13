@@ -281,6 +281,16 @@ function XiboInitialise(scope) {
 
     // Select statements
     //$(scope + " select").selectpicker();
+
+    // Date time controls
+    $(scope + ' .datePicker').datetimepicker({
+        format: "yyyy-mm-dd",
+        autoClose: true,
+        language: language,
+        calendarType: calendarType,
+        minView: 2,
+        todayHighlight: true
+    });
 }
 
 /**

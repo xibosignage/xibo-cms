@@ -84,6 +84,7 @@ Theme::SetTranslation('enterText', Theme::Translate('Enter text...'));
         var translations = <?php echo ((Theme::Get('translations') == '') ? '{}' : Theme::Get('translations')); ?>;
         var language = "<?php echo TranslationEngine::GetJsLocale(); ?>";
         var dateFormat = "<?php echo Config::GetSetting('DATE_FORMAT', 'Y-m-d h:i'); ?>";
+        var calendarType = "<?php echo Config::GetSetting('CALENDAR_TYPE'); ?>";
         </script>
 	</body>
 </html>

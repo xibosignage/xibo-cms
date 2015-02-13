@@ -396,11 +396,11 @@ class scheduleDAO extends baseDAO {
         Debug::Audit('Times received are: FromDt=' . $fromDT . '. ToDt=' . $toDT . '. RepeatToDt=' . $repeatToDt);
 
         // Convert our dates
-        $fromDT = DateManager::getDateFromString($fromDT);
-        $toDT = DateManager::getDateFromString($toDT);
+        $fromDT = DateManager::getTimestampFromString($fromDT);
+        $toDT = DateManager::getTimestampFromString($toDT);
 
         if ($repeatToDt != '')
-            $repeatToDt = DateManager::getDateFromString($repeatToDt);
+            $repeatToDt = DateManager::getTimestampFromString($repeatToDt);
 
         Debug::Audit('Converted Times received are: FromDt=' . $fromDT . '. ToDt=' . $toDT . '. RepeatToDt=' . $repeatToDt);
         
@@ -677,11 +677,11 @@ class scheduleDAO extends baseDAO {
         $isNextButton = Kit::GetParam('next', _GET, _BOOL, false);
         
         // Convert our ISO strings
-        $fromDT = DateManager::getDateFromString($fromDT);
-        $toDT = DateManager::getDateFromString($toDT);
+        $fromDT = DateManager::getTimestampFromString($fromDT);
+        $toDT = DateManager::getTimestampFromString($toDT);
 
         if ($repeatToDt != '')
-            $repeatToDt = DateManager::getDateFromString($repeatToDt);
+            $repeatToDt = DateManager::getTimestampFromString($repeatToDt);
 
         Debug::Audit('Times received are: FromDt=' . $fromDT . '. ToDt=' . $toDT . '. RepeatToDt=' . $repeatToDt);
 

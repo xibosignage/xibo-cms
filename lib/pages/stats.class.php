@@ -33,8 +33,8 @@ class statsDAO extends baseDAO
         Theme::Set('form_meta', '<input type="hidden" name="p" value="stats"><input type="hidden" name="q" value="BandwidthGrid">');
         
         $formFields = array();
-        $formFields[] = FormManager::AddText('fromdt', __('From Date'), date("Y-m-d", time() - (86400 * 35)), NULL, 'f');
-        $formFields[] = FormManager::AddText('todt', __('To Date'), date("Y-m-d"), NULL, 't');
+        $formFields[] = FormManager::AddDatePicker('fromdt', __('From Date'), DateManager::getLocalDate(time() - (86400 * 35), 'Y-m-d'), NULL, 'f');
+        $formFields[] = FormManager::AddDatePicker('todt', __('To Date'), DateManager::getLocalDate(null, 'Y-m-d'), NULL, 't');
 
         // List of Displays this user has permission for
         $displays = $this->user->DisplayGroupList(1);
@@ -59,8 +59,8 @@ class statsDAO extends baseDAO
         Theme::Set('form_meta', '<input type="hidden" name="p" value="stats"><input type="hidden" name="q" value="AvailabilityGrid">');
         
         $formFields = array();
-        $formFields[] = FormManager::AddText('fromdt', __('From Date'), date("Y-m-d", time() - (86400 * 35)), NULL, 'f');
-        $formFields[] = FormManager::AddText('todt', __('To Date'), date("Y-m-d"), NULL, 't');
+        $formFields[] = FormManager::AddDatePicker('fromdt', __('From Date'), DateManager::getLocalDate(time() - (86400 * 35), 'Y-m-d'), NULL, 'f');
+        $formFields[] = FormManager::AddDatePicker('todt', __('To Date'), DateManager::getLocalDate(null, 'Y-m-d'), NULL, 't');
 
         // List of Displays this user has permission for
         $displays = $this->user->DisplayGroupList(1);
@@ -86,8 +86,8 @@ class statsDAO extends baseDAO
         Theme::Set('form_meta', '<input type="hidden" name="p" value="stats"><input type="hidden" name="q" value="StatsGrid">');
         
         $formFields = array();
-        $formFields[] = FormManager::AddText('fromdt', __('From Date'), date("Y-m-d", time() - 86400), NULL, 'f');
-        $formFields[] = FormManager::AddText('todt', __('To Date'), date("Y-m-d"), NULL, 't');
+        $formFields[] = FormManager::AddDatePicker('fromdt', __('From Date'), DateManager::getLocalDate(time() - 86400, 'Y-m-d'), NULL, 'f');
+        $formFields[] = FormManager::AddDatePicker('todt', __('To Date'), DateManager::getLocalDate(null, 'Y-m-d'), NULL, 't');
 
         // List of Displays this user has permission for
         $displays = $this->user->DisplayGroupList(1);
@@ -147,8 +147,8 @@ class statsDAO extends baseDAO
         $user =& $this->user;
         $response = new ResponseManager();
 
-        $fromDt = Kit::GetParam('fromdt', _POST, _STRING);
-        $toDt = Kit::GetParam('todt', _POST, _STRING);
+        $fromDt = DateManager::getIsoDateFromString(Kit::GetParam('fromdt', _POST, _STRING));
+        $toDt = DateManager::getIsoDateFromString(Kit::GetParam('todt', _POST, _STRING));
         $displayId = Kit::GetParam('displayid', _POST, _INT);
         $mediaId = Kit::GetParam('mediaid', _POST, _INT);
 
@@ -157,6 +157,8 @@ class statsDAO extends baseDAO
         if ($fromDt == $toDt) {
             $toDt = date("Y-m-d", strtotime($toDt) + 86399);
         }
+
+        Debug::Audit('Converted Times received are: FromDt=' . $fromDt . '. ToDt=' . $toDt);
 
         // Get an array of display id this user has access to.
         $displays = $this->user->DisplayList();
@@ -217,8 +219,8 @@ class statsDAO extends baseDAO
             $row['NumberPlays'] = Kit::ValidateParam($row['NumberPlays'], _INT);
             $row['DurationSec'] = Kit::ValidateParam($row['Duration'], _INT);
             $row['Duration'] = sec2hms(Kit::ValidateParam($row['Duration'], _INT));
-            $row['MinStart'] = Kit::ValidateParam($row['MinStart'], _STRING);
-            $row['MaxEnd'] = Kit::ValidateParam($row['MaxEnd'], _STRING);
+            $row['MinStart'] = DateManager::getLocalDate(strtotime(Kit::ValidateParam($row['MinStart'], _STRING)));
+            $row['MaxEnd'] = DateManager::getLocalDate(strtotime(Kit::ValidateParam($row['MaxEnd'], _STRING)));
 
             $rows[] = $row;
         }
@@ -270,8 +272,8 @@ class statsDAO extends baseDAO
             $row['NumberPlays'] = Kit::ValidateParam($row['NumberPlays'], _INT);
             $row['DurationSec'] = Kit::ValidateParam($row['Duration'], _INT);
             $row['Duration'] = sec2hms(Kit::ValidateParam($row['Duration'], _INT));
-            $row['MinStart'] = Kit::ValidateParam($row['MinStart'], _STRING);
-            $row['MaxEnd'] = Kit::ValidateParam($row['MaxEnd'], _STRING);
+            $row['MinStart'] = DateManager::getLocalDate(strtotime(Kit::ValidateParam($row['MinStart'], _STRING)));
+            $row['MaxEnd'] = DateManager::getLocalDate(strtotime(Kit::ValidateParam($row['MaxEnd'], _STRING)));
 
             $rows[] = $row;
         }
@@ -326,8 +328,8 @@ class statsDAO extends baseDAO
             $row['NumberPlays'] = Kit::ValidateParam($row['NumberPlays'], _INT);
             $row['DurationSec'] = Kit::ValidateParam($row['Duration'], _INT);
             $row['Duration'] = sec2hms(Kit::ValidateParam($row['Duration'], _INT));
-            $row['MinStart'] = Kit::ValidateParam($row['MinStart'], _STRING);
-            $row['MaxEnd'] = Kit::ValidateParam($row['MaxEnd'], _STRING);
+            $row['MinStart'] = DateManager::getLocalDate(strtotime(Kit::ValidateParam($row['MinStart'], _STRING)));
+            $row['MaxEnd'] = DateManager::getLocalDate(strtotime(Kit::ValidateParam($row['MaxEnd'], _STRING)));
 
             $rows[] = $row;
         }
@@ -343,8 +345,8 @@ class statsDAO extends baseDAO
 
     public function AvailabilityGrid() 
     {
-        $fromDt = strtotime(Kit::GetParam('fromdt', _POST, _STRING));
-        $toDt = strtotime(Kit::GetParam('todt', _POST, _STRING));
+        $fromDt = DateManager::getTimestampFromString(Kit::GetParam('fromdt', _POST, _STRING));
+        $toDt = DateManager::getTimestampFromString(Kit::GetParam('todt', _POST, _STRING));
         $displayId = Kit::GetParam('displayid', _POST, _INT);
 
         // Get an array of display id this user has access to.
@@ -425,8 +427,8 @@ class statsDAO extends baseDAO
     public function BandwidthGrid() 
     {
 
-        $fromDt = strtotime(Kit::GetParam('fromdt', _POST, _STRING));
-        $toDt = strtotime(Kit::GetParam('todt', _POST, _STRING));
+        $fromDt = DateManager::getTimestampFromString(Kit::GetParam('fromdt', _POST, _STRING));
+        $toDt = DateManager::getTimestampFromString(Kit::GetParam('todt', _POST, _STRING));
 
         // Get an array of display id this user has access to.
         $displays = $this->user->DisplayList();

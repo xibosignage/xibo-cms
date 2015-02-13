@@ -60,7 +60,7 @@ $(document).ready(function() {
 
     // Calendar is initialised without any event_source (that is changed when the selector is used)
     if (($('#Calendar').length > 0)) {
-        options.type = ($('#CalendarContainer').data().calendarType);
+        options.type = calendarType;
         calendar = $('#Calendar').calendar(options);
 
         // Set up our display selector control
@@ -103,8 +103,6 @@ var setupScheduleForm = function(form) {
     // Select lists
     $('#CampaignID', form).selectpicker();
     $('select[name="DisplayGroupIDs[]"]', form).selectpicker();
-
-    var calendarType = $('#CalendarContainer').data().calendarType;
 
     // Set up any date fields we have with the date picker
     $('#starttimeControl', form).datetimepicker({
