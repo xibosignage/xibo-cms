@@ -121,6 +121,10 @@ class DateManager
         return $timestamp;
     }
 
+    public static function getTimestampFromTimeString($time) {
+        return strtotime($time);
+    }
+
     public static function getIsoDateFromString($date) {
         return date('Y-m-d H:i:s', self::getTimestampFromString($date));
     }

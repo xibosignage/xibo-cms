@@ -263,6 +263,15 @@ if (!$tabs)
                             </div>
                         </div>
                     <?php }
+                    else if ($field['fieldType'] == 'timePicker') { ?>
+                        <div class="form-group <?php echo $field['groupClass']; ?>">
+                            <label class="col-sm-2 control-label" for="<?php echo $field['name']; ?>" accesskey="<?php echo $field['accesskey']; ?>"><?php echo $field['title']; ?></label>
+                            <div class="col-sm-10">
+                                <input class="form-control timePicker" name="<?php echo $field['name']; ?>" type="text" id="<?php echo $field['name']; ?>" value="<?php echo $field['value']; ?>" <?php echo $field['validation']; ?> readonly/>
+                                <span class="help-block"><?php echo $field['helpText']; ?></span>
+                            </div>
+                        </div>
+                    <?php }
                 } // End for loop
                 echo '</div>';
             } // End for loop ?>

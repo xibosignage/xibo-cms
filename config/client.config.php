@@ -505,6 +505,28 @@ $CLIENT_CONFIG = array(
                         'enabled' => true,
                         'groupClass' => NULL
                     ),
+                    array(
+                        'name' => 'updateStartWindow',
+                        'tabId' => 'advanced',
+                        'title' => __('Update Window Start Time'),
+                        'type' => _STRING,
+                        'fieldType' => 'timePicker',
+                        'default' => 0,
+                        'helpText' => __('The start of the time window to install application updates.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'updateEndWindow',
+                        'tabId' => 'advanced',
+                        'title' => __('Update Window End Time'),
+                        'type' => _STRING,
+                        'fieldType' => 'timePicker',
+                        'default' => 0,
+                        'helpText' => __('The end of the time window to install application updates.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
                 )
             )
     );
