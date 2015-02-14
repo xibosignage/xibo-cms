@@ -708,7 +708,14 @@ class layoutDAO extends baseDAO
                             'id' => 'layout_button_permissions',
                             'url' => 'index.php?p=campaign&q=PermissionsForm&CampaignID=' . $layout['campaignid'],
                             'text' => __('Permissions')
-                        );  
+                        );
+
+                    // Button to test loading by XML
+                    $row['buttons'][] = array(
+                            'id' => 'layout_button_xml',
+                            'url' => 'index.php?p=layout&q=ShowXlf&layoutId=' . $layout['layoutid'],
+                            'text' => __('Show')
+                        );
                 }
             }
 
@@ -1366,6 +1373,19 @@ HTML;
         }
 
         $response->SetFormSubmitResponse(__('Layout Imported'));
+        $response->Respond();
+    }
+
+    public function ShowXlf()
+    {
+        $response = new ResponseManager();
+
+        $layoutObject = new Layout();
+        $id = Kit::GetParam('layoutId', _GET, _INT);
+        $layout = \Xibo\Factory\LayoutFactory::loadByXlf($layoutObject->GetLayoutXml($id), $id);
+
+        $response->SetFormRequestResponse('<pre>' . json_format(json_encode($layout)) . '</pre>', 'Test', '350px', '200px');
+        $response->dialogClass = 'modal-big';
         $response->Respond();
     }
 }

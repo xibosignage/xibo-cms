@@ -96,4 +96,33 @@ Class PDOConnect {
 			self::$conn = null;
 		}
 	}
+
+	/**
+	 * Run Insert SQL
+	 * @param string $sql
+	 * @param array $params
+	 * @return int
+	 */
+	public static function insert($sql, $params)
+	{
+		$dbh = PDOConnect::init();
+		$sth = $dbh->prepare($sql);
+
+		$sth->execute($params);
+
+		return $dbh->lastInsertId();
+	}
+
+	/**
+	 * Run Update SQL
+	 * @param string $sql
+	 * @param array $params
+	 */
+	public static function execute($sql, $params)
+	{
+		$dbh = PDOConnect::init();
+		$sth = $dbh->prepare($sql);
+
+		$sth->execute($params);
+	}
 }

@@ -27,11 +27,21 @@ error_reporting(0);
 ini_set('display_errors', 0);
 ini_set('gd.jpeg_ignore_warning', 1);
 
+// Load Kit
+require_once("lib/app/kit.class.php");
+
+// Define an auto-load function
+include('lib/autoload.php');
+
+// Define another one
+spl_autoload_register(function ($class) {
+    Kit::ClassLoader($class);
+});
+
 // Required Library Files
 require_once("lib/app/pdoconnect.class.php");
 require_once("lib/app/translationengine.class.php");
 require_once("lib/app/debug.class.php");
-require_once("lib/app/kit.class.php");
 require_once("lib/app/pagemanager.class.php");
 require_once("lib/app/menumanager.class.php");
 require_once("lib/app/modulemanager.class.php");
@@ -51,6 +61,7 @@ require_once("lib/app/thememanager.class.php");
 require_once("lib/pages/base.class.php");
 require_once("3rdparty/parsedown/parsedown.php");
 require_once("3rdparty/jdatetime/jdatetime.class.php");
+require_once("3rdparty/nice-json/nice-json.php");
 
 // Required Config Files
 require_once("config/config.class.php");
@@ -114,11 +125,6 @@ date_default_timezone_set(Config::GetSetting("defaultTimezone"));
 
 // Error Handling (our error handler requires a DB connection
 set_error_handler(array(new Debug(), "ErrorHandler"));
-
-// Define an auto-load function
-spl_autoload_register(function ($class) {
-    Kit::ClassLoader($class);
-});
 
 // Define the VERSION
 Config::Version();

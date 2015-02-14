@@ -85,6 +85,9 @@ if (file_exists("upgrade.php")) {
 Config::Load();
 
 // Define an auto-load function
+include('lib/autoload.php');
+
+// Define an auto-load function
 spl_autoload_register(function ($class) {
     Kit::ClassLoader($class);
 });

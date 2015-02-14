@@ -60,7 +60,7 @@ class Layout extends Data
             $SQL .= "        layout.status, ";
             $SQL .= "        layout.retired, ";
             $SQL .= "        layout.backgroundImageId, ";
-            
+
             if (Kit::GetParam('showTags', $filter_by, _INT) == 1)
                 $SQL .= " tag.tag AS tags, ";
             else
@@ -135,7 +135,7 @@ class Layout extends Data
                 $SQL .= " AND layout.userid = :userId ";
                 $params['userId'] = Kit::GetParam('userId', $filter_by, _INT, 0);
             }
-            
+
             // Retired options
             if (Kit::GetParam('retired', $filter_by, _INT, -1) != -1) {
                 $SQL .= " AND layout.retired = :retired ";
@@ -147,15 +147,15 @@ class Layout extends Data
             // Tags
             if (Kit::GetParam('tags', $filter_by, _STRING) != '') {
                 $SQL .= " AND layout.layoutID IN (
-                    SELECT lktaglayout.layoutId 
-                      FROM tag 
-                        INNER JOIN lktaglayout 
-                        ON lktaglayout.tagId = tag.tagId 
+                    SELECT lktaglayout.layoutId
+                      FROM tag
+                        INNER JOIN lktaglayout
+                        ON lktaglayout.tagId = tag.tagId
                     WHERE tag LIKE :tags
                     ) ";
                 $params['tags'] =  '%' . Kit::GetParam('tags', $filter_by, _STRING) . '%';
             }
-            
+
             // Exclude templates by default
             if (Kit::GetParam('excludeTemplates', $filter_by, _INT, 1) == 1) {
                 $SQL .= " AND layout.layoutID NOT IN (SELECT layoutId FROM lktaglayout WHERE tagId = 1) ";
@@ -167,7 +167,7 @@ class Layout extends Data
                     // Only show used layouts
                     $SQL .= ' AND ('
                         . '     campaign.CampaignID IN (SELECT DISTINCT schedule.CampaignID FROM schedule) '
-                        . '     OR layout.layoutID IN (SELECT DISTINCT defaultlayoutid FROM display) ' 
+                        . '     OR layout.layoutID IN (SELECT DISTINCT defaultlayoutid FROM display) '
                         . ' ) ';
                 }
                 else {
@@ -180,7 +180,7 @@ class Layout extends Data
             // Sorting?
             if (is_array($sort_order))
                 $SQL .= 'ORDER BY ' . implode(',', $sort_order);
-        
+
             $sth = $dbh->prepare($SQL);
             $sth->execute($params);
 
@@ -199,20 +199,20 @@ class Layout extends Data
                 $layout->status = Kit::ValidateParam($row['status'], _INT);
                 $layout->backgroundImageId = Kit::ValidateParam($row['backgroundImageId'], _INT);
                 $layout->mediaOwnerId = Kit::ValidateParam($row['mediaownerid'], _INT);
-                
+
                 // Details for media assignment
                 $layout->regionId = Kit::ValidateParam($row['regionid'], _STRING);
                 $layout->lkLayoutMediaId = Kit::ValidateParam($row['lklayoutmediaid'], _INT);
 
                 $entries[] = $layout;
             }
-          
+
             return $entries;
         }
         catch (Exception $e) {
-            
+
             Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
-        
+
             return false;
         }
     }
