@@ -36,6 +36,35 @@ class Region
 
     public $playlists;
 
+    public $basicInfoLoaded = false;
+
+    public function __clone()
+    {
+        // Clear the IDs and clone the playlist
+        $this->regionId = null;
+
+        $this->playlists = array_map(function ($object) { return clone $object; }, $this->playlists);
+    }
+
+    /**
+     * Sets the Owner
+     * @param int $ownerId
+     */
+    public function setOwner($ownerId)
+    {
+        $this->ownerId = $ownerId;
+
+        foreach ($this->playlists as $playlist) {
+            /* @var Playlist $playlist */
+            $playlist->setOwner($ownerId);
+        }
+    }
+
+    public function load()
+    {
+
+    }
+
     public function save()
     {
 

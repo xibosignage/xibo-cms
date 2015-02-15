@@ -36,6 +36,14 @@ class Widget {
     // A widget might be linked to file based media
     public $media;
 
+    public function __clone()
+    {
+        $this->widgetId = null;
+        $this->widgetOptions = array_map(function ($object) { return clone $object; }, $this->widgetOptions);
+
+        // No need to clone the media
+    }
+
     public function save()
     {
 

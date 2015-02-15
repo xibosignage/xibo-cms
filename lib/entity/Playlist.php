@@ -33,6 +33,18 @@ class Playlist
     public $tags;
     public $widgets;
 
+    public function __clone()
+    {
+        $this->playlistId = null;
+
+        $this->widgets = array_map(function ($object) { return clone $object; }, $this->widgets);
+    }
+
+    public function setOwner($ownerId)
+    {
+
+    }
+
     public function save()
     {
 

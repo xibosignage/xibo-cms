@@ -3,7 +3,7 @@
  * Xibo - Digital Signage - http://www.xibo.org.uk
  * Copyright (C) 2015 Spring Signage Ltd
  *
- * This file (Module.php) is part of Xibo.
+ * This file (ResolutionFactory.php) is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -20,27 +20,25 @@
  */
 
 
-namespace Xibo\Entity;
+namespace Xibo\Factory;
 
 
-class Module
+use Xibo\Entity\Resolution;
+
+class ResolutionFactory
 {
-    public $moduleId;
+    /**
+     * Load the Resolution by ID
+     * @param int $resolutionId
+     * @return Resolution
+     */
+    public static function loadById($resolutionId)
+    {
+        // TODO: Implement Query
+        return new Resolution();
+    }
 
-    public $name;
-    public $description;
-    public $validExtensions;
-    public $imageUri;
-    public $type;
-
-    public $enabled;
-    public $regionSpecific;
-    public $previewEnabled;
-    public $assignable;
-    public $renderAs;
-    public $settings;
-
-    public function save()
+    public static function query($sortOrder, $filterBy)
     {
 
     }

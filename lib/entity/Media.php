@@ -25,4 +25,20 @@ namespace Xibo\Entity;
 
 class Media {
     public $mediaId;
+    public $editedMediaId;
+    public $ownerId;
+
+    public $name;
+    public $type;
+    public $duration;
+    public $originalFileName;
+    public $storedAs;
+    public $md5;
+    public $fileSize;
+
+    public $retired;
+    public $isEdited;
+    public $moduleSystemFile;
+    public $valid;
+    public $expires;
 }

@@ -28,10 +28,78 @@ use Xibo\Entity\Media;
 use Xibo\Entity\Playlist;
 use Xibo\Entity\Region;
 use Xibo\Entity\Widget;
+use Xibo\Entity\WidgetOption;
 use Xibo\Exception\NotFoundException;
 
 class LayoutFactory
 {
+    /**
+     * Create Layout from Resolution
+     * @param int $resolutionId
+     * @param int $ownerId
+     * @param string $name
+     * @param string $description
+     * @param string $tags
+     * @return Layout
+     */
+    public static function createFromResolution($resolutionId, $ownerId, $name, $description, $tags)
+    {
+        $resolution = ResolutionFactory::loadById($resolutionId);
+
+        // Create a new Layout
+        $layout = new Layout();
+        $layout->width = $resolution->width;
+        $layout->height = $resolution->height;
+
+        // Set the properties
+        $layout->layout = $name;
+        $layout->description = $description;
+
+        // Set the owner
+        $layout->setOwner($ownerId);
+
+        // Create some tags
+        $layout->tags = TagFactory::tagsFromString($tags);
+
+        // Add a blank, full screen region
+        $layout->regions[] = RegionFactory::create($name . '-1', $layout->width, $layout->height, 0, 0);
+
+        return $layout;
+    }
+
+    /**
+     * Create Layout from Template
+     * @param int $layoutId
+     * @param int $ownerId
+     * @param string $name
+     * @param string $description
+     * @param string $tags
+     * @return Layout
+     * @throws NotFoundException
+     */
+    public static function createFromTemplate($layoutId, $ownerId, $name, $description, $tags)
+    {
+        // Load the template
+        $template = LayoutFactory::loadById($layoutId);
+        $template->load();
+
+        // Empty all of the ID's
+        $layout = clone $template;
+
+        // Overwrite our new properties
+        $layout->layout = $name;
+        $layout->description = $description;
+
+        // Create some tags (overwriting the old ones)
+        $layout->tags = TagFactory::tagsFromString($tags);
+
+        // Set the owner
+        $layout->setOwner($ownerId);
+
+        // Fresh layout object, entirely new and ready to be saved
+        return $layout;
+    }
+
     /**
      * Load a layout by its ID
      * @param int $layoutId
@@ -42,35 +110,54 @@ class LayoutFactory
     {
         $layouts = LayoutFactory::query(null, array('layoutId' => $layoutId));
 
-        if (count($layouts) > 0) {
-            return $layouts[0];
-        }
-        else
+        if (count($layouts) <= 0) {
             throw new NotFoundException(\__('Layout not found'));
+        }
+
+        // Set our layout
+        $layout = $layouts[0];
+        /* @var Layout $layout */
+
+        // LEGACY: What happens if we have a legacy layout (a layout that still contains its own XML)
+        if ($layout->legacyXml != null && $layout->legacyXml != '') {
+            $layoutFromXml = LayoutFactory::loadByXlf($layout->legacyXml);
+
+            // Add the information we know from the layout we originally parsed from the DB
+            $layoutFromXml->layoutId = $layout->layoutId;
+            $layoutFromXml->layout = $layout->layout;
+            $layoutFromXml->description = $layout->description;
+            $layoutFromXml->status = $layout->status;
+            $layoutFromXml->campaignId = $layout->campaignId;
+            $layoutFromXml->backgroundImageId = $layout->backgroundImageId;
+            $layoutFromXml->ownerId = $layout->ownerId;
+
+            $layout = $layoutFromXml;
+        }
+
+        return $layout;
     }
 
     /**
      * Load a layout by its XLF
      * @param string $layoutXlf
-     * @param int[Optional] $layoutId
-     * @return string
+     * @return Layout
      */
-    public static function loadByXlf($layoutXlf, $layoutId = 0)
+    public static function loadByXlf($layoutXlf)
     {
-        // This layout is actually in the database, so we can load those items we know about
-        if ($layoutId != 0) {
-            $layout = LayoutFactory::loadById($layoutId);
-        }
-        else {
-            $layout = new Layout();
-        }
+        // New Layout
+        $layout = new Layout();
+
+        // Get a list of modules for us to use
+        $modules = ModuleFactory::get();
 
         // Parse the XML and fill in the details for this layout
         $document = new \DOMDocument();
         $document->loadXML($layoutXlf);
 
+        $layout->schemaVersion = (int)$document->documentElement->getAttribute('schemaVersion');
         $layout->width = $document->documentElement->getAttribute('width');
         $layout->height = $document->documentElement->getAttribute('height');
+        $layout->backgroundColor = $document->documentElement->getAttribute('bgcolor');
 
         // Xpath to use when getting media
         $xpath = new \DOMXPath($document);
@@ -94,19 +181,58 @@ class LayoutFactory
             // Populate Playlists (XLF doesn't contain any playlists)
             $playlist = new Playlist();
             $playlist->playlist = $layout->layout . ' ' . $region->name . '-1';
+            $playlist->ownerId = $region->ownerId;
 
             // Get all widgets
             foreach ($xpath->query('//region[@id="' . $region->regionId . '"]/media') as $mediaNode) {
                 /* @var \DOMElement $mediaNode */
                 $widget = new Widget();
-                $media = new Media();
-                $media->mediaId = $mediaNode->getAttribute('id');
-                $widget->media[] = $media;
-
                 $widget->type = $mediaNode->getAttribute('type');
                 $widget->ownerId = $mediaNode->getAttribute('userid');
+                $widget->duration = $mediaNode->getAttribute('duration');
+                $xlfMediaId = $mediaNode->getAttribute('id');
+
+                // Is this stored media?
+                if (!array_key_exists($widget->type, $modules))
+                    continue;
+
+                $module = $modules[$widget->type];
+                /* @var \Xibo\Entity\Module $module */
+
+                if ($module->regionSpecific == 0) {
+                    $media = new Media();
+                    $media->mediaId = $xlfMediaId;
+                    $widget->media[] = $media;
+                }
 
                 // Get all widget options
+                foreach ($xpath->query('//region[@id="' . $region->regionId . '"]/media[@id="' . $xlfMediaId . '"]/options') as $optionsNode) {
+                    /* @var \DOMElement $optionsNode */
+                    foreach ($optionsNode->childNodes as $mediaOption) {
+                        /* @var \DOMElement $mediaOption */
+                        $widgetOption = new WidgetOption();
+                        $widgetOption->type = 'attribute';
+                        $widgetOption->option = $mediaOption->nodeName;
+                        $widgetOption->value = $mediaOption->textContent;
+
+                        $widget->widgetOptions[] = $widgetOption;
+                    }
+                }
+
+                // Get all widget raw content
+                foreach ($xpath->query('//region[@id="' . $region->regionId . '"]/media[@id="' . $xlfMediaId . '"]/raw') as $rawNode) {
+                    /* @var \DOMElement $rawNode */
+                    // Get children
+                    foreach ($rawNode->childNodes as $mediaOption) {
+                        /* @var \DOMElement $mediaOption */
+                        $widgetOption = new WidgetOption();
+                        $widgetOption->type = 'cdata';
+                        $widgetOption->option = $mediaOption->nodeName;
+                        $widgetOption->value = $mediaOption->textContent;
+
+                        $widget->widgetOptions[] = $widgetOption;
+                    }
+                }
 
                 // Add the widget to the playlist
                 $playlist->widgets[] = $widget;
@@ -117,10 +243,17 @@ class LayoutFactory
             $layout->regions[] = $region;
         }
 
-
+        // The parsed, finished layout
         return $layout;
     }
 
+    /**
+     * Query for all Layouts
+     * @param array $sortOrder
+     * @param array $filterBy
+     * @return array[Layout]
+     * @throws NotFoundException
+     */
     public static function query($sortOrder = array(), $filterBy = array())
     {
         $entries = array();
@@ -135,6 +268,7 @@ class LayoutFactory
             $sql .= "        layout.description, ";
             $sql .= "        layout.userID, ";
             $sql .= "        campaign.CampaignID, ";
+            $sql .= "        layout.xml AS legacyXml, ";
             $sql .= "        layout.status, ";
             $sql .= "        layout.retired, ";
             if (\Kit::GetParam('showTags', $filterBy, _INT) == 1)
@@ -268,6 +402,10 @@ class LayoutFactory
                 $layout->retired = \Kit::ValidateParam($row['retired'], _INT);
                 $layout->status = \Kit::ValidateParam($row['status'], _INT);
                 $layout->backgroundImageId = \Kit::ValidateParam($row['backgroundImageId'], _INT);
+                $layout->legacyXml = \Kit::ValidateParam($row['legacyXml'], _HTMLSTRING);
+
+                //TODO: Add Schema Version
+
                 $layout->basicInfoLoaded = true;
 
                 $entries[] = $layout;
@@ -279,7 +417,7 @@ class LayoutFactory
 
             \Debug::Error($e->getMessage());
 
-            return false;
+            throw new NotFoundException;
         }
     }
 }

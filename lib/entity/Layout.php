@@ -22,6 +22,7 @@ namespace Xibo\Entity;
 
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\RegionFactory;
 
 class Layout
 {
@@ -29,48 +30,59 @@ class Layout
     public $ownerId;
     public $campaignId;
     public $backgroundImageId;
+    public $schemaVersion;
 
     public $retired;
-
     public $layout;
+
     public $description;
+    public $backgroundColor;
     public $status;
+    public $legacyXml;
 
     public $width;
     public $height;
 
-    /**
-     * @var array[Region]
-     */
     public $regions;
     public $tags;
 
-    private $compiledXlf;
-    private $compiledMediaList;
-
     // Track which bits of the layout have been loaded
     public $basicInfoLoaded = false;
+
+    public function __clone()
+    {
+        // Clear the layout id
+        $this->layoutId = null;
+
+        // Clone the regions
+        $this->regions = array_map(function ($object) { return clone $object; }, $this->regions);
+    }
+
+    /**
+     * Sets the Owner of the Layout (including children)
+     * @param int $ownerId
+     */
+    public function setOwner($ownerId)
+    {
+        $this->ownerId = $ownerId;
+
+        foreach ($this->regions as $region) {
+            /* @var Region $region */
+            $region->setOwner($ownerId);
+        }
+    }
 
     /**
      * Load this Layout
      */
     public function load()
     {
-        if ($this->basicInfoLoaded)
-            return;
-
-        // Load the Layout's basic data
-        if ($this->layoutId)
-            throw new \InvalidArgumentException(__('Missing Argument LayoutId'));
-
-        $layout = LayoutFactory::loadById($this->layoutId);
-        $this->layout = $layout->layout;
-        $this->description = $layout->description;
-        $this->status = $layout->status;
-        $this->campaignId = $layout->campaignId;
-        $this->backgroundImageId = $layout->backgroundImageId;
-        $this->ownerId = $layout->ownerId;
-        $this->basicInfoLoaded = true;
+        // Load all regions
+        $this->regions = RegionFactory::loadByLayoutId($this->layoutId);
+        foreach ($this->regions as $region) {
+            /* @var Region $region */
+            $region->load();
+        }
     }
 
     /**
@@ -120,10 +132,23 @@ class Layout
             throw new \InvalidArgumentException(sprintf(__("You already own a layout called '%s'. Please choose another name."), $this->layout));
     }
 
+    /**
+     * Export the Layout as its XLF
+     * @return string
+     */
     public function toXlf()
     {
         // TODO: Represent this Layout in XML
         return '<xml></xml>';
+    }
+
+    /**
+     * Export the Layout as a ZipArchive
+     * @return \ZipArchive
+     */
+    public function toZip()
+    {
+        return new \ZipArchive();
     }
 
     //
@@ -135,8 +160,8 @@ class Layout
      */
     private function add()
     {
-        $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, status)';
-        $sql .= ' VALUES (:layout, :description, :userid, :createddt, :modifieddt, :status)';
+        $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, status, width, height)';
+        $sql .= ' VALUES (:layout, :description, :userid, :createddt, :modifieddt, :status, :width, :height)';
 
         $time = \DateManager::getSystemDate(null, 'Y-m-d h:i:s');
 
@@ -146,7 +171,9 @@ class Layout
             'userid' => $this->ownerId,
             'createddt' => $time,
             'modifieddt' => $time,
-            'status' => 3
+            'status' => 3,
+            'width' => $this->width,
+            'height' => $this->height
         ));
 
         // Add a Campaign
@@ -161,10 +188,11 @@ class Layout
 
     /**
      * Update
+     * NOTE: We set the XML to NULL during this operation as we will always convert old layouts to the new structure
      */
     private function update()
     {
-        $sql = 'UPDATE layout SET layout = :layout, description = :description, modifiedDT = :modifieddt, retired = :retired WHERE layoutID = :layoutid';
+        $sql = 'UPDATE layout SET layout = :layout, description = :description, modifiedDT = :modifieddt, retired = :retired, width = :width, height = :height, xml = NULL WHERE layoutID = :layoutid';
 
         $time = \DateManager::getSystemDate(null, 'Y-m-d h:i:s');
 
@@ -174,6 +202,8 @@ class Layout
             'description' => $this->description,
             'modifieddt' => $time,
             'retired' => $this->retired,
+            'width' => $this->width,
+            'height' => $this->height
         ));
 
         if (!$this->basicInfoLoaded)

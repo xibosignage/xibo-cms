@@ -3,7 +3,7 @@
  * Xibo - Digital Signage - http://www.xibo.org.uk
  * Copyright (C) 2015 Spring Signage Ltd
  *
- * This file (Module.php) is part of Xibo.
+ * This file (TagFactory.php) is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -20,28 +20,24 @@
  */
 
 
-namespace Xibo\Entity;
+namespace Xibo\Factory;
 
 
-class Module
+use Xibo\Entity\Tag;
+
+class TagFactory
 {
-    public $moduleId;
-
-    public $name;
-    public $description;
-    public $validExtensions;
-    public $imageUri;
-    public $type;
-
-    public $enabled;
-    public $regionSpecific;
-    public $previewEnabled;
-    public $assignable;
-    public $renderAs;
-    public $settings;
-
-    public function save()
+    /**
+     * @param string $tagString
+     * @return array[\Xibo\Entity\Tag]
+     */
+    public static function tagsFromString($tagString)
     {
+        $tags = array();
 
+        // TODO: Parse the tag string, create tags using existing tags if possible
+        $tags[] = new Tag();
+
+        return $tags;
     }
 }
