@@ -131,6 +131,9 @@ class LayoutFactory
             $layoutFromXml->backgroundImageId = $layout->backgroundImageId;
             $layoutFromXml->ownerId = $layout->ownerId;
 
+            // Save this so that it gets converted to the DB format.
+            //$layoutFromXml->save();
+
             $layout = $layoutFromXml;
         }
 
@@ -270,13 +273,16 @@ class LayoutFactory
             $sql .= "        campaign.CampaignID, ";
             $sql .= "        layout.xml AS legacyXml, ";
             $sql .= "        layout.status, ";
+            $sql .= "        layout.width, ";
+            $sql .= "        layout.height, ";
             $sql .= "        layout.retired, ";
             if (\Kit::GetParam('showTags', $filterBy, _INT) == 1)
                 $sql .= " tag.tag AS tags, ";
             else
                 $sql .= " (SELECT GROUP_CONCAT(DISTINCT tag) FROM tag INNER JOIN lktaglayout ON lktaglayout.tagId = tag.tagId WHERE lktaglayout.layoutId = layout.LayoutID GROUP BY lktaglayout.layoutId) AS tags, ";
-            $sql .= "        layout.backgroundImageId ";
-
+            $sql .= "        layout.backgroundImageId, ";
+            $sql .= "        layout.backgroundColor, ";
+            $sql .= "        layout.schemaVersion ";
             $sql .= "   FROM layout ";
             $sql .= "  INNER JOIN `lkcampaignlayout` ";
             $sql .= "   ON lkcampaignlayout.LayoutID = layout.LayoutID ";
@@ -394,17 +400,19 @@ class LayoutFactory
 
                 // Validate each param and add it to the array.
                 $layout->layoutId = \Kit::ValidateParam($row['layoutID'], _INT);
+                $layout->schemaVersion = \Kit::ValidateParam($row['schemaVersion'], _INT);
                 $layout->layout = \Kit::ValidateParam($row['layout'], _STRING);
                 $layout->description = \Kit::ValidateParam($row['description'], _STRING);
                 $layout->tags = \Kit::ValidateParam($row['tags'], _STRING);
+                $layout->backgroundColor = \Kit::ValidateParam($row['backgroundColor'], _STRING);
                 $layout->ownerId = \Kit::ValidateParam($row['userID'], _INT);
                 $layout->campaignId = \Kit::ValidateParam($row['CampaignID'], _INT);
                 $layout->retired = \Kit::ValidateParam($row['retired'], _INT);
                 $layout->status = \Kit::ValidateParam($row['status'], _INT);
                 $layout->backgroundImageId = \Kit::ValidateParam($row['backgroundImageId'], _INT);
+                $layout->width = \Kit::ValidateParam($row['width'], _DOUBLE);
+                $layout->height = \Kit::ValidateParam($row['height'], _DOUBLE);
                 $layout->legacyXml = \Kit::ValidateParam($row['legacyXml'], _HTMLSTRING);
-
-                //TODO: Add Schema Version
 
                 $layout->basicInfoLoaded = true;
 
@@ -417,7 +425,7 @@ class LayoutFactory
 
             \Debug::Error($e->getMessage());
 
-            throw new NotFoundException;
+            throw new NotFoundException(__('Layout Not Found'));
         }
     }
 }

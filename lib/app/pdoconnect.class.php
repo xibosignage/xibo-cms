@@ -102,27 +102,64 @@ Class PDOConnect {
 	 * @param string $sql
 	 * @param array $params
 	 * @return int
+	 * @throws PDOException
 	 */
 	public static function insert($sql, $params)
 	{
-		$dbh = PDOConnect::init();
-		$sth = $dbh->prepare($sql);
+		try {
+			$dbh = PDOConnect::init();
+			$sth = $dbh->prepare($sql);
 
-		$sth->execute($params);
+			$sth->execute($params);
 
-		return $dbh->lastInsertId();
+			return $dbh->lastInsertId();
+		}
+		catch (PDOException $e) {
+			Debug::Error($e->getMessage());
+			throw $e;
+		}
 	}
 
 	/**
 	 * Run Update SQL
 	 * @param string $sql
 	 * @param array $params
+	 * @throws PDOException
 	 */
 	public static function execute($sql, $params)
 	{
-		$dbh = PDOConnect::init();
-		$sth = $dbh->prepare($sql);
+		try {
+			$dbh = PDOConnect::init();
+			$sth = $dbh->prepare($sql);
 
-		$sth->execute($params);
+			$sth->execute($params);
+		}
+		catch (PDOException $e) {
+			Debug::Error($e->getMessage());
+			throw $e;
+		}
+	}
+
+	/**
+	 * Run Select SQL
+	 * @param $sql
+	 * @param $params
+	 * @return array
+	 * @throws PDOException
+	 */
+	public static function select($sql, $params)
+	{
+		try {
+			$dbh = PDOConnect::init();
+			$sth = $dbh->prepare($sql);
+
+			$sth->execute($params);
+
+			return $sth->fetchAll(PDO::FETCH_ASSOC);
+		}
+		catch (PDOException $e) {
+			Debug::Error($e->getMessage());
+			throw $e;
+		}
 	}
 }

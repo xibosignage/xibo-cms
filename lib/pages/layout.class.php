@@ -195,7 +195,7 @@ class layoutDAO extends baseDAO
 
     function actionMenu() {
 
-        if ($this->sub_page != 'view')
+        if (Kit::GetParam('modify', _GET, _WORD, 'view') != 'view')
             return NULL;
 
         return array(
@@ -1137,15 +1137,12 @@ HTML;
 
     /**
      * Get a list of group names for a layout
-     * @param <type> $layoutId
-     * @return <type>
+     * @param int $layoutId
+     * @return array
      */
     private function GroupsForLayout($layoutId)
     {
-        $db =& $this->db;
-
-        Kit::ClassLoader('campaign');
-        $campaign = new Campaign($db);
+        $campaign = new Campaign();
         $campaignId = $campaign->GetCampaignId($layoutId);
 
         $SQL = '';
@@ -1153,27 +1150,25 @@ HTML;
         $SQL .= '  FROM `group` ';
         $SQL .= '   INNER JOIN lkcampaigngroup ';
         $SQL .= '   ON `group`.GroupID = lkcampaigngroup.GroupID ';
-        $SQL .= ' WHERE lkcampaigngroup.CampaignID = %d ';
+        $SQL .= ' WHERE lkcampaigngroup.CampaignID = :campaignId ';
 
-        $SQL = sprintf($SQL, $campaignId);
+        try {
+            $results = PDOConnect::select($SQL, array('campaignId' => $campaignId));
 
-        if (!$results = $db->query($SQL))
-        {
-            trigger_error($db->error());
+            $groups = '';
+
+            foreach ($results as $row) {
+                $groups .= $row['Group'] . ', ';
+            }
+
+            $groups = trim($groups);
+            $groups = trim($groups, ',');
+
+            return $groups;
+        }
+        catch (PDOException $e) {
             trigger_error(__('Unable to get group information for layout'), E_USER_ERROR);
         }
-
-        $groups = '';
-
-        while ($row = $db->get_assoc_row($results))
-        {
-            $groups .= $row['Group'] . ', ';
-        }
-
-        $groups = trim($groups);
-        $groups = trim($groups, ',');
-
-        return $groups;
     }
 
     public function LayoutStatus() {

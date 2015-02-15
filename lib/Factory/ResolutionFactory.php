@@ -24,6 +24,7 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\Resolution;
+use Xibo\Exception\NotFoundException;
 
 class ResolutionFactory
 {
@@ -31,15 +32,42 @@ class ResolutionFactory
      * Load the Resolution by ID
      * @param int $resolutionId
      * @return Resolution
+     * @throws NotFoundException
      */
     public static function loadById($resolutionId)
     {
-        // TODO: Implement Query
-        return new Resolution();
+        $resolutions = ResolutionFactory::query(null, array('resolutionId' => $resolutionId));
+
+        if (count($resolutions) <= 0)
+            throw new NotFoundException;
+
+        return $resolutions[0];
     }
 
-    public static function query($sortOrder, $filterBy)
+    public static function query($sortOrder = null, $filterBy = null)
     {
+        $entities = array();
 
+        $params = array();
+        $sql  = 'SELECT * FROM `resolution` WHERE enabled = 1';
+
+        if (\Kit::GetParam('resolutionId', $filterBy, _INT) != 0) {
+            $sql .= ' AND resolutionId = :resolutionId';
+            $params['resolutionId'] = \Kit::GetParam('resolutionId', $filterBy, _INT);
+        }
+
+        foreach(\PDOConnect::select($sql, $params) as $record) {
+            $resolution = new Resolution();
+            $resolution->resolutionId = $record['resolutionID'];
+            $resolution->resolution = $record['resolution'];
+            $resolution->width = $record['intended_width'];
+            $resolution->height = $record['intended_height'];
+            $resolution->version = \Kit::ValidateParam($record['version'], _INT);
+            $resolution->enabled = \Kit::ValidateParam($record['enabled'], _INT);
+
+            $entities[] = $resolution;
+        }
+
+        return $entities;
     }
 }
