@@ -22,6 +22,8 @@
 namespace Xibo\Entity;
 
 
+use Xibo\Factory\PlaylistFactory;
+
 class Region
 {
     public $regionId;
@@ -37,6 +39,11 @@ class Region
     public $playlists;
 
     public $basicInfoLoaded = false;
+
+    public function __construct()
+    {
+        $this->playlists = array();
+    }
 
     public function __clone()
     {
@@ -60,20 +67,30 @@ class Region
         }
     }
 
+    /**
+     * Load
+     */
     public function load()
     {
-
+        // Load all playlists
+        $this->playlists = PlaylistFactory::loadByRegionId($this->regionId);
+        foreach ($this->playlists as $playlist) {
+            /* @var Playlist $playlist */
+            $playlist->load();
+        }
     }
 
     public function save()
     {
+        if ($this->regionId == null || $this->regionId == 0)
+            $this->add();
+        else
+            $this->update();
 
         // Save all Playlists
-        if ($this->playlists != null) {
-            foreach ($this->playlists as $playlist) {
-                /* @var Playlist $playlist */
-                $playlist->save();
-            }
+        foreach ($this->playlists as $playlist) {
+            /* @var Playlist $playlist */
+            $playlist->save();
         }
     }
 

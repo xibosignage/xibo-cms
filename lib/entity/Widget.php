@@ -36,6 +36,11 @@ class Widget {
     // A widget might be linked to file based media
     public $media;
 
+    public function __construct()
+    {
+        $this->widgetOptions = array();
+    }
+
     public function __clone()
     {
         $this->widgetId = null;
@@ -46,11 +51,14 @@ class Widget {
 
     public function save()
     {
+        if ($this->widgetId == null || $this->widgetId == 0)
+            $this->add();
+        else
+            $this->update();
 
-        if ($this->widgetOptions != null && count($this->widgetOptions) > 0) {
-            foreach ($this->widgetOptions as $widgetOption) {
-                $widgetOption->save();
-            }
+        foreach ($this->widgetOptions as $widgetOption) {
+            /* @var \Xibo\Entity\WidgetOption $widgetOption */
+            $widgetOption->save();
         }
     }
 

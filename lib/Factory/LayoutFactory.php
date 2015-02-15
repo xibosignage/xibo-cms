@@ -31,6 +31,10 @@ use Xibo\Entity\Widget;
 use Xibo\Entity\WidgetOption;
 use Xibo\Exception\NotFoundException;
 
+/**
+ * Class LayoutFactory
+ * @package Xibo\Factory
+ */
 class LayoutFactory
 {
     /**

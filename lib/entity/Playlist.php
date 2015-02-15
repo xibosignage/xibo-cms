@@ -33,6 +33,18 @@ class Playlist
     public $tags;
     public $widgets;
 
+    /**
+     * The regions that this Playlist belongs to
+     * @var array[int]
+     */
+    public $regionIds;
+
+    public function __construct()
+    {
+        $this->widgets = array();
+        $this->tags = array();
+    }
+
     public function __clone()
     {
         $this->playlistId = null;
@@ -40,19 +52,46 @@ class Playlist
         $this->widgets = array_map(function ($object) { return clone $object; }, $this->widgets);
     }
 
+    /**
+     * Sets the Owner
+     * @param int $ownerId
+     */
     public function setOwner($ownerId)
+    {
+        $this->ownerId = $ownerId;
+    }
+
+    /**
+     * Assign this Playlist to a Region
+     * @param int $regionId
+     */
+    public function assignRegion($regionId)
+    {
+        if (!in_array($regionId, $this->regionIds))
+            $this->regionIds[] = $regionId;
+    }
+
+    /**
+     * Load
+     */
+    public function load()
     {
 
     }
 
+    /**
+     * Saves
+     */
     public function save()
     {
+        if ($this->playlistId == null || $this->playlistId == 0)
+            $this->add();
+        else
+            $this->update();
 
-        if ($this->widgets != null) {
-            foreach ($this->widgets as $widget) {
-                /* @var Widget $widget */
-                $widget->save();
-            }
+        foreach ($this->widgets as $widget) {
+            /* @var Widget $widget */
+            $widget->save();
         }
     }
 

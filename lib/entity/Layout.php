@@ -49,6 +49,12 @@ class Layout
     // Track which bits of the layout have been loaded
     public $basicInfoLoaded = false;
 
+    public function __construct()
+    {
+        $this->regions = array();
+        $this->tags = array();
+    }
+
     public function __clone()
     {
         // Clear the layout id
@@ -99,11 +105,15 @@ class Layout
         }
 
         // Update the regions
-        if ($this->regions != null) {
-            foreach ($this->regions as $region) {
-                /* @var Region $region */
-                $region->save();
-            }
+        foreach ($this->regions as $region) {
+            /* @var Region $region */
+            $region->save();
+        }
+
+        // Save the tags
+        foreach ($this->tags as $tag) {
+            /* @var Tag $tag */
+            $tag->save();
         }
     }
 
@@ -116,7 +126,7 @@ class Layout
     {
         // We must provide either a template or a resolution
         if ($this->width == 0 || $this->height == 0)
-            throw new \InvalidArgumentException(__('The layout dimensions cannot be 0'));
+            throw new \InvalidArgumentException(__('The layout dimensions cannot be empty'));
 
         // Validation
         if (strlen($this->layout) > 50 || strlen($this->layout) < 1)
@@ -160,21 +170,26 @@ class Layout
      */
     private function add()
     {
-        $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, status, width, height)';
-        $sql .= ' VALUES (:layout, :description, :userid, :createddt, :modifieddt, :status, :width, :height)';
+        $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, status, width, height, schemaVersion)';
+        $sql .= ' VALUES (:layout, :description, :userid, :createddt, :modifieddt, :status, :width, :height, 3)';
 
         $time = \DateManager::getSystemDate(null, 'Y-m-d h:i:s');
 
-        $this->layoutId = \PDOConnect::insert($sql, array(
-            'layout' => $this->layout,
-            'description' => $this->description,
-            'userid' => $this->ownerId,
-            'createddt' => $time,
-            'modifieddt' => $time,
-            'status' => 3,
-            'width' => $this->width,
-            'height' => $this->height
-        ));
+        try {
+            $this->layoutId = \PDOConnect::insert($sql, array(
+                'layout' => $this->layout,
+                'description' => $this->description,
+                'userid' => $this->ownerId,
+                'createddt' => $time,
+                'modifieddt' => $time,
+                'status' => 3,
+                'width' => $this->width,
+                'height' => $this->height
+            ));
+        }
+        catch (\PDOException $e) {
+            throw new \Exception(__('Could not add Layout'));
+        }
 
         // Add a Campaign
         $campaign = new \Campaign();

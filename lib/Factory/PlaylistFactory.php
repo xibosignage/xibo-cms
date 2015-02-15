@@ -3,7 +3,7 @@
  * Xibo - Digital Signage - http://www.xibo.org.uk
  * Copyright (C) 2015 Spring Signage Ltd
  *
- * This file (Tag.php) is part of Xibo.
+ * This file (PlaylistFactory.php) is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -20,29 +20,21 @@
  */
 
 
-namespace Xibo\Entity;
+namespace Xibo\Factory;
 
 
-class Tag
+use Xibo\Entity\Playlist;
+
+class PlaylistFactory
 {
-    public $tagId;
-    public $tag;
-
-    public $layouts;
-    public $media;
-
-    public function assignLayout($layoutId)
+    /**
+     * Load Playlists by
+     * @param $regionId
+     * @return array[Playlist]
+     */
+    public static function loadByRegionId($regionId)
     {
-
-    }
-
-    public function assignMedia($mediaId)
-    {
-
-    }
-
-    public function save()
-    {
-
+        //TODO fill in playlist factory
+        return array(new Playlist());
     }
 }
