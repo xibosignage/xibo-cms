@@ -41,7 +41,7 @@ var text_callback = function(dialog)
         var scale = $('#layout').attr('designer_scale');
 
         $("#cke_ta_text .cke_contents").css({
-            background: $('#layout').css('background-color'),
+            background: $('#layout').css('background-color')
         });
         
         $("#cke_ta_text iframe").css({
