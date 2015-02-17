@@ -651,6 +651,15 @@ class Twitter extends Module
             CURLOPT_URL => $url,
         );
 
+        // Proxy support
+        if (Config::GetSetting('PROXY_HOST') != '') {
+            $httpOptions[CURLOPT_PROXY] = Config::GetSetting('PROXY_HOST');
+            $httpOptions[CURLOPT_PROXYPORT] = Config::GetSetting('PROXY_PORT');
+
+            if (Config::GetSetting('PROXY_AUTH') != '')
+                $httpOptions[CURLOPT_PROXYUSERPWD] = Config::GetSetting('PROXY_AUTH');
+        }
+
         $curl = curl_init();
 
         // Set options
