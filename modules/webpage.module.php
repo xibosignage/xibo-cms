@@ -58,7 +58,7 @@ class webpage extends Module
         Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" />');
 
         $formFields = array();
-        
+         
         $formFields[] = FormManager::AddText('uri', __('Link'), NULL, 
             __('The Location (URL) of the webpage'), 'l', 'required');
 
