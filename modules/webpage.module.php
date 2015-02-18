@@ -62,6 +62,9 @@ class webpage extends Module
         $formFields[] = FormManager::AddText('uri', __('Link'), NULL, 
             __('The Location (URL) of the webpage'), 'l', 'required');
 
+        $formFields[] = FormManager::AddText('name', __('Name'), NULL, 
+            __('An optional name for this media'), 'n');
+
         $formFields[] = FormManager::AddNumber('duration', __('Duration'), NULL, 
             __('The duration in seconds this counter should be displayed'), 'd', 'required');
 
@@ -170,6 +173,9 @@ class webpage extends Module
         $formFields[] = FormManager::AddText('uri', __('Link'), urldecode($this->GetOption('uri')), 
             __('The Location (URL) of the webpage'), 'l', 'required');
 
+        $formFields[] = FormManager::AddText('name', __('Name'), $this->GetOption('name'), 
+            __('An optional name for this media'), 'n');
+
         $formFields[] = FormManager::AddNumber('duration', __('Duration'), $this->duration, 
             __('The duration in seconds this counter should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
 
@@ -269,6 +275,7 @@ class webpage extends Module
         $transparency     = Kit::GetParam('transparency', _POST, _CHECKBOX, 'off');
         $offsetLeft = Kit::GetParam('offsetLeft', _POST, _INT);
         $offsetTop = Kit::GetParam('offsetTop', _POST, _INT);
+	$name = Kit::GetParam('name', _POST, _STRING);
         
         $url = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
                         
@@ -301,6 +308,7 @@ class webpage extends Module
         $this->SetOption('pageWidth', Kit::GetParam('pageWidth', _POST, _INT));
         $this->SetOption('pageHeight', Kit::GetParam('pageHeight', _POST, _INT));
         $this->SetOption('modeid', Kit::GetParam('modeid', _POST, _INT));
+	$this->SetOption('name', $name);
 
         // Should have built the media object entirely by this time
         // This saves the Media Object to the Region
@@ -344,6 +352,7 @@ class webpage extends Module
         $transparency     = Kit::GetParam('transparency', _POST, _CHECKBOX, 'off');
         $offsetLeft = Kit::GetParam('offsetLeft', _POST, _INT);
         $offsetTop = Kit::GetParam('offsetTop', _POST, _INT);
+	$name = Kit::GetParam('name', _POST, _STRING);
         
         // If we have permission to change it, then get the value from the form
         if ($this->auth->modifyPermissions)
@@ -376,6 +385,7 @@ class webpage extends Module
         $this->SetOption('pageWidth', Kit::GetParam('pageWidth', _POST, _INT));
         $this->SetOption('pageHeight', Kit::GetParam('pageHeight', _POST, _INT));
         $this->SetOption('modeid', Kit::GetParam('modeid', _POST, _INT));
+	$this->SetOption('name', $name);
 
         // Should have built the media object entirely by this time
         // This saves the Media Object to the Region
@@ -477,6 +487,10 @@ class webpage extends Module
         $template = str_replace('<!--[[[JAVASCRIPTCONTENT]]]-->', $after_body, $template);
 
         return $template;
+    }
+
+    public function GetName() {
+        return $this->GetOption('name');
     }
 
     public function IsValid() {
