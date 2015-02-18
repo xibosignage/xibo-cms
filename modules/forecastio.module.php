@@ -210,6 +210,9 @@ class ForecastIo extends Module
             'value',
             __('Select the language you would like to use.'), 'l');
 
+	$formFields['general'][] = FormManager::AddText('color', __('Colour'), '#000',
+            __('Please select a colour for the foreground text.'), 'c', 'required');
+
         $formFields['advanced'][] = FormManager::AddCheckbox('overrideTemplate', __('Override the template?'), 0, 
             __('Tick if you would like to override the template.'), 'o');
 
@@ -268,7 +271,7 @@ class ForecastIo extends Module
 
         // You can store any additional options for your module using the SetOption method
         $this->SetOption('useDisplayLocation', Kit::GetParam('useDisplayLocation', _POST, _CHECKBOX));
-        $this->SetOption('color', Kit::GetParam('color', _POST, _STRING, '#000'));
+        $this->SetOption('color', Kit::GetParam('color', _POST, _STRING));
         $this->SetOption('longitude', Kit::GetParam('longitude', _POST, _DOUBLE));
         $this->SetOption('latitude', Kit::GetParam('latitude', _POST, _DOUBLE));
         $this->SetOption('templateId', Kit::GetParam('templateId', _POST, _STRING));
