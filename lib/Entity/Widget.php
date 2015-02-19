@@ -24,6 +24,7 @@ namespace Xibo\Entity;
 
 
 use Xibo\Factory\WidgetFactory;
+use Xibo\Factory\WidgetMediaFactory;
 use Xibo\Factory\WidgetOptionFactory;
 
 class Widget
@@ -68,8 +69,8 @@ class Widget
         // Load the widget options
         $this->widgetOptions = WidgetOptionFactory::loadByWidgetId($this->widgetId);
 
-        // TODO: Load any media assignments for this widget
-
+        // Load any media assignments for this widget
+        $this->mediaIds = WidgetMediaFactory::loadByWidgetId($this->widgetId);
     }
 
     public function save()
@@ -119,8 +120,19 @@ class Widget
         ));
     }
 
+    /**
+     * Link Media
+     */
     private function linkMedia()
     {
-        // TODO: Implement linkMedia (lkwidgetmedia table)
+        // TODO: Make this more efficient by storing the prepared SQL statement
+        $sql = 'INSERT INTO `lkwidgetmedia` (widgetId, mediaId) VALUES (:widgetId, :mediaId) ON DUPLICATE KEY UPDATE mediaId = :mediaId';
+
+        foreach ($this->mediaIds as $mediaId) {
+            \PDOConnect::insert($sql, array(
+                'widgetId' => $this->widgetId,
+                'mediaId' => $mediaId
+            ));
+        }
     }
 }
