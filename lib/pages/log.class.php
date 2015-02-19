@@ -90,7 +90,7 @@ class logDAO extends baseDAO {
             'k');
 
         // Advanced Tab
-        $formFields['advanced'][] = FormManager::AddText('filter_fromdt', __('From Date'), $filter_fromdt, NULL, 't');
+        $formFields['advanced'][] = FormManager::AddDatePicker('filter_fromdt', __('From Date'), $filter_fromdt, NULL, 't');
         $formFields['advanced'][] = FormManager::AddText('filter_page', __('Page'), $filter_page, NULL, 'p');
         $formFields['advanced'][] = FormManager::AddText('filter_function', __('Function'), $filter_function, NULL, 'f');
         
@@ -171,7 +171,7 @@ class logDAO extends baseDAO {
 			$starttime_timestamp = time();
 		}
 		else {
-			$start_date = explode("/",$fromdt); // dd/mm/yyyy
+			$start_date = DateManager::getTimestampFromString($fromdt);
 			$starttime_timestamp = strtotime($start_date[1] . "/" . $start_date[0] . "/" . $start_date[2] . ' ' . date("H", time()) . ":" . date("i", time()) . ':59');
 		}
 
@@ -220,7 +220,7 @@ class logDAO extends baseDAO {
 		foreach ($log as $row) { 
 
             $row['logid'] = Kit::ValidateParam($row['logid'], _INT);
-			$row['logdate'] = Kit::ValidateParam($row['logdate'], _STRING);
+			$row['logdate'] = DateManager::getLocalDate(strtotime(Kit::ValidateParam($row['logdate'], _STRING)), 'y-m-d h:i:s');
             $row['display'] = (Kit::ValidateParam($row['display'], _STRING) == '') ? __('CMS') : Kit::ValidateParam($row['display'], _STRING);
 			$row['page'] = Kit::ValidateParam($row['page'], _STRING);
 			$row['function'] = Kit::ValidateParam($row['function'], _STRING);

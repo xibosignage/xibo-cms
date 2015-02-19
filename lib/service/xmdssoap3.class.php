@@ -727,8 +727,10 @@ class XMDSSoap3
         // Load the XML into a DOMDocument
         $document = new DOMDocument("1.0");
 
-        if (!$document->loadXML($logXml))
-            throw new SoapFault('Receiver', "XML Cannot be loaded into DOM Document.");
+        if (!$document->loadXML($logXml)) {
+            Debug::Error('Malformed XML from Player, this will be discarded. The Raw XML String provided is: ' . $logXml, $this->displayId);
+            return true;
+        }
 
         foreach ($document->documentElement->childNodes as $node) {
             

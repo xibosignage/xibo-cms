@@ -262,6 +262,8 @@ class Install {
         // We should have a database that we can access and populate with our tables.
         $sql_files = array('structure.sql', 'data.sql');
         $sqlStatementCount = 0;
+        $sql_file = '';
+        $sql = '';
 
         try {
             $dbh = PDOConnect::init();
@@ -280,9 +282,8 @@ class Install {
             }
         }
         catch (Exception $e) {
-            throw new Exception(sprintf(__('An error occurred populating the database. Statement number: %d. Error Message = [%s]'), $sqlStatementCount, $e->getMessage()));
+            throw new Exception(sprintf(__('An error occurred populating the database. Statement number: %d. Error Message = [%s]. File = [%s]. SQL = [%s].'), $sqlStatementCount, $e->getMessage(), $sql_file, $sql));
         }
-
         
         // Write out a new settings.php
         $fh = fopen('settings.php', 'wt');

@@ -147,7 +147,7 @@ class displayDAO extends baseDAO
         $displayObject->licensed = Kit::GetParam('licensed', _POST, _INT);
         $displayObject->incSchedule = Kit::GetParam('inc_schedule', _POST, _INT);
         $displayObject->emailAlert = Kit::GetParam('email_alert', _POST, _INT);
-        $displayObject->alertTimeout = Kit::GetParam('alert_timeout', _POST, _INT);
+        $displayObject->alertTimeout = Kit::GetParam('alert_timeout', _POST, _CHECKBOX);
         $displayObject->wakeOnLanEnabled = Kit::GetParam('wakeOnLanEnabled', _POST, _CHECKBOX);
         $displayObject->wakeOnLanTime = Kit::GetParam('wakeOnLanTime', _POST, _STRING);
         $displayObject->broadCastAddress = Kit::GetParam('broadCastAddress', _POST, _STRING);
@@ -331,6 +331,9 @@ class displayDAO extends baseDAO
                     if ($option['id'] == $profile[$i]['value'])
                         $profile[$i]['valueString'] = $option['value'];
                 }
+            }
+            else if ($profile[$i]['fieldType'] == 'timePicker') {
+                $profile[$i]['valueString'] = DateManager::getSystemDate($profile[$i]['value'] / 1000, 'H:i');
             }
         }
 

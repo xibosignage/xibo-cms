@@ -651,6 +651,15 @@ class Twitter extends Module
             CURLOPT_URL => $url,
         );
 
+        // Proxy support
+        if (Config::GetSetting('PROXY_HOST') != '') {
+            $httpOptions[CURLOPT_PROXY] = Config::GetSetting('PROXY_HOST');
+            $httpOptions[CURLOPT_PROXYPORT] = Config::GetSetting('PROXY_PORT');
+
+            if (Config::GetSetting('PROXY_AUTH') != '')
+                $httpOptions[CURLOPT_PROXYUSERPWD] = Config::GetSetting('PROXY_AUTH');
+        }
+
         $curl = curl_init();
 
         // Set options
@@ -689,7 +698,7 @@ class Twitter extends Module
         // We have a 200 - therefore we want to think about caching the bearer token
         // First, lets check its a bearer token
         if ($body->token_type != 'bearer') {
-            Debug::Error('Twitter API returned OK, but without a bearer token.');
+            Debug::Error('Twitter API returned OK, but without a bearer token. ' . var_export($body, true));
             return false;
         }
 

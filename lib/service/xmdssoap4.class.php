@@ -143,7 +143,7 @@ class XMDSSoap4
                 try {
                     $displayProfile = new DisplayProfile();
                     $displayProfile->displayProfileId = (empty($row['displayprofileid']) ? 0 : Kit::ValidateParam($row['displayprofileid'], _INT));
-                    
+
                     if ($displayProfile->displayProfileId == 0) {
                         // Load the default profile
                         $displayProfile->type = $clientType;
@@ -215,7 +215,7 @@ class XMDSSoap4
         if ($isAuditing == 1)
             Debug::Audit($returnXml, $displayId);
 
-        return $return->saveXML();
+        return $returnXml;
     }
 
     /**
@@ -867,8 +867,10 @@ class XMDSSoap4
         // Load the XML into a DOMDocument
         $document = new DOMDocument("1.0");
 
-        if (!$document->loadXML($logXml))
-            throw new SoapFault('Receiver', 'XML Cannot be loaded into DOM Document.');
+        if (!$document->loadXML($logXml)) {
+            Debug::Error('Malformed XML from Player, this will be discarded. The Raw XML String provided is: ' . $logXml, $this->displayId);
+            return true;
+        }
 
         foreach ($document->documentElement->childNodes as $node) {
             
@@ -882,6 +884,7 @@ class XMDSSoap4
             $mediaId = "";
             $method = '';
             $thread = '';
+            $type = '';
 
             // This will be a bunch of trace nodes
             $message = $node->textContent;

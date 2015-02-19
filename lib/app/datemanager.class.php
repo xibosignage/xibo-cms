@@ -31,7 +31,13 @@ class DateManager
     {
         return gmdate("H:i T");
     }
-    
+
+    /**
+     * Get a local date
+     * @param int $timestamp
+     * @param string $format
+     * @return bool|string
+     */
     public static function getLocalDate($timestamp = NULL, $format = NULL)
     {
         if ($timestamp == NULL)
@@ -53,6 +59,19 @@ class DateManager
 
         // Always return ISO formatted dates
         return date($format, $timestamp);
+    }
+
+    public static function getMidnightSystemDate($timestamp = NULL, $format = NULL)
+    {
+        if ($timestamp == NULL)
+            $timestamp = time();
+
+        // Get the timestamp and Trim the hours off it.
+        $dateTime = new DateTime();
+        $dateTime->setTimestamp($timestamp);
+        $dateTime->setTime(0, 0, 0);
+
+        return self::getSystemDate($dateTime->getTimestamp(), $format);
     }
 
     /**
@@ -78,20 +97,36 @@ class DateManager
      * @param string $date
      * @return int
      */
-    public static function getDateFromString($date)
+    public static function getTimestampFromString($date)
     {
         $timestamp = strtotime($date);
 
         // If we are Jalali, then we want to convert from Jalali back to Gregorian. Otherwise assume input is already Gregorian.
         if (Config::GetSetting('CALENDAR_TYPE') == 'Jalali') {
             // Split the time stamp into its component parts and pass it to the conversion.
-            $date = jDateTime::toGregorian(date('Y', $timestamp), date('m', $timestamp), date('d', $timestamp));
+            $date = trim($date);
+
+            $split = (stripos($date, ' ') > 0) ? explode(' ', $date) : array($date, '');
+
+            $dateSplit = explode('-', $split[0]);
+
+            $date = jDateTime::toGregorian($dateSplit[0], $dateSplit[1], $dateSplit[2]);
+
+            //Debug::Audit('Converted to Gregorian from Jalali: ' . var_export($date, true));
 
             // Convert that back into a date using strtotime - the date is now Gregorian
-            $timestamp = strtotime($date[0] . '-' . $date[1] . '-' . $date[2] . ' ' . date('H') . ':' . date('i') . ':' . date('s'));
+            $timestamp = strtotime($date[0] . '-' . $date[1] . '-' . $date[2] . ' ' . $split[1]);
         }
 
         return $timestamp;
+    }
+
+    public static function getTimestampFromTimeString($time) {
+        return strtotime($time);
+    }
+
+    public static function getIsoDateFromString($date) {
+        return date('Y-m-d H:i:s', self::getTimestampFromString($date));
     }
 
     /**

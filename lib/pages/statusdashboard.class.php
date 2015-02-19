@@ -31,7 +31,7 @@ class statusdashboardDAO extends baseDAO {
         try {
             $dbh = PDOConnect::init();
         
-            $sth = $dbh->prepare('SELECT MONTHNAME(FROM_UNIXTIME(month)) AS month, IFNULL(SUM(Size), 0) AS size FROM `bandwidth` WHERE month > :month GROUP BY MONTHNAME(FROM_UNIXTIME(month)) ORDER BY MIN(month);');
+            $sth = $dbh->prepare('SELECT FROM_UNIXTIME(month) AS month, IFNULL(SUM(Size), 0) AS size FROM `bandwidth` WHERE month > :month GROUP BY FROM_UNIXTIME(month) ORDER BY MIN(month);');
             $sth->execute(array('month' => time() - (86400 * 365)));
 
             $results = $sth->fetchAll();
@@ -59,7 +59,7 @@ class statusdashboardDAO extends baseDAO {
                 $size = ((double)$row['size']) / (pow(1024, $base));
                 $remaining = $xmdsLimit - $size;
                 $output[] = array(
-                        'label' => __($row['month']), 
+                        'label' => DateManager::getLocalDate(DateManager::getDateFromGregorianString($row['month']), 'F'),
                         'value' => round($size, 2),
                         'limit' => round($remaining, 2)
                     );
@@ -68,7 +68,7 @@ class statusdashboardDAO extends baseDAO {
             // What if we are empty?
             if (count($output) == 0) {
                 $output[] = array(
-                        'label' => __(date("M")), 
+                        'label' => DateManager::getLocalDate(null, 'F'),
                         'value' => 0,
                         'limit' => 0
                     );

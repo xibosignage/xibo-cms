@@ -60,7 +60,7 @@ $(document).ready(function() {
 
     // Calendar is initialised without any event_source (that is changed when the selector is used)
     if (($('#Calendar').length > 0)) {
-        options.type = ($('#CalendarContainer').data().calendarType);
+        options.type = calendarType;
         calendar = $('#Calendar').calendar(options);
 
         // Set up our display selector control
@@ -111,7 +111,8 @@ var setupScheduleForm = function(form) {
         linkFormat: "yyyy-mm-dd hh:ii",
         minuteStep: 5,
         autoClose: true,
-        language: language
+        language: language,
+        calendarType: calendarType
     });
 
     $('#endtimeControl', form).datetimepicker({
@@ -120,7 +121,8 @@ var setupScheduleForm = function(form) {
         linkFormat: "yyyy-mm-dd hh:ii",
         minuteStep: 5,
         autoClose: true,
-        language: language
+        language: language,
+        calendarType: calendarType
     });
 
     $('#rec_rangeControl', form).datetimepicker({
@@ -129,7 +131,8 @@ var setupScheduleForm = function(form) {
         linkFormat: "yyyy-mm-dd hh:ii",
         minuteStep: 5,
         autoClose: true,
-        language: language
+        language: language,
+        calendarType: calendarType
     });
 };
 

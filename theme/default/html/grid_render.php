@@ -96,7 +96,7 @@ if (!$tabs)
 
                                 $i++;
                                 
-                                if ($field['enabled'] != 1) { ?>
+                                if (isset($field['enabled']) && $field['enabled'] != 1) { ?>
                                     <div class="form-group <?php echo $field['groupClass']; ?>">
                                         <label class="control-label" for="<?php echo $field['name']; ?>" accesskey="<?php echo $field['accesskey']; ?>"><?php echo $field['title']; ?></label>
                                         <div>
@@ -189,6 +189,15 @@ if (!$tabs)
                                             }
                                             ?>
                                             </select>
+                                            <span class="help-block"><?php echo $field['helpText']; ?></span>
+                                        </div>
+                                    </div>
+                                <?php }
+                                else if ($field['fieldType'] == 'datePicker') { ?>
+                                    <div class="form-group <?php echo $field['groupClass']; ?>">
+                                        <label class="control-label" for="<?php echo $field['name']; ?>" accesskey="<?php echo $field['accesskey']; ?>"><?php echo $field['title']; ?></label>
+                                        <div>
+                                            <input class="form-control datePicker" name="<?php echo $field['name']; ?>" type="text" id="<?php echo $field['name']; ?>" value="<?php echo $field['value']; ?>" <?php echo $field['validation']; ?> readonly />
                                             <span class="help-block"><?php echo $field['helpText']; ?></span>
                                         </div>
                                     </div>

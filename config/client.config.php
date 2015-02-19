@@ -273,7 +273,7 @@ $CLIENT_CONFIG = array(
                         'type' => _CHECKBOX,
                         'fieldType' => 'checkbox',
                         'default' => 0,
-                        'helpText' => __('CEF is Chrome Embedded and offers up to date web rendering. If unselected the default Internet Explorer control will be used.'),
+                        'helpText' => __('CEF is Chrome Embedded and offers up to date web rendering. If unselected the default Internet Explorer control will be used. The Player software will need to be restarted after making this change.'),
                         'enabled' => true,
                         'groupClass' => NULL
                     ),
@@ -502,6 +502,28 @@ $CLIENT_CONFIG = array(
                         'fieldType' => 'checkbox',
                         'default' => 0,
                         'helpText' => __('When enabled the client will send the current layout to the CMS each time it changes. Warning: This is bandwidth intensive and should be disabled unless on a LAN.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'updateStartWindow',
+                        'tabId' => 'advanced',
+                        'title' => __('Update Window Start Time'),
+                        'type' => _STRING,
+                        'fieldType' => 'timePicker',
+                        'default' => 0,
+                        'helpText' => __('The start of the time window to install application updates.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'updateEndWindow',
+                        'tabId' => 'advanced',
+                        'title' => __('Update Window End Time'),
+                        'type' => _STRING,
+                        'fieldType' => 'timePicker',
+                        'default' => 0,
+                        'helpText' => __('The end of the time window to install application updates.'),
                         'enabled' => true,
                         'groupClass' => NULL
                     ),

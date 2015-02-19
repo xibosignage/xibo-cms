@@ -72,7 +72,7 @@ UPDATE `setting` SET cat = 'defaults', ordering = 30, usersee = '0', userchange 
 UPDATE `setting` SET cat = 'defaults', ordering = 40, usersee = '1', userchange = '0', `default` = 'Unchecked', `title` = 'Allow modifications to the transition configuration?' WHERE setting = 'TRANSITION_CONFIG_LOCKED_CHECKB';
 UPDATE `setting` SET cat = 'displays', ordering = 10, usersee = '1', userchange = '1', `default` = '51.504', `title` = 'Default Latitude' WHERE setting = 'DEFAULT_LAT';
 UPDATE `setting` SET cat = 'displays', ordering = 20, usersee = '1', userchange = '1', `default` = '-0.104', `title` = 'Default Longitude' WHERE setting = 'DEFAULT_LONG';
-UPDATE `setting` SET cat = 'displays', ordering = 30, usersee = '1', userchange = '1', `default` = '0', `title` = 'Display a VNC Link?' WHERE setting = 'SHOW_DISPLAY_AS_VNCLINK';
+UPDATE `setting` SET cat = 'displays', ordering = 30, usersee = '1', userchange = '1', `default` = '', `title` = 'Display a VNC Link?' WHERE setting = 'SHOW_DISPLAY_AS_VNCLINK';
 UPDATE `setting` SET cat = 'displays', ordering = 40, usersee = '1', userchange = '1', `default` = '_top', `title` = 'Open VNC Link in new window?' WHERE setting = 'SHOW_DISPLAY_AS_VNC_TGT';
 UPDATE `setting` SET cat = 'displays', ordering = 50, usersee = '0', userchange = '0', `default` = '0', `title` = 'Number of display slots' WHERE setting = 'MAX_LICENSED_DISPLAYS';
 UPDATE `setting` SET cat = 'general', ordering = 10, usersee = '1', userchange = '1', `default` = 'On', `title` = 'Allow usage tracking?' WHERE setting = 'PHONE_HOME';
