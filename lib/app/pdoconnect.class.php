@@ -115,7 +115,11 @@ Class PDOConnect {
 			return $dbh->lastInsertId();
 		}
 		catch (PDOException $e) {
-			Debug::Error($e->getMessage());
+            // Get the calling class / function
+            $trace = debug_backtrace();
+            $caller = $trace[1];
+
+            Debug::LogEntry('error', $e->getMessage() . PHP_EOL . $e->getTraceAsString(), (isset($caller['class'])) ? $caller['class'] : 'Global', $caller['function']);
 			throw $e;
 		}
 	}
@@ -126,7 +130,7 @@ Class PDOConnect {
 	 * @param array $params
 	 * @throws PDOException
 	 */
-	public static function execute($sql, $params)
+	public static function update($sql, $params)
 	{
 		try {
 			$dbh = PDOConnect::init();
@@ -135,7 +139,11 @@ Class PDOConnect {
 			$sth->execute($params);
 		}
 		catch (PDOException $e) {
-			Debug::Error($e->getMessage());
+            // Get the calling class / function
+            $trace = debug_backtrace();
+            $caller = $trace[1];
+
+            Debug::LogEntry('error', $e->getMessage() . PHP_EOL . $e->getTraceAsString(), (isset($caller['class'])) ? $caller['class'] : 'Global', $caller['function']);
 			throw $e;
 		}
 	}
@@ -158,7 +166,11 @@ Class PDOConnect {
 			return $sth->fetchAll(PDO::FETCH_ASSOC);
 		}
 		catch (PDOException $e) {
-			Debug::Error($e->getMessage());
+            // Get the calling class / function
+            $trace = debug_backtrace();
+            $caller = $trace[1];
+
+            Debug::LogEntry('error', $e->getMessage() . PHP_EOL . $e->getTraceAsString(), (isset($caller['class'])) ? $caller['class'] : 'Global', $caller['function']);
 			throw $e;
 		}
 	}

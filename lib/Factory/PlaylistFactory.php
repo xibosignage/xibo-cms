@@ -35,6 +35,24 @@ class PlaylistFactory
     public static function loadByRegionId($regionId)
     {
         //TODO fill in playlist factory
-        return array(new Playlist());
+        return PlaylistFactory::query(null, array('regionId' => $regionId));
+    }
+
+    public static function query($sortOrder = null, $filterBy = null)
+    {
+        $entries = array();
+
+        $sql = 'SELECT playlist.* FROM `playlist` INNER JOIN `lkregionplaylist` ON lkregionplaylist.playlistId = playlist.playlistId WHERE lkregionplaylist.regionId = :regionId';
+
+        foreach (\PDOConnect::select($sql, array('regionId' => \Kit::GetParam('regionId', $filterBy, _INT))) as $row) {
+            $playlist = new Playlist();
+            $playlist->name = \Kit::ValidateParam($row['name'], _STRING);
+            $playlist->ownerId = \Kit::ValidateParam($row['ownerId'], _INT);
+            $playlist->playlistId = \Kit::ValidateParam($row['playlistId'], _INT);
+
+            $entries[] = $playlist;
+        }
+
+        return $entries;
     }
 }

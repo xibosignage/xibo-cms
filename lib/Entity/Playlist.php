@@ -30,7 +30,7 @@ class Playlist
     public $playlistId;
     public $ownerId;
 
-    public $playlist;
+    public $name;
 
     public $tags;
     public $widgets;
@@ -62,6 +62,11 @@ class Playlist
     public function setOwner($ownerId)
     {
         $this->ownerId = $ownerId;
+
+        foreach ($this->widgets as $widget) {
+            /* @var Widget $widget */
+            $widget->setOwner($ownerId);
+        }
     }
 
     /**
@@ -80,6 +85,12 @@ class Playlist
     public function load()
     {
         $this->widgets = WidgetFactory::loadByPlaylistId($this->playlistId);
+
+        // Load the widgets
+        foreach ($this->widgets as $widget) {
+            /* @var Widget $widget */
+            $widget->load();
+        }
     }
 
     /**
@@ -94,25 +105,48 @@ class Playlist
 
         foreach ($this->widgets as $widget) {
             /* @var Widget $widget */
+
+            // Assert the playlistId
+            $widget->playlistId = $this->playlistId;
             $widget->save();
         }
+
+        // Manage the assignments to regions
+        $this->linkRegions();
     }
 
     private function add()
     {
-        $sql = 'INSERT INTO `playlist` (`playlist`, `ownerId`) VALUES (:playlist, :ownerId)';
+        $sql = 'INSERT INTO `playlist` (`name`, `ownerId`) VALUES (:name, :ownerId)';
         $this->playlistId = \PDOConnect::insert($sql, array(
-            'playlist' => $this->playlist,
+            'name' => $this->name,
             'ownerId' => $this->ownerId
         ));
     }
 
     private function update()
     {
-        $sql = 'UPDATE `playlist` SET `playlist` = :playlist WHERE `playlistId` = :playlistId';
-        \PDOConnect::execute($sql, array(
+        $sql = 'UPDATE `playlist` SET `name` = :name WHERE `playlistId` = :playlistId';
+        \PDOConnect::update($sql, array(
             'playlistId' => $this->playlistId,
-            'playlist' => $this->playlist
+            'name' => $this->name
         ));
+    }
+
+    /**
+     * Link regions
+     */
+    private function linkRegions()
+    {
+        $order = 0;
+        foreach ($this->regionIds as $regionId) {
+            $order++;
+            \PDOConnect::insert('INSERT INTO `lkregionplaylist` (regionId, playlistId, displayOrder) VALUES (:regionId, :playlistId, :displayOrder) ON DUPLICATE KEY UPDATE regionId = :regionId2', array(
+                'regionId' => $regionId,
+                'regionId2' => $regionId,
+                'playlistId' => $this->playlistId,
+                'displayOrder' => $order
+            ));
+        }
     }
 }

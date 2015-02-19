@@ -27,6 +27,7 @@ use Xibo\Factory\PlaylistFactory;
 class Region
 {
     public $regionId;
+    public $layoutId;
     public $ownerId;
 
     public $name;
@@ -37,8 +38,6 @@ class Region
     public $zIndex;
 
     public $playlists;
-
-    public $basicInfoLoaded = false;
 
     public function __construct()
     {
@@ -77,6 +76,9 @@ class Region
         foreach ($this->playlists as $playlist) {
             /* @var Playlist $playlist */
             $playlist->load();
+
+            // Assign my regionId
+            $playlist->assignRegion($this->regionId);
         }
     }
 
@@ -90,6 +92,11 @@ class Region
         // Save all Playlists
         foreach ($this->playlists as $playlist) {
             /* @var Playlist $playlist */
+
+            // Make sure this region is assigned
+            $playlist->assignRegion($this->regionId);
+
+            // Save the playlist
             $playlist->save();
         }
     }
@@ -100,13 +107,40 @@ class Region
     }
 
     // Add / Update
+    /**
+     * Add
+     */
     private function add()
     {
+        $sql = 'INSERT INTO `region` (`layoutId`, `ownerId`, `name`, `width`, `height`, `top`, `left`) VALUES (:layoutId, :ownerId, :name, :width, :height, :top, :left)';
 
+        $this->regionId = \PDOConnect::insert($sql, array(
+            'layoutId' => $this->layoutId,
+            'ownerId' => $this->ownerId,
+            'name' => $this->name,
+            'width' => $this->width,
+            'height' => $this->height,
+            'top' => $this->top,
+            'left' => $this->left
+        ));
     }
 
+    /**
+     * Update Database
+     */
     private function update()
     {
+        $sql = 'UPDATE `region` SET `layoutId` = :layoutId, `ownerId` = :ownerId, `name` = :name, `width` = :width, `height` = :height, `top` = :top, `left` = :left WHERE `regionId` = :regionId';
 
+        \PDOConnect::update($sql, array(
+            'layoutId' => $this->layoutId,
+            'ownerId' => $this->ownerId,
+            'name' => $this->name,
+            'width' => $this->width,
+            'height' => $this->height,
+            'top' => $this->top,
+            'left' => $this->left,
+            'regionId' => $this->regionId
+        ));
     }
 }

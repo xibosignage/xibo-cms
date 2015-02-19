@@ -24,7 +24,6 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\Layout;
-use Xibo\Entity\Media;
 use Xibo\Entity\Playlist;
 use Xibo\Entity\Region;
 use Xibo\Entity\Widget;
@@ -134,11 +133,16 @@ class LayoutFactory
             $layoutFromXml->campaignId = $layout->campaignId;
             $layoutFromXml->backgroundImageId = $layout->backgroundImageId;
             $layoutFromXml->ownerId = $layout->ownerId;
+            $layoutFromXml->schemaVersion = 3;
 
             // Save this so that it gets converted to the DB format.
             //$layoutFromXml->save();
 
             $layout = $layoutFromXml;
+        }
+        else {
+            // Load the layout
+            $layout->load();
         }
 
         return $layout;
@@ -173,13 +177,15 @@ class LayoutFactory
         foreach ($document->getElementsByTagName('region') as $regionNode) {
             /* @var \DOMElement $regionNode */
             $region = new Region();
-            $region->width = $regionNode->getAttribute('width');
-            $region->height = $regionNode->getAttribute('height');
-            $region->left = $regionNode->getAttribute('left');
-            $region->top = $regionNode->getAttribute('top');
-            $region->regionId = $regionNode->getAttribute('id');
-            $region->ownerId = $regionNode->getAttribute('userId');
+            $region->width = (double)$regionNode->getAttribute('width');
+            $region->height = (double)$regionNode->getAttribute('height');
+            $region->left = (double)$regionNode->getAttribute('left');
+            $region->top = (double)$regionNode->getAttribute('top');
+            $region->ownerId = (int)$regionNode->getAttribute('userId');
             $region->name = $regionNode->getAttribute('name');
+
+            // Use the regionId locally to parse the rest of the XLF
+            $regionId = $regionNode->getAttribute('id');
 
             // Set the region name if empty
             if ($region->name == '')
@@ -187,11 +193,11 @@ class LayoutFactory
 
             // Populate Playlists (XLF doesn't contain any playlists)
             $playlist = new Playlist();
-            $playlist->playlist = $layout->layout . ' ' . $region->name . '-1';
+            $playlist->name = $layout->layout . ' ' . $region->name . '-1';
             $playlist->ownerId = $region->ownerId;
 
             // Get all widgets
-            foreach ($xpath->query('//region[@id="' . $region->regionId . '"]/media') as $mediaNode) {
+            foreach ($xpath->query('//region[@id="' . $regionId . '"]/media') as $mediaNode) {
                 /* @var \DOMElement $mediaNode */
                 $widget = new Widget();
                 $widget->type = $mediaNode->getAttribute('type');
@@ -207,13 +213,11 @@ class LayoutFactory
                 /* @var \Xibo\Entity\Module $module */
 
                 if ($module->regionSpecific == 0) {
-                    $media = new Media();
-                    $media->mediaId = $xlfMediaId;
-                    $widget->media[] = $media;
+                    $widget->mediaIds[] = $xlfMediaId;
                 }
 
                 // Get all widget options
-                foreach ($xpath->query('//region[@id="' . $region->regionId . '"]/media[@id="' . $xlfMediaId . '"]/options') as $optionsNode) {
+                foreach ($xpath->query('//region[@id="' . $regionId . '"]/media[@id="' . $xlfMediaId . '"]/options') as $optionsNode) {
                     /* @var \DOMElement $optionsNode */
                     foreach ($optionsNode->childNodes as $mediaOption) {
                         /* @var \DOMElement $mediaOption */
@@ -227,7 +231,7 @@ class LayoutFactory
                 }
 
                 // Get all widget raw content
-                foreach ($xpath->query('//region[@id="' . $region->regionId . '"]/media[@id="' . $xlfMediaId . '"]/raw') as $rawNode) {
+                foreach ($xpath->query('//region[@id="' . $regionId . '"]/media[@id="' . $xlfMediaId . '"]/raw') as $rawNode) {
                     /* @var \DOMElement $rawNode */
                     // Get children
                     foreach ($rawNode->childNodes as $mediaOption) {
@@ -333,6 +337,11 @@ class LayoutFactory
                 }
             }
 
+            if (\Kit::GetParam('layoutExact', $filterBy, _STRING) != '') {
+                $sql.= " AND layout.layout = :exact ";
+                $params['exact'] = \Kit::GetParam('layout', $filterBy, _STRING);
+            }
+
             // Layout
             if (\Kit::GetParam('layoutId', $filterBy, _INT, 0) != 0) {
                 $sql .= " AND layout.layoutId = :layoutId ";
@@ -396,6 +405,8 @@ class LayoutFactory
             if (is_array($sortOrder))
                 $sql .= 'ORDER BY ' . implode(',', $sortOrder);
 
+            \Debug::sql($sql, $params);
+
             $sth = $dbh->prepare($sql);
             $sth->execute($params);
 
@@ -417,8 +428,6 @@ class LayoutFactory
                 $layout->width = \Kit::ValidateParam($row['width'], _DOUBLE);
                 $layout->height = \Kit::ValidateParam($row['height'], _DOUBLE);
                 $layout->legacyXml = \Kit::ValidateParam($row['legacyXml'], _HTMLSTRING);
-
-                $layout->basicInfoLoaded = true;
 
                 $entries[] = $layout;
             }

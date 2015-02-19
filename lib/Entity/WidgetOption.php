@@ -46,6 +46,6 @@ class WidgetOption
     public function delete()
     {
         $sql = 'DELETE FROM `widgetoption` WHERE `widgetId` = :widgetId AND `option` = :option';
-        \PDOConnect::execute($sql, array('widgetId' => $this->widgetId, 'option' => $this->option));
+        \PDOConnect::update($sql, array('widgetId' => $this->widgetId, 'option' => $this->option));
     }
 }

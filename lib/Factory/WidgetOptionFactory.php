@@ -3,7 +3,7 @@
  * Xibo - Digital Signage - http://www.xibo.org.uk
  * Copyright (C) 2015 Spring Signage Ltd
  *
- * This file (WidgetFactory.php) is part of Xibo.
+ * This file (WidgetOptionFactory.php) is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -23,33 +23,38 @@
 namespace Xibo\Factory;
 
 
-use Xibo\Entity\Widget;
+use Xibo\Entity\WidgetOption;
 
-class WidgetFactory
+class WidgetOptionFactory
 {
     /**
-     * Load widgets by Playlist ID
-     * @param int $playlistId
-     * @return array[Widget]
+     * Load by Widget Id
+     * @param int $widgetId
+     * @return array[WidgetOption]
      */
-    public static function loadByPlaylistId($playlistId)
+    public static function loadByWidgetId($widgetId)
     {
-        return WidgetFactory::query(null, array('playlistId' => $playlistId));
+        return WidgetOptionFactory::query(null, array('widgetId' => $widgetId));
     }
 
+    /**
+     * Query Widget options
+     * @param array $sortOrder
+     * @param array $filterBy
+     * @return array[WidgetOption]
+     */
     public static function query($sortOrder = null, $filterBy = null)
     {
         $entries = array();
 
-        $sql = 'SELECT * FROM `widget` WHERE playlistId = :playlistId';
+        $sql = 'SELECT * FROM `widgetoption` WHERE widgetId = :widgetId';
 
-        foreach (\PDOConnect::select($sql, array('playlistId' => \Kit::GetParam('playlistId', $filterBy, _INT))) as $row) {
-            $widget = new Widget();
+        foreach (\PDOConnect::select($sql, array('widgetId' => \Kit::GetParam('widgetId', $filterBy, _INT))) as $row) {
+            $widget = new WidgetOption();
             $widget->widgetId = \Kit::ValidateParam($row['widgetId'], _INT);
-            $widget->playlistId = \Kit::ValidateParam($row['playlistId'], _INT);
-            $widget->ownerId = \Kit::ValidateParam($row['ownerId'], _INT);
             $widget->type = \Kit::ValidateParam($row['type'], _WORD);
-            $widget->duration = \Kit::ValidateParam($row['duration'], _INT);
+            $widget->option = \Kit::ValidateParam($row['option'], _STRING);
+            $widget->value = \Kit::ValidateParam($row['value'], _HTMLSTRING);
 
             $entries[] = $widget;
         }

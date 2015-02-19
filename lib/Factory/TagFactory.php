@@ -57,7 +57,7 @@ class TagFactory
     {
         $tags = array();
 
-        $sql = 'SELECT tagId, tag FROM `tag` INNER JOIN `lktaglayout` ON lktaglayout.tagId = tag.tagId WHERE lktaglayout.layoutId = :layoutId';
+        $sql = 'SELECT tag.tagId, tag.tag FROM `tag` INNER JOIN `lktaglayout` ON lktaglayout.tagId = tag.tagId WHERE lktaglayout.layoutId = :layoutId';
 
         foreach (\PDOConnect::select($sql, array('layoutId' => $layoutId)) as $row) {
             $tag = new Tag();

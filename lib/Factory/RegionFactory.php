@@ -60,11 +60,30 @@ class RegionFactory
         return RegionFactory::query(array(), array('layoutId' => $layoutId));
     }
 
+    /**
+     * @param array $sortOrder
+     * @param array $filterBy
+     * @return array[Region]
+     */
     public static function query($sortOrder = array(), $filterBy = array())
     {
         $entries = array();
 
-        // TODO: Region Lookup
+        $sql = 'SELECT * FROM `region` WHERE layoutId = :layoutId';
+
+        foreach (\PDOConnect::select($sql, array('layoutId' => \Kit::GetParam('layoutId', $filterBy, _INT))) as $row) {
+            $region = new Region();
+            $region->regionId = \Kit::ValidateParam($row['regionId'], _INT);
+            $region->ownerId = \Kit::ValidateParam($row['ownerId'], _INT);
+            $region->name = \Kit::ValidateParam($row['name'], _STRING);
+            $region->width = \Kit::ValidateParam($row['width'], _DOUBLE);
+            $region->height = \Kit::ValidateParam($row['height'], _DOUBLE);
+            $region->top = \Kit::ValidateParam($row['top'], _DOUBLE);
+            $region->left = \Kit::ValidateParam($row['left'], _DOUBLE);
+
+            $entries[] = $region;
+        }
+
         return $entries;
     }
 }

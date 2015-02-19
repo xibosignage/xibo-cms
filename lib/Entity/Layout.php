@@ -47,9 +47,6 @@ class Layout
     public $regions;
     public $tags;
 
-    // Track which bits of the layout have been loaded
-    public $basicInfoLoaded = false;
-
     public function __construct()
     {
         $this->regions = array();
@@ -111,12 +108,17 @@ class Layout
         // Update the regions
         foreach ($this->regions as $region) {
             /* @var Region $region */
+
+            // Assert the Layout Id
+            $region->layoutId = $this->layoutId;
             $region->save();
         }
 
         // Save the tags
         foreach ($this->tags as $tag) {
             /* @var Tag $tag */
+
+            $tag->assignLayout($this->layoutId);
             $tag->save();
         }
     }
@@ -140,7 +142,7 @@ class Layout
             throw new \InvalidArgumentException(__("Description can not be longer than 254 characters"));
 
         // Check for duplicates
-        $duplicates = LayoutFactory::query(null, array('userId' => $this->ownerId, 'layout' => $this->layout, 'notLayoutId' => $this->layoutId));
+        $duplicates = LayoutFactory::query(null, array('userId' => $this->ownerId, 'layoutExact' => $this->layout, 'notLayoutId' => $this->layoutId));
 
         if (count($duplicates) > 0)
             throw new \InvalidArgumentException(sprintf(__("You already own a layout called '%s'. Please choose another name."), $this->layout));
@@ -174,8 +176,8 @@ class Layout
      */
     private function add()
     {
-        $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, status, width, height, schemaVersion)';
-        $sql .= ' VALUES (:layout, :description, :userid, :createddt, :modifieddt, :status, :width, :height, 3)';
+        $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, status, width, height, schemaVersion, backgroundImageId, backgroundColor)';
+        $sql .= ' VALUES (:layout, :description, :userid, :createddt, :modifieddt, :status, :width, :height, 3, :backgroundImageId, :backgroundColor)';
 
         $time = \DateManager::getSystemDate(null, 'Y-m-d h:i:s');
 
@@ -188,7 +190,9 @@ class Layout
                 'modifieddt' => $time,
                 'status' => 3,
                 'width' => $this->width,
-                'height' => $this->height
+                'height' => $this->height,
+                'backgroundImageId' => $this->backgroundImageId,
+                'backgroundColor' => $this->backgroundColor
             ));
         }
         catch (\PDOException $e) {
@@ -211,22 +215,23 @@ class Layout
      */
     private function update()
     {
-        $sql = 'UPDATE layout SET layout = :layout, description = :description, modifiedDT = :modifieddt, retired = :retired, width = :width, height = :height, xml = NULL WHERE layoutID = :layoutid';
+        $sql = '
+UPDATE layout SET layout = :layout, description = :description, modifiedDT = :modifieddt, retired = :retired, width = :width, height = :height, backgroundImageId = :backgroundImageId, backgroundColor = :backgroundColor, xml = NULL
+WHERE layoutID = :layoutid';
 
         $time = \DateManager::getSystemDate(null, 'Y-m-d h:i:s');
 
-        \PDOConnect::execute($sql, array(
+        \PDOConnect::update($sql, array(
             'layoutid' => $this->layoutId,
             'layout' => $this->layout,
             'description' => $this->description,
             'modifieddt' => $time,
             'retired' => $this->retired,
             'width' => $this->width,
-            'height' => $this->height
+            'height' => $this->height,
+            'backgroundImageId' => $this->backgroundImageId,
+            'backgroundColor' => $this->backgroundColor,
         ));
-
-        if (!$this->basicInfoLoaded)
-            throw new NotFoundException(__('Layout not loaded'));
 
         // TODO: Update the Campaign
     }

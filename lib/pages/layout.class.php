@@ -263,29 +263,27 @@ class layoutDAO extends baseDAO
 
     /**
      * Modifies a layout record
-     *
-     * @param int $id
      */
-    function modify ()
+    function modify()
     {
         // Check the token
         if (!Kit::CheckToken())
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
-        
-        $response       = new ResponseManager();
 
-        $layoutid       = Kit::GetParam('layoutid', _POST, _INT);
-        $layout         = Kit::GetParam('layout', _POST, _STRING);
-        $description    = Kit::GetParam('description', _POST, _STRING);
-        $tags           = Kit::GetParam('tags', _POST, _STRING);
-        $retired        = Kit::GetParam('retired', _POST, _INT, 0);
-        $userid         = Kit::GetParam('userid', _SESSION, _INT);
-        
-        // Add this layout
-        $layoutObject = new Layout();
+        $response = new ResponseManager();
 
-        if (!$layoutObject->Edit($layoutid, $layout, $description, $tags, $userid, $retired))
-            trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);
+        $layout = \Xibo\Factory\LayoutFactory::loadById(Kit::GetParam('layoutid', _POST, _INT));
+
+        $layout->layout = Kit::GetParam('layout', _POST, _STRING);
+        $layout->description = Kit::GetParam('description', _POST, _STRING);
+        $layout->tags = \Xibo\Factory\TagFactory::tagsFromString(Kit::GetParam('tags', _POST, _STRING));
+        $layout->retired = Kit::GetParam('retired', _POST, _INT, 0);
+
+        // Validate
+        $layout->validate();
+
+        // Save
+        $layout->save();
 
         $response->SetFormSubmitResponse(__('Layout Details Changed.'));
         $response->Respond();
@@ -1107,29 +1105,32 @@ HTML;
     }
 
     /**
-     * Copys a layout
+     * Copies a layout
      */
     public function Copy()
     {
         // Check the token
         if (!Kit::CheckToken())
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
-        
-        $db =& $this->db;
-        $user =& $this->user;
+
         $response = new ResponseManager();
 
-        $layoutid = Kit::GetParam('layoutid', _POST, _INT);
-        $layout = Kit::GetParam('layout', _POST, _STRING);
-        $description = Kit::GetParam('description', _POST, _STRING);
-        $copyMedia = Kit::GetParam('copyMediaFiles', _POST, _CHECKBOX);
+        // Load the layout for Copy
+        $layout = clone \Xibo\Factory\LayoutFactory::loadById(Kit::GetParam('layoutid', _POST, _INT));
 
-        Kit::ClassLoader('Layout');
+        $layout->layout = Kit::GetParam('layout', _POST, _STRING);
+        $layout->description = Kit::GetParam('description', _POST, _STRING);
 
-        $layoutObject = new Layout($db);
+        // Validate the new layout
+        $layout->validate();
 
-        if (!$layoutObject->Copy($layoutid, $layout, $description, $user->userid, (bool)$copyMedia))
-            trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);
+        // TODO: Copy the media on the layout and change the assignments.
+        if (Kit::GetParam('copyMediaFiles', _POST, _CHECKBOX == 1)) {
+
+        }
+
+        // Save the new layout
+        $layout->save();
 
         $response->SetFormSubmitResponse(__('Layout Copied'));
         $response->Respond();
@@ -1312,9 +1313,7 @@ HTML;
     {
         $response = new ResponseManager();
 
-        $layoutObject = new Layout();
-        $id = Kit::GetParam('layoutId', _GET, _INT);
-        $layout = \Xibo\Factory\LayoutFactory::loadByXlf($layoutObject->GetLayoutXml($id), $id);
+        $layout = \Xibo\Factory\LayoutFactory::loadById(Kit::GetParam('layoutId', _GET, _INT));
 
         $response->SetFormRequestResponse('<pre>' . json_format(json_encode($layout)) . '</pre>', 'Test', '350px', '200px');
         $response->dialogClass = 'modal-big';
