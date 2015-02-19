@@ -23,6 +23,7 @@ namespace Xibo\Entity;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\RegionFactory;
+use Xibo\Factory\TagFactory;
 
 class Layout
 {
@@ -89,6 +90,9 @@ class Layout
             /* @var Region $region */
             $region->load();
         }
+
+        // Load all tags
+        $this->tags = TagFactory::loadByLayoutId($this->layoutId);
     }
 
     /**

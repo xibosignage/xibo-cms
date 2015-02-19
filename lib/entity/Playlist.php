@@ -23,6 +23,8 @@
 namespace Xibo\Entity;
 
 
+use Xibo\Factory\WidgetFactory;
+
 class Playlist
 {
     public $playlistId;
@@ -43,6 +45,7 @@ class Playlist
     {
         $this->widgets = array();
         $this->tags = array();
+        $this->regionIds = array();
     }
 
     public function __clone()
@@ -76,7 +79,7 @@ class Playlist
      */
     public function load()
     {
-
+        $this->widgets = WidgetFactory::loadByPlaylistId($this->playlistId);
     }
 
     /**

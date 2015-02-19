@@ -28,15 +28,45 @@ use Xibo\Entity\Tag;
 class TagFactory
 {
     /**
+     * Get tags from a string
      * @param string $tagString
-     * @return array[\Xibo\Entity\Tag]
+     * @return array[Tag]
      */
     public static function tagsFromString($tagString)
     {
         $tags = array();
 
-        // TODO: Parse the tag string, create tags using existing tags if possible
-        $tags[] = new Tag();
+        // Parse the tag string, create tags
+        foreach(explode(',', $tagString) as $tagName) {
+            $tag = new Tag();
+            $tag->tag = $tagName;
+
+            // Add to the list
+            $tags[] = $tag;
+        }
+
+        return $tags;
+    }
+
+    /**
+     * Gets tags for a layout
+     * @param $layoutId
+     * @return array[Tag]
+     */
+    public static function loadByLayoutId($layoutId)
+    {
+        $tags = array();
+
+        $sql = 'SELECT tagId, tag FROM `tag` INNER JOIN `lktaglayout` ON lktaglayout.tagId = tag.tagId WHERE lktaglayout.layoutId = :layoutId';
+
+        foreach (\PDOConnect::select($sql, array('layoutId' => $layoutId)) as $row) {
+            $tag = new Tag();
+            $tag->tagId = \Kit::ValidateParam($row['tagId'], _INT);
+            $tag->tag = \Kit::ValidateParam($row['tag'], _STRING);
+            $tag->assignLayout($layoutId);
+
+            $tags[] = $tag;
+        }
 
         return $tags;
     }

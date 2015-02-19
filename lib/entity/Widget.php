@@ -23,8 +23,8 @@
 namespace Xibo\Entity;
 
 
-class Widget {
-
+class Widget
+{
     public $widgetId;
     public $ownerId;
 
@@ -39,6 +39,7 @@ class Widget {
     public function __construct()
     {
         $this->widgetOptions = array();
+        $this->media = array();
     }
 
     public function __clone()
@@ -47,6 +48,11 @@ class Widget {
         $this->widgetOptions = array_map(function ($object) { return clone $object; }, $this->widgetOptions);
 
         // No need to clone the media
+    }
+
+    public function load()
+    {
+        // TODO: Do we need to load the widget options in here?
     }
 
     public function save()

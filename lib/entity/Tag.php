@@ -28,21 +28,40 @@ class Tag
     public $tagId;
     public $tag;
 
-    public $layouts;
-    public $media;
+    public $layoutIds;
+    public $mediaIds;
+
+    public function __construct()
+    {
+        $this->layoutIds = array();
+        $this->mediaIds = array();
+    }
 
     public function assignLayout($layoutId)
     {
-
+        if (!in_array($layoutId, $this->layoutIds))
+            $this->layoutIds[] = $layoutId;
     }
 
     public function assignMedia($mediaId)
     {
-
+        if (!in_array($mediaId, $this->mediaIds))
+            $this->mediaIds[] = $mediaId;
     }
 
     public function save()
     {
+        // If the tag doesn't exist already - save it
+        if ($this->tagId == null || $this->tagId == 0)
+            $this->add();
+    }
 
+    /**
+     * Add a tag
+     * @throws \PDOException
+     */
+    private function add()
+    {
+        $this->tagId = \PDOConnect::insert('INSERT INTO `tag` (tag) VALUES (:tag)', array('tag' => $this->tag));
     }
 }

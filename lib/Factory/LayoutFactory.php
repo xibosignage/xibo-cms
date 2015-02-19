@@ -66,7 +66,7 @@ class LayoutFactory
         $layout->tags = TagFactory::tagsFromString($tags);
 
         // Add a blank, full screen region
-        $layout->regions[] = RegionFactory::create($name . '-1', $layout->width, $layout->height, 0, 0);
+        $layout->regions[] = RegionFactory::create($ownerId, $name . '-1', $layout->width, $layout->height, 0, 0);
 
         return $layout;
     }

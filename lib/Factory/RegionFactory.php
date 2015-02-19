@@ -29,6 +29,7 @@ class RegionFactory
 {
     /**
      * Create a new region
+     * @param int $ownerId;
      * @param string $name
      * @param int $width
      * @param int $height
@@ -36,10 +37,16 @@ class RegionFactory
      * @param int $left
      * @return Region
      */
-    public static function create($name, $width, $height, $top, $left)
+    public static function create($ownerId, $name, $width, $height, $top, $left)
     {
-        // TODO: Implement region creation
-        return new Region();
+        $region = new Region();
+        $region->ownerId = $ownerId;
+        $region->name = $name;
+        $region->width = $width;
+        $region->height = $height;
+        $region->top = $top;
+        $region->left = $left;
+        return $region;
     }
 
     /**
@@ -57,7 +64,7 @@ class RegionFactory
     {
         $entries = array();
 
-
+        // TODO: Region Lookup
         return $entries;
     }
 }
