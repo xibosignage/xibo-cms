@@ -289,53 +289,47 @@ class timelineDAO extends baseDAO {
 	
 	/**
 	 * Edits the region information
-	 * @return 
 	 */
 	function RegionChange()
 	{
-		$db 	=& $this->db;
-		$user 	=& $this->user;
-		
-		// ajax request handler
 		$response = new ResponseManager();
 		
-		// Vars
-		$layoutid = Kit::GetParam('layoutid', _REQUEST, _INT, 0);
+		// Create the layout
+		$layout = \Xibo\Factory\LayoutFactory::loadById(Kit::GetParam('layoutid', _REQUEST, _INT));
+
+        // Pull in the regions and convert them to stdObjects
         $regions = Kit::GetParam('regions', _POST, _HTMLSTRING);
 
         if ($regions == '')
-            trigger_error(__('No regions present'));
+            trigger_error(__('No regions present'), E_USER_ERROR);
 
         $regions = json_decode($regions);
 
-        foreach ($regions as $region) {
+        // Go through each region and update the region in the layout we have
+        foreach ($regions as $newCoordinates) {
+            $regionId = Kit::ValidateParam($newCoordinates->regionid, _INT);
 
-            $regionid = Kit::ValidateParam($region->regionid, _STRING);
-            $top = Kit::ValidateParam($region->top, _DOUBLE);
-            $left = Kit::ValidateParam($region->left, _DOUBLE);
-            $width = Kit::ValidateParam($region->width, _DOUBLE);
-            $height = Kit::ValidateParam($region->height, _DOUBLE);
+            // Load the region
+            $region = \Xibo\Factory\RegionFactory::loadFromLayout($layout, $regionId);
+            Debug::Audit('Editing Region ' . $region);
 
-            Debug::LogEntry('audit', 'Editing Region ' . $regionid);
-            
-            Kit::ClassLoader('region');
-            $regionObject = new region($db);
-            $regionObject->delayFinalise = true;
-            $ownerId = $regionObject->GetOwnerId($layoutid, $regionid);
-
-            $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutid, $regionid, true);
-            if (!$regionAuth->del)
+            // Check Permissions
+            $regionAuth = $this->user->RegionAssignmentAuth($region->ownerId, $layout->layoutId, $regionId, true);
+            if (!$regionAuth->edit)
                 trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
-    		
-    		if (!$regionObject->EditRegion($layoutid, $regionid, $width, $height, $top, $left))
-    			trigger_error($regionObject->GetErrorMessage(), E_USER_ERROR);
+
+            // New coordinates
+            $region->top = Kit::ValidateParam($newCoordinates->top, _DOUBLE);
+            $region->left = Kit::ValidateParam($newCoordinates->left, _DOUBLE);
+            $region->width = Kit::ValidateParam($newCoordinates->width, _DOUBLE);
+            $region->height = Kit::ValidateParam($newCoordinates->height, _DOUBLE);
+            Debug::Audit('Set ' . $region);
         }
 
-        // Set the layout status
-        Kit::ClassLoader('Layout');
-        $layout = new Layout($this->db);
-        $layout->SetValid($layoutid, true);
-		
+        // Mark the layout as having changed
+        $layout->status = 0;
+        $layout->save();
+
 		$response->SetFormSubmitResponse('');
 		$response->hideMessage = true;
 		$response->Respond();

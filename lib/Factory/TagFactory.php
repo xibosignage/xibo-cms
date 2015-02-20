@@ -43,6 +43,7 @@ class TagFactory
 
         // Parse the tag string, create tags
         foreach(explode(',', $tagString) as $tagName) {
+            $tagName = trim($tagName);
 
             // Add to the list
             try {
@@ -51,7 +52,7 @@ class TagFactory
             catch (NotFoundException $e) {
                 // New tag
                 $tag = new Tag();
-                $tag->tag = trim($tagName);
+                $tag->tag = $tagName;
                 $tags[] = $tag;
             }
         }

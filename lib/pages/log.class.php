@@ -325,12 +325,10 @@ class logDAO extends baseDAO {
         if (!Kit::CheckToken())
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
-		$db =& $this->db;
-
 		if ($this->user->usertypeid != 1)
 			trigger_error(__('Only Administrator Users can truncate the log'), E_USER_ERROR);
 		
-		$db->query("TRUNCATE TABLE log");
+		PDOConnect::update('TRUNCATE TABLE log', array());
 		
 		$response = new ResponseManager();
 		$response->SetFormSubmitResponse('Log Truncated');

@@ -94,9 +94,8 @@ class Layout
 
     /**
      * Save this Layout
-     * @param bool[Optional] $recursive
      */
-    public function save($recursive = true)
+    public function save()
     {
         // New or existing layout
         if ($this->layoutId == null || $this->layoutId == 0) {
@@ -107,14 +106,12 @@ class Layout
         }
 
         // Update the regions
-        if ($recursive) {
-            foreach ($this->regions as $region) {
-                /* @var Region $region */
+        foreach ($this->regions as $region) {
+            /* @var Region $region */
 
-                // Assert the Layout Id
-                $region->layoutId = $this->layoutId;
-                $region->save();
-            }
+            // Assert the Layout Id
+            $region->layoutId = $this->layoutId;
+            $region->save();
         }
 
         // Save the tags

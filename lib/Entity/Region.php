@@ -52,6 +52,11 @@ class Region
         $this->playlists = array_map(function ($object) { return clone $object; }, $this->playlists);
     }
 
+    public function __toString()
+    {
+        return sprintf('Region %s - %d x %d (%d, %d). ID = %d', $this->name, $this->width, $this->height, $this->top, $this->left, $this->regionId);
+    }
+
     /**
      * Sets the Owner
      * @param int $ownerId
@@ -82,6 +87,9 @@ class Region
         }
     }
 
+    /**
+     * Save
+     */
     public function save()
     {
         if ($this->regionId == null || $this->regionId == 0)

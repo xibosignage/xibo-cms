@@ -23,7 +23,9 @@
 namespace Xibo\Factory;
 
 
+use Xibo\Entity\Layout;
 use Xibo\Entity\Region;
+use Xibo\Exception\NotFoundException;
 
 class RegionFactory
 {
@@ -61,6 +63,24 @@ class RegionFactory
     }
 
     /**
+     * Load Regions from a Layout
+     * @param Layout $layout
+     * @param int $regionId
+     * @return Region
+     * @throws NotFoundException
+     */
+    public static function loadFromLayout($layout, $regionId)
+    {
+        foreach ($layout->regions as $region) {
+            /* @var Region $region */
+            if ($region->regionId == $regionId)
+                return $region;
+        }
+
+        throw new NotFoundException(__('Cannot find region'));
+    }
+
+    /**
      * @param array $sortOrder
      * @param array $filterBy
      * @return array[Region]
@@ -73,6 +93,7 @@ class RegionFactory
 
         foreach (\PDOConnect::select($sql, array('layoutId' => \Kit::GetParam('layoutId', $filterBy, _INT))) as $row) {
             $region = new Region();
+            $region->layoutId = \Kit::ValidateParam($row['layoutId'], _INT);
             $region->regionId = \Kit::ValidateParam($row['regionId'], _INT);
             $region->ownerId = \Kit::ValidateParam($row['ownerId'], _INT);
             $region->name = \Kit::ValidateParam($row['name'], _STRING);
