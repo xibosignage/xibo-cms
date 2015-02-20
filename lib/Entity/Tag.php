@@ -37,6 +37,11 @@ class Tag
         $this->mediaIds = array();
     }
 
+    public function __clone()
+    {
+        $this->tagId = null;
+    }
+
     public function assignLayout($layoutId)
     {
         if (!in_array($layoutId, $this->layoutIds))
@@ -54,6 +59,10 @@ class Tag
         // If the tag doesn't exist already - save it
         if ($this->tagId == null || $this->tagId == 0)
             $this->add();
+
+        // Manage the links to layouts and media
+        $this->linkLayouts();
+        $this->linkMedia();
     }
 
     /**
@@ -62,6 +71,32 @@ class Tag
      */
     private function add()
     {
-        $this->tagId = \PDOConnect::insert('INSERT INTO `tag` (tag) VALUES (:tag)', array('tag' => $this->tag));
+        $this->tagId = \PDOConnect::insert('INSERT INTO `tag` (tag) VALUES (:tag) ON DUPLICATE KEY UPDATE tag = tag', array('tag' => $this->tag));
+    }
+
+    /**
+     * Link all assigned layouts
+     */
+    private function linkLayouts()
+    {
+        foreach ($this->layoutIds as $layoutId) {
+            \PDOConnect::update('INSERT INTO `lktaglayout` (tagId, layoutId) VALUES (:tagId, :layoutId) ON DUPLICATE KEY UPDATE layoutId = layoutId', array(
+                'tagId' => $this->tagId,
+                'layoutId' => $layoutId
+            ));
+        }
+    }
+
+    /**
+     * Line all assigned media
+     */
+    private function  linkMedia()
+    {
+        foreach ($this->mediaIds as $mediaId) {
+            \PDOConnect::update('INSERT INTO `lktagmedia` (tagId, mediaId) VALUES (:tagId, :mediaId) ON DUPLICATE KEY UPDATE mediaId = mediaId', array(
+                'tagId' => $this->tagId,
+                'mediaId' => $mediaId
+            ));
+        }
     }
 }

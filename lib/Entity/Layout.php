@@ -94,8 +94,9 @@ class Layout
 
     /**
      * Save this Layout
+     * @param bool[Optional] $recursive
      */
-    public function save()
+    public function save($recursive = true)
     {
         // New or existing layout
         if ($this->layoutId == null || $this->layoutId == 0) {
@@ -106,12 +107,14 @@ class Layout
         }
 
         // Update the regions
-        foreach ($this->regions as $region) {
-            /* @var Region $region */
+        if ($recursive) {
+            foreach ($this->regions as $region) {
+                /* @var Region $region */
 
-            // Assert the Layout Id
-            $region->layoutId = $this->layoutId;
-            $region->save();
+                // Assert the Layout Id
+                $region->layoutId = $this->layoutId;
+                $region->save();
+            }
         }
 
         // Save the tags
@@ -176,6 +179,8 @@ class Layout
      */
     private function add()
     {
+        \Debug::Audit('Adding Layout ' . $this->layout);
+
         $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, status, width, height, schemaVersion, backgroundImageId, backgroundColor)';
         $sql .= ' VALUES (:layout, :description, :userid, :createddt, :modifieddt, :status, :width, :height, 3, :backgroundImageId, :backgroundColor)';
 
@@ -215,6 +220,8 @@ class Layout
      */
     private function update()
     {
+        \Debug::Audit('Editing Layout ' . $this->layout . '. Id = ' . $this->layoutId);
+
         $sql = '
 UPDATE layout SET layout = :layout, description = :description, modifiedDT = :modifieddt, retired = :retired, width = :width, height = :height, backgroundImageId = :backgroundImageId, backgroundColor = :backgroundColor, xml = NULL
 WHERE layoutID = :layoutid';

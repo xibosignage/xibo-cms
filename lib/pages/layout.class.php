@@ -283,7 +283,7 @@ class layoutDAO extends baseDAO
         $layout->validate();
 
         // Save
-        $layout->save();
+        $layout->save(false);
 
         $response->SetFormSubmitResponse(__('Layout Details Changed.'));
         $response->Respond();

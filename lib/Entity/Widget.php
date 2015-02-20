@@ -22,8 +22,6 @@
 
 namespace Xibo\Entity;
 
-
-use Xibo\Factory\WidgetFactory;
 use Xibo\Factory\WidgetMediaFactory;
 use Xibo\Factory\WidgetOptionFactory;
 
@@ -75,6 +73,8 @@ class Widget
 
     public function save()
     {
+        \Debug::Audit('Saving Widget ' . $this->type . ' on PlaylistId ' . $this->playlistId . ' WidgetId: ' . $this->widgetId);
+
         if ($this->widgetId == null || $this->widgetId == 0)
             $this->add();
         else
@@ -126,12 +126,16 @@ class Widget
     private function linkMedia()
     {
         // TODO: Make this more efficient by storing the prepared SQL statement
-        $sql = 'INSERT INTO `lkwidgetmedia` (widgetId, mediaId) VALUES (:widgetId, :mediaId) ON DUPLICATE KEY UPDATE mediaId = :mediaId';
+        $sql = 'INSERT INTO `lkwidgetmedia` (widgetId, mediaId) VALUES (:widgetId, :mediaId) ON DUPLICATE KEY UPDATE mediaId = :mediaId2';
 
         foreach ($this->mediaIds as $mediaId) {
+
+            //\Debug::Audit('Linking MediaId ' . $mediaId . ' to Widget ' . $this->widgetId);
+
             \PDOConnect::insert($sql, array(
                 'widgetId' => $this->widgetId,
-                'mediaId' => $mediaId
+                'mediaId' => $mediaId,
+                'mediaId2' => $mediaId
             ));
         }
     }

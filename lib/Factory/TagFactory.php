@@ -24,6 +24,7 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\Tag;
+use Xibo\Exception\NotFoundException;
 
 class TagFactory
 {
@@ -36,16 +37,49 @@ class TagFactory
     {
         $tags = array();
 
+        if ($tagString == '') {
+            return $tags;
+        }
+
         // Parse the tag string, create tags
         foreach(explode(',', $tagString) as $tagName) {
-            $tag = new Tag();
-            $tag->tag = $tagName;
 
             // Add to the list
-            $tags[] = $tag;
+            try {
+                $tags[] = TagFactory::loadByTag($tagName);
+            }
+            catch (NotFoundException $e) {
+                // New tag
+                $tag = new Tag();
+                $tag->tag = trim($tagName);
+                $tags[] = $tag;
+            }
         }
 
         return $tags;
+    }
+
+    /**
+     * Load tag by Tag Name
+     * @param string $tagName
+     * @return Tag
+     * @throws NotFoundException
+     */
+    public static function loadByTag($tagName)
+    {
+        $sql = 'SELECT tag.tagId, tag.tag FROM `tag` WHERE tag.tag = :tag';
+
+        $tags = \PDOConnect::select($sql, array('tag' => $tagName));
+
+        if (count($tags) <= 0)
+            throw new NotFoundException(sprintf(__('Unable to find Tag %s'), $tagName));
+
+        $row = $tags[0];
+        $tag = new Tag();
+        $tag->tagId = \Kit::ValidateParam($row['tagId'], _INT);
+        $tag->tag = \Kit::ValidateParam($row['tag'], _STRING);
+
+        return $tag;
     }
 
     /**

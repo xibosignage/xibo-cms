@@ -112,6 +112,8 @@ class Region
      */
     private function add()
     {
+        \Debug::Audit('Adding region to LayoutId ' . $this->layoutId);
+
         $sql = 'INSERT INTO `region` (`layoutId`, `ownerId`, `name`, `width`, `height`, `top`, `left`) VALUES (:layoutId, :ownerId, :name, :width, :height, :top, :left)';
 
         $this->regionId = \PDOConnect::insert($sql, array(
@@ -130,6 +132,8 @@ class Region
      */
     private function update()
     {
+        \Debug::Audit('Editing region ' . $this->regionId . ' on LayoutId ' . $this->layoutId);
+
         $sql = 'UPDATE `region` SET `layoutId` = :layoutId, `ownerId` = :ownerId, `name` = :name, `width` = :width, `height` = :height, `top` = :top, `left` = :left WHERE `regionId` = :regionId';
 
         \PDOConnect::update($sql, array(

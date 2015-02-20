@@ -117,6 +117,8 @@ class Playlist
 
     private function add()
     {
+        \Debug::Audit('Adding Playlist ' . $this->name);
+
         $sql = 'INSERT INTO `playlist` (`name`, `ownerId`) VALUES (:name, :ownerId)';
         $this->playlistId = \PDOConnect::insert($sql, array(
             'name' => $this->name,
@@ -126,6 +128,8 @@ class Playlist
 
     private function update()
     {
+        \Debug::Audit('Updating Playlist ' . $this->name . '. Id = ' . $this->playlistId);
+
         $sql = 'UPDATE `playlist` SET `name` = :name WHERE `playlistId` = :playlistId';
         \PDOConnect::update($sql, array(
             'playlistId' => $this->playlistId,

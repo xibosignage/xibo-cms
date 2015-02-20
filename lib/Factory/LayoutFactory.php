@@ -254,6 +254,9 @@ class LayoutFactory
             $layout->regions[] = $region;
         }
 
+        // TODO: Load any existing tags
+
+
         // The parsed, finished layout
         return $layout;
     }
@@ -339,7 +342,7 @@ class LayoutFactory
 
             if (\Kit::GetParam('layoutExact', $filterBy, _STRING) != '') {
                 $sql.= " AND layout.layout = :exact ";
-                $params['exact'] = \Kit::GetParam('layout', $filterBy, _STRING);
+                $params['exact'] = \Kit::GetParam('layoutExact', $filterBy, _STRING);
             }
 
             // Layout
