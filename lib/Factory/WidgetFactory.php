@@ -32,7 +32,7 @@ class WidgetFactory
      * @param int $playlistId
      * @return array[Widget]
      */
-    public static function loadByPlaylistId($playlistId)
+    public static function getByPlaylistId($playlistId)
     {
         return WidgetFactory::query(null, array('playlistId' => $playlistId));
     }

@@ -160,8 +160,7 @@ class layoutDAO extends baseDAO
 
                 $layoutId = Kit::GetParam('layoutid', _GET, _INT);
                 
-                Theme::Set('layout_form_edit_url', 'index.php?p=layout&q=displayForm&modify=true&layoutid=' . $layoutId);
-                Theme::Set('layout_form_edit_background_url', 'index.php?p=layout&q=BackgroundForm&modify=true&layoutid=' . $layoutId);
+                Theme::Set('layout_form_edit_url', 'index.php?p=layout&q=EditForm&designer=1&layoutid=' . $layoutId);
                 Theme::Set('layout_form_savetemplate_url', 'index.php?p=template&q=TemplateForm&layoutid=' . $layoutId);
                 Theme::Set('layout_form_addregion_url', 'index.php?p=timeline&q=AddRegion&layoutid=' . $layoutId);
                 Theme::Set('layout_form_preview_url', 'index.php?p=preview&q=render&ajax=true&layoutid=' . $layoutId);
@@ -209,7 +208,7 @@ class layoutDAO extends baseDAO
                 array('title' => __('Add Layout'),
                     'class' => 'XiboFormButton',
                     'selected' => false,
-                    'link' => 'index.php?p=layout&q=displayForm',
+                    'link' => 'index.php?p=layout&q=AddForm',
                     'help' => __('Add a new Layout and jump to the layout designer.'),
                     'onclick' => ''
                     ),
@@ -274,10 +273,23 @@ class layoutDAO extends baseDAO
 
         $layout = \Xibo\Factory\LayoutFactory::loadById(Kit::GetParam('layoutid', _POST, _INT));
 
+        // Make sure we have permission
+        $auth = $this->user->LayoutAuth($layout->layoutId, true);
+        if (!$auth->edit)
+            trigger_error(__('You do not have permissions to edit this layout'), E_USER_ERROR);
+
         $layout->layout = Kit::GetParam('layout', _POST, _STRING);
         $layout->description = Kit::GetParam('description', _POST, _STRING);
         $layout->tags = \Xibo\Factory\TagFactory::tagsFromString(Kit::GetParam('tags', _POST, _STRING));
         $layout->retired = Kit::GetParam('retired', _POST, _INT, 0);
+        $layout->backgroundColor = Kit::GetParam('backgroundColor', _POST, _STRING);
+        $layout->backgroundImageId = Kit::GetParam('backgroundImageId', _POST, _INT);
+        $layout->backgroundzIndex = Kit::GetParam('backgroundzIndex', _POST, _INT);
+
+        // Resolution
+        $resolution = \Xibo\Factory\ResolutionFactory::getById(Kit::GetParam('resolutionId', _POST, _INT));
+        $layout->width = $resolution->width;
+        $layout->height = $resolution->height;
 
         // Validate
         $layout->validate();
@@ -285,7 +297,12 @@ class layoutDAO extends baseDAO
         // Save
         $layout->save();
 
-        $response->SetFormSubmitResponse(__('Layout Details Changed.'));
+        if (Kit::GetParam('designer', _POST, _INT) == 1) {
+            $response->SetFormSubmitResponse(__('Layout Background Changed'), true, sprintf('index.php?p=layout&layoutid=%d&modify=true', $layout->layoutId));
+        }
+        else {
+            $response->SetFormSubmitResponse(__('Layout Details Changed.'));
+        }
         $response->Respond();
     }
     
@@ -618,7 +635,7 @@ class layoutDAO extends baseDAO
                 // Edit Button
                 $row['buttons'][] = array(
                         'id' => 'layout_button_edit',
-                        'url' => 'index.php?p=layout&q=displayForm&modify=true&layoutid=' . $layout['layoutid'],
+                        'url' => 'index.php?p=layout&q=EditForm&layoutid=' . $layout['layoutid'],
                         'text' => __('Edit')
                     );
 
@@ -705,22 +722,11 @@ class layoutDAO extends baseDAO
     /**
      * Displays an Add/Edit form
      */
-    function displayForm () 
+    function AddForm ()
     {
         $user =& $this->user;
         $response = new ResponseManager();
-        $layoutId = Kit::GetParam('layoutid', _GET, _INT);
 
-        // Get the layout
-        if ($layoutId != 0) {
-            $layout = $user->LayoutList(NULL, array('layoutId' => Kit::GetParam('layoutid', _GET, _INT)));
-
-            if (count($layout) <= 0)
-                trigger_error(__('Unable to find Layout'), E_USER_ERROR);
-
-            $layout = $layout[0];
-        }
-        
         Theme::Set('form_id', 'LayoutForm');
 
         // Two tabs
@@ -737,205 +743,147 @@ class layoutDAO extends baseDAO
         $formFields['description'][] = FormManager::AddMultiText('description', __('Description'), (isset($layout['description']) ? $layout['description'] : NULL), 
             __('An optional description of the Layout. (1 - 250 characters)'), 'd', 5, 'maxlength="250"');
 
-        if ($layoutId != 0) {
-            // We are editing
-            Theme::Set('form_action', 'index.php?p=layout&q=modify');
-            Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutId . '">');
+        // We are adding
+        Theme::Set('form_action', 'index.php?p=layout&q=add');
 
-            $formFields['general'][] = FormManager::AddCombo(
-                    'retired', 
-                    __('Retired'), 
-                    $layout['retired'],
-                    array(array('retiredid' => '1', 'retired' => 'Yes'), array('retiredid' => '0', 'retired' => 'No')),
-                    'retiredid',
-                    'retired',
-                    __('Retire this layout or not? It will no longer be visible in lists'), 
-                    'r');
-        }
-        else
-        {
-            // We are adding
-            Theme::Set('form_action', 'index.php?p=layout&q=add');
+        $templates = $user->TemplateList();
+        array_unshift($templates, array('layoutid' => '0', 'layout' => 'None'));
 
-            $templates = $user->TemplateList();
-            array_unshift($templates, array('layoutid' => '0', 'layout' => 'None'));
+        $formFields['general'][] = FormManager::AddCombo(
+            'templateid',
+            __('Template'),
+            NULL,
+            $templates,
+            'layoutid',
+            'layout',
+            __('Optionally choose a template you have saved before.'),
+            't');
 
-            $formFields['general'][] = FormManager::AddCombo(
-                    'templateid', 
-                    __('Template'), 
-                    NULL,
-                    $templates,
-                    'layoutid',
-                    'layout',
-                    __('Optionally choose a template you have saved before.'), 
-                    't');
+        $formFields['general'][] = FormManager::AddCombo(
+            'resolutionid',
+            __('Resolution'),
+            NULL,
+            $user->ResolutionList(),
+            'resolutionid',
+            'resolution',
+            __('Choose the resolution this Layout should be designed for.'),
+            'r',
+            'resolution-group');
 
-            $formFields['general'][] = FormManager::AddCombo(
-                    'resolutionid', 
-                    __('Resolution'), 
-                    NULL,
-                    $user->ResolutionList(),
-                    'resolutionid',
-                    'resolution',
-                    __('Choose the resolution this Layout should be designed for.'), 
-                    'r',
-                    'resolution-group');
-
-            $response->AddFieldAction('templateid', 'change', 0, array('.resolution-group' => array('display' => 'block')));
-            $response->AddFieldAction('templateid', 'change', 0, array('.resolution-group' => array('display' => 'none')), "not");
-        }
+        $response->AddFieldAction('templateid', 'change', 0, array('.resolution-group' => array('display' => 'block')));
+        $response->AddFieldAction('templateid', 'change', 0, array('.resolution-group' => array('display' => 'none')), "not");
 
         Theme::Set('form_fields_general', $formFields['general']);
         Theme::Set('form_fields_description', $formFields['description']);
 
-        // Initialise the template and capture the output
-        $form = Theme::RenderReturn('form_render');
 
-        $dialogTitle = ($this->layoutid == 0) ? __('Add Layout') : __('Edit Layout');
-
-        $response->SetFormRequestResponse($form, $dialogTitle, '350px', '275px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . (($this->layoutid != '') ? HelpManager::Link('Layout', 'Edit') : HelpManager::Link('Layout', 'Add')) . '")');
+        $response->SetFormRequestResponse(null, __('Add Layout'), '350px', '275px');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Layout', 'Add') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#LayoutForm").submit()');
         $response->Respond();
     }
-    
+
     /**
-     * Generates a form for the background edit
+     * Edit form
      */
-    function BackgroundForm() 
+    function EditForm()
     {
-        $db         =& $this->db;
-        $user       =& $this->user;
+        $response = new ResponseManager();
+        $layoutId = Kit::GetParam('layoutid', _GET, _INT);
 
-        $response   = new ResponseManager();
+        // Get the layout
+        $layout = \Xibo\Factory\LayoutFactory::getById($layoutId);
 
-        // Permission to retire?
-        if (!$this->auth->edit)
+        // Check Permissions
+        $auth = $this->user->LayoutAuth($layoutId, true);
+        if (!$auth->edit)
             trigger_error(__('You do not have permissions to edit this layout'), E_USER_ERROR);
 
-        // Load the XML into a SimpleXML OBJECT
-        $xml                = simplexml_load_string($this->xml);
+        // Generate the form
+        Theme::Set('form_id', 'LayoutForm');
+        Theme::Set('form_action', 'index.php?p=layout&q=modify');
+        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutId . '"><input type="hidden" name="designer" value="' . Kit::GetParam('designer', _GET, _INT) . '">');
 
-        $backgroundImage    = (string) $xml['background'];
-        $backgroundColor    = (string) $xml['bgcolor'];
-        $width              = (string) $xml['width'];
-        $height             = (string) $xml['height'];
-        $resolutionid = (int)$xml['resolutionid'];
-        $zindex = (int)$xml['zindex'];
-        $bgImageId          = 0;
+        // Two tabs
+        $tabs = array();
+        $tabs[] = FormManager::AddTab('general', __('General'));
+        $tabs[] = FormManager::AddTab('description', __('Description'));
+        $tabs[] = FormManager::AddTab('background', __('Background'));
 
-        // Do we need to override the background with one passed in?
-        $bgOveride          = Kit::GetParam('backgroundOveride', _GET, _STRING);
+        Theme::Set('form_tabs', $tabs);
 
-        if ($bgOveride != '')
-            $backgroundImage = $bgOveride;
-        
-        // Manipulate the images slightly
-        if ($backgroundImage != '')
-        {
-            // Get the ID for the background image
-            $bgImageInfo = explode('.', $backgroundImage);
-            $bgImageId = $bgImageInfo[0];
-
-            $thumbBgImage = "index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=$bgImageId&width=200&height=200&dynamic";
-        }
-        else
-        {
-            $thumbBgImage = "theme/default/img/forms/filenotfound.gif";
-        }
-
-        // Configure some template variables.
-        Theme::Set('form_id', 'LayoutBackgroundForm');
-        Theme::Set('form_action', 'index.php?p=layout&q=EditBackground');
-        Theme::Set('form_meta', '<input type="hidden" id="layoutid" name="layoutid" value="' . $this->layoutid . '">');
-        
-        // Get the ID of the current resolution
-        if ($resolutionid == 0) {
-            $SQL = sprintf("SELECT resolutionID FROM resolution WHERE width = %d AND height = %d", $width, $height);
-            
-            if (!$resolutionid = $db->GetSingleValue($SQL, 'resolutionID', _INT)) 
-            {
-                trigger_error($db->error());
-                trigger_error(__("Unable to get the Resolution information"), E_USER_ERROR);
-            }
-        }
-        
-        // Begin the form output
         $formFields = array();
+        $formFields['general'][] = FormManager::AddText('layout', __('Name'), $layout->layout, __('The Name of the Layout - (1 - 50 characters)'), 'n', 'required');
+        $formFields['general'][] = FormManager::AddText('tags', __('Tags'), $layout->tags, __('Tags for this layout - used when searching for it. Comma delimited. (1 - 250 characters)'), 't', 'maxlength="250"');
+
+        $formFields['description'][] = FormManager::AddMultiText('description', __('Description'), $layout->description,
+            __('An optional description of the Layout. (1 - 250 characters)'), 'd', 5, 'maxlength="250"');
+
+        $formFields['general'][] = FormManager::AddCombo(
+            'retired',
+            __('Retired'),
+            $layout->retired,
+            array(array('retiredid' => '1', 'retired' => 'Yes'), array('retiredid' => '0', 'retired' => 'No')),
+            'retiredid',
+            'retired',
+            __('Retire this layout or not? It will no longer be visible in lists'),
+            'r');
+
+        Theme::Set('form_fields_general', $formFields['general']);
+        Theme::Set('form_fields_description', $formFields['description']);
+
+        // Background Tab
+        // Do we need to override the background with one passed in?
+        $backgroundImageId = Kit::GetParam('backgroundOveride', _GET, _INT, $layout->backgroundImageId);
+
+        // Manipulate the images slightly
+        $thumbBgImage = ($backgroundImageId == 0) ? 'theme/default/img/forms/filenotfound.gif' : 'index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $backgroundImageId . '&width=200&height=200&dynamic';
+
+        // Get the ID of the current resolution
+        $resolution = \Xibo\Factory\ResolutionFactory::getByDimensions($layout->width, $layout->height);
 
         // A list of web safe colours
-        $formFields[] = FormManager::AddText('bg_color', __('Background Colour'), $backgroundColor, 
+        $formFields['background'][] = FormManager::AddText('backgroundColor', __('Background Colour'), $layout->backgroundColor,
             __('Use the colour picker to select the background colour'), 'c', 'required');
 
         // A list of available backgrounds
-        $backgrounds = $user->MediaList(NULL, array('type' => 'image'));
+        $backgrounds = $this->user->MediaList(NULL, array('type' => 'image'));
         array_unshift($backgrounds, array('mediaid' => '0', 'media' => 'None'));
 
-        $formFields[] = FormManager::AddCombo(
-                    'bg_image', 
-                    __('Background Image'), 
-                    $bgImageId,
-                    $backgrounds,
-                    'mediaid',
-                    'media',
-                    __('Select the background image from the library'), 
-                    'b', '', true, 'onchange="background_button_callback()"');
+        $formFields['background'][] = FormManager::AddCombo(
+            'backgroundImageId',
+            __('Background Image'),
+            $backgroundImageId,
+            $backgrounds,
+            'mediaid',
+            'media',
+            __('Select the background image from the library'),
+            'b', '', true, 'onchange="background_button_callback()"');
 
-        $formFields[] = FormManager::AddCombo(
-                    'resolutionid', 
-                    __('Resolution'), 
-                    $resolutionid,
-                    $user->ResolutionList(NULL, array('withCurrent' => $resolutionid)),
-                    'resolutionid',
-                    'resolution',
-                    __('Change the resolution'), 
-                    'r');
+        $formFields['background'][] = FormManager::AddCombo(
+            'resolutionId',
+            __('Resolution'),
+            $resolution->resolutionId,
+            $this->user->ResolutionList(NULL, array('withCurrent' => $resolution->resolutionId)),
+            'resolutionid',
+            'resolution',
+            __('Change the resolution'),
+            'r');
 
-        $formFields[] = FormManager::AddNumber('zindex', __('Layer'), ($zindex == 0) ? '' : $zindex, 
-            __('The layering order of this region (z-index). Advanced use only. '), 'z');
+        $formFields['background'][] = FormManager::AddNumber('backgroundzIndex', __('Layer'), $layout->backgroundzIndex,
+            __('The layering order of the background image (z-index). Advanced use only. '), 'z');
 
-        Theme::Set('append', '<img id="bg_image_image" src="' . $thumbBgImage . '" alt="' . __('Background thumbnail') . '" />');
-        Theme::Set('form_fields', $formFields);
+        $formFields['background'][] = FormManager::AddRaw('<img id="bg_image_image" src="' . $thumbBgImage . '" alt="' . __('Background thumbnail') . '" />');
 
-        $response->SetFormRequestResponse(NULL, __('Change the Background Properties'), '550px', '240px');
+        Theme::Set('form_fields_background', $formFields['background']);
+
+        $response->SetFormRequestResponse(null, __('Edit Layout'));
         $response->callBack = 'backGroundFormSetup';
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Layout', 'Background') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Layout', 'Edit') . '")');
         $response->AddButton(__('Add Image'), 'XiboFormRender("index.php?p=module&q=Exec&mod=image&method=AddForm&backgroundImage=true&layoutid=' . $this->layoutid . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Save'), '$("#LayoutBackgroundForm").submit()');
-        $response->Respond();
-    }
-    
-    /**
-     * Edits the background of the layout
-     */
-    function EditBackground()
-    {
-        // Check the token
-        if (!Kit::CheckToken())
-            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
-        
-        $db             =& $this->db;
-        $user           =& $this->user;
-        $response       = new ResponseManager();
-
-        $layoutid       = Kit::GetParam('layoutid', _POST, _INT);
-        $bg_color       = Kit::GetParam('bg_color', _POST, _STRING);
-        $mediaID        = Kit::GetParam('bg_image', _POST, _INT);
-        $resolutionid   = Kit::GetParam('resolutionid', _POST, _INT);
-        $zindex   = Kit::GetParam('zindex', _POST, _INT);
-
-        // Permission to retire?
-        if (!$this->auth->edit)
-            trigger_error(__('You do not have permissions to edit this layout'), E_USER_ERROR);
-
-        $layoutObject = new Layout($db);
-
-        if (!$layoutObject->SetBackground($layoutid, $resolutionid, $bg_color, $mediaID, $zindex))
-            trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);
-        
-        $response->SetFormSubmitResponse(__('Layout Background Changed'), true, sprintf("index.php?p=layout&layoutid=%d&modify=true", $layoutid));
+        $response->AddButton(__('Save'), '$("#LayoutForm").submit()');
         $response->Respond();
     }
     

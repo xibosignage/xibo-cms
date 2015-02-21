@@ -30,7 +30,7 @@ class WidgetMediaFactory
      * @param int $widgetId
      * @return array[int]
      */
-    public static function loadByWidgetId($widgetId)
+    public static function getByWidgetId($widgetId)
     {
         return WidgetMediaFactory::query(null, array('widgetId' => $widgetId));
     }

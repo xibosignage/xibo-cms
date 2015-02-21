@@ -27,6 +27,7 @@ use Xibo\Factory\WidgetFactory;
 
 class Playlist
 {
+    private $hash;
     public $playlistId;
     public $ownerId;
 
@@ -43,6 +44,7 @@ class Playlist
 
     public function __construct()
     {
+        $this->hash = null;
         $this->widgets = array();
         $this->tags = array();
         $this->regionIds = array();
@@ -50,9 +52,15 @@ class Playlist
 
     public function __clone()
     {
+        $this->hash = null;
         $this->playlistId = null;
 
         $this->widgets = array_map(function ($object) { return clone $object; }, $this->widgets);
+    }
+
+    private function hash()
+    {
+        return md5($this->playlistId . $this->ownerId . $this->name);
     }
 
     /**
@@ -84,13 +92,15 @@ class Playlist
      */
     public function load()
     {
-        $this->widgets = WidgetFactory::loadByPlaylistId($this->playlistId);
+        $this->widgets = WidgetFactory::getByPlaylistId($this->playlistId);
 
         // Load the widgets
         foreach ($this->widgets as $widget) {
             /* @var Widget $widget */
             $widget->load();
         }
+
+        $this->hash = $this->hash();
     }
 
     /**
@@ -100,7 +110,7 @@ class Playlist
     {
         if ($this->playlistId == null || $this->playlistId == 0)
             $this->add();
-        else
+        else if ($this->hash != $this->hash())
             $this->update();
 
         foreach ($this->widgets as $widget) {

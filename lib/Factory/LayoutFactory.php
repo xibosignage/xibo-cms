@@ -47,7 +47,7 @@ class LayoutFactory
      */
     public static function createFromResolution($resolutionId, $ownerId, $name, $description, $tags)
     {
-        $resolution = ResolutionFactory::loadById($resolutionId);
+        $resolution = ResolutionFactory::getById($resolutionId);
 
         // Create a new Layout
         $layout = new Layout();
@@ -146,6 +146,24 @@ class LayoutFactory
         }
 
         return $layout;
+    }
+
+    /**
+     * Loads only the layout information
+     * @param int $layoutId
+     * @return Layout
+     * @throws NotFoundException
+     */
+    public static function getById($layoutId)
+    {
+        $layouts = LayoutFactory::query(null, array('layoutId' => $layoutId));
+
+        if (count($layouts) <= 0) {
+            throw new NotFoundException(\__('Layout not found'));
+        }
+
+        // Set our layout
+        return $layouts[0];
     }
 
     /**
@@ -293,6 +311,7 @@ class LayoutFactory
                 $sql .= " (SELECT GROUP_CONCAT(DISTINCT tag) FROM tag INNER JOIN lktaglayout ON lktaglayout.tagId = tag.tagId WHERE lktaglayout.layoutId = layout.LayoutID GROUP BY lktaglayout.layoutId) AS tags, ";
             $sql .= "        layout.backgroundImageId, ";
             $sql .= "        layout.backgroundColor, ";
+            $sql .= "        layout.backgroundzIndex, ";
             $sql .= "        layout.schemaVersion ";
             $sql .= "   FROM layout ";
             $sql .= "  INNER JOIN `lkcampaignlayout` ";
@@ -428,6 +447,7 @@ class LayoutFactory
                 $layout->retired = \Kit::ValidateParam($row['retired'], _INT);
                 $layout->status = \Kit::ValidateParam($row['status'], _INT);
                 $layout->backgroundImageId = \Kit::ValidateParam($row['backgroundImageId'], _INT);
+                $layout->backgroundzIndex = \Kit::ValidateParam($row['backgroundzIndex'], _INT);
                 $layout->width = \Kit::ValidateParam($row['width'], _DOUBLE);
                 $layout->height = \Kit::ValidateParam($row['height'], _DOUBLE);
                 $layout->legacyXml = \Kit::ValidateParam($row['legacyXml'], _HTMLSTRING);

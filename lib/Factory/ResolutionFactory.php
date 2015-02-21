@@ -34,7 +34,7 @@ class ResolutionFactory
      * @return Resolution
      * @throws NotFoundException
      */
-    public static function loadById($resolutionId)
+    public static function getById($resolutionId)
     {
         $resolutions = ResolutionFactory::query(null, array('resolutionId' => $resolutionId));
 
@@ -44,17 +44,51 @@ class ResolutionFactory
         return $resolutions[0];
     }
 
+    /**
+     * Get Resolution by Dimensions
+     * @param double $width
+     * @param double $height
+     * @return Resolution
+     * @throws NotFoundException
+     */
+    public static function getByDimensions($width, $height)
+    {
+        $resolutions = ResolutionFactory::query(null, array('width' => $width, 'height' => $height));
+
+        if (count($resolutions) <= 0)
+            throw new NotFoundException('Resolution not found');
+
+        return $resolutions[0];
+    }
+
     public static function query($sortOrder = null, $filterBy = null)
     {
         $entities = array();
 
         $params = array();
-        $sql  = 'SELECT * FROM `resolution` WHERE enabled = 1';
+        $sql  = 'SELECT * FROM `resolution` WHERE 1 = 1 ';
+
+        if (\Kit::GetParam('enabled', $filterBy, _INT, -1) != -1) {
+            $sql .= ' AND enabled = :enabled ';
+            $params['enabled'] = \Kit::GetParam('enabled', $filterBy, _INT);
+        }
 
         if (\Kit::GetParam('resolutionId', $filterBy, _INT) != 0) {
             $sql .= ' AND resolutionId = :resolutionId';
             $params['resolutionId'] = \Kit::GetParam('resolutionId', $filterBy, _INT);
         }
+
+        if (\Kit::GetParam('width', $filterBy, _INT) != 0) {
+            $sql .= ' AND intended_width = :width';
+            $params['width'] = \Kit::GetParam('width', $filterBy, _INT);
+        }
+
+        if (\Kit::GetParam('height', $filterBy, _INT) != 0) {
+            $sql .= ' AND intended_height = :height';
+            $params['height'] = \Kit::GetParam('height', $filterBy, _INT);
+        }
+
+        \Debug::sql($sql, $params);
 
         foreach(\PDOConnect::select($sql, $params) as $record) {
             $resolution = new Resolution();

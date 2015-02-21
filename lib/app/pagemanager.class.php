@@ -154,7 +154,8 @@ class PageManager
                     $reloadLocation = $this->thePage->$function();
                 }
                 catch (Exception $e) {
-                    trigger_error($e->getMessage(), E_USER_ERROR);
+                    Debug::Error($e->getMessage() . '. ' . $e->getTraceAsString());
+                    trigger_error(($e->getMessage() == '') ? __('Sorry, there has been an unexpected error. Please check your error log.') : $e->getMessage(), E_USER_ERROR);
                 }
             }
             else 

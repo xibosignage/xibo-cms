@@ -478,3 +478,14 @@ var settingsUpdated = function(response) {
         SystemMessage((response.message == "") ? translation.failure : response.message, true);
     }
 };
+
+var background_button_callback = function() {
+    //Want to attach an onchange event to the drop down for the bg-image
+    var id = $('#bg_image').val();
+
+    $('#bg_image_image').attr("src", "index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=" + id + "&width=200&height=200&dynamic");
+};
+
+var backGroundFormSetup = function() {
+    $('#backgroundColor').colorpicker({format: "hex"});
+};

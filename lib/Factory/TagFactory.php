@@ -47,7 +47,7 @@ class TagFactory
 
             // Add to the list
             try {
-                $tags[] = TagFactory::loadByTag($tagName);
+                $tags[] = TagFactory::getByTag($tagName);
             }
             catch (NotFoundException $e) {
                 // New tag
@@ -66,7 +66,7 @@ class TagFactory
      * @return Tag
      * @throws NotFoundException
      */
-    public static function loadByTag($tagName)
+    public static function getByTag($tagName)
     {
         $sql = 'SELECT tag.tagId, tag.tag FROM `tag` WHERE tag.tag = :tag';
 

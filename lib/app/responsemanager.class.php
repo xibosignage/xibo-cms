@@ -144,12 +144,11 @@ class ResponseManager
 	
 	/**
 	 * Sets the Default response options for a form request
-	 * @return 
-	 * @param $form Object
-	 * @param $title Object
-	 * @param $width Object[optional]
-	 * @param $height Object[optional]
-	 * @param $callBack Object[optional]
+	 * @param $form string
+	 * @param $title string
+	 * @param $width string[optional]
+	 * @param $height string[optional]
+	 * @param $callBack string[optional]
 	 */
 	public function SetFormRequestResponse($form, $title, $width = '', $height = '', $callBack = '')
 	{
@@ -166,8 +165,6 @@ class ResponseManager
 			$this->dialogWidth 	= $width;
 			$this->dialogHeight	= $height;
 		}
-		
-		return;
 	}
 	
 	/**
@@ -206,15 +203,12 @@ class ResponseManager
 	
 	/**
 	 * Adds a button to the form
-	 * @return 
-	 * @param $name Object
-	 * @param $function Object
+	 * @param string $name
+	 * @param string $function
 	 */
 	public function AddButton($name, $function)
 	{
 		$this->buttons[$name] = $function;
-		
-		return true;
 	}
 
 	/**

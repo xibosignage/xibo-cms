@@ -32,7 +32,7 @@ class PlaylistFactory
      * @param $regionId
      * @return array[Playlist]
      */
-    public static function loadByRegionId($regionId)
+    public static function getByRegionId($regionId)
     {
         //TODO fill in playlist factory
         return PlaylistFactory::query(null, array('regionId' => $regionId));

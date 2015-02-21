@@ -106,39 +106,32 @@ class timelineDAO extends baseDAO {
      */
     function ManualRegionPositionForm()
     {
-        $db =& $this->db;
-        $user =& $this->user;
         $response = new ResponseManager();
 
-        $regionid = Kit::GetParam('regionid', _GET, _STRING);
-        $layoutid = Kit::GetParam('layoutid', _GET, _INT);
+        $layoutId = Kit::GetParam('layoutId', _GET, _INT);
         $scale = Kit::GetParam('scale', _GET, _DOUBLE);
         $zoom = Kit::GetParam('zoom', _GET, _DOUBLE);
 
         // Load the region and get the dimensions, applying the scale factor if necessary (only v1 layouts will have a scale factor != 1)
-        $region = new region($db);
-        $regionNode = $region->getRegion($layoutid, $regionid);
+        $region = \Xibo\Factory\RegionFactory::loadByRegionId(Kit::GetParam('regionid', _GET, _INT));
 
-        $top = round($regionNode->getAttribute('top') * $scale, 0);
-        $left = round($regionNode->getAttribute('left') * $scale, 0);
-        $width = round($regionNode->getAttribute('width') * $scale, 0);
-        $height = round($regionNode->getAttribute('height') * $scale, 0);
-        $zindex = $regionNode->getAttribute('zindex');
-
-        $ownerId = $region->GetOwnerId($layoutid, $regionid);
-        $regionName = $regionNode->getAttribute('name');
-
-        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutid, $regionid, true);
+        $regionAuth = $this->user->RegionAssignmentAuth($region->ownerId, $region->layoutId, $region->regionId, true);
         if (!$regionAuth->edit)
             trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
+
+        $top = round($region->top * $scale, 0);
+        $left = round($region->left * $scale, 0);
+        $width = round($region->width * $scale, 0);
+        $height = round($region->height * $scale, 0);
+        $zIndex = $region->zIndex;
 
         // Set some information about the form
         Theme::Set('form_id', 'RegionProperties');
         Theme::Set('form_action', 'index.php?p=timeline&q=ManualRegionPosition');
-        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid .'"><input type="hidden" name="regionid" value="' . $regionid . '"><input type="hidden" name="scale" value="' . $scale .'"><input type="hidden" name="zoom" value="' . $zoom .'">');
+        Theme::Set('form_meta', '<input type="hidden" name="regionid" value="' . $region->regionId . '"><input type="hidden" name="scale" value="' . $scale .'"><input type="hidden" name="zoom" value="' . $zoom .'">');
         
         $formFields = array();
-        $formFields[] = FormManager::AddText('name', __('Name'), $regionName, 
+        $formFields[] = FormManager::AddText('name', __('Name'), $region->name,
             __('Name of the Region'), 'n', 'maxlength="50"');
 
         $formFields[] = FormManager::AddNumber('top', __('Top'), $top, 
@@ -162,14 +155,14 @@ class timelineDAO extends baseDAO {
             $formFields[] = FormManager::AddCombo(
                         'transitionType', 
                         __('Exit Transition'), 
-                        $region->GetOption($layoutid, $regionid, 'transOut', ''),
+                        $region->getOptionValue('transOut', ''),
                         $transitions,
                         'code',
                         'transition',
                         __('What transition should be applied when this region is finished?'), 
                         't');
 
-            $formFields[] = FormManager::AddNumber('transitionDuration', __('Duration'), $region->GetOption($layoutid, $regionid, 'transOutDuration', 0), 
+            $formFields[] = FormManager::AddNumber('transitionDuration', __('Duration'), $region->getOptionValue('transOutDuration', 0),
                 __('The duration for this transition, in milliseconds.'), 'l', '', 'transition-group');
 
             // Compass points for direction
@@ -187,7 +180,7 @@ class timelineDAO extends baseDAO {
             $formFields[] = FormManager::AddCombo(
                         'transitionDirection', 
                         __('Direction'), 
-                        $region->GetOption($layoutid, $regionid, 'transOutDirection', ''),
+                        $region->getOptionValue('transOutDirection', ''),
                         $compassPoints,
                         'id',
                         'name',
@@ -203,18 +196,17 @@ class timelineDAO extends baseDAO {
         }
 
         $formFields[] = FormManager::AddCheckbox('loop', __('Loop?'), 
-            $region->GetOption($layoutid, $regionid, 'loop', 0), __('If there is only one item in this region should it loop?'), 
+            $region->getOptionValue('loop', 0), __('If there is only one item in this region should it loop?'),
             'l');
 
-        $formFields[] = FormManager::AddNumber('zindex', __('Layer'), ($zindex == 0) ? NULL : $zindex, 
+        $formFields[] = FormManager::AddNumber('zindex', __('Layer'), ($zIndex == 0) ? NULL : $zIndex,
             __('The layering order of this region (z-index). Advanced use only. '), 'z');
 
         Theme::Set('form_fields', $formFields);
 
         // Add some information about the whole layout to this request.
-        $layout = new Layout();
-        $layoutInformation = $layout->LayoutInformation($layoutid);
-        $response->extra['layoutInformation'] = array('width' => $layoutInformation['width'], 'height' => $layoutInformation['height']);
+        $layout = \Xibo\Factory\LayoutFactory::getById($layoutId);
+        $response->extra['layoutInformation'] = array('width' => $layout->width, 'height' => $layout->height);
         
         $response->SetFormRequestResponse(NULL, __('Region Options'), '350px', '275px');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
@@ -229,61 +221,53 @@ class timelineDAO extends baseDAO {
         if (!Kit::CheckToken())
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
-        $db 	=& $this->db;
-        $user 	=& $this->user;
-        $response   = new ResponseManager();
+        $response = new ResponseManager();
 
-        $layoutid   = Kit::GetParam('layoutid', _POST, _INT);
-        $regionid   = Kit::GetParam('regionid', _POST, _STRING);
-        $regionName = Kit::GetParam('name', _POST, _STRING);
-        $top        = Kit::GetParam('top', _POST, _INT);
-        $left       = Kit::GetParam('left', _POST, _INT);
-        $width      = Kit::GetParam('width', _POST, _INT);
-        $height 	= Kit::GetParam('height', _POST, _INT);
-        $scale = Kit::GetParam('scale', _POST, _DOUBLE);
-        $zoom = Kit::GetParam('zoom', _POST, _DOUBLE);
+        // Load the region and get the dimensions, applying the scale factor if necessary (only v1 layouts will have a scale factor != 1)
+        $region = \Xibo\Factory\RegionFactory::loadByRegionId(Kit::GetParam('regionid', _POST, _INT));
+        Debug::Audit($region);
 
-        // Adjust the dimensions
-        // For version 2 layouts and above, the scale will always be 1.
-        // Version 1 layouts need to use scale because the values in the XLF should be scaled down
-        $top = $top / $scale;
-        $left = $left / $scale;
-        $width = $width / $scale;
-        $height = $height / $scale;
-        
-        // Transitions?
-        $transitionType = Kit::GetParam('transitionType', _POST, _WORD);
-        $duration = Kit::GetParam('transitionDuration', _POST, _INT, 0);
-        $direction = Kit::GetParam('transitionDirection', _POST, _WORD, '');
-
-        $region = new region($db);
-        $ownerId = $region->GetOwnerId($layoutid, $regionid);
-
-        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutid, $regionid, true);
+        $regionAuth = $this->user->RegionAssignmentAuth($region->ownerId, $region->layoutId, $region->regionId, true);
         if (!$regionAuth->edit)
             trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
 
-        Debug::LogEntry('audit', sprintf('Layoutid [%d] Regionid [%s]', $layoutid, $regionid), 'layout', 'ManualRegionPosition');
+        // Set the new values
+        $region->name = Kit::GetParam('name', _POST, _STRING);
+        $region->zIndex = Kit::GetParam('zindex', _POST, _INT, NULL);
+
+        $top  = Kit::GetParam('top', _POST, _INT);
+        $left = Kit::GetParam('left', _POST, _INT);
+        $width = Kit::GetParam('width', _POST, _INT);
+        $height = Kit::GetParam('height', _POST, _INT);
+        $scale = Kit::GetParam('scale', _POST, _DOUBLE);
+        $zoom = Kit::GetParam('zoom', _POST, _DOUBLE);
 
         // Remove the "px" from them
         $width  = str_replace('px', '', $width);
         $height = str_replace('px', '', $height);
         $top    = str_replace('px', '', $top);
         $left   = str_replace('px', '', $left);
-        
-        // Create some options
-        $options = array(
-            array('name' => 'transOut', 'value' => $transitionType), 
-            array('name' => 'transOutDuration', 'value' => $duration),
-            array('name' => 'transOutDirection', 'value' => $direction),
-            array('name' => 'loop', 'value' => Kit::GetParam('loop', _POST, _CHECKBOX))
-        );
 
-        // Edit the region 
-        if (!$region->EditRegion($layoutid, $regionid, $width, $height, $top, $left, $regionName, $options, Kit::GetParam('zindex', _POST, _INT, NULL)))
-            trigger_error($region->GetErrorMessage(), E_USER_ERROR);
+        // Adjust the dimensions
+        // For version 2 layouts and above, the scale will always be 1.
+        // Version 1 layouts need to use scale because the values in the XLF should be scaled down
+        $region->top = $top / $scale;
+        $region->left = $left / $scale;
+        $region->width = $width / $scale;
+        $region->height = $height / $scale;
 
-        $response->SetFormSubmitResponse('Region Resized', true, "index.php?p=layout&modify=true&layoutid=$layoutid&zoom=$zoom");
+        // Loop
+        $region->setOptionValue('loop', Kit::GetParam('loop', _POST, _CHECKBOX));
+
+        // Transitions
+        $region->setOptionValue('transitionType', Kit::GetParam('transitionType', _POST, _WORD));
+        $region->setOptionValue('transitionDuration', Kit::GetParam('transitionDuration', _POST, _INT));
+        $region->setOptionValue('transitionDirection', Kit::GetParam('transitionDirection', _POST, _WORD));
+
+        // Save
+        $region->save();
+
+        $response->SetFormSubmitResponse('Region Resized', true, "index.php?p=layout&modify=true&layoutid=$region->layoutId&zoom=$zoom");
         $response->Respond();
     }
 	
@@ -310,7 +294,7 @@ class timelineDAO extends baseDAO {
             $regionId = Kit::ValidateParam($newCoordinates->regionid, _INT);
 
             // Load the region
-            $region = \Xibo\Factory\RegionFactory::loadFromLayout($layout, $regionId);
+            $region = $layout->getRegion($regionId);
             Debug::Audit('Editing Region ' . $region);
 
             // Check Permissions

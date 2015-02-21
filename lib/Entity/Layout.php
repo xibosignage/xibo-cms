@@ -27,19 +27,21 @@ use Xibo\Factory\TagFactory;
 
 class Layout
 {
+    private $hash;
     public $layoutId;
     public $ownerId;
     public $campaignId;
     public $backgroundImageId;
     public $schemaVersion;
 
-    public $retired;
     public $layout;
-
     public $description;
     public $backgroundColor;
-    public $status;
     public $legacyXml;
+
+    public $status;
+    public $retired;
+    public $backgroundzIndex;
 
     public $width;
     public $height;
@@ -49,6 +51,7 @@ class Layout
 
     public function __construct()
     {
+        $this->hash = null;
         $this->regions = array();
         $this->tags = array();
     }
@@ -57,9 +60,15 @@ class Layout
     {
         // Clear the layout id
         $this->layoutId = null;
+        $this->hash = null;
 
         // Clone the regions
         $this->regions = array_map(function ($object) { return clone $object; }, $this->regions);
+    }
+
+    private function hash()
+    {
+        return md5($this->layoutId . $this->ownerId . $this->campaignId . $this->backgroundImageId . $this->backgroundColor . $this->width . $this->height . $this->status);
     }
 
     /**
@@ -77,12 +86,29 @@ class Layout
     }
 
     /**
+     * Load Regions from a Layout
+     * @param int $regionId
+     * @return Region
+     * @throws NotFoundException
+     */
+    public function getRegion($regionId)
+    {
+        foreach ($this->regions as $region) {
+            /* @var Region $region */
+            if ($region->regionId == $regionId)
+                return $region;
+        }
+
+        throw new NotFoundException(__('Cannot find region'));
+    }
+
+    /**
      * Load this Layout
      */
     public function load()
     {
         // Load all regions
-        $this->regions = RegionFactory::loadByLayoutId($this->layoutId);
+        $this->regions = RegionFactory::getByLayoutId($this->layoutId);
         foreach ($this->regions as $region) {
             /* @var Region $region */
             $region->load();
@@ -90,6 +116,9 @@ class Layout
 
         // Load all tags
         $this->tags = TagFactory::loadByLayoutId($this->layoutId);
+
+        // Set the hash
+        $this->hash = $this->hash();
     }
 
     /**
@@ -101,7 +130,7 @@ class Layout
         if ($this->layoutId == null || $this->layoutId == 0) {
             $this->add();
         }
-        else {
+        else if ($this->hash() != $this->hash) {
             $this->update();
         }
 
@@ -178,8 +207,8 @@ class Layout
     {
         \Debug::Audit('Adding Layout ' . $this->layout);
 
-        $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, status, width, height, schemaVersion, backgroundImageId, backgroundColor)';
-        $sql .= ' VALUES (:layout, :description, :userid, :createddt, :modifieddt, :status, :width, :height, 3, :backgroundImageId, :backgroundColor)';
+        $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, status, width, height, schemaVersion, backgroundImageId, backgroundColor, backgroundzIndex)';
+        $sql .= ' VALUES (:layout, :description, :userid, :createddt, :modifieddt, :status, :width, :height, 3, :backgroundImageId, :backgroundColor, :backgroundzIndex)';
 
         $time = \DateManager::getSystemDate(null, 'Y-m-d h:i:s');
 
@@ -194,7 +223,8 @@ class Layout
                 'width' => $this->width,
                 'height' => $this->height,
                 'backgroundImageId' => $this->backgroundImageId,
-                'backgroundColor' => $this->backgroundColor
+                'backgroundColor' => $this->backgroundColor,
+                'backgroundzIndex' => $this->backgroundzIndex,
             ));
         }
         catch (\PDOException $e) {
@@ -220,7 +250,7 @@ class Layout
         \Debug::Audit('Editing Layout ' . $this->layout . '. Id = ' . $this->layoutId);
 
         $sql = '
-UPDATE layout SET layout = :layout, description = :description, modifiedDT = :modifieddt, retired = :retired, width = :width, height = :height, backgroundImageId = :backgroundImageId, backgroundColor = :backgroundColor, xml = NULL
+UPDATE layout SET layout = :layout, description = :description, modifiedDT = :modifieddt, retired = :retired, width = :width, height = :height, backgroundImageId = :backgroundImageId, backgroundColor = :backgroundColor, backgroundzIndex = :backgroundzIndex, xml = NULL
 WHERE layoutID = :layoutid';
 
         $time = \DateManager::getSystemDate(null, 'Y-m-d h:i:s');
@@ -235,6 +265,7 @@ WHERE layoutID = :layoutid';
             'height' => $this->height,
             'backgroundImageId' => $this->backgroundImageId,
             'backgroundColor' => $this->backgroundColor,
+            'backgroundzIndex' => $this->backgroundzIndex,
         ));
 
         // TODO: Update the Campaign

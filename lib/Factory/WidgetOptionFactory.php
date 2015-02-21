@@ -32,7 +32,7 @@ class WidgetOptionFactory
      * @param int $widgetId
      * @return array[WidgetOption]
      */
-    public static function loadByWidgetId($widgetId)
+    public static function getByWidgetId($widgetId)
     {
         return WidgetOptionFactory::query(null, array('widgetId' => $widgetId));
     }

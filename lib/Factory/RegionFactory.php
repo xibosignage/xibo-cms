@@ -52,32 +52,29 @@ class RegionFactory
     }
 
     /**
-     * Load the regions for a layout
+     * Get the regions for a layout
      * @param int $layoutId
      * @return array[\Xibo\Entity\Region]
      */
-    public static function loadByLayoutId($layoutId)
+    public static function getByLayoutId($layoutId)
     {
         // Get all regions for this layout
         return RegionFactory::query(array(), array('layoutId' => $layoutId));
     }
 
     /**
-     * Load Regions from a Layout
-     * @param Layout $layout
+     * Load a region
      * @param int $regionId
      * @return Region
-     * @throws NotFoundException
      */
-    public static function loadFromLayout($layout, $regionId)
+    public static function loadByRegionId($regionId)
     {
-        foreach ($layout->regions as $region) {
-            /* @var Region $region */
-            if ($region->regionId == $regionId)
-                return $region;
-        }
-
-        throw new NotFoundException(__('Cannot find region'));
+        // Get a region by its ID
+        $regions = RegionFactory::query(array(), array('regionId' => $regionId));
+        $region = $regions[0];
+        /* @var Region $region */
+        $region->load();
+        return $region;
     }
 
     /**
@@ -89,9 +86,20 @@ class RegionFactory
     {
         $entries = array();
 
-        $sql = 'SELECT * FROM `region` WHERE layoutId = :layoutId';
+        $params = array();
+        $sql = 'SELECT * FROM `region` WHERE 1 = 1 ';
 
-        foreach (\PDOConnect::select($sql, array('layoutId' => \Kit::GetParam('layoutId', $filterBy, _INT))) as $row) {
+        if (\Kit::GetParam('regionId', $filterBy, _INT) != 0) {
+            $sql .= ' AND regionId = :regionId ';
+            $params['regionId'] = \Kit::GetParam('regionId', $filterBy, _INT);
+        }
+
+        if (\Kit::GetParam('layoutId', $filterBy, _INT) != 0) {
+            $sql .= ' AND layoutId = :layoutId ';
+            $params['layoutId'] = \Kit::GetParam('layoutId', $filterBy, _INT);
+        }
+
+        foreach (\PDOConnect::select($sql, $params) as $row) {
             $region = new Region();
             $region->layoutId = \Kit::ValidateParam($row['layoutId'], _INT);
             $region->regionId = \Kit::ValidateParam($row['regionId'], _INT);
@@ -101,6 +109,7 @@ class RegionFactory
             $region->height = \Kit::ValidateParam($row['height'], _DOUBLE);
             $region->top = \Kit::ValidateParam($row['top'], _DOUBLE);
             $region->left = \Kit::ValidateParam($row['left'], _DOUBLE);
+            $region->zIndex = \Kit::ValidateParam($row['zIndex'], _DOUBLE);
 
             $entries[] = $region;
         }

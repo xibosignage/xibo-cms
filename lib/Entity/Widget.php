@@ -27,6 +27,7 @@ use Xibo\Factory\WidgetOptionFactory;
 
 class Widget
 {
+    private $hash;
     public $widgetId;
     public $playlistId;
     public $ownerId;
@@ -41,16 +42,23 @@ class Widget
 
     public function __construct()
     {
+        $this->hash = null;
         $this->widgetOptions = array();
         $this->mediaIds = array();
     }
 
     public function __clone()
     {
+        $this->hash = null;
         $this->widgetId = null;
         $this->widgetOptions = array_map(function ($object) { return clone $object; }, $this->widgetOptions);
 
         // No need to clone the media
+    }
+
+    private function hash()
+    {
+        return md5($this->widgetId . $this->playlistId . $this->ownerId . $this->type . $this->duration);
     }
 
     /**
@@ -65,19 +73,19 @@ class Widget
     public function load()
     {
         // Load the widget options
-        $this->widgetOptions = WidgetOptionFactory::loadByWidgetId($this->widgetId);
+        $this->widgetOptions = WidgetOptionFactory::getByWidgetId($this->widgetId);
 
         // Load any media assignments for this widget
-        $this->mediaIds = WidgetMediaFactory::loadByWidgetId($this->widgetId);
+        $this->mediaIds = WidgetMediaFactory::getByWidgetId($this->widgetId);
+
+        $this->hash = $this->hash();
     }
 
     public function save()
     {
-        \Debug::Audit('Saving Widget ' . $this->type . ' on PlaylistId ' . $this->playlistId . ' WidgetId: ' . $this->widgetId);
-
         if ($this->widgetId == null || $this->widgetId == 0)
             $this->add();
-        else
+        else if ($this->hash != $this->hash())
             $this->update();
 
         foreach ($this->widgetOptions as $widgetOption) {
@@ -99,6 +107,8 @@ class Widget
 
     private function add()
     {
+        \Debug::Audit('Adding Widget ' . $this->type . ' to PlaylistId ' . $this->playlistId);
+
         $sql = 'INSERT INTO `widget` (`playlistId`, `ownerId`, `type`, `duration`) VALUES (:playlistId, :ownerId, :type, :duration)';
         $this->widgetId = \PDOConnect::insert($sql, array(
             'playlistId' => $this->playlistId,
@@ -110,6 +120,8 @@ class Widget
 
     private function update()
     {
+        \Debug::Audit('Saving Widget ' . $this->type . ' on PlaylistId ' . $this->playlistId . ' WidgetId: ' . $this->widgetId);
+
         $sql = 'UPDATE `widget` SET `playlistId` = :playlistId, `ownerId` = :ownerId, `type` = :type, `duration` = :duration WHERE `widgetId` = :widgetId';
         \PDOConnect::update($sql, array(
             'playlistId' => $this->playlistId,
