@@ -19,40 +19,33 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
-include_once("lib/data/layout.data.class.php");
 
-class timelineDAO extends baseDAO {
-
+class timelineDAO extends baseDAO
+{
     /**
 	 * Adds a new region for a layout
-	 * @return 
 	 */
 	function AddRegion()
 	{
-		$db 	=& $this->db;
-		$user 	=& $this->user;
-		
-		//ajax request handler
 		$response = new ResponseManager();
 		
-		$layoutid = Kit::GetParam('layoutid', _REQUEST, _INT, 0);
-		
-		if ($layoutid == 0)
-		{
-			trigger_error(__("No layout information available, please refresh the page."), E_USER_ERROR);
-		}
-		
-		include_once("lib/data/region.data.class.php");
+		$layout = \Xibo\Factory\LayoutFactory::loadById(Kit::GetParam('layoutid', _REQUEST, _INT));
 
-		$region = new region($db);
+        // Check Permissions
+        $auth = $this->user->LayoutAuth($layout->layoutId, true);
+        if (!$auth->edit)
+            trigger_error(__('You do not have permission to edit this Layout'), E_USER_ERROR);
+
+        // Create a new region
+        $region = \Xibo\Factory\RegionFactory::create($this->user->userid, null, 250, 250, 50, 50);
+
+        // Add the region to the layout
+        $layout->regions[] = $region;
+
+        // Save everything
+        $layout->save();
 		
-		if (!$region->AddRegion($layoutid, $user->userid))
-		{
-			//there was an ERROR
-			trigger_error($region->GetErrorMessage(), E_USER_ERROR);
-		}
-		
-		$response->SetFormSubmitResponse(__('Region Added.'), true, "index.php?p=layout&modify=true&layoutid=$layoutid");
+		$response->SetFormSubmitResponse(__('Region Added.'), true, 'index.php?p=layout&modify=true&layoutid=' . $layout->layoutId);
 		$response->Respond();
 	}
 	

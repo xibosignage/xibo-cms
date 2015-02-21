@@ -41,6 +41,16 @@ class RegionFactory
      */
     public static function create($ownerId, $name, $width, $height, $top, $left)
     {
+        // Validation
+        if (!is_numeric($width) || !is_numeric($height) || !is_numeric($top) || !is_numeric($left))
+            throw new \InvalidArgumentException(__('Size and coordinates must be generic'));
+
+        if ($width <= 0)
+            throw new \InvalidArgumentException(__('Width must be greater than 0'));
+
+        if ($height <= 0)
+            throw new \InvalidArgumentException(__('Height must be greater than 0'));
+
         $region = new Region();
         $region->ownerId = $ownerId;
         $region->name = $name;
@@ -48,6 +58,7 @@ class RegionFactory
         $region->height = $height;
         $region->top = $top;
         $region->left = $left;
+        $region->zIndex = 0;
         return $region;
     }
 

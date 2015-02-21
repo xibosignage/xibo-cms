@@ -106,22 +106,12 @@ Class PDOConnect {
 	 */
 	public static function insert($sql, $params)
 	{
-		try {
-			$dbh = PDOConnect::init();
-			$sth = $dbh->prepare($sql);
+        $dbh = PDOConnect::init();
+        $sth = $dbh->prepare($sql);
 
-			$sth->execute($params);
+        $sth->execute($params);
 
-			return $dbh->lastInsertId();
-		}
-		catch (PDOException $e) {
-            // Get the calling class / function
-            $trace = debug_backtrace();
-            $caller = $trace[1];
-
-            Debug::LogEntry('error', $e->getMessage() . PHP_EOL . $e->getTraceAsString(), (isset($caller['class'])) ? $caller['class'] : 'Global', $caller['function']);
-			throw $e;
-		}
+        return $dbh->lastInsertId();
 	}
 
 	/**
@@ -132,20 +122,10 @@ Class PDOConnect {
 	 */
 	public static function update($sql, $params)
 	{
-		try {
-			$dbh = PDOConnect::init();
-			$sth = $dbh->prepare($sql);
+        $dbh = PDOConnect::init();
+        $sth = $dbh->prepare($sql);
 
-			$sth->execute($params);
-		}
-		catch (PDOException $e) {
-            // Get the calling class / function
-            $trace = debug_backtrace();
-            $caller = $trace[1];
-
-            Debug::LogEntry('error', $e->getMessage() . PHP_EOL . $e->getTraceAsString(), (isset($caller['class'])) ? $caller['class'] : 'Global', $caller['function']);
-			throw $e;
-		}
+        $sth->execute($params);
 	}
 
 	/**
@@ -157,21 +137,11 @@ Class PDOConnect {
 	 */
 	public static function select($sql, $params)
 	{
-		try {
-			$dbh = PDOConnect::init();
-			$sth = $dbh->prepare($sql);
+        $dbh = PDOConnect::init();
+        $sth = $dbh->prepare($sql);
 
-			$sth->execute($params);
+        $sth->execute($params);
 
-			return $sth->fetchAll(PDO::FETCH_ASSOC);
-		}
-		catch (PDOException $e) {
-            // Get the calling class / function
-            $trace = debug_backtrace();
-            $caller = $trace[1];
-
-            Debug::LogEntry('error', $e->getMessage() . PHP_EOL . $e->getTraceAsString(), (isset($caller['class'])) ? $caller['class'] : 'Global', $caller['function']);
-			throw $e;
-		}
+        return $sth->fetchAll(PDO::FETCH_ASSOC);
 	}
 }
