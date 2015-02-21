@@ -155,6 +155,10 @@ class Layout
     public function delete()
     {
         // TODO: Delete the Layout
+        // We must ensure everything is loaded before we delete
+        if ($this->hash() == null)
+            $this->load();
+
     }
 
     public function validate()

@@ -80,12 +80,21 @@ class RegionFactory
      */
     public static function loadByRegionId($regionId)
     {
-        // Get a region by its ID
-        $regions = RegionFactory::query(array(), array('regionId' => $regionId));
-        $region = $regions[0];
-        /* @var Region $region */
+        $region = RegionFactory::getByRegionId($regionId);
         $region->load();
         return $region;
+    }
+
+    /**
+     * Get by RegionId
+     * @param int $regionId
+     * @return Region
+     */
+    public static function getByRegionId($regionId)
+    {
+        // Get a region by its ID
+        $regions = RegionFactory::query(array(), array('regionId' => $regionId));
+        return $regions[0];
     }
 
     /**

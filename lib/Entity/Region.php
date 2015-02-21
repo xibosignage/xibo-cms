@@ -182,9 +182,34 @@ class Region
         }
     }
 
+    /**
+     * Delete Region
+     */
     public function delete()
     {
+        // We must ensure everything is loaded before we delete
+        if ($this->hash() == null)
+            $this->load();
 
+        // To delete a region we must delete all playlists
+        foreach ($this->playlists as $playlist) {
+            /* @var Playlist $playlist */
+
+            // Make sure this region is assigned
+            $playlist->assignRegion($this->regionId);
+
+            // Save the playlist
+            $playlist->delete();
+        }
+
+        // Delete all region options
+        foreach ($this->regionOptions as $regionOption) {
+            /* @var RegionOption $regionOption */
+            $regionOption->delete();
+        }
+
+        // Delete this region
+        \PDOConnect::update('DELETE FROM `region` WHERE regionId = :regionId', array('regionId' => $this->regionId));
     }
 
     // Add / Update

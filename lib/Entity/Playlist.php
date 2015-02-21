@@ -125,6 +125,31 @@ class Playlist
         $this->linkRegions();
     }
 
+    /**
+     * Delete
+     */
+    public function delete()
+    {
+        // We must ensure everything is loaded before we delete
+        if ($this->hash() == null)
+            $this->load();
+
+        // Delete widgets
+        foreach ($this->widgets as $widget) {
+            /* @var Widget $widget */
+
+            // Assert the playlistId
+            $widget->playlistId = $this->playlistId;
+            $widget->delete();
+        }
+
+        // Unlink regions
+        $this->unlinkRegions();
+
+        // Delete this playlist
+        \PDOConnect::update('DELETE FROM `playlist` WHERE playlistId = :playlistId', array('playlistId' => $this->playlistId));
+    }
+
     private function add()
     {
         \Debug::Audit('Adding Playlist ' . $this->name);
@@ -160,6 +185,19 @@ class Playlist
                 'regionId2' => $regionId,
                 'playlistId' => $this->playlistId,
                 'displayOrder' => $order
+            ));
+        }
+    }
+
+    /**
+     * Unlink all Regions
+     */
+    private function unlinkRegions()
+    {
+        foreach ($this->regionIds as $regionId) {
+            \PDOConnect::update('DELETE FROM `lkregionplaylist` WHERE regionId = :regionId AND playlistId = :playlistId', array(
+                'regionId' => $regionId,
+                'playlistId' => $this->playlistId
             ));
         }
     }

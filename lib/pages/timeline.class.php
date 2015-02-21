@@ -50,48 +50,30 @@ class timelineDAO extends baseDAO
 	}
 	
 	/**
-	 * Deletes a region and all its media
-	 * @return 
+	 * Deletes a region and all the assigned widgets
 	 */
 	function DeleteRegion()
 	{
-		$db 		=& $this->db;
-		$user 		=& $this->user;
-		$response 	= new ResponseManager();
-		
-		$layoutid 	= Kit::GetParam('layoutid', _REQUEST, _INT, 0);
-		$regionid 	= Kit::GetParam('regionid', _REQUEST, _STRING);
-		
-		if ($layoutid == 0 || $regionid == '')
-		{
-			$response->SetError(__("No layout/region information available, please refresh the page and try again."));
-			$response->Respond();
-		}
+		$response = new ResponseManager();
 
-        Kit::ClassLoader('region');
-        $region = new region($db);
-        $ownerId = $region->GetOwnerId($layoutid, $regionid);
+        $region = \Xibo\Factory\RegionFactory::getByRegionId(Kit::GetParam('regionid', _REQUEST, _INT));
 
-        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutid, $regionid, true);
+        // Do we have permission
+        $regionAuth = $this->user->RegionAssignmentAuth($region->ownerId, $region->layoutId, $region->regionId, true);
         if (!$regionAuth->del)
             trigger_error(__('You do not have permissions to delete this region'), E_USER_ERROR);
 
         // Remove the permissions
-        Kit::ClassLoader('layoutregiongroupsecurity');
-        $security = new LayoutRegionGroupSecurity($db);
-        $security->UnlinkAll($layoutid, $regionid);
+        // TODO: Remove the permissions in a more generic way
+        $security = new LayoutRegionGroupSecurity();
+        $security->UnlinkAll($region->layoutId, $region->regionId);
+        //$db->query(sprintf("DELETE FROM lklayoutmediagroup WHERE layoutid = %d AND RegionID = '%s'", $layoutid, $regionid));
 
-        $db->query(sprintf("DELETE FROM lklayoutmediagroup WHERE layoutid = %d AND RegionID = '%s'", $layoutid, $regionid));
+        // Delete the region
+        $region->delete();
 
-            if (!$region->DeleteRegion($layoutid, $regionid))
-            {
-                    //there was an ERROR
-                    $response->SetError($region->GetErrorMessage());
-                    $response->Respond();
-            }
-
-            $response->SetFormSubmitResponse(__('Region Deleted.'), true, sprintf("index.php?p=layout&layoutid=%d&modify=true", $layoutid));
-            $response->Respond();
+        $response->SetFormSubmitResponse(__('Region Deleted.'), true, sprintf('index.php?p=layout&layoutid=%d&modify=true', $region->layoutId));
+        $response->Respond();
 	}
 
     /*
@@ -313,33 +295,28 @@ class timelineDAO extends baseDAO
 	}
 	
     /**
-     * Return the Delete Form as HTML
-     * @return
+     * Delete Region Form
      */
     public function DeleteRegionForm()
     {
-        $db 		=& $this->db;
-        $response	= new ResponseManager();
-        $helpManager = new HelpManager($db, $this->user);
-        $layoutid 	= Kit::GetParam('layoutid', _REQUEST, _INT, 0);
-        $regionid 	= Kit::GetParam('regionid', _REQUEST, _STRING);
+        $response = new ResponseManager();
 
-        Kit::ClassLoader('region');
-        $region = new region($db);
-        $ownerId = $region->GetOwnerId($layoutid, $regionid);
+        // Load our region
+        $region = \Xibo\Factory\RegionFactory::getByRegionId(Kit::GetParam('regionid', _REQUEST, _INT));
 
-        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutid, $regionid, true);
+        // Do we have permission
+        $regionAuth = $this->user->RegionAssignmentAuth($region->ownerId, $region->layoutId, $region->regionId, true);
         if (!$regionAuth->del)
             trigger_error(__('You do not have permissions to delete this region'), E_USER_ERROR);
 		
 		// Set some information about the form
         Theme::Set('form_id', 'RegionDeleteForm');
         Theme::Set('form_action', 'index.php?p=timeline&q=DeleteRegion');
-        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '" /><input type="hidden" name="regionid" value="' . $regionid . '" />');
+        Theme::Set('form_meta', '<input type="hidden" name="regionid" value="' . $region->regionId . '" />');
         Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to remove this region? All media files will be unassigned and any context saved to the region itself (such as Text, Tickers) will be lost permanently.'))));
 
         $response->SetFormRequestResponse(NULL, __('Delete this region?'), '350px', '200px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Region', 'Delete') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Region', 'Delete') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Delete'), '$("#RegionDeleteForm").submit()');
         $response->Respond();

@@ -102,7 +102,24 @@ class Widget
 
     public function delete()
     {
+        // We must ensure everything is loaded before we delete
+        if ($this->hash() == null)
+            $this->load();
 
+        // Delete all Options
+        foreach ($this->widgetOptions as $widgetOption) {
+            /* @var \Xibo\Entity\WidgetOption $widgetOption */
+
+            // Assert the widgetId
+            $widgetOption->widgetId = $this->widgetId;
+            $widgetOption->delete();
+        }
+
+        // Unlink Media
+        $this->unlinkMedia();
+
+        // Delete this
+        \PDOConnect::update('DELETE FROM `widget` WHERE widgetId = :widgetId', array('widgetId' => $this->widgetId));
     }
 
     private function add()
@@ -148,6 +165,19 @@ class Widget
                 'widgetId' => $this->widgetId,
                 'mediaId' => $mediaId,
                 'mediaId2' => $mediaId
+            ));
+        }
+    }
+
+    /**
+     * Unlink Media
+     */
+    private function unlinkMedia()
+    {
+        foreach ($this->mediaIds as $mediaId) {
+            \PDOConnect::update('DELETE FROM `lkwidgetmedia` WHERE widgetId = :widgetId AND mediaId = :mediaId', array(
+                'widgetId' => $this->widgetId,
+                'mediaId' => $mediaId
             ));
         }
     }
