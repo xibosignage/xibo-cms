@@ -24,6 +24,7 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\Module;
+use Xibo\Exception\NotFoundException;
 
 class ModuleFactory
 {
@@ -43,6 +44,43 @@ class ModuleFactory
         }
 
         return $modules;
+    }
+
+    /**
+     * Get module by extension
+     * @param string $extension
+     * @return Module
+     * @throws NotFoundException
+     */
+    public static function getByExtension($extension)
+    {
+        $modules = ModuleFactory::query(null, array('extension' => $extension));
+
+        if (count($modules) <= 0)
+            throw new NotFoundException(sprintf(__('Extension %s does not match any enabled Module'), $extension));
+
+        return $modules[0];
+    }
+
+    /**
+     * Get Valid Extensions
+     * @return array[string]
+     */
+    public static function getValidExtensions()
+    {
+        $modules = ModuleFactory::query();
+        $extensions = array();
+
+        foreach($modules as $module) {
+            /* @var Module $module */
+            if ($module->validExtensions != '') {
+                foreach (explode(',', $module->validExtensions) as $extension) {
+                    $extensions[] = $extension;
+                }
+            }
+        }
+
+        return $extensions;
     }
 
     public static function query($sortOrder = array('Module'), $filterBy = array())
@@ -71,13 +109,18 @@ class ModuleFactory
             $SQL .= ' WHERE 1 = 1 ';
 
             if (\Kit::GetParam('id', $filterBy, _INT, 0) != 0) {
-                $params['id'] = Kit::GetParam('id', $filterBy, _INT);
+                $params['id'] = \Kit::GetParam('id', $filterBy, _INT);
                 $SQL .= ' AND ModuleID = :id ';
             }
 
             if (\Kit::GetParam('name', $filterBy, _STRING) != '') {
-                $params['id'] = Kit::GetParam('name', $filterBy, _STRING);
+                $params['id'] = \Kit::GetParam('name', $filterBy, _STRING);
                 $SQL .= ' AND name = :name ';
+            }
+
+            if (\Kit::GetParam('extension', $filterBy, _STRING) != '') {
+                $params['extension'] = '%' . \Kit::GetParam('extension', $filterBy, _STRING) . '%';
+                $SQL .= ' AND ValidExtensions LIKE :extension ';
             }
 
             // Sorting?
@@ -109,7 +152,7 @@ class ModuleFactory
 
             return $entries;
         }
-        catch (Exception $e) {
+        catch (\Exception $e) {
 
             \Debug::Error($e->getMessage());
 

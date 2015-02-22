@@ -135,8 +135,10 @@ class LayoutFactory
             $layoutFromXml->ownerId = $layout->ownerId;
             $layoutFromXml->schemaVersion = 3;
 
-            // Save this so that it gets converted to the DB format.
+            // TODO: Save this so that it gets converted to the DB format.
             //$layoutFromXml->save();
+
+            // TODO: somehow we need to map the old permissions over to the new permissions model.
 
             $layout = $layoutFromXml;
         }

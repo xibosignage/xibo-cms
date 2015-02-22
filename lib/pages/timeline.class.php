@@ -325,7 +325,6 @@ class timelineDAO extends baseDAO
     /**
      * Shows the Timeline for this region
      * Also shows any Add/Edit options
-     * @return
      */
     function RegionOptions()
     {
@@ -643,28 +642,23 @@ class timelineDAO extends baseDAO
      */
     public function TimelineList()
     {
-        $db =& $this->db;
         $user =& $this->user;
         $user->SetPref('timeLineView', 'list');
         $response = new ResponseManager();
         $response->html = '';
 
-        $layoutId = Kit::GetParam('layoutid', _GET, _INT);
-        $regionId = Kit::GetParam('regionid', _REQUEST, _STRING);
+        // Load the region and get the dimensions, applying the scale factor if necessary (only v1 layouts will have a scale factor != 1)
+        $region = \Xibo\Factory\RegionFactory::loadByRegionId(Kit::GetParam('regionid', _GET, _INT));
 
-        // Make sure we have permission to edit this region
-        Kit::ClassLoader('region');
-        $region = new region($db);
-        $ownerId = $region->GetOwnerId($layoutId, $regionId);
-
-        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
+        $regionAuth = $this->user->RegionAssignmentAuth($region->ownerId, $region->layoutId, $region->regionId, true);
         if (!$regionAuth->edit)
             trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
 
+        // Start buildings the Timeline List
         $response->html .= '<div class="container-fluid">';
         $response->html .= '<div class="row">';
         // Set the theme module buttons
-        $this->ThemeSetModuleButtons($layoutId, $regionId);
+        $this->ThemeSetModuleButtons($region->layoutId, $region->regionId);
         $response->html .= Theme::RenderReturn('layout_designer_form_timeline');
 
         // Load the XML for this layout and region, we need to get the media nodes.
@@ -674,37 +668,30 @@ class timelineDAO extends baseDAO
         $timeListMediaListId = uniqid('timelineMediaList_');
 
         $response->html .= '<div class="col-md-10">';
-        $response->html .= '<div id="timelineControl" class="timelineColumn" layoutid="' . $layoutId . '" regionid="' . $regionId . '">';
+        $response->html .= '<div id="timelineControl" class="timelineColumn" layoutid="' . $region->layoutId . '" regionid="' . $region->regionId . '">';
         $response->html .= '    <div class="timelineMediaVerticalList">';
         $response->html .= '        <ul id="' . $timeListMediaListId . '" class="timelineSortableListOfMedia">';
 
         // How are we going to colour the bars, my media type or my permissions
         $timeBarColouring = Config::GetSetting('REGION_OPTIONS_COLOURING');
 
-        // Create a layout object
-        $region = new Region($db);
+        // Get the Widgets on this Timeline
+        // TODO: Playlist logic
+        $playlist = $region->playlists[0];
+        /* @var \Xibo\Entity\Playlist $playlist */
 
-        foreach($region->GetMediaNodeList($layoutId, $regionId) as $mediaNode)
-        {
+        foreach($playlist->widgets as $widget) {
             // Put this node vertically in the region time line
-            $mediaId = $mediaNode->getAttribute('id');
-            $lkId = $mediaNode->getAttribute('lkid');
-            $mediaType = $mediaNode->getAttribute('type');
-            $mediaDuration = $mediaNode->getAttribute('duration');
-            $ownerId = $mediaNode->getAttribute('userId');
-
-            // Permissions for this assignment
-            $auth = $user->MediaAssignmentAuth($ownerId, $layoutId, $regionId, $mediaId, true);
+            // TODO: Permissions for this assignment
+            $auth = $user->MediaAssignmentAuth($widget->ownerId, $region->layoutId, $region->regionId, $widget->widgetId, true);
 
             // Skip over media assignments that we do not have permission to see
             if (!$auth->view)
                 continue;
 
-            Debug::LogEntry('audit', sprintf('Permission Granted to View MediaID: %s', $mediaId), 'layout', 'TimeLine');
-
             // Create a media module to handle all the complex stuff
             try {
-                $tmpModule = ModuleFactory::load($mediaType, $layoutId, $regionId, $mediaId, $lkId, $this->db, $this->user);
+                $tmpModule = ModuleFactory::load($widget->type, $region->layoutId, $region->regionId, $widget->mediaId, null, $this->db, $this->user);
             }
             catch (Exception $e) {
                 Debug::Audit('Caught exception from Module Create');

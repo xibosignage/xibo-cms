@@ -58,17 +58,7 @@ class image extends Module
     }
 
     /**
-     * Return the Add Form as HTML
-     * @return
-     */
-    public function AddForm()
-    {
-        return $this->AddFormForLibraryMedia();
-    }
-
-    /**
      * Return the Edit Form as HTML
-     * @return
      */
     public function EditForm() {
 

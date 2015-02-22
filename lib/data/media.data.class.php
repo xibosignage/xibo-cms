@@ -225,12 +225,8 @@ class Media extends Data
             // Validation
             if (strlen($name) > 100)
                 $this->ThrowError(10, __('The name cannot be longer than 100 characters'));
-    
-            // Test the duration (except for video and localvideo which can have a 0)
-            if ($duration == 0 && $type != 'video' && $type != 'localvideo' && $type != 'genericfile' && $type != 'font')
-                $this->ThrowError(11, __('You must enter a duration.'));
-    
-            // Check the naming of this item to ensure it doesnt conflict
+
+            // Check the naming of this item to ensure it doesn't conflict
             $params = array();
             $checkSQL = 'SELECT name FROM media WHERE name = :name AND userid = :userid';
             

@@ -208,10 +208,7 @@ class File extends Data
 
         // Check that we are now writable - if not then error
         if (!is_writable($libraryFolder))
-        {
-            $this->SetError(4);
-            return false;
-        }
+            throw new Exception('Library not writable');
 
         return true;
     }
@@ -221,6 +218,17 @@ class File extends Data
         $libraryFolder  = Config::GetSetting('LIBRARY_LOCATION');
 
         return $libraryFolder . '/cache';
+    }
+
+    /**
+     * Library Usage
+     * @return int
+     */
+    public static function libraryUsage()
+    {
+        $results = PDOConnect::select('SELECT IFNULL(SUM(FileSize), 0) AS SumSize FROM media', array());
+
+        return Kit::ValidateParam($results[0]['SumSize'], _INT);
     }
 }
 ?>

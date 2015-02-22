@@ -22,6 +22,7 @@
 
 namespace Xibo\Entity;
 
+use Xibo\Exception\NotFoundException;
 use Xibo\Factory\WidgetMediaFactory;
 use Xibo\Factory\WidgetOptionFactory;
 
@@ -68,6 +69,58 @@ class Widget
     public function setOwner($ownerId)
     {
         $this->ownerId = $ownerId;
+    }
+
+    /**
+     * Get Option
+     * @param string $option
+     * @return WidgetOption
+     * @throws NotFoundException
+     */
+    public function getOption($option)
+    {
+        foreach ($this->widgetOptions as $widgetOption) {
+            /* @var WidgetOption $widgetOption */
+            if ($widgetOption->option == $option)
+                return $widgetOption;
+        }
+
+        throw new NotFoundException('Widget Option not found');
+    }
+
+    /**
+     * Get Widget Option Value
+     * @param string $option
+     * @param mixed $default
+     * @return mixed
+     */
+    public function getOptionValue($option, $default)
+    {
+        try {
+            $widgetOption = $this->getOption($option);
+            return $widgetOption->value;
+        }
+        catch (NotFoundException $e) {
+            return $default;
+        }
+    }
+
+    /**
+     * Set Widget Option Value
+     * @param string $option
+     * @param string $type
+     * @param mixed $value
+     */
+    public function setOptionValue($option, $type, $value)
+    {
+        try {
+            $widgetOption = $this->getOption($option);
+            $widgetOption->type = $type;
+            $widgetOption->value = $value;
+        }
+        catch (NotFoundException $e) {
+            $this->widgetOptions[] = WidgetOptionFactory::create($this->widgetId, $option, $value);
+        }
     }
 
     public function load()

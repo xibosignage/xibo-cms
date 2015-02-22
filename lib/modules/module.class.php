@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2014 Daniel Garner
+ * Copyright (C) 2006-2015 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -19,930 +19,191 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
-include_once('lib/data/media.data.class.php');
 
 abstract class Module implements ModuleInterface
 {
-    // Session Variables
-    protected $db;
-    protected $user;
-    protected $response;
-    public $auth;
-
     // Module Information
-    protected $module_id;
-    protected $render_as;
-    public $displayType;
-    protected $type;
-    protected $regionSpecific;
-    protected $previewEnabled;
-    protected $validExtensions;
-    protected $validExtensionsText;
-    protected $imageUri;
-    protected $settings;
+    /**
+     * @var \Xibo\Entity\Module $module
+     */
+    protected $module;
+
+    /**
+     * @var \Xibo\Entity\Widget $widget Widget
+     */
+    private $widget;
+
+    /**
+     * @var PermissionManager $auth Widget Permissions
+     */
+    protected $auth;
 
     // The Schema Version of this code
-    protected $schemaVersion;
     protected $codeSchemaVersion = -1;
-    
-    // Layout Information
-    protected $region;
-    protected $layoutid;
-    protected $regionid;
-    protected $xml;
-    protected $deleteFromRegion;
-    protected $width;
-    protected $height;
-    protected $layoutSchemaVersion;
-
-    // Media information
-    protected $mediaid;
-    protected $name;
-    protected $duration;
-    protected $lkid;
-    protected $existingMedia;
-    protected $assignedMedia;
-    protected $showRegionOptions;
-    protected $originalUserId;
-    protected $storedAs;
-    protected $originalFilename;
-    protected $tags;
-
-    // Track the error state
-    private $error;
-    private $errorNo;
-    private $errorMessage;
 
     /**
-     * Constructor - sets up this media object with all the available information
-     * @return
-     * @param $db database
-     * @param $user user
-     * @param $mediaid String[optional]
-     * @param $layoutid String[optional]
-     * @param $regionid String[optional]
+     * Set the Widget
+     * @param \Xibo\Entity\Widget $widget
      */
-    public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '', $lkid = '')
+    final public function setWidget($widget)
     {
-        $this->db =& $db;
-        $this->user =& $user;
-
-        // Initialise the error state
-        $this->error = false;
-        $this->errorNo = 0;
-        $this->errorMessage = '';
-
-        // Initialise the module state
-        $this->mediaid 	= $mediaid;
-        $this->name 	= '';
-        $this->layoutid = $layoutid;
-        $this->regionid = $regionid;
-        $this->lkid     = $lkid;
-
-        // New region
-        $this->region 	= new region($db);
-
-        $this->existingMedia = false;
-        $this->assignedMedia = false;
-        $this->deleteFromRegion = false;
-        $this->assignable = true;
-        $this->duration = '';
-
-        // Members used by forms (routed through the CMS)
-        $this->showRegionOptions = Kit::GetParam('showRegionOptions', _REQUEST, _INT, 1);
-        
-        // Log
-        Debug::LogEntry('audit', 'Module created with MediaID: ' . $mediaid . ' LayoutID: ' . $layoutid . ' and RegionID: ' . $regionid);
-
-        // Determine which type this module is
-        $this->SetModuleInformation();
-
-        // Either the information from the region - or some blanks
-        return ($this->SetMediaInformation($this->layoutid, $this->regionid, $this->mediaid, $this->lkid));
+        $this->widget = $widget;
     }
 
     /**
-     * Sets the module information
-     * @return
+     * Set Widget Permissions
+     * @param PermissionManager $auth
      */
-    final private function SetModuleInformation()
+    final public function setPermissions($auth)
     {
-        if ($this->type == '')
-            return $this->SetError(__('Unable to create Module [No type given] - please refer to the Module Documentation.'));
-
-        try {
-            $dbh = PDOConnect::init();
-        
-            $sth = $dbh->prepare('SELECT * FROM module WHERE Module = :type');
-            $sth->execute(array(
-                    'type' => $this->type
-                ));
-
-            if (!$row = $sth->fetch())
-                return;
-
-            $this->module_id = Kit::ValidateParam($row['ModuleID'], _INT);
-            $this->schemaVersion = Kit::ValidateParam($row['SchemaVersion'], _INT);
-            $this->regionSpecific = Kit::ValidateParam($row['RegionSpecific'], _INT);
-            $this->validExtensionsText = Kit::ValidateParam($row['ValidExtensions'], _STRING);
-            $this->previewEnabled = Kit::ValidateParam($row['PreviewEnabled'], _INT);
-            $this->assignable = Kit::ValidateParam($row['assignable'], _INT);
-            $this->imageUri = Kit::ValidateParam($row['ImageUri'], _STRING);
-            $this->render_as = Kit::ValidateParam($row['render_as'], _WORD);
-            $this->settings = Kit::ValidateParam($row['settings'], _HTMLSTRING);
-
-            // Assume native rendering if none provided
-            $this->render_as = ($this->render_as == '') ? 'native' : $this->render_as;
-
-            // Settings needs to be converted into an array (it will be stored as a JSON string)
-            if ($this->settings == '')
-                $this->settings = array();
-            else
-                $this->settings = json_decode($this->settings, true);
-
-            //Debug::Audit('Settings: ' . $row['settings']);
-            //Debug::Audit('Settings: ' . var_export($this->settings, true) . '.' . json_last_error());
-
-            // Translated name of this module
-            $this->displayType = __(Kit::ValidateParam($row['Name'], _STRING));
-            
-            // Parse out the valid extensions
-            $this->validExtensions = explode(',', $this->validExtensionsText);
-            $this->validExtensionsText = str_replace(',', ', ', $this->validExtensionsText);
-        }
-        catch (Exception $e) {
-            
-            Debug::LogEntry('error', $e->getMessage());
-            
-            if (!$this->IsError())
-                $this->SetError(__('Unable to create Module [No registered modules of this type] - please refer to the Module Documentation.'));
-
-            throw $e;
-        }
-
-        return true;
+        $this->auth = $auth;
     }
 
+    /**
+     * Set the Module
+     * @param \Xibo\Entity\Module $module
+     */
+    final public function setModule($module)
+    {
+        $this->module = $module;
+    }
+
+    /**
+     * Save the Module
+     */
     protected final function saveSettings()
     {
         // Save
         try {
-            $dbh = PDOConnect::init();
-        
-            $sth = $dbh->prepare('UPDATE module SET settings = :settings WHERE moduleid = :moduleId');
-            Debug::Audit(var_export(array(
-                    'moduleId' => $this->module_id,
-                    'settings' => json_encode($this->settings)
-                ), true));
-            $sth->execute(array(
-                    'moduleId' => $this->module_id,
-                    'settings' => json_encode($this->settings)
-                ));
+            $this->module->save();
         }
         catch (Exception $e) {
-            
-            Debug::LogEntry('error', $e->getMessage());
-        
             trigger_error(__('Cannot Save Settings'), E_USER_ERROR);
         }
     }
 
     /**
-     * Gets the information about this Media on this region on this layout
-     * @return
-     * @param $layoutid Object
-     * @param $regionid Object
-     * @param $mediaid Object
-     */
-    final private function SetMediaInformation($layoutid, $regionid, $mediaid, $lkid)
-    {
-        $db =& $this->db;
-        $region =& $this->region;
-        $xmlDoc = new DOMDocument();
-
-        if ($this->mediaid != '' && $this->regionid != '' && $this->layoutid != '')
-        {
-            if ($this->module_id == 0)
-                $this->ThrowError(__('Module "' . $this->type . '" does not exist or is not installed. Please visit the module administration page or contact your administrator'));
-
-            // Existing media that is assigned to a layout
-            $this->existingMedia = true;
-            $this->assignedMedia = true;
-
-            // Set the layout Xml
-            $layoutXml = $region->GetLayoutXml($layoutid);
-
-            //Debug::LogEntry('audit', 'Layout XML retrieved: ' . $layoutXml);
-
-            $layoutDoc = new DOMDocument();
-            $layoutDoc->loadXML($layoutXml);
-            
-            $this->layoutSchemaVersion = (int)$layoutDoc->documentElement->getAttribute('schemaVersion');
-
-            $layoutXpath = new DOMXPath($layoutDoc);
-
-            // Get the media node and extract the info
-            if ($lkid != null && $lkid != '')
-                $mediaNodeXpath = $layoutXpath->query("//region[@id='$regionid']/media[@lkid='$lkid']");
-            else
-                $mediaNodeXpath = $layoutXpath->query("//region[@id='$regionid']/media[@id='$mediaid']");
-
-            // Test to make sure we got a node
-            if ($mediaNodeXpath->length <= 0)
-                return $this->SetError(__('Cannot find this media item. Please refresh the region options.'));
-
-            // Create a Media node in the DOMDocument for us to replace
-            $xmlDoc->loadXML('<root/>');
-
-            $mediaNode = $mediaNodeXpath->item(0);
-            $mediaNode->setAttribute('schemaVersion', $this->schemaVersion);
-
-            // Get the width and height of this region (original width and height)
-            $this->width = $mediaNode->parentNode->getAttribute('width');
-            $this->height = $mediaNode->parentNode->getAttribute('height');
-
-            $this->duration = $mediaNode->getAttribute('duration');
-            
-            // Get the LK id if we do not have one provided
-            if ($lkid == '')
-                $this->lkid = $mediaNode->getAttribute('lkid');
-
-            // If the userId is blank, then set it to be the layout user id
-            if (!$this->originalUserId = $mediaNode->getAttribute('userId'))
-                $this->originalUserId = $db->GetSingleValue(sprintf("SELECT userid FROM layout WHERE layoutid = %d", $this->layoutid), 'userid', _INT);
-
-            // Make sure we have permissions
-            $this->auth = $this->user->MediaAssignmentAuth($this->originalUserId, $this->layoutid, $this->regionid, $this->mediaid, true);
-
-            $mediaNode = $xmlDoc->importNode($mediaNode, true);
-            $xmlDoc->documentElement->appendChild($mediaNode);
-
-            Debug::LogEntry('audit', 'Existing Assigned Media XML is: \n ' . $xmlDoc->saveXML(), 'module', 'SetMediaInformation');
-
-            $this->xml = $xmlDoc;
-
-            // If we are some library media, then always set the URI as the StoredAs value, so that the preview and other items that rely
-            // on StoredAs work.
-            if ($this->regionSpecific == 0) {
-                $this->storedAs = $this->GetOption('uri');
-            }
-        }
-        else
-        {
-            if ($this->mediaid != '' && $this->regionSpecific == 0)
-            {
-                // We do not have a region or a layout
-                // But this is some existing media
-                // Therefore make sure we get the bare minimum!
-                $this->existingMedia = true;
-                $this->assignedMedia = false;
-
-                try {
-                    // Load what we know about this media into the object
-                    // this is unauthenticated at this point
-                    $rows = Media::Entries(NULL, array('mediaId' => $mediaid, 'allModules' => 1));
-                    
-                    if (count($rows) != 1) {
-                        return $this->SetError(__('Unable to find media record with the provided ID'));
-                    }
-
-                    $this->duration = $rows[0]->duration;
-                    $this->name = $rows[0]->name;
-                    $this->originalUserId = $rows[0]->ownerId;
-                    $this->storedAs = $rows[0]->storedAs;
-                    $this->originalFilename = $rows[0]->fileName;
-                    $this->tags = $rows[0]->tags;
-                }
-                catch (Exception $e) {
-                    
-                    Debug::LogEntry('error', $e->getMessage());
-                
-                    return $this->SetError(__('Unable to find media record with the provided ID'));
-                }
-
-                $this->auth = $this->user->MediaAuth($this->mediaid, true);
-            }
-            else
-            {
-                // New assignment, therefore user and permissions are defaulted
-                $this->originalUserId = $this->user->userid;
-            }
-
-            $xml = <<<XML
-            <root>
-                    <media id="" type="$this->type" render="$this->render_as" duration="" lkid="" userId="$this->originalUserId" schemaVersion="$this->schemaVersion">
-                            <options />
-                            <raw />
-                    </media>
-            </root>
-XML;
-            $xmlDoc->loadXML($xml);
-            $this->xml = $xmlDoc;
-        }
-
-        return true;
-    }
-
-    /**
-     * Sets the Layout and Region Information
-     * @return
-     * @param $layoutid Object
-     * @param $regionid Object
-     * @param $mediaid Object
-     */
-    public function SetRegionInformation($layoutid, $regionid)
-    {
-        $this->layoutid = $layoutid;
-        $this->regionid = $regionid;
-
-        return true;
-    }
-
-    /**
-     * This Media item represented as XML
-     * @return
-     */
-    final public function AsXml()
-    {
-        // Make sure the required attributes are present on the Media Node
-        // We can add / change:
-        // 		MediaID
-        //		Duration
-        //		Type
-        //		SchemaVersion (use the type to get this from the DB)
-        // LkID is done by the region code (where applicable - otherwise it will be left blank)
-        $mediaNodes = $this->xml->getElementsByTagName('media');
-        $mediaNode	= $mediaNodes->item(0);
-
-        $mediaNode->setAttribute('id', $this->mediaid);
-        $mediaNode->setAttribute('duration', $this->duration);
-        $mediaNode->setAttribute('type', $this->type);
-        $mediaNode->setAttribute('render', $this->render_as);
-        $mediaNode->setAttribute('userId', $this->originalUserId);
-
-        return $this->xml->saveXML($mediaNode);
-    }
-
-    /**
-     * Adds the name/value element to the XML Options sequence
-     * @return
-     * @param $name String
-     * @param $value String
+     * Set Option
+     * @param string $name
+     * @param string $value
      */
     final protected function SetOption($name, $value)
     {
-        $db =& $this->db;
-
-        if ($name == '')
-            return;
-
-        Debug::LogEntry('audit', sprintf('IN with Name=%s and value=%s', $name, $value), 'module', 'Set Option');
-
-        // Get the options node from this document
-        $optionNodes = $this->xml->getElementsByTagName('options');
-        // There is only 1
-        $optionNode = $optionNodes->item(0);
-
-        // Create a new option node
-        $newNode = $this->xml->createElement($name, $value);
-
-        Debug::LogEntry('audit', sprintf('Created a new Option Node with Name=%s and value=%s', $name, $value), 'module', 'Set Option');
-
-        // Check to see if we already have this option or not
-        $xpath = new DOMXPath($this->xml);
-
-        // Xpath for it
-        $userOptions = $xpath->query('//options/' . $name);
-
-        if ($userOptions->length == 0)
-        {
-            // Append the new node to the list
-            $optionNode->appendChild($newNode);
-        }
-        else
-        {
-            // Replace the old node we found with XPath with the new node we just created
-            $optionNode->replaceChild($newNode, $userOptions->item(0));
-        }
+        $this->widget->setOptionValue($name, 'attrib', $value);
     }
 
     /**
-     * Gets the value for the option in Parameter 1
-     * @return
-     * @param $name String The Option Name
-     * @param $default Object[optional] The Default Value
+     * Get Option or Default
+     * @param string $name
+     * @param mixed[Optional] $default
      */
-    final protected function GetOption($name, $default = false)
+    final protected function GetOption($name, $default = null)
     {
-        $db =& $this->db;
-
-        if ($name == '')
-            return false;
-
-        // Check to see if we already have this option or not
-        $xpath = new DOMXPath($this->xml);
-
-        // Xpath for it
-        $userOptions = $xpath->query('//options/' . $name);
-
-        if ($userOptions->length == 0)
-        {
-            // We do not have an option - return the default
-            //Debug::LogEntry('audit', 'GetOption ' . $name . ': Not Set - returning default ' . $default);
-            return $default;
-        }
-        else
-        {
-            // Check to see if what we have is empty or 0, if so then return the default value.
-            return ($userOptions->item(0)->nodeValue == '' || $userOptions->item(0)->nodeValue === 0) ? $default : $userOptions->item(0)->nodeValue;
-        }
+        $this->widget->getOptionValue($name, $default);
     }
 
     /**
-     * Sets the RAW XML string that is given as the content for Raw
-     * @param $xml string
-     * @param $replace bool
+     * Get Raw Node Value
+     * @param $name
+     * @param $default
      */
-    final protected function SetRaw($xml, $replace = false)
+    final protected function getRawNode($name, $default)
     {
-        if ($xml == '')
-            $this->ThrowError(__('Missing XML for SetRaw'));
-
-        // Load the XML we are given into its own document
-        $rawNode = new DOMDocument();
-        if (!@$rawNode->loadXML('<raw>' . $xml . '</raw>'))
-            $this->ThrowError(__('There is an error in the HTML/XML'));
-
-        // Import the Raw node into this document (with all sub nodes)
-        $importedNode = $this->xml->importNode($rawNode->documentElement, true);
-
-        // Get the Raw Xml node from our document
-        $rawNodes = $this->xml->getElementsByTagName('raw');
-
-        // There is only 1
-        $rawNode = $rawNodes->item(0);
-
-        // Append the imported node (at the end of whats already there)
-        $rawNode->parentNode->replaceChild($importedNode, $rawNode);
+        $this->widget->getOptionValue($name, $default);
     }
 
     /**
-     * Gets the XML string from RAW
-     * @return
+     * Set Raw Node Value
+     * @param $name
+     * @param $value
      */
-    final protected function GetRaw()
+    final protected function setRawNode($name, $value)
     {
-        // Get the Raw Xml node from our document
-        $rawNodes = $this->xml->getElementsByTagName('raw');
-
-        // There is only 1
-        $rawNode = $rawNodes->item(0);
-
-        // Return it as a XML string
-        return $this->xml->saveXML($rawNode);
-    }
-
-    final protected function GetRawNode($nodeName, $default = NULL) {
-        // Get the text out of RAW
-        $rawXml = new DOMDocument();
-        $rawXml->loadXML($this->GetRaw());
-
-        // Get the Node out of the Raw XML
-        $nodes = $rawXml->getElementsByTagName($nodeName);
-
-        if ($nodes->length < 1)
-            return $default;
-
-        return $nodes->item(0)->nodeValue;
+        $this->widget->setOptionValue($name, 'cdata', $value);
     }
 
     /**
-     * Updates the region information with this media record
-     * @return
+     * Get WidgetId
+     * @return int
      */
-    final public function UpdateRegion()
+    final protected function getWidgetId()
     {
-        Debug::LogEntry('audit', 'Updating Region');
-
-        // By this point we expect to have a MediaID, duration
-        $layoutid = $this->layoutid;
-        $regionid = $this->regionid;
-
-        if ($this->deleteFromRegion) {
-            // We call region delete
-            if (!$this->region->RemoveMedia($layoutid, $regionid, $this->lkid, $this->mediaid))
-                return $this->SetError(__("Unable to Remove this media from the Layout"));
-        }
-        else {
-            if ($this->assignedMedia) {
-                // We call region swap with the same media id
-                if (!$this->region->SwapMedia($layoutid, $regionid, $this->lkid, $this->mediaid, $this->mediaid, $this->AsXml()))
-                    return $this->SetError(__("Unable to assign to the Region"));
-            }
-            else {
-                // We call region add
-                if (!$this->region->AddMedia($layoutid, $regionid, $this->regionSpecific, $this->AsXml()))
-                    return $this->SetError(__("Error adding this media to the library"));
-            }
-        }
-
-        Debug::LogEntry('audit', 'Finished Updating Region');
-
-        return true;
+        return $this->widget->widgetId;
     }
 
     /**
-     * Return the Delete Form as HTML
-     * @return
+     * Save the Widget
+     */
+    final protected function saveWidget()
+    {
+        $this->widget->save();
+    }
+
+    /**
+     * Delete Form
+     * All widgets are deleted in a generic way
      */
     public function DeleteForm()
     {
-            $db =& $this->db;
-            $helpManager = new HelpManager($db, $this->user);
-            $this->response = new ResponseManager();
-            $this->response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Media', 'Delete') . '")');
+        $response = new ResponseManager();
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Media', 'Delete') . '")');
 
-            //Parameters
-            $layoutid = $this->layoutid;
-            $regionid = $this->regionid;
-            $mediaid = $this->mediaid;
-            $lkid = $this->lkid;
-            $userid = $this->user->userid;
+        // Can this user delete?
+        if (!$this->auth->del)
+            throw new Exception('You do not have permission to delete this media.');
 
-            // Can this user delete?
-            if (!$this->auth->del)
-            {
-                $this->response->SetError('You do not have permission to delete this media.');
-                $this->response->keepOpen = false;
-                return $this->response;
-            }
+        Theme::Set('form_id', 'MediaDeleteForm');
+        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->module->type . '&q=Exec&method=DeleteMedia');
+        Theme::Set('form_meta', '<input type="hidden" name="widgetId" value="' . $this->getWidgetId() . '"><input type="hidden" name"regionId" value="' . Kit::GetParam('regionId', _POST, _INT) . '">');
+        $formFields = array(
+            FormManager::AddMessage(__('Are you sure you want to remove this widget?')),
+            FormManager::AddMessage(__('This action cannot be undone.')),
+        );
 
-            // Messages
-            $msgTitle = __('Return to the Region Options');
-            $msgWarn = __('Are you sure you want to remove this item?');
-            $msgWarnLost = __('It will be lost');
-            $msgYes = __('Yes');
-            $msgNo = __('No');
+        // If we have linked media items, should we also delete them?
+        if (count($this->widget->mediaIds) > 0) {
+            $formFields[] = FormManager::AddCheckbox('deleteMedia', __('Also delete from the Library?'), 0, __('This widget is linked to Media in the Library. Check this option to also delete that Media.'), 'd');
+        }
 
-            if ($this->regionSpecific)
-            {
-                $form = <<<END
-                <form id="MediaDeleteForm" class="XiboForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=DeleteMedia">
-                        <input type="hidden" name="mediaid" value="$mediaid">
-                        <input type="hidden" name="layoutid" value="$layoutid">
-                        <input type="hidden" name="regionid" value="$regionid">
-                        <p>$msgWarn <span class="required">$msgWarnLost</span>.</p>
-                </form>
-END;
-                $this->response->AddButton(__('No'), 'XiboFormRender("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
-                $this->response->AddButton(__('Yes'), '$("#MediaDeleteForm").submit()');
-            }
-            else
-            {
-                // This is for library based media
-                $options = '';
+        Theme::Set('form_fields', $formFields);
+        $form = Theme::RenderReturn('form_render');
 
-                // Always have the abilty to unassign from the region
-                $options .= 'unassign|' . __('Unassign from this region only');
-
-                // Get the permissions for the media item
-                $mediaAuth = $this->user->MediaAuth($mediaid, true);
-
-                // Is this user allowed to delete this media?
-                if ($mediaAuth->del)
-                {
-                    // Load what we know about this media into the object
-                    $SQL = "SELECT IFNULL(editedMediaID, 0) AS editedMediaID FROM media WHERE mediaID = $mediaid ";
-                    $editedMediaID = $db->GetSingleValue($SQL, 'editedMediaID', _INT);
-                    
-                    if ($editedMediaID === false)
-                    {
-                        trigger_error($editedMediaID . $db->error());
-                        $this->response->SetError(__('Error querying for the Media information'));
-                        $this->response->keepOpen = true;
-                        return $this->response;
-                    }
-
-                    $options .= ',retire|' . __('Unassign from this region and retire');
-
-                    // Is this media retired?
-                    $revised = false;
-                    if ($editedMediaID != 0)
-                            $revised = true;
-
-                    // Is this media being used anywhere else?
-                    if ($layoutid == '')
-                    {
-                        $SQL = sprintf('SELECT layoutID FROM lklayoutmedia WHERE mediaID = %d ', $mediaid);
-                        $options = '';
-                    }
-                    else
-                    {
-                        $SQL = sprintf("SELECT layoutID FROM lklayoutmedia WHERE mediaID = %d AND layoutid <> %d AND regionID <> '%s' ", $mediaid, $layoutid, $regionid);
-                    }
-
-                    if (!$results = $db->query($SQL))
-                    {
-                        trigger_error($db->error());
-
-                        $this->response->SetError(__('Cannot determine if this media has been used.'));
-                        $this->response->keepOpen = true;
-                        return $this->response;
-                    }
-
-                    if ($db->num_rows($results) == 0 && !$revised)
-                    {
-                        $options .= ',delete|' . __('Delete this media');
-                    }
-                    else
-                    {
-                        $options .= ',unassignall|' . __('Unassign from all Layouts');
-                        $options .= ',retire|' . __('Retire this media');
-                    }
-                }
-                else
-                {
-                    // If this is the normal content page then say they cant edit, otherwise display the form with only the unassign option
-                    if ($layoutid == '')
-                    {
-                        $this->response->SetError(__('You do not have permission to alter/delete this media.'));
-                        $this->response->keepOpen = true;
-                        return $this->response;
-                    }
-                }
-
-                $options = ltrim($options, ',');
-
-                $deleteOptions = listcontent($options, 'options');
-
-                $msgWarn = __('Are you sure you want to delete this media?');
-                $msgSelect = __('Please select from the following options');
-                $msgCaution = __('Deleting media cannot be undone');
-
-                //we can delete
-                $form = <<<END
-                <form id="MediaDeleteForm" class="XiboForm" method="post" action="index.php?p=module&mod=$this->type&q=Exec&method=DeleteMedia">
-                    <input type="hidden" name="mediaid" value="$mediaid">
-                    <input type="hidden" name="lkid" value="$lkid">
-                    <input type="hidden" name="layoutid" value="$layoutid">
-                    <input type="hidden" name="regionid" value="$regionid">
-                    <p>$msgWarn</p>
-                    <p>$msgSelect: $deleteOptions </p>
-                    <p>$msgCaution</p>
-                </form>
-END;
-                if ($layoutid == '')
-                    $this->response->AddButton(__('No'), 'XiboDialogClose()');
-                else
-                   $this->response->AddButton(__('No'), 'XiboFormRender("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
-
-                $this->response->AddButton(__('Yes'), '$("#MediaDeleteForm").submit()');
-            }
-
-            $this->response->html = $form;
-            $this->response->dialogTitle = __('Delete Media');
-            $this->response->dialogSize = true;
-            $this->response->dialogWidth = '450px';
-            $this->response->dialogHeight = '280px';
-
-            return $this->response;
+        $response->SetFormRequestResponse($form, __('Delete Widget'), '300px', '200px');
+        $response->AddButton(__('No'), 'XiboDialogClose()');
+        $response->AddButton(__('Yes'), '$("#LayoutDeleteForm").submit()');
+        $response->Respond();
     }
 
     /**
-     * Delete Media from the Database
-     * @return
+     * Delete Widget
      */
     public function DeleteMedia()
     {
-        $db =& $this->db;
-        $this->response = new ResponseManager();
-        $mediaObject = new Media($db);
+        $response = new ResponseManager();
 
-        $layoutid = $this->layoutid;
-        $regionid = $this->regionid;
-        $mediaid = $this->mediaid;
-
-        // Check permissions
+        // Can this user delete?
         if (!$this->auth->del)
-        {
-            $this->response->SetError('You do not have permission to delete this assignment.');
-            $this->response->keepOpen = false;
-            return $this->response;
-        }
+            throw new Exception('You do not have permission to delete this media.');
 
-        // Extra work if we are on a layout
-        if ($layoutid != '')
-        {
-            if (!$this->ApiDeleteRegionMedia($layoutid, $regionid, $mediaid)) {
-                $this->response->keepOpen = true;
-                $this->response->SetError($this->errorMessage);
-                return $this->response;
+        // Delete associated media?
+        if (Kit::GetParam('deleteMedia', _POST, _CHECKBOX) == 1) {
+            $media = new Media();
+            foreach ($this->widget->mediaIds as $mediaId) {
+                $media->Delete($mediaId);
             }
         }
 
-        // Are we region specific media?
-        if (!$this->regionSpecific)
-        {
-            $options = Kit::GetParam('options', _POST, _WORD);
+        // Delete the widget
+        $this->widget->delete();
 
-            // Unassigning Media needs to remove it from all Layouts the user has permission for.
-            if ($options == 'unassignall') {
-                if (!$this->UnassignFromAll($mediaid)) {
-                    $this->response->SetError($mediaObject->GetErrorMessage());
-                    $this->response->keepOpen = true;
-                    return $this->response;
-                }
-            }
-            // If we are set to retire we retire
-            else if ($options == 'retire')
-            {
-                if (!$mediaObject->Retire($mediaid)) {
-                    $this->response->SetError($mediaObject->GetErrorMessage());
-                    $this->response->keepOpen = true;
-                    return $this->response;
-                }
-            }
-            // If we are set to delete, we delete
-            else if ($options == 'delete')
-            {
-                if (!$mediaObject->Delete($mediaid)) {
-                    $this->response->SetError($mediaObject->GetErrorMessage());
-                    $this->response->keepOpen = true;
-                    return $this->response;
-                }
-            }
-
-            $this->response->message = __('Completed Successfully');
-        }
-
-        // We want to load the region timeline form back again
-        if ($layoutid != '')
-        {
-            $this->response->loadForm = true;
-            $this->response->loadFormUri= "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
-        }
-                
-        return $this->response;
+        // Return
+        $response->SetFormSubmitResponse(__('The Widget has been Deleted'));
+        $response->loadForm = true;
+        $response->loadFormUri= 'index.php?p=timeline&q=Timeline&regionid=' . Kit::GetParam('regionId', _POST, _INT);
+        $response->Respond();
     }
 
-    public function ApiDeleteRegionMedia($layoutid, $regionid, $mediaid) {
-        $db =& $this->db;
 
-        Kit::ClassLoader('layoutmediagroupsecurity');
-        $security = new LayoutMediaGroupSecurity($db);
-
-        if (!$security->UnlinkAll($layoutid, $regionid, $this->mediaid)) {
-            return $this->SetError($security->GetErrorMessage());
-        }
-
-        $this->deleteFromRegion = true;
-
-        // Attempt to update the region
-        if (!$this->UpdateRegion())
-            return false;
-
-        return true;
-    }
-
-    /**
-     * Unassign from all Layouts
-     * @param [int] $mediaId [The MediaID to Unassign]
-     */
-    public function UnassignFromAll($mediaId) {
-
-        // Get a list of layouts with this media id on them that this user has permission for.
-        $layouts = $this->user->LayoutList(NULL, array('mediaId' => $mediaId));
-
-        // Create a media object for each, and call delete
-        foreach ($layouts as $layout) {
-
-            Debug::LogEntry('audit', 'Unassigning MediaID ' . $mediaId . ' from Layout: ' . $layout['layout'], 'module', 'UnassignFromAll');
-
-            // What if the region is background?
-            if ($layout['regionid'] == 'background') {
-
-            }
-            else if ($layout['regionid'] == 'module') {
-
-            }
-            else {
-                $mod = new $this->type($this->db, $this->user, $mediaId, $layout['layoutid'], $layout['regionid'], $layout['lklayoutmediaid']);
-
-                // Call to delete region media
-                if (!$mod->ApiDeleteRegionMedia($layout['layoutid'], $layout['regionid'], $mediaId)) {
-                    $this->response->keepOpen = true;
-                    $this->response->SetError($this->errorMessage);
-                    return $this->response;
-                }
-            }
-        }
-
-        $this->response->message = __('Media unassigned from all Layouts');
-        return $this->response;
-    }
-
-    protected function AddFormForLibraryMedia()
-    {
-        global $session;
-        $db =& $this->db;
-        $user =& $this->user;
-        $this->response = new ResponseManager();
-
-        // Check we have room in the library
-        $libraryLimit = Config::GetSetting('LIBRARY_SIZE_LIMIT_KB');
-
-        if ($libraryLimit > 0)
-        {
-            $fileSize = $this->db->GetSingleValue('SELECT IFNULL(SUM(FileSize), 0) AS SumSize FROM media', 'SumSize', _INT);
-
-            if (($fileSize / 1024) > $libraryLimit)
-                trigger_error(sprintf(__('Your library is full. Library Limit: %s K'), $libraryLimit), E_USER_ERROR);
-        }
-
-        // Would like to get the regions width / height
-        $layoutid = $this->layoutid;
-        $regionid = $this->regionid;
-
-        // Set the Session / Security information
-        $sessionId = session_id();
-        $securityToken = CreateFormToken();
-        $backgroundImage = Kit::GetParam('backgroundImage', _GET, _BOOL, false);
-
-        $session->setSecurityToken($securityToken);
-
-        // Set some defaults based on the type of media we are
-        // TODO: this should be passed in
-        switch ($this->type) {
-            case 'video':
-            case 'localvideo':
-            case 'genericfile':
-            case 'font':
-                $defaultDuration = 0;
-                break;
-
-            case 'image':
-                $defaultDuration = Config::GetSetting('jpg_length');
-                break;
-
-            case 'flash':
-                $defaultDuration = Config::GetSetting('swf_length');
-                break;
-
-            case 'powerpoint':
-                $defaultDuration = Config::GetSetting('ppt_length');
-                break;
-
-            default:
-                $defaultDuration = 10;
-        }
-        
-
-        // Save button is different depending on if we are on a region or not
-        if ($regionid != '' && $this->showRegionOptions)
-        {
-            setSession('content','mediatype', $this->type);
-
-            $this->response->AddButton(__('Assign to Layout'), 'XiboAssignToLayout(' . $layoutid . ',"' . $regionid . '")');
-            $this->response->AddButton(__('View Library'), 'XiboSwapDialog("index.php?p=content&q=LibraryAssignForm&layoutid=' . $layoutid . '&regionid=' . $regionid . '")');
-            $this->response->AddButton(__('Close'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
-        }
-        elseif ($regionid != '' && !$this->showRegionOptions)
-        {
-            $this->response->AddButton(__('Close'), 'XiboDialogClose()');
-        }
-        elseif ($backgroundImage)
-        {
-            $this->response->AddButton(__('Close'), 'XiboSwapDialog("index.php?p=layout&q=BackgroundForm&modify=true&layoutid=' . $layoutid . '")');
-
-            // Background override url is used on the theme to add a button next to each uploaded file (if in background override)
-            Theme::Set('background_override_url', "index.php?p=layout&q=BackgroundForm&modify=true&layoutid=$layoutid&backgroundOveride=");
-        }
-        else
-        {
-            $this->response->AddButton(__('Close'), 'XiboSwapDialog("index.php?p=content&q=displayForms&sp=add");XiboRefreshAllGrids()');
-        }
-
-        // Setup the theme
-        Theme::Set('form_upload_id', 'fileupload');
-        Theme::Set('form_action', 'index.php?p=content&q=JqueryFileUpload&type=' . $this->type);
-        Theme::Set('form_meta', '<input type="hidden" id="PHPSESSID" value="' . $sessionId . '" /><input type="hidden" id="SecurityToken" value="' . $securityToken . '" /><input type="hidden" name="type" value="' . $this->type . '"><input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" name="regionid" value="' . $regionid . '">');
-        Theme::Set('form_valid_ext', '/(\.|\/)' . implode('|', $this->validExtensions) . '$/i');
-        Theme::Set('form_max_size', Kit::ReturnBytes($this->maxFileSize));
-        Theme::Set('valid_extensions', sprintf(__('This form accepts: %s files up to a maximum size of %s'), $this->validExtensionsText, $this->maxFileSize));
-        Theme::Set('default_duration', $defaultDuration);
-
-        $form = Theme::RenderReturn('library_form_media_add');
-
-        $this->response->html = $form;
-        $this->response->dialogTitle = sprintf(__('Add New %s'), __($this->displayType));
-        $this->response->dialogSize = true;
-        $this->response->dialogWidth = '450px';
-        $this->response->dialogHeight = '280px';
-        $this->response->callBack = 'MediaFormInitUpload';
-        $this->response->dialogClass = 'modal-big';
-
-        return $this->response;
-    }
 
     protected function EditFormForLibraryMedia($extraFormFields = NULL)
     {
@@ -950,8 +211,8 @@ END;
         $db =& $this->db;
         $user =& $this->user;
         
-        if ($this->response == null)
-            $this->response = new ResponseManager();
+        if ($response == null)
+            $response = new ResponseManager();
 
         // Would like to get the regions width / height
         $layoutid = $this->layoutid;
@@ -963,9 +224,9 @@ END;
         // Can this user delete?
         if (!$this->auth->edit)
         {
-            $this->response->SetError('You do not have permission to edit this media.');
-            $this->response->keepOpen = false;
-            return $this->response;
+            $response->SetError('You do not have permission to edit this media.');
+            $response->keepOpen = false;
+            return $response;
         }
 
         // Set the Session / Security information
@@ -998,18 +259,18 @@ END;
         {
             setSession('content', 'mediatype', $this->type);
 
-            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
+            $response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
         }
         elseif ($regionid != '' && !$this->showRegionOptions)
         {
-            $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
+            $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         }
         else
         {
-            $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
+            $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         }
 
-        $this->response->AddButton(__('Save'), '$("#EditLibraryBasedMedia").submit()');
+        $response->AddButton(__('Save'), '$("#EditLibraryBasedMedia").submit()');
 
         // Setup the theme
         Theme::Set('form_id', 'EditLibraryBasedMedia');
@@ -1055,90 +316,18 @@ END;
 
         Theme::Set('form_fields', $formFields);
 
-        $this->response->html = Theme::RenderReturn('form_render');
-        $this->response->dialogTitle = 'Edit ' . $this->displayType;
-        $this->response->dialogSize = true;
-        $this->response->dialogWidth = '450px';
-        $this->response->dialogHeight = '280px';
+        $response->html = Theme::RenderReturn('form_render');
+        $response->dialogTitle = 'Edit ' . $this->displayType;
+        $response->dialogSize = true;
+        $response->dialogWidth = '450px';
+        $response->dialogHeight = '280px';
 
-        return $this->response;
-    }
-
-    /**
-     * Adds Library Media
-     *  called from inside the FileUpload Handler
-     * @param [type] $fileId    [description]
-     * @param [type] $mediaName [description]
-     * @param [type] $duration  [description]
-     * @param [type] $fileName  [description]
-     * @return [int] [The ID of the Media Added]
-     */
-    public function AddLibraryMedia($fileId, $mediaName, $duration, $fileName)
-    {
-        $this->response = new ResponseManager();
-        $db =& $this->db;
-        $layoutid = $this->layoutid;
-        $regionid = $this->regionid;
-
-        // The media name might be empty here, because the user isn't forced to select it
-        if ($mediaName == '')
-            $mediaName = $fileName;
-
-        // Hand off to the media module
-        Kit::ClassLoader('media');
-        $mediaObject = new Media($db);
-
-        if (!$mediaid = $mediaObject->Add($fileId, $this->type, $mediaName, $duration, $fileName, $this->user->userid)) {
-            return $this->SetError($mediaObject->GetErrorMessage());
-        }
-
-        Debug::LogEntry('audit', 'Returned MediaId: ' . $mediaid, 'module', 'AddLibraryMedia');
-
-        // Required Attributes
-        $this->mediaid	= $mediaid;
-        $this->duration = $duration;
-
-        try {
-            $dbh = PDOConnect::init();
-        
-            $sth = $dbh->prepare('SELECT StoredAs FROM `media` WHERE mediaid = :mediaid');
-            $sth->execute(array(
-                    'mediaid' => $mediaid
-                ));
-
-            if (!$row = $sth->fetch())
-                return $this->SetError(__('Unable to get the storage name'));
-            
-            // Find out what we stored this item as
-            $storedAs = Kit::ValidateParam($row['StoredAs'], _STRING);          
-        }
-        catch (Exception $e) {
-            
-            Debug::LogEntry('error', $e->getMessage());
-        
-            if (!$this->IsError())
-                $this->SetError(1, __('Unknown Error'));
-        
-            return false;
-        }
-        // Any Options
-        $this->SetOption('uri', $storedAs);
-
-        // Should have built the media object entirely by this time
-        if ($regionid != '')
-        {
-            // This saves the Media Object to the Region
-            if (!$this->UpdateRegion())
-                return false;
-        }
-
-        // Return the ID of this media
-        return $mediaid;
+        return $response;
     }
 
     protected function EditLibraryMedia()
     {
-        $this->response = new ResponseManager();
+        $response = new ResponseManager();
         $db =& $this->db;
         $user =& $this->user;
         $layoutid = $this->layoutid;
@@ -1148,9 +337,9 @@ END;
 
         if (!$this->auth->edit)
         {
-            $this->response->SetError('You do not have permission to edit this media.');
-            $this->response->keepOpen = false;
-            return $this->response;
+            $response->SetError('You do not have permission to edit this media.');
+            $response->keepOpen = false;
+            return $response;
         }
 
         // Hand off to the media module
@@ -1179,9 +368,9 @@ END;
                 $name = $fileName;
 
             if (!$new_mediaid = $mediaObject->FileRevise($mediaid, $tmpName, $fileName)) {
-                $this->response->SetError($mediaObject->GetErrorMessage());
-                $this->response->keepOpen = true;
-                return $this->response;
+                $response->SetError($mediaObject->GetErrorMessage());
+                $response->keepOpen = true;
+                return $response;
             }            	
 
             // Are we on a region
@@ -1214,9 +403,9 @@ END;
 
         // Edit the media record
         if (!$mediaObject->Edit($this->mediaid, $name, $this->duration, $userid, $tags)) {
-            $this->response->SetError($mediaObject->GetErrorMessage());
-            $this->response->keepOpen = true;
-            return $this->response;
+            $response->SetError($mediaObject->GetErrorMessage());
+            $response->keepOpen = true;
+            return $response;
         }
 
         // Should have built the media object entirely by this time
@@ -1225,17 +414,17 @@ END;
             // This saves the Media Object to the Region
             $this->UpdateRegion();
 
-            $this->response->loadForm	 = true;
-            $this->response->loadFormUri = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";;
+            $response->loadForm	 = true;
+            $response->loadFormUri = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";;
         }
         elseif ($regionid != '' && !$this->showRegionOptions)
         {
             $this->UpdateRegion();
-            $this->response->loadForm = false;
+            $response->loadForm = false;
         }
         else
         {
-            $this->response->message = 'Edited the ' . $this->displayType;
+            $response->message = 'Edited the ' . $this->displayType;
         }
 
         // Edit from the library - check to see if we are replacing this media in *all* layouts.
@@ -1248,10 +437,10 @@ END;
         // Do we need to delete the old media item?
         if ($tmpName != '' && Kit::GetParam('deleteOldVersion', _POST, _CHECKBOX) == 1) {
             if (!$mediaObject->Delete($mediaid))
-                $this->response->message .= ' ' . __('Failed to remove old media');
+                $response->message .= ' ' . __('Failed to remove old media');
         }
         
-        return $this->response;
+        return $response;
     }
 
     /**
@@ -1513,7 +702,7 @@ END;
         Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $this->layoutid . '" /><input type="hidden" name="regionid" value="' . $this->regionid . '" /><input type="hidden" name="mediaid" value="' . $this->mediaid . '" />');
 
         $response->SetFormRequestResponse(NULL, __('Permissions'), '350px', '500px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . (($this->layoutid != 0) ? $helpManager->Link('LayoutMedia', 'Permissions') : $helpManager->Link('Media', 'Permissions')) . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . (($this->layoutid != 0) ? HelpManager::Link('LayoutMedia', 'Permissions') : HelpManager::Link('Media', 'Permissions')) . '")');
         
         if ($this->assignedMedia) {
             $response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&q=RegionOptions")');
@@ -1680,13 +869,13 @@ END;
      */
     public function TransitionEditForm()
     {
-        $this->response = new ResponseManager();
+        $response = new ResponseManager();
 
         if (!$this->auth->edit)
         {
-            $this->response->SetError('You do not have permission to edit this media.');
-            $this->response->keepOpen = false;
-            return $this->response;
+            $response->SetError('You do not have permission to edit this media.');
+            $response->keepOpen = false;
+            return $response;
         }
         
         // Are we dealing with an IN or an OUT
@@ -1764,29 +953,29 @@ END;
                     'transition-group transition-direction');
 
         // Add some dependencies
-        $this->response->AddFieldAction('transitionType', 'init', '', array('.transition-group' => array('display' => 'none')));
-        $this->response->AddFieldAction('transitionType', 'init', '', array('.transition-group' => array('display' => 'block')), 'not');
-        $this->response->AddFieldAction('transitionType', 'change', '', array('.transition-group' => array('display' => 'none')));
-        $this->response->AddFieldAction('transitionType', 'change', '', array('.transition-group' => array('display' => 'block')), 'not');
+        $response->AddFieldAction('transitionType', 'init', '', array('.transition-group' => array('display' => 'none')));
+        $response->AddFieldAction('transitionType', 'init', '', array('.transition-group' => array('display' => 'block')), 'not');
+        $response->AddFieldAction('transitionType', 'change', '', array('.transition-group' => array('display' => 'none')));
+        $response->AddFieldAction('transitionType', 'change', '', array('.transition-group' => array('display' => 'block')), 'not');
 
         // Decide where the cancel button will take us
         if ($this->showRegionOptions)
-            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&q=RegionOptions")');
+            $response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&q=RegionOptions")');
         else
-            $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
+            $response->AddButton(__('Cancel'), 'XiboDialogClose()');
 
         // Always include the save button
-        $this->response->AddButton(__('Save'), '$("#TransitionForm").submit()');
+        $response->AddButton(__('Save'), '$("#TransitionForm").submit()');
         
         // Output the form and dialog
         Theme::Set('form_fields', $formFields);
-        $this->response->html = Theme::RenderReturn('form_render');
-        $this->response->dialogTitle = sprintf(__('Edit %s Transition for %s'), $type, $this->displayType);
-        $this->response->dialogSize = true;
-        $this->response->dialogWidth = '450px';
-        $this->response->dialogHeight = '280px';
+        $response->html = Theme::RenderReturn('form_render');
+        $response->dialogTitle = sprintf(__('Edit %s Transition for %s'), $type, $this->displayType);
+        $response->dialogSize = true;
+        $response->dialogWidth = '450px';
+        $response->dialogHeight = '280px';
         
-        return $this->response;
+        return $response;
     }
     
     /**
@@ -1794,13 +983,13 @@ END;
      */
     public function TransitionEdit()
     {
-        $this->response = new ResponseManager();
+        $response = new ResponseManager();
 
         if (!$this->auth->edit)
         {
-            $this->response->SetError('You do not have permission to edit this media.');
-            $this->response->keepOpen = false;
-            return $this->response;
+            $response->SetError('You do not have permission to edit this media.');
+            $response->keepOpen = false;
+            return $response;
         }
         
         // Get the transition type
@@ -1835,11 +1024,11 @@ END;
         if ($this->showRegionOptions)
         {
             // We want to load a new form
-            $this->response->loadForm = true;
-            $this->response->loadFormUri = 'index.php?p=timeline&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&q=RegionOptions';
+            $response->loadForm = true;
+            $response->loadFormUri = 'index.php?p=timeline&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&q=RegionOptions';
         }
 
-        return $this->response;
+        return $response;
     }
     
     /**

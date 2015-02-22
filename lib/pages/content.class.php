@@ -130,7 +130,7 @@ class contentDAO extends baseDAO {
                 array('title' => __('Add Media'),
                     'class' => 'XiboFormButton',
                     'selected' => false,
-                    'link' => 'index.php?p=content&q=displayForms',
+                    'link' => 'index.php?p=content&q=fileUploadForm',
                     'help' => __('Add a new media item to the library'),
                     'onclick' => ''
                     )
@@ -260,45 +260,61 @@ class contentDAO extends baseDAO {
     }
 	
 	/**
-	 * Display the forms
+	 * File Uploader
+     * Presents a form which can be used to upload file based media
 	 */
-	function displayForms() 
+	function fileUploadForm()
 	{
-		$db 	=& $this->db;
-		$user 	=& $this->user;
-		
-		//displays all the content add forms - tabbed.
-		$response = new ResponseManager();
-		
-		// Get a list of the enabled modules and then create buttons for them
-		if (!$enabledModules = new ModuleManager($user, 0, '', -1)) 
-            trigger_error($enabledModules->message, E_USER_ERROR);
-		
-		$buttons = array();
-		
-		// Loop through the buttons we have and output store HTML for each one in $buttons.
-		while ($modulesItem = $enabledModules->GetNextModule())
-		{
-			$button['mod'] = Kit::ValidateParam($modulesItem['Module'], _STRING);
-			$button['caption'] = __('Add') . ' ' . Kit::ValidateParam($modulesItem['Name'], _STRING);
-			$button['mod'] = strtolower($button['mod']);
-			$button['title'] = Kit::ValidateParam($modulesItem['Description'], _STRING);
-			$button['img'] = Theme::Image(Kit::ValidateParam($modulesItem['ImageUri'], _STRING));
-			$button['uri'] = 'index.php?p=module&q=Exec&mod=' . $button['mod'] . '&method=AddForm';
-			
-			$buttons[] = $button;
-		}
+        $response = new ResponseManager();
 
-		Theme::Set('buttons', $buttons);
-		
-		$response->html = Theme::RenderReturn('library_form_add');
-		$response->dialogTitle 	= __('Add Media to the Library');
-		$response->dialogSize 	= true;
-		$response->dialogWidth 	= '650px';
-		$response->dialogHeight = '280px';
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Content', 'AddtoLibrary') . '")');
-		$response->AddButton(__('Close'), 'XiboDialogClose()');
-		$response->Respond();
+        // Check we have room in the library
+        $libraryLimit = Config::GetSetting('LIBRARY_SIZE_LIMIT_KB');
+
+        if ($libraryLimit > 0)
+        {
+            $fileSize = File::libraryUsage();
+
+            if (($fileSize / 1024) > $libraryLimit)
+                trigger_error(sprintf(__('Your library is full. Library Limit: %s K'), $libraryLimit), E_USER_ERROR);
+        }
+
+        // Set the Session / Security information
+        $sessionId = session_id();
+        $securityToken = Kit::Token('fileUploadToken', false);
+
+        // Do we come from the Background Image?
+        $backgroundImage = Kit::GetParam('backgroundImage', _GET, _BOOL, false);
+        $layoutId = Kit::GetParam('layoutId', _GET, _INT);
+
+        // Save button is different depending on whether we can from the Layout Edit form or not.
+        if ($backgroundImage)
+        {
+            $response->AddButton(__('Close'), 'XiboSwapDialog("index.php?p=layout&q=EditForm&modify=true&layoutid=' . $layoutId . '")');
+
+            // Background override url is used on the theme to add a button next to each uploaded file (if in background override)
+            Theme::Set('background_override_url', "index.php?p=layout&q=EditForm&modify=true&layoutid=$layoutId&backgroundOveride=");
+        }
+        else
+        {
+            $response->AddButton(__('Close'), 'XiboSwapDialog("index.php?p=content&q=displayForms&sp=add");XiboRefreshAllGrids()');
+        }
+
+        // Setup the theme
+        Theme::Set('form_upload_id', 'fileupload');
+        Theme::Set('form_action', 'index.php?p=content&q=JqueryFileUpload');
+        Theme::Set('form_meta', '<input type="hidden" id="PHPSESSID" value="' . $sessionId . '" /><input type="hidden" id="SecurityToken" value="' . $securityToken . '" />');
+        Theme::Set('form_valid_ext', '/(\.|\/)' . implode('|', \Xibo\Factory\ModuleFactory::getValidExtensions()) . '$/i');
+        Theme::Set('form_max_size', Kit::ReturnBytes(Config::getMaxUploadSize()));
+        Theme::Set('form_max_size_message', sprintf(__('This form accepts files up to a maximum size of %s'), Config::getMaxUploadSize()));
+
+        $form = Theme::RenderReturn('library_form_media_add');
+
+        $response->html = $form;
+        $response->dialogTitle = __('Upload media');
+        $response->AddButton(__('Close'), 'XiboDialogClose(); XiboRefreshAllGrids();');
+        $response->callBack = 'MediaFormInitUpload';
+        $response->dialogClass = 'modal-big';
+        $response->Respond();
 	}
 	
     /**
@@ -505,49 +521,41 @@ HTML;
      * End point for jQuery file uploader
      */
     public function JqueryFileUpload() {
-        $db =& $this->db;
 
-        require_once("3rdparty/jquery-file-upload/XiboUploadHandler.php");
-        $type = Kit::GetParam('type', _REQUEST, _WORD);
+        require_once('3rdparty/jquery-file-upload/XiboUploadHandler.php');
 
-        Kit::ClassLoader('file');
-        $fileObject = new File($db);
-        
         $libraryFolder = Config::GetSetting('LIBRARY_LOCATION');
-
         // Make sure the library exists
+        $fileObject = new File();
         $fileObject->EnsureLibraryExists();
 
         // Get Valid Extensions
-        Kit::ClassLoader('media');
-        $media = new Media($db);
-        $validExt = $media->ValidExtensions($type);
+        $validExt = \Xibo\Factory\ModuleFactory::getValidExtensions();
 
         $options = array(
-                'db' => $this->db,
-                'user' => $this->user,
-                'upload_dir' => $libraryFolder . 'temp/', 
-                'download_via_php' => true,
-                'script_url' => Kit::GetXiboRoot() . '?p=content&q=JqueryFileUpload',
-                'upload_url' => Kit::GetXiboRoot() . '?p=content&q=JqueryFileUpload',
-                'image_versions' => array(),
-                'accept_file_types' => '/\.' . implode('|', $validExt) . '$/i'
-            );
+            'userId' => $this->user->userid,
+            'upload_dir' => $libraryFolder . 'temp/',
+            'download_via_php' => true,
+            'script_url' => Kit::GetXiboRoot() . '?p=content&q=JqueryFileUpload',
+            'upload_url' => Kit::GetXiboRoot() . '?p=content&q=JqueryFileUpload',
+            'image_versions' => array(),
+            'accept_file_types' => '/\.' . implode('|', $validExt) . '$/i'
+        );
 
         // Hand off to the Upload Handler provided by jquery-file-upload
-        $handler = new XiboUploadHandler($options);
-
-        // Must commit if in a transaction
         try {
             $dbh = PDOConnect::init();
-            $dbh->commit();
+            new XiboUploadHandler($options);
+
+            // Must commit if in a transaction
+            if ($dbh->inTransaction())
+                $dbh->commit();
         }
         catch (Exception $e) {
-            Debug::LogEntry('audit', 'Unable to commit/rollBack');
+            // We must not issue an error, the file upload return should have the error object already
         }
 
         // Must prevent from continuing (framework will try to issue a response)
         exit;
     }
 }
-?>
