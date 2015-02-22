@@ -173,59 +173,8 @@ class image extends Module
      */
     public function GetResource($displayId = 0)
     {
-        $proportional = Kit::GetParam('proportional', _GET, _BOOL, true);
-        $thumb = Kit::GetParam('thumb', _GET, _BOOL, false);
-        $dynamic = isset($_REQUEST['dynamic']);
-        $file = $this->storedAs;
-        $width = Kit::GetParam('width', _REQUEST, _INT, 80);
-        $height = Kit::GetParam('height', _REQUEST, _INT, 80);
 
-        // File upload directory.. get this from the settings object
-        $library = Config::GetSetting("LIBRARY_LOCATION");
-        $fileName = $library . $file;
-
-        // If we are a thumb request then output the cached thumbnail
-        if ($thumb) {
-            $fileName = $library . sprintf('tn_%dx%d_%s', $width, $height, $file);
-
-            // If the thumbnail doesn't exist then create one
-            if (!file_exists($fileName)) {
-                Debug::LogEntry('audit', 'File doesnt exist, creating a thumbnail for ' . $fileName);
-
-                if (!$info = getimagesize($library . $file))
-                    die($library . $file . ' is not an image');
-
-                ResizeImage($library . $file, $fileName, $width, $height, $proportional, 'file');
-            }
-        }
-        
-        // Get the info for this new temporary file
-        if (!$info = getimagesize($fileName)) {
-            echo $fileName . ' is not an image';
-            exit;
-        }
-
-        if ($dynamic && !$thumb && $info[2])
-        {
-            $width  = Kit::GetParam('width', _GET, _INT);
-            $height = Kit::GetParam('height', _GET, _INT);
-
-            // dynamically create an image of the correct size - used for previews
-            ResizeImage($fileName, '', $width, $height, $proportional, 'browser');
-
-            exit;
-        }
-
-        if (!file_exists($fileName)) {
-            //not sure
-            Debug::LogEntry('audit', "Cant find: $uid", 'module', 'GetResource');
-
-            $fileName = 'theme/default/img/forms/filenotfound.png';
-        }
-        
-    	$this->ReturnFile($fileName);
-        
-        exit();
+        File::ReturnFile($fileName);
     }
 }
 ?>

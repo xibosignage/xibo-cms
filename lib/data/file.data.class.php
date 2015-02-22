@@ -230,5 +230,108 @@ class File extends Data
 
         return Kit::ValidateParam($results[0]['SumSize'], _INT);
     }
+
+    /**
+     * Return file based media items to the browser for Download/Preview
+     * @param string $fileName
+     * @param string $downloadFilename
+     */
+    public static function ReturnFile($fileName = '', $downloadFilename = '')
+    {
+        // Check we have a file name
+        if ($fileName == '')
+            throw new InvalidArgumentException(__('Filename not provided'));
+
+        // What has been requested
+        $proportional = Kit::GetParam('proportional', _GET, _BOOL, true);
+        $thumb = Kit::GetParam('thumb', _GET, _BOOL, false);
+        $dynamic = isset($_REQUEST['dynamic']);
+        $width = Kit::GetParam('width', _REQUEST, _INT, 80);
+        $height = Kit::GetParam('height', _REQUEST, _INT, 80);
+        $download = Kit::GetParam('download', _REQUEST, _BOOLEAN, false);
+        $downloadFromLibrary = Kit::GetParam('downloadFromLibrary', _REQUEST, _BOOLEAN, false);
+
+        if ($downloadFromLibrary && $downloadFilename == '') {
+            throw new InvalidArgumentException(__('Download Filename not provided'));
+        }
+
+        // Get the name with library
+        $libraryLocation = Config::GetSetting('LIBRARY_LOCATION');
+        $libraryPath = $libraryLocation . $fileName;
+
+        // Are we requesting a thumbnail - if so then cache it for later use
+        if ($thumb) {
+            $thumbPath = $libraryLocation . sprintf('tn_%dx%d_%s', $width, $height, $fileName);
+
+            // If the thumbnail doesn't exist then create one
+            if (!file_exists($thumbPath)) {
+                Debug::LogEntry('audit', 'File doesn\'t exist, creating a thumbnail for ' . $fileName);
+
+                if (!$info = getimagesize($libraryPath))
+                    die($libraryPath . ' is not an image');
+
+                // Save the thumbnail
+                ResizeImage($libraryPath, $thumbPath, $width, $height, $proportional, 'file');
+            }
+
+            // From now onwards operate on the thumbnail
+            $libraryPath = $thumbPath;
+        }
+
+        if ($dynamic || $thumb) {
+
+            // Get the info for this new temporary file
+            if (!$info = getimagesize($libraryPath)) {
+                echo $libraryPath . ' is not an image';
+                exit;
+            }
+
+            if ($dynamic && !$thumb && $info[2]) {
+                $width = Kit::GetParam('width', _GET, _INT);
+                $height = Kit::GetParam('height', _GET, _INT);
+
+                // dynamically create an image of the correct size - used for previews
+                ResizeImage($libraryPath, '', $width, $height, $proportional, 'browser');
+
+                exit;
+            }
+        }
+
+        $size = filesize($libraryPath);
+
+        if ($download) {
+            header('Content-Type: application/octet-stream');
+            header("Content-Transfer-Encoding: Binary");
+            header("Content-disposition: attachment; filename=\"" . (($downloadFromLibrary) ? $downloadFilename : basename($fileName)) . "\"");
+        }
+        else {
+            $fi = new finfo( FILEINFO_MIME_TYPE );
+            $mime = $fi->file($libraryPath);
+            header("Content-Type: {$mime}");
+        }
+
+        //Output a header
+        header('Pragma: public');
+        header('Cache-Control: max-age=86400');
+        header('Expires: '. gmdate('D, d M Y H:i:s \G\M\T', time() + 86400));
+        header('Content-Length: ' . $size);
+
+        // Send via Apache X-Sendfile header?
+        if (Config::GetSetting('SENDFILE_MODE') == 'Apache') {
+            header("X-Sendfile: $libraryPath");
+            exit();
+        }
+
+        // Send via Nginx X-Accel-Redirect?
+        if (Config::GetSetting('SENDFILE_MODE') == 'Nginx') {
+            header("X-Accel-Redirect: /download/" . basename($fileName));
+            exit();
+        }
+
+        // Return the file with PHP
+        // Disable any buffering to prevent OOM errors.
+        @ob_end_clean();
+        readfile($libraryPath);
+        exit();
+    }
 }
-?>

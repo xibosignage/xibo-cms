@@ -731,7 +731,7 @@ class timelineDAO extends baseDAO
                 $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=DeleteForm&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '" title="' . __('Click to delete this media') . '">' . __('Delete') . '</a></li>';
 
             if ($auth->modifyPermissions)
-                $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=PermissionsForm&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '" title="Click to change permissions for this media">' . __('Permissions') . '</a></li>';
+                $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=PermissionsForm&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '" title="' . __('Click to change permissions for this media') . '">' . __('Permissions') . '</a></li>';
 
             if (count($this->user->TransitionAuth('in')) > 0)
                 $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=TransitionEditForm&type=in&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '" title="' . __('Click to edit this transition') . '">' . __('In Transition') . '</a></li>';
@@ -743,7 +743,7 @@ class timelineDAO extends baseDAO
 
             // Put the media name in
             $response->html .= '        <div class="timelineMediaDetails ' . $mediaBlockColouringClass . '">';
-            $response->html .= '            <h3>' . sprintf('%s (%d seconds)', (($mediaName == '') ? __($tmpModule->displayType) : $mediaName), $mediaDuration) . '</h3>';
+            $response->html .= '            <h3>' . sprintf('%s (%d seconds)', (($mediaName == '') ? __($tmpModule->displayType) : $mediaName), $widget->duration) . '</h3>';
             $response->html .= '        </div>';
 
             // Put the media hover preview in

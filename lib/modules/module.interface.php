@@ -23,10 +23,8 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 interface ModuleInterface
 {
 	// Some Default Add/Edit/Delete functionality each module should have
-	public function AddForm();
 	public function EditForm();
 	public function DeleteForm();
-	public function AddMedia();
 	public function EditMedia();
 	public function DeleteMedia();
 
@@ -37,6 +35,12 @@ interface ModuleInterface
 	 * HTML Content to completely render this module.
 	 */
     public function GetResource();
+
+    /**
+     * Is the Module Valid
+     * @return int (0 = No, 1 = Yes, 2 = Player Dependent
+     */
+    public function IsValid();
 
     /**
      * Install or Upgrade this module

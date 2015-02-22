@@ -28,6 +28,25 @@ use Xibo\Exception\NotFoundException;
 
 class ModuleFactory
 {
+    public static function create($type)
+    {
+        $modules = ModuleFactory::query(null, array('type' => $type));
+
+        if (count($modules) <= 0)
+            throw new NotFoundException(sprintf(__('Unknown type %s'), $type));
+
+        // Create a module
+        $module = $modules[0];
+
+        $type = $module->type;
+
+        $type = new $type();
+        /* @var \Module $type */
+        $type->setModule($module);
+
+        return $type;
+    }
+
     public static function get($key = 'type')
     {
         $modules = ModuleFactory::query();
@@ -114,8 +133,13 @@ class ModuleFactory
             }
 
             if (\Kit::GetParam('name', $filterBy, _STRING) != '') {
-                $params['id'] = \Kit::GetParam('name', $filterBy, _STRING);
+                $params['name'] = \Kit::GetParam('name', $filterBy, _STRING);
                 $SQL .= ' AND name = :name ';
+            }
+
+            if (\Kit::GetParam('type', $filterBy, _STRING) != '') {
+                $params['type'] = \Kit::GetParam('type', $filterBy, _STRING);
+                $SQL .= ' AND module = :type ';
             }
 
             if (\Kit::GetParam('extension', $filterBy, _STRING) != '') {
@@ -156,7 +180,7 @@ class ModuleFactory
 
             \Debug::Error($e->getMessage());
 
-            return false;
+            return array();
         }
     }
 }

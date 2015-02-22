@@ -583,6 +583,32 @@ class Media extends Data
         }
     }
 
+    /**
+     * Get Media Name
+     * @param $mediaId
+     * @return bool|string
+     */
+    public function getName($mediaId) {
+
+        try {
+            $dbh = PDOConnect::init();
+
+            $sth = $dbh->prepare('SELECT `name` FROM `media` WHERE mediaid = :id');
+            $sth->execute(array('id' => $mediaId));
+
+            return $sth->fetchColumn();
+        }
+        catch (Exception $e) {
+
+            Debug::LogEntry('error', $e->getMessage());
+
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+
+            return false;
+        }
+    }
+
     public function DeleteMediaFile($fileName)
     {
         Debug::LogEntry('audit', 'IN', 'Media', 'DeleteMediaFile');

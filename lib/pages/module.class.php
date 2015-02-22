@@ -74,7 +74,6 @@ class moduleDAO extends baseDAO
 
     /**
      * Display the module page
-     * @return
      */
     function displayPage()
     {
@@ -273,7 +272,7 @@ class moduleDAO extends baseDAO
             'b');
 
         // Set any module specific form fields
-        $module = ModuleFactory::create($type, $this->db, $this->user);
+        $module = \Xibo\Factory\ModuleFactory::create($type);
 
         // Merge in the fields from the settings
         foreach($module->ModuleSettingsForm() as $field)
@@ -293,8 +292,7 @@ class moduleDAO extends baseDAO
         // Check the token
         if (!Kit::CheckToken())
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
-        
-        $db =& $this->db;
+
         $response = new ResponseManager();
 
         // Can we edit?

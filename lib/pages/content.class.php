@@ -202,7 +202,7 @@ class contentDAO extends baseDAO {
             $row['thumbnail'] = '';
 
             if ($row['mediatype'] == 'image') {
-                $row['thumbnail'] = '<a class="img-replace" data-toggle="lightbox" data-type="image" data-img-src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $row['mediaid'] . '&width=100&height=100&dynamic=true&thumb=true" href="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $row['mediaid'] . '"><i class="fa fa-file-image-o"></i></a>';
+                $row['thumbnail'] = '<a class="img-replace" data-toggle="lightbox" data-type="image" data-img-src="index.php?p=content&q=getFile&mediaid=' . $row['mediaid'] . '&width=100&height=100&dynamic=true&thumb=true" href="index.php?p=content&q=getFile&mediaid=' . $row['mediaid'] . '"><i class="fa fa-file-image-o"></i></a>';
             }
 
 			$row['buttons'] = array();
@@ -213,17 +213,16 @@ class contentDAO extends baseDAO {
                 // Edit
                 $row['buttons'][] = array(
                         'id' => 'content_button_edit',
-                        'url' => 'index.php?p=module&mod=' . $row['mediatype'] . '&q=Exec&method=EditForm&mediaid=' . $row['mediaid'],
+                        'url' => 'index.php?p=content&q=editForm&mediaid=' . $row['mediaid'],
                         'text' => __('Edit')
                     );
             }
             
             if ($row['del'] == 1) {
-				
 				// Delete
                 $row['buttons'][] = array(
                         'id' => 'content_button_delete',
-                        'url' => 'index.php?p=module&mod=' . $row['mediatype'] . '&q=Exec&method=DeleteForm&mediaid=' . $row['mediaid'],
+                        'url' => 'index.php?p=content&q=deleteForm&mediaid=' . $row['mediaid'],
                         'text' => __('Delete')
                     );
             }
@@ -233,7 +232,7 @@ class contentDAO extends baseDAO {
         		// Permissions
                 $row['buttons'][] = array(
                         'id' => 'content_button_permissions',
-                        'url' => 'index.php?p=module&mod=' . $row['mediatype'] . '&q=Exec&method=PermissionsForm&mediaid=' . $row['mediaid'],
+                        'url' => 'index.php?p=content&q=permissionsForm&mediaid=' . $row['mediaid'],
                         'text' => __('Permissions')
                     );
             }
@@ -242,7 +241,7 @@ class contentDAO extends baseDAO {
             $row['buttons'][] = array(
                     'id' => 'content_button_download',
                     'linkType' => '_self',
-                    'url' => 'index.php?p=module&mod=' . $row['mediatype'] . '&q=Exec&method=GetResource&download=1&downloadFromLibrary=1&mediaid=' . $row['mediaid'],
+                    'url' => 'index.php?p=content&q=getFile&download=1&downloadFromLibrary=1&mediaid=' . $row['mediaid'],
                     'text' => __('Download')
                 );
 
@@ -316,6 +315,210 @@ class contentDAO extends baseDAO {
         $response->dialogClass = 'modal-big';
         $response->Respond();
 	}
+
+    /**
+     * Gets a file from the library
+     */
+    public function getFile()
+    {
+        // Get the MediaId
+        $mediaId = Kit::GetParam('mediaId', _GET, _INT);
+
+        // Can this user view?
+        $entries = $this->user->MediaList(null, array('mediaId' => $mediaId));
+        if (count($entries) < 0)
+            throw new Exception(__('You do not have permission to view this media.'));
+
+        File::ReturnFile($entries[0]['storedas'], $entries[0]['filename']);
+    }
+
+    /**
+     * Edit Form
+     */
+    function editForm()
+    {
+        $formFields[] = FormManager::AddText('tags', __('Tags'), $this->widget->tags,
+            __('Tag this media. Comma Separated.'), 'n');
+
+        if ($this->assignable) {
+            $formFields[] = FormManager::AddCheckbox('replaceInLayouts', __('Update this media in all layouts it is assigned to?'),
+                ((Config::GetSetting('LIBRARY_MEDIA_UPDATEINALL_CHECKB') == 'Checked') ? 1 : 0),
+                __('Note: It will only be replaced in layouts you have permission to edit.'),
+                'r');
+        }
+
+        $formFields[] = FormManager::AddCheckbox('deleteOldVersion', __('Delete the old version?'),
+            ((Config::GetSetting('LIBRARY_MEDIA_UPDATEINALL_CHECKB') == 'Checked') ? 1 : 0),
+            __('Completely remove the old version of this media item if a new file is being uploaded.'),
+            '');
+    }
+
+    /**
+     * Media Delete Form
+     * @throws Exception
+     */
+    public function deleteForm()
+    {
+        $response = new ResponseManager();
+
+        // Get the MediaId
+        $mediaId = Kit::GetParam('mediaId', _GET, _INT);
+
+        // Can this user delete?
+        $auth = $this->user->MediaAuth($mediaId, true);
+        if (!$auth->del)
+            throw new Exception(__('You do not have permission to delete this media.'));
+
+        Theme::Set('form_id', 'MediaDeleteForm');
+        Theme::Set('form_action', 'index.php?p=content&q=delete');
+        Theme::Set('form_meta', '<input type="hidden" name="mediaId" value="' . $mediaId . '">');
+        $formFields = array(
+            FormManager::AddMessage(__('Are you sure you want to remove this Media?')),
+            FormManager::AddMessage(__('This action cannot be undone.')),
+        );
+
+        Theme::Set('form_fields', $formFields);
+        $form = Theme::RenderReturn('form_render');
+
+        $response->SetFormRequestResponse($form, __('Delete Media'), '300px', '200px');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Media', 'Delete') . '")');
+        $response->AddButton(__('No'), 'XiboDialogClose()');
+        $response->AddButton(__('Yes'), '$("#MediaDeleteForm").submit()');
+        $response->Respond();
+    }
+
+    /**
+     * Delete Media
+     */
+    public function delete()
+    {
+        $response = new ResponseManager();
+
+        // Get the MediaId
+        $mediaId = Kit::GetParam('mediaId', _GET, _INT);
+
+        // Can this user delete?
+        $auth = $this->user->MediaAuth($mediaId, true);
+        if (!$auth->del)
+            throw new Exception(__('You do not have permission to delete this media.'));
+
+        $media = new Media();
+        $media->Delete($mediaId);
+
+        $response->SetFormSubmitResponse(__('The Media has been Deleted'));
+        $response->Respond();
+    }
+
+    /**
+     * Replace media in all layouts.
+     * @param <type> $oldMediaId
+     * @param <type> $newMediaId
+     */
+    private function ReplaceMediaInAllLayouts($replaceInLayouts, $replaceBackgroundImages, $oldMediaId, $newMediaId)
+    {
+        $count = 0;
+
+        Debug::LogEntry('audit', sprintf('Replacing mediaid %s with mediaid %s in all layouts', $oldMediaId, $newMediaId), 'module', 'ReplaceMediaInAllLayouts');
+
+        try {
+            $dbh = PDOConnect::init();
+
+            // Some update statements to use
+            $sth = $dbh->prepare('SELECT lklayoutmediaid, regionid FROM lklayoutmedia WHERE mediaid = :media_id AND layoutid = :layout_id');
+            $sth_update = $dbh->prepare('UPDATE lklayoutmedia SET mediaid = :media_id WHERE lklayoutmediaid = :lklayoutmediaid');
+
+            // Loop through a list of layouts this user has access to
+            foreach($this->user->LayoutList() as $layout) {
+                $layoutId = $layout['layoutid'];
+
+                // Does this layout use the old media id?
+                $sth->execute(array(
+                    'media_id' => $oldMediaId,
+                    'layout_id' => $layoutId
+                ));
+
+                $results = $sth->fetchAll();
+
+                if (count($results) <= 0)
+                    continue;
+
+                Debug::LogEntry('audit', sprintf('%d linked media items for layoutid %d', count($results), $layoutId), 'module', 'ReplaceMediaInAllLayouts');
+
+                // Create a region object for later use (new one each time)
+                $layout = new Layout();
+                $region = new region($this->db);
+
+                // Loop through each media link for this layout
+                foreach ($results as $row)
+                {
+                    // Get the LKID of the link between this layout and this media.. could be more than one?
+                    $lkId = $row['lklayoutmediaid'];
+                    $regionId = $row['regionid'];
+
+                    if ($regionId == 'background') {
+
+                        Debug::Audit('Replacing background image');
+
+                        if (!$replaceBackgroundImages)
+                            continue;
+
+                        // Straight swap this background image node.
+                        if (!$layout->EditBackgroundImage($layoutId, $newMediaId))
+                            return false;
+                    }
+                    else {
+
+                        if (!$replaceInLayouts)
+                            continue;
+
+                        // Get the Type of this media
+                        if (!$type = $region->GetMediaNodeType($layoutId, '', '', $lkId))
+                            continue;
+
+                        // Create a new media node use it to swap the nodes over
+                        Debug::LogEntry('audit', 'Creating new module with MediaID: ' . $newMediaId . ' LayoutID: ' . $layoutId . ' and RegionID: ' . $regionId, 'region', 'ReplaceMediaInAllLayouts');
+                        try {
+                            $module = ModuleFactory::createForMedia($type, $newMediaId, $this->db, $this->user);
+                        }
+                        catch (Exception $e) {
+                            Debug::Error($e->getMessage());
+                            return false;
+                        }
+
+                        // Sets the URI field
+                        if (!$module->SetRegionInformation($layoutId, $regionId))
+                            return false;
+
+                        // Get the media xml string to use in the swap.
+                        $mediaXmlString = $module->AsXml();
+
+                        // Swap the nodes
+                        if (!$region->SwapMedia($layoutId, $regionId, $lkId, $oldMediaId, $newMediaId, $mediaXmlString))
+                            return false;
+                    }
+
+                    // Update the LKID with the new media id
+                    $sth_update->execute(array(
+                        'media_id' => $newMediaId,
+                        'lklayoutmediaid' => $row['lklayoutmediaid']
+                    ));
+
+                    $count++;
+                }
+            }
+        }
+        catch (Exception $e) {
+
+            Debug::LogEntry('error', $e->getMessage());
+
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+
+            return false;
+        }
+
+        Debug::LogEntry('audit', sprintf('Replaced media in %d layouts', $count), 'module', 'ReplaceMediaInAllLayouts');
+    }
 	
     /**
      * Displays the Library Assign form
