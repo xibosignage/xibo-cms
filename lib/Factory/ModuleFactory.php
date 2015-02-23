@@ -24,6 +24,8 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\Module;
+use Xibo\Entity\Region;
+use Xibo\Entity\Widget;
 use Xibo\Exception\NotFoundException;
 
 class ModuleFactory
@@ -87,6 +89,21 @@ class ModuleFactory
             // Load the widget
             $module->setWidget(WidgetFactory::loadByWidgetId($widgetId));
         }
+
+        return $module;
+    }
+
+    /**
+     * Create a Module using a Widget
+     * @param Widget $widget
+     * @param Region $region
+     * @return \Module
+     */
+    public static function createWithWidget($widget, $region)
+    {
+        $module = ModuleFactory::create($widget->type);
+        $module->setWidget($widget);
+        $module->setRegion($region);
 
         return $module;
     }

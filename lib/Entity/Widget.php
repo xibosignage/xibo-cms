@@ -119,7 +119,7 @@ class Widget
             $widgetOption->value = $value;
         }
         catch (NotFoundException $e) {
-            $this->widgetOptions[] = WidgetOptionFactory::create($this->widgetId, $option, $value);
+            $this->widgetOptions[] = WidgetOptionFactory::create($this->widgetId, $type, $option, $value);
         }
     }
 

@@ -81,7 +81,7 @@ class image extends Module
         $this->SetOption('valign', Kit::GetParam('valignId', _POST, _WORD, 'middle'));
 
         // Edit
-        $this->EditMedia();
+        parent::EditMedia();
     }
 
     /**

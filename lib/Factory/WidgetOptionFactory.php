@@ -28,6 +28,25 @@ use Xibo\Entity\WidgetOption;
 class WidgetOptionFactory
 {
     /**
+     * Create a Widget Option
+     * @param int $widgetId
+     * @param string $type
+     * @param string $option
+     * @param mixed $value
+     * @return WidgetOption
+     */
+    public static function create($widgetId, $type, $option, $value)
+    {
+        $widgetOption = new WidgetOption();
+        $widgetOption->widgetId = $widgetId;
+        $widgetOption->type = $type;
+        $widgetOption->option = $option;
+        $widgetOption->value = $value;
+
+        return $widgetOption;
+    }
+
+    /**
      * Load by Widget Id
      * @param int $widgetId
      * @return array[WidgetOption]

@@ -442,6 +442,11 @@ class moduleDAO extends baseDAO
         // Create a new module to handle this request
         $module = \Xibo\Factory\ModuleFactory::createForWidget(Kit::GetParam('mod', _REQUEST, _WORD), Kit::GetParam('widgetId', _REQUEST, _INT), $this->user->userid, Kit::GetParam('playlistId', _REQUEST, _INT), Kit::GetParam('regionId', _REQUEST, _INT));
 
+        // TODO: Authenticate access to this widget
+        $auth = new PermissionManager($this->user);
+        $auth->FullAccess();
+        $module->setPermissions($auth);
+
         // What module has been requested?
         $response = null;
         $method = Kit::GetParam('method', _REQUEST, _WORD);

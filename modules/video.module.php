@@ -53,7 +53,7 @@ class video extends Module
         $this->SetOption('loop', Kit::GetParam('loop', _POST, _CHECKBOX));
         $this->SetOption('mute', Kit::GetParam('mute', _POST, _CHECKBOX));
 
-        $this->EditMedia();
+        parent::EditMedia();
     }
 
     /**

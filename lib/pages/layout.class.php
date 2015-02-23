@@ -565,7 +565,7 @@ class layoutDAO extends baseDAO
             $row['thumbnail'] = '';
 
             if ($showThumbnail == 1 && $layout['backgroundImageId'] != 0)
-                $row['thumbnail'] = '<a class="img-replace" data-toggle="lightbox" data-type="image" data-img-src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $layout['backgroundImageId'] . '&width=100&height=100&dynamic=true&thumb=true" href="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $layout['backgroundImageId'] . '"><i class="fa fa-file-image-o"></i></a>';
+                $row['thumbnail'] = '<a class="img-replace" data-toggle="lightbox" data-type="image" data-img-src="index.php?p=content&q=getFile&mediaid=' . $layout['backgroundImageId'] . '&width=100&height=100&dynamic=true&thumb=true" href="index.php?p=content&q=getFile&mediaid=' . $layout['backgroundImageId'] . '"><i class="fa fa-file-image-o"></i></a>';
 
             // Fix up the description
             if ($showDescriptionId == 1) {

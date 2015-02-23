@@ -48,7 +48,6 @@ require_once('lib/service/serviceresponse.class.php');
 require_once('modules/module_user_general.php');
 require_once('lib/modules/module.interface.php');
 require_once('lib/modules/module.class.php');
-require_once("lib/modules/modulefactory.class.php");
 
 // Sort out magic quotes
 if (get_magic_quotes_gpc()) 

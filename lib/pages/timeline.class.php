@@ -681,6 +681,7 @@ class timelineDAO extends baseDAO
         /* @var \Xibo\Entity\Playlist $playlist */
 
         foreach($playlist->widgets as $widget) {
+            /* @var \Xibo\Entity\Widget $widget */
             // Put this node vertically in the region time line
             // TODO: Permissions for this assignment
             $auth = $user->MediaAssignmentAuth($widget->ownerId, $region->layoutId, $region->regionId, $widget->widgetId, true);
@@ -690,11 +691,11 @@ class timelineDAO extends baseDAO
                 continue;
 
             // Create a media module to handle all the complex stuff
+            $tmpModule = null;
             try {
-                $tmpModule = ModuleFactory::load($widget->type, $region->layoutId, $region->regionId, $widget->mediaId, null, $this->db, $this->user);
+                $tmpModule = \Xibo\Factory\ModuleFactory::createWithWidget($widget, $region);
             }
             catch (Exception $e) {
-                Debug::Audit('Caught exception from Module Create');
                 trigger_error($e->getMessage(), E_USER_ERROR);
             }
 
@@ -706,10 +707,10 @@ class timelineDAO extends baseDAO
             if ($timeBarColouring == 'Permissions')
                 $mediaBlockColouringClass = 'timelineMediaItemColouring_' . (($auth->edit) ? 'enabled' : 'disabled');
             else
-                $mediaBlockColouringClass = 'timelineMediaItemColouringDefault timelineMediaItemColouring_' . $mediaType;
+                $mediaBlockColouringClass = 'timelineMediaItemColouringDefault timelineMediaItemColouring_' . $tmpModule->getModuleType();
             
             // Create the list item
-            $response->html .= '<li class="timelineMediaListItem" mediaid="' . $mediaId . '" lkid="' . $lkId . '">';
+            $response->html .= '<li class="timelineMediaListItem" mediaid="' . $widget->widgetId . '">';
             
             // In transition
             $response->html .= '    <div class="timelineMediaInTransition">';
@@ -725,25 +726,25 @@ class timelineDAO extends baseDAO
 
             // Create some links
             if ($auth->edit)
-                $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=EditForm&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '" title="' . __('Click to edit this media') . '">' . __('Edit') . '</a></li>';
+                $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=EditForm&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '" title="' . __('Click to edit this media') . '">' . __('Edit') . '</a></li>';
 
             if ($auth->del)
-                $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=DeleteForm&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '" title="' . __('Click to delete this media') . '">' . __('Delete') . '</a></li>';
+                $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=DeleteForm&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '" title="' . __('Click to delete this media') . '">' . __('Delete') . '</a></li>';
 
             if ($auth->modifyPermissions)
-                $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=PermissionsForm&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '" title="' . __('Click to change permissions for this media') . '">' . __('Permissions') . '</a></li>';
+                $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=PermissionsForm&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '" title="' . __('Click to change permissions for this media') . '">' . __('Permissions') . '</a></li>';
 
             if (count($this->user->TransitionAuth('in')) > 0)
-                $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=TransitionEditForm&type=in&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '" title="' . __('Click to edit this transition') . '">' . __('In Transition') . '</a></li>';
+                $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=TransitionEditForm&type=in&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '" title="' . __('Click to edit this transition') . '">' . __('In Transition') . '</a></li>';
             
             if (count($this->user->TransitionAuth('out')) > 0)
-                $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=TransitionEditForm&type=out&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '" title="' . __('Click to edit this transition') . '">' . __('Out Transition') . '</a></li>';
+                $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=TransitionEditForm&type=out&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '" title="' . __('Click to edit this transition') . '">' . __('Out Transition') . '</a></li>';
             
             $response->html .= '        </ul>';
 
             // Put the media name in
             $response->html .= '        <div class="timelineMediaDetails ' . $mediaBlockColouringClass . '">';
-            $response->html .= '            <h3>' . sprintf('%s (%d seconds)', (($mediaName == '') ? __($tmpModule->displayType) : $mediaName), $widget->duration) . '</h3>';
+            $response->html .= '            <h3>' . sprintf('%s (%d seconds)', $mediaName, $widget->duration) . '</h3>';
             $response->html .= '        </div>';
 
             // Put the media hover preview in
@@ -786,8 +787,8 @@ class timelineDAO extends baseDAO
         $response->focusInFirstInput = false;
 
         // Add some buttons
-        $response->AddButton(__('Save Order'), 'XiboTimelineSaveOrder("' . $timeListMediaListId . '","' . $layoutId . '","' . $regionId . '")');
-        $response->AddButton(__('Switch to Grid'), 'XiboSwapDialog("index.php?p=timeline&q=TimelineGrid&layoutid=' . $layoutId . '&regionid=' . $regionId . '")');
+        $response->AddButton(__('Save Order'), 'XiboTimelineSaveOrder("' . $timeListMediaListId . '","' . $region->regionId . '")');
+        $response->AddButton(__('Switch to Grid'), 'XiboSwapDialog("index.php?p=timeline&q=TimelineGrid&regionid=' . $region->regionId . '")');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Layout', 'RegionOptions') . '")');
         $response->AddButton(__('Close'), 'XiboDialogClose()');
 

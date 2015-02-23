@@ -24,6 +24,7 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\Widget;
+use Xibo\Exception\NotFoundException;
 
 class WidgetFactory
 {
@@ -52,10 +53,15 @@ class WidgetFactory
      * Load widget by widget id
      * @param $widgetId
      * @return Widget
+     * @throws NotFoundException
      */
     public static function loadByWidgetId($widgetId)
     {
         $widgets = WidgetFactory::query(null, array('widgetId' => $widgetId));
+
+        if (count($widgets) <= 0)
+            throw new NotFoundException(__('Widget not found'));
+
         $widget = $widgets[0];
         /* @var Widget $widget */
         $widget->load();
@@ -85,9 +91,20 @@ class WidgetFactory
     {
         $entries = array();
 
-        $sql = 'SELECT * FROM `widget` WHERE playlistId = :playlistId';
+        $params = array();
+        $sql = 'SELECT * FROM `widget` WHERE 1 = 1';
 
-        foreach (\PDOConnect::select($sql, array('playlistId' => \Kit::GetParam('playlistId', $filterBy, _INT))) as $row) {
+        if (\Kit::GetParam('playlistId', $filterBy, _INT) != 0) {
+            $sql .= ' AND playlistId = :playlistId';
+            $params['playlistId'] = \Kit::GetParam('playlistId', $filterBy, _INT);
+        }
+
+        if (\Kit::GetParam('widgetId', $filterBy, _INT) != 0) {
+            $sql .= ' AND widgetId = :widgetId';
+            $params['widgetId'] = \Kit::GetParam('widgetId', $filterBy, _INT);
+        }
+
+        foreach (\PDOConnect::select($sql, $params) as $row) {
             $widget = new Widget();
             $widget->widgetId = \Kit::ValidateParam($row['widgetId'], _INT);
             $widget->playlistId = \Kit::ValidateParam($row['playlistId'], _INT);

@@ -240,7 +240,7 @@ abstract class Module implements ModuleInterface
     {
         $response->dialogTitle = sprintf(__('Edit %s'), $this->module->name);
 
-        if ($this->region == null)
+        if ($this->region != null)
             $response->AddButton(__('Cancel'), 'XiboSwapDialog("' . $this->getTimelineLink() . '")');
         else
             $response->AddButton(__('Cancel'), 'XiboDialogClose()');
@@ -274,6 +274,8 @@ abstract class Module implements ModuleInterface
     {
         if ($response == null)
             $response = new ResponseManager();
+
+        $this->configureForm('EditMedia');
 
         $formFields = array();
 
@@ -393,10 +395,12 @@ abstract class Module implements ModuleInterface
      */
     public function GetName()
     {
-        $name = '';
         if (count($this->widget->mediaIds) > 0) {
             $media = new Media();
             $name = $media->getName($this->widget->mediaIds[0]);
+        }
+        else {
+            $name = $this->module->name;
         }
 
         return $this->GetOption('name', $name);
@@ -452,7 +456,7 @@ abstract class Module implements ModuleInterface
         $output .= '<div class="preview-module-image"><img alt="' . __($this->module->name) . ' thumbnail" src="theme/default/img/forms/' . $this->module->type . '.gif" /></div>';
         $output .= '<div class="info">';
         $output .= '    <ul>';
-        $output .= '    <li>' . __('Type') . ': ' . $this->displayType . '</li>';
+        $output .= '    <li>' . __('Type') . ': ' . $this->module->name . '</li>';
         $output .= '    <li>' . __('Name') . ': ' . $this->GetName() . '</li>';
         $output .= '    <li>' . __('Duration') . ': ' . $this->widget->duration . ' ' . __('seconds') . '</li>';
         $output .= '    </ul>';
