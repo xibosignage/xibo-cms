@@ -1213,5 +1213,74 @@ class Media extends Data
             return false;
         }
     }
+
+    /**
+     * Installs fonts
+     * @return bool|void
+     */
+    public function installFonts()
+    {
+        $media = new Media();
+
+        $fontTemplate = '
+@font-face {
+    font-family: \'[family]\';
+    src: url(\'[url]\');
+}
+        ';
+
+        // Save a fonts.css file to the library for use as a module
+        try {
+            $dbh = PDOConnect::init();
+
+            $sth = $dbh->prepare('SELECT mediaID, name, storedAs FROM `media` WHERE type = :type AND IsEdited = 0');
+            $sth->execute(array(
+                'type' => 'font'
+            ));
+
+            $fonts = $sth->fetchAll();
+
+            if (count($fonts) < 1)
+                return;
+
+            $css = '';
+            $localCss = '';
+            $ckeditorString = '';
+            foreach ($fonts as $font) {
+
+                // Css for the client contains the actual stored as location of the font.
+                $css .= str_replace('[url]', $font['storedAs'], str_replace('[family]', $font['name'], $fontTemplate));
+
+                // Css for the local CMS contains the full download path to the font
+                $url = Kit::GetXiboRoot() . '?p=module&mod=font&q=Exec&method=GetResource&download=1&downloadFromLibrary=1&mediaid=' . $font['mediaID'];
+                $localCss .= str_replace('[url]', $url, str_replace('[family]', $font['name'], $fontTemplate));
+
+                // CKEditor string
+                $ckeditorString .= $font['name'] . '/' . $font['name'] . ';';
+            }
+
+            file_put_contents('modules/preview/fonts.css', $css);
+
+            // Install it (doesn't expire, isn't a system file, force update)
+            $media->addModuleFile('modules/preview/fonts.css', 0, false, true);
+
+            // Generate a fonts.css file for use locally (in the CMS)
+            file_put_contents('modules/preview/fonts.css', $localCss);
+
+            // Edit the CKEditor file
+            $ckeditor = file_get_contents('theme/default/libraries/ckeditor/config.js');
+            $replace = "/*REPLACE*/ config.font_names = '" . $ckeditorString . "' + config.font_names; /*ENDREPLACE*/";
+
+            $ckeditor = preg_replace('/\/\*REPLACE\*\/.*?\/\*ENDREPLACE\*\//', $replace, $ckeditor);
+
+            file_put_contents('theme/default/libraries/ckeditor/config.js', $ckeditor);
+        }
+        catch (Exception $e) {
+
+            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+
+            return false;
+        }
+    }
 }
 ?>

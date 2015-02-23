@@ -28,6 +28,12 @@ use Xibo\Exception\NotFoundException;
 
 class ModuleFactory
 {
+    /**
+     * Create a Module
+     * @param string $type
+     * @return \Module
+     * @throws NotFoundException
+     */
     public static function create($type)
     {
         $modules = ModuleFactory::query(null, array('type' => $type));
@@ -45,6 +51,44 @@ class ModuleFactory
         $type->setModule($module);
 
         return $type;
+    }
+
+    /**
+     * Create a Module for a Widget and optionally a playlist/region
+     * @param string $type
+     * @param int $widgetId
+     * @param int $ownerId
+     * @param int $playlistId
+     * @param int $regionId
+     * @return \Module
+     * @throws NotFoundException
+     */
+    public static function createForWidget($type, $widgetId = 0, $ownerId = 0, $playlistId = 0, $regionId = 0)
+    {
+        $module = ModuleFactory::create($type);
+
+        // Do we have a regionId
+        if ($regionId != 0) {
+            // Load the region and set
+            $region = RegionFactory::getByRegionId($regionId);
+            $module->setRegion($region);
+        }
+
+        // Do we have a widgetId
+        if ($widgetId == 0) {
+            // If we don't have a widget we must have a playlist
+            if ($playlistId == 0)
+                throw new \InvalidArgumentException(__('Playlist not provided'));
+
+            // Create a new widget to use
+            $module->setWidget(WidgetFactory::create($ownerId, $playlistId, $module->getModuleType(), 0));
+        }
+        else {
+            // Load the widget
+            $module->setWidget(WidgetFactory::loadByWidgetId($widgetId));
+        }
+
+        return $module;
     }
 
     public static function get($key = 'type')

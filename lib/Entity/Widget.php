@@ -123,6 +123,25 @@ class Widget
         }
     }
 
+    /**
+     * Assign File Media
+     * @param int $mediaId
+     */
+    public function assignMedia($mediaId)
+    {
+        if (!in_array($mediaId, $this->mediaIds))
+            $this->mediaIds[] = $mediaId;
+    }
+
+    /**
+     * Unassign File Media
+     * @param int $mediaId
+     */
+    public function unassignMedia($mediaId)
+    {
+        unset($this->mediaIds[$mediaId]);
+    }
+
     public function load()
     {
         // Load the widget options

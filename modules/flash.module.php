@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006,2007,2008 Daniel Garner and James Packer
+ * Copyright (C) 2006-2015 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -20,93 +20,37 @@
  */
 class flash extends Module
 {
-    // Custom Media information
-    protected $maxFileSize;
-    protected $maxFileSizeBytes;
-
-    public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '', $lkid = '')
-    {
-        // Must set the type of the class
-        $this->type= 'flash';
-
-        // Get the max upload size from PHP
-        $this->maxFileSize 	= ini_get('upload_max_filesize');
-        $this->maxFileSizeBytes = convertBytes($this->maxFileSize);
-
-        // Must call the parent class
-        parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);
-    }
-
     /**
-     * Sets the Layout and Region Information
-     *  it will then fill in any blanks it has about this media if it can
-     * @return
-     * @param $layoutid Object
-     * @param $regionid Object
-     * @param $mediaid Object
+     * Preview code for a module
+     * @param int $width
+     * @param int $height
+     * @param int $scaleOverride The Scale Override
+     * @return string The Rendered Content
      */
-    public function SetRegionInformation($layoutid, $regionid) {
-        $db =& $this->db;
-        
-        parent::SetRegionInformation($layoutid, $regionid);
-
-        // Any Options
-        $this->SetOption('uri', $this->storedAs);
-        $this->existingMedia = false;
-
-        return true;
-    }
-
-    /**
-     * Return the Add Form as HTML
-     * @return
-     */
-    public function AddForm()
+    public function Preview($width, $height, $scaleOverride = 0)
     {
-        return $this->AddFormForLibraryMedia();
+        // Never previewed in the browser.
+        return $this->previewIcon();
     }
 
-    /**
-     * Return the Edit Form as HTML
-     * @return
-     */
-    public function EditForm()
-    {
-        return $this->EditFormForLibraryMedia();
-    }
-
-    /**
-     * Add Media to the Database
-     * @return
-     */
-    public function AddMedia()
-    {
-        return $this->AddLibraryMedia();
-    }
-
-    /**
-     * Edit Media in the Database
-     * @return
-     */
-    public function EditMedia()
-    {
-        return $this->EditLibraryMedia();
-    }
-    
-    public function IsValid() {
-        // Client dependant
-        return 2;
-    }
-    
     /**
      * Get Resource
+     * @param int $displayId
+     * @return mixed
      */
     public function GetResource($displayId = 0)
     {
-    	$this->ReturnFile();
-        
+        $this->ReturnFile();
         exit();
     }
 
+    /**
+     * Is this module valid
+     * @return int
+     */
+    public function IsValid()
+    {
+        // Yes
+        return 1;
+    }
 }
-?>

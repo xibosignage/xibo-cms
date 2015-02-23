@@ -22,7 +22,6 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 abstract class Module implements ModuleInterface
 {
-    // Module Information
     /**
      * @var \Xibo\Entity\Module $module
      */
@@ -38,7 +37,14 @@ abstract class Module implements ModuleInterface
      */
     protected $auth;
 
-    // The Schema Version of this code
+    /**
+     * @var \Xibo\Entity\Region $region The region this module is in
+     */
+    protected $region;
+
+    /**
+     * @var int $codeSchemaVersion The Schema Version of this code
+     */
     protected $codeSchemaVersion = -1;
 
     /**
@@ -66,6 +72,24 @@ abstract class Module implements ModuleInterface
     final public function setModule($module)
     {
         $this->module = $module;
+    }
+
+    /**
+     * Set the regionId
+     * @param \Xibo\Entity\Region $region
+     */
+    final public function setRegion($region)
+    {
+        $this->region = $region;
+    }
+
+    /**
+     * Set the duration
+     * @param int $duration
+     */
+    final protected function setDuration($duration)
+    {
+        $this->widget->duration = $duration;
     }
 
     /**
@@ -125,6 +149,24 @@ abstract class Module implements ModuleInterface
     }
 
     /**
+     * Assign Media
+     * @param int $mediaId
+     */
+    final protected function assignMedia($mediaId)
+    {
+        $this->widget->assignMedia($mediaId);
+    }
+
+    /**
+     * Unassign Media
+     * @param int $mediaId
+     */
+    final protected function unassignMedia($mediaId)
+    {
+        $this->widget->unassignMedia($mediaId);
+    }
+
+    /**
      * Get WidgetId
      * @return int
      */
@@ -134,11 +176,85 @@ abstract class Module implements ModuleInterface
     }
 
     /**
+     * Get the PlaylistId
+     * @return int
+     */
+    final protected function getPlaylistId()
+    {
+        return $this->widget->playlistId;
+    }
+
+    /**
+     * Get the Module type
+     * @return string
+     */
+    final public function getModuleType()
+    {
+        return $this->module->type;
+    }
+
+    /**
+     * Get the duration
+     * @return int
+     */
+    final protected function getDuration()
+    {
+        return $this->widget->duration;
+    }
+
+    /**
      * Save the Widget
      */
     final protected function saveWidget()
     {
         $this->widget->save();
+    }
+
+    /**
+     * Get the Form Meta for this Module
+     * @return string
+     */
+    final protected function getFormMeta()
+    {
+        return '
+            <input type="hidden" name="regionId" value="' . (($this->region == null) ? 0 : $this->region->regionId) . '">
+            <input type="hidden" id="widgetId" name="widgetId" value="' . $this->getWidgetId() . '">';
+    }
+
+    /**
+     * Configures the form
+     * @param string $functionToExecute
+     */
+    final protected function configureForm($functionToExecute)
+    {
+        Theme::Set('form_id', 'ModuleForm');
+        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->module->type . '&q=Exec&method=' . $functionToExecute);
+        Theme::Set('form_meta', $this->getFormMeta());
+    }
+
+    /**
+     * Configure form buttons
+     * @param ResponseManager &$response
+     */
+    final protected function configureFormButtons(&$response)
+    {
+        $response->dialogTitle = sprintf(__('Edit %s'), $this->module->name);
+
+        if ($this->region == null)
+            $response->AddButton(__('Cancel'), 'XiboSwapDialog("' . $this->getTimelineLink() . '")');
+        else
+            $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+
+        $response->AddButton(__('Save'), '$("#ModuleForm").submit()');
+    }
+
+    /**
+     * Get the URL for an edit form
+     * @return string
+     */
+    protected function getTimelineLink()
+    {
+        return 'index.php?p=timeline&regionId=' . (($this->region == null) ? 0 : $this->region->regionId) . '&q=RegionOptions';
     }
 
     /**
@@ -152,21 +268,19 @@ abstract class Module implements ModuleInterface
     /**
      * Basic Edit Form
      * @param array $extraFormFields
+     * @param ResponseManager $response
      */
-    public function baseEditForm($extraFormFields = null)
+    public function baseEditForm($extraFormFields = null, $response = null)
     {
-        $response = new ResponseManager();
-
-        Theme::Set('form_id', 'ModuleForm');
-        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->module->type . '&q=Exec&method=EditMedia');
-        Theme::Set('form_meta', '<input type="hidden" name="regionId" value="' . Kit::GetParam('regionId', _POST, _INT) . '"><input type="hidden" id="widgetId" name="widgetId" value="' . $this->getWidgetId() . '">');
+        if ($response == null)
+            $response = new ResponseManager();
 
         $formFields = array();
 
         $formFields[] = FormManager::AddText('name', __('Name'), $this->GetOption('name'),
             __('The Name of this item - Leave blank to use the file name'), 'n');
 
-        $formFields[] = FormManager::AddNumber('duration', __('Duration'), $this->widget->duration,
+        $formFields[] = FormManager::AddNumber('duration', __('Duration'), $this->getDuration(),
             __('The duration in seconds this item should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
 
         // Add in any extra form fields we might have provided
@@ -180,14 +294,7 @@ abstract class Module implements ModuleInterface
 
         // Generate the Response
         $response->html = Theme::RenderReturn('form_render');
-        $response->dialogTitle = sprintf(__('Edit %s'), $this->module->name);
-
-        if (Kit::GetParam('designer', _REQUEST, _INT) == 1)
-            $response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&q=RegionOptions&regionid=' . Kit::GetParam('regionId', _POST, _INT) . '")');
-        else
-            $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-
-        $response->AddButton(__('Save'), '$("#ModuleForm").submit()');
+        $this->configureFormButtons($response);
         $response->Respond();
     }
 
@@ -201,7 +308,7 @@ abstract class Module implements ModuleInterface
 
         // Can this user delete?
         if (!$this->auth->edit)
-            throw new Exception('You do not have permission to delete this media.');
+            throw new Exception(__('You do not have permission to edit this media.'));
 
         $this->widget->duration = Kit::GetParam('duration', _POST, _INT, $this->widget->duration);
         $this->SetOption('name', Kit::GetParam('name', _POST, _STRING, $this->GetOption('name')));
@@ -305,9 +412,18 @@ abstract class Module implements ModuleInterface
     public function Preview($width, $height, $scaleOverride = 0)
     {
         if ($this->module->previewEnabled == 0)
-            return '<div style="text-align:center;"><img alt="' . $this->module->type . ' thumbnail" src="theme/default/img/forms/' . $this->module->type . '.gif" /></div>';
+            return $this->previewIcon();
             
         return $this->PreviewAsClient($width, $height, $scaleOverride);
+    }
+
+    /**
+     * Preview Icon
+     * @return string
+     */
+    public function previewIcon()
+    {
+        return '<div style="text-align:center;"><img alt="' . $this->getModuleType() . ' thumbnail" src="theme/default/img/forms/' . $this->getModuleType() . '.gif" /></div>';
     }
 
     /**
@@ -715,5 +831,28 @@ abstract class Module implements ModuleInterface
             return $this->module->settings[$setting];
         else
             return $default;
+    }
+
+    /**
+     * Get Media Id
+     * @return int
+     * @throws \Xibo\Exception\NotFoundException
+     */
+    protected function getMediaId()
+    {
+        if (count($this->widget->mediaIds) <= 0)
+            throw new \Xibo\Exception\NotFoundException(__('No file to return'));
+
+        return $this->widget->mediaIds[0];
+    }
+
+    /**
+     * Return File
+     */
+    protected function ReturnFile()
+    {
+        // This widget is expected to output a file - usually this is for file based media
+        $media = new Media();
+        File::ReturnFile($media->GetStoredAs($this->getMediaId()));
     }
 }

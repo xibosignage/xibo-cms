@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2011-2014 Daniel Garner
+ * Copyright (C) 2011-2015 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -20,19 +20,9 @@
  */
 class datasetview extends Module
 {
-    // Custom Media information
-    protected $maxFileSize;
-    protected $maxFileSizeBytes;
-
-    public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '', $lkid = '')
-    {
-        // Must set the type of the class
-        $this->type= 'datasetview';
-
-        // Must call the parent class
-        parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);
-    }
-
+    /**
+     * Install Modules Files
+     */
     public function InstallFiles()
     {
         $media = new Media();
@@ -44,83 +34,47 @@ class datasetview extends Module
 
     /**
      * Return the Add Form as HTML
-     * @return
      */
     public function AddForm()
     {
-        $this->response = new ResponseManager();
-        $db =& $this->db;
-        $user =& $this->user;
+        $response = new ResponseManager();
 
-        // Would like to get the regions width / height
-        $layoutid = $this->layoutid;
-        $regionid = $this->regionid;
+        // Configure form
+        $this->configureForm('AddMedia');
 
-        Theme::Set('form_id', 'ModuleForm');
-        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=AddMedia');
-        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" />');
-        
         $formFields = array();
         $formFields[] = FormManager::AddCombo(
-                    'datasetid', 
-                    __('DataSet'), 
-                    NULL,
-                    $user->DataSetList(),
-                    'datasetid',
-                    'dataset',
-                    __('Please select the DataSet to use as a source of data for this view.'), 
-                    'd');
+            'datasetid',
+            __('DataSet'),
+            NULL,
+            $this->auth->getUser()->DataSetList(),
+            'datasetid',
+            'dataset',
+            __('Please select the DataSet to use as a source of data for this view.'),
+            'd');
 
         $formFields[] = FormManager::AddNumber('duration', __('Duration'), NULL, 
             __('The duration in seconds this counter should be displayed'), 'd', 'required');
 
         Theme::Set('form_fields', $formFields);
         
-        $this->response->SetFormRequestResponse(NULL, __('Add DataSet View'), '350px', '275px');
+        $response->SetFormRequestResponse(NULL, __('Add DataSet View'), '350px', '275px');
+        $this->configureFormButtons($response);
 
-        // Cancel button
-        if ($this->showRegionOptions)
-        {
-            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
-        }
-        else
-        {
-            $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        }
-        
-        $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
-
-        return $this->response;
+        return $response;
     }
 
     /**
      * Return the Edit Form as HTML
-     * @return
      */
     public function EditForm()
     {
-        $this->response = new ResponseManager();
-        $db =& $this->db;
-        $user =& $this->user;
-
-        // Would like to get the regions width / height
-        $layoutid = $this->layoutid;
-        $regionid = $this->regionid;
-        $mediaid = $this->mediaid;
-
-        // Permissions
+        $response = new ResponseManager();
         if (!$this->auth->edit)
-        {
-            $this->response->SetError('You do not have permission to edit this assignment.');
-            $this->response->keepOpen = true;
-            return $this->response;
-        }
+            throw new Exception(__('You do not have permission to edit this widget.'));
 
-        $dataSetId = $this->GetOption('datasetid');
-
-        Theme::Set('form_id', 'ModuleForm');
-        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=EditMedia');
-        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" /><input type="hidden" name="datasetid" value="' . $dataSetId . '"><input type="hidden" id="mediaid" name="mediaid" value="' . $mediaid . '">');
+        // Configure the form
+        $this->configureForm('EditMedia');
 
         // We want 2 tabs
         $tabs = array();
@@ -129,8 +83,9 @@ class datasetview extends Module
         Theme::Set('form_tabs', $tabs);
 
         $formFields = array();
-        
-        $formFields[] = FormManager::AddNumber('duration', __('Duration'), $this->duration, 
+        $formFields[] = FormManager::AddHidden('dataSetId', $this->GetOption('datasetid'));
+
+        $formFields[] = FormManager::AddNumber('duration', __('Duration'), $this->getDuration(),
             __('The duration in seconds this item should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
 
         $formFields[] = FormManager::AddText('ordering', __('Order'), $this->GetOption('ordering'),
@@ -149,7 +104,7 @@ class datasetview extends Module
         if ($columns != '')
         {
             // Query for more info about the selected and available columns
-            $notColumns = $db->GetArray(sprintf("SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetID = %d AND DataSetColumnID NOT IN (%s)", $dataSetId, $columns));
+            $notColumns = PDOConnect::select(sprintf("SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetID = %d AND DataSetColumnID NOT IN (%s)", $this->GetOption('datasetid'), $columns), array());
 
             // These columns need to be in order
             $columnIds = explode(',', $columns);
@@ -157,8 +112,8 @@ class datasetview extends Module
 
             foreach($columnIds as $col)
             {
-                $heading = $db->GetSingleRow(sprintf('SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetColumnID = %d', $col), 'Heading', _STRING);
-                $headings[] = $heading;
+                $heading = PDOConnect::select(sprintf('SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetColumnID = %d', $col), array());
+                $headings[] = $heading[0]['Heading'];
             }
 
             $columns = $headings;
@@ -166,7 +121,7 @@ class datasetview extends Module
         else
         {
             $columns = array();
-            $notColumns = $db->GetArray(sprintf("SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetID = %d ", $dataSetId));
+            $notColumns = PDOConnect::select(sprintf("SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetID = %d ", $this->GetOption('datasetid')), array());
         }
 
         // Build the two lists
@@ -206,31 +161,17 @@ class datasetview extends Module
         $formFields[] = FormManager::AddNumber('rowsPerPage', __('Rows per page'), $this->GetOption('rowsPerPage'), 
             __('Please enter the number of rows per page. 0 for no pages.'), 'u');
 
-        // Get the embedded HTML out of RAW
-        $rawXml = new DOMDocument();
-        $rawXml->loadXML($this->GetRaw());
-        $rawNodes = $rawXml->getElementsByTagName('styleSheet');
-
-        if ($rawNodes->length != 0)
-            $rawNode = $rawNodes->item(0);
-        
-        $formFields[] = FormManager::AddMultiText('styleSheet', NULL, (($rawNodes->length == 0) ? $this->DefaultStyleSheet() : $rawNode->nodeValue), 
+        $formFields[] = FormManager::AddMultiText('styleSheet', NULL, $this->getRawNode('styleSheet', $this->DefaultStyleSheet()),
             __('Enter a style sheet for the table'), 's', 10);
 
         Theme::Set('form_fields_advanced', $formFields);
 
-        $this->response->SetFormRequestResponse(NULL, 'Edit DataSet View for DataSet', '650px', '575px');
+        $response->SetFormRequestResponse(NULL, 'Edit DataSet View for DataSet', '650px', '575px');
 
-        // Cancel button
-        if ($this->showRegionOptions)
-            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
-        else
-            $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        
-        $this->response->AddButton(__('Save'), 'DataSetViewSubmit()');
-        $this->response->callBack = 'datasetview_callback';
+        $this->configureFormButtons($response);
+        $response->callBack = 'datasetview_callback';
 
-        return $this->response;
+        return $response;
     }
 
     /**
@@ -239,96 +180,53 @@ class datasetview extends Module
      */
     public function AddMedia()
     {
-        $this->response = new ResponseManager();
-        $layoutid = $this->layoutid;
-        $regionid = $this->regionid;
+        $response = new ResponseManager();
 
-        //Other properties
+        // Other properties
         $dataSetId = Kit::GetParam('datasetid', _POST, _INT, 0);
         $duration = Kit::GetParam('duration', _POST, _INT, 0);
 
         // validation
         if ($dataSetId == 0)
-        {
-            $this->response->SetError(__('Please select a DataSet'));
-            $this->response->keepOpen = true;
-            return $this->response;
-        }
+            throw new InvalidArgumentException(__('Please select a DataSet'));
 
         // Check we have permission to use this DataSetId
-        if (!$this->user->DataSetAuth($dataSetId))
-        {
-            $this->response->keepOpen = true;
-            return $this->response->SetError(__('You do not have permission to use that dataset'));
-        }
+        if (!$this->auth->getUser()->DataSetAuth($dataSetId))
+            throw new InvalidArgumentException(__('You do not have permission to use that dataset'));
 
         if ($duration == 0)
-        {
-            $this->response->SetError(__('You must enter a duration.'));
-            $this->response->keepOpen = true;
-            return $this->response;
-        }
+            throw new InvalidArgumentException(__('You must enter a duration.'));
 
-        // Required Attributes
-        $this->mediaid = md5(uniqid());
-        $this->duration = $duration;
 
         // Any Options
+        $this->setDuration($duration);
         $this->SetOption('datasetid', $dataSetId);
 
-        // Should have built the media object entirely by this time
-        // This saves the Media Object to the Region
-        $this->UpdateRegion();
+        // Save the widget
+        $this->saveWidget();
+
+        // Load an edit form
+        $response->loadForm = true;
+        $response->loadFormUri = $this->getTimelineLink();
 
         // Link
-        Kit::ClassLoader('dataset');
-        $dataSet = new DataSet($this->db);
-        $dataSet->LinkLayout($dataSetId, $this->layoutid, $this->regionid, $this->mediaid);
+        // TODO: repair this link in some way. They can't be linked to layouts anymore before one widget might end up
+        // in more than one layout, due to the playlist it belongs to
+        //$dataSet = new DataSet();
+        //$dataSet->LinkLayout($dataSetId, $this->layoutid, $this->regionid, $this->mediaid);
 
-        //Set this as the session information
-        setSession('content', 'type', 'datasetview');
-
-        if ($this->showRegionOptions)
-        {
-            // We want to load a new form
-            $this->response->loadForm = true;
-            $this->response->loadFormUri = "index.php?p=module&mod=datasetview&q=Exec&method=EditForm&layoutid=$this->layoutid&regionid=$regionid&mediaid=$this->mediaid";
-        }
-
-        return $this->response;
+        return $response;
     }
 
     /**
      * Edit Media in the Database
-     * @return
      */
     public function EditMedia()
     {
-        $this->response = new ResponseManager();
-        $layoutid = $this->layoutid;
-        $regionid = $this->regionid;
-        $mediaid = $this->mediaid;
-
-        // Other properties
-        $dataSetId = Kit::GetParam('datasetid', _POST, _INT, 0);
+        $response = new ResponseManager();
 
         if (!$this->auth->edit)
-        {
-            $this->response->SetError('You do not have permission to edit this assignment.');
-            $this->response->keepOpen = false;
-            return $this->response;
-        }
-
-        // If we have permission to change it, then get the value from the form
-        if ($this->auth->modifyPermissions)
-            $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
-
-        if ($this->duration == 0)
-        {
-            $this->response->SetError(__('You must enter a duration.'));
-            $this->response->keepOpen = true;
-            return $this->response;
-        }
+            throw new Exception(__('You do not have permission to edit this media.'));
 
         $columns = Kit::GetParam('DataSetColumnId', _GET, _ARRAY, array());
         $upperLimit = Kit::GetParam('upperLimit', _POST, _INT);
@@ -364,6 +262,7 @@ class datasetview extends Module
             trigger_error(__('Cannot user ordering criteria in the Filter Clause'), E_USER_ERROR);
 
         // Store the values on the XLF
+        $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration()));
         $this->SetOption('upperLimit', $upperLimit);
         $this->SetOption('lowerLimit', $lowerLimit);
         $this->SetOption('filter', $filter);
@@ -372,60 +271,57 @@ class datasetview extends Module
         $this->SetOption('duration', $this->duration);
         $this->SetOption('updateInterval', $updateInterval);
         $this->SetOption('rowsPerPage', $rowsPerPage);
-        $this->SetRaw('<styleSheet><![CDATA[' . $styleSheet . ']]></styleSheet>');
+        $this->setRawNode('styleSheet', $styleSheet);
 
-        // Should have built the media object entirely by this time
-        // This saves the Media Object to the Region
-        $this->UpdateRegion();
+        // Save the widget
+        $this->saveWidget();
 
-        //Set this as the session information
-        setSession('content', 'type', 'datasetview');
+        // Load an edit form
+        $response->loadForm = true;
+        $response->loadFormUri = $this->getTimelineLink();
 
-        if ($this->showRegionOptions)
-        {
-            // We want to load a new form
-            $this->response->loadForm = true;
-            $this->response->loadFormUri = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
-        }
-
-        return $this->response;
+        return $response;
     }
 
+    /**
+     * Delete Media
+     * @throws Exception
+     */
     public function DeleteMedia()
     {
-        $dataSetId = $this->GetOption('datasetid');
+        // TODO: repair this link in some way. They can't be linked to layouts anymore before one widget might end up
+        // in more than one layout, due to the playlist it belongs to
+        // $dataSet = new DataSet($this->db);
+        // $dataSet->UnlinkLayout($this->GetOption('datasetid'), $this->layoutid, $this->regionid, $this->mediaid);
 
-        Debug::LogEntry('audit', sprintf('Deleting Media with DataSetId %d', $dataSetId), 'datasetview', 'DeleteMedia');
-
-        Kit::ClassLoader('dataset');
-        $dataSet = new DataSet($this->db);
-        $dataSet->UnlinkLayout($dataSetId, $this->layoutid, $this->regionid, $this->mediaid);
-
-        return parent::DeleteMedia();
+        parent::DeleteMedia();
     }
 
+    /**
+     * GetResource
+     * Return the rendered resource to be used by the client (or a preview)
+     * for displaying this content.
+     * @param integer $displayId If this comes from a real client, this will be the display id.
+     * @return mixed
+     */
     public function GetResource($displayId = 0)
     {
-        // Load in the template
-        if ($this->layoutSchemaVersion == 1)
-            $template = file_get_contents('modules/preview/Html4TransitionalTemplate.html');
-        else
-            $template = file_get_contents('modules/preview/HtmlTemplate.html');
+        $template = file_get_contents('modules/preview/HtmlTemplate.html');
 
         $isPreview = (Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
 
         // Replace the View Port Width?
         if ($isPreview)
-            $template = str_replace('[[ViewPortWidth]]', $this->width, $template);
+            $template = str_replace('[[ViewPortWidth]]', $this->region->width, $template);
 
         // Get the embedded HTML out of RAW
         $styleSheet = $this->GetRawNode('styleSheet', $this->DefaultStyleSheet());
 
         $options = array(
-            'type' => $this->type,
-            'duration' => $this->duration,
-            'originalWidth' => $this->width,
-            'originalHeight' => $this->height,
+            'type' => $this->getModuleType(),
+            'duration' => $this->getDuration(),
+            'originalWidth' => $this->region->width,
+            'originalHeight' => $this->region->height,
             'rowsPerPage' => $this->GetOption('rowsPerPage'),
             'previewWidth' => Kit::GetParam('width', _GET, _DOUBLE, 0),
             'previewHeight' => Kit::GetParam('height', _GET, _DOUBLE, 0),
@@ -510,10 +406,14 @@ END;
         return $styleSheet;
     }
 
+    /**
+     * Get the Data Set Table
+     * @param int $displayId
+     * @param bool $isPreview
+     * @return string
+     */
     public function DataSetTableHtml($displayId = 0, $isPreview = true)
     {
-        $db =& $this->db;
-
         // Show a preview of the data set table output.
         $dataSetId = $this->GetOption('datasetid');
         $upperLimit = $this->GetOption('upperLimit');
@@ -529,13 +429,12 @@ END;
 
         // Set an expiry time for the media
         $media = new Media();
-        $layout = new Layout();
         $expires = time() + ($this->GetOption('updateInterval', 3600) * 60);
             
         // Create a data set view object, to get the results.
-        $dataSet = new DataSet($db);
+        $dataSet = new DataSet();
         if (!$dataSetResults = $dataSet->DataSetResults($dataSetId, $columnIds, $filter, $ordering, $lowerLimit, $upperLimit, $displayId)) {
-            return;
+            return '';
         }
 
         $rowCount = 1;
@@ -593,7 +492,7 @@ END;
                     $file = $media->addModuleFileFromUrl(str_replace(' ', '%20', htmlspecialchars_decode($replace)), 'datasetview_' . md5($dataSetId . $dataSetResults['Columns'][$i]['DataSetColumnID'] . $replace), $expires);
 
                     // Tag this layout with this file
-                    $layout->AddLk($this->layoutid, 'module', $file['mediaId']);
+                    $this->assignMedia($file['mediaId']);
 
                     $replace = ($isPreview) ? '<img src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $file['mediaId'] . '" />' : '<img src="' . $file['storedAs'] . '" />';
                 }
@@ -613,10 +512,14 @@ END;
 
         return $table;
     }
-    
-    public function IsValid() {
+
+    /**
+     * Is Valid
+     * @return int
+     */
+    public function IsValid()
+    {
         // DataSet rendering will be valid
         return 1;
     }
 }
-?>

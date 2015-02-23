@@ -33,30 +33,6 @@ class moduleDAO extends baseDAO
     {
         $this->db   =& $db;
         $this->user =& $user;
-
-        $mod = Kit::GetParam('mod', _REQUEST, _WORD);
-
-        // If we have the module - create an instance of the module class
-        // This will only be true when we are displaying the Forms
-        if ($mod != '')
-        {
-            // Try to get the layout, region and media id's
-            $layoutId   = Kit::GetParam('layoutid', _REQUEST, _INT);
-            $regionId   = Kit::GetParam('regionid', _REQUEST, _STRING);
-            $mediaId    = Kit::GetParam('mediaid', _REQUEST, _STRING);
-            $lkId       = Kit::GetParam('lkid', _REQUEST, _INT);
-
-            Debug::LogEntry('audit', 'Creating new module with MediaID: ' . $mediaId . ' LayoutID: ' . $layoutId . ' and RegionID: ' . $regionId);
-
-            try {
-                $this->module = ModuleFactory::load($mod, $layoutId, $regionId, $mediaId, $lkId, $this->db, $this->user);
-            }
-            catch (Exception $e) {
-                trigger_error($e->getMessage(), E_USER_ERROR);
-            }
-        }
-
-        return true;
     }
 
     function actionMenu()
@@ -459,18 +435,21 @@ class moduleDAO extends baseDAO
     }
     
     /**
-     * What action to perform?
-     * @return
+     * Execute a Module Action
      */
     public function Exec()
     {
+        // Create a new module to handle this request
+        $module = \Xibo\Factory\ModuleFactory::createForWidget(Kit::GetParam('mod', _REQUEST, _WORD), Kit::GetParam('widgetId', _REQUEST, _INT), $this->user->userid, Kit::GetParam('playlistId', _REQUEST, _INT), Kit::GetParam('regionId', _REQUEST, _INT));
+
         // What module has been requested?
+        $response = null;
         $method = Kit::GetParam('method', _REQUEST, _WORD);
         $raw = Kit::GetParam('raw', _REQUEST, _WORD);
 
-        if (method_exists($this->module, $method))
+        if (method_exists($module, $method))
         {
-            $response = $this->module->$method();
+            $response = $module->$method();
         }
         else
         {
@@ -485,8 +464,8 @@ class moduleDAO extends baseDAO
         }
         else
         {
+            /* @var ResponseManager $response */
             $response->Respond();
         }
     }
 }
-?>

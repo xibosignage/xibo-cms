@@ -37,6 +37,50 @@ class WidgetFactory
         return WidgetFactory::query(null, array('playlistId' => $playlistId));
     }
 
+    /**
+     * Get widget by widget id
+     * @param $widgetId
+     * @return Widget
+     */
+    public static function getByWidgetId($widgetId)
+    {
+        $widgets = WidgetFactory::query(null, array('widgetId' => $widgetId));
+        return $widgets[0];
+    }
+
+    /**
+     * Load widget by widget id
+     * @param $widgetId
+     * @return Widget
+     */
+    public static function loadByWidgetId($widgetId)
+    {
+        $widgets = WidgetFactory::query(null, array('widgetId' => $widgetId));
+        $widget = $widgets[0];
+        /* @var Widget $widget */
+        $widget->load();
+        return $widget;
+    }
+
+    /**
+     * Create a new widget
+     * @param int $ownerId
+     * @param int $playlistId
+     * @param string $type
+     * @param int $duration
+     * @return Widget
+     */
+    public static function create($ownerId, $playlistId, $type, $duration)
+    {
+        $widget = new Widget();
+        $widget->ownerId = $ownerId;
+        $widget->playlistId = $playlistId;
+        $widget->type = $type;
+        $widget->duration = $duration;
+
+        return $widget;
+    }
+
     public static function query($sortOrder = null, $filterBy = null)
     {
         $entries = array();

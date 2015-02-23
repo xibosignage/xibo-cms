@@ -337,8 +337,14 @@ class contentDAO extends baseDAO {
      */
     function editForm()
     {
+        //TODO: Editform
         $formFields[] = FormManager::AddText('tags', __('Tags'), $this->widget->tags,
             __('Tag this media. Comma Separated.'), 'n');
+
+        $formFields[] = FormManager::AddCheckbox('replaceBackgroundImages', __('Replace background images?'),
+            0,
+            __('If the current image is used as a background, should the new image replace it?'),
+            '', 'replacement-controls');
 
         if ($this->assignable) {
             $formFields[] = FormManager::AddCheckbox('replaceInLayouts', __('Update this media in all layouts it is assigned to?'),

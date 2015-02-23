@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006,2007,2008 Daniel Garner and James Packer
+ * Copyright (C) 2009-2015 Daniel Garner. 2006-2008 Daniel Garner and James Packer.
  *
  * This file is part of Xibo.
  *
@@ -30,7 +30,7 @@ class powerpoint extends Module
     public function Preview($width, $height, $scaleOverride = 0)
     {
         // PowerPoint cannot be previewed
-        return '<div style="text-align:center;"><img alt="' . $this->type . ' thumbnail" src="theme/default/img/forms/' . $this->type . '.gif" /></div>';
+        return $this->previewIcon();
     }
     
     public function IsValid() {
@@ -40,13 +40,12 @@ class powerpoint extends Module
 
     /**
      * Get Resource
+     * @param int $displayId
+     * @return mixed
      */
     public function GetResource($displayId = 0)
     {
         $this->ReturnFile();
-
         exit();
-
     }
 }
-?>

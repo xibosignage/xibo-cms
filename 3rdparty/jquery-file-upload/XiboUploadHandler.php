@@ -30,10 +30,17 @@ class XiboUploadHandler extends UploadHandler
 
             // Get the storedAs valid for return
             $file->storedas = $mediaObject->GetStoredAs($mediaId);
+
+            // Fonts, then install
+            if ($module->type == 'font') {
+                $mediaObject->installFonts();
+            }
         }
         catch (Exception $e) {
             $file->error = $e->getMessage();
             exit();
         }
     }
+
+
 }

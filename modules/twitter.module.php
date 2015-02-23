@@ -670,7 +670,7 @@ class Twitter extends Module
             Debug::Error('Twitter API returned ' . $result . ' status. Unable to proceed.');
 
             // Parse out header and body
-            list($header, $body) = explode("\r\n\r\n", $result, 2);
+            $body = substr($result, $outHeaders['header_size']);
 
             // See if we can parse the error.
             $body = json_decode($body);
@@ -681,7 +681,7 @@ class Twitter extends Module
         }
 
         // Parse out header and body
-        list($header, $body) = explode("\r\n\r\n", $result, 2);
+        $body = substr($result, $outHeaders['header_size']);
 
         // See if we can parse the body as JSON.
         $body = json_decode($body);
