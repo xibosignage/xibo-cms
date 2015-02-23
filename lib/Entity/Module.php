@@ -39,6 +39,7 @@ class Module
     public $assignable;
     public $renderAs;
     public $settings;
+    public $schemaVersion;
 
     public function save()
     {

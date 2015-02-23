@@ -167,7 +167,8 @@ class ModuleFactory
             $SQL .= '   ValidExtensions, ';
             $SQL .= '   ImageUri, ';
             $SQL .= '   PreviewEnabled, ';
-            $SQL .= '   assignable ';
+            $SQL .= '   assignable, ';
+            $SQL .= '   SchemaVersion ';
             $SQL .= '  FROM `module` ';
             $SQL .= ' WHERE 1 = 1 ';
 
@@ -211,6 +212,7 @@ class ModuleFactory
                 $module->regionSpecific = \Kit::ValidateParam($row['RegionSpecific'], _INT);
                 $module->previewEnabled = \Kit::ValidateParam($row['PreviewEnabled'], _INT);
                 $module->assignable = \Kit::ValidateParam($row['assignable'], _INT);
+                $module->schemaVersion = \Kit::ValidateParam($row['SchemaVersion'], _INT);
 
                 $settings = \Kit::ValidateParam($row['settings'], _STRING);
                 $module->settings = ($settings == '') ? array() : json_decode($settings, true);

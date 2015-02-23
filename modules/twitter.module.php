@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2014 Daniel Garner
+ * Copyright (C) 2014-2015 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -23,19 +23,7 @@ include_once('modules/3rdparty/emoji.php');
 
 class Twitter extends Module
 {
-    public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '', $lkid = '', $typeOverride = NULL) {
-        // The Module Type must be set - this should be a unique text string of no more than 50 characters.
-        // It is used to uniquely identify the module globally.
-        $this->type = ($typeOverride == NULL) ? 'twitter' : $typeOverride;
-
-        // This is the code schema version, it should be 1 for a new module and should be incremented each time the 
-        // module data structure changes.
-        // It is used to install / update your module and to put updated modules down to the display clients.
-        $this->codeSchemaVersion = 1;
-        
-        // Must call the parent class
-        parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);
-    }
+    public $codeSchemaVersion = 1;
 
     /**
      * Install or Update this module
@@ -46,13 +34,13 @@ class Twitter extends Module
         // The current version of the module in the database can be obtained in $this->schemaVersion
         // The current version of this code can be obtained in $this->codeSchemaVersion
         
-        // $settings will be made available to all instances of your module in $this->settings. These are global settings to your module, 
+        // $settings will be made available to all instances of your module in $this->module->settings. These are global settings to your module, 
         // not instance specific (i.e. not settings specific to the layout you are adding the module to).
         // $settings will be collected from the Administration -> Modules CMS page.
         // 
         // Layout specific settings should be managed with $this->SetOption in your add / edit forms.
         
-        if ($this->schemaVersion <= 1) {
+        if ($this->module->schemaVersion <= 1) {
             // Install
             $this->InstallModule('Twitter', 'Twitter Search Module', 'forms/library.gif', 1, 1, array());
         }
@@ -68,6 +56,9 @@ class Twitter extends Module
         // again. This means that if you want to change those fields in an update to your module, you will need to increment your codeSchemaVersion.
     }
 
+    /**
+     * Install Files
+     */
     public function InstallFiles()
     {
         $media = new Media();
@@ -86,10 +77,10 @@ class Twitter extends Module
         // Scan the folder for template files
         foreach (glob('modules/theme/twitter/*.template.json') as $template) {
             // Read the contents, json_decode and add to the array
-            $this->settings['templates'][] = json_decode(file_get_contents($template), true);
+            $this->module->settings['templates'][] = json_decode(file_get_contents($template), true);
         }
 
-        Debug::Audit(count($this->settings['templates']));
+        Debug::Audit(count($this->module->settings['templates']));
     }
 
     /**
@@ -130,47 +121,36 @@ class Twitter extends Module
         $apiKey = Kit::GetParam('apiKey', _POST, _STRING, '');
 
         if ($apiKey == '')
-            $this->ThrowError(__('Missing API Key'));
+            throw new InvalidArgumentException(__('Missing API Key'));
 
         // Process any module settings you asked for.
         $apiSecret = Kit::GetParam('apiSecret', _POST, _STRING, '');
 
         if ($apiSecret == '')
-            $this->ThrowError(__('Missing API Secret'));
+            throw new InvalidArgumentException(__('Missing API Secret'));
 
-        $this->settings['apiKey'] = $apiKey;
-        $this->settings['apiSecret'] = $apiSecret;
-        $this->settings['cachePeriod'] = Kit::GetParam('cachePeriod', _POST, _INT, 300);
-        $this->settings['cachePeriodImages'] = Kit::GetParam('cachePeriodImages', _POST, _INT, 24);
+        $this->module->settings['apiKey'] = $apiKey;
+        $this->module->settings['apiSecret'] = $apiSecret;
+        $this->module->settings['cachePeriod'] = Kit::GetParam('cachePeriod', _POST, _INT, 300);
+        $this->module->settings['cachePeriodImages'] = Kit::GetParam('cachePeriodImages', _POST, _INT, 24);
 
         // Return an array of the processed settings.
-        return $this->settings;
+        return $this->module->settings;
     }
     
     /**
-     * Return the Add Form as HTML
-     * @return
+     * Return the Add Form
      */
     public function AddForm()
     {
-        $this->response = new ResponseManager();
-
-        // This is the logged in user and can be used to assess permissions
-        $user =& $this->user;
-
-        // The CMS provides the region width and height in case they are needed
-        $rWidth     = Kit::GetParam('rWidth', _REQUEST, _STRING);
-        $rHeight    = Kit::GetParam('rHeight', _REQUEST, _STRING);
+        $response = new ResponseManager();
 
         // Augment settings with templates
         $this->loadTemplates();
 
-        // All forms should set some meta data about the form.
-        // Usually, you would want this meta data to remain the same.
-        Theme::Set('form_id', 'ModuleForm');
-        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=AddMedia');
-        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $this->layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $this->regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" />');
-    
+        // Configure form
+        $this->configureForm('AddMedia');
+
         $tabs = array();
         $tabs[] = FormManager::AddTab('general', __('General'));
         $tabs[] = FormManager::AddTab('template', __('Template'), array(array('name' => 'enlarge', 'value' => true)));
@@ -251,7 +231,7 @@ class Twitter extends Module
         
         // Template - for standard stuff
         $formFields['template'][] = FormManager::AddCombo('templateId', __('Template'), $this->GetOption('templateId', 'tweet-only'), 
-            $this->settings['templates'], 
+            $this->module->settings['templates'], 
             'id', 
             'value', 
             __('Select the template you would like to apply. This can be overridden using the check box below.'), 't', 'template-selector-control');
@@ -262,31 +242,31 @@ class Twitter extends Module
         __('Tick if you would like to override the template.'), 'o');
         
         // Add a text template
-        $formFields['template'][] = FormManager::AddMultiText('ta_text', NULL, $this->GetRawNode('template'), 
+        $formFields['template'][] = FormManager::AddMultiText('ta_text', NULL, null,
             __('Enter the template. Please note that the background colour has automatically coloured to your layout background colour.'), 't', 10, NULL, 'template-override-controls');
         
         // Field for the style sheet (optional)
-        $formFields['template'][] = FormManager::AddMultiText('ta_css', NULL, $this->GetRawNode('styleSheet'), 
+        $formFields['template'][] = FormManager::AddMultiText('ta_css', NULL, null,
             __('Optional Stylesheet'), 's', 10, NULL, 'template-override-controls');
 
         // Add some field dependencies
         // When the override template check box is ticked, we want to expose the advanced controls and we want to hide the template selector
-        $this->response->AddFieldAction('overrideTemplate', 'init', false, 
+        $response->AddFieldAction('overrideTemplate', 'init', false, 
             array(
                 '.template-override-controls' => array('display' => 'none'),
                 '.template-selector-control' => array('display' => 'block')
             ), 'is:checked');
-        $this->response->AddFieldAction('overrideTemplate', 'change', false, 
+        $response->AddFieldAction('overrideTemplate', 'change', false, 
             array(
                 '.template-override-controls' => array('display' => 'none'),
                 '.template-selector-control' => array('display' => 'block')
             ), 'is:checked');
-        $this->response->AddFieldAction('overrideTemplate', 'init', true, 
+        $response->AddFieldAction('overrideTemplate', 'init', true, 
             array(
                 '.template-override-controls' => array('display' => 'block'),
                 '.template-selector-control' => array('display' => 'none')
             ), 'is:checked');
-        $this->response->AddFieldAction('overrideTemplate', 'change', true, 
+        $response->AddFieldAction('overrideTemplate', 'change', true, 
             array(
                 '.template-override-controls' => array('display' => 'block'),
                 '.template-selector-control' => array('display' => 'none')
@@ -304,48 +284,30 @@ class Twitter extends Module
         Theme::Set('form_fields_advanced', $formFields['advanced']);
 
         // Set the field dependencies
-        $this->setFieldDepencencies();
-        $this->response->html = Theme::RenderReturn('form_render');
+        $this->setFieldDepencencies($response);
+        $response->html = Theme::RenderReturn('form_render');
 
-        $this->response->dialogTitle = __($this->displayType);
-        $this->response->callBack = 'text_callback';
+        $response->callBack = 'text_callback';
         // Append the templates to the response
-        $this->response->extra = $this->settings['templates'];
-        // The response object outputs the required JSON object to the browser
-        // which is then processed by the CMS JavaScript library (xibo-cms.js).
-        $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&q=RegionOptions")');
-        $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
+        $response->extra = $this->module->settings['templates'];
+        $this->configureFormButtons($response);
 
         // The response must be returned.
-        return $this->response;
+        return $response;
     }
 
     /**
      * Add Media to the Database
-     * @return
      */
     public function AddMedia()
     {
-        $this->response = new ResponseManager();
-
-        // Same member variables as the Form call, except with POST variables for your form fields.
-        $layoutid   = $this->layoutid;
-        $regionid   = $this->regionid;
-        $mediaid    = $this->mediaid;
-
-        // You are required to set a media id, which should be unique.
-        $this->mediaid  = md5(Kit::uniqueId());
-
-        // You must also provide a duration (all media items must provide this field)
-        $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
+        $response = new ResponseManager();
 
         // You should validate all form input using the Kit::GetParam helper classes
-        if (Kit::GetParam('searchTerm', _POST, _STRING) == '') {
-            $this->response->SetError(__('Please enter a search term'));
-            $this->response->keepOpen = true;
-            return $this->response;
-        }
+        if (Kit::GetParam('searchTerm', _POST, _STRING) == '')
+            throw new InvalidArgumentException(__('Please enter a search term'));
 
+        $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration()));
         $this->SetOption('name', Kit::GetParam('name', _POST, _STRING));
         $this->SetOption('searchTerm', Kit::GetParam('searchTerm', _POST, _STRING));
         $this->SetOption('effect', Kit::GetParam('effect', _POST, _STRING));
@@ -356,46 +318,38 @@ class Twitter extends Module
         $this->SetOption('resultType', Kit::GetParam('resultType', _POST, _STRING));
         $this->SetOption('tweetDistance', Kit::GetParam('tweetDistance', _POST, _INT));
         $this->SetOption('tweetCount', Kit::GetParam('tweetCount', _POST, _INT));
-        $this->SetRaw('<template><![CDATA[' . Kit::GetParam('ta_text', _POST, _HTMLSTRING) . ']]></template><styleSheet><![CDATA[' . Kit::GetParam('ta_css', _POST, _HTMLSTRING) . ']]></styleSheet>');
+        $this->setRawNode('template', Kit::GetParam('ta_text', _POST, _HTMLSTRING));
+        $this->setRawNode('styleSheet', Kit::GetParam('ta_css', _POST, _HTMLSTRING));
         $this->SetOption('overrideTemplate', Kit::GetParam('overrideTemplate', _POST, _CHECKBOX));
         $this->SetOption('templateId', Kit::GetParam('templateId', _POST, _WORD));
 
-        // Should have built the media object entirely by this time
-        // This saves the Media Object to the Region
-        $this->UpdateRegion();
+        // Save the widget
+        $this->saveWidget();
 
-        // Usually you will want to load the region options form again once you have added your module.
-        // In some cases you will want to load the edit form for that module
-        $this->response->loadForm = true;
-        $this->response->loadFormUri = "index.php?p=timeline&layoutid=$this->layoutid&regionid=$this->regionid&q=RegionOptions";
-        
-        return $this->response;
+        // Load form
+        $response->loadForm = true;
+        $response->loadFormUri = $this->getTimelineLink();
+
+        return $response;
     }
 
     /**
      * Return the Edit Form as HTML
-     * @return
      */
     public function EditForm()
     {
-        $this->response = new ResponseManager();
+        $response = new ResponseManager();
 
-        // This is the logged in user and can be used to assess permissions
-        $user =& $this->user;
+        // Edit calls are the same as add calls, except you will to check the user has permissions to do the edit
+        if (!$this->auth->edit)
+            throw new Exception(__('You do not have permission to edit this widget.'));
 
-        // The CMS provides the region width and height in case they are needed
-        $rWidth     = Kit::GetParam('rWidth', _REQUEST, _STRING);
-        $rHeight    = Kit::GetParam('rHeight', _REQUEST, _STRING);
+        // Configure the form
+        $this->configureForm('EditMedia');
 
         // Augment settings with templates
         $this->loadTemplates();
 
-        // All forms should set some meta data about the form.
-        // Usually, you would want this meta data to remain the same.
-        Theme::Set('form_id', 'ModuleForm');
-        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=EditMedia');
-        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $this->layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $this->regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" /><input type="hidden" id="mediaid" name="mediaid" value="' . $this->mediaid . '">');
-    
         $tabs = array();
         $tabs[] = FormManager::AddTab('general', __('General'));
         $tabs[] = FormManager::AddTab('template', __('Appearance'), array(array('name' => 'enlarge', 'value' => true)));
@@ -407,7 +361,7 @@ class Twitter extends Module
             __('An optional name for this media'), 'n');
 
         // Duration
-        $formFields['general'][] = FormManager::AddNumber('duration', __('Duration'), $this->duration, 
+        $formFields['general'][] = FormManager::AddNumber('duration', __('Duration'), $this->getDuration(),
             __('The duration in seconds this item should be displayed.'), 'd', 'required');
 
         // Search Term
@@ -477,12 +431,12 @@ class Twitter extends Module
             __('Should URLs be removed from the Tweet Text. Most URLs do not compliment digital signage.'), 'u');
 
         // Encode up the template
-        if ($this->user->usertypeid == 1)
-            $formFields['advanced'][] = FormManager::AddMessage('<pre>' . htmlentities(json_encode(array('id' => 'ID', 'value' => 'TITLE', 'template' => $this->GetRawNode('template'), 'css' => $this->GetRawNode('styleSheet')))) . '</pre>');
+        if ($this->auth->getUser()->usertypeid == 1)
+            $formFields['advanced'][] = FormManager::AddMessage('<pre>' . htmlentities(json_encode(array('id' => 'ID', 'value' => 'TITLE', 'template' => $this->getRawNode('template', null), 'css' => $this->getRawNode('styleSheet', null)))) . '</pre>');
 
         // Template - for standard stuff
         $formFields['template'][] = FormManager::AddCombo('templateId', __('Template'), $this->GetOption('templateId', 'tweet-only'), 
-            $this->settings['templates'], 
+            $this->module->settings['templates'], 
             'id', 
             'value', 
             __('Select the template you would like to apply. This can be overridden using the check box below.'), 't', 'template-selector-control');
@@ -493,31 +447,31 @@ class Twitter extends Module
         __('Tick if you would like to override the template.'), 'o');
         
         // Add a text template
-        $formFields['template'][] = FormManager::AddMultiText('ta_text', NULL, $this->GetRawNode('template'), 
+        $formFields['template'][] = FormManager::AddMultiText('ta_text', NULL, $this->getRawNode('template', null),
             __('Enter the template. Please note that the background colour has automatically coloured to your layout background colour.'), 't', 10, NULL, 'template-override-controls');
         
         // Field for the style sheet (optional)
-        $formFields['template'][] = FormManager::AddMultiText('ta_css', NULL, $this->GetRawNode('styleSheet'), 
+        $formFields['template'][] = FormManager::AddMultiText('ta_css', NULL, $this->getRawNode('styleSheet', null),
             __('Optional Stylesheet'), 's', 10, NULL, 'template-override-controls');
 
         // Add some field dependencies
         // When the override template check box is ticked, we want to expose the advanced controls and we want to hide the template selector
-        $this->response->AddFieldAction('overrideTemplate', 'init', false, 
+        $response->AddFieldAction('overrideTemplate', 'init', false, 
             array(
                 '.template-override-controls' => array('display' => 'none'),
                 '.template-selector-control' => array('display' => 'block')
             ), 'is:checked');
-        $this->response->AddFieldAction('overrideTemplate', 'change', false, 
+        $response->AddFieldAction('overrideTemplate', 'change', false, 
             array(
                 '.template-override-controls' => array('display' => 'none'),
                 '.template-selector-control' => array('display' => 'block')
             ), 'is:checked');
-        $this->response->AddFieldAction('overrideTemplate', 'init', true, 
+        $response->AddFieldAction('overrideTemplate', 'init', true, 
             array(
                 '.template-override-controls' => array('display' => 'block'),
                 '.template-selector-control' => array('display' => 'none')
             ), 'is:checked');
-        $this->response->AddFieldAction('overrideTemplate', 'change', true, 
+        $response->AddFieldAction('overrideTemplate', 'change', true, 
             array(
                 '.template-override-controls' => array('display' => 'block'),
                 '.template-selector-control' => array('display' => 'none')
@@ -535,48 +489,34 @@ class Twitter extends Module
         Theme::Set('form_fields_advanced', $formFields['advanced']);
 
         // Set the field dependencies
-        $this->setFieldDepencencies();
+        $this->setFieldDepencencies($response);
 
-        $this->response->html = Theme::RenderReturn('form_render');
-        $this->response->dialogTitle = __($this->displayType);
-        $this->response->callBack = 'text_callback';
-        // The response object outputs the required JSON object to the browser
-        // which is then processed by the CMS JavaScript library (xibo-cms.js).
+        $response->html = Theme::RenderReturn('form_render');
+        $response->callBack = 'text_callback';
         // Append the templates to the response
-        $this->response->extra = $this->settings['templates'];
-        $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&q=RegionOptions")');
-        $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
+        $response->extra = $this->module->settings['templates'];
+        $this->configureFormButtons($response);
 
         // The response must be returned.
-        return $this->response;
+        return $response;
     }
 
     /**
      * Edit Media in the Database
-     * @return
      */
     public function EditMedia()
     {
-        $this->response = new ResponseManager();
+        $response = new ResponseManager();
 
         // Edit calls are the same as add calls, except you will to check the user has permissions to do the edit
-        if (!$this->auth->edit) {
-            $this->response->SetError('You do not have permission to edit this assignment.');
-            $this->response->keepOpen = false;
-            return $this->response;
-        }
-
-        // If we have permission to change it, then get the value from the form
-        if ($this->auth->modifyPermissions)
-            $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
+        if (!$this->auth->edit)
+            throw new Exception(__('You do not have permission to edit this widget.'));
 
         // You should validate all form input using the Kit::GetParam helper classes
-        if (Kit::GetParam('searchTerm', _POST, _STRING) == '') {
-            $this->response->SetError(__('Please enter a search term'));
-            $this->response->keepOpen = true;
-            return $this->response;
-        }
+        if (Kit::GetParam('searchTerm', _POST, _STRING) == '')
+            throw new InvalidArgumentException(__('Please enter a search term'));
 
+        $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration()));
         $this->SetOption('name', Kit::GetParam('name', _POST, _STRING));
         $this->SetOption('searchTerm', Kit::GetParam('searchTerm', _POST, _STRING));
         $this->SetOption('effect', Kit::GetParam('effect', _POST, _STRING));
@@ -592,27 +532,30 @@ class Twitter extends Module
         $this->SetOption('templateId', Kit::GetParam('templateId', _POST, _WORD));
 
         // Text Template
-        $this->SetRaw('<template><![CDATA[' . Kit::GetParam('ta_text', _POST, _HTMLSTRING) . ']]></template><styleSheet><![CDATA[' . Kit::GetParam('ta_css', _POST, _HTMLSTRING) . ']]></styleSheet>');
-        
-        // Should have built the media object entirely by this time
-        // This saves the Media Object to the Region
-        $this->UpdateRegion();
+        $this->setRawNode('template', Kit::GetParam('ta_text', _POST, _HTMLSTRING));
+        $this->setRawNode('styleSheet', Kit::GetParam('ta_css', _POST, _HTMLSTRING));
 
-        // Usually you will want to load the region options form again once you have added your module.
-        // In some cases you will want to load the edit form for that module
-        $this->response->loadForm = true;
-        $this->response->loadFormUri = "index.php?p=timeline&layoutid=$this->layoutid&regionid=$this->regionid&q=RegionOptions";
-        
-        return $this->response;
+        // Save the widget
+        $this->saveWidget();
+
+        // Load an edit form
+        $response->loadForm = true;
+        $response->loadFormUri = $this->getTimelineLink();
+
+        return $response;
     }
 
-    private function setFieldDepencencies()
+    /**
+     * Set field dependencies
+     * @param ResponseManager $response
+     */
+    private function setFieldDepencencies(&$response)
     {
         // Add a dependency
-        $this->response->AddFieldAction('effect', 'init', 'none', array('.effect-controls' => array('display' => 'none'), '.background-color-group' => array('display' => 'none')));
-        $this->response->AddFieldAction('effect', 'change', 'none', array('.effect-controls' => array('display' => 'none'), '.background-color-group' => array('display' => 'none')));
-        $this->response->AddFieldAction('effect', 'init', 'none', array('.effect-controls' => array('display' => 'block'), '.background-color-group' => array('display' => 'block')), 'not');
-        $this->response->AddFieldAction('effect', 'change', 'none', array('.effect-controls' => array('display' => 'block'), '.background-color-group' => array('display' => 'block')), 'not');
+        $response->AddFieldAction('effect', 'init', 'none', array('.effect-controls' => array('display' => 'none'), '.background-color-group' => array('display' => 'none')));
+        $response->AddFieldAction('effect', 'change', 'none', array('.effect-controls' => array('display' => 'none'), '.background-color-group' => array('display' => 'none')));
+        $response->AddFieldAction('effect', 'init', 'none', array('.effect-controls' => array('display' => 'block'), '.background-color-group' => array('display' => 'block')), 'not');
+        $response->AddFieldAction('effect', 'change', 'none', array('.effect-controls' => array('display' => 'block'), '.background-color-group' => array('display' => 'block')), 'not');
     }
 
     protected function getToken() {
@@ -819,7 +762,7 @@ class Twitter extends Module
         Debug::Audit(var_export(json_encode($data), true));
 
         // Get the template
-        $template = $this->GetRawNode('template');
+        $template = $this->getRawNode('template', null);
 
         // Parse the text template
         $matches = '';
@@ -903,9 +846,9 @@ class Twitter extends Module
                             $file = $media->addModuleFileFromUrl($tweet->user->profile_image_url, 'twitter_' . $tweet->user->id, $expires);
 
                             // Tag this layout with this file
-                            $layout->AddLk($this->layoutid, 'module', $file['mediaId']);
+                            $this->assignMedia($file['mediaId']);
 
-                            $replace = ($isPreview) ? '<img src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $file['mediaId'] . '" />' : '<img src="' . $file['storedAs'] . '" />';
+                            $replace = ($isPreview) ? '<img src="index.php?p=content&q=getFile&mediaid=' . $file['mediaId'] . '" />' : '<img src="' . $file['storedAs'] . '" />';
                         }
                         break;
 
@@ -917,7 +860,8 @@ class Twitter extends Module
 
                             if ($photoUrl != '') {
                                 $file = $media->addModuleFileFromUrl($photoUrl, 'twitter_photo_' . $tweet->user->id . '_' . $tweet->entities->media[0]->id_str, $expires);
-                                $replace = ($isPreview) ? '<img src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $file['mediaId'] . '" />' : '<img src="' . $file['storedAs'] . '" />';
+                                $this->assignMedia($file['mediaId']);
+                                $replace = ($isPreview) ? '<img src="index.php?p=content&q=getFile&mediaid=' . $file['mediaId'] . '" />' : '<img src="' . $file['storedAs'] . '" />';
                             }
                         }
 
@@ -939,11 +883,9 @@ class Twitter extends Module
     }
 
     /**
-     * GetResource
-     *     Return the rendered resource to be used by the client (or a preview)
-     *     for displaying this content.
-     * @param integer $displayId If this comes from a real client, this will be the display id.
-     * @return string
+     * Get Resource
+     * @param int $displayId
+     * @return mixed
      */
     public function GetResource($displayId = 0)
     {
@@ -959,10 +901,10 @@ class Twitter extends Module
 
         // Replace the View Port Width?
         if ($isPreview)
-            $template = str_replace('[[ViewPortWidth]]', $this->width, $template);
+            $template = str_replace('[[ViewPortWidth]]', $this->region->width, $template);
 
         // Information from the Module
-        $duration = $this->duration;
+        $duration = $this->getDuration();
         
         // Generate a JSON string of substituted items.
         $items = $this->getTwitterFeed($displayId, $isPreview);
@@ -972,15 +914,15 @@ class Twitter extends Module
             return '';
 
         $options = array(
-            'type' => $this->type,
+            'type' => $this->getModuleType(),
             'fx' => $this->GetOption('effect', 'none'),
             'speed' => $this->GetOption('speed', 500),
             'duration' => $duration,
             'durationIsPerItem' => ($this->GetOption('durationIsPerItem', 0) == 1),
             'numItems' => count($items),
             'itemsPerPage' => 1,
-            'originalWidth' => $this->width,
-            'originalHeight' => $this->height,
+            'originalWidth' => $this->region->width,
+            'originalHeight' => $this->region->height,
             'previewWidth' => Kit::GetParam('width', _GET, _DOUBLE, 0),
             'previewHeight' => Kit::GetParam('height', _GET, _DOUBLE, 0),
             'scaleOverride' => Kit::GetParam('scale_override', _GET, _DOUBLE, 0)
@@ -994,7 +936,7 @@ class Twitter extends Module
         $headContent  = '';
 
         // Add the CSS if it isn't empty
-        $css = $this->GetRawNode('styleSheet');
+        $css = $this->getRawNode('styleSheet', null);
         if ($css != '') {
             $headContent .= '<style type="text/css">' . $css . '</style>';
         }
@@ -1043,16 +985,6 @@ class Twitter extends Module
 
         return $template;
     }
-
-    public function HoverPreview()
-    {
-        // Default Hover window contains a thumbnail, media type and duration
-        $output = parent::HoverPreview();
-
-        // You can add anything you like to this, or completely replace it
-
-        return $output;
-    }
     
     public function IsValid() {
         // Using the information you have in your module calculate whether it is valid or not.
@@ -1062,4 +994,3 @@ class Twitter extends Module
         return 1;
     }
 }
-?>

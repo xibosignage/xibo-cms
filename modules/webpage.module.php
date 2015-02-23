@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2012 Daniel Garner and James Packer
+ * Copyright (C) 2006-2015 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -20,17 +20,11 @@
  */ 
 class webpage extends Module
 {
-    
-    public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '', $lkid = '')
+    /**
+     * Install Files
+     */
+    public function InstallFiles()
     {
-        // Must set the type of the class
-        $this->type = 'webpage';
-    
-        // Must call the parent class   
-        parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);
-    }
-
-    public function InstallFiles() {
         $media = new Media();
         $media->addModuleFile('modules/preview/vendor/jquery-1.11.1.min.js');;
         $media->addModuleFile('modules/preview/xibo-layout-scaler.js');;
@@ -38,24 +32,14 @@ class webpage extends Module
     }
     
     /**
-     * Return the Add Form as HTML
-     * @return 
+     * Return the Add Form
      */
     public function AddForm()
     {
-        $this->response = new ResponseManager();
-        $db         =& $this->db;
-        $user       =& $this->user;
-                
-        // Would like to get the regions width / height 
-        $layoutid   = $this->layoutid;
-        $regionid   = $this->regionid;
-        $rWidth     = Kit::GetParam('rWidth', _REQUEST, _STRING);
-        $rHeight    = Kit::GetParam('rHeight', _REQUEST, _STRING);
-        
-        Theme::Set('form_id', 'ModuleForm');
-        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=AddMedia');
-        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" />');
+        $response = new ResponseManager();
+
+        // Configure form
+        $this->configureForm('AddMedia');
 
         $formFields = array();
         
@@ -112,32 +96,20 @@ class webpage extends Module
                 '.webpage-offsets' => array('display' => 'none'),
             );
 
-        $this->response->AddFieldAction('modeid', 'init', 1, $modeFieldDepencies_1);
-        $this->response->AddFieldAction('modeid', 'change', 1, $modeFieldDepencies_1);
-        $this->response->AddFieldAction('modeid', 'init', 2, $modeFieldDepencies_2);
-        $this->response->AddFieldAction('modeid', 'change', 2, $modeFieldDepencies_2);
-        $this->response->AddFieldAction('modeid', 'init', 3, $modeFieldDepencies_3);
-        $this->response->AddFieldAction('modeid', 'change', 3, $modeFieldDepencies_3);
+        $response->AddFieldAction('modeid', 'init', 1, $modeFieldDepencies_1);
+        $response->AddFieldAction('modeid', 'change', 1, $modeFieldDepencies_1);
+        $response->AddFieldAction('modeid', 'init', 2, $modeFieldDepencies_2);
+        $response->AddFieldAction('modeid', 'change', 2, $modeFieldDepencies_2);
+        $response->AddFieldAction('modeid', 'init', 3, $modeFieldDepencies_3);
+        $response->AddFieldAction('modeid', 'change', 3, $modeFieldDepencies_3);
 
         Theme::Set('form_fields', $formFields);
 
-        if ($this->showRegionOptions)
-        {
-            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
-        }
-        else
-        {
-            $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        }
+        $response->html = Theme::RenderReturn('form_render');
+        $this->configureFormButtons($response);
+        $response->dialogTitle = __('Add Webpage');
 
-        $this->response->html = Theme::RenderReturn('form_render');
-        $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
-        $this->response->dialogTitle = __('Add Webpage');
-        $this->response->dialogSize     = true;
-        $this->response->dialogWidth    = '450px';
-        $this->response->dialogHeight   = '250px';
-
-        return $this->response;
+        return $response;
     }
     
     /**
@@ -146,31 +118,21 @@ class webpage extends Module
      */
     public function EditForm()
     {
-        $this->response = new ResponseManager();
-        $db         =& $this->db;
-        
-        $layoutid   = $this->layoutid;
-        $regionid   = $this->regionid;
-        $mediaid    = $this->mediaid;
+        $response = new ResponseManager();
 
-        // Permissions
+        // Edit calls are the same as add calls, except you will to check the user has permissions to do the edit
         if (!$this->auth->edit)
-        {
-            $this->response->SetError('You do not have permission to edit this assignment.');
-            $this->response->keepOpen = true;
-            return $this->response;
-        }
+            throw new Exception(__('You do not have permission to edit this widget.'));
 
-        Theme::Set('form_id', 'ModuleForm');
-        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=EditMedia');
-        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" /><input type="hidden" id="mediaid" name="mediaid" value="' . $mediaid . '">');
-            
+        // Configure the form
+        $this->configureForm('EditMedia');
+
         $formFields = array();
         
         $formFields[] = FormManager::AddText('uri', __('Link'), urldecode($this->GetOption('uri')), 
             __('The Location (URL) of the webpage'), 'l', 'required');
 
-        $formFields[] = FormManager::AddNumber('duration', __('Duration'), $this->duration, 
+        $formFields[] = FormManager::AddNumber('duration', __('Duration'), $this->getDuration(),
             __('The duration in seconds this item should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
 
         $formFields[] = FormManager::AddCombo(
@@ -220,78 +182,46 @@ class webpage extends Module
                 '.webpage-offsets' => array('display' => 'none'),
             );
 
-        $this->response->AddFieldAction('modeid', 'init', 1, $modeFieldDepencies_1);
-        $this->response->AddFieldAction('modeid', 'change', 1, $modeFieldDepencies_1);
-        $this->response->AddFieldAction('modeid', 'init', 2, $modeFieldDepencies_2);
-        $this->response->AddFieldAction('modeid', 'change', 2, $modeFieldDepencies_2);
-        $this->response->AddFieldAction('modeid', 'init', 3, $modeFieldDepencies_3);
-        $this->response->AddFieldAction('modeid', 'change', 3, $modeFieldDepencies_3);
+        $response->AddFieldAction('modeid', 'init', 1, $modeFieldDepencies_1);
+        $response->AddFieldAction('modeid', 'change', 1, $modeFieldDepencies_1);
+        $response->AddFieldAction('modeid', 'init', 2, $modeFieldDepencies_2);
+        $response->AddFieldAction('modeid', 'change', 2, $modeFieldDepencies_2);
+        $response->AddFieldAction('modeid', 'init', 3, $modeFieldDepencies_3);
+        $response->AddFieldAction('modeid', 'change', 3, $modeFieldDepencies_3);
 
         Theme::Set('form_fields', $formFields);
 
-        
-        if ($this->showRegionOptions)
-        {
-            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
-        }
-        else
-        {
-            $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        }
+        $response->html = Theme::RenderReturn('form_render');
+        $this->configureFormButtons($response);
+        $response->dialogTitle = __('Edit Webpage');
 
-        $this->response->html = Theme::RenderReturn('form_render');
-        $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
-        $this->response->dialogTitle = __('Edit Webpage');
-        $this->response->dialogSize     = true;
-        $this->response->dialogWidth    = '450px';
-        $this->response->dialogHeight   = '250px';
-
-        return $this->response;
+        return $response;
     }
     
     /**
      * Add Media to the Database
-     * @return 
      */
     public function AddMedia()
     {
-        $this->response = new ResponseManager();
-        $db         =& $this->db;
-        
-        $layoutid   = $this->layoutid;
-        $regionid   = $this->regionid;
-        $mediaid    = $this->mediaid;
-        
-        //Other properties
-        $uri          = Kit::GetParam('uri', _POST, _URI);
-        $duration     = Kit::GetParam('duration', _POST, _INT, 0);
-        $scaling      = Kit::GetParam('scaling', _POST, _INT, 100);
-        $transparency     = Kit::GetParam('transparency', _POST, _CHECKBOX, 'off');
+        $response = new ResponseManager();
+
+        // Other properties
+        $uri = Kit::GetParam('uri', _POST, _URI);
+        $duration = Kit::GetParam('duration', _POST, _INT, 0);
+        $scaling = Kit::GetParam('scaling', _POST, _INT, 100);
+        $transparency = Kit::GetParam('transparency', _POST, _CHECKBOX, 'off');
         $offsetLeft = Kit::GetParam('offsetLeft', _POST, _INT);
         $offsetTop = Kit::GetParam('offsetTop', _POST, _INT);
         
-        $url = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
-                        
-        //Validate the URL?
+        // Validate the URL?
         if ($uri == "" || $uri == "http://")
-        {
-            $this->response->SetError('Please enter a Link');
-            $this->response->keepOpen = true;
-            return $this->response;
-        }
+            throw new InvalidArgumentException(__('Please enter a Link'));
         
         if ($duration == 0)
-        {
-            $this->response->SetError('You must enter a duration.');
-            $this->response->keepOpen = true;
-            return $this->response;
-        }
-        
-        // Required Attributes
-        $this->mediaid  = md5(uniqid());
-        $this->duration = $duration;
+            throw new InvalidArgumentException(__('You must enter a duration.'));
         
         // Any Options
+        $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration()));
         $this->SetOption('xmds', true);
         $this->SetOption('uri', $uri);
         $this->SetOption('scaling', $scaling);
@@ -302,20 +232,14 @@ class webpage extends Module
         $this->SetOption('pageHeight', Kit::GetParam('pageHeight', _POST, _INT));
         $this->SetOption('modeid', Kit::GetParam('modeid', _POST, _INT));
 
-        // Should have built the media object entirely by this time
-        // This saves the Media Object to the Region
-        $this->UpdateRegion();
-        
-        //Set this as the session information
-        setSession('content', 'type', 'webpage');
-        
-        if ($this->showRegionOptions) {
-            // We want to load a new form
-            $this->response->loadForm = true;
-            $this->response->loadFormUri = $url;
-        }
-        
-        return $this->response;
+        // Save the widget
+        $this->saveWidget();
+
+        // Load form
+        $response->loadForm = true;
+        $response->loadFormUri = $this->getTimelineLink();
+
+        return $response;
     }
     
     /**
@@ -324,49 +248,24 @@ class webpage extends Module
      */
     public function EditMedia()
     {
-        $this->response = new ResponseManager();
-        $db         =& $this->db;
-        
-        $layoutid   = $this->layoutid;
-        $regionid   = $this->regionid;
-        $mediaid    = $this->mediaid;
+        $response = new ResponseManager();
 
         if (!$this->auth->edit)
-        {
-            $this->response->SetError('You do not have permission to edit this assignment.');
-            $this->response->keepOpen = false;
-            return $this->response;
-        }
-        
-        //Other properties
-        $uri          = Kit::GetParam('uri', _POST, _URI);
-        $scaling      = Kit::GetParam('scaling', _POST, _INT, 100);
-        $transparency     = Kit::GetParam('transparency', _POST, _CHECKBOX, 'off');
+            throw new Exception(__('You do not have permission to edit this widget.'));
+
+        // Other properties
+        $uri = Kit::GetParam('uri', _POST, _URI);
+        $scaling = Kit::GetParam('scaling', _POST, _INT, 100);
+        $transparency = Kit::GetParam('transparency', _POST, _CHECKBOX, 'off');
         $offsetLeft = Kit::GetParam('offsetLeft', _POST, _INT);
         $offsetTop = Kit::GetParam('offsetTop', _POST, _INT);
-        
-        // If we have permission to change it, then get the value from the form
-        if ($this->auth->modifyPermissions)
-            $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
 
-        $url = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
-                        
-        //Validate the URL?
+        // Validate the URL?
         if ($uri == "" || $uri == "http://")
-        {
-            $this->response->SetError('Please enter a Link');
-            $this->response->keepOpen = true;
-            return $this->response;
-        }
-        
-        if ($this->duration == 0)
-        {
-            $this->response->SetError('You must enter a duration.');
-            $this->response->keepOpen = true;
-            return $this->response;
-        }
-        
+            throw new InvalidArgumentException(__('Please enter a Link'));
+
         // Any Options
+        $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration()));
         $this->SetOption('xmds', true);
         $this->SetOption('uri', $uri);
         $this->SetOption('scaling', $scaling);
@@ -377,21 +276,14 @@ class webpage extends Module
         $this->SetOption('pageHeight', Kit::GetParam('pageHeight', _POST, _INT));
         $this->SetOption('modeid', Kit::GetParam('modeid', _POST, _INT));
 
-        // Should have built the media object entirely by this time
-        // This saves the Media Object to the Region
-        $this->UpdateRegion();
-        
-        //Set this as the session information
-        setSession('content', 'type', 'webpage');
-        
-    if ($this->showRegionOptions)
-        {
-            // We want to load a new form
-            $this->response->loadForm = true;
-            $this->response->loadFormUri = $url;
-        }
-        
-        return $this->response; 
+        // Save the widget
+        $this->saveWidget();
+
+        // Load an edit form
+        $response->loadForm = true;
+        $response->loadFormUri = $this->getTimelineLink();
+
+        return $response;
     }
 
     /**
@@ -422,7 +314,7 @@ class webpage extends Module
         
         // Replace the View Port Width?
         if (isset($_GET['preview']))
-            $template = str_replace('[[ViewPortWidth]]', $this->width, $template);
+            $template = str_replace('[[ViewPortWidth]]', $this->region->width, $template);
 
         // Get some parameters
         $width = Kit::GetParam('width', _REQUEST, _DOUBLE);
@@ -438,10 +330,10 @@ class webpage extends Module
 
         $options = array(
                 'modeId' => $this->GetOption('modeid'),
-                'originalWidth' => intval($this->width),
-                'originalHeight' => intval($this->height),
-                'iframeWidth' => intval(($iframeWidth == '' || $iframeWidth == 0) ? $this->width : $iframeWidth),
-                'iframeHeight' => intval(($iframeHeight == '' || $iframeHeight == 0) ? $this->height : $iframeHeight),
+                'originalWidth' => intval($this->region->width),
+                'originalHeight' => intval($this->region->height),
+                'iframeWidth' => intval(($iframeWidth == '' || $iframeWidth == 0) ? $this->region->width : $iframeWidth),
+                'iframeHeight' => intval(($iframeHeight == '' || $iframeHeight == 0) ? $this->region->height : $iframeHeight),
                 'previewWidth' => intval($width),
                 'previewHeight' => intval($height),
                 'offsetTop' => intval($this->GetOption('offsetTop', 0)),
@@ -479,7 +371,8 @@ class webpage extends Module
         return $template;
     }
 
-    public function IsValid() {
+    public function IsValid()
+    {
         // Can't be sure because the client does the rendering
         return 2;
     }

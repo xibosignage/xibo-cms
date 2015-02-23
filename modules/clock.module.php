@@ -220,8 +220,11 @@ class clock extends Module
         return $response;
     }
 
-    private function SetFieldDependencies(&$response) {
-
+    /**
+     * @param ResponseManager $response
+     */
+    private function SetFieldDependencies(&$response)
+    {
         $clockTypeId_1 = array(
                 '.analogue-control-group' => array('display' => 'block'),
                 '.digital-control-group' => array('display' => 'none'),
@@ -259,6 +262,8 @@ class clock extends Module
      */
     public function GetResource($displayId = 0)
     {
+        $template = null;
+
         // Clock Type
         switch ($this->GetOption('clockTypeId', 1)) {
 
@@ -291,11 +296,7 @@ class clock extends Module
                 $template = file_get_contents('modules/preview/HtmlTemplate.html');
 
                 // Extract the format from the raw node in the XLF
-                $rawXml = new DOMDocument();
-                $rawXml->loadXML($this->GetRaw());
-                $formatNodes = $rawXml->getElementsByTagName('format');
-                $formatNode = $formatNodes->item(0);
-                $format = $formatNode->nodeValue;
+                $format = $this->getRawNode('format', null);
 
                 // Strip out the bit between the [] brackets and use that as the format mask for moment.
                 $matches = '';
@@ -321,22 +322,23 @@ class clock extends Module
                 $javaScriptContent  = '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
                 $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'moment.js"></script>';
                 $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-layout-scaler.js"></script>';
-                $javaScriptContent .= '<script>
+                $javaScriptContent .= <<<END
+<script>
+    var options = ' . json_encode($options) . '
 
-                    var options = ' . json_encode($options) . '
+    function updateClock() {
+        $(".clock").each(function() {
+            $(this).html(moment().add(' . {$this->GetOption('offset', 0)} . ', "m").format($(this).attr("format")));
+        });
+    }
 
-                    function updateClock() {
-                        $(".clock").each(function() {
-                            $(this).html(moment().add(' . $this->GetOption('offset', 0) . ', "m").format($(this).attr("format")));
-                        });
-                    }
-
-                    $(document).ready(function() {
-                        updateClock();
-                        setInterval(updateClock, 1000);
-                        $("body").xiboLayoutScaler(options);
-                    });
-                </script>';
+    $(document).ready(function() {
+        updateClock();
+        setInterval(updateClock, 1000);
+        $("body").xiboLayoutScaler(options);
+    });
+</script>
+END;
 
                 // Replace the After body Content
                 $template = str_replace('<!--[[[JAVASCRIPTCONTENT]]]-->', $javaScriptContent, $template);

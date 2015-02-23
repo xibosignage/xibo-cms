@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2012 Daniel Garner
+ * Copyright (C) 2012-15 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -20,35 +20,16 @@
  */ 
 class localvideo extends Module
 {
-    public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '', $lkid = '')
-    {
-        // Must set the type of the class
-        $this->type = 'localvideo';
-
-        // Must call the parent class
-        parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);
-    }
-	
     /**
      * Return the Add Form as HTML
-     * @return
      */
     public function AddForm()
     {
-        $this->response = new ResponseManager();
-        $db =& $this->db;
-        $user =& $this->user;
+        $response = new ResponseManager();
 
-        // Would like to get the regions width / height
-        $layoutid = $this->layoutid;
-        $regionid = $this->regionid;
-        $rWidth = Kit::GetParam('rWidth', _REQUEST, _STRING);
-        $rHeight = Kit::GetParam('rHeight', _REQUEST, _STRING);
+        // Configure form
+        $this->configureForm('AddMedia');
 
-        Theme::Set('form_id', 'ModuleForm');
-        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=AddMedia');
-        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" />');
-        
         $formFields = array();
         
         $formFields[] = FormManager::AddText('uri', __('Video Path'), NULL, 
@@ -59,204 +40,110 @@ class localvideo extends Module
 
         Theme::Set('form_fields', $formFields);
 
-        if ($this->showRegionOptions)
-        {
-            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
-        }
-        else
-        {
-            $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        }
+        $response->html = Theme::RenderReturn('form_render');
+        $this->configureFormButtons($response);
+        $response->dialogTitle = __('Add Local Video');
 
-        $this->response->html = Theme::RenderReturn('form_render');
-        $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
-        $this->response->dialogTitle = __('Add Local Video');
-        $this->response->dialogSize 	= true;
-        $this->response->dialogWidth 	= '350px';
-        $this->response->dialogHeight 	= '250px';
-
-        return $this->response;
+        return $response;
     }
 	
     /**
      * Return the Edit Form as HTML
-     * @return
      */
     public function EditForm()
     {
-        $this->response = new ResponseManager();
-        $db =& $this->db;
+        $response = new ResponseManager();
 
-        $layoutid = $this->layoutid;
-        $regionid = $this->regionid;
-        $mediaid = $this->mediaid;
-
-        // Permissions
+        // Edit calls are the same as add calls, except you will to check the user has permissions to do the edit
         if (!$this->auth->edit)
-        {
-            $this->response->SetError('You do not have permission to edit this assignment.');
-            $this->response->keepOpen = true;
-            return $this->response;
-        }
+            throw new Exception(__('You do not have permission to edit this widget.'));
 
-        Theme::Set('form_id', 'ModuleForm');
-        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=EditMedia');
-        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" /><input type="hidden" id="mediaid" name="mediaid" value="' . $mediaid . '">');
-        
+        // Configure the form
+        $this->configureForm('EditMedia');
+
         $formFields = array();
         
         $formFields[] = FormManager::AddText('uri', __('Video Path'), urldecode($this->GetOption('uri')), 
             __('A local file path or URL to the video. This can be a RTSP stream.'), 'p', 'required');
 
-        $formFields[] = FormManager::AddNumber('duration', __('Duration'), $this->duration, 
+        $formFields[] = FormManager::AddNumber('duration', __('Duration'), $this->getDuration(),
             __('The duration in seconds this counter should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
 
         Theme::Set('form_fields', $formFields);
-		
-        if ($this->showRegionOptions)
-        {
-            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
-        }
-        else
-        {
-            $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        }
-        
-        $this->response->html = Theme::RenderReturn('form_render');
-        $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
-        $this->response->dialogTitle = __('Edit Local Video');
-        $this->response->dialogSize 	= true;
-        $this->response->dialogWidth 	= '350px';
-        $this->response->dialogHeight 	= '250px';
 
-        return $this->response;
+        $response->html = Theme::RenderReturn('form_render');
+        $this->configureFormButtons($response);
+        $response->dialogTitle = __('Edit Local Video');
+
+        return $response;
     }
 	
     /**
      * Add Media to the Database
-     * @return
      */
     public function AddMedia()
     {
-        $this->response = new ResponseManager();
-        $db =& $this->db;
+        $response = new ResponseManager();
 
-        $layoutid = $this->layoutid;
-        $regionid = $this->regionid;
-        $mediaid = $this->mediaid;
-
-        //Other properties
+        // Properties
         $uri = Kit::GetParam('uri', _POST, _URI);
         $duration = Kit::GetParam('duration', _POST, _INT, 0);
 
-        $url = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
-
-        // Validate the URL?
+        // Validate
         if ($uri == "")
-        {
-            $this->response->SetError(__('Please enter a full path name giving the location of this video on the client'));
-            $this->response->keepOpen = true;
-            return $this->response;
-        }
+            throw new InvalidArgumentException(__('Please enter a full path name giving the location of this video on the client'));
 
         if ($duration < 0)
-        {
-            $this->response->SetError('You must enter a duration.');
-            $this->response->keepOpen = true;
-            return $this->response;
-        }
-
-        // Required Attributes
-        $this->mediaid = md5(uniqid());
-        $this->duration = $duration;
+            throw new InvalidArgumentException(__('You must enter a duration.'));
 
         // Any Options
+        $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration()));
         $this->SetOption('uri', $uri);
 
-        // Should have built the media object entirely by this time
-        // This saves the Media Object to the Region
-        $this->UpdateRegion();
+        // Save the widget
+        $this->saveWidget();
 
-        //Set this as the session information
-        setSession('content', 'type', 'localvideo');
+        // Load an edit form
+        $response->loadForm = true;
+        $response->loadFormUri = $this->getTimelineLink();
 
-        if ($this->showRegionOptions)
-        {
-            // We want to load a new form
-            $this->response->loadForm = true;
-            $this->response->loadFormUri = $url;
-        }
-
-        return $this->response;
+        return $response;
     }
 	
     /**
      * Edit Media in the Database
-     * @return
      */
     public function EditMedia()
     {
-        $this->response = new ResponseManager();
-        $db =& $this->db;
-
-        $layoutid = $this->layoutid;
-        $regionid = $this->regionid;
-        $mediaid = $this->mediaid;
+        $response = new ResponseManager();
 
         if (!$this->auth->edit)
-        {
-            $this->response->SetError('You do not have permission to edit this assignment.');
-            $this->response->keepOpen = false;
-            return $this->response;
-        }
+            throw new Exception(__('You do not have permission to edit this widget.'));
 
-        //Other properties
+        // Other properties
         $uri = Kit::GetParam('uri', _POST, _URI);
 
-        // If we have permission to change it, then get the value from the form
-        if ($this->auth->modifyPermissions)
-            $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
-
-        $url = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
-
-        //Validate the URL?
+        // Validate
         if ($uri == "")
-        {
-            $this->response->SetError(__('Please enter a full path name giving the location of this video on the client'));
-            $this->response->keepOpen = true;
-            return $this->response;
-        }
-
-        if ($this->duration < 0)
-        {
-            $this->response->SetError('You must enter a duration.');
-            $this->response->keepOpen = true;
-            return $this->response;
-        }
+            throw new InvalidArgumentException(__('Please enter a full path name giving the location of this video on the client'));
 
         // Any Options
+        $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration()));
         $this->SetOption('uri', $uri);
 
-        // Should have built the media object entirely by this time
-        // This saves the Media Object to the Region
-        $this->UpdateRegion();
+        // Save the widget
+        $this->saveWidget();
 
-        //Set this as the session information
-        setSession('content', 'type', 'localvideo');
+        // Load an edit form
+        $response->loadForm = true;
+        $response->loadFormUri = $this->getTimelineLink();
 
-        if ($this->showRegionOptions)
-        {
-            // We want to load a new form
-            $this->response->loadForm = true;
-            $this->response->loadFormUri = $url;
-        }
-
-        return $this->response;
+        return $response;
     }
     
-    public function IsValid() {
+    public function IsValid()
+    {
         // Client dependant
         return 2;
     }
 }
-?>
