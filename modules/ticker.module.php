@@ -120,7 +120,6 @@ class ticker extends Module
     
     /**
      * Return the Edit Form as HTML
-     * @return 
      */
     public function EditForm()
     {
@@ -459,13 +458,8 @@ class ticker extends Module
     {
         $response = new ResponseManager();
 
-
         if (!$this->auth->edit)
-        {
-            $response->SetError('You do not have permission to edit this assignment.');
-            $response->keepOpen = false;
-            return $response;
-        }
+            throw new Exception(__('You do not have permission to edit this widget.'));
 
         $sourceId = $this->GetOption('sourceId', 1);
         
@@ -487,10 +481,6 @@ class ticker extends Module
         $lowerLimit = Kit::GetParam('lowerLimit', _POST, _INT);
         $filter = Kit::GetParam('filter', _POST, _STRINGSPECIAL);
         $ordering = Kit::GetParam('ordering', _POST, _STRING);
-        
-        // If we have permission to change it, then get the value from the form
-        if ($this->auth->modifyPermissions)
-            $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
         
         // Validation
         if ($text == '')
@@ -564,6 +554,8 @@ class ticker extends Module
         // Load form
         $response->loadForm = true;
         $response->loadFormUri = $this->getTimelineLink();
+
+        return $response;
     }
 
 	public function DeleteMedia()
@@ -630,7 +622,7 @@ class ticker extends Module
         $itemsPerPage = $this->GetOption('itemsPerPage', 0);
 
         // Get the text out of RAW
-        $text = $this->getRawNode('text', null);
+        $text = $this->getRawNode('template', null);
 
         // Get the CSS Node
         $css = $this->getRawNode('css', '');
@@ -757,7 +749,7 @@ class ticker extends Module
         $matches = '';
         preg_match_all('/\[.*?\]/', $text, $matches);
 
-        Debug::LogEntry('audit', 'Loading SimplePie to handle RSS parsing.' . urldecode($this->GetOption('uri')));
+        Debug::Audit('Loading SimplePie to handle RSS parsing.' . urldecode($this->GetOption('uri')) . '. Will substitute items with ' . $text);
         
         // Use SimplePie to get the feed
         include_once('3rdparty/simplepie/autoloader.php');

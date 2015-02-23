@@ -395,6 +395,8 @@ abstract class Module implements ModuleInterface
      */
     public function GetName()
     {
+        Debug::Audit('Media assigned: ' . count($this->widget->mediaIds));
+
         if (count($this->widget->mediaIds) > 0) {
             $media = new Media();
             $name = $media->getName($this->widget->mediaIds[0]);
@@ -442,7 +444,7 @@ abstract class Module implements ModuleInterface
         $widthPx = $width .'px';
         $heightPx = $height .'px';
 
-        return '<iframe scrolling="no" src="index.php?p=module&mod=' . $this->module->type . '&q=Exec&method=GetResource&raw=true&preview=true&scale_override=' . $scaleOverride . '&widgetId=' . $this->getWidgetId() . '&width=' . $width . '&height=' . $height . '" width="' . $widthPx . '" height="' . $heightPx . '" style="border:0;"></iframe>';
+        return '<iframe scrolling="no" src="index.php?p=module&mod=' . $this->module->type . '&q=Exec&method=GetResource&raw=true&preview=true&scale_override=' . $scaleOverride . '&regionId=' . $this->region->regionId . '&widgetId=' . $this->getWidgetId() . '&width=' . $width . '&height=' . $height . '" width="' . $widthPx . '" height="' . $heightPx . '" style="border:0;"></iframe>';
     }
 
     /**

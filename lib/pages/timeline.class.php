@@ -411,8 +411,6 @@ class timelineDAO extends baseDAO
             /* @var \Xibo\Entity\Widget $widget */
             $widget->load();
 
-            Debug::Audit('Loaded widget: ' . var_export($widget, true));
-
             // Otherwise, output a preview
             $module = \Xibo\Factory\ModuleFactory::createWithWidget($widget, $region);
 

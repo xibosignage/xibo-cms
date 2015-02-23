@@ -98,7 +98,7 @@ class Widget
     {
         try {
             $widgetOption = $this->getOption($option);
-            return $widgetOption->value;
+            return (($widgetOption->value) == '') ? $default : $widgetOption->value;
         }
         catch (NotFoundException $e) {
             return $default;

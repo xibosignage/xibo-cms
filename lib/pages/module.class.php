@@ -439,7 +439,14 @@ class moduleDAO extends baseDAO
      */
     public function Exec()
     {
-        Debug::Audit('Module Exec for ' . Kit::GetParam('mod', _REQUEST, _WORD) . ' with method ' . Kit::GetParam('method', _REQUEST, _WORD));
+        $requestedModule = Kit::GetParam('mod', _REQUEST, _WORD);
+        $requestedMethod = Kit::GetParam('method', _REQUEST, _WORD);
+
+        Debug::Audit('Module Exec for ' . $requestedModule  . ' with method ' . $requestedMethod);
+
+        // Validate that GetResource calls have a region
+        if ($requestedMethod == 'GetResource' && Kit::GetParam('regionId', _REQUEST, _INT) == 0)
+            die(__('Get Resource Call without a Region'));
 
         // Create a new module to handle this request
         $module = \Xibo\Factory\ModuleFactory::createForWidget(Kit::GetParam('mod', _REQUEST, _WORD), Kit::GetParam('widgetId', _REQUEST, _INT), $this->user->userid, Kit::GetParam('playlistId', _REQUEST, _INT), Kit::GetParam('regionId', _REQUEST, _INT));
