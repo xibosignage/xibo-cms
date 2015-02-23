@@ -936,7 +936,7 @@ class layoutDAO extends baseDAO
         $height = ($layout->height * $designerScale) . "px";
         
         // Background CSS
-        $backgroundCss = ($layout->backgroundImageId == 0) ? $layout->backgroundColor : 'url(\'index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $layout->backgroundImageId . '&width=' . $width . '&height=' . $height . '&dynamic&proportional=0\') top center no-repeat; background-color:' . $layout->backgroundColor;
+        $backgroundCss = ($layout->backgroundImageId == 0) ? $layout->backgroundColor : 'url(\'index.php?p=content&q=getFile&mediaid=' . $layout->backgroundImageId . '&width=' . $width . '&height=' . $height . '&dynamic&proportional=0\') top center no-repeat; background-color:' . $layout->backgroundColor;
 
         // Get all the regions and draw them on
         $regionHtml = '';

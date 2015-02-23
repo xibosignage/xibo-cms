@@ -89,11 +89,16 @@ class RegionFactory
      * Get by RegionId
      * @param int $regionId
      * @return Region
+     * @throws NotFoundException
      */
     public static function getByRegionId($regionId)
     {
         // Get a region by its ID
         $regions = RegionFactory::query(array(), array('regionId' => $regionId));
+
+        if (count($regions) < 0)
+            throw new NotFoundException(__('Region not found'));
+
         return $regions[0];
     }
 

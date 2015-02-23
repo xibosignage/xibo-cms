@@ -326,7 +326,7 @@ class contentDAO extends baseDAO {
 
         // Can this user view?
         $entries = $this->user->MediaList(null, array('mediaId' => $mediaId));
-        if (count($entries) < 0)
+        if (count($entries) <= 0)
             throw new Exception(__('You do not have permission to view this media.'));
 
         File::ReturnFile($entries[0]['storedas'], $entries[0]['filename']);

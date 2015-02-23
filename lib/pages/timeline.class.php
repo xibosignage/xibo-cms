@@ -366,84 +366,77 @@ class timelineDAO extends baseDAO
     }
 
     /**
-	 * Called by AJAX
-	 * @return 
+	 * Represents the Preview inside the Layout Designer
 	 */
 	public function RegionPreview()
 	{
-		$db 		=& $this->db;
-		$user 		=& $this->user;
-		
-		include_once("lib/data/region.data.class.php");
-		
-		//ajax request handler
+		// Response Manager
 		$response	= new ResponseManager();
 		
-		//Expect
-		$layoutid 	= Kit::GetParam('layoutid', _POST, _INT, 0);
-		$regionid 	= Kit::GetParam('regionid', _POST, _STRING);
+		// Keyed off the region id
+		$regionId = Kit::GetParam('regionid', _POST, _STRING);
 		
-		$seqGiven 	= Kit::GetParam('seq', _POST, _INT, 0);
-		$seq	 	= Kit::GetParam('seq', _POST, _INT, 0);
-		$width	 	= Kit::GetParam('width', _POST, _INT, 0);
-        $height     = Kit::GetParam('height', _POST, _INT, 0);
-		$scale_override = Kit::GetParam('scale_override', _POST, _DOUBLE, 0);
+		$seqGiven = Kit::GetParam('seq', _POST, _INT, 0);
+		$seq = Kit::GetParam('seq', _POST, _INT, 0);
+		$width = Kit::GetParam('width', _POST, _INT, 0);
+        $height = Kit::GetParam('height', _POST, _INT, 0);
+		$scaleOverride = Kit::GetParam('scale_override', _POST, _DOUBLE, 0);
 		
 		// The sequence will not be zero based, so adjust it
 		$seq--;
 		
-		// Get some region information
-		$return		= "";
-		$xml		= new DOMDocument("1.0");
-		$region 	= new region($db);
-		
-		if (!$xmlString = $region->GetLayoutXml($layoutid))
-		{
-            trigger_error($region->GetErrorMessage(), E_USER_ERROR);
-		}
-		
-		$xml->loadXML($xmlString);
-		
-		// This will be all the media nodes in the region provided
-		$xpath 		= new DOMXPath($xml);
-		$nodeList 	= $xpath->query("//region[@id='$regionid']/media");
-        $return = '';
-		
-		if ($nodeList->length == 0)
-		{
-			// No media to preview
-			$response->extra['text']  = __('Empty Region');
-			$response->html = '';
-			$response->Respond();
-		}
-		
-		$node = $nodeList->item($seq);
-			
-		// We have our node.
-		$type = (string) $node->getAttribute("type");
-		$mediaDurationText = (string) $node->getAttribute("duration");
-        $mediaid = (string) $node->getAttribute("id");
-        $lkId = (string) $node->getAttribute("lkid");
-
-        // Create a module to deal with this
+		// Load our region
         try {
-            $moduleObject = ModuleFactory::load($type, $layoutid, $regionid, $mediaid, $lkId, $this->db, $this->user);
+            $region = \Xibo\Factory\RegionFactory::getByRegionId($regionId);
+            $playlists = \Xibo\Factory\PlaylistFactory::getByRegionId($regionId);
+
+            // Get the first playlist we can find
+            // TODO: implement playlists
+            $playlist = $playlists[0];
+            /* @var \Xibo\Entity\Playlist $playlist */
+
+            // Use the playlist to get the widgets (softly)
+            $widgets = \Xibo\Factory\WidgetFactory::getByPlaylistId($playlist->playlistId);
+
+            // We want to load the widget in the given sequence
+            if (count($widgets) <= 0) {
+                // No media to preview
+                $response->extra['text']  = __('Empty Region');
+                $response->html = '';
+                $response->Respond();
+            }
+
+            // Select the widget at the required sequence
+            $widget = $widgets[$seq];
+            /* @var \Xibo\Entity\Widget $widget */
+            $widget->load();
+
+            Debug::Audit('Loaded widget: ' . var_export($widget, true));
+
+            // Otherwise, output a preview
+            $module = \Xibo\Factory\ModuleFactory::createWithWidget($widget, $region);
+
+            $return  = '<div class="regionPreviewOverlay"></div>';
+            $return .= $module->Preview($width, $height, $scaleOverride);
+
+            $response->html = $return;
+            $response->extra['type'] = $widget->type;
+            $response->extra['duration'] = $widget->duration;
+            $response->extra['number_items'] = count($widgets);
+            $response->extra['text'] = $seqGiven . ' / ' . count($widgets) . ' ' . $module->GetName() . ' lasting ' . $widget->duration . ' seconds';
+            $response->extra['current_item'] = $seqGiven;
+
+            $response->Respond();
         }
-        catch (Exception $e) {
-            trigger_error($e->getMessage(), E_USER_ERROR);
+        catch (\Xibo\Exception\NotFoundException $e) {
+            // Log it
+            Debug::Error($e->getMessage());
+
+            // No media to preview
+            $response->extra['text']  = __('Region cannot be found.');
+            $response->html = '';
+            $response->Respond();
         }
-
-        $return .= '<div class="regionPreviewOverlay"></div>';
-        $return .= $moduleObject->Preview($width, $height, $scale_override);
-
-		$response->html = $return;
-		$response->extra['type'] = $type;
-        $response->extra['duration'] = $mediaDurationText;
-        $response->extra['number_items'] = $nodeList->length;
-        $response->extra['text'] = $seqGiven . ' / ' . $nodeList->length . ' ' . $moduleObject->displayType . ' lasting ' . $mediaDurationText . ' seconds';
-        $response->extra['current_item'] = $seqGiven;
-
-        $response->Respond();
 	}
 
 	public function RegionPermissionsForm()
