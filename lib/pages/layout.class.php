@@ -485,11 +485,9 @@ class layoutDAO extends baseDAO
     
     /**
      * Shows the Layout Grid
-     * @return 
      */
     function LayoutGrid() 
     {
-        $db =& $this->db;
         $user =& $this->user;
         $response = new ResponseManager();
         
@@ -550,20 +548,21 @@ class layoutDAO extends baseDAO
         $rows = array();
 
         foreach ($layouts as $layout) {
+            /* @var \Xibo\Entity\Layout $layout */
             // Construct an object containing all the layouts, and pass to the theme
             $row = array();
 
-            $row['layoutid'] = $layout['layoutid'];
-            $row['layout'] = $layout['layout'];
-            $row['description'] = $layout['description'];
-            $row['tags'] = $layout['tags'];
-            $row['owner'] = $user->getNameFromID($layout['ownerid']);
-            $row['permissions'] = $this->GroupsForLayout($layout['layoutid']);
+            $row['layoutid'] = $layout->layoutId;
+            $row['layout'] = $layout->layout;
+            $row['description'] = $layout->description;
+            $row['tags'] = $layout->tags;
+            $row['owner'] = $user->getNameFromID($layout->ownerId);
+            $row['permissions'] = $this->groupsForLayout($layout->layoutId);
 
             $row['thumbnail'] = '';
 
-            if ($showThumbnail == 1 && $layout['backgroundImageId'] != 0)
-                $row['thumbnail'] = '<a class="img-replace" data-toggle="lightbox" data-type="image" data-img-src="index.php?p=content&q=getFile&mediaid=' . $layout['backgroundImageId'] . '&width=100&height=100&dynamic=true&thumb=true" href="index.php?p=content&q=getFile&mediaid=' . $layout['backgroundImageId'] . '"><i class="fa fa-file-image-o"></i></a>';
+            if ($showThumbnail == 1 && $layout->backgroundImageId != 0)
+                $row['thumbnail'] = '<a class="img-replace" data-toggle="lightbox" data-type="image" data-img-src="index.php?p=content&q=getFile&mediaid=' . $layout->backgroundImageId . '&width=100&height=100&dynamic=true&thumb=true" href="index.php?p=content&q=getFile&mediaid=' . $layout->backgroundImageId . '"><i class="fa fa-file-image-o"></i></a>';
 
             // Fix up the description
             if ($showDescriptionId == 1) {
@@ -574,7 +573,7 @@ class layoutDAO extends baseDAO
                 $row['description'] = strtok($row['description'], "\n");
             }
 
-            switch ($layout['status']) {
+            switch ($layout->status) {
 
                 case 1:
                     $row['status'] = 1;
@@ -597,7 +596,7 @@ class layoutDAO extends baseDAO
             }
 
             
-            $row['layout_form_edit_url'] = 'index.php?p=layout&q=displayForm&layoutid=' . $layout['layoutid'];
+            $row['layout_form_edit_url'] = 'index.php?p=layout&q=displayForm&layoutid=' . $layout->layoutId;
 
             // Add some buttons for this row
             if ($layout['edit']) {
@@ -605,7 +604,7 @@ class layoutDAO extends baseDAO
                 $row['buttons'][] = array(
                         'id' => 'layout_button_design',
                         'linkType' => '_self',
-                        'url' => 'index.php?p=layout&modify=true&layoutid=' . $layout['layoutid'],
+                        'url' => 'index.php?p=layout&modify=true&layoutid=' . $layout->layoutId,
                         'text' => __('Design')
                     );
             }
@@ -614,14 +613,14 @@ class layoutDAO extends baseDAO
             $row['buttons'][] = array(
                     'id' => 'layout_button_preview',
                     'linkType' => '_blank',
-                    'url' => 'index.php?p=preview&q=render&ajax=true&layoutid=' . $layout['layoutid'],
+                    'url' => 'index.php?p=preview&q=render&ajax=true&layoutid=' . $layout->layoutId,
                     'text' => __('Preview Layout')
                 );
 
             // Schedule Now
             $row['buttons'][] = array(
                     'id' => 'layout_button_schedulenow',
-                    'url' => 'index.php?p=schedule&q=ScheduleNowForm&CampaignID=' . $layout['campaignid'],
+                    'url' => 'index.php?p=schedule&q=ScheduleNowForm&CampaignID=' . $layout->campaignId,
                     'text' => __('Schedule Now')
                 );
 
@@ -633,27 +632,27 @@ class layoutDAO extends baseDAO
                 // Edit Button
                 $row['buttons'][] = array(
                         'id' => 'layout_button_edit',
-                        'url' => 'index.php?p=layout&q=EditForm&layoutid=' . $layout['layoutid'],
+                        'url' => 'index.php?p=layout&q=EditForm&layoutid=' . $layout->layoutId,
                         'text' => __('Edit')
                     );
 
                 // Copy Button
                 $row['buttons'][] = array(
                         'id' => 'layout_button_copy',
-                        'url' => 'index.php?p=layout&q=CopyForm&layoutid=' . $layout['layoutid'] . '&oldlayout=' . $layout['layout'],
+                        'url' => 'index.php?p=layout&q=CopyForm&layoutid=' . $layout->layoutId . '&oldlayout=' . $layout->layout,
                         'text' => __('Copy')
                     );
 
                 // Retire Button
                 $row['buttons'][] = array(
                         'id' => 'layout_button_retire',
-                        'url' => 'index.php?p=layout&q=RetireForm&layoutId=' . $layout['layoutid'],
+                        'url' => 'index.php?p=layout&q=RetireForm&layoutId=' . $layout->layoutId,
                         'text' => __('Retire'),
                         'multi-select' => true,
                         'dataAttributes' => array(
                             array('name' => 'multiselectlink', 'value' => 'index.php?p=layout&q=Retire'),
                             array('name' => 'rowtitle', 'value' => $row['layout']),
-                            array('name' => 'layoutid', 'value' => $layout['layoutid'])
+                            array('name' => 'layoutid', 'value' => $layout->layoutId)
                         )
                     );
 
@@ -662,13 +661,13 @@ class layoutDAO extends baseDAO
                     // Delete Button
                     $row['buttons'][] = array(
                             'id' => 'layout_button_delete',
-                            'url' => 'index.php?p=layout&q=DeleteLayoutForm&layoutId=' . $layout['layoutid'],
+                            'url' => 'index.php?p=layout&q=DeleteLayoutForm&layoutId=' . $layout->layoutId,
                             'text' => __('Delete'),
                             'multi-select' => true,
                             'dataAttributes' => array(
                                 array('name' => 'multiselectlink', 'value' => 'index.php?p=layout&q=delete'),
                                 array('name' => 'rowtitle', 'value' => $row['layout']),
-                                array('name' => 'layoutid', 'value' => $layout['layoutid'])
+                                array('name' => 'layoutid', 'value' => $layout->layoutId)
                             )
                         );
                 }
@@ -679,7 +678,7 @@ class layoutDAO extends baseDAO
                 $row['buttons'][] = array(
                         'id' => 'layout_button_export',
                         'linkType' => '_self',
-                        'url' => 'index.php?p=layout&q=Export&layoutid=' . $layout['layoutid'],
+                        'url' => 'index.php?p=layout&q=Export&layoutid=' . $layout->layoutId,
                         'text' => __('Export')
                     );
 
@@ -688,14 +687,14 @@ class layoutDAO extends baseDAO
                     // Permissions button
                     $row['buttons'][] = array(
                             'id' => 'layout_button_permissions',
-                            'url' => 'index.php?p=campaign&q=PermissionsForm&CampaignID=' . $layout['campaignid'],
+                            'url' => 'index.php?p=campaign&q=PermissionsForm&CampaignID=' . $layout->campaignId,
                             'text' => __('Permissions')
                         );
 
                     // Button to test loading by XML
                     $row['buttons'][] = array(
                             'id' => 'layout_button_xml',
-                            'url' => 'index.php?p=layout&q=ShowXlf&layoutId=' . $layout['layoutid'],
+                            'url' => 'index.php?p=layout&q=ShowXlf&layoutId=' . $layout->layoutId,
                             'text' => __('Show')
                         );
                 }
@@ -1087,20 +1086,26 @@ HTML;
      * @param int $layoutId
      * @return array
      */
-    private function GroupsForLayout($layoutId)
+    private function groupsForLayout($layoutId)
     {
         $campaign = new Campaign();
         $campaignId = $campaign->GetCampaignId($layoutId);
 
+        // Load permissions for the Campaign
+        $permissions = \Xibo\Factory\PermissionFactory::getByObjectId('Campaign', $campaignId);
+
+        if (count($permissions) <= 0)
+            return '';
+
+        $groupIds = array_map(function($object) { return /* @var \Xibo\Entity\Permission $object */ $object->groupId; }, $permissions);
+
         $SQL = '';
         $SQL .= 'SELECT `group`.Group ';
         $SQL .= '  FROM `group` ';
-        $SQL .= '   INNER JOIN lkcampaigngroup ';
-        $SQL .= '   ON `group`.GroupID = lkcampaigngroup.GroupID ';
-        $SQL .= ' WHERE lkcampaigngroup.CampaignID = :campaignId ';
+        $SQL .= ' WHERE groupId IN (' . implode(',', $groupIds) . ')';
 
         try {
-            $results = PDOConnect::select($SQL, array('campaignId' => $campaignId));
+            $results = PDOConnect::select($SQL, array());
 
             $groups = '';
 
@@ -1114,6 +1119,7 @@ HTML;
             return $groups;
         }
         catch (PDOException $e) {
+            Debug::Error($e->getMessage() . '. SQL = ' . $SQL);
             trigger_error(__('Unable to get group information for layout'), E_USER_ERROR);
         }
     }

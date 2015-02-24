@@ -22,6 +22,7 @@ namespace Xibo\Entity;
 
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\TagFactory;
 
@@ -48,6 +49,7 @@ class Layout
 
     public $regions;
     public $tags;
+    public $permissions;
 
     public function __construct()
     {
@@ -112,6 +114,9 @@ class Layout
      */
     public function load()
     {
+        // Load permissions
+        $this->permissions = PermissionFactory::getByObjectId(get_class(), $this->layoutId);
+
         // Load all regions
         $this->regions = RegionFactory::getByLayoutId($this->layoutId);
         foreach ($this->regions as $region) {
@@ -169,7 +174,11 @@ class Layout
 
         \Debug::Audit('Deleting ' . $this);
 
-        // TODO: Delete Permissions
+        // Delete Permissions
+        foreach ($this->permissions as $permission) {
+            /* @var Permission $permission */
+            $permission->deleteAll();
+        }
 
         // Unassign all Tags
         foreach ($this->tags as $tag) {

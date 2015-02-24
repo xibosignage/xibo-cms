@@ -23,6 +23,7 @@
 namespace Xibo\Entity;
 
 
+use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\WidgetFactory;
 
 class Playlist
@@ -35,6 +36,7 @@ class Playlist
 
     public $tags;
     public $widgets;
+    public $permissions;
 
     /**
      * The regions that this Playlist belongs to
@@ -97,6 +99,9 @@ class Playlist
      */
     public function load()
     {
+        // Load permissions
+        $this->permissions = PermissionFactory::getByObjectId(get_class(), $this->playlistId);
+
         $this->widgets = WidgetFactory::getByPlaylistId($this->playlistId);
 
         // Load the widgets
@@ -140,6 +145,12 @@ class Playlist
             $this->load();
 
         \Debug::Audit('Deleting ' . $this);
+
+        // Delete Permissions
+        foreach ($this->permissions as $permission) {
+            /* @var Permission $permission */
+            $permission->deleteAll();
+        }
 
         // Delete widgets
         foreach ($this->widgets as $widget) {

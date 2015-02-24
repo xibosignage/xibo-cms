@@ -23,6 +23,7 @@ namespace Xibo\Entity;
 
 
 use Xibo\Exception\NotFoundException;
+use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\RegionOptionFactory;
 
@@ -42,6 +43,7 @@ class Region
 
     public $playlists;
     public $regionOptions;
+    public $permissions;
 
     public function __construct()
     {
@@ -138,6 +140,9 @@ class Region
      */
     public function load()
     {
+        // Load permissions
+        $this->permissions = PermissionFactory::getByObjectId(get_class(), $this->regionId);
+
         // Load all playlists
         $this->playlists = PlaylistFactory::getByRegionId($this->regionId);
         foreach ($this->playlists as $playlist) {
@@ -192,6 +197,12 @@ class Region
             $this->load();
 
         \Debug::Audit('Deleting ' . $this);
+
+        // Delete Permissions
+        foreach ($this->permissions as $permission) {
+            /* @var Permission $permission */
+            $permission->deleteAll();
+        }
 
         // To delete a region we must delete all playlists
         foreach ($this->playlists as $playlist) {

@@ -23,6 +23,7 @@
 namespace Xibo\Entity;
 
 use Xibo\Exception\NotFoundException;
+use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\WidgetMediaFactory;
 use Xibo\Factory\WidgetOptionFactory;
 
@@ -40,6 +41,7 @@ class Widget
 
     // A widget might be linked to file based media
     public $mediaIds;
+    public $permissions;
 
     public function __construct()
     {
@@ -142,8 +144,14 @@ class Widget
         unset($this->mediaIds[$mediaId]);
     }
 
+    /**
+     * Load the Widget
+     */
     public function load()
     {
+        // Load permissions
+        $this->permissions = PermissionFactory::getByObjectId(get_class(), $this->widgetId);
+
         // Load the widget options
         $this->widgetOptions = WidgetOptionFactory::getByWidgetId($this->widgetId);
 
@@ -153,6 +161,9 @@ class Widget
         $this->hash = $this->hash();
     }
 
+    /**
+     * Save the widget
+     */
     public function save()
     {
         if ($this->widgetId == null || $this->widgetId == 0)
@@ -177,6 +188,12 @@ class Widget
         // We must ensure everything is loaded before we delete
         if ($this->hash() == null)
             $this->load();
+
+        // Delete Permissions
+        foreach ($this->permissions as $permission) {
+            /* @var Permission $permission */
+            $permission->deleteAll();
+        }
 
         // Delete all Options
         foreach ($this->widgetOptions as $widgetOption) {

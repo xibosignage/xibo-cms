@@ -942,55 +942,47 @@ class User {
     }
 
     /**
-     * Returns an array of layouts that this user has access to
+     * List of Layouts this user can see
+     * @param array $sort_order
+     * @param array $filter_by
+     * @return array[Layout]
+     * @throws \Xibo\Exception\NotFoundException
      */
-    public function LayoutList($sort_order = array('layout'), $filter_by = array()) {
-        
-        $layouts = Layout::Entries($sort_order, $filter_by);
-        $parsedLayouts = array();
+    public function LayoutList($sort_order = array('layout'), $filter_by = array())
+    {
+        // Get the Layouts
+        $layouts = \Xibo\Factory\LayoutFactory::query($sort_order, $filter_by);
 
-        foreach ($layouts as $row) {
-            $layoutItem = array();
+        if ($this->usertypeid == 1)
+            return $layouts;
 
-            // Validate each param and add it to the array.
-            $layoutItem['layoutid'] = $row->layoutId;
-            $layoutItem['layout']   = $row->layout;
-            $layoutItem['description'] = $row->description;
-            $layoutItem['tags'] = $row->tags;
-            $layoutItem['ownerid']  = $row->ownerId;
-            $layoutItem['xml']  = $row->xml;
-            $layoutItem['campaignid'] = $row->campaignId;
-            $layoutItem['retired'] = $row->retired;
-            $layoutItem['status'] = $row->status;
-            $layoutItem['backgroundImageId'] = $row->backgroundImageId;
-            $layoutItem['mediaownerid'] = $row->mediaOwnerId;
-            
-            // Details for media assignment
-            $layoutItem['regionid'] = $row->regionId;
-            $layoutItem['lklayoutmediaid'] = $row->lkLayoutMediaId;
+        // Get the layout permissions for this user
+        $permissions = \Xibo\Factory\PermissionFactory::getByGroupIds('layout', $this->GetUserGroups($this->userid, true));
 
-            // Authenticate the assignment (if not null already)
-            if ($layoutItem['lklayoutmediaid'] != 0) {
-                $assignmentAuth = $this->MediaAssignmentAuth($layoutItem['mediaownerid'], $layoutItem['layoutid'], $layoutItem['regionid'], Kit::GetParam('mediaId', $filter_by, _INT, 0), true);
+        foreach ($layouts as $key => $layout) {
+            /* @var \Xibo\Entity\Layout $layout */
 
-                // If we get here and the user does not have assess to this region assignment, don't add this row
-                if (!$assignmentAuth->del)
-                    continue;
+            // Check to see if we are the owner
+            if ($layout->ownerId == $this->userid)
+                continue;
+
+            // Check to see if our layout is in our list of permissions, we can check by ID
+            $found = false;
+            foreach ($permissions as $permission) {
+                /* @var \Xibo\Entity\Permission $permission */
+                if ($permission->objectId == $layout->layoutId) {
+                    $layout->permissions[] = $permission;
+                    $found = true;
+                    break;
+                }
             }
 
-            $auth = $this->CampaignAuth($layoutItem['campaignid'], true);
-
-            if ($auth->view) {
-                $layoutItem['view'] = (int) $auth->view;
-                $layoutItem['edit'] = (int) $auth->edit;
-                $layoutItem['del'] = (int) $auth->del;
-                $layoutItem['modifyPermissions'] = (int) $auth->modifyPermissions;
-                
-                $parsedLayouts[] = $layoutItem;
-            }
+            // If we haven't been able to find the item in the list of permissions, remove it
+            if (!$found)
+                unset($layouts[$key]);
         }
 
-        return $parsedLayouts;
+        return $layouts;
     }
 
     /**
