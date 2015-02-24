@@ -75,7 +75,7 @@ class ticker extends Module
         $formFields[] = FormManager::AddText('uri', __('Feed URL'), NULL, 
             __('The Link for the RSS feed'), 'f', '', 'feed-fields');
 
-        $datasets = $this->auth->getUser->DataSetList();
+        $datasets = $this->auth->getUser()->DataSetList();
         array_unshift($datasets, array('datasetid' => '0', 'dataset' => 'None'));
         Theme::Set('dataset_field_list', $datasets);
 

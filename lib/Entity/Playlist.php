@@ -58,6 +58,11 @@ class Playlist
         $this->widgets = array_map(function ($object) { return clone $object; }, $this->widgets);
     }
 
+    public function __toString()
+    {
+        return sprintf('Playlist %s. Widgets = %d. PlaylistId = %d', $this->name, count($this->widgets), $this->playlistId);
+    }
+
     private function hash()
     {
         return md5($this->playlistId . $this->ownerId . $this->name);
@@ -133,6 +138,8 @@ class Playlist
         // We must ensure everything is loaded before we delete
         if ($this->hash() == null)
             $this->load();
+
+        \Debug::Audit('Deleting ' . $this);
 
         // Delete widgets
         foreach ($this->widgets as $widget) {

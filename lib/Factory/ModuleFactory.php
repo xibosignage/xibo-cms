@@ -79,8 +79,11 @@ class ModuleFactory
         // Do we have a widgetId
         if ($widgetId == 0) {
             // If we don't have a widget we must have a playlist
-            if ($playlistId == 0)
-                throw new \InvalidArgumentException(__('Playlist not provided'));
+            if ($playlistId == 0) {
+                //throw new \InvalidArgumentException(__('Playlist not provided'));
+                // TODO: Implement Playlists
+                $playlistId = PlaylistFactory::getByRegionId($regionId)[0]->playlistId;
+            }
 
             // Create a new widget to use
             $module->setWidget(WidgetFactory::create($ownerId, $playlistId, $module->getModuleType(), 0));
@@ -126,6 +129,11 @@ class ModuleFactory
         return $modules;
     }
 
+    public static function getAssignableModules()
+    {
+        return ModuleFactory::query(null, array('assignable' => 1, 'enabled' => 1));
+    }
+
     /**
      * Get module by extension
      * @param string $extension
@@ -163,8 +171,11 @@ class ModuleFactory
         return $extensions;
     }
 
-    public static function query($sortOrder = array('Module'), $filterBy = array())
+    public static function query($sortOrder = null, $filterBy = array())
     {
+        if ($sortOrder == null)
+            $sortOrder = array('Module');
+
         $entries = array();
 
         try {
@@ -207,6 +218,11 @@ class ModuleFactory
             if (\Kit::GetParam('extension', $filterBy, _STRING) != '') {
                 $params['extension'] = '%' . \Kit::GetParam('extension', $filterBy, _STRING) . '%';
                 $SQL .= ' AND ValidExtensions LIKE :extension ';
+            }
+
+            if (\Kit::GetParam('id', $filterBy, _INT, -1) != -1) {
+                $SQL .= " AND assignable = :assignable ";
+                $params['assignable'] = \Kit::GetParam('id', $filterBy, _INT);
             }
 
             // Sorting?

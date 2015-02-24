@@ -909,7 +909,7 @@ class User {
 
         if (!$campaignId = $this->db->GetSingleValue(sprintf($SQL, $layoutId), 'CampaignID', _INT))
         {
-            trigger_error(__('Layout has no associated Campaign, corrupted Layout'));
+            trigger_error(__('Layout has no associated Campaign, corrupted Layout. ID=' . $layoutId));
 
             // New auth object is no permissions
             if ($fullObject)

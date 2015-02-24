@@ -22,19 +22,6 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
  
 class layoutDAO extends baseDAO 
 {
-    private $auth;
-    private $has_permissions = true;
-    
-    private $sub_page = "";
-    
-    private $layoutid;
-    private $layout;
-    private $retired;
-    private $description;
-    private $tags;
-    
-    private $xml;
-    
     /**
      * Layout Page Logic
      * @param database $db
@@ -251,6 +238,8 @@ class layoutDAO extends baseDAO
             // Save
             $layout->save();
 
+            // TODO: Set the default permissions on the regions
+
             // Successful layout creation
             $response->SetFormSubmitResponse(__('Layout Details Changed.'), true, sprintf("index.php?p=layout&layoutid=%d&modify=true", $layout->layoutId));
             $response->Respond();
@@ -384,20 +373,23 @@ class layoutDAO extends baseDAO
         $response->SetFormSubmitResponse(__('The Layout has been Upgraded'), true, 'index.php?p=layout&modify=true&layoutid=' . $layoutId);
         $response->Respond();
     }
-    
+
+    /**
+     * Delete Layout Form
+     */
     function DeleteLayoutForm() 
     {
-        $db =& $this->db;
         $response = new ResponseManager();
         
-        $layoutid = $this->layoutid;
+        $layoutId = Kit::GetParam('layoutId', _GET, _INT);
+        $auth = $this->user->LayoutAuth($layoutId, true);
 
-        if (!$this->auth->del)
+        if (!$auth->del)
             trigger_error(__('You do not have permissions to delete this layout'), E_USER_ERROR);
         
         Theme::Set('form_id', 'LayoutDeleteForm');
         Theme::Set('form_action', 'index.php?p=layout&q=delete');
-        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '">');
+        Theme::Set('form_meta', '<input type="hidden" name="layoutId" value="' . $layoutId . '">');
         Theme::Set('form_fields', array(
             FormManager::AddMessage(__('Are you sure you want to delete this layout?')),
             FormManager::AddMessage(__('All media will be unassigned and any layout specific media such as text/rss will be lost. The layout will be removed from all Schedules.')),
@@ -407,22 +399,27 @@ class layoutDAO extends baseDAO
         
         $response->SetFormRequestResponse($form, __('Delete Layout'), '300px', '200px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Layout', 'Delete') . '")');
-        $response->AddButton(__('Retire'), 'XiboSwapDialog("index.php?p=layout&q=RetireForm&layoutid=' . $layoutid . '")');
+        $response->AddButton(__('Retire'), 'XiboSwapDialog("index.php?p=layout&q=RetireForm&layoutid=' . $layoutId . '")');
         $response->AddButton(__('No'), 'XiboDialogClose()');
         $response->AddButton(__('Yes'), '$("#LayoutDeleteForm").submit()');
         $response->Respond();
     }
 
-    public function RetireForm() {
+    /**
+     * Retire Layout Form
+     */
+    public function RetireForm()
+    {
         $response = new ResponseManager();
-        
-        $layoutid = $this->layoutid;
 
-        if (!$this->auth->edit)
+        $layoutId = Kit::GetParam('layoutId', _GET, _INT);
+        $auth = $this->user->LayoutAuth($layoutId, true);
+
+        if (!$auth->del)
             trigger_error(__('You do not have permissions to retire this layout'), E_USER_ERROR);
         
         Theme::Set('form_id', 'RetireForm');
-        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '">');
+        Theme::Set('form_meta', '<input type="hidden" name="layoutId" value="' . $layoutId . '">');
         
         // Retire the layout
         Theme::Set('form_action', 'index.php?p=layout&q=Retire');
@@ -432,7 +429,7 @@ class layoutDAO extends baseDAO
         
         $response->SetFormRequestResponse($form, __('Retire Layout'), '300px', '200px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Layout', 'Retire') . '")');
-        $response->AddButton(__('Delete'), 'XiboSwapDialog("index.php?p=layout&q=DeleteLayoutForm&layoutid=' . $layoutid . '")');
+        $response->AddButton(__('Delete'), 'XiboSwapDialog("index.php?p=layout&q=DeleteLayoutForm&layoutid=' . $layoutId . '")');
         $response->AddButton(__('No'), 'XiboDialogClose()');
         $response->AddButton(__('Yes'), '$("#RetireForm").submit()');
         $response->Respond();
@@ -448,15 +445,16 @@ class layoutDAO extends baseDAO
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $response = new ResponseManager();
-        $layoutId = Kit::GetParam('layoutid', _POST, _INT, 0);
+        $layoutId = Kit::GetParam('layoutId', _POST, _INT);
+        $auth = $this->user->LayoutAuth($layoutId, true);
 
-        if (!$this->auth->del)
+        if (!$auth->del)
             trigger_error(__('You do not have permissions to delete this layout'), E_USER_ERROR);
 
-        $layoutObject = new Layout();
+        // TODO: Remove all Permissions
 
-        if (!$layoutObject->Delete($layoutId))
-            trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);
+        $layout = \Xibo\Factory\LayoutFactory::loadById($layoutId);
+        $layout->delete();
 
         $response->SetFormSubmitResponse(__('The Layout has been Deleted'));
         $response->Respond();
@@ -649,7 +647,7 @@ class layoutDAO extends baseDAO
                 // Retire Button
                 $row['buttons'][] = array(
                         'id' => 'layout_button_retire',
-                        'url' => 'index.php?p=layout&q=RetireForm&layoutid=' . $layout['layoutid'],
+                        'url' => 'index.php?p=layout&q=RetireForm&layoutId=' . $layout['layoutid'],
                         'text' => __('Retire'),
                         'multi-select' => true,
                         'dataAttributes' => array(
@@ -661,10 +659,10 @@ class layoutDAO extends baseDAO
 
                 // Extra buttons if have delete permissions
                 if ($layout['del']) {
-                    // Copy Button
+                    // Delete Button
                     $row['buttons'][] = array(
                             'id' => 'layout_button_delete',
-                            'url' => 'index.php?p=layout&q=DeleteLayoutForm&layoutid=' . $layout['layoutid'],
+                            'url' => 'index.php?p=layout&q=DeleteLayoutForm&layoutId=' . $layout['layoutid'],
                             'text' => __('Delete'),
                             'multi-select' => true,
                             'dataAttributes' => array(

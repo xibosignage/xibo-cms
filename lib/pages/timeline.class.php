@@ -334,7 +334,6 @@ class timelineDAO extends baseDAO
 	
     /**
      * Adds the media into the region provided
-     * @return
      */
     function AddFromLibrary()
     {
@@ -586,42 +585,42 @@ class timelineDAO extends baseDAO
         $response->Respond();
     }
 
-    private function ThemeSetModuleButtons($layoutId, $regionId) {
+    /**
+     * Set the Module Buttons for a Form
+     * @param int $regionId
+     */
+    private function setModuleButtons($regionId)
+    {
         // Present a canvas with 2 columns, left column for the media icons
         $buttons = array();
 
         // Always output a Library assignment button
         $buttons[] = array(
                 'id' => 'media_button_library',
-                'url' => 'index.php?p=content&q=LibraryAssignForm&layoutid=' . $layoutId . '&regionid=' . $regionId,
+                'url' => 'index.php?p=content&q=LibraryAssignForm&regionId=' . $regionId,
                 'text' => __('Library')
             );
 
         // Get a list of the enabled modules and then create buttons for them
-        if (!$enabledModules = new ModuleManager($this->user))
-            trigger_error($enabledModules->message, E_USER_ERROR);
+        foreach (\Xibo\Factory\ModuleFactory::getAssignableModules() as $module) {
+            /* @var \Xibo\Entity\Module $module */
+            $url = (($module->regionSpecific == 1) ? 'index.php?p=module&q=Exec&mod=' . $module->type . '&method=AddForm' : 'index.php?p=content&q=fileUploadForm') . '&regionId=' . $regionId;
 
-        // Loop through the buttons we have and output each one
-        while ($modulesItem = $enabledModules->GetNextModule())
-        {
-            $mod = Kit::ValidateParam($modulesItem['Module'], _STRING);
-            $caption = Kit::ValidateParam($modulesItem['Name'], _STRING);
-            $mod = strtolower($mod);
-            $title = Kit::ValidateParam($modulesItem['Description'], _STRING);
-            $img = Kit::ValidateParam($modulesItem['ImageUri'], _STRING);
-
-            
             $buttons[] = array(
-                'id' => 'media_button_' . $mod,
-                'url' => 'index.php?p=module&q=Exec&mod=' . $mod . '&method=AddForm&layoutid=' . $layoutId . '&regionid=' . $regionId,
-                'text' => __($caption)
+                'id' => 'media_button_' . $module->type,
+                'url' => $url,
+                'text' => __($module->name)
             );
         }
 
         Theme::Set('media_buttons', $buttons);
     }
 
-    public function TimeLine() {
+    /**
+     * Timeline Form
+     */
+    public function TimeLine()
+    {
         if ($this->user->GetPref('timeLineView') == 'grid')
             $this->TimeLineGrid();
         else
@@ -649,7 +648,7 @@ class timelineDAO extends baseDAO
         $response->html .= '<div class="container-fluid">';
         $response->html .= '<div class="row">';
         // Set the theme module buttons
-        $this->ThemeSetModuleButtons($region->layoutId, $region->regionId);
+        $this->setModuleButtons($region->regionId);
         $response->html .= Theme::RenderReturn('layout_designer_form_timeline');
 
         // Load the XML for this layout and region, we need to get the media nodes.
@@ -790,25 +789,20 @@ class timelineDAO extends baseDAO
      * Timeline in Grid mode
      */
     public function TimelineGrid() {
-        $user =& $this->user;
-        $user->SetPref('timeLineView', 'grid');
+        $this->user->SetPref('timeLineView', 'grid');
+
         $response = new ResponseManager();
         $response->html = '';
 
-        $layoutId = Kit::GetParam('layoutid', _GET, _INT);
-        $regionId = Kit::GetParam('regionid', _REQUEST, _STRING);
+        // Load the region and get the dimensions, applying the scale factor if necessary (only v1 layouts will have a scale factor != 1)
+        $region = \Xibo\Factory\RegionFactory::loadByRegionId(Kit::GetParam('regionid', _GET, _INT));
 
-        // Make sure we have permission to edit this region
-        Kit::ClassLoader('region');
-        $region = new Region();
-        $ownerId = $region->GetOwnerId($layoutId, $regionId);
-
-        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
+        $regionAuth = $this->user->RegionAssignmentAuth($region->ownerId, $region->layoutId, $region->regionId, true);
         if (!$regionAuth->edit)
             trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
 
         // Set the theme module buttons
-        $this->ThemeSetModuleButtons($layoutId, $regionId);
+        $this->setModuleButtons($region->regionId);
 
         $id = uniqid();
         Theme::Set('prepend', '<div class="row">' . Theme::RenderReturn('layout_designer_form_timeline') . '<div class="col-md-10">');
@@ -820,8 +814,7 @@ class timelineDAO extends baseDAO
         Theme::Set('pager', ResponseManager::Pager($id));
         Theme::Set('form_meta', '<input type="hidden" name="p" value="timeline">
             <input type="hidden" name="q" value="TimelineGridView">
-            <input type="hidden" name="layoutid" value="' . $layoutId . '">
-            <input type="hidden" name="regionid" value="' . $regionId . '">');
+            <input type="hidden" name="regionid" value="' . $region->regionId . '">');
         
         // Call to render the template
         $response->html = Theme::RenderReturn('grid_render');
@@ -835,32 +828,28 @@ class timelineDAO extends baseDAO
         $response->focusInFirstInput = false;
 
         // Add some buttons
-        $response->AddButton(__('Switch to List'), 'XiboSwapDialog("index.php?p=timeline&q=TimelineList&layoutid=' . $layoutId . '&regionid=' . $regionId . '")');
+        $response->AddButton(__('Switch to List'), 'XiboSwapDialog("index.php?p=timeline&q=TimelineList&regionid=' . $region->regionId . '")');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Layout', 'RegionOptions') . '")');
         $response->AddButton(__('Close'), 'XiboDialogClose()');
         $response->Respond();
     }
 
-    public function TimelineGridView() {
-
+    /**
+     * TimeLine Grid
+     */
+    public function TimelineGridView()
+    {
         $user =& $this->user;
         $response = new ResponseManager();
-        
-        $layoutId = Kit::GetParam('layoutid', _POST, _INT);
-        $regionId = Kit::GetParam('regionid', _POST, _STRING);
 
-        // Make sure we have permission to edit this region
-        Kit::ClassLoader('region');
-        $region = new Region();
-        $ownerId = $region->GetOwnerId($layoutId, $regionId);
+        // Load the region and get the dimensions, applying the scale factor if necessary (only v1 layouts will have a scale factor != 1)
+        $region = \Xibo\Factory\RegionFactory::loadByRegionId(Kit::GetParam('regionid', _POST, _INT));
 
-        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
+        $regionAuth = $this->user->RegionAssignmentAuth($region->ownerId, $region->layoutId, $region->regionId, true);
         if (!$regionAuth->edit)
             trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
 
-        // Load the XML for this layout and region, we need to get the media nodes.
-        $region = new Region();
-
+        // Columns
         $cols = array(
                 array('name' => 'order', 'title' => __('Order')),
                 array('name' => 'name', 'title' => __('Name')),
@@ -873,40 +862,49 @@ class timelineDAO extends baseDAO
         $rows = array();
         $i = 0;
 
-        foreach($region->GetMediaNodeList($layoutId, $regionId) as $mediaNode) {
-            // Construct an object containing all the layouts, and pass to the theme
-            $row = array();
+        // Get the Widgets on this Timeline
+        // TODO: Playlist logic
+        $playlist = $region->playlists[0];
+        /* @var \Xibo\Entity\Playlist $playlist */
 
+        Debug::Audit(count($playlist->widgets) . ' widgets on ' . $region);
+
+        foreach($playlist->widgets as $widget) {
+            /* @var \Xibo\Entity\Widget $widget */
             // Put this node vertically in the region time line
-            $mediaId = $mediaNode->getAttribute('id');
-            $lkId = $mediaNode->getAttribute('lkid');
-            $mediaType = $mediaNode->getAttribute('type');
-            $mediaDuration = $mediaNode->getAttribute('duration');
-            $ownerId = $mediaNode->getAttribute('userId');
-
-            // Permissions for this assignment
-            $auth = $user->MediaAssignmentAuth($ownerId, $layoutId, $regionId, $mediaId, true);
+            // TODO: Permissions for this assignment
+            $auth = $user->MediaAssignmentAuth($widget->ownerId, $region->layoutId, $region->regionId, $widget->widgetId, true);
 
             // Skip over media assignments that we do not have permission to see
             if (!$auth->view)
                 continue;
 
+            // Construct an object containing all the layouts, and pass to the theme
+            $row = array();
+
             $i++;
 
             // Create a media module to handle all the complex stuff
-            $tmpModule = ModuleFactory::load($mediaType, $layoutId, $regionId, $mediaId, $lkId, $this->db, $this->user);
+            $tmpModule = null;
+            try {
+                $tmpModule = \Xibo\Factory\ModuleFactory::createWithWidget($widget, $region);
+            }
+            catch (Exception $e) {
+                trigger_error($e->getMessage(), E_USER_ERROR);
+            }
 
             $mediaName = $tmpModule->GetName();
+
             $row['order'] = $i;
-            $row['name'] = (($mediaName == '') ? __($tmpModule->displayType) : $mediaName);
-            $row['type'] = __($tmpModule->displayType);
-            $row['duration'] = sprintf('%d seconds', $mediaDuration);
+            $row['name'] = $mediaName;
+            $row['type'] = __($tmpModule->getModuleName());
+            $row['duration'] = sprintf('%d seconds', $widget->duration);
             $row['transition'] = sprintf('%s / %s', $tmpModule->GetTransition('in'), $tmpModule->GetTransition('out'));
 
             if ($auth->edit) {
                 $row['buttons'][] = array(
                         'id' => 'timeline_button_edit',
-                        'url' => 'index.php?p=module&mod=' . $mediaType . '&q=Exec&method=EditForm&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '"',
+                        'url' => 'index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=EditForm&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '"',
                         'text' => __('Edit')
                     );
             }
@@ -914,16 +912,14 @@ class timelineDAO extends baseDAO
             if ($auth->del) {
                 $row['buttons'][] = array(
                         'id' => 'timeline_button_delete',
-                        'url' => 'index.php?p=module&mod=' . $mediaType . '&q=Exec&method=DeleteForm&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '"',
+                        'url' => 'index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=DeleteForm&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '"',
                         'text' => __('Remove'),
                         'multi-select' => true,
                         'dataAttributes' => array(
-                            array('name' => 'multiselectlink', 'value' => 'index.php?p=module&mod=' . $mediaType . '&q=Exec&method=DeleteMedia'),
+                            array('name' => 'multiselectlink', 'value' => 'index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=DeleteMedia'),
                             array('name' => 'rowtitle', 'value' => $row['name']),
-                            array('name' => 'layoutid', 'value' => $layoutId),
-                            array('name' => 'regionid', 'value' => $regionId),
-                            array('name' => 'mediaid', 'value' => $mediaId),
-                            array('name' => 'lkid', 'value' => $lkId),
+                            array('name' => 'regionid', 'value' => $region->regionId),
+                            array('name' => 'lkid', 'value' => $widget->widgetId),
                             array('name' => 'options', 'value' => 'unassign')
                         )
                     );
@@ -932,7 +928,7 @@ class timelineDAO extends baseDAO
             if ($auth->modifyPermissions) {
                 $row['buttons'][] = array(
                         'id' => 'timeline_button_permissions',
-                        'url' => 'index.php?p=module&mod=' . $mediaType . '&q=Exec&method=PermissionsForm&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '"',
+                        'url' => 'index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=PermissionsForm&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '"',
                         'text' => __('Permissions')
                     );
             }
@@ -940,7 +936,7 @@ class timelineDAO extends baseDAO
             if (count($this->user->TransitionAuth('in')) > 0) {
                 $row['buttons'][] = array(
                         'id' => 'timeline_button_trans_in',
-                        'url' => 'index.php?p=module&mod=' . $mediaType . '&q=Exec&method=TransitionEditForm&type=in&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '"',
+                        'url' => 'index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=TransitionEditForm&type=in&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '"',
                         'text' => __('In Transition')
                     );
             }
@@ -948,7 +944,7 @@ class timelineDAO extends baseDAO
             if (count($this->user->TransitionAuth('out')) > 0) {
                 $row['buttons'][] = array(
                         'id' => 'timeline_button_trans_in',
-                        'url' => 'index.php?p=module&mod=' . $mediaType . '&q=Exec&method=TransitionEditForm&type=out&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '"',
+                        'url' => 'index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=TransitionEditForm&type=out&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '"',
                         'text' => __('Out Transition')
                     );
             }
@@ -970,7 +966,6 @@ class timelineDAO extends baseDAO
 
     /**
      * Re-orders a medias regions
-     * @return
      */
     function TimelineReorder()
     {
@@ -1022,4 +1017,3 @@ class timelineDAO extends baseDAO
         $response->Respond();
     }
 }
-?>

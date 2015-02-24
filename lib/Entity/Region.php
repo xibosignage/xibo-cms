@@ -191,6 +191,8 @@ class Region
         if ($this->hash() == null)
             $this->load();
 
+        \Debug::Audit('Deleting ' . $this);
+
         // To delete a region we must delete all playlists
         foreach ($this->playlists as $playlist) {
             /* @var Playlist $playlist */

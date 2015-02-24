@@ -194,6 +194,15 @@ abstract class Module implements ModuleInterface
     }
 
     /**
+     * Get the Module Name
+     * @return string
+     */
+    final public function getModuleName()
+    {
+        return $this->module->name;
+    }
+
+    /**
      * Get the duration
      * @return int
      */

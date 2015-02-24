@@ -66,6 +66,11 @@ class Layout
         $this->regions = array_map(function ($object) { return clone $object; }, $this->regions);
     }
 
+    public function __toString()
+    {
+        return sprintf('Layout %s - %d x %d. Regions = %d, Tags = %d. layoutId = %d', $this->layout, $this->width, $this->height, count($this->regions), count($this->tags), $this->layoutId);
+    }
+
     private function hash()
     {
         return md5($this->layoutId . $this->ownerId . $this->campaignId . $this->backgroundImageId . $this->backgroundColor . $this->width . $this->height . $this->status);
@@ -152,13 +157,47 @@ class Layout
         }
     }
 
+    /**
+     * Delete Layout
+     * @throws \Exception
+     */
     public function delete()
     {
-        // TODO: Delete the Layout
         // We must ensure everything is loaded before we delete
         if ($this->hash() == null)
             $this->load();
 
+        \Debug::Audit('Deleting ' . $this);
+
+        // TODO: Delete Permissions
+
+        // Unassign all Tags
+        foreach ($this->tags as $tag) {
+            /* @var Tag $tag */
+
+            $tag->assignLayout($this->layoutId);
+            $tag->removeAssignments();
+        }
+
+        // Delete Regions
+        foreach ($this->regions as $region) {
+            /* @var Region $region */
+
+            // Assert the Layout Id
+            $region->layoutId = $this->layoutId;
+            $region->delete();
+        }
+
+        // Delete Campaign
+        $campaign = new \Campaign();
+        if (!$campaign->Delete($this->campaignId))
+            throw new \Exception(__('Problem deleting Campaign'));
+
+        // Remove the Layout from any display defaults
+        \PDOConnect::update('UPDATE `display` SET defaultlayoutid = 4 WHERE defaultlayoutid = :layoutid', array('layoutid' => $this->layoutId));
+
+        // Remove the Layout (now it is orphaned it can be deleted safely)
+        \PDOConnect::update('DELETE FROM layout WHERE layoutid = :layoutid', array('layoutid' => $this->layoutId));
     }
 
     public function validate()
@@ -241,8 +280,6 @@ class Layout
 
         // Link them
         $campaign->Link($this->campaignId, $this->layoutId, 0);
-
-        // TODO: Set the default permissions on the regions
     }
 
     /**
@@ -272,6 +309,8 @@ WHERE layoutID = :layoutid';
             'backgroundzIndex' => $this->backgroundzIndex,
         ));
 
-        // TODO: Update the Campaign
+        // Update the Campaign
+        $campaign = new \Campaign();
+        $campaign->Edit($this->campaignId, $this->layout);
     }
 }
