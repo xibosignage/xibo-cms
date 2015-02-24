@@ -37,16 +37,23 @@ var text_callback = function(dialog)
     // Conjure up a text editor
     CKEDITOR.replace("ta_text");
     
-    CKEDITOR.instances["ta_text"].on('instanceReady', function() {
+    CKEDITOR.instances["ta_text"].on('instanceReady', function(activeInstance) {
         var scale = $('#layout').attr('designer_scale');
 
-        $("#cke_ta_text .cke_contents").css({
-            background: $('#layout').css('background-color')
+        // Set something sensible based on the color of the layout background and get the current background color
+        var color = $c.complement($("#layout").data().backgroundColor);
+        var bg = $("#layout").data().backgroundColor;
+
+        // Apply styles on the active editor instance
+        activeInstance.editor.document.getBody().setStyle('color', color);
+        activeInstance.editor.document.getBody().setStyle('background', bg);
+
+        // Reapply styles after changing to source view and back to normal view
+        activeInstance.editor.on('contentDom', function() {
+            activeInstance.editor.document.getBody().setStyle('background', bg);
+            activeInstance.editor.document.getBody().setStyle('color', color);
         });
-        
-        $("#cke_ta_text iframe").css({
-            "background": "transparent"
-        });
+
     });
 
     // Make sure when we close the dialog we also destroy the editor
