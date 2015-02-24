@@ -643,7 +643,7 @@ class Twitter extends Module
                     'Content-Length: 29'
                 ),
             CURLOPT_USERAGENT => 'Xibo Twitter Module',
-            CURLOPT_HEADER => true,
+            CURLOPT_HEADER => false,
             CURLINFO_HEADER_OUT => true,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POST => true,
@@ -676,24 +676,18 @@ class Twitter extends Module
         $outHeaders = curl_getinfo($curl);
 
         if ($outHeaders['http_code'] != 200) {
-            Debug::Error('Twitter API returned ' . $result . ' status. Unable to proceed.');
-
-            // Parse out header and body
-            list($header, $body) = explode("\r\n\r\n", $result, 2);
+            Debug::Error('Twitter API returned ' . $result . ' status. Unable to proceed. Headers = ' . var_export($outHeaders, true));
 
             // See if we can parse the error.
-            $body = json_decode($body);
+            $body = json_decode($result);
 
             Debug::Error('Twitter Error: ' . ((isset($body->errors[0])) ? $body->errors[0]->message : 'Unknown Error'));
 
             return false;
         }
 
-        // Parse out header and body
-        list($header, $body) = explode("\r\n\r\n", $result, 2);
-
         // See if we can parse the body as JSON.
-        $body = json_decode($body);
+        $body = json_decode($result);
 
         // We have a 200 - therefore we want to think about caching the bearer token
         // First, lets check its a bearer token
@@ -730,11 +724,20 @@ class Twitter extends Module
                     'Authorization: Bearer ' . $token
                 ),
             CURLOPT_USERAGENT => 'Xibo Twitter Module',
-            CURLOPT_HEADER => true,
+            CURLOPT_HEADER => false,
             CURLINFO_HEADER_OUT => true,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_URL => $url . $queryString,
         );
+
+        // Proxy support
+        if (Config::GetSetting('PROXY_HOST') != '') {
+            $httpOptions[CURLOPT_PROXY] = Config::GetSetting('PROXY_HOST');
+            $httpOptions[CURLOPT_PROXYPORT] = Config::GetSetting('PROXY_PORT');
+
+            if (Config::GetSetting('PROXY_AUTH') != '')
+                $httpOptions[CURLOPT_PROXYUSERPWD] = Config::GetSetting('PROXY_AUTH');
+        }
 
         Debug::Audit('Calling API with: ' . $url . $queryString);
 
@@ -751,13 +754,10 @@ class Twitter extends Module
             return false;
         }
         else if ($outHeaders['http_code'] != 200) {
-            Debug::Error('Twitter API returned ' . $outHeaders['http_code'] . ' status. Unable to proceed.');
-
-            // Parse out header and body
-            list($header, $body) = explode("\r\n\r\n", $result, 2);
+            Debug::Error('Twitter API returned ' . $outHeaders['http_code'] . ' status. Unable to proceed. Headers = ' . var_export($outHeaders, true));
 
             // See if we can parse the error.
-            $body = json_decode($body);
+            $body = json_decode($result);
 
             Debug::Error('Twitter Error: ' . ((isset($body->errors[0])) ? $body->errors[0]->message : 'Unknown Error'));
 
@@ -765,9 +765,7 @@ class Twitter extends Module
         }
 
         // Parse out header and body
-        list($header, $body) = explode("\r\n\r\n", $result, 2);
-
-        $body = json_decode($body);
+        $body = json_decode($result);
 
         return $body;
     }
