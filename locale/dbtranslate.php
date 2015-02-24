@@ -124,7 +124,7 @@ echo __('Maintenance Alerts for Users');
 echo __('Email maintenance alerts for users with view permissions to effected Displays.');
 echo __('Set the level of logging the CMS should record. In production systems "error" is recommended.');
 echo __('Which Calendar Type should the CMS use?');
-echo __('Default Delete Old Version of media');
+echo __('Default for "Delete old version of Media" checkbox. Showen when Editing Library Media.');
 
 // Transitions
 echo __('Fade In');
