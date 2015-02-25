@@ -30,7 +30,7 @@ abstract class Module implements ModuleInterface
     /**
      * @var \Xibo\Entity\Widget $widget Widget
      */
-    private $widget;
+    public $widget;
 
     /**
      * @var PermissionManager $auth Widget Permissions
@@ -54,15 +54,6 @@ abstract class Module implements ModuleInterface
     final public function setWidget($widget)
     {
         $this->widget = $widget;
-    }
-
-    /**
-     * Set Widget Permissions
-     * @param PermissionManager $auth
-     */
-    final public function setPermissions($auth)
-    {
-        $this->auth = $auth;
     }
 
     /**

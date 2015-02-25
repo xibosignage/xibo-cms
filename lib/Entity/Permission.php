@@ -29,17 +29,39 @@ class Permission
     public $entityId;
     public $groupId;
     public $objectId;
+    public $isUser;
 
     public $entity;
     public $objectIdString;
+    public $group;
 
     public $view;
     public $edit;
     public $delete;
 
-    public function add()
+    public function save()
     {
-        \PDOConnect::insert('INSERT INTO `permission` (`entityId`, `groupId`, `objectId`, `view, `edit`, `delete`) VALUES (:entityId, :groupId, :objectId, :view, :edit, :delete)', array(
+        if ($this->permissionId == null || $this->permissionId == 0)
+            $this->add();
+        else
+            $this->update();
+    }
+
+    private function add()
+    {
+        $this->permissionId = \PDOConnect::insert('INSERT INTO `permission` (`entityId`, `groupId`, `objectId`, `view`, `edit`, `delete`) VALUES (:entityId, :groupId, :objectId, :view, :edit, :delete)', array(
+            'entityId' => $this->entityId,
+            'objectId' => $this->objectId,
+            'groupId' => $this->groupId,
+            'view' => $this->view,
+            'edit' => $this->edit,
+            'delete' => $this->delete,
+        ));
+    }
+
+    private function update()
+    {
+        \PDOConnect::update('UPDATE `permission` SET `view` = :view, `edit` = :edit, `delete` = :delete WHERE `entityId` = :entityId AND `groupId` = :groupId AND `objectId` = :objectId', array(
             'entityId' => $this->entityId,
             'objectId' => $this->objectId,
             'groupId' => $this->groupId,

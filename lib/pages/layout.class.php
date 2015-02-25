@@ -687,15 +687,8 @@ class layoutDAO extends baseDAO
                     // Permissions button
                     $row['buttons'][] = array(
                             'id' => 'layout_button_permissions',
-                            'url' => 'index.php?p=campaign&q=PermissionsForm&CampaignID=' . $layout->campaignId,
+                            'url' => 'index.php?p=user&q=permissionsForm&entity=Campaign&objectId=' . $layout->campaignId,
                             'text' => __('Permissions')
-                        );
-
-                    // Button to test loading by XML
-                    $row['buttons'][] = array(
-                            'id' => 'layout_button_xml',
-                            'url' => 'index.php?p=layout&q=ShowXlf&layoutId=' . $layout->layoutId,
-                            'text' => __('Show')
                         );
                 }
             }
@@ -1092,7 +1085,7 @@ HTML;
         $campaignId = $campaign->GetCampaignId($layoutId);
 
         // Load permissions for the Campaign
-        $permissions = \Xibo\Factory\PermissionFactory::getByObjectId('Campaign', $campaignId);
+        $permissions = \Xibo\Factory\PermissionFactory::getByObjectId('Xibo\Entity\Campaign', $campaignId);
 
         if (count($permissions) <= 0)
             return '';

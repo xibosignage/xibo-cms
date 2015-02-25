@@ -84,7 +84,7 @@ class Layout
      */
     public function getId()
     {
-        return $this->layoutId;
+        return $this->campaignId;
     }
 
     /**
@@ -133,7 +133,7 @@ class Layout
     public function load()
     {
         // Load permissions
-        $this->permissions = PermissionFactory::getByObjectId(get_class(), $this->layoutId);
+        $this->permissions = PermissionFactory::getByObjectId('campaign', $this->campaignId);
 
         // Load all regions
         $this->regions = RegionFactory::getByLayoutId($this->layoutId);
