@@ -27,6 +27,12 @@ class User {
     public $usertypeid;
     public $userName;
     public $homePage;
+
+    /**
+     * Cached Permissions
+     * @var array[Permission]
+     */
+    private $permissionCache = array();
     
     public function __construct(database $db = NULL)
     {
@@ -589,6 +595,128 @@ class User {
         
         return $theMenu;
     }
+
+    /**
+     * Load permissions for a particular entity
+     * @param string $entity
+     * @return array[Permission]
+     */
+    private function loadPermissions($entity)
+    {
+        // Check our cache to see if we have permissions for this entity cached already
+        if (!isset($this->permissionCache[$entity])) {
+
+            // Store the results in the cache (defualt to empty result)
+            $this->permissionCache[$entity] = array();
+
+            // Turn it into a ID keyed array
+            foreach (\Xibo\Factory\PermissionFactory::getByUserId($entity, $this->userid) as $permission) {
+                /* @var \Xibo\Entity\Permission $permission */
+                $this->permissionCache[$entity][$permission->objectId] = $permission;
+            }
+        }
+
+        return $this->permissionCache[$entity];
+    }
+
+    /**
+     * Check that this object can be used with the permissions sytem
+     * @param object $object
+     */
+    private function checkObjectCompatibility($object)
+    {
+        if (!method_exists($object, 'getId') || !method_exists($object, 'getOwnerId'))
+            throw new InvalidArgumentException(__('Provided Object not under permission management'));
+    }
+
+    /**
+     * Check the given object is viewable
+     * @param object $object
+     * @return bool
+     */
+    public function checkViewable($object)
+    {
+        // Check that this object has the necessary methods
+        $this->checkObjectCompatibility($object);
+
+        // Admin users
+        if ($this->usertypeid == 1 || $this->userid == $object->getOwnerId())
+            return true;
+
+        // Get the permissions for that entity
+        $permissions = $this->loadPermissions(get_class($object));
+
+        // Check to see if our object is in the list
+        if (array_key_exists($object->getId(), $permissions))
+            return ($permissions[$object->getId()]->view == 1);
+        else
+            return false;
+    }
+
+    /**
+     * Check the given object is editable
+     * @param object $object
+     * @return bool
+     */
+    public function checkEditable($object)
+    {
+        // Check that this object has the necessary methods
+        $this->checkObjectCompatibility($object);
+
+        // Admin users
+        if ($this->usertypeid == 1 || $this->userid == $object->getOwnerId())
+            return true;
+
+        // Get the permissions for that entity
+        $permissions = $this->loadPermissions(get_class($object));
+
+        // Check to see if our object is in the list
+        if (array_key_exists($object->getId(), $permissions))
+            return ($permissions[$object->getId()]->edit == 1);
+        else
+            return false;
+    }
+
+    /**
+     * Check the given object is delete-able
+     * @param object $object
+     * @return bool
+     */
+    public function checkDeleteable($object)
+    {
+        // Check that this object has the necessary methods
+        $this->checkObjectCompatibility($object);
+
+        // Admin users
+        if ($this->usertypeid == 1 || $this->userid == $object->getOwnerId())
+            return true;
+
+        // Get the permissions for that entity
+        $permissions = $this->loadPermissions(get_class($object));
+
+        // Check to see if our object is in the list
+        if (array_key_exists($object->getId(), $permissions))
+            return ($permissions[$object->getId()]->delete == 1);
+        else
+            return false;
+    }
+
+    /**
+     * Check the given objects permissions are modify-able
+     * @param object $object
+     * @return bool
+     */
+    public function checkPermissionsModifyable($object)
+    {
+        // Check that this object has the necessary methods
+        $this->checkObjectCompatibility($object);
+
+        // Admin users
+        if ($this->usertypeid == 1 || $this->userid == $object->getOwnerId())
+            return true;
+        else
+            return false;
+    }
     
     /**
      * Authenticates this user against the given module
@@ -956,9 +1084,6 @@ class User {
         if ($this->usertypeid == 1)
             return $layouts;
 
-        // Get the layout permissions for this user
-        $permissions = \Xibo\Factory\PermissionFactory::getByGroupIds('layout', $this->GetUserGroups($this->userid, true));
-
         foreach ($layouts as $key => $layout) {
             /* @var \Xibo\Entity\Layout $layout */
 
@@ -966,19 +1091,8 @@ class User {
             if ($layout->ownerId == $this->userid)
                 continue;
 
-            // Check to see if our layout is in our list of permissions, we can check by ID
-            $found = false;
-            foreach ($permissions as $permission) {
-                /* @var \Xibo\Entity\Permission $permission */
-                if ($permission->objectId == $layout->layoutId) {
-                    $layout->permissions[] = $permission;
-                    $found = true;
-                    break;
-                }
-            }
-
-            // If we haven't been able to find the item in the list of permissions, remove it
-            if (!$found)
+            // Check we are viewable
+            if (!$this->checkViewable($layout))
                 unset($layouts[$key]);
         }
 

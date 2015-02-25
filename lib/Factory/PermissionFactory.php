@@ -56,30 +56,42 @@ class PermissionFactory
     /**
      * Gets all permissions for a set of user groups
      * @param string $entity
-     * @param array[int] $groupIds
+     * @param int $userId
      * @return array[Permission]
      */
-    public static function getByGroupIds($entity, $groupIds)
+    public static function getByUserId($entity, $userId)
     {
+        $permissions = array();
 
-    }
+        $sql = '
+SELECT `permission`.`permissionId`, `permission`.`groupId`, `permission`.`objectId`, `permission`.`view`, `permission`.`edit`, `permission`.`delete`
+  FROM `permission`
+    INNER JOIN `permissionentity`
+    ON `permissionentity`.entityId = permission.entityId
+    INNER JOIN `group`
+    ON `group`.groupId = `permission`.groupId
+    INNER JOIN `lkusergroup`
+    ON `lkusergroup`.groupId = `group`.groupId
+    INNER JOIN `user`
+    ON lkusergroup.UserID = `user`.UserID
+ WHERE entity = :entity
+    AND (`user`.userId = :userId OR `group`.IsEveryone = 1)
+';
+        $params = array('entity' => $entity, 'userId' => $userId);
 
-    /**
-     * Create a Full Access Permission
-     * @param $entity
-     * @param $groupId
-     * @param $objectId
-     * @return Permission
-     */
-    public static function createFullAccess($entity, $groupId, $objectId)
-    {
-        $permission = new Permission();
-        $permission->entity = $entity;
-        $permission->objectId = $objectId;
-        $permission->groupId = $groupId;
-        $permission->view = 1;
-        $permission->edit = 1;
-        $permission->delete = 1;
-        return $permission;
+        \Debug::sql($sql, $params);
+
+        foreach (\PDOConnect::select($sql, $params) as $row) {
+            $permission = new Permission();
+            $permission->permissionId = $row['permissionId'];
+            $permission->groupId = $row['groupId'];
+            $permission->view = $row['view'];
+            $permission->edit = $row['edit'];
+            $permission->delete = $row['delete'];
+            $permission->objectId = $row['objectId'];
+            $permission->entity = $entity;
+        }
+
+        return $permissions;
     }
 }

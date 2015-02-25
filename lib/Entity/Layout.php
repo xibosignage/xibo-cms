@@ -79,6 +79,24 @@ class Layout
     }
 
     /**
+     * Get the Id
+     * @return int
+     */
+    public function getId()
+    {
+        return $this->layoutId;
+    }
+
+    /**
+     * Get the OwnerId
+     * @return int
+     */
+    public function getOwnerId()
+    {
+        return $this->ownerId;
+    }
+
+    /**
      * Sets the Owner of the Layout (including children)
      * @param int $ownerId
      */

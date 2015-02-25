@@ -73,6 +73,24 @@ class Region
     }
 
     /**
+     * Get the Id
+     * @return int
+     */
+    public function getId()
+    {
+        return $this->regionId;
+    }
+
+    /**
+     * Get the OwnerId
+     * @return int
+     */
+    public function getOwnerId()
+    {
+        return $this->ownerId;
+    }
+
+    /**
      * Sets the Owner
      * @param int $ownerId
      */

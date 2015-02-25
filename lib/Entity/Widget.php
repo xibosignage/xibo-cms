@@ -65,6 +65,24 @@ class Widget
     }
 
     /**
+     * Get the Id
+     * @return int
+     */
+    public function getId()
+    {
+        return $this->widgetId;
+    }
+
+    /**
+     * Get the OwnerId
+     * @return int
+     */
+    public function getOwnerId()
+    {
+        return $this->ownerId;
+    }
+
+    /**
      * Set the Owner
      * @param int $ownerId
      */

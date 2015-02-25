@@ -599,7 +599,7 @@ class layoutDAO extends baseDAO
             $row['layout_form_edit_url'] = 'index.php?p=layout&q=displayForm&layoutid=' . $layout->layoutId;
 
             // Add some buttons for this row
-            if ($layout['edit']) {
+            if ($this->user->checkEditable($layout)) {
                 // Design Button
                 $row['buttons'][] = array(
                         'id' => 'layout_button_design',
@@ -627,7 +627,7 @@ class layoutDAO extends baseDAO
             $row['buttons'][] = array('linkType' => 'divider');
 
             // Only proceed if we have edit permissions
-            if ($layout['edit']) {
+            if ($this->user->checkEditable($layout)) {
 
                 // Edit Button
                 $row['buttons'][] = array(
@@ -657,7 +657,7 @@ class layoutDAO extends baseDAO
                     );
 
                 // Extra buttons if have delete permissions
-                if ($layout['del']) {
+                if ($this->user->checkDeleteable($layout)) {
                     // Delete Button
                     $row['buttons'][] = array(
                             'id' => 'layout_button_delete',
@@ -683,7 +683,7 @@ class layoutDAO extends baseDAO
                     );
 
                 // Extra buttons if we have modify permissions
-                if ($layout['modifyPermissions']) {
+                if ($this->user->checkPermissionsModifyable($layout)) {
                     // Permissions button
                     $row['buttons'][] = array(
                             'id' => 'layout_button_permissions',
