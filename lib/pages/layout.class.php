@@ -446,14 +446,12 @@ class layoutDAO extends baseDAO
         
         $response = new ResponseManager();
         $layoutId = Kit::GetParam('layoutId', _POST, _INT);
-        $auth = $this->user->LayoutAuth($layoutId, true);
-
-        if (!$auth->del)
-            trigger_error(__('You do not have permissions to delete this layout'), E_USER_ERROR);
-
-        // TODO: Remove all Permissions
 
         $layout = \Xibo\Factory\LayoutFactory::loadById($layoutId);
+
+        if (!$this->user->checkDeleteable($layout))
+            trigger_error(__('You do not have permissions to delete this layout'), E_USER_ERROR);
+
         $layout->delete();
 
         $response->SetFormSubmitResponse(__('The Layout has been Deleted'));
@@ -786,8 +784,7 @@ class layoutDAO extends baseDAO
         $layout = \Xibo\Factory\LayoutFactory::getById($layoutId);
 
         // Check Permissions
-        $auth = $this->user->LayoutAuth($layoutId, true);
-        if (!$auth->edit)
+        if (!$this->user->checkEditable($layout))
             trigger_error(__('You do not have permissions to edit this layout'), E_USER_ERROR);
 
         // Generate the form

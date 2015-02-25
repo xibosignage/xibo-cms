@@ -147,12 +147,13 @@ SELECT `permission`.`permissionId`, `permission`.`groupId`, `permission`.`object
     ON `permissionentity`.entityId = permission.entityId
     INNER JOIN `group`
     ON `group`.groupId = `permission`.groupId
-    INNER JOIN `lkusergroup`
+    LEFT OUTER JOIN `lkusergroup`
     ON `lkusergroup`.groupId = `group`.groupId
-    INNER JOIN `user`
+    LEFT OUTER JOIN `user`
     ON lkusergroup.UserID = `user`.UserID
+      AND `user`.userId = :userId
  WHERE entity = :entity
-    AND (`user`.userId = :userId OR `group`.IsEveryone = 1)
+    AND (`user`.userId IS NOT NULL OR `group`.IsEveryone = 1)
 ';
         $params = array('entity' => $entity, 'userId' => $userId);
 
@@ -168,6 +169,8 @@ SELECT `permission`.`permissionId`, `permission`.`groupId`, `permission`.`object
             $permission->objectId = $row['objectId'];
             $permission->entity = $entity;
             $permission->entityId = $row['entityId'];
+
+            $permissions[] = $permission;
         }
 
         return $permissions;

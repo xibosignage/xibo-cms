@@ -606,7 +606,7 @@ class User {
         // Check our cache to see if we have permissions for this entity cached already
         if (!isset($this->permissionCache[$entity])) {
 
-            // Store the results in the cache (defualt to empty result)
+            // Store the results in the cache (default to empty result)
             $this->permissionCache[$entity] = array();
 
             // Turn it into a ID keyed array

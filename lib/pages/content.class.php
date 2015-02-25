@@ -326,8 +326,14 @@ class contentDAO extends baseDAO {
 
         // Can this user view?
         $entries = $this->user->MediaList(null, array('mediaId' => $mediaId));
-        if (count($entries) <= 0)
-            throw new Exception(__('You do not have permission to view this media.'));
+        if (count($entries) <= 0) {
+            $width = Kit::GetParam('width', _GET, _INT);
+            $height = Kit::GetParam('height', _GET, _INT);
+
+            // dynamically create an image of the correct size - used for previews
+            ResizeImage(Theme::ImageUrl('forms/filenotfound.gif'), '', $width, $height, true, 'browser');
+            exit();
+        }
 
         File::ReturnFile($entries[0]['storedas'], $entries[0]['filename']);
     }
