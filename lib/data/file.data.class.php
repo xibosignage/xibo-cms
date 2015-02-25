@@ -222,5 +222,51 @@ class File extends Data
 
         return $libraryFolder . '/cache';
     }
+
+    /**
+     * Download a file
+     * @param string $url
+     * @param string $savePath
+     */
+    public static function downloadFile($url, $savePath)
+    {
+        // Use CURL to download a file
+        // Open the file handle
+        $fileHandle = fopen($savePath, 'w+');
+
+        // Configure CURL with the file handle
+        $httpOptions = array(
+            CURLOPT_TIMEOUT => 50,
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_USERAGENT => 'Xibo Digital Signage',
+            CURLOPT_HEADER => false,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_URL => $url,
+            CURLOPT_FILE => $fileHandle
+        );
+
+        // Proxy support
+        if (Config::GetSetting('PROXY_HOST') != '') {
+            $httpOptions[CURLOPT_PROXY] = Config::GetSetting('PROXY_HOST');
+            $httpOptions[CURLOPT_PROXYPORT] = Config::GetSetting('PROXY_PORT');
+
+            if (Config::GetSetting('PROXY_AUTH') != '')
+                $httpOptions[CURLOPT_PROXYUSERPWD] = Config::GetSetting('PROXY_AUTH');
+        }
+
+        $curl = curl_init();
+
+        // Set our options
+        curl_setopt_array($curl, $httpOptions);
+
+        // Exec saves the file
+        curl_exec($curl);
+
+        // Close the curl connection
+        curl_close($curl);
+
+        // Close the file handle
+        fclose($fileHandle);
+    }
 }
 ?>
