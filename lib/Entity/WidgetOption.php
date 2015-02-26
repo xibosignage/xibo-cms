@@ -31,8 +31,20 @@ class WidgetOption
     public $option;
     public $value;
 
+    public function __toString()
+    {
+        if ($this->type == 'cdata') {
+            return sprintf('%s WidgetOption %s', $this->type, $this->option);
+        }
+        else {
+            return sprintf('%s WidgetOption %s with value %s', $this->type, $this->option, $this->value);
+        }
+    }
+
     public function save()
     {
+        \Debug::Audit('Saving ' . $this);
+
         $sql = 'INSERT INTO `widgetoption` (`widgetId`, `type`, `option`, `value`) VALUES (:widgetId, :type, :option, :value) ON DUPLICATE KEY UPDATE `value` = :value2';
         \PDOConnect::insert($sql, array(
             'widgetId' => $this->widgetId,

@@ -458,6 +458,9 @@ class moduleDAO extends baseDAO
         // Set the permissions for this module
         $module->setPermission($this->user->getPermission($module->widget));
 
+        // Set the user - it is used in forms to return other entities
+        $module->setUser($this->user);
+
         // What module has been requested?
         $response = null;
         $method = Kit::GetParam('method', _REQUEST, _WORD);

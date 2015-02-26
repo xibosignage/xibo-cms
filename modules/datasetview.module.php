@@ -47,7 +47,7 @@ class datasetview extends Module
             'datasetid',
             __('DataSet'),
             NULL,
-            $this->auth->getUser()->DataSetList(),
+            $this->getUser()->DataSetList(),
             'datasetid',
             'dataset',
             __('Please select the DataSet to use as a source of data for this view.'),
@@ -191,7 +191,7 @@ class datasetview extends Module
             throw new InvalidArgumentException(__('Please select a DataSet'));
 
         // Check we have permission to use this DataSetId
-        if (!$this->auth->getUser()->DataSetAuth($dataSetId))
+        if (!$this->getUser()->DataSetAuth($dataSetId))
             throw new InvalidArgumentException(__('You do not have permission to use that dataset'));
 
         if ($duration == 0)

@@ -33,6 +33,11 @@ abstract class Module implements ModuleInterface
     public $widget;
 
     /**
+     * @var User $user
+     */
+    protected $user;
+
+    /**
      * @var \Xibo\Entity\Permission $auth Widget Permissions
      */
     protected $auth;
@@ -72,6 +77,15 @@ abstract class Module implements ModuleInterface
     final public function setRegion($region)
     {
         $this->region = $region;
+    }
+
+    /**
+     * Set User
+     * @param User $user
+     */
+    final public function setUser($user)
+    {
+        $this->user = $user;
     }
 
     /**
@@ -125,6 +139,15 @@ abstract class Module implements ModuleInterface
     final protected function GetOption($name, $default = null)
     {
         return $this->widget->getOptionValue($name, $default);
+    }
+
+    /**
+     * Get User
+     * @return User
+     */
+    final protected function getUser()
+    {
+       return $this->user;
     }
 
     /**
@@ -393,6 +416,8 @@ abstract class Module implements ModuleInterface
 
         // Return
         $response->SetFormSubmitResponse(__('The Widget has been Deleted'));
+        $response->loadForm = true;
+        $response->loadFormUri = $this->getTimelineLink();
         $response->Respond();
     }
 

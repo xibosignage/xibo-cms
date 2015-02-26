@@ -75,7 +75,7 @@ class ticker extends Module
         $formFields[] = FormManager::AddText('uri', __('Feed URL'), NULL, 
             __('The Link for the RSS feed'), 'f', '', 'feed-fields');
 
-        $datasets = $this->auth->getUser()->DataSetList();
+        $datasets = $this->getUser()->DataSetList();
         array_unshift($datasets, array('datasetid' => '0', 'dataset' => 'None'));
         Theme::Set('dataset_field_list', $datasets);
 
@@ -417,7 +417,7 @@ class ticker extends Module
                 trigger_error(__('Please select a DataSet'), E_USER_ERROR);
 
             // Check we have permission to use this DataSetId
-            if (!$this->auth->getUser()->DataSetAuth($dataSetId))
+            if (!$this->getUser()->DataSetAuth($dataSetId))
                 trigger_error(__('You do not have permission to use that dataset'), E_USER_ERROR);
         }
         else {
@@ -446,7 +446,7 @@ class ticker extends Module
 
         // Load form
         $response->loadForm = true;
-        $response->loadFormUri = $this->getTimelineLink();
+        $response->loadFormUri = 'index.php?p=module&q=Exec&mod=' . $this->getModuleType() . '&method=EditForm&regionId=' . $this->region->regionId . '&widgetId=' . $this->getWidgetId();
         
         return $response;
     }

@@ -332,7 +332,7 @@ class ForecastIo extends Module
         $formFields['forecast'][] = FormManager::AddMessage(__('Please press Request Forecast to show the current forecast and all available substitutions.'));
 
         // Encode up the template
-        if ($this->auth->getUser()->usertypeid == 1)
+        if ($this->getUser()->usertypeid == 1)
             $formFields['forecast'][] = FormManager::AddMessage('<pre>' . htmlentities(json_encode(array('id' => 'ID', 'value' => 'TITLE', 'main' => $this->getRawNode('currentTemplate', null), 'daily' => $this->getRawNode('dailyTemplate', null), 'css' => $this->getRawNode('styleSheet', null)))) . '</pre>');
 
         // Configure the field dependencies

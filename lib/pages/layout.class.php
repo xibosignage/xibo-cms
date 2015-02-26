@@ -874,7 +874,7 @@ class layoutDAO extends baseDAO
             $regionHtml .= ' layoutid="' . $layout->layoutId . '" ' . $regionZindex . ' tip_scale="1" designer_scale="' . $designerScale . '"';
             $regionHtml .= ' width="' . $regionWidth . '" height="' . $regionHeight . '" href="index.php?p=timeline&layoutid=' . $layout->layoutId . '&regionid=' . $region->regionId . '&q=Timeline"';
             $regionHtml .= ' ondblclick="' . $doubleClickLink . '" class="' . $regionDisabledClass . ' ' . $regionPreviewClass . '" style="position:absolute; width:' . $regionWidth . '; height:' . $regionHeight . '; top: ';
-            $regionHtml .= $regionTop . '; left: ' . $regionLeft . '; ' . $styleZindex . '">' . $regionTransparency . '";';
+            $regionHtml .= $regionTop . '; left: ' . $regionLeft . '; ' . $styleZindex . '">' . $regionTransparency;
 
             if ($regionAuth->edit) {
 
