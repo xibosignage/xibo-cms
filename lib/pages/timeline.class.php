@@ -330,8 +330,10 @@ class timelineDAO extends baseDAO
         // Load the region
         $region = \Xibo\Factory\RegionFactory::getById(Kit::GetParam('regionid', _REQUEST, _INT));
 
+        Debug::Audit('Assigning files to ' . $region);
+
         // Make sure we have permission to edit this region
-        if ($this->user->checkEditable($region))
+        if (!$this->user->checkEditable($region))
             trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
 
         // Media to assign
@@ -339,6 +341,12 @@ class timelineDAO extends baseDAO
 
         if (count($mediaList) <= 0)
             throw new InvalidArgumentException(__('No media to assign'), 25006);
+
+        // Get the playlist for this region
+        // TODO: Playlist Implementation
+        $playlists = \Xibo\Factory\PlaylistFactory::getByRegionId($region->regionId);
+        $playlist = $playlists[0];
+        /* @var \Xibo\Entity\Playlist $playlist */
 
         // Add each media item to the region and save
         // Loop through all the media
@@ -350,14 +358,14 @@ class timelineDAO extends baseDAO
                 trigger_error(__('You do not have permissions to use this media'), E_USER_ERROR);
 
             // Create a Widget and add it to our region
-            $widget = \Xibo\Factory\WidgetFactory::create($this->user->userid, $region->playlists[0]->playlistId, $media->mediaType, $media->duration);
+            $widget = \Xibo\Factory\WidgetFactory::create($this->user->userid, $playlist->playlistId, $media->mediaType, $media->duration);
             $widget->assignMedia($mediaId);
 
-            $region->playlists[0]->widgets[] = $widget;
+            $playlist->widgets[] = $widget;
         }
 
-        // Save the region
-        $region->save();
+        // Save the playlist
+        $playlist->save();
 
         // We want to load a new form
         $response->SetFormSubmitResponse(sprintf(__('%d Media Items Assigned'), count($mediaList)));

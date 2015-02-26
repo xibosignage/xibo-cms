@@ -344,7 +344,7 @@ abstract class Module implements ModuleInterface
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Media', 'Delete') . '")');
 
         // Can this user delete?
-        if (!$this->auth->del)
+        if (!$this->auth->delete)
             throw new Exception('You do not have permission to delete this media.');
 
         Theme::Set('form_id', 'MediaDeleteForm');
@@ -365,7 +365,7 @@ abstract class Module implements ModuleInterface
 
         $response->SetFormRequestResponse($form, __('Delete Widget'), '300px', '200px');
         $response->AddButton(__('No'), 'XiboDialogClose()');
-        $response->AddButton(__('Yes'), '$("#LayoutDeleteForm").submit()');
+        $response->AddButton(__('Yes'), '$("#MediaDeleteForm").submit()');
         $response->Respond();
     }
 
@@ -377,8 +377,8 @@ abstract class Module implements ModuleInterface
         $response = new ResponseManager();
 
         // Can this user delete?
-        if (!$this->auth->del)
-            throw new Exception('You do not have permission to delete this media.');
+        if (!$this->auth->delete)
+            throw new Exception(__('You do not have permission to delete this media.'));
 
         // Delete associated media?
         if (Kit::GetParam('deleteMedia', _POST, _CHECKBOX) == 1) {
@@ -393,8 +393,6 @@ abstract class Module implements ModuleInterface
 
         // Return
         $response->SetFormSubmitResponse(__('The Widget has been Deleted'));
-        $response->loadForm = true;
-        $response->loadFormUri= 'index.php?p=timeline&q=Timeline&regionid=' . Kit::GetParam('regionId', _POST, _INT);
         $response->Respond();
     }
 

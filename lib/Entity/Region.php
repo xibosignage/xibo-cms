@@ -65,7 +65,7 @@ class Region
 
     public function __toString()
     {
-        return sprintf('Region %s - %d x %d (%d, %d). RegionId = %d, LayoutId = %d', $this->name, $this->width, $this->height, $this->top, $this->left, $this->regionId, $this->layoutId);
+        return sprintf('Region %s - %d x %d (%d, %d). RegionId = %d, LayoutId = %d. OwnerId = %d', $this->name, $this->width, $this->height, $this->top, $this->left, $this->regionId, $this->layoutId, $this->ownerId);
     }
 
     private function hash()

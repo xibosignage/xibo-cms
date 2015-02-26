@@ -140,7 +140,7 @@ class MediaFactory
         \Debug::sql($sql, $params);
 
         foreach (\PDOConnect::select($sql, $params) as $row) {
-            $media = new \Media();
+            $media = new Media();
             $media->mediaId = \Kit::ValidateParam($row['mediaID'], _INT);
             $media->name = \Kit::ValidateParam($row['name'], _STRING);
             $media->mediaType = \Kit::ValidateParam($row['type'], _WORD);

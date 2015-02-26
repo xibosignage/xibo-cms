@@ -297,7 +297,7 @@ class contentDAO extends baseDAO {
             Theme::Set('background_override_url', "index.php?p=layout&q=EditForm&modify=true&layoutid=$layoutId&backgroundOveride=");
         }
         else if ($playlistId != 0) {
-            $response->AddButton(__('Close'), 'XiboSwapDialog("index.php?p=timeline&q=Timeline&modify=true&layoutid=' . $layoutId . '&regionId=' . $regionId . '")');
+            $response->AddButton(__('Finish'), 'XiboSwapDialog("index.php?p=timeline&q=Timeline&modify=true&layoutid=' . $layoutId . '&regionId=' . $regionId . '")');
         }
         else {
             $response->AddButton(__('Close'), 'XiboDialogClose(); XiboRefreshAllGrids();');
