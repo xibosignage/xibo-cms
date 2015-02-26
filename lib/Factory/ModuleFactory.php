@@ -72,7 +72,7 @@ class ModuleFactory
         // Do we have a regionId
         if ($regionId != 0) {
             // Load the region and set
-            $region = RegionFactory::getByRegionId($regionId);
+            $region = RegionFactory::getById($regionId);
             $module->setRegion($region);
         }
 
@@ -220,9 +220,14 @@ class ModuleFactory
                 $SQL .= ' AND ValidExtensions LIKE :extension ';
             }
 
-            if (\Kit::GetParam('id', $filterBy, _INT, -1) != -1) {
+            if (\Kit::GetParam('assignable', $filterBy, _INT, -1) != -1) {
                 $SQL .= " AND assignable = :assignable ";
-                $params['assignable'] = \Kit::GetParam('id', $filterBy, _INT);
+                $params['assignable'] = \Kit::GetParam('assignable', $filterBy, _INT);
+            }
+
+            if (\Kit::GetParam('enabled', $filterBy, _INT, -1) != -1) {
+                $SQL .= " AND enabled = :enabled ";
+                $params['enabled'] = \Kit::GetParam('enabled', $filterBy, _INT);
             }
 
             // Sorting?

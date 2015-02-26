@@ -35,8 +35,8 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 ?>
 <div class="pull-right">
 	<select id="layoutJumpList" data-live-search="true">
-		<?php foreach(Theme::Get('layouts') as $layout) { ?>
-		<option value="<?php echo $layout['layoutid']; ?>"<?php echo ($layout['layoutid'] == Theme::Get('layoutId') ? ' selected' : ''); ?>><?php echo $layout['layout']; ?></option> 
+		<?php foreach(Theme::Get('layouts') as $layout) { /* @var \Xibo\Entity\Layout $layout */ ?>
+		<option value="<?php echo $layout->layoutId; ?>"<?php echo ($layout->layoutId == Theme::Get('layoutId') ? ' selected' : ''); ?>><?php echo $layout->layout; ?></option>
 		<?php } ?>
 	</select>
 </div>

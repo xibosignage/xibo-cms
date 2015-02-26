@@ -37,9 +37,10 @@ class RegionFactory
      * @param int $height
      * @param int $top
      * @param int $left
+     * @param int $zIndex
      * @return Region
      */
-    public static function create($ownerId, $name, $width, $height, $top, $left)
+    public static function create($ownerId, $name, $width, $height, $top, $left, $zIndex = 0)
     {
         // Validation
         if (!is_numeric($width) || !is_numeric($height) || !is_numeric($top) || !is_numeric($left))
@@ -58,7 +59,11 @@ class RegionFactory
         $region->height = $height;
         $region->top = $top;
         $region->left = $left;
-        $region->zIndex = 0;
+        $region->zIndex = $zIndex;
+
+        // Create a Playlist for this region
+        $region->playlists[] = PlaylistFactory::create($name, $ownerId);
+
         return $region;
     }
 
@@ -80,7 +85,7 @@ class RegionFactory
      */
     public static function loadByRegionId($regionId)
     {
-        $region = RegionFactory::getByRegionId($regionId);
+        $region = RegionFactory::getById($regionId);
         $region->load();
         return $region;
     }
@@ -91,12 +96,12 @@ class RegionFactory
      * @return Region
      * @throws NotFoundException
      */
-    public static function getByRegionId($regionId)
+    public static function getById($regionId)
     {
         // Get a region by its ID
         $regions = RegionFactory::query(array(), array('regionId' => $regionId));
 
-        if (count($regions) < 0)
+        if (count($regions) <= 0)
             throw new NotFoundException(__('Region not found'));
 
         return $regions[0];
@@ -123,6 +128,8 @@ class RegionFactory
             $sql .= ' AND layoutId = :layoutId ';
             $params['layoutId'] = \Kit::GetParam('layoutId', $filterBy, _INT);
         }
+
+        \Debug::sql($sql, $params);
 
         foreach (\PDOConnect::select($sql, $params) as $row) {
             $region = new Region();

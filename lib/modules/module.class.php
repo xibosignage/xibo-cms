@@ -33,7 +33,7 @@ abstract class Module implements ModuleInterface
     public $widget;
 
     /**
-     * @var PermissionManager $auth Widget Permissions
+     * @var \Xibo\Entity\Permission $auth Widget Permissions
      */
     protected $auth;
 
@@ -72,6 +72,15 @@ abstract class Module implements ModuleInterface
     final public function setRegion($region)
     {
         $this->region = $region;
+    }
+
+    /**
+     * Set the permissions
+     * @param \Xibo\Entity\Permission $permission
+     */
+    final public function setPermission($permission)
+    {
+        $this->auth = $permission;
     }
 
     /**

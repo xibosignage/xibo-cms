@@ -50,6 +50,7 @@ class Region
         $this->hash = null;
         $this->playlists = array();
         $this->regionOptions = array();
+        $this->permissions = array();
     }
 
     public function __clone()
@@ -211,7 +212,7 @@ class Region
     public function delete()
     {
         // We must ensure everything is loaded before we delete
-        if ($this->hash() == null)
+        if ($this->hash == null)
             $this->load();
 
         \Debug::Audit('Deleting ' . $this);

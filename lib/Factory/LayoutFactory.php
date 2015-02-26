@@ -57,6 +57,8 @@ class LayoutFactory
         // Set the properties
         $layout->layout = $name;
         $layout->description = $description;
+        $layout->backgroundzIndex = 0;
+        $layout->backgroundColor = '#000';
 
         // Set the owner
         $layout->setOwner($ownerId);
@@ -196,13 +198,14 @@ class LayoutFactory
         // Populate Region Nodes
         foreach ($document->getElementsByTagName('region') as $regionNode) {
             /* @var \DOMElement $regionNode */
-            $region = new Region();
-            $region->width = (double)$regionNode->getAttribute('width');
-            $region->height = (double)$regionNode->getAttribute('height');
-            $region->left = (double)$regionNode->getAttribute('left');
-            $region->top = (double)$regionNode->getAttribute('top');
-            $region->ownerId = (int)$regionNode->getAttribute('userId');
-            $region->name = $regionNode->getAttribute('name');
+            $region = RegionFactory::create(
+                (int)$regionNode->getAttribute('userId'),
+                $regionNode->getAttribute('name'),
+                (double)$regionNode->getAttribute('width'),
+                (double)$regionNode->getAttribute('height'),
+                (double)$regionNode->getAttribute('top'),
+                (double)$regionNode->getAttribute('left')
+                );
 
             // Use the regionId locally to parse the rest of the XLF
             $regionId = $regionNode->getAttribute('id');
@@ -212,9 +215,7 @@ class LayoutFactory
                 $region->name = count($layout->regions) + 1;
 
             // Populate Playlists (XLF doesn't contain any playlists)
-            $playlist = new Playlist();
-            $playlist->name = $layout->layout . ' ' . $region->name . '-1';
-            $playlist->ownerId = $region->ownerId;
+            $playlist = $region->playlists[0];
 
             // Get all widgets
             foreach ($xpath->query('//region[@id="' . $regionId . '"]/media') as $mediaNode) {

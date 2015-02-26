@@ -35,6 +35,24 @@ class XiboUploadHandler extends UploadHandler
             if ($module->type == 'font') {
                 $mediaObject->installFonts();
             }
+
+            // Are we assigning to a Playlist?
+            if ($this->options['playlistId'] != 0) {
+                Debug::Audit('Assigning uploaded media to playlistId ' . $this->options['playlistId']);
+
+                // Get the Playlist
+                $playlist = \Xibo\Factory\PlaylistFactory::getById($this->options['playlistId']);
+
+                // Create a Widget and add it to our region
+                $widget = \Xibo\Factory\WidgetFactory::create($this->options['userId'], $playlist->playlistId, $module->type, 10);
+                $widget->assignMedia($mediaId);
+
+                // Assign the new widget to the playlist
+                $playlist->widgets[] = $widget;
+
+                // Save the playlist
+                $playlist->save();
+            }
         }
         catch (Exception $e) {
             $file->error = $e->getMessage();

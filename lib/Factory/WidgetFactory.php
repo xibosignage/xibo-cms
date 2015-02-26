@@ -43,7 +43,7 @@ class WidgetFactory
      * @param $widgetId
      * @return Widget
      */
-    public static function getByWidgetId($widgetId)
+    public static function getById($widgetId)
     {
         $widgets = WidgetFactory::query(null, array('widgetId' => $widgetId));
         return $widgets[0];

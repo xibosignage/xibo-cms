@@ -159,7 +159,7 @@ class Playlist
     public function delete()
     {
         // We must ensure everything is loaded before we delete
-        if ($this->hash() == null)
+        if ($this->hash == null)
             $this->load();
 
         \Debug::Audit('Deleting ' . $this);

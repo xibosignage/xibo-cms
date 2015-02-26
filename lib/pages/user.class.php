@@ -770,14 +770,16 @@ class userDAO extends baseDAO {
         // Check to see that we can resolve the entity
         $entity = 'Xibo\\Factory\\' . $entity . 'Factory';
 
+        if (!class_exists($entity) || !method_exists($entity, 'getById'))
+            throw new InvalidArgumentException(__('Permissions form requested with an invalid entity'));
+
         // Get the object
         $objectId = Kit::GetParam('objectId', _GET, _INT);
         if ($objectId == 0)
             throw new InvalidArgumentException(__('Permissions form requested without an object'));
 
         // Load our object
-        //TODO call correct factory class
-        $object = \Xibo\Factory\CampaignFactory::getById($objectId);
+        $object = $entity::getById($objectId);
 
         // Does this user have permission to edit the permissions?!
         if (!$this->user->checkPermissionsModifyable($object))
@@ -850,14 +852,16 @@ class userDAO extends baseDAO {
         // Check to see that we can resolve the entity
         $entity = 'Xibo\\Factory\\' . $entity . 'Factory';
 
+        if (!class_exists($entity) || !method_exists($entity, 'getById'))
+            throw new InvalidArgumentException(__('Permissions form requested with an invalid entity'));
+
         // Get the object
         $objectId = Kit::GetParam('objectId', _POST, _INT);
         if ($objectId == 0)
             throw new InvalidArgumentException(__('Permissions form requested without an object'));
 
         // Load our object
-        //TODO call correct factory class
-        $object = \Xibo\Factory\CampaignFactory::getById($objectId);
+        $object = $entity::getById($objectId);
 
         // Does this user have permission to edit the permissions?!
         if (!$this->user->checkPermissionsModifyable($object))

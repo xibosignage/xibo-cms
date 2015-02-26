@@ -39,6 +39,8 @@ class Permission
     public $edit;
     public $delete;
 
+    public $modifyPermissions;
+
     public function save()
     {
         if ($this->permissionId == null || $this->permissionId == 0)

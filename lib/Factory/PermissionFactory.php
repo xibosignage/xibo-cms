@@ -175,4 +175,18 @@ SELECT `permission`.`permissionId`, `permission`.`groupId`, `permission`.`object
 
         return $permissions;
     }
+
+    /**
+     * Get Full Permissions
+     * @return Permission
+     */
+    public static function getFullPermissions()
+    {
+        $permission = new Permission();
+        $permission->view = 1;
+        $permission->edit = 1;
+        $permission->delete = 1;
+        $permission->modifyPermissions = 1;
+        return $permission;
+    }
 }

@@ -285,23 +285,28 @@ class contentDAO extends baseDAO {
         $backgroundImage = Kit::GetParam('backgroundImage', _GET, _BOOL, false);
         $layoutId = Kit::GetParam('layoutId', _GET, _INT);
 
-        // Save button is different depending on whether we can from the Layout Edit form or not.
-        if ($backgroundImage)
-        {
+        // Do we have a playlistId?
+        $playlistId = Kit::GetParam('playlistId', _GET, _INT);
+        $regionId = Kit::GetParam('regionId', _GET, _INT);
+
+        // Save button is different depending on whether we came from the Layout Edit form or not.
+        if ($backgroundImage) {
             $response->AddButton(__('Close'), 'XiboSwapDialog("index.php?p=layout&q=EditForm&modify=true&layoutid=' . $layoutId . '")');
 
             // Background override url is used on the theme to add a button next to each uploaded file (if in background override)
             Theme::Set('background_override_url', "index.php?p=layout&q=EditForm&modify=true&layoutid=$layoutId&backgroundOveride=");
         }
-        else
-        {
-            $response->AddButton(__('Close'), 'XiboSwapDialog("index.php?p=content&q=displayForms&sp=add");XiboRefreshAllGrids()');
+        else if ($playlistId != 0) {
+            $response->AddButton(__('Close'), 'XiboSwapDialog("index.php?p=timeline&q=Timeline&modify=true&layoutid=' . $layoutId . '&regionId=' . $regionId . '")');
+        }
+        else {
+            $response->AddButton(__('Close'), 'XiboDialogClose(); XiboRefreshAllGrids();');
         }
 
         // Setup the theme
         Theme::Set('form_upload_id', 'fileupload');
         Theme::Set('form_action', 'index.php?p=content&q=JqueryFileUpload');
-        Theme::Set('form_meta', '<input type="hidden" id="PHPSESSID" value="' . $sessionId . '" /><input type="hidden" id="SecurityToken" value="' . $securityToken . '" />');
+        Theme::Set('form_meta', '<input type="hidden" id="PHPSESSID" value="' . $sessionId . '" /><input type="hidden" id="SecurityToken" value="' . $securityToken . '" /><input type="hidden" name="playlistId" value="' . $playlistId . '" />');
         Theme::Set('form_valid_ext', '/(\.|\/)' . implode('|', \Xibo\Factory\ModuleFactory::getValidExtensions()) . '$/i');
         Theme::Set('form_max_size', Kit::ReturnBytes(Config::getMaxUploadSize()));
         Theme::Set('form_max_size_message', sprintf(__('This form accepts files up to a maximum size of %s'), Config::getMaxUploadSize()));
@@ -310,7 +315,6 @@ class contentDAO extends baseDAO {
 
         $response->html = $form;
         $response->dialogTitle = __('Upload media');
-        $response->AddButton(__('Close'), 'XiboDialogClose(); XiboRefreshAllGrids();');
         $response->callBack = 'MediaFormInitUpload';
         $response->dialogClass = 'modal-big';
         $response->Respond();
@@ -749,6 +753,7 @@ HTML;
 
         $options = array(
             'userId' => $this->user->userid,
+            'playlistId' => Kit::GetParam('playlistId', _REQUEST, _INT),
             'upload_dir' => $libraryFolder . 'temp/',
             'download_via_php' => true,
             'script_url' => Kit::GetXiboRoot() . '?p=content&q=JqueryFileUpload',

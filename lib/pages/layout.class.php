@@ -146,17 +146,15 @@ class layoutDAO extends baseDAO
             case 'true':
 
                 $layoutId = Kit::GetParam('layoutid', _GET, _INT);
+                $layout = \Xibo\Factory\LayoutFactory::loadById($layoutId);
                 
                 Theme::Set('layout_form_edit_url', 'index.php?p=layout&q=EditForm&designer=1&layoutid=' . $layoutId);
                 Theme::Set('layout_form_savetemplate_url', 'index.php?p=template&q=TemplateForm&layoutid=' . $layoutId);
                 Theme::Set('layout_form_addregion_url', 'index.php?p=timeline&q=AddRegion&layoutid=' . $layoutId);
                 Theme::Set('layout_form_preview_url', 'index.php?p=preview&q=render&ajax=true&layoutid=' . $layoutId);
-                Theme::Set('layout', $this->layout);
-
-                $campaign = new Campaign();
-                $campaignId = $campaign->GetCampaignId($layoutId);
-                Theme::Set('layout_form_schedulenow_url', 'index.php?p=schedule&q=ScheduleNowForm&CampaignID=' . $campaignId);
-                Theme::Set('layout_designer_editor', $this->RenderDesigner());
+                Theme::Set('layout_form_schedulenow_url', 'index.php?p=schedule&q=ScheduleNowForm&CampaignID=' . $layout->campaignId);
+                Theme::Set('layout', $layout->layout);
+                Theme::Set('layout_designer_editor', $this->RenderDesigner($layout));
 
                 // Set up the theme variables for the Layout Jump List
                 Theme::Set('layoutId', $layoutId);
@@ -218,35 +216,30 @@ class layoutDAO extends baseDAO
         if (!Kit::CheckToken())
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
 
-        try {
-            $response = new ResponseManager();
+        $response = new ResponseManager();
 
-            $name = Kit::GetParam('layout', _POST, _STRING);
-            $description = Kit::GetParam('description', _POST, _STRING);
-            $tags = Kit::GetParam('tags', _POST, _STRING);
-            $templateId = Kit::GetParam('templateid', _POST, _INT);
-            $resolutionId = Kit::GetParam('resolutionid', _POST, _INT);
+        $name = Kit::GetParam('layout', _POST, _STRING);
+        $description = Kit::GetParam('description', _POST, _STRING);
+        $tags = Kit::GetParam('tags', _POST, _STRING);
+        $templateId = Kit::GetParam('templateid', _POST, _INT);
+        $resolutionId = Kit::GetParam('resolutionid', _POST, _INT);
 
-            if ($templateId != 0)
-                $layout = \Xibo\Factory\LayoutFactory::createFromTemplate($templateId, $this->user->userid, $name, $description, $tags);
-            else
-                $layout = \Xibo\Factory\LayoutFactory::createFromResolution($resolutionId, $this->user->userid, $name, $description, $tags);
+        if ($templateId != 0)
+            $layout = \Xibo\Factory\LayoutFactory::createFromTemplate($templateId, $this->user->userid, $name, $description, $tags);
+        else
+            $layout = \Xibo\Factory\LayoutFactory::createFromResolution($resolutionId, $this->user->userid, $name, $description, $tags);
 
-            // Validate
-            $layout->validate();
+        // Validate
+        $layout->validate();
 
-            // Save
-            $layout->save();
+        // Save
+        $layout->save();
 
-            // TODO: Set the default permissions on the regions
+        // TODO: Set the default permissions on the regions
 
-            // Successful layout creation
-            $response->SetFormSubmitResponse(__('Layout Details Changed.'), true, sprintf("index.php?p=layout&layoutid=%d&modify=true", $layout->layoutId));
-            $response->Respond();
-        }
-        catch (Exception $e) {
-            trigger_error($e->getMessage(), E_USER_ERROR);
-        }
+        // Successful layout creation
+        $response->SetFormSubmitResponse(__('Layout Details Changed.'), true, sprintf("index.php?p=layout&layoutid=%d&modify=true", $layout->layoutId));
+        $response->Respond();
     }
 
     /**
@@ -263,8 +256,7 @@ class layoutDAO extends baseDAO
         $layout = \Xibo\Factory\LayoutFactory::loadById(Kit::GetParam('layoutid', _POST, _INT));
 
         // Make sure we have permission
-        $auth = $this->user->LayoutAuth($layout->layoutId, true);
-        if (!$auth->edit)
+        if (!$this->user->checkEditable($layout))
             trigger_error(__('You do not have permissions to edit this layout'), E_USER_ERROR);
 
         $layout->layout = Kit::GetParam('layout', _POST, _STRING);
@@ -294,85 +286,6 @@ class layoutDAO extends baseDAO
         }
         $response->Respond();
     }
-    
-    /**
-     * Upgrade Layout Form
-     */
-    public function upgradeForm() 
-    {
-        $response = new ResponseManager();
-        $layoutId = Kit::GetParam('layoutId', _GET, _INT);
-
-        if ($layoutId == 0)
-            trigger_error(__('layoutId missing'), E_USER_ERROR);
-
-        // Do we have permission to touch this layout?
-        $auth = $this->user->LayoutAuth($layoutId, true);
-
-        if (!$auth->edit)
-            trigger_error(__('You do not have permissions to edit this layout'), E_USER_ERROR);
-        
-        Theme::Set('form_id', 'LayoutUpgradeForm');
-        Theme::Set('form_action', 'index.php?p=layout&q=upgrade');
-        Theme::Set('form_meta', '<input type="hidden" name="layoutId" value="' . $layoutId . '">');
-
-        $formFields = array();
-        $formFields[] = FormManager::AddMessage(__('Are you sure you want to upgrade this layout?'));
-        $formFields[] = FormManager::AddMessage(__('Layouts are now designed at the display resolution allowing better positioning, smoother scrolling and much more. To upgrade this layout you need to select the intended resolution.'));
-        $formFields[] = FormManager::AddCombo(
-                    'resolutionId', 
-                    __('Resolution'), 
-                    NULL,
-                    $this->user->ResolutionList(),
-                    'resolutionid',
-                    'resolution',
-                    __('The regions will be resized to fit with the new resolution, but you may need to adjust the content manually.'), 
-                    'r', 'required');
-
-        // Provide a check box which will attempt to scale up the contents of all media items
-        $formFields[] = FormManager::AddCheckbox('scaleContent', __('Upscale?'), 1,
-            __('Automatically upscale all media content on this Layout to fit with the new resolution selected. Manual adjustment may still be required.'),
-            's');
-
-        Theme::Set('form_fields', $formFields);
-
-        $form = Theme::RenderReturn('form_render');
-        
-        $response->SetFormRequestResponse($form, __('Upgrade Layout'), '300px', '200px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Layout', 'Upgrade') . '")');
-        $response->AddButton(__('No'), 'XiboDialogClose()');
-        $response->AddButton(__('Yes'), '$("#LayoutUpgradeForm").submit()');
-        $response->Respond();
-    }
-
-    public function upgrade()
-    {
-        // Check the token
-        if (!Kit::CheckToken())
-            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
-        
-        $response = new ResponseManager();
-        $layoutId = Kit::GetParam('layoutId', _POST, _INT);
-        $resolutionId = Kit::GetParam('resolutionId', _POST, _INT);
-        $scaleContent = Kit::GetParam('scaleContent', _POST, _CHECKBOX);
-
-        if ($layoutId == 0)
-            trigger_error(__('layoutId missing'), E_USER_ERROR);
-
-        // Do we have permission to touch this layout?
-        $auth = $this->user->LayoutAuth($layoutId, true);
-
-        if (!$auth->edit)
-            trigger_error(__('You do not have permissions to upgrade this layout'), E_USER_ERROR);
-
-        $layoutObject = new Layout();
-
-        if (!$layoutObject->upgrade($layoutId, $resolutionId, $scaleContent))
-            trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);
-
-        $response->SetFormSubmitResponse(__('The Layout has been Upgraded'), true, 'index.php?p=layout&modify=true&layoutid=' . $layoutId);
-        $response->Respond();
-    }
 
     /**
      * Delete Layout Form
@@ -382,9 +295,9 @@ class layoutDAO extends baseDAO
         $response = new ResponseManager();
         
         $layoutId = Kit::GetParam('layoutId', _GET, _INT);
-        $auth = $this->user->LayoutAuth($layoutId, true);
+        $layout = \Xibo\Factory\LayoutFactory::loadById($layoutId);
 
-        if (!$auth->del)
+        if (!$this->user->checkDeleteable($layout))
             trigger_error(__('You do not have permissions to delete this layout'), E_USER_ERROR);
         
         Theme::Set('form_id', 'LayoutDeleteForm');
@@ -397,7 +310,7 @@ class layoutDAO extends baseDAO
 
         $form = Theme::RenderReturn('form_render');
         
-        $response->SetFormRequestResponse($form, __('Delete Layout'), '300px', '200px');
+        $response->SetFormRequestResponse($form, sprintf(__('Delete %s'), $layout->layout), '300px', '200px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Layout', 'Delete') . '")');
         $response->AddButton(__('Retire'), 'XiboSwapDialog("index.php?p=layout&q=RetireForm&layoutid=' . $layoutId . '")');
         $response->AddButton(__('No'), 'XiboDialogClose()');
@@ -413,10 +326,11 @@ class layoutDAO extends baseDAO
         $response = new ResponseManager();
 
         $layoutId = Kit::GetParam('layoutId', _GET, _INT);
-        $auth = $this->user->LayoutAuth($layoutId, true);
+        $layout = \Xibo\Factory\LayoutFactory::loadById(Kit::GetParam('layoutid', _POST, _INT));
 
-        if (!$auth->del)
-            trigger_error(__('You do not have permissions to retire this layout'), E_USER_ERROR);
+        // Make sure we have permission
+        if (!$this->user->checkEditable($layout))
+            trigger_error(__('You do not have permissions to edit this layout'), E_USER_ERROR);
         
         Theme::Set('form_id', 'RetireForm');
         Theme::Set('form_meta', '<input type="hidden" name="layoutId" value="' . $layoutId . '">');
@@ -427,7 +341,7 @@ class layoutDAO extends baseDAO
 
         $form = Theme::RenderReturn('form_render');
         
-        $response->SetFormRequestResponse($form, __('Retire Layout'), '300px', '200px');
+        $response->SetFormRequestResponse($form, sprintf(__('Retire %s'), $layout->layout), '300px', '200px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Layout', 'Retire') . '")');
         $response->AddButton(__('Delete'), 'XiboSwapDialog("index.php?p=layout&q=DeleteLayoutForm&layoutid=' . $layoutId . '")');
         $response->AddButton(__('No'), 'XiboDialogClose()');
@@ -845,7 +759,7 @@ class layoutDAO extends baseDAO
             $backgrounds,
             'mediaid',
             'media',
-            __('Select the background image from the library'),
+            __('Pick the background image from the library'),
             'b', '', true, 'onchange="background_button_callback()"');
 
         $formFields['background'][] = FormManager::AddCombo(
@@ -868,7 +782,7 @@ class layoutDAO extends baseDAO
         $response->SetFormRequestResponse(null, __('Edit Layout'));
         $response->callBack = 'backGroundFormSetup';
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Layout', 'Edit') . '")');
-        $response->AddButton(__('Add Image'), 'XiboFormRender("index.php?p=module&q=Exec&mod=image&method=AddForm&backgroundImage=true&layoutid=' . $this->layoutid . '")');
+        $response->AddButton(__('Add Image'), 'XiboFormRender("index.php?p=module&q=Exec&mod=image&method=AddForm&backgroundImage=true&layoutid=' . $layout->layoutId . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#LayoutForm").submit()');
         $response->Respond();
@@ -876,12 +790,11 @@ class layoutDAO extends baseDAO
     
     /**
      * Render the designer
+     * @param \Xibo\Entity\Layout $layout
+     * @return string
      */
-    function RenderDesigner() 
+    function RenderDesigner($layout)
     {
-        // Layout
-        $layout = \Xibo\Factory\LayoutFactory::loadById(Kit::GetParam('layoutid', _REQUEST, _INT));
-
         // What zoom level are we at?
         $zoom = Kit::GetParam('zoom', _GET, _DOUBLE, 1);
         
@@ -946,7 +859,7 @@ class layoutDAO extends baseDAO
             $styleZindex = ($region->zIndex == 0) ? '' : 'z-index: ' . $region->zIndex . ';';
 
             // Permissions
-            $regionAuth = $this->user->RegionAssignmentAuth($region->ownerId, $layout->layoutId, $region->regionId, true);
+            $regionAuth = $this->user->getPermission($region);
 
             $paddingTop = ($regionHeight / 2 - 16) . 'px';
 
@@ -973,8 +886,8 @@ class layoutDAO extends baseDAO
                 $regionHtml .= '    <ul class="dropdown-menu">';
                 $regionHtml .= '        <li><a class="XiboFormButton" href="index.php?p=timeline&q=Timeline&layoutid=' . $layout->layoutId . '&regionid=' . $region->regionId . '" title="' . __('Timeline') . '">' . __('Edit Timeline') . '</a></li>';
                 $regionHtml .= '        <li><a class="RegionOptionsMenuItem" href="#" title="' . __('Options') . '">' . __('Options') . '</a></li>';
-                $regionHtml .= '        <li><a class="XiboFormButton" href="index.php?p=timeline&q=DeleteRegionForm&layoutid=' . $this->layoutid . '&regionid=' . $region->regionId . '" title="' . __('Delete') . '">' . __('Delete') . '</a></li>';
-                $regionHtml .= '        <li><a class="XiboFormButton" href="index.php?p=timeline&q=RegionPermissionsForm&layoutid=' . $this->layoutid . '&regionid=' . $region->regionId . '" title="' . __('Permissions') . '">' . __('Permissions') . '</a></li>';
+                $regionHtml .= '        <li><a class="XiboFormButton" href="index.php?p=timeline&q=DeleteRegionForm&layoutid=' . $layout->layoutId . '&regionid=' . $region->regionId . '" title="' . __('Delete') . '">' . __('Delete') . '</a></li>';
+                $regionHtml .= '        <li><a class="XiboFormButton" href="index.php?p=user&q=permissionsForm&entity=Region&objectId=' . $region->regionId . '" title="' . __('Permissions') . '">' . __('Permissions') . '</a></li>';
                 $regionHtml .= '    </ul>';
                 $regionHtml .= '</div>';
                 

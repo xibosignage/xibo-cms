@@ -630,6 +630,31 @@ class User {
     }
 
     /**
+     * Get a permission object
+     * @param object $object
+     * @return \Xibo\Entity\Permission
+     */
+    public function getPermission($object)
+    {
+        // Check that this object has the necessary methods
+        $this->checkObjectCompatibility($object);
+
+        // Admin users
+        if ($this->usertypeid == 1 || $this->userid == $object->getOwnerId()) {
+            return \Xibo\Factory\PermissionFactory::getFullPermissions();
+        }
+
+        // Get the permissions for that entity
+        $permissions = $this->loadPermissions(get_class($object));
+
+        // Check to see if our object is in the list
+        if (array_key_exists($object->getId(), $permissions))
+            return $permissions[$object->getId()];
+        else
+            return new \Xibo\Entity\Permission();
+    }
+
+    /**
      * Check the given object is viewable
      * @param object $object
      * @return bool
@@ -925,41 +950,6 @@ class User {
         $SQL .= '   AND (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
 
         $SQL = sprintf($SQL, $this->db->escape_string($mediaId), $this->db->escape_string($regionId), $layoutId, implode(',', $this->GetUserGroups($this->userid, true)));
-        //Debug::LogEntry('audit', $SQL);
-
-        if (!$row = $this->db->GetSingleRow($SQL))
-            return $auth;
-
-        // There are permissions to evaluate
-        $auth->Evaluate($ownerId, $row['View'], $row['Edit'], $row['Del']);
-
-        if ($fullObject)
-            return $auth;
-
-        return $auth->edit;
-    }
-
-    public function RegionAssignmentAuth($ownerId, $layoutId, $regionId, $fullObject = false)
-    {
-        $auth = new PermissionManager($this);
-
-        // If we are the owner, or a super admin then give full permissions
-        if ($this->usertypeid == 1 || $ownerId == $this->userid)
-        {
-            $auth->FullAccess();
-            return $auth;
-        }
-
-        // Permissions for groups the user is assigned to, and Everyone
-        $SQL  = '';
-        $SQL .= 'SELECT MAX(IFNULL(View, 0)) AS View, MAX(IFNULL(Edit, 0)) AS Edit, MAX(IFNULL(Del, 0)) AS Del ';
-        $SQL .= '  FROM lklayoutregiongroup ';
-        $SQL .= '   INNER JOIN `group` ';
-        $SQL .= '   ON `group`.GroupID = lklayoutregiongroup.GroupID ';
-        $SQL .= " WHERE lklayoutregiongroup.RegionID = '%s' AND lklayoutregiongroup.LayoutID = %d ";
-        $SQL .= '   AND (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
-
-        $SQL = sprintf($SQL, $this->db->escape_string($regionId), $layoutId, implode(',', $this->GetUserGroups($this->userid, true)));
         //Debug::LogEntry('audit', $SQL);
 
         if (!$row = $this->db->GetSingleRow($SQL))

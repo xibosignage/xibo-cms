@@ -24,6 +24,7 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\Playlist;
+use Xibo\Exception\NotFoundException;
 
 class PlaylistFactory
 {
@@ -38,13 +39,55 @@ class PlaylistFactory
         return PlaylistFactory::query(null, array('regionId' => $regionId));
     }
 
+    /**
+     * Get by Id
+     * @param int $playlistId
+     * @return Playlist
+     * @throws NotFoundException
+     */
+    public static function getById($playlistId)
+    {
+        $playlists = PlaylistFactory::query(null, array('playlistId' => $playlistId));
+
+        if (count($playlists) <= 0)
+            throw new NotFoundException(__('Cannot find playlist'));
+
+        return $playlists[0];
+    }
+
+    /**
+     * Create a Playlist
+     * @param string $name
+     * @param int $ownerId
+     * @return Playlist
+     */
+    public static function create($name, $ownerId)
+    {
+        $playlist = new Playlist();
+        $playlist->name = $name;
+        $playlist->ownerId = $ownerId;
+
+        return $playlist;
+    }
+
     public static function query($sortOrder = null, $filterBy = null)
     {
         $entries = array();
 
-        $sql = 'SELECT playlist.* FROM `playlist` INNER JOIN `lkregionplaylist` ON lkregionplaylist.playlistId = playlist.playlistId WHERE lkregionplaylist.regionId = :regionId';
+        $params = array();
+        $sql = 'SELECT playlist.* FROM `playlist` ';
 
-        foreach (\PDOConnect::select($sql, array('regionId' => \Kit::GetParam('regionId', $filterBy, _INT))) as $row) {
+        if (\Kit::GetParam('regionId', $filterBy, _INT) != 0) {
+            $sql .= 'INNER JOIN `lkregionplaylist` ON lkregionplaylist.playlistId = playlist.playlistId AND lkregionplaylist.regionId = :regionId ';
+            $params['regionId'] = \Kit::GetParam('regionId', $filterBy, _INT);
+        }
+
+        if (\Kit::GetParam('playlistId', $filterBy, _INT) != 0) {
+            $sql .= ' WHERE playlistId = :playlistId ';
+            $params['playlistId'] = \Kit::GetParam('playlistId', $filterBy, _INT);
+        }
+
+        foreach (\PDOConnect::select($sql, $params) as $row) {
             $playlist = new Playlist();
             $playlist->name = \Kit::ValidateParam($row['name'], _STRING);
             $playlist->ownerId = \Kit::ValidateParam($row['ownerId'], _INT);

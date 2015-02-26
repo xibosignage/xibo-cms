@@ -187,7 +187,7 @@ class Layout
     public function delete()
     {
         // We must ensure everything is loaded before we delete
-        if ($this->hash() == null)
+        if ($this->hash == null)
             $this->load();
 
         \Debug::Audit('Deleting ' . $this);
@@ -282,24 +282,19 @@ class Layout
 
         $time = \DateManager::getSystemDate(null, 'Y-m-d h:i:s');
 
-        try {
-            $this->layoutId = \PDOConnect::insert($sql, array(
-                'layout' => $this->layout,
-                'description' => $this->description,
-                'userid' => $this->ownerId,
-                'createddt' => $time,
-                'modifieddt' => $time,
-                'status' => 3,
-                'width' => $this->width,
-                'height' => $this->height,
-                'backgroundImageId' => $this->backgroundImageId,
-                'backgroundColor' => $this->backgroundColor,
-                'backgroundzIndex' => $this->backgroundzIndex,
-            ));
-        }
-        catch (\PDOException $e) {
-            throw new \Exception(__('Could not add Layout'));
-        }
+        $this->layoutId = \PDOConnect::insert($sql, array(
+            'layout' => $this->layout,
+            'description' => $this->description,
+            'userid' => $this->ownerId,
+            'createddt' => $time,
+            'modifieddt' => $time,
+            'status' => 3,
+            'width' => $this->width,
+            'height' => $this->height,
+            'backgroundImageId' => $this->backgroundImageId,
+            'backgroundColor' => $this->backgroundColor,
+            'backgroundzIndex' => $this->backgroundzIndex,
+        ));
 
         // Add a Campaign
         $campaign = new \Campaign();

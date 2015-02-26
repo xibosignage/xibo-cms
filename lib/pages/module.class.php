@@ -455,6 +455,9 @@ class moduleDAO extends baseDAO
         if (!$this->user->checkViewable($module->widget))
             die(__('Access Denied'));
 
+        // Set the permissions for this module
+        $module->setPermission($this->user->getPermission($module->widget));
+
         // What module has been requested?
         $response = null;
         $method = Kit::GetParam('method', _REQUEST, _WORD);

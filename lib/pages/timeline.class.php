@@ -32,12 +32,11 @@ class timelineDAO extends baseDAO
 		$layout = \Xibo\Factory\LayoutFactory::loadById(Kit::GetParam('layoutid', _REQUEST, _INT));
 
         // Check Permissions
-        $auth = $this->user->LayoutAuth($layout->layoutId, true);
-        if (!$auth->edit)
+        if (!$this->user->checkEditable($layout))
             trigger_error(__('You do not have permission to edit this Layout'), E_USER_ERROR);
 
         // Create a new region
-        $region = \Xibo\Factory\RegionFactory::create($this->user->userid, null, 250, 250, 50, 50);
+        $region = \Xibo\Factory\RegionFactory::create($this->user->userid, $layout->layout . '-' . (count($layout->regions) + 1), 250, 250, 50, 50);
 
         // Add the region to the layout
         $layout->regions[] = $region;
@@ -56,18 +55,11 @@ class timelineDAO extends baseDAO
 	{
 		$response = new ResponseManager();
 
-        $region = \Xibo\Factory\RegionFactory::getByRegionId(Kit::GetParam('regionid', _REQUEST, _INT));
+        $region = \Xibo\Factory\RegionFactory::getById(Kit::GetParam('regionid', _REQUEST, _INT));
 
         // Do we have permission
-        $regionAuth = $this->user->RegionAssignmentAuth($region->ownerId, $region->layoutId, $region->regionId, true);
-        if (!$regionAuth->del)
+        if (!$this->user->checkDeleteable($region))
             trigger_error(__('You do not have permissions to delete this region'), E_USER_ERROR);
-
-        // Remove the permissions
-        // TODO: Remove the permissions in a more generic way
-        $security = new LayoutRegionGroupSecurity();
-        $security->UnlinkAll($region->layoutId, $region->regionId);
-        //$db->query(sprintf("DELETE FROM lklayoutmediagroup WHERE layoutid = %d AND RegionID = '%s'", $layoutid, $regionid));
 
         // Delete the region
         $region->delete();
@@ -90,8 +82,7 @@ class timelineDAO extends baseDAO
         // Load the region and get the dimensions, applying the scale factor if necessary (only v1 layouts will have a scale factor != 1)
         $region = \Xibo\Factory\RegionFactory::loadByRegionId(Kit::GetParam('regionid', _GET, _INT));
 
-        $regionAuth = $this->user->RegionAssignmentAuth($region->ownerId, $region->layoutId, $region->regionId, true);
-        if (!$regionAuth->edit)
+        if (!$this->user->checkEditable($region))
             trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
 
         $top = round($region->top * $scale, 0);
@@ -202,8 +193,7 @@ class timelineDAO extends baseDAO
         $region = \Xibo\Factory\RegionFactory::loadByRegionId(Kit::GetParam('regionid', _POST, _INT));
         Debug::Audit($region);
 
-        $regionAuth = $this->user->RegionAssignmentAuth($region->ownerId, $region->layoutId, $region->regionId, true);
-        if (!$regionAuth->edit)
+        if (!$this->user->checkEditable($region))
             trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
 
         // Set the new values
@@ -273,8 +263,7 @@ class timelineDAO extends baseDAO
             Debug::Audit('Editing Region ' . $region);
 
             // Check Permissions
-            $regionAuth = $this->user->RegionAssignmentAuth($region->ownerId, $layout->layoutId, $regionId, true);
-            if (!$regionAuth->edit)
+            if (!$this->user->checkEditable($region))
                 trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
 
             // New coordinates
@@ -302,11 +291,10 @@ class timelineDAO extends baseDAO
         $response = new ResponseManager();
 
         // Load our region
-        $region = \Xibo\Factory\RegionFactory::getByRegionId(Kit::GetParam('regionid', _REQUEST, _INT));
+        $region = \Xibo\Factory\RegionFactory::getById(Kit::GetParam('regionid', _REQUEST, _INT));
 
         // Do we have permission
-        $regionAuth = $this->user->RegionAssignmentAuth($region->ownerId, $region->layoutId, $region->regionId, true);
-        if (!$regionAuth->del)
+        if (!$this->user->checkDeleteable($region))
             trigger_error(__('You do not have permissions to delete this region'), E_USER_ERROR);
 		
 		// Set some information about the form
@@ -337,30 +325,44 @@ class timelineDAO extends baseDAO
      */
     function AddFromLibrary()
     {
-        $db 		=& $this->db;
-        $user 		=& $this->user;
-        $response 	= new ResponseManager();
+        $response = new ResponseManager();
 
-        $layoutId = Kit::GetParam('layoutid', _GET, _INT);
-        $regionId = Kit::GetParam('regionid', _REQUEST, _STRING);
-        $mediaList = Kit::GetParam('MediaID', _POST, _ARRAY, array());
+        // Load the region
+        $region = \Xibo\Factory\RegionFactory::getById(Kit::GetParam('regionid', _REQUEST, _INT));
 
         // Make sure we have permission to edit this region
-        Kit::ClassLoader('region');
-        $region = new region($db);
-        $ownerId = $region->GetOwnerId($layoutId, $regionId);
-
-        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
-        if (!$regionAuth->edit)
+        if ($this->user->checkEditable($region))
             trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
 
-        if (!$region->AddFromLibrary($user, $layoutId, $regionId, $mediaList))
-            trigger_error($region->GetErrorMessage(), E_USER_ERROR);
+        // Media to assign
+        $mediaList = Kit::GetParam('MediaID', _POST, _ARRAY, array());
+
+        if (count($mediaList) <= 0)
+            throw new InvalidArgumentException(__('No media to assign'), 25006);
+
+        // Add each media item to the region and save
+        // Loop through all the media
+        foreach ($mediaList as $mediaId) {
+            /* @var int $mediaId */
+            $media = \Xibo\Factory\MediaFactory::getById($mediaId);
+
+            if (!$this->user->checkViewable($media))
+                trigger_error(__('You do not have permissions to use this media'), E_USER_ERROR);
+
+            // Create a Widget and add it to our region
+            $widget = \Xibo\Factory\WidgetFactory::create($this->user->userid, $region->playlists[0]->playlistId, $media->mediaType, $media->duration);
+            $widget->assignMedia($mediaId);
+
+            $region->playlists[0]->widgets[] = $widget;
+        }
+
+        // Save the region
+        $region->save();
 
         // We want to load a new form
         $response->SetFormSubmitResponse(sprintf(__('%d Media Items Assigned'), count($mediaList)));
         $response->loadForm = true;
-        $response->loadFormUri = "index.php?p=timeline&layoutid=$layoutId&regionid=$regionId&q=Timeline";
+        $response->loadFormUri = 'index.php?p=timeline&regionid=' . $region->regionId . '&q=Timeline';
         $response->Respond();
     }
 
@@ -370,7 +372,7 @@ class timelineDAO extends baseDAO
 	public function RegionPreview()
 	{
 		// Response Manager
-		$response	= new ResponseManager();
+		$response = new ResponseManager();
 		
 		// Keyed off the region id
 		$regionId = Kit::GetParam('regionid', _POST, _STRING);
@@ -386,7 +388,7 @@ class timelineDAO extends baseDAO
 		
 		// Load our region
         try {
-            $region = \Xibo\Factory\RegionFactory::getByRegionId($regionId);
+            $region = \Xibo\Factory\RegionFactory::getById($regionId);
             $playlists = \Xibo\Factory\PlaylistFactory::getByRegionId($regionId);
 
             // Get the first playlist we can find
@@ -436,160 +438,12 @@ class timelineDAO extends baseDAO
         }
 	}
 
-	public function RegionPermissionsForm()
-    {
-        $db =& $this->db;
-        $user =& $this->user;
-        $response = new ResponseManager();
-        $helpManager = new HelpManager($db, $user);
-
-        $layoutid = Kit::GetParam('layoutid', _GET, _INT);
-        $regionid = Kit::GetParam('regionid', _GET, _STRING);
-
-        Kit::ClassLoader('region');
-        $region = new region($db);
-        $ownerId = $region->GetOwnerId($layoutid, $regionid);
-
-        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutid, $regionid, true);
-        if (!$regionAuth->modifyPermissions)
-            trigger_error(__("You do not have permissions to edit this regions permissions"), E_USER_ERROR);
-
-        // List of all Groups with a view / edit / delete check box
-        $permissions = new UserGroup();
-        
-        if (!$result = $permissions->GetPermissionsForObject('lklayoutregiongroup', NULL, NULL, sprintf(" AND lklayoutregiongroup.LayoutID = %d AND lklayoutregiongroup.RegionID = '%s' ", $layoutid, $regionid)))
-            trigger_error($permissions->GetErrorMessage(), E_USER_ERROR);
-        
-        if (count($result) <= 0)
-            trigger_error(__('Unable to get permissions'), E_USER_ERROR);
-
-        $checkboxes = array();
-
-        foreach ($result as $row) {
-            $groupId = $row['groupid'];
-            $rowClass = ($row['isuserspecific'] == 0) ? 'strong_text' : '';
-
-            $checkbox = array(
-                    'id' => $groupId,
-                    'name' => Kit::ValidateParam($row['group'], _STRING),
-                    'class' => $rowClass,
-                    'value_view' => $groupId . '_view',
-                    'value_view_checked' => (($row['view'] == 1) ? 'checked' : ''),
-                    'value_edit' => $groupId . '_edit',
-                    'value_edit_checked' => (($row['edit'] == 1) ? 'checked' : ''),
-                    'value_del' => $groupId . '_del',
-                    'value_del_checked' => (($row['del'] == 1) ? 'checked' : ''),
-                );
-
-            $checkboxes[] = $checkbox;
-        }
-
-        $formFields = array();
-        $formFields[] = FormManager::AddPermissions('groupids[]', $checkboxes);
-        Theme::Set('form_fields', $formFields);
-
-        // Set some information about the form
-        Theme::Set('form_id', 'RegionPermissionsForm');
-        Theme::Set('form_action', 'index.php?p=timeline&q=RegionPermissions');
-        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '" /><input type="hidden" name="regionid" value="' . $regionid . '" />');
-
-        $response->SetFormRequestResponse(NULL, __('Permissions'), '350px', '500px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Region', 'Permissions') . '")');
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Save'), '$("#RegionPermissionsForm").submit()');
-        $response->Respond();
-    }
-
-    public function RegionPermissions()
-    {
-        $db =& $this->db;
-        $user =& $this->user;
-        $response = new ResponseManager();
-        Kit::ClassLoader('layoutregiongroupsecurity');
-
-        $layoutId = Kit::GetParam('layoutid', _POST, _INT);
-        $regionId = Kit::GetParam('regionid', _POST, _STRING);
-        $groupIds = Kit::GetParam('groupids', _POST, _ARRAY);
-
-        Kit::ClassLoader('region');
-        $region = new region($db);
-        $ownerId = $region->GetOwnerId($layoutId, $regionId);
-
-        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
-        if (!$regionAuth->modifyPermissions)
-            trigger_error(__('You do not have permissions to edit this regions permissions'), E_USER_ERROR);
-
-        // Unlink all
-        $layoutSecurity = new LayoutRegionGroupSecurity($db);
-        if (!$layoutSecurity->UnlinkAll($layoutId, $regionId))
-            trigger_error(__('Unable to set permissions'));
-
-        // Some assignments for the loop
-        $lastGroupId = 0;
-        $first = true;
-        $view = 0;
-        $edit = 0;
-        $del = 0;
-
-        // List of groupIds with view, edit and del assignments
-        foreach($groupIds as $groupPermission)
-        {
-            $groupPermission = explode('_', $groupPermission);
-            $groupId = $groupPermission[0];
-
-            if ($first)
-            {
-                // First time through
-                $first = false;
-                $lastGroupId = $groupId;
-            }
-
-            if ($groupId != $lastGroupId)
-            {
-                // The groupId has changed, so we need to write the current settings to the db.
-                // Link new permissions
-                if (!$layoutSecurity->Link($layoutId, $regionId, $lastGroupId, $view, $edit, $del))
-                    trigger_error(__('Unable to set permissions'));
-
-                // Reset
-                $lastGroupId = $groupId;
-                $view = 0;
-                $edit = 0;
-                $del = 0;
-            }
-
-            switch ($groupPermission[1])
-            {
-                case 'view':
-                    $view = 1;
-                    break;
-
-                case 'edit':
-                    $edit = 1;
-                    break;
-
-                case 'del':
-                    $del = 1;
-                    break;
-            }
-        }
-
-        // Need to do the last one
-        if (!$first)
-        {
-            if (!$layoutSecurity->Link($layoutId, $regionId, $lastGroupId, $view, $edit, $del))
-                    trigger_error(__('Unable to set permissions'));
-        }
-
-        $response->SetFormSubmitResponse(__('Permissions Changed'));
-        $response->Respond();
-    }
-
     /**
      * Set the Module Buttons for a Form
      * @param int $regionId
+     * @param int $playlistId
      */
-    private function setModuleButtons($regionId)
+    private function setModuleButtons($regionId, $playlistId)
     {
         // Present a canvas with 2 columns, left column for the media icons
         $buttons = array();
@@ -604,7 +458,7 @@ class timelineDAO extends baseDAO
         // Get a list of the enabled modules and then create buttons for them
         foreach (\Xibo\Factory\ModuleFactory::getAssignableModules() as $module) {
             /* @var \Xibo\Entity\Module $module */
-            $url = (($module->regionSpecific == 1) ? 'index.php?p=module&q=Exec&mod=' . $module->type . '&method=AddForm' : 'index.php?p=content&q=fileUploadForm') . '&regionId=' . $regionId;
+            $url = (($module->regionSpecific == 1) ? 'index.php?p=module&q=Exec&mod=' . $module->type . '&method=AddForm' : 'index.php?p=content&q=fileUploadForm') . '&regionId=' . $regionId . '&playlistId=' . $playlistId;
 
             $buttons[] = array(
                 'id' => 'media_button_' . $module->type,
@@ -640,15 +494,14 @@ class timelineDAO extends baseDAO
         // Load the region and get the dimensions, applying the scale factor if necessary (only v1 layouts will have a scale factor != 1)
         $region = \Xibo\Factory\RegionFactory::loadByRegionId(Kit::GetParam('regionid', _GET, _INT));
 
-        $regionAuth = $this->user->RegionAssignmentAuth($region->ownerId, $region->layoutId, $region->regionId, true);
-        if (!$regionAuth->edit)
+        if (!$this->user->checkEditable($region))
             trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
 
         // Start buildings the Timeline List
         $response->html .= '<div class="container-fluid">';
         $response->html .= '<div class="row">';
         // Set the theme module buttons
-        $this->setModuleButtons($region->regionId);
+        $this->setModuleButtons($region->regionId, $region->playlists[0]->playlistId);
         $response->html .= Theme::RenderReturn('layout_designer_form_timeline');
 
         // Load the XML for this layout and region, we need to get the media nodes.
@@ -722,7 +575,7 @@ class timelineDAO extends baseDAO
                 $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=DeleteForm&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '" title="' . __('Click to delete this media') . '">' . __('Delete') . '</a></li>';
 
             if ($auth->modifyPermissions)
-                $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=PermissionsForm&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '" title="' . __('Click to change permissions for this media') . '">' . __('Permissions') . '</a></li>';
+                $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=user&q=permissionsForm&entity=Widget&objectId=' . $widget->widgetId . '" title="' . __('Click to change permissions for this media') . '">' . __('Permissions') . '</a></li>';
 
             if (count($this->user->TransitionAuth('in')) > 0)
                 $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=TransitionEditForm&type=in&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '" title="' . __('Click to edit this transition') . '">' . __('In Transition') . '</a></li>';
@@ -797,12 +650,11 @@ class timelineDAO extends baseDAO
         // Load the region and get the dimensions, applying the scale factor if necessary (only v1 layouts will have a scale factor != 1)
         $region = \Xibo\Factory\RegionFactory::loadByRegionId(Kit::GetParam('regionid', _GET, _INT));
 
-        $regionAuth = $this->user->RegionAssignmentAuth($region->ownerId, $region->layoutId, $region->regionId, true);
-        if (!$regionAuth->edit)
+        if (!$this->user->checkEditable($region))
             trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
 
         // Set the theme module buttons
-        $this->setModuleButtons($region->regionId);
+        $this->setModuleButtons($region->regionId, $region->playlists[0]->playlistId);
 
         $id = uniqid();
         Theme::Set('prepend', '<div class="row">' . Theme::RenderReturn('layout_designer_form_timeline') . '<div class="col-md-10">');
@@ -845,8 +697,7 @@ class timelineDAO extends baseDAO
         // Load the region and get the dimensions, applying the scale factor if necessary (only v1 layouts will have a scale factor != 1)
         $region = \Xibo\Factory\RegionFactory::loadByRegionId(Kit::GetParam('regionid', _POST, _INT));
 
-        $regionAuth = $this->user->RegionAssignmentAuth($region->ownerId, $region->layoutId, $region->regionId, true);
-        if (!$regionAuth->edit)
+        if (!$this->user->checkEditable($region))
             trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
 
         // Columns
@@ -983,8 +834,7 @@ class timelineDAO extends baseDAO
         $region = new region($db);
         $ownerId = $region->GetOwnerId($layoutId, $regionId);
 
-        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
-        if (!$regionAuth->edit)
+        if (!$this->user->checkEditable($region))
             trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
 
         // Create a list of media
