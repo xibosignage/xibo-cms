@@ -32,11 +32,16 @@ class PlaylistFactory
      * Load Playlists by
      * @param $regionId
      * @return array[Playlist]
+     * @throws NotFoundException
      */
     public static function getByRegionId($regionId)
     {
-        //TODO fill in playlist factory
-        return PlaylistFactory::query(null, array('regionId' => $regionId));
+        $playlists = PlaylistFactory::query(null, array('regionId' => $regionId));
+
+        if (count($playlists) <= 0)
+            throw new NotFoundException(__('Cannot find playlist'));
+
+        return $playlists;
     }
 
     /**
@@ -86,6 +91,8 @@ class PlaylistFactory
             $sql .= ' WHERE playlistId = :playlistId ';
             $params['playlistId'] = \Kit::GetParam('playlistId', $filterBy, _INT);
         }
+
+        \Debug::sql($sql, $params);
 
         foreach (\PDOConnect::select($sql, $params) as $row) {
             $playlist = new Playlist();

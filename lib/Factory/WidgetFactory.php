@@ -89,6 +89,9 @@ class WidgetFactory
 
     public static function query($sortOrder = null, $filterBy = null)
     {
+        if ($sortOrder == null)
+            $sortOrder = array('displayOrder');
+
         $entries = array();
 
         $params = array();
@@ -103,6 +106,10 @@ class WidgetFactory
             $sql .= ' AND widgetId = :widgetId';
             $params['widgetId'] = \Kit::GetParam('widgetId', $filterBy, _INT);
         }
+
+        // Sorting?
+        if (is_array($sortOrder))
+            $sql .= ' ORDER BY ' . implode(',', $sortOrder);
 
         foreach (\PDOConnect::select($sql, $params) as $row) {
             $widget = new Widget();

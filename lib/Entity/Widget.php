@@ -36,6 +36,7 @@ class Widget
 
     public $type;
     public $duration;
+    public $displayOrder;
 
     public $widgetOptions;
 
@@ -59,9 +60,14 @@ class Widget
         // No need to clone the media
     }
 
+    public function __toString()
+    {
+        return sprintf('Widget. %s on playlist %d in position %d. WidgetId = %d', $this->type, $this->playlistId, $this->displayOrder, $this->widgetId);
+    }
+
     private function hash()
     {
-        return md5($this->widgetId . $this->playlistId . $this->ownerId . $this->type . $this->duration);
+        return md5($this->widgetId . $this->playlistId . $this->ownerId . $this->type . $this->duration . $this->displayOrder);
     }
 
     /**
@@ -233,12 +239,13 @@ class Widget
     {
         \Debug::Audit('Adding Widget ' . $this->type . ' to PlaylistId ' . $this->playlistId);
 
-        $sql = 'INSERT INTO `widget` (`playlistId`, `ownerId`, `type`, `duration`) VALUES (:playlistId, :ownerId, :type, :duration)';
+        $sql = 'INSERT INTO `widget` (`playlistId`, `ownerId`, `type`, `duration`, `displayOrder`) VALUES (:playlistId, :ownerId, :type, :duration, :displayOrder)';
         $this->widgetId = \PDOConnect::insert($sql, array(
             'playlistId' => $this->playlistId,
             'ownerId' => $this->ownerId,
             'type' => $this->type,
-            'duration' => $this->duration
+            'duration' => $this->duration,
+            'displayOrder' => $this->displayOrder
         ));
     }
 
@@ -246,13 +253,14 @@ class Widget
     {
         \Debug::Audit('Saving Widget ' . $this->type . ' on PlaylistId ' . $this->playlistId . ' WidgetId: ' . $this->widgetId);
 
-        $sql = 'UPDATE `widget` SET `playlistId` = :playlistId, `ownerId` = :ownerId, `type` = :type, `duration` = :duration WHERE `widgetId` = :widgetId';
+        $sql = 'UPDATE `widget` SET `playlistId` = :playlistId, `ownerId` = :ownerId, `type` = :type, `duration` = :duration, `displayOrder` = :displayOrder WHERE `widgetId` = :widgetId';
         \PDOConnect::update($sql, array(
             'playlistId' => $this->playlistId,
             'ownerId' => $this->ownerId,
             'type' => $this->type,
             'duration' => $this->duration,
-            'widgetId' => $this->widgetId
+            'widgetId' => $this->widgetId,
+            'displayOrder' => $this->displayOrder
         ));
     }
 

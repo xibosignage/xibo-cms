@@ -561,7 +561,7 @@ class timelineDAO extends baseDAO
                 $mediaBlockColouringClass = 'timelineMediaItemColouringDefault timelineMediaItemColouring_' . $tmpModule->getModuleType();
             
             // Create the list item
-            $response->html .= '<li class="timelineMediaListItem" mediaid="' . $widget->widgetId . '">';
+            $response->html .= '<li class="timelineMediaListItem" widgetid="' . $widget->widgetId . '">';
             
             // In transition
             $response->html .= '    <div class="timelineMediaInTransition">';
@@ -828,47 +828,42 @@ class timelineDAO extends baseDAO
      */
     function TimelineReorder()
     {
-        $db =& $this->db;
-        $user =& $this->user;
         $response = new ResponseManager();
 
-        // Vars
-        $layoutId = Kit::GetParam('layoutid', _REQUEST, _INT);
-        $regionId = Kit::GetParam('regionid', _POST, _STRING);
-        $mediaList = Kit::GetParam('medialist', _POST, _STRING);
+        // Load the region and get the dimensions, applying the scale factor if necessary (only v1 layouts will have a scale factor != 1)
+        $playlists = \Xibo\Factory\PlaylistFactory::getByRegionId(Kit::GetParam('regionId', _GET, _INT));
+        $playlist = $playlists[0];
+        /* @var \Xibo\Entity\Playlist $playlist */
 
-        // Check the user has permission
-        Kit::ClassLoader('region');
-        $region = new region($db);
-        $ownerId = $region->GetOwnerId($layoutId, $regionId);
+        if (!$this->user->checkEditable($playlist))
+            trigger_error(__('You do not have permissions to edit this playlist'), E_USER_ERROR);
 
-        if (!$this->user->checkEditable($region))
-            trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
+        // Load the widgets
+        $playlist->load();
 
         // Create a list of media
-        if ($mediaList == '')
-            trigger_error(__('No media to reorder'));
+        $widgetList = Kit::GetParam('widgetIds', _POST, _ARRAY_INT);
+        if (count($widgetList) <= 0)
+            trigger_error(__('No widgets to reorder'), E_USER_ERROR);
 
-        // Trim the last | if there is one
-        $mediaList = rtrim($mediaList, '|');
+        Debug::Audit($playlist . ' reorder to ' . var_export($widgetList, true));
 
-        // Explode into an array
-        $mediaList = explode('|', $mediaList);
-
-        // Store in an array
-        $resolvedMedia = array();
-
-        foreach($mediaList as $mediaNode)
-        {
-            // Explode the second part of the array
-            $mediaNode = explode(',', $mediaNode);
-
-            $resolvedMedia[] = array('mediaid' => $mediaNode[0], 'lkid' => $mediaNode[1]);
+        // Go through each one and move it
+        $i = 0;
+        foreach ($widgetList as $widgetId) {
+            $i++;
+            // Find this item in the existing list and add it to our new order
+            foreach ($playlist->widgets as $widget) {
+                /* @var \Xibo\Entity\Widget $widget */
+                Debug::Audit('Comparing ' . $widget . ' with ' . $widgetId);
+                if ($widget->getId() == $widgetId) {
+                    Debug::Audit('Setting Display Order ' . $i . ' on widgetId ' . $widgetId);
+                    $widget->displayOrder = $i;
+                    $widget->save();
+                    break;
+                }
+            }
         }
-
-        // Hand off to the region object to do the actual reorder
-        if (!$region->ReorderTimeline($layoutId, $regionId, $resolvedMedia))
-            trigger_error($region->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse(__('Order Changed'));
         $response->keepOpen = true;

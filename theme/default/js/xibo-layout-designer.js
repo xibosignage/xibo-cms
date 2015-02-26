@@ -1,6 +1,6 @@
 /**
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2013 Daniel Garner
+ * Copyright (C) 2006-2015 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -257,28 +257,20 @@ var LoadTimeLineCallback = function() {
 };
 
 
-var XiboTimelineSaveOrder = function(mediaListId, layoutId, regionId) {
+var XiboTimelineSaveOrder = function(mediaListId, regionId) {
 
-    //console.log(mediaListId);
+    var widgets = $('#' + mediaListId + ' li.timelineMediaListItem').map(function(){return $(this).attr("widgetid");}).get();
 
-    // Load the media id's into an array
-    var mediaList = "";
-
-    $('#' + mediaListId + ' li.timelineMediaListItem').each(function(){
-        mediaList = mediaList + $(this).attr("mediaid") + "," + $(this).attr("lkid") + "|";
-    });
-
-    //console.log("Media List: " + mediaList);
+    console.log(widgets);
 
     // Call the server to do the reorder
     $.ajax({
         type:"post",
-        url:"index.php?p=timeline&q=TimelineReorder&layoutid="+layoutId+"&ajax=true",
+        url:"index.php?p=timeline&q=TimelineReorder&regionId="+regionId+"&ajax=true",
         cache:false,
         dataType:"json",
         data:{
-            "regionid": regionId,
-            "medialist": mediaList
+            "widgetIds": widgets
         },
         success: XiboSubmitResponse
     });
