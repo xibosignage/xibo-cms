@@ -960,6 +960,9 @@ END;
         $lkid = $this->lkid;
         $userid	= $this->user->userid;
 
+	// Delete Old Version Checkbox Setting
+	$deleteOldVersionChecked = (Config::GetSetting('LIBRARY_MEDIA_DELETEOLDVER_CHECKB') == 'Checked') ? 1 : 0;
+
         // Can this user delete?
         if (!$this->auth->edit)
         {
@@ -1041,10 +1044,8 @@ END;
                 'r');
         }
 
-        $formFields[] = FormManager::AddCheckbox('deleteOldVersion', __('Delete the old version?'), 
-                ((Config::GetSetting('LIBRARY_MEDIA_UPDATEINALL_CHECKB') == 'Checked') ? 1 : 0), 
-                __('Completely remove the old version of this media item if a new file is being uploaded.'), 
-                '');
+	$formFields[] = FormManager::AddCheckbox('deleteOldVersion', __('Delete the old version?'), $deleteOldVersionChecked,
+		__('Completely remove the old version of this media item if a new file is being uploaded.'), 'c');
 
         // Add in any extra form fields we might have provided by the super-class
         if ($extraFormFields != NULL && is_array($extraFormFields)) {
