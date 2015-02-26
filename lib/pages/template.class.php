@@ -130,7 +130,7 @@ class templateDAO extends baseDAO {
             $row['thumbnail'] = '';
 
             if ($showThumbnail == 1 && $template->backgroundImageId != 0)
-                $row['thumbnail'] = '<a class="img-replace" data-toggle="lightbox" data-type="image" data-img-src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $template->backgroundImageId . '&width=100&height=100&dynamic=true&thumb=true" href="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $template->backgroundImageId . '"><i class="fa fa-file-image-o"></i></a>';
+                $row['thumbnail'] = '<a class="img-replace" data-toggle="lightbox" data-type="image" data-img-src="index.php?p=content&q=getFile&mediaid=' . $template->backgroundImageId . '&width=100&height=100&dynamic=true&thumb=true" href="index.php?p=content&q=getFile&mediaid=' . $template->backgroundImageId . '"><i class="fa fa-file-image-o"></i></a>';
 
 
             $row['buttons'] = array();
@@ -332,7 +332,6 @@ class templateDAO extends baseDAO {
     
     /**
      * Deletes a template
-     * @return
      */
     function DeleteTemplate()
     {
@@ -340,27 +339,16 @@ class templateDAO extends baseDAO {
         if (!Kit::CheckToken())
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
-        $db =& $this->db;
-        $user =& $this->user;
         $response = new ResponseManager();
 
-        $templateId = Kit::GetParam('templateId', _POST, _INT);
+        // Get the layout
+        $layout = \Xibo\Factory\LayoutFactory::getById(Kit::GetParam('layoutid', _POST, _INT));
 
-        if ($templateId == 0)
-            trigger_error(__('No template selected'), E_USER_ERROR);
+        // Check Permissions
+        if (!$this->user->checkDeleteable($layout))
+            trigger_error(__('You do not have permissions to view this layout'), E_USER_ERROR);
 
-        // Is this user allowed to delete this template?
-        $auth = $this->user->TemplateAuth($templateId, true);
-        
-        if (!$auth->del)
-            trigger_error(__('Access denied'), E_USER_ERROR);
-
-        // Use the data class
-        $template = new Layout();
-
-        // Delete the template
-        if (!$template->Delete($templateId))
-            trigger_error($template->GetErrorMessage(), E_USER_ERROR);
+        $layout->delete();
 
         $response->SetFormSubmitResponse(__('The Template has been Deleted'));
         $response->Respond();
@@ -372,16 +360,17 @@ class templateDAO extends baseDAO {
     public function DeleteTemplateForm()
     {
         $response = new ResponseManager();
-        
-        $templateId = Kit::GetParam('layoutid', _GET, _INT);
 
-        $auth = $this->user->TemplateAuth($templateId, true);
-        if (!$auth->del)
-            trigger_error(__('You do not have permissions to delete this template'), E_USER_ERROR);
+        // Get the layout
+        $layout = \Xibo\Factory\LayoutFactory::getById(Kit::GetParam('layoutid', _GET, _INT));
+
+        // Check Permissions
+        if (!$this->user->checkDeleteable($layout))
+            trigger_error(__('You do not have permissions to view this layout'), E_USER_ERROR);
         
         Theme::Set('form_id', 'DeleteForm');
         Theme::Set('form_action', 'index.php?p=template&q=DeleteTemplate');
-        Theme::Set('form_meta', '<input type="hidden" name="templateId" value="' . $templateId . '">');
+        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layout->layoutId . '">');
         Theme::Set('form_fields', array(
             FormManager::AddMessage(__('Are you sure you want to delete this template?'))
             ));

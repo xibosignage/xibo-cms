@@ -68,6 +68,12 @@ class CampaignFactory
         $sql .= "   ON lkcampaignlayout.LayoutID = layout.LayoutID ";
         $sql .= " WHERE 1 = 1 ";
 
+        if (\Kit::GetParam('campaignId', $filterBy, _INT, 0) != 0) {
+            // Join Campaign back onto it again
+            $sql .= " AND `campaign`.campaignId = :campaignId ";
+            $params['campaignId'] = \Kit::GetParam('campaignId', $filterBy, _INT, 0);
+        }
+
         if (\Kit::GetParam('name', $filterBy, _STRING) != '') {
             // convert into a space delimited array
             $names = explode(' ', \Kit::GetParam('name', $filterBy, _STRING));

@@ -113,7 +113,7 @@ class Tag
     private function unlinkLayouts()
     {
         foreach ($this->layoutIds as $layoutId) {
-            \PDOConnect::update('DELETE FROM `lktaglayout` WHERE tagId = :tagId AND layoutId =  :layoutId) ', array(
+            \PDOConnect::update('DELETE FROM `lktaglayout` WHERE tagId = :tagId AND layoutId =  :layoutId ', array(
                 'tagId' => $this->tagId,
                 'layoutId' => $layoutId
             ));
