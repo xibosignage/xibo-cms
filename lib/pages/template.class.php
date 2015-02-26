@@ -24,9 +24,8 @@ class templateDAO extends baseDAO {
     /**
      * Display page logic
      */
-    function displayPage() {
-
-        $db =& $this->db;
+    function displayPage()
+    {
 
         // Default options
         if (Kit::IsFilterPinned('template', 'Filter')) {
@@ -65,8 +64,8 @@ class templateDAO extends baseDAO {
         Theme::Render('grid_render');
     }
 
-    function actionMenu() {
-
+    function actionMenu()
+    {
         return array(
                 array('title' => __('Filter'),
                     'class' => '',
@@ -90,9 +89,7 @@ class templateDAO extends baseDAO {
      */
     function TemplateView() 
     {
-        $db         =& $this->db;
-        $user       =& $this->user;
-        $response   = new ResponseManager();
+        $response = new ResponseManager();
 
         $filter_name = Kit::GetParam('filter_name', _POST, _STRING);
         $filter_tags = Kit::GetParam('filter_tags', _POST, _STRING);
@@ -105,7 +102,7 @@ class templateDAO extends baseDAO {
         $showThumbnail = Kit::GetParam('showThumbnail', _POST, _CHECKBOX);
         setSession('layout', 'showThumbnail', $showThumbnail);
     
-        $templates = $user->TemplateList($filter_name, $filter_tags);
+        $templates = $this->user->TemplateList($filter_name, $filter_tags);
 
         if (!is_array($templates)) {
             trigger_error(__('Unable to get list of templates for this user'), E_USER_ERROR);
@@ -123,62 +120,64 @@ class templateDAO extends baseDAO {
         $rows = array();
 
         foreach ($templates as $template) {
+            /* @var \Xibo\Entity\Layout $template */
             
-            $template['permissions'] = $this->GroupsForTemplate($template['campaignid']);
-            $template['owner'] = $user->getNameFromID($template['ownerid']);
+            $row['layoutid'] = $template->layoutId;
+            $row['layout'] = $template->layout;
+            $row['owner'] = $template->owner;
+            $row['permissions'] = $template->groupsWithPermissions;
 
-            $template['thumbnail'] = '';
+            $row['thumbnail'] = '';
 
-            if ($showThumbnail == 1 && $template['backgroundImageId'] != 0)
-                $template['thumbnail'] = '<a class="img-replace" data-toggle="lightbox" data-type="image" data-img-src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $template['backgroundImageId'] . '&width=100&height=100&dynamic=true&thumb=true" href="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $template['backgroundImageId'] . '"><i class="fa fa-file-image-o"></i></a>';
+            if ($showThumbnail == 1 && $template->backgroundImageId != 0)
+                $row['thumbnail'] = '<a class="img-replace" data-toggle="lightbox" data-type="image" data-img-src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $template->backgroundImageId . '&width=100&height=100&dynamic=true&thumb=true" href="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $template->backgroundImageId . '"><i class="fa fa-file-image-o"></i></a>';
 
 
-            $template['buttons'] = array();
+            $row['buttons'] = array();
 
             // Parse down for description
-            $template['descriptionWithMarkup'] = Parsedown::instance()->text($template['description']);
+            $row['description'] = $template->description;
+            $row['descriptionWithMarkup'] = Parsedown::instance()->text($row['description']);
 
-            if ($template['edit']) {
+            if ($this->user->checkEditable($template)) {
                 // Edit Button
-                $template['buttons'][] = array(
+                $row['buttons'][] = array(
                         'id' => 'template_button_edit',
-                        'url' => 'index.php?p=template&q=EditForm&modify=true&layoutid=' . $template['layoutid'],
+                        'url' => 'index.php?p=template&q=EditForm&modify=true&layoutid=' . $template->layoutId,
                         'text' => __('Edit')
                     );
             }
 
-            if ($template['del']) {
-
+            if ($this->user->checkDeleteable($template)) {
                 // Delete Button
-                $template['buttons'][] = array(
+                $row['buttons'][] = array(
                         'id' => 'layout_button_delete',
-                        'url' => 'index.php?p=template&q=DeleteTemplateForm&layoutid=' . $template['layoutid'],
+                        'url' => 'index.php?p=template&q=DeleteTemplateForm&layoutid=' . $template->layoutId,
                         'text' => __('Delete')
                     );
             }
 
-            if ($template['modifyPermissions']) {
-
+            if ($this->user->checkPermissionsModifyable($template)) {
                 // Permissions Button
-                $template['buttons'][] = array(
+                $row['buttons'][] = array(
                         'id' => 'layout_button_delete',
-                        'url' => 'index.php?p=campaign&q=PermissionsForm&CampaignID=' . $template['campaignid'],
+                        'url' => 'index.php?p=user&q=permissionsForm&entity=Campaign&objectId=' . $template->campaignId,
                         'text' => __('Permissions')
                     );
             }
 
-            $template['buttons'][] = array('linkType' => 'divider');
+            $row['buttons'][] = array('linkType' => 'divider');
 
             // Export Button
-            $template['buttons'][] = array(
+            $row['buttons'][] = array(
                     'id' => 'layout_button_export',
                     'linkType' => '_self',
-                    'url' => 'index.php?p=layout&q=Export&layoutid=' . $template['layoutid'],
+                    'url' => 'index.php?p=layout&q=Export&layoutid=' . $template->layoutId,
                     'text' => __('Export')
                 );
 
             // Add this row to the array
-            $rows[] = $template;    
+            $rows[] = $row;
         }
 
         Theme::Set('table_rows', $rows);
@@ -189,25 +188,28 @@ class templateDAO extends baseDAO {
     
     /**
      * Displays the TemplateForm (for adding)
-     * @return 
      */
     function TemplateForm() 
     {
-        $db         =& $this->db;
-        $user       =& $this->user;
-        $response   = new ResponseManager();
-        $layoutid   = Kit::GetParam('layoutid', _REQUEST, _INT);
+        $response = new ResponseManager();
+
+        // Get the layout
+        $layout = \Xibo\Factory\LayoutFactory::getById(Kit::GetParam('layoutid', _GET, _INT));
+
+        // Check Permissions
+        if (!$this->user->checkViewable($layout))
+            trigger_error(__('You do not have permissions to view this layout'), E_USER_ERROR);
         
         Theme::Set('form_id', 'TemplateAddForm');
         Theme::Set('form_action', 'index.php?p=template&q=AddTemplate');
-        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '">');
+        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layout->layoutId . '">');
 
         $formFields = array();
         $formFields[] = FormManager::AddText('template', __('Name'), NULL, 
             __('The Name of the Template - (1 - 50 characters)'), 'n', 'maxlength="50" required');
 
         $formFields[] = FormManager::AddText('tags', __('Tags'), NULL, 
-            __('Tags for this Template - used when searching for it. Space delimited. (1 - 250 characters)'), 't', 'maxlength="250"');
+            __('Tags for this Template - used when searching for it. Comma delimited. (1 - 250 characters)'), 't', 'maxlength="250"');
 
         $formFields[] = FormManager::AddMultiText('description', __('Description'), NULL, 
             __('An optional description of the Template. (1 - 250 characters)'), 'd', 5, 'maxlength="250"');
@@ -221,19 +223,16 @@ class templateDAO extends baseDAO {
         $response->Respond();
     }
 
-    function EditForm() {
-        $db =& $this->db;
-        $user =& $this->user;
+    function EditForm()
+    {
         $response = new ResponseManager();
-        $layoutId = Kit::GetParam('layoutid', _GET, _INT);
 
-        // Get the layout    
-        $layout = $user->LayoutList(NULL, array('layoutId' => Kit::GetParam('layoutid', _GET, _INT), 'excludeTemplates' => 0));
+        // Get the layout
+        $layout = \Xibo\Factory\LayoutFactory::getById(Kit::GetParam('layoutid', _GET, _INT));
 
-        if (count($layout) <= 0)
-            trigger_error(__('Unable to find Template'), E_USER_ERROR);
-        
-        $layout = $layout[0];
+        // Check Permissions
+        if (!$this->user->checkEditable($layout))
+            trigger_error(__('You do not have permissions to view this layout'), E_USER_ERROR);
     
         Theme::Set('form_id', 'TemplateEditForm');
 
@@ -245,19 +244,19 @@ class templateDAO extends baseDAO {
         Theme::Set('form_tabs', $tabs);
         
         $formFields = array();
-        $formFields['general'][] = FormManager::AddText('layout', __('Name'), $layout['layout'], __('The Name of the Layout - (1 - 50 characters)'), 'n', 'required');
+        $formFields['general'][] = FormManager::AddText('layout', __('Name'), $layout->layout, __('The Name of the Layout - (1 - 50 characters)'), 'n', 'required');
         
-        $formFields['description'][] = FormManager::AddMultiText('description', __('Description'), $layout['description'], 
+        $formFields['description'][] = FormManager::AddMultiText('description', __('Description'), $layout->description,
             __('An optional description of the Layout. (1 - 250 characters)'), 'd', 5, 'maxlength="250"');
 
         // We are editing
         Theme::Set('form_action', 'index.php?p=template&q=Edit');
-        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutId . '">');
+        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layout->layoutId . '">');
 
         $formFields['general'][] = FormManager::AddCombo(
                 'retired', 
                 __('Retired'), 
-                $layout['retired'],
+                $layout->retired,
                 array(array('retiredid' => '1', 'retired' => 'Yes'), array('retiredid' => '0', 'retired' => 'No')),
                 'retiredid',
                 'retired',
@@ -279,55 +278,53 @@ class templateDAO extends baseDAO {
     
     /**
      * Adds a template
-     * @return 
      */
     function AddTemplate() 
     {
         // Check the token
         if (!Kit::CheckToken())
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
-        
-        $db =& $this->db;
-        $user =& $this->user;
+
         $response = new ResponseManager();
 
-        $template = Kit::GetParam('template', _POST, _STRING);
-        $tags = Kit::GetParam('tags', _POST, _STRING);
-        $description = Kit::GetParam('description', _POST, _STRING);
-        $templateLayoutId = Kit::GetParam('layoutid', _POST, _INT);
-        
-        // Copy the layout and adjust the values of the new layout
-        $layoutObject = new Layout();
+        // Get the layout
+        $layout = clone \Xibo\Factory\LayoutFactory::getById(Kit::GetParam('layoutid', _POST, _INT));
 
-        if (!$layoutId = $layoutObject->Copy($templateLayoutId, $template, $description, $user->userid, true))
-            trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);
+        $layout->layout = Kit::GetParam('template', _POST, _STRING);
+        $layout->tags = \Xibo\Factory\TagFactory::tagsFromString(Kit::GetParam('tags', _POST, _STRING));
+        $layout->tags[] = \Xibo\Factory\TagFactory::getByTag('template');
+        $layout->description = Kit::GetParam('description', _POST, _STRING);
 
-        // Tag it with the template tag
-        $layoutObject->tag('template', $layoutId);
+        $layout->validate();
+        $layout->save();
         
         $response->SetFormSubmitResponse('Template Added.');
         $response->Respond();
     }
 
-    function Edit() {
+    function Edit()
+    {
         // Check the token
         if (!Kit::CheckToken())
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
-        $response       = new ResponseManager();
+        $response = new ResponseManager();
 
-        $layoutid       = Kit::GetParam('layoutid', _POST, _INT);
-        $layout         = Kit::GetParam('layout', _POST, _STRING);
-        $description    = Kit::GetParam('description', _POST, _STRING);
-        $retired        = Kit::GetParam('retired', _POST, _INT, 0);
-        $userid         = Kit::GetParam('userid', _SESSION, _INT);
-        $tags = 'template';
-        
-        // Add this layout
-        $layoutObject = new Layout();
+        // Get the layout
+        $layout = \Xibo\Factory\LayoutFactory::getById(Kit::GetParam('layoutid', _POST, _INT));
 
-        if (!$layoutObject->Edit($layoutid, $layout, $description, $tags, $userid, $retired))
-            trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);
+        // Check Permissions
+        if (!$this->user->checkEditable($layout))
+            trigger_error(__('You do not have permissions to view this layout'), E_USER_ERROR);
+
+        $layout->layout = Kit::GetParam('layout', _POST, _STRING);
+        $layout->tags = \Xibo\Factory\TagFactory::tagsFromString(Kit::GetParam('tags', _POST, _STRING));
+        $layout->tags[] = \Xibo\Factory\TagFactory::getByTag('template');
+        $layout->description = Kit::GetParam('description', _POST, _STRING);
+        $layout->retired = Kit::GetParam('retired', _POST, _INT, 0);
+
+        $layout->validate();
+        $layout->save();
 
         $response->SetFormSubmitResponse(__('Template Details Changed.'));
         $response->Respond();
@@ -397,42 +394,4 @@ class templateDAO extends baseDAO {
         $response->AddButton(__('Yes'), '$("#DeleteForm").submit()');
         $response->Respond();
     }
-     
-     /**
-     * Get a list of group names for a layout
-     * @param <type> $layoutId
-     * @return <type>
-     */
-    private function GroupsForTemplate($campaignId)
-    {
-        $db =& $this->db;
-
-        $SQL = '';
-        $SQL .= 'SELECT `group`.Group ';
-        $SQL .= '  FROM `group` ';
-        $SQL .= '   INNER JOIN lkcampaigngroup ';
-        $SQL .= '   ON `group`.GroupID = lkcampaigngroup.GroupID ';
-        $SQL .= ' WHERE lkcampaigngroup.CampaignID = %d ';
-
-        $SQL = sprintf($SQL, $campaignId);
-
-        if (!$results = $db->query($SQL))
-        {
-            trigger_error($db->error());
-            trigger_error(__('Unable to get group information for template'), E_USER_ERROR);
-        }
-
-        $groups = '';
-
-        while ($row = $db->get_assoc_row($results))
-        {
-            $groups .= $row['Group'] . ', ';
-        }
-
-        $groups = trim($groups);
-        $groups = trim($groups, ',');
-
-        return $groups;
-    }
 }
-?>

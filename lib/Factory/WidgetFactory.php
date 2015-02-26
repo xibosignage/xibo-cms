@@ -118,6 +118,7 @@ class WidgetFactory
             $widget->ownerId = \Kit::ValidateParam($row['ownerId'], _INT);
             $widget->type = \Kit::ValidateParam($row['type'], _WORD);
             $widget->duration = \Kit::ValidateParam($row['duration'], _INT);
+            $widget->displayOrder = \Kit::ValidateParam($row['displayOrder'], _INT);
 
             $entries[] = $widget;
         }

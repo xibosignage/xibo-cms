@@ -113,15 +113,8 @@ class LayoutFactory
      */
     public static function loadById($layoutId)
     {
-        $layouts = LayoutFactory::query(null, array('layoutId' => $layoutId));
-
-        if (count($layouts) <= 0) {
-            throw new NotFoundException(\__('Layout not found'));
-        }
-
-        // Set our layout
-        $layout = $layouts[0];
-        /* @var Layout $layout */
+        // Get the layout
+        $layout = LayoutFactory::getById($layoutId);
 
         // LEGACY: What happens if we have a legacy layout (a layout that still contains its own XML)
         if ($layout->legacyXml != null && $layout->legacyXml != '') {
@@ -160,7 +153,7 @@ class LayoutFactory
      */
     public static function getById($layoutId)
     {
-        $layouts = LayoutFactory::query(null, array('layoutId' => $layoutId));
+        $layouts = LayoutFactory::query(null, array('layoutId' => $layoutId, 'excludeTemplates' => 0, 'retired' => -1));
 
         if (count($layouts) <= 0) {
             throw new NotFoundException(\__('Layout not found'));
@@ -302,6 +295,7 @@ class LayoutFactory
             $sql .= "        layout.layout, ";
             $sql .= "        layout.description, ";
             $sql .= "        layout.userID, ";
+            $sql .= "        `user`.UserName AS owner, ";
             $sql .= "        campaign.CampaignID, ";
             $sql .= "        layout.xml AS legacyXml, ";
             $sql .= "        layout.status, ";
@@ -315,13 +309,24 @@ class LayoutFactory
             $sql .= "        layout.backgroundImageId, ";
             $sql .= "        layout.backgroundColor, ";
             $sql .= "        layout.backgroundzIndex, ";
-            $sql .= "        layout.schemaVersion ";
+            $sql .= "        layout.schemaVersion, ";
+            $sql .= "     (SELECT GROUP_CONCAT(DISTINCT `group`.group)
+                              FROM `permission`
+                                INNER JOIN `permissionentity`
+                                ON `permissionentity`.entityId = permission.entityId
+                                INNER JOIN `group`
+                                ON `group`.groupId = `permission`.groupId
+                             WHERE entity = :entity
+                                AND objectId = campaign.CampaignID
+                            ) AS groupsWithPermissions ";
+            $params['entity'] = 'Xibo\\Entity\\Campaign';
             $sql .= "   FROM layout ";
             $sql .= "  INNER JOIN `lkcampaignlayout` ";
             $sql .= "   ON lkcampaignlayout.LayoutID = layout.LayoutID ";
             $sql .= "   INNER JOIN `campaign` ";
             $sql .= "   ON lkcampaignlayout.CampaignID = campaign.CampaignID ";
             $sql .= "       AND campaign.IsLayoutSpecific = 1";
+            $sql .= "   INNER JOIN `user` ON `user`.userId = `campaign`.userId ";
 
             if (\Kit::GetParam('showTags', $filterBy, _INT) == 1) {
                 $sql .= " LEFT OUTER JOIN lktaglayout ON lktaglayout.layoutId = layout.layoutId ";
@@ -385,13 +390,11 @@ class LayoutFactory
                 $params['userId'] = \Kit::GetParam('userId', $filterBy, _INT, 0);
             }
 
-            // Retired options
-            if (\Kit::GetParam('retired', $filterBy, _INT, -1) != -1) {
+            // Retired options (default to 0 - provide -1 to return all
+            if (\Kit::GetParam('retired', $filterBy, _INT, 0) != -1) {
                 $sql .= " AND layout.retired = :retired ";
                 $params['retired'] = \Kit::GetParam('retired', $filterBy, _INT);
             }
-            else
-                $sql .= " AND layout.retired = 0 ";
 
             // Tags
             if (\Kit::GetParam('tags', $filterBy, _STRING) != '') {
@@ -445,6 +448,7 @@ class LayoutFactory
                 $layout->description = \Kit::ValidateParam($row['description'], _STRING);
                 $layout->tags = \Kit::ValidateParam($row['tags'], _STRING);
                 $layout->backgroundColor = \Kit::ValidateParam($row['backgroundColor'], _STRING);
+                $layout->owner = \Kit::ValidateParam($row['owner'], _STRING);
                 $layout->ownerId = \Kit::ValidateParam($row['userID'], _INT);
                 $layout->campaignId = \Kit::ValidateParam($row['CampaignID'], _INT);
                 $layout->retired = \Kit::ValidateParam($row['retired'], _INT);
@@ -454,6 +458,7 @@ class LayoutFactory
                 $layout->width = \Kit::ValidateParam($row['width'], _DOUBLE);
                 $layout->height = \Kit::ValidateParam($row['height'], _DOUBLE);
                 $layout->legacyXml = \Kit::ValidateParam($row['legacyXml'], _HTMLSTRING);
+                $layout->groupsWithPermissions = \Kit::ValidateParam($row['groupsWithPermissions'], _STRING);
 
                 $entries[] = $layout;
             }

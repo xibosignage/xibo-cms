@@ -468,8 +468,8 @@ class layoutDAO extends baseDAO
             $row['layout'] = $layout->layout;
             $row['description'] = $layout->description;
             $row['tags'] = $layout->tags;
-            $row['owner'] = $user->getNameFromID($layout->ownerId);
-            $row['permissions'] = $this->groupsForLayout($layout->layoutId);
+            $row['owner'] = $layout->owner;
+            $row['permissions'] = $layout->groupsWithPermissions;
 
             $row['thumbnail'] = '';
 
@@ -921,23 +921,26 @@ HTML;
      */
     public function CopyForm()
     {
-        $db =& $this->db;
-        $user =& $this->user;
         $response = new ResponseManager();
 
-        $layoutid = Kit::GetParam('layoutid', _REQUEST, _INT);
+        $layoutId = Kit::GetParam('layoutid', _GET, _INT);
 
-        $layout = $user->LayoutList(NULL, array('layoutId' => $layoutid));
+        // Get the layout
+        $layout = \Xibo\Factory\LayoutFactory::getById($layoutId);
+
+        // Check Permissions
+        if (!$this->user->checkViewable($layout))
+            trigger_error(__('You do not have permissions to view this layout'), E_USER_ERROR);
 
         $copyMediaChecked = (Config::GetSetting('LAYOUT_COPY_MEDIA_CHECKB') == 'Checked') ? 1 : 0;
 
         Theme::Set('form_id', 'LayoutCopyForm');
         Theme::Set('form_action', 'index.php?p=layout&q=Copy');
-        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '">');
+        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layout->layoutId . '">');
 
         $formFields = array();
-        $formFields[] = FormManager::AddText('layout', __('Name'), $layout[0]['layout'] . ' 2', __('The Name of the Layout - (1 - 50 characters)'), 'n', 'required');
-        $formFields[] = FormManager::AddText('description', __('Description'), $layout[0]['description'], __('An optional description of the Layout. (1 - 250 characters)'), 'd', 'maxlength="250"');
+        $formFields[] = FormManager::AddText('layout', __('Name'), $layout->layout . ' 2', __('The Name of the Layout - (1 - 50 characters)'), 'n', 'required');
+        $formFields[] = FormManager::AddText('description', __('Description'), $layout->description, __('An optional description of the Layout. (1 - 250 characters)'), 'd', 'maxlength="250"');
         $formFields[] = FormManager::AddCheckbox('copyMediaFiles', __('Make new copies of all media on this layout?'), $copyMediaChecked, 
             __('This will duplicate all media that is currently assigned to the Layout being copied.'), 'c');
 
@@ -945,7 +948,7 @@ HTML;
 
         $form = Theme::RenderReturn('form_render');
 
-        $response->SetFormRequestResponse($form, __('Copy a Layout.'), '350px', '275px');
+        $response->SetFormRequestResponse($form, sprintf(__('Copy %s'), $layout->layout), '350px', '275px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Layout', 'Copy') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Copy'), '$("#LayoutCopyForm").submit()');
@@ -984,51 +987,8 @@ HTML;
         $response->Respond();
     }
 
-    /**
-     * Get a list of group names for a layout
-     * @param int $layoutId
-     * @return array
-     */
-    private function groupsForLayout($layoutId)
+    public function LayoutStatus()
     {
-        $campaign = new Campaign();
-        $campaignId = $campaign->GetCampaignId($layoutId);
-
-        // Load permissions for the Campaign
-        $permissions = \Xibo\Factory\PermissionFactory::getByObjectId('Xibo\Entity\Campaign', $campaignId);
-
-        if (count($permissions) <= 0)
-            return '';
-
-        $groupIds = array_map(function($object) { return /* @var \Xibo\Entity\Permission $object */ $object->groupId; }, $permissions);
-
-        $SQL = '';
-        $SQL .= 'SELECT `group`.Group ';
-        $SQL .= '  FROM `group` ';
-        $SQL .= ' WHERE groupId IN (' . implode(',', $groupIds) . ')';
-
-        try {
-            $results = PDOConnect::select($SQL, array());
-
-            $groups = '';
-
-            foreach ($results as $row) {
-                $groups .= $row['Group'] . ', ';
-            }
-
-            $groups = trim($groups);
-            $groups = trim($groups, ',');
-
-            return $groups;
-        }
-        catch (PDOException $e) {
-            Debug::Error($e->getMessage() . '. SQL = ' . $SQL);
-            trigger_error(__('Unable to get group information for layout'), E_USER_ERROR);
-        }
-    }
-
-    public function LayoutStatus() {
-
         $db =& $this->db;
         $response = new ResponseManager();
         $layoutId = Kit::GetParam('layoutId', _GET, _INT);

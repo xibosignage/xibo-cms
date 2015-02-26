@@ -1090,10 +1090,10 @@ class User {
     }
 
     /**
-     * A List of Templates the User has access to
-     * @param string $template [description]
-     * @param string $tags     [description]
-     * @param string $isSystem [description]
+     * A List of Templates
+     * @param array $sort_order
+     * @param array $filter_by
+     * @return array[Layout]
      */
     public function TemplateList($sort_order = array('layout'), $filter_by = array())
     {

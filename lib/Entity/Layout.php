@@ -47,9 +47,14 @@ class Layout
     public $width;
     public $height;
 
+    // Child items
     public $regions;
     public $tags;
     public $permissions;
+
+    // Read only properties
+    public $owner;
+    public $groupsWithPermissions;
 
     public function __construct()
     {
