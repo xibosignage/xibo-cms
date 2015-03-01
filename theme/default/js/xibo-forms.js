@@ -4,6 +4,9 @@ var text_callback = function(dialog)
     if ($("#ta_text").val() == "" && !$("#overrideTemplate").is(":checked")) {
         // Set something sensible based on the color of the layout background
         var color = $c.complement($("#layout").data().backgroundColor);
+        
+        // Apply the complementary color and a not to small font-size to the first paragraph of the editor
+        $("#ta_text").val('<p style="color:' + color + '; font-size:48px;"></p>');
 
         // Get the current template selected
         var templateId = $("#templateId").val();
@@ -47,6 +50,20 @@ var text_callback = function(dialog)
         $("#cke_ta_text iframe").css({
             "background": "transparent"
         });
+        
+        // Reapply the background style after switching to source view and back to the normal editing view
+        CKEDITOR.instances["ta_text"].on('contentDom', function() {
+            var scale = $('#layout').attr('designer_scale');
+            
+            $("#cke_ta_text .cke_contents").css({
+                background: $('#layout').css('background-color')
+            });
+        
+            $("#cke_ta_text iframe").css({
+                "background": "transparent"
+            });
+        });
+        
     });
 
     // Make sure when we close the dialog we also destroy the editor
