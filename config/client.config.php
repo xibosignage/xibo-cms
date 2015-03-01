@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2014 Daniel Garner
+ * Copyright (C) 2006-2015 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -297,6 +297,17 @@ $CLIENT_CONFIG = array(
                         'default' => 0,
                         'helpText' => __('The duration between status screen shots in minutes. 0 to disable. Warning: This is bandwidth intensive.'),
                         'enabled' => Theme::GetConfig('client_screenShotRequestInterval_enabled', true),
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'MaxLogFileUploads',
+                        'tabId' => 'advanced',
+                        'title' => __('Limit the number of log files uploaded concurrently'),
+                        'type' => _INT,
+                        'fieldType' => 'number',
+                        'default' => 3,
+                        'helpText' => __('The number of log files to upload concurrently. The lower the number the longer it will take, but the better for memory usage.'),
+                        'enabled' => true,
                         'groupClass' => NULL
                     )
                 )
