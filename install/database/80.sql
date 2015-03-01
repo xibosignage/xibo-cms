@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS `displayprofile` (
   PRIMARY KEY (`displayprofileid`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
-UPDATE layout SET background = SUBSTRING_INDEX(background, '.', 1) WHERE IFNULL(background, '') <> '';
+UPDATE layout SET background = SUBSTRING_INDEX(background, '.', 1) WHERE IFNULL(background, '') <> '' AND background LIKE '%.%';
 ALTER TABLE  `layout` CHANGE  `background`  `backgroundImageId` INT( 11 ) NULL DEFAULT NULL;
 
 INSERT INTO `lklayoutmedia` (mediaid, layoutid, regionid)
@@ -116,7 +116,7 @@ UPDATE `setting` SET cat = 'users', ordering = 30, usersee = '1', userchange = '
 
 ALTER TABLE  `schedule` ADD  `DisplayOrder` INT NOT NULL DEFAULT '0';
 
-UPDATE `schedule` SET DisplayOrder = (SELECT MAX(DisplayOrder) FROM `schedule_detail` WHERE schedule_detail.eventid = schedule.eventid);
+UPDATE `schedule` SET DisplayOrder = IFNULL((SELECT MAX(DisplayOrder) FROM `schedule_detail` WHERE schedule_detail.eventid = schedule.eventid), 0);
 
 ALTER TABLE  `schedule_detail` DROP FOREIGN KEY  `schedule_detail_ibfk_9` ;
 ALTER TABLE `schedule_detail` DROP `CampaignID`;
