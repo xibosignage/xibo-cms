@@ -714,8 +714,7 @@ END;
         Theme::Set('users_assigned_url', 'index.php?p=group&q=SetMembers&GroupID=' . $groupID);
 
         // Users in group
-        if (!$usersAssigned = $this->user->userList(null, array('groupIds' => array($groupID))))
-			trigger_error(__('Error getting users'), E_USER_ERROR);
+        $usersAssigned = $this->user->userList(null, array('groupIds' => array($groupID)));
 
 		Theme::Set('users_assigned', $usersAssigned);
 
