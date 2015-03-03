@@ -455,7 +455,7 @@ class webpage extends Module
         $template = str_replace('<!--[[[HEADCONTENT]]]-->', $headContent, $template);
 
         // Body content
-        $output = '<iframe id="iframe" scrolling="no" src="' . $url . '"></iframe>';
+        $output = '<iframe id="iframe" scrolling="no" frameborder="0" src="' . $url . '"></iframe>';
         
         // Replace the Body Content with our generated text
         $template = str_replace('<!--[[[BODYCONTENT]]]-->', $output, $template);
