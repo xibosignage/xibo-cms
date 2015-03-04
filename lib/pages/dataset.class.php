@@ -262,7 +262,7 @@ class datasetDAO extends baseDAO
         $response->SetFormRequestResponse(NULL, __('Edit DataSet'), '350px', '275px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('DataSet', 'Edit') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Edit'), '$("#EditDataSetForm").submit()');
+        $response->AddButton(__('Save'), '$("#EditDataSetForm").submit()');
         $response->Respond();
     }
 
