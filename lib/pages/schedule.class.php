@@ -732,7 +732,7 @@ class scheduleDAO extends baseDAO {
         Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to delete this event from <b>all</b> displays? If you only want to delete this item from certain displays, please deselect the displays in the edit dialogue and click Save.'))));
 
         $response->SetFormRequestResponse(NULL, __('Delete Event.'), '480px', '240px');
-        $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=Delete')");
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Schedule', 'Delete') . '")');
         $response->AddButton(__('No'), 'XiboDialogClose()');
         $response->AddButton(__('Yes'), '$("#DeleteEventForm").submit()');
         $response->Respond();
