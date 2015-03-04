@@ -1012,7 +1012,7 @@ class User {
             $dbh = PDOConnect::init();
         
             $params = array();
-            $SQL = 'SELECT * FROM resolution WHERE enabled = 1 ';
+            $SQL = 'SELECT * FROM resolution WHERE 1 = 1 ';
 
             // Include the current?
             if (Kit::GetParam('withCurrent', $filter_by, _INT, 0) != 0) {
@@ -1020,11 +1020,16 @@ class User {
                 $params['resolutionid'] = Kit::GetParam('withCurrent', $filter_by, _INT);
             }
 
+            if (Kit::GetParam('enabled', $filter_by, _INT, 1) != -1) {
+                $SQL .= ' AND enabled = :enabled ';
+                $params['enabled'] = Kit::GetParam('enabled', $filter_by, _INT, 1);
+            }
+
             // Sorting?
             if (is_array($sort_order))
                 $SQL .= 'ORDER BY ' . implode(',', $sort_order);
 
-            Debug::LogEntry('audit', $SQL, 'user', 'ResolutionList');
+            Debug::sql($SQL, $params);
 
             $sth = $dbh->prepare($SQL);
             $sth->execute($params);
