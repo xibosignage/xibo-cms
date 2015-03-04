@@ -809,6 +809,12 @@ class ticker extends Module
             $headContent .= '</style>';   
         }
 
+        if ($this->GetOption('backgroundColor') != '') {
+            $headContent .= '<style type="text/css">';
+            $headContent .= ' body { background-color: ' . $this->GetOption('backgroundColor') . '; }';
+            $headContent .= '</style>';
+        }
+
         // Add the CSS if it isn't empty
         if ($css != '') {
             $headContent .= '<style type="text/css">' . $css . '</style>';
