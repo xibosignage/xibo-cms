@@ -348,26 +348,17 @@ function EmbedInit()
         $rawXml->loadXML($this->GetRaw());
 
         // Get the Text Node
-        $html = $rawXml->getElementsByTagName('embedHtml');
-        $html = $html->item(0);
-        $html = $this->parseLibraryReferences($isPreview, $html->nodeValue);
-
-
+        $html = $this->parseLibraryReferences($isPreview, $this->GetRawNode('embedHtml', ''));
 
         // Include some vendor items
         $javaScriptContent = '<script src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
         $javaScriptContent .= '<script src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-layout-scaler.js"></script>';
 
-
         // Get the Script
-        $script = $rawXml->getElementsByTagName('embedScript');
-        $script = $script->item(0);
-        $javaScriptContent .= $this->parseLibraryReferences($isPreview, $script->nodeValue);
+        $javaScriptContent .= $this->parseLibraryReferences($isPreview, $this->GetRawNode('embedScript', ''));
 
         // Get the Style Sheet
-        $styleSheet = $rawXml->getElementsByTagName('embedStyle');
-        $styleSheet = $styleSheet->item(0);
-        $styleSheetContent = $this->parseLibraryReferences($isPreview, $styleSheet->nodeValue);
+        $styleSheetContent = $this->parseLibraryReferences($isPreview, $this->GetRawNode('embedStyle', ''));
 
         // Set some options
         $options = array(
