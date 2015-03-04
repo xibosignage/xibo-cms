@@ -351,6 +351,9 @@ class ticker extends Module
             $formFields['advanced'][] = FormManager::AddText('stripTags', __('Strip Tags'), $this->GetOption('stripTags'), 
                 __('A comma separated list of HTML tags that should be stripped from the feed in addition to the default ones.'), '');
 
+            $formFields['advanced'][] = FormManager::AddCheckbox('disableDateSort', __('Disable Date Sort'), $this->GetOption('disableDateSort'),
+                __('Should the date sort applied to the feed be disabled?'), '');
+
             // Encode up the template
             //$formFields['advanced'][] = FormManager::AddMessage('<pre>' . htmlentities(json_encode(array('id' => 'media-rss-with-title', 'value' => 'Image overlaid with the Title', 'template' => '<div class="image">[Link|image]<div class="cycle-overlay"><p style="font-family: Arial, Verdana, sans-serif; font-size:48px;">[Title]</p></div></div>', 'css' => '.image img { width:100%;}.cycle-overlay {color: white;background: black;opacity: .6;filter: alpha(opacity=60);position: absolute;bottom: 0;width: 100%;padding: 15px;text-align:center;}'))) . '</pre>');
         }
@@ -626,6 +629,7 @@ class ticker extends Module
         $this->SetOption('allowedAttributes', Kit::GetParam('allowedAttributes', _POST, _STRING));
         $this->SetOption('stripTags', Kit::GetParam('stripTags', _POST, _STRING));
         $this->SetOption('backgroundColor', Kit::GetParam('backgroundColor', _POST, _STRING));
+        $this->SetOption('disableDateSort', Kit::GetParam('disableDateSort', _POST, _CHECKBOX));
         $this->SetOption('textDirection', Kit::GetParam('textDirection', _POST, _WORD));
         $this->SetOption('overrideTemplate', Kit::GetParam('overrideTemplate', _POST, _CHECKBOX));
         $this->SetOption('templateId', Kit::GetParam('templateId', _POST, _WORD));
@@ -895,6 +899,11 @@ class ticker extends Module
         if ($this->GetOption('stripTags') != '') {
             $tagsStrip = array_merge($feed->strip_htmltags, explode(',', $this->GetOption('stripTags')));
             $feed->strip_htmltags($tagsStrip);
+        }
+
+        // Disable date sorting?
+        if ($this->GetOption('disableDateSort') == 1) {
+            $feed->enable_order_by_date(false);
         }
 
         // Init
