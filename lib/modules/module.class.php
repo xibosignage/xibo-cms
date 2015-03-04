@@ -1242,7 +1242,7 @@ END;
         $replaceInLayouts = (Kit::GetParam('replaceInLayouts', _POST, _CHECKBOX) == 1);
         $replaceBackgroundImages = (Kit::GetParam('replaceBackgroundImages', _POST, _CHECKBOX) == 1);
 
-        if ($replaceInLayouts || $replaceBackgroundImages)
+        if ($mediaid != $this->mediaid && ($replaceInLayouts || $replaceBackgroundImages))
             $this->ReplaceMediaInAllLayouts($replaceInLayouts, $replaceBackgroundImages, $mediaid, $this->mediaid, $this->duration);
 
         // Do we need to delete the old media item?
