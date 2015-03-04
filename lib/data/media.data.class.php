@@ -917,14 +917,15 @@ class Media extends Data
         
             if ($media !== false) {
                 
-                $SQL = "UPDATE `media` SET md5 = :md5, filesize = :filesize, expires = :expires WHERE mediaId = :mediaId ";
+                $SQL = "UPDATE `media` SET md5 = :md5, filesize = :filesize, expires = :expires, moduleSystemFile = :moduleSystemFile WHERE mediaId = :mediaId ";
 
                 $sth = $dbh->prepare($SQL);
                 $sth->execute(array(
                         'mediaId' => $media['mediaId'],
                         'filesize' => $fileSize,
                         'md5' => $md5,
-                        'expires' => $expires
+                        'expires' => $expires,
+                        'moduleSystemFile' => $moduleSystemFile
                     ));
 
                 // Update the media array for returning
