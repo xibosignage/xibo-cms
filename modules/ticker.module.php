@@ -233,7 +233,7 @@ class ticker extends Module
             __('When in single mode how many items per page should be shown.'), 'p');
 
         $field_updateInterval = FormManager::AddNumber('updateInterval', __('Update Interval (mins)'), $this->GetOption('updateInterval', 5), 
-            __('Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per day this could be set to 60.'),
+            __('Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60.'),
             'n', 'required');
 
         $field_durationIsPerItem = FormManager::AddCheckbox('durationIsPerItem', __('Duration is per item'), 
