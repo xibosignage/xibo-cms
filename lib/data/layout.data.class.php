@@ -1905,6 +1905,13 @@ class Layout extends Data
             // Set the DOM XML
             $this->SetDomXml($layoutId);
 
+            // Set the user on each region
+            $regionNodeList = $this->DomXml->getElementsByTagName('region');
+
+            foreach ($regionNodeList as $region) {
+                $region->setAttribute('userId', $userId);
+            }
+
             // We will need a file object and a media object
             $fileObject = new File();
             $mediaObject = new Media();
@@ -1967,7 +1974,7 @@ class Layout extends Data
                 Debug::LogEntry('audit', 'Post File Import Fix', get_class(), __FUNCTION__);
     
                 // Get this media node from the layout using the old media id
-                if (!$this->PostImportFix($layoutId, $file['mediaid'], $mediaObject->mediaId, $mediaObject->storedAs, $file['background']))
+                if (!$this->PostImportFix($userId, $layoutId, $file['mediaid'], $mediaObject->mediaId, $mediaObject->storedAs, $file['background']))
                     return false;
             }
 
@@ -1998,7 +2005,7 @@ class Layout extends Data
         }
     }
 
-    public function PostImportFix($layoutId, $oldMediaId, $newMediaId, $storedAs = '', $background = 0) {
+    public function PostImportFix($userId, $layoutId, $oldMediaId, $newMediaId, $storedAs = '', $background = 0) {
         
         Debug::LogEntry('audit', 'Swapping ' . $oldMediaId . ' for ' . $newMediaId, get_class(), __FUNCTION__);
 
@@ -2038,6 +2045,9 @@ class Layout extends Data
             foreach ($mediaNodeList as $node) {
                 // Update the ID
                 $node->setAttribute('id', $newMediaId);
+
+                // Update Owner
+                $node->setAttribute('userId', $userId);
 
                 // Update the URI option
                 // Get the options node from this document
