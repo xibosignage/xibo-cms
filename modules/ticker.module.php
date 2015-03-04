@@ -307,7 +307,7 @@ class ticker extends Module
             $formFields['format'][] = $field_itemsPerPage;
 
             $formFields['advanced'][] = FormManager::AddText('copyright', __('Copyright'), $this->GetOption('copyright'), 
-                __('Copyright information to display as the last item in this feed.'), 'f');
+                __('Copyright information to display as the last item in this feed. This can be styled with the #copyright CSS selector.'), 'f');
 
             $formFields['advanced'][] = $field_updateInterval;
 
@@ -1019,6 +1019,11 @@ class ticker extends Module
             }
 
             $items[] = $rowString;
+        }
+
+        // Copyright information?
+        if ($this->GetOption('copyright', '') != '') {
+            $items[] = '<span id="copyright">' . $this->GetOption('copyright') . '</span>';
         }
 
         // Return the formatted items
