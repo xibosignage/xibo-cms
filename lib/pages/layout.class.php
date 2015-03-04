@@ -658,7 +658,7 @@ class layoutDAO extends baseDAO
                 // Copy Button
                 $row['buttons'][] = array(
                         'id' => 'layout_button_copy',
-                        'url' => 'index.php?p=layout&q=CopyForm&layoutid=' . $layout['layoutid'] . '&oldlayout=' . $layout['layout'],
+                        'url' => 'index.php?p=layout&q=CopyForm&layoutid=' . $layout['layoutid'] . '&oldlayout=' . urlencode($layout['layout']),
                         'text' => __('Copy')
                     );
 
