@@ -22,10 +22,6 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 class DateManager
 {
-    private static $locale = null;
-    private static $defaultFormat = null;
-    private static $timezone = null;
-
     public static function getClock()
     {
         return date("H:i T");
@@ -47,28 +43,17 @@ class DateManager
         if ($timestamp == NULL)
             $timestamp = time();
 
-        if (self::$defaultFormat == null)
-            self::$defaultFormat = DateManager::getDefaultFormat();
-
         if ($format == NULL)
-            $format = self::$defaultFormat;
-
-        if (self::$locale == null)
-            self::$locale = Config::GetSetting('DEFAULT_LANGUAGE');
-
-        if (self::$timezone == null)
-            self::$timezone = Config::GetSetting('DEFAULT_TIMEZONE');
+            $format = DateManager::getDefaultFormat();
 
         if (DateManager::getCalendarType() == 'Jalali') {
             return JDateTime::date($format, $timestamp, false);
         }
         else {
             // Do we have the international date formatter?
-            if (Config::CheckIntlDateFormat()) {
-                $formatter = new IntlDateFormatter(self::$locale, IntlDateFormatter::FULL, IntlDateFormatter::FULL, IntlDateFormatter::GREGORIAN, $format);
-                $date = new DateTime();
-                $date->setTimestamp($timestamp);
-                return $formatter->format($date);
+            if (Config::GetSetting('USE_INTL_DATEFORMAT') == 1 && Config::CheckIntlDateFormat()) {
+                $formatter = new IntlDateFormatter(Config::GetSetting('DEFAULT_LANGUAGE'), IntlDateFormatter::FULL, IntlDateFormatter::FULL, Config::GetSetting('DEFAULT_TIMEZONE'), IntlDateFormatter::GREGORIAN, $format);
+                return $formatter->format($timestamp);
             }
             else {
                 return date($format, $timestamp);
