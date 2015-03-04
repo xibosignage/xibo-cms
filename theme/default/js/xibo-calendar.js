@@ -89,7 +89,7 @@ function CallGenerateCalendar() {
         url += '&' + displayGroups;
 
     // Override the calendar URL
-    calendar.setOptions({events_source: url});
+    calendar.setOptions({events_source: url, time_start: '00:00', time_end: '00:00'});
 
     // Navigate
     calendar.view();
