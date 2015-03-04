@@ -1007,7 +1007,7 @@ class ticker extends Module
                             break;
 
                         case '[Date]':
-                            $replace = ($dateFormat == '') ? $item->get_local_date() : $item->get_date($dateFormat);
+                            $replace = DateManager::getLocalDate($item->get_date('U'), $dateFormat);
                             break;
 
                         case '[PermaLink]':

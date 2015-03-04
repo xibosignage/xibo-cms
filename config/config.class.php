@@ -712,6 +712,11 @@ class Config
 	function CheckZip() {
 		return extension_loaded('zip');
 	}
+
+    static function CheckIntlDateFormat()
+    {
+        return class_exists('IntlDateFormatter');
+    }
 	
 	/**
 	 * Check PHP is setup for large file uploads

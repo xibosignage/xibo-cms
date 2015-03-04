@@ -22,6 +22,10 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 class DateManager
 {
+    private static $locale = null;
+    private static $defaultFormat = null;
+    private static $timezone = null;
+
     public static function getClock()
     {
         return date("H:i T");
@@ -43,10 +47,33 @@ class DateManager
         if ($timestamp == NULL)
             $timestamp = time();
 
+        if (self::$defaultFormat == null)
+            self::$defaultFormat = DateManager::getDefaultFormat();
+
         if ($format == NULL)
-            $format = DateManager::getDefaultFormat();
-        
-        return (DateManager::getCalendarType() == 'Jalali') ? JDateTime::date($format, $timestamp, false) : date($format, $timestamp);
+            $format = self::$defaultFormat;
+
+        if (self::$locale == null)
+            self::$locale = Config::GetSetting('DEFAULT_LANGUAGE');
+
+        if (self::$timezone == null)
+            self::$timezone = Config::GetSetting('DEFAULT_TIMEZONE');
+
+        if (DateManager::getCalendarType() == 'Jalali') {
+            return JDateTime::date($format, $timestamp, false);
+        }
+        else {
+            // Do we have the international date formatter?
+            if (Config::CheckIntlDateFormat()) {
+                $formatter = new IntlDateFormatter(self::$locale, IntlDateFormatter::FULL, IntlDateFormatter::FULL, IntlDateFormatter::GREGORIAN, $format);
+                $date = new DateTime();
+                $date->setTimestamp($timestamp);
+                return $formatter->format($date);
+            }
+            else {
+                return date($format, $timestamp);
+            }
+        }
     }
     
     public static function getSystemDate($timestamp = NULL, $format = NULL)
