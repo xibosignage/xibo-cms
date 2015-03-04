@@ -885,12 +885,6 @@ class ticker extends Module
             $feed->strip_attributes($attrsStrip);
         }
 
-        // Get a list of tags to strip
-        if ($this->GetOption('stripTags') != '') {
-            $tagsStrip = array_merge($feed->strip_htmltags, explode(',', $this->GetOption('stripTags')));
-            $feed->strip_htmltags($tagsStrip);
-        }
-
         // Init
         $feed->init();
 
@@ -1013,6 +1007,15 @@ class ticker extends Module
                             break;
                     }
                 }
+
+		if ($this->GetOption('stripTags') != '') {
+			require_once '3rdparty/htmlpurifier/library/HTMLPurifier.auto.php';
+
+			$config = HTMLPurifier_Config::createDefault();
+			$config->set('HTML.ForbiddenElements', array_merge($feed->strip_htmltags, explode(',', $this->GetOption('stripTags'))));
+			$purifier = new HTMLPurifier($config);
+			$replace = $purifier->purify($replace);
+		}
 
                 // Substitute the replacement we have found (it might be '')
                 $rowString = str_replace($sub, $replace, $rowString);
