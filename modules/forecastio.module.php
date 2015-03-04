@@ -564,7 +564,8 @@ class ForecastIo extends Module
     {
         $tab = Kit::GetParam('tab', _POST, _WORD);
 
-        $data = $this->getForecastData(0);
+        if (!$data = $this->getForecastData(0))
+            trigger_error(__('No data returned, please check error log.'), E_USER_ERROR);
 
         $cols = array(
                 array('name' => 'forecast', 'title' => __('Forecast')),
@@ -630,10 +631,12 @@ class ForecastIo extends Module
 
         if (!Cache::has($key)) {
             Debug::LogEntry('audit', 'Getting Forecast from the API', $this->type, __FUNCTION__);
-            $data = $forecast->get($defaultLat, $defaultLong, null, $apiOptions);
+            if (!$data = $forecast->get($defaultLat, $defaultLong, null, $apiOptions)) {
+                return false;
+            }
 
             // If the response is empty, cache it for less time
-            $cacheDuration = (isset($data->currently)) ? $this->GetSetting('cachePeriod') : 30;
+            $cacheDuration = $this->GetSetting('cachePeriod');
 
             // Cache
             Cache::put($key, $data, $cacheDuration);
@@ -708,7 +711,8 @@ class ForecastIo extends Module
     public function GetResource($displayId = 0)
     {
         // Behave exactly like the client.
-        $data = $this->getForecastData($displayId);
+        if (!$data = $this->getForecastData($displayId))
+            return '';
 
         // A template is provided which contains a number of different libraries that might
         // be useful (jQuery, etc).
