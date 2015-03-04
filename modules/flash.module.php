@@ -97,6 +97,28 @@ class flash extends Module
         // Client dependant
         return 2;
     }
+
+    public function Preview($width, $height, $scaleOverride = 0)
+    {
+        if ($this->previewEnabled == 0)
+            return $this->Preview($width, $height, $scaleOverride);
+
+        $url = 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=GetResource&raw=true&preview=true&scale_override=' . $scaleOverride . '&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&mediaid=' . $this->mediaid . '&lkid=' . $this->lkid . '&width=' . $width . '&height=' . $height;
+
+        return '<object width="' . $width . '" height="' . $height . '">
+            <param name="movie" value="' . $url . '"></param>
+            <param name="allowFullScreen" value="false"></param>
+            <param name="allowscriptaccess" value="always"></param>
+            <param name="wmode" value="transaprent"></param>
+            <embed src="' . $url . '"
+                   type="application/x-shockwave-flash"
+                   allowscriptaccess="always"
+                   allowfullscreen="true"
+                   width="' . $width . '" height="' . $height . '"
+                   wmode="transparent">
+            </embed>
+        </object>';
+    }
     
     /**
      * Get Resource
