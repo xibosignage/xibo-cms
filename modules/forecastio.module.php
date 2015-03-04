@@ -264,7 +264,7 @@ class ForecastIo extends Module
         $this->mediaid  = md5(uniqid());
 
         // You must also provide a duration (all media items must provide this field)
-        $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
+        $this->duration = Kit::GetParam('duration', _POST, _INT, 0, false);
 
         // You can store any additional options for your module using the SetOption method
         $this->SetOption('useDisplayLocation', Kit::GetParam('useDisplayLocation', _POST, _CHECKBOX));
@@ -432,7 +432,7 @@ class ForecastIo extends Module
         }
 
         // You must also provide a duration (all media items must provide this field)
-        $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
+        $this->duration = Kit::GetParam('duration', _POST, _INT, 0, false);
 
         // You can store any additional options for your module using the SetOption method
         $this->SetOption('useDisplayLocation', Kit::GetParam('useDisplayLocation', _POST, _CHECKBOX));

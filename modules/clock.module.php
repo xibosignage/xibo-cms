@@ -192,7 +192,7 @@ class clock extends Module
         $this->mediaid  = md5(uniqid());
 
         // You must also provide a duration (all media items must provide this field)
-        $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
+        $this->duration = Kit::GetParam('duration', _POST, _INT, 0, false);
         $this->SetOption('theme', Kit::GetParam('themeid', _POST, _INT, 0));
         $this->SetOption('clockTypeId', Kit::GetParam('clockTypeId', _POST, _INT, 1));
         $this->SetOption('offset', Kit::GetParam('offset', _POST, _INT, 0));
@@ -322,7 +322,7 @@ class clock extends Module
         }
 
         // You must also provide a duration (all media items must provide this field)
-        $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
+        $this->duration = Kit::GetParam('duration', _POST, _INT, 0, false);
         $this->SetOption('theme', Kit::GetParam('themeid', _POST, _INT, 0));
         $this->SetOption('clockTypeId', Kit::GetParam('clockTypeId', _POST, _INT, 1));
         $this->SetOption('offset', Kit::GetParam('offset', _POST, _INT, 0));

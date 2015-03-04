@@ -205,7 +205,7 @@ function EmbedInit()
         $embedHtml    = Kit::GetParam('embedHtml', _POST, _HTMLSTRING);
         $embedScript  = Kit::GetParam('embedScript', _POST, _HTMLSTRING);
         $embedStyle   = Kit::GetParam('embedStyle', _POST, _HTMLSTRING);
-        $duration     = Kit::GetParam('duration', _POST, _INT, 0);
+        $duration     = Kit::GetParam('duration', _POST, _INT, 0, false);
         $transparency = Kit::GetParam('transparency', _POST, _CHECKBOX, 'off');
         $name = Kit::GetParam('name', _POST, _STRING);
         
@@ -284,7 +284,7 @@ function EmbedInit()
 
         // If we have permission to change it, then get the value from the form
         if ($this->auth->modifyPermissions)
-            $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
+            $this->duration = Kit::GetParam('duration', _POST, _INT, 0, false);
         
         $url          = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
                         

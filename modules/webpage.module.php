@@ -264,7 +264,7 @@ class webpage extends Module
         
         //Other properties
         $uri          = Kit::GetParam('uri', _POST, _URI);
-        $duration     = Kit::GetParam('duration', _POST, _INT, 0);
+        $duration     = Kit::GetParam('duration', _POST, _INT, 0, false);
         $scaling      = Kit::GetParam('scaling', _POST, _INT, 100);
         $transparency     = Kit::GetParam('transparency', _POST, _CHECKBOX, 'off');
         $offsetLeft = Kit::GetParam('offsetLeft', _POST, _INT);
@@ -347,7 +347,7 @@ class webpage extends Module
         
         // If we have permission to change it, then get the value from the form
         if ($this->auth->modifyPermissions)
-            $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
+            $this->duration = Kit::GetParam('duration', _POST, _INT, 0, false);
 
         $url = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
                         

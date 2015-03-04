@@ -446,7 +446,7 @@ class ticker extends Module
         $sourceId = Kit::GetParam('sourceid', _POST, _INT);
         $uri = Kit::GetParam('uri', _POST, _URI);
         $dataSetId = Kit::GetParam('datasetid', _POST, _INT, 0);
-        $duration = Kit::GetParam('duration', _POST, _INT, 0);
+        $duration = Kit::GetParam('duration', _POST, _INT, 0, false);
         
         // Must have a duration
         if ($duration == 0)
@@ -551,7 +551,7 @@ class ticker extends Module
         
         // If we have permission to change it, then get the value from the form
         if ($this->auth->modifyPermissions)
-            $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
+            $this->duration = Kit::GetParam('duration', _POST, _INT, 0, false);
         
         // Validation
         if ($text == '')

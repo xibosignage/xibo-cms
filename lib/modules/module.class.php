@@ -1165,7 +1165,7 @@ END;
         $tags = Kit::GetParam('tags', _POST, _STRING);
         
         if ($this->auth->modifyPermissions)
-            $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
+            $this->duration = Kit::GetParam('duration', _POST, _INT, 0, false);
 
         // Revise this file?
         if ($tmpName != '') {

@@ -147,7 +147,7 @@ class localvideo extends Module
 
         //Other properties
         $uri = Kit::GetParam('uri', _POST, _URI);
-        $duration = Kit::GetParam('duration', _POST, _INT, 0);
+        $duration = Kit::GetParam('duration', _POST, _INT, 0, false);
 
         $url = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 
@@ -215,7 +215,7 @@ class localvideo extends Module
 
         // If we have permission to change it, then get the value from the form
         if ($this->auth->modifyPermissions)
-            $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
+            $this->duration = Kit::GetParam('duration', _POST, _INT, 0, false);
 
         $url = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 

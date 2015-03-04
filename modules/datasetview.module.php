@@ -245,7 +245,7 @@ class datasetview extends Module
 
         //Other properties
         $dataSetId = Kit::GetParam('datasetid', _POST, _INT, 0);
-        $duration = Kit::GetParam('duration', _POST, _INT, 0);
+        $duration = Kit::GetParam('duration', _POST, _INT, 0, false);
 
         // validation
         if ($dataSetId == 0)
@@ -321,7 +321,7 @@ class datasetview extends Module
 
         // If we have permission to change it, then get the value from the form
         if ($this->auth->modifyPermissions)
-            $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
+            $this->duration = Kit::GetParam('duration', _POST, _INT, 0, false);
 
         if ($this->duration == 0)
         {

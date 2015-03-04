@@ -337,7 +337,7 @@ class Twitter extends Module
         $this->mediaid  = md5(Kit::uniqueId());
 
         // You must also provide a duration (all media items must provide this field)
-        $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
+        $this->duration = Kit::GetParam('duration', _POST, _INT, 0, false);
 
         // You should validate all form input using the Kit::GetParam helper classes
         if (Kit::GetParam('searchTerm', _POST, _STRING) == '') {
@@ -568,7 +568,7 @@ class Twitter extends Module
 
         // If we have permission to change it, then get the value from the form
         if ($this->auth->modifyPermissions)
-            $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
+            $this->duration = Kit::GetParam('duration', _POST, _INT, 0, false);
 
         // You should validate all form input using the Kit::GetParam helper classes
         if (Kit::GetParam('searchTerm', _POST, _STRING) == '') {
