@@ -372,23 +372,36 @@ END;
 	
 	/**
 	 * Shows the Delete Group Form
-	 * @return 
 	 */
 	function DeleteForm() 
 	{
-		$db =& $this->db;
-		$groupid = $this->groupid;
+		$groupId = $this->groupid;
 		$response = new ResponseManager();
+
+        // Get the group name
+        $group = __('Unknown');
+        try {
+            $dbh = PDOConnect::init();
+            $sth = $dbh->prepare('SELECT `group` FROM `group` WHERE groupId = :groupId');
+            $sth->execute(array('groupId' => $groupId));
+
+            if ($row = $sth->fetch(PDO::FETCH_ASSOC)) {
+                $group = Kit::ValidateParam($row['group'], _STRING);
+            }
+        }
+        catch (Exception $e) {
+            Debug::Error($e->getMessage());
+        }
 		
 		// Set some information about the form
         Theme::Set('form_id', 'UserGroupDeleteForm');
         Theme::Set('form_action', 'index.php?p=group&q=Delete');
-        Theme::Set('form_meta', '<input type="hidden" name="groupid" value="' . $groupid . '">');
+        Theme::Set('form_meta', '<input type="hidden" name="groupid" value="' . $groupId . '">');
 
-        Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to delete?'))));
+        Theme::Set('form_fields', array(FormManager::AddMessage(sprintf(__('Are you sure you want to delete %s?'), $group))));
 
 		// Construct the Response		
-		$response->SetFormRequestResponse(NULL, __('Delete Group'), '400', '180');
+		$response->SetFormRequestResponse(NULL, sprintf(__('Delete %s'), $group), '400', '180');
 		$response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('UserGroup', 'Delete') . '")');
 		$response->AddButton(__('No'), 'XiboDialogClose()');
 		$response->AddButton(__('Yes'), '$("#UserGroupDeleteForm").submit()');
