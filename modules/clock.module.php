@@ -150,7 +150,7 @@ class clock extends Module
                     't',
                     'analogue-control-group');
 
-        $formFields[] = FormManager::AddMessage(__('Enter a format for the Digital Clock below. e.g. [HH:mm] or [DD/MM/YYYY].'), 'digital-control-group');
+        $formFields[] = FormManager::AddMessage(sprintf(__('Enter a format for the Digital Clock below. e.g. [HH:mm] or [DD/MM/YYYY]. See the <a href="%s" target="_blank">format guide</a> for more information.'), HelpManager::Link('Widget', 'ClockFormat')), 'digital-control-group');
         
         $formFields[] = FormManager::AddMultiText('ta_text', NULL, '[HH:mm]', 
             __('Enter a format for the clock'), 'f', 10, '', 'digital-control-group');
@@ -274,7 +274,7 @@ class clock extends Module
                     't',
                     'analogue-control-group');
 
-        $formFields[] = FormManager::AddMessage(__('Enter a format for the Digital Clock below. e.g. [HH:mm] or [DD/MM/YYYY].'), 'digital-control-group');
+        $formFields[] = FormManager::AddMessage(sprintf(__('Enter a format for the Digital Clock below. e.g. [HH:mm] or [DD/MM/YYYY]. See the <a href="%s" target="_blank">format guide</a> for more information.'), HelpManager::Link('Widget', 'ClockFormat')), 'digital-control-group');
         
         $formFields[] = FormManager::AddMultiText('ta_text', NULL, (($formatNode != NULL) ? $formatNode->nodeValue : ''), 
             __('Enter a format for the clock'), 'f', 10, '', 'digital-control-group');

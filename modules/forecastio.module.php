@@ -565,7 +565,7 @@ class ForecastIo extends Module
         $tab = Kit::GetParam('tab', _POST, _WORD);
 
         if (!$data = $this->getForecastData(0))
-            trigger_error(__('No data returned, please check error log.'), E_USER_ERROR);
+            die(__('No data returned, please check error log.'));
 
         $cols = array(
                 array('name' => 'forecast', 'title' => __('Forecast')),
