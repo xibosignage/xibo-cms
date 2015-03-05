@@ -1906,10 +1906,13 @@ class Layout extends Data
             $this->SetDomXml($layoutId);
 
             // Set the user on each region
-            $regionNodeList = $this->DomXml->getElementsByTagName('region');
-
-            foreach ($regionNodeList as $region) {
+            foreach ($this->DomXml->getElementsByTagName('region') as $region) {
                 $region->setAttribute('userId', $userId);
+            }
+
+            // Set the user on each media node
+            foreach ($this->DomXml->getElementsByTagName('media') as $media) {
+                $media->setAttribute('userId', $userId);
             }
 
             // We will need a file object and a media object
