@@ -111,9 +111,9 @@ if (!$tabs)
                     
                     if (isset($field['enabled']) && $field['enabled'] != 1) { ?>
                         <div class="form-group <?php echo $field['groupClass']; ?>">
-                            <label class="col-sm-2 control-label" for="<?php echo $field['name']; ?>" accesskey="<?php echo $field['accesskey']; ?>"><?php echo $field['title']; ?></label>
+                            <label class="col-sm-2 control-label"><?php echo $field['title']; ?></label>
                             <div class="col-sm-10">
-                                <input class="form-control" type="text" placeholder="<?php echo $field['value']; ?>" readonly>
+                                <p class="form-control-static"><?php echo $field['value']; ?></p>
                                 <span class="help-block"><?php echo $field['helpText']; ?></span>
                             </div>
                         </div>
