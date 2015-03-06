@@ -602,9 +602,6 @@ END;
                 // This is for library based media
                 $options = '';
 
-                // Always have the abilty to unassign from the region
-                $options .= 'unassign|' . __('Unassign from this region only');
-
                 // Get the permissions for the media item
                 $mediaAuth = $this->user->MediaAuth($mediaid, true);
 
@@ -622,8 +619,6 @@ END;
                         $this->response->keepOpen = true;
                         return $this->response;
                     }
-
-                    $options .= ',retire|' . __('Unassign from this region and retire');
 
                     // Is this media retired?
                     $revised = false;
@@ -656,9 +651,11 @@ END;
                     }
                     else
                     {
-                        $options .= ',unassignall|' . __('Unassign from all Layouts');
                         $options .= ',retire|' . __('Retire this media');
+                        $options .= ',unassignall|' . __('Unassign from all Layouts');
                     }
+
+                    $options .= ',retire|' . __('Unassign from this region and retire');
                 }
                 else
                 {
@@ -670,6 +667,9 @@ END;
                         return $this->response;
                     }
                 }
+
+                // Always have the abilty to unassign from the region
+                $options .= ',unassign|' . __('Unassign from this region only');
 
                 $options = ltrim($options, ',');
 
