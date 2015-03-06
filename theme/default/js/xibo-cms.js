@@ -552,7 +552,7 @@ function XiboFormRender(formUrl, data) {
                         function(index, value) {
                             var extrabutton = $('<button class="btn">').html(index);
 
-                            if (value.indexOf("submit()") > -1) {
+                            if (value.indexOf("submit()") > -1 || value.indexOf("XiboDialogApply(") > -1) {
                                 extrabutton.addClass('btn-primary save-button');
                             }
                             else {
@@ -950,6 +950,17 @@ function XiboSubmitResponse(response, form) {
     // Remove the spinner
     $(form).closest(".modal-dialog").find(".saving").remove();
 
+    // Check the apply flag
+    var apply = $(form).data("apply");
+    if (apply != undefined && apply) {
+        response.keepOpen = true;
+        response.loadForm = false;
+        response.refresh = false;
+    }
+
+    // Remove the apply flag
+    $(form).data("apply", false);
+
     // Did we actually succeed
     if (response.success) {
         // Success - what do we do now?
@@ -1108,6 +1119,18 @@ function XiboHoverRender(url, x, y)
  */
 function XiboDialogClose() {
     bootbox.hideAll();
+}
+
+/**
+ * Apply a form instead of saving and closing
+ * @constructor
+ */
+function XiboDialogApply(formId) {
+    var form = $(formId);
+
+    form.data("apply", true);
+
+    form.submit();
 }
 
 function XiboSwapDialog(formUrl) {
