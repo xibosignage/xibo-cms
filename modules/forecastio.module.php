@@ -692,11 +692,20 @@ class ForecastIo extends Module
         foreach ($matches[0] as $sub) {
             $replace = str_replace('[', '', str_replace(']', '', $sub));
 
-            // Debug::Audit('Matching ' . $replace . ' with ' . $sub . '. ' . (isset($data['currently'][$replace]) ? $data['currently'][$replace] : 'not in array'));
+            // Handling for date/time
+            if (stripos($replace, 'time|') > -1) {
+                $timeSplit = explode('|', $replace);
 
-            // Match that in the array
-            if (isset($data[$replace]))
-                $source = str_replace($sub, $data[$replace], $source);
+                $time = DateManager::getLocalDate($data['time'], $timeSplit[1]);
+
+                // Pull time out of the array
+                $source = str_replace($sub, $time, $source);
+            }
+            else {
+                // Match that in the array
+                if (isset($data[$replace]))
+                    $source = str_replace($sub, $data[$replace], $source);
+            }
         }
 
         return $source;
