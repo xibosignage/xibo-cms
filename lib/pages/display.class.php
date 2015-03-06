@@ -49,6 +49,7 @@ class displayDAO extends baseDAO
             $filter_pinned = 1;
             $filter_displaygroup = Session::Get('display', 'filter_displaygroup');
             $filter_display = Session::Get('display', 'filter_display');
+            $filterMacAddress = Session::Get('display', 'filterMacAddress');
             $filter_showView = Session::Get('display', 'filter_showView');
             $filter_autoRefresh = Session::Get('display', 'filter_autoRefresh');
         }
@@ -56,6 +57,7 @@ class displayDAO extends baseDAO
             $filter_pinned = 0;
             $filter_displaygroup = NULL;
             $filter_display = NULL;
+            $filterMacAddress = NULL;
             $filter_showView = 0;
             $filter_autoRefresh = 0;
         }
@@ -78,6 +80,7 @@ class displayDAO extends baseDAO
             't');
 
         $formFields[] = FormManager::AddText('filter_display', __('Name'), $filter_display, NULL, 'n');
+        $formFields[] = FormManager::AddText('filterMacAddress', __('Mac Address'), $filterMacAddress, NULL, 'm');
 
         $displayGroups = $this->user->DisplayGroupList(0);
         array_unshift($displayGroups, array('displaygroupid' => '0', 'displaygroup' => 'All'));
@@ -376,6 +379,10 @@ class displayDAO extends baseDAO
         // Filter by Name
         $filter_display = Kit::GetParam('filter_display', _POST, _STRING);
         setSession('display', 'filter_display', $filter_display);
+
+        // Filter by Name
+        $filterMacAddress = Kit::GetParam('filterMacAddress', _POST, _STRING);
+        setSession('display', 'filterMacAddress', $filterMacAddress);
         
         // Display Group
         $filter_displaygroupid = Kit::GetParam('filter_displaygroup', _POST, _INT);
@@ -392,7 +399,7 @@ class displayDAO extends baseDAO
         // Pinned option?        
         setSession('display', 'DisplayFilter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 
-        $displays = $user->DisplayList(array('displayid'), array('displaygroupid' => $filter_displaygroupid, 'display' => $filter_display));
+        $displays = $user->DisplayList(array('displayid'), array('displaygroupid' => $filter_displaygroupid, 'display' => $filter_display, 'macAddress' => $filterMacAddress));
 
         if (!is_array($displays))
         {

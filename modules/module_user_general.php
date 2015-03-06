@@ -1351,6 +1351,10 @@ class User {
             }
         }
 
+        if (Kit::GetParam('macAddress', $filter_by, _STRING) != '') {
+            $SQL .= sprintf(' AND display.macaddress LIKE \'%s\' ', '%' . $this->db->escape_string(Kit::GetParam('macAddress', $filter_by, _STRING)) . '%');
+        }
+
         // Exclude a group?
         if (Kit::GetParam('exclude_displaygroupid', $filter_by, _INT) != 0) {
             $SQL .= " AND display.DisplayID NOT IN ";
