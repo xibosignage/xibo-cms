@@ -96,4 +96,22 @@ Class PDOConnect {
 			self::$conn = null;
 		}
 	}
+
+    /**
+     * Check to see if the query returns records
+     * @param string $sql
+     * @param array[mixed] $params
+     * @return bool
+     */
+    public static function exists($sql, $params)
+    {
+        $dbh = PDOConnect::init();
+        $sth = $dbh->prepare($sql);
+        $sth->execute($params);
+
+        if ($sth->fetch())
+            return true;
+        else
+            return false;
+    }
 }

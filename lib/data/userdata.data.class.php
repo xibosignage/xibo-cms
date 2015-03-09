@@ -368,6 +368,42 @@ class Userdata extends Data
         return true;
     }
 
+    /**
+     * Returns an array containing the type of children owned by the user
+     * @return array[string]
+     * @throws Exception
+     */
+    public function getChildTypes()
+    {
+        if (!isset($this->userId) || $this->userId == 0)
+            return $this->SetError(__('Missing userId'));
+
+        try {
+            $types = array();
+
+            if (PDOConnect::exists('SELECT LayoutID FROM layout WHERE UserID = :userId', array('userId' => $this->userId)))
+                $types[] = 'layouts';
+
+            if (PDOConnect::exists('SELECT MediaID FROM media WHERE UserID = :userId', array('userId' => $this->userId)))
+                $types[] = 'media';
+
+            if (PDOConnect::exists('SELECT EventID FROM schedule WHERE UserID = :userId', array('userId' => $this->userId)))
+                $types[] = 'scheduled layouts';
+
+            if (PDOConnect::exists('SELECT Schedule_DetailID FROM schedule_detail WHERE UserID = :userId', array('userId' => $this->userId)))
+                $types[] = 'schedule detail records';
+
+            if (PDOConnect::exists('SELECT osr_id FROM oauth_server_registry WHERE osr_usa_id_ref = :userId', array('userId' => $this->userId)))
+                $types[] = 'applications';
+
+            return $types;
+        }
+        catch (Exception $e) {
+            Debug::Error($e->getMessage());
+            throw $e;
+        }
+    }
+
     /*
      * Password hashing with PBKDF2.
      * Author: havoc AT defuse.ca
