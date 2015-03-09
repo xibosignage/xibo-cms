@@ -185,6 +185,7 @@ function EmbedInit()
         $this->response->dialogSize     = true;
         $this->response->dialogWidth    = '650px';
         $this->response->dialogHeight   = '450px';
+        $this->response->AddButton(__('Apply'), 'XiboDialogApply("#ModuleForm")');
         $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
 
         return $this->response;
@@ -316,6 +317,7 @@ function EmbedInit()
         if ($this->showRegionOptions)
         {
             // We want to load a new form
+            $this->response->callBack = 'refreshPreview("' . $this->regionid . '")';
             $this->response->loadForm = true;
             $this->response->loadFormUri = $url;
         }

@@ -545,6 +545,7 @@ class Twitter extends Module
         // Append the templates to the response
         $this->response->extra = $this->settings['templates'];
         $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&q=RegionOptions")');
+        $this->response->AddButton(__('Apply'), 'XiboDialogApply("#ModuleForm")');
         $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
 
         // The response must be returned.
@@ -600,6 +601,7 @@ class Twitter extends Module
 
         // Usually you will want to load the region options form again once you have added your module.
         // In some cases you will want to load the edit form for that module
+        $this->response->callBack = 'refreshPreview("' . $this->regionid . '")';
         $this->response->loadForm = true;
         $this->response->loadFormUri = "index.php?p=timeline&layoutid=$this->layoutid&regionid=$this->regionid&q=RegionOptions";
         

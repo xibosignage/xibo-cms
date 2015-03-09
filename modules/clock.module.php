@@ -299,6 +299,7 @@ class clock extends Module
             $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
         }
 
+        $this->response->AddButton(__('Apply'), 'XiboDialogApply("#ModuleForm")');
         $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
 
         // The response must be returned.
@@ -335,6 +336,7 @@ class clock extends Module
         // Usually you will want to load the region options form again once you have added your module.
         // In some cases you will want to load the edit form for that module
         if ($this->showRegionOptions) {
+            $this->response->callBack = 'refreshPreview("' . $this->regionid . '")';
             $this->response->loadForm = true;
             $this->response->loadFormUri = "index.php?p=timeline&layoutid=$this->layoutid&regionid=$this->regionid&q=RegionOptions";
         }

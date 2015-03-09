@@ -226,7 +226,7 @@ class datasetview extends Module
             $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
         else
             $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        
+
         $this->response->AddButton(__('Save'), 'DataSetViewSubmit()');
         $this->response->callBack = 'datasetview_callback';
 

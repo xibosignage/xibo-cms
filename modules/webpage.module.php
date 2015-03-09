@@ -240,6 +240,7 @@ class webpage extends Module
         }
 
         $this->response->html = Theme::RenderReturn('form_render');
+        $this->response->AddButton(__('Apply'), 'XiboDialogApply("#ModuleForm")');
         $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
         $this->response->dialogTitle = __('Edit Webpage');
         $this->response->dialogSize     = true;
@@ -387,6 +388,7 @@ class webpage extends Module
     if ($this->showRegionOptions)
         {
             // We want to load a new form
+            $this->response->callBack = 'refreshPreview("' . $this->regionid . '")';
             $this->response->loadForm = true;
             $this->response->loadFormUri = $url;
         }

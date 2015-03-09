@@ -91,11 +91,10 @@ var datasetview_callback = function(dialog)
 }
 
 var DataSetViewSubmit = function() {
-    
+    var form = $("#ModuleForm");
     // Get the two lists
-    $("#ModuleForm").attr('action', $("#ModuleForm").attr('action') + "&ajax=true&" + $("#columnsIn").sortable('serialize')).submit();
-    return;
-}
+    form.attr('action', form.attr('action') + "&ajax=true&" + $("#columnsIn").sortable('serialize')).submit();
+};
 
 function ManageMembersCallBack(dialog)
 {
