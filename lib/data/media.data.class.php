@@ -1193,5 +1193,22 @@ class Media extends Data
             return false;
         }
     }
+
+    /**
+     * Delete all Media for a User
+     * @param int $userId
+     * @return bool
+     */
+    public function deleteAllForUser($userId)
+    {
+        $media = Media::Entries(null, array('ownerid' => $userId));
+
+        foreach ($media as $item) {
+            /* @var Media $item */
+            if (!$item->Delete($item->mediaId))
+                return $this->SetError($item->GetErrorMessage());
+        }
+
+        return true;
+    }
 }
-?>

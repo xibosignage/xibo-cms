@@ -320,11 +320,11 @@ class userDAO extends baseDAO {
         $userGroup->UnlinkAllGroups($userId);
 
         // Delete the user specific group
-        if (!$userGroup->Delete($groupId, $deleteAllItems))
+        if (!$userGroup->Delete($groupId))
             trigger_error($userGroup->GetErrorMessage(), E_USER_ERROR);
 
         // Delete the user
-        if (!$user->Delete($deleteAllItems))
+        if (!$user->Delete())
             trigger_error($user->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse(__('User Deleted.'));

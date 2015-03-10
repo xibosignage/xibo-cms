@@ -1029,8 +1029,8 @@ class Layout extends Data
             // Media Links
             $sth = $dbh->prepare('DELETE FROM lklayoutmedia WHERE layoutid = :layoutid');
             $sth->execute(array('layoutid' => $layoutId));
-        
-            // Handle the deletion of the campaign        
+
+            // Handle the deletion of the campaign
             $campaign = new Campaign();
             $campaignId = $campaign->GetCampaignId($layoutId);
     
@@ -1041,6 +1041,10 @@ class Layout extends Data
             // Remove the Layout from any display defaults
             $sth = $dbh->prepare('UPDATE `display` SET defaultlayoutid = 4 WHERE defaultlayoutid = :layoutid');
             $sth->execute(array('layoutid' => $layoutId));
+
+            // Remove the Layout from any Campaigns
+            if (!$campaign->unlinkAllForLayout($layoutId))
+                $this->ThrowError($campaign->GetErrorMessage());
     
             // Remove the Layout (now it is orphaned it can be deleted safely)
             $sth = $dbh->prepare('DELETE FROM layout WHERE layoutid = :layoutid');
@@ -2114,5 +2118,22 @@ class Layout extends Data
             }
         }
     }
+
+    /**
+     * Delete all layouts for a user
+     * @param int $userId
+     * @return bool
+     */
+    public function deleteAllForUser($userId)
+    {
+        $layouts = $this->Entries(null, array('userId' => $userId));
+
+        foreach ($layouts as $layout) {
+            /* @var Layout $layout */
+            if (!$layout->Delete($layout->layoutId))
+                return $this->SetError($layout->GetErrorMessage());
+        }
+
+        return true;
+    }
 }
-?>

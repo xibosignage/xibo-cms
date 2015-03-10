@@ -623,6 +623,35 @@ class Schedule extends Data
             return false;
         }
     }
+
+    /**
+     * Delete all events for a user
+     * @param int $userId
+     * @return bool
+     */
+    public function deleteAllForUser($userId)
+    {
+        // Get all events
+        try {
+            $dbh = PDOConnect::init();
+            $sth = $dbh-> prepare('SELECT eventId FROM `schedule` WHERE userId = :userId');
+            $sth->execute(array('userId' => $userId));
+
+            $events = $sth->fetchAll(PDO::FETCH_ASSOC);
+        }
+        catch (Exception $e) {
+            return $this->SetError(__('Cannot get events for User'));
+        }
+
+        $eventIds = array_map(function ($element) { return $element['eventId']; }, $events);
+
+        foreach ($eventIds as $eventId) {
+            if (!$this->Delete($eventId))
+                return false;
+        }
+
+        return true;
+    }
 }
 
 class Event

@@ -252,6 +252,10 @@ class Userdata extends Data
         }
     }
 
+    /**
+     * Delete User
+     * @return bool
+     */
     public function Delete()
     {
         if (!isset($this->userId) || $this->userId == 0)
@@ -259,10 +263,32 @@ class Userdata extends Data
 
         try {
             $dbh = PDOConnect::init();
-        
+
+            // Delete all layouts
+            $layout = new Layout();
+            if (!$layout->deleteAllForUser($this->userId))
+                return $this->SetError($layout->GetErrorMessage());
+
+            // Delete all Campaigns
+            $campaign = new Campaign();
+            if (!$campaign->deleteAllForUser($this->userId))
+                return $this->SetError($campaign->GetErrorMessage());
+
+            // Delete all media
+            $media = new Media();
+            if (!$media->deleteAllForUser($this->userId))
+                return $this->SetError($media->GetErrorMessage());
+
+            // Delete all schedules that have not been caught by deleting layouts and campaigns
+            // These would be schedules for other peoples layouts
+            $schedule = new Schedule();
+            if (!$schedule->deleteAllForUser($this->userId));
+
+            // Delete the user itself
             $sth = $dbh->prepare('DELETE FROM `user` WHERE userid = :userid');
             $sth->execute(array('userid' => $this->userId));
 
+            // Delete from the session table
             $sth = $dbh->prepare('DELETE FROM `session` WHERE userid = :userid');
             $sth->execute(array('userid' => $this->userId));
 

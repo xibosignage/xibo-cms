@@ -158,7 +158,7 @@ class UserGroup extends Data
 
     /**
      * Deletes an Xibo User Group
-     * @param $userGroupId int
+     * @param int $userGroupId
      * @return bool
      */
     public function Delete($userGroupId)
