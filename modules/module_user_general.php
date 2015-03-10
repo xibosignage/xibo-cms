@@ -1012,7 +1012,7 @@ class User {
             $dbh = PDOConnect::init();
         
             $params = array();
-            $SQL = 'SELECT * FROM resolution WHERE enabled = 1 ';
+            $SQL = 'SELECT * FROM resolution WHERE 1 = 1 ';
 
             // Include the current?
             if (Kit::GetParam('withCurrent', $filter_by, _INT, 0) != 0) {
@@ -1020,11 +1020,16 @@ class User {
                 $params['resolutionid'] = Kit::GetParam('withCurrent', $filter_by, _INT);
             }
 
+            if (Kit::GetParam('enabled', $filter_by, _INT, 1) != -1) {
+                $SQL .= ' AND enabled = :enabled ';
+                $params['enabled'] = Kit::GetParam('enabled', $filter_by, _INT, 1);
+            }
+
             // Sorting?
             if (is_array($sort_order))
                 $SQL .= 'ORDER BY ' . implode(',', $sort_order);
 
-            Debug::LogEntry('audit', $SQL, 'user', 'ResolutionList');
+            Debug::sql($SQL, $params);
 
             $sth = $dbh->prepare($SQL);
             $sth->execute($params);
@@ -1344,6 +1349,10 @@ class User {
                 else
                     $SQL.= " AND  (display.display LIKE '%" . sprintf('%s', $this->db->escape_string($searchName)) . "%') ";
             }
+        }
+
+        if (Kit::GetParam('macAddress', $filter_by, _STRING) != '') {
+            $SQL .= sprintf(' AND display.macaddress LIKE \'%s\' ', '%' . $this->db->escape_string(Kit::GetParam('macAddress', $filter_by, _STRING)) . '%');
         }
 
         // Exclude a group?

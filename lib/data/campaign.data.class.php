@@ -200,6 +200,30 @@ class Campaign extends Data {
     }
 
     /**
+     * Unlink a Layout from all Campaigns
+     * @param int $layoutId
+     * @return bool
+     */
+    public function unlinkAllForLayout($layoutId)
+    {
+        try {
+            $dbh = PDOConnect::init();
+
+            // Delete links
+            $sth = $dbh->prepare('DELETE FROM `lkcampaignlayout` WHERE layoutId = :layoutId');
+            $sth->execute(array(
+                'layoutId' => $layoutId
+            ));
+
+            return true;
+        }
+        catch (Exception $e) {
+            Debug::LogEntry('error', $e->getMessage());
+            return $this->SetError(25500, __('Unable to unlink Layout from all Campaigns'));
+        }
+    }
+
+    /**
      * Gets the CampaignId for a layoutspecfic campaign
      * @param <type> $layoutId
      */
@@ -232,5 +256,33 @@ class Campaign extends Data {
             return $this->SetError(25000, __('Layout has no associated Campaign, corrupted Layout'));
         }
     }
+
+    /**
+     * Delete all Campaigns for a User
+     * @param int $userId
+     * @return bool
+     */
+    public function deleteAllForUser($userId)
+    {
+        // Get all events
+        try {
+            $dbh = PDOConnect::init();
+            $sth = $dbh-> prepare('SELECT campaignId FROM `campaign` WHERE userId = :userId');
+            $sth->execute(array('userId' => $userId));
+
+            $campaigns = $sth->fetchAll(PDO::FETCH_ASSOC);
+        }
+        catch (Exception $e) {
+            return $this->SetError(__('Cannot get events for User'));
+        }
+
+        $campaignIds = array_map(function ($element) { return $element['campaignId']; }, $campaigns);
+
+        foreach ($campaignIds as $campaignId) {
+            if (!$this->Delete($campaignId))
+                return false;
+        }
+
+        return true;
+    }
 }
-?>

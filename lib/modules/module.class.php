@@ -602,9 +602,6 @@ END;
                 // This is for library based media
                 $options = '';
 
-                // Always have the abilty to unassign from the region
-                $options .= 'unassign|' . __('Unassign from this region only');
-
                 // Get the permissions for the media item
                 $mediaAuth = $this->user->MediaAuth($mediaid, true);
 
@@ -622,8 +619,6 @@ END;
                         $this->response->keepOpen = true;
                         return $this->response;
                     }
-
-                    $options .= ',retire|' . __('Unassign from this region and retire');
 
                     // Is this media retired?
                     $revised = false;
@@ -656,9 +651,11 @@ END;
                     }
                     else
                     {
-                        $options .= ',unassignall|' . __('Unassign from all Layouts');
                         $options .= ',retire|' . __('Retire this media');
+                        $options .= ',unassignall|' . __('Unassign from all Layouts');
                     }
+
+                    $options .= ',retire|' . __('Unassign from this region and retire');
                 }
                 else
                 {
@@ -670,6 +667,9 @@ END;
                         return $this->response;
                     }
                 }
+
+                // Always have the abilty to unassign from the region
+                $options .= ',unassign|' . __('Unassign from this region only');
 
                 $options = ltrim($options, ',');
 
@@ -1166,7 +1166,7 @@ END;
         $tags = Kit::GetParam('tags', _POST, _STRING);
         
         if ($this->auth->modifyPermissions)
-            $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
+            $this->duration = Kit::GetParam('duration', _POST, _INT, 0, false);
 
         // Revise this file?
         if ($tmpName != '') {
@@ -1243,7 +1243,7 @@ END;
         $replaceInLayouts = (Kit::GetParam('replaceInLayouts', _POST, _CHECKBOX) == 1);
         $replaceBackgroundImages = (Kit::GetParam('replaceBackgroundImages', _POST, _CHECKBOX) == 1);
 
-        if ($replaceInLayouts || $replaceBackgroundImages)
+        if ($mediaid != $this->mediaid && ($replaceInLayouts || $replaceBackgroundImages))
             $this->ReplaceMediaInAllLayouts($replaceInLayouts, $replaceBackgroundImages, $mediaid, $this->mediaid, $this->duration);
 
         // Do we need to delete the old media item?

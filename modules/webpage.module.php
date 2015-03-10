@@ -246,6 +246,7 @@ class webpage extends Module
         }
 
         $this->response->html = Theme::RenderReturn('form_render');
+        $this->response->AddButton(__('Apply'), 'XiboDialogApply("#ModuleForm")');
         $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
         $this->response->dialogTitle = __('Edit Webpage');
         $this->response->dialogSize     = true;
@@ -270,7 +271,7 @@ class webpage extends Module
         
         //Other properties
         $uri          = Kit::GetParam('uri', _POST, _URI);
-        $duration     = Kit::GetParam('duration', _POST, _INT, 0);
+        $duration     = Kit::GetParam('duration', _POST, _INT, 0, false);
         $scaling      = Kit::GetParam('scaling', _POST, _INT, 100);
         $transparency     = Kit::GetParam('transparency', _POST, _CHECKBOX, 'off');
         $offsetLeft = Kit::GetParam('offsetLeft', _POST, _INT);
@@ -356,7 +357,7 @@ class webpage extends Module
         
         // If we have permission to change it, then get the value from the form
         if ($this->auth->modifyPermissions)
-            $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
+            $this->duration = Kit::GetParam('duration', _POST, _INT, 0, false);
 
         $url = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
                         
@@ -397,6 +398,7 @@ class webpage extends Module
     if ($this->showRegionOptions)
         {
             // We want to load a new form
+            $this->response->callBack = 'refreshPreview("' . $this->regionid . '")';
             $this->response->loadForm = true;
             $this->response->loadFormUri = $url;
         }
@@ -465,7 +467,7 @@ class webpage extends Module
         $template = str_replace('<!--[[[HEADCONTENT]]]-->', $headContent, $template);
 
         // Body content
-        $output = '<iframe id="iframe" scrolling="no" src="' . $url . '"></iframe>';
+        $output = '<iframe id="iframe" scrolling="no" frameborder="0" src="' . $url . '"></iframe>';
         
         // Replace the Body Content with our generated text
         $template = str_replace('<!--[[[BODYCONTENT]]]-->', $output, $template);

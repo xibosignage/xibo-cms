@@ -150,7 +150,7 @@ class clock extends Module
                     't',
                     'analogue-control-group');
 
-        $formFields[] = FormManager::AddMessage(__('Enter a format for the Digital Clock below. e.g. [HH:mm] or [DD/MM/YYYY].'), 'digital-control-group');
+        $formFields[] = FormManager::AddMessage(sprintf(__('Enter a format for the Digital Clock below. e.g. [HH:mm] or [DD/MM/YYYY]. See the <a href="%s" target="_blank">format guide</a> for more information.'), HelpManager::Link('Widget', 'ClockFormat')), 'digital-control-group');
         
         $formFields[] = FormManager::AddMultiText('ta_text', NULL, '[HH:mm]', 
             __('Enter a format for the clock'), 'f', 10, '', 'digital-control-group');
@@ -192,7 +192,7 @@ class clock extends Module
         $this->mediaid  = md5(uniqid());
 
         // You must also provide a duration (all media items must provide this field)
-        $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
+        $this->duration = Kit::GetParam('duration', _POST, _INT, 0, false);
         $this->SetOption('theme', Kit::GetParam('themeid', _POST, _INT, 0));
         $this->SetOption('clockTypeId', Kit::GetParam('clockTypeId', _POST, _INT, 1));
         $this->SetOption('offset', Kit::GetParam('offset', _POST, _INT, 0));
@@ -274,7 +274,7 @@ class clock extends Module
                     't',
                     'analogue-control-group');
 
-        $formFields[] = FormManager::AddMessage(__('Enter a format for the Digital Clock below. e.g. [HH:mm] or [DD/MM/YYYY].'), 'digital-control-group');
+        $formFields[] = FormManager::AddMessage(sprintf(__('Enter a format for the Digital Clock below. e.g. [HH:mm] or [DD/MM/YYYY]. See the <a href="%s" target="_blank">format guide</a> for more information.'), HelpManager::Link('Widget', 'ClockFormat')), 'digital-control-group');
         
         $formFields[] = FormManager::AddMultiText('ta_text', NULL, (($formatNode != NULL) ? $formatNode->nodeValue : ''), 
             __('Enter a format for the clock'), 'f', 10, '', 'digital-control-group');
@@ -299,6 +299,7 @@ class clock extends Module
             $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
         }
 
+        $this->response->AddButton(__('Apply'), 'XiboDialogApply("#ModuleForm")');
         $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
 
         // The response must be returned.
@@ -322,7 +323,7 @@ class clock extends Module
         }
 
         // You must also provide a duration (all media items must provide this field)
-        $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
+        $this->duration = Kit::GetParam('duration', _POST, _INT, 0, false);
         $this->SetOption('theme', Kit::GetParam('themeid', _POST, _INT, 0));
         $this->SetOption('clockTypeId', Kit::GetParam('clockTypeId', _POST, _INT, 1));
         $this->SetOption('offset', Kit::GetParam('offset', _POST, _INT, 0));
@@ -335,6 +336,7 @@ class clock extends Module
         // Usually you will want to load the region options form again once you have added your module.
         // In some cases you will want to load the edit form for that module
         if ($this->showRegionOptions) {
+            $this->response->callBack = 'refreshPreview("' . $this->regionid . '")';
             $this->response->loadForm = true;
             $this->response->loadFormUri = "index.php?p=timeline&layoutid=$this->layoutid&regionid=$this->regionid&q=RegionOptions";
         }

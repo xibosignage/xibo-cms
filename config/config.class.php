@@ -500,11 +500,25 @@ class Config
 		else
 		{
 			$this->envWarning = true;
-			
 		}
 
 		$rows[] = array(
 				'item' => __('DateTimeZone'),
+				'status' => $status,
+				'advice' => $advice
+			);
+
+		// Check to see if Zip support exists
+		$advice = __('This enables import / export of layouts.');
+		if ($this->CheckZip()) {
+			$status = 1;
+		}
+		else {
+			$this->envWarning = true;
+		}
+
+		$rows[] = array(
+				'item' => __('ZIP'),
 				'status' => $status,
 				'advice' => $advice
 			);
@@ -698,6 +712,11 @@ class Config
 	function CheckZip() {
 		return extension_loaded('zip');
 	}
+
+    static function CheckIntlDateFormat()
+    {
+        return class_exists('IntlDateFormatter');
+    }
 	
 	/**
 	 * Check PHP is setup for large file uploads

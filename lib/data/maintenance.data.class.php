@@ -121,7 +121,8 @@ class Maintenance extends Data
         return true;
     }
 
-    public function TidyLibrary($tidyOldRevisions) {
+    public function TidyLibrary($tidyOldRevisions, $cleanUnusedFiles)
+    {
         // Also run a script to tidy up orphaned media in the library
         $library = Config::GetSetting('LIBRARY_LOCATION');
         $library = rtrim($library, '/') . '/';
@@ -141,26 +142,40 @@ class Maintenance extends Data
 
         $media = array();
         $unusedMedia = array();
+        $unusedRevisions = array();
 
         // Run a query to get an array containing all of the media in the library
         try {
             $dbh = PDOConnect::init();
         
             $sth = $dbh->prepare('
-                SELECT media.mediaid, media.storedAs, media.type, media.isedited, COUNT(lklayoutmedia.lklayoutmediaid) AS UsedInLayoutCount 
-                  FROM `media` 
+                SELECT media.mediaid, media.storedAs, media.type, media.isedited,
+                    SUM(CASE WHEN IFNULL(lklayoutmedia.lklayoutmediaid, 0) = 0 THEN 0 ELSE 1 END) AS UsedInLayoutCount,
+                    SUM(CASE WHEN IFNULL(lkmediadisplaygroup.id, 0) = 0 THEN 0 ELSE 1 END) AS UsedInDisplayCount
+                  FROM `media`
                     LEFT OUTER JOIN `lklayoutmedia`
                     ON lklayoutmedia.mediaid = media.mediaid
-                GROUP BY media.mediaid, media.storedAs ');
+                    LEFT OUTER JOIN `lkmediadisplaygroup`
+                    ON lkmediadisplaygroup.mediaid = media.mediaid
+                GROUP BY media.mediaid, media.storedAs, media.type, media.isedited ');
 
             $sth->execute(array());
 
             foreach ($sth->fetchAll() as $row) {
                 $media[$row['storedAs']] = $row;
+
+                // Ignore any module files or fonts
+                if ($row['type'] == 'module' || $row['type'] == 'font')
+                    continue;
                 
-                // If its not used in a layout and its not a generic module, add to the unused array.
-                if ($tidyOldRevisions && $row['UsedInLayoutCount'] <= 0 && $row['isedited'] > 0 && $row['type'] != 'module' && $row['type'] != 'font')
+                // Collect media revisions that aren't used
+                if ($tidyOldRevisions && $row['UsedInLayoutCount'] <= 0 && $row['UsedInDisplayCount'] <= 0 && $row['isedited'] > 0) {
+                    $unusedRevisions[$row['storedAs']] = $row;
+                }
+                // Collect any files that aren't used
+                else if ($cleanUnusedFiles && $row['UsedInLayoutCount'] <= 0 && $row['UsedInDisplayCount'] <= 0) {
                     $unusedMedia[$row['storedAs']] = $row;
+                }
             }
         }
         catch (Exception $e) {
@@ -197,18 +212,18 @@ class Maintenance extends Data
                 // If not, delete it
                 $mediaObject->DeleteMediaFile($file);
             }
-            else if (array_key_exists($file, $unusedMedia)) {
+            else if (array_key_exists($file, $unusedRevisions)) {
                 // It exists but isn't being used any more
-                Debug::Audit('Deleting media: ' . $media[$file]['mediaid']);
+                Debug::Audit('Deleting unused revision media: ' . $media[$file]['mediaid']);
                 $mediaObject->Delete($media[$file]['mediaid']);
             }
-            else {
-                // Don't do anything, this file still exists
-                //Debug::Audit('Still exists: ' . $file);
+            else if (array_key_exists($file, $unusedMedia)) {
+                // It exists but isn't being used any more
+                Debug::Audit('Deleting unsued media: ' . $media[$file]['mediaid']);
+                $mediaObject->Delete($media[$file]['mediaid']);
             }
         }
 
         return true;
     }
 }
-?>

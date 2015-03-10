@@ -252,6 +252,10 @@ class Userdata extends Data
         }
     }
 
+    /**
+     * Delete User
+     * @return bool
+     */
     public function Delete()
     {
         if (!isset($this->userId) || $this->userId == 0)
@@ -259,10 +263,32 @@ class Userdata extends Data
 
         try {
             $dbh = PDOConnect::init();
-        
+
+            // Delete all layouts
+            $layout = new Layout();
+            if (!$layout->deleteAllForUser($this->userId))
+                return $this->SetError($layout->GetErrorMessage());
+
+            // Delete all Campaigns
+            $campaign = new Campaign();
+            if (!$campaign->deleteAllForUser($this->userId))
+                return $this->SetError($campaign->GetErrorMessage());
+
+            // Delete all media
+            $media = new Media();
+            if (!$media->deleteAllForUser($this->userId))
+                return $this->SetError($media->GetErrorMessage());
+
+            // Delete all schedules that have not been caught by deleting layouts and campaigns
+            // These would be schedules for other peoples layouts
+            $schedule = new Schedule();
+            if (!$schedule->deleteAllForUser($this->userId));
+
+            // Delete the user itself
             $sth = $dbh->prepare('DELETE FROM `user` WHERE userid = :userid');
             $sth->execute(array('userid' => $this->userId));
 
+            // Delete from the session table
             $sth = $dbh->prepare('DELETE FROM `session` WHERE userid = :userid');
             $sth->execute(array('userid' => $this->userId));
 
@@ -366,6 +392,42 @@ class Userdata extends Data
         }
 
         return true;
+    }
+
+    /**
+     * Returns an array containing the type of children owned by the user
+     * @return array[string]
+     * @throws Exception
+     */
+    public function getChildTypes()
+    {
+        if (!isset($this->userId) || $this->userId == 0)
+            return $this->SetError(__('Missing userId'));
+
+        try {
+            $types = array();
+
+            if (PDOConnect::exists('SELECT LayoutID FROM layout WHERE UserID = :userId', array('userId' => $this->userId)))
+                $types[] = 'layouts';
+
+            if (PDOConnect::exists('SELECT MediaID FROM media WHERE UserID = :userId', array('userId' => $this->userId)))
+                $types[] = 'media';
+
+            if (PDOConnect::exists('SELECT EventID FROM schedule WHERE UserID = :userId', array('userId' => $this->userId)))
+                $types[] = 'scheduled layouts';
+
+            if (PDOConnect::exists('SELECT Schedule_DetailID FROM schedule_detail WHERE UserID = :userId', array('userId' => $this->userId)))
+                $types[] = 'schedule detail records';
+
+            if (PDOConnect::exists('SELECT osr_id FROM oauth_server_registry WHERE osr_usa_id_ref = :userId', array('userId' => $this->userId)))
+                $types[] = 'applications';
+
+            return $types;
+        }
+        catch (Exception $e) {
+            Debug::Error($e->getMessage());
+            throw $e;
+        }
     }
 
     /*

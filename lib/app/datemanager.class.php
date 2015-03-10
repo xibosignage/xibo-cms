@@ -45,8 +45,20 @@ class DateManager
 
         if ($format == NULL)
             $format = DateManager::getDefaultFormat();
-        
-        return (DateManager::getCalendarType() == 'Jalali') ? JDateTime::date($format, $timestamp, false) : date($format, $timestamp);
+
+        if (DateManager::getCalendarType() == 'Jalali') {
+            return JDateTime::date($format, $timestamp, false);
+        }
+        else {
+            // Do we have the international date formatter?
+            if (Config::GetSetting('USE_INTL_DATEFORMAT') == 1 && Config::CheckIntlDateFormat()) {
+                $formatter = new IntlDateFormatter(Config::GetSetting('DEFAULT_LANGUAGE'), IntlDateFormatter::FULL, IntlDateFormatter::FULL, Config::GetSetting('DEFAULT_TIMEZONE'), IntlDateFormatter::GREGORIAN, $format);
+                return $formatter->format($timestamp);
+            }
+            else {
+                return date($format, $timestamp);
+            }
+        }
     }
     
     public static function getSystemDate($timestamp = NULL, $format = NULL)

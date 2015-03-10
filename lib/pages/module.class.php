@@ -171,7 +171,7 @@ class moduleDAO extends baseDAO
             $row['moduleid'] = Kit::ValidateParam($module['ModuleID'], _INT);
             $row['name'] = Kit::ValidateParam($module['Name'], _STRING);
             $row['description'] = Kit::ValidateParam($module['Description'], _STRING);
-            $row['isregionspecific'] = Kit::ValidateParam($module['RegionSpecific'], _INT);
+            $row['isregionspecific'] = (Kit::ValidateParam($module['RegionSpecific'], _INT) == 0) ? 1 : 0;
             $row['validextensions'] = Kit::ValidateParam($module['ValidExtensions'], _STRING);
             $row['imageuri'] = Kit::ValidateParam($module['ImageUri'], _STRING);
             $row['enabled'] = Kit::ValidateParam($module['Enabled'], _INT);

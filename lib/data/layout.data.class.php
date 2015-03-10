@@ -1029,8 +1029,8 @@ class Layout extends Data
             // Media Links
             $sth = $dbh->prepare('DELETE FROM lklayoutmedia WHERE layoutid = :layoutid');
             $sth->execute(array('layoutid' => $layoutId));
-        
-            // Handle the deletion of the campaign        
+
+            // Handle the deletion of the campaign
             $campaign = new Campaign();
             $campaignId = $campaign->GetCampaignId($layoutId);
     
@@ -1041,6 +1041,10 @@ class Layout extends Data
             // Remove the Layout from any display defaults
             $sth = $dbh->prepare('UPDATE `display` SET defaultlayoutid = 4 WHERE defaultlayoutid = :layoutid');
             $sth->execute(array('layoutid' => $layoutId));
+
+            // Remove the Layout from any Campaigns
+            if (!$campaign->unlinkAllForLayout($layoutId))
+                $this->ThrowError($campaign->GetErrorMessage());
     
             // Remove the Layout (now it is orphaned it can be deleted safely)
             $sth = $dbh->prepare('DELETE FROM layout WHERE layoutid = :layoutid');
@@ -1905,6 +1909,16 @@ class Layout extends Data
             // Set the DOM XML
             $this->SetDomXml($layoutId);
 
+            // Set the user on each region
+            foreach ($this->DomXml->getElementsByTagName('region') as $region) {
+                $region->setAttribute('userId', $userId);
+            }
+
+            // Set the user on each media node
+            foreach ($this->DomXml->getElementsByTagName('media') as $media) {
+                $media->setAttribute('userId', $userId);
+            }
+
             // We will need a file object and a media object
             $fileObject = new File();
             $mediaObject = new Media();
@@ -1967,7 +1981,7 @@ class Layout extends Data
                 Debug::LogEntry('audit', 'Post File Import Fix', get_class(), __FUNCTION__);
     
                 // Get this media node from the layout using the old media id
-                if (!$this->PostImportFix($layoutId, $file['mediaid'], $mediaObject->mediaId, $mediaObject->storedAs, $file['background']))
+                if (!$this->PostImportFix($userId, $layoutId, $file['mediaid'], $mediaObject->mediaId, $mediaObject->storedAs, $file['background']))
                     return false;
             }
 
@@ -1998,7 +2012,7 @@ class Layout extends Data
         }
     }
 
-    public function PostImportFix($layoutId, $oldMediaId, $newMediaId, $storedAs = '', $background = 0) {
+    public function PostImportFix($userId, $layoutId, $oldMediaId, $newMediaId, $storedAs = '', $background = 0) {
         
         Debug::LogEntry('audit', 'Swapping ' . $oldMediaId . ' for ' . $newMediaId, get_class(), __FUNCTION__);
 
@@ -2038,6 +2052,9 @@ class Layout extends Data
             foreach ($mediaNodeList as $node) {
                 // Update the ID
                 $node->setAttribute('id', $newMediaId);
+
+                // Update Owner
+                $node->setAttribute('userId', $userId);
 
                 // Update the URI option
                 // Get the options node from this document
@@ -2101,5 +2118,22 @@ class Layout extends Data
             }
         }
     }
+
+    /**
+     * Delete all layouts for a user
+     * @param int $userId
+     * @return bool
+     */
+    public function deleteAllForUser($userId)
+    {
+        $layouts = $this->Entries(null, array('userId' => $userId));
+
+        foreach ($layouts as $layout) {
+            /* @var Layout $layout */
+            if (!$layout->Delete($layout->layoutId))
+                return $this->SetError($layout->GetErrorMessage());
+        }
+
+        return true;
+    }
 }
-?>

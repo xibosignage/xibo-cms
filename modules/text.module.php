@@ -265,6 +265,7 @@ class text extends Module
         {
             $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
         }
+        $this->response->AddButton(__('Apply'), 'XiboDialogApply("#ModuleForm")');
         $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
 
         return $this->response;
@@ -282,7 +283,7 @@ class text extends Module
         $mediaid    = $this->mediaid;
 
         //Other properties
-        $duration     = Kit::GetParam('duration', _POST, _INT, 0);
+        $duration     = Kit::GetParam('duration', _POST, _INT, 0, false);
         $text         = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
 	$name 	      = Kit::GetParam('name', _POST, _STRING);
 
@@ -356,7 +357,7 @@ class text extends Module
 
         // If we have permission to change it, then get the value from the form
         if ($this->auth->modifyPermissions)
-            $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
+            $this->duration = Kit::GetParam('duration', _POST, _INT, 0, false);
 
         Debug::LogEntry('audit', 'Text received: ' . $text);
 
@@ -394,6 +395,7 @@ class text extends Module
 
         if ($this->showRegionOptions) {
             // We want to load a new form
+            $this->response->callBack = 'refreshPreview("' . $this->regionid . '")';
             $this->response->loadForm = true;
             $this->response->loadFormUri = $url;
         }

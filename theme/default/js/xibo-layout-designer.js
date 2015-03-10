@@ -223,11 +223,15 @@ function setFullScreenLayout() {
     $('#left', '.XiboForm').val('0');
 }
 
+function refreshPreview(regionId) {
+    // Refresh the preview
+    var preview = Preview.instances[regionId];
+    preview.SetSequence(preview.seq);
+}
+
 var LoadTimeLineCallback = function() {
 
-    // Refresh the preview
-    var preview = Preview.instances[$('#timelineControl').attr('regionid')];
-    preview.SetSequence(preview.seq);
+    refreshPreview($('#timelineControl').attr('regionid'));
 
     $("li.timelineMediaListItem").hover(function() {
 

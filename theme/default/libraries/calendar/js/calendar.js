@@ -683,8 +683,9 @@ if(!String.prototype.formatNum) {
 
 		var time_start = this.options.time_start.split(":");
 		var time_end = this.options.time_end.split(":");
+        var time_hour_duration = parseInt(time_end[0]) - parseInt(time_start[0]);
 
-		data.hours = (parseInt(time_end[0]) - parseInt(time_start[0])) * time_split_hour;
+		data.hours = ((time_hour_duration == 0) ? 24 : time_hour_duration) * time_split_hour;
 		var lines = data.hours * time_split_count - parseInt(time_start[1]) / time_split;
 		var ms_per_line = (60000 * time_split);
 
@@ -707,12 +708,10 @@ if(!String.prototype.formatNum) {
 			e.end_hour = f.getHours().toString().formatNum(2) + ':' + f.getMinutes().toString().formatNum(2);
 
 			if(e.start < start.getTime()) {
-				warn(1);
 				e.start_hour = s.getDate() + ' ' + $self.locale['ms' + s.getMonth()] + ' ' + e.start_hour;
 			}
 
 			if(e.end > end.getTime()) {
-				warn(1);
 				e.end_hour = f.getDate() + ' ' + $self.locale['ms' + f.getMonth()] + ' ' + e.end_hour;
 			}
 
@@ -1629,12 +1628,10 @@ if(!String.prototype.formatNum) {
 				e.end_hour = f.getHours().toString().formatNum(2) + ':' + f.getMinutes().toString().formatNum(2);
 
 				if(e.start < start.getTime()) {
-					warn(1);
 					e.start_hour = s.getJalaliDate() + ' ' + $self.locale['jms' + (s.getJalaliMonth() - 1)] + ' ' + e.start_hour;
 				}
 
 				if(e.end > end.getTime()) {
-					warn(1);
 					e.end_hour = f.getJalaliDate() + ' ' + $self.locale['jms' + (s.getJalaliMonth() - 1)] + ' ' + e.end_hour;
 				}
 

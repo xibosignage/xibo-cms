@@ -169,38 +169,43 @@ class statusdashboardDAO extends baseDAO {
             Theme::Set('nowShowing', $sth->fetchColumn(0));
 
             // Latest news
-            // Make sure we have the cache location configured
-            Kit::ClassLoader('file');
-            $file = new File($this->db);
-            File::EnsureLibraryExists();
+            if (Config::GetSetting('DASHBOARD_LATEST_NEWS_ENABLED') == 1) {
+                // Make sure we have the cache location configured
+                Kit::ClassLoader('file');
+                $file = new File($this->db);
+                File::EnsureLibraryExists();
 
-            // Use SimplePie to get the feed
-            include_once('3rdparty/simplepie/autoloader.php');
+                // Use SimplePie to get the feed
+                include_once('3rdparty/simplepie/autoloader.php');
 
-            $feed = new SimplePie();
-            $feed->set_cache_location($file->GetLibraryCacheUri());
-            $feed->set_feed_url(Theme::GetConfig('latest_news_url'));
-            $feed->set_cache_duration(86400);
-            $feed->handle_content_type();
-            $feed->init();
+                $feed = new SimplePie();
+                $feed->set_cache_location($file->GetLibraryCacheUri());
+                $feed->set_feed_url(Theme::GetConfig('latest_news_url'));
+                $feed->set_cache_duration(86400);
+                $feed->handle_content_type();
+                $feed->init();
 
-            $latestNews = array();
+                $latestNews = array();
 
-            if ($feed->error()) {
-                Debug::LogEntry('audit', 'Feed Error: ' . $feed->error(), get_class(), __FUNCTION__);
-            }
-            else {
-                // Store our formatted items
-                foreach ($feed->get_items() as $item) {
-                    $latestNews[] = array(
+                if ($feed->error()) {
+                    Debug::LogEntry('audit', 'Feed Error: ' . $feed->error(), get_class(), __FUNCTION__);
+                }
+                else {
+                    // Store our formatted items
+                    foreach ($feed->get_items() as $item) {
+                        $latestNews[] = array(
                             'title' => $item->get_title(),
                             'description' => $item->get_description(),
                             'link' => $item->get_link()
                         );
+                    }
                 }
-            }
 
-            Theme::Set('latestNews', $latestNews);
+                Theme::Set('latestNews', $latestNews);
+            }
+            else {
+                Theme::Set('latestNews', array(array('title' => __('Latest news not enabled.'), 'description' => '', 'link' => '')));
+            }
         }
         catch (Exception $e) {
             
