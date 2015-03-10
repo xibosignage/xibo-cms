@@ -170,6 +170,9 @@ class ForecastIo extends Module
 
         Theme::Set('form_tabs', $tabs);
 
+	$formFields['general'][] = FormManager::AddText('name', __('Name'), NULL,
+            __('An optional name for this media'), 'n');
+
         $formFields['general'][] = FormManager::AddNumber('duration', __('Duration'), NULL, 
             __('The duration in seconds this item should be displayed.'), 'd', 'required');
 
@@ -209,6 +212,9 @@ class ForecastIo extends Module
             'id',
             'value',
             __('Select the language you would like to use.'), 'l');
+
+	$formFields['general'][] = FormManager::AddText('color', __('Colour'), '#000',
+            __('Please select a colour for the foreground text.'), 'c', 'required');
 
         $formFields['advanced'][] = FormManager::AddCheckbox('overrideTemplate', __('Override the template?'), 0, 
             __('Tick if you would like to override the template.'), 'o');
@@ -260,15 +266,19 @@ class ForecastIo extends Module
         $regionid   = $this->regionid;
         $mediaid    = $this->mediaid;
 
-        // You are required to set a media id, which should be unique.
+        //Other Properties
+	$name 	      = Kit::GetParam('name', _POST, _STRING);
+
+	// You are required to set a media id, which should be unique.
         $this->mediaid  = md5(uniqid());
 
         // You must also provide a duration (all media items must provide this field)
         $this->duration = Kit::GetParam('duration', _POST, _INT, 0, false);
 
         // You can store any additional options for your module using the SetOption method
+	$this->SetOption('name', $name);
         $this->SetOption('useDisplayLocation', Kit::GetParam('useDisplayLocation', _POST, _CHECKBOX));
-        $this->SetOption('color', Kit::GetParam('color', _POST, _STRING, '#000'));
+        $this->SetOption('color', Kit::GetParam('color', _POST, _STRING));
         $this->SetOption('longitude', Kit::GetParam('longitude', _POST, _DOUBLE));
         $this->SetOption('latitude', Kit::GetParam('latitude', _POST, _DOUBLE));
         $this->SetOption('templateId', Kit::GetParam('templateId', _POST, _STRING));
@@ -326,6 +336,9 @@ class ForecastIo extends Module
         $tabs[] = FormManager::AddTab('forecast', __('Forecast'));
 
         Theme::Set('form_tabs', $tabs);
+
+	$formFields['general'][] = FormManager::AddText('name', __('Name'), $this->GetOption('name'),
+            __('An optional name for this media'), 'n');
 
         $formFields['general'][] = FormManager::AddNumber('duration', __('Duration'), $this->duration, 
             __('The duration in seconds this item should be displayed.'), 'd', 'required');
@@ -432,10 +445,14 @@ class ForecastIo extends Module
             return $this->response;
         }
 
-        // You must also provide a duration (all media items must provide this field)
+        //Other Properties
+	$name = Kit::GetParam('name', _POST, _STRING);
+
+	// You must also provide a duration (all media items must provide this field)
         $this->duration = Kit::GetParam('duration', _POST, _INT, 0, false);
 
         // You can store any additional options for your module using the SetOption method
+	$this->SetOption('name', $name);
         $this->SetOption('useDisplayLocation', Kit::GetParam('useDisplayLocation', _POST, _CHECKBOX));
         $this->SetOption('color', Kit::GetParam('color', _POST, _STRING, '#000'));
         $this->SetOption('longitude', Kit::GetParam('longitude', _POST, _DOUBLE));
@@ -809,6 +826,10 @@ class ForecastIo extends Module
         // You can add anything you like to this, or completely replace it
 
         return $output;
+    }
+
+    public function GetName() {
+        return $this->GetOption('name');
     }
     
     public function IsValid() {

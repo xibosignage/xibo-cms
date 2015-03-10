@@ -66,6 +66,10 @@ class text extends Module
         Theme::Set('form_tabs', $tabs);
 
         $formFields = array();
+	
+	$formFields['options'][] = FormManager::AddText('name', __('Name'), NULL, 
+            __('An optional name for this media'), 'n');
+
         $formFields['options'][] = FormManager::AddCombo(
                 'effect', 
                 __('Effect'), 
@@ -179,6 +183,9 @@ class text extends Module
         $oldDirection = $this->GetOption('direction', 'none');
         if ($oldDirection != 'none')
             $oldDirection = 'marquee' . ucfirst($oldDirection);
+	
+	$formFields['options'][] = FormManager::AddText('name', __('Name'), $this->GetOption('name'), 
+	    __('An optional name for this media'), 'n');
 
         $formFields['options'][] = FormManager::AddCombo(
                 'effect', 
@@ -278,6 +285,7 @@ class text extends Module
         //Other properties
         $duration     = Kit::GetParam('duration', _POST, _INT, 0, false);
         $text         = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
+	$name 	      = Kit::GetParam('name', _POST, _STRING);
 
         $url = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
 
@@ -305,6 +313,7 @@ class text extends Module
         $this->SetOption('effect', Kit::GetParam('effect', _POST, _STRING));
         $this->SetOption('speed', Kit::GetParam('speed', _POST, _INT));
         $this->SetOption('backgroundColor', Kit::GetParam('backgroundColor', _POST, _STRING));
+	$this->SetOption('name', $name);
         $this->SetRaw('<text><![CDATA[' . $text . ']]></text>');
 
         // Should have built the media object entirely by this time
@@ -344,7 +353,8 @@ class text extends Module
 
         //Other properties
         $text = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
-        
+        $name = Kit::GetParam('name', _POST, _STRING);
+
         // If we have permission to change it, then get the value from the form
         if ($this->auth->modifyPermissions)
             $this->duration = Kit::GetParam('duration', _POST, _INT, 0, false);
@@ -373,6 +383,7 @@ class text extends Module
         $this->SetOption('effect', Kit::GetParam('effect', _POST, _STRING));
         $this->SetOption('speed', Kit::GetParam('speed', _POST, _INT));
         $this->SetOption('backgroundColor', Kit::GetParam('backgroundColor', _POST, _STRING));
+	$this->SetOption('name', $name);
         $this->SetRaw('<text><![CDATA[' . $text . ']]></text>');
 
         // Should have built the media object entirely by this time
@@ -552,6 +563,10 @@ class text extends Module
         $output .= '</div>';
 
         return $output;
+    }
+
+    public function GetName() {
+        return $this->GetOption('name');
     }
     
     public function IsValid() {
