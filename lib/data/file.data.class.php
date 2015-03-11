@@ -209,7 +209,7 @@ class File extends Data
         // Check that we are now writable - if not then error
         if (!is_writable($libraryFolder))
         {
-            $this->SetError(4);
+            Debug::Error('Library not writable');
             return false;
         }
 
