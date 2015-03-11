@@ -119,22 +119,34 @@ class contentDAO extends baseDAO {
 
     function actionMenu() {
 
-        return array(
-                array('title' => __('Filter'),
-                    'class' => '',
-                    'selected' => false,
-                    'link' => '#',
-                    'help' => __('Open the filter form'),
-                    'onclick' => 'ToggleFilterView(\'Filter\')'
-                    ),
-                array('title' => __('Add Media'),
-                    'class' => 'XiboFormButton',
-                    'selected' => false,
-                    'link' => 'index.php?p=content&q=displayForms',
-                    'help' => __('Add a new media item to the library'),
-                    'onclick' => ''
-                    )
-            );                   
+        $menu = array();
+        $menu[] = array('title' => __('Filter'),
+            'class' => '',
+            'selected' => false,
+            'link' => '#',
+            'help' => __('Open the filter form'),
+            'onclick' => 'ToggleFilterView(\'Filter\')'
+        );
+
+        if (Config::GetSetting('SETTING_LIBRARY_TIDY_ENABLED') == 1) {
+            $menu[] = array('title' => __('Tidy Library'),
+                'class' => 'XiboFormButton',
+                'selected' => false,
+                'link' => 'index.php?p=content&q=tidyLibraryForm',
+                'help' => __('Run through the library and remove unused and unnecessary files'),
+                'onclick' => ''
+            );
+        }
+
+        $menu[] = array('title' => __('Add Media'),
+            'class' => 'XiboFormButton',
+            'selected' => false,
+            'link' => 'index.php?p=content&q=displayForms',
+            'help' => __('Add a new media item to the library'),
+            'onclick' => ''
+        );
+
+        return $menu;
     }
 	
 	/**
@@ -549,5 +561,46 @@ HTML;
         // Must prevent from continuing (framework will try to issue a response)
         exit;
     }
+
+    public function tidyLibraryForm()
+    {
+        $response = new ResponseManager();
+
+        Theme::Set('form_id', 'TidyLibraryForm');
+        Theme::Set('form_action', 'index.php?p=content&q=tidyLibrary');
+
+        $formFields = array();
+        $formFields[] = FormManager::AddMessage(__('Tidying your Library will delete any media that is not currently in use.'));
+
+        // Work out how many files there are
+        $media = Media::entriesUnusedForUser($this->user->userid);
+
+        $formFields[] = FormManager::AddMessage(sprintf(__('There is %s of data stored in %d files . Are you sure you want to proceed?', Kit::formatBytes(array_sum(array_map(function ($element) { return $element['fileSize']; }, $media))), count($media))));
+
+        Theme::Set('form_fields', $formFields);
+
+        $response->SetFormRequestResponse(NULL, __('Tidy Library'), '350px', '275px');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Content', 'TidyLibrary') . '")');
+        $response->AddButton(__('No'), 'XiboDialogClose()');
+        $response->AddButton(__('Yes'), '$("#TidyLibraryForm").submit()');
+        $response->Respond();
+    }
+
+    /**
+     * Tidies up the library
+     */
+    public function tidyLibrary()
+    {
+        $response = new ResponseManager();
+
+        if (Config::GetSetting('SETTING_LIBRARY_TIDY_ENABLED') != 1)
+            trigger_error(__('Sorry this function is disabled.'), E_USER_ERROR);
+
+        $media = new Media();
+        if (!$media->deleteUnusedForUser($this->user->userid))
+            trigger_error($media->GetErrorMessage(), E_USER_ERROR);
+
+        $response->SetFormSubmitResponse(__('Library Tidy Complete'));
+        $response->Respond();
+    }
 }
-?>

@@ -1211,4 +1211,62 @@ class Media extends Data
 
         return true;
     }
+
+    /**
+     * Get unused media entries
+     * @param int $userId
+     * @return array
+     * @throws Exception
+     */
+    public static function entriesUnusedForUser($userId)
+    {
+        $media = array();
+
+        try {
+            $dbh = PDOConnect::init();
+            $sth = $dbh->prepare('SELECT media.mediaId, media.storedAs, media.type, media.isedited, media.fileSize,
+                    SUM(CASE WHEN IFNULL(lklayoutmedia.lklayoutmediaid, 0) = 0 THEN 0 ELSE 1 END) AS UsedInLayoutCount,
+                    SUM(CASE WHEN IFNULL(lkmediadisplaygroup.id, 0) = 0 THEN 0 ELSE 1 END) AS UsedInDisplayCount
+                  FROM `media`
+                    LEFT OUTER JOIN `lklayoutmedia`
+                    ON lklayoutmedia.mediaid = media.mediaid
+                    LEFT OUTER JOIN `lkmediadisplaygroup`
+                    ON lkmediadisplaygroup.mediaid = media.mediaid
+                 WHERE media.userId = :userId
+                  AND media.type <> \'module\' AND media.type <> \'font\'
+                GROUP BY media.mediaid, media.storedAs, media.type, media.isedited');
+
+            $sth->execute(array('userId' => $userId));
+
+            foreach ($sth->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                // Check to make sure it is not used
+                if ($row['UsedInLayoutCount'] > 0 || $row['UsedInDisplayCount'] > 0)
+                    continue;
+
+                $media[] = $row;
+            }
+        }
+        catch (Exception $e) {
+            Debug::Error($e->getMessage());
+            throw new Exception(__('Cannot get entries'));
+        }
+
+        return $media;
+    }
+
+    /**
+     * Delete unused media for user
+     * @param int $userId
+     * @return bool
+     */
+    public function deleteUnusedForUser($userId)
+    {
+        foreach (Media::entriesUnusedForUser($userId) as $item) {
+            Debug::Audit('Deleting unused media: ' . $item['mediaId']);
+            if (!$this->Delete($item['mediaId']))
+                return false;
+        }
+
+        return true;
+    }
 }
