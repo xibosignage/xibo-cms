@@ -789,8 +789,7 @@ END;
 		$allUserIds = array_map(function ($array) { return $array['userid']; }, $allUsers);
 
 		// Users in group
-		if (!$usersAssigned = $this->user->userList(null, array('groupIds' => array($groupId))))
-			trigger_error(__('Error getting users'), E_USER_ERROR);
+		$usersAssigned = $this->user->userList(null, array('groupIds' => array($groupId)));
 
         foreach ($usersAssigned as $row) {
 			// Did this session have permission to do anything to this user?
