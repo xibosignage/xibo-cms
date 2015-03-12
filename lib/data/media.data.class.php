@@ -844,8 +844,9 @@ class Media extends Data
             $fileName = Config::GetSetting('LIBRARY_LOCATION') . 'temp' . DIRECTORY_SEPARATOR . $name;
             
             // Put in a temporary folder
-            @file_put_contents($fileName, @fopen($url, 'r'));
-            
+            File::downloadFile($url, $fileName);
+
+            // Add the media file to the library
             $media = $this->addModuleFile($fileName, $expires, $moduleSystemFile, true);
 
             // Tidy temp
@@ -916,14 +917,15 @@ class Media extends Data
         
             if ($media !== false) {
                 
-                $SQL = "UPDATE `media` SET md5 = :md5, filesize = :filesize, expires = :expires WHERE mediaId = :mediaId ";
+                $SQL = "UPDATE `media` SET md5 = :md5, filesize = :filesize, expires = :expires, moduleSystemFile = :moduleSystemFile WHERE mediaId = :mediaId ";
 
                 $sth = $dbh->prepare($SQL);
                 $sth->execute(array(
                         'mediaId' => $media['mediaId'],
                         'filesize' => $fileSize,
                         'md5' => $md5,
-                        'expires' => $expires
+                        'expires' => $expires,
+                        'moduleSystemFile' => $moduleSystemFile
                     ));
 
                 // Update the media array for returning
@@ -1191,5 +1193,22 @@ class Media extends Data
             return false;
         }
     }
+
+    /**
+     * Delete all Media for a User
+     * @param int $userId
+     * @return bool
+     */
+    public function deleteAllForUser($userId)
+    {
+        $media = Media::Entries(null, array('ownerid' => $userId));
+
+        foreach ($media as $item) {
+            /* @var Media $item */
+            if (!$item->Delete($item->mediaId))
+                return $this->SetError($item->GetErrorMessage());
+        }
+
+        return true;
+    }
 }
-?>

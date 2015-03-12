@@ -47,6 +47,11 @@ class ModuleFactory
     public static function createForLibrary($type, $layoutId, $database = null, $user = null)
     {
         self::includeType($type);
+        if ($database == null)
+            $database = new Database();
+
+        if ($user == null)
+            $user = new User();
 
         if (!$module = new $type($database, $user, '', $layoutId, ''))
             throw new Exception($module->GetErrorMessage());
@@ -57,6 +62,11 @@ class ModuleFactory
     public static function createForLayout($type, $layoutId, $regionId, $database = null, $user = null)
     {
         self::includeType($type);
+        if ($database == null)
+            $database = new Database();
+
+        if ($user == null)
+            $user = new User();
 
         if (!$module = new $type($database, $user, '', $layoutId, $regionId))
             throw new Exception($module->GetErrorMessage());
@@ -67,6 +77,11 @@ class ModuleFactory
     public static function createForMedia($type, $mediaId, $database = null, $user = null)
     {
         self::includeType($type);
+        if ($database == null)
+            $database = new Database();
+
+        if ($user == null)
+            $user = new User();
 
         if (!$module = new $type($database, $user, $mediaId))
             throw new Exception($module->GetErrorMessage());
@@ -77,6 +92,11 @@ class ModuleFactory
     public static function load($type, $layoutId, $regionId, $mediaId, $linkId = null, $database = null, $user = null)
     {
         self::includeType($type);
+        if ($database == null)
+            $database = new Database();
+
+        if ($user == null)
+            $user = new User();
 
         if (!$module = new $type($database, $user, $mediaId, $layoutId, $regionId, $linkId))
             throw new Exception($module->GetErrorMessage());

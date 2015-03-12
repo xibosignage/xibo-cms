@@ -239,5 +239,19 @@ class FormManager {
             'id' => $id, 'name' => $name, 'dataAttributes' => $dataAttributes
         );
     }
+
+    public static function AddDatePicker($name, $title, $value, $helpText, $accessKey, $validation = '', $groupClass = '') {
+        return array(
+            'name' => $name,
+            'title' => $title,
+            'value' => $value,
+            'helpText' => $helpText,
+            'fieldType' => 'datePicker',
+            'options' => NULL,
+            'validation' => $validation,
+            'accesskey' => $accessKey,
+            'groupClass' => $groupClass
+        );
+    }
 }
 ?>

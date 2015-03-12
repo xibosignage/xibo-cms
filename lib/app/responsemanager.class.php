@@ -326,9 +326,11 @@ class ResponseManager
 			// Extra
 			$response['extra'] = $this->extra;
 
-            // Log the response if we are auditing
-            //global $db;
-            //Debug::LogEntry('audit', json_encode($response), 'Response Manager', 'Respond');
+            // Clear the object buffer, and if it isn't empty error with the contents.
+            $buffer = ob_get_clean();
+
+            if ($buffer != '')
+                trigger_error($buffer, E_USER_ERROR);
 			
 			echo json_encode($response);
 			

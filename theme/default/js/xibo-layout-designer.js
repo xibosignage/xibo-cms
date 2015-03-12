@@ -216,17 +216,22 @@ function XiboAssignToLayout(layoutId, regionId) {
  * Sets the layout to full screen
  */
 function setFullScreenLayout() {
-    $('#width', '.XiboForm').val($('#layoutWidth').val());
-    $('#height', '.XiboForm').val($('#layoutHeight').val());
+    var layoutInformation = $('.bootbox').data().extra.layoutInformation;
+    $('#width', '.XiboForm').val(layoutInformation.width);
+    $('#height', '.XiboForm').val(layoutInformation.height);
     $('#top', '.XiboForm').val('0');
     $('#left', '.XiboForm').val('0');
 }
 
+function refreshPreview(regionId) {
+    // Refresh the preview
+    var preview = Preview.instances[regionId];
+    preview.SetSequence(preview.seq);
+}
+
 var LoadTimeLineCallback = function() {
 
-    // Refresh the preview
-    var preview = Preview.instances[$('#timelineControl').attr('regionid')];
-    preview.SetSequence(preview.seq);
+    refreshPreview($('#timelineControl').attr('regionid'));
 
     $("li.timelineMediaListItem").hover(function() {
 

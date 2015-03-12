@@ -1092,13 +1092,13 @@ class Rest
         if (count($entry) <= 0)
             return $this->SetError(__('Error getting type from a media item.'));
 
-        $mod = $entry[0]->type;
-
-        require_once("modules/$mod.module.php");
-
-        // Create the media object without any region and layout information
-        if (!$module = new $mod(null, $this->user, $mediaId, $layoutId, $regionId, $lkId))
-            return $this->Error($module->GetErrorNumber(), $module->GetErrorMessage());
+        // Create a module
+        try {
+            $module = ModuleFactory::load($entry[0]->mediaType, $layoutId, $regionId, $mediaId, $lkId, null, $this->user);
+        }
+        catch (Exception $e) {
+            return $this->Error($e->getMessage());
+        }
 
         if (!$module->auth->del)
             return $this->Error(1, 'Access Denied');

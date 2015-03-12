@@ -133,7 +133,7 @@ class datasetview extends Module
         $formFields[] = FormManager::AddNumber('duration', __('Duration'), $this->duration, 
             __('The duration in seconds this item should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
 
-        $formFields[] = FormManager::AddNumber('ordering', __('Order'), $this->GetOption('ordering'), 
+        $formFields[] = FormManager::AddText('ordering', __('Order'), $this->GetOption('ordering'),
             __('Please enter a SQL clause for how this dataset should be ordered'), 'o');
 
         $formFields[] = FormManager::AddText('filter', __('Filter'), $this->GetOption('filter'), 
@@ -226,7 +226,7 @@ class datasetview extends Module
             $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
         else
             $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        
+
         $this->response->AddButton(__('Save'), 'DataSetViewSubmit()');
         $this->response->callBack = 'datasetview_callback';
 
@@ -245,7 +245,7 @@ class datasetview extends Module
 
         //Other properties
         $dataSetId = Kit::GetParam('datasetid', _POST, _INT, 0);
-        $duration = Kit::GetParam('duration', _POST, _INT, 0);
+        $duration = Kit::GetParam('duration', _POST, _INT, 0, false);
 
         // validation
         if ($dataSetId == 0)
@@ -321,7 +321,7 @@ class datasetview extends Module
 
         // If we have permission to change it, then get the value from the form
         if ($this->auth->modifyPermissions)
-            $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
+            $this->duration = Kit::GetParam('duration', _POST, _INT, 0, false);
 
         if ($this->duration == 0)
         {

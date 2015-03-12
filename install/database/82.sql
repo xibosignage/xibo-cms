@@ -48,8 +48,8 @@ SELECT layout, 1, userid, layoutid, templateId
  WHERE templateId IS NOT NULL;
 
 /* Link up */
-INSERT INTO `lkcampaignlayout` (CampaignID, LayoutId)
-SELECT CampaignID, LayoutId
+INSERT INTO `lkcampaignlayout` (CampaignID, LayoutId, DisplayOrder)
+SELECT CampaignID, LayoutId, 0
   FROM `campaign`
  WHERE templateid <> 0;
 

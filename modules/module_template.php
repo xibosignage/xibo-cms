@@ -154,10 +154,10 @@ class moduletemplate extends Module
         $this->mediaid  = md5(uniqid());
 
         // You must also provide a duration (all media items must provide this field)
-        $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
+        $this->duration = Kit::GetParam('duration', _POST, _INT, 0, false);
 
         // You should validate all form input using the Kit::GetParam helper classes
-        //Kit::GetParam('duration', _POST, _INT, 0);
+        //Kit::GetParam('duration', _POST, _INT, 0, false);
         
         // You should also validate that fields are set to your liking
         if ($text == '')

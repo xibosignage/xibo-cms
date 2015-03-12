@@ -83,7 +83,7 @@ class Region extends Data
      * @param $regionid Object[optional]
      * @return string The region id
      */
-    public function AddRegion($layoutid, $userid, $regionid = "", $width = 100, $height = 100, $top = 50, $left = 50, $name = '')
+    public function AddRegion($layoutid, $userid, $regionid = "", $width = 250, $height = 250, $top = 50, $left = 50, $name = '')
     {
         Debug::LogEntry('audit', 'LayoutId: ' . $layoutid . ', Width: ' . $width . ', Height: ' . $height . ', Top: ' . $top . ', Left: ' . $left . ', Name: ' . $name . '.', 'region', 'AddRegion');
 
@@ -1027,12 +1027,6 @@ class Region extends Data
 
                 $mediaId = Kit::ValidateParam($mediaId, _INT);
     
-                // Check we have permissions to use this media (we will use this to copy the media later)
-                $mediaAuth = $user->MediaAuth($mediaId, true);
-    
-                if (!$mediaAuth->view)
-                    return $this->SetError(__('You have selected media that you no longer have permission to use. Please reload Library form.'));
-    
                 // Get the type from this media
                 $sth = $dbh->prepare('SELECT type FROM media WHERE mediaID = :mediaid');
                 $sth->execute(array(
@@ -1044,26 +1038,30 @@ class Region extends Data
                 
                 $mod = Kit::ValidateParam($row['type'], _WORD);
 
-                require_once("modules/$mod.module.php");
+                try {
+                    // Create the media object without any region and layout information
+                    $module = ModuleFactory::createForMedia($mod, $mediaId, null, $user);
+                }
+                catch (Exception $e) {
+                    return $this->SetError($e->getMessage());
+                }
+
+                // Check we have permissions to use this media (we will use this to copy the media later)
+                if (!$module->auth->view)
+                    return $this->SetError(__('You have selected media that you no longer have permission to use. Please reload Library form.'));
     
-                // Create the media object without any region and layout information
-                if (!$this->module = new $mod($this->db, $user, $mediaId))
-                    return $this->SetError($this->module->GetErrorMessage());
+                if (!$module->SetRegionInformation($layoutId, $regionId))
+                    return $this->SetError($module->GetErrorMessage());
     
-                if (!$this->module->SetRegionInformation($layoutId, $regionId))
-                    return $this->SetError($this->module->GetErrorMessage());
-    
-                if (!$this->module->UpdateRegion())
-                    return $this->SetError($this->module->GetErrorMessage());
+                if (!$module->UpdateRegion())
+                    return $this->SetError($module->GetErrorMessage());
     
                 // Need to copy over the permissions from this media item & also the delete permission
-                Kit::ClassLoader('layoutmediagroupsecurity');
                 $security = new LayoutMediaGroupSecurity($this->db);
-                $security->Link($layoutId, $regionId, $mediaId, $user->getGroupFromID($user->userid, true), $mediaAuth->view, $mediaAuth->edit, 1);
+                $security->Link($layoutId, $regionId, $mediaId, $user->getGroupFromID($user->userid, true), $module->auth->view, $module->auth->edit, 1);
             }
     
             // Update layout status
-            Kit::ClassLoader('Layout');
             $layout = new Layout($this->db);
             $layout->SetValid($layoutId, true);
     

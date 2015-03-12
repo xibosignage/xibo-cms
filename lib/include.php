@@ -20,7 +20,7 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-define('WEBSITE_VERSION', 84);
+define('WEBSITE_VERSION', 85);
 
 // No errors reported until we read the settings from the DB
 error_reporting(0);
@@ -94,7 +94,7 @@ try {
     PDOConnect::init();
 }
 catch (PDOException $e) {
-    die('Database connection problem. ' . $e->getMessage());
+    die('Database connection problem.');
 }
 
 // create a database class instance (legacy)

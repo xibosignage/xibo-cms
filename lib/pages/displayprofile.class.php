@@ -161,7 +161,7 @@ class displayprofileDAO extends baseDAO {
             trigger_error(__('Unknown Client Type'), E_USER_ERROR);
 
         // Capture and validate the posted form parameters in accordance with the display config object.
-        include_once('config/client.config.php');
+        include('config/client.config.php');
 
         if (!isset($CLIENT_CONFIG[$displayProfile->type]))
             trigger_error(__('CMS Config not supported for ' . $displayProfile->type . ' displays.'), E_USER_ERROR);
@@ -202,6 +202,14 @@ class displayprofileDAO extends baseDAO {
 
             if ($setting['type'] == 'checkbox' && isset($setting['value']))
                 $validated = $setting['value'];
+            else if ($setting['fieldType'] == 'timePicker') {
+                // Check if we are 0, if so then set to 00:00
+                if ($setting['value'] == 0)
+                    $validated = '00:00';
+                else {
+                    $validated = DateManager::getSystemDate($setting['value'] / 1000, 'H:i');
+                }
+            }
             else if (isset($setting['value']))
                 $validated = Kit::ValidateParam($setting['value'], $setting['type']);
             else
@@ -264,7 +272,7 @@ class displayprofileDAO extends baseDAO {
         $displayProfile->isDefault = Kit::GetParam('isdefault', _POST, _CHECKBOX);
 
         // Capture and validate the posted form parameters in accordance with the display config object.
-        include_once('config/client.config.php');
+        include('config/client.config.php');
 
         if (!isset($CLIENT_CONFIG[$displayProfile->type]))
             trigger_error(__('CMS Config not supported for ' . $displayProfile->type . ' displays.'), E_USER_ERROR);
@@ -274,6 +282,11 @@ class displayprofileDAO extends baseDAO {
         foreach($CLIENT_CONFIG[$displayProfile->type]['settings'] as $setting) {
             // Validate the parameter
             $value = Kit::GetParam($setting['name'], _POST, $setting['type'], (($setting['type'] == 'checkbox') ? NULL : $setting['default']));
+
+            // If we are a time picker, then process the received time
+            if ($setting['fieldType'] == 'timePicker') {
+                $value = DateManager::getTimestampFromTimeString($value) * 1000;
+            }
 
             // Add to the combined array
             $combined[] = array(

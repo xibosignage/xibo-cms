@@ -214,9 +214,10 @@ class Kit
     /**
      * Validates a Parameter
      * Based on code from Joomla! 1.5
-     * @return 
-     * @param $param Object
-     * @param $type Object
+     * @return mixed
+     * @param string $param
+     * @param string $type
+     * @param bool $sanitize
      */
     static function ValidateParam($param, $type, $sanitize = true)
     {
@@ -240,7 +241,7 @@ class Kit
                 }
                 else {
                     if (!$return = filter_var($return, FILTER_VALIDATE_INT))
-                        trigger_error(sprintf(__('No integer match found for [%s] and return value is not an integer'), $param), E_USER_ERROR);
+                        trigger_error(sprintf(__('Expecting a whole number but found %s'), $param), E_USER_ERROR);
                 }
 
                 break;
@@ -254,7 +255,7 @@ class Kit
                 }
                 else {
                     if (!$return = filter_var($return, FILTER_VALIDATE_FLOAT, FILTER_FLAG_ALLOW_FRACTION))
-                        trigger_error(sprintf(__('No integer match found for %s, and return value is not an integer'), $param), E_USER_ERROR);
+                        trigger_error(sprintf(__('Expecting a number but found %s'), $param), E_USER_ERROR);
                 }
 
                 break;

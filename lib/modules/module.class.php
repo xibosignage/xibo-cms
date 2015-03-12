@@ -298,8 +298,6 @@ abstract class Module implements ModuleInterface
                 $this->assignedMedia = false;
 
                 try {
-                    $dbh = PDOConnect::init();
-                
                     // Load what we know about this media into the object
                     // this is unauthenticated at this point
                     $rows = Media::Entries(NULL, array('mediaId' => $mediaid, 'allModules' => 1));
@@ -604,9 +602,6 @@ END;
                 // This is for library based media
                 $options = '';
 
-                // Always have the abilty to unassign from the region
-                $options .= 'unassign|' . __('Unassign from this region only');
-
                 // Get the permissions for the media item
                 $mediaAuth = $this->user->MediaAuth($mediaid, true);
 
@@ -624,8 +619,6 @@ END;
                         $this->response->keepOpen = true;
                         return $this->response;
                     }
-
-                    $options .= ',retire|' . __('Unassign from this region and retire');
 
                     // Is this media retired?
                     $revised = false;
@@ -658,9 +651,11 @@ END;
                     }
                     else
                     {
-                        $options .= ',unassignall|' . __('Unassign from all Layouts');
                         $options .= ',retire|' . __('Retire this media');
+                        $options .= ',unassignall|' . __('Unassign from all Layouts');
                     }
+
+                    $options .= ',retire|' . __('Unassign from this region and retire');
                 }
                 else
                 {
@@ -672,6 +667,9 @@ END;
                         return $this->response;
                     }
                 }
+
+                // Always have the abilty to unassign from the region
+                $options .= ',unassign|' . __('Unassign from this region only');
 
                 $options = ltrim($options, ',');
 
@@ -962,6 +960,9 @@ END;
         $lkid = $this->lkid;
         $userid	= $this->user->userid;
 
+	// Delete Old Version Checkbox Setting
+	$deleteOldVersionChecked = (Config::GetSetting('LIBRARY_MEDIA_DELETEOLDVER_CHECKB') == 'Checked') ? 1 : 0;
+
         // Can this user delete?
         if (!$this->auth->edit)
         {
@@ -1043,10 +1044,8 @@ END;
                 'r');
         }
 
-        $formFields[] = FormManager::AddCheckbox('deleteOldVersion', __('Delete the old version?'), 
-                ((Config::GetSetting('LIBRARY_MEDIA_UPDATEINALL_CHECKB') == 'Checked') ? 1 : 0), 
-                __('Completely remove the old version of this media item if a new file is being uploaded.'), 
-                '');
+	$formFields[] = FormManager::AddCheckbox('deleteOldVersion', __('Delete the old version?'), $deleteOldVersionChecked,
+		__('Completely remove the old version of this media item if a new file is being uploaded.'), 'c');
 
         // Add in any extra form fields we might have provided by the super-class
         if ($extraFormFields != NULL && is_array($extraFormFields)) {
@@ -1167,7 +1166,7 @@ END;
         $tags = Kit::GetParam('tags', _POST, _STRING);
         
         if ($this->auth->modifyPermissions)
-            $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
+            $this->duration = Kit::GetParam('duration', _POST, _INT, 0, false);
 
         // Revise this file?
         if ($tmpName != '') {
@@ -1244,7 +1243,7 @@ END;
         $replaceInLayouts = (Kit::GetParam('replaceInLayouts', _POST, _CHECKBOX) == 1);
         $replaceBackgroundImages = (Kit::GetParam('replaceBackgroundImages', _POST, _CHECKBOX) == 1);
 
-        if ($replaceInLayouts || $replaceBackgroundImages)
+        if ($mediaid != $this->mediaid && ($replaceInLayouts || $replaceBackgroundImages))
             $this->ReplaceMediaInAllLayouts($replaceInLayouts, $replaceBackgroundImages, $mediaid, $this->mediaid, $this->duration);
 
         // Do we need to delete the old media item?

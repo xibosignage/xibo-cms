@@ -41,8 +41,9 @@ CREATE TABLE IF NOT EXISTS `displayprofile` (
   PRIMARY KEY (`displayprofileid`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
-UPDATE layout SET background = SUBSTRING_INDEX(background, '.', 1) WHERE IFNULL(background, '') <> '';
-ALTER TABLE  `layout` CHANGE  `background`  `backgroundImageId` INT( 11 ) NULL DEFAULT NULL;
+ALTER TABLE `layout` ADD `backgroundImageId` INT( 11 ) NULL DEFAULT NULL;
+UPDATE layout SET backgroundImageId = SUBSTRING_INDEX(background, '.', 1) WHERE IFNULL(background, '') <> '' AND background LIKE '%.%';
+ALTER TABLE  `layout` DROP  `background`;
 
 INSERT INTO `lklayoutmedia` (mediaid, layoutid, regionid)
 SELECT backgroundimageid, layoutid, 'background' FROM `layout` INNER JOIN `media` ON media.mediaid = layout.backgroundImageId WHERE IFNULL(backgroundImageId, 0) <> 0;
@@ -72,7 +73,7 @@ UPDATE `setting` SET cat = 'defaults', ordering = 30, usersee = '0', userchange 
 UPDATE `setting` SET cat = 'defaults', ordering = 40, usersee = '1', userchange = '0', `default` = 'Unchecked', `title` = 'Allow modifications to the transition configuration?' WHERE setting = 'TRANSITION_CONFIG_LOCKED_CHECKB';
 UPDATE `setting` SET cat = 'displays', ordering = 10, usersee = '1', userchange = '1', `default` = '51.504', `title` = 'Default Latitude' WHERE setting = 'DEFAULT_LAT';
 UPDATE `setting` SET cat = 'displays', ordering = 20, usersee = '1', userchange = '1', `default` = '-0.104', `title` = 'Default Longitude' WHERE setting = 'DEFAULT_LONG';
-UPDATE `setting` SET cat = 'displays', ordering = 30, usersee = '1', userchange = '1', `default` = '0', `title` = 'Display a VNC Link?' WHERE setting = 'SHOW_DISPLAY_AS_VNCLINK';
+UPDATE `setting` SET cat = 'displays', ordering = 30, usersee = '1', userchange = '1', `default` = '', `title` = 'Display a VNC Link?' WHERE setting = 'SHOW_DISPLAY_AS_VNCLINK';
 UPDATE `setting` SET cat = 'displays', ordering = 40, usersee = '1', userchange = '1', `default` = '_top', `title` = 'Open VNC Link in new window?' WHERE setting = 'SHOW_DISPLAY_AS_VNC_TGT';
 UPDATE `setting` SET cat = 'displays', ordering = 50, usersee = '0', userchange = '0', `default` = '0', `title` = 'Number of display slots' WHERE setting = 'MAX_LICENSED_DISPLAYS';
 UPDATE `setting` SET cat = 'general', ordering = 10, usersee = '1', userchange = '1', `default` = 'On', `title` = 'Allow usage tracking?' WHERE setting = 'PHONE_HOME';
@@ -116,7 +117,7 @@ UPDATE `setting` SET cat = 'users', ordering = 30, usersee = '1', userchange = '
 
 ALTER TABLE  `schedule` ADD  `DisplayOrder` INT NOT NULL DEFAULT '0';
 
-UPDATE `schedule` SET DisplayOrder = (SELECT MAX(DisplayOrder) FROM `schedule_detail` WHERE schedule_detail.eventid = schedule.eventid);
+UPDATE `schedule` SET DisplayOrder = IFNULL((SELECT MAX(DisplayOrder) FROM `schedule_detail` WHERE schedule_detail.eventid = schedule.eventid), 0);
 
 ALTER TABLE  `schedule_detail` DROP FOREIGN KEY  `schedule_detail_ibfk_9` ;
 ALTER TABLE `schedule_detail` DROP `CampaignID`;

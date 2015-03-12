@@ -32,8 +32,6 @@ class UserGroup extends Data
             $SQL .= '  FROM (
                     SELECT `group`.*
                       FROM `group`
-                        LEFT OUTER JOIN lkusergroup
-                        ON lkusergroup.GroupID = group.GroupID
                      WHERE IsUserSpecific = 0
                     UNION ALL
                     SELECT `group`.*
@@ -57,6 +55,8 @@ class UserGroup extends Data
             }
 
             $SQL .= 'ORDER BY joinedGroup.IsEveryone DESC, joinedGroup.IsUserSpecific, joinedGroup.`Group`; ';
+
+            Debug::sql($SQL, $params);
         
             $sth = $dbh->prepare($SQL);
             $sth->execute($params);
@@ -158,8 +158,8 @@ class UserGroup extends Data
 
     /**
      * Deletes an Xibo User Group
-     * @return
-     * @param $userGroupId Object
+     * @param int $userGroupId
+     * @return bool
      */
     public function Delete($userGroupId)
     {
@@ -409,5 +409,41 @@ class UserGroup extends Data
             return false;
         }
     }
+
+    /**
+     * Returns an array containing the type of children owned by the group
+     * @param int $groupId
+     * @return array[string]
+     * @throws Exception
+     */
+    public function getChildTypes($groupId)
+    {
+        try {
+            $types = array();
+
+            if (PDOConnect::exists('SELECT GroupID FROM lkdatasetgroup WHERE GroupID = :groupId', array('groupId' => $groupId)))
+                $types[] = 'data sets';
+
+            if (PDOConnect::exists('SELECT GroupID FROM lkdisplaygroupgroup WHERE GroupID = :groupId', array('groupId' => $groupId)))
+                $types[] = 'display groups';
+
+            if (PDOConnect::exists('SELECT GroupID FROM lkcampaigngroup WHERE GroupID = :groupId', array('groupId' => $groupId)))
+                $types[] = 'layouts and campaigns';
+
+            if (PDOConnect::exists('SELECT GroupID FROM lklayoutmediagroup WHERE GroupID = :groupId', array('groupId' => $groupId)))
+                $types[] = 'media on layouts';
+
+            if (PDOConnect::exists('SELECT GroupID FROM lklayoutregiongroup WHERE GroupID = :groupId', array('groupId' => $groupId)))
+                $types[] = 'regions on layouts';
+
+            if (PDOConnect::exists('SELECT GroupID FROM lkmediagroup WHERE GroupID = :groupId', array('groupId' => $groupId)))
+                $types[] = 'media';
+
+            return $types;
+        }
+        catch (Exception $e) {
+            Debug::Error($e->getMessage());
+            throw $e;
+        }
+    }
 }
-?>

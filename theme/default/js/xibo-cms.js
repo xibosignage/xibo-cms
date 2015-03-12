@@ -281,6 +281,26 @@ function XiboInitialise(scope) {
 
     // Select statements
     //$(scope + " select").selectpicker();
+
+    // Date time controls
+    $(scope + ' .datePicker').datetimepicker({
+        format: "yyyy-mm-dd",
+        autoClose: true,
+        language: language,
+        calendarType: calendarType,
+        minView: 2,
+        todayHighlight: true
+    });
+    $(scope + ' .timePicker').datetimepicker({
+        format: "hh:ii",
+        autoClose: true,
+        language: language,
+        calendarType: calendarType,
+        maxView: 1,
+        startView: 1,
+        todayHighlight: true,
+        minuteStep: 10
+    });
 }
 
 /**
@@ -532,7 +552,7 @@ function XiboFormRender(formUrl, data) {
                         function(index, value) {
                             var extrabutton = $('<button class="btn">').html(index);
 
-                            if (value.indexOf("submit()") > -1) {
+                            if (value.indexOf("submit()") > -1 || value.indexOf("XiboDialogApply(") > -1) {
                                 extrabutton.addClass('btn-primary save-button');
                             }
                             else {
@@ -569,7 +589,7 @@ function XiboFormRender(formUrl, data) {
                     // Call paging
                     if ($(response.sortingDiv + ' tbody', dialog).html() != "") {
                         $(response.sortingDiv, dialog).tablesorter({
-                            sortList: [[0, 0]],
+                            sortList: [[response.initialSortColumn,response.initialSortOrder]],
                             widthFixed: true
                         });
                     }
@@ -930,6 +950,17 @@ function XiboSubmitResponse(response, form) {
     // Remove the spinner
     $(form).closest(".modal-dialog").find(".saving").remove();
 
+    // Check the apply flag
+    var apply = $(form).data("apply");
+    if (apply != undefined && apply) {
+        response.keepOpen = true;
+        response.loadForm = false;
+        response.refresh = false;
+    }
+
+    // Remove the apply flag
+    $(form).data("apply", false);
+
     // Did we actually succeed
     if (response.success) {
         // Success - what do we do now?
@@ -1088,6 +1119,18 @@ function XiboHoverRender(url, x, y)
  */
 function XiboDialogClose() {
     bootbox.hideAll();
+}
+
+/**
+ * Apply a form instead of saving and closing
+ * @constructor
+ */
+function XiboDialogApply(formId) {
+    var form = $(formId);
+
+    form.data("apply", true);
+
+    form.submit();
 }
 
 function XiboSwapDialog(formUrl) {

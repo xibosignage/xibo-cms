@@ -75,6 +75,13 @@ class embedded extends Module
         $formFields[] = FormManager::AddMultiText('embedHtml', NULL, NULL, 
             __('HTML to Embed'), 'h', 10);
 
+        $formFields[] = FormManager::AddMultiText('embedStyle', NULL, '
+<style type="text/css">
+
+</style>',
+            __('Custom Style Sheets'), 'h', 10);
+
+
         $formFields[] = FormManager::AddMultiText('embedScript', NULL, '
 <script type="text/javascript">
 function EmbedInit()
@@ -156,6 +163,9 @@ function EmbedInit()
         $formFields[] = FormManager::AddMultiText('embedHtml', NULL, $this->GetRawNode('embedHtml'),
             __('HTML to Embed'), 'h', 10);
 
+        $formFields[] = FormManager::AddMultiText('embedStyle', NULL, $this->GetRawNode('embedStyle'),
+            __('Custom Style Sheets'), 'h', 10);
+
         $formFields[] = FormManager::AddMultiText('embedScript', NULL, $this->GetRawNode('embedScript'),
             __('HEAD content to Embed (including script tags)'), 'h', 10);
 
@@ -175,6 +185,7 @@ function EmbedInit()
         $this->response->dialogSize     = true;
         $this->response->dialogWidth    = '650px';
         $this->response->dialogHeight   = '450px';
+        $this->response->AddButton(__('Apply'), 'XiboDialogApply("#ModuleForm")');
         $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
 
         return $this->response;
@@ -194,7 +205,8 @@ function EmbedInit()
         //Other properties
         $embedHtml    = Kit::GetParam('embedHtml', _POST, _HTMLSTRING);
         $embedScript  = Kit::GetParam('embedScript', _POST, _HTMLSTRING);
-        $duration     = Kit::GetParam('duration', _POST, _INT, 0);
+        $embedStyle   = Kit::GetParam('embedStyle', _POST, _HTMLSTRING);
+        $duration     = Kit::GetParam('duration', _POST, _INT, 0, false);
         $transparency = Kit::GetParam('transparency', _POST, _CHECKBOX, 'off');
         $name = Kit::GetParam('name', _POST, _STRING);
         
@@ -223,7 +235,7 @@ function EmbedInit()
         $this->SetOption('scaleContent', Kit::GetParam('scaleContent', _POST, _CHECKBOX, 'off'));
         
         // Any Options
-        $this->SetRaw('<embedHtml><![CDATA[' . $embedHtml . ']]></embedHtml><embedScript><![CDATA[' . $embedScript . ']]></embedScript>');
+        $this->SetRaw('<embedHtml><![CDATA[' . $embedHtml . ']]></embedHtml><embedScript><![CDATA[' . $embedScript . ']]></embedScript><embedStyle><![CDATA[' . $embedStyle . ']]></embedStyle>');
 
         // Should have built the media object entirely by this time
         // This saves the Media Object to the Region
@@ -263,6 +275,7 @@ function EmbedInit()
         //Other properties
         $embedHtml    = Kit::GetParam('embedHtml', _POST, _HTMLSTRING);
         $embedScript  = Kit::GetParam('embedScript', _POST, _HTMLSTRING);
+        $embedStyle   = Kit::GetParam('embedStyle', _POST, _HTMLSTRING);
         $transparency = Kit::GetParam('transparency', _POST, _CHECKBOX, 'off');
         $name = Kit::GetParam('name', _POST, _STRING);
 
@@ -272,7 +285,7 @@ function EmbedInit()
 
         // If we have permission to change it, then get the value from the form
         if ($this->auth->modifyPermissions)
-            $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
+            $this->duration = Kit::GetParam('duration', _POST, _INT, 0, false);
         
         $url          = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
                         
@@ -292,7 +305,7 @@ function EmbedInit()
         }
         
         // Any Options
-        $this->SetRaw('<embedHtml><![CDATA[' . $embedHtml . ']]></embedHtml><embedScript><![CDATA[' . $embedScript . ']]></embedScript>');
+        $this->SetRaw('<embedHtml><![CDATA[' . $embedHtml . ']]></embedHtml><embedScript><![CDATA[' . $embedScript . ']]></embedScript><embedStyle><![CDATA[' . $embedStyle . ']]></embedStyle>');
 
         // Should have built the media object entirely by this time
         // This saves the Media Object to the Region
@@ -304,6 +317,7 @@ function EmbedInit()
         if ($this->showRegionOptions)
         {
             // We want to load a new form
+            $this->response->callBack = 'refreshPreview("' . $this->regionid . '")';
             $this->response->loadForm = true;
             $this->response->loadFormUri = $url;
         }
@@ -336,14 +350,17 @@ function EmbedInit()
         $rawXml->loadXML($this->GetRaw());
 
         // Get the Text Node
-        $html = $rawXml->getElementsByTagName('embedHtml');
-        $html = $html->item(0);
-        $html = $this->parseLibraryReferences($isPreview, $html->nodeValue);
+        $html = $this->parseLibraryReferences($isPreview, $this->GetRawNode('embedHtml', ''));
+
+        // Include some vendor items
+        $javaScriptContent = '<script src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
+        $javaScriptContent .= '<script src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-layout-scaler.js"></script>';
 
         // Get the Script
-        $script = $rawXml->getElementsByTagName('embedScript');
-        $script = $script->item(0);
-        $javaScriptContent = $this->parseLibraryReferences($isPreview, $script->nodeValue);
+        $javaScriptContent .= $this->parseLibraryReferences($isPreview, $this->GetRawNode('embedScript', ''));
+
+        // Get the Style Sheet
+        $styleSheetContent = $this->parseLibraryReferences($isPreview, $this->GetRawNode('embedStyle', ''));
 
         // Set some options
         $options = array(
@@ -354,9 +371,6 @@ function EmbedInit()
             'scaleOverride' => Kit::GetParam('scale_override', _GET, _DOUBLE, 0)
         );
 
-        // Include some vendor items
-        $javaScriptContent .= '<script src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
-        $javaScriptContent .= '<script src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-layout-scaler.js"></script>';
 
         // Add an options variable with some useful information for scaling
         $javaScriptContent .= '<script type="text/javascript">';
@@ -377,8 +391,12 @@ function EmbedInit()
         $headContent = '<link href="' . (($isPreview) ? 'modules/preview/' : '') . 'fonts.css" rel="stylesheet" media="screen">';
         $headContent .= '<style type="text/css">' . file_get_contents(Theme::ItemPath('css/client.css')) . '</style>';
 
+
         $template = str_replace('<!--[[[HEADCONTENT]]]-->', $headContent, $template);
-        
+
+        // Replace the Style Sheet Content with our generated Style Sheet
+        $template = str_replace('<!--[[[STYLESHEETCONTENT]]]-->', $styleSheetContent, $template);
+
         // Replace the Head Content with our generated java script
         $template = str_replace('<!--[[[JAVASCRIPTCONTENT]]]-->', $javaScriptContent, $template);
 

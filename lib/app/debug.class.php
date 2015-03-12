@@ -158,59 +158,12 @@ class Debug
      */ 
     static function LogEntry($type, $message, $page = "", $function = "", $logdate = "", $displayid = 0, $scheduleID = 0, $layoutid = 0, $mediaid = '')
     {
+        // Check level
         if (Debug::getLevel($type) > self::$_level)
             return;
 
-        if (self::$pdo == NULL)
-            self::$pdo = PDOConnect::newConnection();
-
-        $currentdate        = date("Y-m-d H:i:s");
-        $requestUri         = Kit::GetParam('REQUEST_URI', $_SERVER, _STRING, 'Not Supplied');
-        $requestIp          = Kit::GetParam('REMOTE_ADDR', $_SERVER, _STRING, 'Not Supplied');
-        $requestUserAgent   = Kit::GetParam('HTTP_USER_AGENT', $_SERVER, _STRING, 'Not Supplied');
-        $requestUserAgent   = substr($requestUserAgent, 0, 253);
-        $userid             = Kit::GetParam('userid', _SESSION, _INT, 0);
-        $message            = Kit::ValidateParam($message, _HTMLSTRING);
-        
-        if ($logdate == "") 
-            $logdate = $currentdate;
-
-        //Prepare the variables
-        if ($page == "")
-            $page = Kit::GetParam('p', _GET, _WORD);
-
-        // Insert into the DB
-        try {
-            $dbh = self::$pdo;
-
-            $SQL  = 'INSERT INTO log (logdate, type, page, function, message, requesturi, remoteaddr, useragent, userid, displayid, scheduleid, layoutid, mediaid) ';
-            $SQL .= ' VALUES (:logdate, :type, :page, :function, :message, :requesturi, :remoteaddr, :useragent, :userid, :displayid, :scheduleid, :layoutid, :mediaid) ';
-
-            $sth = $dbh->prepare($SQL);
-
-            $params = array(
-                    'logdate' => $currentdate,
-                    'type' => $type,
-                    'page' => $page,
-                    'function' => $function,
-                    'message' => $message,
-                    'requesturi' => $requestUri,
-                    'remoteaddr' => $requestIp,
-                    'useragent' => $requestUserAgent,
-                    'userid' => $userid,
-                    'displayid' => $displayid,
-                    'scheduleid' => $scheduleID,
-                    'layoutid' => $layoutid,
-                    'mediaid' => $mediaid
-                );
-
-            $sth->execute($params);
-        }
-        catch (PDOException $e) {
-            // In this case just silently log the error
-            error_log($message . '\n\n', 3, './err_log.xml');
-            error_log($e->getMessage() . '\n\n', 3, './err_log.xml');
-        }
+        // Log
+        self::log($type, $message, $page, $function, $logdate, $displayid, $scheduleID, $layoutid, $mediaid);
     }
 
     public static function Audit($message, $displayId = 0)
@@ -229,6 +182,10 @@ class Debug
     {
         if (self::$_level < 5)
             return;
+
+        // Get the calling class / function
+        $trace = debug_backtrace();
+        $caller = $trace[1];
 
         Debug::LogEntry('info', $message, (isset($caller['class'])) ? $caller['class'] : 'Global', $caller['function'], '', $displayId);
     }
@@ -261,6 +218,72 @@ class Debug
         $caller = $trace[1];
 
         Debug::LogEntry('audit', 'SQL: ' . $sql . '. Params: ' . var_export($params, true) . '.', (isset($caller['class'])) ? $caller['class'] : 'Global', $caller['function'], '', $displayId);
+    }
+
+    /**
+     * Log
+     * @param string $type
+     * @param string $message
+     * @param string $page[Optional]
+     * @param string $function[Optional]
+     * @param string $logDate[Optional]
+     * @param int $displayId[Optional]
+     * @param int $scheduleId[Optional]
+     * @param int $layoutId[Optional]
+     * @param string $mediaId[Optional]
+     */
+    public static function log($type, $message, $page = null, $function = null, $logDate = null, $displayId = 0, $scheduleId = 0, $layoutId = 0, $mediaId = null)
+    {
+        if (self::$pdo == NULL)
+            self::$pdo = PDOConnect::newConnection();
+
+        $currentDate = date("Y-m-d H:i:s");
+        $requestUri = Kit::GetParam('REQUEST_URI', $_SERVER, _STRING, 'Not Supplied');
+        $requestIp = Kit::GetParam('REMOTE_ADDR', $_SERVER, _STRING, 'Not Supplied');
+        $requestUserAgent = Kit::GetParam('HTTP_USER_AGENT', $_SERVER, _STRING, 'Not Supplied');
+        $requestUserAgent = substr($requestUserAgent, 0, 253);
+        $userId = Kit::GetParam('userid', _SESSION, _INT, 0);
+        $message = Kit::ValidateParam($message, _HTMLSTRING);
+
+        // Prepare the variables
+        if ($logDate == null)
+            $logDate = $currentDate;
+
+        if ($page == null)
+            $page = Kit::GetParam('p', _GET, _WORD);
+
+        // Insert into the DB
+        try {
+            $dbh = self::$pdo;
+
+            $SQL  = 'INSERT INTO log (logdate, type, page, function, message, requesturi, remoteaddr, useragent, userid, displayid, scheduleid, layoutid, mediaid)
+                      VALUES (:logdate, :type, :page, :function, :message, :requesturi, :remoteaddr, :useragent, :userid, :displayid, :scheduleid, :layoutid, :mediaid) ';
+
+            $sth = $dbh->prepare($SQL);
+
+            $params = array(
+                'logdate' => $logDate,
+                'type' => $type,
+                'page' => $page,
+                'function' => $function,
+                'message' => $message,
+                'requesturi' => $requestUri,
+                'remoteaddr' => $requestIp,
+                'useragent' => $requestUserAgent,
+                'userid' => $userId,
+                'displayid' => $displayId,
+                'scheduleid' => $scheduleId,
+                'layoutid' => $layoutId,
+                'mediaid' => $mediaId
+            );
+
+            $sth->execute($params);
+        }
+        catch (PDOException $e) {
+            // In this case just silently log the error
+            error_log($message . '\n\n', 3, './err_log.xml');
+            error_log($e->getMessage() . '\n\n', 3, './err_log.xml');
+        }
     }
 }
 ?>

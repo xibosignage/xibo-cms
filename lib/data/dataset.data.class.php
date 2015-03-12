@@ -339,6 +339,7 @@ class DataSet extends Data
             $finalSelect = '';
             $results = array();
             $headings = array();
+            $allowedOrderCols = array();
             $filter = str_replace($blackList, '', $filter);
             
             $columns = explode(',', $columnIds);
@@ -361,6 +362,7 @@ class DataSet extends Data
             {
                 $heading = $col;
                 $heading['Text'] = $heading['Heading'];
+                $allowedOrderCols[] = $heading['Heading'];
 
                 $formula = str_replace($blackList, '', htmlspecialchars_decode($col['Formula'], ENT_QUOTES));
                 
@@ -432,20 +434,24 @@ class DataSet extends Data
     
                 $ordering = explode(',', $ordering);
     
-                $i = 0;
                 foreach ($ordering as $orderPair)
                 {
-                    $i++;
+                    // Sanitize the clause
+                    $sanitized = str_replace(' DESC', '', $orderPair);
 
+                    // Check allowable
+                    if (!in_array($sanitized, $allowedOrderCols)) {
+                        Debug::Info('Disallowed column: ' . $sanitized);
+                        continue;
+                    }
+
+                    // Substitute
                     if (strripos($orderPair, ' DESC')) {
-                        $orderPair = str_replace(' DESC', '', $orderPair);
-                        $order .= ' :order' . $i . ' DESC,';
+                        $order .= sprintf(' `%s`  DESC,', $sanitized);
                     }
                     else {
-                        $order .= ' :order,' . $i;
+                        $order .= sprintf(' `%s`,', $sanitized);
                     }
-
-                    $params['order' . $i] = $orderPair;
                 }
     
                 $SQL .= trim($order, ',');

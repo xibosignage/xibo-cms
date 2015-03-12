@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS `datasetdata` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 CREATE TABLE IF NOT EXISTS `display` (
-  `displayid` int(8) NOT NULL AUTO_INCREMENT,
+  `displayid` int(11) NOT NULL AUTO_INCREMENT,
   `isAuditing` tinyint(4) NOT NULL DEFAULT '0' COMMENT 'Is this display auditing',
   `display` varchar(50) NOT NULL,
   `defaultlayoutid` int(8) NOT NULL,
@@ -93,6 +93,8 @@ CREATE TABLE IF NOT EXISTS `display` (
   `displayprofileid` int(11) NULL,
   `currentLayoutId` int(11) NULL,
   `screenShotRequested` tinyint(4) NOT NULL DEFAULT '0',
+  `storageAvailableSpace` int(11) NULL,
+  `storageTotalSpace` int(11) NULL,
   PRIMARY KEY (`displayid`),
   KEY `defaultplaylistid` (`defaultlayoutid`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;

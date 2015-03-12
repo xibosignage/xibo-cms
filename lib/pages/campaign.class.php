@@ -341,7 +341,6 @@ class campaignDAO extends baseDAO
         $db =& $this->db;
         $user =& $this->user;
         $response = new ResponseManager();
-        $helpManager = new HelpManager($db, $user);
 
         $campaignId = Kit::GetParam('CampaignID', _GET, _INT);
 

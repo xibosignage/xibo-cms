@@ -683,8 +683,9 @@ if(!String.prototype.formatNum) {
 
 		var time_start = this.options.time_start.split(":");
 		var time_end = this.options.time_end.split(":");
+        var time_hour_duration = parseInt(time_end[0]) - parseInt(time_start[0]);
 
-		data.hours = (parseInt(time_end[0]) - parseInt(time_start[0])) * time_split_hour;
+		data.hours = ((time_hour_duration == 0) ? 24 : time_hour_duration) * time_split_hour;
 		var lines = data.hours * time_split_count - parseInt(time_start[1]) / time_split;
 		var ms_per_line = (60000 * time_split);
 
@@ -707,12 +708,10 @@ if(!String.prototype.formatNum) {
 			e.end_hour = f.getHours().toString().formatNum(2) + ':' + f.getMinutes().toString().formatNum(2);
 
 			if(e.start < start.getTime()) {
-				warn(1);
 				e.start_hour = s.getDate() + ' ' + $self.locale['ms' + s.getMonth()] + ' ' + e.start_hour;
 			}
 
 			if(e.end > end.getTime()) {
-				warn(1);
 				e.end_hour = f.getDate() + ' ' + $self.locale['ms' + f.getMonth()] + ' ' + e.end_hour;
 			}
 
@@ -959,7 +958,10 @@ if(!String.prototype.formatNum) {
 
 
 		this._init_position();
-		this._loadEvents();
+		this._loadEvents(function(calendar){
+			calendar._render();
+			calendar.options.onAfterViewLoad.call(this, calendar.options.view);
+		});
 		this._render();
 
 		this.options.onAfterViewLoad.call(this, this.options.view);
@@ -1092,7 +1094,7 @@ if(!String.prototype.formatNum) {
 		return this.options.position.end;
 	}
 
-	Calendar.prototype._loadEvents = function() {
+	Calendar.prototype._loadEvents = function(callback) {
 		var self = this;
 		var source = null;
 		if('events_source' in this.options && this.options.events_source !== '') {
@@ -1105,18 +1107,18 @@ if(!String.prototype.formatNum) {
 		var loader;
 		switch($.type(source)) {
 			case 'function':
-				loader = function() {
-					return source(self.options.position.start, self.options.position.end, browser_timezone);
+				loader = function(callback) {
+					return callback(source(self.options.position.start, self.options.position.end, browser_timezone));
 				};
 				break;
 			case 'array':
-				loader = function() {
-					return [].concat(source);
+				loader = function(callback) {
+					return callback([].concat(source));
 				};
 				break;
 			case 'string':
 				if(source.length) {
-					loader = function() {
+					loader = function(callback) {
 						var events = [];
 						var params = {from: self.options.position.start.getTime(), to: self.options.position.end.getTime()};
 						if(browser_timezone.length) {
@@ -1126,7 +1128,7 @@ if(!String.prototype.formatNum) {
 							url:      buildEventsUrl(source, params),
 							dataType: 'json',
 							type:     'GET',
-							async:    false
+							async:    true
 						}).done(function(json) {
 							if(!json.success) {
 								$.error(json.error);
@@ -1134,8 +1136,8 @@ if(!String.prototype.formatNum) {
 							if(json.result) {
 								events = json.result;
 							}
+							callback(events);
 						});
-						return events;
 					};
 				}
 				break;
@@ -1144,16 +1146,20 @@ if(!String.prototype.formatNum) {
 			$.error(this.locale.error_loadurl);
 		}
 		this.options.onBeforeEventsLoad.call(this, function() {
-			self.options.events = loader();
-			self.options.events.sort(function(a, b) {
-				var delta;
-				delta = a.start - b.start;
-				if(delta == 0) {
-					delta = a.end - b.end;
-				}
-				return delta;
+			loader(function(events){
+				self.options.events = events;
+
+				self.options.events.sort(function(a, b) {
+					var delta;
+					delta = a.start - b.start;
+					if(delta == 0) {
+						delta = a.end - b.end;
+					}
+					return delta;
+				});
+				self.options.onAfterEventsLoad.call(self, self.options.events);
+				callback(self);
 			});
-			self.options.onAfterEventsLoad.call(self, self.options.events);
 		});
 	};
 
@@ -1622,12 +1628,10 @@ if(!String.prototype.formatNum) {
 				e.end_hour = f.getHours().toString().formatNum(2) + ':' + f.getMinutes().toString().formatNum(2);
 
 				if(e.start < start.getTime()) {
-					warn(1);
 					e.start_hour = s.getJalaliDate() + ' ' + $self.locale['jms' + (s.getJalaliMonth() - 1)] + ' ' + e.start_hour;
 				}
 
 				if(e.end > end.getTime()) {
-					warn(1);
 					e.end_hour = f.getJalaliDate() + ' ' + $self.locale['jms' + (s.getJalaliMonth() - 1)] + ' ' + e.end_hour;
 				}
 

@@ -58,6 +58,8 @@ class Display extends Data {
     public $displayProfileId;
     public $currentLayoutId;
     public $screenShotRequested;
+    public $storageAvailableSpace;
+    public $storageTotalSpace;
 
     public $displayGroupId;
     private $_config;
@@ -65,18 +67,32 @@ class Display extends Data {
     public function Load() {
         try {
             $dbh = PDOConnect::init();
-        
-            $sth = $dbh->prepare('
-                SELECT display.*, displaygroup.displaygroupid, displaygroup.description, X(display.GeoLocation) AS Latitude, Y(display.GeoLocation) AS Longitude 
-                  FROM `display`
+            $params = array();
+
+            $SQL = '
+              SELECT display.*, displaygroup.displaygroupid, displaygroup.description, X(display.GeoLocation) AS Latitude, Y(display.GeoLocation) AS Longitude
+                FROM `display`
                     INNER JOIN `lkdisplaydg`
                     ON lkdisplaydg.displayid = display.displayId
                     INNER JOIN `displaygroup`
                     ON displaygroup.displaygroupid = lkdisplaydg.displaygroupid
-                        AND isdisplayspecific = 1
-                WHERE display.displayid = :display_id');
+                        AND isdisplayspecific = 1 ';
+
+            if ($this->displayId != null && $this->displayId != 0) {
+                $SQL .= 'WHERE display.displayid = :displayId';
+                $params['displayId'] = $this->displayId;
+            }
+            else if ($this->license != null && $this->license != '') {
+                $SQL .= 'WHERE display.licence = :licence';
+                $params['licence'] = $this->license;
+            }
+            else {
+                throw new Exception('There aren\'t any valid filter criteria');
+            }
+
+            $sth = $dbh->prepare($SQL);
             
-            $sth->execute(array('display_id' => $this->displayId));
+            $sth->execute($params);
           
             if (!$row = $sth->fetch())
                 $this->ThrowError(25004, __('Cannot find display record'));
@@ -113,7 +129,9 @@ class Display extends Data {
             $this->displayProfileId = Kit::ValidateParam($row['displayprofileid'], _INT);
             $this->currentLayoutId = Kit::ValidateParam($row['currentLayoutId'], _INT);
             $this->screenShotRequested = Kit::ValidateParam($row['screenShotRequested'], _INT);
-            
+            $this->storageAvailableSpace = Kit::ValidateParam($row['storageAvailableSpace'], _INT);
+            $this->storageTotalSpace = Kit::ValidateParam($row['storageTotalSpace'], _INT);
+
             $this->displayGroupId = Kit::ValidateParam($row['displaygroupid'], _INT);
 
             // Store the current licensed flag, in case we are changing it and need to check it.
@@ -383,58 +401,17 @@ class Display extends Data {
             return false;
         }
     }
-    
-    /**
-     * Edits a Displays Name
-     * @return 
-     * @param $license Object
-     * @param $display Object
-     */
-    public function EditDisplayName($license, $display) 
-    {
-        Debug::LogEntry('audit', 'IN', get_class(), __FUNCTION__);
 
-        try {
-            $dbh = PDOConnect::init();
-
-            // Update the display with its new name (using the licence as the key)
-            $sth = $dbh->prepare('UPDATE display SET display = :display WHERE license = :license');
-            $sth->execute(array(
-                    'display' => $display,
-                    'license' => $license
-                ));
-            
-            // Also need to update the display group name here.
-            $displayGroupObject = new DisplayGroup($this->db);
-            
-            // Do we also want to update the linked Display Groups name (seeing as that is what we will be presenting to everyone)
-            if (!$displayGroupObject->EditDisplayGroup($displayID, $display))
-                $this->ThrowError(25015, __('Could not update this display with a new name.'));
-            
-            Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'EditDisplayName');
-            
-            return true;
-        }
-        catch (Exception $e) {
-            
-            Debug::LogEntry('error', $e->getMessage());
-
-            if (!$this->IsError())
-                $this->SetError(25015,__('Unable to edit display record.'));
-
-            return false;
-        }
-    }
-    
     /**
      * Sets the information required on the display to indicate that it is still logged in
-     * @param int  $displayId The Display ID
-     * @param array  $status The Display Status
+     * @param int $displayId The Display ID
+     * @param array $status The Display Status
+     * @return bool
      */
     public function Touch($displayId, $status = array())
     {
         Debug::LogEntry('audit', 'IN', get_class(), __FUNCTION__);
-        
+
         try {
             $dbh = PDOConnect::init();
 
@@ -442,8 +419,10 @@ class Display extends Data {
             $this->Load();
 
             // Update last accessed and set to be logged in
-            $this->lastAccessed = time();
-            $this->loggedIn = 1;
+            if (Kit::GetParam('loggedIn', $status, _INT, 1) != 0) {
+                $this->lastAccessed = time();
+                $this->loggedIn = 1;
+            }
 
             // Pull in any of the optional parameters from the status array
             $this->clientAddress = (Kit::GetParam('clientAddress', $status, _STRING) == '') ? $this->clientAddress : Kit::GetParam('clientAddress', $status, _STRING);
@@ -454,6 +433,8 @@ class Display extends Data {
             $this->clientCode = (Kit::GetParam('clientCode', $status, _INT) == 0) ? $this->clientCode : Kit::GetParam('clientCode', $status, _INT);
             $this->currentLayoutId = (Kit::GetParam('currentLayoutId', $status, _INT) == 0) ? $this->currentLayoutId : Kit::GetParam('currentLayoutId', $status, _INT);
             $this->screenShotRequested = (Kit::GetParam('screenShotRequested', $status, _INT, -1) == -1) ? $this->screenShotRequested : Kit::GetParam('screenShotRequested', $status, _INT);
+            $this->storageAvailableSpace = (Kit::GetParam('availableSpace', $status, _INT, -1) == -1) ? $this->storageAvailableSpace : Kit::GetParam('availableSpace', $status, _INT);
+            $this->storageTotalSpace = (Kit::GetParam('totalSpace', $status, _INT, -1) == -1) ? $this->storageTotalSpace : Kit::GetParam('totalSpace', $status, _INT);
 
             // Has the mac address changed
             if (Kit::GetParam('macAddress', $status, _STRING) != '') {
@@ -467,7 +448,7 @@ class Display extends Data {
 
             // Save
             $SQL = '
-                    UPDATE display SET lastaccessed = :lastAccessed, 
+                    UPDATE display SET lastaccessed = :lastAccessed,
                         loggedin = :loggedIn,
                         ClientAddress = :clientAddress,
                         MediaInventoryStatus = :mediaInventoryStatus,
@@ -475,11 +456,13 @@ class Display extends Data {
                         client_type = :clientType,
                         client_version = :clientVersion,
                         client_code = :clientCode,
-                        MacAddress = :macAddress, 
-                        LastChanged = :lastChanged, 
+                        MacAddress = :macAddress,
+                        LastChanged = :lastChanged,
                         NumberOfMacAddressChanges = :numberOfMacAddressChanges,
                         currentLayoutId = :currentLayoutId,
-                        screenShotRequested = :screenShotRequested
+                        screenShotRequested = :screenShotRequested,
+                        storageAvailableSpace = :storageAvailableSpace,
+                        storageTotalSpace = :storageTotalSpace
                      WHERE displayId = :displayId
                 ';
 
@@ -499,7 +482,9 @@ class Display extends Data {
                     'lastChanged' => $this->lastChanged,
                     'numberOfMacAddressChanges' => $this->numberOfMacAddressChanges,
                     'currentLayoutId' => $this->currentLayoutId,
-                    'screenShotRequested' => $this->screenShotRequested
+                    'screenShotRequested' => $this->screenShotRequested,
+                    'storageAvailableSpace' => $this->storageAvailableSpace,
+                    'storageTotalSpace' => $this->storageTotalSpace
                 ));
 
             return true;
@@ -510,13 +495,33 @@ class Display extends Data {
         }
     }
 
+    /**
+     * Edits a Displays Name
+     * @param string $license
+     * @param string $display
+     * @return bool
+     */
+    public function EditDisplayName($license, $display)
+    {
+        Debug::Audit($license);
+
+        $this->license = $license;
+        if (!$this->Load())
+            return false;
+
+        // Update the name
+        $this->display = $display;
+        $this->Edit();
+    }
+
     public function RequestScreenShot($displayId) {
-        return $this->Touch($displayId, array('screenShotRequested' => 1));
+        return $this->Touch($displayId, array('screenShotRequested' => 1, 'loggedIn' => 0));
     }
 
     /**
      * Flags a display as being incomplete
-     * @param <type> $displayId
+     * @param int $displayId
+     * @return bool
      */
     public function FlagIncomplete($displayId)
     {
@@ -656,8 +661,8 @@ class Display extends Data {
         }
     }
 
-    public function GetSetting($key, $default) {
-
+    public function GetSetting($key, $default)
+    {
         if (!$this->SetConfig())
             return false;
 
@@ -674,11 +679,10 @@ class Display extends Data {
         return $return;
     }
 
-    private function SetConfig() {
+    private function SetConfig()
+    {
         if ($this->_config == null) {
             try {
-                $dbh = PDOConnect::init();
-
                 $displayProfile = new DisplayProfile();
                 $displayProfile->displayProfileId = $this->displayProfileId;
             
@@ -707,6 +711,19 @@ class Display extends Data {
             }
         }
     }
+
+    /**
+     * Get the Settings Profile for this Display
+     * @return array|bool
+     */
+    public function getSettingsProfile()
+    {
+        if (!$this->SetConfig())
+            return false;
+
+        return $this->_config;
+    }
+
     /**
      * Assess each Display to correctly set the logged in flag based on last accessed time
      * @return
@@ -779,9 +796,6 @@ class Display extends Data {
         catch (Exception $e) {
             
             Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
-            
-            if (!$this->IsError())
-                $this->SetError(1, __('Unknown Error'));
         
             return false;
         }
@@ -1109,11 +1123,11 @@ class Display extends Data {
                 }
                 else
                 {
-                    $error = "Using 'socket_sendto()' failed, due to error: '".socket_strerror(socket_last_error($socket))."' (".socket_last_error($socket).")<br>\n";
+                    $error = __('Using "socket_sendto()" failed, due to error: ' . socket_strerror(socket_last_error($socket)) . ' (' . socket_last_error($socket) . ')');
                     socket_close($socket);
                     unset($socket);
 
-                    return $this->SetError(25015, __('Using "socket_sendto()" failed, due to error: ' . socket_strerror(socket_last_error($socket)) . ' (' . socket_last_error($socket) . ')'));
+                    return $this->SetError(25015, $error);
                 }
             }
             else

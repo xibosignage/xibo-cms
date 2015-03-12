@@ -31,7 +31,7 @@ class statusdashboardDAO extends baseDAO {
         try {
             $dbh = PDOConnect::init();
         
-            $sth = $dbh->prepare('SELECT MONTHNAME(FROM_UNIXTIME(month)) AS month, IFNULL(SUM(Size), 0) AS size FROM `bandwidth` WHERE month > :month GROUP BY MONTHNAME(FROM_UNIXTIME(month)) ORDER BY MIN(month);');
+            $sth = $dbh->prepare('SELECT FROM_UNIXTIME(month) AS month, IFNULL(SUM(Size), 0) AS size FROM `bandwidth` WHERE month > :month GROUP BY FROM_UNIXTIME(month) ORDER BY MIN(month);');
             $sth->execute(array('month' => time() - (86400 * 365)));
 
             $results = $sth->fetchAll();
@@ -59,7 +59,7 @@ class statusdashboardDAO extends baseDAO {
                 $size = ((double)$row['size']) / (pow(1024, $base));
                 $remaining = $xmdsLimit - $size;
                 $output[] = array(
-                        'label' => __($row['month']), 
+                        'label' => DateManager::getLocalDate(DateManager::getDateFromGregorianString($row['month']), 'F'),
                         'value' => round($size, 2),
                         'limit' => round($remaining, 2)
                     );
@@ -68,7 +68,7 @@ class statusdashboardDAO extends baseDAO {
             // What if we are empty?
             if (count($output) == 0) {
                 $output[] = array(
-                        'label' => __(date("M")), 
+                        'label' => DateManager::getLocalDate(null, 'F'),
                         'value' => 0,
                         'limit' => 0
                     );
@@ -169,38 +169,43 @@ class statusdashboardDAO extends baseDAO {
             Theme::Set('nowShowing', $sth->fetchColumn(0));
 
             // Latest news
-            // Make sure we have the cache location configured
-            Kit::ClassLoader('file');
-            $file = new File($this->db);
-            File::EnsureLibraryExists();
+            if (Config::GetSetting('DASHBOARD_LATEST_NEWS_ENABLED') == 1) {
+                // Make sure we have the cache location configured
+                Kit::ClassLoader('file');
+                $file = new File($this->db);
+                File::EnsureLibraryExists();
 
-            // Use SimplePie to get the feed
-            include_once('3rdparty/simplepie/autoloader.php');
+                // Use SimplePie to get the feed
+                include_once('3rdparty/simplepie/autoloader.php');
 
-            $feed = new SimplePie();
-            $feed->set_cache_location($file->GetLibraryCacheUri());
-            $feed->set_feed_url(Theme::GetConfig('latest_news_url'));
-            $feed->set_cache_duration(86400);
-            $feed->handle_content_type();
-            $feed->init();
+                $feed = new SimplePie();
+                $feed->set_cache_location($file->GetLibraryCacheUri());
+                $feed->set_feed_url(Theme::GetConfig('latest_news_url'));
+                $feed->set_cache_duration(86400);
+                $feed->handle_content_type();
+                $feed->init();
 
-            $latestNews = array();
+                $latestNews = array();
 
-            if ($feed->error()) {
-                Debug::LogEntry('audit', 'Feed Error: ' . $feed->error(), get_class(), __FUNCTION__);
-            }
-            else {
-                // Store our formatted items
-                foreach ($feed->get_items() as $item) {
-                    $latestNews[] = array(
+                if ($feed->error()) {
+                    Debug::LogEntry('audit', 'Feed Error: ' . $feed->error(), get_class(), __FUNCTION__);
+                }
+                else {
+                    // Store our formatted items
+                    foreach ($feed->get_items() as $item) {
+                        $latestNews[] = array(
                             'title' => $item->get_title(),
                             'description' => $item->get_description(),
                             'link' => $item->get_link()
                         );
+                    }
                 }
-            }
 
-            Theme::Set('latestNews', $latestNews);
+                Theme::Set('latestNews', $latestNews);
+            }
+            else {
+                Theme::Set('latestNews', array(array('title' => __('Latest news not enabled.'), 'description' => '', 'link' => '')));
+            }
         }
         catch (Exception $e) {
             

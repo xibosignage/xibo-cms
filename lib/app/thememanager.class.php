@@ -53,7 +53,7 @@ class Theme {
 		if (!file_exists('theme/' . $this->name . '/config.php'))
 			throw new Exception(__('The theme "%s" config file does not exist', $globalTheme));
 
-		require_once('theme/' . $this->name . '/config.php');
+		require('theme/' . $this->name . '/config.php');
 		$this->config = $config;
 
 		self::$instance = $this;

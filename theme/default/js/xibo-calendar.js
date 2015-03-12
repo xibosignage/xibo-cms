@@ -49,7 +49,9 @@ $(document).ready(function() {
             }
         },
         onAfterViewLoad: function(view) {
-            $('h1.page-header').text(this.getTitle());
+            if (typeof this.getTitle === "function")
+                $('h1.page-header').text(this.getTitle());
+
             $('.btn-group button').removeClass('active');
             $('button[data-calendar-view="' + view + '"]').addClass('active');
         },
@@ -58,12 +60,12 @@ $(document).ready(function() {
 
     // Calendar is initialised without any event_source (that is changed when the selector is used)
     if (($('#Calendar').length > 0)) {
-        options.type = ($('#CalendarContainer').data().calendarType);
+        options.type = calendarType;
         calendar = $('#Calendar').calendar(options);
 
         // Set up our display selector control
         $('#DisplayList').on('change', function(){
-            CallGenerateCalendar();
+            setTimeout(CallGenerateCalendar(), 1000);
         });
 
         // Make the select list nicer
@@ -87,7 +89,7 @@ function CallGenerateCalendar() {
         url += '&' + displayGroups;
 
     // Override the calendar URL
-    calendar.setOptions({events_source: url});
+    calendar.setOptions({events_source: url, time_start: '00:00', time_end: '00:00'});
 
     // Navigate
     calendar.view();
@@ -109,7 +111,8 @@ var setupScheduleForm = function(form) {
         linkFormat: "yyyy-mm-dd hh:ii",
         minuteStep: 5,
         autoClose: true,
-        language: language
+        language: language,
+        calendarType: calendarType
     });
 
     $('#endtimeControl', form).datetimepicker({
@@ -118,7 +121,8 @@ var setupScheduleForm = function(form) {
         linkFormat: "yyyy-mm-dd hh:ii",
         minuteStep: 5,
         autoClose: true,
-        language: language
+        language: language,
+        calendarType: calendarType
     });
 
     $('#rec_rangeControl', form).datetimepicker({
@@ -127,7 +131,8 @@ var setupScheduleForm = function(form) {
         linkFormat: "yyyy-mm-dd hh:ii",
         minuteStep: 5,
         autoClose: true,
-        language: language
+        language: language,
+        calendarType: calendarType
     });
 };
 
