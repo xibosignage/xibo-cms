@@ -58,7 +58,7 @@ class Forecast
 
         if ($outHeaders['http_code'] == 0) {
             // Unable to connect
-            \Debug::Error('Unable to reach twitter api.');
+            \Debug::Error('Unable to reach Forecast API. No Host Found (HTTP Code 0). Curl Error = ' . curl_error($curl));
             return false;
         }
         else if ($outHeaders['http_code'] != 200) {
