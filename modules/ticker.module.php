@@ -925,6 +925,7 @@ class ticker extends Module
         $items = array();
 
         foreach ($feed->get_items() as $item) {
+            /* @var SimplePie_Item $item */
 
             // Substitute for all matches in the template
             $rowString = $text;

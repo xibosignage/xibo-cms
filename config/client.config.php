@@ -45,6 +45,28 @@ $CLIENT_CONFIG = array(
                         'groupClass' => NULL
                     ),
                     array(
+                        'name' => 'DownloadStartWindow',
+                        'tabId' => 'general',
+                        'title' => __('Download Window Start Time'),
+                        'type' => _STRING,
+                        'fieldType' => 'timePicker',
+                        'default' => 0,
+                        'helpText' => __('The start of the time window to connect to the CMS and download updates.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'DownloadEndWindow',
+                        'tabId' => 'general',
+                        'title' => __('Download Window End Time'),
+                        'type' => _STRING,
+                        'fieldType' => 'timePicker',
+                        'default' => 0,
+                        'helpText' => __('The end of the time window to connect to the CMS and download updates.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
                         'name' => 'PowerpointEnabled',
                         'tabId' => 'general',
                         'title' => __('Enable PowerPoint?'),
@@ -535,6 +557,28 @@ $CLIENT_CONFIG = array(
                         'fieldType' => 'timePicker',
                         'default' => 0,
                         'helpText' => __('The end of the time window to install application updates.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'downloadStartWindow',
+                        'tabId' => 'general',
+                        'title' => __('Download Window Start Time'),
+                        'type' => _STRING,
+                        'fieldType' => 'timePicker',
+                        'default' => 0,
+                        'helpText' => __('The start of the time window to connect to the CMS and download updates.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'downloadEndWindow',
+                        'tabId' => 'general',
+                        'title' => __('Download Window End Time'),
+                        'type' => _STRING,
+                        'fieldType' => 'timePicker',
+                        'default' => 0,
+                        'helpText' => __('The end of the time window to connect to the CMS and download updates.'),
                         'enabled' => true,
                         'groupClass' => NULL
                     ),
