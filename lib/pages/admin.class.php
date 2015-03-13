@@ -138,7 +138,7 @@ class adminDAO extends baseDAO {
                 'class' => 'XiboFormButton',
                 'selected' => false,
                 'link' => 'index.php?p=admin&q=TidyLibraryForm',
-                'help' => __('Run through the library and remove and unnecessary files'),
+                'help' => __('Run through the library and remove unused and unnecessary files'),
                 'onclick' => ''
                 );
         }

@@ -219,7 +219,7 @@ class Maintenance extends Data
             }
             else if (array_key_exists($file, $unusedMedia)) {
                 // It exists but isn't being used any more
-                Debug::Audit('Deleting unsued media: ' . $media[$file]['mediaid']);
+                Debug::Audit('Deleting unused media: ' . $media[$file]['mediaid']);
                 $mediaObject->Delete($media[$file]['mediaid']);
             }
         }

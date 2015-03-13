@@ -11,6 +11,8 @@ VALUES (
   'USE_INTL_DATEFORMAT', '0', 'checkbox', 'Should dates be internationalised where possible.', '', 'regional', 1, 'Show international dates?',  '',  '60',  '0',  '1',  'checkbox'
 );
 
+UPDATE `setting` SET `type` = 'checkbox', `fieldType` = 'checkbox' WHERE setting = 'SETTING_LIBRARY_TIDY_ENABLED' OR setting = 'SETTING_IMPORT_ENABLED';
+
 UPDATE `version` SET `app_ver` = '1.7.2', `XmdsVersion` = 4, `XlfVersion` = 2;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';
 UPDATE `version` SET `DBVersion` = '86';

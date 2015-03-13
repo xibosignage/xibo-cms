@@ -487,7 +487,7 @@ class displayDAO extends baseDAO
             // Format the storage available / total space
             $row['storageAvailableSpaceFormatted'] = Kit::formatBytes($row['storageAvailableSpace']);
             $row['storageTotalSpaceFormatted'] = Kit::formatBytes($row['storageTotalSpace']);
-            $row['storagePercentage'] = ($row['storageTotalSpace'] == 0) ? 0 : round(($row['storageTotalSpace'] - $row['storageAvailableSpace']) / $row['storageTotalSpace'] * 100.0, 2);
+            $row['storagePercentage'] = ($row['storageTotalSpace'] == 0) ? 100 : round($row['storageAvailableSpace'] / $row['storageTotalSpace'] * 100.0, 2);
 
             // Edit and Delete buttons first
             if ($row['edit'] == 1) {
