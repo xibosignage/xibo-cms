@@ -337,7 +337,7 @@ class Twitter extends Module
         $this->mediaid  = md5(Kit::uniqueId());
 
         // You must also provide a duration (all media items must provide this field)
-        $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
+        $this->duration = Kit::GetParam('duration', _POST, _INT, 0, false);
 
         // You should validate all form input using the Kit::GetParam helper classes
         if (Kit::GetParam('searchTerm', _POST, _STRING) == '') {
@@ -545,6 +545,7 @@ class Twitter extends Module
         // Append the templates to the response
         $this->response->extra = $this->settings['templates'];
         $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&q=RegionOptions")');
+        $this->response->AddButton(__('Apply'), 'XiboDialogApply("#ModuleForm")');
         $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
 
         // The response must be returned.
@@ -568,7 +569,7 @@ class Twitter extends Module
 
         // If we have permission to change it, then get the value from the form
         if ($this->auth->modifyPermissions)
-            $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
+            $this->duration = Kit::GetParam('duration', _POST, _INT, 0, false);
 
         // You should validate all form input using the Kit::GetParam helper classes
         if (Kit::GetParam('searchTerm', _POST, _STRING) == '') {
@@ -600,6 +601,7 @@ class Twitter extends Module
 
         // Usually you will want to load the region options form again once you have added your module.
         // In some cases you will want to load the edit form for that module
+        $this->response->callBack = 'refreshPreview("' . $this->regionid . '")';
         $this->response->loadForm = true;
         $this->response->loadFormUri = "index.php?p=timeline&layoutid=$this->layoutid&regionid=$this->regionid&q=RegionOptions";
         
@@ -643,13 +645,22 @@ class Twitter extends Module
                     'Content-Length: 29'
                 ),
             CURLOPT_USERAGENT => 'Xibo Twitter Module',
-            CURLOPT_HEADER => true,
+            CURLOPT_HEADER => false,
             CURLINFO_HEADER_OUT => true,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POST => true,
             CURLOPT_POSTFIELDS => http_build_query(array('grant_type' => 'client_credentials')),
             CURLOPT_URL => $url,
         );
+
+        // Proxy support
+        if (Config::GetSetting('PROXY_HOST') != '') {
+            $httpOptions[CURLOPT_PROXY] = Config::GetSetting('PROXY_HOST');
+            $httpOptions[CURLOPT_PROXYPORT] = Config::GetSetting('PROXY_PORT');
+
+            if (Config::GetSetting('PROXY_AUTH') != '')
+                $httpOptions[CURLOPT_PROXYUSERPWD] = Config::GetSetting('PROXY_AUTH');
+        }
 
         $curl = curl_init();
 
@@ -667,29 +678,23 @@ class Twitter extends Module
         $outHeaders = curl_getinfo($curl);
 
         if ($outHeaders['http_code'] != 200) {
-            Debug::Error('Twitter API returned ' . $result . ' status. Unable to proceed.');
-
-            // Parse out header and body
-            list($header, $body) = explode("\r\n\r\n", $result, 2);
+            Debug::Error('Twitter API returned ' . $result . ' status. Unable to proceed. Headers = ' . var_export($outHeaders, true));
 
             // See if we can parse the error.
-            $body = json_decode($body);
+            $body = json_decode($result);
 
             Debug::Error('Twitter Error: ' . ((isset($body->errors[0])) ? $body->errors[0]->message : 'Unknown Error'));
 
             return false;
         }
 
-        // Parse out header and body
-        list($header, $body) = explode("\r\n\r\n", $result, 2);
-
         // See if we can parse the body as JSON.
-        $body = json_decode($body);
+        $body = json_decode($result);
 
         // We have a 200 - therefore we want to think about caching the bearer token
         // First, lets check its a bearer token
         if ($body->token_type != 'bearer') {
-            Debug::Error('Twitter API returned OK, but without a bearer token.');
+            Debug::Error('Twitter API returned OK, but without a bearer token. ' . var_export($body, true));
             return false;
         }
 
@@ -721,11 +726,20 @@ class Twitter extends Module
                     'Authorization: Bearer ' . $token
                 ),
             CURLOPT_USERAGENT => 'Xibo Twitter Module',
-            CURLOPT_HEADER => true,
+            CURLOPT_HEADER => false,
             CURLINFO_HEADER_OUT => true,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_URL => $url . $queryString,
         );
+
+        // Proxy support
+        if (Config::GetSetting('PROXY_HOST') != '') {
+            $httpOptions[CURLOPT_PROXY] = Config::GetSetting('PROXY_HOST');
+            $httpOptions[CURLOPT_PROXYPORT] = Config::GetSetting('PROXY_PORT');
+
+            if (Config::GetSetting('PROXY_AUTH') != '')
+                $httpOptions[CURLOPT_PROXYUSERPWD] = Config::GetSetting('PROXY_AUTH');
+        }
 
         Debug::Audit('Calling API with: ' . $url . $queryString);
 
@@ -742,13 +756,10 @@ class Twitter extends Module
             return false;
         }
         else if ($outHeaders['http_code'] != 200) {
-            Debug::Error('Twitter API returned ' . $outHeaders['http_code'] . ' status. Unable to proceed.');
-
-            // Parse out header and body
-            list($header, $body) = explode("\r\n\r\n", $result, 2);
+            Debug::Error('Twitter API returned ' . $outHeaders['http_code'] . ' status. Unable to proceed. Headers = ' . var_export($outHeaders, true));
 
             // See if we can parse the error.
-            $body = json_decode($body);
+            $body = json_decode($result);
 
             Debug::Error('Twitter Error: ' . ((isset($body->errors[0])) ? $body->errors[0]->message : 'Unknown Error'));
 
@@ -756,9 +767,7 @@ class Twitter extends Module
         }
 
         // Parse out header and body
-        list($header, $body) = explode("\r\n\r\n", $result, 2);
-
-        $body = json_decode($body);
+        $body = json_decode($result);
 
         return $body;
     }

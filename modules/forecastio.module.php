@@ -170,6 +170,9 @@ class ForecastIo extends Module
 
         Theme::Set('form_tabs', $tabs);
 
+	$formFields['general'][] = FormManager::AddText('name', __('Name'), NULL,
+            __('An optional name for this media'), 'n');
+
         $formFields['general'][] = FormManager::AddNumber('duration', __('Duration'), NULL, 
             __('The duration in seconds this item should be displayed.'), 'd', 'required');
 
@@ -209,6 +212,9 @@ class ForecastIo extends Module
             'id',
             'value',
             __('Select the language you would like to use.'), 'l');
+
+	$formFields['general'][] = FormManager::AddText('color', __('Colour'), '#000',
+            __('Please select a colour for the foreground text.'), 'c', 'required');
 
         $formFields['advanced'][] = FormManager::AddCheckbox('overrideTemplate', __('Override the template?'), 0, 
             __('Tick if you would like to override the template.'), 'o');
@@ -260,15 +266,19 @@ class ForecastIo extends Module
         $regionid   = $this->regionid;
         $mediaid    = $this->mediaid;
 
-        // You are required to set a media id, which should be unique.
+        //Other Properties
+	$name 	      = Kit::GetParam('name', _POST, _STRING);
+
+	// You are required to set a media id, which should be unique.
         $this->mediaid  = md5(uniqid());
 
         // You must also provide a duration (all media items must provide this field)
-        $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
+        $this->duration = Kit::GetParam('duration', _POST, _INT, 0, false);
 
         // You can store any additional options for your module using the SetOption method
+	$this->SetOption('name', $name);
         $this->SetOption('useDisplayLocation', Kit::GetParam('useDisplayLocation', _POST, _CHECKBOX));
-        $this->SetOption('color', Kit::GetParam('color', _POST, _STRING, '#000'));
+        $this->SetOption('color', Kit::GetParam('color', _POST, _STRING));
         $this->SetOption('longitude', Kit::GetParam('longitude', _POST, _DOUBLE));
         $this->SetOption('latitude', Kit::GetParam('latitude', _POST, _DOUBLE));
         $this->SetOption('templateId', Kit::GetParam('templateId', _POST, _STRING));
@@ -326,6 +336,9 @@ class ForecastIo extends Module
         $tabs[] = FormManager::AddTab('forecast', __('Forecast'));
 
         Theme::Set('form_tabs', $tabs);
+
+	$formFields['general'][] = FormManager::AddText('name', __('Name'), $this->GetOption('name'),
+            __('An optional name for this media'), 'n');
 
         $formFields['general'][] = FormManager::AddNumber('duration', __('Duration'), $this->duration, 
             __('The duration in seconds this item should be displayed.'), 'd', 'required');
@@ -409,6 +422,7 @@ class ForecastIo extends Module
         // which is then processed by the CMS JavaScript library (xibo-cms.js).
         $this->response->AddButton(__('Request Forecast'), 'requestTab("forecast", "index.php?p=module&q=exec&mod=' . $this->type . '&method=requestTab&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&mediaid=' . $this->mediaid . '")');
         $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&q=RegionOptions")');
+        $this->response->AddButton(__('Apply'), 'XiboDialogApply("#ModuleForm")');
         $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
 
         // The response must be returned.
@@ -431,10 +445,14 @@ class ForecastIo extends Module
             return $this->response;
         }
 
-        // You must also provide a duration (all media items must provide this field)
-        $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
+        //Other Properties
+	$name = Kit::GetParam('name', _POST, _STRING);
+
+	// You must also provide a duration (all media items must provide this field)
+        $this->duration = Kit::GetParam('duration', _POST, _INT, 0, false);
 
         // You can store any additional options for your module using the SetOption method
+	$this->SetOption('name', $name);
         $this->SetOption('useDisplayLocation', Kit::GetParam('useDisplayLocation', _POST, _CHECKBOX));
         $this->SetOption('color', Kit::GetParam('color', _POST, _STRING, '#000'));
         $this->SetOption('longitude', Kit::GetParam('longitude', _POST, _DOUBLE));
@@ -564,7 +582,8 @@ class ForecastIo extends Module
     {
         $tab = Kit::GetParam('tab', _POST, _WORD);
 
-        $data = $this->getForecastData(0);
+        if (!$data = $this->getForecastData(0))
+            die(__('No data returned, please check error log.'));
 
         $cols = array(
                 array('name' => 'forecast', 'title' => __('Forecast')),
@@ -630,10 +649,12 @@ class ForecastIo extends Module
 
         if (!Cache::has($key)) {
             Debug::LogEntry('audit', 'Getting Forecast from the API', $this->type, __FUNCTION__);
-            $data = $forecast->get($defaultLat, $defaultLong, null, $apiOptions);
+            if (!$data = $forecast->get($defaultLat, $defaultLong, null, $apiOptions)) {
+                return false;
+            }
 
             // If the response is empty, cache it for less time
-            $cacheDuration = (isset($data->currently)) ? $this->GetSetting('cachePeriod') : 30;
+            $cacheDuration = $this->GetSetting('cachePeriod');
 
             // Cache
             Cache::put($key, $data, $cacheDuration);
@@ -671,7 +692,9 @@ class ForecastIo extends Module
         // Process the icon for each day
         for ($i = 0; $i < 7; $i++) {
             $data['daily']['data'][$i]['wicon'] = (isset($icons[$data['daily']['data'][$i]['icon']]) ? $icons[$data['daily']['data'][$i]['icon']] : $icons['unmapped']);
-            $data['daily']['data'][$i]['temperatureFloor'] = (isset($data['daily']['data'][$i]['temperature']) ? $data['daily']['data'][$i]['temperature'] : '--');
+            $data['daily']['data'][$i]['temperatureMaxFloor'] = (isset($data['daily']['data'][$i]['temperatureMax'])) ? floor($data['daily']['data'][$i]['temperatureMax']) : '--';
+            $data['daily']['data'][$i]['temperatureMinFloor'] = (isset($data['daily']['data'][$i]['temperatureMin'])) ? floor($data['daily']['data'][$i]['temperatureMin']) : '--';
+            $data['daily']['data'][$i]['temperatureFloor'] = ($data['daily']['data'][$i]['temperatureMinFloor'] != '--' && $data['daily']['data'][$i]['temperatureMaxFloor'] != '--') ? floor((($data['daily']['data'][$i]['temperatureMinFloor'] + $data['daily']['data'][$i]['temperatureMaxFloor']) / 2)) : '--';
         }
 
         return $data;
@@ -687,11 +710,20 @@ class ForecastIo extends Module
         foreach ($matches[0] as $sub) {
             $replace = str_replace('[', '', str_replace(']', '', $sub));
 
-            // Debug::Audit('Matching ' . $replace . ' with ' . $sub . '. ' . (isset($data['currently'][$replace]) ? $data['currently'][$replace] : 'not in array'));
+            // Handling for date/time
+            if (stripos($replace, 'time|') > -1) {
+                $timeSplit = explode('|', $replace);
 
-            // Match that in the array
-            if (isset($data[$replace]))
-                $source = str_replace($sub, $data[$replace], $source);
+                $time = DateManager::getLocalDate($data['time'], $timeSplit[1]);
+
+                // Pull time out of the array
+                $source = str_replace($sub, $time, $source);
+            }
+            else {
+                // Match that in the array
+                if (isset($data[$replace]))
+                    $source = str_replace($sub, $data[$replace], $source);
+            }
         }
 
         return $source;
@@ -706,7 +738,8 @@ class ForecastIo extends Module
     public function GetResource($displayId = 0)
     {
         // Behave exactly like the client.
-        $data = $this->getForecastData($displayId);
+        if (!$data = $this->getForecastData($displayId))
+            return '';
 
         // A template is provided which contains a number of different libraries that might
         // be useful (jQuery, etc).
@@ -793,6 +826,10 @@ class ForecastIo extends Module
         // You can add anything you like to this, or completely replace it
 
         return $output;
+    }
+
+    public function GetName() {
+        return $this->GetOption('name');
     }
     
     public function IsValid() {

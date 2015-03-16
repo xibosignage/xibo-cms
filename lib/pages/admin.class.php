@@ -138,7 +138,7 @@ class adminDAO extends baseDAO {
                 'class' => 'XiboFormButton',
                 'selected' => false,
                 'link' => 'index.php?p=admin&q=TidyLibraryForm',
-                'help' => __('Run through the library and remove and unnecessary files'),
+                'help' => __('Run through the library and remove unused and unnecessary files'),
                 'onclick' => ''
                 );
         }
@@ -525,12 +525,15 @@ FORM;
         Theme::Set('form_action', 'index.php?p=admin&q=TidyLibrary');
 
         $formFields = array();
+        $formFields[] = FormManager::AddMessage(__('Tidying the Library will delete any temporary files. Are you sure you want to proceed?'));
 
         // Check box to also delete un-used media that has been revised.
-        $formFields[] = FormManager::AddCheckbox('tidyOldRevisions', __('Remove old revisions'), 0, 
+        $formFields[] = FormManager::AddCheckbox('tidyOldRevisions', __('Remove old revisions'), 0,
             __('Cleaning up old revisions of media will result in any unused media revisions being permanently deleted.'), '');
 
-        $formFields[] = FormManager::AddMessage(__('Tidying the Library will delete any temporary files. Are you sure you want to proceed?'));
+        // Check box to tidy up un-used files
+        $formFields[] = FormManager::AddCheckbox('cleanUnusedFiles', __('Remove all media not currently in use?'), 0,
+            __('Selecting this option will remove any media that is not currently being used in Layouts or linked to Displays. This process cannot be reversed.'), '');
 
         Theme::Set('form_fields', $formFields);
 
@@ -548,11 +551,13 @@ FORM;
     {
         $response = new ResponseManager();
         $tidyOldRevisions = (Kit::GetParam('tidyOldRevisions', _POST, _CHECKBOX) == 1);
+        $cleanUnusedFiles = (Kit::GetParam('cleanUnusedFiles', _POST, _CHECKBOX) == 1);
+
         if (Config::GetSetting('SETTING_LIBRARY_TIDY_ENABLED') != 1)
         	trigger_error(__('Sorry this function is disabled.'), E_USER_ERROR);
 
         $maintenance = new Maintenance();
-        if (!$maintenance->TidyLibrary($tidyOldRevisions))
+        if (!$maintenance->TidyLibrary($tidyOldRevisions, $cleanUnusedFiles))
             trigger_error($maintenance->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse(__('Library Tidy Complete'));

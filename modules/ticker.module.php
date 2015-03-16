@@ -233,7 +233,7 @@ class ticker extends Module
             __('When in single mode how many items per page should be shown.'), 'p');
 
         $field_updateInterval = FormManager::AddNumber('updateInterval', __('Update Interval (mins)'), $this->GetOption('updateInterval', 5), 
-            __('Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per day this could be set to 60.'),
+            __('Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60.'),
             'n', 'required');
 
         $field_durationIsPerItem = FormManager::AddCheckbox('durationIsPerItem', __('Duration is per item'), 
@@ -307,7 +307,7 @@ class ticker extends Module
             $formFields['format'][] = $field_itemsPerPage;
 
             $formFields['advanced'][] = FormManager::AddText('copyright', __('Copyright'), $this->GetOption('copyright'), 
-                __('Copyright information to display as the last item in this feed.'), 'f');
+                __('Copyright information to display as the last item in this feed. This can be styled with the #copyright CSS selector.'), 'f');
 
             $formFields['advanced'][] = $field_updateInterval;
 
@@ -350,6 +350,9 @@ class ticker extends Module
 
             $formFields['advanced'][] = FormManager::AddText('stripTags', __('Strip Tags'), $this->GetOption('stripTags'), 
                 __('A comma separated list of HTML tags that should be stripped from the feed in addition to the default ones.'), '');
+
+            $formFields['advanced'][] = FormManager::AddCheckbox('disableDateSort', __('Disable Date Sort'), $this->GetOption('disableDateSort'),
+                __('Should the date sort applied to the feed be disabled?'), '');
 
             // Encode up the template
             //$formFields['advanced'][] = FormManager::AddMessage('<pre>' . htmlentities(json_encode(array('id' => 'media-rss-with-title', 'value' => 'Image overlaid with the Title', 'template' => '<div class="image">[Link|image]<div class="cycle-overlay"><p style="font-family: Arial, Verdana, sans-serif; font-size:48px;">[Title]</p></div></div>', 'css' => '.image img { width:100%;}.cycle-overlay {color: white;background: black;opacity: .6;filter: alpha(opacity=60);position: absolute;bottom: 0;width: 100%;padding: 15px;text-align:center;}'))) . '</pre>');
@@ -426,6 +429,7 @@ class ticker extends Module
             $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
         }
 
+        $this->response->AddButton(__('Apply'), 'XiboDialogApply("#ModuleForm")');
         $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
 
         return $this->response;
@@ -446,7 +450,7 @@ class ticker extends Module
         $sourceId = Kit::GetParam('sourceid', _POST, _INT);
         $uri = Kit::GetParam('uri', _POST, _URI);
         $dataSetId = Kit::GetParam('datasetid', _POST, _INT, 0);
-        $duration = Kit::GetParam('duration', _POST, _INT, 0);
+        $duration = Kit::GetParam('duration', _POST, _INT, 0, false);
         
         // Must have a duration
         if ($duration == 0)
@@ -551,7 +555,7 @@ class ticker extends Module
         
         // If we have permission to change it, then get the value from the form
         if ($this->auth->modifyPermissions)
-            $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
+            $this->duration = Kit::GetParam('duration', _POST, _INT, 0, false);
         
         // Validation
         if ($text == '')
@@ -626,6 +630,7 @@ class ticker extends Module
         $this->SetOption('allowedAttributes', Kit::GetParam('allowedAttributes', _POST, _STRING));
         $this->SetOption('stripTags', Kit::GetParam('stripTags', _POST, _STRING));
         $this->SetOption('backgroundColor', Kit::GetParam('backgroundColor', _POST, _STRING));
+        $this->SetOption('disableDateSort', Kit::GetParam('disableDateSort', _POST, _CHECKBOX));
         $this->SetOption('textDirection', Kit::GetParam('textDirection', _POST, _WORD));
         $this->SetOption('overrideTemplate', Kit::GetParam('overrideTemplate', _POST, _CHECKBOX));
         $this->SetOption('templateId', Kit::GetParam('templateId', _POST, _WORD));
@@ -643,6 +648,7 @@ class ticker extends Module
         if ($this->showRegionOptions)
         {
             // We want to load a new form
+            $this->response->callBack = 'refreshPreview("' . $this->regionid . '")';
             $this->response->loadForm = true;
             $this->response->loadFormUri = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
         }
@@ -809,6 +815,12 @@ class ticker extends Module
             $headContent .= '</style>';   
         }
 
+        if ($this->GetOption('backgroundColor') != '') {
+            $headContent .= '<style type="text/css">';
+            $headContent .= ' body { background-color: ' . $this->GetOption('backgroundColor') . '; }';
+            $headContent .= '</style>';
+        }
+
         // Add the CSS if it isn't empty
         if ($css != '') {
             $headContent .= '<style type="text/css">' . $css . '</style>';
@@ -885,10 +897,9 @@ class ticker extends Module
             $feed->strip_attributes($attrsStrip);
         }
 
-        // Get a list of tags to strip
-        if ($this->GetOption('stripTags') != '') {
-            $tagsStrip = array_merge($feed->strip_htmltags, explode(',', $this->GetOption('stripTags')));
-            $feed->strip_htmltags($tagsStrip);
+        // Disable date sorting?
+        if ($this->GetOption('disableDateSort') == 1) {
+            $feed->enable_order_by_date(false);
         }
 
         // Init
@@ -908,6 +919,7 @@ class ticker extends Module
         $items = array();
 
         foreach ($feed->get_items() as $item) {
+            /* @var SimplePie_Item $item */
 
             // Substitute for all matches in the template
             $rowString = $text;
@@ -1001,7 +1013,7 @@ class ticker extends Module
                             break;
 
                         case '[Date]':
-                            $replace = ($dateFormat == '') ? $item->get_local_date() : $item->get_date($dateFormat);
+                            $replace = DateManager::getLocalDate($item->get_date('U'), $dateFormat);
                             break;
 
                         case '[PermaLink]':
@@ -1014,11 +1026,25 @@ class ticker extends Module
                     }
                 }
 
+		if ($this->GetOption('stripTags') != '') {
+			require_once '3rdparty/htmlpurifier/library/HTMLPurifier.auto.php';
+
+			$config = HTMLPurifier_Config::createDefault();
+			$config->set('HTML.ForbiddenElements', array_merge($feed->strip_htmltags, explode(',', $this->GetOption('stripTags'))));
+			$purifier = new HTMLPurifier($config);
+			$replace = $purifier->purify($replace);
+		}
+
                 // Substitute the replacement we have found (it might be '')
                 $rowString = str_replace($sub, $replace, $rowString);
             }
 
             $items[] = $rowString;
+        }
+
+        // Copyright information?
+        if ($this->GetOption('copyright', '') != '') {
+            $items[] = '<span id="copyright">' . $this->GetOption('copyright') . '</span>';
         }
 
         // Return the formatted items

@@ -419,8 +419,10 @@ class Display extends Data {
             $this->Load();
 
             // Update last accessed and set to be logged in
-            $this->lastAccessed = time();
-            $this->loggedIn = 1;
+            if (Kit::GetParam('loggedIn', $status, _INT, 1) != 0) {
+                $this->lastAccessed = time();
+                $this->loggedIn = 1;
+            }
 
             // Pull in any of the optional parameters from the status array
             $this->clientAddress = (Kit::GetParam('clientAddress', $status, _STRING) == '') ? $this->clientAddress : Kit::GetParam('clientAddress', $status, _STRING);
@@ -513,7 +515,7 @@ class Display extends Data {
     }
 
     public function RequestScreenShot($displayId) {
-        return $this->Touch($displayId, array('screenShotRequested' => 1));
+        return $this->Touch($displayId, array('screenShotRequested' => 1, 'loggedIn' => 0));
     }
 
     /**

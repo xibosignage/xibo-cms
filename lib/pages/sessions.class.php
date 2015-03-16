@@ -46,7 +46,7 @@ class sessionsDAO extends baseDAO {
         }
 
 		$formFields = array();
-        $formFields[] = FormManager::AddText('filter_fromdt', __('From Date'), $filter_fromdt, NULL, 't');
+        $formFields[] = FormManager::AddDatePicker('filter_fromdt', __('From Date'), $filter_fromdt, NULL, 't');
 
         $formFields[] = FormManager::AddCombo(
             'filter_type', 
@@ -84,28 +84,22 @@ class sessionsDAO extends baseDAO {
 	function Grid() 
 	{
 		$db =& $this->db;
-		$user =& $this->user;
 		$response = new ResponseManager();
 		
 		$type = Kit::GetParam('filter_type', _POST, _WORD);
-		$fromdt = Kit::GetParam('filter_fromdt', _POST, _STRING);
-		
-		///get the dates and times
-		if ($fromdt != '') {
-			$start_date = explode("/",$fromdt); //		dd/mm/yyyy
-			$starttime_timestamp = strtotime($start_date[1] . "/" . $start_date[0] . "/" . $start_date[2] . ' ' . date("H", time()) . ":" . date("i", time()) . ':59');
-		}
+		$fromDt = Kit::GetParam('filter_fromdt', _POST, _STRING);
 
-		setSession('sessions', 'Filter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
-		setSession('sessions', 'filter_type', $type);
-		setSession('sessions', 'filter_fromdt', $fromdt);
-		
-		$SQL  = "SELECT session.userID, user.UserName,  IsExpired, LastPage,  session.LastAccessed,  RemoteAddr,  UserAgent ";
-		$SQL .= "FROM `session` LEFT OUTER JOIN user ON user.userID = session.userID ";
-		$SQL .= "WHERE 1 = 1 ";
+        setSession('sessions', 'Filter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        setSession('sessions', 'filter_type', $type);
+        setSession('sessions', 'filter_fromdt', $fromDt);
 
-		if ($fromdt != '')
-			$SQL .= sprintf(" AND session.LastAccessed < '%s' ", date("Y-m-d h:i:s", $starttime_timestamp));
+        $SQL  = "SELECT session.userID, user.UserName,  IsExpired, LastPage,  session.LastAccessed,  RemoteAddr,  UserAgent ";
+        $SQL .= "FROM `session` LEFT OUTER JOIN user ON user.userID = session.userID ";
+        $SQL .= "WHERE 1 = 1 ";
+
+        if ($fromDt != '')
+            // From Date is the Calendar Formatted DateTime in ISO format
+            $SQL .= sprintf(" AND session.LastAccessed < '%s' ", DateManager::getMidnightSystemDate(DateManager::getTimestampFromString($fromDt)));
 		
 		if ($type == "active")
 			$SQL .= " AND IsExpired = 0 ";
@@ -145,7 +139,7 @@ class sessionsDAO extends baseDAO {
 			$row['username'] = Kit::ValidateParam($row['UserName'], _STRING);
 			$row['isexpired'] = (Kit::ValidateParam($row['IsExpired'], _INT) == 1) ? 0 : 1;
 			$row['lastpage'] = Kit::ValidateParam($row['LastPage'], _STRING);
-			$row['lastaccessed'] = Kit::ValidateParam($row['LastAccessed'], _STRING);
+			$row['lastaccessed'] = DateManager::getLocalDate(strtotime(Kit::ValidateParam($row['LastAccessed'], _STRING)));
 			$row['ip'] = Kit::ValidateParam($row['RemoteAddr'], _STRING);
 			$row['browser'] = Kit::ValidateParam($row['UserAgent'], _STRING);
 
@@ -160,10 +154,8 @@ class sessionsDAO extends baseDAO {
 		}
 
 		Theme::Set('table_rows', $rows);
-        
-        $output = Theme::RenderReturn('table_render');
-		
-		$response->SetGridResponse($output);
+
+		$response->SetGridResponse(Theme::RenderReturn('table_render'));
 		$response->Respond();
 	}
 	

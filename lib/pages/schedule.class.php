@@ -392,15 +392,17 @@ class scheduleDAO extends baseDAO {
         
         $displayOrder = Kit::GetParam('DisplayOrder', _POST, _INT);
         $isNextButton = Kit::GetParam('next', _GET, _BOOL, false);
-        
-        // Convert our dates
-        $fromDT = DateManager::getDateFromString($fromDT);
-        $toDT = DateManager::getDateFromString($toDT);
-
-        if ($repeatToDt != '')
-            $repeatToDt = DateManager::getDateFromString($repeatToDt);
 
         Debug::Audit('Times received are: FromDt=' . $fromDT . '. ToDt=' . $toDT . '. RepeatToDt=' . $repeatToDt);
+
+        // Convert our dates
+        $fromDT = DateManager::getTimestampFromString($fromDT);
+        $toDT = DateManager::getTimestampFromString($toDT);
+
+        if ($repeatToDt != '')
+            $repeatToDt = DateManager::getTimestampFromString($repeatToDt);
+
+        Debug::Audit('Converted Times received are: FromDt=' . $fromDT . '. ToDt=' . $toDT . '. RepeatToDt=' . $repeatToDt);
         
         // Validate layout
         if ($campaignId == 0)
@@ -675,11 +677,11 @@ class scheduleDAO extends baseDAO {
         $isNextButton = Kit::GetParam('next', _GET, _BOOL, false);
         
         // Convert our ISO strings
-        $fromDT = DateManager::getDateFromString($fromDT);
-        $toDT = DateManager::getDateFromString($toDT);
+        $fromDT = DateManager::getTimestampFromString($fromDT);
+        $toDT = DateManager::getTimestampFromString($toDT);
 
         if ($repeatToDt != '')
-            $repeatToDt = DateManager::getDateFromString($repeatToDt);
+            $repeatToDt = DateManager::getTimestampFromString($repeatToDt);
 
         Debug::Audit('Times received are: FromDt=' . $fromDT . '. ToDt=' . $toDT . '. RepeatToDt=' . $repeatToDt);
 
@@ -730,7 +732,7 @@ class scheduleDAO extends baseDAO {
         Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to delete this event from <b>all</b> displays? If you only want to delete this item from certain displays, please deselect the displays in the edit dialogue and click Save.'))));
 
         $response->SetFormRequestResponse(NULL, __('Delete Event.'), '480px', '240px');
-        $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=Delete')");
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Schedule', 'Delete') . '")');
         $response->AddButton(__('No'), 'XiboDialogClose()');
         $response->AddButton(__('Yes'), '$("#DeleteEventForm").submit()');
         $response->Respond();

@@ -49,6 +49,7 @@ class displayDAO extends baseDAO
             $filter_pinned = 1;
             $filter_displaygroup = Session::Get('display', 'filter_displaygroup');
             $filter_display = Session::Get('display', 'filter_display');
+            $filterMacAddress = Session::Get('display', 'filterMacAddress');
             $filter_showView = Session::Get('display', 'filter_showView');
             $filter_autoRefresh = Session::Get('display', 'filter_autoRefresh');
         }
@@ -56,6 +57,7 @@ class displayDAO extends baseDAO
             $filter_pinned = 0;
             $filter_displaygroup = NULL;
             $filter_display = NULL;
+            $filterMacAddress = NULL;
             $filter_showView = 0;
             $filter_autoRefresh = 0;
         }
@@ -78,6 +80,7 @@ class displayDAO extends baseDAO
             't');
 
         $formFields[] = FormManager::AddText('filter_display', __('Name'), $filter_display, NULL, 'n');
+        $formFields[] = FormManager::AddText('filterMacAddress', __('Mac Address'), $filterMacAddress, NULL, 'm');
 
         $displayGroups = $this->user->DisplayGroupList(0);
         array_unshift($displayGroups, array('displaygroupid' => '0', 'displaygroup' => 'All'));
@@ -147,7 +150,7 @@ class displayDAO extends baseDAO
         $displayObject->licensed = Kit::GetParam('licensed', _POST, _INT);
         $displayObject->incSchedule = Kit::GetParam('inc_schedule', _POST, _INT);
         $displayObject->emailAlert = Kit::GetParam('email_alert', _POST, _INT);
-        $displayObject->alertTimeout = Kit::GetParam('alert_timeout', _POST, _INT);
+        $displayObject->alertTimeout = Kit::GetParam('alert_timeout', _POST, _CHECKBOX);
         $displayObject->wakeOnLanEnabled = Kit::GetParam('wakeOnLanEnabled', _POST, _CHECKBOX);
         $displayObject->wakeOnLanTime = Kit::GetParam('wakeOnLanTime', _POST, _STRING);
         $displayObject->broadCastAddress = Kit::GetParam('broadCastAddress', _POST, _STRING);
@@ -332,6 +335,9 @@ class displayDAO extends baseDAO
                         $profile[$i]['valueString'] = $option['value'];
                 }
             }
+            else if ($profile[$i]['fieldType'] == 'timePicker') {
+                $profile[$i]['valueString'] = DateManager::getSystemDate($profile[$i]['value'] / 1000, 'H:i');
+            }
         }
 
         Theme::Set('table_cols', $cols);
@@ -373,6 +379,10 @@ class displayDAO extends baseDAO
         // Filter by Name
         $filter_display = Kit::GetParam('filter_display', _POST, _STRING);
         setSession('display', 'filter_display', $filter_display);
+
+        // Filter by Name
+        $filterMacAddress = Kit::GetParam('filterMacAddress', _POST, _STRING);
+        setSession('display', 'filterMacAddress', $filterMacAddress);
         
         // Display Group
         $filter_displaygroupid = Kit::GetParam('filter_displaygroup', _POST, _INT);
@@ -389,7 +399,7 @@ class displayDAO extends baseDAO
         // Pinned option?        
         setSession('display', 'DisplayFilter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 
-        $displays = $user->DisplayList(array('displayid'), array('displaygroupid' => $filter_displaygroupid, 'display' => $filter_display));
+        $displays = $user->DisplayList(array('displayid'), array('displaygroupid' => $filter_displaygroupid, 'display' => $filter_display, 'macAddress' => $filterMacAddress));
 
         if (!is_array($displays))
         {
@@ -477,7 +487,7 @@ class displayDAO extends baseDAO
             // Format the storage available / total space
             $row['storageAvailableSpaceFormatted'] = Kit::formatBytes($row['storageAvailableSpace']);
             $row['storageTotalSpaceFormatted'] = Kit::formatBytes($row['storageTotalSpace']);
-            $row['storagePercentage'] = ($row['storageTotalSpace'] == 0) ? 0 : round(($row['storageTotalSpace'] - $row['storageAvailableSpace']) / $row['storageTotalSpace'] * 100.0, 2);
+            $row['storagePercentage'] = ($row['storageTotalSpace'] == 0) ? 100 : round($row['storageAvailableSpace'] / $row['storageTotalSpace'] * 100.0, 2);
 
             // Edit and Delete buttons first
             if ($row['edit'] == 1) {

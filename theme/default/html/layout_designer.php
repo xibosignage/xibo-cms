@@ -41,7 +41,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 	</select>
 </div>
 <div class="row">
-	<div class="col-md-1">
+	<div class="col-md-2">
 		<div class="btn-group">
 			<button class="btn dropdown-toggle" data-toggle="dropdown">
 				<?php echo Theme::Translate('Options'); ?>

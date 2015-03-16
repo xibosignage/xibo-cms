@@ -167,7 +167,7 @@ class counter extends Module
         $mediaid	= $this->mediaid;
 
         //Other properties
-        $duration = Kit::GetParam('duration', _POST, _INT, 0);
+        $duration = Kit::GetParam('duration', _POST, _INT, 0, false);
         $text = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
         $popupNotification = Kit::GetParam('popupNotification', _POST, _CHECKBOX);
 
@@ -242,7 +242,7 @@ class counter extends Module
 
         // If we have permission to change it, then get the value from the form
         if ($this->auth->modifyPermissions)
-            $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
+            $this->duration = Kit::GetParam('duration', _POST, _INT, 0, false);
 
         Debug::LogEntry('audit', 'Text received: ' . $text);
 

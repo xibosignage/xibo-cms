@@ -39,7 +39,7 @@ class HelpManager
             $dbh = PDOConnect::init();
         
             $sth = $dbh->prepare('SELECT Link FROM help WHERE Topic = :topic and Category = :cat');
-            
+            $sth->execute(array('topic' => $topic, 'cat' => $category));
 
             if (!$link = $sth->fetchColumn(0)) {
                 $sth->execute(array('topic' => $topic, 'cat' => 'General'));

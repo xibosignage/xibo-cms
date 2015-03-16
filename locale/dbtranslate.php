@@ -124,7 +124,9 @@ echo __('Maintenance Alerts for Users');
 echo __('Email maintenance alerts for users with view permissions to effected Displays.');
 echo __('Set the level of logging the CMS should record. In production systems "error" is recommended.');
 echo __('Which Calendar Type should the CMS use?');
-
+echo __('Enable Latest News?');
+echo __('Default for "Delete old version of Media" checkbox. Showen when Editing Library Media.');
+echo __('Should the Dashboard show latest news? The address is provided by the theme.');
 
 // Transitions
 echo __('Fade In');

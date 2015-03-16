@@ -58,12 +58,15 @@ class webpage extends Module
         Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" />');
 
         $formFields = array();
-        
+         
         $formFields[] = FormManager::AddText('uri', __('Link'), NULL, 
             __('The Location (URL) of the webpage'), 'l', 'required');
 
+        $formFields[] = FormManager::AddText('name', __('Name'), NULL, 
+            __('An optional name for this media'), 'n');
+
         $formFields[] = FormManager::AddNumber('duration', __('Duration'), NULL, 
-            __('The duration in seconds this counter should be displayed'), 'd', 'required');
+            __('The duration in seconds this item should be displayed'), 'd', 'required');
 
         $formFields[] = FormManager::AddCombo(
             'modeid', 
@@ -170,8 +173,11 @@ class webpage extends Module
         $formFields[] = FormManager::AddText('uri', __('Link'), urldecode($this->GetOption('uri')), 
             __('The Location (URL) of the webpage'), 'l', 'required');
 
+        $formFields[] = FormManager::AddText('name', __('Name'), $this->GetOption('name'), 
+            __('An optional name for this media'), 'n');
+
         $formFields[] = FormManager::AddNumber('duration', __('Duration'), $this->duration, 
-            __('The duration in seconds this counter should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
+            __('The duration in seconds this item should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
 
         $formFields[] = FormManager::AddCombo(
             'modeid', 
@@ -240,6 +246,7 @@ class webpage extends Module
         }
 
         $this->response->html = Theme::RenderReturn('form_render');
+        $this->response->AddButton(__('Apply'), 'XiboDialogApply("#ModuleForm")');
         $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
         $this->response->dialogTitle = __('Edit Webpage');
         $this->response->dialogSize     = true;
@@ -264,11 +271,12 @@ class webpage extends Module
         
         //Other properties
         $uri          = Kit::GetParam('uri', _POST, _URI);
-        $duration     = Kit::GetParam('duration', _POST, _INT, 0);
+        $duration     = Kit::GetParam('duration', _POST, _INT, 0, false);
         $scaling      = Kit::GetParam('scaling', _POST, _INT, 100);
         $transparency     = Kit::GetParam('transparency', _POST, _CHECKBOX, 'off');
         $offsetLeft = Kit::GetParam('offsetLeft', _POST, _INT);
         $offsetTop = Kit::GetParam('offsetTop', _POST, _INT);
+	$name = Kit::GetParam('name', _POST, _STRING);
         
         $url = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
                         
@@ -301,6 +309,7 @@ class webpage extends Module
         $this->SetOption('pageWidth', Kit::GetParam('pageWidth', _POST, _INT));
         $this->SetOption('pageHeight', Kit::GetParam('pageHeight', _POST, _INT));
         $this->SetOption('modeid', Kit::GetParam('modeid', _POST, _INT));
+	$this->SetOption('name', $name);
 
         // Should have built the media object entirely by this time
         // This saves the Media Object to the Region
@@ -344,10 +353,11 @@ class webpage extends Module
         $transparency     = Kit::GetParam('transparency', _POST, _CHECKBOX, 'off');
         $offsetLeft = Kit::GetParam('offsetLeft', _POST, _INT);
         $offsetTop = Kit::GetParam('offsetTop', _POST, _INT);
+	$name = Kit::GetParam('name', _POST, _STRING);
         
         // If we have permission to change it, then get the value from the form
         if ($this->auth->modifyPermissions)
-            $this->duration = Kit::GetParam('duration', _POST, _INT, 0);
+            $this->duration = Kit::GetParam('duration', _POST, _INT, 0, false);
 
         $url = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
                         
@@ -376,6 +386,7 @@ class webpage extends Module
         $this->SetOption('pageWidth', Kit::GetParam('pageWidth', _POST, _INT));
         $this->SetOption('pageHeight', Kit::GetParam('pageHeight', _POST, _INT));
         $this->SetOption('modeid', Kit::GetParam('modeid', _POST, _INT));
+	$this->SetOption('name', $name);
 
         // Should have built the media object entirely by this time
         // This saves the Media Object to the Region
@@ -387,6 +398,7 @@ class webpage extends Module
     if ($this->showRegionOptions)
         {
             // We want to load a new form
+            $this->response->callBack = 'refreshPreview("' . $this->regionid . '")';
             $this->response->loadForm = true;
             $this->response->loadFormUri = $url;
         }
@@ -455,7 +467,7 @@ class webpage extends Module
         $template = str_replace('<!--[[[HEADCONTENT]]]-->', $headContent, $template);
 
         // Body content
-        $output = '<iframe id="iframe" scrolling="no" src="' . $url . '"></iframe>';
+        $output = '<iframe id="iframe" scrolling="no" frameborder="0" src="' . $url . '"></iframe>';
         
         // Replace the Body Content with our generated text
         $template = str_replace('<!--[[[BODYCONTENT]]]-->', $output, $template);
@@ -477,6 +489,10 @@ class webpage extends Module
         $template = str_replace('<!--[[[JAVASCRIPTCONTENT]]]-->', $after_body, $template);
 
         return $template;
+    }
+
+    public function GetName() {
+        return $this->GetOption('name');
     }
 
     public function IsValid() {

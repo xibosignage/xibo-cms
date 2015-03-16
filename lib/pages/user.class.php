@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2013 Daniel Garner
+ * Copyright (C) 2006-2015 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -284,82 +284,51 @@ class userDAO extends baseDAO {
 
 	/**
 	 * Deletes a user
-	 *
-	 * @param int $id
-	 * @return unknown
 	 */
 	function DeleteUser() 
 	{
         // Check the token
         if (!Kit::CheckToken())
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
-        
-            $db 	=& $this->db;
-            $user       =& $this->user;
 
-            $response	= new ResponseManager();
-            $userid 	= Kit::GetParam('userid', _POST, _INT, 0);
-            $groupID    = $user->getGroupFromID($userid, true);
+        $response = new ResponseManager();
+        $deleteAllItems = (Kit::GetParam('deleteAllItems', _POST, _CHECKBOX) == 1);
 
-            // Can we delete this user? Dont even try if we cant. Check tables that have this userid or this groupid
-            if ($this->db->GetCountOfRows(sprintf('SELECT LayoutID FROM layout WHERE UserID = %d', $userid)) > 0)
-                trigger_error(__('Cannot delete this user, they have layouts'), E_USER_ERROR);
+        $userId = Kit::GetParam('userid', _POST, _INT, 0);
+        $groupId = $this->user->getGroupFromID($userId, true);
 
-            if ($this->db->GetCountOfRows(sprintf('SELECT MediaID FROM media WHERE UserID = %d', $userid)) > 0)
-                trigger_error(__('Cannot delete this user, they have media'), E_USER_ERROR);
+        $user = new Userdata();
+        $user->userId = $userId;
 
-            if ($this->db->GetCountOfRows(sprintf('SELECT EventID FROM schedule WHERE UserID = %d', $userid)) > 0)
-                trigger_error(__('Cannot delete this user, they have scheduled layouts'), E_USER_ERROR);
+        $userGroup = new UserGroup();
 
-            if ($this->db->GetCountOfRows(sprintf('SELECT Schedule_DetailID FROM schedule_detail WHERE UserID = %d', $userid)) > 0)
-                trigger_error(__('Cannot delete this user, they have schedule detail records'), E_USER_ERROR);
+        if (!$deleteAllItems) {
+            // Can we delete this user? Don't even try if we cant.
+            $children = $user->getChildTypes();
 
-            if ($this->db->GetCountOfRows(sprintf('SELECT TemplateID FROM template WHERE UserID = %d', $userid)) > 0)
-                trigger_error(__('Cannot delete this user, they have templates'), E_USER_ERROR);
+            if (count($children) > 0)
+                trigger_error(sprintf(__('Cannot delete user, they own %s'), implode(', ', $children)), E_USER_ERROR);
 
-            if ($this->db->GetCountOfRows(sprintf('SELECT osr_id FROM oauth_server_registry WHERE osr_usa_id_ref = %d', $userid)) > 0)
-                trigger_error(__('Cannot delete this user, they have applications'), E_USER_ERROR);
+            // Can we delete this group?
+            $children = $userGroup->getChildTypes($groupId);
 
-            if ($this->db->GetCountOfRows(sprintf('SELECT GroupID FROM lkdatasetgroup WHERE GroupID = %d', $groupID)) > 0)
-                trigger_error(__('Cannot delete this user, they have permissions to data sets'), E_USER_ERROR);
+            if (count($children) > 0)
+                trigger_error(sprintf(__('Cannot delete user, they own %s'), implode(', ', $children)), E_USER_ERROR);
+        }
 
-            if ($this->db->GetCountOfRows(sprintf('SELECT GroupID FROM lkdisplaygroupgroup WHERE GroupID = %d', $groupID)) > 0)
-                trigger_error(__('Cannot delete this user, they have permissions to display groups'), E_USER_ERROR);
+        // Delete all items has been selected, so call delete on the group, then the user
+        $userGroup->UnlinkAllGroups($userId);
 
-            if ($this->db->GetCountOfRows(sprintf('SELECT GroupID FROM lklayoutgroup WHERE GroupID = %d', $groupID)) > 0)
-                trigger_error(__('Cannot delete this user, they have permissions to layouts'), E_USER_ERROR);
+        // Delete the user specific group
+        if (!$userGroup->Delete($groupId))
+            trigger_error($userGroup->GetErrorMessage(), E_USER_ERROR);
 
-            if ($this->db->GetCountOfRows(sprintf('SELECT GroupID FROM lklayoutmediagroup WHERE GroupID = %d', $groupID)) > 0)
-                trigger_error(__('Cannot delete this user, they have permissions to media on layouts'), E_USER_ERROR);
+        // Delete the user
+        if (!$user->Delete())
+            trigger_error($user->GetErrorMessage(), E_USER_ERROR);
 
-            if ($this->db->GetCountOfRows(sprintf('SELECT GroupID FROM lklayoutregiongroup WHERE GroupID = %d', $groupID)) > 0)
-                trigger_error(__('Cannot delete this user, they have permissions to regions on layouts'), E_USER_ERROR);
-
-            if ($this->db->GetCountOfRows(sprintf('SELECT GroupID FROM lkmediagroup WHERE GroupID = %d', $groupID)) > 0)
-                trigger_error(__('Cannot delete this user, they have permissions to media'), E_USER_ERROR);
-
-            if ($this->db->GetCountOfRows(sprintf('SELECT GroupID FROM lktemplategroup WHERE GroupID = %d', $groupID)) > 0)
-                trigger_error(__('Cannot delete this user, they have permissions to templates'), E_USER_ERROR);
-
-            // Firstly delete the group for this user
-            $userGroupObject = new UserGroup($db);
-            
-            // Remove this user from all user groups (including their own)
-            $userGroupObject->UnlinkAllGroups($userid);
-
-            // Delete the user specific group
-            if (!$userGroupObject->Delete($groupID))
-                trigger_error($userGroupObject->GetErrorMessage(), E_USER_ERROR);
-
-            // Delete the user
-            Kit::ClassLoader('userdata');
-            $user = new UserData($this->db);
-            $user->userId = $userid;
-            if (!$user->Delete())
-                trigger_error($user->GetErrorMessage(), E_USER_ERROR);
-
-            $response->SetFormSubmitResponse(__('User Deleted.'));
-            $response->Respond();
+        $response->SetFormSubmitResponse(__('User Deleted.'));
+        $response->Respond();
 	}
 
 	/**
@@ -516,7 +485,14 @@ class userDAO extends baseDAO {
         Theme::Set('form_action', 'index.php?p=user&q=DeleteUser');
         Theme::Set('form_meta', '<input type="hidden" name="userid" value="' . $userid . '" />');
 
-        Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to delete? You may not be able to delete this user if they have associated content. You can retire users by using the Edit Button.'))));
+        $formFields = array(FormManager::AddMessage(__('Are you sure you want to delete? You may not be able to delete this user if they have associated content. You can retire users by using the Edit Button.')));
+        $formFields[] = FormManager::AddCheckbox('deleteAllItems',
+            __('Delete all items owned by this User?'),
+            0,
+            __('Check to delete all items owned by this user, including Layouts, Media, Schedules, etc.'),
+            'd');
+
+        Theme::Set('form_fields', $formFields);
 
 		$response->SetFormRequestResponse(NULL, __('Delete this User?'), '430px', '200px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('User', 'Delete') . '")');

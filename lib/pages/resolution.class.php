@@ -29,8 +29,6 @@ class resolutionDAO extends baseDAO
      */
     function displayPage()
     {
-        $db =& $this->db;
-
         // Configure the theme
         $id = uniqid();
         Theme::Set('id', $id);
@@ -38,16 +36,47 @@ class resolutionDAO extends baseDAO
         Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
         Theme::Set('pager', ResponseManager::Pager($id));
 
+        if (Kit::IsFilterPinned('resolution', 'ResolutionFilter')) {
+            $pinned = 1;
+            $enabled = Session::Get('resolution', 'filterEnabled');
+        }
+        else {
+            $enabled = 1;
+            $pinned = 0;
+        }
+
+        $formFields = array();
+        $formFields[] = FormManager::AddCombo(
+            'filterEnabled',
+            __('Enabled'),
+            $enabled,
+            array(array('enabledid' => 1, 'enabled' => 'Yes'), array('enabledid' => 0, 'enabled' => 'No')),
+            'enabledid',
+            'enabled',
+            NULL,
+            'e');
+
+        $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'),
+            $pinned, NULL,
+            'k');
+
         // Call to render the template
         Theme::Set('header_text', __('Resolutions'));
-        Theme::Set('form_fields', array());
+        Theme::Set('form_fields', $formFields);
         Theme::Render('grid_render');
     }
 
     function actionMenu() {
 
         return array(
-                array('title' => __('Add Resolution'),
+            array('title' => __('Filter'),
+                'class' => '',
+                'selected' => false,
+                'link' => '#',
+                'help' => __('Open the filter form'),
+                'onclick' => 'ToggleFilterView(\'Filter\')'
+            ),
+            array('title' => __('Add Resolution'),
                     'class' => 'XiboFormButton',
                     'selected' => false,
                     'link' => 'index.php?p=resolution&q=AddForm',
@@ -62,11 +91,15 @@ class resolutionDAO extends baseDAO
      */
     function ResolutionGrid()
     {
-        $db 	=& $this->db;
         $user 	=& $this->user;
         $response = new ResponseManager();
 
-        $rows = $user->ResolutionList();
+        setSession('resolution', 'ResolutionFilter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        // Show enabled
+        $filterEnabled = Kit::GetParam('filterEnabled', _POST, _INT);
+        setSession('resolution', 'filterEnabled', $filterEnabled);
+
+        $rows = $user->ResolutionList(array('resolution'), array('enabled' => $filterEnabled));
         $resolutions = array();
 
         $cols = array(
@@ -103,9 +136,7 @@ class resolutionDAO extends baseDAO
 
         Theme::Set('table_rows', $resolutions);
 
-        $output = Theme::RenderReturn('table_render');
-
-        $response->SetGridResponse($output);
+        $response->SetGridResponse(Theme::RenderReturn('table_render'));
         $response->Respond();
     }
 

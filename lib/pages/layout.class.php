@@ -658,7 +658,7 @@ class layoutDAO extends baseDAO
                 // Copy Button
                 $row['buttons'][] = array(
                         'id' => 'layout_button_copy',
-                        'url' => 'index.php?p=layout&q=CopyForm&layoutid=' . $layout['layoutid'] . '&oldlayout=' . $layout['layout'],
+                        'url' => 'index.php?p=layout&q=CopyForm&layoutid=' . $layout['layoutid'] . '&oldlayout=' . urlencode($layout['layout']),
                         'text' => __('Copy')
                     );
 
@@ -1001,6 +1001,7 @@ class layoutDAO extends baseDAO
 
             $designerScale = 1;
             $tipScale = 1;
+            Theme::Set('layout_upgrade_url', 'index.php?p=layout&q=upgradeForm&layoutId=' . $this->layoutid);
         }
         else {
             // Version 1 layouts had the designer resolution in the XLF and therefore did not need anything scaling in the designer.

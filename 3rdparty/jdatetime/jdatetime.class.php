@@ -448,13 +448,16 @@ class jDateTime
     /**
      * Returns correct names for months
      */
-    private static function getMonthNames($month, $shorten = false, $len = 3)
+    public static function getMonthNames($month, $shorten = false, $len = 3, $latin = true)
     {
         // Convert
+        $monthsLatin = array(
+            'Esfand', 'Farvardin', 'Ordibehest', 'Khordad', 'Tir', 'Mordad', 'Shahrivar', 'Mehr', 'Aban', 'Day', 'Bahman',
+        );
         $months = array(
             'فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'
         );
-        $ret    = $months[$month - 1];
+        $ret = ($latin) ? $monthsLatin[$month - 1] : $months[$month - 1];
 
         // Return
         return ($shorten) ? self::substr($ret, 0, $len) : $ret;

@@ -203,7 +203,7 @@ class timelineDAO extends baseDAO {
         }
 
         $formFields[] = FormManager::AddCheckbox('loop', __('Loop?'), 
-            $region->GetOption($layoutid, $regionid, 'loop', 0), __('If there is only one item in this region should it loop?'), 
+            $region->GetOption($layoutid, $regionid, 'loop', 0), __('If there is only one item in this region should it loop? Not currently available for Windows Players.'),
             'l');
 
         $formFields[] = FormManager::AddNumber('zindex', __('Layer'), ($zindex == 0) ? NULL : $zindex, 
