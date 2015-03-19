@@ -20,42 +20,27 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-class previewDAO extends baseDAO {
-    private $auth;
-	private $has_permissions = true;
-	
-	private $layoutid;
-	private $layout;
-	private $retired;
-	private $description;
-	private $tags;
-	
-	private $xml;
+class previewDAO extends baseDAO
+{
+    /* @var \Xibo\Entity\Layout $layout */
+    private $layout;
 
-    function __construct(database $db, user $user) 
+    function __construct(database $db, user $user)
     {
-        $this->db   =& $db;
+        $this->db =& $db;
         $this->user =& $user;
-        $this->layoutid = Kit::GetParam('layoutid', _REQUEST, _INT);
+
+        $layoutId = Kit::GetParam('layoutid', _REQUEST, _INT);
 
         //if we have modify selected then we need to get some info
-        if ($this->layoutid != '')
-        {
+        if ($layoutId != 0) {
             // get the permissions
-            Debug::LogEntry('audit', 'Loading permissions for layoutid ' . $this->layoutid);
-
-            $layout = $this->user->LayoutList(NULL, array('layoutId' => $this->layoutid));
+            $layout = $this->user->LayoutList(NULL, array('layoutId' => $layoutId));
 
             if (count($layout) <= 0)
                 trigger_error(__('You do not have permissions to view this layout'), E_USER_ERROR);
 
-            $layout = $layout[0];
-
-            $this->layout = $layout['layout'];
-            $this->description = $layout['description'];
-            $this->retired = $layout['retired'];
-            $this->tags = $layout['tags'];
-            $this->xml = $layout['xml'];
+            $this->layout = $layout[0];
         }
     }
 
@@ -74,14 +59,14 @@ class previewDAO extends baseDAO {
             <html>
                 <head>
                     <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
-                    <title>$pfl $this->layoutid</title> 
+                    <title>$pfl {$this->layout->layoutId}</title>
                     <link rel="stylesheet" type="text/css" href="$previewCss" />
                     <script type="text/JavaScript" src="theme/default/libraries/jquery/jquery-1.9.1.js"></script>
                     <script type="text/JavaScript" src="modules/preview/html5Preloader.js"></script>
                     <script type="text/JavaScript" src="modules/preview/html-preview.js"></script>
                     <link rel="shortcut icon" href="$favicon" />
                 </head>
-                <body onload="dsInit($this->layoutid)">
+                <body onload="dsInit({$this->layout->layoutId})">
                     <div id="player">
                         <div id="info"></div>
                         <div id="log"></div>
@@ -103,7 +88,6 @@ EOT;
 
     function getXlf()
     {
-        print $this->xml;
+        print $this->layout->toXlf();
     }
 }
-?>

@@ -120,7 +120,7 @@ class campaignDAO extends baseDAO
                 // Permissions for Campaign
                 $row['buttons'][] = array(
                         'id' => 'campaign_button_delete',
-                        'url' => 'index.php?p=campaign&q=PermissionsForm&CampaignID=' . $row['campaignid'],
+                        'url' => 'index.php?p=user&q=permissionsForm&entity=Campaign&objectId=' . $row['campaignid'],
                         'text' => __('Permissions')
                     );
             }

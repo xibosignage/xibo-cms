@@ -743,7 +743,6 @@ class ticker extends Module
 
         // Make sure we have a $media/$layout object to use
         $media = new Media();
-        $layout = new Layout();
 
         // Parse the text template
         $matches = '';

@@ -534,11 +534,8 @@ class timelineDAO extends baseDAO
         foreach($playlist->widgets as $widget) {
             /* @var \Xibo\Entity\Widget $widget */
             // Put this node vertically in the region time line
-            // TODO: Permissions for this assignment
-            $auth = $user->MediaAssignmentAuth($widget->ownerId, $region->layoutId, $region->regionId, $widget->widgetId, true);
-
-            // Skip over media assignments that we do not have permission to see
-            if (!$auth->view)
+            if (!$this->user->checkViewable($widget))
+                // Skip over media assignments that we do not have permission to see
                 continue;
 
             // Create a media module to handle all the complex stuff
@@ -556,7 +553,7 @@ class timelineDAO extends baseDAO
             
             // Colouring for the media block
             if ($timeBarColouring == 'Permissions')
-                $mediaBlockColouringClass = 'timelineMediaItemColouring_' . (($auth->edit) ? 'enabled' : 'disabled');
+                $mediaBlockColouringClass = 'timelineMediaItemColouring_' . (($this->user->checkEditable($widget)) ? 'enabled' : 'disabled');
             else
                 $mediaBlockColouringClass = 'timelineMediaItemColouringDefault timelineMediaItemColouring_' . $tmpModule->getModuleType();
             
@@ -576,13 +573,13 @@ class timelineDAO extends baseDAO
             $response->html .= '        <ul class="timelineMediaItemLinks">';
 
             // Create some links
-            if ($auth->edit)
+            if ($this->user->checkEditable($widget))
                 $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=EditForm&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '" title="' . __('Click to edit this media') . '">' . __('Edit') . '</a></li>';
 
-            if ($auth->del)
+            if ($this->user->checkDeleteable($widget))
                 $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=DeleteForm&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '" title="' . __('Click to delete this media') . '">' . __('Delete') . '</a></li>';
 
-            if ($auth->modifyPermissions)
+            if ($this->user->checkPermissionsModifyable($widget))
                 $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=user&q=permissionsForm&entity=Widget&objectId=' . $widget->widgetId . '" title="' . __('Click to change permissions for this media') . '">' . __('Permissions') . '</a></li>';
 
             if (count($this->user->TransitionAuth('in')) > 0)
@@ -731,11 +728,8 @@ class timelineDAO extends baseDAO
         foreach($playlist->widgets as $widget) {
             /* @var \Xibo\Entity\Widget $widget */
             // Put this node vertically in the region time line
-            // TODO: Permissions for this assignment
-            $auth = $user->MediaAssignmentAuth($widget->ownerId, $region->layoutId, $region->regionId, $widget->widgetId, true);
-
-            // Skip over media assignments that we do not have permission to see
-            if (!$auth->view)
+            if (!$this->user->checkViewable($widget))
+                // Skip over media assignments that we do not have permission to see
                 continue;
 
             // Construct an object containing all the layouts, and pass to the theme
@@ -760,7 +754,7 @@ class timelineDAO extends baseDAO
             $row['duration'] = sprintf('%d seconds', $widget->duration);
             $row['transition'] = sprintf('%s / %s', $tmpModule->GetTransition('in'), $tmpModule->GetTransition('out'));
 
-            if ($auth->edit) {
+            if ($this->user->checkEditable($widget)) {
                 $row['buttons'][] = array(
                         'id' => 'timeline_button_edit',
                         'url' => 'index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=EditForm&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '"',
@@ -768,7 +762,7 @@ class timelineDAO extends baseDAO
                     );
             }
 
-            if ($auth->del) {
+            if ($this->user->checkDeleteable($widget)) {
                 $row['buttons'][] = array(
                         'id' => 'timeline_button_delete',
                         'url' => 'index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=DeleteForm&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '"',
@@ -784,10 +778,10 @@ class timelineDAO extends baseDAO
                     );
             }
 
-            if ($auth->modifyPermissions) {
+            if ($this->user->checkPermissionsModifyable($widget)) {
                 $row['buttons'][] = array(
                         'id' => 'timeline_button_permissions',
-                        'url' => 'index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=PermissionsForm&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '"',
+                        'url' => 'index.php?p=user&q=permissionsForm&entity=Widget&objectId=' . $widget->widgetId . '"',
                         'text' => __('Permissions')
                     );
             }
