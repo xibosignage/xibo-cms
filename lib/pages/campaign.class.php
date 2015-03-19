@@ -331,7 +331,6 @@ class campaignDAO extends baseDAO
 
     /**
      * Sets the Members of a group
-     * @return
      */
     public function SetMembers()
     {
@@ -339,26 +338,22 @@ class campaignDAO extends baseDAO
         if (!Kit::CheckToken('assign_token'))
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
-        $db =& $this->db;
         $response = new ResponseManager();
 
         $campaignObject = new Campaign();
 
-        $campaignId = Kit::GetParam('CampaignID', _REQUEST, _INT);
+        $campaign = \Xibo\Factory\CampaignFactory::getById(Kit::GetParam('CampaignID', _REQUEST, _INT));
         $layouts = Kit::GetParam('LayoutID', _POST, _ARRAY, array());
 
         // Authenticate this user
-        $auth = $this->user->CampaignAuth($campaignId, true);
-        if (!$auth->edit)
+        if (!$this->user->checkEditable($campaign))
             trigger_error(__('You do not have permission to edit this campaign'), E_USER_ERROR);
 
         // Get all current members
-        $currentMembers = Layout::Entries(NULL, array('campaignId' => $campaignId));
+        $currentMembers = \Xibo\Factory\LayoutFactory::query(null, array('campaignId' => $campaign->campaignId));
 
         // Flatten
-        $currentLayouts = array_map(function($element) {
-            return $element->layoutId;
-        }, $currentMembers);
+        $currentLayouts = array_map(function($element) { return $element->layoutId; }, $currentMembers);
 
         // Work out which ones are NEW
         $newLayouts = array_diff($currentLayouts, $layouts);
@@ -366,20 +361,19 @@ class campaignDAO extends baseDAO
         // Check permissions to all new layouts that have been selected
         foreach ($newLayouts as $layoutId) {
             // Authenticate
-            $auth = $this->user->LayoutAuth($layoutId, true);
-            if (!$auth->view)
+            if (!$this->user->checkViewable(\Xibo\Factory\LayoutFactory::getById($layoutId)))
                 trigger_error(__('Your permissions to view a layout you are adding have been revoked. Please reload the Layouts form.'), E_USER_ERROR);
         }
 
         // Remove all current members
-        $campaignObject->UnlinkAll($campaignId);
+        $campaignObject->UnlinkAll($campaign->campaignId);
 
         // Add all new members
         $displayOrder = 1;
 
         foreach($layouts as $layoutId) {
             // By this point everything should be authenticated
-            $campaignObject->Link($campaignId, $layoutId, $displayOrder);
+            $campaignObject->Link($campaign->campaignId, $layoutId, $displayOrder);
             $displayOrder++;
         }
 
@@ -389,29 +383,20 @@ class campaignDAO extends baseDAO
 
     /**
      * Displays the Library Assign form
-     * @return
      */
     function LayoutAssignForm()
     {
-        $db =& $this->db;
-        $user =& $this->user;
         $response = new ResponseManager();
-        // Input vars
-        $campaignId = Kit::GetParam('CampaignID', _GET, _INT);
+
+        $campaign = \Xibo\Factory\CampaignFactory::getById(Kit::GetParam('CampaignID', _GET, _INT));
 
         $id = uniqid();
         Theme::Set('id', $id);
         Theme::Set('form_meta', '<input type="hidden" name="p" value="campaign"><input type="hidden" name="q" value="LayoutAssignView">');
         Theme::Set('pager', ResponseManager::Pager($id, 'grid_pager'));
-        
-        // Get the currently assigned layouts and put them in the "well"
-        $layoutsAssigned = Layout::Entries(array('lkcl.DisplayOrder'), array('campaignId' => $campaignId));
 
-        if (!is_array($layoutsAssigned))
-        {
-            trigger_error($db->error());
-            trigger_error(__('Error getting Layouts'), E_USER_ERROR);
-        }
+        // Get the currently assigned layouts and put them in the "well"
+        $layoutsAssigned = \Xibo\Factory\LayoutFactory::query(array('lkcl.DisplayOrder'), array('campaignId' => $campaign->campaignId));
 
         Debug::LogEntry('audit', count($layoutsAssigned) . ' layouts assigned already');
 
@@ -438,27 +423,24 @@ class campaignDAO extends baseDAO
 
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Campaign', 'Layouts') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Save'), 'LayoutsSubmit("' . $campaignId . '")');
+        $response->AddButton(__('Save'), 'LayoutsSubmit("' . $campaign->campaignId . '")');
 
         $response->Respond();
     }
     
     /**
      * Show the library
-     * @return 
      */
     function LayoutAssignView() 
     {
-        $db =& $this->db;
-        $user =& $this->user;
         $response = new ResponseManager();
 
-        //Input vars
+        // Input vars
         $name = Kit::GetParam('filter_name', _POST, _STRING);
         $tags = Kit::GetParam('filter_tags', _POST, _STRING);
 
         // Get a list of media
-        $layoutList = $user->LayoutList(NULL, array('layout' => $name, 'tags' => $tags));
+        $layoutList = $this->user->LayoutList(NULL, array('layout' => $name, 'tags' => $tags));
 
         $cols = array(
                 array('name' => 'layout', 'title' => __('Name'))
@@ -468,7 +450,12 @@ class campaignDAO extends baseDAO
         $rows = array();
 
         // Add some extra information
-        foreach ($layoutList as $row) {
+        foreach ($layoutList as $layout) {
+            /* @var \Xibo\Entity\Layout $layout */
+
+            $row = array();
+            $row['layoutid'] = $layout->layoutId;
+            $row['layout'] = $layout->layout;
 
             $row['list_id'] = 'LayoutID_' . $row['layoutid'];
             $row['assign_icons'][] = array(
@@ -491,4 +478,3 @@ class campaignDAO extends baseDAO
         $response->Respond();
     }
 }
-?>

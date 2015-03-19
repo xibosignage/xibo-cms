@@ -34,4 +34,15 @@ class Resolution
 
     public $version;
     public $enabled;
+
+    public function getId()
+    {
+        return $this->resolutionId;
+    }
+
+    public function getOwnerId()
+    {
+        // No owner
+        return 1;
+    }
 }
