@@ -215,16 +215,28 @@ if (!$tabs)
                                         $options = $field['options'];
                                     }
 
-                                    foreach ($options as $item) { 
+                                    foreach ($options as $item) {
 
-                                        $class = (!isset($field['classColumn']) || $field['classColumn'] == '') ? '' : ' class="' . $item[$field['classColumn']] . '"';
-                                        $style = (!isset($field['styleColumn']) || $field['styleColumn'] == '') ? '' : ' style="' . $item[$field['styleColumn']] . '"';
+                                        if (is_array($item)) {
+                                            $class = (!isset($field['classColumn']) || $field['classColumn'] == '') ? '' : ' class="' . $item[$field['classColumn']] . '"';
+                                            $style = (!isset($field['styleColumn']) || $field['styleColumn'] == '') ? '' : ' style="' . $item[$field['styleColumn']] . '"';
+                                            $itemOptionId =  $item[$field['optionId']];
+                                            $itemOptionValue = $item[$field['optionValue']];
+                                        }
+                                        else {
+                                            $style = (!isset($field['styleColumn']) || $field['styleColumn'] == '') ? '' : ' style="' . $item->{$field['styleColumn']} . '"';
+                                            $class = (!isset($field['classColumn']) || $field['classColumn'] == '') ? '' : ' class="' . $item->{$field['classColumn']} . '"';
+                                            $itemOptionId = $item->{$field['optionId']};
+                                            $itemOptionValue = $item->{$field['optionValue']};
+                                        }
+
+
                                         if ($field['fieldType'] == 'dropdownmulti')
-                                            $selected = ((in_array($item[$field['optionId']], $field['value'])) ? 'selected' : '');
+                                            $selected = ((in_array($itemOptionId, $field['value'])) ? 'selected' : '');
                                         else
-                                            $selected = (($item[$field['optionId']] == $field['value']) ? 'selected' : '');
+                                            $selected = (($itemOptionId == $field['value']) ? 'selected' : '');
                                          ?>
-                                        <option<?php echo $class . $style ?> value="<?php echo $item[$field['optionId']]; ?>" <?php echo $selected; ?>><?php echo $item[$field['optionValue']]; ?></option>
+                                        <option<?php echo $class . $style ?> value="<?php echo $itemOptionId; ?>" <?php echo $selected; ?>><?php echo $itemOptionValue; ?></option>
                                     <?php } 
 
                                     if ($groups)

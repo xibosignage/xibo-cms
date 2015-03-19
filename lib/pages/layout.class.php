@@ -750,6 +750,7 @@ class layoutDAO extends baseDAO
 
         // A list of available backgrounds
         $backgrounds = $this->user->MediaList(NULL, array('type' => 'image'));
+        $backgrounds = array_map(function ($element) { /* @var \Xibo\Entity\Media $element */ return array('mediaid' => $element->mediaId, 'media' => $element->name); }, $backgrounds);
         array_unshift($backgrounds, array('mediaid' => '0', 'media' => 'None'));
 
         $formFields['background'][] = FormManager::AddCombo(
@@ -767,7 +768,7 @@ class layoutDAO extends baseDAO
             __('Resolution'),
             $resolution->resolutionId,
             $this->user->ResolutionList(NULL, array('withCurrent' => $resolution->resolutionId)),
-            'resolutionid',
+            'resolutionId',
             'resolution',
             __('Change the resolution'),
             'r');

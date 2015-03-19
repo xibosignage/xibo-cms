@@ -859,7 +859,7 @@ class User {
             /* @var \Xibo\Entity\Resolution $resolution */
 
             // Check to see if we are the owner
-            if ($resolution->ownerId == $this->userid)
+            if ($resolution->getOwnerId() == $this->userid)
                 continue;
 
             // Check we are viewable
