@@ -285,9 +285,6 @@ abstract class Module implements ModuleInterface
      * @return string
      */
     protected function getTimelineLink()
-	// Delete Old Version Checkbox Setting
-	$deleteOldVersionChecked = (Config::GetSetting('LIBRARY_MEDIA_DELETEOLDVER_CHECKB') == 'Checked') ? 1 : 0;
-
     {
         return 'index.php?p=timeline&regionId=' . (($this->region == null) ? 0 : $this->region->regionId) . '&q=RegionOptions';
     }

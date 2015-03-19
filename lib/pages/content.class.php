@@ -350,6 +350,10 @@ class contentDAO extends baseDAO {
 
         // Can this user view?
         $entries = $this->user->MediaList(null, array('mediaId' => $mediaId));
+
+        $media = $entries[0];
+        /* @var \Xibo\Entity\Media $media */
+
         if (count($entries) <= 0) {
             $width = Kit::GetParam('width', _GET, _INT);
             $height = Kit::GetParam('height', _GET, _INT);
@@ -359,7 +363,7 @@ class contentDAO extends baseDAO {
             exit();
         }
 
-        File::ReturnFile($entries[0]['storedas'], $entries[0]['filename']);
+        File::ReturnFile($media->storedAs, $media->fileName);
     }
 
     /**
