@@ -36,9 +36,9 @@ class User {
     
     public function __construct(database $db = NULL)
     {
-        $this->db           =& $db;
-        $this->userid   = Kit::GetParam('userid', _SESSION, _INT);
-        $this->usertypeid   = Kit::GetParam('usertype', _SESSION, _INT);
+        $this->db =& $db;
+        $this->userid = Kit::GetParam('userid', _SESSION, _INT);
+        $this->usertypeid = Kit::GetParam('usertype', _SESSION, _INT);
 
         // We havent authed yet
         $this->authedDisplayGroupIDs = false;
@@ -47,6 +47,7 @@ class User {
     /**
      * Validate the User is Logged In
      * @param $ajax Object[optional] Indicates if this request came from an AJAX call or otherwise
+     * @return bool
      */
     function attempt_login($ajax = false) 
     {
@@ -56,7 +57,7 @@ class User {
         // Referring Page is anything after the ?
         $requestUri = rawurlencode(Kit::GetCurrentPage());
         
-        if (!$this->checkforUserid()) 
+        if (!$this->checkForUserId())
         {
             // Log out the user
             if ($userid != 0)
@@ -106,9 +107,9 @@ class User {
 
     /**
      * Login a user
-     * @return 
-     * @param $username Object
-     * @param $password Object
+     * @return bool
+     * @param string $username
+     * @param string $password
      */
     function login($username, $password) 
     {
@@ -169,93 +170,90 @@ class User {
         return true;
     }
 
-        /**
-         * Logs in a specific user
-         * @param int $userId
-         * @return bool
-         */
-        function LoginServices($userId)
-        {
-            try {
-                $dbh = PDOConnect::init();
-                $sth = $dbh->prepare('SELECT UserName, usertypeid, homepage FROM user WHERE userID = :userId AND Retired = 0');
-                $sth->execute(array('userId' => $userId));
+    /**
+     * Logs in a specific user
+     * @param int $userId
+     * @return bool
+     */
+    function LoginServices($userId)
+    {
+        try {
+            $dbh = PDOConnect::init();
+            $sth = $dbh->prepare('SELECT UserName, usertypeid, homepage FROM `user` WHERE userID = :userId AND Retired = 0');
+            $sth->execute(array('userId' => $userId));
 
-                if (!$results = $sth->fetch())
-                    return false;
-
-                $this->userid = $userId;
-                $this->userName = Kit::ValidateParam($results['UserName'], _USERNAME);
-                $this->usertypeid = Kit::ValidateParam($results['usertypeid'], _INT);
-                $this->homePage = Kit::ValidateParam($results['homepage'], _WORD);
-
-                return true;
-            }
-            catch (Exception $e) {
-                Debug::Audit($e->getMessage());
+            if (!$results = $sth->fetch())
                 return false;
-            }
+
+            $this->userid = $userId;
+            $this->userName = Kit::ValidateParam($results['UserName'], _USERNAME);
+            $this->usertypeid = Kit::ValidateParam($results['usertypeid'], _INT);
+            $this->homePage = Kit::ValidateParam($results['homepage'], _WORD);
+
+            return true;
         }
+        catch (Exception $e) {
+            Debug::Audit($e->getMessage());
+            return false;
+        }
+    }
 
     /**
      * Logout the user associated with this user object
-     * @return 
+     * @return bool
      */
-    function logout() 
+    function logout()
     {
-        $db         =& $this->db;
         global $session;
-        
-        $userid = Kit::GetParam('userid', _SESSION, _INT);
+        $db =& $this->db;
+
+        $userId = Kit::GetParam('userid', _SESSION, _INT);
 
         //write out to the db that the logged in user has accessed the page still
-        $SQL = sprintf("UPDATE user SET loggedin = 0 WHERE userid = %d", $userid);
+        $SQL = sprintf("UPDATE user SET loggedin = 0 WHERE userid = %d", $userId);
         if(!$results = $db->query($SQL)) trigger_error("Can not write last accessed info.", E_USER_ERROR);
 
         //to log out a user we need only to clear out some session vars
         unset($_SESSION['userid']);
         unset($_SESSION['username']);
         unset($_SESSION['password']);
-        
+
         $session->setIsExpired(1);
 
         return true;
     }
 
-    //Check to see if a user id is in the session information
-    function checkforUserid() 
+    /**
+     * Check to see if a user id is in the session information
+     * @return bool
+     */
+    private function checkForUserId()
     {
-        $db         =& $this->db;
         global $session;
-        
-        $userid = Kit::GetParam('userid', _SESSION, _INT, 0);
+        $db =& $this->db;
+
+        $userId = Kit::GetParam('userid', _SESSION, _INT, 0);
 
         // Checks for a user ID in the session variable
-        if($userid == 0) 
-        {
+        if ($userId == 0) {
             return false;
         }
-        else 
-        {
-            if(!is_numeric($_SESSION['userid'])) 
-            {
+        else {
+            if(!is_numeric($_SESSION['userid'])) {
                 unset($_SESSION['userid']);
                 return false;
             }
-            elseif ($session->isExpired == 1) 
-            {
+            elseif ($session->isExpired == 1) {
                 unset($_SESSION['userid']);
                 return false;
             }
-            else 
-            {
+            else {
                 // check to see that the ID is still valid
-                $SQL = sprintf("SELECT UserID FROM user WHERE loggedin = 1 AND userid = %d", $userid);
+                $SQL = sprintf("SELECT UserID FROM user WHERE loggedin = 1 AND userid = %d", $userId);
                 
                 $result = $db->query($SQL) or trigger_error($db->error(), E_USER_ERROR);
                 
-                if($db->num_rows($result)==0) 
-                {
+                if($db->num_rows($result)==0) {
                     unset($_SESSION['userid']);
                     return false;
                 }
@@ -744,319 +742,59 @@ class User {
     }
     
     /**
-     * Authenticates this user against the given module
-     * or if none provided returns an array of optional modules
-     * @return Array
-     * @param [Optional] $module String
-     */
-    public function ModuleAuth($regionSpecific, $module = '', $assignable = -1)
-    {
-        $userid =& $this->userid;
-
-        try {
-            $dbh = PDOConnect::init();
-
-            // Check that the module is enabled
-            $params = array();
-            $SQL  = "SELECT * FROM module WHERE Enabled = 1 ";
-
-            if ($regionSpecific != -1) {
-                $SQL .= " AND RegionSpecific = :regionspecific ";
-                $params['regionspecific'] = $regionSpecific;
-            }
-
-            if ($assignable != -1) {
-                $SQL .= " AND assignable = :assignable ";
-                $params['assignable'] = $assignable;
-            }
-
-            if ($module != '') {
-                $SQL .= " AND Module = :module ";
-                $params['module'] = $module;
-            }
-            
-            $SQL .= "  ORDER BY Name ";
-        
-            $sth = $dbh->prepare($SQL);
-            $sth->execute($params);
-
-            $modules = $sth->fetchAll();
-            
-            if (count($modules) == 0) {
-                return false;
-            }
-            
-            // Return this array
-            return $modules;  
-        }
-        catch (Exception $e) {
-            
-            Debug::LogEntry('error', $e->getMessage());
-
-            return false;
-        }
-    }
-
-    public function ModuleList($sort_order = array('Name'), $filter_by = array()) {
-        try {
-            $dbh = PDOConnect::init();
-
-            $params = array();
-
-            $SQL = '';
-            $SQL .= 'SELECT ModuleID, ';
-            $SQL .= '   Name, ';
-            $SQL .= '   Enabled, ';
-            $SQL .= '   Description, ';
-            $SQL .= '   RegionSpecific, ';
-            $SQL .= '   ValidExtensions, ';
-            $SQL .= '   ImageUri, ';
-            $SQL .= '   PreviewEnabled, ';
-            $SQL .= '   assignable ';
-            $SQL .= '  FROM `module` ';
-            $SQL .= ' WHERE 1 = 1 ';
-
-            if (Kit::GetParam('id', $filter_by, _INT, 0) != 0) {
-                $params['id'] = Kit::GetParam('id', $filter_by, _INT);
-                $SQL .= ' AND ModuleID = :id ';
-            }
-
-            if (Kit::GetParam('name', $filter_by, _STRING) != '') {
-                $params['id'] = Kit::GetParam('name', $filter_by, _STRING);
-                $SQL .= ' AND name = :name ';
-            }
-            
-            // Sorting?
-            if (is_array($sort_order))
-                $SQL .= 'ORDER BY ' . implode(',', $sort_order);
-        
-            //Debug::LogEntry('audit', 'SQL: ' . $SQL . '. Params: ' . var_export($params, true), get_class(), __FUNCTION__);
-
-            $sth = $dbh->prepare($SQL);
-            $sth->execute($params);
-          
-            return $sth->fetchAll();
-        }
-        catch (Exception $e) {
-            
-            Debug::LogEntry('error', $e->getMessage());
-        
-            return false;
-        }
-    }
-    
-    /**
      * Returns the usertypeid for this user object.
-     * @return 
+     * @return int
      */
-    public function GetUserTypeID()
+    public function getUserTypeId()
     {
         return $this->usertypeid;
     }
 
     /**
      * Authenticates a user against a fileId
-     * @param <type> $fileId
-     * @return <bool> true on granted
+     * @param int $fileId
+     * @return bool true on granted
+     * @throws \Xibo\Exception\NotFoundException
      */
     public function FileAuth($fileId)
     {
-        // Need to check this user has permission to upload this file (i.e. is it theirs)
-        if (!$userId = $this->db->GetSingleValue(sprintf("SELECT UserID FROM file WHERE FileID = %d", $fileId), 'UserID', _INT))
-        {
-            trigger_error($this->db->error_text);
-            trigger_error($this->db->error());
+        $results = PDOConnect::select('SELECT UserID FROM file WHERE FileID = :fileId', array('fileId' => $fileId));
 
-            return false;
-        }
+        if (count($results) <= 0)
+            throw new \Xibo\Exception\NotFoundException('File not found');
+
+        $userId = Kit::ValidateParam($results[0]['UserID'], _INT);
         
         return ($userId == $this->userid);
     }
 
     /**
-     * Authorizes a user against a media ID
-     * @param <int> $mediaID
-     */
-    public function MediaAuth($mediaId, $fullObject = false, $ownerId = 0)
-    {
-        $auth = new PermissionManager($this);
-
-        if ($ownerId == 0) {
-            $SQL  = '';
-            $SQL .= 'SELECT UserID ';
-            $SQL .= '  FROM media ';
-            $SQL .= ' WHERE media.MediaID = %d ';
-
-            if (!$ownerId = $this->db->GetSingleValue(sprintf($SQL, $mediaId), 'UserID', _INT))
-                return $auth;
-        }
-
-        // If we are the owner, or a super admin then give full permissions
-        if ($this->usertypeid == 1 || $ownerId == $this->userid)
-        {
-            $auth->FullAccess();
-            return $auth;
-        }
-
-        // Permissions for groups the user is assigned to, and Everyone
-        $SQL  = '';
-        $SQL .= 'SELECT UserID, MAX(IFNULL(View, 0)) AS View, MAX(IFNULL(Edit, 0)) AS Edit, MAX(IFNULL(Del, 0)) AS Del ';
-        $SQL .= '  FROM media ';
-        $SQL .= '   INNER JOIN lkmediagroup ';
-        $SQL .= '   ON lkmediagroup.MediaID = media.MediaID ';
-        $SQL .= '   INNER JOIN `group` ';
-        $SQL .= '   ON `group`.GroupID = lkmediagroup.GroupID ';
-        $SQL .= ' WHERE media.MediaID = %d ';
-        $SQL .= '   AND (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
-        $SQL .= 'GROUP BY media.UserID ';
-
-        $SQL = sprintf($SQL, $mediaId, implode(',', $this->GetUserGroups($this->userid, true)));
-        //Debug::LogEntry('audit', $SQL);
-
-        if (!$row = $this->db->GetSingleRow($SQL))
-            return $auth;
-
-        // There are permissions to evaluate
-        $auth->Evaluate($row['UserID'], $row['View'], $row['Edit'], $row['Del']);
-
-        if ($fullObject)
-            return $auth;
-
-        return $auth->edit;
-    }
-
-    /**
-     * Authorizes a user against a media ID assigned to a layout
-     * @param <int> $mediaID
-     */
-    public function MediaAssignmentAuth($ownerId, $layoutId, $regionId, $mediaId, $fullObject = false)
-    {
-        $auth = new PermissionManager($this);
-
-        // If we are the owner, or a super admin then give full permissions
-        if ($this->usertypeid == 1 || $ownerId == $this->userid)
-        {
-            $auth->FullAccess();
-            return $auth;
-        }
-
-        // Permissions for groups the user is assigned to, and Everyone
-        $SQL  = '';
-        $SQL .= 'SELECT MAX(IFNULL(View, 0)) AS View, MAX(IFNULL(Edit, 0)) AS Edit, MAX(IFNULL(Del, 0)) AS Del ';
-        $SQL .= '  FROM lklayoutmediagroup ';
-        $SQL .= '   INNER JOIN `group` ';
-        $SQL .= '   ON `group`.GroupID = lklayoutmediagroup.GroupID ';
-        $SQL .= " WHERE lklayoutmediagroup.MediaID = '%s' AND lklayoutmediagroup.RegionID = '%s' AND lklayoutmediagroup.LayoutID = %d ";
-        $SQL .= '   AND (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
-
-        $SQL = sprintf($SQL, $this->db->escape_string($mediaId), $this->db->escape_string($regionId), $layoutId, implode(',', $this->GetUserGroups($this->userid, true)));
-        //Debug::LogEntry('audit', $SQL);
-
-        if (!$row = $this->db->GetSingleRow($SQL))
-            return $auth;
-
-        // There are permissions to evaluate
-        $auth->Evaluate($ownerId, $row['View'], $row['Edit'], $row['Del']);
-
-        if ($fullObject)
-            return $auth;
-
-        return $auth->edit;
-    }
-
-    /**
      * Returns an array of Media the current user has access to
+     * @param array $sort_order
+     * @param array $filter_by
+     * @return array[Media]
      */
     public function MediaList($sort_order = array('name'), $filter_by = array())
     {
-        try {
-            $media = Media::Entries($sort_order, $filter_by);
-            $parsedMedia = array();
+        // Get the Layouts
+        $media = \Xibo\Factory\MediaFactory::query($sort_order, $filter_by);
 
-            foreach ($media as $row) {
-                $mediaItem = array();
+        if ($this->usertypeid == 1)
+            return $media;
 
-                // Validate each param and add it to the array.
-                $mediaItem['mediaid'] = $row->mediaId;
-                $mediaItem['media'] = $row->name;
-                $mediaItem['mediatype'] = $row->mediaType;
-                $mediaItem['duration'] = $row->duration;
-                $mediaItem['ownerid'] = $row->ownerId;
-                $mediaItem['filesize'] = $row->fileSize;
-                $mediaItem['parentid'] = $row->parentId;
-                $mediaItem['filename'] = $row->fileName;
-                $mediaItem['tags'] = $row->tags;
-                $mediaItem['storedas'] = $row->storedAs;
+        foreach ($media as $key => $mediaItem) {
+            /* @var \Xibo\Entity\Media $mediaItem */
 
-                $auth = $this->MediaAuth($row->mediaId, true, $row->ownerId);
+            // Check to see if we are the owner
+            if ($mediaItem->ownerId == $this->userid)
+                continue;
 
-                if ($auth->view) {
-                    $mediaItem['view'] = (int)$auth->view;
-                    $mediaItem['edit'] = (int)$auth->edit;
-                    $mediaItem['del'] = (int)$auth->del;
-                    $mediaItem['modifyPermissions'] = (int)$auth->modifyPermissions;
-
-                    $parsedMedia[] = $mediaItem;
-                }
-            }
-
-            return $parsedMedia;
-        }
-        catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
-            return false;
-        }
-    }
-
-    /**
-     * Authorises a user against a layoutid
-     * @param <type> $layoutId
-     * @return <type>
-     */
-    public function LayoutAuth($layoutId, $fullObject = false)
-    {
-        $auth = new PermissionManager($this);
-
-        // Get the Campaign ID
-        $SQL  = "SELECT campaign.CampaignID ";
-        $SQL .= "  FROM `lkcampaignlayout` ";
-        $SQL .= "   INNER JOIN `campaign` ";
-        $SQL .= "   ON lkcampaignlayout.CampaignID = campaign.CampaignID ";
-        $SQL .= " WHERE lkcampaignlayout.LayoutID = %d ";
-        $SQL .= "   AND campaign.IsLayoutSpecific = 1";
-
-        if (!$campaignId = $this->db->GetSingleValue(sprintf($SQL, $layoutId), 'CampaignID', _INT))
-        {
-            trigger_error(__('Layout has no associated Campaign, corrupted Layout. ID=' . $layoutId));
-
-            // New auth object is no permissions
-            if ($fullObject)
-                return $auth;
-
-            return false;
+            // Check we are viewable
+            if (!$this->checkViewable($mediaItem))
+                unset($media[$key]);
         }
 
-        $auth = $this->CampaignAuth($campaignId, true);
-
-        if ($fullObject)
-            return $auth;
-
-        return $auth->edit;
-    }
-
-    /**
-     *Authorises a user against a template Id
-     * @param <type> $templateId
-     * @return <type>
-     */
-    public function TemplateAuth($templateId, $fullObject = false)
-    {
-        $auth = $this->LayoutAuth($templateId, true);
-
-        if ($fullObject)
-            return $auth;
-
-        return $auth->edit;
+        return $media;
     }
 
     /**
@@ -1103,54 +841,33 @@ class User {
         return $this->LayoutList($sort_order, $filter_by);
     }
 
-    public function ResolutionList($sort_order = array('resolution'), $filter_by = array()) {
-        try {
-            $dbh = PDOConnect::init();
-        
-            $params = array();
-            $SQL = 'SELECT * FROM resolution WHERE enabled = 1 ';
+    /**
+     * A list of Resolutions
+     * @param array $sort_order
+     * @param array $filter_by
+     * @return array[Resolution]
+     */
+    public function ResolutionList($sort_order = array('resolution'), $filter_by = array())
+    {
+        // Get the Layouts
+        $resolutions = \Xibo\Factory\ResolutionFactory::query($sort_order, $filter_by);
 
-            // Include the current?
-            if (Kit::GetParam('withCurrent', $filter_by, _INT, 0) != 0) {
-                $SQL .= ' OR resolutionid = :resolutionid ';
-                $params['resolutionid'] = Kit::GetParam('withCurrent', $filter_by, _INT);
-            }
-
-            // Sorting?
-            if (is_array($sort_order))
-                $SQL .= 'ORDER BY ' . implode(',', $sort_order);
-
-            Debug::LogEntry('audit', $SQL, 'user', 'ResolutionList');
-
-            $sth = $dbh->prepare($SQL);
-            $sth->execute($params);
-          
-            $results = $sth->fetchAll();
-            $resolutions = array();
-
-            foreach ($results as $row) {
-                $res = array();
-                
-                $res['resolutionid'] = Kit::ValidateParam($row['resolutionID'], _INT);
-                $res['resolution'] = Kit::ValidateParam($row['resolution'], _STRING);
-                $res['width'] = Kit::ValidateParam($row['width'], _INT);
-                $res['height'] = Kit::ValidateParam($row['height'], _INT);
-                $res['intended_width'] = Kit::ValidateParam($row['intended_width'], _INT);
-                $res['intended_height'] = Kit::ValidateParam($row['intended_height'], _INT);
-                $res['version'] = Kit::ValidateParam($row['version'], _INT);
-                $res['enabled'] = Kit::ValidateParam($row['enabled'], _INT);
-
-                $resolutions[] = $res;
-            }
-
+        if ($this->usertypeid == 1)
             return $resolutions;
+
+        foreach ($resolutions as $key => $resolution) {
+            /* @var \Xibo\Entity\Resolution $resolution */
+
+            // Check to see if we are the owner
+            if ($resolution->ownerId == $this->userid)
+                continue;
+
+            // Check we are viewable
+            if (!$this->checkViewable($resolution))
+                unset($resolutions[$key]);
         }
-        catch (Exception $e) {
-            
-            Debug::LogEntry('error', $e->getMessage());
-        
-            return false;
-        }
+
+        return $resolutions;
     }
 
     /**
@@ -1512,127 +1229,31 @@ class User {
         return $displays;
 
     }
-    
-    /**
-     * Authorises a user against a campaign
-     * @param <type> $campaignId
-     * @return <type>
-     */
-    public function CampaignAuth($campaignId, $fullObject = false)
-    {
-        $auth = new PermissionManager($this);
-
-        $SQL  = '';
-        $SQL .= 'SELECT UserID ';
-        $SQL .= '  FROM `campaign` ';
-        $SQL .= ' WHERE campaign.CampaignID = %d ';
-
-        if (!$ownerId = $this->db->GetSingleValue(sprintf($SQL, $campaignId), 'UserID', _INT))
-            return $auth;
-
-        // If we are the owner, or a super admin then give full permissions
-        if ($this->usertypeid == 1 || $ownerId == $this->userid)
-        {
-            $auth->FullAccess();
-            return $auth;
-        }
-
-        // Permissions for groups the user is assigned to, and Everyone
-        $SQL  = '';
-        $SQL .= 'SELECT UserID, MAX(IFNULL(View, 0)) AS View, MAX(IFNULL(Edit, 0)) AS Edit, MAX(IFNULL(Del, 0)) AS Del ';
-        $SQL .= '  FROM `campaign` ';
-        $SQL .= '   INNER JOIN lkcampaigngroup ';
-        $SQL .= '   ON lkcampaigngroup.CampaignID = campaign.CampaignID ';
-        $SQL .= '   INNER JOIN `group` ';
-        $SQL .= '   ON `group`.GroupID = lkcampaigngroup.GroupID ';
-        $SQL .= ' WHERE campaign.CampaignID = %d ';
-        $SQL .= '   AND (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
-        $SQL .= 'GROUP BY campaign.UserID ';
-
-        $SQL = sprintf($SQL, $campaignId, implode(',', $this->GetUserGroups($this->userid, true)));
-        //Debug::LogEntry('audit', $SQL);
-
-        if (!$row = $this->db->GetSingleRow($SQL))
-            return $auth;
-
-        // There are permissions to evaluate
-        $auth->Evaluate($row['UserID'], $row['View'], $row['Edit'], $row['Del']);
-
-        if ($fullObject)
-            return $auth;
-
-        return $auth->edit;
-    }
 
     /**
-     * Authenticates the current user and returns an array ofcampaigns this user is authenticated on
-     * @return
+     * Campaigns viewable by the user
+     * @param array $sort_order
+     * @param array $filter_by
+     * @return array[Campaign]
      */
-    public function CampaignList($name = '', $isRetired = false)
+    public function CampaignList($sort_order = null, $filter_by = null)
     {
-        $db         =& $this->db;
-        $userid     =& $this->userid;
+        // Get the Layouts
+        $campaigns = \Xibo\Factory\CampaignFactory::query($sort_order, $filter_by);
 
-        $SQL  = "SELECT campaign.CampaignID, Campaign, IsLayoutSpecific, COUNT(lkcampaignlayout.LayoutID) AS NumLayouts, MIN(layout.retired) AS Retired ";
-        $SQL .= "  FROM `campaign` ";
-        $SQL .= "   LEFT OUTER JOIN `lkcampaignlayout` ";
-        $SQL .= "   ON lkcampaignlayout.CampaignID = campaign.CampaignID ";
-        $SQL .= "   LEFT OUTER JOIN `layout` ";
-        $SQL .= "   ON lkcampaignlayout.LayoutID = layout.LayoutID ";
-        $SQL .= " WHERE 1 = 1 ";
-        
-        if ($name != '')
-        {
-            // convert into a space delimited array
-            $names = explode(' ', $name);
+        if ($this->usertypeid == 1)
+            return $campaigns;
 
-            foreach($names as $searchName)
-            {
-                // Not like, or like?
-                if (substr($searchName, 0, 1) == '-')
-                    $SQL.= " AND  (campaign.Campaign NOT LIKE '%" . sprintf('%s', ltrim($db->escape_string($searchName), '-')) . "%') ";
-                else
-                    $SQL.= " AND  (campaign.Campaign LIKE '%" . sprintf('%s', $db->escape_string($searchName)) . "%') ";
-            }
-        }
-        
-        $SQL .= "GROUP BY campaign.CampaignID, Campaign, IsLayoutSpecific ";
-        $SQL .= "ORDER BY Campaign";
+        foreach ($campaigns as $key => $campaign) {
+            /* @var \Xibo\Entity\Campaign $campaign */
 
-        if (!$result = $this->db->query($SQL))
-        {
-            trigger_error($this->db->error());
-            return false;
-        }
-
-        $campaigns = array();
-
-        while ($row = $this->db->get_assoc_row($result))
-        {
-            $campaignItem = array();
-
-            // Validate each param and add it to the array.
-            $campaignItem['campaignid'] = Kit::ValidateParam($row['CampaignID'], _INT);
-            $campaignItem['campaign'] = Kit::ValidateParam($row['Campaign'], _STRING);
-            $campaignItem['numlayouts'] = Kit::ValidateParam($row['NumLayouts'], _INT);
-            $campaignItem['islayoutspecific'] = Kit::ValidateParam($row['IsLayoutSpecific'], _INT);
-            $campaignItem['retired'] = Kit::ValidateParam($row['Retired'], _BOOL);
-
-            // return retired layouts?
-            if (!$isRetired && $campaignItem['retired'])
+            // Check to see if we are the owner
+            if ($campaign->ownerId == $this->userid)
                 continue;
 
-            $auth = $this->CampaignAuth($campaignItem['campaignid'], true);
-
-            if ($auth->view)
-            {
-                $campaignItem['view'] = (int) $auth->view;
-                $campaignItem['edit'] = (int) $auth->edit;
-                $campaignItem['del'] = (int) $auth->del;
-                $campaignItem['modifypermissions'] = (int) $auth->modifyPermissions;
-
-                $campaigns[] = $campaignItem;
-            }
+            // Check we are viewable
+            if (!$this->checkViewable($campaign))
+                unset($campaigns[$key]);
         }
 
         return $campaigns;
@@ -1640,8 +1261,8 @@ class User {
     
     /**
      * Get a list of transitions
-     * @param string in/out
-     * @param string transition code
+     * @param string $type in/out
+     * @param string $code transition code
      * @return boolean
      */
     public function TransitionAuth($type = '', $code = '')
@@ -1817,4 +1438,3 @@ class User {
         Session::Set($key, $value);
     }
 }
-?>

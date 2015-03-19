@@ -94,6 +94,8 @@ class CampaignFactory
             }
         }
 
+        $sql .= 'GROUP BY campaign.CampaignID, Campaign, IsLayoutSpecific, `campaign`.userId ';
+
         // Sorting?
         if (is_array($sortOrder))
             $sql .= 'ORDER BY ' . implode(',', $sortOrder);
@@ -108,7 +110,7 @@ class CampaignFactory
             $campaign->campaignId = \Kit::ValidateParam($row['CampaignID'], _INT);
             $campaign->campaign = \Kit::ValidateParam($row['Campaign'], _STRING);
             $campaign->numberLayouts = \Kit::ValidateParam($row['NumLayouts'], _INT);
-            $campaign->isLayout = \Kit::ValidateParam($row['IsLayoutSpecific'], _INT);
+            $campaign->isLayout = (\Kit::ValidateParam($row['IsLayoutSpecific'], _INT) == 1);
             $campaign->retired = \Kit::ValidateParam($row['Retired'], _INT);
             $campaign->ownerId = \Kit::ValidateParam($row['userId'], _INT);
 

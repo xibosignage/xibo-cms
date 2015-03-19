@@ -43,7 +43,6 @@ class Module
 
     public function save()
     {
-        // TODO: Implement Save
         $dbh = \PDOConnect::init();
 
         $sth = $dbh->prepare('UPDATE module SET settings = :settings WHERE moduleid = :moduleId');

@@ -55,17 +55,10 @@ class campaignDAO extends baseDAO
      */
     public function Grid()
     {
-        $db =& $this->db;
         $user =& $this->user;
         $response = new ResponseManager();
 
         $campaigns = $user->CampaignList();
-
-        if (!is_array($campaigns))
-        {
-            trigger_error($db->error());
-            trigger_error(__('Unable to get list of campaigns'), E_USER_ERROR);
-        }
 
         $cols = array(
                 array('name' => 'campaign', 'title' => __('Name')),
@@ -75,10 +68,16 @@ class campaignDAO extends baseDAO
         
         $rows = array();
 
-        foreach($campaigns as $row)
-        {
-            if ($row['islayoutspecific'] == 1)
+        foreach($campaigns as $campaign) {
+            /* @var \Xibo\Entity\Campaign $campaign */
+
+            if ($campaign->isLayout)
                 continue;
+
+            $row = array();
+            $row['campaignid'] = $campaign->campaignId;
+            $row['campaign'] = $campaign->campaign;
+            $row['numlayouts'] = $campaign->numberLayouts;
 
             // Schedule Now
             $row['buttons'][] = array(
@@ -88,8 +87,7 @@ class campaignDAO extends baseDAO
                 );
             
             // Buttons based on permissions
-            if ($row['edit'] == 1)
-            {
+            if ($this->user->checkEditable($campaign)) {
                 // Assign Layouts
                 $row['buttons'][] = array(
                         'id' => 'campaign_button_layouts',
@@ -105,8 +103,7 @@ class campaignDAO extends baseDAO
                     );
             }
 
-            if ($row['del'] == 1)
-            {
+            if ($this->user->checkDeleteable($campaign)) {
                 // Delete Campaign
                 $row['buttons'][] = array(
                         'id' => 'campaign_button_delete',
@@ -115,8 +112,7 @@ class campaignDAO extends baseDAO
                     );
             }
 
-            if ($row['modifypermissions'] == 1)
-            {
+            if ($this->user->checkPermissionsModifyable($campaign)) {
                 // Permissions for Campaign
                 $row['buttons'][] = array(
                         'id' => 'campaign_button_delete',

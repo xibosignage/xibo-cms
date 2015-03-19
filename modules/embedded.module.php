@@ -285,7 +285,7 @@ function EmbedInit()
                 continue;
 
             // Check that this mediaId exists and get some information about it
-            $entry = Media::Entries(null, array('mediaId' => $mediaId));
+            $entry = \Xibo\Factory\MediaFactory::query(null,array('mediaId' => $mediaId));
 
             if (count($entry) <= 0)
                 continue;

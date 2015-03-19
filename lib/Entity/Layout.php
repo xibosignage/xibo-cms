@@ -232,6 +232,10 @@ class Layout
         \PDOConnect::update('DELETE FROM layout WHERE layoutid = :layoutid', array('layoutid' => $this->layoutId));
     }
 
+    /**
+     * Validate this layout
+     * @throws NotFoundException
+     */
     public function validate()
     {
         // We must provide either a template or a resolution
@@ -282,8 +286,8 @@ class Layout
     {
         \Debug::Audit('Adding Layout ' . $this->layout);
 
-        $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, status, width, height, schemaVersion, backgroundImageId, backgroundColor, backgroundzIndex)';
-        $sql .= ' VALUES (:layout, :description, :userid, :createddt, :modifieddt, :status, :width, :height, 3, :backgroundImageId, :backgroundColor, :backgroundzIndex)';
+        $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, status, width, height, schemaVersion, backgroundImageId, backgroundColor, backgroundzIndex)
+                  VALUES (:layout, :description, :userid, :createddt, :modifieddt, :status, :width, :height, 3, :backgroundImageId, :backgroundColor, :backgroundzIndex)';
 
         $time = \DateManager::getSystemDate(null, 'Y-m-d h:i:s');
 
@@ -318,8 +322,9 @@ class Layout
         \Debug::Audit('Editing Layout ' . $this->layout . '. Id = ' . $this->layoutId);
 
         $sql = '
-UPDATE layout SET layout = :layout, description = :description, modifiedDT = :modifieddt, retired = :retired, width = :width, height = :height, backgroundImageId = :backgroundImageId, backgroundColor = :backgroundColor, backgroundzIndex = :backgroundzIndex, xml = NULL
-WHERE layoutID = :layoutid';
+        UPDATE layout SET layout = :layout, description = :description, modifiedDT = :modifieddt, retired = :retired, width = :width, height = :height, backgroundImageId = :backgroundImageId, backgroundColor = :backgroundColor, backgroundzIndex = :backgroundzIndex, xml = NULL
+         WHERE layoutID = :layoutid
+        ';
 
         $time = \DateManager::getSystemDate(null, 'Y-m-d h:i:s');
 

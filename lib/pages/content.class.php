@@ -142,7 +142,6 @@ class contentDAO extends baseDAO {
 	 */
 	function LibraryGrid() 
 	{
-		$db =& $this->db;
 		$user =& $this->user;
 		$response = new ResponseManager();
 
@@ -188,51 +187,60 @@ class contentDAO extends baseDAO {
 		$rows = array();
 
 		// Add some additional row content
-		foreach ($mediaList as $row) {
+		foreach ($mediaList as $media) {
+            /* @var \Xibo\Entity\Media $media */
+            $row = array();
 
-			$row['duration_text'] = ($filter_duration_in_seconds == 1) ? $row['duration'] : sec2hms($row['duration']);
-			$row['owner'] = $user->getNameFromID($row['ownerid']);
-			$row['permissions'] = $group = $this->GroupsForMedia($row['mediaid']);
-			$row['revised'] = ($row['parentid'] != 0) ? 1 : 0;
+            $row['mediaid'] = $media->mediaId;
+            $row['media'] = $media->name;
+            $row['filename'] = $media->fileName;
+            $row['mediatype'] = $media->mediaType;
+            $row['duration'] = $media->duration;
+            $row['tags'] = $media->tags;
+
+			$row['duration_text'] = ($filter_duration_in_seconds == 1) ? $media->duration : sec2hms($media->duration);
+			$row['owner'] = $media->owner;
+			$row['permissions'] = $media->groupsWithPermissions;
+			$row['revised'] = ($media->parentId != 0) ? 1 : 0;
 
 			// Display a friendly file size
-			$row['size_text'] = Kit::FormatBytes($row['filesize']);
+			$row['size_text'] = Kit::FormatBytes($media->fileSize);
 
             // Thumbnail URL
             $row['thumbnail'] = '';
 
             if ($row['mediatype'] == 'image') {
-                $row['thumbnail'] = '<a class="img-replace" data-toggle="lightbox" data-type="image" data-img-src="index.php?p=content&q=getFile&mediaid=' . $row['mediaid'] . '&width=100&height=100&dynamic=true&thumb=true" href="index.php?p=content&q=getFile&mediaid=' . $row['mediaid'] . '"><i class="fa fa-file-image-o"></i></a>';
+                $row['thumbnail'] = '<a class="img-replace" data-toggle="lightbox" data-type="image" data-img-src="index.php?p=content&q=getFile&mediaid=' . $media->mediaId . '&width=100&height=100&dynamic=true&thumb=true" href="index.php?p=content&q=getFile&mediaid=' . $media->mediaId . '"><i class="fa fa-file-image-o"></i></a>';
             }
 
 			$row['buttons'] = array();
 
 			// Buttons
-            if ($row['edit'] == 1) {
+            if ($user->checkEditable($media)) {
                 
                 // Edit
                 $row['buttons'][] = array(
                         'id' => 'content_button_edit',
-                        'url' => 'index.php?p=content&q=editForm&mediaid=' . $row['mediaid'],
+                        'url' => 'index.php?p=content&q=editForm&mediaid=' . $media->mediaId,
                         'text' => __('Edit')
                     );
             }
             
-            if ($row['del'] == 1) {
+            if ($user->checkDeleteable($media)) {
 				// Delete
                 $row['buttons'][] = array(
                         'id' => 'content_button_delete',
-                        'url' => 'index.php?p=content&q=deleteForm&mediaid=' . $row['mediaid'],
+                        'url' => 'index.php?p=content&q=deleteForm&mediaid=' . $media->mediaId,
                         'text' => __('Delete')
                     );
             }
 
-            if ($row['modifyPermissions'] == 1) {
+            if ($user->checkPermissionsModifyable($media)) {
 
         		// Permissions
                 $row['buttons'][] = array(
                         'id' => 'content_button_permissions',
-                        'url' => 'index.php?p=content&q=permissionsForm&mediaid=' . $row['mediaid'],
+                        'url' => 'index.php?p=user&q=permissionsForm&entity=Media&objectId=' . $media->mediaId,
                         'text' => __('Permissions')
                     );
             }
@@ -241,7 +249,7 @@ class contentDAO extends baseDAO {
             $row['buttons'][] = array(
                     'id' => 'content_button_download',
                     'linkType' => '_self',
-                    'url' => 'index.php?p=content&q=getFile&download=1&downloadFromLibrary=1&mediaid=' . $row['mediaid'],
+                    'url' => 'index.php?p=content&q=getFile&download=1&downloadFromLibrary=1&mediaid=' . $media->mediaId,
                     'text' => __('Download')
                 );
 
@@ -378,16 +386,15 @@ class contentDAO extends baseDAO {
         $response = new ResponseManager();
 
         // Get the MediaId
-        $mediaId = Kit::GetParam('mediaId', _GET, _INT);
+        $media = \Xibo\Factory\MediaFactory::getById(Kit::GetParam('mediaId', _GET, _INT));
 
         // Can this user delete?
-        $auth = $this->user->MediaAuth($mediaId, true);
-        if (!$auth->del)
+        if (!$this->user->checkDeleteable($media))
             throw new Exception(__('You do not have permission to delete this media.'));
 
         Theme::Set('form_id', 'MediaDeleteForm');
         Theme::Set('form_action', 'index.php?p=content&q=delete');
-        Theme::Set('form_meta', '<input type="hidden" name="mediaId" value="' . $mediaId . '">');
+        Theme::Set('form_meta', '<input type="hidden" name="mediaId" value="' . $media->mediaId . '">');
         $formFields = array(
             FormManager::AddMessage(__('Are you sure you want to remove this Media?')),
             FormManager::AddMessage(__('This action cannot be undone.')),
@@ -411,15 +418,14 @@ class contentDAO extends baseDAO {
         $response = new ResponseManager();
 
         // Get the MediaId
-        $mediaId = Kit::GetParam('mediaId', _GET, _INT);
+        $media = \Xibo\Factory\MediaFactory::getById(Kit::GetParam('mediaId', _GET, _INT));
 
         // Can this user delete?
-        $auth = $this->user->MediaAuth($mediaId, true);
-        if (!$auth->del)
+        if (!$this->user->checkDeleteable($media))
             throw new Exception(__('You do not have permission to delete this media.'));
 
-        $media = new Media();
-        $media->Delete($mediaId);
+        // Delete
+        $media->Delete();
 
         $response->SetFormSubmitResponse(__('The Media has been Deleted'));
         $response->Respond();
@@ -697,43 +703,6 @@ HTML;
         Debug::LogEntry("audit", $complete_page, "FileUpload");
         Debug::LogEntry("audit", "[OUT]", "FileUpload");
         exit;
-    }
-
-    /**
-     * Get a list of group names for a layout
-     * @param <type> $layoutId
-     * @return <type>
-     */
-    private function GroupsForMedia($mediaId)
-    {
-        $db =& $this->db;
-
-        $SQL = '';
-        $SQL .= 'SELECT `group`.Group ';
-        $SQL .= '  FROM `group` ';
-        $SQL .= '   INNER JOIN lkmediagroup ';
-        $SQL .= '   ON `group`.GroupID = lkmediagroup.GroupID ';
-        $SQL .= ' WHERE lkmediagroup.MediaID = %d ';
-
-        $SQL = sprintf($SQL, $mediaId);
-
-        if (!$results = $db->query($SQL))
-        {
-            trigger_error($db->error());
-            trigger_error(__('Unable to get group information for media'), E_USER_ERROR);
-        }
-
-        $groups = '';
-
-        while ($row = $db->get_assoc_row($results))
-        {
-            $groups .= $row['Group'] . ', ';
-        }
-
-        $groups = trim($groups);
-        $groups = trim($groups, ',');
-
-        return $groups;
     }
 
     /**

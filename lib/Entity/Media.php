@@ -41,6 +41,10 @@ class Media
     public $moduleSystemFile;
     public $expires;
 
+    // Read only properties
+    public $owner;
+    public $groupsWithPermissions;
+
     public function getId()
     {
         return $this->mediaId;
@@ -49,5 +53,12 @@ class Media
     public function getOwnerId()
     {
         return $this->ownerId;
+    }
+
+    public function Delete()
+    {
+        $media = new \Media();
+        if (!$media->Delete($this->mediaId))
+            throw new \Exception($media->GetErrorMessage());
     }
 }

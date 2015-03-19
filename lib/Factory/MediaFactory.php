@@ -67,10 +67,23 @@ class MediaFactory
         else
             $sql .= " (SELECT GROUP_CONCAT(DISTINCT tag) FROM tag INNER JOIN lktagmedia ON lktagmedia.tagId = tag.tagId WHERE lktagmedia.mediaId = media.mediaID GROUP BY lktagmedia.mediaId) AS tags, ";
 
+        $sql .= "        `user`.UserName AS owner, ";
+        $sql .= "     (SELECT GROUP_CONCAT(DISTINCT `group`.group)
+                              FROM `permission`
+                                INNER JOIN `permissionentity`
+                                ON `permissionentity`.entityId = permission.entityId
+                                INNER JOIN `group`
+                                ON `group`.groupId = `permission`.groupId
+                             WHERE entity = :entity
+                                AND objectId = media.mediaId
+                            ) AS groupsWithPermissions, ";
+        $params['entity'] = 'Xibo\\Entity\\Media';
+
         $sql .= "   media.originalFileName ";
         $sql .= " FROM media ";
         $sql .= "   LEFT OUTER JOIN media parentmedia ";
         $sql .= "   ON parentmedia.MediaID = media.MediaID ";
+        $sql .= "   INNER JOIN `user` ON `user`.userId = `media`.userId ";
 
         if (\Kit::GetParam('showTags', $filterBy, _INT) == 1) {
             $sql .= " LEFT OUTER JOIN lktagmedia ON lktagmedia.mediaId = media.mediaId ";
@@ -154,6 +167,8 @@ class MediaFactory
             $media->valid = \Kit::ValidateParam($row['valid'], _INT);
             $media->moduleSystemFile = \Kit::ValidateParam($row['moduleSystemFile'], _INT);
             $media->expires = \Kit::ValidateParam($row['expires'], _INT);
+            $media->owner = \Kit::ValidateParam($row['owner'], _STRING);
+            $media->groupsWithPermissions = \Kit::ValidateParam($row['groupsWithPermissions'], _STRING);
 
             $entries[] = $media;
         }

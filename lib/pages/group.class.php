@@ -168,7 +168,7 @@ END;
 			$row['usergroup'] = $group;
 
 			// we only want to show certain buttons, depending on the user logged in
-			if ($user->GetUserTypeID() == 1) 
+			if ($user->getUserTypeId() == 1)
 			{
 				// Edit
 	            $row['buttons'][] = array(
