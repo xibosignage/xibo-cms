@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2012 Daniel Garner
+ * Copyright (C) 2012-15 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -20,31 +20,15 @@
  */ 
 class shellcommand extends Module
 {
-	
-    public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '', $lkid = '')
-    {
-        // Must set the type of the class
-        $this->type = 'shellcommand';
-
-        // Must call the parent class
-        parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);
-    }
-	
-    /**
+	/**
      * Return the Add Form as HTML
-     * @return
      */
     public function AddForm()
     {
-        $this->response = new ResponseManager();
-        $db =& $this->db;
-        $user =& $this->user;
-        $layoutid = $this->layoutid;
-        $regionid = $this->regionid;
-        
-        Theme::Set('form_id', 'ModuleForm');
-        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=AddMedia');
-        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" />');
+        $response = new ResponseManager();
+
+        // Configure form
+        $this->configureForm('AddMedia');
         
         $formFields = array();
         
@@ -56,49 +40,27 @@ class shellcommand extends Module
 
         Theme::Set('form_fields', $formFields);
 
-        if ($this->showRegionOptions)
-        {
-            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
-        }
-        else
-        {
-            $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        }
+        $response->html = Theme::RenderReturn('form_render');
+        $this->configureFormButtons($response);
+        $response->dialogTitle = __('Add Shell Command');
 
-        $this->response->html = Theme::RenderReturn('form_render');
-        $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
-        $this->response->dialogTitle = __('Add Shell Command');
-        $this->response->dialogSize 	= true;
-        $this->response->dialogWidth 	= '450px';
-        $this->response->dialogHeight 	= '250px';
-
-        return $this->response;
+        return $response;
     }
 	
     /**
      * Return the Edit Form as HTML
-     * @return
      */
     public function EditForm()
     {
-        $this->response = new ResponseManager();
-        $db =& $this->db;
-        $layoutid = $this->layoutid;
-        $regionid = $this->regionid;
-        $mediaid = $this->mediaid;
+        $response = new ResponseManager();
 
-        // Permissions
+        // Edit calls are the same as add calls, except you will to check the user has permissions to do the edit
         if (!$this->auth->edit)
-        {
-            $this->response->SetError('You do not have permission to edit this assignment.');
-            $this->response->keepOpen = true;
-            return $this->response;
-        }
+            throw new Exception(__('You do not have permission to edit this widget.'));
 
-        Theme::Set('form_id', 'ModuleForm');
-        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=EditMedia');
-        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" /><input type="hidden" id="mediaid" name="mediaid" value="' . $mediaid . '">');
-        
+        // Configure the form
+        $this->configureForm('EditMedia');
+
         $formFields = array();
         
         $formFields[] = FormManager::AddText('windowsCommand', __('Windows Command'), htmlentities(urldecode($this->GetOption('windowsCommand'))), 
@@ -109,71 +71,39 @@ class shellcommand extends Module
 
         Theme::Set('form_fields', $formFields);
         
-        if ($this->showRegionOptions)
-        {
-            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
-        }
-        else
-        {
-            $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        }
+        $response->html = Theme::RenderReturn('form_render');
+        $this->configureFormButtons($response);
+        $response->dialogTitle = __('Edit Shell Command');
 
-        $this->response->html = Theme::RenderReturn('form_render');
-        $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
-        $this->response->dialogTitle = __('Edit Shell Command');
-        $this->response->dialogSize 	= true;
-        $this->response->dialogWidth 	= '450px';
-        $this->response->dialogHeight 	= '250px';
-
-        return $this->response;
+        return $response;
     }
 	
     /**
      * Add Media to the Database
-     * @return
      */
     public function AddMedia()
     {
-        $this->response = new ResponseManager();
-        $db =& $this->db;
+        $response = new ResponseManager();
 
-        $layoutid = $this->layoutid;
-        $regionid = $this->regionid;
-        $mediaid = $this->mediaid;
-
-        // Required Attributes
-        $this->mediaid = md5(uniqid());
-        $this->duration = 1;
-        
         $windowsCommand = Kit::GetParam('windowsCommand', _POST, _STRING);
         $linuxCommand = Kit::GetParam('linuxCommand', _POST, _STRING);
 
         if ($windowsCommand == '' && $linuxCommand == '')
-        {
-            $this->response->SetError('You must enter a command');
-            $this->response->keepOpen = true;
-            return $this->response;
-        }
+            throw new InvalidArgumentException(__('You must enter a command'));
 
         // Any Options (we need to encode shell commands, as they sit on the options rather than the raw
+        $this->setDuration(1);
         $this->SetOption('windowsCommand', urlencode($windowsCommand));
         $this->SetOption('linuxCommand', urlencode($linuxCommand));
 
-        // Should have built the media object entirely by this time
-        // This saves the Media Object to the Region
-        $this->UpdateRegion();
+        // Save the widget
+        $this->saveWidget();
 
-        // Set this as the session information
-        setSession('content', 'type', 'shellcommand');
+        // Load form
+        $response->loadForm = true;
+        $response->loadFormUri = $this->getTimelineLink();
 
-        if ($this->showRegionOptions)
-        {
-            // We want to load a new form
-            $this->response->loadForm = true;
-            $this->response->loadFormUri = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
-        }
-
-        return $this->response;
+        return $response;
     }
 
     /**
@@ -182,55 +112,39 @@ class shellcommand extends Module
      */
     public function EditMedia()
     {
-        $this->response = new ResponseManager();
-        $db =& $this->db;
+        $response = new ResponseManager();
 
-        $layoutid = $this->layoutid;
-        $regionid = $this->regionid;
-        $mediaid = $this->mediaid;
-
+        // Edit calls are the same as add calls, except you will to check the user has permissions to do the edit
         if (!$this->auth->edit)
-        {
-            $this->response->SetError('You do not have permission to edit this assignment.');
-            $this->response->keepOpen = false;
-            return $this->response;
-        }
+            throw new Exception(__('You do not have permission to edit this widget.'));
+
+        // Configure the form
+        $this->configureForm('EditMedia');
 
         $windowsCommand = Kit::GetParam('windowsCommand', _POST, _STRING);
         $linuxCommand = Kit::GetParam('linuxCommand', _POST, _STRING);
 
         if ($windowsCommand == '' && $linuxCommand == '')
-        {
-            $this->response->SetError('You must enter a command');
-            $this->response->keepOpen = true;
-            return $this->response;
-        }
+            throw new InvalidArgumentException(__('You must enter a command'));
 
         // Any Options
-        $this->duration = 1;
+        $this->setDuration(1);
         $this->SetOption('windowsCommand', urlencode($windowsCommand));
         $this->SetOption('linuxCommand', urlencode($linuxCommand));
 
-        // Should have built the media object entirely by this time
-        // This saves the Media Object to the Region
-        $this->UpdateRegion();
+        // Save the widget
+        $this->saveWidget();
 
-        // Set this as the session information
-        setSession('content', 'type', 'shellcommand');
+        // Load an edit form
+        $response->loadForm = true;
+        $response->loadFormUri = $this->getTimelineLink();
 
-        if ($this->showRegionOptions)
-        {
-            // We want to load a new form
-            $this->response->loadForm = true;
-            $this->response->loadFormUri = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
-        }
-
-        return $this->response;
+        return $response;
     }
 
     public function Preview($width, $height, $scaleOverride = 0)
     {
-        if ($this->previewEnabled == 0)
+        if ($this->module->previewEnabled == 0)
             return parent::Preview ($width, $height);
         
         $msgWindows = __('Windows Command');
@@ -247,9 +161,9 @@ class shellcommand extends Module
     {
         return $this->Preview(0,0);
     }
-    
-    
-    public function IsValid() {
+
+    public function IsValid()
+    {
         // Client dependant
         return 2;
     }

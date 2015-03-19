@@ -149,7 +149,14 @@ class PageManager
             {
                 // Call the method
                 $function = $this->q;
-                $reloadLocation = $this->thePage->$function();
+
+                try {
+                    $reloadLocation = $this->thePage->$function();
+                }
+                catch (Exception $e) {
+                    Debug::Error($e->getMessage() . '. ' . $e->getTraceAsString());
+                    trigger_error(($e->getMessage() == '') ? __('Sorry, there has been an unexpected error. Please check your error log.') : $e->getMessage(), E_USER_ERROR);
+                }
             }
             else 
                 trigger_error($this->p . ' does not support the function: ' . $this->q, E_USER_ERROR);

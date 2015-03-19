@@ -731,5 +731,153 @@ class userDAO extends baseDAO {
         $response->SetFormSubmitResponse(__('Password Changed'));
         $response->Respond();
     }
+
+    /**
+     * Show the Permissions for this Campaign
+     */
+    public function permissionsForm()
+    {
+        $response = new ResponseManager();
+
+        $entity = Kit::GetParam('entity', _GET, _STRING);
+        if ($entity == '')
+            throw new InvalidArgumentException(__('Permissions form requested without an entity'));
+
+        // Check to see that we can resolve the entity
+        $entity = 'Xibo\\Factory\\' . $entity . 'Factory';
+
+        if (!class_exists($entity) || !method_exists($entity, 'getById'))
+            throw new InvalidArgumentException(__('Permissions form requested with an invalid entity'));
+
+        // Get the object
+        $objectId = Kit::GetParam('objectId', _GET, _INT);
+        if ($objectId == 0)
+            throw new InvalidArgumentException(__('Permissions form requested without an object'));
+
+        // Load our object
+        $object = $entity::getById($objectId);
+
+        // Does this user have permission to edit the permissions?!
+        if (!$this->user->checkPermissionsModifyable($object))
+            throw new Exception(__('You do not have permission to edit these permissions.'));
+
+        // Set some information about the form
+        Theme::Set('form_id', 'PermissionsForm');
+        Theme::Set('form_action', 'index.php?p=user&q=permissions');
+        Theme::Set('form_meta', '<input type="hidden" name="objectId" value="' . $objectId . '" /><input type="hidden" name="entity" value="' . Kit::GetParam('entity', _GET, _STRING) . '" />');
+
+        // List of all Groups with a view / edit / delete check box
+        $permissions = \Xibo\Factory\PermissionFactory::getAllByObjectId(get_class($object), $objectId);
+
+        $checkboxes = array();
+
+        foreach ($permissions as $row) {
+            /* @var \Xibo\Entity\Permission $row */
+            $groupId = $row->groupId;
+            $rowClass = ($row->isUser == 0) ? 'strong_text' : '';
+
+            $checkbox = array(
+                'id' => $groupId,
+                'name' => $row->group,
+                'class' => $rowClass,
+                'value_view' => $groupId . '_view',
+                'value_view_checked' => (($row->view == 1) ? 'checked' : ''),
+                'value_edit' => $groupId . '_edit',
+                'value_edit_checked' => (($row->edit == 1) ? 'checked' : ''),
+                'value_del' => $groupId . '_del',
+                'value_del_checked' => (($row->delete == 1) ? 'checked' : ''),
+            );
+
+            $checkboxes[] = $checkbox;
+        }
+
+        $formFields = array();
+        $formFields[] = FormManager::AddPermissions('groupids[]', $checkboxes);
+        $formFields[] = FormManager::AddCheckbox('cascade',
+            __('Cascade permissions to all items underneath this one.'), 0,
+            __('For example, if this is a Layout then update the permissions on all Regions, Playlists and Widgets.'),
+            'r');
+
+        Theme::Set('form_fields', $formFields);
+
+        $form = Theme::RenderReturn('form_render');
+
+        $response->SetFormRequestResponse($form, __('Permissions'), '350px', '500px');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Campaign', 'Permissions') . '")');
+        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        $response->AddButton(__('Save'), '$("#PermissionsForm").submit()');
+        $response->Respond();
+    }
+
+    /**
+     * Permissions form
+     * Can be called from anywhere, must provide an entity name to set the permissions against.
+     */
+    public function permissions()
+    {
+        $response = new ResponseManager();
+
+        // Check the token
+        if (!Kit::CheckToken())
+            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
+
+        $entity = Kit::GetParam('entity', _POST, _STRING);
+        if ($entity == '')
+            throw new InvalidArgumentException(__('Permissions form requested without an entity'));
+
+        // Check to see that we can resolve the entity
+        $entity = 'Xibo\\Factory\\' . $entity . 'Factory';
+
+        if (!class_exists($entity) || !method_exists($entity, 'getById'))
+            throw new InvalidArgumentException(__('Permissions form requested with an invalid entity'));
+
+        // Get the object
+        $objectId = Kit::GetParam('objectId', _POST, _INT);
+        if ($objectId == 0)
+            throw new InvalidArgumentException(__('Permissions form requested without an object'));
+
+        // Load our object
+        $object = $entity::getById($objectId);
+
+        // Does this user have permission to edit the permissions?!
+        if (!$this->user->checkPermissionsModifyable($object))
+            throw new Exception(__('You do not have permission to edit these permissions.'));
+
+        // Get all current permissions
+        $permissions = \Xibo\Factory\PermissionFactory::getAllByObjectId(get_class($object), $objectId);
+
+        // Get the provided permissions
+        $groupIds = Kit::GetParam('groupids', _POST, _ARRAY);
+        $newPermissions = array();
+        array_map(function ($string) use (&$newPermissions) { $array = explode('_', $string); return $newPermissions[$array[0]][$array[1]] = 1; }, $groupIds);
+
+        Debug::Audit(var_export($newPermissions, true));
+
+        // List of groupIds with view, edit and del assignments
+        foreach ($permissions as $row) {
+            /* @var \Xibo\Entity\Permission $row */
+
+            // Check and see what permissions we have been provided for this selection
+            if (array_key_exists($row->groupId, $newPermissions)) {
+                $row->view = (array_key_exists('view', $newPermissions[$row->groupId]) ? 1 : 0);
+                $row->edit = (array_key_exists('edit', $newPermissions[$row->groupId]) ? 1 : 0);
+                $row->delete = (array_key_exists('del', $newPermissions[$row->groupId]) ? 1 : 0);
+                $row->save();
+            }
+            else {
+                $row->delete();
+            }
+        }
+
+        $cascade = Kit::GetParam('cascade', _POST, _CHECKBOX);
+
+        if ($cascade) {
+            Debug::Audit('Permissions to push down: ' . var_export($newPermissions, true));
+
+            // TODO: Cascade permissions
+        }
+
+        $response->SetFormSubmitResponse(__('Permissions Changed'));
+        $response->Respond();
+    }
 }
-?>

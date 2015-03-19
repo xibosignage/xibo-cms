@@ -35,8 +35,8 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 ?>
 <div class="pull-right">
 	<select id="layoutJumpList" data-live-search="true">
-		<?php foreach(Theme::Get('layouts') as $layout) { ?>
-		<option value="<?php echo $layout['layoutid']; ?>"<?php echo ($layout['layoutid'] == Theme::Get('layoutId') ? ' selected' : ''); ?>><?php echo $layout['layout']; ?></option> 
+		<?php foreach(Theme::Get('layouts') as $layout) { /* @var \Xibo\Entity\Layout $layout */ ?>
+		<option value="<?php echo $layout->layoutId; ?>"<?php echo ($layout->layoutId == Theme::Get('layoutId') ? ' selected' : ''); ?>><?php echo $layout->layout; ?></option>
 		<?php } ?>
 	</select>
 </div>
@@ -49,10 +49,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 			</button>
 			<ul class="dropdown-menu">
 				<li><a class="XiboAjaxSubmit" href="<?php echo Theme::Get('layout_form_addregion_url'); ?>" title="<?php echo Theme::Translate('Add Region'); ?>"><span><?php echo Theme::Translate('Add Region'); ?></span></a></li>
-				<?php if (Theme::Get('layoutVersion') >= 2) { ?>
-				<li><a class="XiboFormButton" href="<?php echo Theme::Get('layout_form_edit_background_url'); ?>" title="<?php echo Theme::Translate('Background'); ?>"><span><?php echo Theme::Translate('Background'); ?></span></a></li>
-				<?php } ?>
-				<li><a class="XiboFormButton" href="<?php echo Theme::Get('layout_form_edit_url'); ?>" title="<?php echo Theme::Translate('Edit the Layout Properties'); ?>"><span><?php echo Theme::Translate('Properties'); ?></span></a></li>
+				<li><a class="XiboFormButton" href="<?php echo Theme::Get('layout_form_edit_url'); ?>" title="<?php echo Theme::Translate('Edit the Layout Properties'); ?>"><span><?php echo Theme::Translate('Background Properties'); ?></span></a></li>
 				<li class="divider"></li>
                 <li><a href="<?php echo Theme::Get('layout_form_preview_url'); ?>" title="<?php echo Theme::Translate('Preview Layout'); ?>" target="_blank"><span><?php echo Theme::Translate('Preview Layout'); ?></span></a></li>
 				<li><a class="XiboFormButton" href="<?php echo Theme::Get('layout_form_schedulenow_url'); ?>" title="<?php echo Theme::Translate('Schedule Now'); ?>"><span><?php echo Theme::Translate('Schedule Now'); ?></span></a></li>

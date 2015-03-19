@@ -93,8 +93,6 @@ class Debug
         if (in_array($errno, $user_errors_halt)) 
         {
             // We have a halt error
-            Debug::LogEntry('audit', 'Creating a Response Manager to deal with the HALT Error.');
-
             $response = new ResponseManager();
             
             $response->SetError($errmsg);

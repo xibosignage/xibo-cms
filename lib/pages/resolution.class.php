@@ -91,7 +91,7 @@ class resolutionDAO extends baseDAO
      */
     function ResolutionGrid()
     {
-        $user 	=& $this->user;
+        $user =& $this->user;
         $response = new ResponseManager();
 
         setSession('resolution', 'ResolutionFilter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
@@ -99,22 +99,26 @@ class resolutionDAO extends baseDAO
         $filterEnabled = Kit::GetParam('filterEnabled', _POST, _INT);
         setSession('resolution', 'filterEnabled', $filterEnabled);
 
-        $rows = $user->ResolutionList(array('resolution'), array('enabled' => $filterEnabled));
-        $resolutions = array();
+        $resolutions = $user->ResolutionList(array('resolution'), array('enabled' => $filterEnabled));
+        $rows = array();
 
         $cols = array(
                 array('name' => 'resolutionid', 'title' => __('ID')),
                 array('name' => 'resolution', 'title' => __('Resolution')),
                 array('name' => 'intended_width', 'title' => __('Width')),
                 array('name' => 'intended_height', 'title' => __('Height')),
-                array('name' => 'width', 'title' => __('Designer Width')),
-                array('name' => 'height', 'title' => __('Designer Height')),
-                array('name' => 'version', 'title' => __('Version')),
                 array('name' => 'enabled', 'title' => __('Enabled?'), 'icons' => true)
             );
         Theme::Set('table_cols', $cols);
 
-        foreach($rows as $row) {
+        foreach ($resolutions as $resolution) {
+            /* @var \Xibo\Entity\Resolution $resolution */
+            $row = array();
+            $row['resolutionid'] = $resolution->resolutionId;
+            $row['resolution'] = $resolution->resolution;
+            $row['intended_width'] = $resolution->width;
+            $row['intended_height'] = $resolution->height;
+            $row['enabled'] = ($resolution->enabled) ? 1 : 0;
 
             // Edit Button
             $row['buttons'][] = array(
@@ -131,10 +135,10 @@ class resolutionDAO extends baseDAO
                 );
 
             // Add to the rows objects
-            $resolutions[] = $row;
+            $rows[] = $row;
         }
 
-        Theme::Set('table_rows', $resolutions);
+        Theme::Set('table_rows', $rows);
 
         $response->SetGridResponse(Theme::RenderReturn('table_render'));
         $response->Respond();
@@ -145,8 +149,6 @@ class resolutionDAO extends baseDAO
      */
     function AddForm()
     {
-        $db 	=& $this->db;
-        $user 	=& $this->user;
         $response = new ResponseManager();
 
         Theme::Set('form_id', 'AddForm');
@@ -176,46 +178,34 @@ class resolutionDAO extends baseDAO
      */
     function EditForm()
     {
-        $db 	=& $this->db;
-        $user 	=& $this->user;
         $response = new ResponseManager();
 
-        $resolutionID   = Kit::GetParam('resolutionid', _GET, _INT);
+        $resolution = \Xibo\Factory\ResolutionFactory::getById(Kit::GetParam('resolutionid', _GET, _INT));
 
-        $SQL = sprintf("SELECT resolution, width, height, intended_width, intended_height, enabled FROM resolution WHERE resolutionID = %d", $resolutionID);
-
-        if (!$result = $db->query($SQL))
-        {
-            trigger_error($db->error());
-            trigger_error(__('Unable to edit this resolution'), E_USER_ERROR);
-        }
-
-        if ($db->num_rows($result) == 0)
-            trigger_error(__('Incorrect resolution id'), E_USER_ERROR);
-
-        $row = $db->get_assoc_row($result);
+        if (!$this->user->checkEditable($resolution))
+            trigger_error(__('Access Denied'));
 
         $formFields = array();
-        $formFields[] = FormManager::AddText('resolution', __('Resolution'), Kit::ValidateParam($row['resolution'], _STRING), 
+        $formFields[] = FormManager::AddText('resolution', __('Resolution'), $resolution->resolution,
             __('A name for this Resolution'), 'r', 'required');
 
-        $formFields[] = FormManager::AddNumber('width', __('Width'), Kit::ValidateParam($row['intended_width'], _INT), 
+        $formFields[] = FormManager::AddNumber('width', __('Width'),$resolution->width,
             __('The Width for this Resolution'), 'w', 'required');
 
-        $formFields[] = FormManager::AddNumber('height', __('Height'), Kit::ValidateParam($row['intended_height'], _INT), 
+        $formFields[] = FormManager::AddNumber('height', __('Height'), $resolution->height,
             __('The Height for this Resolution'), 'h', 'required');
 
-        $formFields[] = FormManager::AddCheckbox('enabled', __('Enable?'), Kit::ValidateParam($row['enabled'], _INT), 
+        $formFields[] = FormManager::AddCheckbox('enabled', __('Enable?'), $resolution->enabled,
             __('Is the Resolution enabled for use?'), 'e');
         
         Theme::Set('form_fields', $formFields);
 
         Theme::Set('form_id', 'ResolutionForm');
         Theme::Set('form_action', 'index.php?p=resolution&q=Edit');
-        Theme::Set('form_meta', '<input type="hidden" name="resolutionid" value="' . $resolutionID . '" >');
+        Theme::Set('form_meta', '<input type="hidden" name="resolutionid" value="' . $resolution->resolutionId . '" >');
 
         $response->SetFormRequestResponse(NULL, __('Edit Resolution'), '350px', '250px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Template', 'Add') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Resolution', 'Add') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#ResolutionForm").submit()');
         $response->Respond();
@@ -226,20 +216,21 @@ class resolutionDAO extends baseDAO
      */
     function DeleteForm()
     {
-        $db 	=& $this->db;
-        $user 	=& $this->user;
         $response = new ResponseManager();
 
-        $resolutionid   = Kit::GetParam('resolutionid', _GET, _INT);
+        $resolution = \Xibo\Factory\ResolutionFactory::getById(Kit::GetParam('resolutionid', _GET, _INT));
+
+        if (!$this->user->checkDeleteable($resolution))
+            trigger_error(__('Access Denied'));
 
         // Set some information about the form
         Theme::Set('form_id', 'DeleteForm');
         Theme::Set('form_action', 'index.php?p=resolution&q=Delete');
-        Theme::Set('form_meta', '<input type="hidden" name="resolutionid" value="' . $resolutionid . '" />');
+        Theme::Set('form_meta', '<input type="hidden" name="resolutionid" value="' . $resolution->resolutionId . '" />');
         Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to delete?'))));
         
         $response->SetFormRequestResponse(Theme::RenderReturn('form_render'), __('Delete Resolution'), '250px', '150px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Campaign', 'Delete') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Resolution', 'Delete') . '")');
         $response->AddButton(__('No'), 'XiboDialogClose()');
         $response->AddButton(__('Yes'), '$("#DeleteForm").submit()');
         $response->Respond();

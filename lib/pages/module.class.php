@@ -33,30 +33,6 @@ class moduleDAO extends baseDAO
     {
         $this->db   =& $db;
         $this->user =& $user;
-
-        $mod = Kit::GetParam('mod', _REQUEST, _WORD);
-
-        // If we have the module - create an instance of the module class
-        // This will only be true when we are displaying the Forms
-        if ($mod != '')
-        {
-            // Try to get the layout, region and media id's
-            $layoutId   = Kit::GetParam('layoutid', _REQUEST, _INT);
-            $regionId   = Kit::GetParam('regionid', _REQUEST, _STRING);
-            $mediaId    = Kit::GetParam('mediaid', _REQUEST, _STRING);
-            $lkId       = Kit::GetParam('lkid', _REQUEST, _INT);
-
-            Debug::LogEntry('audit', 'Creating new module with MediaID: ' . $mediaId . ' LayoutID: ' . $layoutId . ' and RegionID: ' . $regionId);
-
-            try {
-                $this->module = ModuleFactory::load($mod, $layoutId, $regionId, $mediaId, $lkId, $this->db, $this->user);
-            }
-            catch (Exception $e) {
-                trigger_error($e->getMessage(), E_USER_ERROR);
-            }
-        }
-
-        return true;
     }
 
     function actionMenu()
@@ -74,7 +50,6 @@ class moduleDAO extends baseDAO
 
     /**
      * Display the module page
-     * @return
      */
     function displayPage()
     {
@@ -273,7 +248,7 @@ class moduleDAO extends baseDAO
             'b');
 
         // Set any module specific form fields
-        $module = ModuleFactory::create($type, $this->db, $this->user);
+        $module = \Xibo\Factory\ModuleFactory::create($type);
 
         // Merge in the fields from the settings
         foreach($module->ModuleSettingsForm() as $field)
@@ -293,8 +268,7 @@ class moduleDAO extends baseDAO
         // Check the token
         if (!Kit::CheckToken())
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
-        
-        $db =& $this->db;
+
         $response = new ResponseManager();
 
         // Can we edit?
@@ -461,18 +435,40 @@ class moduleDAO extends baseDAO
     }
     
     /**
-     * What action to perform?
-     * @return
+     * Execute a Module Action
      */
     public function Exec()
     {
+        $requestedModule = Kit::GetParam('mod', _REQUEST, _WORD);
+        $requestedMethod = Kit::GetParam('method', _REQUEST, _WORD);
+
+        Debug::Audit('Module Exec for ' . $requestedModule  . ' with method ' . $requestedMethod);
+
+        // Validate that GetResource calls have a region
+        if ($requestedMethod == 'GetResource' && Kit::GetParam('regionId', _REQUEST, _INT) == 0)
+            die(__('Get Resource Call without a Region'));
+
+        // Create a new module to handle this request
+        $module = \Xibo\Factory\ModuleFactory::createForWidget(Kit::GetParam('mod', _REQUEST, _WORD), Kit::GetParam('widgetId', _REQUEST, _INT), $this->user->userid, Kit::GetParam('playlistId', _REQUEST, _INT), Kit::GetParam('regionId', _REQUEST, _INT));
+
+        // Authenticate access to this widget
+        if (!$this->user->checkViewable($module->widget))
+            die(__('Access Denied'));
+
+        // Set the permissions for this module
+        $module->setPermission($this->user->getPermission($module->widget));
+
+        // Set the user - it is used in forms to return other entities
+        $module->setUser($this->user);
+
         // What module has been requested?
+        $response = null;
         $method = Kit::GetParam('method', _REQUEST, _WORD);
         $raw = Kit::GetParam('raw', _REQUEST, _WORD);
 
-        if (method_exists($this->module, $method))
+        if (method_exists($module, $method))
         {
-            $response = $this->module->$method();
+            $response = $module->$method();
         }
         else
         {
@@ -487,8 +483,8 @@ class moduleDAO extends baseDAO
         }
         else
         {
+            /* @var ResponseManager $response */
             $response->Respond();
         }
     }
 }
-?>

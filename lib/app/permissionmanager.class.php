@@ -33,9 +33,7 @@ class PermissionManager
 
     /**
      * Constructs the Module Manager.
-     * @return
-     * @param $db Object
-     * @param $user Object
+     * @param User $user
      */
     public function __construct(User $user)
     {
@@ -77,5 +75,14 @@ class PermissionManager
         $this->edit = true;
         $this->del = true;
         $this->modifyPermissions = true;
+    }
+
+    /**
+     * Get User
+     * @return User
+     */
+    public function getUser()
+    {
+        return $this->user;
     }
 }

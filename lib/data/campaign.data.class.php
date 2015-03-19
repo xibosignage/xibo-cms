@@ -96,12 +96,6 @@ class Campaign extends Data {
             if (!$this->UnlinkAll($campaignId))
                 throw new Exception(__('Unable to Unlink'));
 
-            // Remove all permissions
-            $security = new CampaignSecurity($this->db);
-
-            if (!$security->UnlinkAll($campaignId))
-                throw new Exception(__('Unable to set permissions'));
-
             // Remove from all Schedules
             Schedule::DeleteScheduleForCampaign($campaignId);
 

@@ -20,17 +20,11 @@
  */ 
 class embedded extends Module
 {
-    
-    public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '', $lkid = '')
+    /**
+     * Install Files
+     */
+    public function InstallFiles()
     {
-        // Must set the type of the class
-        $this->type = 'embedded';
-    
-        // Must call the parent class   
-        parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);
-    }
-
-    public function InstallFiles() {
         $media = new Media();
         $media->addModuleFile('modules/preview/vendor/jquery-1.11.1.min.js');
         $media->addModuleFile('modules/preview/xibo-layout-scaler.js');
@@ -38,30 +32,19 @@ class embedded extends Module
     
     /**
      * Return the Add Form as HTML
-     * @return 
      */
     public function AddForm()
     {
-        $this->response = new ResponseManager();
-        $db         =& $this->db;
-        $user       =& $this->user;
-                
-        // Would like to get the regions width / height 
-        $layoutid   = $this->layoutid;
-        $regionid   = $this->regionid;
-        $rWidth     = Kit::GetParam('rWidth', _REQUEST, _STRING);
-        $rHeight    = Kit::GetParam('rHeight', _REQUEST, _STRING);
-    
-        Theme::Set('form_id', 'ModuleForm');
-        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=AddMedia');
-        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" />');
+        $response = new ResponseManager();
+        // Configure form
+        $this->configureForm('AddMedia');
 
         $formFields = array();
         
         $formFields[] = FormManager::AddText('name', __('Name'), NULL, 
             __('An optional name for this media'), 'n');
 
-        $formFields[] = FormManager::AddNumber('duration', __('Duration'), $this->duration, 
+        $formFields[] = FormManager::AddNumber('duration', __('Duration'), $this->getDuration(),
             __('The duration in seconds this item should be displayed'), 'd', 'required');
 
         $formFields[] = FormManager::AddCheckbox('transparency', __('Background transparent?'), 
@@ -95,61 +78,31 @@ function EmbedInit()
 
         Theme::Set('form_fields', $formFields);
 
-        if ($this->showRegionOptions)
-        {
-            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
-        }
-        else
-        {
-            $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        }
+        $response->html = Theme::RenderReturn('form_render');
+        $this->configureFormButtons($response);
 
-        $this->response->html           = Theme::RenderReturn('form_render');
-        $this->response->dialogTitle    = 'Add Embedded HTML';
-        $this->response->dialogSize     = true;
-        $this->response->dialogWidth    = '650px';
-        $this->response->dialogHeight   = '450px';
-        $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
-
-        return $this->response;
+        return $response;
     }
     
     /**
      * Return the Edit Form as HTML
-     * @return ResponseManager
      */
     public function EditForm()
     {
-        $this->response = new ResponseManager();
+        $response = new ResponseManager();
 
-        $layoutid   = $this->layoutid;
-        $regionid   = $this->regionid;
-        $mediaid    = $this->mediaid;
-
-        // Can this user edit?
+        // Edit calls are the same as add calls, except you will to check the user has permissions to do the edit
         if (!$this->auth->edit)
-        {
-            $this->response->SetError('You do not have permission to edit this media.');
-            $this->response->keepOpen = false;
-            return $this->response;
-        }
+            throw new Exception(__('You do not have permission to edit this widget.'));
 
-        Theme::Set('form_id', 'ModuleForm');
-        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=EditMedia');
-        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" /><input type="hidden" id="mediaid" name="mediaid" value="' . $mediaid . '">');
-        
-        // Get the embedded HTML out of RAW
-        $rawXml = new DOMDocument();
-        $rawXml->loadXML($this->GetRaw());
-        
-        //Debug::LogEntry('audit', 'Raw XML returned: ' . $this->GetRaw());
+        // Configure the form
+        $this->configureForm('EditMedia');
         
         $formFields = array();
-
         $formFields[] = FormManager::AddText('name', __('Name'), $this->GetOption('name'), 
             __('An optional name for this media'), 'n');
         
-        $formFields[] = FormManager::AddNumber('duration', __('Duration'), $this->duration, 
+        $formFields[] = FormManager::AddNumber('duration', __('Duration'), $this->getDuration(),
             __('The duration in seconds this item should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
 
         $formFields[] = FormManager::AddCheckbox('transparency', __('Background transparent?'), 
@@ -160,181 +113,92 @@ function EmbedInit()
             $this->GetOption('scaleContent'), __('Should the embedded content be scaled along with the layout?'), 
             's');
 
-        $formFields[] = FormManager::AddMultiText('embedHtml', NULL, $this->GetRawNode('embedHtml'),
+        $formFields[] = FormManager::AddMultiText('embedHtml', NULL, $this->getRawNode('embedHtml', null),
             __('HTML to Embed'), 'h', 10);
 
-        $formFields[] = FormManager::AddMultiText('embedStyle', NULL, $this->GetRawNode('embedStyle'),
+        $formFields[] = FormManager::AddMultiText('embedStyle', NULL, $this->getRawNode('embedStyle', null),
             __('Custom Style Sheets'), 'h', 10);
 
-        $formFields[] = FormManager::AddMultiText('embedScript', NULL, $this->GetRawNode('embedScript'),
+        $formFields[] = FormManager::AddMultiText('embedScript', NULL, $this->getRawNode('embedScript', null),
             __('HEAD content to Embed (including script tags)'), 'h', 10);
 
         Theme::Set('form_fields', $formFields);
 
-        if ($this->showRegionOptions)
-        {
-            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
-        }
-        else
-        {
-            $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        }
-
-        $this->response->html           = Theme::RenderReturn('form_render');;
-        $this->response->dialogTitle    = __('Edit Embedded HTML');
-        $this->response->dialogSize     = true;
-        $this->response->dialogWidth    = '650px';
-        $this->response->dialogHeight   = '450px';
+        $response->html= Theme::RenderReturn('form_render');;
+        $this->configureFormButtons($response);
         $this->response->AddButton(__('Apply'), 'XiboDialogApply("#ModuleForm")');
-        $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
 
-        return $this->response;
+        return $response;
     }
     
     /**
      * Add Media to the Database
-     * @return 
      */
     public function AddMedia()
     {
-        $this->response = new ResponseManager();
-        $layoutid   = $this->layoutid;
-        $regionid   = $this->regionid;
-        $mediaid    = $this->mediaid;
-        
-        //Other properties
-        $embedHtml    = Kit::GetParam('embedHtml', _POST, _HTMLSTRING);
-        $embedScript  = Kit::GetParam('embedScript', _POST, _HTMLSTRING);
-        $embedStyle   = Kit::GetParam('embedStyle', _POST, _HTMLSTRING);
-        $duration     = Kit::GetParam('duration', _POST, _INT, 0, false);
-        $transparency = Kit::GetParam('transparency', _POST, _CHECKBOX, 'off');
-        $name = Kit::GetParam('name', _POST, _STRING);
-        
-        $url = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
-                        
-        //Validate the URL?
-        if ($embedHtml == "")
-        {
-            $this->response->SetError('Please enter some HTML to embed.');
-            $this->response->keepOpen = true;
-            return $this->response;
-        }
-        
-        if ($duration == 0)
-        {
-            $this->response->SetError('You must enter a duration.');
-            $this->response->keepOpen = true;
-            return $this->response;
-        }
-        
-        // Required Attributes
-        $this->mediaid = md5(uniqid());
-        $this->duration = $duration;
-        $this->SetOption('transparency', $transparency);
-        $this->SetOption('name', $name);
-        $this->SetOption('scaleContent', Kit::GetParam('scaleContent', _POST, _CHECKBOX, 'off'));
-        
-        // Any Options
-        $this->SetRaw('<embedHtml><![CDATA[' . $embedHtml . ']]></embedHtml><embedScript><![CDATA[' . $embedScript . ']]></embedScript><embedStyle><![CDATA[' . $embedStyle . ']]></embedStyle>');
+        $response = new ResponseManager();
 
-        // Should have built the media object entirely by this time
-        // This saves the Media Object to the Region
-        $this->UpdateRegion();
-        
-        //Set this as the session information
-        setSession('content', 'type', $this->type);
-        
-    if ($this->showRegionOptions)
-        {
-            // We want to load a new form
-            $this->response->loadForm = true;
-            $this->response->loadFormUri = $url;
-        }
-        
-        return $this->response;
+        // Required Attributes
+        $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration(), false));
+        $this->SetOption('transparency', Kit::GetParam('transparency', _POST, _CHECKBOX));
+        $this->SetOption('name', Kit::GetParam('name', _POST, _STRING));
+        $this->SetOption('scaleContent', Kit::GetParam('scaleContent', _POST, _CHECKBOX, 'off'));
+        $this->setRawNode('embedHtml', Kit::GetParam('embedHtml', _POST, _HTMLSTRING));
+        $this->setRawNode('embedScript', Kit::GetParam('embedScript', _POST, _HTMLSTRING));
+        $this->setRawNode('embedStyle', Kit::GetParam('embedStyle', _POST, _HTMLSTRING));
+
+        // Save the widget
+        $this->saveWidget();
+
+        // Load form
+        $response->loadForm = true;
+        $response->loadFormUri = $this->getTimelineLink();
+
+        return $response;
     }
     
     /**
      * Edit Media in the Database
-     * @return 
      */
     public function EditMedia()
     {
-        $this->response = new ResponseManager();
-        $layoutid   = $this->layoutid;
-        $regionid   = $this->regionid;
-        $mediaid    = $this->mediaid;
-
+        $response = new ResponseManager();
         if (!$this->auth->edit)
-        {
-            $this->response->SetError('You do not have permission to edit this assignment.');
-            $this->response->keepOpen = false;
-            return $this->response;
-        }
-        
-        //Other properties
-        $embedHtml    = Kit::GetParam('embedHtml', _POST, _HTMLSTRING);
-        $embedScript  = Kit::GetParam('embedScript', _POST, _HTMLSTRING);
-        $embedStyle   = Kit::GetParam('embedStyle', _POST, _HTMLSTRING);
-        $transparency = Kit::GetParam('transparency', _POST, _CHECKBOX, 'off');
-        $name = Kit::GetParam('name', _POST, _STRING);
+            throw new Exception(__('You do not have permission to edit this widget.'));
 
-        $this->SetOption('transparency', $transparency);
-        $this->SetOption('name', $name);
+        $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration(), false));
+        $this->SetOption('transparency', Kit::GetParam('transparency', _POST, _CHECKBOX));
+        $this->SetOption('name', Kit::GetParam('name', _POST, _STRING));
         $this->SetOption('scaleContent', Kit::GetParam('scaleContent', _POST, _CHECKBOX, 'off'));
+        $this->setRawNode('embedHtml', Kit::GetParam('embedHtml', _POST, _HTMLSTRING));
+        $this->setRawNode('embedScript', Kit::GetParam('embedScript', _POST, _HTMLSTRING));
+        $this->setRawNode('embedStyle', Kit::GetParam('embedStyle', _POST, _HTMLSTRING));
 
-        // If we have permission to change it, then get the value from the form
-        if ($this->auth->modifyPermissions)
-            $this->duration = Kit::GetParam('duration', _POST, _INT, 0, false);
-        
-        $url          = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
-                        
-        // Validate the URL?
-        if ($embedHtml == "")
-        {
-            $this->response->SetError('Please enter some HTML to embed.');
-            $this->response->keepOpen = true;
-            return $this->response;
-        }
-        
-        if ($this->duration == 0)
-        {
-            $this->response->SetError('You must enter a duration.');
-            $this->response->keepOpen = true;
-            return $this->response;
-        }
-        
-        // Any Options
-        $this->SetRaw('<embedHtml><![CDATA[' . $embedHtml . ']]></embedHtml><embedScript><![CDATA[' . $embedScript . ']]></embedScript><embedStyle><![CDATA[' . $embedStyle . ']]></embedStyle>');
+        // Save the widget
+        $this->saveWidget();
 
-        // Should have built the media object entirely by this time
-        // This saves the Media Object to the Region
-        $this->UpdateRegion();
-        
-        //Set this as the session information
-        setSession('content', 'type', $this->type);
-        
-        if ($this->showRegionOptions)
-        {
-            // We want to load a new form
+        // Load form
+        $response->loadForm = true;
+        $response->loadFormUri = $this->getTimelineLink();
+
+        return $response;
+    }
+    
+    public function IsValid()
+    {
             $this->response->callBack = 'refreshPreview("' . $this->regionid . '")';
-            $this->response->loadForm = true;
-            $this->response->loadFormUri = $url;
-        }
-        
-        return $this->response; 
-    }
-    
-    public function GetName() {
-        return $this->GetOption('name');
-    }
-    
-    public function IsValid() {
         // Can't be sure because the client does the rendering
         return 2;
     }
-   
-    public function GetResource($display = 0) {
+
+    /**
+     * GetResource
+     * Return the rendered resource to be used by the client (or a preview) for displaying this content.
+     * @param integer $displayId If this comes from a real client, this will be the display id.
+     * @return mixed
+     */
+    public function GetResource($displayId = 0)
+    {
         // Behave exactly like the client.
         $isPreview = (Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
 
@@ -343,29 +207,25 @@ function EmbedInit()
 
         // Replace the View Port Width?
         if (isset($_GET['preview']))
-            $template = str_replace('[[ViewPortWidth]]', $this->width, $template);
+            $template = str_replace('[[ViewPortWidth]]', $this->region->width, $template);
 
-        // Get the text out of RAW
-        $rawXml = new DOMDocument();
-        $rawXml->loadXML($this->GetRaw());
-
-        // Get the Text Node
-        $html = $this->parseLibraryReferences($isPreview, $this->GetRawNode('embedHtml', ''));
+        // Embedded Html
+        $html = $this->parseLibraryReferences($isPreview, $this->getRawNode('embedHtml', null));
 
         // Include some vendor items
         $javaScriptContent = '<script src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
         $javaScriptContent .= '<script src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-layout-scaler.js"></script>';
 
         // Get the Script
-        $javaScriptContent .= $this->parseLibraryReferences($isPreview, $this->GetRawNode('embedScript', ''));
+        $javaScriptContent .= $this->parseLibraryReferences($isPreview, $this->getRawNode('embedScript', null));
 
         // Get the Style Sheet
-        $styleSheetContent = $this->parseLibraryReferences($isPreview, $this->GetRawNode('embedStyle', ''));
+        $styleSheetContent = $this->parseLibraryReferences($isPreview, $this->getRawNode('embedStyle', null));
 
         // Set some options
         $options = array(
-            'originalWidth' => $this->width,
-            'originalHeight' => $this->height,
+            'originalWidth' => $this->region->width,
+            'originalHeight' => $this->region->height,
             'previewWidth' => Kit::GetParam('width', _GET, _DOUBLE, 0),
             'previewHeight' => Kit::GetParam('height', _GET, _DOUBLE, 0),
             'scaleOverride' => Kit::GetParam('scale_override', _GET, _DOUBLE, 0)
@@ -427,7 +287,7 @@ function EmbedInit()
                 continue;
 
             // Check that this mediaId exists and get some information about it
-            $entry = Media::Entries(null, array('mediaId' => $mediaId));
+            $entry = \Xibo\Factory\MediaFactory::query(null,array('mediaId' => $mediaId));
 
             if (count($entry) <= 0)
                 continue;
@@ -442,5 +302,3 @@ function EmbedInit()
         return $parsedContent;
     }
 }
-
-?>

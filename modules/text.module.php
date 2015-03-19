@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2014 Daniel Garner
+ * Copyright (C) 2006-2015 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -20,15 +20,9 @@
  */ 
 class text extends Module
 {
-    public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '', $lkid = '')
-    {
-        // Must set the type of the class
-        $this->type = 'text';
-        
-        // Must call the parent class
-        parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);
-    }
-
+    /**
+     * Install Files
+     */
     public function InstallFiles() {
         $media = new Media();
         $media->addModuleFile('modules/preview/vendor/jquery-1.11.1.min.js');
@@ -39,25 +33,15 @@ class text extends Module
     }
     
     /**
-     * Return the Add Form as HTML
-     * @return
+     * Return the Add Form
      */
     public function AddForm()
     {
-        $this->response = new ResponseManager();
-        $db         =& $this->db;
-        $user       =& $this->user;
+        $response = new ResponseManager();
 
-        // Would like to get the regions width / height
-        $layoutid   = $this->layoutid;
-        $regionid   = $this->regionid;
-        $rWidth     = Kit::GetParam('rWidth', _REQUEST, _STRING);
-        $rHeight    = Kit::GetParam('rHeight', _REQUEST, _STRING);
-
-        Theme::Set('form_id', 'ModuleForm');
-        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=AddMedia');
-        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" />');
-    
+        // Configure form
+        $this->configureForm('AddMedia');
+        
         // Two tabs
         $tabs = array();
         $tabs[] = FormManager::AddTab('general', __('General'), array(array('name' => 'enlarge', 'value' => true)));
@@ -122,54 +106,35 @@ class text extends Module
         Theme::Set('form_fields_options', $formFields['options']);
 
         // Add a dependency
-        $this->response->AddFieldAction('effect', 'init', 'none', array('.effect-controls' => array('display' => 'none')));
-        $this->response->AddFieldAction('effect', 'change', 'none', array('.effect-controls' => array('display' => 'none')));
-        $this->response->AddFieldAction('effect', 'init', 'none', array('.effect-controls' => array('display' => 'block')), 'not');
-        $this->response->AddFieldAction('effect', 'change', 'none', array('.effect-controls' => array('display' => 'block')), 'not');
+        $response->AddFieldAction('effect', 'init', 'none', array('.effect-controls' => array('display' => 'none')));
+        $response->AddFieldAction('effect', 'change', 'none', array('.effect-controls' => array('display' => 'none')));
+        $response->AddFieldAction('effect', 'init', 'none', array('.effect-controls' => array('display' => 'block')), 'not');
+        $response->AddFieldAction('effect', 'change', 'none', array('.effect-controls' => array('display' => 'block')), 'not');
 
-        $this->response->html = Theme::RenderReturn('form_render');
-        $this->response->callBack = 'text_callback';
-        $this->response->dialogSize = __('large');
-        $this->response->dialogTitle = __('Add Text');
+        $response->html = Theme::RenderReturn('form_render');
+        $response->callBack = 'text_callback';
+        $response->dialogSize = 'large';
+        $this->configureFormButtons($response);
+        $response->dialogTitle = __('Add Text');
 
-        if ($this->showRegionOptions)
-        {
-            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
-        }
-        else
-        {
-            $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        }
-        $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
 
-        return $this->response;
+        return $response;
     }
 
     /**
      * Return the Edit Form as HTML
-     * @return
      */
     public function EditForm()
     {
-        $this->response = new ResponseManager();
-        $db =& $this->db;
-        $user =& $this->user;
-        $layoutid = $this->layoutid;
-        $regionid = $this->regionid;
-        $mediaid = $this->mediaid;
+        $response = new ResponseManager();
 
-        // Permissions
+        // Edit calls are the same as add calls, except you will to check the user has permissions to do the edit
         if (!$this->auth->edit)
-        {
-            $this->response->SetError('You do not have permission to edit this assignment.');
-            $this->response->keepOpen = true;
-            return $this->response;
-        }
+            throw new Exception(__('You do not have permission to edit this widget.'));
 
-        Theme::Set('form_id', 'ModuleForm');
-        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=EditMedia');
-        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" /><input type="hidden" id="mediaid" name="mediaid" value="' . $mediaid . '">');
-        
+        // Configure the form
+        $this->configureForm('EditMedia');
+
         // Two tabs
         $tabs = array();
         $tabs[] = FormManager::AddTab('general', __('General'), array(array('name' => 'enlarge', 'value' => true)));
@@ -219,7 +184,7 @@ class text extends Module
         $formFields['options'][] = FormManager::AddText('backgroundColor', __('Background Colour'), $this->GetOption('backgroundColor'), 
             __('The selected effect works best with a background colour. Optionally add one here.'), 'c', NULL, 'effect-controls');
 
-        $formFields['options'][] = FormManager::AddNumber('duration', __('Duration'), $this->duration, 
+        $formFields['options'][] = FormManager::AddNumber('duration', __('Duration'), $this->getDuration(),
             __('The duration in seconds this counter should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
 
         // Handle the substitutions as RAW items
@@ -231,15 +196,9 @@ class text extends Module
             );
         Theme::Set('substitutions', $subs);
 
-        // Get the text out of RAW
-        $rawXml = new DOMDocument();
-        $rawXml->loadXML($this->GetRaw());
+        $textNode = $this->getRawNode('text', null);
 
-        // Get the Text Node out of this
-        $textNodes = $rawXml->getElementsByTagName('text');
-        $textNode = $textNodes->item(0);
-
-        $formFields['general'][] = FormManager::AddMultiText('ta_text', NULL, $textNode->nodeValue, 
+        $formFields['general'][] = FormManager::AddMultiText('ta_text', NULL, $textNode,
             __('Enter the text to display. Please note that the background colour has automatically coloured to your layout background colour.'), 't', 10);
 
         $formFields['general'][] = FormManager::AddRaw(Theme::RenderReturn('media_form_text_edit'));
@@ -248,188 +207,115 @@ class text extends Module
         Theme::Set('form_fields_options', $formFields['options']);
 
         // Add a dependency
-        $this->response->AddFieldAction('effect', 'init', 'none', array('.effect-controls' => array('display' => 'none')));
-        $this->response->AddFieldAction('effect', 'change', 'none', array('.effect-controls' => array('display' => 'none')));
-        $this->response->AddFieldAction('effect', 'init', 'none', array('.effect-controls' => array('display' => 'block')), 'not');
-        $this->response->AddFieldAction('effect', 'change', 'none', array('.effect-controls' => array('display' => 'block')), 'not');
+        $response->AddFieldAction('effect', 'init', 'none', array('.effect-controls' => array('display' => 'none')));
+        $response->AddFieldAction('effect', 'change', 'none', array('.effect-controls' => array('display' => 'none')));
+        $response->AddFieldAction('effect', 'init', 'none', array('.effect-controls' => array('display' => 'block')), 'not');
+        $response->AddFieldAction('effect', 'change', 'none', array('.effect-controls' => array('display' => 'block')), 'not');
 
-        $this->response->html = Theme::RenderReturn('form_render');
-        $this->response->callBack = 'text_callback';
-        $this->response->dialogSize = 'large';
-        $this->response->dialogTitle = __('Edit Text');
-        if ($this->showRegionOptions)
-        {
-            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutid . '&regionid=' . $regionid . '&q=RegionOptions")');
-        }
-        else
-        {
-            $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        }
+        $response->html = Theme::RenderReturn('form_render');
+        $response->callBack = 'text_callback';
+        $response->dialogSize = 'large';
+        $this->configureFormButtons($response);
+        $response->dialogTitle = __('Edit Text');
         $this->response->AddButton(__('Apply'), 'XiboDialogApply("#ModuleForm")');
-        $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
 
-        return $this->response;
+        return $response;
     }
 
     /**
      * Add Media to the Database
-     * @return
      */
     public function AddMedia()
     {
-        $this->response = new ResponseManager();
-        $layoutid   = $this->layoutid;
-        $regionid   = $this->regionid;
-        $mediaid    = $this->mediaid;
+        $response = new ResponseManager();
 
-        //Other properties
-        $duration     = Kit::GetParam('duration', _POST, _INT, 0, false);
-        $text         = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
+        // Other properties
+        $duration = Kit::GetParam('duration', _POST, _INT, 0, false);
+        $text = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
 	$name 	      = Kit::GetParam('name', _POST, _STRING);
 
-        $url = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
-
-        //validation
+        // Validation
         if ($text == '')
-        {
-            $this->response->SetError('Please enter some text');
-            $this->response->keepOpen = true;
-            return $this->response;
-        }
+            throw new InvalidArgumentException(__('Please enter some text'));
 
         if ($duration == 0)
-        {
-            $this->response->SetError('You must enter a duration.');
-            $this->response->keepOpen = true;
-            return $this->response;
-        }
-
-        // Required Attributes
-        $this->mediaid  = md5(uniqid());
-        $this->duration = $duration;
+            throw new InvalidArgumentException(__('You must enter a duration.'));
 
         // Any Options
+        $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration()));
         $this->SetOption('xmds', true);
         $this->SetOption('effect', Kit::GetParam('effect', _POST, _STRING));
         $this->SetOption('speed', Kit::GetParam('speed', _POST, _INT));
         $this->SetOption('backgroundColor', Kit::GetParam('backgroundColor', _POST, _STRING));
-	$this->SetOption('name', $name);
-        $this->SetRaw('<text><![CDATA[' . $text . ']]></text>');
+        $this->SetOption('name', $name);
+        $this->setRawNode('text', $text);
 
-        // Should have built the media object entirely by this time
-        // This saves the Media Object to the Region
-        $this->UpdateRegion();
+        // Save the widget
+        $this->saveWidget();
 
-        //Set this as the session information
-        setSession('content', 'type', 'text');
+        // Load form
+        $response->loadForm = true;
+        $response->loadFormUri = $this->getTimelineLink();
 
-        if ($this->showRegionOptions) {
-            // We want to load a new form
-            $this->response->loadForm = true;
-            $this->response->loadFormUri = $url;
-        }
-
-        return $this->response;
+        return $response;
     }
 
     /**
      * Edit Media in the Database
-     * @return
      */
     public function EditMedia()
     {
-        $this->response = new ResponseManager();
-        $user =& $this->user;
+        $response = new ResponseManager();
 
-        $layoutid = $this->layoutid;
-        $regionid = $this->regionid;
-        $mediaid = $this->mediaid;
+        // Edit calls are the same as add calls, except you will to check the user has permissions to do the edit
+        if (!$this->auth->edit)
+            throw new Exception(__('You do not have permission to edit this widget.'));
 
-        if (!$this->auth->edit) {
-            $this->response->SetError('You do not have permission to edit this assignment.');
-            $this->response->keepOpen = false;
-            return $this->response;
-        }
-
-        //Other properties
+        // Other properties
         $text = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
         $name = Kit::GetParam('name', _POST, _STRING);
 
-        // If we have permission to change it, then get the value from the form
-        if ($this->auth->modifyPermissions)
-            $this->duration = Kit::GetParam('duration', _POST, _INT, 0, false);
-
-        Debug::LogEntry('audit', 'Text received: ' . $text);
-
-        $url = "index.php?p=timeline&layoutid=$layoutid&regionid=$regionid&q=RegionOptions";
-
         // Validation
         if ($text == '')
-        {
-            $this->response->SetError('Please enter some text');
-            $this->response->keepOpen = true;
-            return $this->response;
-        }
-
-        if ($this->duration == 0)
-        {
-            $this->response->SetError('You must enter a duration.');
-            $this->response->keepOpen = true;
-            return $this->response;
-        }
+            throw new InvalidArgumentException(__('Please enter some text'));
 
         // Any Options
+        $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration(), false));
         $this->SetOption('xmds', true);
         $this->SetOption('effect', Kit::GetParam('effect', _POST, _STRING));
         $this->SetOption('speed', Kit::GetParam('speed', _POST, _INT));
         $this->SetOption('backgroundColor', Kit::GetParam('backgroundColor', _POST, _STRING));
-	$this->SetOption('name', $name);
-        $this->SetRaw('<text><![CDATA[' . $text . ']]></text>');
+        $this->SetOption('name', $name);
+        $this->setRawNode('text', $text);
 
-        // Should have built the media object entirely by this time
-        // This saves the Media Object to the Region
-        $this->UpdateRegion();
+        // Save the widget
+        $this->saveWidget();
 
-        //Set this as the session information
-        setSession('content', 'type', 'text');
+        // Load form
+        $response->loadForm = true;
+        $response->loadFormUri = $this->getTimelineLink();
+        $this->response->callBack = 'refreshPreview("' . $this->regionid . '")';
 
-        if ($this->showRegionOptions) {
-            // We want to load a new form
-            $this->response->callBack = 'refreshPreview("' . $this->regionid . '")';
-            $this->response->loadForm = true;
-            $this->response->loadFormUri = $url;
-        }
-
-        return $this->response;
+        return $response;
     }
 
     /**
-     * Raw Preview
+     * Get Resource
+     * @param int $displayId
+     * @return mixed
      */
     public function GetResource($displayId = 0)
     {
         // Load in the template
-        if ($this->layoutSchemaVersion == 1)
-            $template = file_get_contents('modules/preview/Html4TransitionalTemplate.html');
-        else
-            $template = file_get_contents('modules/preview/HtmlTemplate.html');
+        $template = file_get_contents('modules/preview/HtmlTemplate.html');
 
         // Replace the View Port Width?
         if (isset($_GET['preview']))
-            $template = str_replace('[[ViewPortWidth]]', $this->width, $template);
+            $template = str_replace('[[ViewPortWidth]]', $this->region->width, $template);
 
-        $width = Kit::GetParam('width', _REQUEST, _DOUBLE);
-        $height = Kit::GetParam('height', _REQUEST, _DOUBLE);
-        $duration = $this->duration;
+        $duration = $this->getDuration();
 
-        // Get the text out of RAW
-        $rawXml = new DOMDocument();
-        $rawXml->loadXML($this->GetRaw());
-
-        // Get the Text Node
-        $textNodes = $rawXml->getElementsByTagName('text');
-        $textNode = $textNodes->item(0);
-        $text = $textNode->nodeValue;
+        $text = $this->getRawNode('text', null);
 
         // Handle older layouts that have a direction node but no effect node
         $oldDirection = $this->GetOption('direction', 'none');
@@ -441,7 +327,7 @@ class text extends Module
 
         // Set some options
         $options = array(
-            'type' => $this->type,
+            'type' => $this->getModuleType(),
             'fx' => $effect,
             'duration' => $duration,
             'durationIsPerItem' => false,
@@ -449,8 +335,8 @@ class text extends Module
             'takeItemsFrom' => 'start',
             'itemsPerPage' => 0,
             'speed' => $this->GetOption('speed', 0),
-            'originalWidth' => $this->width,
-            'originalHeight' => $this->height,
+            'originalWidth' => $this->region->width,
+            'originalHeight' => $this->region->height,
             'previewWidth' => Kit::GetParam('width', _GET, _DOUBLE, 0),
             'previewHeight' => Kit::GetParam('height', _GET, _DOUBLE, 0),
             'scaleOverride' => Kit::GetParam('scale_override', _GET, _DOUBLE, 0)
@@ -549,17 +435,8 @@ class text extends Module
         // Default Hover window contains a thumbnail, media type and duration
         $output = parent::HoverPreview();
 
-        // Provide a sample of the text content
-        $rawXml = new DOMDocument();
-        $rawXml->loadXML($this->GetRaw());
-
-        // Get the Text Node out of this
-        $textNodes = $rawXml->getElementsByTagName('text');
-        $textNode = $textNodes->item(0);
-        $text = $textNode->nodeValue;
-
         $output .= '<div class="hoverPreview">';
-        $output .= '    ' . $text;
+        $output .= '    ' . $this->getRawNode('text', null);;
         $output .= '</div>';
 
         return $output;
@@ -569,9 +446,9 @@ class text extends Module
         return $this->GetOption('name');
     }
     
-    public function IsValid() {
+    public function IsValid()
+    {
         // Text rendering will be valid
         return 1;
     }
 }
-?>

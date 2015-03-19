@@ -19,86 +19,53 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
-include_once("lib/data/layout.data.class.php");
 
-class timelineDAO extends baseDAO {
-
+class timelineDAO extends baseDAO
+{
     /**
 	 * Adds a new region for a layout
-	 * @return 
 	 */
 	function AddRegion()
 	{
-		$db 	=& $this->db;
-		$user 	=& $this->user;
-		
-		//ajax request handler
 		$response = new ResponseManager();
 		
-		$layoutid = Kit::GetParam('layoutid', _REQUEST, _INT, 0);
-		
-		if ($layoutid == 0)
-		{
-			trigger_error(__("No layout information available, please refresh the page."), E_USER_ERROR);
-		}
-		
-		include_once("lib/data/region.data.class.php");
+		$layout = \Xibo\Factory\LayoutFactory::loadById(Kit::GetParam('layoutid', _REQUEST, _INT));
 
-		$region = new region($db);
+        // Check Permissions
+        if (!$this->user->checkEditable($layout))
+            trigger_error(__('You do not have permission to edit this Layout'), E_USER_ERROR);
+
+        // Create a new region
+        $region = \Xibo\Factory\RegionFactory::create($this->user->userid, $layout->layout . '-' . (count($layout->regions) + 1), 250, 250, 50, 50);
+
+        // Add the region to the layout
+        $layout->regions[] = $region;
+
+        // Save everything
+        $layout->save();
 		
-		if (!$region->AddRegion($layoutid, $user->userid))
-		{
-			//there was an ERROR
-			trigger_error($region->GetErrorMessage(), E_USER_ERROR);
-		}
-		
-		$response->SetFormSubmitResponse(__('Region Added.'), true, "index.php?p=layout&modify=true&layoutid=$layoutid");
+		$response->SetFormSubmitResponse(__('Region Added.'), true, 'index.php?p=layout&modify=true&layoutid=' . $layout->layoutId);
 		$response->Respond();
 	}
 	
 	/**
-	 * Deletes a region and all its media
-	 * @return 
+	 * Deletes a region and all the assigned widgets
 	 */
 	function DeleteRegion()
 	{
-		$db 		=& $this->db;
-		$user 		=& $this->user;
-		$response 	= new ResponseManager();
-		
-		$layoutid 	= Kit::GetParam('layoutid', _REQUEST, _INT, 0);
-		$regionid 	= Kit::GetParam('regionid', _REQUEST, _STRING);
-		
-		if ($layoutid == 0 || $regionid == '')
-		{
-			$response->SetError(__("No layout/region information available, please refresh the page and try again."));
-			$response->Respond();
-		}
+		$response = new ResponseManager();
 
-        Kit::ClassLoader('region');
-        $region = new region($db);
-        $ownerId = $region->GetOwnerId($layoutid, $regionid);
+        $region = \Xibo\Factory\RegionFactory::getById(Kit::GetParam('regionid', _REQUEST, _INT));
 
-        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutid, $regionid, true);
-        if (!$regionAuth->del)
+        // Do we have permission
+        if (!$this->user->checkDeleteable($region))
             trigger_error(__('You do not have permissions to delete this region'), E_USER_ERROR);
 
-        // Remove the permissions
-        Kit::ClassLoader('layoutregiongroupsecurity');
-        $security = new LayoutRegionGroupSecurity($db);
-        $security->UnlinkAll($layoutid, $regionid);
+        // Delete the region
+        $region->delete();
 
-        $db->query(sprintf("DELETE FROM lklayoutmediagroup WHERE layoutid = %d AND RegionID = '%s'", $layoutid, $regionid));
-
-            if (!$region->DeleteRegion($layoutid, $regionid))
-            {
-                    //there was an ERROR
-                    $response->SetError($region->GetErrorMessage());
-                    $response->Respond();
-            }
-
-            $response->SetFormSubmitResponse(__('Region Deleted.'), true, sprintf("index.php?p=layout&layoutid=%d&modify=true", $layoutid));
-            $response->Respond();
+        $response->SetFormSubmitResponse(__('Region Deleted.'), true, sprintf('index.php?p=layout&layoutid=%d&modify=true', $region->layoutId));
+        $response->Respond();
 	}
 
     /*
@@ -106,39 +73,31 @@ class timelineDAO extends baseDAO {
      */
     function ManualRegionPositionForm()
     {
-        $db =& $this->db;
-        $user =& $this->user;
         $response = new ResponseManager();
 
-        $regionid = Kit::GetParam('regionid', _GET, _STRING);
-        $layoutid = Kit::GetParam('layoutid', _GET, _INT);
+        $layoutId = Kit::GetParam('layoutId', _GET, _INT);
         $scale = Kit::GetParam('scale', _GET, _DOUBLE);
         $zoom = Kit::GetParam('zoom', _GET, _DOUBLE);
 
         // Load the region and get the dimensions, applying the scale factor if necessary (only v1 layouts will have a scale factor != 1)
-        $region = new region($db);
-        $regionNode = $region->getRegion($layoutid, $regionid);
+        $region = \Xibo\Factory\RegionFactory::loadByRegionId(Kit::GetParam('regionid', _GET, _INT));
 
-        $top = round($regionNode->getAttribute('top') * $scale, 0);
-        $left = round($regionNode->getAttribute('left') * $scale, 0);
-        $width = round($regionNode->getAttribute('width') * $scale, 0);
-        $height = round($regionNode->getAttribute('height') * $scale, 0);
-        $zindex = $regionNode->getAttribute('zindex');
-
-        $ownerId = $region->GetOwnerId($layoutid, $regionid);
-        $regionName = $regionNode->getAttribute('name');
-
-        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutid, $regionid, true);
-        if (!$regionAuth->edit)
+        if (!$this->user->checkEditable($region))
             trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
+
+        $top = round($region->top * $scale, 0);
+        $left = round($region->left * $scale, 0);
+        $width = round($region->width * $scale, 0);
+        $height = round($region->height * $scale, 0);
+        $zIndex = $region->zIndex;
 
         // Set some information about the form
         Theme::Set('form_id', 'RegionProperties');
         Theme::Set('form_action', 'index.php?p=timeline&q=ManualRegionPosition');
-        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid .'"><input type="hidden" name="regionid" value="' . $regionid . '"><input type="hidden" name="scale" value="' . $scale .'"><input type="hidden" name="zoom" value="' . $zoom .'">');
+        Theme::Set('form_meta', '<input type="hidden" name="regionid" value="' . $region->regionId . '"><input type="hidden" name="scale" value="' . $scale .'"><input type="hidden" name="zoom" value="' . $zoom .'">');
         
         $formFields = array();
-        $formFields[] = FormManager::AddText('name', __('Name'), $regionName, 
+        $formFields[] = FormManager::AddText('name', __('Name'), $region->name,
             __('Name of the Region'), 'n', 'maxlength="50"');
 
         $formFields[] = FormManager::AddNumber('top', __('Top'), $top, 
@@ -162,14 +121,14 @@ class timelineDAO extends baseDAO {
             $formFields[] = FormManager::AddCombo(
                         'transitionType', 
                         __('Exit Transition'), 
-                        $region->GetOption($layoutid, $regionid, 'transOut', ''),
+                        $region->getOptionValue('transOut', ''),
                         $transitions,
                         'code',
                         'transition',
                         __('What transition should be applied when this region is finished?'), 
                         't');
 
-            $formFields[] = FormManager::AddNumber('transitionDuration', __('Duration'), $region->GetOption($layoutid, $regionid, 'transOutDuration', 0), 
+            $formFields[] = FormManager::AddNumber('transitionDuration', __('Duration'), $region->getOptionValue('transOutDuration', 0),
                 __('The duration for this transition, in milliseconds.'), 'l', '', 'transition-group');
 
             // Compass points for direction
@@ -187,7 +146,7 @@ class timelineDAO extends baseDAO {
             $formFields[] = FormManager::AddCombo(
                         'transitionDirection', 
                         __('Direction'), 
-                        $region->GetOption($layoutid, $regionid, 'transOutDirection', ''),
+                        $region->getOptionValue('transOutDirection', ''),
                         $compassPoints,
                         'id',
                         'name',
@@ -203,18 +162,17 @@ class timelineDAO extends baseDAO {
         }
 
         $formFields[] = FormManager::AddCheckbox('loop', __('Loop?'), 
-            $region->GetOption($layoutid, $regionid, 'loop', 0), __('If there is only one item in this region should it loop? Not currently available for Windows Players.'),
+            $region->getOptionValue('loop', 0), __('If there is only one item in this region should it loop? Not currently available for Windows Players.'),
             'l');
 
-        $formFields[] = FormManager::AddNumber('zindex', __('Layer'), ($zindex == 0) ? NULL : $zindex, 
+        $formFields[] = FormManager::AddNumber('zindex', __('Layer'), ($zIndex == 0) ? NULL : $zIndex,
             __('The layering order of this region (z-index). Advanced use only. '), 'z');
 
         Theme::Set('form_fields', $formFields);
 
         // Add some information about the whole layout to this request.
-        $layout = new Layout();
-        $layoutInformation = $layout->LayoutInformation($layoutid);
-        $response->extra['layoutInformation'] = array('width' => $layoutInformation['width'], 'height' => $layoutInformation['height']);
+        $layout = \Xibo\Factory\LayoutFactory::getById($layoutId);
+        $response->extra['layoutInformation'] = array('width' => $layout->width, 'height' => $layout->height);
         
         $response->SetFormRequestResponse(NULL, __('Region Options'), '350px', '275px');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
@@ -229,146 +187,124 @@ class timelineDAO extends baseDAO {
         if (!Kit::CheckToken())
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
-        $db 	=& $this->db;
-        $user 	=& $this->user;
-        $response   = new ResponseManager();
+        $response = new ResponseManager();
 
-        $layoutid   = Kit::GetParam('layoutid', _POST, _INT);
-        $regionid   = Kit::GetParam('regionid', _POST, _STRING);
-        $regionName = Kit::GetParam('name', _POST, _STRING);
-        $top        = Kit::GetParam('top', _POST, _INT);
-        $left       = Kit::GetParam('left', _POST, _INT);
-        $width      = Kit::GetParam('width', _POST, _INT);
-        $height 	= Kit::GetParam('height', _POST, _INT);
-        $scale = Kit::GetParam('scale', _POST, _DOUBLE);
-        $zoom = Kit::GetParam('zoom', _POST, _DOUBLE);
+        // Load the region and get the dimensions, applying the scale factor if necessary (only v1 layouts will have a scale factor != 1)
+        $region = \Xibo\Factory\RegionFactory::loadByRegionId(Kit::GetParam('regionid', _POST, _INT));
+        Debug::Audit($region);
 
-        // Adjust the dimensions
-        // For version 2 layouts and above, the scale will always be 1.
-        // Version 1 layouts need to use scale because the values in the XLF should be scaled down
-        $top = $top / $scale;
-        $left = $left / $scale;
-        $width = $width / $scale;
-        $height = $height / $scale;
-        
-        // Transitions?
-        $transitionType = Kit::GetParam('transitionType', _POST, _WORD);
-        $duration = Kit::GetParam('transitionDuration', _POST, _INT, 0);
-        $direction = Kit::GetParam('transitionDirection', _POST, _WORD, '');
-
-        $region = new region($db);
-        $ownerId = $region->GetOwnerId($layoutid, $regionid);
-
-        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutid, $regionid, true);
-        if (!$regionAuth->edit)
+        if (!$this->user->checkEditable($region))
             trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
 
-        Debug::LogEntry('audit', sprintf('Layoutid [%d] Regionid [%s]', $layoutid, $regionid), 'layout', 'ManualRegionPosition');
+        // Set the new values
+        $region->name = Kit::GetParam('name', _POST, _STRING);
+        $region->zIndex = Kit::GetParam('zindex', _POST, _INT, NULL);
+
+        $top  = Kit::GetParam('top', _POST, _INT);
+        $left = Kit::GetParam('left', _POST, _INT);
+        $width = Kit::GetParam('width', _POST, _INT);
+        $height = Kit::GetParam('height', _POST, _INT);
+        $scale = Kit::GetParam('scale', _POST, _DOUBLE);
+        $zoom = Kit::GetParam('zoom', _POST, _DOUBLE);
 
         // Remove the "px" from them
         $width  = str_replace('px', '', $width);
         $height = str_replace('px', '', $height);
         $top    = str_replace('px', '', $top);
         $left   = str_replace('px', '', $left);
-        
-        // Create some options
-        $options = array(
-            array('name' => 'transOut', 'value' => $transitionType), 
-            array('name' => 'transOutDuration', 'value' => $duration),
-            array('name' => 'transOutDirection', 'value' => $direction),
-            array('name' => 'loop', 'value' => Kit::GetParam('loop', _POST, _CHECKBOX))
-        );
 
-        // Edit the region 
-        if (!$region->EditRegion($layoutid, $regionid, $width, $height, $top, $left, $regionName, $options, Kit::GetParam('zindex', _POST, _INT, NULL)))
-            trigger_error($region->GetErrorMessage(), E_USER_ERROR);
+        // Adjust the dimensions
+        // For version 2 layouts and above, the scale will always be 1.
+        // Version 1 layouts need to use scale because the values in the XLF should be scaled down
+        $region->top = $top / $scale;
+        $region->left = $left / $scale;
+        $region->width = $width / $scale;
+        $region->height = $height / $scale;
 
-        $response->SetFormSubmitResponse('Region Resized', true, "index.php?p=layout&modify=true&layoutid=$layoutid&zoom=$zoom");
+        // Loop
+        $region->setOptionValue('loop', Kit::GetParam('loop', _POST, _CHECKBOX));
+
+        // Transitions
+        $region->setOptionValue('transitionType', Kit::GetParam('transitionType', _POST, _WORD));
+        $region->setOptionValue('transitionDuration', Kit::GetParam('transitionDuration', _POST, _INT));
+        $region->setOptionValue('transitionDirection', Kit::GetParam('transitionDirection', _POST, _WORD));
+
+        // Save
+        $region->save();
+
+        $response->SetFormSubmitResponse('Region Resized', true, "index.php?p=layout&modify=true&layoutid=$region->layoutId&zoom=$zoom");
         $response->Respond();
     }
 	
 	/**
 	 * Edits the region information
-	 * @return 
 	 */
 	function RegionChange()
 	{
-		$db 	=& $this->db;
-		$user 	=& $this->user;
-		
-		// ajax request handler
 		$response = new ResponseManager();
 		
-		// Vars
-		$layoutid = Kit::GetParam('layoutid', _REQUEST, _INT, 0);
+		// Create the layout
+		$layout = \Xibo\Factory\LayoutFactory::loadById(Kit::GetParam('layoutid', _REQUEST, _INT));
+
+        // Pull in the regions and convert them to stdObjects
         $regions = Kit::GetParam('regions', _POST, _HTMLSTRING);
 
         if ($regions == '')
-            trigger_error(__('No regions present'));
+            trigger_error(__('No regions present'), E_USER_ERROR);
 
         $regions = json_decode($regions);
 
-        foreach ($regions as $region) {
+        // Go through each region and update the region in the layout we have
+        foreach ($regions as $newCoordinates) {
+            $regionId = Kit::ValidateParam($newCoordinates->regionid, _INT);
 
-            $regionid = Kit::ValidateParam($region->regionid, _STRING);
-            $top = Kit::ValidateParam($region->top, _DOUBLE);
-            $left = Kit::ValidateParam($region->left, _DOUBLE);
-            $width = Kit::ValidateParam($region->width, _DOUBLE);
-            $height = Kit::ValidateParam($region->height, _DOUBLE);
+            // Load the region
+            $region = $layout->getRegion($regionId);
+            Debug::Audit('Editing Region ' . $region);
 
-            Debug::LogEntry('audit', 'Editing Region ' . $regionid);
-            
-            Kit::ClassLoader('region');
-            $regionObject = new region($db);
-            $regionObject->delayFinalise = true;
-            $ownerId = $regionObject->GetOwnerId($layoutid, $regionid);
-
-            $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutid, $regionid, true);
-            if (!$regionAuth->del)
+            // Check Permissions
+            if (!$this->user->checkEditable($region))
                 trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
-    		
-    		if (!$regionObject->EditRegion($layoutid, $regionid, $width, $height, $top, $left))
-    			trigger_error($regionObject->GetErrorMessage(), E_USER_ERROR);
+
+            // New coordinates
+            $region->top = Kit::ValidateParam($newCoordinates->top, _DOUBLE);
+            $region->left = Kit::ValidateParam($newCoordinates->left, _DOUBLE);
+            $region->width = Kit::ValidateParam($newCoordinates->width, _DOUBLE);
+            $region->height = Kit::ValidateParam($newCoordinates->height, _DOUBLE);
+            Debug::Audit('Set ' . $region);
         }
 
-        // Set the layout status
-        Kit::ClassLoader('Layout');
-        $layout = new Layout($this->db);
-        $layout->SetValid($layoutid, true);
-		
+        // Mark the layout as having changed
+        $layout->status = 0;
+        $layout->save();
+
 		$response->SetFormSubmitResponse('');
 		$response->hideMessage = true;
 		$response->Respond();
 	}
 	
     /**
-     * Return the Delete Form as HTML
-     * @return
+     * Delete Region Form
      */
     public function DeleteRegionForm()
     {
-        $db 		=& $this->db;
-        $response	= new ResponseManager();
-        $helpManager = new HelpManager($db, $this->user);
-        $layoutid 	= Kit::GetParam('layoutid', _REQUEST, _INT, 0);
-        $regionid 	= Kit::GetParam('regionid', _REQUEST, _STRING);
+        $response = new ResponseManager();
 
-        Kit::ClassLoader('region');
-        $region = new region($db);
-        $ownerId = $region->GetOwnerId($layoutid, $regionid);
+        // Load our region
+        $region = \Xibo\Factory\RegionFactory::getById(Kit::GetParam('regionid', _REQUEST, _INT));
 
-        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutid, $regionid, true);
-        if (!$regionAuth->del)
+        // Do we have permission
+        if (!$this->user->checkDeleteable($region))
             trigger_error(__('You do not have permissions to delete this region'), E_USER_ERROR);
 		
 		// Set some information about the form
         Theme::Set('form_id', 'RegionDeleteForm');
         Theme::Set('form_action', 'index.php?p=timeline&q=DeleteRegion');
-        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '" /><input type="hidden" name="regionid" value="' . $regionid . '" />');
+        Theme::Set('form_meta', '<input type="hidden" name="regionid" value="' . $region->regionId . '" />');
         Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to remove this region? All media files will be unassigned and any context saved to the region itself (such as Text, Tickers) will be lost permanently.'))));
 
         $response->SetFormRequestResponse(NULL, __('Delete this region?'), '350px', '200px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Region', 'Delete') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Region', 'Delete') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Delete'), '$("#RegionDeleteForm").submit()');
         $response->Respond();
@@ -377,7 +313,6 @@ class timelineDAO extends baseDAO {
     /**
      * Shows the Timeline for this region
      * Also shows any Add/Edit options
-     * @return
      */
     function RegionOptions()
     {
@@ -387,303 +322,167 @@ class timelineDAO extends baseDAO {
 	
     /**
      * Adds the media into the region provided
-     * @return
      */
     function AddFromLibrary()
     {
-        $db 		=& $this->db;
-        $user 		=& $this->user;
-        $response 	= new ResponseManager();
+        $response = new ResponseManager();
 
-        $layoutId = Kit::GetParam('layoutid', _GET, _INT);
-        $regionId = Kit::GetParam('regionid', _REQUEST, _STRING);
-        $mediaList = Kit::GetParam('MediaID', _POST, _ARRAY, array());
+        // Load the region
+        $region = \Xibo\Factory\RegionFactory::getById(Kit::GetParam('regionid', _REQUEST, _INT));
+
+        Debug::Audit('Assigning files to ' . $region);
 
         // Make sure we have permission to edit this region
-        Kit::ClassLoader('region');
-        $region = new region($db);
-        $ownerId = $region->GetOwnerId($layoutId, $regionId);
-
-        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
-        if (!$regionAuth->edit)
+        if (!$this->user->checkEditable($region))
             trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
 
-        if (!$region->AddFromLibrary($user, $layoutId, $regionId, $mediaList))
-            trigger_error($region->GetErrorMessage(), E_USER_ERROR);
+        // Media to assign
+        $mediaList = Kit::GetParam('MediaID', _POST, _ARRAY, array());
+
+        if (count($mediaList) <= 0)
+            throw new InvalidArgumentException(__('No media to assign'), 25006);
+
+        // Get the playlist for this region
+        // TODO: Playlist Implementation
+        $playlists = \Xibo\Factory\PlaylistFactory::getByRegionId($region->regionId);
+        $playlist = $playlists[0];
+        /* @var \Xibo\Entity\Playlist $playlist */
+
+        // Add each media item to the region and save
+        // Loop through all the media
+        foreach ($mediaList as $mediaId) {
+            /* @var int $mediaId */
+            $media = \Xibo\Factory\MediaFactory::getById($mediaId);
+
+            if (!$this->user->checkViewable($media))
+                trigger_error(__('You do not have permissions to use this media'), E_USER_ERROR);
+
+            // Create a Widget and add it to our region
+            $widget = \Xibo\Factory\WidgetFactory::create($this->user->userid, $playlist->playlistId, $media->mediaType, $media->duration);
+            $widget->assignMedia($mediaId);
+
+            $playlist->widgets[] = $widget;
+        }
+
+        // Save the playlist
+        $playlist->save();
 
         // We want to load a new form
         $response->SetFormSubmitResponse(sprintf(__('%d Media Items Assigned'), count($mediaList)));
         $response->loadForm = true;
-        $response->loadFormUri = "index.php?p=timeline&layoutid=$layoutId&regionid=$regionId&q=Timeline";
+        $response->loadFormUri = 'index.php?p=timeline&regionid=' . $region->regionId . '&q=Timeline';
         $response->Respond();
     }
 
     /**
-	 * Called by AJAX
-	 * @return 
+	 * Represents the Preview inside the Layout Designer
 	 */
 	public function RegionPreview()
 	{
-		$db 		=& $this->db;
-		$user 		=& $this->user;
+		// Response Manager
+		$response = new ResponseManager();
 		
-		include_once("lib/data/region.data.class.php");
+		// Keyed off the region id
+		$regionId = Kit::GetParam('regionid', _POST, _STRING);
 		
-		//ajax request handler
-		$response	= new ResponseManager();
-		
-		//Expect
-		$layoutid 	= Kit::GetParam('layoutid', _POST, _INT, 0);
-		$regionid 	= Kit::GetParam('regionid', _POST, _STRING);
-		
-		$seqGiven 	= Kit::GetParam('seq', _POST, _INT, 0);
-		$seq	 	= Kit::GetParam('seq', _POST, _INT, 0);
-		$width	 	= Kit::GetParam('width', _POST, _INT, 0);
-        $height     = Kit::GetParam('height', _POST, _INT, 0);
-		$scale_override = Kit::GetParam('scale_override', _POST, _DOUBLE, 0);
+		$seqGiven = Kit::GetParam('seq', _POST, _INT, 0);
+		$seq = Kit::GetParam('seq', _POST, _INT, 0);
+		$width = Kit::GetParam('width', _POST, _INT, 0);
+        $height = Kit::GetParam('height', _POST, _INT, 0);
+		$scaleOverride = Kit::GetParam('scale_override', _POST, _DOUBLE, 0);
 		
 		// The sequence will not be zero based, so adjust it
 		$seq--;
 		
-		// Get some region information
-		$return		= "";
-		$xml		= new DOMDocument("1.0");
-		$region 	= new region($db);
-		
-		if (!$xmlString = $region->GetLayoutXml($layoutid))
-		{
-            trigger_error($region->GetErrorMessage(), E_USER_ERROR);
-		}
-		
-		$xml->loadXML($xmlString);
-		
-		// This will be all the media nodes in the region provided
-		$xpath 		= new DOMXPath($xml);
-		$nodeList 	= $xpath->query("//region[@id='$regionid']/media");
-        $return = '';
-		
-		if ($nodeList->length == 0)
-		{
-			// No media to preview
-			$response->extra['text']  = __('Empty Region');
-			$response->html = '';
-			$response->Respond();
-		}
-		
-		$node = $nodeList->item($seq);
-			
-		// We have our node.
-		$type = (string) $node->getAttribute("type");
-		$mediaDurationText = (string) $node->getAttribute("duration");
-        $mediaid = (string) $node->getAttribute("id");
-        $lkId = (string) $node->getAttribute("lkid");
-
-        // Create a module to deal with this
+		// Load our region
         try {
-            $moduleObject = ModuleFactory::load($type, $layoutid, $regionid, $mediaid, $lkId, $this->db, $this->user);
+            $region = \Xibo\Factory\RegionFactory::getById($regionId);
+            $playlists = \Xibo\Factory\PlaylistFactory::getByRegionId($regionId);
+
+            // Get the first playlist we can find
+            // TODO: implement playlists
+            $playlist = $playlists[0];
+            /* @var \Xibo\Entity\Playlist $playlist */
+
+            // Use the playlist to get the widgets (softly)
+            $widgets = \Xibo\Factory\WidgetFactory::getByPlaylistId($playlist->playlistId);
+
+            // We want to load the widget in the given sequence
+            if (count($widgets) <= 0) {
+                // No media to preview
+                $response->extra['text']  = __('Empty Region');
+                $response->html = '';
+                $response->Respond();
+            }
+
+            // Select the widget at the required sequence
+            $widget = $widgets[$seq];
+            /* @var \Xibo\Entity\Widget $widget */
+            $widget->load();
+
+            // Otherwise, output a preview
+            $module = \Xibo\Factory\ModuleFactory::createWithWidget($widget, $region);
+
+            $return  = '<div class="regionPreviewOverlay"></div>';
+            $return .= $module->Preview($width, $height, $scaleOverride);
+
+            $response->html = $return;
+            $response->extra['type'] = $widget->type;
+            $response->extra['duration'] = $widget->duration;
+            $response->extra['number_items'] = count($widgets);
+            $response->extra['text'] = $seqGiven . ' / ' . count($widgets) . ' ' . $module->GetName() . ' lasting ' . $widget->duration . ' seconds';
+            $response->extra['current_item'] = $seqGiven;
+
+            $response->Respond();
         }
-        catch (Exception $e) {
-            trigger_error($e->getMessage(), E_USER_ERROR);
+        catch (\Xibo\Exception\NotFoundException $e) {
+            // Log it
+            Debug::Error($e->getMessage());
+
+            // No media to preview
+            $response->extra['text']  = __('Region cannot be found.');
+            $response->html = '';
+            $response->Respond();
         }
-
-        $return .= '<div class="regionPreviewOverlay"></div>';
-        $return .= $moduleObject->Preview($width, $height, $scale_override);
-
-		$response->html = $return;
-		$response->extra['type'] = $type;
-        $response->extra['duration'] = $mediaDurationText;
-        $response->extra['number_items'] = $nodeList->length;
-        $response->extra['text'] = $seqGiven . ' / ' . $nodeList->length . ' ' . $moduleObject->displayType . ' lasting ' . $mediaDurationText . ' seconds';
-        $response->extra['current_item'] = $seqGiven;
-
-        $response->Respond();
 	}
 
-	public function RegionPermissionsForm()
+    /**
+     * Set the Module Buttons for a Form
+     * @param int $regionId
+     * @param int $playlistId
+     */
+    private function setModuleButtons($regionId, $playlistId)
     {
-        $db =& $this->db;
-        $user =& $this->user;
-        $response = new ResponseManager();
-        $helpManager = new HelpManager($db, $user);
-
-        $layoutid = Kit::GetParam('layoutid', _GET, _INT);
-        $regionid = Kit::GetParam('regionid', _GET, _STRING);
-
-        Kit::ClassLoader('region');
-        $region = new region($db);
-        $ownerId = $region->GetOwnerId($layoutid, $regionid);
-
-        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutid, $regionid, true);
-        if (!$regionAuth->modifyPermissions)
-            trigger_error(__("You do not have permissions to edit this regions permissions"), E_USER_ERROR);
-
-        // List of all Groups with a view / edit / delete check box
-        $permissions = new UserGroup();
-        
-        if (!$result = $permissions->GetPermissionsForObject('lklayoutregiongroup', NULL, NULL, sprintf(" AND lklayoutregiongroup.LayoutID = %d AND lklayoutregiongroup.RegionID = '%s' ", $layoutid, $regionid)))
-            trigger_error($permissions->GetErrorMessage(), E_USER_ERROR);
-        
-        if (count($result) <= 0)
-            trigger_error(__('Unable to get permissions'), E_USER_ERROR);
-
-        $checkboxes = array();
-
-        foreach ($result as $row) {
-            $groupId = $row['groupid'];
-            $rowClass = ($row['isuserspecific'] == 0) ? 'strong_text' : '';
-
-            $checkbox = array(
-                    'id' => $groupId,
-                    'name' => Kit::ValidateParam($row['group'], _STRING),
-                    'class' => $rowClass,
-                    'value_view' => $groupId . '_view',
-                    'value_view_checked' => (($row['view'] == 1) ? 'checked' : ''),
-                    'value_edit' => $groupId . '_edit',
-                    'value_edit_checked' => (($row['edit'] == 1) ? 'checked' : ''),
-                    'value_del' => $groupId . '_del',
-                    'value_del_checked' => (($row['del'] == 1) ? 'checked' : ''),
-                );
-
-            $checkboxes[] = $checkbox;
-        }
-
-        $formFields = array();
-        $formFields[] = FormManager::AddPermissions('groupids[]', $checkboxes);
-        Theme::Set('form_fields', $formFields);
-
-        // Set some information about the form
-        Theme::Set('form_id', 'RegionPermissionsForm');
-        Theme::Set('form_action', 'index.php?p=timeline&q=RegionPermissions');
-        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutid . '" /><input type="hidden" name="regionid" value="' . $regionid . '" />');
-
-        $response->SetFormRequestResponse(NULL, __('Permissions'), '350px', '500px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Region', 'Permissions') . '")');
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Save'), '$("#RegionPermissionsForm").submit()');
-        $response->Respond();
-    }
-
-    public function RegionPermissions()
-    {
-        $db =& $this->db;
-        $user =& $this->user;
-        $response = new ResponseManager();
-        Kit::ClassLoader('layoutregiongroupsecurity');
-
-        $layoutId = Kit::GetParam('layoutid', _POST, _INT);
-        $regionId = Kit::GetParam('regionid', _POST, _STRING);
-        $groupIds = Kit::GetParam('groupids', _POST, _ARRAY);
-
-        Kit::ClassLoader('region');
-        $region = new region($db);
-        $ownerId = $region->GetOwnerId($layoutId, $regionId);
-
-        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
-        if (!$regionAuth->modifyPermissions)
-            trigger_error(__('You do not have permissions to edit this regions permissions'), E_USER_ERROR);
-
-        // Unlink all
-        $layoutSecurity = new LayoutRegionGroupSecurity($db);
-        if (!$layoutSecurity->UnlinkAll($layoutId, $regionId))
-            trigger_error(__('Unable to set permissions'));
-
-        // Some assignments for the loop
-        $lastGroupId = 0;
-        $first = true;
-        $view = 0;
-        $edit = 0;
-        $del = 0;
-
-        // List of groupIds with view, edit and del assignments
-        foreach($groupIds as $groupPermission)
-        {
-            $groupPermission = explode('_', $groupPermission);
-            $groupId = $groupPermission[0];
-
-            if ($first)
-            {
-                // First time through
-                $first = false;
-                $lastGroupId = $groupId;
-            }
-
-            if ($groupId != $lastGroupId)
-            {
-                // The groupId has changed, so we need to write the current settings to the db.
-                // Link new permissions
-                if (!$layoutSecurity->Link($layoutId, $regionId, $lastGroupId, $view, $edit, $del))
-                    trigger_error(__('Unable to set permissions'));
-
-                // Reset
-                $lastGroupId = $groupId;
-                $view = 0;
-                $edit = 0;
-                $del = 0;
-            }
-
-            switch ($groupPermission[1])
-            {
-                case 'view':
-                    $view = 1;
-                    break;
-
-                case 'edit':
-                    $edit = 1;
-                    break;
-
-                case 'del':
-                    $del = 1;
-                    break;
-            }
-        }
-
-        // Need to do the last one
-        if (!$first)
-        {
-            if (!$layoutSecurity->Link($layoutId, $regionId, $lastGroupId, $view, $edit, $del))
-                    trigger_error(__('Unable to set permissions'));
-        }
-
-        $response->SetFormSubmitResponse(__('Permissions Changed'));
-        $response->Respond();
-    }
-
-    private function ThemeSetModuleButtons($layoutId, $regionId) {
         // Present a canvas with 2 columns, left column for the media icons
         $buttons = array();
 
         // Always output a Library assignment button
         $buttons[] = array(
                 'id' => 'media_button_library',
-                'url' => 'index.php?p=content&q=LibraryAssignForm&layoutid=' . $layoutId . '&regionid=' . $regionId,
+                'url' => 'index.php?p=content&q=LibraryAssignForm&regionId=' . $regionId,
                 'text' => __('Library')
             );
 
         // Get a list of the enabled modules and then create buttons for them
-        if (!$enabledModules = new ModuleManager($this->user))
-            trigger_error($enabledModules->message, E_USER_ERROR);
+        foreach (\Xibo\Factory\ModuleFactory::getAssignableModules() as $module) {
+            /* @var \Xibo\Entity\Module $module */
+            $url = (($module->regionSpecific == 1) ? 'index.php?p=module&q=Exec&mod=' . $module->type . '&method=AddForm' : 'index.php?p=content&q=fileUploadForm') . '&regionId=' . $regionId . '&playlistId=' . $playlistId;
 
-        // Loop through the buttons we have and output each one
-        while ($modulesItem = $enabledModules->GetNextModule())
-        {
-            $mod = Kit::ValidateParam($modulesItem['Module'], _STRING);
-            $caption = Kit::ValidateParam($modulesItem['Name'], _STRING);
-            $mod = strtolower($mod);
-            $title = Kit::ValidateParam($modulesItem['Description'], _STRING);
-            $img = Kit::ValidateParam($modulesItem['ImageUri'], _STRING);
-
-            
             $buttons[] = array(
-                'id' => 'media_button_' . $mod,
-                'url' => 'index.php?p=module&q=Exec&mod=' . $mod . '&method=AddForm&layoutid=' . $layoutId . '&regionid=' . $regionId,
-                'text' => __($caption)
+                'id' => 'media_button_' . $module->type,
+                'url' => $url,
+                'text' => __($module->name)
             );
         }
 
         Theme::Set('media_buttons', $buttons);
     }
 
-    public function TimeLine() {
+    /**
+     * Timeline Form
+     */
+    public function TimeLine()
+    {
         if ($this->user->GetPref('timeLineView') == 'grid')
             $this->TimeLineGrid();
         else
@@ -695,28 +494,22 @@ class timelineDAO extends baseDAO {
      */
     public function TimelineList()
     {
-        $db =& $this->db;
         $user =& $this->user;
         $user->SetPref('timeLineView', 'list');
         $response = new ResponseManager();
         $response->html = '';
 
-        $layoutId = Kit::GetParam('layoutid', _GET, _INT);
-        $regionId = Kit::GetParam('regionid', _REQUEST, _STRING);
+        // Load the region and get the dimensions, applying the scale factor if necessary (only v1 layouts will have a scale factor != 1)
+        $region = \Xibo\Factory\RegionFactory::loadByRegionId(Kit::GetParam('regionid', _GET, _INT));
 
-        // Make sure we have permission to edit this region
-        Kit::ClassLoader('region');
-        $region = new region($db);
-        $ownerId = $region->GetOwnerId($layoutId, $regionId);
-
-        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
-        if (!$regionAuth->edit)
+        if (!$this->user->checkEditable($region))
             trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
 
+        // Start buildings the Timeline List
         $response->html .= '<div class="container-fluid">';
         $response->html .= '<div class="row">';
         // Set the theme module buttons
-        $this->ThemeSetModuleButtons($layoutId, $regionId);
+        $this->setModuleButtons($region->regionId, $region->playlists[0]->playlistId);
         $response->html .= Theme::RenderReturn('layout_designer_form_timeline');
 
         // Load the XML for this layout and region, we need to get the media nodes.
@@ -726,40 +519,31 @@ class timelineDAO extends baseDAO {
         $timeListMediaListId = uniqid('timelineMediaList_');
 
         $response->html .= '<div class="col-md-10">';
-        $response->html .= '<div id="timelineControl" class="timelineColumn" layoutid="' . $layoutId . '" regionid="' . $regionId . '">';
+        $response->html .= '<div id="timelineControl" class="timelineColumn" layoutid="' . $region->layoutId . '" regionid="' . $region->regionId . '">';
         $response->html .= '    <div class="timelineMediaVerticalList">';
         $response->html .= '        <ul id="' . $timeListMediaListId . '" class="timelineSortableListOfMedia">';
 
         // How are we going to colour the bars, my media type or my permissions
         $timeBarColouring = Config::GetSetting('REGION_OPTIONS_COLOURING');
 
-        // Create a layout object
-        $region = new Region($db);
+        // Get the Widgets on this Timeline
+        // TODO: Playlist logic
+        $playlist = $region->playlists[0];
+        /* @var \Xibo\Entity\Playlist $playlist */
 
-        foreach($region->GetMediaNodeList($layoutId, $regionId) as $mediaNode)
-        {
+        foreach($playlist->widgets as $widget) {
+            /* @var \Xibo\Entity\Widget $widget */
             // Put this node vertically in the region time line
-            $mediaId = $mediaNode->getAttribute('id');
-            $lkId = $mediaNode->getAttribute('lkid');
-            $mediaType = $mediaNode->getAttribute('type');
-            $mediaDuration = $mediaNode->getAttribute('duration');
-            $ownerId = $mediaNode->getAttribute('userId');
-
-            // Permissions for this assignment
-            $auth = $user->MediaAssignmentAuth($ownerId, $layoutId, $regionId, $mediaId, true);
-
-            // Skip over media assignments that we do not have permission to see
-            if (!$auth->view)
+            if (!$this->user->checkViewable($widget))
+                // Skip over media assignments that we do not have permission to see
                 continue;
 
-            Debug::LogEntry('audit', sprintf('Permission Granted to View MediaID: %s', $mediaId), 'layout', 'TimeLine');
-
             // Create a media module to handle all the complex stuff
+            $tmpModule = null;
             try {
-                $tmpModule = ModuleFactory::load($mediaType, $layoutId, $regionId, $mediaId, $lkId, $this->db, $this->user);
+                $tmpModule = \Xibo\Factory\ModuleFactory::createWithWidget($widget, $region);
             }
             catch (Exception $e) {
-                Debug::Audit('Caught exception from Module Create');
                 trigger_error($e->getMessage(), E_USER_ERROR);
             }
 
@@ -769,12 +553,12 @@ class timelineDAO extends baseDAO {
             
             // Colouring for the media block
             if ($timeBarColouring == 'Permissions')
-                $mediaBlockColouringClass = 'timelineMediaItemColouring_' . (($auth->edit) ? 'enabled' : 'disabled');
+                $mediaBlockColouringClass = 'timelineMediaItemColouring_' . (($this->user->checkEditable($widget)) ? 'enabled' : 'disabled');
             else
-                $mediaBlockColouringClass = 'timelineMediaItemColouringDefault timelineMediaItemColouring_' . $mediaType;
+                $mediaBlockColouringClass = 'timelineMediaItemColouringDefault timelineMediaItemColouring_' . $tmpModule->getModuleType();
             
             // Create the list item
-            $response->html .= '<li class="timelineMediaListItem" mediaid="' . $mediaId . '" lkid="' . $lkId . '">';
+            $response->html .= '<li class="timelineMediaListItem" widgetid="' . $widget->widgetId . '">';
             
             // In transition
             $response->html .= '    <div class="timelineMediaInTransition">';
@@ -789,26 +573,26 @@ class timelineDAO extends baseDAO {
             $response->html .= '        <ul class="timelineMediaItemLinks">';
 
             // Create some links
-            if ($auth->edit)
-                $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=EditForm&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '" title="' . __('Click to edit this media') . '">' . __('Edit') . '</a></li>';
+            if ($this->user->checkEditable($widget))
+                $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=EditForm&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '" title="' . __('Click to edit this media') . '">' . __('Edit') . '</a></li>';
 
-            if ($auth->del)
-                $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=DeleteForm&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '" title="' . __('Click to delete this media') . '">' . __('Delete') . '</a></li>';
+            if ($this->user->checkDeleteable($widget))
+                $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=DeleteForm&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '" title="' . __('Click to delete this media') . '">' . __('Delete') . '</a></li>';
 
-            if ($auth->modifyPermissions)
-                $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=PermissionsForm&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '" title="Click to change permissions for this media">' . __('Permissions') . '</a></li>';
+            if ($this->user->checkPermissionsModifyable($widget))
+                $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=user&q=permissionsForm&entity=Widget&objectId=' . $widget->widgetId . '" title="' . __('Click to change permissions for this media') . '">' . __('Permissions') . '</a></li>';
 
             if (count($this->user->TransitionAuth('in')) > 0)
-                $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=TransitionEditForm&type=in&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '" title="' . __('Click to edit this transition') . '">' . __('In Transition') . '</a></li>';
+                $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=TransitionEditForm&type=in&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '" title="' . __('Click to edit this transition') . '">' . __('In Transition') . '</a></li>';
             
             if (count($this->user->TransitionAuth('out')) > 0)
-                $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $mediaType . '&q=Exec&method=TransitionEditForm&type=out&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '" title="' . __('Click to edit this transition') . '">' . __('Out Transition') . '</a></li>';
+                $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=TransitionEditForm&type=out&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '" title="' . __('Click to edit this transition') . '">' . __('Out Transition') . '</a></li>';
             
             $response->html .= '        </ul>';
 
             // Put the media name in
             $response->html .= '        <div class="timelineMediaDetails ' . $mediaBlockColouringClass . '">';
-            $response->html .= '            <h3>' . sprintf('%s (%d seconds)', (($mediaName == '') ? __($tmpModule->displayType) : $mediaName), $mediaDuration) . '</h3>';
+            $response->html .= '            <h3>' . sprintf('%s (%d seconds)', $mediaName, $widget->duration) . '</h3>';
             $response->html .= '        </div>';
 
             // Put the media hover preview in
@@ -851,8 +635,8 @@ class timelineDAO extends baseDAO {
         $response->focusInFirstInput = false;
 
         // Add some buttons
-        $response->AddButton(__('Save Order'), 'XiboTimelineSaveOrder("' . $timeListMediaListId . '","' . $layoutId . '","' . $regionId . '")');
-        $response->AddButton(__('Switch to Grid'), 'XiboSwapDialog("index.php?p=timeline&q=TimelineGrid&layoutid=' . $layoutId . '&regionid=' . $regionId . '")');
+        $response->AddButton(__('Save Order'), 'XiboTimelineSaveOrder("' . $timeListMediaListId . '","' . $region->regionId . '")');
+        $response->AddButton(__('Switch to Grid'), 'XiboSwapDialog("index.php?p=timeline&q=TimelineGrid&regionid=' . $region->regionId . '")');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Layout', 'RegionOptions') . '")');
         $response->AddButton(__('Close'), 'XiboDialogClose()');
 
@@ -863,25 +647,19 @@ class timelineDAO extends baseDAO {
      * Timeline in Grid mode
      */
     public function TimelineGrid() {
-        $user =& $this->user;
-        $user->SetPref('timeLineView', 'grid');
+        $this->user->SetPref('timeLineView', 'grid');
+
         $response = new ResponseManager();
         $response->html = '';
 
-        $layoutId = Kit::GetParam('layoutid', _GET, _INT);
-        $regionId = Kit::GetParam('regionid', _REQUEST, _STRING);
+        // Load the region and get the dimensions, applying the scale factor if necessary (only v1 layouts will have a scale factor != 1)
+        $region = \Xibo\Factory\RegionFactory::loadByRegionId(Kit::GetParam('regionid', _GET, _INT));
 
-        // Make sure we have permission to edit this region
-        Kit::ClassLoader('region');
-        $region = new Region();
-        $ownerId = $region->GetOwnerId($layoutId, $regionId);
-
-        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
-        if (!$regionAuth->edit)
+        if (!$this->user->checkEditable($region))
             trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
 
         // Set the theme module buttons
-        $this->ThemeSetModuleButtons($layoutId, $regionId);
+        $this->setModuleButtons($region->regionId, $region->playlists[0]->playlistId);
 
         $id = uniqid();
         Theme::Set('prepend', '<div class="row">' . Theme::RenderReturn('layout_designer_form_timeline') . '<div class="col-md-10">');
@@ -893,8 +671,7 @@ class timelineDAO extends baseDAO {
         Theme::Set('pager', ResponseManager::Pager($id));
         Theme::Set('form_meta', '<input type="hidden" name="p" value="timeline">
             <input type="hidden" name="q" value="TimelineGridView">
-            <input type="hidden" name="layoutid" value="' . $layoutId . '">
-            <input type="hidden" name="regionid" value="' . $regionId . '">');
+            <input type="hidden" name="regionid" value="' . $region->regionId . '">');
         
         // Call to render the template
         $response->html = Theme::RenderReturn('grid_render');
@@ -908,32 +685,27 @@ class timelineDAO extends baseDAO {
         $response->focusInFirstInput = false;
 
         // Add some buttons
-        $response->AddButton(__('Switch to List'), 'XiboSwapDialog("index.php?p=timeline&q=TimelineList&layoutid=' . $layoutId . '&regionid=' . $regionId . '")');
+        $response->AddButton(__('Switch to List'), 'XiboSwapDialog("index.php?p=timeline&q=TimelineList&regionid=' . $region->regionId . '")');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Layout', 'RegionOptions') . '")');
         $response->AddButton(__('Close'), 'XiboDialogClose()');
         $response->Respond();
     }
 
-    public function TimelineGridView() {
-
+    /**
+     * TimeLine Grid
+     */
+    public function TimelineGridView()
+    {
         $user =& $this->user;
         $response = new ResponseManager();
-        
-        $layoutId = Kit::GetParam('layoutid', _POST, _INT);
-        $regionId = Kit::GetParam('regionid', _POST, _STRING);
 
-        // Make sure we have permission to edit this region
-        Kit::ClassLoader('region');
-        $region = new Region();
-        $ownerId = $region->GetOwnerId($layoutId, $regionId);
+        // Load the region and get the dimensions, applying the scale factor if necessary (only v1 layouts will have a scale factor != 1)
+        $region = \Xibo\Factory\RegionFactory::loadByRegionId(Kit::GetParam('regionid', _POST, _INT));
 
-        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
-        if (!$regionAuth->edit)
+        if (!$this->user->checkEditable($region))
             trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
 
-        // Load the XML for this layout and region, we need to get the media nodes.
-        $region = new Region();
-
+        // Columns
         $cols = array(
                 array('name' => 'order', 'title' => __('Order')),
                 array('name' => 'name', 'title' => __('Name')),
@@ -946,66 +718,70 @@ class timelineDAO extends baseDAO {
         $rows = array();
         $i = 0;
 
-        foreach($region->GetMediaNodeList($layoutId, $regionId) as $mediaNode) {
+        // Get the Widgets on this Timeline
+        // TODO: Playlist logic
+        $playlist = $region->playlists[0];
+        /* @var \Xibo\Entity\Playlist $playlist */
+
+        Debug::Audit(count($playlist->widgets) . ' widgets on ' . $region);
+
+        foreach($playlist->widgets as $widget) {
+            /* @var \Xibo\Entity\Widget $widget */
+            // Put this node vertically in the region time line
+            if (!$this->user->checkViewable($widget))
+                // Skip over media assignments that we do not have permission to see
+                continue;
+
             // Construct an object containing all the layouts, and pass to the theme
             $row = array();
-
-            // Put this node vertically in the region time line
-            $mediaId = $mediaNode->getAttribute('id');
-            $lkId = $mediaNode->getAttribute('lkid');
-            $mediaType = $mediaNode->getAttribute('type');
-            $mediaDuration = $mediaNode->getAttribute('duration');
-            $ownerId = $mediaNode->getAttribute('userId');
-
-            // Permissions for this assignment
-            $auth = $user->MediaAssignmentAuth($ownerId, $layoutId, $regionId, $mediaId, true);
-
-            // Skip over media assignments that we do not have permission to see
-            if (!$auth->view)
-                continue;
 
             $i++;
 
             // Create a media module to handle all the complex stuff
-            $tmpModule = ModuleFactory::load($mediaType, $layoutId, $regionId, $mediaId, $lkId, $this->db, $this->user);
+            $tmpModule = null;
+            try {
+                $tmpModule = \Xibo\Factory\ModuleFactory::createWithWidget($widget, $region);
+            }
+            catch (Exception $e) {
+                trigger_error($e->getMessage(), E_USER_ERROR);
+            }
 
             $mediaName = $tmpModule->GetName();
+
             $row['order'] = $i;
-            $row['name'] = (($mediaName == '') ? __($tmpModule->displayType) : $mediaName);
-            $row['type'] = __($tmpModule->displayType);
-            $row['duration'] = sprintf('%d seconds', $mediaDuration);
+            $row['name'] = $mediaName;
+            $row['type'] = __($tmpModule->getModuleName());
+            $row['duration'] = sprintf('%d seconds', $widget->duration);
             $row['transition'] = sprintf('%s / %s', $tmpModule->GetTransition('in'), $tmpModule->GetTransition('out'));
 
-            if ($auth->edit) {
+            if ($this->user->checkEditable($widget)) {
                 $row['buttons'][] = array(
                         'id' => 'timeline_button_edit',
-                        'url' => 'index.php?p=module&mod=' . $mediaType . '&q=Exec&method=EditForm&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '"',
+                        'url' => 'index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=EditForm&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '"',
                         'text' => __('Edit')
                     );
             }
 
-            if ($auth->del) {
+            if ($this->user->checkDeleteable($widget)) {
                 $row['buttons'][] = array(
                         'id' => 'timeline_button_delete',
-                        'url' => 'index.php?p=module&mod=' . $mediaType . '&q=Exec&method=DeleteForm&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '"',
+                        'url' => 'index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=DeleteForm&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '"',
                         'text' => __('Remove'),
                         'multi-select' => true,
                         'dataAttributes' => array(
-                            array('name' => 'multiselectlink', 'value' => 'index.php?p=module&mod=' . $mediaType . '&q=Exec&method=DeleteMedia'),
+                            array('name' => 'multiselectlink', 'value' => 'index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=DeleteMedia'),
                             array('name' => 'rowtitle', 'value' => $row['name']),
-                            array('name' => 'layoutid', 'value' => $layoutId),
-                            array('name' => 'regionid', 'value' => $regionId),
-                            array('name' => 'mediaid', 'value' => $mediaId),
-                            array('name' => 'lkid', 'value' => $lkId),
+                            array('name' => 'regionid', 'value' => $region->regionId),
+                            array('name' => 'lkid', 'value' => $widget->widgetId),
                             array('name' => 'options', 'value' => 'unassign')
                         )
                     );
             }
 
-            if ($auth->modifyPermissions) {
+            if ($this->user->checkPermissionsModifyable($widget)) {
                 $row['buttons'][] = array(
                         'id' => 'timeline_button_permissions',
-                        'url' => 'index.php?p=module&mod=' . $mediaType . '&q=Exec&method=PermissionsForm&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '"',
+                        'url' => 'index.php?p=user&q=permissionsForm&entity=Widget&objectId=' . $widget->widgetId . '"',
                         'text' => __('Permissions')
                     );
             }
@@ -1013,7 +789,7 @@ class timelineDAO extends baseDAO {
             if (count($this->user->TransitionAuth('in')) > 0) {
                 $row['buttons'][] = array(
                         'id' => 'timeline_button_trans_in',
-                        'url' => 'index.php?p=module&mod=' . $mediaType . '&q=Exec&method=TransitionEditForm&type=in&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '"',
+                        'url' => 'index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=TransitionEditForm&type=in&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '"',
                         'text' => __('In Transition')
                     );
             }
@@ -1021,7 +797,7 @@ class timelineDAO extends baseDAO {
             if (count($this->user->TransitionAuth('out')) > 0) {
                 $row['buttons'][] = array(
                         'id' => 'timeline_button_trans_in',
-                        'url' => 'index.php?p=module&mod=' . $mediaType . '&q=Exec&method=TransitionEditForm&type=out&layoutid=' . $layoutId . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId . '"',
+                        'url' => 'index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=TransitionEditForm&type=out&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '"',
                         'text' => __('Out Transition')
                     );
             }
@@ -1043,56 +819,48 @@ class timelineDAO extends baseDAO {
 
     /**
      * Re-orders a medias regions
-     * @return
      */
     function TimelineReorder()
     {
-        $db =& $this->db;
-        $user =& $this->user;
         $response = new ResponseManager();
 
-        // Vars
-        $layoutId = Kit::GetParam('layoutid', _REQUEST, _INT);
-        $regionId = Kit::GetParam('regionid', _POST, _STRING);
-        $mediaList = Kit::GetParam('medialist', _POST, _STRING);
+        // Load the region and get the dimensions, applying the scale factor if necessary (only v1 layouts will have a scale factor != 1)
+        $playlists = \Xibo\Factory\PlaylistFactory::getByRegionId(Kit::GetParam('regionId', _GET, _INT));
+        $playlist = $playlists[0];
+        /* @var \Xibo\Entity\Playlist $playlist */
 
-        // Check the user has permission
-        Kit::ClassLoader('region');
-        $region = new region($db);
-        $ownerId = $region->GetOwnerId($layoutId, $regionId);
+        if (!$this->user->checkEditable($playlist))
+            trigger_error(__('You do not have permissions to edit this playlist'), E_USER_ERROR);
 
-        $regionAuth = $this->user->RegionAssignmentAuth($ownerId, $layoutId, $regionId, true);
-        if (!$regionAuth->edit)
-            trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
+        // Load the widgets
+        $playlist->load();
 
         // Create a list of media
-        if ($mediaList == '')
-            trigger_error(__('No media to reorder'));
+        $widgetList = Kit::GetParam('widgetIds', _POST, _ARRAY_INT);
+        if (count($widgetList) <= 0)
+            trigger_error(__('No widgets to reorder'), E_USER_ERROR);
 
-        // Trim the last | if there is one
-        $mediaList = rtrim($mediaList, '|');
+        Debug::Audit($playlist . ' reorder to ' . var_export($widgetList, true));
 
-        // Explode into an array
-        $mediaList = explode('|', $mediaList);
-
-        // Store in an array
-        $resolvedMedia = array();
-
-        foreach($mediaList as $mediaNode)
-        {
-            // Explode the second part of the array
-            $mediaNode = explode(',', $mediaNode);
-
-            $resolvedMedia[] = array('mediaid' => $mediaNode[0], 'lkid' => $mediaNode[1]);
+        // Go through each one and move it
+        $i = 0;
+        foreach ($widgetList as $widgetId) {
+            $i++;
+            // Find this item in the existing list and add it to our new order
+            foreach ($playlist->widgets as $widget) {
+                /* @var \Xibo\Entity\Widget $widget */
+                Debug::Audit('Comparing ' . $widget . ' with ' . $widgetId);
+                if ($widget->getId() == $widgetId) {
+                    Debug::Audit('Setting Display Order ' . $i . ' on widgetId ' . $widgetId);
+                    $widget->displayOrder = $i;
+                    $widget->save();
+                    break;
+                }
+            }
         }
-
-        // Hand off to the region object to do the actual reorder
-        if (!$region->ReorderTimeline($layoutId, $regionId, $resolvedMedia))
-            trigger_error($region->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse(__('Order Changed'));
         $response->keepOpen = true;
         $response->Respond();
     }
 }
-?>

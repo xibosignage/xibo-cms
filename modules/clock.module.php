@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2014 Daniel Garner
+ * Copyright (C) 2014-15 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -21,21 +21,10 @@
  */ 
 class clock extends Module
 {
-    public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '', $lkid = '') {
-        // The Module Type must be set - this should be a unique text string of no more than 50 characters.
-        // It is used to uniquely identify the module globally.
-        $this->type = 'clock';
+    public $codeSchemaVersion = 1;
 
-        // This is the code schema version, it should be 1 for a new module and should be incremented each time the 
-        // module data structure changes.
-        // It is used to install / update your module and to put updated modules down to the display clients.
-        $this->codeSchemaVersion = 1;
-        
-        // Must call the parent class
-        parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);
-    }
-
-    public function InstallFiles() {
+    public function InstallFiles()
+    {
         $media = new Media();
         $media->addModuleFile('modules/preview/vendor/jquery-1.11.1.min.js');
         $media->addModuleFile('modules/preview/vendor/jquery-cycle-2.1.6.min.js');
@@ -45,75 +34,14 @@ class clock extends Module
     }
 
     /**
-     * Install or Update this module
-     */
-    public function InstallOrUpdate() {
-        // This function should update the `module` table with information about your module.
-        // The current version of the module in the database can be obtained in $this->schemaVersion
-        // The current version of this code can be obtained in $this->codeSchemaVersion
-        
-        // $settings will be made available to all instances of your module in $this->settings. These are global settings to your module, 
-        // not instance specific (i.e. not settings specific to the layout you are adding the module to).
-        // $settings will be collected from the Administration -> Modules CMS page.
-        // 
-        // Layout specific settings should be managed with $this->SetOption in your add / edit forms.
-        Debug::LogEntry('audit', 'Request to install or update with schemaversion: ' . $this->schemaVersion, 'clock', 'InstallOrUpdate');
-        
-        if ($this->schemaVersion <= 1) {
-            // Install
-            Debug::LogEntry('audit', 'Installing Clock module', 'clock', 'InstallOrUpdate');
-
-            $this->InstallModule('Clock', 'Display a Clock', 'forms/library.gif', 1, 1, array());
-        }
-        else {
-            // Update
-            // No updates required to this module.
-            // Call "$this->UpdateModule($name, $description, $imageUri, $previewEnabled, $assignable, $settings)" with the updated items
-        }
-
-        // Check we are all installed
-        $this->InstallFiles();
-    }
-
-    /**
-     * Form for updating the module settings
-     */
-    public function ModuleSettingsForm() {
-        // Output any form fields (formatted via a Theme file)
-        // These are appended to the bottom of the "Edit" form in Module Administration
-        return array();
-    }
-
-    /**
-     * Process any module settings
-     */
-    public function ModuleSettings() {
-        // Process any module settings you asked for.
-        
-        // Return an array of the processed settings.
-        return array();
-    }
-
-    /**
      * Return the Add Form as HTML
-     * @return
      */
     public function AddForm()
     {
-        $this->response = new ResponseManager();
+        $response = new ResponseManager();
 
-        // This is the logged in user and can be used to assess permissions
-        $user =& $this->user;
-
-        // The CMS provides the region width and height in case they are needed
-        $rWidth = Kit::GetParam('rWidth', _REQUEST, _STRING);
-        $rHeight = Kit::GetParam('rHeight', _REQUEST, _STRING);
-
-        // All forms should set some meta data about the form.
-        // Usually, you would want this meta data to remain the same.
-        Theme::Set('form_id', 'ModuleForm');
-        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=AddMedia');
-        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $this->layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $this->regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" />');
+        // Configure form
+        $this->configureForm('AddMedia');
     
         $formFields = array();
 
@@ -158,86 +86,58 @@ class clock extends Module
         Theme::Set('form_fields', $formFields);
 
         // Dependencies (some fields should be shown / hidden)
-        $this->SetFieldDependencies();
+        $this->SetFieldDependencies($response);
 
         // Modules should be rendered using the theme engine.
-        $this->response->html = Theme::RenderReturn('form_render');
+        $response->html = Theme::RenderReturn('form_render');
 
-        $this->response->dialogTitle = __('Add Clock');
-        $this->response->callBack = 'text_callback';
-        
-        // The response object outputs the required JSON object to the browser
-        // which is then processed by the CMS JavaScript library (xibo-cms.js).
-        $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&q=RegionOptions")');
-        $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
+        $this->configureFormButtons($response);
+        $response->dialogTitle = __('Add Clock');
+        $response->callBack = 'text_callback';
 
         // The response must be returned.
-        return $this->response;
+        return $response;
     }
 
     /**
      * Add Media to the Database
-     * @return
      */
     public function AddMedia()
     {
-        $this->response = new ResponseManager();
-
-        // Same member variables as the Form call, except with POST variables for your form fields.
-        $layoutid   = $this->layoutid;
-        $regionid   = $this->regionid;
-        $mediaid    = $this->mediaid;
-
-        // You are required to set a media id, which should be unique.
-        $this->mediaid  = md5(uniqid());
+        $response = new ResponseManager();
 
         // You must also provide a duration (all media items must provide this field)
-        $this->duration = Kit::GetParam('duration', _POST, _INT, 0, false);
+        $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration(), false));
         $this->SetOption('theme', Kit::GetParam('themeid', _POST, _INT, 0));
         $this->SetOption('clockTypeId', Kit::GetParam('clockTypeId', _POST, _INT, 1));
         $this->SetOption('offset', Kit::GetParam('offset', _POST, _INT, 0));
-        $this->SetRaw('<format><![CDATA[' . Kit::GetParam('ta_text', _POST, _HTMLSTRING) . ']]></format>');
+        $this->setRawNode('ta_text', Kit::GetParam('ta_text', _POST, _HTMLSTRING));
 
-        // Should have built the media object entirely by this time
-        // This saves the Media Object to the Region
-        $this->UpdateRegion();
+        // Save the widget
+        $this->saveWidget();
 
-        // Usually you will want to load the region options form again once you have added your module.
-        // In some cases you will want to load the edit form for that module
-        $this->response->loadForm = true;
-        $this->response->loadFormUri = "index.php?p=timeline&layoutid=$this->layoutid&regionid=$this->regionid&q=RegionOptions";
+        // Load form
+        $response->loadForm = true;
+        $response->loadFormUri = $this->getTimelineLink();
         
-        return $this->response;
+        return $response;
     }
 
     /**
      * Return the Edit Form as HTML
-     * @return
      */
     public function EditForm()
     {
-        $this->response = new ResponseManager();
+        $response = new ResponseManager();
 
         // Edit calls are the same as add calls, except you will to check the user has permissions to do the edit
         if (!$this->auth->edit)
-        {
-            $this->response->SetError('You do not have permission to edit this assignment.');
-            $this->response->keepOpen = false;
-            return $this->response;
-        }
+            throw new Exception(__('You do not have permission to edit this widget.'));
 
-        // All forms should set some meta data about the form.
-        // Usually, you would want this meta data to remain the same.
-        Theme::Set('form_id', 'ModuleForm');
-        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=EditMedia');
-        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $this->layoutid . '"><input type="hidden" id="iRegionId" name="regionid" value="' . $this->regionid . '"><input type="hidden" name="showRegionOptions" value="' . $this->showRegionOptions . '" /><input type="hidden" id="mediaid" name="mediaid" value="' . $this->mediaid . '">');
+        // Configure the form
+        $this->configureForm('EditMedia');
 
-        // Extract the format from the raw node in the XLF
-        $rawXml = new DOMDocument();
-        $rawXml->loadXML($this->GetRaw());
-        $formatNodes = $rawXml->getElementsByTagName('format');
-        $formatNode = $formatNodes->item(0);
-
+        // Build the form
         $formFields = array();
 
         // Offer a choice of clock type
@@ -255,7 +155,7 @@ class clock extends Module
                     __('Please select the type of clock to display.'), 
                     'c');
 
-        $formFields[] = FormManager::AddNumber('duration', __('Duration'), $this->duration, 
+        $formFields[] = FormManager::AddNumber('duration', __('Duration'), $this->getDuration(),
             __('The duration in seconds this item should be displayed'), 'd', 'required');
 
 
@@ -276,76 +176,57 @@ class clock extends Module
 
         $formFields[] = FormManager::AddMessage(sprintf(__('Enter a format for the Digital Clock below. e.g. [HH:mm] or [DD/MM/YYYY]. See the <a href="%s" target="_blank">format guide</a> for more information.'), HelpManager::Link('Widget', 'ClockFormat')), 'digital-control-group');
         
-        $formFields[] = FormManager::AddMultiText('ta_text', NULL, (($formatNode != NULL) ? $formatNode->nodeValue : ''), 
+        $formFields[] = FormManager::AddMultiText('ta_text', NULL, $this->getRawNode('format', null),
             __('Enter a format for the clock'), 'f', 10, '', 'digital-control-group');
 
         Theme::Set('form_fields', $formFields);
 
         // Dependencies (some fields should be shown / hidden)
-        $this->SetFieldDependencies();
+        $this->SetFieldDependencies($response);
 
         // Modules should be rendered using the theme engine.
-        $this->response->html = Theme::RenderReturn('form_render');
+        $response->html = Theme::RenderReturn('form_render');
 
-        $this->response->dialogTitle = __('Edit Clock');
-        $this->response->callBack = 'text_callback';
-        
-        // The response object outputs the required JSON object to the browser
-        // which is then processed by the CMS JavaScript library (xibo-cms.js).
-        if ($this->showRegionOptions) {
-            $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&q=RegionOptions")');
-        }
-        else {
-            $this->response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        }
-
+        $this->configureFormButtons($response);
+        $response->dialogTitle = __('Edit Clock');
+        $response->callBack = 'text_callback';
+        return $response;
         $this->response->AddButton(__('Apply'), 'XiboDialogApply("#ModuleForm")');
-        $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
-
-        // The response must be returned.
-        return $this->response;
     }
 
     /**
      * Edit Media in the Database
-     * @return
      */
     public function EditMedia()
     {
-        $this->response = new ResponseManager();
-        
-        // Edit calls are the same as add calls, except you will to check the user has permissions to do the edit
+        $response = new ResponseManager();
+
         if (!$this->auth->edit)
-        {
-            $this->response->SetError('You do not have permission to edit this assignment.');
-            $this->response->keepOpen = false;
-            return $this->response;
-        }
+            throw new Exception(__('You do not have permission to edit this widget.'));
 
         // You must also provide a duration (all media items must provide this field)
-        $this->duration = Kit::GetParam('duration', _POST, _INT, 0, false);
+        $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration(), false));
         $this->SetOption('theme', Kit::GetParam('themeid', _POST, _INT, 0));
         $this->SetOption('clockTypeId', Kit::GetParam('clockTypeId', _POST, _INT, 1));
         $this->SetOption('offset', Kit::GetParam('offset', _POST, _INT, 0));
-        $this->SetRaw('<format><![CDATA[' . Kit::GetParam('ta_text', _POST, _HTMLSTRING) . ']]></format>');
+        $this->setRawNode('ta_text', Kit::GetParam('ta_text', _POST, _HTMLSTRING));
 
-        // Should have built the media object entirely by this time
-        // This saves the Media Object to the Region
-        $this->UpdateRegion();
+        // Save the widget
+        $this->saveWidget();
 
-        // Usually you will want to load the region options form again once you have added your module.
-        // In some cases you will want to load the edit form for that module
-        if ($this->showRegionOptions) {
+        // Load an edit form
+        $response->loadForm = true;
+        $response->loadFormUri = $this->getTimelineLink();
             $this->response->callBack = 'refreshPreview("' . $this->regionid . '")';
-            $this->response->loadForm = true;
-            $this->response->loadFormUri = "index.php?p=timeline&layoutid=$this->layoutid&regionid=$this->regionid&q=RegionOptions";
-        }
         
-        return $this->response;
+        return $response;
     }
 
-    private function SetFieldDependencies() {
-
+    /**
+     * @param ResponseManager $response
+     */
+    private function SetFieldDependencies(&$response)
+    {
         $clockTypeId_1 = array(
                 '.analogue-control-group' => array('display' => 'block'),
                 '.digital-control-group' => array('display' => 'none'),
@@ -367,22 +248,24 @@ class clock extends Module
                 '.offset-control-group' => array('display' => 'none')
             );
             
-        $this->response->AddFieldAction('clockTypeId', 'init', 1, $clockTypeId_1);
-        $this->response->AddFieldAction('clockTypeId', 'change', 1, $clockTypeId_1);
-        $this->response->AddFieldAction('clockTypeId', 'init', 2, $clockTypeId_2);
-        $this->response->AddFieldAction('clockTypeId', 'change', 2, $clockTypeId_2);
-        $this->response->AddFieldAction('clockTypeId', 'init', 3, $clockTypeId_3);
-        $this->response->AddFieldAction('clockTypeId', 'change', 3, $clockTypeId_3);
+        $response->AddFieldAction('clockTypeId', 'init', 1, $clockTypeId_1);
+        $response->AddFieldAction('clockTypeId', 'change', 1, $clockTypeId_1);
+        $response->AddFieldAction('clockTypeId', 'init', 2, $clockTypeId_2);
+        $response->AddFieldAction('clockTypeId', 'change', 2, $clockTypeId_2);
+        $response->AddFieldAction('clockTypeId', 'init', 3, $clockTypeId_3);
+        $response->AddFieldAction('clockTypeId', 'change', 3, $clockTypeId_3);
     }
 
     /**
      * GetResource
-     *     Return the rendered resource to be used by the client (or a preview)
-     *     for displaying this content.
+     * Return the rendered resource to be used by the client (or a preview) for displaying this content.
      * @param integer $displayId If this comes from a real client, this will be the display id.
+     * @return mixed
      */
     public function GetResource($displayId = 0)
     {
+        $template = null;
+
         // Clock Type
         switch ($this->GetOption('clockTypeId', 1)) {
 
@@ -415,11 +298,7 @@ class clock extends Module
                 $template = file_get_contents('modules/preview/HtmlTemplate.html');
 
                 // Extract the format from the raw node in the XLF
-                $rawXml = new DOMDocument();
-                $rawXml->loadXML($this->GetRaw());
-                $formatNodes = $rawXml->getElementsByTagName('format');
-                $formatNode = $formatNodes->item(0);
-                $format = $formatNode->nodeValue;
+                $format = $this->getRawNode('format', null);
 
                 // Strip out the bit between the [] brackets and use that as the format mask for moment.
                 $matches = '';
@@ -436,8 +315,8 @@ class clock extends Module
                 $options = array(
                         'previewWidth' => Kit::GetParam('width', _GET, _DOUBLE, 0),
                         'previewHeight' => Kit::GetParam('height', _GET, _DOUBLE, 0),
-                        'originalWidth' => $this->width,
-                        'originalHeight' => $this->height,
+                        'originalWidth' => $this->region->width,
+                        'originalHeight' => $this->region->height,
                         'scaleOverride' => Kit::GetParam('scale_override', _GET, _DOUBLE, 0)
                     );
 
@@ -445,22 +324,23 @@ class clock extends Module
                 $javaScriptContent  = '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
                 $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'moment.js"></script>';
                 $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-layout-scaler.js"></script>';
-                $javaScriptContent .= '<script>
+                $javaScriptContent .= <<<END
+<script>
+    var options = ' . json_encode($options) . '
 
-                    var options = ' . json_encode($options) . '
+    function updateClock() {
+        $(".clock").each(function() {
+            $(this).html(moment().add(' . {$this->GetOption('offset', 0)} . ', "m").format($(this).attr("format")));
+        });
+    }
 
-                    function updateClock() {
-                        $(".clock").each(function() {
-                            $(this).html(moment().add(' . $this->GetOption('offset', 0) . ', "m").format($(this).attr("format")));
-                        });
-                    }
-
-                    $(document).ready(function() {
-                        updateClock();
-                        setInterval(updateClock, 1000);
-                        $("body").xiboLayoutScaler(options);
-                    });
-                </script>';
+    $(document).ready(function() {
+        updateClock();
+        setInterval(updateClock, 1000);
+        $("body").xiboLayoutScaler(options);
+    });
+</script>
+END;
 
                 // Replace the After body Content
                 $template = str_replace('<!--[[[JAVASCRIPTCONTENT]]]-->', $javaScriptContent, $template);
@@ -498,20 +378,18 @@ class clock extends Module
 
         // Replace the View Port Width?
         if (isset($_GET['preview']))
-            $template = str_replace('[[ViewPortWidth]]', $this->width, $template);
+            $template = str_replace('[[ViewPortWidth]]', $this->region->width, $template);
 
         // Return that content.
         return $template;
     }
 
-    public function HoverPreview() {
-        // Default Hover window contains a thumbnail, media type and duration
-        $output = parent::HoverPreview();
-
-        return $output;
-    }
-    
-    public function IsValid() {
+    /**
+     * Is Valid
+     * @return int
+     */
+    public function IsValid()
+    {
         // Using the information you have in your module calculate whether it is valid or not.
         // 0 = Invalid
         // 1 = Valid
@@ -519,4 +397,3 @@ class clock extends Module
         return 1;
     }
 }
-?>

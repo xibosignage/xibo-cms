@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2013 Daniel Garner
+ * Copyright (C) 2006-2015 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -28,7 +28,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 	<div class="row fileupload-buttonbar">
 	    <div class="col-md-7">
 			<div class="well">
-				<?php echo Theme::Get('valid_extensions'); ?>
+				<?php echo Theme::Get('form_max_size_message'); ?>
 			</div>
 	        <!-- The fileinput-button span is used to style the file input field as button -->
 	        <span class="btn btn-success fileinput-button">
@@ -70,13 +70,12 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
             <span class="fileupload-preview"></span>
         </td>
         <td class="title">
-            <label for="name[]" title="<?php echo Theme::Translate('The Name of this item - Leave blank to use the file name'); ?>"><?php echo Theme::Translate('Name'); ?>: <input name="name[]" type="text" id="name" /></label>
             {% if (file.error) { %}
                 <div><span class="label label-important">Error</span> {%=file.error%}</div>
             {% } %}
-        </td>
-        <td class="title">
-			<label for="duration[]" title="<?php echo Theme::Translate('The duration in seconds this image should be displayed (may be overridden on each layout)'); ?>"><?php echo Theme::Translate('Duration'); ?>: <input name="duration[]" type="text" id="duration" value="<?php echo Theme::Get('default_duration'); ?>" required /></label>
+            {% if (!file.error) { %}
+            <label for="name[]" title="<?php echo Theme::Translate('The Name of this item - Leave blank to use the file name'); ?>"><?php echo Theme::Translate('Name'); ?>: <input name="name[]" type="text" id="name" /></label>
+            {% } %}
         </td>
         <td>
             <p class="size">{%=o.formatFileSize(file.size)%}</p>

@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006,2007,2008 Daniel Garner and James Packer
+ * Copyright (C) 2009-2015 Daniel Garner. 2006-2008 Daniel Garner and James Packer.
  *
  * This file is part of Xibo.
  *
@@ -20,75 +20,6 @@
  */
 class powerpoint extends Module
 {
-    // Custom Media information
-    protected $maxFileSize;
-    protected $maxFileSizeBytes;
-
-    public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '', $lkid = '')
-    {
-        // Must set the type of the class
-        $this->type= 'powerpoint';
-        
-        // Get the max upload size from PHP
-        $this->maxFileSize 	= ini_get('upload_max_filesize');
-        $this->maxFileSizeBytes = convertBytes($this->maxFileSize);
-
-        // Must call the parent class
-        parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);
-    }
-    
-    /**
-     * Sets the Layout and Region Information
-     *  it will then fill in any blanks it has about this media if it can
-     * @return
-     * @param $layoutid Object
-     * @param $regionid Object
-     * @param $mediaid Object
-     */
-    public function SetRegionInformation($layoutid, $regionid) {
-        $db =& $this->db;
-        
-        parent::SetRegionInformation($layoutid, $regionid);
-
-        // Any Options
-        $this->SetOption('uri', $this->storedAs);
-        $this->existingMedia = false;
-
-        return true;
-    }
-
-    /**
-     * Return the Add Form as HTML
-     * @return
-     */
-    public function AddForm()
-    {
-        return $this->AddFormForLibraryMedia();
-    }
-
-    public function AddMedia()
-    {
-        // Never called
-    }
-
-    /**
-     * Return the Edit Form as HTML
-     * @return
-     */
-    public function EditForm()
-    {
-        return $this->EditFormForLibraryMedia();
-    }
-
-    /**
-     * Edit Media in the Database
-     * @return
-     */
-    public function EditMedia()
-    {
-        return $this->EditLibraryMedia();
-    }
-
     /**
      * Preview code for a module
      * @param int $width
@@ -99,7 +30,7 @@ class powerpoint extends Module
     public function Preview($width, $height, $scaleOverride = 0)
     {
         // PowerPoint cannot be previewed
-        return '<div style="text-align:center;"><img alt="' . $this->type . ' thumbnail" src="theme/default/img/forms/' . $this->type . '.gif" /></div>';
+        return $this->previewIcon();
     }
     
     public function IsValid() {
@@ -109,13 +40,12 @@ class powerpoint extends Module
 
     /**
      * Get Resource
+     * @param int $displayId
+     * @return mixed
      */
     public function GetResource($displayId = 0)
     {
         $this->ReturnFile();
-
         exit();
-
     }
 }
-?>

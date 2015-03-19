@@ -29,150 +29,7 @@ class Media extends Data
     private $validExtensions;
 
     public $mediaId;
-    public $ownerId;
-    public $parentId;
-
-    public $name;
-    public $mediaType;
     public $storedAs;
-    public $fileName;
-    public $tags;
-    
-    public $fileSize;
-    public $duration;
-    public $valid;
-    public $moduleSystemFile;
-    public $expires;
-
-    public static function Entries($sort_order = array('name'), $filter_by = array())
-    {
-        $entries = array();
-        
-        try {
-            $dbh = PDOConnect::init();
-
-            $params = array();
-            $SQL  = '';
-            $SQL .= "SELECT  media.mediaID, ";
-            $SQL .= "   media.name, ";
-            $SQL .= "   media.type, ";
-            $SQL .= "   media.duration, ";
-            $SQL .= "   media.userID, ";
-            $SQL .= "   media.FileSize, ";
-            $SQL .= "   media.storedAs, ";
-            $SQL .= "   media.valid, ";
-            $SQL .= "   media.moduleSystemFile, ";
-            $SQL .= "   media.expires, ";
-            $SQL .= "   IFNULL((SELECT parentmedia.mediaid FROM media parentmedia WHERE parentmedia.editedmediaid = media.mediaid),0) AS ParentID, ";
-            
-            if (Kit::GetParam('showTags', $filter_by, _INT) == 1)
-                $SQL .= " tag.tag AS tags, ";
-            else
-                $SQL .= " (SELECT GROUP_CONCAT(DISTINCT tag) FROM tag INNER JOIN lktagmedia ON lktagmedia.tagId = tag.tagId WHERE lktagmedia.mediaId = media.mediaID GROUP BY lktagmedia.mediaId) AS tags, ";
-            
-            $SQL .= "   media.originalFileName ";
-            $SQL .= " FROM media ";
-            $SQL .= "   LEFT OUTER JOIN media parentmedia ";
-            $SQL .= "   ON parentmedia.MediaID = media.MediaID ";
-
-            if (Kit::GetParam('showTags', $filter_by, _INT) == 1) {
-                $SQL .= " LEFT OUTER JOIN lktagmedia ON lktagmedia.mediaId = media.mediaId ";
-                $SQL .= " LEFT OUTER JOIN tag ON tag.tagId = lktagmedia.tagId";
-            }
-
-            $SQL .= " WHERE media.isEdited = 0 ";
-
-            if (Kit::GetParam('allModules', $filter_by, _INT) == 0) {
-                $SQL .= "AND media.type <> 'module'";
-            }
-            
-            if (Kit::GetParam('name', $filter_by, _STRING) != '') {
-                // convert into a space delimited array
-                $names = explode(' ', Kit::GetParam('name', $filter_by, _STRING));
-                $i = 0;
-                foreach($names as $searchName) {
-                    $i++;
-                    // Not like, or like?
-                    if (substr($searchName, 0, 1) == '-') {
-                        $SQL .= " AND media.name NOT LIKE :notLike ";
-                        $params['notLike'] = '%' . ltrim($searchName, '-') . '%';
-                    }
-                    else {
-                        $SQL .= " AND media.name LIKE :like ";
-                        $params['like'] = '%' . $searchName . '%';
-                    }
-                }
-            }
-
-            if (Kit::GetParam('mediaId', $filter_by, _INT, -1) != -1) {
-                $SQL .= " AND media.mediaId = :mediaId ";
-                $params['mediaId'] = Kit::GetParam('mediaId', $filter_by, _INT);
-            }
-
-            if (Kit::GetParam('type', $filter_by, _STRING) != '') {
-                $SQL .= 'AND media.type = :type';
-                $params['type'] = Kit::GetParam('type', $filter_by, _STRING);
-            }
-
-            if (Kit::GetParam('storedAs', $filter_by, _STRING) != '') {
-                $SQL .= 'AND media.storedAs = :storedAs';
-                $params['storedAs'] = Kit::GetParam('storedAs', $filter_by, _STRING);
-            }
-
-            if (Kit::GetParam('ownerid', $filter_by, _INT) != 0) {
-                $SQL .= " AND media.userid = :ownerId ";
-                $params['ownerId'] = Kit::GetParam('ownerid', $filter_by, _INT);
-            }
-            
-            if (Kit::GetParam('retired', $filter_by, _INT, -1) == 1)
-                $SQL .= " AND media.retired = 1 ";
-            
-            if (Kit::GetParam('retired', $filter_by, _INT, -1) == 0)
-                $SQL .= " AND media.retired = 0 ";
-
-            // Expired files?
-            if (Kit::GetParam('expires', $filter_by, _INT) != 0) {
-                $SQL .= ' AND media.expires < :expires AND IFNULL(media.expires, 0) <> 0 ';
-                $params['expires'] = Kit::GetParam('expires', $filter_by, _INT);
-            }
-            
-            // Sorting?
-            if (is_array($sort_order))
-                $SQL .= 'ORDER BY ' . implode(',', $sort_order);
-
-            //Debug::Audit(sprintf('Retrieving list of media with SQL: %s. Params: %s', $SQL, var_export($params, true)));
-        
-            $sth = $dbh->prepare($SQL);
-            $sth->execute($params);
-
-            foreach ($sth->fetchAll() as $row) {
-                $media = new Media();
-                $media->mediaId = Kit::ValidateParam($row['mediaID'], _INT);
-                $media->name = Kit::ValidateParam($row['name'], _STRING);
-                $media->mediaType = Kit::ValidateParam($row['type'], _WORD);
-                $media->duration = Kit::ValidateParam($row['duration'], _DOUBLE);
-                $media->ownerId = Kit::ValidateParam($row['userID'], _INT);
-                $media->fileSize = Kit::ValidateParam($row['FileSize'], _INT);
-                $media->parentId = Kit::ValidateParam($row['ParentID'], _INT);
-                $media->fileName = Kit::ValidateParam($row['originalFileName'], _STRING);
-                $media->tags = Kit::ValidateParam($row['tags'], _STRING);
-                $media->storedAs = Kit::ValidateParam($row['storedAs'], _STRING);
-                $media->valid = Kit::ValidateParam($row['valid'], _INT);
-                $media->moduleSystemFile = Kit::ValidateParam($row['moduleSystemFile'], _INT);
-                $media->expires = Kit::ValidateParam($row['expires'], _INT);
-
-                $entries[] = $media;
-            }
-        
-            return $entries;  
-        }
-        catch (Exception $e) {
-            
-            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
-        
-            return false;
-        }
-    }
 
     /**
      * Adds a new media record
@@ -225,12 +82,8 @@ class Media extends Data
             // Validation
             if (strlen($name) > 100)
                 $this->ThrowError(10, __('The name cannot be longer than 100 characters'));
-    
-            // Test the duration (except for video and localvideo which can have a 0)
-            if ($duration == 0 && $type != 'video' && $type != 'localvideo' && $type != 'genericfile' && $type != 'font')
-                $this->ThrowError(11, __('You must enter a duration.'));
-    
-            // Check the naming of this item to ensure it doesnt conflict
+
+            // Check the naming of this item to ensure it doesn't conflict
             $params = array();
             $checkSQL = 'SELECT name FROM media WHERE name = :name AND userid = :userid';
             
@@ -250,8 +103,8 @@ class Media extends Data
             // End Validation
     
             // All OK to insert this record
-            $SQL  = "INSERT INTO media (name, type, duration, originalFilename, userID, retired) ";
-            $SQL .= "VALUES (:name, :type, :duration, :originalfilename, :userid, :retired) ";
+            $SQL  = "INSERT INTO media (name, type, duration, originalFilename, userID, retired)
+                      VALUES (:name, :type, :duration, :originalfilename, :userid, :retired) ";
 
             $sth = $dbh->prepare($SQL);
             $sth->execute(array(
@@ -587,6 +440,32 @@ class Media extends Data
         }
     }
 
+    /**
+     * Get Media Name
+     * @param $mediaId
+     * @return bool|string
+     */
+    public function getName($mediaId) {
+
+        try {
+            $dbh = PDOConnect::init();
+
+            $sth = $dbh->prepare('SELECT `name` FROM `media` WHERE mediaid = :id');
+            $sth->execute(array('id' => $mediaId));
+
+            return $sth->fetchColumn();
+        }
+        catch (Exception $e) {
+
+            Debug::LogEntry('error', $e->getMessage());
+
+            if (!$this->IsError())
+                $this->SetError(1, __('Unknown Error'));
+
+            return false;
+        }
+    }
+
     public function DeleteMediaFile($fileName)
     {
         Debug::LogEntry('audit', 'IN', 'Media', 'DeleteMediaFile');
@@ -762,10 +641,10 @@ class Media extends Data
                 $newMediaName = $prefix . ' ' . $newMediaName;
     
             // All OK to insert this record
-            $SQL  = "INSERT INTO media (name, type, duration, originalFilename, userID, retired ) ";
-            $SQL .= " SELECT :name, type, duration, originalFilename, userID, retired ";
-            $SQL .= "  FROM media ";
-            $SQL .= " WHERE MediaID = :mediaid ";
+            $SQL  = "INSERT INTO media (name, type, duration, originalFilename, userID, retired )
+             SELECT :name, type, duration, originalFilename, userID, retired
+               FROM media
+              WHERE MediaID = :mediaid ";
 
             $sth = $dbh->prepare($SQL);
             $sth->execute(array(
@@ -933,8 +812,8 @@ class Media extends Data
             }
             else {
                 // All OK to insert this record
-                $SQL  = "INSERT INTO media (name, type, duration, originalFilename, userID, retired, moduleSystemFile, storedAs, FileSize, MD5, expires) ";
-                $SQL .= "VALUES (:name, :type, :duration, :originalfilename, 1, :retired, :moduleSystemFile, :storedas, :filesize, :md5, :expires) ";
+                $SQL  = "INSERT INTO media (name, type, duration, originalFilename, userID, retired, moduleSystemFile, storedAs, FileSize, MD5, expires)
+                          VALUES (:name, :type, :duration, :originalfilename, 1, :retired, :moduleSystemFile, :storedas, :filesize, :md5, :expires) ";
 
                 $sth = $dbh->prepare($SQL);
                 $sth->execute(array(
@@ -1072,7 +951,8 @@ class Media extends Data
         $media = new Media();
 
         // Get a list of all expired files and delete them
-        foreach (Media::Entries(NULL, array('expires' => time(), 'allModules' => 1)) as $entry) {
+        foreach (\Xibo\Factory\MediaFactory::query(null, array('expires' => time(), 'allModules' => 1)) as $entry) {
+            /* @var \Xibo\Entity\Media $entry */
             // If the media type is a module, then pretend its a generic file
             if ($entry->mediaType == 'module') {
                 // Find and remove any links to layouts.
@@ -1147,7 +1027,7 @@ class Media extends Data
         try {
             $dbh = PDOConnect::init();
         
-            $sth = $dbh->prepare('DELETE FROM `lktagmedia` WHERE tagId IN (SELECT tagId FROM tag WHERE tag = :tag) AND mediaId = :mediaId)');
+            $sth = $dbh->prepare('DELETE FROM `lktagmedia` WHERE tagId IN (SELECT tagId FROM tag WHERE tag = :tag) AND mediaId = :mediaId');
             $sth->execute(array(
                     'tag' => $tag,
                     'mediaId' => $mediaId
@@ -1190,6 +1070,75 @@ class Media extends Data
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
         
+            return false;
+        }
+    }
+
+    /**
+     * Installs fonts
+     * @return bool|void
+     */
+    public function installFonts()
+    {
+        $media = new Media();
+
+        $fontTemplate = '
+@font-face {
+    font-family: \'[family]\';
+    src: url(\'[url]\');
+}
+        ';
+
+        // Save a fonts.css file to the library for use as a module
+        try {
+            $dbh = PDOConnect::init();
+
+            $sth = $dbh->prepare('SELECT mediaID, name, storedAs FROM `media` WHERE type = :type AND IsEdited = 0');
+            $sth->execute(array(
+                'type' => 'font'
+            ));
+
+            $fonts = $sth->fetchAll();
+
+            if (count($fonts) < 1)
+                return;
+
+            $css = '';
+            $localCss = '';
+            $ckeditorString = '';
+            foreach ($fonts as $font) {
+
+                // Css for the client contains the actual stored as location of the font.
+                $css .= str_replace('[url]', $font['storedAs'], str_replace('[family]', $font['name'], $fontTemplate));
+
+                // Css for the local CMS contains the full download path to the font
+                $url = Kit::GetXiboRoot() . '?p=module&mod=font&q=Exec&method=GetResource&download=1&downloadFromLibrary=1&mediaid=' . $font['mediaID'];
+                $localCss .= str_replace('[url]', $url, str_replace('[family]', $font['name'], $fontTemplate));
+
+                // CKEditor string
+                $ckeditorString .= $font['name'] . '/' . $font['name'] . ';';
+            }
+
+            file_put_contents('modules/preview/fonts.css', $css);
+
+            // Install it (doesn't expire, isn't a system file, force update)
+            $media->addModuleFile('modules/preview/fonts.css', 0, true, true);
+
+            // Generate a fonts.css file for use locally (in the CMS)
+            file_put_contents('modules/preview/fonts.css', $localCss);
+
+            // Edit the CKEditor file
+            $ckeditor = file_get_contents('theme/default/libraries/ckeditor/config.js');
+            $replace = "/*REPLACE*/ config.font_names = '" . $ckeditorString . "' + config.font_names; /*ENDREPLACE*/";
+
+            $ckeditor = preg_replace('/\/\*REPLACE\*\/.*?\/\*ENDREPLACE\*\//', $replace, $ckeditor);
+
+            file_put_contents('theme/default/libraries/ckeditor/config.js', $ckeditor);
+        }
+        catch (Exception $e) {
+
+            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+
             return false;
         }
     }

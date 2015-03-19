@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006,2007,2008 Daniel Garner and James Packer
+ * Copyright (C) 2006-2015 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -20,138 +20,81 @@
  */
 class image extends Module
 {
-    // Custom Media information
-    protected $maxFileSize;
-    protected $maxFileSizeBytes;
-
-    public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '', $lkid = '')
-    {
-        // Must set the type of the class
-        $this->type= 'image';
-
-        // Get the max upload size from PHP
-        $this->maxFileSize 	= ini_get('upload_max_filesize');
-        $this->maxFileSizeBytes = convertBytes($this->maxFileSize);
-
-        // Must call the parent class
-        parent::__construct($db, $user, $mediaid, $layoutid, $regionid, $lkid);
-    }
-
-    /**
-     * Sets the Layout and Region Information
-     *  it will then fill in any blanks it has about this media if it can
-     * @return
-     * @param $layoutid Object
-     * @param $regionid Object
-     * @param $mediaid Object
-     */
-    public function SetRegionInformation($layoutid, $regionid) {
-        $db =& $this->db;
-        
-        parent::SetRegionInformation($layoutid, $regionid);
-
-        // Any Options
-        $this->SetOption('uri', $this->storedAs);
-        $this->existingMedia = false;
-
-        return true;
-    }
-
-    /**
-     * Return the Add Form as HTML
-     * @return
-     */
-    public function AddForm()
-    {
-        return $this->AddFormForLibraryMedia();
-    }
-
     /**
      * Return the Edit Form as HTML
-     * @return
      */
     public function EditForm() {
 
-        $this->response = new ResponseManager();
+        $response = new ResponseManager();
 
         // Provide some extra form fields
         $formFields = array();
 
-        $formFields[] = FormManager::AddCheckbox('replaceBackgroundImages', __('Replace background images?'), 
-                0, 
-                __('If the current image is used as a background, should the new image replace it?'), 
-                '', 'replacement-controls');
+        $formFields[] = FormManager::AddCombo(
+                    'scaleTypeId',
+                    __('Scale Type'),
+                    $this->GetOption('scaleType'),
+                    array(array('scaleTypeId' => 'center', 'scaleType' => __('Center')), array('scaleTypeId' => 'stretch', 'scaleType' => __('Stretch'))),
+                    'scaleTypeId',
+                    'scaleType',
+                    __('How should this image be scaled?'),
+                    's');
 
-        if ($this->layoutid != '' && $this->regionid != '') {
+        $formFields[] = FormManager::AddCombo(
+                    'alignId',
+                    __('Align'),
+                    $this->GetOption('align', 'center'),
+                    array(array('alignId' => 'left', 'align' => __('Left')), array('alignId' => 'center', 'align' => __('Centre')), array('alignId' => 'right', 'align' => __('Right'))),
+                    'alignId',
+                    'align',
+                    __('How should this image be aligned?'),
+                    'a', 'align-fields');
 
-            $formFields[] = FormManager::AddCombo(
-                        'scaleTypeId', 
-                        __('Scale Type'), 
-                        $this->GetOption('scaleType'),
-                        array(array('scaleTypeId' => 'center', 'scaleType' => __('Center')), array('scaleTypeId' => 'stretch', 'scaleType' => __('Stretch'))),
-                        'scaleTypeId',
-                        'scaleType',
-                        __('How should this image be scaled?'), 
-                        's');
+        $formFields[] = FormManager::AddCombo(
+                    'valignId',
+                    __('Vertical Align'),
+                    $this->GetOption('valign', 'middle'),
+                    array(array('valignId' => 'top', 'valign' => __('Top')), array('valignId' => 'middle', 'valign' => __('Middle')), array('valignId' => 'bottom', 'valign' => __('Bottom'))),
+                    'valignId',
+                    'valign',
+                    __('How should this image be vertically aligned?'),
+                    'v', 'align-fields');
 
-            $formFields[] = FormManager::AddCombo(
-                        'alignId', 
-                        __('Align'), 
-                        $this->GetOption('align', 'center'),
-                        array(array('alignId' => 'left', 'align' => __('Left')), array('alignId' => 'center', 'align' => __('Centre')), array('alignId' => 'right', 'align' => __('Right'))),
-                        'alignId',
-                        'align',
-                        __('How should this image be aligned?'), 
-                        'a', 'align-fields');
+        // Set some field dependencies
+        $response->AddFieldAction('scaleTypeId', 'init', 'center', array('.align-fields' => array('display' => 'block')));
+        $response->AddFieldAction('scaleTypeId', 'change', 'center', array('.align-fields' => array('display' => 'block')));
+        $response->AddFieldAction('scaleTypeId', 'init', 'center', array('.align-fields' => array('display' => 'none')), 'not');
+        $response->AddFieldAction('scaleTypeId', 'change', 'center', array('.align-fields' => array('display' => 'none')), 'not');
 
-            $formFields[] = FormManager::AddCombo(
-                        'valignId', 
-                        __('Vertical Align'), 
-                        $this->GetOption('valign', 'middle'),
-                        array(array('valignId' => 'top', 'valign' => __('Top')), array('valignId' => 'middle', 'valign' => __('Middle')), array('valignId' => 'bottom', 'valign' => __('Bottom'))),
-                        'valignId',
-                        'valign',
-                        __('How should this image be vertically aligned?'), 
-                        'v', 'align-fields');
-
-            // Set some field dependencies
-            $this->response->AddFieldAction('scaleTypeId', 'init', 'center', array('.align-fields' => array('display' => 'block')));
-            $this->response->AddFieldAction('scaleTypeId', 'change', 'center', array('.align-fields' => array('display' => 'block')));
-            $this->response->AddFieldAction('scaleTypeId', 'init', 'center', array('.align-fields' => array('display' => 'none')), 'not');
-            $this->response->AddFieldAction('scaleTypeId', 'change', 'center', array('.align-fields' => array('display' => 'none')), 'not');
-        }
-        return $this->EditFormForLibraryMedia($formFields);
-    }
-
-    /**
-     * Add Media to the Database
-     * @return
-     */
-    public function AddMedia()
-    {
-        return $this->AddLibraryMedia();
+        // Standard Edit Form
+        $this->baseEditForm($formFields, $response);
     }
 
     /**
      * Edit Media in the Database
-     * @return
      */
     public function EditMedia()
     {
-        if ($this->layoutid != '' && $this->regionid != '') {
-            // Set the properties specific to Images
-            $this->SetOption('scaleType', Kit::GetParam('scaleTypeId', _POST, _WORD, 'center'));
-            $this->SetOption('align', Kit::GetParam('alignId', _POST, _WORD, 'center'));
-            $this->SetOption('valign', Kit::GetParam('valignId', _POST, _WORD, 'middle'));
-        }
-        
-        return $this->EditLibraryMedia();
+        // Set the properties specific to Images
+        $this->SetOption('scaleType', Kit::GetParam('scaleTypeId', _POST, _WORD, 'center'));
+        $this->SetOption('align', Kit::GetParam('alignId', _POST, _WORD, 'center'));
+        $this->SetOption('valign', Kit::GetParam('valignId', _POST, _WORD, 'middle'));
+
+        // Edit
+        parent::EditMedia();
     }
 
+    /**
+     * Preview code for a module
+     * @param int $width
+     * @param int $height
+     * @param int $scaleOverride The Scale Override
+     * @return string The Rendered Content
+     */
     public function Preview($width, $height, $scaleOverride = 0)
     {
-        if ($this->previewEnabled == 0)
-            return parent::Preview ($width, $height);
+        if ($this->module->previewEnabled == 0)
+            return parent::Preview($width, $height);
         
         $proportional = ($this->GetOption('scaleType') == 'stretch') ? 'false' : 'true';
         $align = $this->GetOption('align', 'center');
@@ -159,83 +102,32 @@ class image extends Module
  
         $html = '<div style="display:table; width:100%%; height: %dpx">
             <div style="text-align:%s; display: table-cell; vertical-align: %s;">
-                <img src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=%d&lkid=%d&width=%d&height=%d&dynamic=true&proportional=%s" />
+                <img src="index.php?p=content&q=getFile&mediaid=%d&width=%d&height=%d&dynamic=true&proportional=%s" />
             </div>
         </div>';
 
         // Show the image - scaled to the aspect ratio of this region (get from GET)
-        return sprintf($html, $height, $align, $valign, $this->mediaid, $this->lkid, $width, $height, $proportional);
+        return sprintf($html, $height, $align, $valign, $this->getMediaId(), $width, $height, $proportional);
     }
 
-    public function HoverPreview()
-    {
-        // Default Hover window contains a thumbnail, media type and duration
-        $output = parent::HoverPreview();
-        $output .= '<div class="hoverPreview">';
-        $output .= '    <img src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $this->mediaid . '&width=200&height=200&dynamic=true" alt="Hover Preview">';
-        $output .= '</div>';
-
-        return $output;
-    }
-    
     /**
      * Get Resource
+     * @param int $displayId
+     * @return mixed
      */
     public function GetResource($displayId = 0)
     {
-        $proportional = Kit::GetParam('proportional', _GET, _BOOL, true);
-        $thumb = Kit::GetParam('thumb', _GET, _BOOL, false);
-        $dynamic = isset($_REQUEST['dynamic']);
-        $file = $this->storedAs;
-        $width = Kit::GetParam('width', _REQUEST, _INT, 80);
-        $height = Kit::GetParam('height', _REQUEST, _INT, 80);
-
-        // File upload directory.. get this from the settings object
-        $library = Config::GetSetting("LIBRARY_LOCATION");
-        $fileName = $library . $file;
-
-        // If we are a thumb request then output the cached thumbnail
-        if ($thumb) {
-            $fileName = $library . sprintf('tn_%dx%d_%s', $width, $height, $file);
-
-            // If the thumbnail doesn't exist then create one
-            if (!file_exists($fileName)) {
-                Debug::LogEntry('audit', 'File doesnt exist, creating a thumbnail for ' . $fileName);
-
-                if (!$info = getimagesize($library . $file))
-                    die($library . $file . ' is not an image');
-
-                ResizeImage($library . $file, $fileName, $width, $height, $proportional, 'file');
-            }
-        }
-        
-        // Get the info for this new temporary file
-        if (!$info = getimagesize($fileName)) {
-            echo $fileName . ' is not an image';
-            exit;
-        }
-
-        if ($dynamic && !$thumb && $info[2])
-        {
-            $width  = Kit::GetParam('width', _GET, _INT);
-            $height = Kit::GetParam('height', _GET, _INT);
-
-            // dynamically create an image of the correct size - used for previews
-            ResizeImage($fileName, '', $width, $height, $proportional, 'browser');
-
-            exit;
-        }
-
-        if (!file_exists($fileName)) {
-            //not sure
-            Debug::LogEntry('audit', "Cant find: $uid", 'module', 'GetResource');
-
-            $fileName = 'theme/default/img/forms/filenotfound.png';
-        }
-        
-    	$this->ReturnFile($fileName);
-        
+        $this->ReturnFile();
         exit();
     }
+
+    /**
+     * Is this module valid
+     * @return int
+     */
+    public function IsValid()
+    {
+        // Yes
+        return 1;
+    }
 }
-?>

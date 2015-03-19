@@ -209,7 +209,7 @@ class Session {
 		try {
 			$dbh = PDOConnect::init();
 
-			$sth->prepare('UPDATE session SET IsExpired = 1 WHERE session_id = :session_id');
+			$sth = $dbh->prepare('UPDATE session SET IsExpired = 1 WHERE session_id = :session_id');
 			$sth->execute(array('session_id', $key));
 		}
 		catch (Exception $e) {
@@ -309,14 +309,16 @@ class Session {
 		}
 	}
 	
-	public function setSecurityToken($token)
+	public static function setSecurityToken($token)
 	{
 		try {
+            // TODO: Remove global variable
+            global $session;
 			$dbh = PDOConnect::init();
 
 			// Delete sessions older than 10 times the max lifetime
 			$sth = $dbh->prepare('UPDATE session SET securitytoken = :securitytoken WHERE session_id = :session_id');
-			$sth->execute(array('session_id' => $this->key, 'securitytoken' => $token));
+			$sth->execute(array('session_id' => $session->key, 'securitytoken' => $token));
 
 			return true;
 		}

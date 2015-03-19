@@ -1,40 +1,64 @@
 <?php 
 
-require_once("3rdparty/jquery-file-upload/UploadHandler.php");
+require_once('3rdparty/jquery-file-upload/UploadHandler.php');
 
-class XiboUploadHandler extends UploadHandler {
-	
-	protected function handle_form_data($file, $index) {
+class XiboUploadHandler extends UploadHandler
+{
+	protected function handle_form_data($file, $index)
+    {
         // Handle form data, e.g. $_REQUEST['description'][$index]
         
         // Link the file to the module
         $name = $_REQUEST['name'][$index];
-        $duration = $_REQUEST['duration'][$index];
 
-        $layoutId = Kit::GetParam('layoutid', _REQUEST, _INT);
-        $type = Kit::GetParam('type', _REQUEST, _WORD);
+        // The media name might be empty here, because the user isn't forced to select it
+        if ($name == '')
+            $name = $file->name;
 
-        Debug::LogEntry('audit', 'Upload complete for Type: ' . $type . ' and file name: ' . $file->name . '. Name: ' . $name . '. Duration:' . $duration);
+        Debug::Audit('Upload complete for name: ' . $file->name . '. Name: ' . $name . '.');
 
-        // We want to create a module for each of the uploaded files.
-        // Do not pass in the region ID so that we only assign to the library and not to the layout
+        // Upload and Save
         try {
-            $module = ModuleFactory::createForLibrary($type, $layoutId, $this->options['db'], $this->options['user']);
+            // Guess the type
+            $module = \Xibo\Factory\ModuleFactory::getByExtension(strtolower(substr(strrchr($file->name, '.'), 1)));
+
+            // Add the Media
+            $mediaObject = new Media();
+            if (!$mediaId = $mediaObject->Add($file->name, $module->type, $name, 0, $file->name, $this->options['userId'])) {
+                throw new Exception($mediaObject->GetErrorMessage());
+            }
+
+            // Get the storedAs valid for return
+            $file->storedas = $mediaObject->GetStoredAs($mediaId);
+
+            // Fonts, then install
+            if ($module->type == 'font') {
+                $mediaObject->installFonts();
+            }
+
+            // Are we assigning to a Playlist?
+            if ($this->options['playlistId'] != 0) {
+                Debug::Audit('Assigning uploaded media to playlistId ' . $this->options['playlistId']);
+
+                // Get the Playlist
+                $playlist = \Xibo\Factory\PlaylistFactory::getById($this->options['playlistId']);
+
+                // Create a Widget and add it to our region
+                $widget = \Xibo\Factory\WidgetFactory::create($this->options['userId'], $playlist->playlistId, $module->type, 10);
+                $widget->assignMedia($mediaId);
+
+                // Assign the new widget to the playlist
+                $playlist->widgets[] = $widget;
+
+                // Save the playlist
+                $playlist->save();
+            }
         }
         catch (Exception $e) {
             $file->error = $e->getMessage();
             exit();
         }
-
-        // We want to add this item to our library
-        if (!$storedAs = $module->AddLibraryMedia($file->name, $name, $duration, $file->name)) {
-            $file->error = $module->GetErrorMessage();
-        }
-
-        // Set new file details
-        $file->storedas = $storedAs;
-
-        // Delete the file
-        @unlink($this->get_upload_path($file->name));
     }
+
+
 }
