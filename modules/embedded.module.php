@@ -140,12 +140,12 @@ function EmbedInit()
 
         // Required Attributes
         $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration(), false));
-        $this->SetOption('transparency', Kit::GetParam('transparency', _POST, _CHECKBOX));
-        $this->SetOption('name', Kit::GetParam('name', _POST, _STRING));
-        $this->SetOption('scaleContent', Kit::GetParam('scaleContent', _POST, _CHECKBOX, 'off'));
-        $this->setRawNode('embedHtml', Kit::GetParam('embedHtml', _POST, _HTMLSTRING));
-        $this->setRawNode('embedScript', Kit::GetParam('embedScript', _POST, _HTMLSTRING));
-        $this->setRawNode('embedStyle', Kit::GetParam('embedStyle', _POST, _HTMLSTRING));
+        $this->SetOption('transparency', \Kit::GetParam('transparency', _POST, _CHECKBOX));
+        $this->SetOption('name', \Kit::GetParam('name', _POST, _STRING));
+        $this->SetOption('scaleContent', \Kit::GetParam('scaleContent', _POST, _CHECKBOX, 'off'));
+        $this->setRawNode('embedHtml', \Kit::GetParam('embedHtml', _POST, _HTMLSTRING));
+        $this->setRawNode('embedScript', \Kit::GetParam('embedScript', _POST, _HTMLSTRING));
+        $this->setRawNode('embedStyle', \Kit::GetParam('embedStyle', _POST, _HTMLSTRING));
 
         // Save the widget
         $this->saveWidget();
@@ -167,12 +167,12 @@ function EmbedInit()
             throw new Exception(__('You do not have permission to edit this widget.'));
 
         $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration(), false));
-        $this->SetOption('transparency', Kit::GetParam('transparency', _POST, _CHECKBOX));
-        $this->SetOption('name', Kit::GetParam('name', _POST, _STRING));
-        $this->SetOption('scaleContent', Kit::GetParam('scaleContent', _POST, _CHECKBOX, 'off'));
-        $this->setRawNode('embedHtml', Kit::GetParam('embedHtml', _POST, _HTMLSTRING));
-        $this->setRawNode('embedScript', Kit::GetParam('embedScript', _POST, _HTMLSTRING));
-        $this->setRawNode('embedStyle', Kit::GetParam('embedStyle', _POST, _HTMLSTRING));
+        $this->SetOption('transparency', \Kit::GetParam('transparency', _POST, _CHECKBOX));
+        $this->SetOption('name', \Kit::GetParam('name', _POST, _STRING));
+        $this->SetOption('scaleContent', \Kit::GetParam('scaleContent', _POST, _CHECKBOX, 'off'));
+        $this->setRawNode('embedHtml', \Kit::GetParam('embedHtml', _POST, _HTMLSTRING));
+        $this->setRawNode('embedScript', \Kit::GetParam('embedScript', _POST, _HTMLSTRING));
+        $this->setRawNode('embedStyle', \Kit::GetParam('embedStyle', _POST, _HTMLSTRING));
 
         // Save the widget
         $this->saveWidget();
@@ -200,7 +200,7 @@ function EmbedInit()
     public function GetResource($displayId = 0)
     {
         // Behave exactly like the client.
-        $isPreview = (Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
+        $isPreview = (\Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
 
         // Load in the template
         $template = file_get_contents('modules/preview/HtmlTemplate.html');
@@ -226,9 +226,9 @@ function EmbedInit()
         $options = array(
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
-            'previewWidth' => Kit::GetParam('width', _GET, _DOUBLE, 0),
-            'previewHeight' => Kit::GetParam('height', _GET, _DOUBLE, 0),
-            'scaleOverride' => Kit::GetParam('scale_override', _GET, _DOUBLE, 0)
+            'previewWidth' => \Kit::GetParam('width', _GET, _DOUBLE, 0),
+            'previewHeight' => \Kit::GetParam('height', _GET, _DOUBLE, 0),
+            'scaleOverride' => \Kit::GetParam('scale_override', _GET, _DOUBLE, 0)
         );
 
 

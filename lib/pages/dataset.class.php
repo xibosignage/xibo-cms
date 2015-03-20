@@ -28,7 +28,7 @@ class datasetDAO extends baseDAO
 {
     public function displayPage()
     {
-        $subpage = Kit::GetParam('sp', _GET, _WORD, '');
+        $subpage = \Kit::GetParam('sp', _GET, _WORD, '');
 
         // Configure the theme
         $id = uniqid();
@@ -36,8 +36,8 @@ class datasetDAO extends baseDAO
         // Different pages for data entry and admin    
         if ($subpage == 'DataEntry') {
             Theme::Set('id', 'DataEntryGrid');
-            $dataSetId = Kit::GetParam('datasetid', _GET, _INT);
-            $dataSet = Kit::GetParam('dataset', _GET, _STRING);
+            $dataSetId = \Kit::GetParam('datasetid', _GET, _INT);
+            $dataSet = \Kit::GetParam('dataset', _GET, _STRING);
             
             Theme::Set('form_meta', '<input type="hidden" name="p" value="dataset"><input type="hidden" name="q" value="DataSetDataForm"><input type="hidden" name="datasetid" value="' . $dataSetId . '"><input type="hidden" name="dataset" value="' . $dataSet . '">');
             
@@ -61,7 +61,7 @@ class datasetDAO extends baseDAO
 
     function actionMenu() {
 
-        if (Kit::GetParam('sp', _GET, _WORD, 'view') == 'view') {
+        if (\Kit::GetParam('sp', _GET, _WORD, 'view') == 'view') {
             return array(
                 array('title' => __('Add DataSet'),
                     'class' => 'XiboFormButton',
@@ -72,7 +72,7 @@ class datasetDAO extends baseDAO
                     )
             );
         }
-        else if (Kit::GetParam('sp', _GET, _WORD, 'view') == 'DataEntry') {
+        else if (\Kit::GetParam('sp', _GET, _WORD, 'view') == 'DataEntry') {
             return array(
                 array('title' => __('More Rows'),
                     'class' => '',
@@ -212,8 +212,8 @@ class datasetDAO extends baseDAO
         $user =& $this->user;
         $response = new ResponseManager();
 
-        $dataSet = Kit::GetParam('dataset', _POST, _STRING);
-        $description = Kit::GetParam('description', _POST, _STRING);
+        $dataSet = \Kit::GetParam('dataset', _POST, _STRING);
+        $description = \Kit::GetParam('description', _POST, _STRING);
 
         $dataSetObject = new DataSet($db);
         if (!$dataSetId = $dataSetObject->Add($dataSet, $description, $this->user->userid))
@@ -233,7 +233,7 @@ class datasetDAO extends baseDAO
         $user =& $this->user;
         $response = new ResponseManager();
 
-        $dataSetId = Kit::GetParam('datasetid', _GET, _INT);
+        $dataSetId = \Kit::GetParam('datasetid', _GET, _INT);
 
         $auth = $user->DataSetAuth($dataSetId, true);
         if (!$auth->edit)
@@ -251,10 +251,10 @@ class datasetDAO extends baseDAO
         Theme::Set('form_meta', '<input type="hidden" name="datasetid" value="' . $dataSetId . '" />');
 
         $formFields = array();
-        $formFields[] = FormManager::AddText('dataset', __('Name'), Kit::ValidateParam($row['DataSet'], _STRING), 
+        $formFields[] = FormManager::AddText('dataset', __('Name'), \Kit::ValidateParam($row['DataSet'], _STRING),
             __('A name for this DataSet'), 'n', 'required');
 
-        $formFields[] = FormManager::AddText('description', __('Description'), Kit::ValidateParam($row['Description'], _STRING), 
+        $formFields[] = FormManager::AddText('description', __('Description'), \Kit::ValidateParam($row['Description'], _STRING),
             __('An optional description'), 'd', 'maxlength="250"');
         
         Theme::Set('form_fields', $formFields);
@@ -276,14 +276,14 @@ class datasetDAO extends baseDAO
         $user =& $this->user;
         $response = new ResponseManager();
 
-        $dataSetId = Kit::GetParam('datasetid', _POST, _INT);
+        $dataSetId = \Kit::GetParam('datasetid', _POST, _INT);
 
         $auth = $user->DataSetAuth($dataSetId, true);
         if (!$auth->edit)
             trigger_error(__('Access Denied'));
 
-        $dataSet = Kit::GetParam('dataset', _POST, _STRING);
-        $description = Kit::GetParam('description', _POST, _STRING);
+        $dataSet = \Kit::GetParam('dataset', _POST, _STRING);
+        $description = \Kit::GetParam('description', _POST, _STRING);
 
         $dataSetObject = new DataSet($db);
         if (!$dataSetObject->Edit($dataSetId, $dataSet, $description))
@@ -302,7 +302,7 @@ class datasetDAO extends baseDAO
         $db =& $this->db;
         $response = new ResponseManager();
         
-        $dataSetId = Kit::GetParam('datasetid', _GET, _INT);
+        $dataSetId = \Kit::GetParam('datasetid', _GET, _INT);
 
         $auth = $this->user->DataSetAuth($dataSetId, true);
         if (!$auth->del)
@@ -337,7 +337,7 @@ class datasetDAO extends baseDAO
         $user =& $this->user;
         $response = new ResponseManager();
 
-        $dataSetId = Kit::GetParam('datasetid', _POST, _INT);
+        $dataSetId = \Kit::GetParam('datasetid', _POST, _INT);
 
         $auth = $user->DataSetAuth($dataSetId, true);
         if (!$auth->del)
@@ -345,7 +345,7 @@ class datasetDAO extends baseDAO
 
         $dataSetObject = new DataSet($db);
 
-        if ($dataSetObject->hasData($dataSetId) && Kit::GetParam('deleteData', _POST, _CHECKBOX) == 0)
+        if ($dataSetObject->hasData($dataSetId) && \Kit::GetParam('deleteData', _POST, _CHECKBOX) == 0)
             trigger_error(__('There is data assigned to this data set, cannot delete.'), E_USER_ERROR);
 
         // Proceed with the delete
@@ -362,8 +362,8 @@ class datasetDAO extends baseDAO
         $response = new ResponseManager();
         $helpManager = new HelpManager($db, $this->user);
 
-        $dataSetId = Kit::GetParam('datasetid', _GET, _INT);
-        $dataSet = Kit::GetParam('dataset', _GET, _STRING);
+        $dataSetId = \Kit::GetParam('datasetid', _GET, _INT);
+        $dataSet = \Kit::GetParam('dataset', _GET, _STRING);
 
         $auth = $this->user->DataSetAuth($dataSetId, true);
         if (!$auth->edit)
@@ -379,7 +379,7 @@ class datasetDAO extends baseDAO
         $SQL .= sprintf(" WHERE DataSetID = %d ", $dataSetId);
         $SQL .= "ORDER BY ColumnOrder ";
 
-        Kit::ClassLoader('datasetcolumn');
+        \Kit::ClassLoader('datasetcolumn');
         $dataSetColumnObject = new DataSetColumn($db);
 
         // Load results into an array
@@ -429,8 +429,8 @@ class datasetDAO extends baseDAO
         $response = new ResponseManager();
         $helpManager = new HelpManager($db, $this->user);
 
-        $dataSetId = Kit::GetParam('datasetid', _GET, _INT);
-        $dataSet = Kit::GetParam('dataset', _GET, _STRING);
+        $dataSetId = \Kit::GetParam('datasetid', _GET, _INT);
+        $dataSet = \Kit::GetParam('dataset', _GET, _STRING);
 
         $auth = $this->user->DataSetAuth($dataSetId, true);
         if (!$auth->edit)
@@ -484,19 +484,19 @@ class datasetDAO extends baseDAO
         $user =& $this->user;
         $response = new ResponseManager();
 
-        $dataSetId = Kit::GetParam('datasetid', _POST, _INT);
-        $dataSet = Kit::GetParam('dataset', _POST, _STRING);
+        $dataSetId = \Kit::GetParam('datasetid', _POST, _INT);
+        $dataSet = \Kit::GetParam('dataset', _POST, _STRING);
 
         $auth = $user->DataSetAuth($dataSetId, true);
         if (!$auth->edit)
             trigger_error(__('Access Denied'));
 
-        $heading = Kit::GetParam('heading', _POST, _STRING);
-        $listContent = Kit::GetParam('listcontent', _POST, _STRING);
-        $columnOrder = Kit::GetParam('columnorder', _POST, _INT);
-        $dataTypeId = Kit::GetParam('datatypeid', _POST, _INT);
-        $dataSetColumnTypeId = Kit::GetParam('datasetcolumntypeid', _POST, _INT);
-        $formula = Kit::GetParam('formula', _POST, _STRING);
+        $heading = \Kit::GetParam('heading', _POST, _STRING);
+        $listContent = \Kit::GetParam('listcontent', _POST, _STRING);
+        $columnOrder = \Kit::GetParam('columnorder', _POST, _INT);
+        $dataTypeId = \Kit::GetParam('datatypeid', _POST, _INT);
+        $dataSetColumnTypeId = \Kit::GetParam('datasetcolumntypeid', _POST, _INT);
+        $formula = \Kit::GetParam('formula', _POST, _STRING);
 
         $dataSetObject = new DataSetColumn($db);
         if (!$dataSetObject->Add($dataSetId, $heading, $dataTypeId, $listContent, $columnOrder, $dataSetColumnTypeId, $formula))
@@ -515,9 +515,9 @@ class datasetDAO extends baseDAO
         $response = new ResponseManager();
         $helpManager = new HelpManager($db, $this->user);
 
-        $dataSetId = Kit::GetParam('datasetid', _GET, _INT);
-        $dataSetColumnId = Kit::GetParam('datasetcolumnid', _GET, _INT);
-        $dataSet = Kit::GetParam('dataset', _GET, _STRING);
+        $dataSetId = \Kit::GetParam('datasetid', _GET, _INT);
+        $dataSetColumnId = \Kit::GetParam('datasetcolumnid', _GET, _INT);
+        $dataSet = \Kit::GetParam('dataset', _GET, _STRING);
 
         $auth = $this->user->DataSetAuth($dataSetId, true);
         if (!$auth->edit)
@@ -539,13 +539,13 @@ class datasetDAO extends baseDAO
         Theme::Set('datasetcolumntype_field_list', $db->GetArray('SELECT datasetcolumntypeid, datasetcolumntype FROM datasetcolumntype'));
 
         $formFields = array();
-        $formFields[] = FormManager::AddText('heading', __('Heading'), Kit::ValidateParam($row['Heading'], _STRING), 
+        $formFields[] = FormManager::AddText('heading', __('Heading'), \Kit::ValidateParam($row['Heading'], _STRING),
             __('The heading for this Column'), 'h', 'required');
 
         $formFields[] = FormManager::AddCombo(
                     'datasetcolumntypeid', 
                     __('Column Type'), 
-                    Kit::ValidateParam($row['DataSetColumnTypeID'], _INT),
+                    \Kit::ValidateParam($row['DataSetColumnTypeID'], _INT),
                     $db->GetArray('SELECT datasetcolumntypeid, datasetcolumntype FROM datasetcolumntype'),
                     'datasetcolumntypeid',
                     'datasetcolumntype',
@@ -555,20 +555,20 @@ class datasetDAO extends baseDAO
         $formFields[] = FormManager::AddCombo(
                     'datatypeid', 
                     __('Data Type'), 
-                    Kit::ValidateParam($row['DataTypeID'], _INT),
+                    \Kit::ValidateParam($row['DataTypeID'], _INT),
                     $db->GetArray('SELECT datatypeid, datatype FROM datatype'),
                     'datatypeid',
                     'datatype',
                     __('The DataType of the Intended Data'), 
                     'd');
 
-        $formFields[] = FormManager::AddText('listcontent', __('List Content'), Kit::ValidateParam($row['ListContent'], _STRING), 
+        $formFields[] = FormManager::AddText('listcontent', __('List Content'), \Kit::ValidateParam($row['ListContent'], _STRING),
             __('A comma separated list of items to present in a combo box'), 'l', '');
 
-        $formFields[] = FormManager::AddNumber('columnorder', __('Column Order'), Kit::ValidateParam($row['ColumnOrder'], _INT), 
+        $formFields[] = FormManager::AddNumber('columnorder', __('Column Order'), \Kit::ValidateParam($row['ColumnOrder'], _INT),
             __('The order this column should be displayed in when entering data'), 'o', '');
 
-        $formFields[] = FormManager::AddText('formula', __('Formula'), Kit::ValidateParam($row['Formula'], _STRING), 
+        $formFields[] = FormManager::AddText('formula', __('Formula'), \Kit::ValidateParam($row['Formula'], _STRING),
             __('A formula to use as a calculation for formula column types'), 'f', '');
         
         Theme::Set('form_fields', $formFields);
@@ -590,20 +590,20 @@ class datasetDAO extends baseDAO
         $user =& $this->user;
         $response = new ResponseManager();
 
-        $dataSetId = Kit::GetParam('datasetid', _POST, _INT);
-        $dataSet = Kit::GetParam('dataset', _POST, _STRING);
+        $dataSetId = \Kit::GetParam('datasetid', _POST, _INT);
+        $dataSet = \Kit::GetParam('dataset', _POST, _STRING);
 
         $auth = $user->DataSetAuth($dataSetId, true);
         if (!$auth->edit)
             trigger_error(__('Access Denied'));
             
-        $dataSetColumnId = Kit::GetParam('datasetcolumnid', _POST, _INT);
-        $heading = Kit::GetParam('heading', _POST, _STRING);
-        $listContent = Kit::GetParam('listcontent', _POST, _STRING);
-        $columnOrder = Kit::GetParam('columnorder', _POST, _INT);
-        $dataTypeId = Kit::GetParam('datatypeid', _POST, _INT);
-        $dataSetColumnTypeId = Kit::GetParam('datasetcolumntypeid', _POST, _INT);
-        $formula = Kit::GetParam('formula', _POST, _STRING);
+        $dataSetColumnId = \Kit::GetParam('datasetcolumnid', _POST, _INT);
+        $heading = \Kit::GetParam('heading', _POST, _STRING);
+        $listContent = \Kit::GetParam('listcontent', _POST, _STRING);
+        $columnOrder = \Kit::GetParam('columnorder', _POST, _INT);
+        $dataTypeId = \Kit::GetParam('datatypeid', _POST, _INT);
+        $dataSetColumnTypeId = \Kit::GetParam('datasetcolumntypeid', _POST, _INT);
+        $formula = \Kit::GetParam('formula', _POST, _STRING);
 
         $dataSetObject = new DataSetColumn($db);
         if (!$dataSetObject->Edit($dataSetColumnId, $heading, $dataTypeId, $listContent, $columnOrder, $dataSetColumnTypeId, $formula))
@@ -622,14 +622,14 @@ class datasetDAO extends baseDAO
         $response = new ResponseManager();
         $helpManager = new HelpManager($db, $this->user);
 
-        $dataSetId = Kit::GetParam('datasetid', _GET, _INT);
-        $dataSet = Kit::GetParam('dataset', _GET, _STRING);
+        $dataSetId = \Kit::GetParam('datasetid', _GET, _INT);
+        $dataSet = \Kit::GetParam('dataset', _GET, _STRING);
 
         $auth = $this->user->DataSetAuth($dataSetId, true);
         if (!$auth->edit)
             trigger_error(__('Access Denied'));
 
-        $dataSetColumnId = Kit::GetParam('datasetcolumnid', _GET, _INT);
+        $dataSetColumnId = \Kit::GetParam('datasetcolumnid', _GET, _INT);
 
          // Set some information about the form
         Theme::Set('form_id', 'DataSetColumnDeleteForm');
@@ -655,14 +655,14 @@ class datasetDAO extends baseDAO
         $user =& $this->user;
         $response = new ResponseManager();
 
-        $dataSetId = Kit::GetParam('datasetid', _POST, _INT);
-        $dataSet = Kit::GetParam('dataset', _POST, _STRING);
+        $dataSetId = \Kit::GetParam('datasetid', _POST, _INT);
+        $dataSet = \Kit::GetParam('dataset', _POST, _STRING);
 
         $auth = $this->user->DataSetAuth($dataSetId, true);
         if (!$auth->edit)
             trigger_error(__('Access Denied'));
 
-        $dataSetColumnId = Kit::GetParam('datasetcolumnid', _POST, _INT);
+        $dataSetColumnId = \Kit::GetParam('datasetcolumnid', _POST, _INT);
 
         $dataSetObject = new DataSetColumn($db);
         if (!$dataSetObject->Delete($dataSetColumnId))
@@ -680,8 +680,8 @@ class datasetDAO extends baseDAO
         $db =& $this->db;
         $response = new ResponseManager();
 
-        $dataSetId = Kit::GetParam('datasetid', _POST, _INT);
-        $dataSet = Kit::GetParam('dataset', _POST, _STRING);
+        $dataSetId = \Kit::GetParam('datasetid', _POST, _INT);
+        $dataSet = \Kit::GetParam('dataset', _POST, _STRING);
 
         $auth = $this->user->DataSetAuth($dataSetId, true);
         if (!$auth->edit)
@@ -839,11 +839,11 @@ END;
         $user =& $this->user;
         $response = new ResponseManager();
 
-        $response->uniqueReference = Kit::GetParam('fieldid', _POST, _STRING);
-        $dataSetId = Kit::GetParam('datasetid', _POST, _INT);
-        $dataSetColumnId = Kit::GetParam('datasetcolumnid', _POST, _INT);
-        $rowNumber = Kit::GetParam('rownumber', _POST, _INT);
-        $value = Kit::GetParam('value', _POST, _STRING);
+        $response->uniqueReference = \Kit::GetParam('fieldid', _POST, _STRING);
+        $dataSetId = \Kit::GetParam('datasetid', _POST, _INT);
+        $dataSetColumnId = \Kit::GetParam('datasetcolumnid', _POST, _INT);
+        $rowNumber = \Kit::GetParam('rownumber', _POST, _INT);
+        $value = \Kit::GetParam('value', _POST, _STRING);
 
         $auth = $user->DataSetAuth($dataSetId, true);
         if (!$auth->edit)
@@ -866,11 +866,11 @@ END;
         $user =& $this->user;
         $response = new ResponseManager();
 
-        $response->uniqueReference = Kit::GetParam('fieldid', _POST, _STRING);
-        $dataSetId = Kit::GetParam('datasetid', _POST, _INT);
-        $dataSetColumnId = Kit::GetParam('datasetcolumnid', _POST, _INT);
-        $rowNumber = Kit::GetParam('rownumber', _POST, _INT);
-        $value = Kit::GetParam('value', _POST, _STRING);
+        $response->uniqueReference = \Kit::GetParam('fieldid', _POST, _STRING);
+        $dataSetId = \Kit::GetParam('datasetid', _POST, _INT);
+        $dataSetColumnId = \Kit::GetParam('datasetcolumnid', _POST, _INT);
+        $rowNumber = \Kit::GetParam('rownumber', _POST, _INT);
+        $value = \Kit::GetParam('value', _POST, _STRING);
 
         $auth = $user->DataSetAuth($dataSetId, true);
         if (!$auth->edit)
@@ -944,7 +944,7 @@ END;
         $response = new ResponseManager();
         $helpManager = new HelpManager($db, $user);
 
-        $dataSetId = Kit::GetParam('datasetid', _GET, _INT);
+        $dataSetId = \Kit::GetParam('datasetid', _GET, _INT);
 
         $auth = $this->user->DataSetAuth($dataSetId, true);
 
@@ -957,7 +957,7 @@ END;
         Theme::Set('form_meta', '<input type="hidden" name="datasetid" value="' . $dataSetId . '" />');
 
         // List of all Groups with a view/edit/delete checkbox
-        Kit::ClassLoader('datasetgroupsecurity');
+        \Kit::ClassLoader('datasetgroupsecurity');
         $security = new DataSetGroupSecurity($this->db);
 
         if (!$results = $security->ListSecurity($dataSetId, $user->getGroupFromId($user->userid, true))) {
@@ -972,7 +972,7 @@ END;
 
             $checkbox = array(
                     'id' => $groupId,
-                    'name' => Kit::ValidateParam($row['group'], _STRING),
+                    'name' => \Kit::ValidateParam($row['group'], _STRING),
                     'class' => $rowClass,
                     'value_view' => $groupId . '_view',
                     'value_view_checked' => (($row['view'] == 1) ? 'checked' : ''),
@@ -1006,10 +1006,10 @@ END;
         $db =& $this->db;
         $user =& $this->user;
         $response = new ResponseManager();
-        Kit::ClassLoader('datasetgroupsecurity');
+        \Kit::ClassLoader('datasetgroupsecurity');
 
-        $dataSetId = Kit::GetParam('datasetid', _POST, _INT);
-        $groupIds = Kit::GetParam('groupids', _POST, _ARRAY);
+        $dataSetId = \Kit::GetParam('datasetid', _POST, _INT);
+        $groupIds = \Kit::GetParam('groupids', _POST, _ARRAY);
 
         $auth = $this->user->DataSetAuth($dataSetId, true);
 
@@ -1087,8 +1087,8 @@ END;
         $db =& $this->db;
         $response = new ResponseManager();
         
-        $dataSetId = Kit::GetParam('datasetid', _GET, _INT);
-        $dataSet = Kit::GetParam('dataset', _GET, _STRING);
+        $dataSetId = \Kit::GetParam('datasetid', _GET, _INT);
+        $dataSet = \Kit::GetParam('dataset', _GET, _STRING);
 
         $auth = $this->user->DataSetAuth($dataSetId, true);
         if (!$auth->edit)
@@ -1147,8 +1147,8 @@ END;
         foreach ($dataSetColumns as $row) {
             $i++;
 
-            $formFields[] = FormManager::AddNumber('csvImport_' . Kit::ValidateParam($row['DataSetColumnID'], _INT), 
-                Kit::ValidateParam($row['Heading'], _STRING), $i, NULL, 'c');
+            $formFields[] = FormManager::AddNumber('csvImport_' . \Kit::ValidateParam($row['DataSetColumnID'], _INT),
+                \Kit::ValidateParam($row['Heading'], _STRING), $i, NULL, 'c');
         }
 
         Theme::Set('form_fields', $formFields);
@@ -1164,22 +1164,22 @@ END;
 
         $db =& $this->db;
         $response = new ResponseManager();
-        $dataSetId = Kit::GetParam('datasetid', _POST, _INT);
-        $overwrite = Kit::GetParam('overwrite', _POST, _CHECKBOX);
-        $ignorefirstrow = Kit::GetParam('ignorefirstrow', _POST, _CHECKBOX);
+        $dataSetId = \Kit::GetParam('datasetid', _POST, _INT);
+        $overwrite = \Kit::GetParam('overwrite', _POST, _CHECKBOX);
+        $ignorefirstrow = \Kit::GetParam('ignorefirstrow', _POST, _CHECKBOX);
 
         $auth = $this->user->DataSetAuth($dataSetId, true);
         if (!$auth->edit)
             trigger_error(__('Access Denied'), E_USER_ERROR);
 
         // File data
-        $tmpName = Kit::GetParam('hidFileID', _POST, _STRING);
+        $tmpName = \Kit::GetParam('hidFileID', _POST, _STRING);
 
         if ($tmpName == '')
             trigger_error(__('Please ensure you have picked a file and it has finished uploading'), E_USER_ERROR);
 
         // File name and extension (original name)
-        $fileName = Kit::GetParam('txtFileName', _POST, _STRING);
+        $fileName = \Kit::GetParam('txtFileName', _POST, _STRING);
         $fileName = basename($fileName);
         $ext = strtolower(substr(strrchr($fileName, "."), 1));
 
@@ -1211,8 +1211,8 @@ END;
 
         foreach ($dataSetColumns as $row) {
 
-            $dataSetColumnId = Kit::ValidateParam($row['DataSetColumnID'], _INT);
-            $spreadSheetColumn = Kit::GetParam('csvImport_' . $dataSetColumnId, _POST, _INT);
+            $dataSetColumnId = \Kit::ValidateParam($row['DataSetColumnID'], _INT);
+            $spreadSheetColumn = \Kit::GetParam('csvImport_' . $dataSetColumnId, _POST, _INT);
 
             // If it has been left blank, then skip
             if ($spreadSheetColumn != 0)

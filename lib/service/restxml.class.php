@@ -31,7 +31,7 @@ class RestXml extends Rest
 
         // Commit back any open transactions if we are in an error state
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
             $dbh->commit();
         }
         catch (Exception $e) {
@@ -71,7 +71,7 @@ class RestXml extends Rest
 
         // Roll back any open transactions if we are in an error state
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
             $dbh->rollBack();
         }
         catch (Exception $e) {

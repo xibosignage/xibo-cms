@@ -78,12 +78,12 @@ class transitionDAO extends baseDAO {
         foreach($transitions as $transition)
         {
             $row = array();
-            $row['transitionid'] = Kit::ValidateParam($transition['TransitionID'], _INT);
-            $row['name'] = Kit::ValidateParam($transition['Transition'], _STRING);
-            $row['hasduration'] = Kit::ValidateParam($transition['HasDuration'], _INT);
-            $row['hasdirection'] = Kit::ValidateParam($transition['HasDirection'], _INT);
-            $row['enabledforin'] = Kit::ValidateParam($transition['AvailableAsIn'], _INT);
-            $row['enabledforout'] = Kit::ValidateParam($transition['AvailableAsOut'], _INT);
+            $row['transitionid'] = \Kit::ValidateParam($transition['TransitionID'], _INT);
+            $row['name'] = \Kit::ValidateParam($transition['Transition'], _STRING);
+            $row['hasduration'] = \Kit::ValidateParam($transition['HasDuration'], _INT);
+            $row['hasdirection'] = \Kit::ValidateParam($transition['HasDirection'], _INT);
+            $row['enabledforin'] = \Kit::ValidateParam($transition['AvailableAsIn'], _INT);
+            $row['enabledforout'] = \Kit::ValidateParam($transition['AvailableAsOut'], _INT);
             
             // Initialise array of buttons, because we might not have any
             $row['buttons'] = array();
@@ -121,7 +121,7 @@ class transitionDAO extends baseDAO {
         if (Config::GetSetting('TRANSITION_CONFIG_LOCKED_CHECKB') == 'Checked')
             trigger_error(__('Transition Config Locked'), E_USER_ERROR);
 
-        $transitionId = Kit::GetParam('TransitionID', _GET, _INT);
+        $transitionId = \Kit::GetParam('TransitionID', _GET, _INT);
 
         // Pull the currently known info from the DB
         $SQL = '';
@@ -139,7 +139,7 @@ class transitionDAO extends baseDAO {
             trigger_error(__('Error getting Transition'));
         }
 
-        $name = Kit::ValidateParam($row['Transition'], _STRING);      
+        $name = \Kit::ValidateParam($row['Transition'], _STRING);
 
         // Set some information about the form
         Theme::Set('form_id', 'TransitionEditForm');
@@ -149,11 +149,11 @@ class transitionDAO extends baseDAO {
         $formFields = array();
         
         $formFields[] = FormManager::AddCheckbox('EnabledForIn', __('Available for In Transitions?'), 
-            Kit::ValidateParam($row['AvailableAsIn'], _INT), __('Can this transition be used for media start?'), 
+            \Kit::ValidateParam($row['AvailableAsIn'], _INT), __('Can this transition be used for media start?'),
             'i');
         
         $formFields[] = FormManager::AddCheckbox('EnabledForOut', __('Available for Out Transitions?'), 
-            Kit::ValidateParam($row['AvailableAsOut'], _INT), __('Can this transition be used for media end?'), 
+            \Kit::ValidateParam($row['AvailableAsOut'], _INT), __('Can this transition be used for media end?'),
             'o');
 
         Theme::Set('form_fields', $formFields);
@@ -181,9 +181,9 @@ class transitionDAO extends baseDAO {
         if (Config::GetSetting('TRANSITION_CONFIG_LOCKED_CHECKB') == 'Checked')
             trigger_error(__('Transition Config Locked'), E_USER_ERROR);
 
-        $transitionId = Kit::GetParam('TransitionID', _POST, _INT);
-        $enabledForIn = Kit::GetParam('EnabledForIn', _POST, _CHECKBOX);
-        $enabledForOut = Kit::GetParam('EnabledForOut', _POST, _CHECKBOX);
+        $transitionId = \Kit::GetParam('TransitionID', _POST, _INT);
+        $enabledForIn = \Kit::GetParam('EnabledForIn', _POST, _CHECKBOX);
+        $enabledForOut = \Kit::GetParam('EnabledForOut', _POST, _CHECKBOX);
 
         // Validation
         if ($transitionId == 0 || $transitionId == '')

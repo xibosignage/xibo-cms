@@ -76,9 +76,9 @@ class image extends Module
     public function EditMedia()
     {
         // Set the properties specific to Images
-        $this->SetOption('scaleType', Kit::GetParam('scaleTypeId', _POST, _WORD, 'center'));
-        $this->SetOption('align', Kit::GetParam('alignId', _POST, _WORD, 'center'));
-        $this->SetOption('valign', Kit::GetParam('valignId', _POST, _WORD, 'middle'));
+        $this->SetOption('scaleType', \Kit::GetParam('scaleTypeId', _POST, _WORD, 'center'));
+        $this->SetOption('align', \Kit::GetParam('alignId', _POST, _WORD, 'center'));
+        $this->SetOption('valign', \Kit::GetParam('valignId', _POST, _WORD, 'middle'));
 
         // Edit
         parent::EditMedia();

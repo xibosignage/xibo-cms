@@ -31,10 +31,10 @@ class LkMediaDisplayGroup extends Data {
         Debug::LogEntry('audit', 'IN', get_class(), __FUNCTION__);
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
-            $displaygroupid = Kit::ValidateParam($displaygroupid, _INT, false);
-            $mediaid = Kit::ValidateParam($mediaid, _INT, false);
+            $displaygroupid = \Kit::ValidateParam($displaygroupid, _INT, false);
+            $mediaid = \Kit::ValidateParam($mediaid, _INT, false);
         
             $sth = $dbh->prepare('INSERT INTO `lkmediadisplaygroup` (mediaid, displaygroupid) VALUES (:mediaid, :displaygroupid)');
             $sth->execute(array(
@@ -63,9 +63,9 @@ class LkMediaDisplayGroup extends Data {
         Debug::LogEntry('audit', 'IN', get_class(), __FUNCTION__);
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
-            $displaygroupid = Kit::ValidateParam($displaygroupid, _INT, false);
+            $displaygroupid = \Kit::ValidateParam($displaygroupid, _INT, false);
         
             $sth = $dbh->prepare('DELETE FROM `lkmediadisplaygroup` WHERE displaygroupid = :displaygroupid');
             $sth->execute(array('displaygroupid' => $displaygroupid));
@@ -91,9 +91,9 @@ class LkMediaDisplayGroup extends Data {
         Debug::LogEntry('audit', 'IN', get_class(), __FUNCTION__);
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
-            $mediaid = Kit::ValidateParam($mediaid, _INT, false);
+            $mediaid = \Kit::ValidateParam($mediaid, _INT, false);
         
             $sth = $dbh->prepare('DELETE FROM `lkmediadisplaygroup` WHERE mediaid = :mediaid');
             $sth->execute(array('mediaid' => $mediaid));

@@ -28,7 +28,7 @@ class templateDAO extends baseDAO {
     {
 
         // Default options
-        if (Kit::IsFilterPinned('template', 'Filter')) {
+        if (\Kit::IsFilterPinned('template', 'Filter')) {
             $pinned = 1;
             $name = Session::Get('template', 'filter_name');
             $tags = Session::Get('template', 'filter_tags');
@@ -91,15 +91,15 @@ class templateDAO extends baseDAO {
     {
         $response = new ResponseManager();
 
-        $filter_name = Kit::GetParam('filter_name', _POST, _STRING);
-        $filter_tags = Kit::GetParam('filter_tags', _POST, _STRING);
+        $filter_name = \Kit::GetParam('filter_name', _POST, _STRING);
+        $filter_tags = \Kit::GetParam('filter_tags', _POST, _STRING);
         
         setSession('template', 'filter_name', $filter_name);
         setSession('template', 'filter_tags', $filter_tags);
-        setSession('template', 'Filter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        setSession('template', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
         
         // Show filter_showThumbnail
-        $showThumbnail = Kit::GetParam('showThumbnail', _POST, _CHECKBOX);
+        $showThumbnail = \Kit::GetParam('showThumbnail', _POST, _CHECKBOX);
         setSession('layout', 'showThumbnail', $showThumbnail);
     
         $templates = $this->user->TemplateList($filter_name, $filter_tags);
@@ -290,10 +290,10 @@ class templateDAO extends baseDAO {
         // Get the layout
         $layout = clone \Xibo\Factory\LayoutFactory::getById(Kit::GetParam('layoutid', _POST, _INT));
 
-        $layout->layout = Kit::GetParam('template', _POST, _STRING);
+        $layout->layout = \Kit::GetParam('template', _POST, _STRING);
         $layout->tags = \Xibo\Factory\TagFactory::tagsFromString(Kit::GetParam('tags', _POST, _STRING));
         $layout->tags[] = \Xibo\Factory\TagFactory::getByTag('template');
-        $layout->description = Kit::GetParam('description', _POST, _STRING);
+        $layout->description = \Kit::GetParam('description', _POST, _STRING);
 
         $layout->validate();
         $layout->save();
@@ -317,11 +317,11 @@ class templateDAO extends baseDAO {
         if (!$this->user->checkEditable($layout))
             trigger_error(__('You do not have permissions to view this layout'), E_USER_ERROR);
 
-        $layout->layout = Kit::GetParam('layout', _POST, _STRING);
+        $layout->layout = \Kit::GetParam('layout', _POST, _STRING);
         $layout->tags = \Xibo\Factory\TagFactory::tagsFromString(Kit::GetParam('tags', _POST, _STRING));
         $layout->tags[] = \Xibo\Factory\TagFactory::getByTag('template');
-        $layout->description = Kit::GetParam('description', _POST, _STRING);
-        $layout->retired = Kit::GetParam('retired', _POST, _INT, 0);
+        $layout->description = \Kit::GetParam('description', _POST, _STRING);
+        $layout->retired = \Kit::GetParam('retired', _POST, _INT, 0);
 
         $layout->validate();
         $layout->save();

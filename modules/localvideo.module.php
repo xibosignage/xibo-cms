@@ -86,8 +86,8 @@ class localvideo extends Module
         $response = new ResponseManager();
 
         // Properties
-        $uri = Kit::GetParam('uri', _POST, _URI);
-        $duration = Kit::GetParam('duration', _POST, _INT, 0, false);
+        $uri = \Kit::GetParam('uri', _POST, _URI);
+        $duration = \Kit::GetParam('duration', _POST, _INT, 0, false);
 
         // Validate
         if ($uri == "")
@@ -121,7 +121,7 @@ class localvideo extends Module
             throw new Exception(__('You do not have permission to edit this widget.'));
 
         // Other properties
-        $uri = Kit::GetParam('uri', _POST, _URI);
+        $uri = \Kit::GetParam('uri', _POST, _URI);
 
         // Validate
         if ($uri == "")

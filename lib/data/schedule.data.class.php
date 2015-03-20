@@ -41,7 +41,7 @@ class Schedule extends Data
         Debug::LogEntry('audit', 'IN', 'Schedule', 'Add');
         
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             // Validation
             if (count($displayGroupIDs) == 0)
@@ -233,7 +233,7 @@ class Schedule extends Data
         Debug::LogEntry('audit', 'IN', 'Schedule', 'Delete');
         
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             if (!$this->DeleteScheduleForEvent($eventID))
                 throw new Exception("Error Processing Request", 1);
@@ -275,7 +275,7 @@ class Schedule extends Data
         Debug::LogEntry('audit', 'IN', 'Schedule', 'AddDetail');
         
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             // The parameters for the INSERT
             $params = array(
@@ -334,7 +334,7 @@ class Schedule extends Data
         Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'DeleteScheduleForDisplayGroup');
         
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             // Delete all Schedule records for this DisplayGroupID
             $sth = $dbh->prepare('DELETE FROM schedule_detail WHERE DisplayGroupID = :displaygroupid');
@@ -368,7 +368,7 @@ class Schedule extends Data
     public static function DeleteScheduleForCampaign($campaignId)
     {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             // Delete all Schedule Detail records for this campaignId
             $sth = $dbh->prepare('DELETE FROM schedule_detail WHERE EventID IN (SELECT EventID FROM `schedule` WHERE CampaignID = :campaignId)');
@@ -399,7 +399,7 @@ class Schedule extends Data
     private static function TidyScheduleTable() 
     {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $sth = $dbh->prepare('DELETE FROM `schedule` WHERE EventID NOT IN (SELECT EventID FROM `schedule_detail`)');
             $sth->execute();
@@ -421,7 +421,7 @@ class Schedule extends Data
     private static function TidyScheduleDetailTable() 
     {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $sth = $dbh->prepare('DELETE FROM `schedule_detail` WHERE EventID NOT IN (SELECT EventID FROM `schedule`)');
             $sth->execute();
@@ -445,7 +445,7 @@ class Schedule extends Data
         Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'DeleteScheduleForEvent');
         
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             // Delete all Schedule records for this DisplayGroupID
             $sth = $dbh->prepare('DELETE FROM schedule_detail WHERE EventID = :eventid');
@@ -477,7 +477,7 @@ class Schedule extends Data
         Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'DeleteScheduleForEventAndGroup');
         
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             // Delete all Schedule records for this DisplayGroupID
             $sth = $dbh->prepare('DELETE FROM schedule_detail WHERE EventID = :eventid AND DisplayGroupID = :displaygroupid');
@@ -510,7 +510,7 @@ class Schedule extends Data
         Debug::LogEntry('audit', 'IN', 'Schedule', 'DeleteEventDetail');
         
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             // Delete all Schedule records for this EventDetail
             $sth = $dbh->prepare('DELETE FROM schedule_detail WHERE schedule_detailID = :schedule_detailid');
@@ -538,7 +538,7 @@ class Schedule extends Data
         Debug::LogEntry('audit', 'IN', 'Schedule', 'EditDisplayGroupsForEvent');
         
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             // Read the display groups from the event
             $SQL = sprintf('', $eventID);
@@ -551,7 +551,7 @@ class Schedule extends Data
                 $this->ThrowError(25034,__('Error retriving information necessary to delete this event'));
                             
             // Get the Display Group IDs
-            $displayGroupIDs = Kit::ValidateParam($row['DisplayGroupIDs'], _STRING);
+            $displayGroupIDs = \Kit::ValidateParam($row['DisplayGroupIDs'], _STRING);
             
             // Load into an array and remove the one in $displayGroupID
             $displayGroupIDs = explode(',', $displayGroupIDs);
@@ -595,10 +595,10 @@ class Schedule extends Data
      * @param [int] $eventId The Event ID
      */
     public function DisplayGroupsForEvent($eventId) {
-        $eventId = Kit::ValidateParam($eventId, _INT);
+        $eventId = \Kit::ValidateParam($eventId, _INT);
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $sth = $dbh->prepare('SELECT DISTINCT DisplayGroupID FROM `schedule_detail` WHERE EventID = :eventid');
             $sth->execute(array(
@@ -608,7 +608,7 @@ class Schedule extends Data
             $ids = array();
           
             while ($row = $sth->fetch()) {
-                $ids[] = Kit::ValidateParam($row['DisplayGroupID'], _INT);
+                $ids[] = \Kit::ValidateParam($row['DisplayGroupID'], _INT);
             }
 
             return $ids;
@@ -633,7 +633,7 @@ class Schedule extends Data
     {
         // Get all events
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
             $sth = $dbh-> prepare('SELECT eventId FROM `schedule` WHERE userId = :userId');
             $sth->execute(array('userId' => $userId));
 

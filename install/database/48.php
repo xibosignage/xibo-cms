@@ -17,8 +17,8 @@ class Step48 extends UpgradeStep
 
             foreach($layouts as $layout)
             {
-                $layoutId = Kit::ValidateParam($layout['LayoutID'], _INT);
-                $layoutXml = Kit::ValidateParam($layout['Xml'], _HTMLSTRING);
+                $layoutId = \Kit::ValidateParam($layout['LayoutID'], _INT);
+                $layoutXml = \Kit::ValidateParam($layout['Xml'], _HTMLSTRING);
 
                 echo '.';
 
@@ -70,7 +70,7 @@ class Step48 extends UpgradeStep
         switch ($questionNumber)
         {
             case 0:
-                $this->a[0] = Kit::ValidateParam($response, _BOOL);
+                $this->a[0] = \Kit::ValidateParam($response, _BOOL);
                 return true;
         }
 

@@ -35,7 +35,7 @@ class Campaign extends Data {
             return $this->SetError(25000, __('Campaign name cannot be empty'));
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             $sth = $dbh->prepare('INSERT INTO `campaign` (Campaign, IsLayoutSpecific, UserId) VALUES (:campaign, :islayoutspecific, :userid)');
             $sth->execute(array(
@@ -65,7 +65,7 @@ class Campaign extends Data {
             return $this->SetError(25000, __('Campaign name cannot be empty'));
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             $sth = $dbh->prepare('UPDATE `campaign` SET Campaign = :campaign WHERE CampaignID = :campaignid');
             $sth->execute(array(
@@ -90,7 +90,7 @@ class Campaign extends Data {
 
         // Delete the Campaign record
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             // Unlink all Layouts
             if (!$this->UnlinkAll($campaignId))
@@ -127,7 +127,7 @@ class Campaign extends Data {
      */
     public function Link($campaignId, $layoutId, $displayOrder) {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             $sth = $dbh->prepare('INSERT INTO `lkcampaignlayout` (CampaignID, LayoutID, DisplayOrder) VALUES (:campaignid, :layoutid, :displayorder)');
             $sth->execute(array(
@@ -153,7 +153,7 @@ class Campaign extends Data {
      */
     public function Unlink($campaignId, $layoutId, $displayOrder) {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             $sth = $dbh->prepare('DELETE FROM `lkcampaignlayout` WHERE CampaignID = :campaignid AND LayoutID = :layoutid AND DisplayOrder = :displayorder');
             $sth->execute(array(
@@ -177,7 +177,7 @@ class Campaign extends Data {
      */
     public function UnlinkAll($campaignId) {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             // Delete from the Campaign
             $sth = $dbh->prepare('DELETE FROM `lkcampaignlayout` WHERE CampaignID = :campaignid');
@@ -201,7 +201,7 @@ class Campaign extends Data {
     public function unlinkAllForLayout($layoutId)
     {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             // Delete links
             $sth = $dbh->prepare('DELETE FROM `lkcampaignlayout` WHERE layoutId = :layoutId');
@@ -223,7 +223,7 @@ class Campaign extends Data {
      */
     public function GetCampaignId($layoutId) {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             // Get the Campaign ID
             $SQL  = "SELECT campaign.CampaignID ";
@@ -243,7 +243,7 @@ class Campaign extends Data {
                 throw new Exception('No Campaign returned');
 
             // Return the Campaign ID
-            return Kit::ValidateParam($row['CampaignID'], _INT);
+            return \Kit::ValidateParam($row['CampaignID'], _INT);
         }       
         catch (Exception $e) {
             Debug::LogEntry('error', $e->getMessage());
@@ -260,7 +260,7 @@ class Campaign extends Data {
     {
         // Get all events
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
             $sth = $dbh-> prepare('SELECT campaignId FROM `campaign` WHERE userId = :userId');
             $sth->execute(array('userId' => $userId));
 

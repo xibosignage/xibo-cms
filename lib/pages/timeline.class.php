@@ -75,9 +75,9 @@ class timelineDAO extends baseDAO
     {
         $response = new ResponseManager();
 
-        $layoutId = Kit::GetParam('layoutId', _GET, _INT);
-        $scale = Kit::GetParam('scale', _GET, _DOUBLE);
-        $zoom = Kit::GetParam('zoom', _GET, _DOUBLE);
+        $layoutId = \Kit::GetParam('layoutId', _GET, _INT);
+        $scale = \Kit::GetParam('scale', _GET, _DOUBLE);
+        $zoom = \Kit::GetParam('zoom', _GET, _DOUBLE);
 
         // Load the region and get the dimensions, applying the scale factor if necessary (only v1 layouts will have a scale factor != 1)
         $region = \Xibo\Factory\RegionFactory::loadByRegionId(Kit::GetParam('regionid', _GET, _INT));
@@ -197,15 +197,15 @@ class timelineDAO extends baseDAO
             trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
 
         // Set the new values
-        $region->name = Kit::GetParam('name', _POST, _STRING);
-        $region->zIndex = Kit::GetParam('zindex', _POST, _INT, NULL);
+        $region->name = \Kit::GetParam('name', _POST, _STRING);
+        $region->zIndex = \Kit::GetParam('zindex', _POST, _INT, NULL);
 
-        $top  = Kit::GetParam('top', _POST, _INT);
-        $left = Kit::GetParam('left', _POST, _INT);
-        $width = Kit::GetParam('width', _POST, _INT);
-        $height = Kit::GetParam('height', _POST, _INT);
-        $scale = Kit::GetParam('scale', _POST, _DOUBLE);
-        $zoom = Kit::GetParam('zoom', _POST, _DOUBLE);
+        $top  = \Kit::GetParam('top', _POST, _INT);
+        $left = \Kit::GetParam('left', _POST, _INT);
+        $width = \Kit::GetParam('width', _POST, _INT);
+        $height = \Kit::GetParam('height', _POST, _INT);
+        $scale = \Kit::GetParam('scale', _POST, _DOUBLE);
+        $zoom = \Kit::GetParam('zoom', _POST, _DOUBLE);
 
         // Remove the "px" from them
         $width  = str_replace('px', '', $width);
@@ -222,12 +222,12 @@ class timelineDAO extends baseDAO
         $region->height = $height / $scale;
 
         // Loop
-        $region->setOptionValue('loop', Kit::GetParam('loop', _POST, _CHECKBOX));
+        $region->setOptionValue('loop', \Kit::GetParam('loop', _POST, _CHECKBOX));
 
         // Transitions
-        $region->setOptionValue('transitionType', Kit::GetParam('transitionType', _POST, _WORD));
-        $region->setOptionValue('transitionDuration', Kit::GetParam('transitionDuration', _POST, _INT));
-        $region->setOptionValue('transitionDirection', Kit::GetParam('transitionDirection', _POST, _WORD));
+        $region->setOptionValue('transitionType', \Kit::GetParam('transitionType', _POST, _WORD));
+        $region->setOptionValue('transitionDuration', \Kit::GetParam('transitionDuration', _POST, _INT));
+        $region->setOptionValue('transitionDirection', \Kit::GetParam('transitionDirection', _POST, _WORD));
 
         // Save
         $region->save();
@@ -247,7 +247,7 @@ class timelineDAO extends baseDAO
 		$layout = \Xibo\Factory\LayoutFactory::loadById(Kit::GetParam('layoutid', _REQUEST, _INT));
 
         // Pull in the regions and convert them to stdObjects
-        $regions = Kit::GetParam('regions', _POST, _HTMLSTRING);
+        $regions = \Kit::GetParam('regions', _POST, _HTMLSTRING);
 
         if ($regions == '')
             trigger_error(__('No regions present'), E_USER_ERROR);
@@ -256,7 +256,7 @@ class timelineDAO extends baseDAO
 
         // Go through each region and update the region in the layout we have
         foreach ($regions as $newCoordinates) {
-            $regionId = Kit::ValidateParam($newCoordinates->regionid, _INT);
+            $regionId = \Kit::ValidateParam($newCoordinates->regionid, _INT);
 
             // Load the region
             $region = $layout->getRegion($regionId);
@@ -267,10 +267,10 @@ class timelineDAO extends baseDAO
                 trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
 
             // New coordinates
-            $region->top = Kit::ValidateParam($newCoordinates->top, _DOUBLE);
-            $region->left = Kit::ValidateParam($newCoordinates->left, _DOUBLE);
-            $region->width = Kit::ValidateParam($newCoordinates->width, _DOUBLE);
-            $region->height = Kit::ValidateParam($newCoordinates->height, _DOUBLE);
+            $region->top = \Kit::ValidateParam($newCoordinates->top, _DOUBLE);
+            $region->left = \Kit::ValidateParam($newCoordinates->left, _DOUBLE);
+            $region->width = \Kit::ValidateParam($newCoordinates->width, _DOUBLE);
+            $region->height = \Kit::ValidateParam($newCoordinates->height, _DOUBLE);
             Debug::Audit('Set ' . $region);
         }
 
@@ -337,7 +337,7 @@ class timelineDAO extends baseDAO
             trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
 
         // Media to assign
-        $mediaList = Kit::GetParam('MediaID', _POST, _ARRAY, array());
+        $mediaList = \Kit::GetParam('MediaID', _POST, _ARRAY, array());
 
         if (count($mediaList) <= 0)
             throw new InvalidArgumentException(__('No media to assign'), 25006);
@@ -383,13 +383,13 @@ class timelineDAO extends baseDAO
 		$response = new ResponseManager();
 		
 		// Keyed off the region id
-		$regionId = Kit::GetParam('regionid', _POST, _STRING);
+		$regionId = \Kit::GetParam('regionid', _POST, _STRING);
 		
-		$seqGiven = Kit::GetParam('seq', _POST, _INT, 0);
-		$seq = Kit::GetParam('seq', _POST, _INT, 0);
-		$width = Kit::GetParam('width', _POST, _INT, 0);
-        $height = Kit::GetParam('height', _POST, _INT, 0);
-		$scaleOverride = Kit::GetParam('scale_override', _POST, _DOUBLE, 0);
+		$seqGiven = \Kit::GetParam('seq', _POST, _INT, 0);
+		$seq = \Kit::GetParam('seq', _POST, _INT, 0);
+		$width = \Kit::GetParam('width', _POST, _INT, 0);
+        $height = \Kit::GetParam('height', _POST, _INT, 0);
+		$scaleOverride = \Kit::GetParam('scale_override', _POST, _DOUBLE, 0);
 		
 		// The sequence will not be zero based, so adjust it
 		$seq--;
@@ -807,7 +807,7 @@ class timelineDAO extends baseDAO
 
         // Store the table rows
         Theme::Set('table_rows', $rows);
-        Theme::Set('gridId', Kit::GetParam('gridId', _REQUEST, _STRING));
+        Theme::Set('gridId', \Kit::GetParam('gridId', _REQUEST, _STRING));
 
         // Initialise the theme and capture the output
         $output = Theme::RenderReturn('table_render');
@@ -836,7 +836,7 @@ class timelineDAO extends baseDAO
         $playlist->load();
 
         // Create a list of media
-        $widgetList = Kit::GetParam('widgetIds', _POST, _ARRAY_INT);
+        $widgetList = \Kit::GetParam('widgetIds', _POST, _ARRAY_INT);
         if (count($widgetList) <= 0)
             trigger_error(__('No widgets to reorder'), E_USER_ERROR);
 

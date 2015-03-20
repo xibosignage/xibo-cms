@@ -66,7 +66,7 @@ class Display extends Data {
     
     public function Load() {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
             $params = array();
 
             $SQL = '
@@ -97,42 +97,42 @@ class Display extends Data {
             if (!$row = $sth->fetch())
                 $this->ThrowError(25004, __('Cannot find display record'));
 
-            $this->isAuditing = Kit::ValidateParam($row['isAuditing'], _INT);
-            $this->display = Kit::ValidateParam($row['display'], _STRING);
-            $this->description = Kit::ValidateParam($row['description'], _STRING);
-            $this->defaultLayoutId = Kit::ValidateParam($row['defaultlayoutid'], _INT);
-            $this->license = Kit::ValidateParam($row['license'], _STRING);
-            $this->licensed = Kit::ValidateParam($row['licensed'], _INT);
-            $this->loggedIn = Kit::ValidateParam($row['loggedin'], _INT);
-            $this->lastAccessed = Kit::ValidateParam($row['lastaccessed'], _INT);
-            $this->incSchedule = Kit::ValidateParam($row['inc_schedule'], _INT);
-            $this->emailAlert = Kit::ValidateParam($row['email_alert'], _INT);
-            $this->alertTimeout = Kit::ValidateParam($row['alert_timeout'], _INT);
-            $this->clientAddress = Kit::ValidateParam($row['ClientAddress'], _STRING);
-            $this->mediaInventoryStatus = Kit::ValidateParam($row['MediaInventoryStatus'], _INT);
-            $this->mediaInventoryXml = Kit::ValidateParam($row['MediaInventoryXml'], _HTMLSTRING);
-            $this->macAddress = Kit::ValidateParam($row['MacAddress'], _STRING);
-            $this->lastChanged = Kit::ValidateParam($row['LastChanged'], _INT);
-            $this->numberOfMacAddressChanges = Kit::ValidateParam($row['NumberOfMacAddressChanges'], _INT);
-            $this->lastWakeOnLanCommandSent = Kit::ValidateParam($row['LastWakeOnLanCommandSent'], _INT);
-            $this->wakeOnLanEnabled = Kit::ValidateParam($row['WakeOnLan'], _INT);
-            $this->wakeOnLanTime = Kit::ValidateParam($row['WakeOnLanTime'], _STRING);
-            $this->broadCastAddress = Kit::ValidateParam($row['BroadCastAddress'], _STRING);
-            $this->secureOn = Kit::ValidateParam($row['SecureOn'], _STRING);
-            $this->cidr = Kit::ValidateParam($row['Cidr'], _STRING);
-            $this->latitude = Kit::ValidateParam($row['Latitude'], _DOUBLE);
-            $this->longitude = Kit::ValidateParam($row['Longitude'], _DOUBLE);
-            $this->versionInstructions = Kit::ValidateParam($row['version_instructions'], _STRING);
-            $this->clientType = Kit::ValidateParam($row['client_type'], _STRING);
-            $this->clientVersion = Kit::ValidateParam($row['client_version'], _STRING);
-            $this->clientCode = Kit::ValidateParam($row['client_code'], _INT);
-            $this->displayProfileId = Kit::ValidateParam($row['displayprofileid'], _INT);
-            $this->currentLayoutId = Kit::ValidateParam($row['currentLayoutId'], _INT);
-            $this->screenShotRequested = Kit::ValidateParam($row['screenShotRequested'], _INT);
-            $this->storageAvailableSpace = Kit::ValidateParam($row['storageAvailableSpace'], _INT);
-            $this->storageTotalSpace = Kit::ValidateParam($row['storageTotalSpace'], _INT);
+            $this->isAuditing = \Kit::ValidateParam($row['isAuditing'], _INT);
+            $this->display = \Kit::ValidateParam($row['display'], _STRING);
+            $this->description = \Kit::ValidateParam($row['description'], _STRING);
+            $this->defaultLayoutId = \Kit::ValidateParam($row['defaultlayoutid'], _INT);
+            $this->license = \Kit::ValidateParam($row['license'], _STRING);
+            $this->licensed = \Kit::ValidateParam($row['licensed'], _INT);
+            $this->loggedIn = \Kit::ValidateParam($row['loggedin'], _INT);
+            $this->lastAccessed = \Kit::ValidateParam($row['lastaccessed'], _INT);
+            $this->incSchedule = \Kit::ValidateParam($row['inc_schedule'], _INT);
+            $this->emailAlert = \Kit::ValidateParam($row['email_alert'], _INT);
+            $this->alertTimeout = \Kit::ValidateParam($row['alert_timeout'], _INT);
+            $this->clientAddress = \Kit::ValidateParam($row['ClientAddress'], _STRING);
+            $this->mediaInventoryStatus = \Kit::ValidateParam($row['MediaInventoryStatus'], _INT);
+            $this->mediaInventoryXml = \Kit::ValidateParam($row['MediaInventoryXml'], _HTMLSTRING);
+            $this->macAddress = \Kit::ValidateParam($row['MacAddress'], _STRING);
+            $this->lastChanged = \Kit::ValidateParam($row['LastChanged'], _INT);
+            $this->numberOfMacAddressChanges = \Kit::ValidateParam($row['NumberOfMacAddressChanges'], _INT);
+            $this->lastWakeOnLanCommandSent = \Kit::ValidateParam($row['LastWakeOnLanCommandSent'], _INT);
+            $this->wakeOnLanEnabled = \Kit::ValidateParam($row['WakeOnLan'], _INT);
+            $this->wakeOnLanTime = \Kit::ValidateParam($row['WakeOnLanTime'], _STRING);
+            $this->broadCastAddress = \Kit::ValidateParam($row['BroadCastAddress'], _STRING);
+            $this->secureOn = \Kit::ValidateParam($row['SecureOn'], _STRING);
+            $this->cidr = \Kit::ValidateParam($row['Cidr'], _STRING);
+            $this->latitude = \Kit::ValidateParam($row['Latitude'], _DOUBLE);
+            $this->longitude = \Kit::ValidateParam($row['Longitude'], _DOUBLE);
+            $this->versionInstructions = \Kit::ValidateParam($row['version_instructions'], _STRING);
+            $this->clientType = \Kit::ValidateParam($row['client_type'], _STRING);
+            $this->clientVersion = \Kit::ValidateParam($row['client_version'], _STRING);
+            $this->clientCode = \Kit::ValidateParam($row['client_code'], _INT);
+            $this->displayProfileId = \Kit::ValidateParam($row['displayprofileid'], _INT);
+            $this->currentLayoutId = \Kit::ValidateParam($row['currentLayoutId'], _INT);
+            $this->screenShotRequested = \Kit::ValidateParam($row['screenShotRequested'], _INT);
+            $this->storageAvailableSpace = \Kit::ValidateParam($row['storageAvailableSpace'], _INT);
+            $this->storageTotalSpace = \Kit::ValidateParam($row['storageTotalSpace'], _INT);
 
-            $this->displayGroupId = Kit::ValidateParam($row['displaygroupid'], _INT);
+            $this->displayGroupId = \Kit::ValidateParam($row['displaygroupid'], _INT);
 
             // Store the current licensed flag, in case we are changing it and need to check it.
             $this->currentLicensed = $this->licensed;
@@ -166,7 +166,7 @@ class Display extends Data {
         Debug::LogEntry('audit', 'IN', get_class(), __FUNCTION__);
         
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             // Create the SQL
             $SQL  = "";
@@ -233,7 +233,7 @@ class Display extends Data {
             return $this->SetError(__('Wake on Lan is enabled, but you have not specified a time to wake the display'));
         
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             // Check the number of licensed displays
             $maxDisplays = Config::GetSetting('MAX_LICENSED_DISPLAYS');
@@ -250,7 +250,7 @@ class Display extends Data {
                     if (!$row = $sth->fetch())
                         $this->ThrowError(1, __('Unable to get count of licensed displays.'));
 
-                    $count = Kit::ValidateParam($row['CountLicensed'], _INT);
+                    $count = \Kit::ValidateParam($row['CountLicensed'], _INT);
 
                     $sth->closeCursor();
 
@@ -331,7 +331,7 @@ class Display extends Data {
             Debug::LogEntry('audit', 'Display Edited', 'Display', 'Edit');
 
             // Use a DisplayGroup to handle the default layout and displaygroup name for this display
-            Kit::ClassLoader('displaygroup');
+            \Kit::ClassLoader('displaygroup');
             $displayGroupObject = new DisplayGroup();
             
             // Do we also want to update the linked Display Groups name (seeing as that is what we will be presenting to everyone)
@@ -364,7 +364,7 @@ class Display extends Data {
         Debug::LogEntry('audit', 'IN', get_class(), __FUNCTION__);
         
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             // Pass over to the DisplayGroup data class so that it can try and delete the
             // display specific group first (it is that group which is linked to schedules)
@@ -413,34 +413,34 @@ class Display extends Data {
         Debug::LogEntry('audit', 'IN', get_class(), __FUNCTION__);
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             $this->displayId = $displayId;
             $this->Load();
 
             // Update last accessed and set to be logged in
-            if (Kit::GetParam('loggedIn', $status, _INT, 1) != 0) {
+            if (\Kit::GetParam('loggedIn', $status, _INT, 1) != 0) {
                 $this->lastAccessed = time();
                 $this->loggedIn = 1;
             }
 
             // Pull in any of the optional parameters from the status array
-            $this->clientAddress = (Kit::GetParam('clientAddress', $status, _STRING) == '') ? $this->clientAddress : Kit::GetParam('clientAddress', $status, _STRING);
-            $this->mediaInventoryStatus = (Kit::GetParam('mediaInventoryStatus', $status, _INT) == 0) ? $this->mediaInventoryStatus : Kit::GetParam('mediaInventoryStatus', $status, _INT);
-            $this->mediaInventoryXml = (Kit::GetParam('mediaInventoryXml', $status, _HTMLSTRING) == '') ? $this->mediaInventoryXml : Kit::GetParam('mediaInventoryXml', $status, _HTMLSTRING);
-            $this->clientType = (Kit::GetParam('clientType', $status, _STRING) == '') ? $this->clientType : Kit::GetParam('clientType', $status, _STRING);
-            $this->clientVersion = (Kit::GetParam('clientVersion', $status, _STRING) == '') ? $this->clientVersion : Kit::GetParam('clientVersion', $status, _STRING);
-            $this->clientCode = (Kit::GetParam('clientCode', $status, _INT) == 0) ? $this->clientCode : Kit::GetParam('clientCode', $status, _INT);
-            $this->currentLayoutId = (Kit::GetParam('currentLayoutId', $status, _INT) == 0) ? $this->currentLayoutId : Kit::GetParam('currentLayoutId', $status, _INT);
-            $this->screenShotRequested = (Kit::GetParam('screenShotRequested', $status, _INT, -1) == -1) ? $this->screenShotRequested : Kit::GetParam('screenShotRequested', $status, _INT);
-            $this->storageAvailableSpace = (Kit::GetParam('availableSpace', $status, _INT, -1) == -1) ? $this->storageAvailableSpace : Kit::GetParam('availableSpace', $status, _INT);
-            $this->storageTotalSpace = (Kit::GetParam('totalSpace', $status, _INT, -1) == -1) ? $this->storageTotalSpace : Kit::GetParam('totalSpace', $status, _INT);
+            $this->clientAddress = (\Kit::GetParam('clientAddress', $status, _STRING) == '') ? $this->clientAddress : \Kit::GetParam('clientAddress', $status, _STRING);
+            $this->mediaInventoryStatus = (\Kit::GetParam('mediaInventoryStatus', $status, _INT) == 0) ? $this->mediaInventoryStatus : \Kit::GetParam('mediaInventoryStatus', $status, _INT);
+            $this->mediaInventoryXml = (\Kit::GetParam('mediaInventoryXml', $status, _HTMLSTRING) == '') ? $this->mediaInventoryXml : \Kit::GetParam('mediaInventoryXml', $status, _HTMLSTRING);
+            $this->clientType = (\Kit::GetParam('clientType', $status, _STRING) == '') ? $this->clientType : \Kit::GetParam('clientType', $status, _STRING);
+            $this->clientVersion = (\Kit::GetParam('clientVersion', $status, _STRING) == '') ? $this->clientVersion : \Kit::GetParam('clientVersion', $status, _STRING);
+            $this->clientCode = (\Kit::GetParam('clientCode', $status, _INT) == 0) ? $this->clientCode : \Kit::GetParam('clientCode', $status, _INT);
+            $this->currentLayoutId = (\Kit::GetParam('currentLayoutId', $status, _INT) == 0) ? $this->currentLayoutId : \Kit::GetParam('currentLayoutId', $status, _INT);
+            $this->screenShotRequested = (\Kit::GetParam('screenShotRequested', $status, _INT, -1) == -1) ? $this->screenShotRequested : \Kit::GetParam('screenShotRequested', $status, _INT);
+            $this->storageAvailableSpace = (\Kit::GetParam('availableSpace', $status, _INT, -1) == -1) ? $this->storageAvailableSpace : \Kit::GetParam('availableSpace', $status, _INT);
+            $this->storageTotalSpace = (\Kit::GetParam('totalSpace', $status, _INT, -1) == -1) ? $this->storageTotalSpace : \Kit::GetParam('totalSpace', $status, _INT);
 
             // Has the mac address changed
-            if (Kit::GetParam('macAddress', $status, _STRING) != '') {
-                if ($this->macAddress != Kit::GetParam('macAddress', $status, _STRING)) {
+            if (\Kit::GetParam('macAddress', $status, _STRING) != '') {
+                if ($this->macAddress != \Kit::GetParam('macAddress', $status, _STRING)) {
                     // Mac address change detected
-                    $this->macAddress = Kit::GetParam('macAddress', $status, _STRING);
+                    $this->macAddress = \Kit::GetParam('macAddress', $status, _STRING);
                     $this->numberOfMacAddressChanges++;
                     $this->lastChanged = time();
                 }
@@ -528,7 +528,7 @@ class Display extends Data {
         Debug::LogEntry('audit', sprintf('Flag DisplayID %d incomplete.', $displayId), 'display', 'NotifyDisplays');
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             $sth = $dbh->prepare('UPDATE display SET MediaInventoryStatus = 3 WHERE displayID = :displayid');
             $sth->execute(array(
@@ -552,10 +552,10 @@ class Display extends Data {
         Debug::LogEntry('audit', sprintf('Checking for Displays to refresh on Layout %d', $campaignId), 'display', 'NotifyDisplays');
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             $currentdate = time();
-            $rfLookahead = Kit::ValidateParam(Config::GetSetting('REQUIRED_FILES_LOOKAHEAD'), _INT);
+            $rfLookahead = \Kit::ValidateParam(Config::GetSetting('REQUIRED_FILES_LOOKAHEAD'), _INT);
             $rfLookahead = $currentdate + $rfLookahead;
 
             // Which displays does a change to this layout effect?
@@ -585,7 +585,7 @@ class Display extends Data {
 
             while ($row = $sth->fetch()) {
                 // Notify each display in turn
-                $displayId = Kit::ValidateParam($row['DisplayID'], _INT);
+                $displayId = \Kit::ValidateParam($row['DisplayID'], _INT);
                 $this->FlagIncomplete($displayId);
             }
         }
@@ -610,7 +610,7 @@ class Display extends Data {
         Debug::LogEntry('audit', 'IN', get_class(), __FUNCTION__);
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             $sth = $dbh->prepare('UPDATE display SET defaultLayoutId = :defaultlayoutid WHERE displayID = :displayid');
             $sth->execute(array(
@@ -635,7 +635,7 @@ class Display extends Data {
         Debug::LogEntry('audit', 'IN', get_class(), __FUNCTION__);
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             // Set the instructions
             $version_instructions = array();
@@ -733,7 +733,7 @@ class Display extends Data {
         $timedOutDisplays = array();
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
             $statObject = new Stat();
         
             // Get a list of all displays and there last accessed / alert time out value
@@ -748,15 +748,15 @@ class Display extends Data {
             $displays = $sth->fetchAll();
 
             foreach ($displays as $row) {
-                $displayid = Kit::ValidateParam($row['displayid'], _INT);
-                $lastAccessed = Kit::ValidateParam($row['lastaccessed'], _INT);
-                $alertTimeout = Kit::ValidateParam($row['alert_timeout'], _INT);
-                $clientType = Kit::ValidateParam($row['client_type'], _WORD);
-                $loggedIn = Kit::ValidateParam($row['loggedin'], _INT);
+                $displayid = \Kit::ValidateParam($row['displayid'], _INT);
+                $lastAccessed = \Kit::ValidateParam($row['lastaccessed'], _INT);
+                $alertTimeout = \Kit::ValidateParam($row['alert_timeout'], _INT);
+                $clientType = \Kit::ValidateParam($row['client_type'], _WORD);
+                $loggedIn = \Kit::ValidateParam($row['loggedin'], _INT);
 
                 // Get the config object
                 if ($alertTimeout == 0 && $clientType != '') {
-                    $displayProfileId = (empty($row['displayprofileid']) ? 0 : Kit::ValidateParam($row['displayprofileid'], _INT));
+                    $displayProfileId = (empty($row['displayprofileid']) ? 0 : \Kit::ValidateParam($row['displayprofileid'], _INT));
 
                     $display = new Display();
                     $display->displayId = $displayid;
@@ -811,7 +811,7 @@ class Display extends Data {
         Debug::LogEntry('audit', 'IN', get_class(), __FUNCTION__);
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             // Get the Client Address and the Mac Address
             $sth = $dbh->prepare('SELECT MacAddress, BroadCastAddress, SecureOn, Cidr FROM `display` WHERE DisplayID = :displayid');
@@ -859,7 +859,7 @@ class Display extends Data {
     public static function getUsers($displayId, $authLevel = 'view')
     {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $sth = $dbh->prepare('
                     SELECT DISTINCT user.userId, user.userName, user.email 

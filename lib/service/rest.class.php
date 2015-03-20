@@ -86,7 +86,7 @@ class Rest
         if (!$this->user->PageAuth('display'))
             return $this->Error(1, 'Access Denied');
 
-        Kit::ClassLoader('Display');
+        \Kit::ClassLoader('Display');
 
         return $this->Error(1000, 'Not implemented');
     }
@@ -100,7 +100,7 @@ class Rest
         if (!$this->user->PageAuth('display'))
             return $this->Error(1, 'Access Denied');
 
-        Kit::ClassLoader('Display');
+        \Kit::ClassLoader('Display');
 
         return $this->Error(1000, 'Not implemented');
     }
@@ -114,7 +114,7 @@ class Rest
         if (!$this->user->PageAuth('display'))
             return $this->Error(1, 'Access Denied');
 
-        Kit::ClassLoader('Display');
+        \Kit::ClassLoader('Display');
 
         return $this->Error(1000, 'Not implemented');
     }
@@ -128,7 +128,7 @@ class Rest
         if (!$this->user->PageAuth('display'))
             return $this->Error(1, 'Access Denied');
 
-        Kit::ClassLoader('Display');
+        \Kit::ClassLoader('Display');
 
         return $this->Error(1000, 'Not implemented');
     }
@@ -142,7 +142,7 @@ class Rest
         if (!$this->user->PageAuth('display'))
             return $this->Error(1, 'Access Denied');
 
-        Kit::ClassLoader('Display');
+        \Kit::ClassLoader('Display');
 
         $displayObject = new Display();
         $displayId = $this->GetParam('displayId', _INT);
@@ -164,7 +164,7 @@ class Rest
         if (!$this->user->PageAuth('display'))
             return $this->Error(1, 'Access Denied');
 
-        Kit::ClassLoader('Display');
+        \Kit::ClassLoader('Display');
 
         return $this->Error(1000, 'Not implemented');
     }
@@ -178,7 +178,7 @@ class Rest
         if (!$this->user->PageAuth('display'))
             return $this->Error(1, 'Access Denied');
 
-        Kit::ClassLoader('Display');
+        \Kit::ClassLoader('Display');
 
         return $this->Error(1000, 'Not implemented');
     }
@@ -192,7 +192,7 @@ class Rest
         if (!$this->user->PageAuth('displaygroup'))
             return $this->Error(1, 'Access Denied');
 
-        Kit::ClassLoader('DisplayGroup');
+        \Kit::ClassLoader('DisplayGroup');
 
         return $this->Error(1000, 'Not implemented');
     }
@@ -206,7 +206,7 @@ class Rest
         if (!$this->user->PageAuth('displaygroup'))
             return $this->Error(1, 'Access Denied');
 
-        Kit::ClassLoader('DisplayGroup');
+        \Kit::ClassLoader('DisplayGroup');
 
         return $this->Error(1000, 'Not implemented');
     }
@@ -220,7 +220,7 @@ class Rest
         if (!$this->user->PageAuth('displaygroup'))
             return $this->Error(1, 'Access Denied');
 
-        Kit::ClassLoader('DisplayGroup');
+        \Kit::ClassLoader('DisplayGroup');
 
         return $this->Error(1000, 'Not implemented');
     }
@@ -234,7 +234,7 @@ class Rest
         if (!$this->user->PageAuth('displaygroup'))
             return $this->Error(1, 'Access Denied');
 
-        Kit::ClassLoader('DisplayGroup');
+        \Kit::ClassLoader('DisplayGroup');
 
         return $this->Error(1000, 'Not implemented');
     }
@@ -248,7 +248,7 @@ class Rest
         if (!$this->user->PageAuth('displaygroup'))
             return $this->Error(1, 'Access Denied');
 
-        Kit::ClassLoader('DisplayGroup');
+        \Kit::ClassLoader('DisplayGroup');
 
         return $this->Error(1000, 'Not implemented');
     }
@@ -262,7 +262,7 @@ class Rest
         if (!$this->user->PageAuth('displaygroup'))
             return $this->Error(1, 'Access Denied');
 
-        Kit::ClassLoader('DisplayGroup');
+        \Kit::ClassLoader('DisplayGroup');
 
         return $this->Error(1000, 'Not implemented');
     }
@@ -276,7 +276,7 @@ class Rest
         if (!$this->user->PageAuth('displaygroup'))
             return $this->Error(1, 'Access Denied');
 
-        Kit::ClassLoader('DisplayGroup');
+        \Kit::ClassLoader('DisplayGroup');
 
         return $this->Error(1000, 'Not implemented');
     }
@@ -290,7 +290,7 @@ class Rest
         if (!$this->user->PageAuth('displaygroup'))
             return $this->Error(1, 'Access Denied');
 
-        Kit::ClassLoader('DisplayGroup');
+        \Kit::ClassLoader('DisplayGroup');
 
         return $this->Error(1000, 'Not implemented');
     }
@@ -323,7 +323,7 @@ class Rest
         if (!$this->user->PageAuth('content'))
             return $this->Error(1, 'Access Denied');
 
-        Kit::ClassLoader('file');
+        \Kit::ClassLoader('file');
 
         $file           = new File();
         $fileId         = $this->GetParam('fileId', _INT);
@@ -377,7 +377,7 @@ class Rest
         if (!$this->user->PageAuth('content'))
             return $this->Error(1, 'Access Denied');
 
-        Kit::ClassLoader('Media');
+        \Kit::ClassLoader('Media');
 
         // Create a media object and gather the required parameters.
         $media          = new Media();
@@ -407,7 +407,7 @@ class Rest
         if (!$this->user->PageAuth('content'))
             return $this->Error(1, 'Access Denied');
 
-        Kit::ClassLoader('Media');
+        \Kit::ClassLoader('Media');
 
         // Create a media object and gather the required parameters.
         $media          = new Media();
@@ -435,7 +435,7 @@ class Rest
         if (!$this->user->PageAuth('content'))
             return $this->Error(1, 'Access Denied');
 
-        Kit::ClassLoader('Media');
+        \Kit::ClassLoader('Media');
 
         $media      = new Media();
         $mediaId    = $this->GetParam('mediaId', _INT);
@@ -457,7 +457,7 @@ class Rest
         if (!$this->user->PageAuth('content'))
             return $this->Error(1, 'Access Denied');
 
-        Kit::ClassLoader('Media');
+        \Kit::ClassLoader('Media');
 
         $media      = new Media();
         $mediaId    = $this->GetParam('mediaId', _INT);
@@ -481,7 +481,7 @@ class Rest
         if (!$this->user->PageAuth('content'))
             return $this->Error(1, 'Access Denied');
 
-        Kit::ClassLoader('Media');
+        \Kit::ClassLoader('Media');
 
         // Create a media object and gather the required parameters.
         $media          = new Media();
@@ -531,7 +531,7 @@ class Rest
         if (!$this->user->PageAuth('layout'))
             return $this->Error(1, 'Access Denied');
 
-        Kit::ClassLoader('layout');
+        \Kit::ClassLoader('layout');
         
         $layout         = $this->GetParam('layout', _STRING);
         $description    = $this->GetParam('description', _STRING);
@@ -559,7 +559,7 @@ class Rest
         if (!$this->user->PageAuth('layout'))
             return $this->Error(1, 'Access Denied');
 
-        Kit::ClassLoader('Layout');
+        \Kit::ClassLoader('Layout');
 
         $layout     = new Layout();
         $layoutId   = $this->GetParam('layoutId', _INT);
@@ -579,7 +579,7 @@ class Rest
         if (!$this->user->PageAuth('layout'))
             return $this->Error(1, 'Access Denied');
 
-        Kit::ClassLoader('Layout');
+        \Kit::ClassLoader('Layout');
 
         $layout     = new Layout();
         $layoutId   = $this->GetParam('layoutId', _INT);
@@ -599,7 +599,7 @@ class Rest
         if (!$this->user->PageAuth('layout'))
             return $this->Error(1, 'Access Denied');
 
-        Kit::ClassLoader('Layout');
+        \Kit::ClassLoader('Layout');
 
         $layout     = new Layout();
         $layoutId   = $this->GetParam('layoutId', _INT);
@@ -622,7 +622,7 @@ class Rest
         if (!$this->user->PageAuth('layout'))
             return $this->Error(1, 'Access Denied');
 
-        Kit::ClassLoader('Layout');
+        \Kit::ClassLoader('Layout');
 
         $layout     = new Layout();
         $layoutId   = $this->GetParam('layoutId', _INT);
@@ -642,7 +642,7 @@ class Rest
         if (!$this->user->PageAuth('layout'))
             return $this->Error(1, 'Access Denied');
 
-        Kit::ClassLoader('Layout');
+        \Kit::ClassLoader('Layout');
 
         $layout     = new Layout();
         $layoutId   = $this->GetParam('layoutId', _INT);
@@ -662,7 +662,7 @@ class Rest
         if (!$this->user->PageAuth('layout'))
             return $this->Error(1, 'Access Denied');
 
-        Kit::ClassLoader('Layout');
+        \Kit::ClassLoader('Layout');
 
         $layout     = new Layout();
         $layoutId   = $this->GetParam('layoutId', _INT);
@@ -689,7 +689,7 @@ class Rest
             return $this->Error(1, 'Access Denied');
 
         // Get a list of region items
-        Kit::ClassLoader('layout');
+        \Kit::ClassLoader('layout');
         $layout = new Layout();
 
         // Get the list of regions for this layout
@@ -739,7 +739,7 @@ class Rest
             return $this->Error(1, 'Access Denied');
 
         // Create a region object
-        Kit::ClassLoader('region');
+        \Kit::ClassLoader('region');
         $region = new Region();
 
         if (!$regionId = $region->AddRegion($layoutId, $this->user->userid, '', $width, $height, $top, $left, $name))
@@ -770,7 +770,7 @@ class Rest
             return $this->Error(1, 'Access Denied');
 
         // Create a region object
-        Kit::ClassLoader('region');
+        \Kit::ClassLoader('region');
         $region = new Region();
 
         // Region Assignment needs the Owner Id
@@ -804,7 +804,7 @@ class Rest
             return $this->Error(1, 'Access Denied');
 
         // Create a region object
-        Kit::ClassLoader('region');
+        \Kit::ClassLoader('region');
         $region = new Region();
 
         // Region Assignment needs the Owner Id
@@ -838,7 +838,7 @@ class Rest
             return $this->Error(1, 'Access Denied');
 
         // Create a region object
-        Kit::ClassLoader('region');
+        \Kit::ClassLoader('region');
         $region = new Region();
 
         // Region Assignment needs the Owner Id
@@ -944,7 +944,7 @@ class Rest
             return $this->Error(1, 'Access Denied');
 
         // Check the user has permission
-        Kit::ClassLoader('region');
+        \Kit::ClassLoader('region');
         $region = new region();
         $ownerId = $region->GetOwnerId($layoutId, $regionId);
 
@@ -989,7 +989,7 @@ class Rest
             return $this->Error(1, 'Access Denied');
 
         // Check the user has permission
-        Kit::ClassLoader('region');
+        \Kit::ClassLoader('region');
         $region = new region();
         $ownerId = $region->GetOwnerId($layoutId, $regionId);
 
@@ -1029,7 +1029,7 @@ class Rest
             return $this->Error(1, 'Access Denied');
 
         // Check the user has permission
-        Kit::ClassLoader('region');
+        \Kit::ClassLoader('region');
         $region = new region();
         $ownerId = $region->GetOwnerId($layoutId, $regionId);
 
@@ -1066,7 +1066,7 @@ class Rest
             return $this->Error(1, 'Access Denied');
 
         // Check the user has permission
-        Kit::ClassLoader('region');
+        \Kit::ClassLoader('region');
         $region = new region();
         $ownerId = $region->GetOwnerId($layoutId, $regionId);
 
@@ -1118,7 +1118,7 @@ class Rest
             return $this->Error(1, 'Access Denied');
 
         // Make sure we have permission to edit this region
-        Kit::ClassLoader('region');
+        \Kit::ClassLoader('region');
         $region = new region();
         $ownerId = $region->GetOwnerId($layoutId, $regionId);
 
@@ -1211,7 +1211,7 @@ class Rest
         if (!$this->user->PageAuth('content'))
             return $this->Error(1, 'Access Denied');
 
-        Kit::ClassLoader('Media');
+        \Kit::ClassLoader('Media');
 
         // Create a media object and gather the required parameters.
         $media = new Media();
@@ -1251,7 +1251,7 @@ class Rest
         $dataSet = $this->GetParam('dataset', _STRING);
         $description = $this->GetParam('description', _STRING);
 
-        Kit::ClassLoader('dataset');
+        \Kit::ClassLoader('dataset');
         $dataSetObject = new DataSet();
         if (!$dataSetId = $dataSetObject->Add($dataSet, $description, $this->user->userid))
             return $this->Error($dataSetObject->GetErrorNumber(), $dataSetObject->GetErrorMessage());
@@ -1277,7 +1277,7 @@ class Rest
         $dataSet = $this->GetParam('dataset', _STRING);
         $description = $this->GetParam('description', _STRING);
 
-        Kit::ClassLoader('dataset');
+        \Kit::ClassLoader('dataset');
         $dataSetObject = new DataSet();
         if (!$dataSetObject->Edit($dataSetId, $dataSet, $description))
             return $this->Error($dataSetObject->GetErrorNumber(), $dataSetObject->GetErrorMessage());
@@ -1300,7 +1300,7 @@ class Rest
         if (!$auth->delete)
             return $this->Error(1, 'Access Denied');
 
-        Kit::ClassLoader('dataset');
+        \Kit::ClassLoader('dataset');
         $dataSetObject = new DataSet();
         if (!$dataSetObject->Delete($dataSetId))
             return $this->Error($dataSetObject->GetErrorNumber(), $dataSetObject->GetErrorMessage());
@@ -1323,7 +1323,7 @@ class Rest
         if (!$auth->view)
             return $this->Error(1, 'Access Denied');
 
-        Kit::ClassLoader('datasetcolumn');
+        \Kit::ClassLoader('datasetcolumn');
         $dataSetObject = new DataSetColumn();
         if (!$columns = $dataSetObject->GetColumns($dataSetId))
             return $this->Error($dataSetObject->GetErrorNumber(), $dataSetObject->GetErrorMessage());
@@ -1353,7 +1353,7 @@ class Rest
         $dataSetColumnTypeId = $this->GetParam('datasetColumnTypeId', _INT);
         $formula = $this->GetParam('formula', _STRING);
 
-        Kit::ClassLoader('datasetcolumn');
+        \Kit::ClassLoader('datasetcolumn');
         $dataSetColumnObject = new DataSetColumn();
         if (!$dataSetColumnId = $dataSetColumnObject->Add($dataSetId, $heading, $dataTypeId, $listContent, $columnOrder, $dataSetColumnTypeId, $formula))
             return $this->Error($dataSetColumnObject->GetErrorNumber(), $dataSetColumnObject->GetErrorMessage());
@@ -1384,7 +1384,7 @@ class Rest
         $dataSetColumnTypeId = $this->GetParam('datasetColumnTypeId', _INT);
         $formula = $this->GetParam('formula', _STRING);
 
-        Kit::ClassLoader('datasetcolumn');
+        \Kit::ClassLoader('datasetcolumn');
         $dataSetColumnObject = new DataSetColumn();
         if (!$dataSetColumnObject->Edit($dataSetColumnId, $heading, $dataTypeId, $listContent, $columnOrder, $dataSetColumnTypeId, $formula))
             return $this->Error($dataSetColumnObject->GetErrorNumber(), $dataSetColumnObject->GetErrorMessage());
@@ -1409,7 +1409,7 @@ class Rest
 
         $dataSetColumnId = $this->GetParam('datasetColumnId', _POST, _INT);
 
-        Kit::ClassLoader('datasetcolumn');
+        \Kit::ClassLoader('datasetcolumn');
         $dataSetColumnObject = new DataSetColumn();
         if (!$dataSetColumnId = $dataSetColumnObject->Delete($dataSetColumnId))
             return $this->Error($dataSetColumnObject->GetErrorNumber(), $dataSetColumnObject->GetErrorMessage());
@@ -1432,7 +1432,7 @@ class Rest
         if (!$auth->view)
             return $this->Error(1, 'Access Denied');
 
-        Kit::ClassLoader('datasetdata');
+        \Kit::ClassLoader('datasetdata');
         $dataSetObject = new DataSetData();
         if (!$columns = $dataSetObject->GetData($dataSetId))
             return $this->Error($dataSetObject->GetErrorNumber(), $dataSetObject->GetErrorMessage());
@@ -1461,7 +1461,7 @@ class Rest
         $value = $this->GetParam('value', _STRING);
 
         // Use the DataSetData class to do the insert
-        Kit::ClassLoader('datasetdata');
+        \Kit::ClassLoader('datasetdata');
         $data = new DataSetData();
 
         if (!$id = $data->Add($dataSetColumnId, $rowNumber, $value))
@@ -1491,7 +1491,7 @@ class Rest
         $value = $this->GetParam('value', _STRING);
 
         // Use the DataSetData class to do the update
-        Kit::ClassLoader('datasetdata');
+        \Kit::ClassLoader('datasetdata');
         $data = new DataSetData();
 
         if (!$data->Edit($dataSetColumnId, $rowNumber, $value))
@@ -1520,7 +1520,7 @@ class Rest
         $rowNumber = $this->GetParam('rowNumber', _INT);
 
         // Use the DataSetData class to do the delete
-        Kit::ClassLoader('datasetdata');
+        \Kit::ClassLoader('datasetdata');
         $data = new DataSetData();
 
         if (!$id = $data->Delete($dataSetColumnId, $rowNumber))
@@ -1544,7 +1544,7 @@ class Rest
         if (!$auth->view)
             return $this->Error(1, 'Access Denied');
 
-        Kit::ClassLoader('datasetgroupsecurity');
+        \Kit::ClassLoader('datasetgroupsecurity');
         $security = new DataSetGroupSecurity();
 
         if (!$results = $security->ListSecurity($dataSetId, $this->user->getGroupFromId($this->user->userid, true))) {
@@ -1574,7 +1574,7 @@ class Rest
         $edit = $this->GetParam('edit', _INT);
         $del = $this->GetParam('delete', _INT);
 
-        Kit::ClassLoader('datasetgroupsecurity');
+        \Kit::ClassLoader('datasetgroupsecurity');
         $security = new DataSetGroupSecurity();
 
         if (!$results = $security->Link($dataSetId, $groupId, $view, $edit, $del)) {
@@ -1601,7 +1601,7 @@ class Rest
 
         $groupId = $this->GetParam('groupId', _INT);
 
-        Kit::ClassLoader('datasetgroupsecurity');
+        \Kit::ClassLoader('datasetgroupsecurity');
         $security = new DataSetGroupSecurity();
 
         if (!$results = $security->Unlink($dataSetId, $groupId)) {
@@ -1674,7 +1674,7 @@ class Rest
         if (!$this->user->PageAuth('dataset'))
             return $this->Error(1, 'Access Denied');
 
-        Kit::ClassLoader('dataset');
+        \Kit::ClassLoader('dataset');
         $dataSet = new DataSet();
 
         return $this->Respond($this->NodeListFromArray($dataSet->GetDataTypes(), 'datatype'));
@@ -1685,7 +1685,7 @@ class Rest
         if (!$this->user->PageAuth('dataset'))
             return $this->Error(1, 'Access Denied');
 
-        Kit::ClassLoader('dataset');
+        \Kit::ClassLoader('dataset');
         $dataSet = new DataSet();
 
         return $this->Respond($this->NodeListFromArray($dataSet->GetDataSetColumnTypes(), 'datasetcolumntype'));
@@ -1721,7 +1721,7 @@ class Rest
      */
     protected function GetParam($param, $type, $default = null)
     {
-        return Kit::GetParam($param, $this->POST, $type, $default);
+        return \Kit::GetParam($param, $this->POST, $type, $default);
     }
 }
 ?>

@@ -42,7 +42,7 @@ class DisplayGroup extends Data
         Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'Add');
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             // Validation
             if ($displayGroup == '')
@@ -98,7 +98,7 @@ class DisplayGroup extends Data
         Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'Edit');
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             // Validation
             if ($displayGroupID == 0) 
@@ -155,7 +155,7 @@ class DisplayGroup extends Data
             return $this->SetError(__('Missing displayGroupId'));
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             // Tidy up the schedule detail records.
             $schedule = new Schedule($this->db);
@@ -164,7 +164,7 @@ class DisplayGroup extends Data
                 throw new Exception('Unable to DeleteScheduleForDisplayGroup');
 
             // Remove all permissions
-            Kit::ClassLoader('displaygroupsecurity');
+            \Kit::ClassLoader('displaygroupsecurity');
             $security = new DisplayGroupSecurity($this->db);
 
             if (!$security->UnlinkAll($displayGroupID))
@@ -198,10 +198,10 @@ class DisplayGroup extends Data
      */
     public function DeleteDisplay($displayID)
     {
-        Kit::ClassLoader('lkmediadisplaygroup');
+        \Kit::ClassLoader('lkmediadisplaygroup');
         
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             // Get the DisplaySpecific Group for this Display
             $SQL  = "";
@@ -221,7 +221,7 @@ class DisplayGroup extends Data
                 $this->ThrowError(25005, __('Unable to get the DisplayGroup for this Display'));
             
             // Get the Display Group ID
-            $displayGroupID = Kit::ValidateParam($row['DisplayGroupID'], _INT);
+            $displayGroupID = \Kit::ValidateParam($row['DisplayGroupID'], _INT);
         
             // If there is no region specific display record... what do we do?
             if ($displayGroupID == 0)
@@ -279,7 +279,7 @@ class DisplayGroup extends Data
         Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'Link');
         
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $sth = $dbh->prepare('INSERT INTO lkdisplaydg (DisplayGroupID, DisplayID) VALUES (:displaygroupid, :displayid)');
             $sth->execute(array(
@@ -308,7 +308,7 @@ class DisplayGroup extends Data
         Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'Unlink');
         
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             $sth = $dbh->prepare('DELETE FROM lkdisplaydg WHERE DisplayGroupID = :displaygroupid AND DisplayID = :displayid');
             $sth->execute(array(
@@ -337,7 +337,7 @@ class DisplayGroup extends Data
         Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'EditDisplayGroup');
         
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             // Get the DisplayGroupID for this DisplayID
             $SQL  = "";
@@ -357,7 +357,7 @@ class DisplayGroup extends Data
                 $this->ThrowError(25005, __('Unable to get the DisplayGroup for this Display'));
             
             // Get the Display Group ID
-            $displayGroupID = Kit::ValidateParam($row['DisplayGroupID'], _INT);
+            $displayGroupID = \Kit::ValidateParam($row['DisplayGroupID'], _INT);
         
             // If there is no region specific display record... what do we do?
             if ($displayGroupID == 0) {
@@ -418,11 +418,11 @@ class DisplayGroup extends Data
     public function AssociateFiles($user, $displayGroupId, $mediaList) {
         Debug::LogEntry('audit', 'IN', get_class(), __FUNCTION__);
 
-        Kit::ClassLoader('lkmediadisplaygroup');
+        \Kit::ClassLoader('lkmediadisplaygroup');
         $link = new LkMediaDisplayGroup($this->db);
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             // Drop all current assignments
             if (!$link->UnlinkAllFromDisplayGroup($displayGroupId))
@@ -431,7 +431,7 @@ class DisplayGroup extends Data
             // Loop through all the media
             foreach ($mediaList as $mediaId)
             {
-                $mediaId = Kit::ValidateParam($mediaId, _INT);
+                $mediaId = \Kit::ValidateParam($mediaId, _INT);
     
                 // Check we have permissions to use this media (we will use this to copy the media later)
                 $mediaAuth = $user->MediaAuth($mediaId, true);
@@ -467,11 +467,11 @@ class DisplayGroup extends Data
     public function FlagIncomplete($displayGroupId) {
         Debug::LogEntry('audit', 'IN', get_class(), __FUNCTION__);
 
-        Kit::ClassLoader('display');
+        \Kit::ClassLoader('display');
         $display = new Display($this->db);
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             // Which displays does a change to this layout effect?
             $sth = $dbh->prepare('

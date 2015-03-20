@@ -147,21 +147,21 @@ class Install {
     public function Step3() {
 
         // Have we been told to create a new database
-        $this->db_create = Kit::GetParam('db_create', _POST, _INT);
+        $this->db_create = \Kit::GetParam('db_create', _POST, _INT);
 
         // Check all parameters have been specified
-        $this->db_admin_user = Kit::GetParam('admin_username', _POST, _PASSWORD);
-        $this->db_admin_pass = Kit::GetParam('admin_password', _POST, _PASSWORD);
+        $this->db_admin_user = \Kit::GetParam('admin_username', _POST, _PASSWORD);
+        $this->db_admin_pass = \Kit::GetParam('admin_password', _POST, _PASSWORD);
 
-        $this->new_db_host = Kit::GetParam('host', _POST, _STRING);
-        $this->new_db_user = Kit::GetParam('db_username', _POST, _PASSWORD);
-        $this->new_db_pass = Kit::GetParam('db_password', _POST, _PASSWORD);
-        $this->new_db_name = Kit::GetParam('db_name', _POST, _PASSWORD);
+        $this->new_db_host = \Kit::GetParam('host', _POST, _STRING);
+        $this->new_db_user = \Kit::GetParam('db_username', _POST, _PASSWORD);
+        $this->new_db_pass = \Kit::GetParam('db_password', _POST, _PASSWORD);
+        $this->new_db_name = \Kit::GetParam('db_name', _POST, _PASSWORD);
 
-        $this->existing_db_host = Kit::GetParam('existing_host', _POST, _STRING);
-        $this->existing_db_user = Kit::GetParam('existing_db_username', _POST, _PASSWORD);
-        $this->existing_db_pass = Kit::GetParam('existing_db_password', _POST, _PASSWORD);
-        $this->existing_db_name = Kit::GetParam('existing_db_name', _POST, _PASSWORD);
+        $this->existing_db_host = \Kit::GetParam('existing_host', _POST, _STRING);
+        $this->existing_db_user = \Kit::GetParam('existing_db_username', _POST, _PASSWORD);
+        $this->existing_db_pass = \Kit::GetParam('existing_db_password', _POST, _PASSWORD);
+        $this->existing_db_name = \Kit::GetParam('existing_db_name', _POST, _PASSWORD);
 
         // If an administrator user name / password has been specified then we should create a new DB
         if ($this->db_create == 1) {
@@ -184,7 +184,7 @@ class Install {
             // Try to create the new database
             // Try and connect using these details and create the new database
             try {
-                $dbh = PDOConnect::connect($this->new_db_host, $this->db_admin_user, $this->db_admin_pass);             
+                $dbh = \Xibo\Storage\PDOConnect::connect($this->new_db_host, $this->db_admin_user, $this->db_admin_pass);
             }
             catch (Exception $e) {
                 throw new Exception(sprintf(__('Could not connect to MySQL with the administrator details. Please check and try again. Error Message = [%s]'), $e->getMessage()));
@@ -192,7 +192,7 @@ class Install {
 
             // Try to create the new database
             try {
-                $dbh = PDOConnect::init();
+                $dbh = \Xibo\Storage\PDOConnect::init();
                 $dbh->exec(sprintf('CREATE DATABASE `%s`', $this->new_db_name));
             }
             catch (Exception $e) {
@@ -201,7 +201,7 @@ class Install {
 
             // Try to create the new user
             try {
-                $dbh = PDOConnect::init();
+                $dbh = \Xibo\Storage\PDOConnect::init();
             
                 // Create the user and grant privileges
                 if ($this->new_db_host == 'localhost') {
@@ -234,7 +234,7 @@ class Install {
             $this->existing_db_name = $this->new_db_name;
 
             // Close the connection
-            PDOConnect::close();
+            \Xibo\Storage\PDOConnect::close();
         }
         else {
             // Check details for a new database
@@ -253,7 +253,7 @@ class Install {
 
         // Try and make a connection with this database
         try {
-            $dbh = PDOConnect::connect($this->existing_db_host, $this->existing_db_user, $this->existing_db_pass, $this->existing_db_name);             
+            $dbh = \Xibo\Storage\PDOConnect::connect($this->existing_db_host, $this->existing_db_user, $this->existing_db_pass, $this->existing_db_name);
         }
         catch (Exception $e) {
             throw new Exception(sprintf(__('Could not connect to MySQL with the administrator details. Please check and try again. Error Message = [%s]'), $e->getMessage()));
@@ -266,7 +266,7 @@ class Install {
         $sql = '';
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             foreach ($sql_files as $filename) {
                 $delimiter = ';';
@@ -295,7 +295,7 @@ class Install {
         $secretKey = Install::gen_secret();
 
         // Escape the password before we write it to disk
-        $dbh = PDOConnect::init();
+        $dbh = \Xibo\Storage\PDOConnect::init();
         $existing_db_pass = addslashes($this->existing_db_pass);
 
         $settings = <<<END
@@ -365,8 +365,8 @@ END;
 
     public function Step5() {
         // Configure the user account
-        $username = Kit::GetParam('admin_username', _POST, _STRING);
-        $password = Kit::GetParam('admin_password', _POST, _PASSWORD);
+        $username = \Kit::GetParam('admin_username', _POST, _STRING);
+        $password = \Kit::GetParam('admin_password', _POST, _PASSWORD);
 
         if ($username == '')
             throw new Exception(__('Missing the admin username.'));
@@ -376,7 +376,7 @@ END;
 
         // Update user id 1 with these details.
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $sth = $dbh->prepare('UPDATE `user` SET UserName = :username, UserPassword = :password WHERE UserID = 1 LIMIT 1');
             $sth->execute(array(
@@ -424,9 +424,9 @@ END;
     }
 
     public function Step7() {
-        $server_key = Kit::GetParam('server_key', _POST, _STRING);
-        $library_location = Kit::GetParam('library_location', _POST, _STRING);
-        $stats = Kit::GetParam('stats', _POST, _CHECKBOX);
+        $server_key = \Kit::GetParam('server_key', _POST, _STRING);
+        $library_location = \Kit::GetParam('library_location', _POST, _STRING);
+        $stats = \Kit::GetParam('stats', _POST, _CHECKBOX);
 
         if ($server_key == '')
             throw new Exception(__('Missing the server key.'));
@@ -464,7 +464,7 @@ END;
         }
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             // Library Location
             $sth = $dbh->prepare('UPDATE `setting` SET `value` = :value WHERE `setting`.`setting` = \'LIBRARY_LOCATION\' LIMIT 1');
@@ -493,7 +493,7 @@ END;
 
     public function Step8() {
 
-        PDOConnect::init();
+        \Xibo\Storage\PDOConnect::init();
 
         // Define the VERSION
         Config::Version();

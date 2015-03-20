@@ -183,7 +183,7 @@ class Playlist
         $this->unlinkRegions();
 
         // Delete this playlist
-        \PDOConnect::update('DELETE FROM `playlist` WHERE playlistId = :playlistId', array('playlistId' => $this->playlistId));
+        \Xibo\Storage\PDOConnect::update('DELETE FROM `playlist` WHERE playlistId = :playlistId', array('playlistId' => $this->playlistId));
     }
 
     private function add()
@@ -191,7 +191,7 @@ class Playlist
         \Debug::Audit('Adding Playlist ' . $this->name);
 
         $sql = 'INSERT INTO `playlist` (`name`, `ownerId`) VALUES (:name, :ownerId)';
-        $this->playlistId = \PDOConnect::insert($sql, array(
+        $this->playlistId = \Xibo\Storage\PDOConnect::insert($sql, array(
             'name' => $this->name,
             'ownerId' => $this->ownerId
         ));
@@ -202,7 +202,7 @@ class Playlist
         \Debug::Audit('Updating Playlist ' . $this->name . '. Id = ' . $this->playlistId);
 
         $sql = 'UPDATE `playlist` SET `name` = :name WHERE `playlistId` = :playlistId';
-        \PDOConnect::update($sql, array(
+        \Xibo\Storage\PDOConnect::update($sql, array(
             'playlistId' => $this->playlistId,
             'name' => $this->name
         ));
@@ -216,7 +216,7 @@ class Playlist
         $order = 0;
         foreach ($this->regionIds as $regionId) {
             $order++;
-            \PDOConnect::insert('INSERT INTO `lkregionplaylist` (regionId, playlistId, displayOrder) VALUES (:regionId, :playlistId, :displayOrder) ON DUPLICATE KEY UPDATE regionId = :regionId2', array(
+            \Xibo\Storage\PDOConnect::insert('INSERT INTO `lkregionplaylist` (regionId, playlistId, displayOrder) VALUES (:regionId, :playlistId, :displayOrder) ON DUPLICATE KEY UPDATE regionId = :regionId2', array(
                 'regionId' => $regionId,
                 'regionId2' => $regionId,
                 'playlistId' => $this->playlistId,
@@ -231,7 +231,7 @@ class Playlist
     private function unlinkRegions()
     {
         foreach ($this->regionIds as $regionId) {
-            \PDOConnect::update('DELETE FROM `lkregionplaylist` WHERE regionId = :regionId AND playlistId = :playlistId', array(
+            \Xibo\Storage\PDOConnect::update('DELETE FROM `lkregionplaylist` WHERE regionId = :regionId AND playlistId = :playlistId', array(
                 'regionId' => $regionId,
                 'playlistId' => $this->playlistId
             ));

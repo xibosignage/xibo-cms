@@ -36,7 +36,7 @@ class Bandwidth extends Data {
 
 	public function Log($displayId, $type, $sizeInBytes) {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $sth = $dbh->prepare('
                 INSERT INTO `bandwidth` (Month, Type, DisplayID, Size) VALUES (:month, :type, :displayid, :size)

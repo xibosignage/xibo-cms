@@ -226,10 +226,10 @@ class Layout
             throw new \Exception(__('Problem deleting Campaign'));
 
         // Remove the Layout from any display defaults
-        \PDOConnect::update('UPDATE `display` SET defaultlayoutid = 4 WHERE defaultlayoutid = :layoutid', array('layoutid' => $this->layoutId));
+        \Xibo\Storage\PDOConnect::update('UPDATE `display` SET defaultlayoutid = 4 WHERE defaultlayoutid = :layoutid', array('layoutid' => $this->layoutId));
 
         // Remove the Layout (now it is orphaned it can be deleted safely)
-        \PDOConnect::update('DELETE FROM layout WHERE layoutid = :layoutid', array('layoutid' => $this->layoutId));
+        \Xibo\Storage\PDOConnect::update('DELETE FROM layout WHERE layoutid = :layoutid', array('layoutid' => $this->layoutId));
     }
 
     /**
@@ -291,7 +291,7 @@ class Layout
 
         $time = \DateManager::getSystemDate(null, 'Y-m-d h:i:s');
 
-        $this->layoutId = \PDOConnect::insert($sql, array(
+        $this->layoutId = \Xibo\Storage\PDOConnect::insert($sql, array(
             'layout' => $this->layout,
             'description' => $this->description,
             'userid' => $this->ownerId,
@@ -328,7 +328,7 @@ class Layout
 
         $time = \DateManager::getSystemDate(null, 'Y-m-d h:i:s');
 
-        \PDOConnect::update($sql, array(
+        \Xibo\Storage\PDOConnect::update($sql, array(
             'layoutid' => $this->layoutId,
             'layout' => $this->layout,
             'description' => $this->description,

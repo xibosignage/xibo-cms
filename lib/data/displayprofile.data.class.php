@@ -42,7 +42,7 @@ class DisplayProfile extends Data {
         Debug::Audit('Load DisplayProfileId: ' . $this->displayProfileId);
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             $sth = $dbh->prepare('SELECT * FROM `displayprofile` WHERE displayprofileid = :displayprofileid');
             $sth->execute(array(
@@ -53,18 +53,18 @@ class DisplayProfile extends Data {
                 $this->ThrowError(25004, __('Cannot find display profile'));
 
             // Get the type so we can load the defaults in from file
-            $this->type = Kit::ValidateParam($row['type'], _STRING);
+            $this->type = \Kit::ValidateParam($row['type'], _STRING);
 
             // Load the config from disk
             $this->loadFromFile();
 
             // Overwrite the defaults with the values from this specific record
-            $this->name = Kit::ValidateParam($row['name'], _STRING);
-            $this->isDefault = Kit::ValidateParam($row['isdefault'], _INT);
-            $this->userId = Kit::ValidateParam($row['userid'], _INT);
+            $this->name = \Kit::ValidateParam($row['name'], _STRING);
+            $this->isDefault = \Kit::ValidateParam($row['isdefault'], _INT);
+            $this->userId = \Kit::ValidateParam($row['userid'], _INT);
 
             // Load the client settings into an array
-            $config = Kit::ValidateParam($row['config'], _HTMLSTRING);
+            $config = \Kit::ValidateParam($row['config'], _HTMLSTRING);
             $config = ($config == '') ? array() : json_decode($config, true);
 
             // We have an array of settings that we must use to overwrite the values in our global config
@@ -98,7 +98,7 @@ class DisplayProfile extends Data {
         Debug::Audit('Load Default ' . $this->type);
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             // Load the config from disk
             $this->loadFromFile();
@@ -115,13 +115,13 @@ class DisplayProfile extends Data {
             }
             else {
                 // We do, so we should overwrite the global default with our stored preferences
-                $this->name = Kit::ValidateParam($row['name'], _STRING);
-                $this->type = Kit::ValidateParam($row['type'], _STRING);
-                $this->isDefault = Kit::ValidateParam($row['isdefault'], _INT);
-                $this->userId = Kit::ValidateParam($row['userid'], _INT);
+                $this->name = \Kit::ValidateParam($row['name'], _STRING);
+                $this->type = \Kit::ValidateParam($row['type'], _STRING);
+                $this->isDefault = \Kit::ValidateParam($row['isdefault'], _INT);
+                $this->userId = \Kit::ValidateParam($row['userid'], _INT);
 
                 // Load the client settings into an array
-                $config = Kit::ValidateParam($row['config'], _HTMLSTRING);
+                $config = \Kit::ValidateParam($row['config'], _HTMLSTRING);
                 $config = ($config == '') ? array() : json_decode($config, true);
 
                 // We have an array of settings that we must use to overwrite the values in our global config
@@ -199,7 +199,7 @@ class DisplayProfile extends Data {
     private function ValidateDefault() {
         // Check that there aren't other defaults for this type.
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $sth = $dbh->prepare('SELECT COUNT(*) FROM `displayprofile` WHERE type = :type AND isdefault = :isdefault AND displayprofileid <> :displayprofileid');
             $sth->execute(array('type' => $this->type, 'isdefault' => 1, 'displayprofileid' => ((empty($this->displayProfileId)) ? 0 : $this->displayProfileId)));
@@ -224,7 +224,7 @@ class DisplayProfile extends Data {
 
     private function Add() {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $sth = $dbh->prepare('INSERT INTO `displayprofile` (name, type, config, isdefault, userid) VALUES (:name, :type, :config, :isdefault, :userid)');
             $sth->execute(array(
@@ -251,7 +251,7 @@ class DisplayProfile extends Data {
 
     private function Update() {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $sth = $dbh->prepare('UPDATE `displayprofile` SET name = :name, type = :type, config = :config, isdefault = :isdefault WHERE displayprofileid = :displayprofileid');
             $sth->execute(array(
@@ -278,7 +278,7 @@ class DisplayProfile extends Data {
     public function Delete() {
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $sth = $dbh->prepare('DELETE FROM `displayprofile` WHERE displayprofileid = :displayprofileid');
             $sth->execute(array('displayprofileid' => $this->displayProfileId));

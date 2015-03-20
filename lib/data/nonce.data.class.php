@@ -34,7 +34,7 @@ class Nonce extends Data {
 
     public function RemoveAllXmdsNonce($displayId) {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $sth = $dbh->prepare('DELETE FROM `xmdsnonce` WHERE displayId = :displayId');
             $sth->execute(array('displayId' => $displayId));
@@ -46,7 +46,7 @@ class Nonce extends Data {
 
     public function AddXmdsNonce($type, $displayId, $fileId = NULL, $size, $storedAs, $layoutId = NULL, $regionId = NULL, $mediaId = NULL) {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             $nonce = md5(uniqid() . SECRET_KEY . time() . $fileId . $layoutId . $regionId . $mediaId);
 
@@ -115,7 +115,7 @@ class Nonce extends Data {
 
     public function AllowedFile($type, $displayId, $fileId = NULL, $layoutId = NULL, $regionId = NULL, $mediaId = NULL) {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             $params = array();
 
@@ -194,7 +194,7 @@ class Nonce extends Data {
     public function Details($nonce) {
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             if ($this->validateNonceStatement == NULL) {
                 $this->validateNonceStatement = $dbh->prepare('
@@ -237,7 +237,7 @@ class Nonce extends Data {
 
     private function MarkUsed($id) {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $sth = $dbh->prepare('UPDATE `xmdsnonce` SET lastUsed = :lastUsed WHERE nonceId = :id');
             $sth->execute(array(

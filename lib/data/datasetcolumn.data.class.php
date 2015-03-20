@@ -39,7 +39,7 @@ class DataSetColumn extends Data
             return $this->SetError(25001, __('Please provide a column heading.'));
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             // Is the column order provided?
             if ($columnOrder == 0)
@@ -57,7 +57,7 @@ class DataSetColumn extends Data
                 if (!$row = $sth->fetch())
                     return $this->SetError(25005, __('Could not determine the Column Order'));
                 
-                $columnOrder = Kit::ValidateParam($row['ColumnOrder'], _INT);
+                $columnOrder = \Kit::ValidateParam($row['ColumnOrder'], _INT);
             }
 
             // Insert the data set column
@@ -102,7 +102,7 @@ class DataSetColumn extends Data
             return $this->SetError(25001, __('Please provide a column heading.'));
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             // Validation
             if ($listContent != '')
@@ -162,7 +162,7 @@ class DataSetColumn extends Data
             return $this->SetError(25001, __('Missing dataSetColumnId'));
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             $sth = $dbh->prepare('DELETE FROM datasetcolumn WHERE DataSetColumnID = :datasetcolumnid');
             $sth->execute(array(
@@ -186,7 +186,7 @@ class DataSetColumn extends Data
             return $this->SetError(25001, __('Missing dataSetId'));
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             $sth = $dbh->prepare('DELETE FROM datasetcolumn WHERE DataSetId = :datasetid');
             $sth->execute(array(
@@ -209,7 +209,7 @@ class DataSetColumn extends Data
             return $this->SetError(25001, __('Missing dataSetId'));
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             $sth = $dbh->prepare('SELECT DataSetColumnID, Heading, datatype.DataType, datasetcolumntype.DataSetColumnType, ListContent, ColumnOrder 
                   FROM datasetcolumn 
@@ -234,12 +234,12 @@ class DataSetColumn extends Data
 
             foreach($results as $row) {
 
-                $col['datasetcolumnid'] = Kit::ValidateParam($row['DataSetColumnID'], _INT);
-                $col['heading'] = Kit::ValidateParam($row['Heading'], _STRING);
-                $col['listcontent'] = Kit::ValidateParam($row['ListContent'], _STRING);
-                $col['columnorder'] = Kit::ValidateParam($row['ColumnOrder'], _INT);
-                $col['datatype'] = Kit::ValidateParam($row['DataType'], _STRING);
-                $col['datasetcolumntype'] = Kit::ValidateParam($row['DataSetColumnType'], _STRING);
+                $col['datasetcolumnid'] = \Kit::ValidateParam($row['DataSetColumnID'], _INT);
+                $col['heading'] = \Kit::ValidateParam($row['Heading'], _STRING);
+                $col['listcontent'] = \Kit::ValidateParam($row['ListContent'], _STRING);
+                $col['columnorder'] = \Kit::ValidateParam($row['ColumnOrder'], _INT);
+                $col['datatype'] = \Kit::ValidateParam($row['DataType'], _STRING);
+                $col['datasetcolumntype'] = \Kit::ValidateParam($row['DataSetColumnType'], _STRING);
 
                 $rows[] = $col;
             }

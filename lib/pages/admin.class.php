@@ -49,7 +49,7 @@ class adminDAO extends baseDAO {
             $options = NULL;
             if (!empty($setting['options'])) {
                 // Change to an id=>value array
-                foreach (explode('|', Kit::ValidateParam($setting['options'], _HTMLSTRING)) as $tempOption)
+                foreach (explode('|', \Kit::ValidateParam($setting['options'], _HTMLSTRING)) as $tempOption)
                     $options[] = array('id' => $tempOption, 'value' => $tempOption);
             }
 
@@ -57,7 +57,7 @@ class adminDAO extends baseDAO {
             if ($setting['type'] == 'checkbox' && isset($setting['value']))
                 $validated = $setting['value'];
             else if (isset($setting['value']))
-                $validated = Kit::ValidateParam($setting['value'], $setting['type']);
+                $validated = \Kit::ValidateParam($setting['value'], $setting['type']);
             else
                 $validated = $setting['default'];
 
@@ -161,7 +161,7 @@ class adminDAO extends baseDAO {
         // Go through each setting, validate it and add it to the array
         foreach ($settings as $setting) {
             // Check to see if we have a setting that matches in the provided POST vars.
-            $value = Kit::GetParam($setting['setting'], _POST, $setting['type'], (($setting['type'] == 'checkbox') ? NULL : $setting['default']));
+            $value = \Kit::GetParam($setting['setting'], _POST, $setting['type'], (($setting['type'] == 'checkbox') ? NULL : $setting['default']));
 
             // Check the library location setting
             if ($setting['setting'] == 'LIBRARY_LOCATION') {
@@ -348,8 +348,8 @@ class adminDAO extends baseDAO {
     {
         $db				=& $this->db;
         $response		= new ResponseManager();
-        $mail_to        = Kit::ValidateParam(Config::GetSetting("mail_to"),_PASSWORD);
-        $mail_from      = Kit::ValidateParam(Config::GetSetting("mail_from"),_PASSWORD);
+        $mail_to        = \Kit::ValidateParam(Config::GetSetting("mail_to"),_PASSWORD);
+        $mail_from      = \Kit::ValidateParam(Config::GetSetting("mail_from"),_PASSWORD);
         $subject        = __('Email Test');
         $body           = __('Test email sent');
         $headers        = sprintf("From: %s",$mail_from);
@@ -466,7 +466,7 @@ FORM;
             Debug::LogEntry('audit', 'Valid Upload', 'Backup', 'RestoreDatabase');
 
             // Directory location
-            $fileName = Kit::ValidateParam($_FILES['dumpFile']['tmp_name'], _STRING);
+            $fileName = \Kit::ValidateParam($_FILES['dumpFile']['tmp_name'], _STRING);
 
             if (is_uploaded_file($fileName))
             {
@@ -474,7 +474,7 @@ FORM;
                 $destination = tempnam(Config::GetSetting('LIBRARY_LOCATION'), 'dmp');
                 move_uploaded_file($fileName, $destination);
                 
-                Kit::ClassLoader('maintenance');
+                \Kit::ClassLoader('maintenance');
                 $maintenance = new Maintenance($this->db);
 
                 // Use the maintenance class to restore the database
@@ -550,8 +550,8 @@ FORM;
     public function TidyLibrary()
     {
         $response = new ResponseManager();
-        $tidyOldRevisions = (Kit::GetParam('tidyOldRevisions', _POST, _CHECKBOX) == 1);
-        $cleanUnusedFiles = (Kit::GetParam('cleanUnusedFiles', _POST, _CHECKBOX) == 1);
+        $tidyOldRevisions = (\Kit::GetParam('tidyOldRevisions', _POST, _CHECKBOX) == 1);
+        $cleanUnusedFiles = (\Kit::GetParam('cleanUnusedFiles', _POST, _CHECKBOX) == 1);
 
         if (Config::GetSetting('SETTING_LIBRARY_TIDY_ENABLED') != 1)
         	trigger_error(__('Sorry this function is disabled.'), E_USER_ERROR);

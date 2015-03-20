@@ -45,7 +45,7 @@ class upgradeDAO extends baseDAO {
             Theme::Set('form_class', 'StaticForm');
 
             // What step are we on
-            $xibo_step = Kit::GetParam('step', _REQUEST, _INT, 1);
+            $xibo_step = \Kit::GetParam('step', _REQUEST, _INT, 1);
 
             $content = '';
             
@@ -115,7 +115,7 @@ class upgradeDAO extends baseDAO {
     }
 
     public function Step2() {
-        Kit::ClassLoader('install');
+        \Kit::ClassLoader('install');
 
         // Work out what is involved in this upgrade
         $_SESSION['upgradeFrom'] = Config::Version('DBVersion');
@@ -135,8 +135,8 @@ class upgradeDAO extends baseDAO {
         $_SESSION['phpFiles'] = $php_files;
         $_SESSION['sqlFiles'] = $sql_files;
 
-        $max_sql = Kit::ValidateParam(substr(end($sql_files),0,-4),_INT);
-        $max_php = Kit::ValidateParam(substr(end($php_files),0,-4),_INT);
+        $max_sql = \Kit::ValidateParam(substr(end($sql_files),0,-4),_INT);
+        $max_php = \Kit::ValidateParam(substr(end($php_files),0,-4),_INT);
         $_SESSION['upgradeTo'] = max($max_sql, $max_php);
 
         if (!$_SESSION['upgradeTo'])
@@ -194,7 +194,7 @@ class upgradeDAO extends baseDAO {
     }
 
     public function Step3() {
-        Kit::ClassLoader('install');
+        \Kit::ClassLoader('install');
         set_time_limit(0);
         $fault = false;
         $fault_string = '';
@@ -220,7 +220,7 @@ class upgradeDAO extends baseDAO {
         if ($fault)
             throw new Exception($fault_string);
 
-        $doBackup = Kit::GetParam('doBackup', $_POST, _CHECKBOX);
+        $doBackup = \Kit::GetParam('doBackup', $_POST, _CHECKBOX);
 
         if ($doBackup == 0)
             throw new Exception(__('You MUST have a valid database backup to continue. Please take and verify a backup and upgrade again.'));
@@ -231,7 +231,7 @@ class upgradeDAO extends baseDAO {
 
         // Now loop over the entire upgrade. Run the SQLs and PHP interleaved.
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
             //$dbh->beginTransaction();
 
             for ($i = $_SESSION['upgradeFrom'] + 1; $i <= $_SESSION['upgradeTo']; $i++) {

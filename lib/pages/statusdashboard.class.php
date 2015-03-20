@@ -29,7 +29,7 @@ class statusdashboardDAO extends baseDAO {
 
         // Get some data for a bandwidth chart
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $sth = $dbh->prepare('SELECT FROM_UNIXTIME(month) AS month, IFNULL(SUM(Size), 0) AS size FROM `bandwidth` WHERE month > :month GROUP BY FROM_UNIXTIME(month) ORDER BY MIN(month);');
             $sth->execute(array('month' => time() - (86400 * 365)));
@@ -133,7 +133,7 @@ class statusdashboardDAO extends baseDAO {
 
             Theme::Set('libraryLimitSet', $libraryLimit);
             Theme::Set('libraryLimit', (round((double)$libraryLimit / (pow(1024, $base)), 2)) . ' ' . $suffixes[$base]);
-            Theme::Set('librarySize', Kit::formatBytes($totalSize, 1));
+            Theme::Set('librarySize', \Kit::formatBytes($totalSize, 1));
             Theme::Set('librarySuffix', $suffixes[$base]);
             Theme::Set('libraryWidget', json_encode($output));
 
@@ -171,7 +171,7 @@ class statusdashboardDAO extends baseDAO {
             // Latest news
             if (Config::GetSetting('DASHBOARD_LATEST_NEWS_ENABLED') == 1) {
                 // Make sure we have the cache location configured
-                Kit::ClassLoader('file');
+                \Kit::ClassLoader('file');
                 $file = new File($this->db);
                 File::EnsureLibraryExists();
 

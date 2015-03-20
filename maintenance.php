@@ -60,7 +60,7 @@ if (!file_exists("settings.php") || file_exists("upgrade.php")) {
 
 // Define an auto-load function
 spl_autoload_register(function ($class) {
-    Kit::ClassLoader($class);
+    \Kit::ClassLoader($class);
 });
 
 // parse and init the settings.php
@@ -68,7 +68,7 @@ Config::Load();
 
 // Test our DB connection through PDO
 try {
-    PDOConnect::init();
+    \Xibo\Storage\PDOConnect::init();
 }
 catch (PDOException $e) {
     die('Database connection problem. ' . $e->getMessage());
@@ -120,10 +120,10 @@ else
         $key = Config::GetSetting("MAINTENANCE_KEY");
 
         // Get key from POST or from ARGV
-        $pKey = Kit::GetParam('key', _GET, _STRING);
+        $pKey = \Kit::GetParam('key', _GET, _STRING);
         if(isset($argv[1]))
         {
-            $aKey = Kit::ValidateParam($argv[1], _STRING);
+            $aKey = \Kit::ValidateParam($argv[1], _STRING);
         }
     }
 
@@ -141,38 +141,38 @@ else
         $alertForViewUsers = (Config::GetSetting('MAINTENANCE_ALERTS_FOR_VIEW_USERS') == 1);
         
         // The time in the past that the last connection must be later than globally.
-        $globalTimeout = time() - (60 * Kit::ValidateParam(Config::GetSetting("MAINTENANCE_ALERT_TOUT"), _INT));
-        $msgTo = Kit::ValidateParam(Config::GetSetting("mail_to"), _PASSWORD);
-        $msgFrom = Kit::ValidateParam(Config::GetSetting("mail_from"), _PASSWORD);
+        $globalTimeout = time() - (60 * \Kit::ValidateParam(Config::GetSetting("MAINTENANCE_ALERT_TOUT"), _INT));
+        $msgTo = \Kit::ValidateParam(Config::GetSetting("mail_to"), _PASSWORD);
+        $msgFrom = \Kit::ValidateParam(Config::GetSetting("mail_from"), _PASSWORD);
 
         // We need a theme
         new Theme(new User());
 
         foreach (Display::ValidateDisplays() as $display) {
             // Is this the first time this display has gone "off-line"
-            $displayGoneOffline = (Kit::ValidateParam($display['loggedin'], _INT) == 1);
+            $displayGoneOffline = (\Kit::ValidateParam($display['loggedin'], _INT) == 1);
 
             // Should we send an email?
             if ($emailAlerts) {
-                if (Kit::ValidateParam($display['email_alert'], _INT) == 1) {
+                if (\Kit::ValidateParam($display['email_alert'], _INT) == 1) {
                     if ($displayGoneOffline || $alwaysAlert) {
                         // Fields for email
-                        $subject = sprintf(__("Email Alert for Display %s"), Kit::ValidateParam($display['display'], _STRING));
+                        $subject = sprintf(__("Email Alert for Display %s"), \Kit::ValidateParam($display['display'], _STRING));
                         $body = sprintf(__("Display %s with ID %d was last seen at %s."), 
-                            Kit::ValidateParam($display['display'], _STRING), 
-                            Kit::ValidateParam($display['displayid'], _INT), 
-                            date("Y-m-d H:i:s", Kit::ValidateParam($display['lastaccessed'], _INT)));
+                            \Kit::ValidateParam($display['display'], _STRING),
+                            \Kit::ValidateParam($display['displayid'], _INT),
+                            date("Y-m-d H:i:s", \Kit::ValidateParam($display['lastaccessed'], _INT)));
 
                         // Get a list of people that have view access to the display?
                         if ($alertForViewUsers) {
                             foreach (Display::getUsers($display['displayid']) as $user) {
                                 if ($user['email'] != '') {
-                                    Kit::SendEmail($user['email'], $msgFrom, $subject, $body);
+                                    \Kit::SendEmail($user['email'], $msgFrom, $subject, $body);
                                 }
                             }
                         }
 
-                        if (Kit::SendEmail($msgTo, $msgFrom, $subject, $body)) {
+                        if (\Kit::SendEmail($msgTo, $msgFrom, $subject, $body)) {
                             // Successful Alert
                             print "A";
                         }
@@ -197,11 +197,11 @@ else
 
         // Log Tidy
         print "<h1>" . __("Tidy Logs") . "</h1>";
-        if (Config::GetSetting("MAINTENANCE_LOG_MAXAGE") != 0 && Kit::GetParam('quick', _REQUEST, _INT) != 1) {
-            $maxage = date("Y-m-d H:i:s",time() - (86400 * Kit::ValidateParam(Config::GetSetting("MAINTENANCE_LOG_MAXAGE"), _INT)));
+        if (Config::GetSetting("MAINTENANCE_LOG_MAXAGE") != 0 && \Kit::GetParam('quick', _REQUEST, _INT) != 1) {
+            $maxage = date("Y-m-d H:i:s",time() - (86400 * \Kit::ValidateParam(Config::GetSetting("MAINTENANCE_LOG_MAXAGE"), _INT)));
             
             try {
-                $dbh = PDOConnect::init();
+                $dbh = \Xibo\Storage\PDOConnect::init();
             
                 $sth = $dbh->prepare('DELETE FROM `log` WHERE logdate < :maxage');
                 $sth->execute(array(
@@ -222,11 +222,11 @@ else
 
         // Stats Tidy
         print "<h1>" . __("Tidy Stats") . "</h1>";
-        if (Config::GetSetting("MAINTENANCE_STAT_MAXAGE") != 0 && Kit::GetParam('quick', _REQUEST, _INT) != 1) {
-            $maxage = date("Y-m-d H:i:s",time() - (86400 * Kit::ValidateParam(Config::GetSetting("MAINTENANCE_STAT_MAXAGE"),_INT)));
+        if (Config::GetSetting("MAINTENANCE_STAT_MAXAGE") != 0 && \Kit::GetParam('quick', _REQUEST, _INT) != 1) {
+            $maxage = date("Y-m-d H:i:s",time() - (86400 * \Kit::ValidateParam(Config::GetSetting("MAINTENANCE_STAT_MAXAGE"),_INT)));
             
             try {
-                $dbh = PDOConnect::init();
+                $dbh = \Xibo\Storage\PDOConnect::init();
             
                 $sth = $dbh->prepare('DELETE FROM `stat` WHERE statDate < :maxage');
                 $sth->execute(array(
@@ -253,17 +253,17 @@ else
         $displayObject = new Display();
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             // Get a list of all displays which have WOL enabled
             $sth = $dbh->prepare('SELECT DisplayID, Display, WakeOnLanTime, LastWakeOnLanCommandSent FROM `display` WHERE WakeOnLan = 1');
             $sth->execute(array());
 
             foreach($sth->fetchAll() as $row) {
-                $displayId = Kit::ValidateParam($row['DisplayID'], _INT);
-                $display = Kit::ValidateParam($row['Display'], _STRING);
-                $wakeOnLanTime = Kit::ValidateParam($row['WakeOnLanTime'], _STRING);
-                $lastWakeOnLan = Kit::ValidateParam($row['LastWakeOnLanCommandSent'], _INT);
+                $displayId = \Kit::ValidateParam($row['DisplayID'], _INT);
+                $display = \Kit::ValidateParam($row['Display'], _STRING);
+                $wakeOnLanTime = \Kit::ValidateParam($row['WakeOnLanTime'], _STRING);
+                $lastWakeOnLan = \Kit::ValidateParam($row['LastWakeOnLanCommandSent'], _INT);
     
                 // Time to WOL (with respect to today)
                 $timeToWake = strtotime(date('Y-m-d') . ' ' . $wakeOnLanTime);
@@ -301,7 +301,7 @@ else
         Media::removeExpiredFiles();
 
         // Install module files
-        if (Kit::GetParam('quick', _REQUEST, _INT) != 1) {
+        if (\Kit::GetParam('quick', _REQUEST, _INT) != 1) {
             Media::installAllModuleFiles();
         }
     }

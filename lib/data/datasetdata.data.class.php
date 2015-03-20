@@ -41,7 +41,7 @@ class DataSetData extends Data
             return $this->SetError(25001, __('Missing dataSetId'));
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $sth = $dbh->prepare('SELECT datasetdata.DataSetColumnID, datasetdata.RowNumber, datasetdata.Value 
                   FROM datasetdata
@@ -61,9 +61,9 @@ class DataSetData extends Data
 
             foreach($results as $row) {
 
-                $col['datasetcolumnid'] = Kit::ValidateParam($row['DataSetColumnID'], _INT);
-                $col['rownumber'] = Kit::ValidateParam($row['RowNumber'], _INT);
-                $col['value'] = Kit::ValidateParam($row['Value'], _STRING);
+                $col['datasetcolumnid'] = \Kit::ValidateParam($row['DataSetColumnID'], _INT);
+                $col['rownumber'] = \Kit::ValidateParam($row['RowNumber'], _INT);
+                $col['value'] = \Kit::ValidateParam($row['Value'], _STRING);
 
                 $rows[] = $col;
             }
@@ -92,7 +92,7 @@ class DataSetData extends Data
             return $this->SetError(25001, __('Missing rowNumber'));
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             $SQL  = "INSERT INTO datasetdata (DataSetColumnID, RowNumber, Value) ";
             $SQL .= "    VALUES (:datasetcolumnid, :rownumber, :value) ";
@@ -128,7 +128,7 @@ class DataSetData extends Data
             return $this->SetError(25001, __('Missing rowNumber'));
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             $SQL  = "UPDATE datasetdata SET Value = :value ";
             $SQL .= " WHERE DataSetColumnID = :datasetcolumnid AND RowNumber = :rownumber";
@@ -155,7 +155,7 @@ class DataSetData extends Data
     public function Delete($dataSetColumnId, $rowNumber)
     {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             $SQL  = "DELETE FROM datasetdata ";
             $SQL .= " WHERE DataSetColumnID = :datasetcolumnid AND RowNumber = :rownumber";
@@ -184,7 +184,7 @@ class DataSetData extends Data
             return $this->SetError(25001, __('Missing dataSetId'));
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             $SQL  = "";
             $SQL .= "DELETE FROM datasetdata WHERE DataSetColumnId IN ( ";
@@ -216,7 +216,7 @@ class DataSetData extends Data
             return;
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $sth = $dbh->prepare('SELECT DataSetID FROM `datasetcolumn` WHERE DataSetColumnID = :dataset_column_id');
             $sth->execute(array(
@@ -251,7 +251,7 @@ class DataSetData extends Data
         Debug::LogEntry('audit', sprintf('Updating water mark on DataSetId: %d', $dataSetId), 'DataSetData', 'UpdateWatermark');
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $sth = $dbh->prepare('UPDATE `dataset` SET LastDataEdit = :last_data_edit WHERE DataSetID = :dataset_id');
             $sth->execute(array(
@@ -260,11 +260,11 @@ class DataSetData extends Data
                 ));
 
             // Get affected Campaigns
-            Kit::ClassLoader('dataset');
+            \Kit::ClassLoader('dataset');
             $dataSet = new DataSet($this->db);
             $campaigns = $dataSet->GetCampaignsForDataSet($dataSetId);
 
-            Kit::ClassLoader('display');
+            \Kit::ClassLoader('display');
             $display = new Display($this->db);
 
             foreach ($campaigns as $campaignId) {
@@ -299,7 +299,7 @@ class DataSetData extends Data
         $this->updateWatermark = false;
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             // Are we overwriting or appending?
             if ($overwrite) {
@@ -319,7 +319,7 @@ class DataSetData extends Data
                 if (!$row = $sth->fetch())
                     return $this->SetError(25005, __('Could not determine the Max row number'));
 
-                $rowNumber = Kit::ValidateParam($row['RowNumber'], _INT);
+                $rowNumber = \Kit::ValidateParam($row['RowNumber'], _INT);
                 $rowNumber++;
             }
 

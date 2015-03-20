@@ -118,21 +118,21 @@ class Twitter extends Module
     public function ModuleSettings()
     {
         // Process any module settings you asked for.
-        $apiKey = Kit::GetParam('apiKey', _POST, _STRING, '');
+        $apiKey = \Kit::GetParam('apiKey', _POST, _STRING, '');
 
         if ($apiKey == '')
             throw new InvalidArgumentException(__('Missing API Key'));
 
         // Process any module settings you asked for.
-        $apiSecret = Kit::GetParam('apiSecret', _POST, _STRING, '');
+        $apiSecret = \Kit::GetParam('apiSecret', _POST, _STRING, '');
 
         if ($apiSecret == '')
             throw new InvalidArgumentException(__('Missing API Secret'));
 
         $this->module->settings['apiKey'] = $apiKey;
         $this->module->settings['apiSecret'] = $apiSecret;
-        $this->module->settings['cachePeriod'] = Kit::GetParam('cachePeriod', _POST, _INT, 300);
-        $this->module->settings['cachePeriodImages'] = Kit::GetParam('cachePeriodImages', _POST, _INT, 24);
+        $this->module->settings['cachePeriod'] = \Kit::GetParam('cachePeriod', _POST, _INT, 300);
+        $this->module->settings['cachePeriodImages'] = \Kit::GetParam('cachePeriodImages', _POST, _INT, 24);
 
         // Return an array of the processed settings.
         return $this->module->settings;
@@ -303,25 +303,25 @@ class Twitter extends Module
     {
         $response = new ResponseManager();
 
-        // You should validate all form input using the Kit::GetParam helper classes
-        if (Kit::GetParam('searchTerm', _POST, _STRING) == '')
+        // You should validate all form input using the \Kit::GetParam helper classes
+        if (\Kit::GetParam('searchTerm', _POST, _STRING) == '')
             throw new InvalidArgumentException(__('Please enter a search term'));
 
         $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration(), false));
-        $this->SetOption('name', Kit::GetParam('name', _POST, _STRING));
-        $this->SetOption('searchTerm', Kit::GetParam('searchTerm', _POST, _STRING));
-        $this->SetOption('effect', Kit::GetParam('effect', _POST, _STRING));
-        $this->SetOption('speed', Kit::GetParam('speed', _POST, _INT));
-        $this->SetOption('backgroundColor', Kit::GetParam('backgroundColor', _POST, _STRING));
-        $this->SetOption('noTweetsMessage', Kit::GetParam('noTweetsMessage', _POST, _STRING));
-        $this->SetOption('dateFormat', Kit::GetParam('dateFormat', _POST, _STRING));
-        $this->SetOption('resultType', Kit::GetParam('resultType', _POST, _STRING));
-        $this->SetOption('tweetDistance', Kit::GetParam('tweetDistance', _POST, _INT));
-        $this->SetOption('tweetCount', Kit::GetParam('tweetCount', _POST, _INT));
-        $this->setRawNode('template', Kit::GetParam('ta_text', _POST, _HTMLSTRING));
-        $this->setRawNode('styleSheet', Kit::GetParam('ta_css', _POST, _HTMLSTRING));
-        $this->SetOption('overrideTemplate', Kit::GetParam('overrideTemplate', _POST, _CHECKBOX));
-        $this->SetOption('templateId', Kit::GetParam('templateId', _POST, _WORD));
+        $this->SetOption('name', \Kit::GetParam('name', _POST, _STRING));
+        $this->SetOption('searchTerm', \Kit::GetParam('searchTerm', _POST, _STRING));
+        $this->SetOption('effect', \Kit::GetParam('effect', _POST, _STRING));
+        $this->SetOption('speed', \Kit::GetParam('speed', _POST, _INT));
+        $this->SetOption('backgroundColor', \Kit::GetParam('backgroundColor', _POST, _STRING));
+        $this->SetOption('noTweetsMessage', \Kit::GetParam('noTweetsMessage', _POST, _STRING));
+        $this->SetOption('dateFormat', \Kit::GetParam('dateFormat', _POST, _STRING));
+        $this->SetOption('resultType', \Kit::GetParam('resultType', _POST, _STRING));
+        $this->SetOption('tweetDistance', \Kit::GetParam('tweetDistance', _POST, _INT));
+        $this->SetOption('tweetCount', \Kit::GetParam('tweetCount', _POST, _INT));
+        $this->setRawNode('template', \Kit::GetParam('ta_text', _POST, _HTMLSTRING));
+        $this->setRawNode('styleSheet', \Kit::GetParam('ta_css', _POST, _HTMLSTRING));
+        $this->SetOption('overrideTemplate', \Kit::GetParam('overrideTemplate', _POST, _CHECKBOX));
+        $this->SetOption('templateId', \Kit::GetParam('templateId', _POST, _WORD));
 
         // Save the widget
         $this->saveWidget();
@@ -513,28 +513,28 @@ class Twitter extends Module
         if (!$this->auth->edit)
             throw new Exception(__('You do not have permission to edit this widget.'));
 
-        // You should validate all form input using the Kit::GetParam helper classes
-        if (Kit::GetParam('searchTerm', _POST, _STRING) == '')
+        // You should validate all form input using the \Kit::GetParam helper classes
+        if (\Kit::GetParam('searchTerm', _POST, _STRING) == '')
             throw new InvalidArgumentException(__('Please enter a search term'));
 
         $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration(), false));
-        $this->SetOption('name', Kit::GetParam('name', _POST, _STRING));
-        $this->SetOption('searchTerm', Kit::GetParam('searchTerm', _POST, _STRING));
-        $this->SetOption('effect', Kit::GetParam('effect', _POST, _STRING));
-        $this->SetOption('speed', Kit::GetParam('speed', _POST, _INT));
-        $this->SetOption('backgroundColor', Kit::GetParam('backgroundColor', _POST, _STRING));
-        $this->SetOption('noTweetsMessage', Kit::GetParam('noTweetsMessage', _POST, _STRING));
-        $this->SetOption('dateFormat', Kit::GetParam('dateFormat', _POST, _STRING));
-        $this->SetOption('resultType', Kit::GetParam('resultType', _POST, _STRING));
-        $this->SetOption('tweetDistance', Kit::GetParam('tweetDistance', _POST, _INT));
-        $this->SetOption('tweetCount', Kit::GetParam('tweetCount', _POST, _INT));
-        $this->SetOption('removeUrls', Kit::GetParam('removeUrls', _POST, _CHECKBOX));
-        $this->SetOption('overrideTemplate', Kit::GetParam('overrideTemplate', _POST, _CHECKBOX));
-        $this->SetOption('templateId', Kit::GetParam('templateId', _POST, _WORD));
+        $this->SetOption('name', \Kit::GetParam('name', _POST, _STRING));
+        $this->SetOption('searchTerm', \Kit::GetParam('searchTerm', _POST, _STRING));
+        $this->SetOption('effect', \Kit::GetParam('effect', _POST, _STRING));
+        $this->SetOption('speed', \Kit::GetParam('speed', _POST, _INT));
+        $this->SetOption('backgroundColor', \Kit::GetParam('backgroundColor', _POST, _STRING));
+        $this->SetOption('noTweetsMessage', \Kit::GetParam('noTweetsMessage', _POST, _STRING));
+        $this->SetOption('dateFormat', \Kit::GetParam('dateFormat', _POST, _STRING));
+        $this->SetOption('resultType', \Kit::GetParam('resultType', _POST, _STRING));
+        $this->SetOption('tweetDistance', \Kit::GetParam('tweetDistance', _POST, _INT));
+        $this->SetOption('tweetCount', \Kit::GetParam('tweetCount', _POST, _INT));
+        $this->SetOption('removeUrls', \Kit::GetParam('removeUrls', _POST, _CHECKBOX));
+        $this->SetOption('overrideTemplate', \Kit::GetParam('overrideTemplate', _POST, _CHECKBOX));
+        $this->SetOption('templateId', \Kit::GetParam('templateId', _POST, _WORD));
 
         // Text Template
-        $this->setRawNode('template', Kit::GetParam('ta_text', _POST, _HTMLSTRING));
-        $this->setRawNode('styleSheet', Kit::GetParam('ta_css', _POST, _HTMLSTRING));
+        $this->setRawNode('template', \Kit::GetParam('ta_text', _POST, _HTMLSTRING));
+        $this->setRawNode('styleSheet', \Kit::GetParam('ta_css', _POST, _HTMLSTRING));
 
         // Save the widget
         $this->saveWidget();
@@ -908,7 +908,7 @@ class Twitter extends Module
 
         // Load in the template
         $template = file_get_contents('modules/preview/HtmlTemplate.html');
-        $isPreview = (Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
+        $isPreview = (\Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
 
         // Replace the View Port Width?
         if ($isPreview)
@@ -934,9 +934,9 @@ class Twitter extends Module
             'itemsPerPage' => 1,
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
-            'previewWidth' => Kit::GetParam('width', _GET, _DOUBLE, 0),
-            'previewHeight' => Kit::GetParam('height', _GET, _DOUBLE, 0),
-            'scaleOverride' => Kit::GetParam('scale_override', _GET, _DOUBLE, 0)
+            'previewWidth' => \Kit::GetParam('width', _GET, _DOUBLE, 0),
+            'previewHeight' => \Kit::GetParam('height', _GET, _DOUBLE, 0),
+            'scaleOverride' => \Kit::GetParam('scale_override', _GET, _DOUBLE, 0)
         );
 
         // Replace the control meta with our data from twitter
@@ -982,7 +982,7 @@ class Twitter extends Module
 
         $javaScriptContent .= '<script type="text/javascript">';
         $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
-        $javaScriptContent .= '   var items = ' . Kit::jsonEncode($items) . ';';
+        $javaScriptContent .= '   var items = ' . \Kit::jsonEncode($items) . ';';
         $javaScriptContent .= '   $(document).ready(function() { ';
         $javaScriptContent .= '       $("body").xiboLayoutScaler(options); $("#content").xiboTextRender(options, items); ';
         $javaScriptContent .= '   }); ';

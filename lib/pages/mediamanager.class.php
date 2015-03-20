@@ -27,7 +27,7 @@ class mediamanagerDAO extends baseDAO {
         $db =& $this->db;
         
         // Default options
-        if (Kit::IsFilterPinned('mediamanager', 'Filter')) {
+        if (\Kit::IsFilterPinned('mediamanager', 'Filter')) {
             $filter_pinned = 1;
             $filter_layout_name = Session::Get('mediamanager', 'filter_layout_name');
             $filter_region_name = Session::Get('mediamanager', 'filter_region_name');
@@ -95,16 +95,16 @@ class mediamanagerDAO extends baseDAO {
         $user =& $this->user;
         $response = new ResponseManager();
 
-        $filterLayout = Kit::GetParam('filter_layout_name', _POST, _STRING);
-        $filterRegion = Kit::GetParam('filter_region_name', _POST, _STRING);
-        $filterMediaName = Kit::GetParam('filter_media_name', _POST, _STRING);
-        $filterMediaType = Kit::GetParam('filter_type', _POST, _INT);
+        $filterLayout = \Kit::GetParam('filter_layout_name', _POST, _STRING);
+        $filterRegion = \Kit::GetParam('filter_region_name', _POST, _STRING);
+        $filterMediaName = \Kit::GetParam('filter_media_name', _POST, _STRING);
+        $filterMediaType = \Kit::GetParam('filter_type', _POST, _INT);
 
         setSession('mediamanager', 'filter_layout_name', $filterLayout);
         setSession('mediamanager', 'filter_region_name', $filterRegion);
         setSession('mediamanager', 'filter_media_name', $filterMediaName);
         setSession('mediamanager', 'filter_type', $filterMediaType);
-        setSession('mediamanager', 'Filter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        setSession('mediamanager', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 
         // Lookup the module name
         if ($filterMediaType != 0) {

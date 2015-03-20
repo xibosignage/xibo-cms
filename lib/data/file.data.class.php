@@ -31,7 +31,7 @@ class File extends Data
     public function NewFile($payload, $userId)
     {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $sth = $dbh->prepare('INSERT INTO file (CreatedDT, UserID) VALUES (:createddt, :userid)');
             $sth->execute(array(
@@ -66,7 +66,7 @@ class File extends Data
     public function Append($fileId, $payload)
     {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             // Directory location
             $libraryFolder = Config::GetSetting('LIBRARY_LOCATION');
@@ -98,7 +98,7 @@ class File extends Data
     public function WriteToDisk($fileId, $payload)
     {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             // Directory location
             $libraryFolder = Config::GetSetting('LIBRARY_LOCATION');
@@ -166,7 +166,7 @@ class File extends Data
     public function GenerateFileId($userId)
     {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $sth = $dbh->prepare('INSERT INTO file (CreatedDT, UserID) VALUES (:createddt, :userid)');
             $sth->execute(array(
@@ -272,9 +272,9 @@ class File extends Data
      */
     public static function libraryUsage()
     {
-        $results = PDOConnect::select('SELECT IFNULL(SUM(FileSize), 0) AS SumSize FROM media', array());
+        $results = \Xibo\Storage\PDOConnect::select('SELECT IFNULL(SUM(FileSize), 0) AS SumSize FROM media', array());
 
-        return Kit::ValidateParam($results[0]['SumSize'], _INT);
+        return \Kit::ValidateParam($results[0]['SumSize'], _INT);
     }
 
     /**
@@ -289,13 +289,13 @@ class File extends Data
             throw new InvalidArgumentException(__('Filename not provided'));
 
         // What has been requested
-        $proportional = Kit::GetParam('proportional', _GET, _BOOL, true);
-        $thumb = Kit::GetParam('thumb', _GET, _BOOL, false);
+        $proportional = \Kit::GetParam('proportional', _GET, _BOOL, true);
+        $thumb = \Kit::GetParam('thumb', _GET, _BOOL, false);
         $dynamic = isset($_REQUEST['dynamic']);
-        $width = Kit::GetParam('width', _REQUEST, _INT, 80);
-        $height = Kit::GetParam('height', _REQUEST, _INT, 80);
-        $download = Kit::GetParam('download', _REQUEST, _BOOLEAN, false);
-        $downloadFromLibrary = Kit::GetParam('downloadFromLibrary', _REQUEST, _BOOLEAN, false);
+        $width = \Kit::GetParam('width', _REQUEST, _INT, 80);
+        $height = \Kit::GetParam('height', _REQUEST, _INT, 80);
+        $download = \Kit::GetParam('download', _REQUEST, _BOOLEAN, false);
+        $downloadFromLibrary = \Kit::GetParam('downloadFromLibrary', _REQUEST, _BOOLEAN, false);
 
         if ($downloadFromLibrary && $downloadFilename == '') {
             throw new InvalidArgumentException(__('Download Filename not provided'));
@@ -333,8 +333,8 @@ class File extends Data
             }
 
             if ($dynamic && !$thumb && $info[2]) {
-                $width = Kit::GetParam('width', _GET, _INT);
-                $height = Kit::GetParam('height', _GET, _INT);
+                $width = \Kit::GetParam('width', _GET, _INT);
+                $height = \Kit::GetParam('height', _GET, _INT);
 
                 // dynamically create an image of the correct size - used for previews
                 ResizeImage($libraryPath, '', $width, $height, $proportional, 'browser');

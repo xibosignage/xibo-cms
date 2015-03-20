@@ -34,7 +34,7 @@ class sessionsDAO extends baseDAO {
         Theme::Set('pager', ResponseManager::Pager($id));
 		
 		// Construct Filter Form
-        if (Kit::IsFilterPinned('sessions', 'Filter')) {
+        if (\Kit::IsFilterPinned('sessions', 'Filter')) {
         	$filter_pinned = 1;
             $filter_type = Session::Get('sessions', 'filter_type');
             $filter_fromdt = Session::Get('sessions', 'filter_fromdt');
@@ -86,10 +86,10 @@ class sessionsDAO extends baseDAO {
 		$db =& $this->db;
 		$response = new ResponseManager();
 		
-		$type = Kit::GetParam('filter_type', _POST, _WORD);
-		$fromDt = Kit::GetParam('filter_fromdt', _POST, _STRING);
+		$type = \Kit::GetParam('filter_type', _POST, _WORD);
+		$fromDt = \Kit::GetParam('filter_fromdt', _POST, _STRING);
 
-        setSession('sessions', 'Filter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        setSession('sessions', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
         setSession('sessions', 'filter_type', $type);
         setSession('sessions', 'filter_fromdt', $fromDt);
 
@@ -135,13 +135,13 @@ class sessionsDAO extends baseDAO {
 		
 		foreach ($log as $row) { 
 
-            $row['userid'] = Kit::ValidateParam($row['userID'], _INT);
-			$row['username'] = Kit::ValidateParam($row['UserName'], _STRING);
-			$row['isexpired'] = (Kit::ValidateParam($row['IsExpired'], _INT) == 1) ? 0 : 1;
-			$row['lastpage'] = Kit::ValidateParam($row['LastPage'], _STRING);
+            $row['userid'] = \Kit::ValidateParam($row['userID'], _INT);
+			$row['username'] = \Kit::ValidateParam($row['UserName'], _STRING);
+			$row['isexpired'] = (\Kit::ValidateParam($row['IsExpired'], _INT) == 1) ? 0 : 1;
+			$row['lastpage'] = \Kit::ValidateParam($row['LastPage'], _STRING);
 			$row['lastaccessed'] = DateManager::getLocalDate(strtotime(Kit::ValidateParam($row['LastAccessed'], _STRING)));
-			$row['ip'] = Kit::ValidateParam($row['RemoteAddr'], _STRING);
-			$row['browser'] = Kit::ValidateParam($row['UserAgent'], _STRING);
+			$row['ip'] = \Kit::ValidateParam($row['RemoteAddr'], _STRING);
+			$row['browser'] = \Kit::ValidateParam($row['UserAgent'], _STRING);
 
 			// Edit        
             $row['buttons'][] = array(
@@ -164,7 +164,7 @@ class sessionsDAO extends baseDAO {
 		$db =& $this->db;
 		$response = new ResponseManager();
 		
-		$userid = Kit::GetParam('userid', _GET, _INT);
+		$userid = \Kit::GetParam('userid', _GET, _INT);
 		
 		// Set some information about the form
         Theme::Set('form_id', 'SessionsLogoutForm');
@@ -194,7 +194,7 @@ class sessionsDAO extends baseDAO {
 		
 		//ajax request handler
 		$response = new ResponseManager();
-		$userID = Kit::GetParam('userid', _POST, _INT);
+		$userID = \Kit::GetParam('userid', _POST, _INT);
 		
 		$SQL = sprintf("UPDATE session SET IsExpired = 1 WHERE userID = %d", $userID);
 		

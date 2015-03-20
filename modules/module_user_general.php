@@ -37,8 +37,8 @@ class User {
     public function __construct(database $db = NULL)
     {
         $this->db =& $db;
-        $this->userid = Kit::GetParam('userid', _SESSION, _INT);
-        $this->usertypeid = Kit::GetParam('usertype', _SESSION, _INT);
+        $this->userid = \Kit::GetParam('userid', _SESSION, _INT);
+        $this->usertypeid = \Kit::GetParam('usertype', _SESSION, _INT);
 
         // We havent authed yet
         $this->authedDisplayGroupIDs = false;
@@ -52,7 +52,7 @@ class User {
     function attempt_login($ajax = false) 
     {
         $db =& $this->db;
-        $userid = Kit::GetParam('userid', _SESSION, _INT);
+        $userid = \Kit::GetParam('userid', _SESSION, _INT);
 
         // Referring Page is anything after the ?
         $requestUri = rawurlencode(Kit::GetCurrentPage());
@@ -80,7 +80,7 @@ class User {
                 Theme::Set('source_url', Theme::SourceLink());
 
                 // Message (either from the URL or the session)
-                $message = Kit::GetParam('message', _GET, _STRING, Kit::GetParam('message', _SESSION, _STRING, ''));
+                $message = \Kit::GetParam('message', _GET, _STRING, \Kit::GetParam('message', _SESSION, _STRING, ''));
                 Theme::Set('login_message', $message);
                 Theme::Render('login_page');
                 
@@ -115,7 +115,7 @@ class User {
     {
         $db =& $this->db;
 
-        Kit::ClassLoader('userdata');
+        \Kit::ClassLoader('userdata');
         
         // Get the SALT for this username
         if (!$userInfo = $db->GetSingleRow(sprintf("SELECT UserID, UserName, UserPassword, UserTypeID, CSPRNG FROM `user` WHERE UserName = '%s'", $db->escape_string($username)))) {
@@ -148,9 +148,9 @@ class User {
         }
         
         // there is a result so we store the userID in the session variable
-        $_SESSION['userid'] = Kit::ValidateParam($userInfo['UserID'], _INT);
-        $_SESSION['username'] = Kit::ValidateParam($userInfo['UserName'], _USERNAME);
-        $_SESSION['usertype'] = Kit::ValidateParam($userInfo['UserTypeID'], _INT);
+        $_SESSION['userid'] = \Kit::ValidateParam($userInfo['UserID'], _INT);
+        $_SESSION['username'] = \Kit::ValidateParam($userInfo['UserName'], _USERNAME);
+        $_SESSION['usertype'] = \Kit::ValidateParam($userInfo['UserTypeID'], _INT);
 
         // Set the User Object
         $this->usertypeid = $_SESSION['usertype'];
@@ -178,7 +178,7 @@ class User {
     function LoginServices($userId)
     {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
             $sth = $dbh->prepare('SELECT UserName, usertypeid, homepage FROM `user` WHERE userID = :userId AND Retired = 0');
             $sth->execute(array('userId' => $userId));
 
@@ -186,9 +186,9 @@ class User {
                 return false;
 
             $this->userid = $userId;
-            $this->userName = Kit::ValidateParam($results['UserName'], _USERNAME);
-            $this->usertypeid = Kit::ValidateParam($results['usertypeid'], _INT);
-            $this->homePage = Kit::ValidateParam($results['homepage'], _WORD);
+            $this->userName = \Kit::ValidateParam($results['UserName'], _USERNAME);
+            $this->usertypeid = \Kit::ValidateParam($results['usertypeid'], _INT);
+            $this->homePage = \Kit::ValidateParam($results['homepage'], _WORD);
 
             return true;
         }
@@ -207,7 +207,7 @@ class User {
         global $session;
         $db =& $this->db;
 
-        $userId = Kit::GetParam('userid', _SESSION, _INT);
+        $userId = \Kit::GetParam('userid', _SESSION, _INT);
 
         //write out to the db that the logged in user has accessed the page still
         $SQL = sprintf("UPDATE user SET loggedin = 0 WHERE userid = %d", $userId);
@@ -232,7 +232,7 @@ class User {
         global $session;
         $db =& $this->db;
 
-        $userId = Kit::GetParam('userid', _SESSION, _INT, 0);
+        $userId = \Kit::GetParam('userid', _SESSION, _INT, 0);
 
         // Checks for a user ID in the session variable
         if ($userId == 0) {
@@ -315,7 +315,7 @@ class User {
             {
                 // Every user should have a group?
                 // Add one in!
-                Kit::ClassLoader('usergroup');
+                \Kit::ClassLoader('usergroup');
 
                 $userGroupObject = new UserGroup($db);
                 if (!$groupID = $userGroupObject->Add($this->getNameFromID($id), 1))
@@ -336,8 +336,8 @@ class User {
             // Build an array of the groups to return
             while($row = $db->get_assoc_row($results))
             {
-                $groupIDs[] = Kit::ValidateParam($row['groupID'], _INT);
-                $groups[] = Kit::ValidateParam($row['group'], _STRING);
+                $groupIDs[] = \Kit::ValidateParam($row['groupID'], _INT);
+                $groups[] = \Kit::ValidateParam($row['group'], _STRING);
             }
 
             if ($returnID)
@@ -372,7 +372,7 @@ class User {
             {
                 // Every user should have a group?
                 // Add one in!
-                Kit::ClassLoader('usergroup');
+                \Kit::ClassLoader('usergroup');
 
                 $userGroupObject = new UserGroup($db);
                 if (!$groupID = $userGroupObject->Add($this->getNameFromID($id), 1))
@@ -481,7 +481,7 @@ class User {
         $usertype   =& $this->usertypeid;
 
         // Check the page exists
-        $dbh = PDOConnect::init();
+        $dbh = \Xibo\Storage\PDOConnect::init();
     
         $sth = $dbh->prepare('SELECT pageID FROM `pages` WHERE name = :name');
         $sth->execute(array('name' => $page));
@@ -499,7 +499,7 @@ class User {
         
         // We have access to only the pages assigned to this group
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             $SQL  = "SELECT pageid ";
             $SQL .= " FROM `lkpagegroup` ";
@@ -758,12 +758,12 @@ class User {
      */
     public function FileAuth($fileId)
     {
-        $results = PDOConnect::select('SELECT UserID FROM file WHERE FileID = :fileId', array('fileId' => $fileId));
+        $results = \Xibo\Storage\PDOConnect::select('SELECT UserID FROM file WHERE FileID = :fileId', array('fileId' => $fileId));
 
         if (count($results) <= 0)
             throw new \Xibo\Exception\NotFoundException('File not found');
 
-        $userId = Kit::ValidateParam($results[0]['UserID'], _INT);
+        $userId = \Kit::ValidateParam($results[0]['UserID'], _INT);
         
         return ($userId == $this->userid);
     }
@@ -949,10 +949,10 @@ class User {
             $dataSetItem = array();
 
             // Validate each param and add it to the array.
-            $dataSetItem['datasetid'] = Kit::ValidateParam($row['DataSetID'], _INT);
-            $dataSetItem['dataset']   = Kit::ValidateParam($row['DataSet'], _STRING);
-            $dataSetItem['description'] = Kit::ValidateParam($row['Description'], _STRING);
-            $dataSetItem['ownerid']  = Kit::ValidateParam($row['UserID'], _INT);
+            $dataSetItem['datasetid'] = \Kit::ValidateParam($row['DataSetID'], _INT);
+            $dataSetItem['dataset']   = \Kit::ValidateParam($row['DataSet'], _STRING);
+            $dataSetItem['description'] = \Kit::ValidateParam($row['Description'], _STRING);
+            $dataSetItem['ownerid']  = \Kit::ValidateParam($row['UserID'], _INT);
             
             $auth = $this->DataSetAuth($dataSetItem['datasetid'], true);
 
@@ -1076,11 +1076,11 @@ class User {
             $displayGroupItem = array();
 
             // Validate each param and add it to the array.
-            $displayGroupItem['displaygroupid'] = Kit::ValidateParam($row['DisplayGroupID'], _INT);
-            $displayGroupItem['displaygroup']   = Kit::ValidateParam($row['DisplayGroup'], _STRING);
-            $displayGroupItem['description']   = Kit::ValidateParam($row['Description'], _STRING);
-            $displayGroupItem['isdisplayspecific'] = Kit::ValidateParam($row['IsDisplaySpecific'], _STRING);
-            $displayGroupItem['displayid'] = (($isDisplaySpecific == 1) ? Kit::ValidateParam($row['DisplayID'], _INT) : 0);
+            $displayGroupItem['displaygroupid'] = \Kit::ValidateParam($row['DisplayGroupID'], _INT);
+            $displayGroupItem['displaygroup']   = \Kit::ValidateParam($row['DisplayGroup'], _STRING);
+            $displayGroupItem['description']   = \Kit::ValidateParam($row['Description'], _STRING);
+            $displayGroupItem['isdisplayspecific'] = \Kit::ValidateParam($row['IsDisplaySpecific'], _STRING);
+            $displayGroupItem['displayid'] = (($isDisplaySpecific == 1) ? \Kit::ValidateParam($row['DisplayID'], _INT) : 0);
 
             $auth = $this->DisplayGroupAuth($displayGroupItem['displaygroupid'], true);
 
@@ -1130,9 +1130,9 @@ class User {
         $SQL .= '    LEFT OUTER JOIN layout ON layout.layoutid = display.defaultlayoutid ';
         $SQL .= '    LEFT OUTER JOIN layout currentLayout ON currentLayout.layoutId = display.currentLayoutId';
 
-        if (Kit::GetParam('displaygroupid', $filter_by, _INT) != 0) {
+        if (\Kit::GetParam('displaygroupid', $filter_by, _INT) != 0) {
             // Restrict to a specific display group
-            $SQL .= sprintf(' WHERE displaygroup.displaygroupid = %d ', Kit::GetParam('displaygroupid', $filter_by, _INT));
+            $SQL .= sprintf(' WHERE displaygroup.displaygroupid = %d ', \Kit::GetParam('displaygroupid', $filter_by, _INT));
         }
         else {
             // Restrict to display specific groups
@@ -1140,14 +1140,14 @@ class User {
         }
 
         // Filter by Display ID?
-        if (Kit::GetParam('displayid', $filter_by, _INT) != 0) {
-            $SQL .= sprintf(' AND display.displayid = %d ', Kit::GetParam('displayid', $filter_by, _INT));
+        if (\Kit::GetParam('displayid', $filter_by, _INT) != 0) {
+            $SQL .= sprintf(' AND display.displayid = %d ', \Kit::GetParam('displayid', $filter_by, _INT));
         }
 
         // Filter by Display Name?
-        if (Kit::GetParam('display', $filter_by, _STRING) != '') {
+        if (\Kit::GetParam('display', $filter_by, _STRING) != '') {
             // convert into a space delimited array
-            $names = explode(' ', Kit::GetParam('display', $filter_by, _STRING));
+            $names = explode(' ', \Kit::GetParam('display', $filter_by, _STRING));
 
             foreach($names as $searchName)
             {
@@ -1159,18 +1159,18 @@ class User {
             }
         }
 
-        if (Kit::GetParam('macAddress', $filter_by, _STRING) != '') {
+        if (\Kit::GetParam('macAddress', $filter_by, _STRING) != '') {
             $SQL .= sprintf(' AND display.macaddress LIKE \'%s\' ', '%' . $this->db->escape_string(Kit::GetParam('macAddress', $filter_by, _STRING)) . '%');
         }
 
         // Exclude a group?
-        if (Kit::GetParam('exclude_displaygroupid', $filter_by, _INT) != 0) {
+        if (\Kit::GetParam('exclude_displaygroupid', $filter_by, _INT) != 0) {
             $SQL .= " AND display.DisplayID NOT IN ";
             $SQL .= "       (SELECT display.DisplayID ";
             $SQL .= "       FROM    display ";
             $SQL .= "               INNER JOIN lkdisplaydg ";
             $SQL .= "               ON      lkdisplaydg.DisplayID = display.DisplayID ";
-            $SQL .= sprintf("   WHERE  lkdisplaydg.DisplayGroupID   = %d ", Kit::GetParam('exclude_displaygroupid', $filter_by, _INT));
+            $SQL .= sprintf("   WHERE  lkdisplaydg.DisplayGroupID   = %d ", \Kit::GetParam('exclude_displaygroupid', $filter_by, _INT));
             $SQL .= "       )";
         }
 
@@ -1191,27 +1191,27 @@ class User {
             $displayItem = array();
 
             // Validate each param and add it to the array.
-            $displayItem['displayid'] = Kit::ValidateParam($row['displayid'], _INT);
-            $displayItem['display'] = Kit::ValidateParam($row['display'], _STRING);
-            $displayItem['description'] = Kit::ValidateParam($row['description'], _STRING);
-            $displayItem['layout'] = Kit::ValidateParam($row['layout'], _STRING);
-            $displayItem['loggedin'] = Kit::ValidateParam($row['loggedin'], _INT);
-            $displayItem['lastaccessed'] = Kit::ValidateParam($row['lastaccessed'], _STRING);
-            $displayItem['inc_schedule'] = Kit::ValidateParam($row['inc_schedule'], _INT);
-            $displayItem['licensed'] = Kit::ValidateParam($row['licensed'], _INT);
-            $displayItem['email_alert'] = Kit::ValidateParam($row['email_alert'], _INT);
-            $displayItem['displaygroupid'] = Kit::ValidateParam($row['DisplayGroupID'], _INT);
-            $displayItem['clientaddress'] = Kit::ValidateParam($row['ClientAddress'], _STRING);
-            $displayItem['mediainventorystatus'] = Kit::ValidateParam($row['MediaInventoryStatus'], _INT);
-            $displayItem['macaddress'] = Kit::ValidateParam($row['MacAddress'], _STRING);
-            $displayItem['client_type'] = Kit::ValidateParam($row['client_type'], _STRING);
-            $displayItem['client_version'] = Kit::ValidateParam($row['client_version'], _STRING);
-            $displayItem['client_code'] = Kit::ValidateParam($row['client_code'], _STRING);
-            $displayItem['screenShotRequested'] = Kit::ValidateParam($row['screenShotRequested'], _INT);
-            $displayItem['storageAvailableSpace'] = Kit::ValidateParam($row['storageAvailableSpace'], _INT);
-            $displayItem['storageTotalSpace'] = Kit::ValidateParam($row['storageTotalSpace'], _INT);
-            $displayItem['currentLayoutId'] = Kit::ValidateParam($row['currentLayoutId'], _INT);
-            $displayItem['currentLayout'] = Kit::ValidateParam($row['currentLayout'], _STRING);
+            $displayItem['displayid'] = \Kit::ValidateParam($row['displayid'], _INT);
+            $displayItem['display'] = \Kit::ValidateParam($row['display'], _STRING);
+            $displayItem['description'] = \Kit::ValidateParam($row['description'], _STRING);
+            $displayItem['layout'] = \Kit::ValidateParam($row['layout'], _STRING);
+            $displayItem['loggedin'] = \Kit::ValidateParam($row['loggedin'], _INT);
+            $displayItem['lastaccessed'] = \Kit::ValidateParam($row['lastaccessed'], _STRING);
+            $displayItem['inc_schedule'] = \Kit::ValidateParam($row['inc_schedule'], _INT);
+            $displayItem['licensed'] = \Kit::ValidateParam($row['licensed'], _INT);
+            $displayItem['email_alert'] = \Kit::ValidateParam($row['email_alert'], _INT);
+            $displayItem['displaygroupid'] = \Kit::ValidateParam($row['DisplayGroupID'], _INT);
+            $displayItem['clientaddress'] = \Kit::ValidateParam($row['ClientAddress'], _STRING);
+            $displayItem['mediainventorystatus'] = \Kit::ValidateParam($row['MediaInventoryStatus'], _INT);
+            $displayItem['macaddress'] = \Kit::ValidateParam($row['MacAddress'], _STRING);
+            $displayItem['client_type'] = \Kit::ValidateParam($row['client_type'], _STRING);
+            $displayItem['client_version'] = \Kit::ValidateParam($row['client_version'], _STRING);
+            $displayItem['client_code'] = \Kit::ValidateParam($row['client_code'], _STRING);
+            $displayItem['screenShotRequested'] = \Kit::ValidateParam($row['screenShotRequested'], _INT);
+            $displayItem['storageAvailableSpace'] = \Kit::ValidateParam($row['storageAvailableSpace'], _INT);
+            $displayItem['storageTotalSpace'] = \Kit::ValidateParam($row['storageTotalSpace'], _INT);
+            $displayItem['currentLayoutId'] = \Kit::ValidateParam($row['currentLayoutId'], _INT);
+            $displayItem['currentLayout'] = \Kit::ValidateParam($row['currentLayout'], _STRING);
 
             $auth = $this->DisplayGroupAuth($displayItem['displaygroupid'], true);
 
@@ -1313,13 +1313,13 @@ class User {
         {
             $transitionItem = array();
             
-            $transitionItem['transitionid'] = Kit::ValidateParam($transition['TransitionID'], _INT);
-            $transitionItem['transition'] = Kit::ValidateParam($transition['Transition'], _STRING);
-            $transitionItem['code'] = Kit::ValidateParam($transition['Code'], _WORD);
-            $transitionItem['hasduration'] = Kit::ValidateParam($transition['HasDuration'], _INT);
-            $transitionItem['hasdirection'] = Kit::ValidateParam($transition['HasDirection'], _INT);
-            $transitionItem['enabledforin'] = Kit::ValidateParam($transition['AvailableAsIn'], _INT);
-            $transitionItem['enabledforout'] = Kit::ValidateParam($transition['AvailableAsOut'], _INT);
+            $transitionItem['transitionid'] = \Kit::ValidateParam($transition['TransitionID'], _INT);
+            $transitionItem['transition'] = \Kit::ValidateParam($transition['Transition'], _STRING);
+            $transitionItem['code'] = \Kit::ValidateParam($transition['Code'], _WORD);
+            $transitionItem['hasduration'] = \Kit::ValidateParam($transition['HasDuration'], _INT);
+            $transitionItem['hasdirection'] = \Kit::ValidateParam($transition['HasDirection'], _INT);
+            $transitionItem['enabledforin'] = \Kit::ValidateParam($transition['AvailableAsIn'], _INT);
+            $transitionItem['enabledforout'] = \Kit::ValidateParam($transition['AvailableAsOut'], _INT);
             $transitionItem['class'] = (($transitionItem['hasduration'] == 1) ? 'hasDuration' : '') . ' ' . (($transitionItem['hasdirection'] == 1) ? 'hasDirection' : '');
 
             $transitions[] = $transitionItem;
@@ -1334,12 +1334,12 @@ class User {
     public function DisplayProfileList($sort_order = array('name'), $filter_by = array()) {
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $params = array();
             $SQL  = 'SELECT displayprofileid, name, type, config, isdefault, userid FROM displayprofile ';
         
-            $type = Kit::GetParam('type', $filter_by, _WORD);
+            $type = \Kit::GetParam('type', $filter_by, _WORD);
             if (!empty($type)) {
                 $SQL .= ' WHERE type = :type ';
                 $params['type'] = $type;
@@ -1358,12 +1358,12 @@ class User {
                 $displayItem = array();
     
                 // Validate each param and add it to the array.
-                $displayItem['displayprofileid'] = Kit::ValidateParam($row['displayprofileid'], _INT);
-                $displayItem['name'] = Kit::ValidateParam($row['name'], _STRING);
-                $displayItem['type'] = Kit::ValidateParam($row['type'], _STRING);
-                $displayItem['config'] = Kit::ValidateParam($row['config'], _STRING);
-                $displayItem['isdefault'] = Kit::ValidateParam($row['isdefault'], _INT);
-                $displayItem['userid'] = Kit::ValidateParam($row['userid'], _INT);
+                $displayItem['displayprofileid'] = \Kit::ValidateParam($row['displayprofileid'], _INT);
+                $displayItem['name'] = \Kit::ValidateParam($row['name'], _STRING);
+                $displayItem['type'] = \Kit::ValidateParam($row['type'], _STRING);
+                $displayItem['config'] = \Kit::ValidateParam($row['config'], _STRING);
+                $displayItem['isdefault'] = \Kit::ValidateParam($row['isdefault'], _INT);
+                $displayItem['userid'] = \Kit::ValidateParam($row['userid'], _INT);
     
                 $auth = new PermissionManager($this);
                 

@@ -38,7 +38,7 @@ class userDAO extends baseDAO {
         Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
         Theme::Set('pager', ResponseManager::Pager($id));
 
-        if (Kit::IsFilterPinned('user_admin', 'Filter')) {
+        if (\Kit::IsFilterPinned('user_admin', 'Filter')) {
             $filter_pinned = 1;
             $filter_username = Session::Get('user_admin', 'filter_username');
             $filter_usertypeid = Session::Get('user_admin', 'filter_usertypeid');
@@ -112,15 +112,15 @@ class userDAO extends baseDAO {
         $response   = new ResponseManager();
         // Capture the filter options
         // User ID
-        $filter_username = Kit::GetParam('filter_username', _POST, _STRING);
+        $filter_username = \Kit::GetParam('filter_username', _POST, _STRING);
         setSession('user_admin', 'filter_username', $filter_username);
         
         // User Type ID
-        $filter_usertypeid = Kit::GetParam('filter_usertypeid', _POST, _INT);
+        $filter_usertypeid = \Kit::GetParam('filter_usertypeid', _POST, _INT);
         setSession('user_admin', 'filter_usertypeid', $filter_usertypeid);
 
         // Pinned option?        
-        setSession('user_admin', 'Filter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        setSession('user_admin', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 
         // Filter our users?
         $filterBy = array();
@@ -231,12 +231,12 @@ class userDAO extends baseDAO {
         $response = new ResponseManager();
 
         $user = new Userdata();
-        $user->userName = Kit::GetParam('edit_username', _POST, _STRING);
-        $password = Kit::GetParam('edit_password', _POST, _STRING);
-        $user->email = Kit::GetParam('email', _POST, _STRING);
-        $user->userTypeId	= Kit::GetParam('usertypeid', _POST, _INT, 3);
-        $user->homePage = Kit::GetParam('homepage', _POST, _STRING);
-        $initialGroupId = Kit::GetParam('groupid', _POST, _INT);
+        $user->userName = \Kit::GetParam('edit_username', _POST, _STRING);
+        $password = \Kit::GetParam('edit_password', _POST, _STRING);
+        $user->email = \Kit::GetParam('email', _POST, _STRING);
+        $user->userTypeId	= \Kit::GetParam('usertypeid', _POST, _INT, 3);
+        $user->homePage = \Kit::GetParam('homepage', _POST, _STRING);
+        $initialGroupId = \Kit::GetParam('groupid', _POST, _INT);
 
         // Add the user
         if (!$user->add($password, $initialGroupId))
@@ -258,7 +258,7 @@ class userDAO extends baseDAO {
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
 
         // Do we have permission?
-        $entries = $this->user->userList(null, array('userId' => Kit::GetParam('userid', _POST, _INT)));
+        $entries = $this->user->userList(null, array('userId' => \Kit::GetParam('userid', _POST, _INT)));
 
         if (count($entries) == 0)
             trigger_error(__('You do not have permission to edit this user'), E_USER_ERROR);
@@ -266,14 +266,14 @@ class userDAO extends baseDAO {
             $user = $entries[0]['object'];
 
         // Create our user object
-        $user->userName = Kit::GetParam('edit_username', _POST, _STRING);
-        $user->email = Kit::GetParam('email', _POST, _STRING);
-        $user->homePage = Kit::GetParam('homepage', _POST, _STRING, 'dashboard');
-        $user->retired = Kit::GetParam('retired', _POST, _CHECKBOX);
+        $user->userName = \Kit::GetParam('edit_username', _POST, _STRING);
+        $user->email = \Kit::GetParam('email', _POST, _STRING);
+        $user->homePage = \Kit::GetParam('homepage', _POST, _STRING, 'dashboard');
+        $user->retired = \Kit::GetParam('retired', _POST, _CHECKBOX);
 
         // Super Admins can change the user type
         if ($this->user->usertypeid == 1)
-            $user->userTypeId = Kit::GetParam('usertypeid', _POST, _INT);
+            $user->userTypeId = \Kit::GetParam('usertypeid', _POST, _INT);
 
         if (!$user->edit())
             trigger_error($user->GetErrorMessage(), E_USER_ERROR);
@@ -292,9 +292,9 @@ class userDAO extends baseDAO {
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
 
         $response = new ResponseManager();
-        $deleteAllItems = (Kit::GetParam('deleteAllItems', _POST, _CHECKBOX) == 1);
+        $deleteAllItems = (\Kit::GetParam('deleteAllItems', _POST, _CHECKBOX) == 1);
 
-        $userId = Kit::GetParam('userid', _POST, _INT, 0);
+        $userId = \Kit::GetParam('userid', _POST, _INT, 0);
         $groupId = $this->user->getGroupFromID($userId, true);
 
         $user = new Userdata();
@@ -341,7 +341,7 @@ class userDAO extends baseDAO {
         $user =& $this->user;
         $response = new ResponseManager();
 
-        $userId = Kit::GetParam('userID', _GET, _INT);
+        $userId = \Kit::GetParam('userID', _GET, _INT);
 
         // Set some information about the form
         Theme::Set('form_id', 'UserForm');
@@ -363,11 +363,11 @@ class userDAO extends baseDAO {
                 $aRow = $entries[0];
 
             // Store some information for later use
-            $username = Kit::ValidateParam($aRow['username'], _USERNAME);
-            $usertypeid = Kit::ValidateParam($aRow['usertypeid'], _INT);
-            $email = Kit::ValidateParam($aRow['email'], _STRING);
-            $homepage = Kit::ValidateParam($aRow['homepage'], _STRING);
-            $retired = Kit::ValidateParam($aRow['retired'], _INT);
+            $username = \Kit::ValidateParam($aRow['username'], _USERNAME);
+            $usertypeid = \Kit::ValidateParam($aRow['usertypeid'], _INT);
+            $email = \Kit::ValidateParam($aRow['email'], _STRING);
+            $homepage = \Kit::ValidateParam($aRow['homepage'], _STRING);
+            $retired = \Kit::ValidateParam($aRow['retired'], _INT);
 
             $retiredFormField = FormManager::AddCheckbox('retired', __('Retired?'), 
                 $retired, __('Is this user retired?'),
@@ -478,7 +478,7 @@ class userDAO extends baseDAO {
         $user =& $this->user;
 		$response = new ResponseManager();
 		
-		$userid = Kit::GetParam('userID', _GET, _INT);
+		$userid = \Kit::GetParam('userID', _GET, _INT);
 
         // Set some information about the form
         Theme::Set('form_id', 'UserDeleteForm');
@@ -509,7 +509,7 @@ class userDAO extends baseDAO {
     {
         $db =& $this->db;
         $response = new ResponseManager();
-        $userid = Kit::GetParam('userid', _GET, _INT);
+        $userid = \Kit::GetParam('userid', _GET, _INT);
 
         // Set some information about the form
         Theme::Set('form_id', 'SetUserHomePageForm');
@@ -558,8 +558,8 @@ class userDAO extends baseDAO {
         if (!$this->user->usertypeid == 1)
             trigger_error(__('You do not have permission to change this users homepage'));
 
-        $userid	= Kit::GetParam('userid', _POST, _INT, 0);
-        $homepage = Kit::GetParam('homepage', _POST, _WORD);
+        $userid	= \Kit::GetParam('userid', _POST, _INT, 0);
+        $homepage = \Kit::GetParam('homepage', _POST, _WORD);
 
         $SQL = sprintf("UPDATE user SET homepage = '%s' WHERE userID = %d", $homepage, $userid);
 
@@ -618,7 +618,7 @@ class userDAO extends baseDAO {
         $msgNewPassword = __('New Password');
         $msgRetype = __('Retype New Password');
 
-        $userId = Kit::GetParam('userid', _GET, _INT);
+        $userId = \Kit::GetParam('userid', _GET, _INT);
 
         // Set some information about the form
         Theme::Set('form_id', 'ChangePasswordForm');
@@ -655,11 +655,11 @@ class userDAO extends baseDAO {
         $db =& $this->db;
         $response = new ResponseManager();
 
-        $oldPassword = Kit::GetParam('oldPassword', _POST, _STRING);
-        $newPassword = Kit::GetParam('newPassword', _POST, _STRING);
-        $retypeNewPassword = Kit::GetParam('retypeNewPassword', _POST, _STRING);
+        $oldPassword = \Kit::GetParam('oldPassword', _POST, _STRING);
+        $newPassword = \Kit::GetParam('newPassword', _POST, _STRING);
+        $retypeNewPassword = \Kit::GetParam('retypeNewPassword', _POST, _STRING);
 
-        Kit::ClassLoader('userdata');
+        \Kit::ClassLoader('userdata');
         $userData = new Userdata($db);
 
         if (!$userData->ChangePassword($this->user->userid, $oldPassword, $newPassword, $retypeNewPassword))
@@ -678,7 +678,7 @@ class userDAO extends baseDAO {
         $user       =& $this->user;
         $response   = new ResponseManager();
 
-        $userId = Kit::GetParam('userid', _GET, _INT);
+        $userId = \Kit::GetParam('userid', _GET, _INT);
 
         // Set some information about the form
         Theme::Set('form_id', 'SetPasswordForm');
@@ -713,16 +713,16 @@ class userDAO extends baseDAO {
         $db =& $this->db;
         $response = new ResponseManager();
 
-        $newPassword = Kit::GetParam('newPassword', _POST, _STRING);
-        $retypeNewPassword = Kit::GetParam('retypeNewPassword', _POST, _STRING);
+        $newPassword = \Kit::GetParam('newPassword', _POST, _STRING);
+        $retypeNewPassword = \Kit::GetParam('retypeNewPassword', _POST, _STRING);
 
-        $userId = Kit::GetParam('UserId', _POST, _INT);
+        $userId = \Kit::GetParam('UserId', _POST, _INT);
         
         // Check we are an admin
         if ($this->user->usertypeid != 1)
             trigger_error(__('Trying to change the password for another user denied'), E_USER_ERROR);
 
-        Kit::ClassLoader('userdata');
+        \Kit::ClassLoader('userdata');
         $userData = new Userdata($db);
 
         if (!$userData->ChangePassword($userId, null, $newPassword, $retypeNewPassword, true))
@@ -739,7 +739,7 @@ class userDAO extends baseDAO {
     {
         $response = new ResponseManager();
 
-        $entity = Kit::GetParam('entity', _GET, _STRING);
+        $entity = \Kit::GetParam('entity', _GET, _STRING);
         if ($entity == '')
             throw new InvalidArgumentException(__('Permissions form requested without an entity'));
 
@@ -750,7 +750,7 @@ class userDAO extends baseDAO {
             throw new InvalidArgumentException(__('Permissions form requested with an invalid entity'));
 
         // Get the object
-        $objectId = Kit::GetParam('objectId', _GET, _INT);
+        $objectId = \Kit::GetParam('objectId', _GET, _INT);
         if ($objectId == 0)
             throw new InvalidArgumentException(__('Permissions form requested without an object'));
 
@@ -764,7 +764,7 @@ class userDAO extends baseDAO {
         // Set some information about the form
         Theme::Set('form_id', 'PermissionsForm');
         Theme::Set('form_action', 'index.php?p=user&q=permissions');
-        Theme::Set('form_meta', '<input type="hidden" name="objectId" value="' . $objectId . '" /><input type="hidden" name="entity" value="' . Kit::GetParam('entity', _GET, _STRING) . '" />');
+        Theme::Set('form_meta', '<input type="hidden" name="objectId" value="' . $objectId . '" /><input type="hidden" name="entity" value="' . \Kit::GetParam('entity', _GET, _STRING) . '" />');
 
         // List of all Groups with a view / edit / delete check box
         $permissions = \Xibo\Factory\PermissionFactory::getAllByObjectId(get_class($object), $objectId);
@@ -821,7 +821,7 @@ class userDAO extends baseDAO {
         if (!Kit::CheckToken())
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
 
-        $entity = Kit::GetParam('entity', _POST, _STRING);
+        $entity = \Kit::GetParam('entity', _POST, _STRING);
         if ($entity == '')
             throw new InvalidArgumentException(__('Permissions form requested without an entity'));
 
@@ -832,7 +832,7 @@ class userDAO extends baseDAO {
             throw new InvalidArgumentException(__('Permissions form requested with an invalid entity'));
 
         // Get the object
-        $objectId = Kit::GetParam('objectId', _POST, _INT);
+        $objectId = \Kit::GetParam('objectId', _POST, _INT);
         if ($objectId == 0)
             throw new InvalidArgumentException(__('Permissions form requested without an object'));
 
@@ -847,7 +847,7 @@ class userDAO extends baseDAO {
         $permissions = \Xibo\Factory\PermissionFactory::getAllByObjectId(get_class($object), $objectId);
 
         // Get the provided permissions
-        $groupIds = Kit::GetParam('groupids', _POST, _ARRAY);
+        $groupIds = \Kit::GetParam('groupids', _POST, _ARRAY);
         $newPermissions = array();
         array_map(function ($string) use (&$newPermissions) { $array = explode('_', $string); return $newPermissions[$array[0]][$array[1]] = 1; }, $groupIds);
 
@@ -869,7 +869,7 @@ class userDAO extends baseDAO {
             }
         }
 
-        $cascade = Kit::GetParam('cascade', _POST, _CHECKBOX);
+        $cascade = \Kit::GetParam('cascade', _POST, _CHECKBOX);
 
         if ($cascade) {
             Debug::Audit('Permissions to push down: ' . var_export($newPermissions, true));

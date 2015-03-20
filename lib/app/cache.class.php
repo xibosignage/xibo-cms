@@ -94,7 +94,7 @@ class Cache {
             self::$_data = array();
 
         // Set the location for this key
-        $location = Config::GetSetting('LIBRARY_LOCATION') . 'cache/cache_' . Kit::ValidateParam($key, _FILENAME);
+        $location = Config::GetSetting('LIBRARY_LOCATION') . 'cache/cache_' . \Kit::ValidateParam($key, _FILENAME);
 
         // If the key isn't there already, do nothing. Otherwise load it.
         if (file_exists($location)) {
@@ -110,14 +110,14 @@ class Cache {
     {
         File::EnsureLibraryExists();
 
-        $location = Config::GetSetting('LIBRARY_LOCATION') . 'cache/cache_' . Kit::ValidateParam($key, _FILENAME);
+        $location = Config::GetSetting('LIBRARY_LOCATION') . 'cache/cache_' . \Kit::ValidateParam($key, _FILENAME);
 
         file_put_contents($location, serialize(self::$_data[$key]));
     }
 
     private static function remove($key)
     {
-        $location = Config::GetSetting('LIBRARY_LOCATION') . 'cache/cache_' . Kit::ValidateParam($key, _FILENAME);
+        $location = Config::GetSetting('LIBRARY_LOCATION') . 'cache/cache_' . \Kit::ValidateParam($key, _FILENAME);
 
         if (file_exists($location)) {
             unset(self::$_data[$key]);

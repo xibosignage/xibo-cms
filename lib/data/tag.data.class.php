@@ -25,14 +25,14 @@ class Tag extends Data
 	public function add($tag)
 	{
 		try {
-		    $dbh = PDOConnect::init();
+		    $dbh = \Xibo\Storage\PDOConnect::init();
 		
 		    // See if it exists
 		    $sth = $dbh->prepare('SELECT * FROM `tag` WHERE tag = :tag');
 		    $sth->execute(array('tag' => $tag));
 
 		    if ($row = $sth->fetch()) {
-		    	return Kit::ValidateParam($row['tagId'], _INT);
+		    	return \Kit::ValidateParam($row['tagId'], _INT);
 		    }
 		    
 		    // Insert if not

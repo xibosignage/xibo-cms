@@ -232,7 +232,7 @@ class Widget
         $this->unlinkMedia();
 
         // Delete this
-        \PDOConnect::update('DELETE FROM `widget` WHERE widgetId = :widgetId', array('widgetId' => $this->widgetId));
+        \Xibo\Storage\PDOConnect::update('DELETE FROM `widget` WHERE widgetId = :widgetId', array('widgetId' => $this->widgetId));
     }
 
     private function add()
@@ -240,7 +240,7 @@ class Widget
         \Debug::Audit('Adding Widget ' . $this->type . ' to PlaylistId ' . $this->playlistId);
 
         $sql = 'INSERT INTO `widget` (`playlistId`, `ownerId`, `type`, `duration`, `displayOrder`) VALUES (:playlistId, :ownerId, :type, :duration, :displayOrder)';
-        $this->widgetId = \PDOConnect::insert($sql, array(
+        $this->widgetId = \Xibo\Storage\PDOConnect::insert($sql, array(
             'playlistId' => $this->playlistId,
             'ownerId' => $this->ownerId,
             'type' => $this->type,
@@ -254,7 +254,7 @@ class Widget
         \Debug::Audit('Saving Widget ' . $this->type . ' on PlaylistId ' . $this->playlistId . ' WidgetId: ' . $this->widgetId);
 
         $sql = 'UPDATE `widget` SET `playlistId` = :playlistId, `ownerId` = :ownerId, `type` = :type, `duration` = :duration, `displayOrder` = :displayOrder WHERE `widgetId` = :widgetId';
-        \PDOConnect::update($sql, array(
+        \Xibo\Storage\PDOConnect::update($sql, array(
             'playlistId' => $this->playlistId,
             'ownerId' => $this->ownerId,
             'type' => $this->type,
@@ -276,7 +276,7 @@ class Widget
 
             //\Debug::Audit('Linking MediaId ' . $mediaId . ' to Widget ' . $this->widgetId);
 
-            \PDOConnect::insert($sql, array(
+            \Xibo\Storage\PDOConnect::insert($sql, array(
                 'widgetId' => $this->widgetId,
                 'mediaId' => $mediaId,
                 'mediaId2' => $mediaId
@@ -290,7 +290,7 @@ class Widget
     private function unlinkMedia()
     {
         foreach ($this->mediaIds as $mediaId) {
-            \PDOConnect::update('DELETE FROM `lkwidgetmedia` WHERE widgetId = :widgetId AND mediaId = :mediaId', array(
+            \Xibo\Storage\PDOConnect::update('DELETE FROM `lkwidgetmedia` WHERE widgetId = :widgetId AND mediaId = :mediaId', array(
                 'widgetId' => $this->widgetId,
                 'mediaId' => $mediaId
             ));

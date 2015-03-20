@@ -46,7 +46,7 @@ class TranslationEngine
         $supportedLanguages = scandir($localeDir);
 
         // Try to get the local firstly from _REQUEST (post then get)
-        $requestedLanguage = Kit::GetParam('lang', _REQUEST, _WORD, '');
+        $requestedLanguage = \Kit::GetParam('lang', _REQUEST, _WORD, '');
         $foundLanguage = '';
 
         if ($requestedLanguage != '') {
@@ -131,7 +131,7 @@ class TranslationEngine
     public static function parseHttpAcceptLanguageHeader($header = null)
     {
         if ($header == null)
-            $header = Kit::GetParam('HTTP_ACCEPT_LANGUAGE', $_SERVER, _STRING);
+            $header = \Kit::GetParam('HTTP_ACCEPT_LANGUAGE', $_SERVER, _STRING);
 
         $languages = array();
 

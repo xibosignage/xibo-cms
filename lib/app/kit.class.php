@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2013 Daniel Garner and James Packer
+ * Copyright (C) 2006-2015 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -18,8 +18,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
-  
+
 define('_SESSION', "session");
 define('_POST', "post");
 define('_GET', "get");
@@ -43,13 +42,13 @@ define('_URI', "uri");
 define('_INPUTBOX', "inputbox");
 define('_PASSWORDBOX', "password");
 
-class Kit 
+class Kit
 {
     // Ends the current execution and issues a redirect - should only be called before headers have been sent (i.e. no output)
     static function Redirect($page, $message = '')
     {
         $url    = $page;
-        $ajax   = Kit::GetParam('ajax', _REQUEST, _BOOL, false);
+        $ajax   = \Kit::GetParam('ajax', _REQUEST, _BOOL, false);
         
         if ($ajax)
         {
@@ -208,7 +207,7 @@ class Kit
         }
         
         // Validate this param  
-        return Kit::ValidateParam($return, $type, $sanitize);
+        return \Kit::ValidateParam($return, $type, $sanitize);
     }
     
     /**
@@ -381,7 +380,7 @@ class Kit
      */
     public static function GetURL($page = "")
     {
-        $page = Kit::ValidateParam($page, _WORD);
+        $page = \Kit::ValidateParam($page, _WORD);
         $fullUrl = 'http';
         
         if(isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) == 'on')
@@ -724,8 +723,8 @@ class Kit
                 Debug::Audit('Syntax error, malformed JSON');
                 return false;
             case JSON_ERROR_UTF8:
-                $clean = Kit::utf8ize($mixed);
-                return Kit::jsonEncode($clean);
+                $clean = \Kit::utf8ize($mixed);
+                return \Kit::jsonEncode($clean);
             default:
                 Debug::Audit('Unknown error');
                 return false;
@@ -742,7 +741,7 @@ class Kit
     {
         if (is_array($mixed)) {
             foreach ($mixed as $key => $value) {
-                $mixed[$key] = Kit::utf8ize($value);
+                $mixed[$key] = \Kit::utf8ize($value);
             }
         }
         else if (is_string ($mixed)) {

@@ -29,7 +29,7 @@ class scheduleDAO extends baseDAO {
         Theme::Set('event_add_url', 'index.php?p=schedule&q=AddEventForm');
 
         // We need to provide a list of displays
-        $displayGroupIds = Kit::GetParam('displayGroupIds', _SESSION, _ARRAY);
+        $displayGroupIds = \Kit::GetParam('displayGroupIds', _SESSION, _ARRAY);
         $groups = array();
         $displays = array();
 
@@ -60,9 +60,9 @@ class scheduleDAO extends baseDAO {
      */
     function GenerateCalendar()
     {
-        $displayGroupIds = Kit::GetParam('DisplayGroupIDs', _GET, _ARRAY);
-        $start = Kit::GetParam('from', _REQUEST, _INT) / 1000;
-        $end = Kit::GetParam('to', _REQUEST, _INT) / 1000;
+        $displayGroupIds = \Kit::GetParam('DisplayGroupIDs', _GET, _ARRAY);
+        $start = \Kit::GetParam('from', _REQUEST, _INT) / 1000;
+        $end = \Kit::GetParam('to', _REQUEST, _INT) / 1000;
 
         // if we have some displaygroupids then add them to the session info so we can default everything else.
         Session::Set('DisplayGroupIDs', $displayGroupIds);
@@ -72,7 +72,7 @@ class scheduleDAO extends baseDAO {
         
         // Get Events between the provided dates
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             // Query for all events between the dates
             $SQL = "";
@@ -143,7 +143,7 @@ class scheduleDAO extends baseDAO {
                 $editable = $this->IsEventEditable($eventDisplayGroupIds);
 
                 // Event Title
-                $title = sprintf(__('%s scheduled on %s'), Kit::ValidateParam($row['Campaign'], _STRING), Kit::ValidateParam($row['DisplayGroups'], _STRING));
+                $title = sprintf(__('%s scheduled on %s'), \Kit::ValidateParam($row['Campaign'], _STRING), \Kit::ValidateParam($row['DisplayGroups'], _STRING));
 
                 // Event URL
                 $url = ($editable) ? sprintf('index.php?p=schedule&q=EditEventForm&EventID=%d', $row['EventID']) : '#';
@@ -210,11 +210,11 @@ class scheduleDAO extends baseDAO {
         $user =& $this->user;
         $response = new ResponseManager();
 
-        $displayGroupIds = Kit::GetParam('displayGroupIds', _SESSION, _ARRAY);
+        $displayGroupIds = \Kit::GetParam('displayGroupIds', _SESSION, _ARRAY);
 
         $token_id = uniqid();
         $token_field = '<input type="hidden" name="token_id" value="' . $token_id . '" />';
-        $token = Kit::Token($token_id);
+        $token = \Kit::Token($token_id);
         
         Theme::Set('form_id', 'AddEventForm');
         Theme::Set('form_action', 'index.php?p=schedule&q=AddEvent');
@@ -380,18 +380,18 @@ class scheduleDAO extends baseDAO {
         $user =& $this->user;
         $response = new ResponseManager();
 
-        $campaignId = Kit::GetParam('CampaignID', _POST, _INT, 0);
-        $fromDT = Kit::GetParam('starttime', _POST, _STRING);
-        $toDT = Kit::GetParam('endtime', _POST, _STRING);
-        $displayGroupIDs = Kit::GetParam('DisplayGroupIDs', _POST, _ARRAY);
-        $isPriority = Kit::GetParam('is_priority', _POST, _CHECKBOX);
+        $campaignId = \Kit::GetParam('CampaignID', _POST, _INT, 0);
+        $fromDT = \Kit::GetParam('starttime', _POST, _STRING);
+        $toDT = \Kit::GetParam('endtime', _POST, _STRING);
+        $displayGroupIDs = \Kit::GetParam('DisplayGroupIDs', _POST, _ARRAY);
+        $isPriority = \Kit::GetParam('is_priority', _POST, _CHECKBOX);
 
-        $repeatType = Kit::GetParam('rec_type', _POST, _STRING);
-        $repeatInterval = Kit::GetParam('rec_detail', _POST, _INT);
-        $repeatToDt = Kit::GetParam('rec_range', _POST, _STRING);
+        $repeatType = \Kit::GetParam('rec_type', _POST, _STRING);
+        $repeatInterval = \Kit::GetParam('rec_detail', _POST, _INT);
+        $repeatToDt = \Kit::GetParam('rec_range', _POST, _STRING);
         
-        $displayOrder = Kit::GetParam('DisplayOrder', _POST, _INT);
-        $isNextButton = Kit::GetParam('next', _GET, _BOOL, false);
+        $displayOrder = \Kit::GetParam('DisplayOrder', _POST, _INT);
+        $isNextButton = \Kit::GetParam('next', _GET, _BOOL, false);
 
         Debug::Audit('Times received are: FromDt=' . $fromDT . '. ToDt=' . $toDT . '. RepeatToDt=' . $repeatToDt);
 
@@ -445,7 +445,7 @@ class scheduleDAO extends baseDAO {
         $user =& $this->user;
         $response = new ResponseManager();
 
-        $eventID = Kit::GetParam('EventID', _GET, _INT, 0);
+        $eventID = \Kit::GetParam('EventID', _GET, _INT, 0);
 
         if ($eventID == 0) 
             trigger_error(__('No event selected.'), E_USER_ERROR);
@@ -477,15 +477,15 @@ class scheduleDAO extends baseDAO {
 
         $row = $db->get_assoc_row($result);
 
-        $fromDT = Kit::ValidateParam($row['FromDT'], _INT);
-        $toDT = Kit::ValidateParam($row['ToDT'], _INT);
-        $displayGroupIds = explode(',', Kit::ValidateParam($row['DisplayGroupIDs'], _STRING));
-        $recType = Kit::ValidateParam($row['recurrence_type'], _STRING);
-        $recDetail = Kit::ValidateParam($row['recurrence_detail'], _STRING);
-        $recToDT = Kit::ValidateParam($row['recurrence_range'], _INT);
-        $campaignId = Kit::ValidateParam($row['CampaignID'], _STRING);
-        $isPriority = Kit::ValidateParam($row['is_priority'], _INT);
-        $displayOrder = Kit::ValidateParam($row['DisplayOrder'], _INT);
+        $fromDT = \Kit::ValidateParam($row['FromDT'], _INT);
+        $toDT = \Kit::ValidateParam($row['ToDT'], _INT);
+        $displayGroupIds = explode(',', \Kit::ValidateParam($row['DisplayGroupIDs'], _STRING));
+        $recType = \Kit::ValidateParam($row['recurrence_type'], _STRING);
+        $recDetail = \Kit::ValidateParam($row['recurrence_detail'], _STRING);
+        $recToDT = \Kit::ValidateParam($row['recurrence_range'], _INT);
+        $campaignId = \Kit::ValidateParam($row['CampaignID'], _STRING);
+        $isPriority = \Kit::ValidateParam($row['is_priority'], _INT);
+        $displayOrder = \Kit::ValidateParam($row['DisplayOrder'], _INT);
 
         // Check that we have permission to edit this event.
         if (!$this->IsEventEditable($displayGroupIds))
@@ -493,7 +493,7 @@ class scheduleDAO extends baseDAO {
         
         $token_id = uniqid();
         $token_field = '<input type="hidden" name="token_id" value="' . $token_id . '" />';
-        $token = Kit::Token($token_id);
+        $token = \Kit::Token($token_id);
 
         Theme::Set('form_id', 'EditEventForm');
         Theme::Set('form_action', 'index.php?p=schedule&q=EditEvent');
@@ -662,19 +662,19 @@ class scheduleDAO extends baseDAO {
         $user =& $this->user;
         $response = new ResponseManager();
 
-        $eventId = Kit::GetParam('EventID', _POST, _INT, 0);
-        $campaignId = Kit::GetParam('CampaignID', _POST, _INT, 0);
-        $fromDT = Kit::GetParam('starttime', _POST, _STRING);
-        $toDT = Kit::GetParam('endtime', _POST, _STRING);
-        $displayGroupIDs = Kit::GetParam('DisplayGroupIDs', _POST, _ARRAY);
-        $isPriority = Kit::GetParam('is_priority', _POST, _CHECKBOX);
+        $eventId = \Kit::GetParam('EventID', _POST, _INT, 0);
+        $campaignId = \Kit::GetParam('CampaignID', _POST, _INT, 0);
+        $fromDT = \Kit::GetParam('starttime', _POST, _STRING);
+        $toDT = \Kit::GetParam('endtime', _POST, _STRING);
+        $displayGroupIDs = \Kit::GetParam('DisplayGroupIDs', _POST, _ARRAY);
+        $isPriority = \Kit::GetParam('is_priority', _POST, _CHECKBOX);
 
-        $repeatType = Kit::GetParam('rec_type', _POST, _STRING);
-        $repeatInterval = Kit::GetParam('rec_detail', _POST, _INT);
-        $repeatToDt = Kit::GetParam('rec_range', _POST, _STRING);
+        $repeatType = \Kit::GetParam('rec_type', _POST, _STRING);
+        $repeatInterval = \Kit::GetParam('rec_detail', _POST, _INT);
+        $repeatToDt = \Kit::GetParam('rec_range', _POST, _STRING);
         
-        $displayOrder = Kit::GetParam('DisplayOrder', _POST, _INT);
-        $isNextButton = Kit::GetParam('next', _GET, _BOOL, false);
+        $displayOrder = \Kit::GetParam('DisplayOrder', _POST, _INT);
+        $isNextButton = \Kit::GetParam('next', _GET, _BOOL, false);
         
         // Convert our ISO strings
         $fromDT = DateManager::getTimestampFromString($fromDT);
@@ -721,7 +721,7 @@ class scheduleDAO extends baseDAO {
         $user =& $this->user;
         $response = new ResponseManager();
         
-        $eventID = Kit::GetParam('EventID', _GET, _INT, 0);
+        $eventID = \Kit::GetParam('EventID', _GET, _INT, 0);
         
         if ($eventID == 0) 
             trigger_error(__('No event selected.'), E_USER_ERROR);
@@ -752,7 +752,7 @@ class scheduleDAO extends baseDAO {
         $user =& $this->user;
         $response = new ResponseManager();
         
-        $eventID = Kit::GetParam('EventID', _POST, _INT, 0);
+        $eventID = \Kit::GetParam('EventID', _POST, _INT, 0);
         
         if ($eventID == 0) 
             trigger_error(__('No event selected.'), E_USER_ERROR);
@@ -806,8 +806,8 @@ class scheduleDAO extends baseDAO {
         $date = time();
 
         // We might have a layout id, or a display id
-        $campaignId = Kit::GetParam('CampaignID', _GET, _INT, 0);
-        $displayGroupIds = Kit::GetParam('displayGroupId', _GET, _ARRAY);
+        $campaignId = \Kit::GetParam('CampaignID', _GET, _INT, 0);
+        $displayGroupIds = \Kit::GetParam('displayGroupId', _GET, _ARRAY);
         
         Theme::Set('form_id', 'ScheduleNowForm');
         Theme::Set('form_action', 'index.php?p=schedule&q=ScheduleNow');
@@ -926,16 +926,16 @@ class scheduleDAO extends baseDAO {
         $user =& $this->user;
         $response = new ResponseManager();
 
-        $campaignId = Kit::GetParam('CampaignID', _POST, _INT, 0);
-        $displayGroupIds = Kit::GetParam('DisplayGroupIDs', _POST, _ARRAY);
-        $isPriority = Kit::GetParam('is_priority', _POST, _CHECKBOX);
+        $campaignId = \Kit::GetParam('CampaignID', _POST, _INT, 0);
+        $displayGroupIds = \Kit::GetParam('DisplayGroupIDs', _POST, _ARRAY);
+        $isPriority = \Kit::GetParam('is_priority', _POST, _CHECKBOX);
         $fromDt = time();
 
-        $hours = Kit::GetParam('hours', _POST, _INT, 0);
-        $minutes = Kit::GetParam('minutes', _POST, _INT, 0);
-        $seconds = Kit::GetParam('seconds', _POST, _INT, 0);
+        $hours = \Kit::GetParam('hours', _POST, _INT, 0);
+        $minutes = \Kit::GetParam('minutes', _POST, _INT, 0);
+        $seconds = \Kit::GetParam('seconds', _POST, _INT, 0);
         $duration = ($hours * 3600) + ($minutes * 60) + $seconds;
-        $displayOrder = Kit::GetParam('DisplayOrder', _POST, _INT);
+        $displayOrder = \Kit::GetParam('DisplayOrder', _POST, _INT);
 
         // Validate
         if ($campaignId == 0)

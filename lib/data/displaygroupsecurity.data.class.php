@@ -34,7 +34,7 @@ class DisplayGroupSecurity extends Data {
 		Debug::LogEntry('audit', 'IN', 'DisplayGroupSecurity', 'Link');
 		
 		try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 		
 			$sth = $dbh->prepare('INSERT INTO lkdisplaygroupgroup (DisplayGroupID, GroupID, View, Edit, Del) VALUES (:displaygroupid, :groupid, :view, :edit, :del)');
 			$sth->execute(array(
@@ -71,7 +71,7 @@ class DisplayGroupSecurity extends Data {
 		Debug::LogEntry('audit', 'IN', 'DisplayGroupSecurity', 'Unlink');
 		
 		try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             $sth = $dbh->prepare('DELETE FROM lkdisplaygroupgroup WHERE DisplayGroupID = :displaygroupid AND GroupID = :groupid');
 			$sth->execute(array(
@@ -105,7 +105,7 @@ class DisplayGroupSecurity extends Data {
         Debug::LogEntry('audit', 'IN', 'DataSetGroupSecurity', 'Unlink');
         
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             $sth = $dbh->prepare('DELETE FROM lkdisplaygroupgroup WHERE DisplayGroupID = :displaygroupid');
 			$sth->execute(array(

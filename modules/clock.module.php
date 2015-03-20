@@ -108,10 +108,10 @@ class clock extends Module
 
         // You must also provide a duration (all media items must provide this field)
         $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration(), false));
-        $this->SetOption('theme', Kit::GetParam('themeid', _POST, _INT, 0));
-        $this->SetOption('clockTypeId', Kit::GetParam('clockTypeId', _POST, _INT, 1));
-        $this->SetOption('offset', Kit::GetParam('offset', _POST, _INT, 0));
-        $this->setRawNode('ta_text', Kit::GetParam('ta_text', _POST, _HTMLSTRING));
+        $this->SetOption('theme', \Kit::GetParam('themeid', _POST, _INT, 0));
+        $this->SetOption('clockTypeId', \Kit::GetParam('clockTypeId', _POST, _INT, 1));
+        $this->SetOption('offset', \Kit::GetParam('offset', _POST, _INT, 0));
+        $this->setRawNode('ta_text', \Kit::GetParam('ta_text', _POST, _HTMLSTRING));
 
         // Save the widget
         $this->saveWidget();
@@ -206,10 +206,10 @@ class clock extends Module
 
         // You must also provide a duration (all media items must provide this field)
         $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration(), false));
-        $this->SetOption('theme', Kit::GetParam('themeid', _POST, _INT, 0));
-        $this->SetOption('clockTypeId', Kit::GetParam('clockTypeId', _POST, _INT, 1));
-        $this->SetOption('offset', Kit::GetParam('offset', _POST, _INT, 0));
-        $this->setRawNode('ta_text', Kit::GetParam('ta_text', _POST, _HTMLSTRING));
+        $this->SetOption('theme', \Kit::GetParam('themeid', _POST, _INT, 0));
+        $this->SetOption('clockTypeId', \Kit::GetParam('clockTypeId', _POST, _INT, 1));
+        $this->SetOption('offset', \Kit::GetParam('offset', _POST, _INT, 0));
+        $this->setRawNode('ta_text', \Kit::GetParam('ta_text', _POST, _HTMLSTRING));
 
         // Save the widget
         $this->saveWidget();
@@ -284,7 +284,7 @@ class clock extends Module
                 $template = str_replace('<!--[[[OFFSET]]]-->', $this->GetOption('offset', 0), $template);
 
                 // After body content
-                $isPreview = (Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
+                $isPreview = (\Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
                 $javaScriptContent  = '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
                 $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'moment.js"></script>';
                 
@@ -313,14 +313,14 @@ class clock extends Module
 
                 // After body content
                 $options = array(
-                        'previewWidth' => Kit::GetParam('width', _GET, _DOUBLE, 0),
-                        'previewHeight' => Kit::GetParam('height', _GET, _DOUBLE, 0),
+                        'previewWidth' => \Kit::GetParam('width', _GET, _DOUBLE, 0),
+                        'previewHeight' => \Kit::GetParam('height', _GET, _DOUBLE, 0),
                         'originalWidth' => $this->region->width,
                         'originalHeight' => $this->region->height,
-                        'scaleOverride' => Kit::GetParam('scale_override', _GET, _DOUBLE, 0)
+                        'scaleOverride' => \Kit::GetParam('scale_override', _GET, _DOUBLE, 0)
                     );
 
-                $isPreview = (Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
+                $isPreview = (\Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
                 $javaScriptContent  = '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
                 $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'moment.js"></script>';
                 $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-layout-scaler.js"></script>';
@@ -362,7 +362,7 @@ END;
                 $template = str_replace('<!--[[[OFFSET]]]-->', $this->GetOption('offset', 0), $template);
 
                 // After body content
-                $isPreview = (Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
+                $isPreview = (\Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
                 $javaScriptContent  = '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
                 $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'flipclock.min.js"></script>';
 
@@ -373,8 +373,8 @@ END;
         }
 
         // If we are a preview, then pass in the width and height
-        $template = str_replace('<!--[[[PREVIEW_WIDTH]]]-->', Kit::GetParam('width', _GET, _DOUBLE, 0), $template);
-        $template = str_replace('<!--[[[PREVIEW_HEIGHT]]]-->', Kit::GetParam('height', _GET, _DOUBLE, 0), $template);
+        $template = str_replace('<!--[[[PREVIEW_WIDTH]]]-->', \Kit::GetParam('width', _GET, _DOUBLE, 0), $template);
+        $template = str_replace('<!--[[[PREVIEW_HEIGHT]]]-->', \Kit::GetParam('height', _GET, _DOUBLE, 0), $template);
 
         // Replace the View Port Width?
         if (isset($_GET['preview']))

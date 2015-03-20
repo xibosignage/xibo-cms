@@ -115,7 +115,7 @@ foreach(Theme::Get('table_rows') as $row) {
 </table>
 <?php
 if ($multiSelect) {
-    $token = Kit::Token('gridToken', false);
+    $token = \Kit::Token('gridToken', false);
     ?>
     <div class="btn-group">
         <button class="btn dropdown-toggle" data-toggle="dropdown">

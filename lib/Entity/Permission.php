@@ -51,7 +51,7 @@ class Permission
 
     private function add()
     {
-        $this->permissionId = \PDOConnect::insert('INSERT INTO `permission` (`entityId`, `groupId`, `objectId`, `view`, `edit`, `delete`) VALUES (:entityId, :groupId, :objectId, :view, :edit, :delete)', array(
+        $this->permissionId = \Xibo\Storage\PDOConnect::insert('INSERT INTO `permission` (`entityId`, `groupId`, `objectId`, `view`, `edit`, `delete`) VALUES (:entityId, :groupId, :objectId, :view, :edit, :delete)', array(
             'entityId' => $this->entityId,
             'objectId' => $this->objectId,
             'groupId' => $this->groupId,
@@ -63,7 +63,7 @@ class Permission
 
     private function update()
     {
-        \PDOConnect::update('UPDATE `permission` SET `view` = :view, `edit` = :edit, `delete` = :delete WHERE `entityId` = :entityId AND `groupId` = :groupId AND `objectId` = :objectId', array(
+        \Xibo\Storage\PDOConnect::update('UPDATE `permission` SET `view` = :view, `edit` = :edit, `delete` = :delete WHERE `entityId` = :entityId AND `groupId` = :groupId AND `objectId` = :objectId', array(
             'entityId' => $this->entityId,
             'objectId' => $this->objectId,
             'groupId' => $this->groupId,
@@ -75,7 +75,7 @@ class Permission
 
     public function delete()
     {
-        \PDOConnect::update('DELETE FROM `permission` WHERE entityId = :entityId AND objectId = :objectId AND groupId = :groupId', array(
+        \Xibo\Storage\PDOConnect::update('DELETE FROM `permission` WHERE entityId = :entityId AND objectId = :objectId AND groupId = :groupId', array(
             'entityId' => $this->entityId,
             'objectId' => $this->objectId,
             'groupId' => $this->groupId
@@ -84,7 +84,7 @@ class Permission
 
     public function deleteAll()
     {
-        \PDOConnect::update('DELETE FROM `permission` WHERE entityId = :entityId AND objectId = :objectId', array(
+        \Xibo\Storage\PDOConnect::update('DELETE FROM `permission` WHERE entityId = :entityId AND objectId = :objectId', array(
             'entityId' => $this->entityId,
             'objectId' => $this->objectId,
         ));

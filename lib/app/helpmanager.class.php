@@ -31,12 +31,12 @@ class HelpManager
     public static function Link($topic = "", $category = "General")
     {
         // if topic is empty use the page name
-        $topic  = ($topic == '') ? Kit::GetParam('p', _REQUEST, _WORD) : $topic;
+        $topic  = ($topic == '') ? \Kit::GetParam('p', _REQUEST, _WORD) : $topic;
         $topic  = ucfirst($topic);
 
         // Get the link
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $sth = $dbh->prepare('SELECT Link FROM help WHERE Topic = :topic and Category = :cat');
             $sth->execute(array('topic' => $topic, 'cat' => $category));

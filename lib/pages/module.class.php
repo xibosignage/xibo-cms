@@ -66,7 +66,7 @@ class moduleDAO extends baseDAO
 
             // Get a list of all currently installed modules
             try {
-                $dbh = PDOConnect::init();
+                $dbh = \Xibo\Storage\PDOConnect::init();
 
                 $sth = $dbh->prepare("SELECT CONCAT('modules/', LOWER(Module), '.module.php') AS Module FROM `module`");
                 $sth->execute();
@@ -143,15 +143,15 @@ class moduleDAO extends baseDAO
         foreach($modules as $module)
         {
             $row = array();
-            $row['moduleid'] = Kit::ValidateParam($module['ModuleID'], _INT);
-            $row['name'] = Kit::ValidateParam($module['Name'], _STRING);
-            $row['description'] = Kit::ValidateParam($module['Description'], _STRING);
-            $row['isregionspecific'] = (Kit::ValidateParam($module['RegionSpecific'], _INT) == 0) ? 1 : 0;
-            $row['validextensions'] = Kit::ValidateParam($module['ValidExtensions'], _STRING);
-            $row['imageuri'] = Kit::ValidateParam($module['ImageUri'], _STRING);
-            $row['enabled'] = Kit::ValidateParam($module['Enabled'], _INT);
-            $row['preview_enabled'] = Kit::ValidateParam($module['PreviewEnabled'], _INT);
-            $row['assignable'] = Kit::ValidateParam($module['assignable'], _INT);
+            $row['moduleid'] = \Kit::ValidateParam($module['ModuleID'], _INT);
+            $row['name'] = \Kit::ValidateParam($module['Name'], _STRING);
+            $row['description'] = \Kit::ValidateParam($module['Description'], _STRING);
+            $row['isregionspecific'] = (\Kit::ValidateParam($module['RegionSpecific'], _INT) == 0) ? 1 : 0;
+            $row['validextensions'] = \Kit::ValidateParam($module['ValidExtensions'], _STRING);
+            $row['imageuri'] = \Kit::ValidateParam($module['ImageUri'], _STRING);
+            $row['enabled'] = \Kit::ValidateParam($module['Enabled'], _INT);
+            $row['preview_enabled'] = \Kit::ValidateParam($module['PreviewEnabled'], _INT);
+            $row['assignable'] = \Kit::ValidateParam($module['assignable'], _INT);
             $row['settings'] = json_decode(Kit::ValidateParam($module['settings'], _HTMLSTRING), true);
             
             // Initialise array of buttons, because we might not have any
@@ -201,7 +201,7 @@ class moduleDAO extends baseDAO
         if (Config::GetSetting('MODULE_CONFIG_LOCKED_CHECKB') == 'Checked')
             trigger_error(__('Module Config Locked'), E_USER_ERROR);
 
-        $moduleId = Kit::GetParam('ModuleID', _GET, _INT);
+        $moduleId = \Kit::GetParam('ModuleID', _GET, _INT);
 
         // Pull the currently known info from the DB
         $SQL = '';
@@ -225,7 +225,7 @@ class moduleDAO extends baseDAO
             trigger_error(__('Error getting Module'));
         }
 
-        $type = Kit::ValidateParam($row['Module'], _WORD);
+        $type = \Kit::ValidateParam($row['Module'], _WORD);
 
         // Set some information about the form
         Theme::Set('form_id', 'ModuleEditForm');
@@ -233,18 +233,18 @@ class moduleDAO extends baseDAO
         Theme::Set('form_meta', '<input type="hidden" name="ModuleID" value="'. $moduleId . '" /><input type="hidden" name="type" value="' . $type . '" />');
 
         $formFields = array();
-        $formFields[] = FormManager::AddText('ValidExtensions', __('Valid Extensions'), Kit::ValidateParam($row['ValidExtensions'], _STRING), 
+        $formFields[] = FormManager::AddText('ValidExtensions', __('Valid Extensions'), \Kit::ValidateParam($row['ValidExtensions'], _STRING),
             __('The Extensions allowed on files uploaded using this module. Comma Separated.'), 'e', '');
 
-        $formFields[] = FormManager::AddText('ImageUri', __('Image Uri'), Kit::ValidateParam($row['ImageUri'], _STRING), 
+        $formFields[] = FormManager::AddText('ImageUri', __('Image Uri'), \Kit::ValidateParam($row['ImageUri'], _STRING),
             __('The Image to display for this module. This should be a path relative to the root of the installation.'), 'i', '');
 
         $formFields[] = FormManager::AddCheckbox('PreviewEnabled', __('Preview Enabled?'), 
-            Kit::ValidateParam($row['PreviewEnabled'], _INT), __('When PreviewEnabled users will be able to see a preview in the layout designer'), 
+            \Kit::ValidateParam($row['PreviewEnabled'], _INT), __('When PreviewEnabled users will be able to see a preview in the layout designer'),
             'p');
 
         $formFields[] = FormManager::AddCheckbox('Enabled', __('Enabled?'), 
-            Kit::ValidateParam($row['Enabled'], _INT), __('When Enabled users will be able to add media using this module'), 
+            \Kit::ValidateParam($row['Enabled'], _INT), __('When Enabled users will be able to add media using this module'),
             'b');
 
         // Set any module specific form fields
@@ -275,12 +275,12 @@ class moduleDAO extends baseDAO
         if (Config::GetSetting('MODULE_CONFIG_LOCKED_CHECKB') == 'Checked')
             trigger_error(__('Module Config Locked'), E_USER_ERROR);
 
-        $moduleId = Kit::GetParam('ModuleID', _POST, _INT);
-        $type = Kit::GetParam('type', _POST, _WORD);
-        $validExtensions = Kit::GetParam('ValidExtensions', _POST, _STRING, '');
-        $imageUri = Kit::GetParam('ImageUri', _POST, _STRING);
-        $enabled = Kit::GetParam('Enabled', _POST, _CHECKBOX);
-        $previewEnabled = Kit::GetParam('PreviewEnabled', _POST, _CHECKBOX);
+        $moduleId = \Kit::GetParam('ModuleID', _POST, _INT);
+        $type = \Kit::GetParam('type', _POST, _WORD);
+        $validExtensions = \Kit::GetParam('ValidExtensions', _POST, _STRING, '');
+        $imageUri = \Kit::GetParam('ImageUri', _POST, _STRING);
+        $enabled = \Kit::GetParam('Enabled', _POST, _CHECKBOX);
+        $previewEnabled = \Kit::GetParam('PreviewEnabled', _POST, _CHECKBOX);
 
         // Validation
         if ($moduleId == 0 || $moduleId == '')
@@ -302,7 +302,7 @@ class moduleDAO extends baseDAO
             // Get the settings (may throw an exception)
             $settings = json_encode($module->ModuleSettings());
             
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $sth = $dbh->prepare('
                 UPDATE `module` SET ImageUri = :image_url, ValidExtensions = :valid_extensions, 
@@ -366,7 +366,7 @@ class moduleDAO extends baseDAO
         $response = new ResponseManager();
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $dbh->exec('UPDATE `media` SET valid = 0 WHERE moduleSystemFile = 1');
         }
@@ -389,7 +389,7 @@ class moduleDAO extends baseDAO
     public function Install()
     {
         // Module file name
-        $file = Kit::GetParam('module', _GET, _STRING);
+        $file = \Kit::GetParam('module', _GET, _STRING);
 
         if ($file == '')
             trigger_error(__('Unable to install module'), E_USER_ERROR);
@@ -439,17 +439,17 @@ class moduleDAO extends baseDAO
      */
     public function Exec()
     {
-        $requestedModule = Kit::GetParam('mod', _REQUEST, _WORD);
-        $requestedMethod = Kit::GetParam('method', _REQUEST, _WORD);
+        $requestedModule = \Kit::GetParam('mod', _REQUEST, _WORD);
+        $requestedMethod = \Kit::GetParam('method', _REQUEST, _WORD);
 
         Debug::Audit('Module Exec for ' . $requestedModule  . ' with method ' . $requestedMethod);
 
         // Validate that GetResource calls have a region
-        if ($requestedMethod == 'GetResource' && Kit::GetParam('regionId', _REQUEST, _INT) == 0)
+        if ($requestedMethod == 'GetResource' && \Kit::GetParam('regionId', _REQUEST, _INT) == 0)
             die(__('Get Resource Call without a Region'));
 
         // Create a new module to handle this request
-        $module = \Xibo\Factory\ModuleFactory::createForWidget(Kit::GetParam('mod', _REQUEST, _WORD), Kit::GetParam('widgetId', _REQUEST, _INT), $this->user->userid, Kit::GetParam('playlistId', _REQUEST, _INT), Kit::GetParam('regionId', _REQUEST, _INT));
+        $module = \Xibo\Factory\ModuleFactory::createForWidget(Kit::GetParam('mod', _REQUEST, _WORD), \Kit::GetParam('widgetId', _REQUEST, _INT), $this->user->userid, \Kit::GetParam('playlistId', _REQUEST, _INT), \Kit::GetParam('regionId', _REQUEST, _INT));
 
         // Authenticate access to this widget
         if (!$this->user->checkViewable($module->widget))
@@ -463,8 +463,8 @@ class moduleDAO extends baseDAO
 
         // What module has been requested?
         $response = null;
-        $method = Kit::GetParam('method', _REQUEST, _WORD);
-        $raw = Kit::GetParam('raw', _REQUEST, _WORD);
+        $method = \Kit::GetParam('method', _REQUEST, _WORD);
+        $raw = \Kit::GetParam('raw', _REQUEST, _WORD);
 
         if (method_exists($module, $method))
         {

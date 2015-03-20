@@ -67,7 +67,7 @@ class Step23 extends UpgradeStep
 	{
 		switch ($questionNumber) {
 			case 0:
-                if (Kit::ValidateParam($response, _BOOL)) {
+                if (\Kit::ValidateParam($response, _BOOL)) {
                     $this->a[0] = "Protected";
                 }
                 else {
@@ -75,24 +75,24 @@ class Step23 extends UpgradeStep
                 }
 				return true;
             case 1:
-                $this->a[1] = Kit::ValidateParam($response, _INT, 30);
+                $this->a[1] = \Kit::ValidateParam($response, _INT, 30);
                 return true;
             case 2:
-                $this->a[2] = Kit::ValidateParam($response, _INT, 30);
+                $this->a[2] = \Kit::ValidateParam($response, _INT, 30);
                 return true;
             case 3:
-                $this->a[3] = Kit::ValidateParam($response, _BOOL);
+                $this->a[3] = \Kit::ValidateParam($response, _BOOL);
                 return true;
             case 4:
-                // TODO: Teach Kit how to validate email addresses?
-                $this->a[4] = Kit::ValidateParam($response, _PASSWORD);
+                // TODO: Teach \Kit how to validate email addresses?
+                $this->a[4] = \Kit::ValidateParam($response, _PASSWORD);
                 return true;
             case 5:
-                // TODO: Teach Kit how to validate email addresses?
-                $this->a[5] = Kit::ValidateParam($response, _PASSWORD);
+                // TODO: Teach \Kit how to validate email addresses?
+                $this->a[5] = \Kit::ValidateParam($response, _PASSWORD);
                 return true;
             case 6:
-                $this->a[6] = Kit::ValidateParam($response, _INT, 12);
+                $this->a[6] = \Kit::ValidateParam($response, _INT, 12);
                 return true;
 		}
 

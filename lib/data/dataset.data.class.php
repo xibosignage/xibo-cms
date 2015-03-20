@@ -25,7 +25,7 @@ class DataSet extends Data
     public function hasData($dataSetId)
     {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             // First check to see if we have any data
             $sth = $dbh->prepare('SELECT * FROM `datasetdata` INNER JOIN `datasetcolumn` ON datasetcolumn.DataSetColumnID = datasetdata.DataSetColumnID WHERE datasetcolumn.DataSetID = :datasetid');
@@ -56,7 +56,7 @@ class DataSet extends Data
     public function Add($dataSet, $description, $userId)
     {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             // Validation
             if (strlen($dataSet) > 50 || strlen($dataSet) < 1)
@@ -109,7 +109,7 @@ class DataSet extends Data
     public function Edit($dataSetId, $dataSet, $description)
     {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             // Validation
             if (strlen($dataSet) > 50 || strlen($dataSet) < 1)
@@ -159,7 +159,7 @@ class DataSet extends Data
     public function Delete($dataSetId)
     {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             // Delete the Data
             $data = new DataSetData();
@@ -195,7 +195,7 @@ class DataSet extends Data
 
     public function LinkLayout($dataSetId, $layoutId, $regionId, $mediaId) {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $sth = $dbh->prepare('INSERT INTO `lkdatasetlayout` (DataSetID, LayoutID, RegionID, MediaID) VALUES (:datasetid, :layoutid, :regionid, :mediaid)');
             $sth->execute(array(
@@ -218,7 +218,7 @@ class DataSet extends Data
 
     public function UnlinkLayout($dataSetId, $layoutId, $regionId, $mediaId) {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $sth = $dbh->prepare('DELETE FROM `lkdatasetlayout` WHERE DataSetID = :datasetid AND LayoutID = :layoutid AND RegionID = :regionid AND MediaID = :mediaid');
             $sth->execute(array(
@@ -241,7 +241,7 @@ class DataSet extends Data
 
     public function GetDataSetFromLayout($layoutId, $regionId, $mediaId) {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $sth = $dbh->prepare('SELECT `dataset`.* FROM `lkdatasetlayout` INNER JOIN `dataset` ON lkdatasetlayout.DataSetId = dataset.DataSetID WHERE LayoutID = :layoutid AND RegionID = :regionid AND MediaID = :mediaid');
             $sth->execute(array(
@@ -265,7 +265,7 @@ class DataSet extends Data
 
     public function GetCampaignsForDataSet($dataSetId) {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $sth = $dbh->prepare('SELECT DISTINCT `lkcampaignlayout`.CampaignID FROM `lkdatasetlayout` INNER JOIN `lkcampaignlayout` ON `lkcampaignlayout`.LayoutID = `lkdatasetlayout`.LayoutID WHERE DataSetID = :datasetid');
             $sth->execute(array(
@@ -292,7 +292,7 @@ class DataSet extends Data
 
     public function GetLastDataEditTime($dataSetId) {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $sth = $dbh->prepare('SELECT LastDataEdit FROM `dataset` WHERE DataSetID = :dataset_id');
             $sth->execute(array(
@@ -331,7 +331,7 @@ class DataSet extends Data
         $blackList = array(';', 'INSERT', 'UPDATE', 'SELECT', 'DELETE', 'TRUNCATE', 'TABLE', 'FROM', 'WHERE');
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
             $params = array('dataSetId' => $dataSetId);
             
             $selectSQL = '';
@@ -496,7 +496,7 @@ class DataSet extends Data
 
     public function GetDataTypes() {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             $sth = $dbh->prepare('SELECT datatypeid, datatype FROM datatype');
             $sth->execute();
@@ -516,7 +516,7 @@ class DataSet extends Data
 
     public function GetDataSetColumnTypes() {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             $sth = $dbh->prepare('SELECT datasetcolumntypeid, datasetcolumntype FROM datasetcolumntype');
             $sth->execute();

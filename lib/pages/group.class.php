@@ -32,8 +32,8 @@ class groupDAO extends baseDAO {
 		$this->db 		=& $db;
 		$this->user 	=& $user;
 		
-		$usertype 		= Kit::GetParam('usertype', _SESSION, _INT, 0);
-		$this->groupid	= Kit::GetParam('groupid', _REQUEST, _INT, 0);
+		$usertype 		= \Kit::GetParam('usertype', _SESSION, _INT, 0);
+		$this->groupid	= \Kit::GetParam('groupid', _REQUEST, _INT, 0);
 		
 		// Do we have a user group selected?
 		if ($this->groupid != 0) 
@@ -76,7 +76,7 @@ END;
         Theme::Set('pager', ResponseManager::Pager($id));
 
         // Default options
-        if (Kit::IsFilterPinned('usergroup', 'Filter')) {
+        if (\Kit::IsFilterPinned('usergroup', 'Filter')) {
             $filter_pinned = 1;
             $filter_name = Session::Get('usergroup', 'filter_name');
         }
@@ -128,9 +128,9 @@ END;
 		$db =& $this->db;
 		$user =& $this->user;
 		
-		$filter_name = Kit::GetParam('filter_name', _POST, _STRING);
+		$filter_name = \Kit::GetParam('filter_name', _POST, _STRING);
                 
-		setSession('usergroup', 'Filter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+		setSession('usergroup', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 		setSession('usergroup', 'filter_name', $filter_name);
 	
 		$SQL = <<<END
@@ -162,8 +162,8 @@ END;
 
 		while ($row = $db->get_assoc_row($results)) 
 		{
-			$groupid	= Kit::ValidateParam($row['groupID'], _INT);
-			$group 		= Kit::ValidateParam($row['group'], _STRING);
+			$groupid	= \Kit::ValidateParam($row['groupID'], _INT);
+			$group 		= \Kit::ValidateParam($row['group'], _STRING);
 
 			$row['usergroup'] = $group;
 
@@ -301,7 +301,7 @@ END;
 	function PageSecurityFormGrid() 
 	{
 		$db	=& $this->db;
-		$groupId = Kit::GetParam('groupid', _POST, _INT);
+		$groupId = \Kit::GetParam('groupid', _POST, _INT);
 
 		Theme::Set('form_id', 'UserGroupForm');
 		Theme::Set('form_meta', '<input type="hidden" name="groupid" value="' . $groupId . '">');
@@ -328,13 +328,13 @@ END;
 		$params['groupId'] = $groupId;
 
 		// Filter by Name?
-		if (Kit::GetParam('filter_name', _POST, _STRING) != '') {
+		if (\Kit::GetParam('filter_name', _POST, _STRING) != '') {
 			$SQL .= ' WHERE pagegroup.pagegroup LIKE :name ';
-			$params['name'] = '%' . Kit::GetParam('filter_name', _POST, _STRING) . '%';
+			$params['name'] = '%' . \Kit::GetParam('filter_name', _POST, _STRING) . '%';
 		}
 
 		try {
-			$dbh = PDOConnect::init();
+			$dbh = \Xibo\Storage\PDOConnect::init();
 
 			$sth = $dbh->prepare($SQL);
 			$sth->execute($params);
@@ -381,12 +381,12 @@ END;
         // Get the group name
         $group = __('Unknown');
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
             $sth = $dbh->prepare('SELECT `group` FROM `group` WHERE groupId = :groupId');
             $sth->execute(array('groupId' => $groupId));
 
             if ($row = $sth->fetch(PDO::FETCH_ASSOC)) {
-                $group = Kit::ValidateParam($row['group'], _STRING);
+                $group = \Kit::ValidateParam($row['group'], _STRING);
             }
         }
         catch (Exception $e) {
@@ -423,7 +423,7 @@ END;
         $db =& $this->db;
         $response = new ResponseManager();
 
-        $group 	= Kit::GetParam('group', _POST, _STRING);
+        $group 	= \Kit::GetParam('group', _POST, _STRING);
 
         $userGroupObject = new UserGroup($db);
 
@@ -446,8 +446,8 @@ END;
         
 		$db =& $this->db;
 		
-		$groupid = Kit::GetParam('groupid', _POST, _INT);
-		$group = Kit::GetParam('group', _POST, _STRING);
+		$groupid = \Kit::GetParam('groupid', _POST, _INT);
+		$group = \Kit::GetParam('group', _POST, _STRING);
 
 		$userGroupObject = new UserGroup($db);
 
@@ -470,7 +470,7 @@ END;
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
 		$db =& $this->db;		
-		$groupid = Kit::GetParam('groupid', _POST, _INT);
+		$groupid = \Kit::GetParam('groupid', _POST, _INT);
 		
 		$userGroupObject = new UserGroup($db);
 
@@ -489,7 +489,7 @@ END;
 	function assign() 
 	{
 		$db 		=& $this->db;
-		$groupid 	= Kit::GetParam('groupid', _POST, _INT);
+		$groupid 	= \Kit::GetParam('groupid', _POST, _INT);
 
 		$pageids 	= $_POST['pageids'];
 		
@@ -499,7 +499,7 @@ END;
 			
 			// The page ID actually refers to the pagegroup ID - we have to look up all the page ID's for this
 			// PageGroupID
-			$SQL = "SELECT pageID FROM pages WHERE pagegroupID = " . Kit::ValidateParam($row[1], _INT);
+			$SQL = "SELECT pageID FROM pages WHERE pagegroupID = " . \Kit::ValidateParam($row[1], _INT);
 			
 			if (!$results = $db->query($SQL))
 			{
@@ -591,9 +591,9 @@ END;
 	function MenuItemSecurityGrid() 
 	{
 		$db =& $this->db;
-		$groupid = Kit::GetParam('groupid', _POST, _INT);
+		$groupid = \Kit::GetParam('groupid', _POST, _INT);
 		
-		$filter_menu = Kit::GetParam('filter_menu', _POST, _STRING);
+		$filter_menu = \Kit::GetParam('filter_menu', _POST, _STRING);
 		
 		Theme::Set('form_id', 'UserGroupMenuForm');
 		Theme::Set('form_meta', '<input type="hidden" name="groupid" value="' . $groupid . '">');
@@ -668,7 +668,7 @@ END;
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
 		$db =& $this->db;
-		$groupid = Kit::GetParam('groupid', _POST, _INT);
+		$groupid = \Kit::GetParam('groupid', _POST, _INT);
 
 		$pageids = $_POST['pageids'];
 		
@@ -717,7 +717,7 @@ END;
 	{
         $db =& $this->db;
         $response = new ResponseManager();
-        $groupID = Kit::GetParam('groupid', _REQUEST, _INT);
+        $groupID = \Kit::GetParam('groupid', _REQUEST, _INT);
 
         // There needs to be two lists here.
         
@@ -772,8 +772,8 @@ END;
         $response       = new ResponseManager();
         $groupObject    = new UserGroup($db);
 
-        $groupId = Kit::GetParam('GroupID', _REQUEST, _INT);
-        $users = Kit::GetParam('UserID', _POST, _ARRAY, array());
+        $groupId = \Kit::GetParam('GroupID', _REQUEST, _INT);
+        $users = \Kit::GetParam('UserID', _POST, _ARRAY, array());
 
 		// We will receive a list of users from the UI which are in the "assign column" at the time the form is
 		// submitted.

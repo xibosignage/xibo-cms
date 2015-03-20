@@ -35,12 +35,12 @@ class DataSetGroupSecurity extends Data
 
         foreach($result as $row) {
             $security[] = array(
-                    'groupid' => Kit::ValidateParam($row['groupid'], _INT),
-                    'group' => Kit::ValidateParam($row['group'], _STRING),
-                    'view' => Kit::ValidateParam($row['view'], _INT),
-                    'edit' => Kit::ValidateParam($row['edit'], _INT),
-                    'del' => Kit::ValidateParam($row['del'], _INT),
-                    'isuserspecific' => Kit::ValidateParam($row['isuserspecific'], _INT),
+                    'groupid' => \Kit::ValidateParam($row['groupid'], _INT),
+                    'group' => \Kit::ValidateParam($row['group'], _STRING),
+                    'view' => \Kit::ValidateParam($row['view'], _INT),
+                    'edit' => \Kit::ValidateParam($row['edit'], _INT),
+                    'del' => \Kit::ValidateParam($row['del'], _INT),
+                    'isuserspecific' => \Kit::ValidateParam($row['isuserspecific'], _INT),
                 );
         }
       
@@ -62,7 +62,7 @@ class DataSetGroupSecurity extends Data
             return $this->SetError(25001, __('Missing groupId'));
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             $SQL  = "";
             $SQL .= "INSERT INTO lkdatasetgroup (DataSetID, GroupID, View, Edit, Del) ";
@@ -103,7 +103,7 @@ class DataSetGroupSecurity extends Data
             return $this->SetError(25001, __('Missing dataSetId'));
         
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             // Get the Group ID for Everyone
             $sth = $dbh->prepare('SELECT GroupID FROM `group` WHERE IsEveryone = 1');
@@ -113,7 +113,7 @@ class DataSetGroupSecurity extends Data
                 throw new Exception('Missing Everyone group');
 
             // Link
-            return $this->Link($dataSetId, Kit::ValidateParam($row['GroupID'], _INT), $view, $edit, $del);
+            return $this->Link($dataSetId, \Kit::ValidateParam($row['GroupID'], _INT), $view, $edit, $del);
         }
         catch (Exception $e) {
             Debug::LogEntry('error', $e->getMessage());
@@ -136,7 +136,7 @@ class DataSetGroupSecurity extends Data
             return $this->SetError(25001, __('Missing groupId'));
         
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             $sth = $dbh->prepare('DELETE FROM lkdatasetgroup WHERE DataSetID = :datasetid AND GroupID = :groupid');
             $sth->execute(array(
@@ -168,7 +168,7 @@ class DataSetGroupSecurity extends Data
             return $this->SetError(25001, __('Missing dataSetId'));
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             $sth = $dbh->prepare('DELETE FROM lkdatasetgroup WHERE DataSetID = :datasetid');
             $sth->execute(array(

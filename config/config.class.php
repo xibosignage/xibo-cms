@@ -59,7 +59,7 @@ class Config
 	static function GetSetting($setting, $default = NULL) 
 	{	
 		try {
-			$dbh = PDOConnect::init();
+			$dbh = \Xibo\Storage\PDOConnect::init();
 			
 			$sth = $dbh->prepare('SELECT value FROM setting WHERE setting = :setting');
 			$sth->execute(array('setting' => $setting));
@@ -70,7 +70,7 @@ class Config
 			//Debug::LogEntry('audit', 'Retrieved setting ' . $result['value'] . ' for ' . $setting, 'Config', 'GetSetting');
 			
 			// Validate as a string and return
-			$result = Kit::ValidateParam($result['value'], _STRING);
+			$result = \Kit::ValidateParam($result['value'], _STRING);
 			
 			return ($result == '') ? $default : $result;
 		}
@@ -87,7 +87,7 @@ class Config
 	 */
 	static function ChangeSetting($setting, $value) {
 		try {
-			$dbh = PDOConnect::init();
+			$dbh = \Xibo\Storage\PDOConnect::init();
 			
 			$sth = $dbh->prepare('UPDATE setting SET value = :value WHERE setting = :setting');
 			$sth->execute(array('setting' => $setting, 'value' => $value));
@@ -106,19 +106,19 @@ class Config
 			$sort_order = array('cat', 'ordering');
 
 		try {
-			$dbh = PDOConnect::init();
+			$dbh = \Xibo\Storage\PDOConnect::init();
 			
 			$SQL = 'SELECT * FROM setting WHERE 1 = 1 ';
 			$params = array();
 
-			if (Kit::GetParam('userChange', $filter_by, _INT, -1) != -1) {
+			if (\Kit::GetParam('userChange', $filter_by, _INT, -1) != -1) {
 				$SQL .= ' AND userChange = :userChange ';
-				$params['userChange'] = Kit::GetParam('userChange', $filter_by, _INT);
+				$params['userChange'] = \Kit::GetParam('userChange', $filter_by, _INT);
 			}
 
-			if (Kit::GetParam('userSee', $filter_by, _INT, -1) != -1) {
+			if (\Kit::GetParam('userSee', $filter_by, _INT, -1) != -1) {
 				$SQL .= ' AND userSee = :userSee ';
-				$params['userSee'] = Kit::GetParam('userSee', $filter_by, _INT);
+				$params['userSee'] = \Kit::GetParam('userSee', $filter_by, _INT);
 			}
 			
 			// Sorting?
@@ -144,17 +144,17 @@ class Config
 	static function Version($object = '')
 	{
 		try {
-			$dbh = PDOConnect::init();
+			$dbh = \Xibo\Storage\PDOConnect::init();
 			$sth = $dbh->prepare('SELECT app_ver, XlfVersion, XmdsVersion, DBVersion FROM version');
 			$sth->execute();
 
 			if (!$row = $sth->fetch(PDO::FETCH_ASSOC))
 				throw new Exception('No results returned');
 
-			$appVer = Kit::ValidateParam($row['app_ver'], _STRING);
-			$xlfVer = Kit::ValidateParam($row['XlfVersion'], _INT);
-			$xmdsVer = Kit::ValidateParam($row['XmdsVersion'], _INT);
-			$dbVer = Kit::ValidateParam($row['DBVersion'], _INT);
+			$appVer = \Kit::ValidateParam($row['app_ver'], _STRING);
+			$xlfVer = \Kit::ValidateParam($row['XlfVersion'], _INT);
+			$xmdsVer = \Kit::ValidateParam($row['XmdsVersion'], _INT);
+			$dbVer = \Kit::ValidateParam($row['DBVersion'], _INT);
 	
 			if (!defined('VERSION')) 
 				define('VERSION', $appVer);
@@ -163,7 +163,7 @@ class Config
 		        define('DBVERSION', $dbVer);
 		
 			if ($object != '')
-				return Kit::GetParam($object, $row, _STRING);
+				return \Kit::GetParam($object, $row, _STRING);
 		
 			return $row;
 		}

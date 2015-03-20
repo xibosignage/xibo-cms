@@ -168,9 +168,9 @@ class campaignDAO extends baseDAO
         $db =& $this->db;
         $response = new ResponseManager();
 
-        $name = Kit::GetParam('Name', _POST, _STRING);
+        $name = \Kit::GetParam('Name', _POST, _STRING);
 
-        Kit::ClassLoader('campaign');
+        \Kit::ClassLoader('campaign');
         $campaignObject = new Campaign($db);
 
         if (!$campaignObject->Add($name, 0, $this->user->userid))
@@ -189,7 +189,7 @@ class campaignDAO extends baseDAO
         $user =& $this->user;
         $response = new ResponseManager();
         
-        $campaignId = Kit::GetParam('CampaignID', _GET, _INT);
+        $campaignId = \Kit::GetParam('CampaignID', _GET, _INT);
 
         // Authenticate this user
         $auth = $this->user->CampaignAuth($campaignId, true);
@@ -209,7 +209,7 @@ class campaignDAO extends baseDAO
             trigger_error(__('Error getting Campaign'));
         }
 
-        $campaign = Kit::ValidateParam($row['Campaign'], _STRING);
+        $campaign = \Kit::ValidateParam($row['Campaign'], _STRING);
 
         $formFields = array();
         $formFields[] = FormManager::AddText('Name', __('Name'), $campaign, __('The Name for this Campaign'), 'n', 'required');
@@ -239,8 +239,8 @@ class campaignDAO extends baseDAO
         $db =& $this->db;
         $response = new ResponseManager();
 
-        $campaignId = Kit::GetParam('CampaignID', _POST, _INT);
-        $name = Kit::GetParam('Name', _POST, _STRING);
+        $campaignId = \Kit::GetParam('CampaignID', _POST, _INT);
+        $name = \Kit::GetParam('Name', _POST, _STRING);
 
         // Authenticate this user
         $auth = $this->user->CampaignAuth($campaignId, true);
@@ -254,7 +254,7 @@ class campaignDAO extends baseDAO
         if ($name == '')
             trigger_error(__('Name is a required field.'), E_USER_ERROR);
 
-        Kit::ClassLoader('campaign');
+        \Kit::ClassLoader('campaign');
         $campaignObject = new Campaign($db);
 
         if (!$campaignObject->Edit($campaignId, $name))
@@ -275,7 +275,7 @@ class campaignDAO extends baseDAO
         $response = new ResponseManager();
         $helpManager = new HelpManager($db, $user);
 
-        $campaignId = Kit::GetParam('CampaignID', _GET, _INT);
+        $campaignId = \Kit::GetParam('CampaignID', _GET, _INT);
 
         // Authenticate this user
         $auth = $this->user->CampaignAuth($campaignId, true);
@@ -308,7 +308,7 @@ class campaignDAO extends baseDAO
         $db =& $this->db;
         $response = new ResponseManager();
 
-        $campaignId = Kit::GetParam('CampaignID', _POST, _INT);
+        $campaignId = \Kit::GetParam('CampaignID', _POST, _INT);
 
         // Authenticate this user
         $auth = $this->user->CampaignAuth($campaignId, true);
@@ -319,7 +319,7 @@ class campaignDAO extends baseDAO
         if ($campaignId == 0 || $campaignId == '')
             trigger_error(__('Campaign ID is missing'), E_USER_ERROR);
 
-        Kit::ClassLoader('campaign');
+        \Kit::ClassLoader('campaign');
         $campaignObject = new Campaign($db);
 
         if (!$campaignObject->Delete($campaignId))
@@ -343,7 +343,7 @@ class campaignDAO extends baseDAO
         $campaignObject = new Campaign();
 
         $campaign = \Xibo\Factory\CampaignFactory::getById(Kit::GetParam('CampaignID', _REQUEST, _INT));
-        $layouts = Kit::GetParam('LayoutID', _POST, _ARRAY, array());
+        $layouts = \Kit::GetParam('LayoutID', _POST, _ARRAY, array());
 
         // Authenticate this user
         if (!$this->user->checkEditable($campaign))
@@ -436,8 +436,8 @@ class campaignDAO extends baseDAO
         $response = new ResponseManager();
 
         // Input vars
-        $name = Kit::GetParam('filter_name', _POST, _STRING);
-        $tags = Kit::GetParam('filter_tags', _POST, _STRING);
+        $name = \Kit::GetParam('filter_name', _POST, _STRING);
+        $tags = \Kit::GetParam('filter_tags', _POST, _STRING);
 
         // Get a list of media
         $layoutList = $this->user->LayoutList(NULL, array('layout' => $name, 'tags' => $tags));

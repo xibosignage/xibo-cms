@@ -87,10 +87,10 @@ SQL;
 
         foreach ($helplinks as $row) {
 
-            $row['helpid'] = Kit::ValidateParam($row['HelpID'], _INT);
-            $row['topic'] = Kit::ValidateParam($row['Topic'], _STRING);
-            $row['category'] = Kit::ValidateParam($row['Category'], _STRING);
-            $row['link'] = Kit::ValidateParam($row['Link'], _STRING);
+            $row['helpid'] = \Kit::ValidateParam($row['HelpID'], _INT);
+            $row['topic'] = \Kit::ValidateParam($row['Topic'], _STRING);
+            $row['category'] = \Kit::ValidateParam($row['Category'], _STRING);
+            $row['link'] = \Kit::ValidateParam($row['Link'], _STRING);
 
             $row['buttons'] = array();
 
@@ -165,7 +165,7 @@ SQL;
         $user =& $this->user;
         $response = new ResponseManager();
 
-        $helpId	= Kit::GetParam('HelpID', _REQUEST, _INT);
+        $helpId	= \Kit::GetParam('HelpID', _REQUEST, _INT);
 
         // Pull the currently known info from the DB
         $SQL = "SELECT HelpID, Topic, Category, Link FROM `help` WHERE HelpID = %d ";
@@ -183,13 +183,13 @@ SQL;
         Theme::Set('form_meta', '<input type="hidden" name="HelpID" value="' . $helpId . '" />');
 
         $formFields = array();
-        $formFields[] = FormManager::AddText('Topic', __('Topic'), Kit::ValidateParam($row['Topic'], _STRING), 
+        $formFields[] = FormManager::AddText('Topic', __('Topic'), \Kit::ValidateParam($row['Topic'], _STRING),
             __('The Topic for this Help Link'), 't', 'maxlength="254" required');
 
-        $formFields[] = FormManager::AddText('Category', __('Category'), Kit::ValidateParam($row['Category'], _STRING), 
+        $formFields[] = FormManager::AddText('Category', __('Category'), \Kit::ValidateParam($row['Category'], _STRING),
             __('The Category for this Help Link'), 'c', 'maxlength="254" required');
 
-        $formFields[] = FormManager::AddText('Link', __('Link'), Kit::ValidateParam($row['Link'], _STRING), 
+        $formFields[] = FormManager::AddText('Link', __('Link'), \Kit::ValidateParam($row['Link'], _STRING),
             __('The Link to open for this help topic and category'), 'c', 'maxlength="254" required');
 
         Theme::Set('form_fields', $formFields);
@@ -207,7 +207,7 @@ SQL;
     {
         $db =& $this->db;
         $response = new ResponseManager();
-        $helpId	= Kit::GetParam('HelpID', _REQUEST, _INT);
+        $helpId	= \Kit::GetParam('HelpID', _REQUEST, _INT);
 
         // Set some information about the form
         Theme::Set('form_id', 'HelpDeleteForm');
@@ -234,12 +234,12 @@ SQL;
         $db =& $this->db;
         $response = new ResponseManager();
 
-        $topic = Kit::GetParam('Topic', _POST, _STRING);
-        $category = Kit::GetParam('Category', _POST, _STRING);
-        $link = Kit::GetParam('Link', _POST, _STRING);
+        $topic = \Kit::GetParam('Topic', _POST, _STRING);
+        $category = \Kit::GetParam('Category', _POST, _STRING);
+        $link = \Kit::GetParam('Link', _POST, _STRING);
 
         // Deal with the Edit
-        Kit::ClassLoader('help');
+        \Kit::ClassLoader('help');
         $helpObject = new Help($db);
 
         if (!$helpObject->Add($topic, $category, $link))
@@ -261,13 +261,13 @@ SQL;
         $db =& $this->db;
         $response = new ResponseManager();
 
-        $helpId	= Kit::GetParam('HelpID', _POST, _INT);
-        $topic = Kit::GetParam('Topic', _POST, _STRING);
-        $category = Kit::GetParam('Category', _POST, _STRING);
-        $link = Kit::GetParam('Link', _POST, _STRING);
+        $helpId	= \Kit::GetParam('HelpID', _POST, _INT);
+        $topic = \Kit::GetParam('Topic', _POST, _STRING);
+        $category = \Kit::GetParam('Category', _POST, _STRING);
+        $link = \Kit::GetParam('Link', _POST, _STRING);
 
         // Deal with the Edit
-        Kit::ClassLoader('help');
+        \Kit::ClassLoader('help');
         $helpObject = new Help($db);
 
         if (!$helpObject->Edit($helpId, $topic, $category, $link))
@@ -286,10 +286,10 @@ SQL;
         $db =& $this->db;
         $response = new ResponseManager();
 
-        $helpId	= Kit::GetParam('HelpID', _POST, _INT);
+        $helpId	= \Kit::GetParam('HelpID', _POST, _INT);
 
         // Deal with the Edit
-        Kit::ClassLoader('help');
+        \Kit::ClassLoader('help');
         $helpObject = new Help($db);
 
         if (!$helpObject->Delete($helpId))

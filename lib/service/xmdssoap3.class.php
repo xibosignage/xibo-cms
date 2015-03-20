@@ -42,8 +42,8 @@ class XMDSSoap3
     public function RegisterDisplay($serverKey, $hardwareKey, $displayName, $version)
     {
         // Sanitize
-        $serverKey = Kit::ValidateParam($serverKey, _STRING);
-        $hardwareKey = Kit::ValidateParam($hardwareKey, _STRING);
+        $serverKey = \Kit::ValidateParam($serverKey, _STRING);
+        $hardwareKey = \Kit::ValidateParam($hardwareKey, _STRING);
         
         // Check the serverKey matches the one we have
         if ($serverKey != Config::GetSetting('SERVER_KEY'))
@@ -55,7 +55,7 @@ class XMDSSoap3
 
         // Check in the database for this hardwareKey
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
             $sth = $dbh->prepare('
                 SELECT licensed, displayid
                   FROM display 
@@ -111,9 +111,9 @@ class XMDSSoap3
     function RequiredFiles($serverKey, $hardwareKey, $version)
     {
         // Sanitize
-        $serverKey = Kit::ValidateParam($serverKey, _STRING);
-        $hardwareKey = Kit::ValidateParam($hardwareKey, _STRING);
-        $rfLookAhead = Kit::ValidateParam(Config::GetSetting('REQUIRED_FILES_LOOKAHEAD'), _INT);
+        $serverKey = \Kit::ValidateParam($serverKey, _STRING);
+        $hardwareKey = \Kit::ValidateParam($hardwareKey, _STRING);
+        $rfLookAhead = \Kit::ValidateParam(Config::GetSetting('REQUIRED_FILES_LOOKAHEAD'), _INT);
 
         // Check the serverKey matches
         if ($serverKey != Config::GetSetting('SERVER_KEY'))
@@ -154,7 +154,7 @@ class XMDSSoap3
             Debug::Audit(sprintf('FromDT = %s. ToDt = %s', date('Y-m-d h:i:s', $fromFilter), date('Y-m-d h:i:s', $toFilter)), $this->displayId);
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             // Get a list of all layout ids in the schedule right now.
             $SQL  = " SELECT DISTINCT layout.layoutID ";
@@ -181,7 +181,7 @@ class XMDSSoap3
     
             // Build up the other layouts into an array
             foreach ($sth->fetchAll() as $row)
-                $layouts[] = Kit::ValidateParam($row['layoutID'], _INT);  
+                $layouts[] = \Kit::ValidateParam($row['layoutID'], _INT);
         }
         catch (Exception $e) {            
             Debug::Error($e->getMessage(), $this->displayId);
@@ -192,7 +192,7 @@ class XMDSSoap3
         $layoutIdList = implode(',', $layouts);
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             // Add file nodes to the $fileElements
             $SQL  = "
@@ -234,12 +234,12 @@ class XMDSSoap3
             $mediaSth = $dbh->prepare('UPDATE media SET `MD5` = :md5, FileSize = :size WHERE MediaID = :mediaid');
 
             foreach ($sth->fetchAll() as $row) {
-                $recordType = Kit::ValidateParam($row['RecordType'], _WORD);
-                $path = Kit::ValidateParam($row['path'], _STRING);
-                $id = Kit::ValidateParam($row['id'], _STRING);
-                $md5 = Kit::ValidateParam($row['MD5'], _HTMLSTRING);
-                $fileSize = Kit::ValidateParam($row['FileSize'], _INT);
-                $xml = Kit::ValidateParam($row['xml'], _HTMLSTRING);
+                $recordType = \Kit::ValidateParam($row['RecordType'], _WORD);
+                $path = \Kit::ValidateParam($row['path'], _STRING);
+                $id = \Kit::ValidateParam($row['id'], _STRING);
+                $md5 = \Kit::ValidateParam($row['MD5'], _HTMLSTRING);
+                $fileSize = \Kit::ValidateParam($row['FileSize'], _INT);
+                $xml = \Kit::ValidateParam($row['xml'], _HTMLSTRING);
 
                 if ($recordType == 'layout') {
                     // For layouts the MD5 column is the layout xml
@@ -320,7 +320,7 @@ class XMDSSoap3
         $fileElements->appendChild($blackList);
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $sth = $dbh->prepare('SELECT MediaID FROM blacklist WHERE DisplayID = :displayid AND isIgnored = 0');
             $sth->execute(array(
@@ -371,12 +371,12 @@ class XMDSSoap3
     function GetFile($serverKey, $hardwareKey, $filePath, $fileType, $chunkOffset, $chunkSize, $version)
     {
         // Sanitize
-        $serverKey = Kit::ValidateParam($serverKey, _STRING);
-        $hardwareKey = Kit::ValidateParam($hardwareKey, _STRING);
-        $filePath = Kit::ValidateParam($filePath, _STRING);
-        $fileType = Kit::ValidateParam($fileType, _WORD);
-        $chunkOffset = Kit::ValidateParam($chunkOffset, _INT);
-        $chunkSize = Kit::ValidateParam($chunkSize, _INT);
+        $serverKey = \Kit::ValidateParam($serverKey, _STRING);
+        $hardwareKey = \Kit::ValidateParam($hardwareKey, _STRING);
+        $filePath = \Kit::ValidateParam($filePath, _STRING);
+        $fileType = \Kit::ValidateParam($fileType, _WORD);
+        $chunkOffset = \Kit::ValidateParam($chunkOffset, _INT);
+        $chunkSize = \Kit::ValidateParam($chunkSize, _INT);
 
         $libraryLocation = Config::GetSetting("LIBRARY_LOCATION");
 
@@ -398,14 +398,14 @@ class XMDSSoap3
         $nonce = new Nonce();
 
         if ($fileType == "layout") {
-            $fileId = Kit::ValidateParam($filePath, _INT);
+            $fileId = \Kit::ValidateParam($filePath, _INT);
 
             // Validate the nonce
             if (!$nonce->AllowedFile('layout', $this->displayId, NULL, $fileId))
                 throw new SoapFault('Receiver', 'Requested an invalid file.');
 
             try {
-                $dbh = PDOConnect::init();
+                $dbh = \Xibo\Storage\PDOConnect::init();
             
                 $sth = $dbh->prepare('SELECT xml FROM layout WHERE layoutid = :layoutid');
                 $sth->execute(array('layoutid' => $fileId));
@@ -464,9 +464,9 @@ class XMDSSoap3
     function Schedule($serverKey, $hardwareKey, $version)
     {
         // Sanitize
-        $serverKey = Kit::ValidateParam($serverKey, _STRING);
-        $hardwareKey = Kit::ValidateParam($hardwareKey, _STRING);
-        $rfLookAhead = Kit::ValidateParam(Config::GetSetting('REQUIRED_FILES_LOOKAHEAD'), _INT);
+        $serverKey = \Kit::ValidateParam($serverKey, _STRING);
+        $hardwareKey = \Kit::ValidateParam($hardwareKey, _STRING);
+        $rfLookAhead = \Kit::ValidateParam(Config::GetSetting('REQUIRED_FILES_LOOKAHEAD'), _INT);
 
         // Check the serverKey matches
         if ($serverKey != Config::GetSetting('SERVER_KEY'))
@@ -502,7 +502,7 @@ class XMDSSoap3
             Debug::Audit(sprintf('FromDT = %s. ToDt = %s', date('Y-m-d h:i:s', $fromFilter), date('Y-m-d h:i:s', $toFilter)), $this->displayId);
         
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             // Get all the module dependants
             $sth = $dbh->prepare("SELECT DISTINCT StoredAs FROM `media` WHERE media.type = 'font' OR (media.type = 'module' AND media.moduleSystemFile = 1) ");
@@ -541,8 +541,8 @@ class XMDSSoap3
                 $fromdt = date('Y-m-d H:i:s', $row[1]);
                 $todt = date('Y-m-d H:i:s', $row[2]);
                 $scheduleid = $row[3];
-                $is_priority = Kit::ValidateParam($row[4], _INT);
-                $dependents = Kit::ValidateParam($row[5], _STRING);
+                $is_priority = \Kit::ValidateParam($row[4], _INT);
+                $dependents = \Kit::ValidateParam($row[5], _STRING);
     
                 // Add a layout node to the schedule
                 $layout = $scheduleXml->createElement("layout");
@@ -617,11 +617,11 @@ class XMDSSoap3
     function BlackList($serverKey, $hardwareKey, $mediaId, $type, $reason, $version)
     {
         // Sanitize
-        $serverKey = Kit::ValidateParam($serverKey, _STRING);
-        $hardwareKey = Kit::ValidateParam($hardwareKey, _STRING);
-        $mediaId = Kit::ValidateParam($mediaId, _STRING);
-        $type = Kit::ValidateParam($type, _STRING);
-        $reason = Kit::ValidateParam($reason, _STRING);
+        $serverKey = \Kit::ValidateParam($serverKey, _STRING);
+        $hardwareKey = \Kit::ValidateParam($hardwareKey, _STRING);
+        $mediaId = \Kit::ValidateParam($mediaId, _STRING);
+        $type = \Kit::ValidateParam($type, _STRING);
+        $reason = \Kit::ValidateParam($reason, _STRING);
 
         // Check the serverKey matches
         if ($serverKey != Config::GetSetting('SERVER_KEY'))
@@ -636,7 +636,7 @@ class XMDSSoap3
             throw new SoapFault('Receiver', "This display client is not licensed", $hardwareKey);
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             // Check to see if this media / display is already blacklisted (and not ignored)
             $sth = $dbh->prepare('SELECT BlackListID FROM blacklist WHERE MediaID = :mediaid AND isIgnored = 0 AND DisplayID = :displayid');
@@ -705,9 +705,9 @@ class XMDSSoap3
     function SubmitLog($version, $serverKey, $hardwareKey, $logXml)
     {
         // Sanitize
-        $serverKey = Kit::ValidateParam($serverKey, _STRING);
-        $hardwareKey = Kit::ValidateParam($hardwareKey, _STRING);
-        $logXml = Kit::ValidateParam($logXml, _HTMLSTRING);
+        $serverKey = \Kit::ValidateParam($serverKey, _STRING);
+        $hardwareKey = \Kit::ValidateParam($hardwareKey, _STRING);
+        $logXml = \Kit::ValidateParam($logXml, _HTMLSTRING);
 
         // Check the serverKey matches
         if ($serverKey != Config::GetSetting('SERVER_KEY'))
@@ -817,9 +817,9 @@ class XMDSSoap3
     function SubmitStats($version, $serverKey, $hardwareKey, $statXml)
     {
         // Sanitize
-        $serverKey = Kit::ValidateParam($serverKey, _STRING);
-        $hardwareKey = Kit::ValidateParam($hardwareKey, _STRING);
-        $statXml = Kit::ValidateParam($statXml, _HTMLSTRING);
+        $serverKey = \Kit::ValidateParam($serverKey, _STRING);
+        $hardwareKey = \Kit::ValidateParam($hardwareKey, _STRING);
+        $statXml = \Kit::ValidateParam($statXml, _HTMLSTRING);
 
         // Check the serverKey matches
         if ($serverKey != Config::GetSetting('SERVER_KEY'))
@@ -900,9 +900,9 @@ class XMDSSoap3
     public function MediaInventory($version, $serverKey, $hardwareKey, $inventory)
     {
         // Sanitize
-        $serverKey = Kit::ValidateParam($serverKey, _STRING);
-        $hardwareKey = Kit::ValidateParam($hardwareKey, _STRING);
-        $inventory = Kit::ValidateParam($inventory, _HTMLSTRING);
+        $serverKey = \Kit::ValidateParam($serverKey, _STRING);
+        $hardwareKey = \Kit::ValidateParam($hardwareKey, _STRING);
+        $inventory = \Kit::ValidateParam($inventory, _HTMLSTRING);
 
         // Check the serverKey matches
         if ($serverKey != Config::GetSetting('SERVER_KEY'))
@@ -969,11 +969,11 @@ class XMDSSoap3
     function GetResource($serverKey, $hardwareKey, $layoutId, $regionId, $mediaId, $version)
     {
         // Sanitize
-        $serverKey = Kit::ValidateParam($serverKey, _STRING);
-        $hardwareKey = Kit::ValidateParam($hardwareKey, _STRING);
-        $layoutId = Kit::ValidateParam($layoutId, _INT);
-        $regionId = Kit::ValidateParam($regionId, _STRING);
-        $mediaId = Kit::ValidateParam($mediaId, _STRING);
+        $serverKey = \Kit::ValidateParam($serverKey, _STRING);
+        $hardwareKey = \Kit::ValidateParam($hardwareKey, _STRING);
+        $layoutId = \Kit::ValidateParam($layoutId, _INT);
+        $regionId = \Kit::ValidateParam($regionId, _STRING);
+        $mediaId = \Kit::ValidateParam($mediaId, _STRING);
 
         // Check the serverKey matches
         if ($serverKey != Config::GetSetting('SERVER_KEY'))
@@ -1039,7 +1039,7 @@ class XMDSSoap3
             if (Config::GetSetting('PHONE_HOME_DATE') < (time() - (60 * 60 * 24 * 28))) {
                 
                 try {
-                    $dbh = PDOConnect::init();
+                    $dbh = \Xibo\Storage\PDOConnect::init();
                 
                     // Retrieve number of displays
                     $sth = $dbh->prepare('SELECT COUNT(*) AS Cnt FROM `display` WHERE `licensed` = 1');
@@ -1085,7 +1085,7 @@ class XMDSSoap3
     private function AuthDisplay($hardwareKey, $status = NULL)
     {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $sth = $dbh->prepare('
                 SELECT licensed, inc_schedule, isAuditing, displayID, defaultlayoutid, loggedin, 
@@ -1127,7 +1127,7 @@ class XMDSSoap3
             
             // Last accessed date on the display
             $displayObject = new Display();
-            $displayObject->Touch($this->displayId, array('clientAddress' => Kit::GetParam('REMOTE_ADDR', $_SERVER, _STRING)));
+            $displayObject->Touch($this->displayId, array('clientAddress' => \Kit::GetParam('REMOTE_ADDR', $_SERVER, _STRING)));
                 
             return true;
         }
@@ -1151,8 +1151,8 @@ class XMDSSoap3
             if ($emailAlert == 1 && ($maintenanceEnabled == 'On' || $maintenanceEnabled == 'Protected') 
                 && Config::GetSetting('MAINTENANCE_EMAIL_ALERTS') == 'On') {
 
-                $msgTo = Kit::ValidateParam(Config::GetSetting("mail_to") ,_PASSWORD);
-                $msgFrom = Kit::ValidateParam(Config::GetSetting("mail_from"), _PASSWORD);
+                $msgTo = \Kit::ValidateParam(Config::GetSetting("mail_to") ,_PASSWORD);
+                $msgFrom = \Kit::ValidateParam(Config::GetSetting("mail_from"), _PASSWORD);
 
                 $subject = sprintf(__("Recovery for Display %s"), $display);
                 $body = sprintf(__("Display %s with ID %d is now back online."), $display, $displayId);
@@ -1161,13 +1161,13 @@ class XMDSSoap3
                 if (Config::GetSetting('MAINTENANCE_ALERTS_FOR_VIEW_USERS') == 1) {
                     foreach (Display::getUsers($displayId) as $user) {
                         if ($user['email'] != '') {
-                            Kit::SendEmail($user['email'], $msgFrom, $subject, $body);
+                            \Kit::SendEmail($user['email'], $msgFrom, $subject, $body);
                         }
                     }
                 }
 
                 // Send to the original admin contact
-                Kit::SendEmail($msgTo, $msgFrom, $subject, $body);
+                \Kit::SendEmail($msgTo, $msgFrom, $subject, $body);
             }
         }
     }
@@ -1183,7 +1183,7 @@ class XMDSSoap3
             return true;
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             // Test bandwidth for the current month
             $sth = $dbh->prepare('SELECT IFNULL(SUM(Size), 0) AS BandwidthUsage FROM `bandwidth` WHERE Month = :month');

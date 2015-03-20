@@ -25,7 +25,7 @@ class Stat extends data
     public function Add($type, $fromDT, $toDT, $scheduleID, $displayID, $layoutID, $mediaID, $tag)
     {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             // Lower case the type for consistency
             $type = strtolower($type);
@@ -89,7 +89,7 @@ class Stat extends data
     public function displayDown($displayId, $lastAccessed)
     {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             // Prepare a statement
             $sth = $dbh->prepare('
@@ -121,7 +121,7 @@ class Stat extends data
 
     public function displayUp($displayId) {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             Debug::Audit('Display Up: ' . $displayId);
         

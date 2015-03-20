@@ -52,8 +52,8 @@ class PageManager
         $this->page = $page . 'DAO';
         $this->p = $page;
 
-        $this->ajax = Kit::GetParam('ajax', _REQUEST, _BOOL, false);
-        $this->q = Kit::GetParam('q', _REQUEST, _WORD);
+        $this->ajax = \Kit::GetParam('ajax', _REQUEST, _BOOL, false);
+        $this->q = \Kit::GetParam('q', _REQUEST, _WORD);
         $this->userid = $this->user->userid;
         
         // Default not authorised
@@ -165,7 +165,7 @@ class PageManager
                 exit;
 
             // once we have dealt with it, reload the page      	
-            Kit::Redirect($reloadLocation);
+            \Kit::Redirect($reloadLocation);
         }
         else 
         {

@@ -25,13 +25,13 @@ class XiboServiceResponse
 
     public function __construct()
     {
-        $this->serviceLocation = Kit::GetXiboRoot();
+        $this->serviceLocation = \Kit::GetXiboRoot();
     }
 
     public function StartTransaction() {
         // Start a DB transaction for all returns from the Service Portal
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
             $dbh->beginTransaction();
         }
         catch (Exception $e) {
@@ -101,7 +101,7 @@ class XiboServiceResponse
 
         // Roll back any open transactions if we are in an error state
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
             $dbh->rollBack();
         }
         catch (Exception $e) {

@@ -100,8 +100,8 @@ class counter extends Module
         $response = new ResponseManager();
 
         // Properties
-        $duration = Kit::GetParam('duration', _POST, _INT, 0, false);
-        $text = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
+        $duration = \Kit::GetParam('duration', _POST, _INT, 0, false);
+        $text = \Kit::GetParam('ta_text', _POST, _HTMLSTRING);
 
         // Validation
         if ($text == '')
@@ -112,7 +112,7 @@ class counter extends Module
 
         // Any Options
         $this->setDuration($duration);
-        $this->SetOption('popupNotification', Kit::GetParam('popupNotification', _POST, _CHECKBOX));
+        $this->SetOption('popupNotification', \Kit::GetParam('popupNotification', _POST, _CHECKBOX));
         $this->setRawNode('template', $text);
 
         // Save the widget
@@ -136,21 +136,21 @@ class counter extends Module
             throw new Exception(__('You do not have permission to edit this widget.'));
 
         // Other properties
-        $text = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
+        $text = \Kit::GetParam('ta_text', _POST, _HTMLSTRING);
 
         if ($text == '')
             throw new InvalidArgumentException(__('Please enter a template'));
 
         // If we have permission to change it, then get the value from the form
         if ($this->auth->modifyPermissions) {
-            $duration = Kit::GetParam('duration', _POST, _INT, 0);
+            $duration = \Kit::GetParam('duration', _POST, _INT, 0);
             if ($duration == 0)
                 throw new InvalidArgumentException(__('Pleased enter a duration'));
         }
 
         // Any Options
         $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration(), false));
-        $this->SetOption('popupNotification', Kit::GetParam('popupNotification', _POST, _CHECKBOX));
+        $this->SetOption('popupNotification', \Kit::GetParam('popupNotification', _POST, _CHECKBOX));
         $this->setRawNode('template', $text);
 
         // Save the widget

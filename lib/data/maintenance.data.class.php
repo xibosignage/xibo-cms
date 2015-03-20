@@ -146,7 +146,7 @@ class Maintenance extends Data
 
         // Run a query to get an array containing all of the media in the library
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $sth = $dbh->prepare('
                 SELECT media.mediaid, media.storedAs, media.type, media.isedited,

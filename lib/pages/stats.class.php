@@ -28,7 +28,7 @@ class statsDAO extends baseDAO
 	function displayPage() 
 	{
         // Render a Bandwidth Widget
-        $id = Kit::uniqueId();
+        $id = \Kit::uniqueId();
         Theme::Set('id', $id);
         Theme::Set('form_meta', '<input type="hidden" name="p" value="stats"><input type="hidden" name="q" value="BandwidthGrid">');
         
@@ -54,7 +54,7 @@ class statsDAO extends baseDAO
         Theme::Render('grid_render');
 
         // Render an Availability Widget
-        $id = Kit::uniqueId();
+        $id = \Kit::uniqueId();
         Theme::Set('id', $id);
         Theme::Set('form_meta', '<input type="hidden" name="p" value="stats"><input type="hidden" name="q" value="AvailabilityGrid">');
         
@@ -81,7 +81,7 @@ class statsDAO extends baseDAO
 
 
 		// Proof of Play stats widget
-        $id = Kit::uniqueId();
+        $id = \Kit::uniqueId();
         Theme::Set('id', $id);
         Theme::Set('form_meta', '<input type="hidden" name="p" value="stats"><input type="hidden" name="q" value="StatsGrid">');
         
@@ -149,8 +149,8 @@ class statsDAO extends baseDAO
 
         $fromDt = DateManager::getIsoDateFromString(Kit::GetParam('fromdt', _POST, _STRING));
         $toDt = DateManager::getIsoDateFromString(Kit::GetParam('todt', _POST, _STRING));
-        $displayId = Kit::GetParam('displayid', _POST, _INT);
-        $mediaId = Kit::GetParam('mediaid', _POST, _INT);
+        $displayId = \Kit::GetParam('displayid', _POST, _INT);
+        $mediaId = \Kit::GetParam('mediaid', _POST, _INT);
 
         // What if the fromdt and todt are exactly the same?
         // in this case assume an entire day from midnight on the fromdt to midnight on the todt (i.e. add a day to the todt)
@@ -214,10 +214,10 @@ class statsDAO extends baseDAO
 
         while ($row = $db->get_assoc_row($results))
         {
-            $row['Display'] = Kit::ValidateParam($row['Display'], _STRING);
-            $row['Layout'] = Kit::ValidateParam($row['Layout'], _STRING);
-            $row['NumberPlays'] = Kit::ValidateParam($row['NumberPlays'], _INT);
-            $row['DurationSec'] = Kit::ValidateParam($row['Duration'], _INT);
+            $row['Display'] = \Kit::ValidateParam($row['Display'], _STRING);
+            $row['Layout'] = \Kit::ValidateParam($row['Layout'], _STRING);
+            $row['NumberPlays'] = \Kit::ValidateParam($row['NumberPlays'], _INT);
+            $row['DurationSec'] = \Kit::ValidateParam($row['Duration'], _INT);
             $row['Duration'] = sec2hms(Kit::ValidateParam($row['Duration'], _INT));
             $row['MinStart'] = DateManager::getLocalDate(strtotime(Kit::ValidateParam($row['MinStart'], _STRING)));
             $row['MaxEnd'] = DateManager::getLocalDate(strtotime(Kit::ValidateParam($row['MaxEnd'], _STRING)));
@@ -267,10 +267,10 @@ class statsDAO extends baseDAO
 
         while ($row = $db->get_assoc_row($results))
         {
-            $row['Display'] = Kit::ValidateParam($row['Display'], _STRING);
-            $row['Media'] = Kit::ValidateParam($row['Name'], _STRING);
-            $row['NumberPlays'] = Kit::ValidateParam($row['NumberPlays'], _INT);
-            $row['DurationSec'] = Kit::ValidateParam($row['Duration'], _INT);
+            $row['Display'] = \Kit::ValidateParam($row['Display'], _STRING);
+            $row['Media'] = \Kit::ValidateParam($row['Name'], _STRING);
+            $row['NumberPlays'] = \Kit::ValidateParam($row['NumberPlays'], _INT);
+            $row['DurationSec'] = \Kit::ValidateParam($row['Duration'], _INT);
             $row['Duration'] = sec2hms(Kit::ValidateParam($row['Duration'], _INT));
             $row['MinStart'] = DateManager::getLocalDate(strtotime(Kit::ValidateParam($row['MinStart'], _STRING)));
             $row['MaxEnd'] = DateManager::getLocalDate(strtotime(Kit::ValidateParam($row['MaxEnd'], _STRING)));
@@ -322,11 +322,11 @@ class statsDAO extends baseDAO
 
         while ($row = $db->get_assoc_row($results))
         {
-            $row['Display'] = Kit::ValidateParam($row['Display'], _STRING);
-            $row['Layout'] = Kit::ValidateParam($row['Layout'], _STRING);
-            $row['Media'] = Kit::ValidateParam($row['Name'], _STRING);
-            $row['NumberPlays'] = Kit::ValidateParam($row['NumberPlays'], _INT);
-            $row['DurationSec'] = Kit::ValidateParam($row['Duration'], _INT);
+            $row['Display'] = \Kit::ValidateParam($row['Display'], _STRING);
+            $row['Layout'] = \Kit::ValidateParam($row['Layout'], _STRING);
+            $row['Media'] = \Kit::ValidateParam($row['Name'], _STRING);
+            $row['NumberPlays'] = \Kit::ValidateParam($row['NumberPlays'], _INT);
+            $row['DurationSec'] = \Kit::ValidateParam($row['Duration'], _INT);
             $row['Duration'] = sec2hms(Kit::ValidateParam($row['Duration'], _INT));
             $row['MinStart'] = DateManager::getLocalDate(strtotime(Kit::ValidateParam($row['MinStart'], _STRING)));
             $row['MaxEnd'] = DateManager::getLocalDate(strtotime(Kit::ValidateParam($row['MaxEnd'], _STRING)));
@@ -347,7 +347,7 @@ class statsDAO extends baseDAO
     {
         $fromDt = DateManager::getTimestampFromString(Kit::GetParam('fromdt', _POST, _STRING));
         $toDt = DateManager::getTimestampFromString(Kit::GetParam('todt', _POST, _STRING));
-        $displayId = Kit::GetParam('displayid', _POST, _INT);
+        $displayId = \Kit::GetParam('displayid', _POST, _INT);
 
         // Get an array of display id this user has access to.
         $displays = $this->user->DisplayList();
@@ -362,7 +362,7 @@ class statsDAO extends baseDAO
 
         // Get some data for a bandwidth chart
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $params = array(
                 'type' => 'displaydown',
@@ -403,8 +403,8 @@ class statsDAO extends baseDAO
             foreach ($sth->fetchAll() as $row) {
 
                 $output[] = array(
-                        'label' => Kit::ValidateParam($row['display'], _STRING), 
-                        'value' => (Kit::ValidateParam($row['duration'], _DOUBLE) / 60)
+                        'label' => \Kit::ValidateParam($row['display'], _STRING),
+                        'value' => (\Kit::ValidateParam($row['duration'], _DOUBLE) / 60)
                     );
             }
 
@@ -443,9 +443,9 @@ class statsDAO extends baseDAO
 
         // Get some data for a bandwidth chart
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
-            $displayId = Kit::GetParam('displayid', _POST, _INT);
+            $displayId = \Kit::GetParam('displayid', _POST, _INT);
             $params = array(
                 'month' => $fromDt,
                 'month2' => $toDt
@@ -584,7 +584,7 @@ class statsDAO extends baseDAO
 		// We are expecting some parameters
 		$fromdt	= DateManager::getIsoDateFromString(Kit::GetParam('fromdt', _POST, _STRING));
 		$todt = DateManager::getIsoDateFromString(Kit::GetParam('todt', _POST, _STRING));
-		$displayID = Kit::GetParam('displayid', _POST, _INT);
+		$displayID = \Kit::GetParam('displayid', _POST, _INT);
 
         if ($fromdt == $todt) {
             $todt = date("Y-m-d", strtotime($todt) + 86399);
@@ -641,13 +641,13 @@ class statsDAO extends baseDAO
 		while($row = $db->get_assoc_row($result))
 		{
 			// Read the columns
-			$type		= Kit::ValidateParam($row['Type'], _STRING);
-			$fromdt		= Kit::ValidateParam($row['start'], _STRING);
-			$todt		= Kit::ValidateParam($row['end'], _STRING);
-			$layout		= Kit::ValidateParam($row['Layout'], _STRING);
-			$display	= Kit::ValidateParam($row['Display'], _STRING);
-			$media		= Kit::ValidateParam($row['MediaName'], _STRING);
-			$tag		= Kit::ValidateParam($row['Tag'], _STRING);
+			$type		= \Kit::ValidateParam($row['Type'], _STRING);
+			$fromdt		= \Kit::ValidateParam($row['start'], _STRING);
+			$todt		= \Kit::ValidateParam($row['end'], _STRING);
+			$layout		= \Kit::ValidateParam($row['Layout'], _STRING);
+			$display	= \Kit::ValidateParam($row['Display'], _STRING);
+			$media		= \Kit::ValidateParam($row['MediaName'], _STRING);
+			$tag		= \Kit::ValidateParam($row['Tag'], _STRING);
 			
 			$output		.= "$type, $fromdt, $todt, $layout, $display, $media, $tag\n";
 		}

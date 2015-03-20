@@ -29,7 +29,7 @@ class contentDAO extends baseDAO {
 		$db =& $this->db;
 		
 		// Default options
-        if (Kit::IsFilterPinned('content', 'Filter')) {
+        if (\Kit::IsFilterPinned('content', 'Filter')) {
             $filter_pinned = 1;
             $filter_name = Session::Get('content', 'filter_name');
             $filter_type = Session::Get('content', 'filter_type');
@@ -158,13 +158,13 @@ class contentDAO extends baseDAO {
 		$response = new ResponseManager();
 
 		//Get the input params and store them
-		$filter_type = Kit::GetParam('filter_type', _REQUEST, _WORD);
-		$filter_name = Kit::GetParam('filter_name', _REQUEST, _STRING);
-		$filter_userid = Kit::GetParam('filter_owner', _REQUEST, _INT);
-        $filter_retired = Kit::GetParam('filter_retired', _REQUEST, _INT);
-        $filter_duration_in_seconds = Kit::GetParam('filter_duration_in_seconds', _REQUEST, _CHECKBOX);
-        $filter_showThumbnail = Kit::GetParam('filter_showThumbnail', _REQUEST, _CHECKBOX);
-        $showTags = Kit::GetParam('showTags', _REQUEST, _CHECKBOX);
+		$filter_type = \Kit::GetParam('filter_type', _REQUEST, _WORD);
+		$filter_name = \Kit::GetParam('filter_name', _REQUEST, _STRING);
+		$filter_userid = \Kit::GetParam('filter_owner', _REQUEST, _INT);
+        $filter_retired = \Kit::GetParam('filter_retired', _REQUEST, _INT);
+        $filter_duration_in_seconds = \Kit::GetParam('filter_duration_in_seconds', _REQUEST, _CHECKBOX);
+        $filter_showThumbnail = \Kit::GetParam('filter_showThumbnail', _REQUEST, _CHECKBOX);
+        $showTags = \Kit::GetParam('showTags', _REQUEST, _CHECKBOX);
                 
 		setSession('content', 'filter_type', $filter_type);
 		setSession('content', 'filter_name', $filter_name);
@@ -173,7 +173,7 @@ class contentDAO extends baseDAO {
         setSession('content', 'filter_duration_in_seconds', $filter_duration_in_seconds);
         setSession('content', 'filter_showThumbnail', $filter_showThumbnail);
 		setSession('content', 'showTags', $showTags);
-        setSession('content', 'Filter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        setSession('content', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 		
 		// Construct the SQL
 		$mediaList = $user->MediaList(NULL, array('type' => $filter_type, 'name' => $filter_name, 'ownerid' => $filter_userid, 'retired' => $filter_retired, 'showTags' => $showTags));
@@ -216,7 +216,7 @@ class contentDAO extends baseDAO {
 			$row['revised'] = ($media->parentId != 0) ? 1 : 0;
 
 			// Display a friendly file size
-			$row['size_text'] = Kit::FormatBytes($media->fileSize);
+			$row['size_text'] = \Kit::FormatBytes($media->fileSize);
 
             // Thumbnail URL
             $row['thumbnail'] = '';
@@ -299,15 +299,15 @@ class contentDAO extends baseDAO {
 
         // Set the Session / Security information
         $sessionId = session_id();
-        $securityToken = Kit::Token('fileUploadToken', false);
+        $securityToken = \Kit::Token('fileUploadToken', false);
 
         // Do we come from the Background Image?
-        $backgroundImage = Kit::GetParam('backgroundImage', _GET, _BOOL, false);
-        $layoutId = Kit::GetParam('layoutId', _GET, _INT);
+        $backgroundImage = \Kit::GetParam('backgroundImage', _GET, _BOOL, false);
+        $layoutId = \Kit::GetParam('layoutId', _GET, _INT);
 
         // Do we have a playlistId?
-        $playlistId = Kit::GetParam('playlistId', _GET, _INT);
-        $regionId = Kit::GetParam('regionId', _GET, _INT);
+        $playlistId = \Kit::GetParam('playlistId', _GET, _INT);
+        $regionId = \Kit::GetParam('regionId', _GET, _INT);
 
         // Save button is different depending on whether we came from the Layout Edit form or not.
         if ($backgroundImage) {
@@ -328,7 +328,7 @@ class contentDAO extends baseDAO {
         Theme::Set('form_action', 'index.php?p=content&q=JqueryFileUpload');
         Theme::Set('form_meta', '<input type="hidden" id="PHPSESSID" value="' . $sessionId . '" /><input type="hidden" id="SecurityToken" value="' . $securityToken . '" /><input type="hidden" name="playlistId" value="' . $playlistId . '" />');
         Theme::Set('form_valid_ext', '/(\.|\/)' . implode('|', \Xibo\Factory\ModuleFactory::getValidExtensions()) . '$/i');
-        Theme::Set('form_max_size', Kit::ReturnBytes(Config::getMaxUploadSize()));
+        Theme::Set('form_max_size', \Kit::ReturnBytes(Config::getMaxUploadSize()));
         Theme::Set('form_max_size_message', sprintf(__('This form accepts files up to a maximum size of %s'), Config::getMaxUploadSize()));
 
         $form = Theme::RenderReturn('library_form_media_add');
@@ -346,7 +346,7 @@ class contentDAO extends baseDAO {
     public function getFile()
     {
         // Get the MediaId
-        $mediaId = Kit::GetParam('mediaId', _GET, _INT);
+        $mediaId = \Kit::GetParam('mediaId', _GET, _INT);
 
         // Can this user view?
         $entries = $this->user->MediaList(null, array('mediaId' => $mediaId));
@@ -355,8 +355,8 @@ class contentDAO extends baseDAO {
         /* @var \Xibo\Entity\Media $media */
 
         if (count($entries) <= 0) {
-            $width = Kit::GetParam('width', _GET, _INT);
-            $height = Kit::GetParam('height', _GET, _INT);
+            $width = \Kit::GetParam('width', _GET, _INT);
+            $height = \Kit::GetParam('height', _GET, _INT);
 
             // dynamically create an image of the correct size - used for previews
             ResizeImage(Theme::ImageUrl('forms/filenotfound.gif'), '', $width, $height, true, 'browser');
@@ -459,7 +459,7 @@ class contentDAO extends baseDAO {
         Debug::LogEntry('audit', sprintf('Replacing mediaid %s with mediaid %s in all layouts', $oldMediaId, $newMediaId), 'module', 'ReplaceMediaInAllLayouts');
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             // Some update statements to use
             $sth = $dbh->prepare('SELECT lklayoutmediaid, regionid FROM lklayoutmedia WHERE mediaid = :media_id AND layoutid = :layout_id');
@@ -591,8 +591,8 @@ class contentDAO extends baseDAO {
         $output = Theme::RenderReturn('library_form_assign');
 
         // Input vars
-        $layoutId = Kit::GetParam('layoutid', _REQUEST, _INT);
-        $regionId = Kit::GetParam('regionid', _REQUEST, _STRING);
+        $layoutId = \Kit::GetParam('layoutid', _REQUEST, _INT);
+        $regionId = \Kit::GetParam('regionid', _REQUEST, _STRING);
 
         // Construct the Response
         $response->html = $output;
@@ -621,8 +621,8 @@ class contentDAO extends baseDAO {
         $response = new ResponseManager();
 
         //Input vars
-        $mediatype = Kit::GetParam('filter_type', _POST, _STRING);
-        $name = Kit::GetParam('filter_name', _POST, _STRING);
+        $mediatype = \Kit::GetParam('filter_type', _POST, _STRING);
+        $name = \Kit::GetParam('filter_name', _POST, _STRING);
 
         // Get a list of media
         $mediaList = $user->MediaList(NULL, array('type' => $mediatype, 'name' => $name));
@@ -657,7 +657,7 @@ class contentDAO extends baseDAO {
 
         Debug::LogEntry('audit', 'Uploading a file', 'Library', 'FileUpload');
 
-        Kit::ClassLoader('file');
+        \Kit::ClassLoader('file');
         $fileObject = new File($db);
 
         
@@ -669,7 +669,7 @@ class contentDAO extends baseDAO {
             // Directory location
             $libraryFolder  = Config::GetSetting('LIBRARY_LOCATION');
             $error          = 0;
-            $fileName       = Kit::ValidateParam($_FILES['media_file']['name'], _FILENAME);
+            $fileName       = \Kit::ValidateParam($_FILES['media_file']['name'], _FILENAME);
             $fileId         = $fileObject->GenerateFileId($this->user->userid);
             $fileLocation   = $libraryFolder . 'temp/' . $fileId;
 
@@ -738,18 +738,18 @@ HTML;
 
         $options = array(
             'userId' => $this->user->userid,
-            'playlistId' => Kit::GetParam('playlistId', _REQUEST, _INT),
+            'playlistId' => \Kit::GetParam('playlistId', _REQUEST, _INT),
             'upload_dir' => $libraryFolder . 'temp/',
             'download_via_php' => true,
-            'script_url' => Kit::GetXiboRoot() . '?p=content&q=JqueryFileUpload',
-            'upload_url' => Kit::GetXiboRoot() . '?p=content&q=JqueryFileUpload',
+            'script_url' => \Kit::GetXiboRoot() . '?p=content&q=JqueryFileUpload',
+            'upload_url' => \Kit::GetXiboRoot() . '?p=content&q=JqueryFileUpload',
             'image_versions' => array(),
             'accept_file_types' => '/\.' . implode('|', $validExt) . '$/i'
         );
 
         // Hand off to the Upload Handler provided by jquery-file-upload
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
             new XiboUploadHandler($options);
 
             // Must commit if in a transaction
@@ -777,7 +777,7 @@ HTML;
         // Work out how many files there are
         $media = Media::entriesUnusedForUser($this->user->userid);
 
-        $formFields[] = FormManager::AddMessage(sprintf(__('There is %s of data stored in %d files . Are you sure you want to proceed?', Kit::formatBytes(array_sum(array_map(function ($element) { return $element['fileSize']; }, $media))), count($media))));
+        $formFields[] = FormManager::AddMessage(sprintf(__('There is %s of data stored in %d files . Are you sure you want to proceed?', \Kit::formatBytes(array_sum(array_map(function ($element) { return $element['fileSize']; }, $media))), count($media))));
 
         Theme::Set('form_fields', $formFields);
 

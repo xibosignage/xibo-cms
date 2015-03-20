@@ -104,7 +104,7 @@ class datasetview extends Module
         if ($columns != '')
         {
             // Query for more info about the selected and available columns
-            $notColumns = PDOConnect::select(sprintf("SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetID = %d AND DataSetColumnID NOT IN (%s)", $this->GetOption('datasetid'), $columns), array());
+            $notColumns = \Xibo\Storage\PDOConnect::select(sprintf("SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetID = %d AND DataSetColumnID NOT IN (%s)", $this->GetOption('datasetid'), $columns), array());
 
             // These columns need to be in order
             $columnIds = explode(',', $columns);
@@ -112,7 +112,7 @@ class datasetview extends Module
 
             foreach($columnIds as $col)
             {
-                $heading = PDOConnect::select(sprintf('SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetColumnID = %d', $col), array());
+                $heading = \Xibo\Storage\PDOConnect::select(sprintf('SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetColumnID = %d', $col), array());
                 $headings[] = $heading[0]['Heading'];
             }
 
@@ -121,7 +121,7 @@ class datasetview extends Module
         else
         {
             $columns = array();
-            $notColumns = PDOConnect::select(sprintf("SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetID = %d ", $this->GetOption('datasetid')), array());
+            $notColumns = \Xibo\Storage\PDOConnect::select(sprintf("SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetID = %d ", $this->GetOption('datasetid')), array());
         }
 
         // Build the two lists
@@ -184,8 +184,8 @@ class datasetview extends Module
         $response = new ResponseManager();
 
         // Other properties
-        $dataSetId = Kit::GetParam('datasetid', _POST, _INT, 0);
-        $duration = Kit::GetParam('duration', _POST, _INT, 0, false);
+        $dataSetId = \Kit::GetParam('datasetid', _POST, _INT, 0);
+        $duration = \Kit::GetParam('duration', _POST, _INT, 0, false);
 
         // validation
         if ($dataSetId == 0)
@@ -229,15 +229,15 @@ class datasetview extends Module
         if (!$this->auth->edit)
             throw new Exception(__('You do not have permission to edit this media.'));
 
-        $columns = Kit::GetParam('DataSetColumnId', _GET, _ARRAY, array());
-        $upperLimit = Kit::GetParam('upperLimit', _POST, _INT);
-        $lowerLimit = Kit::GetParam('lowerLimit', _POST, _INT);
-        $filter = Kit::GetParam('filter', _POST, _STRINGSPECIAL);
-        $ordering = Kit::GetParam('ordering', _POST, _STRING);
-        $showHeadings = Kit::GetParam('showHeadings', _POST, _CHECKBOX);
-        $styleSheet = Kit::GetParam('styleSheet', _POST, _HTMLSTRING);
-        $updateInterval = Kit::GetParam('updateInterval', _POST, _INT);
-        $rowsPerPage = Kit::GetParam('rowsPerPage', _POST, _INT);
+        $columns = \Kit::GetParam('DataSetColumnId', _GET, _ARRAY, array());
+        $upperLimit = \Kit::GetParam('upperLimit', _POST, _INT);
+        $lowerLimit = \Kit::GetParam('lowerLimit', _POST, _INT);
+        $filter = \Kit::GetParam('filter', _POST, _STRINGSPECIAL);
+        $ordering = \Kit::GetParam('ordering', _POST, _STRING);
+        $showHeadings = \Kit::GetParam('showHeadings', _POST, _CHECKBOX);
+        $styleSheet = \Kit::GetParam('styleSheet', _POST, _HTMLSTRING);
+        $updateInterval = \Kit::GetParam('updateInterval', _POST, _INT);
+        $rowsPerPage = \Kit::GetParam('rowsPerPage', _POST, _INT);
 
         if (count($columns) == 0)
             $this->SetOption('columns', '');
@@ -309,7 +309,7 @@ class datasetview extends Module
     {
         $template = file_get_contents('modules/preview/HtmlTemplate.html');
 
-        $isPreview = (Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
+        $isPreview = (\Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
 
         // Replace the View Port Width?
         if ($isPreview)
@@ -324,9 +324,9 @@ class datasetview extends Module
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
             'rowsPerPage' => $this->GetOption('rowsPerPage'),
-            'previewWidth' => Kit::GetParam('width', _GET, _DOUBLE, 0),
-            'previewHeight' => Kit::GetParam('height', _GET, _DOUBLE, 0),
-            'scaleOverride' => Kit::GetParam('scale_override', _GET, _DOUBLE, 0)
+            'previewWidth' => \Kit::GetParam('width', _GET, _DOUBLE, 0),
+            'previewHeight' => \Kit::GetParam('height', _GET, _DOUBLE, 0),
+            'scaleOverride' => \Kit::GetParam('scale_override', _GET, _DOUBLE, 0)
         );
 
         // Add our fonts.css file

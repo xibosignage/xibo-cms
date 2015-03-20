@@ -85,8 +85,8 @@ class shellcommand extends Module
     {
         $response = new ResponseManager();
 
-        $windowsCommand = Kit::GetParam('windowsCommand', _POST, _STRING);
-        $linuxCommand = Kit::GetParam('linuxCommand', _POST, _STRING);
+        $windowsCommand = \Kit::GetParam('windowsCommand', _POST, _STRING);
+        $linuxCommand = \Kit::GetParam('linuxCommand', _POST, _STRING);
 
         if ($windowsCommand == '' && $linuxCommand == '')
             throw new InvalidArgumentException(__('You must enter a command'));
@@ -121,8 +121,8 @@ class shellcommand extends Module
         // Configure the form
         $this->configureForm('EditMedia');
 
-        $windowsCommand = Kit::GetParam('windowsCommand', _POST, _STRING);
-        $linuxCommand = Kit::GetParam('linuxCommand', _POST, _STRING);
+        $windowsCommand = \Kit::GetParam('windowsCommand', _POST, _STRING);
+        $linuxCommand = \Kit::GetParam('linuxCommand', _POST, _STRING);
 
         if ($windowsCommand == '' && $linuxCommand == '')
             throw new InvalidArgumentException(__('You must enter a command'));

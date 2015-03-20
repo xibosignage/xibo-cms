@@ -116,31 +116,6 @@ class Debug
         // Must return false
         return false;
     }
-    
-    /**
-     * Mail an error - currently disabled
-     * @return 
-     * @param $errmsg Object
-     * @param $err Object
-     */
-    function MailError($errmsg, $err) 
-    {
-        return true;
-
-        $to = 'info@xibo.org.uk';
-        
-        $from = Config::GetSetting("mail_from");
-        if ($from == "") return true;
-        
-        $subject = "Error message from Digital Signage System";
-        $message = wordwrap("$errmsg\n$err");
-
-        $headers = "From: $from" . "\r\n" . "Reply-To: $from" . "\r\n" .
-                "X-Mailer: PHP/" . phpversion();
-
-        if (!mail($to, $subject, $message, $headers)) trigger_error("Mail not accepted", E_USER_NOTICE);
-        return true;
-    }
 
     /**
      * Write an Entry to the Log table
@@ -233,22 +208,22 @@ class Debug
     public static function log($type, $message, $page = null, $function = null, $logDate = null, $displayId = 0, $scheduleId = 0, $layoutId = 0, $mediaId = null)
     {
         if (self::$pdo == NULL)
-            self::$pdo = PDOConnect::newConnection();
+            self::$pdo = \Xibo\Storage\PDOConnect::newConnection();
 
         $currentDate = date("Y-m-d H:i:s");
-        $requestUri = Kit::GetParam('REQUEST_URI', $_SERVER, _STRING, 'Not Supplied');
-        $requestIp = Kit::GetParam('REMOTE_ADDR', $_SERVER, _STRING, 'Not Supplied');
-        $requestUserAgent = Kit::GetParam('HTTP_USER_AGENT', $_SERVER, _STRING, 'Not Supplied');
+        $requestUri = \Kit::GetParam('REQUEST_URI', $_SERVER, _STRING, 'Not Supplied');
+        $requestIp = \Kit::GetParam('REMOTE_ADDR', $_SERVER, _STRING, 'Not Supplied');
+        $requestUserAgent = \Kit::GetParam('HTTP_USER_AGENT', $_SERVER, _STRING, 'Not Supplied');
         $requestUserAgent = substr($requestUserAgent, 0, 253);
-        $userId = Kit::GetParam('userid', _SESSION, _INT, 0);
-        $message = Kit::ValidateParam($message, _HTMLSTRING);
+        $userId = \Kit::GetParam('userid', _SESSION, _INT, 0);
+        $message = \Kit::ValidateParam($message, _HTMLSTRING);
 
         // Prepare the variables
         if ($logDate == null)
             $logDate = $currentDate;
 
         if ($page == null)
-            $page = Kit::GetParam('p', _GET, _WORD);
+            $page = \Kit::GetParam('p', _GET, _WORD);
 
         // Insert into the DB
         try {

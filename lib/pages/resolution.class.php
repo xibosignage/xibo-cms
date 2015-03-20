@@ -36,7 +36,7 @@ class resolutionDAO extends baseDAO
         Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
         Theme::Set('pager', ResponseManager::Pager($id));
 
-        if (Kit::IsFilterPinned('resolution', 'ResolutionFilter')) {
+        if (\Kit::IsFilterPinned('resolution', 'ResolutionFilter')) {
             $pinned = 1;
             $enabled = Session::Get('resolution', 'filterEnabled');
         }
@@ -94,9 +94,9 @@ class resolutionDAO extends baseDAO
         $user =& $this->user;
         $response = new ResponseManager();
 
-        setSession('resolution', 'ResolutionFilter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        setSession('resolution', 'ResolutionFilter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
         // Show enabled
-        $filterEnabled = Kit::GetParam('filterEnabled', _POST, _INT);
+        $filterEnabled = \Kit::GetParam('filterEnabled', _POST, _INT);
         setSession('resolution', 'filterEnabled', $filterEnabled);
 
         $resolutions = $user->ResolutionList(array('resolution'), array('enabled' => $filterEnabled));
@@ -246,9 +246,9 @@ class resolutionDAO extends baseDAO
         $user 	=& $this->user;
         $response = new ResponseManager();
 
-        $resolution = Kit::GetParam('resolution', _POST, _STRING);
-        $width = Kit::GetParam('width', _POST, _INT);
-        $height = Kit::GetParam('height', _POST, _INT);
+        $resolution = \Kit::GetParam('resolution', _POST, _STRING);
+        $width = \Kit::GetParam('width', _POST, _INT);
+        $height = \Kit::GetParam('height', _POST, _INT);
 
         // Add the resolution
         $resObject = new Resolution($db);
@@ -270,11 +270,11 @@ class resolutionDAO extends baseDAO
         $user 	=& $this->user;
         $response = new ResponseManager();
 
-        $resolutionID = Kit::GetParam('resolutionid', _POST, _INT);
-        $resolution = Kit::GetParam('resolution', _POST, _STRING);
-        $width = Kit::GetParam('width', _POST, _INT);
-        $height = Kit::GetParam('height', _POST, _INT);
-        $enabled = Kit::GetParam('enabled', _POST, _CHECKBOX);
+        $resolutionID = \Kit::GetParam('resolutionid', _POST, _INT);
+        $resolution = \Kit::GetParam('resolution', _POST, _STRING);
+        $width = \Kit::GetParam('width', _POST, _INT);
+        $height = \Kit::GetParam('height', _POST, _INT);
+        $enabled = \Kit::GetParam('enabled', _POST, _CHECKBOX);
 
         // Edit the resolution
         $resObject = new Resolution($db);
@@ -296,7 +296,7 @@ class resolutionDAO extends baseDAO
         $user 	=& $this->user;
         $response = new ResponseManager();
 
-        $resolutionID = Kit::GetParam('resolutionid', _POST, _INT);
+        $resolutionID = \Kit::GetParam('resolutionid', _POST, _INT);
 
         // Remove the resolution
         $resObject = new Resolution($db);

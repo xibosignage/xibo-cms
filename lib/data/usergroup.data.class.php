@@ -25,7 +25,7 @@ class UserGroup extends Data
     public function GetPermissionsForObject($object, $idCol, $objectId, $clause = '') 
     {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             $params = array('id' => $objectId);
             $SQL  = 'SELECT joinedGroup.groupid, joinedGroup.group, view, edit, del, joinedGroup.isuserspecific ';
@@ -86,7 +86,7 @@ class UserGroup extends Data
         Debug::LogEntry('audit', 'IN', 'UserGroup', 'Add');
         
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             // Validation
             if ($group == '')
@@ -126,7 +126,7 @@ class UserGroup extends Data
         Debug::LogEntry('audit', 'IN', 'UserGroup', 'Edit');
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             // Validation
             if ($userGroupID == 0)
@@ -166,7 +166,7 @@ class UserGroup extends Data
         Debug::Audit('IN: ' . $userGroupId);
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
             
             $params = array('groupid' => $userGroupId);
 
@@ -224,7 +224,7 @@ class UserGroup extends Data
         Debug::LogEntry('audit', 'IN', 'UserGroup', 'Link');
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $sth = $dbh->prepare('INSERT INTO   lkusergroup (GroupID, UserID) VALUES (:groupid, :userid)');
             $sth->execute(array(
@@ -258,7 +258,7 @@ class UserGroup extends Data
         Debug::LogEntry('audit', 'IN', 'UserGroup', 'Unlink');
         
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $sth = $dbh->prepare('DELETE FROM lkusergroup WHERE GroupID = :groupid AND UserID = :userid');
             $sth->execute(array(
@@ -290,7 +290,7 @@ class UserGroup extends Data
         Debug::LogEntry('audit', 'IN', 'UserGroup', 'UnlinkAllUsers');
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $sth = $dbh->prepare('DELETE FROM lkusergroup WHERE GroupID = :groupid');
             $sth->execute(array(
@@ -321,7 +321,7 @@ class UserGroup extends Data
         Debug::LogEntry('audit', 'IN', 'UserGroup', 'UnlinkAllGroups');
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $sth = $dbh->prepare('DELETE FROM lkusergroup WHERE UserID = :userid');
             $sth->execute(array(
@@ -354,7 +354,7 @@ class UserGroup extends Data
         Debug::LogEntry('audit', 'IN', 'UserGroup', 'EditUserGroup');
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             // Get the UserGroupID for this UserID
             $SQL  = "SELECT `group`.GroupID ";
@@ -373,7 +373,7 @@ class UserGroup extends Data
             if (!$row = $sth->fetch())
                 $this->ThrowError(25005, __('Unable to get the UserGroup for this User.'));
     
-            $userGroupID = Kit::ValidateParam($row['GroupID'], _INT);
+            $userGroupID = \Kit::ValidateParam($row['GroupID'], _INT);
     
             if ($userGroupID == 0)
             {

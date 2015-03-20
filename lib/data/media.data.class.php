@@ -47,7 +47,7 @@ class Media extends Data
         Debug::LogEntry('audit', 'IN', 'Media', 'Add');
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             // Check we have room in the library
             $libraryLimit = Config::GetSetting('LIBRARY_SIZE_LIMIT_KB');
@@ -60,7 +60,7 @@ class Media extends Data
                 if (!$row = $sth->fetch())
                     throw new Exception("Error Processing Request", 1);
                     
-                $fileSize = Kit::ValidateParam($row['SumSize'], _INT);
+                $fileSize = \Kit::ValidateParam($row['SumSize'], _INT);
     
                 if (($fileSize / 1024) > $libraryLimit) {
                     $this->ThrowError(sprintf(__('Your library is full. Library Limit: %s K'), $libraryLimit));
@@ -141,7 +141,7 @@ class Media extends Data
             // What permissions should we assign this with?
             if (Config::GetSetting('MEDIA_DEFAULT') == 'public')
             {
-                Kit::ClassLoader('mediagroupsecurity');
+                \Kit::ClassLoader('mediagroupsecurity');
     
                 $security = new MediaGroupSecurity($this->db);
                 $security->LinkEveryone($mediaId, 1, 0, 0);
@@ -176,7 +176,7 @@ class Media extends Data
         Debug::LogEntry('audit', 'IN', 'Media', 'Edit');
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $sth = $dbh->prepare('SELECT type FROM `media` WHERE MediaID = :mediaid');
             $sth->execute(array(
@@ -187,7 +187,7 @@ class Media extends Data
                 $this->ThrowError(12, __('Unable to find media type'));
 
             // Look up the type
-            $type = Kit::ValidateParam($row['type'], _WORD);                
+            $type = \Kit::ValidateParam($row['type'], _WORD);
     
             // Validation
             if (strlen($name) > 100)
@@ -253,7 +253,7 @@ class Media extends Data
         Debug::LogEntry('audit', 'IN', 'Media', 'FileRevise');
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             // Check we have room in the library
             $libraryLimit = Config::GetSetting('LIBRARY_SIZE_LIMIT_KB');
@@ -266,7 +266,7 @@ class Media extends Data
                 if (!$row = $sth->fetch())
                     throw new Exception("Error Processing Request", 1);
                     
-                $fileSize = Kit::ValidateParam($row['SumSize'], _INT);
+                $fileSize = \Kit::ValidateParam($row['SumSize'], _INT);
     
                 if (($fileSize / 1024) > $libraryLimit) {
                     $this->ThrowError(sprintf(__('Your library is full. Library Limit: %s K'), $libraryLimit));
@@ -289,7 +289,7 @@ class Media extends Data
                 throw new Exception("Error Processing Request", 1);
                 
             // We need to assign all permissions for the old media id to the new media id
-            Kit::ClassLoader('mediagroupsecurity');
+            \Kit::ClassLoader('mediagroupsecurity');
     
             $security = new MediaGroupSecurity($this->db);
             $security->Copy($mediaId, $newMediaId);
@@ -319,7 +319,7 @@ class Media extends Data
         Debug::LogEntry('audit', 'IN', 'Media', 'Retire');
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             // Retire the media
             $sth = $dbh->prepare('UPDATE media SET retired = 1 WHERE MediaID = :mediaid');
@@ -345,7 +345,7 @@ class Media extends Data
         Debug::LogEntry('audit', 'IN', 'Media', 'Delete');
         
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             // Check for links
             $sth = $dbh->prepare('SELECT * FROM lklayoutmedia WHERE MediaID = :mediaid');
@@ -366,7 +366,7 @@ class Media extends Data
                 $this->ThrowError(22, __('Cannot locate the files for this media. Unable to delete.'));
     
             // This will be used to delete the actual file (stored on disk)
-            $fileName = Kit::ValidateParam($row['StoredAs'], _STRING);
+            $fileName = \Kit::ValidateParam($row['StoredAs'], _STRING);
     
             // Remove permission assignments
             $security = new MediaGroupSecurity($this->db);
@@ -397,7 +397,7 @@ class Media extends Data
 
             if ($editedMediaRow = $sth->fetch()) {
                 // Unretire this edited record
-                $editedMediaId = Kit::ValidateParam($editedMediaRow['MediaID'], _INT);
+                $editedMediaId = \Kit::ValidateParam($editedMediaRow['MediaID'], _INT);
 
                 $sth = $dbh->prepare('UPDATE media SET IsEdited = 0, EditedMediaID = NULL WHERE mediaid = :mediaid');
                 $sth->execute(array(
@@ -422,7 +422,7 @@ class Media extends Data
         Debug::LogEntry('audit', 'IN', get_class(), __FUNCTION__);
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $sth = $dbh->prepare('SELECT storedas FROM `media` WHERE mediaid = :id');
             $sth->execute(array('id' => $mediaId));
@@ -448,7 +448,7 @@ class Media extends Data
     public function getName($mediaId) {
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             $sth = $dbh->prepare('SELECT `name` FROM `media` WHERE mediaid = :id');
             $sth->execute(array('id' => $mediaId));
@@ -524,7 +524,7 @@ class Media extends Data
         Debug::LogEntry('audit', 'IN', 'Media', 'LoadModuleInfo');
         
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             if ($type == '')
                 $this->ThrowError(18, __('No module type given'));
@@ -538,8 +538,8 @@ class Media extends Data
                 $this->ThrowError(20, __('No Module of this type found'));
     
             $this->moduleInfoLoaded = true;
-            $this->regionSpecific = Kit::ValidateParam($row['RegionSpecific'], _INT);
-            $this->validExtensions = explode(',', Kit::ValidateParam($row['ValidExtensions'], _STRING));
+            $this->regionSpecific = \Kit::ValidateParam($row['RegionSpecific'], _INT);
+            $this->validExtensions = explode(',', \Kit::ValidateParam($row['ValidExtensions'], _STRING));
             
             return true;  
         }
@@ -580,7 +580,7 @@ class Media extends Data
         Debug::LogEntry('audit', 'IN', 'Media', 'ModuleList');
         
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $sth = $dbh->prepare('SELECT * FROM module WHERE Enabled = 1');
             $sth->execute();
@@ -620,7 +620,7 @@ class Media extends Data
         Debug::LogEntry('audit', 'IN', 'Media', 'Copy');
         
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             // Get the extension from the old media record
             $sth = $dbh->prepare('SELECT StoredAs, Name FROM media WHERE MediaID = :mediaid');
@@ -632,10 +632,10 @@ class Media extends Data
                 $this->ThrowError(26, __('Error getting media extension before copy.'));
 
             // Get the file name
-            $fileName = Kit::ValidateParam($row['StoredAs'], _STRING);    
+            $fileName = \Kit::ValidateParam($row['StoredAs'], _STRING);
             $extension = strtolower(substr(strrchr($fileName, '.'), 1));
     
-            $newMediaName = Kit::ValidateParam($row['Name'], _STRING) . ' 2';
+            $newMediaName = \Kit::ValidateParam($row['Name'], _STRING) . ' 2';
     
             if ($prefix != '')
                 $newMediaName = $prefix . ' ' . $newMediaName;
@@ -754,7 +754,7 @@ class Media extends Data
 
             //Debug::Audit('Module File: ' . var_export($media, true));
 
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
             
             // Do we need to update this module file (meaning, is it out of date)
             // Why might it be out of date?
@@ -857,7 +857,7 @@ class Media extends Data
     public function removeModuleFile($mediaId, $storedAs)
     {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             Debug::Audit('Removing: ' . $storedAs . ' ID:' . $mediaId);
         
@@ -898,7 +898,7 @@ class Media extends Data
     {
         try {
             if ($this->_moduleFiles == NULL || count($this->_moduleFiles) < 1) {
-                $dbh = PDOConnect::init();
+                $dbh = \Xibo\Storage\PDOConnect::init();
             
                 $sth = $dbh->prepare('SELECT storedAs, mediaId, valid, expires FROM `media` WHERE type = :type');
                 $sth->execute(array(
@@ -984,7 +984,7 @@ class Media extends Data
             return $this->SetError($tagObject->GetErrorMessage());
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             // See if this tag exists
             $sth = $dbh->prepare('SELECT * FROM `lktagmedia` WHERE mediaId = :mediaId AND tagId = :tagId');
@@ -1004,7 +1004,7 @@ class Media extends Data
                 return $dbh->lastInsertId();
             }
             else {
-                return Kit::ValidateParam($row['lkTagMediaId'], _INT);
+                return \Kit::ValidateParam($row['lkTagMediaId'], _INT);
             }
         }
         catch (Exception $e) {
@@ -1025,7 +1025,7 @@ class Media extends Data
      */
     public function unTag($tag, $mediaId) {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $sth = $dbh->prepare('DELETE FROM `lktagmedia` WHERE tagId IN (SELECT tagId FROM tag WHERE tag = :tag) AND mediaId = :mediaId');
             $sth->execute(array(
@@ -1054,7 +1054,7 @@ class Media extends Data
         Debug::Audit('IN');
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $sth = $dbh->prepare('DELETE FROM `lktagmedia` WHERE mediaId = :mediaId');
             $sth->execute(array(
@@ -1091,7 +1091,7 @@ class Media extends Data
 
         // Save a fonts.css file to the library for use as a module
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             $sth = $dbh->prepare('SELECT mediaID, name, storedAs FROM `media` WHERE type = :type AND IsEdited = 0');
             $sth->execute(array(
@@ -1112,7 +1112,7 @@ class Media extends Data
                 $css .= str_replace('[url]', $font['storedAs'], str_replace('[family]', $font['name'], $fontTemplate));
 
                 // Css for the local CMS contains the full download path to the font
-                $url = Kit::GetXiboRoot() . '?p=module&mod=font&q=Exec&method=GetResource&download=1&downloadFromLibrary=1&mediaid=' . $font['mediaID'];
+                $url = \Kit::GetXiboRoot() . '?p=module&mod=font&q=Exec&method=GetResource&download=1&downloadFromLibrary=1&mediaid=' . $font['mediaID'];
                 $localCss .= str_replace('[url]', $url, str_replace('[family]', $font['name'], $fontTemplate));
 
                 // CKEditor string
@@ -1172,7 +1172,7 @@ class Media extends Data
         $media = array();
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
             $sth = $dbh->prepare('SELECT media.mediaId, media.storedAs, media.type, media.isedited, media.fileSize,
                     SUM(CASE WHEN IFNULL(lklayoutmedia.lklayoutmediaid, 0) = 0 THEN 0 ELSE 1 END) AS UsedInLayoutCount,
                     SUM(CASE WHEN IFNULL(lkmediadisplaygroup.id, 0) = 0 THEN 0 ELSE 1 END) AS UsedInDisplayCount

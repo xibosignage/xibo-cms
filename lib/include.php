@@ -23,23 +23,23 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 define('WEBSITE_VERSION', 120);
 
 // No errors reported until we read the settings from the DB
-error_reporting(0);
-ini_set('display_errors', 0);
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 ini_set('gd.jpeg_ignore_warning', 1);
 
-// Load Kit
+// Load \Kit
 require_once("lib/app/kit.class.php");
 
 // Define an auto-load function
+require 'vendor/autoload.php';
 include('lib/autoload.php');
 
 // Define another one
 spl_autoload_register(function ($class) {
-    Kit::ClassLoader($class);
+    \Kit::ClassLoader($class);
 });
 
 // Required Library Files
-require_once("lib/app/pdoconnect.class.php");
 require_once("lib/app/translationengine.class.php");
 require_once("lib/app/debug.class.php");
 require_once("lib/app/pagemanager.class.php");
@@ -58,7 +58,6 @@ require_once("lib/app/session.class.php");
 require_once("lib/app/cache.class.php");
 require_once("lib/app/thememanager.class.php");
 require_once("lib/pages/base.class.php");
-require_once("3rdparty/parsedown/parsedown.php");
 require_once("3rdparty/jdatetime/jdatetime.class.php");
 require_once("3rdparty/nice-json/nice-json.php");
 
@@ -101,7 +100,7 @@ Config::Load();
 
 // Test our DB connection through PDO
 try {
-    PDOConnect::init();
+    \Xibo\Storage\PDOConnect::init();
 }
 catch (PDOException $e) {
     die('Database connection problem.');
@@ -129,8 +128,8 @@ set_error_handler(array(new Debug(), "ErrorHandler"));
 Config::Version();
 
 // Deal with HTTPS/STS config
-if (Kit::isSSL()) {
-    Kit::IssueStsHeaderIfNecessary();
+if (\Kit::isSSL()) {
+    \Kit::IssueStsHeaderIfNecessary();
 }
 else {
     if (Config::GetSetting('FORCE_HTTPS', 0) == 1) {
@@ -155,8 +154,8 @@ TranslationEngine::InitLocale();
 require_once('modules/' . Config::GetSetting("userModule"));
 
 // Page variable set? Otherwise default to index
-$page = Kit::GetParam('p', _REQUEST, _WORD, 'index');
-$function = Kit::GetParam('q', _REQUEST, _WORD);
+$page = \Kit::GetParam('p', _REQUEST, _WORD, 'index');
+$function = \Kit::GetParam('q', _REQUEST, _WORD);
 
 // Does the version in the DB match the version of the code?
 // If not then we need to run an upgrade. Change the page variable to upgrade
@@ -164,9 +163,9 @@ if (DBVERSION != WEBSITE_VERSION && !($page == 'index' && $function == 'login'))
     require_once('install/upgradestep.class.php');
     $page = 'upgrade';
 
-    if (Kit::GetParam('includes', _POST, _BOOL)) {
-        $upgradeFrom = Kit::GetParam('upgradeFrom', _POST, _INT);
-        $upgradeTo = Kit::GetParam('upgradeTo', _POST, _INT);
+    if (\Kit::GetParam('includes', _POST, _BOOL)) {
+        $upgradeFrom = \Kit::GetParam('upgradeFrom', _POST, _INT);
+        $upgradeTo = \Kit::GetParam('upgradeTo', _POST, _INT);
 
         for ($i = $upgradeFrom + 1; $i <= $upgradeTo; $i++) {
             if (file_exists('install/database/' . $i . '.php')) {
@@ -180,10 +179,7 @@ if (DBVERSION != WEBSITE_VERSION && !($page == 'index' && $function == 'login'))
 $session = new Session();
 
 // Work out the location of this service
-$serviceLocation = Kit::GetXiboRoot();
-
-// OAuth
-require_once('lib/oauth.inc.php');
+$serviceLocation = \Kit::GetXiboRoot();
 
 // Assign the page name to the session
 $session->set_page(session_id(), $page);

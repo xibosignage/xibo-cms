@@ -32,7 +32,7 @@ class Resolution extends Data
     public function Add($resolution, $width, $height)
     {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             if ($resolution == '' || $width == '' || $height == '')
                 $this->ThrowError(__('All fields must be filled in'));
@@ -77,7 +77,7 @@ class Resolution extends Data
     public function Edit($resolutionID, $resolution, $width, $height, $enabled)
     {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             if ($resolution == '' || $width == '' || $height == '')
                 $this->ThrowError(__('All fields must be filled in'));
@@ -128,7 +128,7 @@ class Resolution extends Data
     public function Delete($resolutionID)
     {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $sth = $dbh->prepare('DELETE FROM resolution WHERE resolutionID = :resolutionid');
             $sth->execute(array(

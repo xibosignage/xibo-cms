@@ -29,8 +29,8 @@ class indexDAO extends baseDAO {
         global $session;
 
         // this page must be called from a form therefore we expect POST variables      
-        $username = Kit::GetParam('username', _POST, _USERNAME);
-        $password = Kit::GetParam('password', _POST, _PASSWORD);
+        $username = \Kit::GetParam('username', _POST, _USERNAME);
+        $password = \Kit::GetParam('password', _POST, _PASSWORD);
         $referingpage = rawurldecode(Kit::GetParam('referingPage', _GET, _STRING));
 
         // Check the token
@@ -48,7 +48,7 @@ class indexDAO extends baseDAO {
 
         if ($user->login($username,$password)) 
         {
-            $userid     = Kit::GetParam('userid', _SESSION, _INT);
+            $userid     = \Kit::GetParam('userid', _SESSION, _INT);
             
             $session->set_user(session_id(), $userid, 'user');
         }
@@ -77,7 +77,7 @@ class indexDAO extends baseDAO {
         global $user;
         $db =& $this->db;
 
-        $username = Kit::GetParam('username', _SESSION, _USERNAME);
+        $username = \Kit::GetParam('username', _SESSION, _USERNAME);
 
         //logs the user out -- true if ok
         $user->logout();
@@ -96,8 +96,8 @@ class indexDAO extends baseDAO {
         // Checks the validity of the data provided, and emails a new password to the user
         $db =& $this->db;
         
-        $username   = Kit::GetParam('f_username', _POST, _USERNAME);
-        $email      = Kit::GetParam('f_email', _POST, _STRING);
+        $username   = \Kit::GetParam('f_username', _POST, _USERNAME);
+        $email      = \Kit::GetParam('f_email', _POST, _STRING);
         $return     = "index.php";
         
         if ($username == "" || $email == "") 
@@ -131,7 +131,7 @@ class indexDAO extends baseDAO {
         
         $row = $db->get_row($results);
         
-        $userid         = Kit::ValidateParam($row[0], _INT); //user ID for the user that wants a new password
+        $userid         = \Kit::ValidateParam($row[0], _INT); //user ID for the user that wants a new password
 
         $password_plain = $this->random_word(8); //generate a new password
         $password       = md5($password_plain);
@@ -186,7 +186,7 @@ class indexDAO extends baseDAO {
         // Shall we show the new user dashboard?
         $newUserWizard = 1;
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $sth = $dbh->prepare('SELECT newUserWizard FROM `user` WHERE userid = :userid');
             $sth->execute(array('userid' => $user->userid));
@@ -197,11 +197,11 @@ class indexDAO extends baseDAO {
             Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
         }
 
-        if ($newUserWizard == 0 || Kit::GetParam('sp', _GET, _WORD) == 'welcome') {
+        if ($newUserWizard == 0 || \Kit::GetParam('sp', _GET, _WORD) == 'welcome') {
 
             // Update to say we have seen it
             try {
-                $dbh = PDOConnect::init();
+                $dbh = \Xibo\Storage\PDOConnect::init();
             
                 $sth = $dbh->prepare('UPDATE `user` SET newUserWizard = 1 WHERE userid = :userid');
                 $sth->execute(array('userid' => $user->userid));
@@ -271,7 +271,7 @@ class indexDAO extends baseDAO {
         if (!Kit::CheckToken('gridToken'))
             die(__('Sorry the form has expired. Please refresh.'));
 
-        echo Kit::Token('token', false);
+        echo \Kit::Token('token', false);
         exit();
     }
 }

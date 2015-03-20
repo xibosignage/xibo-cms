@@ -344,8 +344,8 @@ abstract class Module implements ModuleInterface
         if (!$this->auth->edit)
             throw new Exception(__('You do not have permission to edit this media.'));
 
-        $this->widget->duration = Kit::GetParam('duration', _POST, _INT, $this->widget->duration);
-        $this->SetOption('name', Kit::GetParam('name', _POST, _STRING, $this->GetOption('name')));
+        $this->widget->duration = \Kit::GetParam('duration', _POST, _INT, $this->widget->duration);
+        $this->SetOption('name', \Kit::GetParam('name', _POST, _STRING, $this->GetOption('name')));
 
         // Save the widget
         $this->widget->save();
@@ -353,7 +353,7 @@ abstract class Module implements ModuleInterface
         // Return
         $response->SetFormSubmitResponse(__('The Widget has been Edited'));
         $response->loadForm = true;
-        $response->loadFormUri= 'index.php?p=timeline&q=Timeline&regionid=' . Kit::GetParam('regionId', _POST, _INT);
+        $response->loadFormUri= 'index.php?p=timeline&q=Timeline&regionid=' . \Kit::GetParam('regionId', _POST, _INT);
         $response->Respond();
     }
 
@@ -372,7 +372,7 @@ abstract class Module implements ModuleInterface
 
         Theme::Set('form_id', 'MediaDeleteForm');
         Theme::Set('form_action', 'index.php?p=module&mod=' . $this->module->type . '&q=Exec&method=DeleteMedia');
-        Theme::Set('form_meta', '<input type="hidden" name="widgetId" value="' . $this->getWidgetId() . '"><input type="hidden" name"regionId" value="' . Kit::GetParam('regionId', _POST, _INT) . '">');
+        Theme::Set('form_meta', '<input type="hidden" name="widgetId" value="' . $this->getWidgetId() . '"><input type="hidden" name"regionId" value="' . \Kit::GetParam('regionId', _POST, _INT) . '">');
         $formFields = array(
             FormManager::AddMessage(__('Are you sure you want to remove this widget?')),
             FormManager::AddMessage(__('This action cannot be undone.')),
@@ -404,7 +404,7 @@ abstract class Module implements ModuleInterface
             throw new Exception(__('You do not have permission to delete this media.'));
 
         // Delete associated media?
-        if (Kit::GetParam('deleteMedia', _POST, _CHECKBOX) == 1) {
+        if (\Kit::GetParam('deleteMedia', _POST, _CHECKBOX) == 1) {
             $media = new Media();
             foreach ($this->widget->mediaIds as $mediaId) {
                 $media->Delete($mediaId);
@@ -525,7 +525,7 @@ abstract class Module implements ModuleInterface
         }
         
         // Are we dealing with an IN or an OUT
-        $type = Kit::GetParam('type', _REQUEST, _WORD);
+        $type = \Kit::GetParam('type', _REQUEST, _WORD);
         $transition = '';
         $duration = '';
         $direction = '';
@@ -604,8 +604,8 @@ abstract class Module implements ModuleInterface
         $response->AddFieldAction('transitionType', 'change', '', array('.transition-group' => array('display' => 'block')), 'not');
 
         // Decide where the cancel button will take us
-        if (Kit::GetParam('designer', _REQUEST, _INT))
-            $response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&regionid=' . Kit::GetParam('regionId', _REQUEST, _INT) . '&q=RegionOptions")');
+        if (\Kit::GetParam('designer', _REQUEST, _INT))
+            $response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&regionid=' . \Kit::GetParam('regionId', _REQUEST, _INT) . '&q=RegionOptions")');
         else
             $response->AddButton(__('Cancel'), 'XiboDialogClose()');
 
@@ -634,10 +634,10 @@ abstract class Module implements ModuleInterface
             throw new Exception(__('You do not have permission to edit this media.'));
         
         // Get the transition type
-        $transitionType = Kit::GetParam('transitionType', _POST, _WORD);
-        $duration = Kit::GetParam('transitionDuration', _POST, _INT, 0);
-        $direction = Kit::GetParam('transitionDirection', _POST, _WORD, '');
-        $type = Kit::GetParam('type', _REQUEST, _WORD);
+        $transitionType = \Kit::GetParam('transitionType', _POST, _WORD);
+        $duration = \Kit::GetParam('transitionDuration', _POST, _INT, 0);
+        $direction = \Kit::GetParam('transitionDirection', _POST, _WORD, '');
+        $type = \Kit::GetParam('type', _REQUEST, _WORD);
         
         switch ($type)
         {
@@ -662,11 +662,11 @@ abstract class Module implements ModuleInterface
         // This saves the Media Object to the Region
         $this->saveWidget();
         
-        if (Kit::GetParam('designer', _REQUEST, _INT))
+        if (\Kit::GetParam('designer', _REQUEST, _INT))
         {
             // We want to load a new form
             $response->loadForm = true;
-            $response->loadFormUri = 'index.php?p=timeline&regionid=' . Kit::GetParam('regionId', _REQUEST, _INT) . '&q=RegionOptions';
+            $response->loadFormUri = 'index.php?p=timeline&regionid=' . \Kit::GetParam('regionId', _REQUEST, _INT) . '&q=RegionOptions';
         }
 
         return $response;
@@ -745,7 +745,7 @@ abstract class Module implements ModuleInterface
             if (!is_numeric($assignable))
                 throw new Exception(__('Assignable variable must be a number'));
 
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $sth = $dbh->prepare('
                     INSERT INTO `module` (`Module`, `Name`, `Enabled`, `RegionSpecific`, `Description`, 
@@ -797,7 +797,7 @@ abstract class Module implements ModuleInterface
             if (!is_numeric($assignable))
                 throw new Exception(__('Assignable variable must be a number'));
 
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $sth = $dbh->prepare('
                     UPDATE `module` SET `Name` = :name, `Description` = :description, 
@@ -849,7 +849,7 @@ abstract class Module implements ModuleInterface
             throw new InvalidArgumentException(__('Module settings must be an array'));
 
         // Update the settings on the module record.
-        $dbh = PDOConnect::init();
+        $dbh = \Xibo\Storage\PDOConnect::init();
 
         $sth = $dbh->prepare('UPDATE `module` SET settings = :settings WHERE ModuleID = :module_id');
         $sth->execute(array(

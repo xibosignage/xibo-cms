@@ -43,7 +43,7 @@ class Module
 
     public function save()
     {
-        $dbh = \PDOConnect::init();
+        $dbh = \Xibo\Storage\PDOConnect::init();
 
         $sth = $dbh->prepare('UPDATE module SET settings = :settings WHERE moduleid = :moduleId');
 

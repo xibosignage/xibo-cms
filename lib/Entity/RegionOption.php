@@ -33,7 +33,7 @@ class RegionOption
     public function save()
     {
         $sql = 'INSERT INTO `regionoption` (`regionId`, `option`, `value`) VALUES (:regionId, :option, :value) ON DUPLICATE KEY UPDATE `value` = :value2';
-        \PDOConnect::insert($sql, array(
+        \Xibo\Storage\PDOConnect::insert($sql, array(
             'regionId' => $this->regionId,
             'option' => $this->option,
             'value' => $this->value,
@@ -44,6 +44,6 @@ class RegionOption
     public function delete()
     {
         $sql = 'DELETE FROM `regionoption` WHERE `regionId` = :regionId AND `option` = :option';
-        \PDOConnect::update($sql, array('regionId' => $this->regionId, 'option' => $this->option));
+        \Xibo\Storage\PDOConnect::update($sql, array('regionId' => $this->regionId, 'option' => $this->option));
     }
 }

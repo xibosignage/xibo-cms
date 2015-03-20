@@ -66,7 +66,7 @@ class ResponseManager
 	public function __construct()
 	{		
 		// Determine if this is an AJAX call or not
-		$this->ajax = Kit::GetParam('ajax', _REQUEST, _BOOL, false);
+		$this->ajax = \Kit::GetParam('ajax', _REQUEST, _BOOL, false);
 		
 		// Assume success
 		$this->success = true;
@@ -86,7 +86,7 @@ class ResponseManager
 
         // Start a DB transaction for all returns from the Web Portal
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             if (!$dbh->inTransaction())
             	$dbh->beginTransaction();
@@ -197,7 +197,7 @@ class ResponseManager
 		$this->message			= $message;
 		$this->refresh			= $refresh;
 		$this->refreshLocation 	= $refreshLocation;
-		$this->nextToken = Kit::Token();	
+		$this->nextToken = \Kit::Token();
 		return;
 	}
 	
@@ -254,7 +254,7 @@ class ResponseManager
 	{
 		// Roll back any open transactions if we are in an error state
 		try {
-			$dbh = PDOConnect::init();
+			$dbh = \Xibo\Storage\PDOConnect::init();
 			
 			if (!$this->success) {
 				$dbh->rollBack();
@@ -342,7 +342,7 @@ class ResponseManager
 			}
 			else {
 				// Have we been asked to refresh?
-				$url = ($this->refresh) ? $this->refreshLocation : 'index.php?p=' . Kit::GetParam('p', _GET, _WORD, 'index');
+				$url = ($this->refresh) ? $this->refreshLocation : 'index.php?p=' . \Kit::GetParam('p', _GET, _WORD, 'index');
 			}
 
 			// Redirect and end execution

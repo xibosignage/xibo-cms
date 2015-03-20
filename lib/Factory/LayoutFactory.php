@@ -287,7 +287,7 @@ class LayoutFactory
         $entries = array();
 
         try {
-            $dbh = \PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             $params = array();
             $sql  = "";
@@ -457,7 +457,10 @@ class LayoutFactory
                 $layout->backgroundzIndex = \Kit::ValidateParam($row['backgroundzIndex'], _INT);
                 $layout->width = \Kit::ValidateParam($row['width'], _DOUBLE);
                 $layout->height = \Kit::ValidateParam($row['height'], _DOUBLE);
-                $layout->legacyXml = \Kit::ValidateParam($row['legacyXml'], _HTMLSTRING);
+
+                if (\Kit::GetParam('showLegacyXml', $filterBy, _INT) == 1)
+                    $layout->legacyXml = \Kit::ValidateParam($row['legacyXml'], _HTMLSTRING);
+
                 $layout->groupsWithPermissions = \Kit::ValidateParam($row['groupsWithPermissions'], _STRING);
 
                 $entries[] = $layout;

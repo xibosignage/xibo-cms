@@ -70,7 +70,7 @@ class TagFactory
     {
         $sql = 'SELECT tag.tagId, tag.tag FROM `tag` WHERE tag.tag = :tag';
 
-        $tags = \PDOConnect::select($sql, array('tag' => $tagName));
+        $tags = \Xibo\Storage\PDOConnect::select($sql, array('tag' => $tagName));
 
         if (count($tags) <= 0)
             throw new NotFoundException(sprintf(__('Unable to find Tag %s'), $tagName));

@@ -45,6 +45,6 @@ class WidgetMediaFactory
     {
         $sql = 'SELECT mediaId FROM `lkwidgetmedia` WHERE widgetId = :widgetId';
 
-        return array_map(function($element) { return $element['mediaId']; }, \PDOConnect::select($sql, array('widgetId' => \Kit::GetParam('widgetId', $filterBy, _INT))));
+        return array_map(function($element) { return $element['mediaId']; }, \Xibo\Storage\PDOConnect::select($sql, array('widgetId' => \Kit::GetParam('widgetId', $filterBy, _INT))));
     }
 }

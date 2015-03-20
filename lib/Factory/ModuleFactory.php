@@ -179,7 +179,7 @@ class ModuleFactory
         $entries = array();
 
         try {
-            $dbh = \PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             $params = array();
 

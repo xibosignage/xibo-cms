@@ -230,9 +230,9 @@ class text extends Module
         $response = new ResponseManager();
 
         // Other properties
-        $duration = Kit::GetParam('duration', _POST, _INT, 0, false);
-        $text = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
-	$name 	      = Kit::GetParam('name', _POST, _STRING);
+        $duration = \Kit::GetParam('duration', _POST, _INT, 0, false);
+        $text = \Kit::GetParam('ta_text', _POST, _HTMLSTRING);
+	$name 	      = \Kit::GetParam('name', _POST, _STRING);
 
         // Validation
         if ($text == '')
@@ -244,9 +244,9 @@ class text extends Module
         // Any Options
         $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration()));
         $this->SetOption('xmds', true);
-        $this->SetOption('effect', Kit::GetParam('effect', _POST, _STRING));
-        $this->SetOption('speed', Kit::GetParam('speed', _POST, _INT));
-        $this->SetOption('backgroundColor', Kit::GetParam('backgroundColor', _POST, _STRING));
+        $this->SetOption('effect', \Kit::GetParam('effect', _POST, _STRING));
+        $this->SetOption('speed', \Kit::GetParam('speed', _POST, _INT));
+        $this->SetOption('backgroundColor', \Kit::GetParam('backgroundColor', _POST, _STRING));
         $this->SetOption('name', $name);
         $this->setRawNode('text', $text);
 
@@ -272,8 +272,8 @@ class text extends Module
             throw new Exception(__('You do not have permission to edit this widget.'));
 
         // Other properties
-        $text = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
-        $name = Kit::GetParam('name', _POST, _STRING);
+        $text = \Kit::GetParam('ta_text', _POST, _HTMLSTRING);
+        $name = \Kit::GetParam('name', _POST, _STRING);
 
         // Validation
         if ($text == '')
@@ -282,9 +282,9 @@ class text extends Module
         // Any Options
         $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration(), false));
         $this->SetOption('xmds', true);
-        $this->SetOption('effect', Kit::GetParam('effect', _POST, _STRING));
-        $this->SetOption('speed', Kit::GetParam('speed', _POST, _INT));
-        $this->SetOption('backgroundColor', Kit::GetParam('backgroundColor', _POST, _STRING));
+        $this->SetOption('effect', \Kit::GetParam('effect', _POST, _STRING));
+        $this->SetOption('speed', \Kit::GetParam('speed', _POST, _INT));
+        $this->SetOption('backgroundColor', \Kit::GetParam('backgroundColor', _POST, _STRING));
         $this->SetOption('name', $name);
         $this->setRawNode('text', $text);
 
@@ -337,9 +337,9 @@ class text extends Module
             'speed' => $this->GetOption('speed', 0),
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
-            'previewWidth' => Kit::GetParam('width', _GET, _DOUBLE, 0),
-            'previewHeight' => Kit::GetParam('height', _GET, _DOUBLE, 0),
-            'scaleOverride' => Kit::GetParam('scale_override', _GET, _DOUBLE, 0)
+            'previewWidth' => \Kit::GetParam('width', _GET, _DOUBLE, 0),
+            'previewHeight' => \Kit::GetParam('height', _GET, _DOUBLE, 0),
+            'scaleOverride' => \Kit::GetParam('scale_override', _GET, _DOUBLE, 0)
         );
 
         // See if we need to replace out any [clock] or [date] tags
@@ -374,7 +374,7 @@ class text extends Module
         $items[] = $text;
         
         // Replace the head content
-        $isPreview = (Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
+        $isPreview = (\Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
         $javaScriptContent  = '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
 
         // Need the marquee plugin?

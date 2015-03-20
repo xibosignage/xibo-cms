@@ -93,11 +93,11 @@ class oauthDAO extends baseDAO {
 
         foreach ($list as $app)
         {
-            $app['application_title'] = Kit::ValidateParam($app['application_title'], _STRING);
-            $app['application_descr'] = Kit::ValidateParam($app['application_descr'], _STRING);
-            $app['application_uri'] = Kit::ValidateParam($app['application_uri'], _URI);
-            $app['consumer_key'] = Kit::ValidateParam($app['consumer_key'], _STRING);
-            $app['consumer_secret'] = Kit::ValidateParam($app['consumer_secret'], _STRING);
+            $app['application_title'] = \Kit::ValidateParam($app['application_title'], _STRING);
+            $app['application_descr'] = \Kit::ValidateParam($app['application_descr'], _STRING);
+            $app['application_uri'] = \Kit::ValidateParam($app['application_uri'], _URI);
+            $app['consumer_key'] = \Kit::ValidateParam($app['consumer_key'], _STRING);
+            $app['consumer_secret'] = \Kit::ValidateParam($app['consumer_secret'], _STRING);
 
             $rows[] = $app;
         }
@@ -135,9 +135,9 @@ class oauthDAO extends baseDAO {
 
         foreach($list as $row)
         {
-            $row['received'] = Kit::ValidateParam($row['received'], _STRING);
-            $row['notes'] = Kit::ValidateParam($row['notes'], _STRING);
-            $row['timestamp'] = Kit::ValidateParam($row['timestamp'], _STRING);
+            $row['received'] = \Kit::ValidateParam($row['received'], _STRING);
+            $row['notes'] = \Kit::ValidateParam($row['notes'], _STRING);
+            $row['timestamp'] = \Kit::ValidateParam($row['timestamp'], _STRING);
 
             $rows[] = $row;
         }
@@ -257,7 +257,7 @@ class oauthDAO extends baseDAO {
         $db =& $this->db;
         $user =& $this->user;
         $response = new ResponseManager();
-        $userid = Kit::GetParam('userid', _SESSION, _INT);
+        $userid = \Kit::GetParam('userid', _SESSION, _INT);
 
         $message = '';
 
@@ -305,9 +305,9 @@ class oauthDAO extends baseDAO {
 
         foreach ($list as $app)
         {
-            $app['application_title'] = Kit::ValidateParam($app['application_title'], _STRING);
-            $app['enabled'] = Kit::ValidateParam($app['enabled'], _STRING);
-            $app['status'] = Kit::ValidateParam($app['status'], _STRING);
+            $app['application_title'] = \Kit::ValidateParam($app['application_title'], _STRING);
+            $app['enabled'] = \Kit::ValidateParam($app['enabled'], _STRING);
+            $app['status'] = \Kit::ValidateParam($app['status'], _STRING);
 
             $rows[] = $app;
         }

@@ -46,7 +46,7 @@ class WidgetOption
         \Debug::Audit('Saving ' . $this);
 
         $sql = 'INSERT INTO `widgetoption` (`widgetId`, `type`, `option`, `value`) VALUES (:widgetId, :type, :option, :value) ON DUPLICATE KEY UPDATE `value` = :value2';
-        \PDOConnect::insert($sql, array(
+        \Xibo\Storage\PDOConnect::insert($sql, array(
             'widgetId' => $this->widgetId,
             'type' => $this->type,
             'option' => $this->option,
@@ -58,6 +58,6 @@ class WidgetOption
     public function delete()
     {
         $sql = 'DELETE FROM `widgetoption` WHERE `widgetId` = :widgetId AND `option` = :option';
-        \PDOConnect::update($sql, array('widgetId' => $this->widgetId, 'option' => $this->option));
+        \Xibo\Storage\PDOConnect::update($sql, array('widgetId' => $this->widgetId, 'option' => $this->option));
     }
 }

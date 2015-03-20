@@ -30,7 +30,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 <div id="LayoutAssign" class="well">
 	<div>
     	<ul id="LayoutAssignSortable">
-    		<?php echo Kit::Token('assign_token'); ?>
+    		<?php echo \Kit::Token('assign_token'); ?>
     		<?php foreach(Theme::Get('layouts_assigned') as $row) { ?>
     		<li id="LayoutID_<?php echo $row->layoutId; ?>" class="btn btn-sm btn-default"><?php echo $row->layout; ?> <span class="glyphicon glyphicon-minus-sign"></span></li>
 			<?php } ?>

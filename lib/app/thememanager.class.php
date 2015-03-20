@@ -216,7 +216,7 @@ class Theme {
 		
 		if ($key == 'form_meta') {
 			// Append a token to the end
-			$return = $return . Kit::Token();
+			$return = $return . \Kit::Token();
 		}
 		return $return;
 	}
@@ -305,12 +305,12 @@ class Theme {
 					
 		while ($menuItem = $menu->GetNextMenuItem()) {
 			$item = array();
-			$item['page'] = Kit::ValidateParam($menuItem['name'], _WORD);
-			$item['args'] = Kit::ValidateParam($menuItem['Args'], _STRING);
-			$item['class'] = Kit::ValidateParam($menuItem['Class'], _WORD);
+			$item['page'] = \Kit::ValidateParam($menuItem['name'], _WORD);
+			$item['args'] = \Kit::ValidateParam($menuItem['Args'], _STRING);
+			$item['class'] = \Kit::ValidateParam($menuItem['Class'], _WORD);
 			$item['title'] = __(Kit::ValidateParam($menuItem['Text'], _STRING));
-			$item['img'] = Kit::ValidateParam($menuItem['Img'], _STRING);
-			$item['external'] = Kit::ValidateParam($menuItem['External'], _INT);
+			$item['img'] = \Kit::ValidateParam($menuItem['Img'], _STRING);
+			$item['external'] = \Kit::ValidateParam($menuItem['External'], _INT);
 
 			$item['selected'] = ($item['page'] == $theme->pageName);
 

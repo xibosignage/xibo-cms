@@ -124,7 +124,7 @@ class moduletemplate extends Module
         // You must provide a duration (all media items must provide this field)
         $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration(), false));
 
-        // You should validate all form input using the Kit::GetParam helper classes
+        // You should validate all form input using the \Kit::GetParam helper classes
         //Kit::GetParam('duration', _POST, _INT, 0, false);
         
         // You should also validate that fields are set to your liking
@@ -206,8 +206,8 @@ class moduletemplate extends Module
 
         // If we are coming from a CMS preview or the Layout Designer we will have some additional variables passed in
         // These will not be passed in from the client.
-        $width = Kit::GetParam('width', _REQUEST, _DOUBLE);
-        $height = Kit::GetParam('height', _REQUEST, _DOUBLE);
+        $width = \Kit::GetParam('width', _REQUEST, _DOUBLE);
+        $height = \Kit::GetParam('height', _REQUEST, _DOUBLE);
 
         // Get any options you require from the XLF
         $myvariable = $this->GetOption('myvariable');

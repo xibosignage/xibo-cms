@@ -213,13 +213,13 @@ class webpage extends Module
         $response = new ResponseManager();
 
         // Other properties
-        $uri = Kit::GetParam('uri', _POST, _URI);
-        $duration = Kit::GetParam('duration', _POST, _INT, 0);
-        $scaling = Kit::GetParam('scaling', _POST, _INT, 100);
-        $transparency = Kit::GetParam('transparency', _POST, _CHECKBOX, 'off');
-        $offsetLeft = Kit::GetParam('offsetLeft', _POST, _INT);
-        $offsetTop = Kit::GetParam('offsetTop', _POST, _INT);
-	$name = Kit::GetParam('name', _POST, _STRING);
+        $uri = \Kit::GetParam('uri', _POST, _URI);
+        $duration = \Kit::GetParam('duration', _POST, _INT, 0);
+        $scaling = \Kit::GetParam('scaling', _POST, _INT, 100);
+        $transparency = \Kit::GetParam('transparency', _POST, _CHECKBOX, 'off');
+        $offsetLeft = \Kit::GetParam('offsetLeft', _POST, _INT);
+        $offsetTop = \Kit::GetParam('offsetTop', _POST, _INT);
+	$name = \Kit::GetParam('name', _POST, _STRING);
         
         // Validate the URL?
         if ($uri == "" || $uri == "http://")
@@ -236,9 +236,9 @@ class webpage extends Module
         $this->SetOption('transparency', $transparency);
         $this->SetOption('offsetLeft', $offsetLeft);
         $this->SetOption('offsetTop', $offsetTop);
-        $this->SetOption('pageWidth', Kit::GetParam('pageWidth', _POST, _INT));
-        $this->SetOption('pageHeight', Kit::GetParam('pageHeight', _POST, _INT));
-        $this->SetOption('modeid', Kit::GetParam('modeid', _POST, _INT));
+        $this->SetOption('pageWidth', \Kit::GetParam('pageWidth', _POST, _INT));
+        $this->SetOption('pageHeight', \Kit::GetParam('pageHeight', _POST, _INT));
+        $this->SetOption('modeid', \Kit::GetParam('modeid', _POST, _INT));
 	$this->SetOption('name', $name);
 
         // Save the widget
@@ -263,12 +263,12 @@ class webpage extends Module
             throw new Exception(__('You do not have permission to edit this widget.'));
 
         // Other properties
-        $uri = Kit::GetParam('uri', _POST, _URI);
-        $scaling = Kit::GetParam('scaling', _POST, _INT, 100);
-        $transparency = Kit::GetParam('transparency', _POST, _CHECKBOX, 'off');
-        $offsetLeft = Kit::GetParam('offsetLeft', _POST, _INT);
-        $offsetTop = Kit::GetParam('offsetTop', _POST, _INT);
-	$name = Kit::GetParam('name', _POST, _STRING);
+        $uri = \Kit::GetParam('uri', _POST, _URI);
+        $scaling = \Kit::GetParam('scaling', _POST, _INT, 100);
+        $transparency = \Kit::GetParam('transparency', _POST, _CHECKBOX, 'off');
+        $offsetLeft = \Kit::GetParam('offsetLeft', _POST, _INT);
+        $offsetTop = \Kit::GetParam('offsetTop', _POST, _INT);
+	$name = \Kit::GetParam('name', _POST, _STRING);
 
         // Validate the URL?
         if ($uri == "" || $uri == "http://")
@@ -282,9 +282,9 @@ class webpage extends Module
         $this->SetOption('transparency', $transparency);
         $this->SetOption('offsetLeft', $offsetLeft);
         $this->SetOption('offsetTop', $offsetTop);
-        $this->SetOption('pageWidth', Kit::GetParam('pageWidth', _POST, _INT));
-        $this->SetOption('pageHeight', Kit::GetParam('pageHeight', _POST, _INT));
-        $this->SetOption('modeid', Kit::GetParam('modeid', _POST, _INT));
+        $this->SetOption('pageWidth', \Kit::GetParam('pageWidth', _POST, _INT));
+        $this->SetOption('pageHeight', \Kit::GetParam('pageHeight', _POST, _INT));
+        $this->SetOption('modeid', \Kit::GetParam('modeid', _POST, _INT));
 	$this->SetOption('name', $name);
 
         // Save the widget
@@ -329,8 +329,8 @@ class webpage extends Module
             $template = str_replace('[[ViewPortWidth]]', $this->region->width, $template);
 
         // Get some parameters
-        $width = Kit::GetParam('width', _REQUEST, _DOUBLE);
-        $height = Kit::GetParam('height', _REQUEST, _DOUBLE);
+        $width = \Kit::GetParam('width', _REQUEST, _DOUBLE);
+        $height = \Kit::GetParam('height', _REQUEST, _DOUBLE);
 
         // Work out the url
         $url = urldecode($this->GetOption('uri'));
@@ -351,7 +351,7 @@ class webpage extends Module
                 'offsetTop' => intval($this->GetOption('offsetTop', 0)),
                 'offsetLeft' => intval($this->GetOption('offsetLeft', 0)),
                 'scale' => ($this->GetOption('scaling', 100) / 100),
-                'scaleOverride' => Kit::GetParam('scale_override', _GET, _DOUBLE, 0)
+                'scaleOverride' => \Kit::GetParam('scale_override', _GET, _DOUBLE, 0)
             );
 
         // Head Content
@@ -365,7 +365,7 @@ class webpage extends Module
         $template = str_replace('<!--[[[BODYCONTENT]]]-->', $output, $template);
 
         // After body content
-        $isPreview = (Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
+        $isPreview = (\Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
         $after_body  = '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
         $after_body .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-layout-scaler.js"></script>';
         $after_body .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-webpage-render.js"></script>';

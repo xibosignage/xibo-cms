@@ -27,8 +27,8 @@ class displayDAO extends baseDAO
         $this->db   =& $db;
         $this->user =& $user;
 
-        $this->sub_page = Kit::GetParam('sp', _GET, _WORD, 'view');
-        $this->ajax     = Kit::GetParam('ajax', _REQUEST, _WORD, 'false');
+        $this->sub_page = \Kit::GetParam('sp', _GET, _WORD, 'view');
+        $this->ajax     = \Kit::GetParam('ajax', _REQUEST, _WORD, 'false');
     }
 
     /**
@@ -45,7 +45,7 @@ class displayDAO extends baseDAO
         Theme::Set('pager', ResponseManager::Pager($id));
 
         // Default options
-        if (Kit::IsFilterPinned('display', 'DisplayFilter')) {
+        if (\Kit::IsFilterPinned('display', 'DisplayFilter')) {
             $filter_pinned = 1;
             $filter_displaygroup = Session::Get('display', 'filter_displaygroup');
             $filter_display = Session::Get('display', 'filter_display');
@@ -133,7 +133,7 @@ class displayDAO extends baseDAO
         $response = new ResponseManager();
 
         $displayObject  = new Display();
-        $displayObject->displayId = Kit::GetParam('displayid', _POST, _INT);
+        $displayObject->displayId = \Kit::GetParam('displayid', _POST, _INT);
 
         $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayObject->displayId), true);
         if (!$auth->edit)
@@ -143,22 +143,22 @@ class displayDAO extends baseDAO
             trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);
 
         // Update properties
-        $displayObject->display = Kit::GetParam('display', _POST, _STRING);
-        $displayObject->description = Kit::GetParam('description', _POST, _STRING);
-        $displayObject->isAuditing = Kit::GetParam('auditing', _POST, _INT);
-        $displayObject->defaultLayoutId = Kit::GetParam('defaultlayoutid', _POST, _INT);
-        $displayObject->licensed = Kit::GetParam('licensed', _POST, _INT);
-        $displayObject->incSchedule = Kit::GetParam('inc_schedule', _POST, _INT);
-        $displayObject->emailAlert = Kit::GetParam('email_alert', _POST, _INT);
-        $displayObject->alertTimeout = Kit::GetParam('alert_timeout', _POST, _CHECKBOX);
-        $displayObject->wakeOnLanEnabled = Kit::GetParam('wakeOnLanEnabled', _POST, _CHECKBOX);
-        $displayObject->wakeOnLanTime = Kit::GetParam('wakeOnLanTime', _POST, _STRING);
-        $displayObject->broadCastAddress = Kit::GetParam('broadCastAddress', _POST, _STRING);
-        $displayObject->secureOn = Kit::GetParam('secureOn', _POST, _STRING);
-        $displayObject->cidr = Kit::GetParam('cidr', _POST, _STRING);
-        $displayObject->latitude = Kit::GetParam('latitude', _POST, _DOUBLE);
-        $displayObject->longitude = Kit::GetParam('longitude', _POST, _DOUBLE);
-        $displayObject->displayProfileId = Kit::GetParam('displayprofileid', _POST, _INT);
+        $displayObject->display = \Kit::GetParam('display', _POST, _STRING);
+        $displayObject->description = \Kit::GetParam('description', _POST, _STRING);
+        $displayObject->isAuditing = \Kit::GetParam('auditing', _POST, _INT);
+        $displayObject->defaultLayoutId = \Kit::GetParam('defaultlayoutid', _POST, _INT);
+        $displayObject->licensed = \Kit::GetParam('licensed', _POST, _INT);
+        $displayObject->incSchedule = \Kit::GetParam('inc_schedule', _POST, _INT);
+        $displayObject->emailAlert = \Kit::GetParam('email_alert', _POST, _INT);
+        $displayObject->alertTimeout = \Kit::GetParam('alert_timeout', _POST, _CHECKBOX);
+        $displayObject->wakeOnLanEnabled = \Kit::GetParam('wakeOnLanEnabled', _POST, _CHECKBOX);
+        $displayObject->wakeOnLanTime = \Kit::GetParam('wakeOnLanTime', _POST, _STRING);
+        $displayObject->broadCastAddress = \Kit::GetParam('broadCastAddress', _POST, _STRING);
+        $displayObject->secureOn = \Kit::GetParam('secureOn', _POST, _STRING);
+        $displayObject->cidr = \Kit::GetParam('cidr', _POST, _STRING);
+        $displayObject->latitude = \Kit::GetParam('latitude', _POST, _DOUBLE);
+        $displayObject->longitude = \Kit::GetParam('longitude', _POST, _DOUBLE);
+        $displayObject->displayProfileId = \Kit::GetParam('displayprofileid', _POST, _INT);
 
         if (!$displayObject->Edit())
             trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);
@@ -176,7 +176,7 @@ class displayDAO extends baseDAO
 
         // Get the display Id
         $displayObject = new Display();
-        $displayObject->displayId = Kit::GetParam('displayid', _GET, _INT);
+        $displayObject->displayId = \Kit::GetParam('displayid', _GET, _INT);
 
         $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayObject->displayId), true);
         if (!$auth->edit)
@@ -377,27 +377,27 @@ class displayDAO extends baseDAO
         $response   = new ResponseManager();
         
         // Filter by Name
-        $filter_display = Kit::GetParam('filter_display', _POST, _STRING);
+        $filter_display = \Kit::GetParam('filter_display', _POST, _STRING);
         setSession('display', 'filter_display', $filter_display);
 
         // Filter by Name
-        $filterMacAddress = Kit::GetParam('filterMacAddress', _POST, _STRING);
+        $filterMacAddress = \Kit::GetParam('filterMacAddress', _POST, _STRING);
         setSession('display', 'filterMacAddress', $filterMacAddress);
         
         // Display Group
-        $filter_displaygroupid = Kit::GetParam('filter_displaygroup', _POST, _INT);
+        $filter_displaygroupid = \Kit::GetParam('filter_displaygroup', _POST, _INT);
         setSession('display', 'filter_displaygroup', $filter_displaygroupid);
 
         // Thumbnail?
-        $filter_showView = Kit::GetParam('filter_showView', _REQUEST, _INT);
+        $filter_showView = \Kit::GetParam('filter_showView', _REQUEST, _INT);
         setSession('display', 'filter_showView', $filter_showView);
 
         // filter_autoRefresh?
-        $filter_autoRefresh = Kit::GetParam('filter_autoRefresh', _REQUEST, _INT, 0);
+        $filter_autoRefresh = \Kit::GetParam('filter_autoRefresh', _REQUEST, _INT, 0);
         setSession('display', 'filter_autoRefresh', $filter_autoRefresh);
 
         // Pinned option?        
-        setSession('display', 'DisplayFilter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        setSession('display', 'DisplayFilter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 
         $displays = $user->DisplayList(array('displayid'), array('displaygroupid' => $filter_displaygroupid, 'display' => $filter_display, 'macAddress' => $filterMacAddress));
 
@@ -409,7 +409,7 @@ class displayDAO extends baseDAO
 
         // Do we want to make a VNC link out of the display name?
         $vncTemplate = Config::GetSetting('SHOW_DISPLAY_AS_VNCLINK');
-        $linkTarget = Kit::ValidateParam(Config::GetSetting('SHOW_DISPLAY_AS_VNC_TGT'), _STRING);
+        $linkTarget = \Kit::ValidateParam(Config::GetSetting('SHOW_DISPLAY_AS_VNC_TGT'), _STRING);
         
         $cols = array(
                 array('name' => 'displayid', 'title' => __('ID')),
@@ -481,12 +481,12 @@ class displayDAO extends baseDAO
                 $row['thumbnail'] = '<i class="fa fa-times-circle"></i>';
             }
             else if ($filter_showView <> 0 && file_exists(Config::GetSetting('LIBRARY_LOCATION') . 'screenshots/' . $row['displayid'] . '_screenshot.jpg')) {
-                $row['thumbnail'] = '<a data-toggle="lightbox" data-type="image" href="index.php?p=display&q=ScreenShot&DisplayId=' . $row['displayid'] . '"><img class="display-screenshot" src="index.php?p=display&q=ScreenShot&DisplayId=' . $row['displayid'] . '&' . Kit::uniqueId() . '" /></a>';
+                $row['thumbnail'] = '<a data-toggle="lightbox" data-type="image" href="index.php?p=display&q=ScreenShot&DisplayId=' . $row['displayid'] . '"><img class="display-screenshot" src="index.php?p=display&q=ScreenShot&DisplayId=' . $row['displayid'] . '&' . \Kit::uniqueId() . '" /></a>';
             }
 
             // Format the storage available / total space
-            $row['storageAvailableSpaceFormatted'] = Kit::formatBytes($row['storageAvailableSpace']);
-            $row['storageTotalSpaceFormatted'] = Kit::formatBytes($row['storageTotalSpace']);
+            $row['storageAvailableSpaceFormatted'] = \Kit::formatBytes($row['storageAvailableSpace']);
+            $row['storageTotalSpaceFormatted'] = \Kit::formatBytes($row['storageTotalSpace']);
             $row['storagePercentage'] = ($row['storageTotalSpace'] == 0) ? 100 : round($row['storageAvailableSpace'] / $row['storageTotalSpace'] * 100.0, 2);
 
             // Edit and Delete buttons first
@@ -616,7 +616,7 @@ class displayDAO extends baseDAO
         $output = Theme::RenderReturn('table_render');
 
         $response->SetGridResponse($output);
-        $response->refresh = Kit::GetParam('filter_autoRefresh', _REQUEST, _INT, 0);
+        $response->refresh = \Kit::GetParam('filter_autoRefresh', _REQUEST, _INT, 0);
         $response->Respond();
     }
 
@@ -628,7 +628,7 @@ class displayDAO extends baseDAO
         $db =& $this->db;
         $user =& $this->user;
         $response = new ResponseManager();
-        $displayid = Kit::GetParam('displayid', _REQUEST, _INT);
+        $displayid = \Kit::GetParam('displayid', _REQUEST, _INT);
 
         // Auth
         $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayid), true);
@@ -659,7 +659,7 @@ class displayDAO extends baseDAO
         
         $db =& $this->db;
         $response = new ResponseManager();
-        $displayid = Kit::GetParam('displayid', _POST, _INT, 0);
+        $displayid = \Kit::GetParam('displayid', _POST, _INT, 0);
 
         $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayid), true);
         if (!$auth->del)
@@ -685,7 +685,7 @@ class displayDAO extends baseDAO
         $db =& $this->db;
         $response = new ResponseManager();
 
-        $displayId = Kit::GetParam('DisplayId', _GET, _INT);
+        $displayId = \Kit::GetParam('DisplayId', _GET, _INT);
 
         $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayId), true);
         if (!$auth->edit)
@@ -734,8 +734,8 @@ class displayDAO extends baseDAO
         $response = new ResponseManager();
         $displayObject  = new Display($db);
 
-        $displayId = Kit::GetParam('DisplayId', _POST, _INT);
-        $defaultLayoutId = Kit::GetParam('defaultlayoutid', _POST, _INT);
+        $displayId = \Kit::GetParam('DisplayId', _POST, _INT);
+        $defaultLayoutId = \Kit::GetParam('defaultlayoutid', _POST, _INT);
 
         $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayId), true);
         if (!$auth->edit)
@@ -755,7 +755,7 @@ class displayDAO extends baseDAO
     {
         $db =& $this->db;
         $response = new ResponseManager();
-        $displayId = Kit::GetParam('DisplayId', _GET, _INT);
+        $displayId = \Kit::GetParam('DisplayId', _GET, _INT);
 
         $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayId), true);
         if (!$auth->view)
@@ -842,7 +842,7 @@ class displayDAO extends baseDAO
     {
         $db =& $this->db;
         $response = new ResponseManager();
-        $displayID  = Kit::GetParam('DisplayID', _REQUEST, _INT);
+        $displayID  = \Kit::GetParam('DisplayID', _REQUEST, _INT);
 
         // Auth
         $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayID), true);
@@ -924,11 +924,11 @@ class displayDAO extends baseDAO
         $db =& $this->db;
         $response = new ResponseManager();
 
-        Kit::ClassLoader('displaygroup');
+        \Kit::ClassLoader('displaygroup');
         $displayGroupObject = new DisplayGroup($db);
 
-        $displayID = Kit::GetParam('DisplayID', _REQUEST, _INT);
-        $displayGroups = Kit::GetParam('DisplayGroupID', _POST, _ARRAY, array());
+        $displayID = \Kit::GetParam('DisplayID', _REQUEST, _INT);
+        $displayGroups = \Kit::GetParam('DisplayGroupID', _POST, _ARRAY, array());
         $members = array();
 
         // Get a list of current members
@@ -948,7 +948,7 @@ class displayDAO extends baseDAO
         while($row = $db->get_assoc_row($resultIn))
         {
             // Test whether this ID is in the array or not
-            $displayGroupID = Kit::ValidateParam($row['DisplayGroupID'], _INT);
+            $displayGroupID = \Kit::ValidateParam($row['DisplayGroupID'], _INT);
 
             if(!in_array($displayGroupID, $displayGroups))
             {
@@ -989,7 +989,7 @@ class displayDAO extends baseDAO
         $db =& $this->db;
         $response = new ResponseManager();
 
-        $displayId = Kit::GetParam('DisplayId', _GET, _INT);
+        $displayId = \Kit::GetParam('DisplayId', _GET, _INT);
 
         // Get the MAC Address
         $macAddress = $db->GetSingleValue(sprintf("SELECT MacAddress FROM `display` WHERE DisplayID = %d", $displayId), 'MacAddress', _STRING);
@@ -1023,7 +1023,7 @@ class displayDAO extends baseDAO
         $response = new ResponseManager();
         $displayObject  = new Display($db);
 
-        $displayId = Kit::GetParam('DisplayId', _POST, _INT);
+        $displayId = \Kit::GetParam('DisplayId', _POST, _INT);
 
         if (!$displayObject->WakeOnLan($displayId))
             trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);
@@ -1033,7 +1033,7 @@ class displayDAO extends baseDAO
     }
 
     public function ScreenShot() {
-        $displayId = Kit::GetParam('DisplayId', _GET, _INT);
+        $displayId = \Kit::GetParam('DisplayId', _GET, _INT);
         
         // Output an image if present, otherwise not found image.
         $file = 'screenshots/' . $displayId . '_screenshot.jpg';
@@ -1067,7 +1067,7 @@ class displayDAO extends baseDAO
         $db =& $this->db;
         $response = new ResponseManager();
 
-        $displayId = Kit::GetParam('displayId', _GET, _INT);
+        $displayId = \Kit::GetParam('displayId', _GET, _INT);
 
         // Set some information about the form
         Theme::Set('form_id', 'RequestScreenShotForm');
@@ -1091,7 +1091,7 @@ class displayDAO extends baseDAO
         $response = new ResponseManager();
         $displayObject  = new Display($db);
 
-        $displayId = Kit::GetParam('displayId', _POST, _INT);
+        $displayId = \Kit::GetParam('displayId', _POST, _INT);
 
         if (!$displayObject->RequestScreenShot($displayId))
             trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);

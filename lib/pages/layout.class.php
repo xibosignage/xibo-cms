@@ -37,12 +37,12 @@ class layoutDAO extends baseDAO
      */
     function displayPage() 
     {
-        switch (Kit::GetParam('modify', _GET, _WORD, 'view'))
+        switch (\Kit::GetParam('modify', _GET, _WORD, 'view'))
         {   
             case 'view':
 
                 // Default options
-                if (Kit::IsFilterPinned('layout', 'LayoutFilter')) {
+                if (\Kit::IsFilterPinned('layout', 'LayoutFilter')) {
                     $layout = Session::Get('layout', 'filter_layout');
                     $tags = Session::Get('layout', 'filter_tags');
                     $retired = Session::Get('layout', 'filter_retired');
@@ -145,7 +145,7 @@ class layoutDAO extends baseDAO
                 
             case 'true':
 
-                $layoutId = Kit::GetParam('layoutid', _GET, _INT);
+                $layoutId = \Kit::GetParam('layoutid', _GET, _INT);
                 $layout = \Xibo\Factory\LayoutFactory::loadById($layoutId);
                 
                 Theme::Set('layout_form_edit_url', 'index.php?p=layout&q=EditForm&designer=1&layoutid=' . $layoutId);
@@ -179,7 +179,7 @@ class layoutDAO extends baseDAO
 
     function actionMenu() {
 
-        if (Kit::GetParam('modify', _GET, _WORD, 'view') != 'view')
+        if (\Kit::GetParam('modify', _GET, _WORD, 'view') != 'view')
             return NULL;
 
         return array(
@@ -218,11 +218,11 @@ class layoutDAO extends baseDAO
 
         $response = new ResponseManager();
 
-        $name = Kit::GetParam('layout', _POST, _STRING);
-        $description = Kit::GetParam('description', _POST, _STRING);
-        $tags = Kit::GetParam('tags', _POST, _STRING);
-        $templateId = Kit::GetParam('templateid', _POST, _INT);
-        $resolutionId = Kit::GetParam('resolutionid', _POST, _INT);
+        $name = \Kit::GetParam('layout', _POST, _STRING);
+        $description = \Kit::GetParam('description', _POST, _STRING);
+        $tags = \Kit::GetParam('tags', _POST, _STRING);
+        $templateId = \Kit::GetParam('templateid', _POST, _INT);
+        $resolutionId = \Kit::GetParam('resolutionid', _POST, _INT);
 
         if ($templateId != 0)
             $layout = \Xibo\Factory\LayoutFactory::createFromTemplate($templateId, $this->user->userid, $name, $description, $tags);
@@ -259,13 +259,13 @@ class layoutDAO extends baseDAO
         if (!$this->user->checkEditable($layout))
             trigger_error(__('You do not have permissions to edit this layout'), E_USER_ERROR);
 
-        $layout->layout = Kit::GetParam('layout', _POST, _STRING);
-        $layout->description = Kit::GetParam('description', _POST, _STRING);
+        $layout->layout = \Kit::GetParam('layout', _POST, _STRING);
+        $layout->description = \Kit::GetParam('description', _POST, _STRING);
         $layout->tags = \Xibo\Factory\TagFactory::tagsFromString(Kit::GetParam('tags', _POST, _STRING));
-        $layout->retired = Kit::GetParam('retired', _POST, _INT, 0);
-        $layout->backgroundColor = Kit::GetParam('backgroundColor', _POST, _STRING);
-        $layout->backgroundImageId = Kit::GetParam('backgroundImageId', _POST, _INT);
-        $layout->backgroundzIndex = Kit::GetParam('backgroundzIndex', _POST, _INT);
+        $layout->retired = \Kit::GetParam('retired', _POST, _INT, 0);
+        $layout->backgroundColor = \Kit::GetParam('backgroundColor', _POST, _STRING);
+        $layout->backgroundImageId = \Kit::GetParam('backgroundImageId', _POST, _INT);
+        $layout->backgroundzIndex = \Kit::GetParam('backgroundzIndex', _POST, _INT);
 
         // Resolution
         $resolution = \Xibo\Factory\ResolutionFactory::getById(Kit::GetParam('resolutionId', _POST, _INT));
@@ -278,7 +278,7 @@ class layoutDAO extends baseDAO
         // Save
         $layout->save();
 
-        if (Kit::GetParam('designer', _POST, _INT) == 1) {
+        if (\Kit::GetParam('designer', _POST, _INT) == 1) {
             $response->SetFormSubmitResponse(__('Layout Background Changed'), true, sprintf('index.php?p=layout&layoutid=%d&modify=true', $layout->layoutId));
         }
         else {
@@ -294,7 +294,7 @@ class layoutDAO extends baseDAO
     {
         $response = new ResponseManager();
         
-        $layoutId = Kit::GetParam('layoutId', _GET, _INT);
+        $layoutId = \Kit::GetParam('layoutId', _GET, _INT);
         $layout = \Xibo\Factory\LayoutFactory::loadById($layoutId);
 
         if (!$this->user->checkDeleteable($layout))
@@ -325,7 +325,7 @@ class layoutDAO extends baseDAO
     {
         $response = new ResponseManager();
 
-        $layoutId = Kit::GetParam('layoutId', _GET, _INT);
+        $layoutId = \Kit::GetParam('layoutId', _GET, _INT);
         $layout = \Xibo\Factory\LayoutFactory::loadById(Kit::GetParam('layoutid', _POST, _INT));
 
         // Make sure we have permission
@@ -359,7 +359,7 @@ class layoutDAO extends baseDAO
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $response = new ResponseManager();
-        $layoutId = Kit::GetParam('layoutId', _POST, _INT);
+        $layoutId = \Kit::GetParam('layoutId', _POST, _INT);
 
         $layout = \Xibo\Factory\LayoutFactory::loadById($layoutId);
 
@@ -381,7 +381,7 @@ class layoutDAO extends baseDAO
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $response = new ResponseManager();
-        $layoutId = Kit::GetParam('layoutid', _POST, _INT, 0);
+        $layoutId = \Kit::GetParam('layoutid', _POST, _INT, 0);
 
         if (!$this->auth->edit)
             trigger_error(__('You do not have permission to retire this layout'), E_USER_ERROR);
@@ -404,39 +404,39 @@ class layoutDAO extends baseDAO
         $response = new ResponseManager();
         
         // Filter by Name
-        $name = Kit::GetParam('filter_layout', _POST, _STRING);
+        $name = \Kit::GetParam('filter_layout', _POST, _STRING);
         setSession('layout', 'filter_layout', $name);
         
         // User ID
-        $filter_userid = Kit::GetParam('filter_userid', _POST, _INT);
+        $filter_userid = \Kit::GetParam('filter_userid', _POST, _INT);
         setSession('layout', 'filter_userid', $filter_userid);
         
         // Show retired
-        $filter_retired = Kit::GetParam('filter_retired', _POST, _INT);
+        $filter_retired = \Kit::GetParam('filter_retired', _POST, _INT);
         setSession('layout', 'filter_retired', $filter_retired);
 
         // Show filterLayoutStatusId
-        $filterLayoutStatusId = Kit::GetParam('filterLayoutStatusId', _POST, _INT);
+        $filterLayoutStatusId = \Kit::GetParam('filterLayoutStatusId', _POST, _INT);
         setSession('layout', 'filterLayoutStatusId', $filterLayoutStatusId);
 
         // Show showDescriptionId
-        $showDescriptionId = Kit::GetParam('showDescriptionId', _POST, _INT);
+        $showDescriptionId = \Kit::GetParam('showDescriptionId', _POST, _INT);
         setSession('layout', 'showDescriptionId', $showDescriptionId);
         
         // Show filter_showThumbnail
-        $showTags = Kit::GetParam('showTags', _POST, _CHECKBOX);
+        $showTags = \Kit::GetParam('showTags', _POST, _CHECKBOX);
         setSession('layout', 'showTags', $showTags);
 
         // Show filter_showThumbnail
-        $showThumbnail = Kit::GetParam('showThumbnail', _POST, _CHECKBOX);
+        $showThumbnail = \Kit::GetParam('showThumbnail', _POST, _CHECKBOX);
         setSession('layout', 'showThumbnail', $showThumbnail);
 
         // Tags list
-        $filter_tags = Kit::GetParam("filter_tags", _POST, _STRING);
+        $filter_tags = \Kit::GetParam("filter_tags", _POST, _STRING);
         setSession('layout', 'filter_tags', $filter_tags);
         
         // Pinned option?        
-        setSession('layout', 'LayoutFilter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        setSession('layout', 'LayoutFilter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
         
         // Get all layouts
         $layouts = $user->LayoutList(NULL, array('layout' => $name, 'userId' => $filter_userid, 'retired' => $filter_retired, 'tags' => $filter_tags, 'filterLayoutStatusId' => $filterLayoutStatusId, 'showTags' => $showTags));
@@ -611,7 +611,7 @@ class layoutDAO extends baseDAO
 
         // Store the table rows
         Theme::Set('table_rows', $rows);
-        Theme::Set('gridId', Kit::GetParam('gridId', _REQUEST, _STRING));
+        Theme::Set('gridId', \Kit::GetParam('gridId', _REQUEST, _STRING));
 
         // Initialise the theme and capture the output
         $output = Theme::RenderReturn('table_render');
@@ -692,7 +692,7 @@ class layoutDAO extends baseDAO
     function EditForm()
     {
         $response = new ResponseManager();
-        $layoutId = Kit::GetParam('layoutid', _GET, _INT);
+        $layoutId = \Kit::GetParam('layoutid', _GET, _INT);
 
         // Get the layout
         $layout = \Xibo\Factory\LayoutFactory::getById($layoutId);
@@ -704,7 +704,7 @@ class layoutDAO extends baseDAO
         // Generate the form
         Theme::Set('form_id', 'LayoutForm');
         Theme::Set('form_action', 'index.php?p=layout&q=modify');
-        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutId . '"><input type="hidden" name="designer" value="' . Kit::GetParam('designer', _GET, _INT) . '">');
+        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutId . '"><input type="hidden" name="designer" value="' . \Kit::GetParam('designer', _GET, _INT) . '">');
 
         // Two tabs
         $tabs = array();
@@ -736,7 +736,7 @@ class layoutDAO extends baseDAO
 
         // Background Tab
         // Do we need to override the background with one passed in?
-        $backgroundImageId = Kit::GetParam('backgroundOveride', _GET, _INT, $layout->backgroundImageId);
+        $backgroundImageId = \Kit::GetParam('backgroundOveride', _GET, _INT, $layout->backgroundImageId);
 
         // Manipulate the images slightly
         $thumbBgImage = ($backgroundImageId == 0) ? 'theme/default/img/forms/filenotfound.gif' : 'index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $backgroundImageId . '&width=200&height=200&dynamic';
@@ -797,7 +797,7 @@ class layoutDAO extends baseDAO
     function RenderDesigner($layout)
     {
         // What zoom level are we at?
-        $zoom = Kit::GetParam('zoom', _GET, _DOUBLE, 1);
+        $zoom = \Kit::GetParam('zoom', _GET, _DOUBLE, 1);
         
         // Get the width and the height
         $version = $layout->schemaVersion;
@@ -924,7 +924,7 @@ HTML;
     {
         $response = new ResponseManager();
 
-        $layoutId = Kit::GetParam('layoutid', _GET, _INT);
+        $layoutId = \Kit::GetParam('layoutid', _GET, _INT);
 
         // Get the layout
         $layout = \Xibo\Factory\LayoutFactory::getById($layoutId);
@@ -970,14 +970,14 @@ HTML;
         // Load the layout for Copy
         $layout = clone \Xibo\Factory\LayoutFactory::loadById(Kit::GetParam('layoutid', _POST, _INT));
 
-        $layout->layout = Kit::GetParam('layout', _POST, _STRING);
-        $layout->description = Kit::GetParam('description', _POST, _STRING);
+        $layout->layout = \Kit::GetParam('layout', _POST, _STRING);
+        $layout->description = \Kit::GetParam('description', _POST, _STRING);
 
         // Validate the new layout
         $layout->validate();
 
         // TODO: Copy the media on the layout and change the assignments.
-        if (Kit::GetParam('copyMediaFiles', _POST, _CHECKBOX == 1)) {
+        if (\Kit::GetParam('copyMediaFiles', _POST, _CHECKBOX == 1)) {
 
         }
 
@@ -992,9 +992,9 @@ HTML;
     {
         $db =& $this->db;
         $response = new ResponseManager();
-        $layoutId = Kit::GetParam('layoutId', _GET, _INT);
+        $layoutId = \Kit::GetParam('layoutId', _GET, _INT);
 
-        Kit::ClassLoader('Layout');
+        \Kit::ClassLoader('Layout');
         $layout = new Layout($db);
 
         $status = "";
@@ -1028,9 +1028,9 @@ HTML;
 
     public function Export() {
         
-        $layoutId = Kit::GetParam('layoutid', _REQUEST, _INT);
+        $layoutId = \Kit::GetParam('layoutid', _REQUEST, _INT);
 
-        Kit::ClassLoader('layout');
+        \Kit::ClassLoader('layout');
         $layout = new Layout($this->db);
 
         if (!$layout->Export($layoutId)) {
@@ -1057,7 +1057,7 @@ HTML;
          // Set some information about the form
         Theme::Set('form_id', 'LayoutImportForm');
         Theme::Set('form_action', 'index.php?p=layout&q=Import');
-        Theme::Set('form_meta', '<input type="hidden" id="txtFileName" name="txtFileName" readonly="true" /><input type="hidden" name="hidFileID" id="hidFileID" value="" /><input type="hidden" name="template" value="' . Kit::GetParam('template', _GET, _STRING, 'false') . '" />');
+        Theme::Set('form_meta', '<input type="hidden" id="txtFileName" name="txtFileName" readonly="true" /><input type="hidden" name="hidFileID" id="hidFileID" value="" /><input type="hidden" name="template" value="' . \Kit::GetParam('template', _GET, _STRING, 'false') . '" />');
 
         Theme::Set('form_upload_id', 'file_upload');
         Theme::Set('form_upload_action', 'index.php?p=content&q=FileUpload');
@@ -1072,7 +1072,7 @@ HTML;
             __('If the import finds existing media with the same name, should it be replaced in the Layout or should the Layout use that media.'), 
             'r');
 
-        if (Kit::GetParam('template', _GET, _STRING, 'false') != 'true')
+        if (\Kit::GetParam('template', _GET, _STRING, 'false') != 'true')
             $formFields[] = FormManager::AddCheckbox('importTags', __('Import Tags?'), 
                 NULL, 
                 __('Would you like to import any tags contained on the layout.'), 
@@ -1093,28 +1093,28 @@ HTML;
         $response = new ResponseManager();
 
         // What are we importing?
-        $template = Kit::GetParam('template', _POST, _STRING, 'false');
+        $template = \Kit::GetParam('template', _POST, _STRING, 'false');
         $template = ($template == 'true');
         
-        $layout = Kit::GetParam('layout', _POST, _STRING);
-        $replaceExisting = Kit::GetParam('replaceExisting', _POST, _CHECKBOX);
-        $importTags = Kit::GetParam('importTags', _POST, _CHECKBOX, (!$template));
+        $layout = \Kit::GetParam('layout', _POST, _STRING);
+        $replaceExisting = \Kit::GetParam('replaceExisting', _POST, _CHECKBOX);
+        $importTags = \Kit::GetParam('importTags', _POST, _CHECKBOX, (!$template));
         
         // File data
-        $tmpName = Kit::GetParam('hidFileID', _POST, _STRING);
+        $tmpName = \Kit::GetParam('hidFileID', _POST, _STRING);
 
         if ($tmpName == '')
             trigger_error(__('Please ensure you have picked a file and it has finished uploading'), E_USER_ERROR);
 
         // File name and extension (original name)
-        $fileName = Kit::GetParam('txtFileName', _POST, _STRING);
+        $fileName = \Kit::GetParam('txtFileName', _POST, _STRING);
         $fileName = basename($fileName);
         $ext = strtolower(substr(strrchr($fileName, "."), 1));
 
         // File upload directory.. get this from the settings object
         $fileLocation = Config::GetSetting('LIBRARY_LOCATION') . 'temp/' . $tmpName;
 
-        Kit::ClassLoader('layout');
+        \Kit::ClassLoader('layout');
         $layoutObject = new Layout($this->db);
 
         if (!$layoutObject->Import($fileLocation, $layout, $this->user->userid, $template, $replaceExisting, $importTags)) {

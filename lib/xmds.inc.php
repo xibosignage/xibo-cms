@@ -24,7 +24,6 @@ error_reporting(0);
 ini_set('display_errors', 0); //we never want to display errors on the screen
 
 // Required Library Files
-require_once("lib/app/pdoconnect.class.php");
 require_once('lib/app/translationengine.class.php');
 require_once('lib/app/app_functions.php');
 require_once('lib/app/debug.class.php');
@@ -71,13 +70,13 @@ if (!file_exists("settings.php")) {
   // Xibo has not been configured. Just quit since we can't
   // raise a SOAP error because we don't know where
   // nuSOAP is yet.
-  die("Not configured. Visit " . Kit::GetURL() . " to configure.");
+  die("Not configured. Visit " . \Kit::GetURL() . " to configure.");
 }
 
 if (file_exists("upgrade.php")) {
   // An upgrade is in progress. Just quit since the server
   // won't be in a servicable state
-  die("An upgrade is pending. Visit " . Kit::GetURL() . ".");
+  die("An upgrade is pending. Visit " . \Kit::GetURL() . ".");
 }
 
 //parse and init the settings.xml
@@ -88,7 +87,7 @@ include('lib/autoload.php');
 
 // Define an auto-load function
 spl_autoload_register(function ($class) {
-    Kit::ClassLoader($class);
+    \Kit::ClassLoader($class);
 });
 
 // Error Handling (our error handler requires a DB connection
@@ -97,8 +96,8 @@ set_error_handler(array(new Debug(), "ErrorHandler"));
 date_default_timezone_set(Config::GetSetting('defaultTimezone'));
 
 // Deal with HTTPS/STS config
-if (Kit::isSSL()) {
-    Kit::IssueStsHeaderIfNecessary();
+if (\Kit::isSSL()) {
+    \Kit::IssueStsHeaderIfNecessary();
 }
 else {
     if (Config::GetSetting('FORCE_HTTPS', 0) == 1) {
@@ -117,10 +116,7 @@ if (Debug::getLevel(Config::GetSetting('audit')) == 10)
     error_reporting(E_ALL);
 
 // Work out the location of this service
-$serviceLocation = Kit::GetXiboRoot();
-
-// OAuth
-require_once('lib/oauth.inc.php');
+$serviceLocation = \Kit::GetXiboRoot();
 
 // Setup the translations for gettext
 TranslationEngine::InitLocale();

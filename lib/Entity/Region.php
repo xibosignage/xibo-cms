@@ -241,7 +241,7 @@ class Region
         }
 
         // Delete this region
-        \PDOConnect::update('DELETE FROM `region` WHERE regionId = :regionId', array('regionId' => $this->regionId));
+        \Xibo\Storage\PDOConnect::update('DELETE FROM `region` WHERE regionId = :regionId', array('regionId' => $this->regionId));
     }
 
     // Add / Update
@@ -254,7 +254,7 @@ class Region
 
         $sql = 'INSERT INTO `region` (`layoutId`, `ownerId`, `name`, `width`, `height`, `top`, `left`, `zIndex`) VALUES (:layoutId, :ownerId, :name, :width, :height, :top, :left, :zIndex)';
 
-        $this->regionId = \PDOConnect::insert($sql, array(
+        $this->regionId = \Xibo\Storage\PDOConnect::insert($sql, array(
             'layoutId' => $this->layoutId,
             'ownerId' => $this->ownerId,
             'name' => $this->name,
@@ -275,7 +275,7 @@ class Region
 
         $sql = 'UPDATE `region` SET `ownerId` = :ownerId, `name` = :name, `width` = :width, `height` = :height, `top` = :top, `left` = :left, zIndex = :zIndex WHERE `regionId` = :regionId';
 
-        \PDOConnect::update($sql, array(
+        \Xibo\Storage\PDOConnect::update($sql, array(
             'ownerId' => $this->ownerId,
             'name' => $this->name,
             'width' => $this->width,

@@ -25,7 +25,7 @@ class Setting extends Data
 	public function Edit($setting, $value)
 	{
 		try {
-		    $dbh = PDOConnect::init();
+		    $dbh = \Xibo\Storage\PDOConnect::init();
 		
 		    $sth = $dbh->prepare('UPDATE setting SET value = :value WHERE setting = :setting');
 		    $sth->execute(array(

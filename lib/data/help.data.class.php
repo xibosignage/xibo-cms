@@ -30,7 +30,7 @@ class Help extends Data {
     public function Add($topic, $category, $link)
     {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             // Validation
             if ($topic == '')
@@ -72,7 +72,7 @@ class Help extends Data {
     public function Edit($helpId, $topic, $category, $link)
     {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             // Validation
             if ($helpId == 0)
@@ -116,7 +116,7 @@ class Help extends Data {
     public function Delete($helpId)
     {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             // Validation
             if ($helpId == 0)

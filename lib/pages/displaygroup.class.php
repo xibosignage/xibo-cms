@@ -186,7 +186,7 @@ class displaygroupDAO extends baseDAO
         $response       = new ResponseManager();
         $helpManager    = new HelpManager($db, $user);
         
-        $displayGroupID = Kit::GetParam('DisplayGroupID', _REQUEST, _INT);
+        $displayGroupID = \Kit::GetParam('DisplayGroupID', _REQUEST, _INT);
 
         // Auth
         $auth = $this->user->DisplayGroupAuth($displayGroupID, true);
@@ -212,10 +212,10 @@ class displaygroupDAO extends baseDAO
         Theme::Set('form_action', 'index.php?p=displaygroup&q=Edit');
         Theme::Set('form_meta', '<input type="hidden" name="DisplayGroupID" value="' . $displayGroupID . '" />');
         
-        $formFields[] = FormManager::AddText('group', __('Name'), Kit::ValidateParam($row['DisplayGroup'], _STRING), 
+        $formFields[] = FormManager::AddText('group', __('Name'), \Kit::ValidateParam($row['DisplayGroup'], _STRING),
             __('The Name for this Group'), 'n', 'required');
 
-        $formFields[] = FormManager::AddText('desc', __('Description'), Kit::ValidateParam($row['Description'], _STRING), 
+        $formFields[] = FormManager::AddText('desc', __('Description'), \Kit::ValidateParam($row['Description'], _STRING),
             __('A short description of this Group'), 'd', 'maxlength="254"');
 
         Theme::Set('form_fields', $formFields);
@@ -234,7 +234,7 @@ class displaygroupDAO extends baseDAO
     {
         $db             =& $this->db;
         $response       = new ResponseManager();
-        $displayGroupID = Kit::GetParam('DisplayGroupID', _REQUEST, _INT);
+        $displayGroupID = \Kit::GetParam('DisplayGroupID', _REQUEST, _INT);
 
         // Auth
         $auth = $this->user->DisplayGroupAuth($displayGroupID, true);
@@ -262,7 +262,7 @@ class displaygroupDAO extends baseDAO
     {
         $db             =& $this->db;
         $response       = new ResponseManager();
-        $displayGroupID = Kit::GetParam('DisplayGroupID', _REQUEST, _INT);
+        $displayGroupID = \Kit::GetParam('DisplayGroupID', _REQUEST, _INT);
         
         // There needs to be two lists here.
         // One of which is the Displays currently assigned to this group
@@ -345,8 +345,8 @@ class displaygroupDAO extends baseDAO
         $db =& $this->db;
         $response = new ResponseManager();
 
-        $displayGroup = Kit::GetParam('group', _POST, _STRING);
-        $description = Kit::GetParam('desc', _POST, _STRING);
+        $displayGroup = \Kit::GetParam('group', _POST, _STRING);
+        $description = \Kit::GetParam('desc', _POST, _STRING);
         
         $displayGroupObject = new DisplayGroup($db);
         
@@ -378,9 +378,9 @@ class displaygroupDAO extends baseDAO
         $db             =& $this->db;
         $response       = new ResponseManager();
 
-        $displayGroupID = Kit::GetParam('DisplayGroupID', _POST, _INT);
-        $displayGroup   = Kit::GetParam('group', _POST, _STRING);
-        $description    = Kit::GetParam('desc', _POST, _STRING);
+        $displayGroupID = \Kit::GetParam('DisplayGroupID', _POST, _INT);
+        $displayGroup   = \Kit::GetParam('group', _POST, _STRING);
+        $description    = \Kit::GetParam('desc', _POST, _STRING);
 
         // Auth
         $auth = $this->user->DisplayGroupAuth($displayGroupID, true);
@@ -412,7 +412,7 @@ class displaygroupDAO extends baseDAO
         $db             =& $this->db;   
         $response       = new ResponseManager();
     
-        $displayGroupID = Kit::GetParam('DisplayGroupID', _POST, _INT);
+        $displayGroupID = \Kit::GetParam('DisplayGroupID', _POST, _INT);
 
         // Auth
         $auth = $this->user->DisplayGroupAuth($displayGroupID, true);
@@ -441,8 +441,8 @@ class displaygroupDAO extends baseDAO
         $response       = new ResponseManager();
         $displayGroupObject = new DisplayGroup($db);
     
-        $displayGroupID = Kit::GetParam('DisplayGroupID', _REQUEST, _INT);
-        $displays       = Kit::GetParam('DisplayID', _POST, _ARRAY, array());
+        $displayGroupID = \Kit::GetParam('DisplayGroupID', _REQUEST, _INT);
+        $displays       = \Kit::GetParam('DisplayID', _POST, _ARRAY, array());
         $members        = array();
 
         // Auth
@@ -467,7 +467,7 @@ class displaygroupDAO extends baseDAO
         while($row = $db->get_assoc_row($resultIn))
         {
             // Test whether this ID is in the array or not
-            $displayID  = Kit::ValidateParam($row['DisplayID'], _INT);
+            $displayID  = \Kit::ValidateParam($row['DisplayID'], _INT);
             
             if(!in_array($displayID, $displays))
             {
@@ -510,7 +510,7 @@ class displaygroupDAO extends baseDAO
         $response = new ResponseManager();
         $helpManager = new HelpManager($db, $user);
 
-        $displayGroupId = Kit::GetParam('DisplayGroupID', _GET, _INT);
+        $displayGroupId = \Kit::GetParam('DisplayGroupID', _GET, _INT);
 
         $auth = $this->user->DisplayGroupAuth($displayGroupId, true);
 
@@ -538,7 +538,7 @@ class displaygroupDAO extends baseDAO
 
             $checkbox = array(
                     'id' => $groupId,
-                    'name' => Kit::ValidateParam($row['group'], _STRING),
+                    'name' => \Kit::ValidateParam($row['group'], _STRING),
                     'class' => $rowClass,
                     'value_view' => $groupId . '_view',
                     'value_view_checked' => (($row['view'] == 1) ? 'checked' : ''),
@@ -576,8 +576,8 @@ class displaygroupDAO extends baseDAO
         $user =& $this->user;
         $response = new ResponseManager();
 
-        $displayGroupId = Kit::GetParam('displayGroupId', _POST, _INT);
-        $groupIds = Kit::GetParam('groupids', _POST, _ARRAY);
+        $displayGroupId = \Kit::GetParam('displayGroupId', _POST, _INT);
+        $groupIds = \Kit::GetParam('groupids', _POST, _ARRAY);
 
         $auth = $this->user->DisplayGroupAuth($displayGroupId, true);
 
@@ -652,7 +652,7 @@ class displaygroupDAO extends baseDAO
 
     public function FileAssociations() {
 
-        $displayGroupId = Kit::GetParam('DisplayGroupID', _GET, _INT);
+        $displayGroupId = \Kit::GetParam('DisplayGroupID', _GET, _INT);
 
         // Auth
         $auth = $this->user->DisplayGroupAuth($displayGroupId, true);
@@ -682,7 +682,7 @@ class displaygroupDAO extends baseDAO
         $existing = array();
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $sth = $dbh->prepare('
                 SELECT media.MediaID, media.Name 
@@ -728,15 +728,15 @@ class displaygroupDAO extends baseDAO
         $user =& $this->user;
 
         //Input vars
-        $mediatype = Kit::GetParam('filter_type', _POST, _STRING);
-        $name = Kit::GetParam('filter_name', _POST, _STRING);
-        $displaygroupid = Kit::GetParam('displaygroupid', _POST, _INT);
+        $mediatype = \Kit::GetParam('filter_type', _POST, _STRING);
+        $name = \Kit::GetParam('filter_name', _POST, _STRING);
+        $displaygroupid = \Kit::GetParam('displaygroupid', _POST, _INT);
 
         // Get the currently associated media items and put them in the top bar
         $existing = array();
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $sth = $dbh->prepare('
                 SELECT mediaid
@@ -785,8 +785,8 @@ class displaygroupDAO extends baseDAO
         $user       =& $this->user;
         $response   = new ResponseManager();
 
-        $displayGroupId = Kit::GetParam('displaygroupid', _GET, _INT);
-        $mediaList = Kit::GetParam('MediaID', _POST, _ARRAY_INT, NULL, false);
+        $displayGroupId = \Kit::GetParam('displaygroupid', _GET, _INT);
+        $mediaList = \Kit::GetParam('MediaID', _POST, _ARRAY_INT, NULL, false);
 
         if ($displayGroupId == 0)
             trigger_error(__('Display Group not selected'), E_USER_ERROR);
@@ -796,7 +796,7 @@ class displaygroupDAO extends baseDAO
         if (!$auth->del)
             trigger_error(__('You do not have permission to edit this display group'), E_USER_ERROR);
 
-        Kit::ClassLoader('displaygroup');
+        \Kit::ClassLoader('displaygroup');
         $displayGroup = new DisplayGroup($this->db);
 
         if (!$displayGroup->AssociateFiles($this->user, $displayGroupId, $mediaList))
@@ -810,8 +810,8 @@ class displaygroupDAO extends baseDAO
     public function VersionInstructionsForm() {
         $response = new ResponseManager();
 
-        $displayGroupId = Kit::GetParam('displaygroupid', _GET, _INT);
-        $displayId = Kit::GetParam('displayid', _GET, _INT);
+        $displayGroupId = \Kit::GetParam('displaygroupid', _GET, _INT);
+        $displayId = \Kit::GetParam('displayid', _GET, _INT);
         Theme::Set('installer_file_id', 0);
 
         // List of effected displays
@@ -861,12 +861,12 @@ class displaygroupDAO extends baseDAO
     public function VersionInstructions() {
         $response = new ResponseManager();
 
-        Kit::ClassLoader('media');
-        Kit::ClassLoader('display');
-        Kit::ClassLoader('lkmediadisplaygroup');
+        \Kit::ClassLoader('media');
+        \Kit::ClassLoader('display');
+        \Kit::ClassLoader('lkmediadisplaygroup');
 
-        $displayGroupId = Kit::GetParam('displaygroupid', _POST, _INT);
-        $mediaId = Kit::GetParam('mediaid', _POST, _INT);
+        $displayGroupId = \Kit::GetParam('displaygroupid', _POST, _INT);
+        $mediaId = \Kit::GetParam('mediaid', _POST, _INT);
 
         // Make sure we have permission to do this to this display
         $auth = $this->user->DisplayGroupAuth($displayGroupId, true);

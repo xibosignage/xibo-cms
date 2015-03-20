@@ -160,7 +160,7 @@ class database
             return false;
         }
 
-        return Kit::ValidateParam($row[$columnName], $dataType);
+        return \Kit::ValidateParam($row[$columnName], $dataType);
     }
 
     /**

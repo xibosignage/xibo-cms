@@ -91,7 +91,7 @@ class Tag
      */
     private function add()
     {
-        $this->tagId = \PDOConnect::insert('INSERT INTO `tag` (tag) VALUES (:tag) ON DUPLICATE KEY UPDATE tag = tag', array('tag' => $this->tag));
+        $this->tagId = \Xibo\Storage\PDOConnect::insert('INSERT INTO `tag` (tag) VALUES (:tag) ON DUPLICATE KEY UPDATE tag = tag', array('tag' => $this->tag));
     }
 
     /**
@@ -100,7 +100,7 @@ class Tag
     private function linkLayouts()
     {
         foreach ($this->layoutIds as $layoutId) {
-            \PDOConnect::update('INSERT INTO `lktaglayout` (tagId, layoutId) VALUES (:tagId, :layoutId) ON DUPLICATE KEY UPDATE layoutId = layoutId', array(
+            \Xibo\Storage\PDOConnect::update('INSERT INTO `lktaglayout` (tagId, layoutId) VALUES (:tagId, :layoutId) ON DUPLICATE KEY UPDATE layoutId = layoutId', array(
                 'tagId' => $this->tagId,
                 'layoutId' => $layoutId
             ));
@@ -113,7 +113,7 @@ class Tag
     private function unlinkLayouts()
     {
         foreach ($this->layoutIds as $layoutId) {
-            \PDOConnect::update('DELETE FROM `lktaglayout` WHERE tagId = :tagId AND layoutId =  :layoutId ', array(
+            \Xibo\Storage\PDOConnect::update('DELETE FROM `lktaglayout` WHERE tagId = :tagId AND layoutId =  :layoutId ', array(
                 'tagId' => $this->tagId,
                 'layoutId' => $layoutId
             ));
@@ -126,7 +126,7 @@ class Tag
     private function linkMedia()
     {
         foreach ($this->mediaIds as $mediaId) {
-            \PDOConnect::update('INSERT INTO `lktagmedia` (tagId, mediaId) VALUES (:tagId, :mediaId) ON DUPLICATE KEY UPDATE mediaId = mediaId', array(
+            \Xibo\Storage\PDOConnect::update('INSERT INTO `lktagmedia` (tagId, mediaId) VALUES (:tagId, :mediaId) ON DUPLICATE KEY UPDATE mediaId = mediaId', array(
                 'tagId' => $this->tagId,
                 'mediaId' => $mediaId
             ));
@@ -139,7 +139,7 @@ class Tag
     private function unlinkMedia()
     {
         foreach ($this->mediaIds as $mediaId) {
-            \PDOConnect::update('DELETE FROM `lktagmedia` WHERE tagId = :tagId AND mediaId = :mediaId', array(
+            \Xibo\Storage\PDOConnect::update('DELETE FROM `lktagmedia` WHERE tagId = :tagId AND mediaId = :mediaId', array(
                 'tagId' => $this->tagId,
                 'mediaId' => $mediaId
             ));

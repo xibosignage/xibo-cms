@@ -91,13 +91,13 @@ class ForecastIo extends Module
     public function ModuleSettings()
     {
         // Process any module settings you asked for.
-        $apiKey = Kit::GetParam('apiKey', _POST, _STRING, '');
+        $apiKey = \Kit::GetParam('apiKey', _POST, _STRING, '');
 
         if ($apiKey == '')
             throw new InvalidArgumentException(__('Missing API Key'));
 
         $this->module->settings['apiKey'] = $apiKey;
-        $this->module->settings['cachePeriod'] = Kit::GetParam('cachePeriod', _POST, _INT, 300);
+        $this->module->settings['cachePeriod'] = \Kit::GetParam('cachePeriod', _POST, _INT, 300);
 
         // Return an array of the processed settings.
         return $this->module->settings;
@@ -231,22 +231,22 @@ class ForecastIo extends Module
 
 
         // You can store any additional options for your module using the SetOption method
-        $this->SetOption('name', Kit::GetParam('name', _POST, _STRING));
+        $this->SetOption('name', \Kit::GetParam('name', _POST, _STRING));
         $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration(), false));
-        $this->SetOption('useDisplayLocation', Kit::GetParam('useDisplayLocation', _POST, _CHECKBOX));
-        $this->SetOption('color', Kit::GetParam('color', _POST, _STRING));
-        $this->SetOption('longitude', Kit::GetParam('longitude', _POST, _DOUBLE));
-        $this->SetOption('latitude', Kit::GetParam('latitude', _POST, _DOUBLE));
-        $this->SetOption('templateId', Kit::GetParam('templateId', _POST, _STRING));
-        $this->SetOption('icons', Kit::GetParam('icons', _POST, _STRING));
-        $this->SetOption('overrideTemplate', Kit::GetParam('overrideTemplate', _POST, _CHECKBOX));
-        $this->SetOption('size', Kit::GetParam('size', _POST, _INT));
-        $this->SetOption('units', Kit::GetParam('units', _POST, _WORD));
-        $this->SetOption('lang', Kit::GetParam('lang', _POST, _WORD));
+        $this->SetOption('useDisplayLocation', \Kit::GetParam('useDisplayLocation', _POST, _CHECKBOX));
+        $this->SetOption('color', \Kit::GetParam('color', _POST, _STRING));
+        $this->SetOption('longitude', \Kit::GetParam('longitude', _POST, _DOUBLE));
+        $this->SetOption('latitude', \Kit::GetParam('latitude', _POST, _DOUBLE));
+        $this->SetOption('templateId', \Kit::GetParam('templateId', _POST, _STRING));
+        $this->SetOption('icons', \Kit::GetParam('icons', _POST, _STRING));
+        $this->SetOption('overrideTemplate', \Kit::GetParam('overrideTemplate', _POST, _CHECKBOX));
+        $this->SetOption('size', \Kit::GetParam('size', _POST, _INT));
+        $this->SetOption('units', \Kit::GetParam('units', _POST, _WORD));
+        $this->SetOption('lang', \Kit::GetParam('lang', _POST, _WORD));
 
-        $this->setRawNode('styleSheet', Kit::GetParam('styleSheet', _POST, _HTMLSTRING));
-        $this->setRawNode('currentTemplate', Kit::GetParam('currentTemplate', _POST, _HTMLSTRING));
-        $this->setRawNode('dailyTemplate', Kit::GetParam('dailyTemplate', _POST, _HTMLSTRING));
+        $this->setRawNode('styleSheet', \Kit::GetParam('styleSheet', _POST, _HTMLSTRING));
+        $this->setRawNode('currentTemplate', \Kit::GetParam('currentTemplate', _POST, _HTMLSTRING));
+        $this->setRawNode('dailyTemplate', \Kit::GetParam('dailyTemplate', _POST, _HTMLSTRING));
 
         // Save the widget
         $this->saveWidget();
@@ -381,27 +381,27 @@ class ForecastIo extends Module
             throw new Exception(__('You do not have permission to edit this widget.'));
 
         //Other Properties
-	$name = Kit::GetParam('name', _POST, _STRING);
+	$name = \Kit::GetParam('name', _POST, _STRING);
 
 	// You must also provide a duration (all media items must provide this field)
         $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration(), false));
 
         // You can store any additional options for your module using the SetOption method
 	$this->SetOption('name', $name);
-        $this->SetOption('useDisplayLocation', Kit::GetParam('useDisplayLocation', _POST, _CHECKBOX));
-        $this->SetOption('color', Kit::GetParam('color', _POST, _STRING, '#000'));
-        $this->SetOption('longitude', Kit::GetParam('longitude', _POST, _DOUBLE));
-        $this->SetOption('latitude', Kit::GetParam('latitude', _POST, _DOUBLE));
-        $this->SetOption('templateId', Kit::GetParam('templateId', _POST, _STRING));
-        $this->SetOption('icons', Kit::GetParam('icons', _POST, _STRING));
-        $this->SetOption('overrideTemplate', Kit::GetParam('overrideTemplate', _POST, _CHECKBOX));
-        $this->SetOption('size', Kit::GetParam('size', _POST, _INT));
-        $this->SetOption('units', Kit::GetParam('units', _POST, _WORD));
-        $this->SetOption('lang', Kit::GetParam('lang', _POST, _WORD));
+        $this->SetOption('useDisplayLocation', \Kit::GetParam('useDisplayLocation', _POST, _CHECKBOX));
+        $this->SetOption('color', \Kit::GetParam('color', _POST, _STRING, '#000'));
+        $this->SetOption('longitude', \Kit::GetParam('longitude', _POST, _DOUBLE));
+        $this->SetOption('latitude', \Kit::GetParam('latitude', _POST, _DOUBLE));
+        $this->SetOption('templateId', \Kit::GetParam('templateId', _POST, _STRING));
+        $this->SetOption('icons', \Kit::GetParam('icons', _POST, _STRING));
+        $this->SetOption('overrideTemplate', \Kit::GetParam('overrideTemplate', _POST, _CHECKBOX));
+        $this->SetOption('size', \Kit::GetParam('size', _POST, _INT));
+        $this->SetOption('units', \Kit::GetParam('units', _POST, _WORD));
+        $this->SetOption('lang', \Kit::GetParam('lang', _POST, _WORD));
 
-        $this->setRawNode('styleSheet', Kit::GetParam('styleSheet', _POST, _HTMLSTRING));
-        $this->setRawNode('currentTemplate', Kit::GetParam('currentTemplate', _POST, _HTMLSTRING));
-        $this->setRawNode('dailyTemplate', Kit::GetParam('dailyTemplate', _POST, _HTMLSTRING));
+        $this->setRawNode('styleSheet', \Kit::GetParam('styleSheet', _POST, _HTMLSTRING));
+        $this->setRawNode('currentTemplate', \Kit::GetParam('currentTemplate', _POST, _HTMLSTRING));
+        $this->setRawNode('dailyTemplate', \Kit::GetParam('dailyTemplate', _POST, _HTMLSTRING));
 
         // Save the widget
         $this->saveWidget();
@@ -677,7 +677,7 @@ class ForecastIo extends Module
 
         // A template is provided which contains a number of different libraries that might
         // be useful (jQuery, etc).
-        $pathPrefix = (Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true') ? 'modules/theme/forecastio/weather_icons/' : '';
+        $pathPrefix = (\Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true') ? 'modules/theme/forecastio/weather_icons/' : '';
         
         // Get the template
         $template = file_get_contents('modules/preview/HtmlTemplate.html');
@@ -696,7 +696,7 @@ class ForecastIo extends Module
         ';
         
         // Add our fonts.css file
-        $isPreview = (Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
+        $isPreview = (\Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
         $headContent .= '<link href="' . (($isPreview) ? 'modules/preview/' : '') . 'fonts.css" rel="stylesheet" media="screen">';
         $headContent .= '<style type="text/css">' . file_get_contents(Theme::ItemPath('css/client.css')) . '</style>';
 
@@ -727,11 +727,11 @@ class ForecastIo extends Module
         
         // JavaScript to control the size (override the original width and height so that the widget gets blown up )
         $options = array(
-                'previewWidth' => Kit::GetParam('width', _GET, _DOUBLE, 0),
-                'previewHeight' => Kit::GetParam('height', _GET, _DOUBLE, 0),
+                'previewWidth' => \Kit::GetParam('width', _GET, _DOUBLE, 0),
+                'previewHeight' => \Kit::GetParam('height', _GET, _DOUBLE, 0),
                 'originalWidth' => $this->region->width,
                 'originalHeight' => $this->region->height,
-                'scaleOverride' => Kit::GetParam('scale_override', _GET, _DOUBLE, 0)
+                'scaleOverride' => \Kit::GetParam('scale_override', _GET, _DOUBLE, 0)
             );
 
         $javaScriptContent  = '<script src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';

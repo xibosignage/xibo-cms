@@ -34,7 +34,7 @@ class logDAO extends baseDAO {
         Theme::Set('pager', ResponseManager::Pager('LogGridForRefresh'));
         
         // Construct Filter Form
-        if (Kit::IsFilterPinned('log', 'Filter')) {
+        if (\Kit::IsFilterPinned('log', 'Filter')) {
             $filter_pinned = 1;
             $filter_type = Session::Get('log', 'filter_type');
             $filter_page = Session::Get('log', 'filter_page');
@@ -149,15 +149,15 @@ class logDAO extends baseDAO {
 		$user		=& $this->user;
 		$response	= new ResponseManager();
 		
-		$type 		= Kit::GetParam('filter_type', _REQUEST, _INT, 0);
-		$function 	= Kit::GetParam('filter_function', _REQUEST, _STRING);
-		$page 		= Kit::GetParam('filter_page', _REQUEST, _STRING);
-		$fromdt 	= Kit::GetParam('filter_fromdt', _REQUEST, _STRING);
-		$displayid	= Kit::GetParam('filter_display', _REQUEST, _INT);
-        $seconds    = Kit::GetParam('filter_seconds', _POST, _INT, 120);
-		$filter_intervalTypeId = Kit::GetParam('filter_intervalTypeId', _POST, _INT, 1);
+		$type 		= \Kit::GetParam('filter_type', _REQUEST, _INT, 0);
+		$function 	= \Kit::GetParam('filter_function', _REQUEST, _STRING);
+		$page 		= \Kit::GetParam('filter_page', _REQUEST, _STRING);
+		$fromdt 	= \Kit::GetParam('filter_fromdt', _REQUEST, _STRING);
+		$displayid	= \Kit::GetParam('filter_display', _REQUEST, _INT);
+        $seconds    = \Kit::GetParam('filter_seconds', _POST, _INT, 120);
+		$filter_intervalTypeId = \Kit::GetParam('filter_intervalTypeId', _POST, _INT, 1);
                 
-        setSession('log', 'Filter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        setSession('log', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
         setSession('log', 'filter_type', $type);
         setSession('log', 'filter_function', $function);
         setSession('log', 'filter_page', $page);
@@ -219,11 +219,11 @@ class logDAO extends baseDAO {
 		
 		foreach ($log as $row) { 
 
-            $row['logid'] = Kit::ValidateParam($row['logid'], _INT);
+            $row['logid'] = \Kit::ValidateParam($row['logid'], _INT);
 			$row['logdate'] = DateManager::getLocalDate(strtotime(Kit::ValidateParam($row['logdate'], _STRING)), 'y-m-d h:i:s');
-            $row['display'] = (Kit::ValidateParam($row['display'], _STRING) == '') ? __('CMS') : Kit::ValidateParam($row['display'], _STRING);
-			$row['page'] = Kit::ValidateParam($row['page'], _STRING);
-			$row['function'] = Kit::ValidateParam($row['function'], _STRING);
+            $row['display'] = (\Kit::ValidateParam($row['display'], _STRING) == '') ? __('CMS') : \Kit::ValidateParam($row['display'], _STRING);
+			$row['page'] = \Kit::ValidateParam($row['page'], _STRING);
+			$row['function'] = \Kit::ValidateParam($row['function'], _STRING);
 			$row['message'] = nl2br(htmlspecialchars($row['message']));
 			
 			$rows[] = $row;
@@ -242,10 +242,10 @@ class logDAO extends baseDAO {
 
 	function LastHundredForDisplay() {
         $response = new ResponseManager();
-        $displayId = Kit::GetParam('displayid', _GET, _INT);
+        $displayId = \Kit::GetParam('displayid', _GET, _INT);
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             $sth = $dbh->prepare('SELECT logid, logdate, page, function, message FROM log WHERE displayid = :displayid ORDER BY logid DESC LIMIT 100');
             $sth->execute(array(
@@ -270,10 +270,10 @@ class logDAO extends baseDAO {
    
             foreach ($log as $row) { 
     
-                $row['logid'] = Kit::ValidateParam($row['logid'], _INT);
-                $row['logdate'] = Kit::ValidateParam($row['logdate'], _STRING);
-                $row['page'] = Kit::ValidateParam($row['page'], _STRING);
-                $row['function'] = Kit::ValidateParam($row['function'], _STRING);
+                $row['logid'] = \Kit::ValidateParam($row['logid'], _INT);
+                $row['logdate'] = \Kit::ValidateParam($row['logdate'], _STRING);
+                $row['page'] = \Kit::ValidateParam($row['page'], _STRING);
+                $row['function'] = \Kit::ValidateParam($row['function'], _STRING);
                 $row['message'] = nl2br(htmlspecialchars($row['message']));
                 
                 $rows[] = $row;

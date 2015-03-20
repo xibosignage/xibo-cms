@@ -235,7 +235,7 @@ class ticker extends Module
             $formFields['format'][] = $field_itemsPerPage;
             $formFields['format'][] = $field_itemsSideBySide;
 
-            Theme::Set('columns', PDOConnect::select(sprintf("SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetID = %d ", $dataSetId), array()));
+            Theme::Set('columns', \Xibo\Storage\PDOConnect::select(sprintf("SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetID = %d ", $dataSetId), array()));
 
             $formFields['template'][] = FormManager::AddRaw(Theme::RenderReturn('media_form_ticker_dataset_edit'));
         }
@@ -397,10 +397,10 @@ class ticker extends Module
         $response = new ResponseManager();
 
         // Other properties
-        $sourceId = Kit::GetParam('sourceid', _POST, _INT);
-        $uri = Kit::GetParam('uri', _POST, _URI);
-        $dataSetId = Kit::GetParam('datasetid', _POST, _INT, 0);
-        $duration = Kit::GetParam('duration', _POST, _INT, 0, false);
+        $sourceId = \Kit::GetParam('sourceid', _POST, _INT);
+        $uri = \Kit::GetParam('uri', _POST, _URI);
+        $dataSetId = \Kit::GetParam('datasetid', _POST, _INT, 0);
+        $duration = \Kit::GetParam('duration', _POST, _INT, 0, false);
         
         // Must have a duration
         if ($duration == 0)
@@ -468,23 +468,23 @@ class ticker extends Module
         $sourceId = $this->GetOption('sourceId', 1);
         
         // Other properties
-        $uri          = Kit::GetParam('uri', _POST, _URI);
-		$name = Kit::GetParam('name', _POST, _STRING);
-        $text         = Kit::GetParam('ta_text', _POST, _HTMLSTRING);
-        $css = Kit::GetParam('ta_css', _POST, _HTMLSTRING);
-        $updateInterval = Kit::GetParam('updateInterval', _POST, _INT, 360);
-        $copyright    = Kit::GetParam('copyright', _POST, _STRING);
-        $numItems = Kit::GetParam('numItems', _POST, _STRING);
-        $takeItemsFrom = Kit::GetParam('takeItemsFrom', _POST, _STRING);
-        $durationIsPerItem = Kit::GetParam('durationIsPerItem', _POST, _CHECKBOX);
-        $itemsSideBySide = Kit::GetParam('itemsSideBySide', _POST, _CHECKBOX);
+        $uri          = \Kit::GetParam('uri', _POST, _URI);
+		$name = \Kit::GetParam('name', _POST, _STRING);
+        $text         = \Kit::GetParam('ta_text', _POST, _HTMLSTRING);
+        $css = \Kit::GetParam('ta_css', _POST, _HTMLSTRING);
+        $updateInterval = \Kit::GetParam('updateInterval', _POST, _INT, 360);
+        $copyright    = \Kit::GetParam('copyright', _POST, _STRING);
+        $numItems = \Kit::GetParam('numItems', _POST, _STRING);
+        $takeItemsFrom = \Kit::GetParam('takeItemsFrom', _POST, _STRING);
+        $durationIsPerItem = \Kit::GetParam('durationIsPerItem', _POST, _CHECKBOX);
+        $itemsSideBySide = \Kit::GetParam('itemsSideBySide', _POST, _CHECKBOX);
         
         // DataSet Specific Options
-        $itemsPerPage = Kit::GetParam('itemsPerPage', _POST, _INT);
-        $upperLimit = Kit::GetParam('upperLimit', _POST, _INT);
-        $lowerLimit = Kit::GetParam('lowerLimit', _POST, _INT);
-        $filter = Kit::GetParam('filter', _POST, _STRINGSPECIAL);
-        $ordering = Kit::GetParam('ordering', _POST, _STRING);
+        $itemsPerPage = \Kit::GetParam('itemsPerPage', _POST, _INT);
+        $upperLimit = \Kit::GetParam('upperLimit', _POST, _INT);
+        $lowerLimit = \Kit::GetParam('lowerLimit', _POST, _INT);
+        $filter = \Kit::GetParam('filter', _POST, _STRINGSPECIAL);
+        $ordering = \Kit::GetParam('ordering', _POST, _STRING);
         
         // Validation
         if ($text == '')
@@ -526,9 +526,9 @@ class ticker extends Module
         $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration(), false));
         $this->SetOption('xmds', true);
 		$this->SetOption('name', $name);
-        $this->SetOption('effect', Kit::GetParam('effect', _POST, _STRING));
+        $this->SetOption('effect', \Kit::GetParam('effect', _POST, _STRING));
         $this->SetOption('copyright', $copyright);
-        $this->SetOption('speed', Kit::GetParam('speed', _POST, _INT));
+        $this->SetOption('speed', \Kit::GetParam('speed', _POST, _INT));
         $this->SetOption('updateInterval', $updateInterval);
         $this->SetOption('uri', $uri);
         $this->SetOption('numItems', $numItems);
@@ -540,14 +540,14 @@ class ticker extends Module
         $this->SetOption('filter', $filter);
         $this->SetOption('ordering', $ordering);
         $this->SetOption('itemsPerPage', $itemsPerPage);
-        $this->SetOption('dateFormat', Kit::GetParam('dateFormat', _POST, _STRING));
-        $this->SetOption('allowedAttributes', Kit::GetParam('allowedAttributes', _POST, _STRING));
-        $this->SetOption('stripTags', Kit::GetParam('stripTags', _POST, _STRING));
-        $this->SetOption('backgroundColor', Kit::GetParam('backgroundColor', _POST, _STRING));
-        $this->SetOption('disableDateSort', Kit::GetParam('disableDateSort', _POST, _CHECKBOX));
-        $this->SetOption('textDirection', Kit::GetParam('textDirection', _POST, _WORD));
-        $this->SetOption('overrideTemplate', Kit::GetParam('overrideTemplate', _POST, _CHECKBOX));
-        $this->SetOption('templateId', Kit::GetParam('templateId', _POST, _WORD));
+        $this->SetOption('dateFormat', \Kit::GetParam('dateFormat', _POST, _STRING));
+        $this->SetOption('allowedAttributes', \Kit::GetParam('allowedAttributes', _POST, _STRING));
+        $this->SetOption('stripTags', \Kit::GetParam('stripTags', _POST, _STRING));
+        $this->SetOption('backgroundColor', \Kit::GetParam('backgroundColor', _POST, _STRING));
+        $this->SetOption('disableDateSort', \Kit::GetParam('disableDateSort', _POST, _CHECKBOX));
+        $this->SetOption('textDirection', \Kit::GetParam('textDirection', _POST, _WORD));
+        $this->SetOption('overrideTemplate', \Kit::GetParam('overrideTemplate', _POST, _CHECKBOX));
+        $this->SetOption('templateId', \Kit::GetParam('templateId', _POST, _WORD));
         
         // Text Template
         $this->setRawNode('template', $text);
@@ -610,7 +610,7 @@ class ticker extends Module
         // Load in the template
         $template = file_get_contents('modules/preview/HtmlTemplate.html');
 
-        $isPreview = (Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
+        $isPreview = (\Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
 
         // Replace the View Port Width?
         if ($isPreview)
@@ -654,9 +654,9 @@ class ticker extends Module
             'speed' => $this->GetOption('speed'),
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
-            'previewWidth' => Kit::GetParam('width', _GET, _DOUBLE, 0),
-            'previewHeight' => Kit::GetParam('height', _GET, _DOUBLE, 0),
-            'scaleOverride' => Kit::GetParam('scale_override', _GET, _DOUBLE, 0)
+            'previewWidth' => \Kit::GetParam('width', _GET, _DOUBLE, 0),
+            'previewHeight' => \Kit::GetParam('height', _GET, _DOUBLE, 0),
+            'scaleOverride' => \Kit::GetParam('scale_override', _GET, _DOUBLE, 0)
         );
 
         // Generate a JSON string of substituted items.

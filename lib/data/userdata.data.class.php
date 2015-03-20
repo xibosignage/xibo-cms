@@ -53,7 +53,7 @@ class Userdata extends Data
             $sortOrder = array('username');
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             $params = array();
             $SQL  = 'SELECT userId, userName, userTypeId, loggedIn, email, homePage, lastAccessed, newUserWizard, retired ';
@@ -61,34 +61,34 @@ class Userdata extends Data
             $SQL .= ' WHERE 1 = 1 ';
 
             // User Id Provided?
-            if (Kit::GetParam('userId', $filterBy, _INT) != 0) {
+            if (\Kit::GetParam('userId', $filterBy, _INT) != 0) {
                 $SQL .= " AND user.userId = :userId ";
-                $params['userId'] = Kit::GetParam('userId', $filterBy, _INT);
+                $params['userId'] = \Kit::GetParam('userId', $filterBy, _INT);
             }
 
             // User Type Provided
-            if (Kit::GetParam('userTypeId', $filterBy, _INT) != 0) {
+            if (\Kit::GetParam('userTypeId', $filterBy, _INT) != 0) {
                 $SQL .= " AND user.userTypeId = :userTypeId ";
-                $params['userTypeId'] = Kit::GetParam('userTypeId', $filterBy, _INT);
+                $params['userTypeId'] = \Kit::GetParam('userTypeId', $filterBy, _INT);
             }
 
             // User Name Provided
-            if (Kit::GetParam('userName', $filterBy, _STRING) != 0) {
+            if (\Kit::GetParam('userName', $filterBy, _STRING) != 0) {
                 $SQL .= " AND user.userName LIKE :userName ";
-                $params['userName'] = '%' . Kit::GetParam('userName', $filterBy, _STRING) . '%';
+                $params['userName'] = '%' . \Kit::GetParam('userName', $filterBy, _STRING) . '%';
             }
 
             // Groups Provided
-            $groups = Kit::GetParam('groupIds', $filterBy, _ARRAY_INT);
+            $groups = \Kit::GetParam('groupIds', $filterBy, _ARRAY_INT);
 
             if (count($groups) > 0) {
                 $SQL .= " AND user.userId IN (SELECT userId FROM `lkusergroup` WHERE groupid IN (" . implode($groups, ',') . ")) ";
             }
 
             // Retired users?
-            if (Kit::GetParam('retired', $filterBy, _INT) != -1) {
+            if (\Kit::GetParam('retired', $filterBy, _INT) != -1) {
                 $SQL .= " AND user.retired = :retired ";
-                $params['retired'] = Kit::GetParam('retired', $filterBy, _INT);
+                $params['retired'] = \Kit::GetParam('retired', $filterBy, _INT);
             }
 
             // Sorting?
@@ -102,15 +102,15 @@ class Userdata extends Data
 
             foreach ($sth->fetchAll() as $row) {
                 $user = new Userdata();
-                $user->userId = Kit::ValidateParam($row['userId'], _INT);
-                $user->userName = Kit::ValidateParam($row['userName'], _STRING);
-                $user->userTypeId = Kit::ValidateParam($row['userTypeId'], _INT);
-                $user->loggedIn = Kit::ValidateParam($row['loggedIn'], _INT);
-                $user->email = Kit::ValidateParam($row['email'], _STRING);
-                $user->homePage = Kit::ValidateParam($row['homePage'], _STRING);
-                $user->lastAccessed = Kit::ValidateParam($row['lastAccessed'], _INT);
-                $user->newUserWizard = Kit::ValidateParam($row['newUserWizard'], _INT);
-                $user->retired = Kit::ValidateParam($row['retired'], _INT);
+                $user->userId = \Kit::ValidateParam($row['userId'], _INT);
+                $user->userName = \Kit::ValidateParam($row['userName'], _STRING);
+                $user->userTypeId = \Kit::ValidateParam($row['userTypeId'], _INT);
+                $user->loggedIn = \Kit::ValidateParam($row['loggedIn'], _INT);
+                $user->email = \Kit::ValidateParam($row['email'], _STRING);
+                $user->homePage = \Kit::ValidateParam($row['homePage'], _STRING);
+                $user->lastAccessed = \Kit::ValidateParam($row['lastAccessed'], _INT);
+                $user->newUserWizard = \Kit::ValidateParam($row['newUserWizard'], _INT);
+                $user->retired = \Kit::ValidateParam($row['retired'], _INT);
 
                 $entries[] = $user;
             }
@@ -148,7 +148,7 @@ class Userdata extends Data
             return false;
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             // Check for duplicate user name
             $sth = $dbh->prepare('SELECT UserName FROM `user` WHERE UserName = :userName');
@@ -210,7 +210,7 @@ class Userdata extends Data
             $this->homePage = "dashboard";
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             // Check for duplicate user name
             $sth = $dbh->prepare('SELECT UserName FROM `user` WHERE UserName = :userName AND userId <> :userId');
@@ -262,7 +262,7 @@ class Userdata extends Data
             return $this->SetError(__('Missing userId'));
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
 
             // Delete all layouts
             $layout = new Layout();
@@ -316,7 +316,7 @@ class Userdata extends Data
     public function ChangePassword($userId, $oldPassword, $newPassword, $retypedNewPassword, $forceChange = false)
     {
         try {
-            $dbh = PDOConnect::init();
+            $dbh = \Xibo\Storage\PDOConnect::init();
         
             // Validate
             if ($userId == 0)
@@ -335,7 +335,7 @@ class Userdata extends Data
                 if (!$row = $sth->fetch())
                     $this->ThrowError(26000, __('Incorrect Password Provided'));
 
-                $good_hash = Kit::ValidateParam($row['UserPassword'], _STRING);
+                $good_hash = \Kit::ValidateParam($row['UserPassword'], _STRING);
     
                 // Check the Old Password is correct
                 if ($this->validate_password($oldPassword, $good_hash) === false)

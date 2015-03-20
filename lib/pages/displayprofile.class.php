@@ -134,9 +134,9 @@ class displayprofileDAO extends baseDAO {
     public function Add() {
         $response = new ResponseManager();
         $displayProfile = new DisplayProfile();
-        $displayProfile->name = Kit::GetParam('name', _POST, _STRING);
-        $displayProfile->type = Kit::GetParam('type', _POST, _STRING);
-        $displayProfile->isDefault = Kit::GetParam('isdefault', _POST, _CHECKBOX);
+        $displayProfile->name = \Kit::GetParam('name', _POST, _STRING);
+        $displayProfile->type = \Kit::GetParam('type', _POST, _STRING);
+        $displayProfile->isDefault = \Kit::GetParam('isdefault', _POST, _CHECKBOX);
         $displayProfile->userId = $this->user->userid;
 
         if (!$displayProfile->Save())
@@ -149,7 +149,7 @@ class displayprofileDAO extends baseDAO {
     public function EditForm() {
         // Create a form out of the config object.
         $displayProfile  = new DisplayProfile();
-        $displayProfile->displayProfileId = Kit::GetParam('displayprofileid', _GET, _INT);
+        $displayProfile->displayProfileId = \Kit::GetParam('displayprofileid', _GET, _INT);
 
         if (!$displayProfile->Load())
             trigger_error($displayProfile->GetErrorMessage(), E_USER_ERROR);
@@ -211,7 +211,7 @@ class displayprofileDAO extends baseDAO {
                 }
             }
             else if (isset($setting['value']))
-                $validated = Kit::ValidateParam($setting['value'], $setting['type']);
+                $validated = \Kit::ValidateParam($setting['value'], $setting['type']);
             else
                 $validated = $setting['default'];
 
@@ -257,7 +257,7 @@ class displayprofileDAO extends baseDAO {
         
         // Create a form out of the config object.
         $displayProfile  = new DisplayProfile();
-        $displayProfile->displayProfileId = Kit::GetParam('displayprofileid', _POST, _INT);
+        $displayProfile->displayProfileId = \Kit::GetParam('displayprofileid', _POST, _INT);
 
         if (!$displayProfile->Load())
             trigger_error($displayProfile->GetErrorMessage(), E_USER_ERROR);
@@ -268,8 +268,8 @@ class displayprofileDAO extends baseDAO {
         if (empty($displayProfile->type))
             trigger_error(__('Unknown Client Type'), E_USER_ERROR);
 
-        $displayProfile->name = Kit::GetParam('name', _POST, _STRING);
-        $displayProfile->isDefault = Kit::GetParam('isdefault', _POST, _CHECKBOX);
+        $displayProfile->name = \Kit::GetParam('name', _POST, _STRING);
+        $displayProfile->isDefault = \Kit::GetParam('isdefault', _POST, _CHECKBOX);
 
         // Capture and validate the posted form parameters in accordance with the display config object.
         include('config/client.config.php');
@@ -281,7 +281,7 @@ class displayprofileDAO extends baseDAO {
 
         foreach($CLIENT_CONFIG[$displayProfile->type]['settings'] as $setting) {
             // Validate the parameter
-            $value = Kit::GetParam($setting['name'], _POST, $setting['type'], (($setting['type'] == 'checkbox') ? NULL : $setting['default']));
+            $value = \Kit::GetParam($setting['name'], _POST, $setting['type'], (($setting['type'] == 'checkbox') ? NULL : $setting['default']));
 
             // If we are a time picker, then process the received time
             if ($setting['fieldType'] == 'timePicker') {
@@ -312,7 +312,7 @@ class displayprofileDAO extends baseDAO {
     function DeleteForm() {
         
         $displayProfile  = new DisplayProfile();
-        $displayProfile->displayProfileId = Kit::GetParam('displayprofileid', _GET, _INT);
+        $displayProfile->displayProfileId = \Kit::GetParam('displayprofileid', _GET, _INT);
 
         if (!$displayProfile->Load())
             trigger_error($displayProfile->GetErrorMessage(), E_USER_ERROR);
@@ -347,7 +347,7 @@ class displayprofileDAO extends baseDAO {
         $response = new ResponseManager();
         
         $displayProfile  = new DisplayProfile();
-        $displayProfile->displayProfileId = Kit::GetParam('displayprofileid', _POST, _INT);
+        $displayProfile->displayProfileId = \Kit::GetParam('displayprofileid', _POST, _INT);
 
         if (!$displayProfile->Load())
             trigger_error($displayProfile->GetErrorMessage(), E_USER_ERROR);
