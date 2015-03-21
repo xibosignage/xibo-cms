@@ -70,7 +70,7 @@ class oauthDAO extends baseDAO {
     {
         $db =& $this->db;
         $user = $this->getUser();
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         $store = OAuthStore::instance();
 
@@ -111,7 +111,7 @@ class oauthDAO extends baseDAO {
         $output = Theme::RenderReturn('table_render');
 
         $response->SetGridResponse($output);
-        $response->Respond();
+
     }
 
     /**
@@ -154,7 +154,7 @@ class oauthDAO extends baseDAO {
         $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Services&Category=Log')");
         $response->AddButton(__('Close'), 'XiboDialogClose()');
         $response->dialogClass = 'modal-big';
-        $response->Respond();
+
     }
 
     /**
@@ -246,7 +246,7 @@ class oauthDAO extends baseDAO {
         $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Services&Category=Register')");
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Register'), '$("#RegisterOAuth").submit()');
-        $response->Respond();
+
     }
 
     /**
@@ -254,13 +254,11 @@ class oauthDAO extends baseDAO {
      */
     public function Register()
     {
-        // Check the token
-        if (!Kit::CheckToken())
-            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
+
         
         $db =& $this->db;
         $user = $this->getUser();
-        $response = new ApplicationState();
+        $response = $this->getState();
         $userid = \Kit::GetParam('userid', _SESSION, _INT);
 
         $message = '';
@@ -281,7 +279,7 @@ class oauthDAO extends baseDAO {
     	}
 
         $response->SetFormSubmitResponse($message, false);
-        $response->Respond();
+
     }
 
     /**
@@ -323,7 +321,7 @@ class oauthDAO extends baseDAO {
         $response->SetFormRequestResponse($output, __('Authorized applications for user'), '650', '450');
         $response->AddButton(__('Help'), "XiboHelpRender('" . Help::Link('User', 'Applications') . "')");
         $response->AddButton(__('Close'), 'XiboDialogClose()');
-        $response->Respond();
+
     }
 }
 ?>

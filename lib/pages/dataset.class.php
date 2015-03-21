@@ -95,7 +95,7 @@ class datasetDAO extends baseDAO
     {
         $db =& $this->db;
         $user = $this->getUser();
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         $cols = array(
                 array('name' => 'dataset', 'title' => __('Name')),
@@ -174,14 +174,14 @@ class datasetDAO extends baseDAO
         $output = Theme::RenderReturn('table_render');
 
         $response->SetGridResponse($output);
-        $response->Respond();
+
     }
 
     public function AddDataSetForm()
     {
         $db =& $this->db;
         $user = $this->getUser();
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         // Set some information about the form
         Theme::Set('form_id', 'AddDataSetForm');
@@ -200,7 +200,7 @@ class datasetDAO extends baseDAO
         $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('DataSet', 'Add') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Add'), '$("#AddDataSetForm").submit()');
-        $response->Respond();
+
     }
 
     /**
@@ -208,13 +208,11 @@ class datasetDAO extends baseDAO
      */
     public function AddDataSet()
     {
-        // Check the token
-        if (!Kit::CheckToken())
-            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
+
         
         $db =& $this->db;
         $user = $this->getUser();
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         $dataSet = \Kit::GetParam('dataset', _POST, _STRING);
         $description = \Kit::GetParam('description', _POST, _STRING);
@@ -228,14 +226,14 @@ class datasetDAO extends baseDAO
         $dataSetColumn->Add($dataSetId, 'Col1', 1, null, 1);
             
         $response->SetFormSubmitResponse(__('DataSet Added'));
-        $response->Respond();
+
     }
 
     public function EditDataSetForm()
     {
         $db =& $this->db;
         $user = $this->getUser();
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         $dataSetId = \Kit::GetParam('datasetid', _GET, _INT);
 
@@ -267,18 +265,16 @@ class datasetDAO extends baseDAO
         $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('DataSet', 'Edit') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#EditDataSetForm").submit()');
-        $response->Respond();
+
     }
 
     public function EditDataSet()
     {
-        // Check the token
-        if (!Kit::CheckToken())
-            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
+
         
         $db =& $this->db;
         $user = $this->getUser();
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         $dataSetId = \Kit::GetParam('datasetid', _POST, _INT);
 
@@ -294,7 +290,7 @@ class datasetDAO extends baseDAO
             trigger_error($dataSetObject->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse(__('DataSet Edited'));
-        $response->Respond();
+
     }
 
     /**
@@ -304,7 +300,7 @@ class datasetDAO extends baseDAO
     public function DeleteDataSetForm()
     {
         $db =& $this->db;
-        $response = new ApplicationState();
+        $response = $this->getState();
         
         $dataSetId = \Kit::GetParam('datasetid', _GET, _INT);
 
@@ -328,18 +324,16 @@ class datasetDAO extends baseDAO
         $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('DataSet', 'Delete') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Delete'), '$("#DataSetDeleteForm").submit()');
-        $response->Respond();
+
     }
 
     public function DeleteDataSet()
     {
-        // Check the token
-        if (!Kit::CheckToken())
-            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
+
         
         $db =& $this->db;
         $user = $this->getUser();
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         $dataSetId = \Kit::GetParam('datasetid', _POST, _INT);
 
@@ -357,13 +351,13 @@ class datasetDAO extends baseDAO
             trigger_error($dataSetObject->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse(__('DataSet Deleted'));
-        $response->Respond();
+
     }
 
     public function DataSetColumnsForm()
     {
         $db =& $this->db;
-        $response = new ApplicationState();
+        $response = $this->getState();
         $helpManager = new Help($db, $this->user);
 
         $dataSetId = \Kit::GetParam('datasetid', _GET, _INT);
@@ -424,13 +418,13 @@ class datasetDAO extends baseDAO
         $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('DataSet', 'ViewColumns') . '")');
         $response->AddButton(__('Close'), 'XiboDialogClose()');
         $response->AddButton(__('Add Column'), 'XiboFormRender("index.php?p=dataset&q=AddDataSetColumnForm&datasetid=' . $dataSetId . '&dataset=' . $dataSet . '")');
-        $response->Respond();
+
     }
 
     public function AddDataSetColumnForm()
     {
         $db =& $this->db;
-        $response = new ApplicationState();
+        $response = $this->getState();
         $helpManager = new Help($db, $this->user);
 
         $dataSetId = \Kit::GetParam('datasetid', _GET, _INT);
@@ -475,18 +469,16 @@ class datasetDAO extends baseDAO
         $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('DataSet', 'AddColumn') . '")');
         $response->AddButton(__('Cancel'), 'XiboFormRender("index.php?p=dataset&q=DataSetColumnsForm&datasetid=' . $dataSetId . '&dataset=' . $dataSet . '")');
         $response->AddButton(__('Save'), '$("#DataSetColumnAddForm").submit()');
-        $response->Respond();
+
     }
 
     public function AddDataSetColumn()
     {
-        // Check the token
-        if (!Kit::CheckToken())
-            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
+
         
         $db =& $this->db;
         $user = $this->getUser();
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         $dataSetId = \Kit::GetParam('datasetid', _POST, _INT);
         $dataSet = \Kit::GetParam('dataset', _POST, _STRING);
@@ -510,13 +502,13 @@ class datasetDAO extends baseDAO
         $response->hideMessage = true;
         $response->loadForm = true;
         $response->loadFormUri = 'index.php?p=dataset&q=DataSetColumnsForm&datasetid=' . $dataSetId . '&dataset=' . $dataSet;
-        $response->Respond();
+
     }
 
     public function EditDataSetColumnForm()
     {
         $db =& $this->db;
-        $response = new ApplicationState();
+        $response = $this->getState();
         $helpManager = new Help($db, $this->user);
 
         $dataSetId = \Kit::GetParam('datasetid', _GET, _INT);
@@ -581,18 +573,16 @@ class datasetDAO extends baseDAO
         $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('DataSet', 'EditColumn') . '")');
         $response->AddButton(__('Cancel'), 'XiboFormRender("index.php?p=dataset&q=DataSetColumnsForm&datasetid=' . $dataSetId . '&dataset=' . $dataSet . '")');
         $response->AddButton(__('Save'), '$("#DataSetColumnEditForm").submit()');
-        $response->Respond();
+
     }
 
     public function EditDataSetColumn()
     {
-        // Check the token
-        if (!Kit::CheckToken())
-            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
+
         
         $db =& $this->db;
         $user = $this->getUser();
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         $dataSetId = \Kit::GetParam('datasetid', _POST, _INT);
         $dataSet = \Kit::GetParam('dataset', _POST, _STRING);
@@ -617,13 +607,13 @@ class datasetDAO extends baseDAO
         $response->hideMessage = true;
         $response->loadForm = true;
         $response->loadFormUri = 'index.php?p=dataset&q=DataSetColumnsForm&datasetid=' . $dataSetId . '&dataset=' . $dataSet;
-        $response->Respond();
+
     }
 
     public function DeleteDataSetColumnForm()
     {
         $db =& $this->db;
-        $response = new ApplicationState();
+        $response = $this->getState();
         $helpManager = new Help($db, $this->user);
 
         $dataSetId = \Kit::GetParam('datasetid', _GET, _INT);
@@ -646,18 +636,16 @@ class datasetDAO extends baseDAO
         $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('DataSet', 'DeleteColumn') . '")');
         $response->AddButton(__('Cancel'), 'XiboFormRender("index.php?p=dataset&q=DataSetColumnsForm&datasetid=' . $dataSetId . '&dataset=' . $dataSet . '")');
         $response->AddButton(__('Delete'), '$("#DataSetColumnDeleteForm").submit()');
-        $response->Respond();
+
     }
 
     public function DeleteDataSetColumn()
     {
-        // Check the token
-        if (!Kit::CheckToken())
-            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
+
         
         $db =& $this->db;
         $user = $this->getUser();
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         $dataSetId = \Kit::GetParam('datasetid', _POST, _INT);
         $dataSet = \Kit::GetParam('dataset', _POST, _STRING);
@@ -676,13 +664,13 @@ class datasetDAO extends baseDAO
         $response->hideMessage = true;
         $response->loadForm = true;
         $response->loadFormUri = 'index.php?p=dataset&q=DataSetColumnsForm&datasetid=' . $dataSetId . '&dataset=' . $dataSet;
-        $response->Respond();
+
     }
 
     public function DataSetDataForm()
     {
         $db =& $this->db;
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         $dataSetId = \Kit::GetParam('datasetid', _POST, _INT);
         $dataSet = \Kit::GetParam('dataset', _POST, _STRING);
@@ -834,14 +822,14 @@ END;
         
         $response->SetGridResponse($form);
         $response->callBack = 'dataSetData';
-        $response->Respond();
+
     }
 
     public function AddDataSetData()
     {
         $db =& $this->db;
         $user = $this->getUser();
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         $response->uniqueReference = \Kit::GetParam('fieldid', _POST, _STRING);
         $dataSetId = \Kit::GetParam('datasetid', _POST, _INT);
@@ -861,14 +849,14 @@ END;
         $response->loadFormUri = 'index.php?p=dataset&q=EditDataSetData';
         $response->hideMessage = true;
         $response->keepOpen = true;
-        $response->Respond();
+
     }
 
     public function EditDataSetData()
     {
         $db =& $this->db;
         $user = $this->getUser();
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         $response->uniqueReference = \Kit::GetParam('fieldid', _POST, _STRING);
         $dataSetId = \Kit::GetParam('datasetid', _POST, _INT);
@@ -901,7 +889,7 @@ END;
 
         $response->hideMessage = true;
         $response->keepOpen = true;
-        $response->Respond();
+
     }
 
     /**
@@ -945,7 +933,7 @@ END;
     {
         $db =& $this->db;
         $user = $this->getUser();
-        $response = new ApplicationState();
+        $response = $this->getState();
         $helpManager = new Help($db, $user);
 
         $dataSetId = \Kit::GetParam('datasetid', _GET, _INT);
@@ -998,18 +986,16 @@ END;
         $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('DataSet', 'Permissions') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#DataSetPermissionsForm").submit()');
-        $response->Respond();
+
     }
 
     public function Permissions()
     {
-        // Check the token
-        if (!Kit::CheckToken())
-            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
+
         
         $db =& $this->db;
         $user = $this->getUser();
-        $response = new ApplicationState();
+        $response = $this->getState();
         \Kit::ClassLoader('datasetgroupsecurity');
 
         $dataSetId = \Kit::GetParam('datasetid', _POST, _INT);
@@ -1083,13 +1069,13 @@ END;
         }
 
         $response->SetFormSubmitResponse(__('Permissions Changed'));
-        $response->Respond();
+
     }
 
     public function ImportCsvForm() {
         global $session;
         $db =& $this->db;
-        $response = new ApplicationState();
+        $response = $this->getState();
         
         $dataSetId = \Kit::GetParam('datasetid', _GET, _INT);
         $dataSet = \Kit::GetParam('dataset', _GET, _STRING);
@@ -1161,13 +1147,13 @@ END;
         $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('DataSet', 'ImportCsv') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Import'), '$("#DataSetImportCsvForm").submit()');
-        $response->Respond();
+
     }
 
     public function ImportCsv() {
 
         $db =& $this->db;
-        $response = new ApplicationState();
+        $response = $this->getState();
         $dataSetId = \Kit::GetParam('datasetid', _POST, _INT);
         $overwrite = \Kit::GetParam('overwrite', _POST, _CHECKBOX);
         $ignorefirstrow = \Kit::GetParam('ignorefirstrow', _POST, _CHECKBOX);
@@ -1229,7 +1215,7 @@ END;
             trigger_error($dataSetObject->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse(__('CSV File Imported'));
-        $response->Respond();
+
     }
 }
 ?>

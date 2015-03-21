@@ -86,7 +86,7 @@ class moduletemplate extends Module
      */
     public function AddForm()
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         // You also have access to $settings, which is the array of settings you configured for your module.
         
@@ -122,7 +122,7 @@ class moduletemplate extends Module
      */
     public function AddMedia()
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         // You must provide a duration (all media items must provide this field)
         $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration(), false));
@@ -155,7 +155,7 @@ class moduletemplate extends Module
     public function EditForm()
     {
         // Edit forms are the same as add forms, except you will have the $this->mediaid member variable available for use.
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         if (!$this->auth->edit)
             throw new Exception(__('You do not have permission to edit this widget.'));
@@ -176,7 +176,7 @@ class moduletemplate extends Module
      */
     public function EditMedia()
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         if (!$this->auth->edit)
             throw new Exception(__('You do not have permission to edit this widget.'));

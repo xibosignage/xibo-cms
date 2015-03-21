@@ -151,11 +151,9 @@ class adminDAO extends baseDAO {
     }
 
     function Edit() {
-        $response = new ApplicationState();
+        $response = $this->getState();
 
-        // Check the token
-        if (!Kit::CheckToken())
-            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
+
 
         $data = new Setting();
 
@@ -189,7 +187,7 @@ class adminDAO extends baseDAO {
 
         $response->SetFormSubmitResponse(__('Settings Updated'), false);
         $response->callBack = 'settingsUpdated';
-        $response->Respond();
+
     }
 	
 	/**
@@ -293,7 +291,7 @@ class adminDAO extends baseDAO {
             trigger_error(__('Cannot set audit to On'));
 		
 		$response->SetFormSubmitResponse(__('Debugging switched On.'));
-		$response->Respond();
+
 	}
 	
 	/**
@@ -309,7 +307,7 @@ class adminDAO extends baseDAO {
             trigger_error(__('Cannot set audit to Off'), E_USER_ERROR);
 		
 		$response->SetFormSubmitResponse(__('Debugging switched Off.'));
-		$response->Respond();
+
 	}
 	
 	/**
@@ -327,7 +325,7 @@ class adminDAO extends baseDAO {
 		}
 		
 		$response->SetFormSubmitResponse(__('Server switched to Production Mode'));
-		$response->Respond();
+
 	}
 	
 	/**
@@ -345,7 +343,7 @@ class adminDAO extends baseDAO {
 		}
 		
 		$response->SetFormSubmitResponse(__('Server switched to Test Mode'));
-		$response->Respond();
+
     }
 
     public function SendEmail()
@@ -372,7 +370,7 @@ class adminDAO extends baseDAO {
 	
         $response->AddButton(__('Close'), 'XiboDialogClose()');
         $response->SetFormRequestResponse($output, __('Email Test'), '280px', '140px');
-        $response->Respond();
+
     }
 
     /**
@@ -380,7 +378,7 @@ class adminDAO extends baseDAO {
      */
     public function BackupForm()
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         // Check we have permission to do this
         if ($this->user->usertypeid != 1)
@@ -394,7 +392,7 @@ class adminDAO extends baseDAO {
         
         $response->SetFormRequestResponse($form, __('Export Database Backup'), '550px', '275px');
         $response->AddButton(__('Close'), 'XiboDialogClose()');
-        $response->Respond();
+
     }
 
     /**
@@ -414,7 +412,7 @@ class adminDAO extends baseDAO {
      */
     public function RestoreForm()
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         if (Config::GetSetting('SETTING_IMPORT_ENABLED') != 1)
         	trigger_error(__('Sorry this function is disabled.'), E_USER_ERROR);
@@ -446,7 +444,7 @@ FORM;
         $response->SetFormRequestResponse($form, __('Import Database Backup'), '550px', '375px');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Import'), '$("#file_upload").submit()');
-        $response->Respond();
+
     }
 
     /**
@@ -523,7 +521,7 @@ FORM;
 
     public function TidyLibraryForm()
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
         
         Theme::Set('form_id', 'TidyLibraryForm');
         Theme::Set('form_action', 'index.php?p=admin&q=TidyLibrary');
@@ -545,7 +543,7 @@ FORM;
         $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Settings', 'TidyLibrary') . '")');
         $response->AddButton(__('No'), 'XiboDialogClose()');
         $response->AddButton(__('Yes'), '$("#TidyLibraryForm").submit()');
-        $response->Respond();
+
     }
 
     /**
@@ -553,7 +551,7 @@ FORM;
      */
     public function TidyLibrary()
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
         $tidyOldRevisions = (\Kit::GetParam('tidyOldRevisions', _POST, _CHECKBOX) == 1);
         $cleanUnusedFiles = (\Kit::GetParam('cleanUnusedFiles', _POST, _CHECKBOX) == 1);
 
@@ -565,7 +563,7 @@ FORM;
             trigger_error($maintenance->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse(__('Library Tidy Complete'));
-        $response->Respond();
+
     }
 }
 ?>

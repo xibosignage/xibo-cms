@@ -39,7 +39,7 @@ class Login extends Base
     {
         Theme::Set('form_action', $this->urlFor('login'));
         Theme::Set('form_meta', '<input type="hidden" name="priorPage" value="' . $this->getSession()->get('priorPage') . '" />');
-        Theme::Set('about_url', 'index.php?p=index&q=About');
+        Theme::Set('about_url', $this->urlFor('about'));
         Theme::Set('source_url', Theme::SourceLink());
 
         // Message (either from the URL or the session)
@@ -51,11 +51,6 @@ class Login extends Base
     function login()
     {
         $user = $this->getUser();
-
-        // Check the token
-        if (!Kit::CheckToken()) {
-            throw new FormExpiredException();
-        }
 
         // this page must be called from a form therefore we expect POST variables
         $username = \Kit::GetParam('username', _POST, _USERNAME);
@@ -161,10 +156,10 @@ class Login extends Base
      */
     public function PingPong()
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         $response->success = true;
-        $response->Respond();
+
     }
 
     /**
@@ -173,7 +168,7 @@ class Login extends Base
      */
     function About()
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         Theme::Set('version', VERSION);
 
@@ -182,7 +177,7 @@ class Login extends Base
 
         $response->SetFormRequestResponse($output, __('About'), '500', '500');
         $response->AddButton(__('Close'), 'XiboDialogClose()');
-        $response->Respond();
+
     }
 
     function ExchangeGridTokenForFormToken()

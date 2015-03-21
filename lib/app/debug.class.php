@@ -95,10 +95,10 @@ class Debug
         if (in_array($errno, $user_errors_halt)) 
         {
             // We have a halt error
-            $response = new ApplicationState();
+            $response = $this->getState();
             
             $response->SetError($errmsg);
-            $response->Respond();
+
         }
         
         // Is Debug Enabled? (i.e. Development or Support)

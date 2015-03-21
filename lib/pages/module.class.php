@@ -108,7 +108,7 @@ class moduleDAO extends baseDAO
     {
         $db =& $this->db;
         $user = $this->getUser();
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         $SQL = '';
         $SQL .= 'SELECT ModuleID, ';
@@ -188,7 +188,7 @@ class moduleDAO extends baseDAO
         $output = Theme::RenderReturn('table_render');
 
         $response->SetGridResponse($output);
-        $response->Respond();
+
     }
 
     /**
@@ -198,7 +198,7 @@ class moduleDAO extends baseDAO
     {
         $db =& $this->db;
         $user = $this->getUser();
-        $response = new ApplicationState();
+        $response = $this->getState();
         $helpManager = new Help($db, $user);
 
         // Can we edit?
@@ -264,16 +264,14 @@ class moduleDAO extends baseDAO
         $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Module', 'Edit') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#ModuleEditForm").submit()');
-        $response->Respond();
+
     }
 
     public function Edit()
     {
-        // Check the token
-        if (!Kit::CheckToken())
-            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
 
-        $response = new ApplicationState();
+
+        $response = $this->getState();
 
         // Can we edit?
         if (Config::GetSetting('MODULE_CONFIG_LOCKED_CHECKB') == 'Checked')
@@ -323,7 +321,7 @@ class moduleDAO extends baseDAO
                 ));
           
             $response->SetFormSubmitResponse(__('Module Edited'), false);
-            $response->Respond();
+
         }
         catch (Exception $e) {
             
@@ -342,7 +340,7 @@ class moduleDAO extends baseDAO
     public function VerifyForm()
     {
         $user = $this->getUser();
-        $response = new ApplicationState();
+        $response = $this->getState();
         $helpManager = new Help(NULL, $user);
 
         // Set some information about the form
@@ -358,16 +356,14 @@ class moduleDAO extends baseDAO
         $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Module', 'Edit') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Verify'), '$("#VerifyForm").submit()');
-        $response->Respond();
+
     }
 
     public function Verify()
     {
-        // Check the token
-        if (!Kit::CheckToken())
-            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
 
-        $response = new ApplicationState();
+
+        $response = $this->getState();
 
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -387,7 +383,7 @@ class moduleDAO extends baseDAO
         Media::installAllModuleFiles();
 
         $response->SetFormSubmitResponse(__('Verified'), false);
-        $response->Respond();
+
     }
 
     public function Install()
@@ -432,10 +428,10 @@ class moduleDAO extends baseDAO
         Debug::LogEntry('audit', 'Module Installed: ' . $file, 'module', 'Install');
 
         // Excellent... capital... success
-        $response = new ApplicationState();
+        $response = $this->getState();
         $response->refresh = true;
         $response->refreshLocation = 'index.php?p=module';
-        $response->Respond();
+
     }
     
     /**
@@ -488,7 +484,7 @@ class moduleDAO extends baseDAO
         else
         {
             /* @var ApplicationState $response */
-            $response->Respond();
+
         }
     }
 }

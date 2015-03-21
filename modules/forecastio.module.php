@@ -125,7 +125,7 @@ class ForecastIo extends Module
      */
     public function AddForm()
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         // You also have access to $settings, which is the array of settings you configured for your module.
         // Augment settings with templates
@@ -230,7 +230,7 @@ class ForecastIo extends Module
      */
     public function AddMedia()
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
 
 
         // You can store any additional options for your module using the SetOption method
@@ -266,7 +266,7 @@ class ForecastIo extends Module
      */
     public function EditForm()
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         if (!$this->auth->edit)
             throw new Exception(__('You do not have permission to edit this widget.'));
@@ -378,7 +378,7 @@ class ForecastIo extends Module
      */
     public function EditMedia()
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         if (!$this->auth->edit)
             throw new Exception(__('You do not have permission to edit this widget.'));

@@ -49,7 +49,7 @@ class transitionDAO extends baseDAO {
     {
         $db =& $this->db;
         $user = $this->getUser();
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         $SQL = '';
         $SQL .= 'SELECT TransitionID, ';
@@ -111,14 +111,14 @@ class transitionDAO extends baseDAO {
         $output = Theme::RenderReturn('table_render');
 
         $response->SetGridResponse($output);
-        $response->Respond();
+
     }
 
     public function EditForm()
     {
         $db =& $this->db;
         $user = $this->getUser();
-        $response = new ApplicationState();
+        $response = $this->getState();
         $helpManager = new Help($db, $user);
 
         // Can we edit?
@@ -166,7 +166,7 @@ class transitionDAO extends baseDAO {
         $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Transition', 'Edit') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#TransitionEditForm").submit()');
-        $response->Respond();
+
     }
 
     /**
@@ -174,12 +174,10 @@ class transitionDAO extends baseDAO {
      */
     public function Edit()
     {
-        // Check the token
-        if (!Kit::CheckToken())
-            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
+
         
         $db =& $this->db;
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         // Can we edit?
         if (Config::GetSetting('TRANSITION_CONFIG_LOCKED_CHECKB') == 'Checked')
@@ -204,7 +202,7 @@ class transitionDAO extends baseDAO {
         }
 
         $response->SetFormSubmitResponse(__('Transition Edited'), false);
-        $response->Respond();
+
     }
 }
 ?>

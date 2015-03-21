@@ -38,7 +38,7 @@ class embedded extends Module
      */
     public function AddForm()
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
         // Configure form
         $this->configureForm('AddMedia');
 
@@ -92,7 +92,7 @@ function EmbedInit()
      */
     public function EditForm()
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         // Edit calls are the same as add calls, except you will to check the user has permissions to do the edit
         if (!$this->auth->edit)
@@ -139,7 +139,7 @@ function EmbedInit()
      */
     public function AddMedia()
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         // Required Attributes
         $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration(), false));
@@ -165,7 +165,7 @@ function EmbedInit()
      */
     public function EditMedia()
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
         if (!$this->auth->edit)
             throw new Exception(__('You do not have permission to edit this widget.'));
 

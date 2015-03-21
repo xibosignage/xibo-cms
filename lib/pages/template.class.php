@@ -93,7 +93,7 @@ class templateDAO extends baseDAO {
      */
     function TemplateView() 
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         $filter_name = \Kit::GetParam('filter_name', _POST, _STRING);
         $filter_tags = \Kit::GetParam('filter_tags', _POST, _STRING);
@@ -187,7 +187,7 @@ class templateDAO extends baseDAO {
         Theme::Set('table_rows', $rows);
         
         $response->SetGridResponse(Theme::RenderReturn('table_render'));
-        $response->Respond();
+
     }
     
     /**
@@ -195,7 +195,7 @@ class templateDAO extends baseDAO {
      */
     function TemplateForm() 
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         // Get the layout
         $layout = \Xibo\Factory\LayoutFactory::getById(Kit::GetParam('layoutid', _GET, _INT));
@@ -224,12 +224,12 @@ class templateDAO extends baseDAO {
         $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Template', 'Add') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#TemplateAddForm").submit()');
-        $response->Respond();
+
     }
 
     function EditForm()
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         // Get the layout
         $layout = \Xibo\Factory\LayoutFactory::getById(Kit::GetParam('layoutid', _GET, _INT));
@@ -277,7 +277,7 @@ class templateDAO extends baseDAO {
         $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Template', 'Edit') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#TemplateEditForm").submit()');
-        $response->Respond();
+
     }
     
     /**
@@ -285,11 +285,9 @@ class templateDAO extends baseDAO {
      */
     function AddTemplate() 
     {
-        // Check the token
-        if (!Kit::CheckToken())
-            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
 
-        $response = new ApplicationState();
+
+        $response = $this->getState();
 
         // Get the layout
         $layout = clone \Xibo\Factory\LayoutFactory::getById(Kit::GetParam('layoutid', _POST, _INT));
@@ -303,16 +301,14 @@ class templateDAO extends baseDAO {
         $layout->save();
         
         $response->SetFormSubmitResponse('Template Added.');
-        $response->Respond();
+
     }
 
     function Edit()
     {
-        // Check the token
-        if (!Kit::CheckToken())
-            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
+
         
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         // Get the layout
         $layout = \Xibo\Factory\LayoutFactory::getById(Kit::GetParam('layoutid', _POST, _INT));
@@ -331,7 +327,7 @@ class templateDAO extends baseDAO {
         $layout->save();
 
         $response->SetFormSubmitResponse(__('Template Details Changed.'));
-        $response->Respond();
+
     }
     
     /**
@@ -339,11 +335,9 @@ class templateDAO extends baseDAO {
      */
     function DeleteTemplate()
     {
-        // Check the token
-        if (!Kit::CheckToken())
-            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
+
         
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         // Get the layout
         $layout = \Xibo\Factory\LayoutFactory::getById(Kit::GetParam('layoutid', _POST, _INT));
@@ -355,7 +349,7 @@ class templateDAO extends baseDAO {
         $layout->delete();
 
         $response->SetFormSubmitResponse(__('The Template has been Deleted'));
-        $response->Respond();
+
     }
 
     /**
@@ -363,7 +357,7 @@ class templateDAO extends baseDAO {
      */
     public function DeleteTemplateForm()
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         // Get the layout
         $layout = \Xibo\Factory\LayoutFactory::getById(Kit::GetParam('layoutid', _GET, _INT));
@@ -385,6 +379,6 @@ class templateDAO extends baseDAO {
         $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Template', 'Delete') . '")');
         $response->AddButton(__('No'), 'XiboDialogClose()');
         $response->AddButton(__('Yes'), '$("#DeleteForm").submit()');
-        $response->Respond();
+
     }
 }

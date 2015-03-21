@@ -147,7 +147,7 @@ class Twitter extends Module
      */
     public function AddForm()
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         // Augment settings with templates
         $this->loadTemplates();
@@ -305,7 +305,7 @@ class Twitter extends Module
      */
     public function AddMedia()
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         // You should validate all form input using the \Kit::GetParam helper classes
         if (\Kit::GetParam('searchTerm', _POST, _STRING) == '')
@@ -342,7 +342,7 @@ class Twitter extends Module
      */
     public function EditForm()
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         // Edit calls are the same as add calls, except you will to check the user has permissions to do the edit
         if (!$this->auth->edit)
@@ -511,7 +511,7 @@ class Twitter extends Module
      */
     public function EditMedia()
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         // Edit calls are the same as add calls, except you will to check the user has permissions to do the edit
         if (!$this->auth->edit)

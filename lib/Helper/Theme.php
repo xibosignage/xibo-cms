@@ -241,7 +241,7 @@ class Theme
 
         if ($key == 'form_meta') {
             // Append a token to the end
-            $return = $return . \Kit::Token();
+            $return = $return . '<input type="hidden" name="' . Theme::Get('csrfKey') . '" value="' . Theme::Get('csrfToken') . '">';
         }
         return $return;
     }

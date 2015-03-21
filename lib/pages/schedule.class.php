@@ -213,7 +213,7 @@ class scheduleDAO extends baseDAO {
 
         $db =& $this->db;
         $user = $this->getUser();
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         $displayGroupIds = \Kit::GetParam('displayGroupIds', _SESSION, _ARRAY);
 
@@ -369,7 +369,7 @@ class scheduleDAO extends baseDAO {
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Next'), '$("#AddEventForm").attr("action", $("#AddEventForm").attr("action") + "&next=1").submit()');
         $response->AddButton(__('Save'), '$("#AddEventForm").attr("action", $("#AddEventForm").attr("action") + "&next=0").submit()');
-        $response->Respond();
+
     }
 
     /**
@@ -383,7 +383,7 @@ class scheduleDAO extends baseDAO {
         
         $db =& $this->db;
         $user = $this->getUser();
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         $campaignId = \Kit::GetParam('CampaignID', _POST, _INT, 0);
         $fromDT = \Kit::GetParam('starttime', _POST, _STRING);
@@ -437,7 +437,7 @@ class scheduleDAO extends baseDAO {
         $response->callBack = 'CallGenerateCalendar';
         if ($isNextButton)
             $response->keepOpen = true;
-        $response->Respond();
+
     }
     
     /**
@@ -448,7 +448,7 @@ class scheduleDAO extends baseDAO {
     function EditEventForm() {
         $db =& $this->db;
         $user = $this->getUser();
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         $eventID = \Kit::GetParam('EventID', _GET, _INT, 0);
 
@@ -648,7 +648,7 @@ class scheduleDAO extends baseDAO {
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#EditEventForm").attr("action", $("#EditEventForm").attr("action") + "&next=0").submit()');
         $response->callBack = 'setupScheduleForm';
-        $response->Respond();
+
     }
     
     
@@ -665,7 +665,7 @@ class scheduleDAO extends baseDAO {
         
         $db =& $this->db;
         $user = $this->getUser();
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         $eventId = \Kit::GetParam('EventID', _POST, _INT, 0);
         $campaignId = \Kit::GetParam('CampaignID', _POST, _INT, 0);
@@ -714,7 +714,7 @@ class scheduleDAO extends baseDAO {
         
         $response->SetFormSubmitResponse(__("The Event has been Modified."));
         $response->callBack = 'CallGenerateCalendar';
-        $response->Respond();
+
     }
     
     /**
@@ -724,7 +724,7 @@ class scheduleDAO extends baseDAO {
     function DeleteForm() {
         $db =& $this->db;
         $user = $this->getUser();
-        $response = new ApplicationState();
+        $response = $this->getState();
         
         $eventID = \Kit::GetParam('EventID', _GET, _INT, 0);
         
@@ -740,7 +740,7 @@ class scheduleDAO extends baseDAO {
         $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Schedule', 'Delete') . '")');
         $response->AddButton(__('No'), 'XiboDialogClose()');
         $response->AddButton(__('Yes'), '$("#DeleteEventForm").submit()');
-        $response->Respond();
+
     }
     
     /**
@@ -749,13 +749,11 @@ class scheduleDAO extends baseDAO {
      */
     public function DeleteEvent()
     {
-        // Check the token
-        if (!Kit::CheckToken())
-            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
+
         
         $db =& $this->db;
         $user = $this->getUser();
-        $response = new ApplicationState();
+        $response = $this->getState();
         
         $eventID = \Kit::GetParam('EventID', _POST, _INT, 0);
         
@@ -773,7 +771,7 @@ class scheduleDAO extends baseDAO {
         
         $response->SetFormSubmitResponse(__("The Event has been Deleted."));
         $response->callBack = 'CallGenerateCalendar';
-        $response->Respond();
+
     }
     
     /**
@@ -806,7 +804,7 @@ class scheduleDAO extends baseDAO {
     public function ScheduleNowForm() {
         $db =& $this->db;
         $user = $this->getUser();
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         $date = time();
 
@@ -919,17 +917,15 @@ class scheduleDAO extends baseDAO {
         $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=ScheduleNow')");
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#ScheduleNowForm").submit()');
-        $response->Respond();
+
     }
 
     public function ScheduleNow() {
-        // Check the token
-        if (!Kit::CheckToken())
-            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
+
         
         $db =& $this->db;
         $user = $this->getUser();
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         $campaignId = \Kit::GetParam('CampaignID', _POST, _INT, 0);
         $displayGroupIds = \Kit::GetParam('DisplayGroupIDs', _POST, _ARRAY);
@@ -965,7 +961,7 @@ class scheduleDAO extends baseDAO {
             trigger_error($scheduleObject->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse(__('The Event has been Scheduled'));
-        $response->Respond();
+
     }  
 }
 ?>

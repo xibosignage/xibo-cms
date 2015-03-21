@@ -150,7 +150,7 @@ class displaygroupDAO extends baseDAO
         $output = Theme::RenderReturn('table_render');
 
         $response->SetGridResponse($output);
-        $response->Respond();
+
     }
     
     /**
@@ -160,7 +160,7 @@ class displaygroupDAO extends baseDAO
     {
         $db =& $this->db;
         $user = $this->getUser();
-        $response = new ApplicationState();
+        $response = $this->getState();
         
         Theme::Set('form_id', 'DisplayGroupAddForm');
         Theme::Set('form_action', 'index.php?p=displaygroup&q=Add');
@@ -177,7 +177,7 @@ class displaygroupDAO extends baseDAO
         $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('DisplayGroup', 'Add') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#DisplayGroupAddForm").submit()');
-        $response->Respond();
+
     }
     
     /**
@@ -228,7 +228,7 @@ class displaygroupDAO extends baseDAO
         $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('DisplayGroup', 'Edit') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#DisplayGroupEditForm").submit()');
-        $response->Respond();
+
     }
     
     /**
@@ -256,7 +256,7 @@ class displaygroupDAO extends baseDAO
         $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('DisplayGroup', 'Delete') . '")');
         $response->AddButton(__('No'), 'XiboDialogClose()');
         $response->AddButton(__('Yes'), '$("#DisplayGroupDeleteForm").submit()');
-        $response->Respond();
+
     }
     
     /**
@@ -333,7 +333,7 @@ class displaygroupDAO extends baseDAO
         $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('DisplayGroup', 'Members') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), 'DisplayGroupMembersSubmit()');
-        $response->Respond();
+
     }
     
     /**
@@ -342,12 +342,10 @@ class displaygroupDAO extends baseDAO
      */
     public function Add()
     {
-        // Check the token
-        if (!Kit::CheckToken())
-            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
+
         
         $db =& $this->db;
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         $displayGroup = \Kit::GetParam('group', _POST, _STRING);
         $description = \Kit::GetParam('desc', _POST, _STRING);
@@ -366,7 +364,7 @@ class displaygroupDAO extends baseDAO
             trigger_error(__('Unable to set permissions'));
         
         $response->SetFormSubmitResponse(__('Display Group Added'), false);
-        $response->Respond();
+
     }
     
     /**
@@ -375,9 +373,7 @@ class displaygroupDAO extends baseDAO
      */
     public function Edit()
     {
-        // Check the token
-        if (!Kit::CheckToken())
-            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
+
         
         $db             =& $this->db;
         $response       = new ApplicationState();
@@ -400,7 +396,7 @@ class displaygroupDAO extends baseDAO
         }
         
         $response->SetFormSubmitResponse(__('Display Group Edited'), false);
-        $response->Respond();
+
     }
     
     /**
@@ -409,9 +405,7 @@ class displaygroupDAO extends baseDAO
      */
     function Delete() 
     {
-        // Check the token
-        if (!Kit::CheckToken())
-            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
+
         
         $db             =& $this->db;   
         $response       = new ApplicationState();
@@ -432,7 +426,7 @@ class displaygroupDAO extends baseDAO
         }
         
         $response->SetFormSubmitResponse(__('Display Group Deleted'), false);
-        $response->Respond();
+
     }
     
     /**
@@ -501,7 +495,7 @@ class displaygroupDAO extends baseDAO
         }
         
         $response->SetFormSubmitResponse(__('Group membership set'), false);
-        $response->Respond();
+
     }
 
     /**
@@ -511,7 +505,7 @@ class displaygroupDAO extends baseDAO
     {
         $db =& $this->db;
         $user = $this->getUser();
-        $response = new ApplicationState();
+        $response = $this->getState();
         $helpManager = new Help($db, $user);
 
         $displayGroupId = \Kit::GetParam('DisplayGroupID', _GET, _INT);
@@ -564,7 +558,7 @@ class displaygroupDAO extends baseDAO
         $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('DisplayGroup', 'Permissions') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#DisplayGroupPermissionsForm").submit()');
-        $response->Respond();
+
     }
 
     /**
@@ -572,13 +566,11 @@ class displaygroupDAO extends baseDAO
      */
     public function Permissions()
     {
-        // Check the token
-        if (!Kit::CheckToken())
-            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
+
         
         $db =& $this->db;
         $user = $this->getUser();
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         $displayGroupId = \Kit::GetParam('displayGroupId', _POST, _INT);
         $groupIds = \Kit::GetParam('groupids', _POST, _ARRAY);
@@ -651,7 +643,7 @@ class displaygroupDAO extends baseDAO
         }
 
         $response->SetFormSubmitResponse(__('Permissions Changed'));
-        $response->Respond();
+
     }
 
     public function FileAssociations() {
@@ -713,7 +705,7 @@ class displaygroupDAO extends baseDAO
         $output = Theme::RenderReturn('displaygroup_fileassociations_form_assign');
 
         // Construct the Response
-        $response = new ApplicationState();
+        $response = $this->getState();
         $response->html = $output;
         $response->success = true;
         $response->dialogSize = true;
@@ -725,7 +717,7 @@ class displaygroupDAO extends baseDAO
         $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('DisplayGroup', 'FileAssociations') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Assign'), 'FileAssociationsSubmit(' . $displayGroupId  . ')');
-        $response->Respond();
+
     }
 
     public function FileAssociationsView() {
@@ -778,11 +770,11 @@ class displaygroupDAO extends baseDAO
         Theme::Set('table_rows', $rows);
 
         // Render the Theme
-        $response = new ApplicationState();
+        $response = $this->getState();
         $response->SetGridResponse(Theme::RenderReturn('displaygroup_fileassociations_form_assign_list'));
         $response->callBack = 'FileAssociationsCallback';
         $response->pageSize = 5;
-        $response->Respond();
+
     }
 
     public function SetFileAssociations() {
@@ -808,11 +800,11 @@ class displaygroupDAO extends baseDAO
 
         // Success
         $response->SetFormSubmitResponse(sprintf(__('%d Media Items Assigned'), count($mediaList)));
-        $response->Respond();
+
     }
 
     public function VersionInstructionsForm() {
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         $displayGroupId = \Kit::GetParam('displaygroupid', _GET, _INT);
         $displayId = \Kit::GetParam('displayid', _GET, _INT);
@@ -859,11 +851,11 @@ class displaygroupDAO extends baseDAO
         $response->SetFormRequestResponse($form, __('Set Instructions for Upgrading this client'), '300px', '250px');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#VersionInstructions").submit()');
-        $response->Respond();
+
     }
 
     public function VersionInstructions() {
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         \Kit::ClassLoader('media');
         \Kit::ClassLoader('display');
@@ -903,7 +895,7 @@ class displaygroupDAO extends baseDAO
         }
 
         $response->SetFormSubmitResponse(__('Version Instructions Set'));
-        $response->Respond();
+
     }
 }
 ?>

@@ -28,7 +28,7 @@ class localvideo extends Module
      */
     public function AddForm()
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         // Configure form
         $this->configureForm('AddMedia');
@@ -55,7 +55,7 @@ class localvideo extends Module
      */
     public function EditForm()
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         // Edit calls are the same as add calls, except you will to check the user has permissions to do the edit
         if (!$this->auth->edit)
@@ -86,7 +86,7 @@ class localvideo extends Module
      */
     public function AddMedia()
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         // Properties
         $uri = \Kit::GetParam('uri', _POST, _URI);
@@ -118,7 +118,7 @@ class localvideo extends Module
      */
     public function EditMedia()
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         if (!$this->auth->edit)
             throw new Exception(__('You do not have permission to edit this widget.'));

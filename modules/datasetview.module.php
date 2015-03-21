@@ -40,7 +40,7 @@ class datasetview extends Module
      */
     public function AddForm()
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         // Configure form
         $this->configureForm('AddMedia');
@@ -72,7 +72,7 @@ class datasetview extends Module
      */
     public function EditForm()
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
         if (!$this->auth->edit)
             throw new Exception(__('You do not have permission to edit this widget.'));
 
@@ -184,7 +184,7 @@ class datasetview extends Module
      */
     public function AddMedia()
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         // Other properties
         $dataSetId = \Kit::GetParam('datasetid', _POST, _INT, 0);
@@ -227,7 +227,7 @@ class datasetview extends Module
      */
     public function EditMedia()
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         if (!$this->auth->edit)
             throw new Exception(__('You do not have permission to edit this media.'));

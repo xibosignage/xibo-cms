@@ -149,7 +149,7 @@ class statsDAO extends baseDAO
     {
         $db =& $this->db;
         $user = $this->getUser();
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         $fromDt = Date::getIsoDateFromString(Kit::GetParam('fromdt', _POST, _STRING));
         $toDt = Date::getIsoDateFromString(Kit::GetParam('todt', _POST, _STRING));
@@ -344,7 +344,7 @@ class statsDAO extends baseDAO
         $output = Theme::RenderReturn('stats_page_grid');
 
         $response->SetGridResponse($output);
-        $response->Respond();
+
     }
 
     public function AvailabilityGrid() 
@@ -415,9 +415,9 @@ class statsDAO extends baseDAO
             Theme::Set('availabilityWidget', json_encode($output));
             $output = Theme::RenderReturn('stats_page_availability');
 
-            $response = new ApplicationState();
+            $response = $this->getState();
             $response->SetGridResponse($output);
-            $response->Respond();
+
         }
         catch (Exception $e) {
             
@@ -530,9 +530,9 @@ class statsDAO extends baseDAO
             
             $output = Theme::RenderReturn('stats_page_bandwidth');
 
-            $response = new ApplicationState();
+            $response = $this->getState();
             $response->SetGridResponse($output);
-            $response->Respond();
+
         }
         catch (Exception $e) {
             
@@ -544,7 +544,7 @@ class statsDAO extends baseDAO
     }
 
     public function OutputCsvForm() {
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         Theme::Set('form_id', 'OutputCsvForm');
         Theme::Set('form_action', 'index.php?p=stats&q=OutputCSV');
@@ -573,7 +573,7 @@ class statsDAO extends baseDAO
         $response->SetFormRequestResponse(NULL, __('Export Statistics'), '550px', '275px');
         $response->AddButton(__('Export'), '$("#OutputCsvForm").submit()');
         $response->AddButton(__('Close'), 'XiboDialogClose()');
-        $response->Respond();
+
     }
 	
 	/**

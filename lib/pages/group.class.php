@@ -217,9 +217,9 @@ END;
 
         $output = Theme::RenderReturn('table_render');
 
-		$response = new ApplicationState();
+		$response = $this->getState();
         $response->SetGridResponse($output);
-        $response->Respond();
+
 	}
 	
 	/**
@@ -230,7 +230,7 @@ END;
 	{
 		$db =& $this->db;
 		$user = $this->getUser();
-		$response = new ApplicationState();
+		$response = $this->getState();
 				
 		Theme::Set('form_id', 'UserGroupForm');
 
@@ -263,7 +263,7 @@ END;
 		$response->AddButton(__('Help'), 'XiboHelpRender("' . $form_help_link . '")');
 		$response->AddButton(__('Cancel'), 'XiboDialogClose()');
 		$response->AddButton(__('Save'), '$("#UserGroupForm").submit()');
-		$response->Respond();
+
 
 		return true;
 	}
@@ -294,7 +294,7 @@ END;
 		$response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('User', 'PageSecurity') . '")');
 		$response->AddButton(__('Close'), 'XiboDialogClose()');
 		$response->AddButton(__('Assign / Unassign'), '$("#UserGroupForm").submit()');
-		$response->Respond();
+
 
 		return true;
 	}
@@ -363,10 +363,10 @@ END;
 
 			$output = Theme::RenderReturn('usergroup_form_pagesecurity_grid');
 
-			$response = new ApplicationState();
+			$response = $this->getState();
 			$response->SetGridResponse($output);
 			$response->initialSortColumn = 2;
-			$response->Respond();
+
 		}
 		catch (Exception $e) {
 			Debug::Error($e);
@@ -380,7 +380,7 @@ END;
 	function DeleteForm() 
 	{
 		$groupId = $this->groupid;
-		$response = new ApplicationState();
+		$response = $this->getState();
 
         // Get the group name
         $group = __('Unknown');
@@ -409,7 +409,7 @@ END;
 		$response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('UserGroup', 'Delete') . '")');
 		$response->AddButton(__('No'), 'XiboDialogClose()');
 		$response->AddButton(__('Yes'), '$("#UserGroupDeleteForm").submit()');
-		$response->Respond();
+
 
 		return true;
 	}
@@ -420,12 +420,10 @@ END;
 	 */
 	function Add() 
 	{
-        // Check the token
-        if (!Kit::CheckToken())
-            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
+
         
         $db =& $this->db;
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         $group 	= \Kit::GetParam('group', _POST, _STRING);
 
@@ -435,7 +433,7 @@ END;
             trigger_error($userGroupObject->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse(__('User Group Added'), false);
-        $response->Respond();
+
 	}
 	
 	/**
@@ -444,9 +442,7 @@ END;
 	 */
 	function Edit() 
 	{
-        // Check the token
-        if (!Kit::CheckToken())
-            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
+
         
 		$db =& $this->db;
 		
@@ -458,9 +454,9 @@ END;
         if (!$userGroupObject->Edit($groupid, $group))
             trigger_error($userGroupObject->GetErrorMessage(), E_USER_ERROR);
 		
-		$response = new ApplicationState();
+		$response = $this->getState();
 		$response->SetFormSubmitResponse(__('User Group Edited'), false);
-        $response->Respond();
+
 	}
 	
 	/**
@@ -469,9 +465,7 @@ END;
 	 */
 	function Delete() 
 	{
-        // Check the token
-        if (!Kit::CheckToken())
-            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
+
         
 		$db =& $this->db;		
 		$groupid = \Kit::GetParam('groupid', _POST, _INT);
@@ -481,9 +475,9 @@ END;
         if (!$userGroupObject->Delete($groupid))
             trigger_error($userGroupObject->GetErrorMessage(), E_USER_ERROR);
 		
-		$response = new ApplicationState();
+		$response = $this->getState();
 		$response->SetFormSubmitResponse(__('User Group Deleted'), false);
-        $response->Respond();
+
 	}
 	
 	/**
@@ -540,10 +534,10 @@ END;
 			}
 		}
 
-		$response = new ApplicationState();
+		$response = $this->getState();
 		$response->SetFormSubmitResponse(__('User Group Page Security Edited'));
 		$response->keepOpen = true;
-        $response->Respond();
+
 	}
 	
 	/**
@@ -578,12 +572,12 @@ END;
 		$xiboGrid = Theme::RenderReturn('grid_render');
 
 		// Construct the Response
-		$response = new ApplicationState();
+		$response = $this->getState();
 		$response->SetFormRequestResponse($xiboGrid, __('Menu Item Security'), '500', '380');
 		$response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('User', 'MenuSecurity') . '")');
 		$response->AddButton(__('Close'), 'XiboDialogClose()');
 		$response->AddButton(__('Assign / Unassign'), '$("#UserGroupMenuForm").submit()');
-		$response->Respond();
+
 
 		return true;
 	}
@@ -655,10 +649,10 @@ END;
 
 		$output = Theme::RenderReturn('usergroup_form_menusecurity_grid');
 		
-		$response = new ApplicationState();
+		$response = $this->getState();
         $response->SetGridResponse($output);
         $response->initialSortColumn = 2;
-        $response->Respond();
+
 	}
 	
 	/**
@@ -667,9 +661,7 @@ END;
 	 */
 	function MenuItemSecurityAssign()
 	{
-        // Check the token
-        if (!Kit::CheckToken())
-            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
+
         
 		$db =& $this->db;
 		$groupid = \Kit::GetParam('groupid', _POST, _INT);
@@ -708,10 +700,10 @@ END;
 		}
 		
 		// Response
-		$response = new ApplicationState();
+		$response = $this->getState();
 		$response->SetFormSubmitResponse(__('User Group Menu Security Edited'));
 		$response->keepOpen = true;
-        $response->Respond();
+
 	}
 
     /**
@@ -720,7 +712,7 @@ END;
     public function MembersForm()
 	{
         $db =& $this->db;
-        $response = new ApplicationState();
+        $response = $this->getState();
         $groupID = \Kit::GetParam('groupid', _REQUEST, _INT);
 
         // There needs to be two lists here.
@@ -764,7 +756,7 @@ END;
         $response->AddButton(__('Help'), "XiboHelpRender('" . Help::Link('UserGroup', 'Members') . "')");
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), 'MembersSubmit()');
-        $response->Respond();
+
 	}
 
 	/**
@@ -824,7 +816,7 @@ END;
         }
 
         $response->SetFormSubmitResponse(__('Group membership set'), false);
-        $response->Respond();
+
 	}
 }
 ?>

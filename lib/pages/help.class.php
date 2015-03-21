@@ -62,7 +62,7 @@ class helpDAO extends baseDAO {
     {
         $db =& $this->db;
         $user = $this->getUser();
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         //display the display table
         $SQL = <<<SQL
@@ -131,12 +131,12 @@ SQL;
         $output = Theme::RenderReturn('table_render');
 
         $response->SetGridResponse($output);
-        $response->Respond();
+
     }
 
     public function AddForm()
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
         
         // Set some information about the form
         Theme::Set('form_id', 'HelpAddForm');
@@ -157,7 +157,7 @@ SQL;
         $response->SetFormRequestResponse(NULL, __('Add Help Link'), '350px', '325px');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#HelpAddForm").submit()');
-        $response->Respond();
+
     }
 
     /**
@@ -167,7 +167,7 @@ SQL;
     {
         $db =& $this->db;
         $user = $this->getUser();
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         $helpId	= \Kit::GetParam('HelpID', _REQUEST, _INT);
 
@@ -201,7 +201,7 @@ SQL;
         $response->SetFormRequestResponse(NULL, __('Edit Help Link'), '350px', '325px');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#HelpEditForm").submit()');
-        $response->Respond();
+
     }
 
     /**
@@ -210,7 +210,7 @@ SQL;
     public function DeleteForm()
     {
         $db =& $this->db;
-        $response = new ApplicationState();
+        $response = $this->getState();
         $helpId	= \Kit::GetParam('HelpID', _REQUEST, _INT);
 
         // Set some information about the form
@@ -223,7 +223,7 @@ SQL;
         $response->SetFormRequestResponse(NULL, __('Delete Help Link'), '350px', '175px');
         $response->AddButton(__('No'), 'XiboDialogClose()');
         $response->AddButton(__('Yes'), '$("#HelpDeleteForm").submit()');
-        $response->Respond();
+
     }
 
     /**
@@ -231,12 +231,10 @@ SQL;
      */
     public function Add()
     {
-        // Check the token
-        if (!Kit::CheckToken())
-            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
+
         
         $db =& $this->db;
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         $topic = \Kit::GetParam('Topic', _POST, _STRING);
         $category = \Kit::GetParam('Category', _POST, _STRING);
@@ -250,7 +248,7 @@ SQL;
             trigger_error($helpObject->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse(__('Help Link Added'), false);
-        $response->Respond();
+
     }
 
     /**
@@ -258,12 +256,10 @@ SQL;
      */
     public function Edit()
     {
-        // Check the token
-        if (!Kit::CheckToken())
-            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
+
         
         $db =& $this->db;
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         $helpId	= \Kit::GetParam('HelpID', _POST, _INT);
         $topic = \Kit::GetParam('Topic', _POST, _STRING);
@@ -278,17 +274,15 @@ SQL;
             trigger_error($helpObject->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse(__('Help Link Edited'), false);
-        $response->Respond();
+
     }
 
     public function Delete()
     {
-        // Check the token
-        if (!Kit::CheckToken())
-            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
+
         
         $db =& $this->db;
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         $helpId	= \Kit::GetParam('HelpID', _POST, _INT);
 
@@ -300,7 +294,7 @@ SQL;
             trigger_error($helpObject->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse(__('Help Link Deleted'), false);
-        $response->Respond();
+
     }
 }
 ?>

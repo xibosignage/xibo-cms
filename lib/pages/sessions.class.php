@@ -89,7 +89,7 @@ class sessionsDAO extends baseDAO {
 	function Grid() 
 	{
 		$db =& $this->db;
-		$response = new ApplicationState();
+		$response = $this->getState();
 		
 		$type = \Kit::GetParam('filter_type', _POST, _WORD);
 		$fromDt = \Kit::GetParam('filter_fromdt', _POST, _STRING);
@@ -161,13 +161,13 @@ class sessionsDAO extends baseDAO {
 		Theme::Set('table_rows', $rows);
 
 		$response->SetGridResponse(Theme::RenderReturn('table_render'));
-		$response->Respond();
+
 	}
 	
 	function ConfirmLogout()
 	{
 		$db =& $this->db;
-		$response = new ApplicationState();
+		$response = $this->getState();
 		
 		$userid = \Kit::GetParam('userid', _GET, _INT);
 		
@@ -182,7 +182,7 @@ class sessionsDAO extends baseDAO {
         $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Sessions', 'Logout') . '")');
 		$response->AddButton(__('No'), 'XiboDialogClose()');
 		$response->AddButton(__('Yes'), '$("#SessionsLogoutForm").submit()');
-		$response->Respond();
+
 	}
 	
 	/**
@@ -191,14 +191,12 @@ class sessionsDAO extends baseDAO {
 	 */
 	function LogoutUser()
 	{
-        // Check the token
-        if (!Kit::CheckToken())
-            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
+
         
 		$db =& $this->db;
 		
 		//ajax request handler
-		$response = new ApplicationState();
+		$response = $this->getState();
 		$userID = \Kit::GetParam('userid', _POST, _INT);
 		
 		$SQL = sprintf("UPDATE session SET IsExpired = 1 WHERE userID = %d", $userID);
@@ -210,7 +208,7 @@ class sessionsDAO extends baseDAO {
 		}
 		
 		$response->SetFormSubmitResponse(__('User Logged Out.'));
-		$response->Respond();
+
 	}
 }
 ?>

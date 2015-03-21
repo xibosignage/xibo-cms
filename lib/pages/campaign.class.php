@@ -60,7 +60,7 @@ class campaignDAO extends baseDAO
     public function Grid()
     {
         $user = $this->getUser();
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         $campaigns = $user->CampaignList();
 
@@ -134,7 +134,7 @@ class campaignDAO extends baseDAO
         $output = Theme::RenderReturn('table_render');
 
         $response->SetGridResponse($output);
-        $response->Respond();
+
     }
 
     /**
@@ -144,7 +144,7 @@ class campaignDAO extends baseDAO
     {
         $db =& $this->db;
         $user = $this->getUser();
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         Theme::Set('form_id', 'CampaignAddForm');
         Theme::Set('form_action', 'index.php?p=campaign&q=Add');
@@ -157,7 +157,7 @@ class campaignDAO extends baseDAO
         $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Campaign', 'Add') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#CampaignAddForm").submit()');
-        $response->Respond();
+
     }
 
     /**
@@ -165,12 +165,10 @@ class campaignDAO extends baseDAO
      */
     public function Add()
     {
-        // Check the token
-        if (!Kit::CheckToken())
-            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
+
         
         $db =& $this->db;
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         $name = \Kit::GetParam('Name', _POST, _STRING);
 
@@ -181,7 +179,7 @@ class campaignDAO extends baseDAO
             trigger_error($campaignObject->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse(__('Campaign Added'), false);
-        $response->Respond();
+
     }
 
     /**
@@ -191,7 +189,7 @@ class campaignDAO extends baseDAO
     {
         $db =& $this->db;
         $user = $this->getUser();
-        $response = new ApplicationState();
+        $response = $this->getState();
         
         $campaignId = \Kit::GetParam('CampaignID', _GET, _INT);
 
@@ -228,7 +226,7 @@ class campaignDAO extends baseDAO
         $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Campaign', 'Edit') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#CampaignEditForm").submit()');
-        $response->Respond();
+
     }
 
     /**
@@ -236,12 +234,10 @@ class campaignDAO extends baseDAO
      */
     public function Edit()
     {
-        // Check the token
-        if (!Kit::CheckToken())
-            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
+
         
         $db =& $this->db;
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         $campaignId = \Kit::GetParam('CampaignID', _POST, _INT);
         $name = \Kit::GetParam('Name', _POST, _STRING);
@@ -265,7 +261,7 @@ class campaignDAO extends baseDAO
             trigger_error($campaignObject->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse(__('Campaign Edited'), false);
-        $response->Respond();
+
     }
 
     /**
@@ -276,7 +272,7 @@ class campaignDAO extends baseDAO
     {
         $db =& $this->db;
         $user = $this->getUser();
-        $response = new ApplicationState();
+        $response = $this->getState();
         $helpManager = new Help($db, $user);
 
         $campaignId = \Kit::GetParam('CampaignID', _GET, _INT);
@@ -297,7 +293,7 @@ class campaignDAO extends baseDAO
         $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Campaign', 'Delete') . '")');
         $response->AddButton(__('No'), 'XiboDialogClose()');
         $response->AddButton(__('Yes'), '$("#CampaignDeleteForm").submit()');
-        $response->Respond();
+
     }
 
     /**
@@ -305,12 +301,10 @@ class campaignDAO extends baseDAO
      */
     public function Delete()
     {
-        // Check the token
-        if (!Kit::CheckToken())
-            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
+
         
         $db =& $this->db;
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         $campaignId = \Kit::GetParam('CampaignID', _POST, _INT);
 
@@ -330,7 +324,7 @@ class campaignDAO extends baseDAO
             trigger_error($campaignObject->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse(__('Campaign Deleted'), false);
-        $response->Respond();
+
     }
 
     /**
@@ -342,7 +336,7 @@ class campaignDAO extends baseDAO
         if (!Kit::CheckToken('assign_token'))
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         $campaignObject = new Campaign();
 
@@ -382,7 +376,7 @@ class campaignDAO extends baseDAO
         }
 
         $response->SetFormSubmitResponse(__('Layouts Added to Campaign'), false);
-        $response->Respond();
+
     }
 
     /**
@@ -390,7 +384,7 @@ class campaignDAO extends baseDAO
      */
     function LayoutAssignForm()
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         $campaign = \Xibo\Factory\CampaignFactory::getById(Kit::GetParam('CampaignID', _GET, _INT));
 
@@ -429,7 +423,7 @@ class campaignDAO extends baseDAO
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), 'LayoutsSubmit("' . $campaign->campaignId . '")');
 
-        $response->Respond();
+
     }
     
     /**
@@ -437,7 +431,7 @@ class campaignDAO extends baseDAO
      */
     function LayoutAssignView() 
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         // Input vars
         $name = \Kit::GetParam('filter_name', _POST, _STRING);
@@ -479,6 +473,6 @@ class campaignDAO extends baseDAO
         $response->SetGridResponse(Theme::RenderReturn('table_render'));
         $response->callBack = 'LayoutAssignCallback';
         $response->pageSize = 5;
-        $response->Respond();
+
     }
 }

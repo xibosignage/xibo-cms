@@ -27,7 +27,7 @@ class image extends Module
      */
     public function EditForm() {
 
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         // Provide some extra form fields
         $formFields = array();

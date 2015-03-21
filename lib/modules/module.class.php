@@ -309,7 +309,7 @@ abstract class Module implements ModuleInterface
     public function baseEditForm($extraFormFields = null, $response = null)
     {
         if ($response == null)
-            $response = new ApplicationState();
+            $response = $this->getState();
 
         $this->configureForm('EditMedia');
 
@@ -333,7 +333,7 @@ abstract class Module implements ModuleInterface
         // Generate the Response
         $response->html = Theme::RenderReturn('form_render');
         $this->configureFormButtons($response);
-        $response->Respond();
+
     }
 
     /**
@@ -342,7 +342,7 @@ abstract class Module implements ModuleInterface
      */
     public function EditMedia()
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         // Can this user delete?
         if (!$this->auth->edit)
@@ -358,7 +358,7 @@ abstract class Module implements ModuleInterface
         $response->SetFormSubmitResponse(__('The Widget has been Edited'));
         $response->loadForm = true;
         $response->loadFormUri= 'index.php?p=timeline&q=Timeline&regionid=' . \Kit::GetParam('regionId', _POST, _INT);
-        $response->Respond();
+
     }
 
     /**
@@ -367,7 +367,7 @@ abstract class Module implements ModuleInterface
      */
     public function DeleteForm()
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
         $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Media', 'Delete') . '")');
 
         // Can this user delete?
@@ -393,7 +393,7 @@ abstract class Module implements ModuleInterface
         $response->SetFormRequestResponse($form, __('Delete Widget'), '300px', '200px');
         $response->AddButton(__('No'), 'XiboDialogClose()');
         $response->AddButton(__('Yes'), '$("#MediaDeleteForm").submit()');
-        $response->Respond();
+
     }
 
     /**
@@ -401,7 +401,7 @@ abstract class Module implements ModuleInterface
      */
     public function DeleteMedia()
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         // Can this user delete?
         if (!$this->auth->delete)
@@ -422,7 +422,7 @@ abstract class Module implements ModuleInterface
         $response->SetFormSubmitResponse(__('The Widget has been Deleted'));
         $response->loadForm = true;
         $response->loadFormUri = $this->getTimelineLink();
-        $response->Respond();
+
     }
 
     /**
@@ -519,7 +519,7 @@ abstract class Module implements ModuleInterface
      */
     public function TransitionEditForm()
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         if (!$this->auth->edit)
         {
@@ -632,7 +632,7 @@ abstract class Module implements ModuleInterface
      */
     public function TransitionEdit()
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         if (!$this->auth->edit)
             throw new Exception(__('You do not have permission to edit this media.'));

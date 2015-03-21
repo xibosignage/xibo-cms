@@ -95,9 +95,9 @@ class displayprofileDAO extends baseDAO {
 
         $output = Theme::RenderReturn('table_render');
 
-        $response = new ApplicationState();
+        $response = $this->getState();
         $response->SetGridResponse($output);
-        $response->Respond();
+
     }
 
     function AddForm() {
@@ -129,15 +129,15 @@ class displayprofileDAO extends baseDAO {
 
         Theme::Set('form_fields', $formFields);
 
-        $response = new ApplicationState();
+        $response = $this->getState();
         $response->SetFormRequestResponse(NULL, 'Add Profile', '350px', '275px');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#ProfileForm").submit()');
-        $response->Respond();
+
     }
 
     public function Add() {
-        $response = new ApplicationState();
+        $response = $this->getState();
         $displayProfile = new DisplayProfile();
         $displayProfile->name = \Kit::GetParam('name', _POST, _STRING);
         $displayProfile->type = \Kit::GetParam('type', _POST, _STRING);
@@ -148,7 +148,7 @@ class displayprofileDAO extends baseDAO {
             trigger_error($displayProfile->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse(__('Display Profile Saved.'));
-        $response->Respond();
+
     }
 
     public function EditForm() {
@@ -245,12 +245,12 @@ class displayprofileDAO extends baseDAO {
             Theme::Set('form_fields_' . $tab['id'], $formFields[$tab['id']]);
         }
 
-        $response = new ApplicationState();
+        $response = $this->getState();
         $response->SetFormRequestResponse(NULL, __('Edit Profile'), '650px', '350px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('DisplayProfile', 'Edit') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#DisplayConfigForm").submit()');
-        $response->Respond();
+
     }
 
     public function Edit() {
@@ -258,7 +258,7 @@ class displayprofileDAO extends baseDAO {
         if (!Kit::CheckToken())
             trigger_error('Token does not match', E_USER_ERROR);
 
-        $response = new ApplicationState();
+        $response = $this->getState();
         
         // Create a form out of the config object.
         $displayProfile  = new DisplayProfile();
@@ -308,7 +308,7 @@ class displayprofileDAO extends baseDAO {
             trigger_error($displayProfile->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse(__('Display Configuration Saved.'));
-        $response->Respond();
+
     }
 
     /**
@@ -337,7 +337,7 @@ class displayprofileDAO extends baseDAO {
         $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('DisplayProfile', 'Delete') . '")');
         $response->AddButton(__('No'), 'XiboDialogClose()');
         $response->AddButton(__('Yes'), '$("#DisplayProfileDeleteForm").submit()');
-        $response->Respond();
+
     }
 
     /**
@@ -349,7 +349,7 @@ class displayprofileDAO extends baseDAO {
         if (!Kit::CheckToken())
             trigger_error('Token does not match', E_USER_ERROR);
 
-        $response = new ApplicationState();
+        $response = $this->getState();
         
         $displayProfile  = new DisplayProfile();
         $displayProfile->displayProfileId = \Kit::GetParam('displayprofileid', _POST, _INT);
@@ -364,7 +364,7 @@ class displayprofileDAO extends baseDAO {
             trigger_error($displayProfile->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse(__('Display Profile Deleted'), false);
-        $response->Respond();
+
     }
 }
 ?>

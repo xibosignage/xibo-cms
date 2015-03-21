@@ -96,7 +96,7 @@ class mediamanagerDAO extends baseDAO {
     {
         $db =& $this->db;
         $user = $this->getUser();
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         $filterLayout = \Kit::GetParam('filter_layout_name', _POST, _STRING);
         $filterRegion = \Kit::GetParam('filter_region_name', _POST, _STRING);
@@ -221,7 +221,7 @@ class mediamanagerDAO extends baseDAO {
         $output = Theme::RenderReturn('table_render');
 
         $response->SetGridResponse($output);
-        $response->Respond();
+
     }
 }
 ?>

@@ -503,7 +503,7 @@ function XiboFormRender(formUrl, data) {
     // Call with AJAX
     $.ajax({
         type: "get",
-        url: formUrl + "&ajax=true",
+        url: formUrl,
         cache: false,
         dataType: "json",
         data: data,

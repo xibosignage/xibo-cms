@@ -36,6 +36,7 @@ class State extends Middleware
 
         // Create a session
         $this->app->container->singleton('session', function() { return new \Session(); });
+        $this->app->session->Get('nothing');
 
         // Next middleware
         $this->next->call();

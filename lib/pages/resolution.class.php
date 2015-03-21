@@ -96,7 +96,7 @@ class resolutionDAO extends baseDAO
     function ResolutionGrid()
     {
         $user = $this->getUser();
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         \Session::Set('resolution', 'ResolutionFilter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
         // Show enabled
@@ -145,7 +145,7 @@ class resolutionDAO extends baseDAO
         Theme::Set('table_rows', $rows);
 
         $response->SetGridResponse(Theme::RenderReturn('table_render'));
-        $response->Respond();
+
     }
 
     /**
@@ -153,7 +153,7 @@ class resolutionDAO extends baseDAO
      */
     function AddForm()
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         Theme::Set('form_id', 'AddForm');
         Theme::Set('form_action', 'index.php?p=resolution&q=Add');
@@ -174,7 +174,7 @@ class resolutionDAO extends baseDAO
         $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Resolution', 'Add') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#AddForm").submit()');
-        $response->Respond();
+
     }
 
     /**
@@ -182,7 +182,7 @@ class resolutionDAO extends baseDAO
      */
     function EditForm()
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         $resolution = \Xibo\Factory\ResolutionFactory::getById(Kit::GetParam('resolutionid', _GET, _INT));
 
@@ -212,7 +212,7 @@ class resolutionDAO extends baseDAO
         $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Resolution', 'Add') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#ResolutionForm").submit()');
-        $response->Respond();
+
     }
 
     /**
@@ -220,7 +220,7 @@ class resolutionDAO extends baseDAO
      */
     function DeleteForm()
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         $resolution = \Xibo\Factory\ResolutionFactory::getById(Kit::GetParam('resolutionid', _GET, _INT));
 
@@ -237,18 +237,16 @@ class resolutionDAO extends baseDAO
         $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Resolution', 'Delete') . '")');
         $response->AddButton(__('No'), 'XiboDialogClose()');
         $response->AddButton(__('Yes'), '$("#DeleteForm").submit()');
-        $response->Respond();
+
     }
 
     function Add()
     {
-        // Check the token
-        if (!Kit::CheckToken())
-            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
+
         
         $db 	=& $this->db;
         $user 	=& $this->user;
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         $resolution = \Kit::GetParam('resolution', _POST, _STRING);
         $width = \Kit::GetParam('width', _POST, _INT);
@@ -261,18 +259,16 @@ class resolutionDAO extends baseDAO
             trigger_error($resObject->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse('New resolution added');
-        $response->Respond();
+
     }
 
     function Edit()
     {
-        // Check the token
-        if (!Kit::CheckToken())
-            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
+
         
         $db 	=& $this->db;
         $user 	=& $this->user;
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         $resolutionID = \Kit::GetParam('resolutionid', _POST, _INT);
         $resolution = \Kit::GetParam('resolution', _POST, _STRING);
@@ -287,18 +283,16 @@ class resolutionDAO extends baseDAO
             trigger_error($resObject->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse('Resolution edited');
-        $response->Respond();
+
     }
 
     function Delete()
     {
-        // Check the token
-        if (!Kit::CheckToken())
-            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
+
         
         $db 	=& $this->db;
         $user 	=& $this->user;
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         $resolutionID = \Kit::GetParam('resolutionid', _POST, _INT);
 
@@ -309,7 +303,7 @@ class resolutionDAO extends baseDAO
             trigger_error($resObject->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse('Resolution deleted');
-        $response->Respond();
+
     }
 }
 ?>

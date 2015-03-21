@@ -50,6 +50,7 @@ $app->setName('web');
 $app->add(new \Xibo\Middleware\Storage());
 $app->add(new \Xibo\Middleware\State());
 $app->add(new \Xibo\Middleware\Actions());
+$app->add(new \Xibo\Middleware\CsrfGuard());
 $app->add(new \Xibo\Middleware\WebAuthentication());
 
 // web view
@@ -75,6 +76,7 @@ $app->post('/login', function () use ($app) {
         $controller->login();
     }
     catch (\Xibo\Exception\FormExpiredException $e) {
+        Debug::Audit('form expored');
         $app->redirectTo('login');
     }
 
@@ -83,8 +85,9 @@ $app->post('/login', function () use ($app) {
 });
 
 $app->get('/about', function () use ($app) {
-
-});
+    $controller = new \Xibo\Controller\Login($app);
+    $controller->render('About');
+})->setName('about');
 
 $app->get('/layouts/view', function () use ($app) {
     // This is a full page

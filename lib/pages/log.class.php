@@ -242,11 +242,11 @@ class logDAO extends baseDAO {
 		$response->initialSortColumn = 1;
 		$response->pageSize = 20;
 		$response->SetGridResponse($output);
-		$response->Respond();
+
 	}
 
 	function LastHundredForDisplay() {
-        $response = new ApplicationState();
+        $response = $this->getState();
         $displayId = \Kit::GetParam('displayid', _GET, _INT);
 
         try {
@@ -293,7 +293,7 @@ class logDAO extends baseDAO {
             $response->dialogTitle = __('Recent Log Messages');
             $response->pageSize = 10;
             $response->SetGridResponse($output);
-            $response->Respond();
+
         }
         catch (Exception $e) {
             trigger_error($e->getMessage(), E_USER_ERROR);
@@ -303,7 +303,7 @@ class logDAO extends baseDAO {
 	public function TruncateForm() {
 		$db =& $this->db;
         $user = $this->getUser();
-		$response = new ApplicationState();
+		$response = $this->getState();
 
 		if ($this->user->usertypeid != 1)
 			trigger_error(__('Only Administrator Users can truncate the log'), E_USER_ERROR);
@@ -318,7 +318,7 @@ class logDAO extends baseDAO {
         $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Log', 'Truncate') . '")');
 		$response->AddButton(__('No'), 'XiboDialogClose()');
 		$response->AddButton(__('Yes'), '$("#TruncateForm").submit()');
-		$response->Respond();
+
 	}
 
 	/**
@@ -326,18 +326,16 @@ class logDAO extends baseDAO {
 	 */
 	public function Truncate() 
 	{
-        // Check the token
-        if (!Kit::CheckToken())
-            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
+
         
 		if ($this->user->usertypeid != 1)
 			trigger_error(__('Only Administrator Users can truncate the log'), E_USER_ERROR);
 		
 		PDOConnect::update('TRUNCATE TABLE log', array());
 		
-		$response = new ApplicationState();
+		$response = $this->getState();
 		$response->SetFormSubmitResponse('Log Truncated');
-        $response->Respond();
+
 	}
 }
 ?>

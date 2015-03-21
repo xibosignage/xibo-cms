@@ -213,9 +213,7 @@ class Layout extends Base
      */
     function add()
     {
-        // Check the token
-        if (!Kit::CheckToken())
-            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
+
 
          
 
@@ -240,7 +238,7 @@ class Layout extends Base
 
         // Successful layout creation
          $this->getState()->SetFormSubmitResponse(__('Layout Details Changed.'), true, sprintf("index.php?p=layout&layoutid=%d&modify=true", $layout->layoutId));
-         $this->getState()->Respond();
+
     }
 
     /**
@@ -248,9 +246,7 @@ class Layout extends Base
      */
     function modify()
     {
-        // Check the token
-        if (!Kit::CheckToken())
-            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
+
 
          
 
@@ -284,7 +280,7 @@ class Layout extends Base
         } else {
              $this->getState()->SetFormSubmitResponse(__('Layout Details Changed.'));
         }
-         $this->getState()->Respond();
+
     }
 
     /**
@@ -315,7 +311,7 @@ class Layout extends Base
          $this->getState()->AddButton(__('Retire'), 'XiboSwapDialog("index.php?p=layout&q=RetireForm&layoutid=' . $layoutId . '")');
          $this->getState()->AddButton(__('No'), 'XiboDialogClose()');
          $this->getState()->AddButton(__('Yes'), '$("#LayoutDeleteForm").submit()');
-         $this->getState()->Respond();
+
     }
 
     /**
@@ -346,7 +342,7 @@ class Layout extends Base
          $this->getState()->AddButton(__('Delete'), 'XiboSwapDialog("index.php?p=layout&q=DeleteLayoutForm&layoutid=' . $layoutId . '")');
          $this->getState()->AddButton(__('No'), 'XiboDialogClose()');
          $this->getState()->AddButton(__('Yes'), '$("#RetireForm").submit()');
-         $this->getState()->Respond();
+
     }
 
     /**
@@ -354,9 +350,7 @@ class Layout extends Base
      */
     function delete()
     {
-        // Check the token
-        if (!Kit::CheckToken())
-            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
+
 
          
         $layoutId = \Kit::GetParam('layoutId', _POST, _INT);
@@ -369,7 +363,7 @@ class Layout extends Base
         $layout->delete();
 
          $this->getState()->SetFormSubmitResponse(__('The Layout has been Deleted'));
-         $this->getState()->Respond();
+
     }
 
     /**
@@ -377,9 +371,7 @@ class Layout extends Base
      */
     function Retire()
     {
-        // Check the token
-        if (!Kit::CheckToken())
-            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
+
 
          
         $layoutId = \Kit::GetParam('layoutid', _POST, _INT, 0);
@@ -393,7 +385,7 @@ class Layout extends Base
             trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);
 
          $this->getState()->SetFormSubmitResponse(__('The Layout has been Retired'));
-         $this->getState()->Respond();
+
     }
 
     /**
@@ -680,7 +672,7 @@ class Layout extends Base
          $this->getState()->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Layout', 'Add') . '")');
          $this->getState()->AddButton(__('Cancel'), 'XiboDialogClose()');
          $this->getState()->AddButton(__('Save'), '$("#LayoutForm").submit()');
-         $this->getState()->Respond();
+
     }
 
     /**
@@ -786,7 +778,7 @@ class Layout extends Base
          $this->getState()->AddButton(__('Add Image'), 'XiboFormRender("index.php?p=module&q=Exec&mod=image&method=AddForm&backgroundImage=true&layoutid=' . $layout->layoutId . '")');
          $this->getState()->AddButton(__('Cancel'), 'XiboDialogClose()');
          $this->getState()->AddButton(__('Save'), '$("#LayoutForm").submit()');
-         $this->getState()->Respond();
+
     }
 
     /**
@@ -949,7 +941,7 @@ HTML;
          $this->getState()->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Layout', 'Copy') . '")');
          $this->getState()->AddButton(__('Cancel'), 'XiboDialogClose()');
          $this->getState()->AddButton(__('Copy'), '$("#LayoutCopyForm").submit()');
-         $this->getState()->Respond();
+
     }
 
     /**
@@ -957,9 +949,7 @@ HTML;
      */
     public function Copy()
     {
-        // Check the token
-        if (!Kit::CheckToken())
-            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
+
 
          
 
@@ -981,7 +971,7 @@ HTML;
         $layout->save();
 
          $this->getState()->SetFormSubmitResponse(__('Layout Copied'));
-         $this->getState()->Respond();
+
     }
 
     public function LayoutStatus()
@@ -1019,7 +1009,7 @@ HTML;
 
          $this->getState()->html = $status;
          $this->getState()->success = true;
-         $this->getState()->Respond();
+
     }
 
     public function Export()
@@ -1082,7 +1072,7 @@ HTML;
          $this->getState()->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('DataSet', 'ImportCsv') . '")');
          $this->getState()->AddButton(__('Cancel'), 'XiboDialogClose()');
          $this->getState()->AddButton(__('Import'), '$("#LayoutImportForm").submit()');
-         $this->getState()->Respond();
+
     }
 
     public function Import()
@@ -1121,7 +1111,7 @@ HTML;
         }
 
          $this->getState()->SetFormSubmitResponse(__('Layout Imported'));
-         $this->getState()->Respond();
+
     }
 
     public function ShowXlf()
@@ -1132,7 +1122,7 @@ HTML;
 
          $this->getState()->SetFormRequestResponse('<pre>' . json_format(json_encode($layout)) . '</pre>', 'Test', '350px', '200px');
          $this->getState()->dialogClass = 'modal-big';
-         $this->getState()->Respond();
+
     }
 }
 

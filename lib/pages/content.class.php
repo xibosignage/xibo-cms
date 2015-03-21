@@ -159,7 +159,7 @@ class contentDAO extends baseDAO {
 	function LibraryGrid() 
 	{
 		$user = $this->getUser();
-		$response = new ApplicationState();
+		$response = $this->getState();
 
 		//Get the input params and store them
 		$filter_type = \Kit::GetParam('filter_type', _REQUEST, _WORD);
@@ -279,7 +279,7 @@ class contentDAO extends baseDAO {
 
     	$response->SetGridResponse($output);
         $response->initialSortColumn = 2;
-        $response->Respond();
+
     }
 	
 	/**
@@ -288,7 +288,7 @@ class contentDAO extends baseDAO {
 	 */
 	function fileUploadForm()
 	{
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         // Check we have room in the library
         $libraryLimit = Config::GetSetting('LIBRARY_SIZE_LIMIT_KB');
@@ -341,7 +341,7 @@ class contentDAO extends baseDAO {
         $response->dialogTitle = __('Upload media');
         $response->callBack = 'MediaFormInitUpload';
         $response->dialogClass = 'modal-big';
-        $response->Respond();
+
 	}
 
     /**
@@ -403,7 +403,7 @@ class contentDAO extends baseDAO {
      */
     public function deleteForm()
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         // Get the MediaId
         $media = \Xibo\Factory\MediaFactory::getById(Kit::GetParam('mediaId', _GET, _INT));
@@ -427,7 +427,7 @@ class contentDAO extends baseDAO {
         $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Media', 'Delete') . '")');
         $response->AddButton(__('No'), 'XiboDialogClose()');
         $response->AddButton(__('Yes'), '$("#MediaDeleteForm").submit()');
-        $response->Respond();
+
     }
 
     /**
@@ -435,7 +435,7 @@ class contentDAO extends baseDAO {
      */
     public function delete()
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         // Get the MediaId
         $media = \Xibo\Factory\MediaFactory::getById(Kit::GetParam('mediaId', _GET, _INT));
@@ -448,7 +448,7 @@ class contentDAO extends baseDAO {
         $media->Delete();
 
         $response->SetFormSubmitResponse(__('The Media has been Deleted'));
-        $response->Respond();
+
     }
 
     /**
@@ -570,7 +570,7 @@ class contentDAO extends baseDAO {
     {
         $db =& $this->db;
         $user = $this->getUser();
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         $id = uniqid();
         Theme::Set('id', $id);
@@ -611,7 +611,7 @@ class contentDAO extends baseDAO {
         $response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutId . '&regionid=' . $regionId . '&q=RegionOptions")');
         $response->AddButton(__('Assign'), 'LibraryAssignSubmit("' . $layoutId . '","' . $regionId . '")');
 
-        $response->Respond();
+
     }
 	
     /**
@@ -622,7 +622,7 @@ class contentDAO extends baseDAO {
     {
         $db =& $this->db;
         $user = $this->getUser();
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         //Input vars
         $mediatype = \Kit::GetParam('filter_type', _POST, _STRING);
@@ -648,7 +648,7 @@ class contentDAO extends baseDAO {
         $response->SetGridResponse(Theme::RenderReturn('library_form_assign_list'));
         $response->callBack = 'LibraryAssignCallback';
         $response->pageSize = 5;
-        $response->Respond();
+
     }
 	
     /**
@@ -770,7 +770,7 @@ HTML;
 
     public function tidyLibraryForm()
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         Theme::Set('form_id', 'TidyLibraryForm');
         Theme::Set('form_action', 'index.php?p=content&q=tidyLibrary');
@@ -789,7 +789,7 @@ HTML;
         $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Content', 'TidyLibrary') . '")');
         $response->AddButton(__('No'), 'XiboDialogClose()');
         $response->AddButton(__('Yes'), '$("#TidyLibraryForm").submit()');
-        $response->Respond();
+
     }
 
     /**
@@ -797,7 +797,7 @@ HTML;
      */
     public function tidyLibrary()
     {
-        $response = new ApplicationState();
+        $response = $this->getState();
 
         if (Config::GetSetting('SETTING_LIBRARY_TIDY_ENABLED') != 1)
             trigger_error(__('Sorry this function is disabled.'), E_USER_ERROR);
@@ -807,6 +807,6 @@ HTML;
             trigger_error($media->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse(__('Library Tidy Complete'));
-        $response->Respond();
+
     }
 }
