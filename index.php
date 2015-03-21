@@ -1,9 +1,9 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2012 Daniel Garner, James Packer and Alex Harrington
+ * Copyright (C) 2006-2015 Daniel Garner
  *
- * This file is part of Xibo.
+ * This file (index.php) is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -18,7 +18,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */ 
- DEFINE('XIBO', true);
+DEFINE('XIBO', true);
 
 // Include the Program Logic
 include_once("lib/include.php");
