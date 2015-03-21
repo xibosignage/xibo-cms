@@ -108,7 +108,7 @@ class adminDAO extends baseDAO {
 
 
 		// Render the Theme and output
-        Theme::Render('settings_page');
+        $this->getState()->html .= Theme::RenderReturn('settings_page');
 	}
 
     function actionMenu() {

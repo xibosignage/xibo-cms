@@ -118,7 +118,7 @@ class contentDAO extends baseDAO {
         // Call to render the template
         Theme::Set('header_text', __('Library'));
         Theme::Set('form_fields', $formFields);
-        Theme::Render('grid_render');
+        $this->getState()->html .= Theme::RenderReturn('grid_render');
 	}
 
     function actionMenu() {
@@ -158,7 +158,7 @@ class contentDAO extends baseDAO {
 	 */
 	function LibraryGrid() 
 	{
-		$user =& $this->user;
+		$user = $this->getUser();
 		$response = new ApplicationState();
 
 		//Get the input params and store them
@@ -569,7 +569,7 @@ class contentDAO extends baseDAO {
     function LibraryAssignForm()
     {
         $db =& $this->db;
-        $user =& $this->user;
+        $user = $this->getUser();
         $response = new ApplicationState();
 
         $id = uniqid();
@@ -621,7 +621,7 @@ class contentDAO extends baseDAO {
     function LibraryAssignView() 
     {
         $db =& $this->db;
-        $user =& $this->user;
+        $user = $this->getUser();
         $response = new ApplicationState();
 
         //Input vars

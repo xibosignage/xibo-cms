@@ -27,7 +27,7 @@ use Xibo\Helper\Theme;defined('XIBO') or die("Sorry, you are not allowed to dire
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- Style Sheets -->
-    <link href="theme/default/libraries/bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
+    <link href="<?php echo Theme::rootPath('theme/default/libraries/bootstrap/css/bootstrap.min.css'); ?>" rel="stylesheet" media="screen">
     <style type="text/css">
       body {
         padding-top: 40px;
@@ -88,11 +88,11 @@ use Xibo\Helper\Theme;defined('XIBO') or die("Sorry, you are not allowed to dire
 	    </div> <!-- /container -->
 
 
-    <script src="theme/default/libraries/jquery/jquery-1.9.1.js"></script>
-    <script src="theme/default/libraries/jquery/jquery.validate.min.js"></script>
-    <script src="theme/default/libraries/jquery/additional-methods.min.js"></script>
-    <script src="theme/default/libraries/bootstrap/js/bootstrap.min.js"></script>
-    <script src="theme/default/libraries/bootstrap/js/bootbox.min.js"></script>
-    <script src="theme/default/js/xibo-cms.js"></script>
+    <script src="<?php echo Theme::rootPath('theme/default/libraries/jquery/jquery-1.9.1.js"'); ?>"></script>
+    <script src="<?php echo Theme::rootPath('theme/default/libraries/jquery/jquery.validate.min.js"'); ?>"></script>
+    <script src="<?php echo Theme::rootPath('theme/default/libraries/jquery/additional-methods.min.js"'); ?>"></script>
+    <script src="<?php echo Theme::rootPath('theme/default/libraries/bootstrap/js/bootstrap.min.js"'); ?>"></script>
+    <script src="<?php echo Theme::rootPath('theme/default/libraries/bootstrap/js/bootbox.min.js"'); ?>"></script>
+    <script src="<?php echo Theme::rootPath('theme/default/js/xibo-cms.js"'); ?>"></script>
 	</body>
 </html>

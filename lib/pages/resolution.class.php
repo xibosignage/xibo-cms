@@ -67,7 +67,7 @@ class resolutionDAO extends baseDAO
         // Call to render the template
         Theme::Set('header_text', __('Resolutions'));
         Theme::Set('form_fields', $formFields);
-        Theme::Render('grid_render');
+        $this->getState()->html .= Theme::RenderReturn('grid_render');
     }
 
     function actionMenu() {
@@ -95,7 +95,7 @@ class resolutionDAO extends baseDAO
      */
     function ResolutionGrid()
     {
-        $user =& $this->user;
+        $user = $this->getUser();
         $response = new ApplicationState();
 
         \Session::Set('resolution', 'ResolutionFilter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));

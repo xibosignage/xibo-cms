@@ -18,47 +18,39 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+namespace Xibo\Controller;
+
 use Xibo\Helper\Date;
-use Xibo\Helper\ApplicationState;
 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-class clockDAO extends baseDAO {
-    
+class Clock extends Base
+{
     /**
      * Shows the Time Information
-     * @return 
      */
     function ShowTimeInfo()
     {
-        $response       = new ApplicationState();
-                
-        $output  = '<ul>';
+        $output = '<ul>';
         $output .= '<li>' . __('Local Time') . ': ' . Date::getClock() . '</li>';
         $output .= '<li>' . __('System Time') . ': ' . Date::getSystemClock() . '</li>';
         $output .= '<li>' . __('Local Date') . ': ' . Date::getLocalDate() . '</li>';
         $output .= '<li>' . __('System Date') . ': ' . Date::getSystemDate() . '</li>';
         $output .= '</ul>';
-        
-        $response->SetFormRequestResponse($output, __('Date / Time Information'), '480px', '240px');
-        $response->Respond();
+
+        $this->getState()->SetFormRequestResponse($output, __('Date / Time Information'), '480px', '240px');
     }
-    
+
     /**
      * Gets the Time
-     * @return 
      */
     function GetClock()
     {
-        $db             =& $this->db;
-        $response       = new ApplicationState();
-        
         $output = Date::GetClock();
-        
-        $response->SetFormRequestResponse($output, __('Date / Time Information'), '480px', '240px');
-        $response->clockUpdate  = true;
-        $response->success      = false;
-        $response->Respond();
+
+        $this->getState()->setData(array('time' => $output));
+        $this->getState()->SetFormRequestResponse($output, __('Date / Time Information'), '480px', '240px');
+        $this->getState()->clockUpdate = true;
+        $this->getState()->success = false;
     }
 }
-?>

@@ -169,6 +169,6 @@ Theme::Set('step', $xibo_step);
 Theme::Set('stepContent', $content);
 
 // Include the header
-Theme::Render('install_header');
-Theme::Render('install_footer');
+$this->getState()->html .= Theme::RenderReturn('install_header');
+$this->getState()->html .= Theme::RenderReturn('install_footer');
 ?>

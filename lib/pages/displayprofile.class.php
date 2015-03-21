@@ -44,7 +44,7 @@ class displayprofileDAO extends baseDAO {
         // Call to render the template
         Theme::Set('header_text', __('Display Setting Profiles'));
         Theme::Set('form_fields', array());
-        Theme::Render('grid_render');
+        $this->getState()->html .= Theme::RenderReturn('grid_render');
     }
 
     function actionMenu() {

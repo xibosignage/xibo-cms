@@ -507,7 +507,7 @@ END;
         // Message (either from the URL or the session)
         Theme::Set('login_message', sprintf(__("%s was successfully installed. Please log-in with the user details you chose earlier."), Theme::GetConfig('app_name')));
 
-        Theme::Render('login_page');
+        $this->getState()->html .= Theme::RenderReturn('login_page');
 
         // Install files
         Media::installAllModuleFiles();

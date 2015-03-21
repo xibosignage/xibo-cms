@@ -27,7 +27,7 @@ class faultDAO extends baseDAO {
 	function displayPage() 
 	{
 		$db =& $this->db;
-		$user =& $this->user;
+		$user = $this->getUser();
 		$config = new Config();
 
 		// Configure the theme
@@ -35,7 +35,7 @@ class faultDAO extends baseDAO {
         Theme::Set('collect_data_url', 'index.php?p=fault&q=CollectData');
 
         // Render the Theme and output
-        Theme::Render('fault_page');
+        $this->getState()->html .= Theme::RenderReturn('fault_page');
 	}
 	
 	function CollectData()

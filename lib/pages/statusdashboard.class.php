@@ -222,7 +222,7 @@ class statusdashboardDAO extends baseDAO {
         Theme::Set('embedded-widget', html_entity_decode(Config::GetSetting('EMBEDDED_STATUS_WIDGET')));
 
         // Render the Theme and output
-        Theme::Render('status_dashboard');
+        $this->getState()->html .= Theme::RenderReturn('status_dashboard');
     }
 }
 ?>

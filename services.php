@@ -89,7 +89,7 @@ if (defined('XMDS') || $method != '')
                         $user = new User($db);
 
                         // Log this user in.
-                        if (!$user->LoginServices($userID))
+                        if (!$user->setIdentity($userID))
                         {
                             $serviceResponse->ErrorServerError('Unknown User.');
                         }

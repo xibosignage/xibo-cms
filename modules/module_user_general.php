@@ -21,11 +21,8 @@
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Theme;
 
-defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
- 
-class User {
-    private $db;
-        
+class User
+{
     public $userid;
     public $usertypeid;
     public $userName;
@@ -37,75 +34,16 @@ class User {
      */
     private $permissionCache = array();
     
-    public function __construct(database $db = NULL)
+    public function __construct()
     {
-        $this->db =& $db;
         $this->userid = \Kit::GetParam('userid', _SESSION, _INT);
         $this->usertypeid = \Kit::GetParam('usertype', _SESSION, _INT);
 
         // We havent authed yet
         $this->authedDisplayGroupIDs = false;
-    }
-    
-    /**
-     * Validate the User is Logged In
-     * @param $ajax Object[optional] Indicates if this request came from an AJAX call or otherwise
-     * @return bool
-     */
-    function attempt_login($ajax = false) 
-    {
-        $db =& $this->db;
-        $userid = \Kit::GetParam('userid', _SESSION, _INT);
 
-        // Referring Page is anything after the ?
-        $requestUri = rawurlencode(Kit::GetCurrentPage());
-        
-        if (!$this->checkForUserId())
-        {
-            // Log out the user
-            if ($userid != 0)
-                $db->query(sprintf("UPDATE user SET loggedin = 0 WHERE userid = %d ", $userid));
-
-            // AJAX calls that fail the login test cause a page redirect
-            if ($ajax) 
-            {
-                //create the AJAX request object
-                $response = new ApplicationState();
-
-                $response->Login();
-                $response->Respond();
-            }
-            else 
-            {
-                Theme::Set('form_meta', '<input type="hidden" name="token" value="' . CreateFormToken() . '" />');
-                Theme::Set('form_action', 'index.php?q=login&referingPage=' . $requestUri);
-                Theme::Set('about_url', 'index.php?p=index&q=About');
-                Theme::Set('source_url', Theme::SourceLink());
-
-                // Message (either from the URL or the session)
-                $message = \Kit::GetParam('message', _GET, _STRING, \Kit::GetParam('message', _SESSION, _STRING, ''));
-                Theme::Set('login_message', $message);
-                Theme::Render('login_page');
-                
-                // Clear the session message
-                $_SESSION['message'] = '';
-                exit;
-            }
-            
-            return false;
-        }
-        else 
-        {
-            //write out to the db that the logged in user has accessed the page still
-            $SQL = sprintf("UPDATE user SET lastaccessed = '" . date("Y-m-d H:i:s") . "', loggedin = 1 WHERE userid = %d ", $userid);
-            
-            $results = $db->query($SQL) or trigger_error("Can not write last accessed info.", E_USER_ERROR);
-
-            // Load the information about this user
-            $this->LoginServices($userid);
-            
-            return true;
-        }
+        // Initialise a theme
+        new Theme($this);
     }
 
     /**
@@ -176,29 +114,24 @@ class User {
     /**
      * Logs in a specific user
      * @param int $userId
-     * @return bool
+     * @throws \Xibo\Exception\NotFoundException if the userId cannot be found
      */
-    function LoginServices($userId)
+    function setIdentity($userId)
     {
-        try {
-            $dbh = \Xibo\Storage\PDOConnect::init();
-            $sth = $dbh->prepare('SELECT UserName, usertypeid, homepage FROM `user` WHERE userID = :userId AND Retired = 0');
-            $sth->execute(array('userId' => $userId));
+        $dbh = \Xibo\Storage\PDOConnect::init();
+        $sth = $dbh->prepare('SELECT UserName, usertypeid, homepage FROM `user` WHERE userID = :userId AND Retired = 0');
+        $sth->execute(array('userId' => $userId));
 
-            if (!$results = $sth->fetch())
-                return false;
+        if (!$results = $sth->fetch())
+            throw new \Xibo\Exception\NotFoundException();
 
-            $this->userid = $userId;
-            $this->userName = \Kit::ValidateParam($results['UserName'], _USERNAME);
-            $this->usertypeid = \Kit::ValidateParam($results['usertypeid'], _INT);
-            $this->homePage = \Kit::ValidateParam($results['homepage'], _WORD);
+        $this->userid = $userId;
+        $this->userName = \Kit::ValidateParam($results['UserName'], _USERNAME);
+        $this->usertypeid = \Kit::ValidateParam($results['usertypeid'], _INT);
+        $this->homePage = \Kit::ValidateParam($results['homepage'], _WORD);
 
-            return true;
-        }
-        catch (Exception $e) {
-            Debug::Audit($e->getMessage());
-            return false;
-        }
+        //write out to the db that the logged in user has accessed the page still
+        \Xibo\Storage\PDOConnect::update('UPDATE `user` SET lastaccessed = :time, loggedIn = 1 WHERE userId = :userId', array('time' => date("Y-m-d H:i:s"), 'userId' => $userId));
     }
 
     /**
@@ -230,10 +163,9 @@ class User {
      * Check to see if a user id is in the session information
      * @return bool
      */
-    private function checkForUserId()
+    public function hasIdentity()
     {
         global $session;
-        $db =& $this->db;
 
         $userId = \Kit::GetParam('userid', _SESSION, _INT, 0);
 
@@ -242,24 +174,24 @@ class User {
             return false;
         }
         else {
-            if(!is_numeric($_SESSION['userid'])) {
+            if (!is_numeric($_SESSION['userid'])) {
                 unset($_SESSION['userid']);
                 return false;
             }
-            elseif ($session->isExpired == 1) {
+            else if ($session->isExpired == 1) {
                 unset($_SESSION['userid']);
                 return false;
             }
             else {
-                // check to see that the ID is still valid
-                $SQL = sprintf("SELECT UserID FROM user WHERE loggedin = 1 AND userid = %d", $userId);
-                
-                $result = $db->query($SQL) or trigger_error($db->error(), E_USER_ERROR);
-                
-                if($db->num_rows($result)==0) {
+                $result = \Xibo\Storage\PDOConnect::select('SELECT UserID FROM `user` WHERE loggedin = 1 AND userid = :userId', array('userId' => $userId));
+
+                if (count($result) <= 0) {
                     unset($_SESSION['userid']);
                     return false;
                 }
+
+                $this->setIdentity($userId);
+
                 return true;
             }
         }
@@ -475,7 +407,7 @@ class User {
      * Authenticates the page given against the user credentials held.
      * TODO: Would like to improve performance here by making these credentials cached
      * @return 
-     * @param $page Object
+     * @param $page string
      */
     public function PageAuth($page)
     {

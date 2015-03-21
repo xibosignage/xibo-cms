@@ -70,7 +70,7 @@ class sessionsDAO extends baseDAO {
         // Call to render the template
         Theme::Set('header_text', __('Sessions'));
         Theme::Set('form_fields', $formFields);
-        Theme::Render('grid_render');
+        $this->getState()->html .= Theme::RenderReturn('grid_render');
 	}
 
     function actionMenu() {

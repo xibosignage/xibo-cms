@@ -109,7 +109,7 @@ class displayDAO extends baseDAO
         // Call to render the template
         Theme::Set('header_text', __('Displays'));
         Theme::Set('form_fields', $formFields);
-        Theme::Render('grid_render');
+        $this->getState()->html .= Theme::RenderReturn('grid_render');
     }
 
     function actionMenu() {
@@ -631,7 +631,7 @@ class displayDAO extends baseDAO
     function DeleteForm()
     {
         $db =& $this->db;
-        $user =& $this->user;
+        $user = $this->getUser();
         $response = new ApplicationState();
         $displayid = \Kit::GetParam('displayid', _REQUEST, _INT);
 

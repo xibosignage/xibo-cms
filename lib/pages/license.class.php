@@ -30,7 +30,7 @@ class licenseDAO extends baseDAO {
         Theme::Set('text', Theme::RenderReturn('about_text'));
 
 		// Render the Theme and output
-        Theme::Render('about_page');
+        $this->getState()->html .= Theme::RenderReturn('about_page');
 	}
 }
 ?>

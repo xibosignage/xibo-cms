@@ -42,13 +42,13 @@ class transitionDAO extends baseDAO {
         // Call to render the template
         Theme::Set('header_text', __('Transitions'));
         Theme::Set('form_fields', array());
-        Theme::Render('grid_render');
+        $this->getState()->html .= Theme::RenderReturn('grid_render');
     }
 
     public function Grid()
     {
         $db =& $this->db;
-        $user =& $this->user;
+        $user = $this->getUser();
         $response = new ApplicationState();
 
         $SQL = '';
@@ -117,7 +117,7 @@ class transitionDAO extends baseDAO {
     public function EditForm()
     {
         $db =& $this->db;
-        $user =& $this->user;
+        $user = $this->getUser();
         $response = new ApplicationState();
         $helpManager = new Help($db, $user);
 

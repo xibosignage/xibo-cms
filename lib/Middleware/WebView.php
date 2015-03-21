@@ -3,7 +3,7 @@
  * Xibo - Digital Signage - http://www.xibo.org.uk
  * Copyright (C) 2015 Spring Signage Ltd
  *
- * This file (State.php) is part of Xibo.
+ * This file (WebView.php) is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -23,21 +23,23 @@
 namespace Xibo\Middleware;
 
 
-use Slim\Middleware;
-use Xibo\Helper\ApplicationState;
+use Slim\Slim;
+use Slim\View;
 
-class State extends Middleware
+class WebView extends View
 {
-    public function call()
+    public function render($template, $data = NULL)
     {
-        // Inject
-        // The state of the application response
-        $this->app->container->singleton('state', function() { return new ApplicationState(); });
+        // Render type (ajax or otherwise)
+        $app = Slim::getInstance();
 
-        // Create a session
-        $this->app->container->singleton('session', function() { return new \Session(); });
+        // Get the application status
+        $state = $this->all()[$template];
+        /* @var \Xibo\Helper\ApplicationState $state */
 
-        // Next middleware
-        $this->next->call();
+        if ($app->request->isAjax())
+            return $state->asJson();
+        else
+            return $state->html;
     }
 }

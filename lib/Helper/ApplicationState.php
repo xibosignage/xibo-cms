@@ -67,6 +67,7 @@ class ApplicationState
 
     public $uniqueReference;
 
+    private $data;
     public $extra;
 
     public function __construct()
@@ -229,124 +230,78 @@ class ApplicationState
             'operation' => $operation,
             'actions' => $actions
         );
-
-        return true;
     }
 
     /**
      * Responds with an Error
      * @param <string> $message
      * @param <bool> $keepOpen
-     * @return <type>
      */
     public function Error($message, $keepOpen = false)
     {
         $this->SetError($message);
         $this->keepOpen = $keepOpen;
         $this->Respond();
-
-        return false;
     }
 
     /**
-     * Outputs the Response to the browser
-     * @return
+     * Response JSON
+     * @return string JSON String
      */
-    public function Respond()
+    public function asJson()
     {
-        // Roll back any open transactions if we are in an error state
-        try {
-            $dbh = \Xibo\Storage\PDOConnect::init();
+        // Construct the Response
+        $response = array();
 
-            if (!$this->success) {
-                $dbh->rollBack();
-            } else {
-                $dbh->commit();
-            }
-        } catch (Exception $e) {
-            Debug::LogEntry('audit', 'Unable to commit/rollBack');
-        }
+        // General
+        $response['html'] = $this->html;
+        $response['buttons'] = $this->buttons;
+        $response['fieldActions'] = $this->fieldActions;
+        $response['uniqueReference'] = $this->uniqueReference;
 
-        if ($this->ajax) {
-            // Construct the Response
-            $response = array();
+        $response['success'] = $this->success;
+        $response['callBack'] = $this->callBack;
+        $response['message'] = $this->message;
+        $response['clockUpdate'] = $this->clockUpdate;
 
-            // General
-            $response['html'] = $this->html;
-            $response['buttons'] = $this->buttons;
-            $response['fieldActions'] = $this->fieldActions;
-            $response['uniqueReference'] = $this->uniqueReference;
+        // Grids
+        $response['sortable'] = $this->sortable;
+        $response['sortingDiv'] = $this->sortingDiv;
+        $response['paging'] = $this->paging;
+        $response['pageSize'] = $this->pageSize;
+        $response['pageNumber'] = $this->pageNumber;
+        $response['initialSortColumn'] = $this->initialSortColumn - 1;
+        $response['initialSortOrder'] = $this->initialSortOrder - 1;
 
-            $response['success'] = $this->success;
-            $response['callBack'] = $this->callBack;
-            $response['message'] = $this->message;
-            $response['clockUpdate'] = $this->clockUpdate;
+        // Dialogs
+        $response['dialogSize'] = $this->dialogSize;
+        $response['dialogWidth'] = $this->dialogWidth;
+        $response['dialogHeight'] = $this->dialogHeight;
+        $response['dialogTitle'] = $this->dialogTitle;
+        $response['dialogClass'] = $this->dialogClass;
 
-            // Grids
-            $response['sortable'] = $this->sortable;
-            $response['sortingDiv'] = $this->sortingDiv;
-            $response['paging'] = $this->paging;
-            $response['pageSize'] = $this->pageSize;
-            $response['pageNumber'] = $this->pageNumber;
-            $response['initialSortColumn'] = $this->initialSortColumn - 1;
-            $response['initialSortOrder'] = $this->initialSortOrder - 1;
+        // Tweak the width and height
+        $response['dialogWidth'] = (int)str_replace('px', '', $response['dialogWidth']);
+        $response['dialogHeight'] = (int)str_replace('px', '', $response['dialogHeight']);
 
-            // Dialogs
-            $response['dialogSize'] = $this->dialogSize;
-            $response['dialogWidth'] = $this->dialogWidth;
-            $response['dialogHeight'] = $this->dialogHeight;
-            $response['dialogTitle'] = $this->dialogTitle;
-            $response['dialogClass'] = $this->dialogClass;
+        // Form Submits
+        $response['keepOpen'] = $this->keepOpen;
+        $response['hideMessage'] = $this->hideMessage;
+        $response['loadForm'] = $this->loadForm;
+        $response['loadFormUri'] = $this->loadFormUri;
+        $response['refresh'] = $this->refresh;
+        $response['refreshLocation'] = $this->refreshLocation;
+        $response['focusInFirstInput'] = $this->focusInFirstInput;
+        $response['modal'] = $this->modal;
+        $response['nextToken'] = $this->nextToken;
 
-            // Tweak the width and height
-            $response['dialogWidth'] = (int)str_replace('px', '', $response['dialogWidth']);
-            $response['dialogHeight'] = (int)str_replace('px', '', $response['dialogHeight']);
+        // Login
+        $response['login'] = $this->login;
 
-            // Form Submits
-            $response['keepOpen'] = $this->keepOpen;
-            $response['hideMessage'] = $this->hideMessage;
-            $response['loadForm'] = $this->loadForm;
-            $response['loadFormUri'] = $this->loadFormUri;
-            $response['refresh'] = $this->refresh;
-            $response['refreshLocation'] = $this->refreshLocation;
-            $response['focusInFirstInput'] = $this->focusInFirstInput;
-            $response['modal'] = $this->modal;
-            $response['nextToken'] = $this->nextToken;
+        // Extra
+        $response['extra'] = $this->extra;
 
-            // Login
-            $response['login'] = $this->login;
-
-            // Extra
-            $response['extra'] = $this->extra;
-
-            // Clear the object buffer, and if it isn't empty error with the contents.
-            $buffer = ob_get_clean();
-
-            if ($buffer != '')
-                trigger_error($buffer, E_USER_ERROR);
-
-            echo json_encode($response);
-
-            // End the execution
-            die();
-        } else {
-            // If the response does not equal success then output an error
-            if (!$this->success) {
-                // Store the message
-                $_SESSION['ErrorMessage'] = $this->message;
-
-                // Redirect to the following
-                $url = 'index.php?p=error';
-            } else {
-                // Have we been asked to refresh?
-                $url = ($this->refresh) ? $this->refreshLocation : 'index.php?p=' . \Kit::GetParam('p', _GET, _WORD, 'index');
-            }
-
-            // Redirect and end execution
-            Kit::Redirect($url);
-        }
-
-        return;
+        return json_encode($response);
     }
 
     public static function Pager($id, $type = 'grid_pager')
@@ -355,6 +310,22 @@ class ApplicationState
 
         return Theme::RenderReturn($type);
     }
-}
 
-?>
+    /**
+     * Set Data
+     * @param array $data
+     */
+    public function setData($data)
+    {
+        $this->data = $data;
+    }
+
+    /**
+     * Get Data
+     * @return array
+     */
+    public function getData()
+    {
+        return $this->data;
+    }
+}

@@ -44,7 +44,7 @@ class displaygroupDAO extends baseDAO
         // Call to render the template
         Theme::Set('header_text', __('Display Groups'));
         Theme::Set('form_fields', array());
-        Theme::Render('grid_render');
+        $this->getState()->html .= Theme::RenderReturn('grid_render');
     }
 
     function actionMenu() {
@@ -67,7 +67,7 @@ class displaygroupDAO extends baseDAO
     public function Grid()
     {
         $db =& $this->db;
-        $user =& $this->user;
+        $user = $this->getUser();
         $response   = new ApplicationState();
 
         $displayGroups = $this->user->DisplayGroupList();
@@ -159,7 +159,7 @@ class displaygroupDAO extends baseDAO
     public function AddForm()
     {
         $db =& $this->db;
-        $user =& $this->user;
+        $user = $this->getUser();
         $response = new ApplicationState();
         
         Theme::Set('form_id', 'DisplayGroupAddForm');
@@ -510,7 +510,7 @@ class displaygroupDAO extends baseDAO
     public function PermissionsForm()
     {
         $db =& $this->db;
-        $user =& $this->user;
+        $user = $this->getUser();
         $response = new ApplicationState();
         $helpManager = new Help($db, $user);
 
@@ -577,7 +577,7 @@ class displaygroupDAO extends baseDAO
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
-        $user =& $this->user;
+        $user = $this->getUser();
         $response = new ApplicationState();
 
         $displayGroupId = \Kit::GetParam('displayGroupId', _POST, _INT);
@@ -729,7 +729,7 @@ class displaygroupDAO extends baseDAO
     }
 
     public function FileAssociationsView() {
-        $user =& $this->user;
+        $user = $this->getUser();
 
         //Input vars
         $mediatype = \Kit::GetParam('filter_type', _POST, _STRING);

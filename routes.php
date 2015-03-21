@@ -3,7 +3,7 @@
  * Xibo - Digital Signage - http://www.xibo.org.uk
  * Copyright (C) 2015 Spring Signage Ltd
  *
- * This file (State.php) is part of Xibo.
+ * This file (routes.php) is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -18,26 +18,23 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+defined('XIBO') or die('Sorry, you are not allowed to directly access this page.');
 
+$app->get('/clock', function() use ($app) {
+    $controller = new \Xibo\Controller\Clock($app);
+    $controller->GetClock();
+    $controller->render();
+})->name('clock');
 
-namespace Xibo\Middleware;
+$app->get('/layouts', function() use ($app) {
+    $controller = new \Xibo\Controller\Layout($app);
+    $controller->render('LayoutGrid');
+})->name('layoutSearch');
 
+$app->get('/layouts/:id', function($id) use ($app) {
+    $app->render(200, array('layout' => \Xibo\Factory\LayoutFactory::getById($id)));
+})->name('layoutGet');
 
-use Slim\Middleware;
-use Xibo\Helper\ApplicationState;
-
-class State extends Middleware
-{
-    public function call()
-    {
-        // Inject
-        // The state of the application response
-        $this->app->container->singleton('state', function() { return new ApplicationState(); });
-
-        // Create a session
-        $this->app->container->singleton('session', function() { return new \Session(); });
-
-        // Next middleware
-        $this->next->call();
-    }
-}
+$app->post('/layouts/:id', function($id) use ($app) {
+    // Update the Layout
+})->name('layoutUpdate');

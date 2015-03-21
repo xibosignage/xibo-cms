@@ -57,7 +57,7 @@ class scheduleDAO extends baseDAO {
         Theme::Set('calendarType', Config::GetSetting('CALENDAR_TYPE'));
 
         // Render the Theme and output
-        Theme::Render('schedule_page');
+        $this->getState()->html .= Theme::RenderReturn('schedule_page');
     }
     
     /**
@@ -212,7 +212,7 @@ class scheduleDAO extends baseDAO {
     function AddEventForm() {
 
         $db =& $this->db;
-        $user =& $this->user;
+        $user = $this->getUser();
         $response = new ApplicationState();
 
         $displayGroupIds = \Kit::GetParam('displayGroupIds', _SESSION, _ARRAY);
@@ -382,7 +382,7 @@ class scheduleDAO extends baseDAO {
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
-        $user =& $this->user;
+        $user = $this->getUser();
         $response = new ApplicationState();
 
         $campaignId = \Kit::GetParam('CampaignID', _POST, _INT, 0);
@@ -447,7 +447,7 @@ class scheduleDAO extends baseDAO {
      */
     function EditEventForm() {
         $db =& $this->db;
-        $user =& $this->user;
+        $user = $this->getUser();
         $response = new ApplicationState();
 
         $eventID = \Kit::GetParam('EventID', _GET, _INT, 0);
@@ -664,7 +664,7 @@ class scheduleDAO extends baseDAO {
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
-        $user =& $this->user;
+        $user = $this->getUser();
         $response = new ApplicationState();
 
         $eventId = \Kit::GetParam('EventID', _POST, _INT, 0);
@@ -723,7 +723,7 @@ class scheduleDAO extends baseDAO {
      */
     function DeleteForm() {
         $db =& $this->db;
-        $user =& $this->user;
+        $user = $this->getUser();
         $response = new ApplicationState();
         
         $eventID = \Kit::GetParam('EventID', _GET, _INT, 0);
@@ -754,7 +754,7 @@ class scheduleDAO extends baseDAO {
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
-        $user =& $this->user;
+        $user = $this->getUser();
         $response = new ApplicationState();
         
         $eventID = \Kit::GetParam('EventID', _POST, _INT, 0);
@@ -805,7 +805,7 @@ class scheduleDAO extends baseDAO {
 
     public function ScheduleNowForm() {
         $db =& $this->db;
-        $user =& $this->user;
+        $user = $this->getUser();
         $response = new ApplicationState();
 
         $date = time();
@@ -928,7 +928,7 @@ class scheduleDAO extends baseDAO {
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
-        $user =& $this->user;
+        $user = $this->getUser();
         $response = new ApplicationState();
 
         $campaignId = \Kit::GetParam('CampaignID', _POST, _INT, 0);

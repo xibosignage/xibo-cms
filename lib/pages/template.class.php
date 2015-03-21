@@ -65,7 +65,7 @@ class templateDAO extends baseDAO {
         Theme::Set('form_fields', $formFields);
 
         // Call to render the template
-        Theme::Render('grid_render');
+        $this->getState()->html .= Theme::RenderReturn('grid_render');
     }
 
     function actionMenu()

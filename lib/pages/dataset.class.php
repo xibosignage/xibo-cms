@@ -48,7 +48,7 @@ class datasetDAO extends baseDAO
             // Call to render the template
             Theme::Set('header_text', $dataSet);
             Theme::Set('form_fields', array());
-            Theme::Render('grid_render');
+            $this->getState()->html .= Theme::RenderReturn('grid_render');
         }
         else {
             $id = uniqid();
@@ -59,7 +59,7 @@ class datasetDAO extends baseDAO
             // Call to render the template
             Theme::Set('header_text', __('DataSets'));
             Theme::Set('form_fields', array());
-            Theme::Render('grid_render');
+            $this->getState()->html .= Theme::RenderReturn('grid_render');
         }
     }
 
@@ -94,7 +94,7 @@ class datasetDAO extends baseDAO
     public function DataSetGrid()
     {
         $db =& $this->db;
-        $user =& $this->user;
+        $user = $this->getUser();
         $response = new ApplicationState();
 
         $cols = array(
@@ -180,7 +180,7 @@ class datasetDAO extends baseDAO
     public function AddDataSetForm()
     {
         $db =& $this->db;
-        $user =& $this->user;
+        $user = $this->getUser();
         $response = new ApplicationState();
 
         // Set some information about the form
@@ -213,7 +213,7 @@ class datasetDAO extends baseDAO
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
-        $user =& $this->user;
+        $user = $this->getUser();
         $response = new ApplicationState();
 
         $dataSet = \Kit::GetParam('dataset', _POST, _STRING);
@@ -234,7 +234,7 @@ class datasetDAO extends baseDAO
     public function EditDataSetForm()
     {
         $db =& $this->db;
-        $user =& $this->user;
+        $user = $this->getUser();
         $response = new ApplicationState();
 
         $dataSetId = \Kit::GetParam('datasetid', _GET, _INT);
@@ -277,7 +277,7 @@ class datasetDAO extends baseDAO
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
-        $user =& $this->user;
+        $user = $this->getUser();
         $response = new ApplicationState();
 
         $dataSetId = \Kit::GetParam('datasetid', _POST, _INT);
@@ -338,7 +338,7 @@ class datasetDAO extends baseDAO
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
-        $user =& $this->user;
+        $user = $this->getUser();
         $response = new ApplicationState();
 
         $dataSetId = \Kit::GetParam('datasetid', _POST, _INT);
@@ -485,7 +485,7 @@ class datasetDAO extends baseDAO
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
-        $user =& $this->user;
+        $user = $this->getUser();
         $response = new ApplicationState();
 
         $dataSetId = \Kit::GetParam('datasetid', _POST, _INT);
@@ -591,7 +591,7 @@ class datasetDAO extends baseDAO
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
-        $user =& $this->user;
+        $user = $this->getUser();
         $response = new ApplicationState();
 
         $dataSetId = \Kit::GetParam('datasetid', _POST, _INT);
@@ -656,7 +656,7 @@ class datasetDAO extends baseDAO
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
-        $user =& $this->user;
+        $user = $this->getUser();
         $response = new ApplicationState();
 
         $dataSetId = \Kit::GetParam('datasetid', _POST, _INT);
@@ -840,7 +840,7 @@ END;
     public function AddDataSetData()
     {
         $db =& $this->db;
-        $user =& $this->user;
+        $user = $this->getUser();
         $response = new ApplicationState();
 
         $response->uniqueReference = \Kit::GetParam('fieldid', _POST, _STRING);
@@ -867,7 +867,7 @@ END;
     public function EditDataSetData()
     {
         $db =& $this->db;
-        $user =& $this->user;
+        $user = $this->getUser();
         $response = new ApplicationState();
 
         $response->uniqueReference = \Kit::GetParam('fieldid', _POST, _STRING);
@@ -944,7 +944,7 @@ END;
     public function PermissionsForm()
     {
         $db =& $this->db;
-        $user =& $this->user;
+        $user = $this->getUser();
         $response = new ApplicationState();
         $helpManager = new Help($db, $user);
 
@@ -1008,7 +1008,7 @@ END;
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
-        $user =& $this->user;
+        $user = $this->getUser();
         $response = new ApplicationState();
         \Kit::ClassLoader('datasetgroupsecurity');
 

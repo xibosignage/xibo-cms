@@ -46,11 +46,12 @@ class Config
 	
 	/**
 	 * Loads the settings from file.
-	 * @return 
 	 */
 	static function Load() 
 	{
 		include("settings.php");
+
+        Config::Version();
 	}
 	
 	/**

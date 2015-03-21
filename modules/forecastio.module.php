@@ -548,7 +548,7 @@ class ForecastIo extends Module
         }
 
         Theme::Set('table_rows', $rows);
-        Theme::Render('table_render');
+        $this->getState()->html .= Theme::RenderReturn('table_render');
         exit();
     }
 

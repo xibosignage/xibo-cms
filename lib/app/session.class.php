@@ -328,18 +328,21 @@ class Session {
 		}
 	}
 	
-	public static function Set($key, $secondKey, $value)
+	public static function set($key, $secondKey, $value = null)
 	{
-		$_SESSION[$key][$secondKey] = $value;
+        if ($value == null)
+		    $_SESSION[$key] = $secondKey;
+        else
+		    $_SESSION[$key][$secondKey] = $value;
 	}
         
     /**
      * Get the Value from the position denoted by the 2 keys provided
-     * @param type $key
-     * @param type $secondKey
-     * @return boolean
+     * @param string $key
+     * @param string[Optional] $secondKey
+     * @return bool
      */
-    public static function Get($key, $secondKey = NULL)
+    public static function get($key, $secondKey = NULL)
     {
     	if ($secondKey != NULL) {
         	if (isset($_SESSION[$key][$secondKey]))

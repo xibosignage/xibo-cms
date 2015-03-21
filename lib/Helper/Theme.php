@@ -38,7 +38,6 @@ class Theme
     private static $instance = null;
 
     private $user;
-    private $helpManager;
     private $dateManager;
 
     private $name = '';
@@ -88,8 +87,9 @@ class Theme
     /**
      * Render Item
      * @param string $item Item to Render
+     * @throws Exception if the requested item doesn't exist
      */
-    public static function Render($item)
+    private static function Render($item)
     {
 
         $theme = Theme::GetInstance();
@@ -110,6 +110,7 @@ class Theme
     /**
      * Render Item but return the value as a string
      * @param string $item Item to Render
+     * @return string
      */
     public static function RenderReturn($item)
     {
@@ -156,10 +157,10 @@ class Theme
 
         // See if we have the requested file in the theme folder
         if (file_exists('theme/' . $theme->name . '/img/' . $item)) {
-            return 'theme/' . $theme->name . '/img/' . $item;
+            return Theme::Get('rootPath') . '/theme/' . $theme->name . '/img/' . $item;
         } // If not, then use the default folder
         elseif (file_exists('theme/default/img/' . $item)) {
-            return 'theme/default/img/' . $item;
+            return Theme::Get('rootPath') . '/theme/default/img/' . $item;
         } else
             return '';
     }
@@ -175,10 +176,10 @@ class Theme
 
         // See if we have the requested file in the theme folder
         if (file_exists('theme/' . $theme->name . '/' . $item)) {
-            return 'theme/' . $theme->name . '/' . $item;
+            return Theme::Get('rootPath') . '/theme/' . $theme->name . '/' . $item;
         } // If not, then use the default folder
         elseif (file_exists('theme/default/' . $item)) {
-            return 'theme/default/' . $item;
+            return Theme::Get('rootPath') . '/theme/default/' . $item;
         } else
             return '';
     }
@@ -189,17 +190,27 @@ class Theme
      */
     public static function Script($item)
     {
-
         $theme = Theme::GetInstance();
 
         // See if we have the requested file in the theme folder
         if (file_exists('theme/' . $theme->name . '/' . $item)) {
-            return '<script src="theme/' . $theme->name . '/' . $item . '"></script>';
+            return '<script src="' . Theme::Get('rootPath') . '/theme/' . $theme->name . '/' . $item . '"></script>';
         } // If not, then use the default folder
         elseif (file_exists('theme/default/' . $item)) {
-            return '<script src="theme/default/' . $item . '"></script>';
+            return '<script src="' . Theme::Get('rootPath') . '/theme/default/' . $item . '"></script>';
         } else
             return '';
+    }
+
+    /**
+     * Get the root path for a given path
+     * @param $path
+     * @return string
+     * @throws Exception if the theme is not initialised
+     */
+    public static function rootPath($path)
+    {
+        return Theme::Get('rootPath') . '/' . $path;
     }
 
     /**

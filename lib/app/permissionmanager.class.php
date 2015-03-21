@@ -47,7 +47,7 @@ class PermissionManager
 
     public function Evaluate($ownerId, $view, $edit, $del)
     {
-        $user =& $this->user;
+        $user = $this->getUser();
 
         $this->ownerId = $ownerId;
         $this->view = $view;

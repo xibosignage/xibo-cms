@@ -27,7 +27,7 @@ class dashboardDAO extends baseDAO {
 	function displayPage() 
 	{
 		// Render the Theme and output
-        Theme::Render('homepage_dashboard');
+        $this->getState()->html .= Theme::RenderReturn('homepage_dashboard');
 	}
 }
 ?>

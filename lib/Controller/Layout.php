@@ -140,7 +140,7 @@ class Layout extends Base
                 Theme::Set('form_fields', $formFields);
 
                 // Call to render the template
-                Theme::Render('grid_render');
+                $this->getState()->html .= Theme::RenderReturn('grid_render');
                 break;
 
             case 'true':
@@ -166,7 +166,7 @@ class Layout extends Base
                 Theme::SetTranslation('savePositionsFirst', Theme::Translate('Please save the pending position changes first by clicking "Save Positions" or cancel by clicking "Undo".'));
 
                 // Call the render the template
-                Theme::Render('layout_designer');
+                $this->getState()->html .= Theme::RenderReturn('layout_designer');
 
                 break;
 
@@ -513,7 +513,7 @@ class Layout extends Base
                 $row['buttons'][] = array(
                     'id' => 'layout_button_design',
                     'linkType' => '_self',
-                    'url' => 'index.php?p=layout&modify=true&layoutid=' . $layout->layoutId,
+                    'url' => $this->app->urlFor('layoutUpdate', array('id' => $layout->layoutId)),
                     'text' => __('Design')
                 );
             }
@@ -608,6 +608,7 @@ class Layout extends Base
 
         // Store the table rows
         Theme::Set('table_rows', $rows);
+        $this->getState()->setData($rows);
         Theme::Set('gridId', \Kit::GetParam('gridId', _REQUEST, _STRING));
 
         // Initialise the theme and capture the output
@@ -622,7 +623,7 @@ class Layout extends Base
      */
     function AddForm()
     {
-        $user =& $this->user;
+        $user = $this->getUser();
          
 
         Theme::Set('form_id', 'LayoutForm');

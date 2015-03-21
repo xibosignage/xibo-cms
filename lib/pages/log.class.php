@@ -118,7 +118,7 @@ class logDAO extends baseDAO {
         Theme::Set('form_tabs', $tabs);
         Theme::Set('form_fields_general', $formFields['general']);
         Theme::Set('form_fields_advanced', $formFields['advanced']);
-        Theme::Render('grid_render');
+        $this->getState()->html .= Theme::RenderReturn('grid_render');
 	}
 
     function actionMenu() {
@@ -302,7 +302,7 @@ class logDAO extends baseDAO {
 
 	public function TruncateForm() {
 		$db =& $this->db;
-        $user =& $this->user;
+        $user = $this->getUser();
 		$response = new ApplicationState();
 
 		if ($this->user->usertypeid != 1)

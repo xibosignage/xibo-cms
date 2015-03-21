@@ -31,7 +31,7 @@ class upgradeDAO extends baseDAO {
         if (DBVERSION == WEBSITE_VERSION) {
             Theme::Set('message', sprintf(__('Sorry you have arrived at this page in error, please try to navigate away.'), Theme::GetConfig('app_name')));
 
-            Theme::Render('message_box');
+            $this->getState()->html .= Theme::RenderReturn('message_box');
             return;
         }
 
@@ -39,7 +39,7 @@ class upgradeDAO extends baseDAO {
             // Make sure we actually need to do an upgrade
             Theme::Set('message', sprintf(__('The CMS is temporarily off-line as an upgrade is in progress. Please check with your system administrator for updates or refresh your page in a few minutes.'), Theme::GetConfig('app_name')));
 
-            Theme::Render('message_box');
+            $this->getState()->html .= Theme::RenderReturn('message_box');
             return;
         }
         else {
@@ -79,7 +79,7 @@ class upgradeDAO extends baseDAO {
 
             Theme::Set('step', $xibo_step);
             Theme::Set('page_content', $content);
-            Theme::Render('upgrade_page');
+            $this->getState()->html .= Theme::RenderReturn('upgrade_page');
         }
     }
 

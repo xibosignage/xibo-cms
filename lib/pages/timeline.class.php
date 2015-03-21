@@ -498,7 +498,7 @@ class timelineDAO extends baseDAO
      */
     public function TimelineList()
     {
-        $user =& $this->user;
+        $user = $this->getUser();
         $user->SetPref('timeLineView', 'list');
         $response = new ApplicationState();
         $response->html = '';
@@ -700,7 +700,7 @@ class timelineDAO extends baseDAO
      */
     public function TimelineGridView()
     {
-        $user =& $this->user;
+        $user = $this->getUser();
         $response = new ApplicationState();
 
         // Load the region and get the dimensions, applying the scale factor if necessary (only v1 layouts will have a scale factor != 1)

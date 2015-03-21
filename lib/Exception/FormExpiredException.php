@@ -3,7 +3,7 @@
  * Xibo - Digital Signage - http://www.xibo.org.uk
  * Copyright (C) 2015 Spring Signage Ltd
  *
- * This file (State.php) is part of Xibo.
+ * This file (FormExpiredException.php) is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -20,24 +20,9 @@
  */
 
 
-namespace Xibo\Middleware;
+namespace Xibo\Exception;
 
 
-use Slim\Middleware;
-use Xibo\Helper\ApplicationState;
+class FormExpiredException extends \Exception {
 
-class State extends Middleware
-{
-    public function call()
-    {
-        // Inject
-        // The state of the application response
-        $this->app->container->singleton('state', function() { return new ApplicationState(); });
-
-        // Create a session
-        $this->app->container->singleton('session', function() { return new \Session(); });
-
-        // Next middleware
-        $this->next->call();
-    }
 }

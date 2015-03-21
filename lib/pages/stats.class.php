@@ -55,7 +55,7 @@ class statsDAO extends baseDAO
 
         Theme::Set('header_text', __('Bandwidth'));
         Theme::Set('form_fields', $formFields);
-        Theme::Render('grid_render');
+        $this->getState()->html .= Theme::RenderReturn('grid_render');
 
         // Render an Availability Widget
         $id = \Kit::uniqueId();
@@ -81,7 +81,7 @@ class statsDAO extends baseDAO
 
         Theme::Set('header_text', __('Availability'));
         Theme::Set('form_fields', $formFields);
-        Theme::Render('grid_render');
+        $this->getState()->html .= Theme::RenderReturn('grid_render');
 
 
 		// Proof of Play stats widget
@@ -122,7 +122,7 @@ class statsDAO extends baseDAO
         // Call to render the template
         Theme::Set('header_text', __('Statistics'));
         Theme::Set('form_fields', $formFields);
-        Theme::Render('grid_render');
+        $this->getState()->html .= Theme::RenderReturn('grid_render');
 	}
 
     public function actionMenu() {
@@ -148,7 +148,7 @@ class statsDAO extends baseDAO
     public function StatsGrid()
     {
         $db =& $this->db;
-        $user =& $this->user;
+        $user = $this->getUser();
         $response = new ApplicationState();
 
         $fromDt = Date::getIsoDateFromString(Kit::GetParam('fromdt', _POST, _STRING));

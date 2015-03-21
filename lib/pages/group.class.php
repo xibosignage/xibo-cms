@@ -99,7 +99,7 @@ END;
         // Call to render the template
         Theme::Set('header_text', __('User Groups'));
         Theme::Set('form_fields', $formFields);
-        Theme::Render('grid_render');
+        $this->getState()->html .= Theme::RenderReturn('grid_render');
 	}
 
     function actionMenu() {
@@ -130,7 +130,7 @@ END;
 	function Grid() 
 	{
 		$db =& $this->db;
-		$user =& $this->user;
+		$user = $this->getUser();
 		
 		$filter_name = \Kit::GetParam('filter_name', _POST, _STRING);
                 
@@ -229,7 +229,7 @@ END;
 	function GroupForm() 
 	{
 		$db =& $this->db;
-		$user =& $this->user;
+		$user = $this->getUser();
 		$response = new ApplicationState();
 				
 		Theme::Set('form_id', 'UserGroupForm');
@@ -553,7 +553,7 @@ END;
 	function MenuItemSecurityForm()
 	{
 		$db =& $this->db;
-		$user =& $this->user;
+		$user = $this->getUser();
 		
 		$id = uniqid();
         Theme::Set('id', $id);

@@ -28,25 +28,25 @@ use Xibo\Helper\Theme;defined('XIBO') or die("Sorry, you are not allowed to dire
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="shortcut icon" href="<?php echo Theme::ImageUrl('favicon.ico'); ?>" />
 
-        <link href="theme/default/libraries/bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
-        <link href="theme/default/libraries/bootstrap/css/bootstrap-theme.min.css" rel="stylesheet" media="screen">
-        <link href="theme/default/libraries/font-awesome/css/font-awesome.min.css" rel="stylesheet">
-        <link href="theme/default/libraries/bootstrap-select/css/bootstrap-select.css" rel="stylesheet">
-        <link href="theme/default/libraries/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css" rel="stylesheet">
-        <link href="theme/default/libraries/bootstrap-colorpicker/css/bootstrap-colorpicker.min.css" rel="stylesheet">
-        <link href="theme/default/libraries/bootstrap-ekko-lightbox/ekko-lightbox.min.css" rel="stylesheet">
-        <link href="theme/default/libraries/calendar/css/calendar.css" rel="stylesheet">
-        <link href="theme/default/libraries/morrisjs/morris.css" rel="stylesheet">
-        <link href="theme/default/libraries/jquery-tablesorter/css/theme.bootstrap.css" rel="stylesheet">
-        <link href="theme/default/libraries/jquery/jquery-ui/css/ui-lightness/jquery-ui-1.10.2.custom.min.css" rel="stylesheet">
-        <link href="theme/default/libraries/jquery-file-upload/css/jquery.fileupload-ui.css" rel="stylesheet">
-        <link href="modules/preview/fonts.css" rel="stylesheet">
+        <link href="<?php echo Theme::rootPath('theme/default/libraries/bootstrap/css/bootstrap.min.css'); ?>" rel="stylesheet" media="screen">
+        <link href="<?php echo Theme::rootPath('theme/default/libraries/bootstrap/css/bootstrap-theme.min.css'); ?>" rel="stylesheet" media="screen">
+        <link href="<?php echo Theme::rootPath('theme/default/libraries/font-awesome/css/font-awesome.min.css'); ?>" rel="stylesheet">
+        <link href="<?php echo Theme::rootPath('theme/default/libraries/bootstrap-select/css/bootstrap-select.css'); ?>" rel="stylesheet">
+        <link href="<?php echo Theme::rootPath('theme/default/libraries/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css'); ?>" rel="stylesheet">
+        <link href="<?php echo Theme::rootPath('theme/default/libraries/bootstrap-colorpicker/css/bootstrap-colorpicker.min.css'); ?>" rel="stylesheet">
+        <link href="<?php echo Theme::rootPath('theme/default/libraries/bootstrap-ekko-lightbox/ekko-lightbox.min.css'); ?>" rel="stylesheet">
+        <link href="<?php echo Theme::rootPath('theme/default/libraries/calendar/css/calendar.css'); ?>" rel="stylesheet">
+        <link href="<?php echo Theme::rootPath('theme/default/libraries/morrisjs/morris.css'); ?>" rel="stylesheet">
+        <link href="<?php echo Theme::rootPath('theme/default/libraries/jquery-tablesorter/css/theme.bootstrap.css'); ?>" rel="stylesheet">
+        <link href="<?php echo Theme::rootPath('theme/default/libraries/jquery/jquery-ui/css/ui-lightness/jquery-ui-1.10.2.custom.min.css'); ?>" rel="stylesheet">
+        <link href="<?php echo Theme::rootPath('theme/default/libraries/jquery-file-upload/css/jquery.fileupload-ui.css'); ?>" rel="stylesheet">
+        <link href="<?php echo Theme::rootPath('modules/preview/fonts.css'); ?>" rel="stylesheet">
         <link href="<?php echo Theme::ItemPath('css/dashboard.css'); ?>" rel="stylesheet" media="screen">
         <link href="<?php echo Theme::ItemPath('css/timeline.css'); ?>" rel="stylesheet" media="screen">
         <link href="<?php echo Theme::ItemPath('css/calendar.css'); ?>" rel="stylesheet" media="screen">
         <link href="<?php echo Theme::ItemPath('css/xibo.css'); ?>" rel="stylesheet" media="screen">
         <link href="<?php echo Theme::ItemPath('css/override.css'); ?>" rel="stylesheet" media="screen">
-        <!-- Copyright 2006-2013 Daniel Garner. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
+        <!-- Copyright 2006-2015 Daniel Garner. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
     </head>
     <body>
     	

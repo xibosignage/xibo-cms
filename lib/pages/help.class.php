@@ -42,7 +42,7 @@ class helpDAO extends baseDAO {
         // Call to render the template
         Theme::Set('header_text', __('Help Links'));
         Theme::Set('form_fields', array());
-        Theme::Render('grid_render');
+        $this->getState()->html .= Theme::RenderReturn('grid_render');
     }
 
     function actionMenu() {
@@ -61,7 +61,7 @@ class helpDAO extends baseDAO {
     public function Grid()
     {
         $db =& $this->db;
-        $user =& $this->user;
+        $user = $this->getUser();
         $response = new ApplicationState();
 
         //display the display table
@@ -166,7 +166,7 @@ SQL;
     public function EditForm()
     {
         $db =& $this->db;
-        $user =& $this->user;
+        $user = $this->getUser();
         $response = new ApplicationState();
 
         $helpId	= \Kit::GetParam('HelpID', _REQUEST, _INT);

@@ -40,7 +40,7 @@ class oauthDAO extends baseDAO {
         // Call to render the template
         Theme::Set('header_text', __('Applications'));
         Theme::Set('form_fields', array());
-        Theme::Render('grid_render');
+        $this->getState()->html .= Theme::RenderReturn('grid_render');
     }
 
     function actionMenu() {
@@ -69,7 +69,7 @@ class oauthDAO extends baseDAO {
     public function Grid()
     {
         $db =& $this->db;
-        $user =& $this->user;
+        $user = $this->getUser();
         $response = new ApplicationState();
 
         $store = OAuthStore::instance();
@@ -201,9 +201,9 @@ class oauthDAO extends baseDAO {
                 Theme::Set('application_descr', $consumer['application_descr']);
                 Theme::Set('application_uri', $consumer['application_uri']);
 
-                Theme::Render('header');
-                Theme::Render('application_verify');
-                Theme::Render('footer');
+                $this->getState()->html .= Theme::RenderReturn('header');
+                $this->getState()->html .= Theme::RenderReturn('application_verify');
+                $this->getState()->html .= Theme::RenderReturn('footer');
                 exit();
            }
         }
@@ -259,7 +259,7 @@ class oauthDAO extends baseDAO {
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
-        $user =& $this->user;
+        $user = $this->getUser();
         $response = new ApplicationState();
         $userid = \Kit::GetParam('userid', _SESSION, _INT);
 

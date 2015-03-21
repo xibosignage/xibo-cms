@@ -75,7 +75,7 @@ class userDAO extends baseDAO {
         // Call to render the template
         Theme::Set('header_text', __('Users'));
         Theme::Set('form_fields', $formFields);
-        Theme::Render('grid_render');
+        $this->getState()->html .= Theme::RenderReturn('grid_render');
     }
 
     function actionMenu() {
@@ -342,7 +342,7 @@ class userDAO extends baseDAO {
 	function DisplayForm() 
 	{
         $db =& $this->db;
-        $user =& $this->user;
+        $user = $this->getUser();
         $response = new ApplicationState();
 
         $userId = \Kit::GetParam('userID', _GET, _INT);
@@ -479,7 +479,7 @@ class userDAO extends baseDAO {
 	function DeleteForm() 
 	{
 		$db =& $this->db;
-        $user =& $this->user;
+        $user = $this->getUser();
 		$response = new ApplicationState();
 		
 		$userid = \Kit::GetParam('userID', _GET, _INT);

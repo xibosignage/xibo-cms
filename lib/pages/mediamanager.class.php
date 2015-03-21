@@ -76,7 +76,7 @@ class mediamanagerDAO extends baseDAO {
         // Call to render the template
         Theme::Set('header_text', __('Media Manager'));
         Theme::Set('form_fields', $formFields);
-        Theme::Render('grid_render');
+        $this->getState()->html .= Theme::RenderReturn('grid_render');
     }
 
     function actionMenu() {
@@ -95,7 +95,7 @@ class mediamanagerDAO extends baseDAO {
     public function MediaManagerGrid()
     {
         $db =& $this->db;
-        $user =& $this->user;
+        $user = $this->getUser();
         $response = new ApplicationState();
 
         $filterLayout = \Kit::GetParam('filter_layout_name', _POST, _STRING);

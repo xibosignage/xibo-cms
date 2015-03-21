@@ -43,6 +43,7 @@ new Debug();
 $app = new \Slim\Slim(array(
     'debug' => true
 ));
+$app->setName('api');
 $app->add(new \Xibo\Middleware\Storage());
 $app->add(new \Xibo\Middleware\State());
 
@@ -67,25 +68,14 @@ $app->add(new JsonApiMiddleware());
 // The current user
 // this should be injected by the ApiAuthenticationOAuth middleware
 $user = new \User();
-$app->container->singleton('user', function() use ($user) { return $user; });
+$user->setIdentity(1);
+$app->user = $user;
 
-// Once we have a user, initialise the theme
+// Once we have a user, initialise the theme (again should be done in auth middleware)
 new \Xibo\Helper\Theme($app->user);
 
-$app->get('/layouts', function() use ($app) {
-    $controller = new \Xibo\Controller\Layout();
-    $controller->setApp($app);
-    $controller->LayoutGrid();
+// All routes
+require 'routes.php';
 
-    $app->render(200, $app->state);
-})->name('layoutSearch');
-
-$app->get('/layouts/:id', function($id) use ($app) {
-    $app->render(200, array('layout' => \Xibo\Factory\LayoutFactory::getById($id)));
-})->name('layoutGet');
-
-$app->post('/layouts/:id', function($id) use ($app) {
-    // Update the Layout
-})->name('layoutUpdate');
-
+// Run app
 $app->run();

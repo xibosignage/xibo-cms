@@ -3,7 +3,7 @@
  * Xibo - Digital Signage - http://www.xibo.org.uk
  * Copyright (C) 2015 Spring Signage Ltd
  *
- * This file (State.php) is part of Xibo.
+ * This file (Actions.php) is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -24,20 +24,26 @@ namespace Xibo\Middleware;
 
 
 use Slim\Middleware;
-use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Theme;
 
-class State extends Middleware
+class Actions extends Middleware
 {
     public function call()
     {
-        // Inject
-        // The state of the application response
-        $this->app->container->singleton('state', function() { return new ApplicationState(); });
+        // Process Actions
+        if (\Config::GetSetting('DEFAULTS_IMPORTED') == 0) {
 
-        // Create a session
-        $this->app->container->singleton('session', function() { return new \Session(); });
+            //$layout = new Layout();
+            //$layout->importFolder('theme' . DIRECTORY_SEPARATOR . Theme::ThemeFolder() . DIRECTORY_SEPARATOR . 'layouts');
 
-        // Next middleware
+            \Config::ChangeSetting('DEFAULTS_IMPORTED', 1);
+        }
+
+        // Process notifications
+        if ($this->app->user->usertypeid == 1 && file_exists('install.php')) {
+            Theme::Set('notifications', array(__('There is a problem with this installation. "install.php" should be deleted.')));
+        }
+
         $this->next->call();
     }
 }
