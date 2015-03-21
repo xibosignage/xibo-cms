@@ -18,6 +18,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Entity\User;
 use Xibo\Helper\Help;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Theme;
@@ -449,7 +450,7 @@ class moduleDAO extends baseDAO
             die(__('Get Resource Call without a Region'));
 
         // Create a new module to handle this request
-        $module = \Xibo\Factory\ModuleFactory::createForWidget(Kit::GetParam('mod', _REQUEST, _WORD), \Kit::GetParam('widgetId', _REQUEST, _INT), $this->user->userid, \Kit::GetParam('playlistId', _REQUEST, _INT), \Kit::GetParam('regionId', _REQUEST, _INT));
+        $module = \Xibo\Factory\ModuleFactory::createForWidget(Kit::GetParam('mod', _REQUEST, _WORD), \Kit::GetParam('widgetId', _REQUEST, _INT), $this->user->userId, \Kit::GetParam('playlistId', _REQUEST, _INT), \Kit::GetParam('regionId', _REQUEST, _INT));
 
         // Authenticate access to this widget
         if (!$this->user->checkViewable($module->widget))

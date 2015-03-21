@@ -40,7 +40,7 @@ class Actions extends Middleware
         }
 
         // Process notifications
-        if ($this->app->user->usertypeid == 1 && file_exists('install.php')) {
+        if ($this->app->user->userTypeId == 1 && file_exists('install.php')) {
             Theme::Set('notifications', array(__('There is a problem with this installation. "install.php" should be deleted.')));
         }
 

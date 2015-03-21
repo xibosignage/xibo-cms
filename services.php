@@ -18,6 +18,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Entity\User;
 use Xibo\Helper\Theme;
 
 DEFINE('XIBO', true);
@@ -110,7 +111,7 @@ if (defined('XMDS') || $method != '')
                 $serviceResponse->ErrorServerError('Not signed.');
             }
 
-            Debug::LogEntry('audit', 'Authenticated API call for [' . $method . '] with a [' . $response . '] response. Issued by UserId: ' . $user->userid, 'Services');
+            Debug::LogEntry('audit', 'Authenticated API call for [' . $method . '] with a [' . $response . '] response. Issued by UserId: ' . $user->userId, 'Services');
                 
             // Authenticated with OAuth.
             \Kit::ClassLoader('Rest');

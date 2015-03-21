@@ -40,14 +40,17 @@ class WebAuthentication extends Middleware
         $app = $this->app;
 
         // Create a user
-        $app->user = new \User();
+        $app->user = new \Xibo\Entity\User();
+
+        // Initialise a theme
+        new Theme($app->user);
 
         Theme::Set('rootPath', str_replace('/index.php', '', $app->request->getRootUri()));
 
         // Define a callable to run our hook - curry in the $app object
         $isAuthorised = function () use ($app) {
             $user = $app->user;
-            /* @var \User $user */
+            /* @var \Xibo\Entity\User $user */
 
             $publicRoutes = array('/login', '/logout', '/clock', '/about');
 

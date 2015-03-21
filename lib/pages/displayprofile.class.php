@@ -142,7 +142,7 @@ class displayprofileDAO extends baseDAO {
         $displayProfile->name = \Kit::GetParam('name', _POST, _STRING);
         $displayProfile->type = \Kit::GetParam('type', _POST, _STRING);
         $displayProfile->isDefault = \Kit::GetParam('isdefault', _POST, _CHECKBOX);
-        $displayProfile->userId = $this->user->userid;
+        $displayProfile->userId = $this->user->userId;
 
         if (!$displayProfile->Save())
             trigger_error($displayProfile->GetErrorMessage(), E_USER_ERROR);
@@ -159,7 +159,7 @@ class displayprofileDAO extends baseDAO {
         if (!$displayProfile->Load())
             trigger_error($displayProfile->GetErrorMessage(), E_USER_ERROR);
 
-        if ($this->user->usertypeid != 1 && $this->user->userid != $displayProfile->userId)
+        if ($this->user->userTypeId != 1 && $this->user->userId != $displayProfile->userId)
             trigger_error(__('You do not have permission to edit this profile'), E_USER_ERROR);
 
         if (empty($displayProfile->type))
@@ -267,7 +267,7 @@ class displayprofileDAO extends baseDAO {
         if (!$displayProfile->Load())
             trigger_error($displayProfile->GetErrorMessage(), E_USER_ERROR);
 
-        if ($this->user->usertypeid != 1 && $this->user->userid != $displayProfile->userId)
+        if ($this->user->userTypeId != 1 && $this->user->userId != $displayProfile->userId)
             trigger_error(__('You do not have permission to edit this profile'), E_USER_ERROR);
 
         if (empty($displayProfile->type))
@@ -322,7 +322,7 @@ class displayprofileDAO extends baseDAO {
         if (!$displayProfile->Load())
             trigger_error($displayProfile->GetErrorMessage(), E_USER_ERROR);
 
-        if ($this->user->usertypeid != 1 && $this->user->userid != $displayProfile->userId)
+        if ($this->user->userTypeId != 1 && $this->user->userId != $displayProfile->userId)
             trigger_error(__('You do not have permission to edit this profile'), E_USER_ERROR);
         
         // Set some information about the form
@@ -357,7 +357,7 @@ class displayprofileDAO extends baseDAO {
         if (!$displayProfile->Load())
             trigger_error($displayProfile->GetErrorMessage(), E_USER_ERROR);
 
-        if ($this->user->usertypeid != 1 && $this->user->userid != $displayProfile->userId)
+        if ($this->user->userTypeId != 1 && $this->user->userId != $displayProfile->userId)
             trigger_error(__('You do not have permission to edit this profile'), E_USER_ERROR);
         
         if (!$displayProfile->Delete($displayProfile->displayProfileId))

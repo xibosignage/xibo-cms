@@ -76,7 +76,7 @@ class oauthDAO extends baseDAO {
 
         try
         {
-            $list = $store->listConsumers($this->user->userid);
+            $list = $store->listConsumers($this->user->userId);
         }
         catch (OAuthException $e)
         {
@@ -127,7 +127,7 @@ class oauthDAO extends baseDAO {
 
         try
         {
-            $list = $store->listLog(null, $this->user->userid);
+            $list = $store->listLog(null, $this->user->userId);
         }
         catch (OAuthException $e)
         {
@@ -163,7 +163,7 @@ class oauthDAO extends baseDAO {
     public function authorize()
     {
         // Do we have an OAuth signed request?
-        $userid = $this->user->userid;
+        $userid = $this->user->userId;
 
         $server = new OAuthServer();
 

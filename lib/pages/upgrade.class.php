@@ -35,7 +35,7 @@ class upgradeDAO extends baseDAO {
             return;
         }
 
-        if ($this->user->usertypeid != 1) {
+        if ($this->user->userTypeId != 1) {
             // Make sure we actually need to do an upgrade
             Theme::Set('message', sprintf(__('The CMS is temporarily off-line as an upgrade is in progress. Please check with your system administrator for updates or refresh your page in a few minutes.'), Theme::GetConfig('app_name')));
 

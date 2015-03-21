@@ -360,7 +360,7 @@ class displaygroupDAO extends baseDAO
         // Add full permissions for this user to this group
         $security = new DisplayGroupSecurity($db);
 
-        if (!$security->Link($displayGroupId, $this->user->getGroupFromID($this->user->userid, true), 1, 1, 1))
+        if (!$security->Link($displayGroupId, $this->user->getGroupFromID($this->user->userId, true), 1, 1, 1))
             trigger_error(__('Unable to set permissions'));
         
         $response->SetFormSubmitResponse(__('Display Group Added'), false);

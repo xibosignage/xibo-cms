@@ -175,7 +175,7 @@ class campaignDAO extends baseDAO
         \Kit::ClassLoader('campaign');
         $campaignObject = new Campaign($db);
 
-        if (!$campaignObject->Add($name, 0, $this->user->userid))
+        if (!$campaignObject->Add($name, 0, $this->user->userId))
             trigger_error($campaignObject->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse(__('Campaign Added'), false);

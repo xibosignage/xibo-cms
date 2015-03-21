@@ -18,6 +18,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Entity\User;
 use Xibo\Helper\Theme;
 
 define('BLACKLIST_ALL', "All");
@@ -1125,8 +1126,8 @@ class XMDSSoap4
 
         // Dummy User Object
         $user = new User();
-        $user->userid = 0;
-        $user->usertypeid = 1;
+        $user->userId = 0;
+        $user->userTypeId = 1;
 
         // Initialise the theme (for global styles in GetResource)
         new Theme($user);

@@ -305,7 +305,7 @@ class logDAO extends baseDAO {
         $user = $this->getUser();
 		$response = $this->getState();
 
-		if ($this->user->usertypeid != 1)
+		if ($this->user->userTypeId != 1)
 			trigger_error(__('Only Administrator Users can truncate the log'), E_USER_ERROR);
 		
         // Set some information about the form
@@ -328,7 +328,7 @@ class logDAO extends baseDAO {
 	{
 
         
-		if ($this->user->usertypeid != 1)
+		if ($this->user->userTypeId != 1)
 			trigger_error(__('Only Administrator Users can truncate the log'), E_USER_ERROR);
 		
 		PDOConnect::update('TRUNCATE TABLE log', array());

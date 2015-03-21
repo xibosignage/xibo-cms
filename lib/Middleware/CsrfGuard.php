@@ -23,6 +23,7 @@
 namespace Xibo\Middleware;
 
 use Slim\Middleware;
+use Xibo\Exception\AccessDeniedException;
 use Xibo\Helper\Theme;
 
 class CsrfGuard extends Middleware
@@ -81,7 +82,16 @@ class CsrfGuard extends Middleware
         if (in_array($this->app->request()->getMethod(), array('POST', 'PUT', 'DELETE'))) {
             $userToken = $this->app->request()->post($this->key);
             if ($token !== $userToken) {
-                $this->app->halt(400, 'Invalid or missing CSRF token.');
+                if ($this->app->request->isAjax()) {
+                    // Return a JSON error response
+                    $this->app->state->Error(__('Sorry the form has expired. Please refresh.'));
+                    $this->app->render('response', array('response' => $this->app->state));
+                    $this->app->halt(200);
+                }
+                else {
+                    // Quit entirely
+                    throw new AccessDeniedException();
+                }
             }
         }
 

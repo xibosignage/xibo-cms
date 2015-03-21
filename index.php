@@ -29,7 +29,7 @@ require 'lib/app/debug.class.php';
 require 'config/config.class.php';
 require 'lib/app/translationengine.class.php';
 require 'lib/app/session.class.php';
-require 'modules/module_user_general.php';
+require 'lib/data/data.class.php';
 // END
 
 if (!file_exists('settings.php'))
@@ -41,6 +41,10 @@ ini_set('display_errors', 1);
 Config::Load();
 new Debug();
 
+// Setup the translations for gettext
+TranslationEngine::InitLocale();
+
+// Slim Application
 $app = new \Slim\Slim(array(
     'debug' => true
 ));
@@ -58,7 +62,9 @@ $app->view(new \Xibo\Middleware\WebView());
 
 // Special "root" route
 $app->get('/', function () use ($app) {
-    echo "boo";
+    $controller = new \Xibo\Controller\Layout($app);
+    $controller->displayPage();
+    $controller->render();
 });
 
 // Special "login" route
@@ -75,8 +81,11 @@ $app->post('/login', function () use ($app) {
         $controller = new \Xibo\Controller\Login($app);
         $controller->login();
     }
+    catch (\Xibo\Exception\AccessDeniedException $e) {
+        $app->session->set('message', __('Username or Password incorrect'));
+        $app->redirectTo('login');
+    }
     catch (\Xibo\Exception\FormExpiredException $e) {
-        Debug::Audit('form expored');
         $app->redirectTo('login');
     }
 

@@ -1,9 +1,9 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2014 Daniel Garner
+ * Copyright (C) 2006-2015 Daniel Garner
  *
- * This file is part of Xibo.
+ * This file (User.php) is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -18,13 +18,15 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+namespace Xibo\Entity;
+
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Theme;
 
 class User
 {
-    public $userid;
-    public $usertypeid;
+    public $userId;
+    public $userTypeId;
     public $userName;
     public $homePage;
 
@@ -33,18 +35,6 @@ class User
      * @var array[Permission]
      */
     private $permissionCache = array();
-    
-    public function __construct()
-    {
-        $this->userid = \Kit::GetParam('userid', _SESSION, _INT);
-        $this->usertypeid = \Kit::GetParam('usertype', _SESSION, _INT);
-
-        // We havent authed yet
-        $this->authedDisplayGroupIDs = false;
-
-        // Initialise a theme
-        new Theme($this);
-    }
 
     /**
      * Login a user
@@ -52,56 +42,41 @@ class User
      * @param string $username
      * @param string $password
      */
-    function login($username, $password) 
+    function login($username, $password)
     {
-        $db =& $this->db;
+        $results = \Xibo\Storage\PDOConnect::select('SELECT UserID, UserName, UserPassword, UserTypeID, CSPRNG FROM `user` WHERE UserName = :userName', array('userName' => $username));
 
-        \Kit::ClassLoader('userdata');
-        
-        // Get the SALT for this username
-        if (!$userInfo = $db->GetSingleRow(sprintf("SELECT UserID, UserName, UserPassword, UserTypeID, CSPRNG FROM `user` WHERE UserName = '%s'", $db->escape_string($username)))) {
-            setMessage(__('Username or Password incorrect'));
-            return false;
+        if (count($results) <= 0) {
+            // User not found
+            throw new \Xibo\Exception\AccessDeniedException();
         }
 
+        $userInfo = $results[0];
+
         // User Data Object to check the password
-        $userData = new Userdata($db);
+        $userData = new Userdata();
 
         // Is SALT empty
         if ($userInfo['CSPRNG'] == 0) {
 
             // Check the password using a MD5
             if ($userInfo['UserPassword'] != md5($password)) {
-                setMessage(__('Username or Password incorrect'));
-                return false;
+                throw new \Xibo\Exception\AccessDeniedException();
             }
 
             // Now that we are validated, generate a new SALT and set the users password.
             $userData->ChangePassword(Kit::ValidateParam($userInfo['UserID'], _INT), null, $password, $password, true /* Force Change */);
-        }
-        else {
-            
+        } else {
+
             // Check the users password using the random SALTED password
             if ($userData->validate_password($password, $userInfo['UserPassword']) === false) {
-                setMessage(__('Username or Password incorrect'));
-                return false;
+                throw new \Xibo\Exception\AccessDeniedException();
             }
         }
-        
+
         // there is a result so we store the userID in the session variable
         $_SESSION['userid'] = \Kit::ValidateParam($userInfo['UserID'], _INT);
-        $_SESSION['username'] = \Kit::ValidateParam($userInfo['UserName'], _USERNAME);
-        $_SESSION['usertype'] = \Kit::ValidateParam($userInfo['UserTypeID'], _INT);
-
-        // Set the User Object
-        $this->usertypeid = $_SESSION['usertype'];
-        $this->userid = $_SESSION['userid'];
-
-        // update the db
-        // write out to the db that the logged in user has accessed the page
-        $SQL = sprintf("UPDATE user SET lastaccessed = '" . date("Y-m-d H:i:s") . "', loggedin = 1 WHERE userid = %d", $_SESSION['userid']);
-        
-        $db->query($SQL) or trigger_error(__('Can not write last accessed info.'), E_USER_ERROR);
+        $this->setIdentity($_SESSION['userid']);
 
         // Switch Session ID's
         global $session;
@@ -125,9 +100,9 @@ class User
         if (!$results = $sth->fetch())
             throw new \Xibo\Exception\NotFoundException();
 
-        $this->userid = $userId;
+        $this->userId = $userId;
         $this->userName = \Kit::ValidateParam($results['UserName'], _USERNAME);
-        $this->usertypeid = \Kit::ValidateParam($results['usertypeid'], _INT);
+        $this->userTypeId = \Kit::ValidateParam($results['usertypeid'], _INT);
         $this->homePage = \Kit::ValidateParam($results['homepage'], _WORD);
 
         //write out to the db that the logged in user has accessed the page still
@@ -147,7 +122,7 @@ class User
 
         //write out to the db that the logged in user has accessed the page still
         $SQL = sprintf("UPDATE user SET loggedin = 0 WHERE userid = %d", $userId);
-        if(!$results = $db->query($SQL)) trigger_error("Can not write last accessed info.", E_USER_ERROR);
+        if (!$results = $db->query($SQL)) trigger_error("Can not write last accessed info.", E_USER_ERROR);
 
         //to log out a user we need only to clear out some session vars
         unset($_SESSION['userid']);
@@ -172,17 +147,14 @@ class User
         // Checks for a user ID in the session variable
         if ($userId == 0) {
             return false;
-        }
-        else {
+        } else {
             if (!is_numeric($_SESSION['userid'])) {
                 unset($_SESSION['userid']);
                 return false;
-            }
-            else if ($session->isExpired == 1) {
+            } else if ($session->isExpired == 1) {
                 unset($_SESSION['userid']);
                 return false;
-            }
-            else {
+            } else {
                 $result = \Xibo\Storage\PDOConnect::select('SELECT UserID FROM `user` WHERE loggedin = 1 AND userid = :userId', array('userId' => $userId));
 
                 if (count($result) <= 0) {
@@ -196,287 +168,271 @@ class User
             }
         }
     }
-    
-    function getNameFromID($id) 
+
+    function getNameFromID($id)
     {
-        $db         =& $this->db;
-        
+        $db =& $this->db;
+
         $SQL = sprintf("SELECT username FROM user WHERE userid = %d", $id);
-        
-        if(!$results = $db->query($SQL)) trigger_error("Unknown user id in the system", E_USER_NOTICE);
-        
+
+        if (!$results = $db->query($SQL)) trigger_error("Unknown user id in the system", E_USER_NOTICE);
+
         // if no user is returned
-        if ($db->num_rows($results) == 0) 
-        {
+        if ($db->num_rows($results) == 0) {
             // assume that is the xibo_admin
             return "None";
         }
 
         $row = $db->get_row($results);
-        
+
         return $row[0];
     }
 
-        /**
-         * Get an array of user groups for the given user id
-         * @param <type> $id User ID
-         * @param <type> $returnID Whether to return ID's or Names
-         * @return <array>
-         */
-        public function GetUserGroups($id, $returnID = false)
+    /**
+     * Get an array of user groups for the given user id
+     * @param <type> $id User ID
+     * @param <type> $returnID Whether to return ID's or Names
+     * @return <array>
+     */
+    public function GetUserGroups($id, $returnID = false)
     {
-            $db =& $this->db;
+        $db =& $this->db;
 
-            $groupIDs = array();
-            $groups = array();
+        $groupIDs = array();
+        $groups = array();
 
-            $SQL  = "";
-            $SQL .= "SELECT group.group, ";
-            $SQL .= "       group.groupID ";
-            $SQL .= "FROM   `user` ";
-            $SQL .= "       INNER JOIN lkusergroup ";
-            $SQL .= "       ON     lkusergroup.UserID = user.UserID ";
-            $SQL .= "       INNER JOIN `group` ";
-            $SQL .= "       ON     group.groupID       = lkusergroup.GroupID ";
-            $SQL .= sprintf("WHERE  `user`.userid                     = %d ", $id);
+        $SQL = "";
+        $SQL .= "SELECT group.group, ";
+        $SQL .= "       group.groupID ";
+        $SQL .= "FROM   `user` ";
+        $SQL .= "       INNER JOIN lkusergroup ";
+        $SQL .= "       ON     lkusergroup.UserID = user.UserID ";
+        $SQL .= "       INNER JOIN `group` ";
+        $SQL .= "       ON     group.groupID       = lkusergroup.GroupID ";
+        $SQL .= sprintf("WHERE  `user`.userid                     = %d ", $id);
 
-            if(!$results = $db->query($SQL))
-            {
-                trigger_error($db->error());
-                trigger_error("Error looking up user information (group)", E_USER_ERROR);
-            }
-
-            if ($db->num_rows($results) == 0)
-            {
-                // Every user should have a group?
-                // Add one in!
-                \Kit::ClassLoader('usergroup');
-
-                $userGroupObject = new UserGroup($db);
-                if (!$groupID = $userGroupObject->Add($this->getNameFromID($id), 1))
-                {
-                    // Error
-                    trigger_error(__('User does not have a group and Xibo is unable to add one.'), E_USER_ERROR);
-                }
-
-                // Link the two
-                $userGroupObject->Link($groupID, $id);
-
-                if ($returnID)
-                    return array($groupID);
-
-                return array('Unknown');
-            }
-
-            // Build an array of the groups to return
-            while($row = $db->get_assoc_row($results))
-            {
-                $groupIDs[] = \Kit::ValidateParam($row['groupID'], _INT);
-                $groups[] = \Kit::ValidateParam($row['group'], _STRING);
-            }
-
-            if ($returnID)
-                return $groupIDs;
-
-
-            return $groups;
-    }
-
-    function getGroupFromID($id, $returnID = false) 
-    {
-            $db =& $this->db;
-        
-            $SQL  = "";
-            $SQL .= "SELECT group.group, ";
-            $SQL .= "       group.groupID ";
-            $SQL .= "FROM   `user` ";
-            $SQL .= "       INNER JOIN lkusergroup ";
-            $SQL .= "       ON     lkusergroup.UserID = user.UserID ";
-            $SQL .= "       INNER JOIN `group` ";
-            $SQL .= "       ON     group.groupID       = lkusergroup.GroupID ";
-            $SQL .= sprintf("WHERE  `user`.userid                     = %d ", $id);
-            $SQL .= "AND    `group`.IsUserSpecific = 1";
-        
-            if(!$results = $db->query($SQL))
-            {
-                trigger_error($db->error());
-                trigger_error("Error looking up user information (group)", E_USER_ERROR);
-            }
-        
-            if ($db->num_rows($results) == 0)
-            {
-                // Every user should have a group?
-                // Add one in!
-                \Kit::ClassLoader('usergroup');
-
-                $userGroupObject = new UserGroup($db);
-                if (!$groupID = $userGroupObject->Add($this->getNameFromID($id), 1))
-                {
-                    // Error
-                    trigger_error(__('User does not have a group and we are unable to add one.'), E_USER_ERROR);
-                }
-
-                // Link the two
-                $userGroupObject->Link($groupID, $id);
-
-                if ($returnID)
-                    return $groupID;
-
-                return 'Unknown';
-            }
-
-            $row = $db->get_row($results);
-
-            if ($returnID)
-            {
-                return $row[1];
-            }
-            return $row[0];
-    }
-    
-    function getUserTypeFromID($id, $returnID = false) 
-    {
-        $db         =& $this->db;
-        
-        $SQL = sprintf("SELECT usertype.usertype, usertype.usertypeid FROM user INNER JOIN usertype ON usertype.usertypeid = user.usertypeid WHERE userid = %d", $id);
-        
-        if(!$results = $db->query($SQL)) 
-        {
-            trigger_error("Error looking up user information (usertype)");
+        if (!$results = $db->query($SQL)) {
             trigger_error($db->error());
+            trigger_error("Error looking up user information (group)", E_USER_ERROR);
         }
-        
-        if ($db->num_rows($results)==0) 
-        {
-            if ($returnID) 
-            {
-                return "3";
+
+        if ($db->num_rows($results) == 0) {
+            // Every user should have a group?
+            // Add one in!
+            \Kit::ClassLoader('usergroup');
+
+            $userGroupObject = new UserGroup($db);
+            if (!$groupID = $userGroupObject->Add($this->getNameFromID($id), 1)) {
+                // Error
+                trigger_error(__('User does not have a group and Xibo is unable to add one.'), E_USER_ERROR);
             }
-            return "User";
+
+            // Link the two
+            $userGroupObject->Link($groupID, $id);
+
+            if ($returnID)
+                return array($groupID);
+
+            return array('Unknown');
         }
-        
+
+        // Build an array of the groups to return
+        while ($row = $db->get_assoc_row($results)) {
+            $groupIDs[] = \Kit::ValidateParam($row['groupID'], _INT);
+            $groups[] = \Kit::ValidateParam($row['group'], _STRING);
+        }
+
+        if ($returnID)
+            return $groupIDs;
+
+
+        return $groups;
+    }
+
+    function getGroupFromID($id, $returnID = false)
+    {
+        $db =& $this->db;
+
+        $SQL = "";
+        $SQL .= "SELECT group.group, ";
+        $SQL .= "       group.groupID ";
+        $SQL .= "FROM   `user` ";
+        $SQL .= "       INNER JOIN lkusergroup ";
+        $SQL .= "       ON     lkusergroup.UserID = user.UserID ";
+        $SQL .= "       INNER JOIN `group` ";
+        $SQL .= "       ON     group.groupID       = lkusergroup.GroupID ";
+        $SQL .= sprintf("WHERE  `user`.userid                     = %d ", $id);
+        $SQL .= "AND    `group`.IsUserSpecific = 1";
+
+        if (!$results = $db->query($SQL)) {
+            trigger_error($db->error());
+            trigger_error("Error looking up user information (group)", E_USER_ERROR);
+        }
+
+        if ($db->num_rows($results) == 0) {
+            // Every user should have a group?
+            // Add one in!
+            \Kit::ClassLoader('usergroup');
+
+            $userGroupObject = new UserGroup($db);
+            if (!$groupID = $userGroupObject->Add($this->getNameFromID($id), 1)) {
+                // Error
+                trigger_error(__('User does not have a group and we are unable to add one.'), E_USER_ERROR);
+            }
+
+            // Link the two
+            $userGroupObject->Link($groupID, $id);
+
+            if ($returnID)
+                return $groupID;
+
+            return 'Unknown';
+        }
+
         $row = $db->get_row($results);
-        
-        if ($returnID) 
-        {
+
+        if ($returnID) {
             return $row[1];
         }
         return $row[0];
     }
-    
-    function getEmailFromID($id) 
+
+    function getUserTypeFromID($id, $returnID = false)
     {
-        $db         =& $this->db;
-        
+        $db =& $this->db;
+
+        $SQL = sprintf("SELECT usertype.usertype, usertype.usertypeid FROM user INNER JOIN usertype ON usertype.usertypeid = user.usertypeid WHERE userid = %d", $id);
+
+        if (!$results = $db->query($SQL)) {
+            trigger_error("Error looking up user information (usertype)");
+            trigger_error($db->error());
+        }
+
+        if ($db->num_rows($results) == 0) {
+            if ($returnID) {
+                return "3";
+            }
+            return "User";
+        }
+
+        $row = $db->get_row($results);
+
+        if ($returnID) {
+            return $row[1];
+        }
+        return $row[0];
+    }
+
+    function getEmailFromID($id)
+    {
+        $db =& $this->db;
+
         $SQL = sprintf("SELECT email FROM user WHERE userid = %d", $id);
-        
-        if(!$results = $db->query($SQL)) trigger_error("Unknown user id in the system", E_USER_NOTICE);
-        
-        if ($db->num_rows($results)==0) 
-        {
+
+        if (!$results = $db->query($SQL)) trigger_error("Unknown user id in the system", E_USER_NOTICE);
+
+        if ($db->num_rows($results) == 0) {
             $SQL = "SELECT email FROM user WHERE userid = 1";
-        
-            if(!$results = $db->query($SQL)) 
-            {
+
+            if (!$results = $db->query($SQL)) {
                 trigger_error("Unknown user id in the system [$id]");
             }
         }
-        
+
         $row = $db->get_row($results);
         return $row[1];
     }
-    
+
     /**
-         * Gets the homepage for the given userid
-         * @param <type> $userId
-         * @return <type>
-         */
+     * Gets the homepage for the given userid
+     * @param <type> $userId
+     * @return <type>
+     */
     function GetHomePage($userId)
     {
-            $db =& $this->db;
+        $db =& $this->db;
 
-            $SQL = sprintf("SELECT homepage FROM `user` WHERE userid = %d", $userId);
+        $SQL = sprintf("SELECT homepage FROM `user` WHERE userid = %d", $userId);
 
-            if (!$homepage = $db->GetSingleValue($SQL, 'homepage', _WORD))
-                trigger_error(__('Unknown User'));
+        if (!$homepage = $db->GetSingleValue($SQL, 'homepage', _WORD))
+            trigger_error(__('Unknown User'));
 
-            return $homepage;
+        return $homepage;
     }
-    
+
     /**
      * Authenticates the page given against the user credentials held.
      * TODO: Would like to improve performance here by making these credentials cached
-     * @return 
+     * @return
      * @param $page string
      */
     public function PageAuth($page)
     {
-        $db         =& $this->db;
-        $userid     =& $this->userid;
-        $usertype   =& $this->usertypeid;
+        $db =& $this->db;
+        $userid =& $this->userId;
+        $usertype =& $this->userTypeId;
 
         // Check the page exists
         $dbh = \Xibo\Storage\PDOConnect::init();
-    
+
         $sth = $dbh->prepare('SELECT pageID FROM `pages` WHERE name = :name');
         $sth->execute(array('name' => $page));
-      
+
         $pageId = $sth->fetchColumn();
 
         if ($pageId == '') {
             Debug::LogEntry('audit', 'Blocked assess to unrecognised page: ' . $page . '.', 'index', 'PageAuth');
             throw new Exception(__('Requested page does not exist'));
         }
-        
+
         // Check the security
         if ($usertype == 1)
             return true;
-        
+
         // We have access to only the pages assigned to this group
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
 
-            $SQL  = "SELECT pageid ";
+            $SQL = "SELECT pageid ";
             $SQL .= " FROM `lkpagegroup` ";
             $SQL .= "    INNER JOIN `lkusergroup` ";
             $SQL .= "    ON lkpagegroup.groupID = lkusergroup.GroupID ";
             $SQL .= " WHERE lkusergroup.UserID = :userid AND pageid = :pageid";
-        
+
             $sth = $dbh->prepare($SQL);
             $sth->execute(array(
-                    'userid' => $userid,
-                    'pageid' => $pageId
-                ));
-                
+                'userid' => $userid,
+                'pageid' => $pageId
+            ));
+
             $results = $sth->fetchAll();
 
             return (count($results) > 0);
-        }
-        catch (Exception $e) {
-            
+        } catch (Exception $e) {
+
             Debug::LogEntry('error', $e->getMessage());
-        
+
             return false;
         }
     }
-    
+
     /**
      * Return a Menu for this user
      * TODO: Would like to cache this menu array for future requests
-     * @return 
+     * @return
      * @param $menu Object
      */
     public function MenuAuth($menu)
     {
-        $db         =& $this->db;
-        $userid     =& $this->userid;
-        $usertypeid     =& $this->usertypeid;
-        
+        $db =& $this->db;
+        $userid =& $this->userId;
+        $usertypeid =& $this->userTypeId;
+
         //Debug::LogEntry('audit', sprintf('Authing the menu for usertypeid [%d]', $usertypeid));
-        
+
         // Get some information about this menu
         // I.e. get the Menu Items this user has access to
-        $SQL  = "";
+        $SQL = "";
         $SQL .= "SELECT DISTINCT pages.name     , ";
         $SQL .= "         menuitem.Args , ";
         $SQL .= "         menuitem.Text , ";
@@ -488,44 +444,39 @@ class User
         $SQL .= "         ON       menuitem.MenuID = menu.MenuID ";
         $SQL .= "         INNER JOIN pages ";
         $SQL .= "         ON       pages.pageID = menuitem.PageID ";
-        if ($usertypeid != 1) 
-        {
+        if ($usertypeid != 1) {
             $SQL .= "       INNER JOIN lkmenuitemgroup ";
             $SQL .= "       ON       lkmenuitemgroup.MenuItemID = menuitem.MenuItemID ";
             $SQL .= "       INNER JOIN `group` ";
             $SQL .= "       ON       lkmenuitemgroup.GroupID = group.GroupID ";
-                        $SQL .= "       INNER JOIN lkusergroup ";
-                        $SQL .= "       ON     group.groupID       = lkusergroup.GroupID ";
+            $SQL .= "       INNER JOIN lkusergroup ";
+            $SQL .= "       ON     group.groupID       = lkusergroup.GroupID ";
         }
         $SQL .= sprintf("WHERE    menu.Menu              = '%s' ", $db->escape_string($menu));
-        if ($usertypeid != 1) 
-        {
+        if ($usertypeid != 1) {
             $SQL .= sprintf(" AND lkusergroup.UserID = %d", $userid);
         }
         $SQL .= " ORDER BY menuitem.Sequence";
-        
-        
-        if (!$result = $db->query($SQL))
-        {
+
+
+        if (!$result = $db->query($SQL)) {
             trigger_error($db->error());
-            
+
             return false;
         }
-        
+
         // No permissions to see any of it
-        if ($db->num_rows($result) == 0)
-        {
+        if ($db->num_rows($result) == 0) {
             return false;
         }
-        
+
         $theMenu = array();
 
         // Load the results into a menu array
-        while ($row = $db->get_assoc_row($result))
-        {
+        while ($row = $db->get_assoc_row($result)) {
             $theMenu[] = $row;
         }
-        
+
         return $theMenu;
     }
 
@@ -543,7 +494,7 @@ class User
             $this->permissionCache[$entity] = array();
 
             // Turn it into a ID keyed array
-            foreach (\Xibo\Factory\PermissionFactory::getByUserId($entity, $this->userid) as $permission) {
+            foreach (\Xibo\Factory\PermissionFactory::getByUserId($entity, $this->userId) as $permission) {
                 /* @var \Xibo\Entity\Permission $permission */
                 $this->permissionCache[$entity][$permission->objectId] = $permission;
             }
@@ -573,7 +524,7 @@ class User
         $this->checkObjectCompatibility($object);
 
         // Admin users
-        if ($this->usertypeid == 1 || $this->userid == $object->getOwnerId()) {
+        if ($this->userTypeId == 1 || $this->userId == $object->getOwnerId()) {
             return \Xibo\Factory\PermissionFactory::getFullPermissions();
         }
 
@@ -598,7 +549,7 @@ class User
         $this->checkObjectCompatibility($object);
 
         // Admin users
-        if ($this->usertypeid == 1 || $this->userid == $object->getOwnerId())
+        if ($this->userTypeId == 1 || $this->userId == $object->getOwnerId())
             return true;
 
         // Get the permissions for that entity
@@ -622,7 +573,7 @@ class User
         $this->checkObjectCompatibility($object);
 
         // Admin users
-        if ($this->usertypeid == 1 || $this->userid == $object->getOwnerId())
+        if ($this->userTypeId == 1 || $this->userId == $object->getOwnerId())
             return true;
 
         // Get the permissions for that entity
@@ -646,7 +597,7 @@ class User
         $this->checkObjectCompatibility($object);
 
         // Admin users
-        if ($this->usertypeid == 1 || $this->userid == $object->getOwnerId())
+        if ($this->userTypeId == 1 || $this->userId == $object->getOwnerId())
             return true;
 
         // Get the permissions for that entity
@@ -670,19 +621,19 @@ class User
         $this->checkObjectCompatibility($object);
 
         // Admin users
-        if ($this->usertypeid == 1 || $this->userid == $object->getOwnerId())
+        if ($this->userTypeId == 1 || $this->userId == $object->getOwnerId())
             return true;
         else
             return false;
     }
-    
+
     /**
      * Returns the usertypeid for this user object.
      * @return int
      */
     public function getUserTypeId()
     {
-        return $this->usertypeid;
+        return $this->userTypeId;
     }
 
     /**
@@ -699,8 +650,8 @@ class User
             throw new \Xibo\Exception\NotFoundException('File not found');
 
         $userId = \Kit::ValidateParam($results[0]['UserID'], _INT);
-        
-        return ($userId == $this->userid);
+
+        return ($userId == $this->userId);
     }
 
     /**
@@ -714,14 +665,14 @@ class User
         // Get the Layouts
         $media = \Xibo\Factory\MediaFactory::query($sort_order, $filter_by);
 
-        if ($this->usertypeid == 1)
+        if ($this->userTypeId == 1)
             return $media;
 
         foreach ($media as $key => $mediaItem) {
             /* @var \Xibo\Entity\Media $mediaItem */
 
             // Check to see if we are the owner
-            if ($mediaItem->ownerId == $this->userid)
+            if ($mediaItem->ownerId == $this->userId)
                 continue;
 
             // Check we are viewable
@@ -744,14 +695,14 @@ class User
         // Get the Layouts
         $layouts = \Xibo\Factory\LayoutFactory::query($sort_order, $filter_by);
 
-        if ($this->usertypeid == 1)
+        if ($this->userTypeId == 1)
             return $layouts;
 
         foreach ($layouts as $key => $layout) {
             /* @var \Xibo\Entity\Layout $layout */
 
             // Check to see if we are the owner
-            if ($layout->ownerId == $this->userid)
+            if ($layout->ownerId == $this->userId)
                 continue;
 
             // Check we are viewable
@@ -787,14 +738,14 @@ class User
         // Get the Layouts
         $resolutions = \Xibo\Factory\ResolutionFactory::query($sort_order, $filter_by);
 
-        if ($this->usertypeid == 1)
+        if ($this->userTypeId == 1)
             return $resolutions;
 
         foreach ($resolutions as $key => $resolution) {
             /* @var \Xibo\Entity\Resolution $resolution */
 
             // Check to see if we are the owner
-            if ($resolution->getOwnerId() == $this->userid)
+            if ($resolution->getOwnerId() == $this->userId)
                 continue;
 
             // Check we are viewable
@@ -814,7 +765,7 @@ class User
     {
         $auth = new PermissionManager($this);
 
-        $SQL  = '';
+        $SQL = '';
         $SQL .= 'SELECT UserID ';
         $SQL .= '  FROM dataset ';
         $SQL .= ' WHERE dataset.DataSetID = %d ';
@@ -823,14 +774,13 @@ class User
             return $auth;
 
         // If we are the owner, or a super admin then give full permissions
-        if ($this->usertypeid == 1 || $ownerId == $this->userid)
-        {
+        if ($this->userTypeId == 1 || $ownerId == $this->userId) {
             $auth->FullAccess();
             return $auth;
         }
 
         // Permissions for groups the user is assigned to, and Everyone
-        $SQL  = '';
+        $SQL = '';
         $SQL .= 'SELECT UserID, MAX(IFNULL(View, 0)) AS View, MAX(IFNULL(Edit, 0)) AS Edit, MAX(IFNULL(Del, 0)) AS Del ';
         $SQL .= '  FROM dataset ';
         $SQL .= '   INNER JOIN lkdatasetgroup ';
@@ -841,7 +791,7 @@ class User
         $SQL .= '   AND (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
         $SQL .= 'GROUP BY dataset.UserID ';
 
-        $SQL = sprintf($SQL, $dataSetId, implode(',', $this->GetUserGroups($this->userid, true)));
+        $SQL = sprintf($SQL, $dataSetId, implode(',', $this->GetUserGroups($this->userId, true)));
         //Debug::LogEntry('audit', $SQL);
 
         if (!$row = $this->db->GetSingleRow($SQL))
@@ -861,7 +811,7 @@ class User
      */
     public function DataSetList()
     {
-        $SQL  = "";
+        $SQL = "";
         $SQL .= "SELECT DataSetID, ";
         $SQL .= "       DataSet, ";
         $SQL .= "       Description, ";
@@ -871,32 +821,29 @@ class User
 
         //Debug::LogEntry('audit', sprintf('Retreiving list of layouts for %s with SQL: %s', $this->userName, $SQL));
 
-        if (!$result = $this->db->query($SQL))
-        {
+        if (!$result = $this->db->query($SQL)) {
             trigger_error($this->db->error());
             return false;
         }
 
         $dataSets = array();
 
-        while ($row = $this->db->get_assoc_row($result))
-        {
+        while ($row = $this->db->get_assoc_row($result)) {
             $dataSetItem = array();
 
             // Validate each param and add it to the array.
             $dataSetItem['datasetid'] = \Kit::ValidateParam($row['DataSetID'], _INT);
-            $dataSetItem['dataset']   = \Kit::ValidateParam($row['DataSet'], _STRING);
+            $dataSetItem['dataset'] = \Kit::ValidateParam($row['DataSet'], _STRING);
             $dataSetItem['description'] = \Kit::ValidateParam($row['Description'], _STRING);
-            $dataSetItem['ownerid']  = \Kit::ValidateParam($row['UserID'], _INT);
-            
+            $dataSetItem['ownerid'] = \Kit::ValidateParam($row['UserID'], _INT);
+
             $auth = $this->DataSetAuth($dataSetItem['datasetid'], true);
 
-            if ($auth->view)
-            {
-                $dataSetItem['view'] = (int) $auth->view;
-                $dataSetItem['edit'] = (int) $auth->edit;
-                $dataSetItem['del'] = (int) $auth->del;
-                $dataSetItem['modifyPermissions'] = (int) $auth->modifyPermissions;
+            if ($auth->view) {
+                $dataSetItem['view'] = (int)$auth->view;
+                $dataSetItem['edit'] = (int)$auth->edit;
+                $dataSetItem['del'] = (int)$auth->del;
+                $dataSetItem['modifyPermissions'] = (int)$auth->modifyPermissions;
 
                 $dataSets[] = $dataSetItem;
             }
@@ -916,8 +863,7 @@ class User
         $noOwnerId = 0;
 
         // If we are the owner, or a super admin then give full permissions
-        if ($this->usertypeid == 1)
-        {
+        if ($this->userTypeId == 1) {
             $auth->FullAccess();
 
             if ($fullObject)
@@ -927,7 +873,7 @@ class User
         }
 
         // Permissions for groups the user is assigned to, and Everyone
-        $SQL  = '';
+        $SQL = '';
         $SQL .= 'SELECT MAX(IFNULL(View, 0)) AS View, MAX(IFNULL(Edit, 0)) AS Edit, MAX(IFNULL(Del, 0)) AS Del ';
         $SQL .= '  FROM displaygroup ';
         $SQL .= '   INNER JOIN lkdisplaygroupgroup ';
@@ -937,7 +883,7 @@ class User
         $SQL .= ' WHERE displaygroup.DisplayGroupID = %d ';
         $SQL .= '   AND (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
 
-        $SQL = sprintf($SQL, $displayGroupId, implode(',', $this->GetUserGroups($this->userid, true)));
+        $SQL = sprintf($SQL, $displayGroupId, implode(',', $this->GetUserGroups($this->userId, true)));
         //Debug::LogEntry('audit', $SQL);
 
         if (!$row = $this->db->GetSingleRow($SQL))
@@ -954,77 +900,71 @@ class User
 
     /**
      * Authenticates the current user and returns an array of display groups this user is authenticated on
-     * @return 
+     * @return
      */
     public function DisplayGroupList($isDisplaySpecific = 0, $name = '')
     {
-        $db         =& $this->db;
-        $userid     =& $this->userid;
+        $db =& $this->db;
+        $userid =& $this->userId;
 
-        $SQL  = "SELECT displaygroup.DisplayGroupID, displaygroup.DisplayGroup, displaygroup.IsDisplaySpecific, displaygroup.Description ";
+        $SQL = "SELECT displaygroup.DisplayGroupID, displaygroup.DisplayGroup, displaygroup.IsDisplaySpecific, displaygroup.Description ";
         if ($isDisplaySpecific == 1)
             $SQL .= " , lkdisplaydg.DisplayID ";
 
         $SQL .= "  FROM displaygroup ";
 
         // If we are only interested in displays, then return the display
-        if ($isDisplaySpecific == 1)
-        {
+        if ($isDisplaySpecific == 1) {
             $SQL .= "   INNER JOIN lkdisplaydg ";
             $SQL .= "   ON lkdisplaydg.DisplayGroupID = displaygroup.DisplayGroupID ";
         }
-        
+
         $SQL .= " WHERE 1 = 1 ";
-        
-        if ($name != '')
-        {
+
+        if ($name != '') {
             // convert into a space delimited array
             $names = explode(' ', $name);
 
-            foreach($names as $searchName)
-            {
+            foreach ($names as $searchName) {
                 // Not like, or like?
                 if (substr($searchName, 0, 1) == '-')
-                    $SQL.= " AND  (displaygroup.DisplayGroup NOT LIKE '%" . sprintf('%s', ltrim($db->escape_string($searchName), '-')) . "%') ";
+                    $SQL .= " AND  (displaygroup.DisplayGroup NOT LIKE '%" . sprintf('%s', ltrim($db->escape_string($searchName), '-')) . "%') ";
                 else
-                    $SQL.= " AND  (displaygroup.DisplayGroup LIKE '%" . sprintf('%s', $db->escape_string($searchName)) . "%') ";
+                    $SQL .= " AND  (displaygroup.DisplayGroup LIKE '%" . sprintf('%s', $db->escape_string($searchName)) . "%') ";
             }
         }
-        
+
         if ($isDisplaySpecific != -1)
             $SQL .= sprintf(" AND displaygroup.IsDisplaySpecific = %d ", $isDisplaySpecific);
 
         $SQL .= " ORDER BY displaygroup.DisplayGroup ";
-        
+
         Debug::LogEntry('audit', sprintf('Retreiving list of displaygroups for %s with SQL: %s', $this->userName, $SQL));
 
-        if (!$result = $this->db->query($SQL))
-        {
+        if (!$result = $this->db->query($SQL)) {
             trigger_error($this->db->error());
             return false;
         }
 
         $displayGroups = array();
 
-        while ($row = $this->db->get_assoc_row($result))
-        {
+        while ($row = $this->db->get_assoc_row($result)) {
             $displayGroupItem = array();
 
             // Validate each param and add it to the array.
             $displayGroupItem['displaygroupid'] = \Kit::ValidateParam($row['DisplayGroupID'], _INT);
-            $displayGroupItem['displaygroup']   = \Kit::ValidateParam($row['DisplayGroup'], _STRING);
-            $displayGroupItem['description']   = \Kit::ValidateParam($row['Description'], _STRING);
+            $displayGroupItem['displaygroup'] = \Kit::ValidateParam($row['DisplayGroup'], _STRING);
+            $displayGroupItem['description'] = \Kit::ValidateParam($row['Description'], _STRING);
             $displayGroupItem['isdisplayspecific'] = \Kit::ValidateParam($row['IsDisplaySpecific'], _STRING);
             $displayGroupItem['displayid'] = (($isDisplaySpecific == 1) ? \Kit::ValidateParam($row['DisplayID'], _INT) : 0);
 
             $auth = $this->DisplayGroupAuth($displayGroupItem['displaygroupid'], true);
 
-            if ($auth->view)
-            {
-                $displayGroupItem['view'] = (int) $auth->view;
-                $displayGroupItem['edit'] = (int) $auth->edit;
-                $displayGroupItem['del'] = (int) $auth->del;
-                $displayGroupItem['modifypermissions'] = (int) $auth->modifyPermissions;
+            if ($auth->view) {
+                $displayGroupItem['view'] = (int)$auth->view;
+                $displayGroupItem['edit'] = (int)$auth->edit;
+                $displayGroupItem['del'] = (int)$auth->del;
+                $displayGroupItem['modifypermissions'] = (int)$auth->modifyPermissions;
 
                 $displayGroups[] = $displayGroupItem;
             }
@@ -1036,9 +976,10 @@ class User
     /**
      * List of Displays this user has access to view
      */
-    public function DisplayList($sort_order = array('displayid'), $filter_by = array(), $auth_level = 'view') {
+    public function DisplayList($sort_order = array('displayid'), $filter_by = array(), $auth_level = 'view')
+    {
 
-        $SQL  = 'SELECT display.displayid, ';
+        $SQL = 'SELECT display.displayid, ';
         $SQL .= '    display.display, ';
         $SQL .= '    displaygroup.description, ';
         $SQL .= '    layout.layout, ';
@@ -1068,8 +1009,7 @@ class User
         if (\Kit::GetParam('displaygroupid', $filter_by, _INT) != 0) {
             // Restrict to a specific display group
             $SQL .= sprintf(' WHERE displaygroup.displaygroupid = %d ', \Kit::GetParam('displaygroupid', $filter_by, _INT));
-        }
-        else {
+        } else {
             // Restrict to display specific groups
             $SQL .= ' WHERE displaygroup.IsDisplaySpecific = 1 ';
         }
@@ -1084,13 +1024,12 @@ class User
             // convert into a space delimited array
             $names = explode(' ', \Kit::GetParam('display', $filter_by, _STRING));
 
-            foreach($names as $searchName)
-            {
+            foreach ($names as $searchName) {
                 // Not like, or like?
                 if (substr($searchName, 0, 1) == '-')
-                    $SQL.= " AND  (display.display NOT LIKE '%" . sprintf('%s', ltrim($this->db->escape_string($searchName), '-')) . "%') ";
+                    $SQL .= " AND  (display.display NOT LIKE '%" . sprintf('%s', ltrim($this->db->escape_string($searchName), '-')) . "%') ";
                 else
-                    $SQL.= " AND  (display.display LIKE '%" . sprintf('%s', $this->db->escape_string($searchName)) . "%') ";
+                    $SQL .= " AND  (display.display LIKE '%" . sprintf('%s', $this->db->escape_string($searchName)) . "%') ";
             }
         }
 
@@ -1113,16 +1052,14 @@ class User
         if (is_array($sort_order))
             $SQL .= 'ORDER BY ' . implode(',', $sort_order);
 
-        if (!$result = $this->db->query($SQL))
-        {
+        if (!$result = $this->db->query($SQL)) {
             trigger_error($this->db->error());
             return false;
         }
 
         $displays = array();
 
-        while ($row = $this->db->get_assoc_row($result))
-        {
+        while ($row = $this->db->get_assoc_row($result)) {
             $displayItem = array();
 
             // Validate each param and add it to the array.
@@ -1150,16 +1087,15 @@ class User
 
             $auth = $this->DisplayGroupAuth($displayItem['displaygroupid'], true);
 
-            if ($auth->view)
-            {
+            if ($auth->view) {
                 // If auth level = edit and we don't have edit, then leave them off
                 if ($auth_level == 'edit' && !$auth->edit)
                     continue;
 
-                $displayItem['view'] = (int) $auth->view;
-                $displayItem['edit'] = (int) $auth->edit;
-                $displayItem['del'] = (int) $auth->del;
-                $displayItem['modifypermissions'] = (int) $auth->modifyPermissions;
+                $displayItem['view'] = (int)$auth->view;
+                $displayItem['edit'] = (int)$auth->edit;
+                $displayItem['del'] = (int)$auth->del;
+                $displayItem['modifypermissions'] = (int)$auth->modifyPermissions;
 
                 $displays[] = $displayItem;
             }
@@ -1180,14 +1116,14 @@ class User
         // Get the Layouts
         $campaigns = \Xibo\Factory\CampaignFactory::query($sort_order, $filter_by);
 
-        if ($this->usertypeid == 1)
+        if ($this->userTypeId == 1)
             return $campaigns;
 
         foreach ($campaigns as $key => $campaign) {
             /* @var \Xibo\Entity\Campaign $campaign */
 
             // Check to see if we are the owner
-            if ($campaign->ownerId == $this->userid)
+            if ($campaign->ownerId == $this->userId)
                 continue;
 
             // Check we are viewable
@@ -1197,7 +1133,7 @@ class User
 
         return $campaigns;
     }
-    
+
     /**
      * Get a list of transitions
      * @param string $type in/out
@@ -1216,38 +1152,35 @@ class User
         $SQL .= '   AvailableAsOut ';
         $SQL .= '  FROM `transition` ';
         $SQL .= ' WHERE 1 = 1 ';
-        
-        if ($type != '')
-        {
+
+        if ($type != '') {
             // Filter on type
             if ($type == 'in')
                 $SQL .= '  AND AvailableAsIn = 1 ';
-            
+
             if ($type == 'out')
                 $SQL .= '  AND AvailableAsOut = 1 ';
         }
-        
-        if ($code != '')
-        {
+
+        if ($code != '') {
             // Filter on code
             $SQL .= sprintf("AND Code = '%s' ", $this->db->escape_string($code));
         }
-        
+
         $SQL .= ' ORDER BY Transition ';
 
         $rows = $this->db->GetArray($SQL);
-        
+
         if (!is_array($rows)) {
             trigger_error($this->db->error());
             return false;
         }
-        
+
         $transitions = array();
 
-        foreach ($rows as $transition)
-        {
+        foreach ($rows as $transition) {
             $transitionItem = array();
-            
+
             $transitionItem['transitionid'] = \Kit::ValidateParam($transition['TransitionID'], _INT);
             $transitionItem['transition'] = \Kit::ValidateParam($transition['Transition'], _STRING);
             $transitionItem['code'] = \Kit::ValidateParam($transition['Code'], _WORD);
@@ -1266,14 +1199,15 @@ class User
     /**
      * List of Displays this user has access to view
      */
-    public function DisplayProfileList($sort_order = array('name'), $filter_by = array()) {
+    public function DisplayProfileList($sort_order = array('name'), $filter_by = array())
+    {
 
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
-        
+
             $params = array();
-            $SQL  = 'SELECT displayprofileid, name, type, config, isdefault, userid FROM displayprofile ';
-        
+            $SQL = 'SELECT displayprofileid, name, type, config, isdefault, userid FROM displayprofile ';
+
             $type = \Kit::GetParam('type', $filter_by, _WORD);
             if (!empty($type)) {
                 $SQL .= ' WHERE type = :type ';
@@ -1283,15 +1217,15 @@ class User
             // Sorting?
             if (is_array($sort_order))
                 $SQL .= 'ORDER BY ' . implode(',', $sort_order);
-    
+
             $sth = $dbh->prepare($SQL);
             $sth->execute($params);
-                
+
             $profiles = array();
-    
+
             while ($row = $sth->fetch()) {
                 $displayItem = array();
-    
+
                 // Validate each param and add it to the array.
                 $displayItem['displayprofileid'] = \Kit::ValidateParam($row['displayprofileid'], _INT);
                 $displayItem['name'] = \Kit::ValidateParam($row['name'], _STRING);
@@ -1299,27 +1233,26 @@ class User
                 $displayItem['config'] = \Kit::ValidateParam($row['config'], _STRING);
                 $displayItem['isdefault'] = \Kit::ValidateParam($row['isdefault'], _INT);
                 $displayItem['userid'] = \Kit::ValidateParam($row['userid'], _INT);
-    
+
                 $auth = new PermissionManager($this);
-                
+
                 // If we are the owner, or a super admin then give full permissions
-                if ($this->usertypeid != 1 && $this->userid != $displayItem['userid'])
+                if ($this->userTypeId != 1 && $this->userId != $displayItem['userid'])
                     continue;
-    
+
                 $displayItem['view'] = 1;
                 $displayItem['edit'] = 1;
                 $displayItem['del'] = 1;
                 $displayItem['modifypermissions'] = 1;
-    
+
                 $profiles[] = $displayItem;
             }
-    
-            return $profiles;  
-        }
-        catch (Exception $e) {
-            
+
+            return $profiles;
+        } catch (Exception $e) {
+
             Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
-        
+
             return false;
         }
     }
@@ -1327,12 +1260,11 @@ class User
     public function userList($sortOrder = array('username'), $filterBy = array())
     {
         // Normal users can only see themselves
-        if ($this->usertypeid == 3) {
-            $filterBy['userId'] = $this->userid;
-        }
-        // Group admins can only see users from their groups.
-        else if ($this->usertypeid == 2) {
-            $groups = $this->GetUserGroups($this->userid, true);
+        if ($this->userTypeId == 3) {
+            $filterBy['userId'] = $this->userId;
+        } // Group admins can only see users from their groups.
+        else if ($this->userTypeId == 2) {
+            $groups = $this->GetUserGroups($this->userId, true);
             $filterBy['groupIds'] = (isset($filterBy['groupIds'])) ? array_merge($filterBy['groupIds'], $groups) : $groups;
         }
 
@@ -1354,26 +1286,27 @@ class User
                 $userItem['loggedin'] = $row->loggedIn;
                 $userItem['retired'] = $row->retired;
                 $userItem['object'] = $row;
-                
+
                 // Add to the collection
                 $parsedUser[] = $userItem;
             }
 
             return $parsedUser;
-        }
-        catch (Exception $e) {
+        } catch (Exception $e) {
             Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
             return false;
         }
     }
 
-    public function GetPref($key, $default = NULL) {
+    public function GetPref($key, $default = NULL)
+    {
         $storedValue = Session::Get($key);
 
         return ($storedValue == NULL) ? $default : $storedValue;
     }
 
-    public function SetPref($key, $value) {
+    public function SetPref($key, $value)
+    {
         Session::Set($key, $value);
     }
 }

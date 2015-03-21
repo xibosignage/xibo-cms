@@ -435,7 +435,7 @@ class Twitter extends Module
             __('Should URLs be removed from the Tweet Text. Most URLs do not compliment digital signage.'), 'u');
 
         // Encode up the template
-        if ($this->getUser()->usertypeid == 1)
+        if ($this->getUser()->userTypeId == 1)
             $formFields['advanced'][] = FormManager::AddMessage('<pre>' . htmlentities(json_encode(array('id' => 'ID', 'value' => 'TITLE', 'template' => $this->getRawNode('template', null), 'css' => $this->getRawNode('styleSheet', null)))) . '</pre>');
 
         // Template - for standard stuff

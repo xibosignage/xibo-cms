@@ -218,7 +218,7 @@ class datasetDAO extends baseDAO
         $description = \Kit::GetParam('description', _POST, _STRING);
 
         $dataSetObject = new DataSet($db);
-        if (!$dataSetId = $dataSetObject->Add($dataSet, $description, $this->user->userid))
+        if (!$dataSetId = $dataSetObject->Add($dataSet, $description, $this->user->userId))
             trigger_error($dataSetObject->GetErrorMessage(), E_USER_ERROR);
 
         // Also add one column

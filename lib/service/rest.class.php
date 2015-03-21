@@ -18,6 +18,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Entity\User;
+
 class Rest
 {
     protected $user;
@@ -347,7 +349,7 @@ class Rest
         if ($fileId == 0)
         {
             // New upload. All users have permissions to upload files if they have gotten this far
-            if (!$fileId = $file->NewFile($payload, $this->user->userid))
+            if (!$fileId = $file->NewFile($payload, $this->user->userId))
                 return $this->Error($file->GetErrorNumber());
         }
         else
@@ -392,7 +394,7 @@ class Rest
             return $this->Error(1, 'Access Denied');
 
         // Add the media.
-        if (!$mediaId = $media->Add($fileId, $type, $name, $duration, $fileName, $this->user->userid))
+        if (!$mediaId = $media->Add($fileId, $type, $name, $duration, $fileName, $this->user->userId))
             return $this->Error($media->GetErrorNumber(), $media->GetErrorMessage());
 
         // Return the mediaId.
@@ -420,7 +422,7 @@ class Rest
             return $this->Error(1, 'Access Denied');
 
         // Add the media.
-        if (!$media->Edit($mediaId, $name, $duration, $this->user->userid))
+        if (!$media->Edit($mediaId, $name, $duration, $this->user->userId))
             return $this->Error($media->GetErrorNumber(), $media->GetErrorMessage());
 
         // Return the mediaId.
@@ -542,7 +544,7 @@ class Rest
         // Add this layout
         $layoutObject = new Layout();
 
-        if(!$id = $layoutObject->Add($layout, $description, $tags, $this->user->userid, $templateId, $resolutionId))
+        if(!$id = $layoutObject->Add($layout, $description, $tags, $this->user->userId, $templateId, $resolutionId))
             return $this->Error($layoutObject->GetErrorNumber(), $layoutObject->GetErrorMessage());
 
         Debug::LogEntry('audit', 'Added new layout with id' . $id);
@@ -742,7 +744,7 @@ class Rest
         \Kit::ClassLoader('region');
         $region = new Region();
 
-        if (!$regionId = $region->AddRegion($layoutId, $this->user->userid, '', $width, $height, $top, $left, $name))
+        if (!$regionId = $region->AddRegion($layoutId, $this->user->userId, '', $width, $height, $top, $left, $name))
             return $this->Error($region->GetErrorNumber(), $region->GetErrorMessage());
 
         return $this->Respond($this->ReturnId('region', $regionId));
@@ -1253,7 +1255,7 @@ class Rest
 
         \Kit::ClassLoader('dataset');
         $dataSetObject = new DataSet();
-        if (!$dataSetId = $dataSetObject->Add($dataSet, $description, $this->user->userid))
+        if (!$dataSetId = $dataSetObject->Add($dataSet, $description, $this->user->userId))
             return $this->Error($dataSetObject->GetErrorNumber(), $dataSetObject->GetErrorMessage());
 
         return $this->Respond($this->ReturnId('dataset', $dataSetId));
@@ -1547,7 +1549,7 @@ class Rest
         \Kit::ClassLoader('datasetgroupsecurity');
         $security = new DataSetGroupSecurity();
 
-        if (!$results = $security->ListSecurity($dataSetId, $this->user->getGroupFromId($this->user->userid, true))) {
+        if (!$results = $security->ListSecurity($dataSetId, $this->user->getGroupFromId($this->user->userId, true))) {
             return $this->Error($security->GetErrorNumber(), $security->GetErrorMessage());
         }
 

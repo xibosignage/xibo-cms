@@ -158,7 +158,7 @@ class userDAO extends baseDAO {
             $row['groupid'] = $user->getGroupFromID($row['userid'], true);
 
             // Super admins have some buttons
-            if ($user->usertypeid == 1) {
+            if ($user->userTypeId == 1) {
                 
                 // Edit        
                 $row['buttons'][] = array(
@@ -272,7 +272,7 @@ class userDAO extends baseDAO {
         $user->retired = \Kit::GetParam('retired', _POST, _CHECKBOX);
 
         // Super Admins can change the user type
-        if ($this->user->usertypeid == 1)
+        if ($this->user->userTypeId == 1)
             $user->userTypeId = \Kit::GetParam('usertypeid', _POST, _INT);
 
         if (!$user->edit())
@@ -551,7 +551,7 @@ class userDAO extends baseDAO {
         $db =& $this->db;
         $response = $this->getState();
 
-        if (!$this->user->usertypeid == 1)
+        if (!$this->user->userTypeId == 1)
             trigger_error(__('You do not have permission to change this users homepage'));
 
         $userid	= \Kit::GetParam('userid', _POST, _INT, 0);
@@ -583,7 +583,7 @@ class userDAO extends baseDAO {
 
         try
         {
-            $list = $store->listConsumerTokens($this->user->userid);
+            $list = $store->listConsumerTokens($this->user->userId);
         }
         catch (OAuthException $e)
         {
@@ -656,7 +656,7 @@ class userDAO extends baseDAO {
         \Kit::ClassLoader('userdata');
         $userData = new Userdata($db);
 
-        if (!$userData->ChangePassword($this->user->userid, $oldPassword, $newPassword, $retypeNewPassword))
+        if (!$userData->ChangePassword($this->user->userId, $oldPassword, $newPassword, $retypeNewPassword))
             trigger_error($userData->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse(__('Password Changed'));
@@ -711,7 +711,7 @@ class userDAO extends baseDAO {
         $userId = \Kit::GetParam('UserId', _POST, _INT);
         
         // Check we are an admin
-        if ($this->user->usertypeid != 1)
+        if ($this->user->userTypeId != 1)
             trigger_error(__('Trying to change the password for another user denied'), E_USER_ERROR);
 
         \Kit::ClassLoader('userdata');

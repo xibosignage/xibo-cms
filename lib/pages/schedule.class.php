@@ -430,7 +430,7 @@ class scheduleDAO extends baseDAO {
         
         // Ready to do the add 
         $scheduleObject = new Schedule($db);
-        if (!$scheduleObject->Add($displayGroupIDs, $fromDT, $toDT, $campaignId, $repeatType, $repeatInterval, $repeatToDt, $isPriority, $this->user->userid, $displayOrder))
+        if (!$scheduleObject->Add($displayGroupIDs, $fromDT, $toDT, $campaignId, $repeatType, $repeatInterval, $repeatToDt, $isPriority, $this->user->userId, $displayOrder))
             trigger_error($scheduleObject->GetErrorMessage(), E_USER_ERROR);
         
         $response->SetFormSubmitResponse(__("The Event has been Added."));
@@ -709,7 +709,7 @@ class scheduleDAO extends baseDAO {
         
         // Ready to do the edit 
         $scheduleObject = new Schedule($db);
-        if (!$scheduleObject->Edit($eventId, $displayGroupIDs, $fromDT, $toDT, $campaignId, $repeatType, $repeatInterval, $repeatToDt, $isPriority, $this->user->userid, $displayOrder))
+        if (!$scheduleObject->Edit($eventId, $displayGroupIDs, $fromDT, $toDT, $campaignId, $repeatType, $repeatInterval, $repeatToDt, $isPriority, $this->user->userId, $displayOrder))
             trigger_error($scheduleObject->GetErrorMessage(), E_USER_ERROR);
         
         $response->SetFormSubmitResponse(__("The Event has been Modified."));
@@ -957,7 +957,7 @@ class scheduleDAO extends baseDAO {
         // Ready to do the add
         $scheduleObject = new Schedule($db);
 
-        if (!$scheduleObject->Add($displayGroupIds, $fromDt, $toDt, $campaignId, '', '', '', $isPriority, $this->user->userid, $displayOrder))
+        if (!$scheduleObject->Add($displayGroupIds, $fromDt, $toDt, $campaignId, '', '', '', $isPriority, $this->user->userId, $displayOrder))
             trigger_error($scheduleObject->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse(__('The Event has been Scheduled'));

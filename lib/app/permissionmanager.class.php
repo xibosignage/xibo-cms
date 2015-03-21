@@ -18,6 +18,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Entity\User;
+
 defined('XIBO') or die('Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.');
 
 class PermissionManager
@@ -55,12 +57,12 @@ class PermissionManager
         $this->del = $del;
 
         // Basic checks first
-        if ($this->user->usertypeid == 1 || $ownerId == $user->userid)
+        if ($this->user->userTypeId == 1 || $ownerId == $user->userId)
         {
             // Super admin or owner, therefore permission granted to everything
             $this->FullAccess();
         }
-        else if ($this->user->usertypeid == 2 && $this->view == 1)
+        else if ($this->user->userTypeId == 2 && $this->view == 1)
         {
             // Group Admin and we have view permissions (i.e. this group is assigned to this item)
             $this->view = true;

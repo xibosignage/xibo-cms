@@ -67,7 +67,7 @@ $app->add(new JsonApiMiddleware());
 
 // The current user
 // this should be injected by the ApiAuthenticationOAuth middleware
-$user = new \User();
+$user = new \Xibo\Entity\User();
 $user->setIdentity(1);
 $app->user = $user;
 

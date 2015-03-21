@@ -674,7 +674,7 @@ class contentDAO extends baseDAO {
             $libraryFolder  = Config::GetSetting('LIBRARY_LOCATION');
             $error          = 0;
             $fileName       = \Kit::ValidateParam($_FILES['media_file']['name'], _FILENAME);
-            $fileId         = $fileObject->GenerateFileId($this->user->userid);
+            $fileId         = $fileObject->GenerateFileId($this->user->userId);
             $fileLocation   = $libraryFolder . 'temp/' . $fileId;
 
             // Make sure the library exists
@@ -741,7 +741,7 @@ HTML;
         $validExt = \Xibo\Factory\ModuleFactory::getValidExtensions();
 
         $options = array(
-            'userId' => $this->user->userid,
+            'userId' => $this->user->userId,
             'playlistId' => \Kit::GetParam('playlistId', _REQUEST, _INT),
             'upload_dir' => $libraryFolder . 'temp/',
             'download_via_php' => true,
@@ -779,7 +779,7 @@ HTML;
         $formFields[] = FormManager::AddMessage(__('Tidying your Library will delete any media that is not currently in use.'));
 
         // Work out how many files there are
-        $media = Media::entriesUnusedForUser($this->user->userid);
+        $media = Media::entriesUnusedForUser($this->user->userId);
 
         $formFields[] = FormManager::AddMessage(sprintf(__('There is %s of data stored in %d files . Are you sure you want to proceed?', \Kit::formatBytes(array_sum(array_map(function ($element) { return $element['fileSize']; }, $media))), count($media))));
 
@@ -803,7 +803,7 @@ HTML;
             trigger_error(__('Sorry this function is disabled.'), E_USER_ERROR);
 
         $media = new Media();
-        if (!$media->deleteUnusedForUser($this->user->userid))
+        if (!$media->deleteUnusedForUser($this->user->userId))
             trigger_error($media->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse(__('Library Tidy Complete'));

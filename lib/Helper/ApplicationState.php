@@ -241,7 +241,6 @@ class ApplicationState
     {
         $this->SetError($message);
         $this->keepOpen = $keepOpen;
-        $this->Respond();
     }
 
     /**

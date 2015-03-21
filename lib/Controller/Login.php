@@ -19,15 +19,13 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
-use Config;
 use dashboardDAO;
 use Debug;
 use Exception;
 use Kit;
 use mediamanagerDAO;
 use statusdashboardDAO;
-use Xibo\Exception\FormExpiredException;
-use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 
 class Login extends Base
@@ -52,15 +50,14 @@ class Login extends Base
     {
         $user = $this->getUser();
 
-        // this page must be called from a form therefore we expect POST variables
-        $username = \Kit::GetParam('username', _POST, _USERNAME);
-        $password = \Kit::GetParam('password', _POST, _PASSWORD);
+        // Get our username and password
+        $username = Sanitize::userName($this->param('username'));
+        $password = Sanitize::password($this->param('password'));
 
-        if ($user->login($username, $password)) {
-            $userId = \Kit::GetParam('userid', _SESSION, _INT);
+        $user->login($username, $password);
+        $userId = \Kit::GetParam('userid', _SESSION, _INT);
 
-            $this->getSession()->set_user(session_id(), $userId, 'user');
-        }
+        $this->getSession()->set_user(session_id(), $userId, 'user');
     }
 
     function logout($referingpage = '')
@@ -111,7 +108,7 @@ class Login extends Base
             $dbh = \Xibo\Storage\PDOConnect::init();
 
             $sth = $dbh->prepare('SELECT newUserWizard FROM `user` WHERE userid = :userid');
-            $sth->execute(array('userid' => $user->userid));
+            $sth->execute(array('userid' => $user->userId));
 
             $newUserWizard = $sth->fetchColumn(0);
         } catch (Exception $e) {
@@ -125,7 +122,7 @@ class Login extends Base
                 $dbh = \Xibo\Storage\PDOConnect::init();
 
                 $sth = $dbh->prepare('UPDATE `user` SET newUserWizard = 1 WHERE userid = :userid');
-                $sth->execute(array('userid' => $user->userid));
+                $sth->execute(array('userid' => $user->userId));
             } catch (Exception $e) {
                 Debug::LogEntry('error', $e->getMessage());
             }

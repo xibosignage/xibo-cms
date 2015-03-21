@@ -30,7 +30,7 @@ use Parsedown;
 use Xibo\Helper\ApplicationState;
 use Session;
 use Xibo\Helper\Theme;
-use user;
+use Xibo\Entity\user;
 
 class Layout extends Base
 {
@@ -224,9 +224,9 @@ class Layout extends Base
         $resolutionId = \Kit::GetParam('resolutionid', _POST, _INT);
 
         if ($templateId != 0)
-            $layout = \Xibo\Factory\LayoutFactory::createFromTemplate($templateId, $this->getUser()->userid, $name, $description, $tags);
+            $layout = \Xibo\Factory\LayoutFactory::createFromTemplate($templateId, $this->getUser()->userId, $name, $description, $tags);
         else
-            $layout = \Xibo\Factory\LayoutFactory::createFromResolution($resolutionId, $this->getUser()->userid, $name, $description, $tags);
+            $layout = \Xibo\Factory\LayoutFactory::createFromResolution($resolutionId, $this->getUser()->userId, $name, $description, $tags);
 
         // Validate
         $layout->validate();
@@ -1106,7 +1106,7 @@ HTML;
         \Kit::ClassLoader('layout');
         $layoutObject = new Layout($this->db);
 
-        if (!$layoutObject->Import($fileLocation, $layout, $this->getUser()->userid, $template, $replaceExisting, $importTags)) {
+        if (!$layoutObject->Import($fileLocation, $layout, $this->getUser()->userId, $template, $replaceExisting, $importTags)) {
             trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);
         }
 

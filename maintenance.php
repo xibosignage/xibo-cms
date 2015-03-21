@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+use Xibo\Entity\User;
 use Xibo\Helper\Theme;
 
 define('SCHEDULEDTASK', true);

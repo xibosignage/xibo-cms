@@ -381,7 +381,7 @@ class adminDAO extends baseDAO {
         $response = $this->getState();
 
         // Check we have permission to do this
-        if ($this->user->usertypeid != 1)
+        if ($this->user->userTypeId != 1)
             trigger_error(__('Only an adminitrator can export a database'));
 
         $form = '';
@@ -418,7 +418,7 @@ class adminDAO extends baseDAO {
         	trigger_error(__('Sorry this function is disabled.'), E_USER_ERROR);
 
         // Check we have permission to do this
-        if ($this->user->usertypeid != 1)
+        if ($this->user->userTypeId != 1)
             trigger_error(__('Only an adminitrator can import a database'));
 
         $msgDumpFile = __('Backup File');

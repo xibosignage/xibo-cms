@@ -57,7 +57,7 @@ class Base
 
     /**
      * Get the Current User
-     * @return \User
+     * @return \Xibo\Entity\User
      */
     protected function getUser()
     {
@@ -90,6 +90,27 @@ class Base
     protected function urlFor($route)
     {
         return $this->app->urlFor($route);
+    }
+
+    /**
+     * Get param
+     * @param $param
+     * @param $default
+     * @return mixed
+     */
+    protected function param($param = null, $default = null)
+    {
+        switch ($this->app->request->getMethod()) {
+            case 'get':
+                return $this->app->request->get($param, $default);
+            case 'post':
+            case 'delete':
+                return $this->app->request->post($param, $default);
+            case 'put':
+                return $this->app->request->put($param, $default);
+            default:
+                return $default;
+        }
     }
 
     /**

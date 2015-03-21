@@ -40,7 +40,7 @@ class timelineDAO extends baseDAO
             trigger_error(__('You do not have permission to edit this Layout'), E_USER_ERROR);
 
         // Create a new region
-        $region = \Xibo\Factory\RegionFactory::create($this->user->userid, $layout->layout . '-' . (count($layout->regions) + 1), 250, 250, 50, 50);
+        $region = \Xibo\Factory\RegionFactory::create($this->user->userId, $layout->layout . '-' . (count($layout->regions) + 1), 250, 250, 50, 50);
 
         // Add the region to the layout
         $layout->regions[] = $region;
@@ -360,7 +360,7 @@ class timelineDAO extends baseDAO
                 trigger_error(__('You do not have permissions to use this media'), E_USER_ERROR);
 
             // Create a Widget and add it to our region
-            $widget = \Xibo\Factory\WidgetFactory::create($this->user->userid, $playlist->playlistId, $media->mediaType, $media->duration);
+            $widget = \Xibo\Factory\WidgetFactory::create($this->user->userId, $playlist->playlistId, $media->mediaType, $media->duration);
             $widget->assignMedia($mediaId);
 
             $playlist->widgets[] = $widget;
