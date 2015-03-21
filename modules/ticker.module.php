@@ -17,7 +17,11 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- */ 
+ */
+use Xibo\Helper\Date;
+use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Theme;
+
 class ticker extends Module
 {
     /**
@@ -53,7 +57,7 @@ class ticker extends Module
      */
     public function AddForm()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         // Configure form
         $this->configureForm('AddMedia');
@@ -123,7 +127,7 @@ class ticker extends Module
      */
     public function EditForm()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         // Edit calls are the same as add calls, except you will to check the user has permissions to do the edit
         if (!$this->auth->edit)
@@ -394,7 +398,7 @@ class ticker extends Module
      */
     public function AddMedia()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         // Other properties
         $sourceId = \Kit::GetParam('sourceid', _POST, _INT);
@@ -460,7 +464,7 @@ class ticker extends Module
      */
     public function EditMedia()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         if (!$this->auth->edit)
             throw new Exception(__('You do not have permission to edit this widget.'));
@@ -895,7 +899,7 @@ class ticker extends Module
                             break;
 
                         case '[Date]':
-                            $replace = DateManager::getLocalDate($item->get_date('U'), $dateFormat);
+                            $replace = Date::getLocalDate($item->get_date('U'), $dateFormat);
                             break;
 
                         case '[PermaLink]':

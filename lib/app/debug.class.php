@@ -18,6 +18,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\ApplicationState;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 class Debug
@@ -93,7 +95,7 @@ class Debug
         if (in_array($errno, $user_errors_halt)) 
         {
             // We have a halt error
-            $response = new ResponseManager();
+            $response = new ApplicationState();
             
             $response->SetError($errmsg);
             $response->Respond();

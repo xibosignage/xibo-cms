@@ -31,6 +31,8 @@
  * 	jumplist_arrow_direction = The Arrow for the List popout
  * 	jumplist_filter_name = The jump list filter name
  */
+use Xibo\Helper\Theme;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
 <div class="pull-right">

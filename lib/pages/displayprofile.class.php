@@ -18,6 +18,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\Date;
+use Xibo\Helper\Help;
+use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Theme;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 // Companion classes
@@ -34,7 +39,7 @@ class displayprofileDAO extends baseDAO {
         Theme::Set('id', $id);
         Theme::Set('form_meta', '<input type="hidden" name="p" value="displayprofile"><input type="hidden" name="q" value="Grid">');
         Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
-        Theme::Set('pager', ResponseManager::Pager($id));
+        Theme::Set('pager', ApplicationState::Pager($id));
 
         // Call to render the template
         Theme::Set('header_text', __('Display Setting Profiles'));
@@ -90,7 +95,7 @@ class displayprofileDAO extends baseDAO {
 
         $output = Theme::RenderReturn('table_render');
 
-        $response = new ResponseManager();
+        $response = new ApplicationState();
         $response->SetGridResponse($output);
         $response->Respond();
     }
@@ -124,7 +129,7 @@ class displayprofileDAO extends baseDAO {
 
         Theme::Set('form_fields', $formFields);
 
-        $response = new ResponseManager();
+        $response = new ApplicationState();
         $response->SetFormRequestResponse(NULL, 'Add Profile', '350px', '275px');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#ProfileForm").submit()');
@@ -132,7 +137,7 @@ class displayprofileDAO extends baseDAO {
     }
 
     public function Add() {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
         $displayProfile = new DisplayProfile();
         $displayProfile->name = \Kit::GetParam('name', _POST, _STRING);
         $displayProfile->type = \Kit::GetParam('type', _POST, _STRING);
@@ -207,7 +212,7 @@ class displayprofileDAO extends baseDAO {
                 if ($setting['value'] == 0)
                     $validated = '00:00';
                 else {
-                    $validated = DateManager::getSystemDate($setting['value'] / 1000, 'H:i');
+                    $validated = Date::getSystemDate($setting['value'] / 1000, 'H:i');
                 }
             }
             else if (isset($setting['value']))
@@ -240,9 +245,9 @@ class displayprofileDAO extends baseDAO {
             Theme::Set('form_fields_' . $tab['id'], $formFields[$tab['id']]);
         }
 
-        $response = new ResponseManager();
+        $response = new ApplicationState();
         $response->SetFormRequestResponse(NULL, __('Edit Profile'), '650px', '350px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('DisplayProfile', 'Edit') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('DisplayProfile', 'Edit') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#DisplayConfigForm").submit()');
         $response->Respond();
@@ -253,7 +258,7 @@ class displayprofileDAO extends baseDAO {
         if (!Kit::CheckToken())
             trigger_error('Token does not match', E_USER_ERROR);
 
-        $response = new ResponseManager();
+        $response = new ApplicationState();
         
         // Create a form out of the config object.
         $displayProfile  = new DisplayProfile();
@@ -285,7 +290,7 @@ class displayprofileDAO extends baseDAO {
 
             // If we are a time picker, then process the received time
             if ($setting['fieldType'] == 'timePicker') {
-                $value = ($value == '00:00') ? '0' : DateManager::getTimestampFromTimeString($value) * 1000;
+                $value = ($value == '00:00') ? '0' : Date::getTimestampFromTimeString($value) * 1000;
             }
 
             // Add to the combined array
@@ -327,9 +332,9 @@ class displayprofileDAO extends baseDAO {
 
         Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to delete?'))));
         
-        $response  = new ResponseManager();
+        $response  = new ApplicationState();
         $response->SetFormRequestResponse(NULL, __('Delete Display Profile'), '350px', '175px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('DisplayProfile', 'Delete') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('DisplayProfile', 'Delete') . '")');
         $response->AddButton(__('No'), 'XiboDialogClose()');
         $response->AddButton(__('Yes'), '$("#DisplayProfileDeleteForm").submit()');
         $response->Respond();
@@ -344,7 +349,7 @@ class displayprofileDAO extends baseDAO {
         if (!Kit::CheckToken())
             trigger_error('Token does not match', E_USER_ERROR);
 
-        $response = new ResponseManager();
+        $response = new ApplicationState();
         
         $displayProfile  = new DisplayProfile();
         $displayProfile->displayProfileId = \Kit::GetParam('displayprofileid', _POST, _INT);

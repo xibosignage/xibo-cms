@@ -18,6 +18,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\Help;
+use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Theme;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 class transitionDAO extends baseDAO {
@@ -33,7 +37,7 @@ class transitionDAO extends baseDAO {
         $id = uniqid();
         Theme::Set('id', $id);
         Theme::Set('form_meta', '<input type="hidden" name="p" value="transition"><input type="hidden" name="q" value="Grid">');
-        Theme::Set('pager', ResponseManager::Pager($id));
+        Theme::Set('pager', ApplicationState::Pager($id));
 
         // Call to render the template
         Theme::Set('header_text', __('Transitions'));
@@ -45,7 +49,7 @@ class transitionDAO extends baseDAO {
     {
         $db =& $this->db;
         $user =& $this->user;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $SQL = '';
         $SQL .= 'SELECT TransitionID, ';
@@ -114,8 +118,8 @@ class transitionDAO extends baseDAO {
     {
         $db =& $this->db;
         $user =& $this->user;
-        $response = new ResponseManager();
-        $helpManager = new HelpManager($db, $user);
+        $response = new ApplicationState();
+        $helpManager = new Help($db, $user);
 
         // Can we edit?
         if (Config::GetSetting('TRANSITION_CONFIG_LOCKED_CHECKB') == 'Checked')
@@ -175,7 +179,7 @@ class transitionDAO extends baseDAO {
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         // Can we edit?
         if (Config::GetSetting('TRANSITION_CONFIG_LOCKED_CHECKB') == 'Checked')

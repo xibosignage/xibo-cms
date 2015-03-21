@@ -19,6 +19,8 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+use Xibo\Helper\Theme;
+
 define('SCHEDULEDTASK', true);
 define('XIBO', true);
 

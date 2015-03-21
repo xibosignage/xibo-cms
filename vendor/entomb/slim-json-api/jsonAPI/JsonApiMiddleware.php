@@ -20,21 +20,18 @@
  * @license GNU General Public License, version 3
  * @filesource
  */
-class JsonApiMiddleware extends \Slim\Middleware {
-
-
+class JsonApiMiddleware extends \Slim\Middleware
+{
     /**
-     * Sets a buch of static API calls
+     * Sets a bunch of static API calls
      *
      */
     function __construct(){
 
         $app = \Slim\Slim::getInstance();
-        $app->config('debug', false);
 
         // Mirrors the API request
         $app->get('/return', function() use ($app) {
-
             $app->render(200,array(
                 'method'    => $app->request()->getMethod(),
                 'name'      => $app->request()->get('name'),
@@ -45,8 +42,6 @@ class JsonApiMiddleware extends \Slim\Middleware {
 
         // Generic error handler
         $app->error(function (Exception $e) use ($app) {
-
-
             $app->render(500,array(
                 'error' => true,
                 'msg'   => \JsonApiMiddleware::_errorType($e->getCode()) .": ". $e->getMessage(),
@@ -82,11 +77,13 @@ class JsonApiMiddleware extends \Slim\Middleware {
     /**
      * Call next
      */
-    function call(){
+    function call()
+    {
         return $this->next->call();
     }
 
-    static function _errorType($type=1){
+    static function _errorType($type=1)
+    {
         switch($type)
         {
             default:
@@ -122,5 +119,4 @@ class JsonApiMiddleware extends \Slim\Middleware {
                 return 'USER_DEPRECATED';
         }
     }
-
 }

@@ -21,6 +21,9 @@
  */ 
 include_once('modules/3rdparty/forecast.php');
 use Forecast\Forecast;
+use Xibo\Helper\Date;
+use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Theme;
 
 class ForecastIo extends Module
 {
@@ -122,7 +125,7 @@ class ForecastIo extends Module
      */
     public function AddForm()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         // You also have access to $settings, which is the array of settings you configured for your module.
         // Augment settings with templates
@@ -227,7 +230,7 @@ class ForecastIo extends Module
      */
     public function AddMedia()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
 
         // You can store any additional options for your module using the SetOption method
@@ -263,7 +266,7 @@ class ForecastIo extends Module
      */
     public function EditForm()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         if (!$this->auth->edit)
             throw new Exception(__('You do not have permission to edit this widget.'));
@@ -375,7 +378,7 @@ class ForecastIo extends Module
      */
     public function EditMedia()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         if (!$this->auth->edit)
             throw new Exception(__('You do not have permission to edit this widget.'));
@@ -415,7 +418,7 @@ class ForecastIo extends Module
 
     /**
      * Set any field dependencies
-     * @param ResponseManager $response
+     * @param ApplicationState $response
      */
     private function SetFieldDepencencies(&$response)
     {
@@ -530,7 +533,7 @@ class ForecastIo extends Module
         $rows = array();
         foreach ($data['currently'] as $key => $value) {
             if (stripos($key, 'time')) {
-                $value = DateManager::getLocalDate($value);
+                $value = Date::getLocalDate($value);
             }
 
             $rows[] = array('forecast' => __('Current'), 'key' => $key, 'value' => $value);
@@ -538,7 +541,7 @@ class ForecastIo extends Module
 
         foreach ($data['daily']['data'][0] as $key => $value) {
             if (stripos($key, 'time')) {
-                $value = DateManager::getLocalDate($value);
+                $value = Date::getLocalDate($value);
             }
 
             $rows[] = array('forecast' => __('Daily'), 'key' => $key, 'value' => $value);
@@ -649,7 +652,7 @@ class ForecastIo extends Module
             if (stripos($replace, 'time|') > -1) {
                 $timeSplit = explode('|', $replace);
 
-                $time = DateManager::getLocalDate($data['time'], $timeSplit[1]);
+                $time = Date::getLocalDate($data['time'], $timeSplit[1]);
 
                 // Pull time out of the array
                 $source = str_replace($sub, $time, $source);

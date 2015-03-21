@@ -18,6 +18,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\ApplicationState;
+
 class image extends Module
 {
     /**
@@ -25,7 +27,7 @@ class image extends Module
      */
     public function EditForm() {
 
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         // Provide some extra form fields
         $formFields = array();

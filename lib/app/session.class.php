@@ -328,9 +328,9 @@ class Session {
 		}
 	}
 	
-	public static function Set($key, $value)
+	public static function Set($key, $secondKey, $value)
 	{
-		$_SESSION[$key] = $value;
+		$_SESSION[$key][$secondKey] = $value;
 	}
         
     /**

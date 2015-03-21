@@ -18,6 +18,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\Help;
+use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Theme;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 abstract class Module implements ModuleInterface
@@ -266,7 +270,7 @@ abstract class Module implements ModuleInterface
 
     /**
      * Configure form buttons
-     * @param ResponseManager &$response
+     * @param ApplicationState &$response
      */
     final protected function configureFormButtons(&$response)
     {
@@ -300,12 +304,12 @@ abstract class Module implements ModuleInterface
     /**
      * Basic Edit Form
      * @param array $extraFormFields
-     * @param ResponseManager $response
+     * @param ApplicationState $response
      */
     public function baseEditForm($extraFormFields = null, $response = null)
     {
         if ($response == null)
-            $response = new ResponseManager();
+            $response = new ApplicationState();
 
         $this->configureForm('EditMedia');
 
@@ -338,7 +342,7 @@ abstract class Module implements ModuleInterface
      */
     public function EditMedia()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         // Can this user delete?
         if (!$this->auth->edit)
@@ -363,8 +367,8 @@ abstract class Module implements ModuleInterface
      */
     public function DeleteForm()
     {
-        $response = new ResponseManager();
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Media', 'Delete') . '")');
+        $response = new ApplicationState();
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Media', 'Delete') . '")');
 
         // Can this user delete?
         if (!$this->auth->delete)
@@ -397,7 +401,7 @@ abstract class Module implements ModuleInterface
      */
     public function DeleteMedia()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         // Can this user delete?
         if (!$this->auth->delete)
@@ -515,7 +519,7 @@ abstract class Module implements ModuleInterface
      */
     public function TransitionEditForm()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         if (!$this->auth->edit)
         {
@@ -628,7 +632,7 @@ abstract class Module implements ModuleInterface
      */
     public function TransitionEdit()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         if (!$this->auth->edit)
             throw new Exception(__('You do not have permission to edit this media.'));

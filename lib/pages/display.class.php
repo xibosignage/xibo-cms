@@ -18,6 +18,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\Date;
+use Xibo\Helper\Help;
+use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Theme;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 class displayDAO extends baseDAO
@@ -42,7 +47,7 @@ class displayDAO extends baseDAO
         Theme::Set('id', $id);
         Theme::Set('form_meta', '<input type="hidden" name="p" value="display"><input type="hidden" name="q" value="DisplayGrid">');
         Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
-        Theme::Set('pager', ResponseManager::Pager($id));
+        Theme::Set('pager', ApplicationState::Pager($id));
 
         // Default options
         if (\Kit::IsFilterPinned('display', 'DisplayFilter')) {
@@ -130,7 +135,7 @@ class displayDAO extends baseDAO
         if (!Kit::CheckToken())
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $displayObject  = new Display();
         $displayObject->displayId = \Kit::GetParam('displayid', _POST, _INT);
@@ -172,7 +177,7 @@ class displayDAO extends baseDAO
      */
     function displayForm()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         // Get the display Id
         $displayObject = new Display();
@@ -336,7 +341,7 @@ class displayDAO extends baseDAO
                 }
             }
             else if ($profile[$i]['fieldType'] == 'timePicker') {
-                $profile[$i]['valueString'] = DateManager::getSystemDate($profile[$i]['value'] / 1000, 'H:i');
+                $profile[$i]['valueString'] = Date::getSystemDate($profile[$i]['value'] / 1000, 'H:i');
             }
         }
 
@@ -357,7 +362,7 @@ class displayDAO extends baseDAO
         Theme::Set('form_tabs', $tabs);
 
         $response->SetFormRequestResponse(NULL, __('Edit a Display'), '650px', '350px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Display', 'Edit') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Display', 'Edit') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#DisplayEditForm").submit()');
         $response->Respond();
@@ -374,30 +379,30 @@ class displayDAO extends baseDAO
 
         $db         =& $this->db;
         $user       =& $this->user;
-        $response   = new ResponseManager();
+        $response   = new ApplicationState();
         
         // Filter by Name
         $filter_display = \Kit::GetParam('filter_display', _POST, _STRING);
-        setSession('display', 'filter_display', $filter_display);
+        \Session::Set('display', 'filter_display', $filter_display);
 
         // Filter by Name
         $filterMacAddress = \Kit::GetParam('filterMacAddress', _POST, _STRING);
-        setSession('display', 'filterMacAddress', $filterMacAddress);
+        \Session::Set('display', 'filterMacAddress', $filterMacAddress);
         
         // Display Group
         $filter_displaygroupid = \Kit::GetParam('filter_displaygroup', _POST, _INT);
-        setSession('display', 'filter_displaygroup', $filter_displaygroupid);
+        \Session::Set('display', 'filter_displaygroup', $filter_displaygroupid);
 
         // Thumbnail?
         $filter_showView = \Kit::GetParam('filter_showView', _REQUEST, _INT);
-        setSession('display', 'filter_showView', $filter_showView);
+        \Session::Set('display', 'filter_showView', $filter_showView);
 
         // filter_autoRefresh?
         $filter_autoRefresh = \Kit::GetParam('filter_autoRefresh', _REQUEST, _INT, 0);
-        setSession('display', 'filter_autoRefresh', $filter_autoRefresh);
+        \Session::Set('display', 'filter_autoRefresh', $filter_autoRefresh);
 
         // Pinned option?        
-        setSession('display', 'DisplayFilter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        \Session::Set('display', 'DisplayFilter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 
         $displays = $user->DisplayList(array('displayid'), array('displaygroupid' => $filter_displaygroupid, 'display' => $filter_display, 'macAddress' => $filterMacAddress));
 
@@ -450,7 +455,7 @@ class displayDAO extends baseDAO
             }
 
             // Format last accessed
-            $row['lastaccessed'] = DateManager::getLocalDate($row['lastaccessed']);
+            $row['lastaccessed'] = Date::getLocalDate($row['lastaccessed']);
 
             // Create some login lights
             $row['rowColor'] = ($row['mediainventorystatus'] == 1) ? 'success' : (($row['mediainventorystatus'] == 2) ? 'danger' : 'warning');
@@ -627,7 +632,7 @@ class displayDAO extends baseDAO
     {
         $db =& $this->db;
         $user =& $this->user;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
         $displayid = \Kit::GetParam('displayid', _REQUEST, _INT);
 
         // Auth
@@ -642,7 +647,7 @@ class displayDAO extends baseDAO
         Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to delete this display? This cannot be undone.'))));
 
         $response->SetFormRequestResponse(NULL, __('Delete this Display?'), '350px', '210');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Display', 'Delete') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Display', 'Delete') . '")');
         $response->AddButton(__('No'), 'XiboDialogClose()');
         $response->AddButton(__('Yes'), '$("#DisplayDeleteForm").submit()');
         $response->Respond();
@@ -658,7 +663,7 @@ class displayDAO extends baseDAO
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
         $displayid = \Kit::GetParam('displayid', _POST, _INT, 0);
 
         $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayid), true);
@@ -683,7 +688,7 @@ class displayDAO extends baseDAO
     public function DefaultLayoutForm()
     {
         $db =& $this->db;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $displayId = \Kit::GetParam('DisplayId', _GET, _INT);
 
@@ -715,7 +720,7 @@ class displayDAO extends baseDAO
         Theme::Set('form_fields', $formFields);
 
         $response->SetFormRequestResponse(NULL, __('Edit Default Layout'), '300px', '150px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Display', 'DefaultLayout') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Display', 'DefaultLayout') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#DefaultLayoutForm").submit()');
         $response->Respond();
@@ -731,7 +736,7 @@ class displayDAO extends baseDAO
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
         $displayObject  = new Display($db);
 
         $displayId = \Kit::GetParam('DisplayId', _POST, _INT);
@@ -754,7 +759,7 @@ class displayDAO extends baseDAO
     public function MediaInventory()
     {
         $db =& $this->db;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
         $displayId = \Kit::GetParam('DisplayId', _GET, _INT);
 
         $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayId), true);
@@ -810,7 +815,7 @@ class displayDAO extends baseDAO
         Theme::Set('table_rows', $rows);
 
         $response->SetFormRequestResponse(Theme::RenderReturn('table_render'), __('Media Inventory'), '550px', '350px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Display', 'MediaInventory') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Display', 'MediaInventory') . '")');
         $response->AddButton(__('Close'), 'XiboDialogClose()');
         $response->Respond();
     }
@@ -841,7 +846,7 @@ class displayDAO extends baseDAO
     public function MemberOfForm()
     {
         $db =& $this->db;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
         $displayID  = \Kit::GetParam('DisplayID', _REQUEST, _INT);
 
         // Auth
@@ -909,7 +914,7 @@ class displayDAO extends baseDAO
         $form = Theme::RenderReturn('display_form_group_assign');
 
         $response->SetFormRequestResponse($form, __('Manage Membership'), '400', '375', 'DisplayGroupManageMembersCallBack');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('DisplayGroup', 'Members') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('DisplayGroup', 'Members') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), 'DisplayGroupMembersSubmit()');
         $response->Respond();
@@ -922,7 +927,7 @@ class displayDAO extends baseDAO
     public function SetMemberOf()
     {
         $db =& $this->db;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         \Kit::ClassLoader('displaygroup');
         $displayGroupObject = new DisplayGroup($db);
@@ -987,7 +992,7 @@ class displayDAO extends baseDAO
     public function WakeOnLanForm()
     {
         $db =& $this->db;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $displayId = \Kit::GetParam('DisplayId', _GET, _INT);
 
@@ -1020,7 +1025,7 @@ class displayDAO extends baseDAO
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
         $displayObject  = new Display($db);
 
         $displayId = \Kit::GetParam('DisplayId', _POST, _INT);
@@ -1065,7 +1070,7 @@ class displayDAO extends baseDAO
 
     public function RequestScreenShotForm() {
         $db =& $this->db;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $displayId = \Kit::GetParam('displayId', _GET, _INT);
 
@@ -1088,7 +1093,7 @@ class displayDAO extends baseDAO
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
         $displayObject  = new Display($db);
 
         $displayId = \Kit::GetParam('displayId', _POST, _INT);

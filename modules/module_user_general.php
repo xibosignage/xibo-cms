@@ -18,7 +18,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
- defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
+use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Theme;
+
+defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
  
 class User {
     private $db;
@@ -67,7 +70,7 @@ class User {
             if ($ajax) 
             {
                 //create the AJAX request object
-                $response = new ResponseManager();
+                $response = new ApplicationState();
 
                 $response->Login();
                 $response->Respond();

@@ -18,6 +18,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\Help;
+use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Theme;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 class oauthDAO extends baseDAO {
@@ -31,7 +35,7 @@ class oauthDAO extends baseDAO {
         $id = uniqid();
         Theme::Set('id', $id);
         Theme::Set('form_meta', '<input type="hidden" name="p" value="oauth"><input type="hidden" name="q" value="Grid">');
-        Theme::Set('pager', ResponseManager::Pager($id));
+        Theme::Set('pager', ApplicationState::Pager($id));
 
         // Call to render the template
         Theme::Set('header_text', __('Applications'));
@@ -66,7 +70,7 @@ class oauthDAO extends baseDAO {
     {
         $db =& $this->db;
         $user =& $this->user;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $store = OAuthStore::instance();
 
@@ -117,7 +121,7 @@ class oauthDAO extends baseDAO {
     {
         $db         =& $this->db;
         $user       =& $this->user;
-        $response   = new ResponseManager();
+        $response   = new ApplicationState();
 
         $store = OAuthStore::instance();
 
@@ -218,7 +222,7 @@ class oauthDAO extends baseDAO {
     {
         $db 		=& $this->db;
         $user		=& $this->user;
-        $response	= new ResponseManager();
+        $response	= new ApplicationState();
 
         Theme::Set('form_id', 'RegisterOAuth');
         Theme::Set('form_action', 'index.php?p=oauth&q=Register');
@@ -256,7 +260,7 @@ class oauthDAO extends baseDAO {
         
         $db =& $this->db;
         $user =& $this->user;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
         $userid = \Kit::GetParam('userid', _SESSION, _INT);
 
         $message = '';
@@ -287,7 +291,7 @@ class oauthDAO extends baseDAO {
     {
         $db         =& $this->db;
         $user       =& $this->user;
-        $response   = new ResponseManager();
+        $response   = new ApplicationState();
 
         $store = OAuthStore::instance();
 
@@ -317,7 +321,7 @@ class oauthDAO extends baseDAO {
         $output = Theme::RenderReturn('application_form_user_applications');
 
         $response->SetFormRequestResponse($output, __('Authorized applications for user'), '650', '450');
-        $response->AddButton(__('Help'), "XiboHelpRender('" . HelpManager::Link('User', 'Applications') . "')");
+        $response->AddButton(__('Help'), "XiboHelpRender('" . Help::Link('User', 'Applications') . "')");
         $response->AddButton(__('Close'), 'XiboDialogClose()');
         $response->Respond();
     }

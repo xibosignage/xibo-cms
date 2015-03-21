@@ -18,6 +18,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\Date;
+use Xibo\Helper\Help;
+use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Theme;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
  
 class logDAO extends baseDAO {
@@ -31,7 +36,7 @@ class logDAO extends baseDAO {
         Theme::Set('id', 'LogGridForRefresh');
         Theme::Set('form_meta', '<input type="hidden" name="p" value="log"><input type="hidden" name="q" value="Grid">');
         Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
-        Theme::Set('pager', ResponseManager::Pager('LogGridForRefresh'));
+        Theme::Set('pager', ApplicationState::Pager('LogGridForRefresh'));
         
         // Construct Filter Form
         if (\Kit::IsFilterPinned('log', 'Filter')) {
@@ -147,7 +152,7 @@ class logDAO extends baseDAO {
 	{
 		$db 		=& $this->db;
 		$user		=& $this->user;
-		$response	= new ResponseManager();
+		$response	= new ApplicationState();
 		
 		$type 		= \Kit::GetParam('filter_type', _REQUEST, _INT, 0);
 		$function 	= \Kit::GetParam('filter_function', _REQUEST, _STRING);
@@ -157,21 +162,21 @@ class logDAO extends baseDAO {
         $seconds    = \Kit::GetParam('filter_seconds', _POST, _INT, 120);
 		$filter_intervalTypeId = \Kit::GetParam('filter_intervalTypeId', _POST, _INT, 1);
                 
-        setSession('log', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
-        setSession('log', 'filter_type', $type);
-        setSession('log', 'filter_function', $function);
-        setSession('log', 'filter_page', $page);
-        setSession('log', 'filter_fromdt', $fromdt);
-        setSession('log', 'filter_display', $displayid);
-        setSession('log', 'filter_seconds', $seconds);
-        setSession('log', 'filter_intervalTypeId', $filter_intervalTypeId);
+        \Session::Set('log', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        \Session::Set('log', 'filter_type', $type);
+        \Session::Set('log', 'filter_function', $function);
+        \Session::Set('log', 'filter_page', $page);
+        \Session::Set('log', 'filter_fromdt', $fromdt);
+        \Session::Set('log', 'filter_display', $displayid);
+        \Session::Set('log', 'filter_seconds', $seconds);
+        \Session::Set('log', 'filter_intervalTypeId', $filter_intervalTypeId);
 		
 		//get the dates and times
 		if ($fromdt == '') {
 			$starttime_timestamp = time();
 		}
 		else {
-			$start_date = DateManager::getTimestampFromString($fromdt);
+			$start_date = Date::getTimestampFromString($fromdt);
 			$starttime_timestamp = strtotime($start_date[1] . "/" . $start_date[0] . "/" . $start_date[2] . ' ' . date("H", time()) . ":" . date("i", time()) . ':59');
 		}
 
@@ -220,7 +225,7 @@ class logDAO extends baseDAO {
 		foreach ($log as $row) { 
 
             $row['logid'] = \Kit::ValidateParam($row['logid'], _INT);
-			$row['logdate'] = DateManager::getLocalDate(strtotime(Kit::ValidateParam($row['logdate'], _STRING)), 'y-m-d h:i:s');
+			$row['logdate'] = Date::getLocalDate(strtotime(Kit::ValidateParam($row['logdate'], _STRING)), 'y-m-d h:i:s');
             $row['display'] = (\Kit::ValidateParam($row['display'], _STRING) == '') ? __('CMS') : \Kit::ValidateParam($row['display'], _STRING);
 			$row['page'] = \Kit::ValidateParam($row['page'], _STRING);
 			$row['function'] = \Kit::ValidateParam($row['function'], _STRING);
@@ -241,7 +246,7 @@ class logDAO extends baseDAO {
 	}
 
 	function LastHundredForDisplay() {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
         $displayId = \Kit::GetParam('displayid', _GET, _INT);
 
         try {
@@ -298,7 +303,7 @@ class logDAO extends baseDAO {
 	public function TruncateForm() {
 		$db =& $this->db;
         $user =& $this->user;
-		$response = new ResponseManager();
+		$response = new ApplicationState();
 
 		if ($this->user->usertypeid != 1)
 			trigger_error(__('Only Administrator Users can truncate the log'), E_USER_ERROR);
@@ -310,7 +315,7 @@ class logDAO extends baseDAO {
         Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to truncate?'))));
 
 		$response->SetFormRequestResponse(NULL, __('Truncate Log'), '430px', '200px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Log', 'Truncate') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Log', 'Truncate') . '")');
 		$response->AddButton(__('No'), 'XiboDialogClose()');
 		$response->AddButton(__('Yes'), '$("#TruncateForm").submit()');
 		$response->Respond();
@@ -330,7 +335,7 @@ class logDAO extends baseDAO {
 		
 		PDOConnect::update('TRUNCATE TABLE log', array());
 		
-		$response = new ResponseManager();
+		$response = new ApplicationState();
 		$response->SetFormSubmitResponse('Log Truncated');
         $response->Respond();
 	}

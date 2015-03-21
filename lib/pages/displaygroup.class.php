@@ -18,6 +18,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\Help;
+use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Theme;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 include_once('lib/data/displaygroup.data.class.php');
@@ -35,7 +39,7 @@ class displaygroupDAO extends baseDAO
         Theme::Set('id', $id);
         Theme::Set('form_meta', '<input type="hidden" name="p" value="displaygroup"><input type="hidden" name="q" value="Grid">');
         Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
-        Theme::Set('pager', ResponseManager::Pager($id));
+        Theme::Set('pager', ApplicationState::Pager($id));
 
         // Call to render the template
         Theme::Set('header_text', __('Display Groups'));
@@ -64,7 +68,7 @@ class displaygroupDAO extends baseDAO
     {
         $db =& $this->db;
         $user =& $this->user;
-        $response   = new ResponseManager();
+        $response   = new ApplicationState();
 
         $displayGroups = $this->user->DisplayGroupList();
 
@@ -156,7 +160,7 @@ class displaygroupDAO extends baseDAO
     {
         $db =& $this->db;
         $user =& $this->user;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
         
         Theme::Set('form_id', 'DisplayGroupAddForm');
         Theme::Set('form_action', 'index.php?p=displaygroup&q=Add');
@@ -170,7 +174,7 @@ class displaygroupDAO extends baseDAO
         Theme::Set('form_fields', $formFields);
 
         $response->SetFormRequestResponse(NULL, __('Add Display Group'), '350px', '275px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('DisplayGroup', 'Add') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('DisplayGroup', 'Add') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#DisplayGroupAddForm").submit()');
         $response->Respond();
@@ -183,8 +187,8 @@ class displaygroupDAO extends baseDAO
     {
         $db             =& $this->db;
         $user           =& $this->user;
-        $response       = new ResponseManager();
-        $helpManager    = new HelpManager($db, $user);
+        $response       = new ApplicationState();
+        $helpManager    = new Help($db, $user);
         
         $displayGroupID = \Kit::GetParam('DisplayGroupID', _REQUEST, _INT);
 
@@ -221,7 +225,7 @@ class displaygroupDAO extends baseDAO
         Theme::Set('form_fields', $formFields);
 
         $response->SetFormRequestResponse(NULL, __('Edit Display Group'), '350px', '275px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('DisplayGroup', 'Edit') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('DisplayGroup', 'Edit') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#DisplayGroupEditForm").submit()');
         $response->Respond();
@@ -233,7 +237,7 @@ class displaygroupDAO extends baseDAO
     function DeleteForm() 
     {
         $db             =& $this->db;
-        $response       = new ResponseManager();
+        $response       = new ApplicationState();
         $displayGroupID = \Kit::GetParam('DisplayGroupID', _REQUEST, _INT);
 
         // Auth
@@ -249,7 +253,7 @@ class displaygroupDAO extends baseDAO
         Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to delete this display? This cannot be undone.'))));
         
         $response->SetFormRequestResponse(NULL, __('Delete Display Group'), '350px', '175px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('DisplayGroup', 'Delete') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('DisplayGroup', 'Delete') . '")');
         $response->AddButton(__('No'), 'XiboDialogClose()');
         $response->AddButton(__('Yes'), '$("#DisplayGroupDeleteForm").submit()');
         $response->Respond();
@@ -261,7 +265,7 @@ class displaygroupDAO extends baseDAO
     public function MembersForm()
     {
         $db             =& $this->db;
-        $response       = new ResponseManager();
+        $response       = new ApplicationState();
         $displayGroupID = \Kit::GetParam('DisplayGroupID', _REQUEST, _INT);
         
         // There needs to be two lists here.
@@ -326,7 +330,7 @@ class displaygroupDAO extends baseDAO
         $form = Theme::RenderReturn('displaygroup_form_display_assign');
 
         $response->SetFormRequestResponse($form, __('Manage Membership'), '400', '375', 'DisplayGroupManageMembersCallBack');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('DisplayGroup', 'Members') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('DisplayGroup', 'Members') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), 'DisplayGroupMembersSubmit()');
         $response->Respond();
@@ -343,7 +347,7 @@ class displaygroupDAO extends baseDAO
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $displayGroup = \Kit::GetParam('group', _POST, _STRING);
         $description = \Kit::GetParam('desc', _POST, _STRING);
@@ -376,7 +380,7 @@ class displaygroupDAO extends baseDAO
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db             =& $this->db;
-        $response       = new ResponseManager();
+        $response       = new ApplicationState();
 
         $displayGroupID = \Kit::GetParam('DisplayGroupID', _POST, _INT);
         $displayGroup   = \Kit::GetParam('group', _POST, _STRING);
@@ -410,7 +414,7 @@ class displaygroupDAO extends baseDAO
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db             =& $this->db;   
-        $response       = new ResponseManager();
+        $response       = new ApplicationState();
     
         $displayGroupID = \Kit::GetParam('DisplayGroupID', _POST, _INT);
 
@@ -438,7 +442,7 @@ class displaygroupDAO extends baseDAO
     public function SetMembers()
     {
         $db             =& $this->db;   
-        $response       = new ResponseManager();
+        $response       = new ApplicationState();
         $displayGroupObject = new DisplayGroup($db);
     
         $displayGroupID = \Kit::GetParam('DisplayGroupID', _REQUEST, _INT);
@@ -507,8 +511,8 @@ class displaygroupDAO extends baseDAO
     {
         $db =& $this->db;
         $user =& $this->user;
-        $response = new ResponseManager();
-        $helpManager = new HelpManager($db, $user);
+        $response = new ApplicationState();
+        $helpManager = new Help($db, $user);
 
         $displayGroupId = \Kit::GetParam('DisplayGroupID', _GET, _INT);
 
@@ -557,7 +561,7 @@ class displaygroupDAO extends baseDAO
         Theme::Set('form_fields', $formFields);
 
         $response->SetFormRequestResponse(NULL, __('Permissions'), '350px', '500px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('DisplayGroup', 'Permissions') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('DisplayGroup', 'Permissions') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#DisplayGroupPermissionsForm").submit()');
         $response->Respond();
@@ -574,7 +578,7 @@ class displaygroupDAO extends baseDAO
         
         $db =& $this->db;
         $user =& $this->user;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $displayGroupId = \Kit::GetParam('displayGroupId', _POST, _INT);
         $groupIds = \Kit::GetParam('groupids', _POST, _ARRAY);
@@ -662,7 +666,7 @@ class displaygroupDAO extends baseDAO
         $id = uniqid();
         Theme::Set('id', $id);
         Theme::Set('form_meta', '<input type="hidden" name="p" value="displaygroup"><input type="hidden" name="q" value="FileAssociationsView"><input type="hidden" name="displaygroupid" value="' . $displayGroupId . '">');
-        Theme::Set('pager', ResponseManager::Pager($id, 'grid_pager'));
+        Theme::Set('pager', ApplicationState::Pager($id, 'grid_pager'));
         
         // Module types filter
         $modules = $this->user->ModuleAuth(0, '', -1);
@@ -709,7 +713,7 @@ class displaygroupDAO extends baseDAO
         $output = Theme::RenderReturn('displaygroup_fileassociations_form_assign');
 
         // Construct the Response
-        $response = new ResponseManager();
+        $response = new ApplicationState();
         $response->html = $output;
         $response->success = true;
         $response->dialogSize = true;
@@ -718,7 +722,7 @@ class displaygroupDAO extends baseDAO
         $response->dialogHeight = '580px';
         $response->dialogTitle = __('Associate an item from the Library');
 
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('DisplayGroup', 'FileAssociations') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('DisplayGroup', 'FileAssociations') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Assign'), 'FileAssociationsSubmit(' . $displayGroupId  . ')');
         $response->Respond();
@@ -774,7 +778,7 @@ class displaygroupDAO extends baseDAO
         Theme::Set('table_rows', $rows);
 
         // Render the Theme
-        $response = new ResponseManager();
+        $response = new ApplicationState();
         $response->SetGridResponse(Theme::RenderReturn('displaygroup_fileassociations_form_assign_list'));
         $response->callBack = 'FileAssociationsCallback';
         $response->pageSize = 5;
@@ -783,7 +787,7 @@ class displaygroupDAO extends baseDAO
 
     public function SetFileAssociations() {
         $user       =& $this->user;
-        $response   = new ResponseManager();
+        $response   = new ApplicationState();
 
         $displayGroupId = \Kit::GetParam('displaygroupid', _GET, _INT);
         $mediaList = \Kit::GetParam('MediaID', _POST, _ARRAY_INT, NULL, false);
@@ -808,7 +812,7 @@ class displaygroupDAO extends baseDAO
     }
 
     public function VersionInstructionsForm() {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $displayGroupId = \Kit::GetParam('displaygroupid', _GET, _INT);
         $displayId = \Kit::GetParam('displayid', _GET, _INT);
@@ -859,7 +863,7 @@ class displaygroupDAO extends baseDAO
     }
 
     public function VersionInstructions() {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         \Kit::ClassLoader('media');
         \Kit::ClassLoader('display');

@@ -289,7 +289,7 @@ class Layout
         $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, status, width, height, schemaVersion, backgroundImageId, backgroundColor, backgroundzIndex)
                   VALUES (:layout, :description, :userid, :createddt, :modifieddt, :status, :width, :height, 3, :backgroundImageId, :backgroundColor, :backgroundzIndex)';
 
-        $time = \DateManager::getSystemDate(null, 'Y-m-d h:i:s');
+        $time = \Xibo\Helper\Date::getSystemDate(null, 'Y-m-d h:i:s');
 
         $this->layoutId = \Xibo\Storage\PDOConnect::insert($sql, array(
             'layout' => $this->layout,
@@ -326,7 +326,7 @@ class Layout
          WHERE layoutID = :layoutid
         ';
 
-        $time = \DateManager::getSystemDate(null, 'Y-m-d h:i:s');
+        $time = \Xibo\Helper\Date::getSystemDate(null, 'Y-m-d h:i:s');
 
         \Xibo\Storage\PDOConnect::update($sql, array(
             'layoutid' => $this->layoutId,

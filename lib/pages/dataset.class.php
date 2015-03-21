@@ -18,6 +18,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\Help;
+use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Theme;
+
 defined('XIBO') or die('Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.');
 
 Kit::ClassLoader('dataset');
@@ -50,7 +54,7 @@ class datasetDAO extends baseDAO
             $id = uniqid();
             Theme::Set('id', $id);
             Theme::Set('form_meta', '<input type="hidden" name="p" value="dataset"><input type="hidden" name="q" value="DataSetGrid">');
-            Theme::Set('pager', ResponseManager::Pager($id));
+            Theme::Set('pager', ApplicationState::Pager($id));
 
             // Call to render the template
             Theme::Set('header_text', __('DataSets'));
@@ -91,7 +95,7 @@ class datasetDAO extends baseDAO
     {
         $db =& $this->db;
         $user =& $this->user;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $cols = array(
                 array('name' => 'dataset', 'title' => __('Name')),
@@ -177,7 +181,7 @@ class datasetDAO extends baseDAO
     {
         $db =& $this->db;
         $user =& $this->user;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         // Set some information about the form
         Theme::Set('form_id', 'AddDataSetForm');
@@ -193,7 +197,7 @@ class datasetDAO extends baseDAO
         Theme::Set('form_fields', $formFields);
 
         $response->SetFormRequestResponse(NULL, __('Add DataSet'), '350px', '275px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('DataSet', 'Add') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('DataSet', 'Add') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Add'), '$("#AddDataSetForm").submit()');
         $response->Respond();
@@ -210,7 +214,7 @@ class datasetDAO extends baseDAO
         
         $db =& $this->db;
         $user =& $this->user;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $dataSet = \Kit::GetParam('dataset', _POST, _STRING);
         $description = \Kit::GetParam('description', _POST, _STRING);
@@ -231,7 +235,7 @@ class datasetDAO extends baseDAO
     {
         $db =& $this->db;
         $user =& $this->user;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $dataSetId = \Kit::GetParam('datasetid', _GET, _INT);
 
@@ -260,7 +264,7 @@ class datasetDAO extends baseDAO
         Theme::Set('form_fields', $formFields);
 
         $response->SetFormRequestResponse(NULL, __('Edit DataSet'), '350px', '275px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('DataSet', 'Edit') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('DataSet', 'Edit') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#EditDataSetForm").submit()');
         $response->Respond();
@@ -274,7 +278,7 @@ class datasetDAO extends baseDAO
         
         $db =& $this->db;
         $user =& $this->user;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $dataSetId = \Kit::GetParam('datasetid', _POST, _INT);
 
@@ -300,7 +304,7 @@ class datasetDAO extends baseDAO
     public function DeleteDataSetForm()
     {
         $db =& $this->db;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
         
         $dataSetId = \Kit::GetParam('datasetid', _GET, _INT);
 
@@ -321,7 +325,7 @@ class datasetDAO extends baseDAO
         Theme::Set('form_fields', $formFields);
 
         $response->SetFormRequestResponse(NULL, __('Delete this DataSet?'), '350px', '200px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('DataSet', 'Delete') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('DataSet', 'Delete') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Delete'), '$("#DataSetDeleteForm").submit()');
         $response->Respond();
@@ -335,7 +339,7 @@ class datasetDAO extends baseDAO
         
         $db =& $this->db;
         $user =& $this->user;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $dataSetId = \Kit::GetParam('datasetid', _POST, _INT);
 
@@ -359,8 +363,8 @@ class datasetDAO extends baseDAO
     public function DataSetColumnsForm()
     {
         $db =& $this->db;
-        $response = new ResponseManager();
-        $helpManager = new HelpManager($db, $this->user);
+        $response = new ApplicationState();
+        $helpManager = new Help($db, $this->user);
 
         $dataSetId = \Kit::GetParam('datasetid', _GET, _INT);
         $dataSet = \Kit::GetParam('dataset', _GET, _STRING);
@@ -426,8 +430,8 @@ class datasetDAO extends baseDAO
     public function AddDataSetColumnForm()
     {
         $db =& $this->db;
-        $response = new ResponseManager();
-        $helpManager = new HelpManager($db, $this->user);
+        $response = new ApplicationState();
+        $helpManager = new Help($db, $this->user);
 
         $dataSetId = \Kit::GetParam('datasetid', _GET, _INT);
         $dataSet = \Kit::GetParam('dataset', _GET, _STRING);
@@ -482,7 +486,7 @@ class datasetDAO extends baseDAO
         
         $db =& $this->db;
         $user =& $this->user;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $dataSetId = \Kit::GetParam('datasetid', _POST, _INT);
         $dataSet = \Kit::GetParam('dataset', _POST, _STRING);
@@ -512,8 +516,8 @@ class datasetDAO extends baseDAO
     public function EditDataSetColumnForm()
     {
         $db =& $this->db;
-        $response = new ResponseManager();
-        $helpManager = new HelpManager($db, $this->user);
+        $response = new ApplicationState();
+        $helpManager = new Help($db, $this->user);
 
         $dataSetId = \Kit::GetParam('datasetid', _GET, _INT);
         $dataSetColumnId = \Kit::GetParam('datasetcolumnid', _GET, _INT);
@@ -588,7 +592,7 @@ class datasetDAO extends baseDAO
         
         $db =& $this->db;
         $user =& $this->user;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $dataSetId = \Kit::GetParam('datasetid', _POST, _INT);
         $dataSet = \Kit::GetParam('dataset', _POST, _STRING);
@@ -619,8 +623,8 @@ class datasetDAO extends baseDAO
     public function DeleteDataSetColumnForm()
     {
         $db =& $this->db;
-        $response = new ResponseManager();
-        $helpManager = new HelpManager($db, $this->user);
+        $response = new ApplicationState();
+        $helpManager = new Help($db, $this->user);
 
         $dataSetId = \Kit::GetParam('datasetid', _GET, _INT);
         $dataSet = \Kit::GetParam('dataset', _GET, _STRING);
@@ -653,7 +657,7 @@ class datasetDAO extends baseDAO
         
         $db =& $this->db;
         $user =& $this->user;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $dataSetId = \Kit::GetParam('datasetid', _POST, _INT);
         $dataSet = \Kit::GetParam('dataset', _POST, _STRING);
@@ -678,7 +682,7 @@ class datasetDAO extends baseDAO
     public function DataSetDataForm()
     {
         $db =& $this->db;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $dataSetId = \Kit::GetParam('datasetid', _POST, _INT);
         $dataSet = \Kit::GetParam('dataset', _POST, _STRING);
@@ -837,7 +841,7 @@ END;
     {
         $db =& $this->db;
         $user =& $this->user;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $response->uniqueReference = \Kit::GetParam('fieldid', _POST, _STRING);
         $dataSetId = \Kit::GetParam('datasetid', _POST, _INT);
@@ -864,7 +868,7 @@ END;
     {
         $db =& $this->db;
         $user =& $this->user;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $response->uniqueReference = \Kit::GetParam('fieldid', _POST, _STRING);
         $dataSetId = \Kit::GetParam('datasetid', _POST, _INT);
@@ -941,8 +945,8 @@ END;
     {
         $db =& $this->db;
         $user =& $this->user;
-        $response = new ResponseManager();
-        $helpManager = new HelpManager($db, $user);
+        $response = new ApplicationState();
+        $helpManager = new Help($db, $user);
 
         $dataSetId = \Kit::GetParam('datasetid', _GET, _INT);
 
@@ -1005,7 +1009,7 @@ END;
         
         $db =& $this->db;
         $user =& $this->user;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
         \Kit::ClassLoader('datasetgroupsecurity');
 
         $dataSetId = \Kit::GetParam('datasetid', _POST, _INT);
@@ -1085,7 +1089,7 @@ END;
     public function ImportCsvForm() {
         global $session;
         $db =& $this->db;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
         
         $dataSetId = \Kit::GetParam('datasetid', _GET, _INT);
         $dataSet = \Kit::GetParam('dataset', _GET, _STRING);
@@ -1154,7 +1158,7 @@ END;
         Theme::Set('form_fields', $formFields);
 
         $response->SetFormRequestResponse(NULL, __('CSV Import'), '350px', '200px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('DataSet', 'ImportCsv') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('DataSet', 'ImportCsv') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Import'), '$("#DataSetImportCsvForm").submit()');
         $response->Respond();
@@ -1163,7 +1167,7 @@ END;
     public function ImportCsv() {
 
         $db =& $this->db;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
         $dataSetId = \Kit::GetParam('datasetid', _POST, _INT);
         $overwrite = \Kit::GetParam('overwrite', _POST, _CHECKBOX);
         $ignorefirstrow = \Kit::GetParam('ignorefirstrow', _POST, _CHECKBOX);

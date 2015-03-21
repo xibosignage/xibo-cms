@@ -18,7 +18,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  *
- */ 
+ */
+use Xibo\Helper\Date;
+use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Theme;
+
 include_once('modules/3rdparty/emoji.php');
 
 class Twitter extends Module
@@ -143,7 +147,7 @@ class Twitter extends Module
      */
     public function AddForm()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         // Augment settings with templates
         $this->loadTemplates();
@@ -301,7 +305,7 @@ class Twitter extends Module
      */
     public function AddMedia()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         // You should validate all form input using the \Kit::GetParam helper classes
         if (\Kit::GetParam('searchTerm', _POST, _STRING) == '')
@@ -338,7 +342,7 @@ class Twitter extends Module
      */
     public function EditForm()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         // Edit calls are the same as add calls, except you will to check the user has permissions to do the edit
         if (!$this->auth->edit)
@@ -507,7 +511,7 @@ class Twitter extends Module
      */
     public function EditMedia()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         // Edit calls are the same as add calls, except you will to check the user has permissions to do the edit
         if (!$this->auth->edit)
@@ -549,7 +553,7 @@ class Twitter extends Module
 
     /**
      * Set field dependencies
-     * @param ResponseManager $response
+     * @param ApplicationState $response
      */
     private function setFieldDepencencies(&$response)
     {
@@ -848,7 +852,7 @@ class Twitter extends Module
                         break;
 
                     case '[Date]':
-                        $replace = date($this->GetOption('dateFormat', Config::GetSetting('DATE_FORMAT')), DateManager::getDateFromGregorianString($tweet->created_at));
+                        $replace = date($this->GetOption('dateFormat', Config::GetSetting('DATE_FORMAT')), Date::getDateFromGregorianString($tweet->created_at));
                         break;
 
                     case '[ProfileImage]':

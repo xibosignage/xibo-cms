@@ -17,7 +17,10 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- */ 
+ */
+use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Theme;
+
 class counter extends Module
 {	
     /**
@@ -25,7 +28,7 @@ class counter extends Module
      */
     public function AddForm()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         // Configure form
         $this->configureForm('AddMedia');
@@ -59,7 +62,7 @@ class counter extends Module
      */
     public function EditForm()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         if (!$this->auth->edit)
             throw new Exception(__('You do not have permission to edit this widget.'));
@@ -97,7 +100,7 @@ class counter extends Module
      */
     public function AddMedia()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         // Properties
         $duration = \Kit::GetParam('duration', _POST, _INT, 0, false);
@@ -130,7 +133,7 @@ class counter extends Module
      */
     public function EditMedia()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         if (!$this->auth->edit)
             throw new Exception(__('You do not have permission to edit this widget.'));

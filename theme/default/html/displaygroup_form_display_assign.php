@@ -26,6 +26,8 @@
  *  	Display = The name of the display
  *  	list_id = The ID of the List Item
  */
+use Xibo\Helper\Theme;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
 <div class="row">

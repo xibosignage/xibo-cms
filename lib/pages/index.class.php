@@ -18,6 +18,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Theme;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 class indexDAO extends baseDAO {
@@ -241,7 +244,7 @@ class indexDAO extends baseDAO {
      */
     public function PingPong()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
         
         $response->success = true;
         $response->Respond();
@@ -253,7 +256,7 @@ class indexDAO extends baseDAO {
      */
     function About()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
         
         Theme::Set('version', VERSION);
         

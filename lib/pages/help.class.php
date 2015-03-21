@@ -18,6 +18,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\Help;
+use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Theme;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 class helpDAO extends baseDAO {
@@ -33,7 +37,7 @@ class helpDAO extends baseDAO {
         $id = uniqid();
         Theme::Set('id', $id);
         Theme::Set('form_meta', '<input type="hidden" name="p" value="help"><input type="hidden" name="q" value="Grid">');
-        Theme::Set('pager', ResponseManager::Pager($id));
+        Theme::Set('pager', ApplicationState::Pager($id));
 
         // Call to render the template
         Theme::Set('header_text', __('Help Links'));
@@ -58,7 +62,7 @@ class helpDAO extends baseDAO {
     {
         $db =& $this->db;
         $user =& $this->user;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         //display the display table
         $SQL = <<<SQL
@@ -114,7 +118,7 @@ SQL;
                 // Test
                 $row['buttons'][] = array(
                         'id' => 'help_button_test',
-                        'url' => HelpManager::Link($row['topic'], $row['category']),
+                        'url' => Help::Link($row['topic'], $row['category']),
                         'text' => __('Test')
                     );
             }
@@ -132,7 +136,7 @@ SQL;
 
     public function AddForm()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
         
         // Set some information about the form
         Theme::Set('form_id', 'HelpAddForm');
@@ -163,7 +167,7 @@ SQL;
     {
         $db =& $this->db;
         $user =& $this->user;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $helpId	= \Kit::GetParam('HelpID', _REQUEST, _INT);
 
@@ -206,7 +210,7 @@ SQL;
     public function DeleteForm()
     {
         $db =& $this->db;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
         $helpId	= \Kit::GetParam('HelpID', _REQUEST, _INT);
 
         // Set some information about the form
@@ -232,7 +236,7 @@ SQL;
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $topic = \Kit::GetParam('Topic', _POST, _STRING);
         $category = \Kit::GetParam('Category', _POST, _STRING);
@@ -259,7 +263,7 @@ SQL;
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $helpId	= \Kit::GetParam('HelpID', _POST, _INT);
         $topic = \Kit::GetParam('Topic', _POST, _STRING);
@@ -284,7 +288,7 @@ SQL;
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $helpId	= \Kit::GetParam('HelpID', _POST, _INT);
 

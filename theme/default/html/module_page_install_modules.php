@@ -24,6 +24,8 @@
  * 	form_meta = Extra form meta that needs to be sent to the CMS to return the list of layouts
  * 	pager = A paging control for this Xibo Grid
  */
+use Xibo\Helper\Theme;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
 <div class="row">

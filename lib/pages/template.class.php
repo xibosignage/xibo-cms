@@ -17,7 +17,11 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- */ 
+ */
+use Xibo\Helper\Help;
+use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Theme;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 class templateDAO extends baseDAO {
@@ -45,7 +49,7 @@ class templateDAO extends baseDAO {
         Theme::Set('header_text', __('Templates'));
         Theme::Set('id', $id);
         Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
-        Theme::Set('pager', ResponseManager::Pager($id));
+        Theme::Set('pager', ApplicationState::Pager($id));
         Theme::Set('form_meta', '<input type="hidden" name="p" value="template"><input type="hidden" name="q" value="TemplateView">');
         
         $formFields = array();
@@ -89,18 +93,18 @@ class templateDAO extends baseDAO {
      */
     function TemplateView() 
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $filter_name = \Kit::GetParam('filter_name', _POST, _STRING);
         $filter_tags = \Kit::GetParam('filter_tags', _POST, _STRING);
         
-        setSession('template', 'filter_name', $filter_name);
-        setSession('template', 'filter_tags', $filter_tags);
-        setSession('template', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        \Session::Set('template', 'filter_name', $filter_name);
+        \Session::Set('template', 'filter_tags', $filter_tags);
+        \Session::Set('template', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
         
         // Show filter_showThumbnail
         $showThumbnail = \Kit::GetParam('showThumbnail', _POST, _CHECKBOX);
-        setSession('layout', 'showThumbnail', $showThumbnail);
+        \Session::Set('layout', 'showThumbnail', $showThumbnail);
     
         $templates = $this->user->TemplateList($filter_name, $filter_tags);
 
@@ -191,7 +195,7 @@ class templateDAO extends baseDAO {
      */
     function TemplateForm() 
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         // Get the layout
         $layout = \Xibo\Factory\LayoutFactory::getById(Kit::GetParam('layoutid', _GET, _INT));
@@ -217,7 +221,7 @@ class templateDAO extends baseDAO {
         Theme::Set('form_fields', $formFields);
 
         $response->SetFormRequestResponse(NULL, __('Save this Layout as a Template?'), '550px', '230px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Template', 'Add') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Template', 'Add') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#TemplateAddForm").submit()');
         $response->Respond();
@@ -225,7 +229,7 @@ class templateDAO extends baseDAO {
 
     function EditForm()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         // Get the layout
         $layout = \Xibo\Factory\LayoutFactory::getById(Kit::GetParam('layoutid', _GET, _INT));
@@ -270,7 +274,7 @@ class templateDAO extends baseDAO {
         $form = Theme::RenderReturn('form_render');
 
         $response->SetFormRequestResponse($form, __('Edit Template'), '350px', '275px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Template', 'Edit') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Template', 'Edit') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#TemplateEditForm").submit()');
         $response->Respond();
@@ -285,7 +289,7 @@ class templateDAO extends baseDAO {
         if (!Kit::CheckToken())
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
 
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         // Get the layout
         $layout = clone \Xibo\Factory\LayoutFactory::getById(Kit::GetParam('layoutid', _POST, _INT));
@@ -308,7 +312,7 @@ class templateDAO extends baseDAO {
         if (!Kit::CheckToken())
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         // Get the layout
         $layout = \Xibo\Factory\LayoutFactory::getById(Kit::GetParam('layoutid', _POST, _INT));
@@ -339,7 +343,7 @@ class templateDAO extends baseDAO {
         if (!Kit::CheckToken())
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         // Get the layout
         $layout = \Xibo\Factory\LayoutFactory::getById(Kit::GetParam('layoutid', _POST, _INT));
@@ -359,7 +363,7 @@ class templateDAO extends baseDAO {
      */
     public function DeleteTemplateForm()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         // Get the layout
         $layout = \Xibo\Factory\LayoutFactory::getById(Kit::GetParam('layoutid', _GET, _INT));
@@ -378,7 +382,7 @@ class templateDAO extends baseDAO {
         $form = Theme::RenderReturn('form_render');
         
         $response->SetFormRequestResponse($form, __('Delete Template'), '300px', '200px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Template', 'Delete') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Template', 'Delete') . '")');
         $response->AddButton(__('No'), 'XiboDialogClose()');
         $response->AddButton(__('Yes'), '$("#DeleteForm").submit()');
         $response->Respond();

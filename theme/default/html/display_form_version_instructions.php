@@ -23,6 +23,8 @@
  *  form_action = The URL for calling the Layout Add Transaction
  *  form_meta = Additional META information required by Xibo in the form submit call
  */
+use Xibo\Helper\Theme;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
 <form id="<?php echo Theme::Get('form_id'); ?>" class="XiboForm" method="post" action="<?php echo Theme::Get('form_action'); ?>">

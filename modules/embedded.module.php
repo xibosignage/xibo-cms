@@ -17,7 +17,10 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- */ 
+ */
+use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Theme;
+
 class embedded extends Module
 {
     /**
@@ -35,7 +38,7 @@ class embedded extends Module
      */
     public function AddForm()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
         // Configure form
         $this->configureForm('AddMedia');
 
@@ -89,7 +92,7 @@ function EmbedInit()
      */
     public function EditForm()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         // Edit calls are the same as add calls, except you will to check the user has permissions to do the edit
         if (!$this->auth->edit)
@@ -136,7 +139,7 @@ function EmbedInit()
      */
     public function AddMedia()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         // Required Attributes
         $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration(), false));
@@ -162,7 +165,7 @@ function EmbedInit()
      */
     public function EditMedia()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
         if (!$this->auth->edit)
             throw new Exception(__('You do not have permission to edit this widget.'));
 

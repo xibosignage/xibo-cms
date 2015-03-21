@@ -17,7 +17,11 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- */ 
+ */
+use Xibo\Helper\Help;
+use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Theme;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
  
 class groupDAO extends baseDAO {	
@@ -73,7 +77,7 @@ END;
         Theme::Set('id', $id);
         Theme::Set('form_meta', '<input type="hidden" name="p" value="group"><input type="hidden" name="q" value="Grid">');
         Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
-        Theme::Set('pager', ResponseManager::Pager($id));
+        Theme::Set('pager', ApplicationState::Pager($id));
 
         // Default options
         if (\Kit::IsFilterPinned('usergroup', 'Filter')) {
@@ -130,8 +134,8 @@ END;
 		
 		$filter_name = \Kit::GetParam('filter_name', _POST, _STRING);
                 
-		setSession('usergroup', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
-		setSession('usergroup', 'filter_name', $filter_name);
+		\Session::Set('usergroup', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+		\Session::Set('usergroup', 'filter_name', $filter_name);
 	
 		$SQL = <<<END
 		SELECT 	group.group,
@@ -213,7 +217,7 @@ END;
 
         $output = Theme::RenderReturn('table_render');
 
-		$response = new ResponseManager();
+		$response = new ApplicationState();
         $response->SetGridResponse($output);
         $response->Respond();
 	}
@@ -226,7 +230,7 @@ END;
 	{
 		$db =& $this->db;
 		$user =& $this->user;
-		$response = new ResponseManager();
+		$response = new ApplicationState();
 				
 		Theme::Set('form_id', 'UserGroupForm');
 
@@ -236,7 +240,7 @@ END;
         	Theme::Set('form_action', 'index.php?p=group&q=Add');
 
         	$form_name = 'Add User Group';
-        	$form_help_link = HelpManager::Link('UserGroup', 'Add');
+        	$form_help_link = Help::Link('UserGroup', 'Add');
 		}
 		else 
 		{
@@ -245,7 +249,7 @@ END;
         	Theme::Set('group', $this->group);
 
         	$form_name = 'Edit User Group';
-        	$form_help_link = HelpManager::Link('UserGroup', 'Edit');
+        	$form_help_link = Help::Link('UserGroup', 'Edit');
 		}
 
 		$formFields = array();
@@ -270,12 +274,12 @@ END;
 	 */
 	function PageSecurityForm()
 	{
-		$response	= new ResponseManager();
+		$response	= new ApplicationState();
 		
 		$id = uniqid();
         Theme::Set('id', $id);
 		Theme::Set('header_text', __('Please select your Page Security Assignments'));
-		Theme::Set('pager', ResponseManager::Pager($id));
+		Theme::Set('pager', ApplicationState::Pager($id));
 		Theme::Set('form_meta', '<input type="hidden" name="p" value="group"><input type="hidden" name="q" value="PageSecurityFormGrid"><input type="hidden" name="groupid" value="' . $this->groupid . '">');
 
 		$formFields = array();
@@ -287,7 +291,7 @@ END;
 			
 		// Construct the Response		
 		$response->SetFormRequestResponse($xiboGrid, __('Page Security'), '500', '380');
-		$response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('User', 'PageSecurity') . '")');
+		$response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('User', 'PageSecurity') . '")');
 		$response->AddButton(__('Close'), 'XiboDialogClose()');
 		$response->AddButton(__('Assign / Unassign'), '$("#UserGroupForm").submit()');
 		$response->Respond();
@@ -359,7 +363,7 @@ END;
 
 			$output = Theme::RenderReturn('usergroup_form_pagesecurity_grid');
 
-			$response = new ResponseManager();
+			$response = new ApplicationState();
 			$response->SetGridResponse($output);
 			$response->initialSortColumn = 2;
 			$response->Respond();
@@ -376,7 +380,7 @@ END;
 	function DeleteForm() 
 	{
 		$groupId = $this->groupid;
-		$response = new ResponseManager();
+		$response = new ApplicationState();
 
         // Get the group name
         $group = __('Unknown');
@@ -402,7 +406,7 @@ END;
 
 		// Construct the Response		
 		$response->SetFormRequestResponse(NULL, sprintf(__('Delete %s'), $group), '400', '180');
-		$response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('UserGroup', 'Delete') . '")');
+		$response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('UserGroup', 'Delete') . '")');
 		$response->AddButton(__('No'), 'XiboDialogClose()');
 		$response->AddButton(__('Yes'), '$("#UserGroupDeleteForm").submit()');
 		$response->Respond();
@@ -421,7 +425,7 @@ END;
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $group 	= \Kit::GetParam('group', _POST, _STRING);
 
@@ -454,7 +458,7 @@ END;
         if (!$userGroupObject->Edit($groupid, $group))
             trigger_error($userGroupObject->GetErrorMessage(), E_USER_ERROR);
 		
-		$response = new ResponseManager();
+		$response = new ApplicationState();
 		$response->SetFormSubmitResponse(__('User Group Edited'), false);
         $response->Respond();
 	}
@@ -477,7 +481,7 @@ END;
         if (!$userGroupObject->Delete($groupid))
             trigger_error($userGroupObject->GetErrorMessage(), E_USER_ERROR);
 		
-		$response = new ResponseManager();
+		$response = new ApplicationState();
 		$response->SetFormSubmitResponse(__('User Group Deleted'), false);
         $response->Respond();
 	}
@@ -536,7 +540,7 @@ END;
 			}
 		}
 
-		$response = new ResponseManager();
+		$response = new ApplicationState();
 		$response->SetFormSubmitResponse(__('User Group Page Security Edited'));
 		$response->keepOpen = true;
         $response->Respond();
@@ -554,7 +558,7 @@ END;
 		$id = uniqid();
         Theme::Set('id', $id);
 		Theme::Set('header_text', __('Select your Menu Assignments'));
-		Theme::Set('pager', ResponseManager::Pager($id));
+		Theme::Set('pager', ApplicationState::Pager($id));
 		Theme::Set('form_meta', '<input type="hidden" name="p" value="group"><input type="hidden" name="q" value="MenuItemSecurityGrid"><input type="hidden" name="groupid" value="' . $this->groupid . '">');
 
 		$formFields = array();
@@ -574,9 +578,9 @@ END;
 		$xiboGrid = Theme::RenderReturn('grid_render');
 
 		// Construct the Response
-		$response = new ResponseManager();		
+		$response = new ApplicationState();
 		$response->SetFormRequestResponse($xiboGrid, __('Menu Item Security'), '500', '380');
-		$response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('User', 'MenuSecurity') . '")');
+		$response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('User', 'MenuSecurity') . '")');
 		$response->AddButton(__('Close'), 'XiboDialogClose()');
 		$response->AddButton(__('Assign / Unassign'), '$("#UserGroupMenuForm").submit()');
 		$response->Respond();
@@ -651,7 +655,7 @@ END;
 
 		$output = Theme::RenderReturn('usergroup_form_menusecurity_grid');
 		
-		$response = new ResponseManager();
+		$response = new ApplicationState();
         $response->SetGridResponse($output);
         $response->initialSortColumn = 2;
         $response->Respond();
@@ -704,7 +708,7 @@ END;
 		}
 		
 		// Response
-		$response = new ResponseManager();
+		$response = new ApplicationState();
 		$response->SetFormSubmitResponse(__('User Group Menu Security Edited'));
 		$response->keepOpen = true;
         $response->Respond();
@@ -716,7 +720,7 @@ END;
     public function MembersForm()
 	{
         $db =& $this->db;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
         $groupID = \Kit::GetParam('groupid', _REQUEST, _INT);
 
         // There needs to be two lists here.
@@ -757,7 +761,7 @@ END;
         $form = Theme::RenderReturn('usergroup_form_user_assign');
 
         $response->SetFormRequestResponse($form, __('Manage Membership'), '400', '375', 'ManageMembersCallBack');
-        $response->AddButton(__('Help'), "XiboHelpRender('" . HelpManager::Link('UserGroup', 'Members') . "')");
+        $response->AddButton(__('Help'), "XiboHelpRender('" . Help::Link('UserGroup', 'Members') . "')");
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), 'MembersSubmit()');
         $response->Respond();
@@ -769,7 +773,7 @@ END;
 	public function SetMembers()
 	{
         $db             =& $this->db;
-        $response       = new ResponseManager();
+        $response       = new ApplicationState();
         $groupObject    = new UserGroup($db);
 
         $groupId = \Kit::GetParam('GroupID', _REQUEST, _INT);

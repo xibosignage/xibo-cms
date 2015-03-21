@@ -17,7 +17,10 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- */ 
+ */
+use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Theme;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 class mediamanagerDAO extends baseDAO {
@@ -45,7 +48,7 @@ class mediamanagerDAO extends baseDAO {
         $id = uniqid();
         Theme::Set('id', $id);
         Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
-        Theme::Set('pager', ResponseManager::Pager($id));
+        Theme::Set('pager', ApplicationState::Pager($id));
         Theme::Set('form_meta', '<input type="hidden" name="p" value="mediamanager"><input type="hidden" name="q" value="MediaManagerGrid">');
         
         $formFields = array();
@@ -93,18 +96,18 @@ class mediamanagerDAO extends baseDAO {
     {
         $db =& $this->db;
         $user =& $this->user;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $filterLayout = \Kit::GetParam('filter_layout_name', _POST, _STRING);
         $filterRegion = \Kit::GetParam('filter_region_name', _POST, _STRING);
         $filterMediaName = \Kit::GetParam('filter_media_name', _POST, _STRING);
         $filterMediaType = \Kit::GetParam('filter_type', _POST, _INT);
 
-        setSession('mediamanager', 'filter_layout_name', $filterLayout);
-        setSession('mediamanager', 'filter_region_name', $filterRegion);
-        setSession('mediamanager', 'filter_media_name', $filterMediaName);
-        setSession('mediamanager', 'filter_type', $filterMediaType);
-        setSession('mediamanager', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        \Session::Set('mediamanager', 'filter_layout_name', $filterLayout);
+        \Session::Set('mediamanager', 'filter_region_name', $filterRegion);
+        \Session::Set('mediamanager', 'filter_media_name', $filterMediaName);
+        \Session::Set('mediamanager', 'filter_type', $filterMediaType);
+        \Session::Set('mediamanager', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 
         // Lookup the module name
         if ($filterMediaType != 0) {

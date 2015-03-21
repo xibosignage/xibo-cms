@@ -18,6 +18,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\Help;
+use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Theme;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 class timelineDAO extends baseDAO
@@ -27,7 +31,7 @@ class timelineDAO extends baseDAO
 	 */
 	function AddRegion()
 	{
-		$response = new ResponseManager();
+		$response = new ApplicationState();
 		
 		$layout = \Xibo\Factory\LayoutFactory::loadById(Kit::GetParam('layoutid', _REQUEST, _INT));
 
@@ -53,7 +57,7 @@ class timelineDAO extends baseDAO
 	 */
 	function DeleteRegion()
 	{
-		$response = new ResponseManager();
+		$response = new ApplicationState();
 
         $region = \Xibo\Factory\RegionFactory::getById(Kit::GetParam('regionid', _REQUEST, _INT));
 
@@ -73,7 +77,7 @@ class timelineDAO extends baseDAO
      */
     function ManualRegionPositionForm()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $layoutId = \Kit::GetParam('layoutId', _GET, _INT);
         $scale = \Kit::GetParam('scale', _GET, _DOUBLE);
@@ -187,7 +191,7 @@ class timelineDAO extends baseDAO
         if (!Kit::CheckToken())
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         // Load the region and get the dimensions, applying the scale factor if necessary (only v1 layouts will have a scale factor != 1)
         $region = \Xibo\Factory\RegionFactory::loadByRegionId(Kit::GetParam('regionid', _POST, _INT));
@@ -241,7 +245,7 @@ class timelineDAO extends baseDAO
 	 */
 	function RegionChange()
 	{
-		$response = new ResponseManager();
+		$response = new ApplicationState();
 		
 		// Create the layout
 		$layout = \Xibo\Factory\LayoutFactory::loadById(Kit::GetParam('layoutid', _REQUEST, _INT));
@@ -288,7 +292,7 @@ class timelineDAO extends baseDAO
      */
     public function DeleteRegionForm()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         // Load our region
         $region = \Xibo\Factory\RegionFactory::getById(Kit::GetParam('regionid', _REQUEST, _INT));
@@ -304,7 +308,7 @@ class timelineDAO extends baseDAO
         Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to remove this region? All media files will be unassigned and any context saved to the region itself (such as Text, Tickers) will be lost permanently.'))));
 
         $response->SetFormRequestResponse(NULL, __('Delete this region?'), '350px', '200px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Region', 'Delete') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Region', 'Delete') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Delete'), '$("#RegionDeleteForm").submit()');
         $response->Respond();
@@ -325,7 +329,7 @@ class timelineDAO extends baseDAO
      */
     function AddFromLibrary()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         // Load the region
         $region = \Xibo\Factory\RegionFactory::getById(Kit::GetParam('regionid', _REQUEST, _INT));
@@ -380,7 +384,7 @@ class timelineDAO extends baseDAO
 	public function RegionPreview()
 	{
 		// Response Manager
-		$response = new ResponseManager();
+		$response = new ApplicationState();
 		
 		// Keyed off the region id
 		$regionId = \Kit::GetParam('regionid', _POST, _STRING);
@@ -496,7 +500,7 @@ class timelineDAO extends baseDAO
     {
         $user =& $this->user;
         $user->SetPref('timeLineView', 'list');
-        $response = new ResponseManager();
+        $response = new ApplicationState();
         $response->html = '';
 
         // Load the region and get the dimensions, applying the scale factor if necessary (only v1 layouts will have a scale factor != 1)
@@ -637,7 +641,7 @@ class timelineDAO extends baseDAO
         // Add some buttons
         $response->AddButton(__('Save Order'), 'XiboTimelineSaveOrder("' . $timeListMediaListId . '","' . $region->regionId . '")');
         $response->AddButton(__('Switch to Grid'), 'XiboSwapDialog("index.php?p=timeline&q=TimelineGrid&regionid=' . $region->regionId . '")');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Layout', 'RegionOptions') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Layout', 'RegionOptions') . '")');
         $response->AddButton(__('Close'), 'XiboDialogClose()');
 
         $response->Respond();
@@ -649,7 +653,7 @@ class timelineDAO extends baseDAO
     public function TimelineGrid() {
         $this->user->SetPref('timeLineView', 'grid');
 
-        $response = new ResponseManager();
+        $response = new ApplicationState();
         $response->html = '';
 
         // Load the region and get the dimensions, applying the scale factor if necessary (only v1 layouts will have a scale factor != 1)
@@ -668,7 +672,7 @@ class timelineDAO extends baseDAO
         Theme::Set('id', $id);
         Theme::Set('form_fields', array());
         Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
-        Theme::Set('pager', ResponseManager::Pager($id));
+        Theme::Set('pager', ApplicationState::Pager($id));
         Theme::Set('form_meta', '<input type="hidden" name="p" value="timeline">
             <input type="hidden" name="q" value="TimelineGridView">
             <input type="hidden" name="regionid" value="' . $region->regionId . '">');
@@ -686,7 +690,7 @@ class timelineDAO extends baseDAO
 
         // Add some buttons
         $response->AddButton(__('Switch to List'), 'XiboSwapDialog("index.php?p=timeline&q=TimelineList&regionid=' . $region->regionId . '")');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Layout', 'RegionOptions') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Layout', 'RegionOptions') . '")');
         $response->AddButton(__('Close'), 'XiboDialogClose()');
         $response->Respond();
     }
@@ -697,7 +701,7 @@ class timelineDAO extends baseDAO
     public function TimelineGridView()
     {
         $user =& $this->user;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         // Load the region and get the dimensions, applying the scale factor if necessary (only v1 layouts will have a scale factor != 1)
         $region = \Xibo\Factory\RegionFactory::loadByRegionId(Kit::GetParam('regionid', _POST, _INT));
@@ -822,7 +826,7 @@ class timelineDAO extends baseDAO
      */
     function TimelineReorder()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         // Load the region and get the dimensions, applying the scale factor if necessary (only v1 layouts will have a scale factor != 1)
         $playlists = \Xibo\Factory\PlaylistFactory::getByRegionId(Kit::GetParam('regionId', _GET, _INT));

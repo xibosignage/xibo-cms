@@ -17,7 +17,11 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- */ 
+ */
+use Xibo\Helper\Help;
+use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Theme;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 include_once('lib/data/usergroup.data.class.php');
@@ -36,7 +40,7 @@ class userDAO extends baseDAO {
         Theme::Set('displaygroup_form_add_url', 'index.php?p=displaygroup&q=AddForm');
         Theme::Set('form_meta', '<input type="hidden" name="p" value="user"><input type="hidden" name="q" value="UserGrid">');
         Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
-        Theme::Set('pager', ResponseManager::Pager($id));
+        Theme::Set('pager', ApplicationState::Pager($id));
 
         if (\Kit::IsFilterPinned('user_admin', 'Filter')) {
             $filter_pinned = 1;
@@ -109,18 +113,18 @@ class userDAO extends baseDAO {
     {
         $db         =& $this->db;
         $user       =& $this->user;
-        $response   = new ResponseManager();
+        $response   = new ApplicationState();
         // Capture the filter options
         // User ID
         $filter_username = \Kit::GetParam('filter_username', _POST, _STRING);
-        setSession('user_admin', 'filter_username', $filter_username);
+        \Session::Set('user_admin', 'filter_username', $filter_username);
         
         // User Type ID
         $filter_usertypeid = \Kit::GetParam('filter_usertypeid', _POST, _INT);
-        setSession('user_admin', 'filter_usertypeid', $filter_usertypeid);
+        \Session::Set('user_admin', 'filter_usertypeid', $filter_usertypeid);
 
         // Pinned option?        
-        setSession('user_admin', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        \Session::Set('user_admin', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 
         // Filter our users?
         $filterBy = array();
@@ -228,7 +232,7 @@ class userDAO extends baseDAO {
         if (!Kit::CheckToken())
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $user = new Userdata();
         $user->userName = \Kit::GetParam('edit_username', _POST, _STRING);
@@ -251,7 +255,7 @@ class userDAO extends baseDAO {
 	 */
 	function EditUser() 
 	{
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         // Check the token
         if (!Kit::CheckToken())
@@ -291,7 +295,7 @@ class userDAO extends baseDAO {
         if (!Kit::CheckToken())
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
 
-        $response = new ResponseManager();
+        $response = new ApplicationState();
         $deleteAllItems = (\Kit::GetParam('deleteAllItems', _POST, _CHECKBOX) == 1);
 
         $userId = \Kit::GetParam('userid', _POST, _INT, 0);
@@ -339,7 +343,7 @@ class userDAO extends baseDAO {
 	{
         $db =& $this->db;
         $user =& $this->user;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $userId = \Kit::GetParam('userID', _GET, _INT);
 
@@ -350,7 +354,7 @@ class userDAO extends baseDAO {
         if ($userId != 0) {
 
             $form_title = 'Edit Form';
-            $form_help_link = HelpManager::Link('User', 'Edit');
+            $form_help_link = Help::Link('User', 'Edit');
             Theme::Set('form_action', 'index.php?p=user&q=EditUser');
             Theme::Set('form_meta', '<input type="hidden" name="userid" value="' . $userId . '" />');
 
@@ -376,7 +380,7 @@ class userDAO extends baseDAO {
         else {
 
             $form_title = 'Add Form';
-            $form_help_link = HelpManager::Link('User', 'Add');
+            $form_help_link = Help::Link('User', 'Add');
             Theme::Set('form_action', 'index.php?p=user&q=AddUser');
 
             // We are adding a new user
@@ -476,7 +480,7 @@ class userDAO extends baseDAO {
 	{
 		$db =& $this->db;
         $user =& $this->user;
-		$response = new ResponseManager();
+		$response = new ApplicationState();
 		
 		$userid = \Kit::GetParam('userID', _GET, _INT);
 
@@ -495,7 +499,7 @@ class userDAO extends baseDAO {
         Theme::Set('form_fields', $formFields);
 
 		$response->SetFormRequestResponse(NULL, __('Delete this User?'), '430px', '200px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('User', 'Delete') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('User', 'Delete') . '")');
 		$response->AddButton(__('No'), 'XiboDialogClose()');
 		$response->AddButton(__('Yes'), '$("#UserDeleteForm").submit()');
 		$response->Respond();
@@ -508,7 +512,7 @@ class userDAO extends baseDAO {
     function SetUserHomepageForm()
     {
         $db =& $this->db;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
         $userid = \Kit::GetParam('userid', _GET, _INT);
 
         // Set some information about the form
@@ -536,7 +540,7 @@ class userDAO extends baseDAO {
         Theme::Set('form_fields', $formFields);
 
         $response->SetFormRequestResponse(NULL, __('Set the homepage for this user'), '350px', '150px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('User', 'SetHomepage') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('User', 'SetHomepage') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#SetUserHomePageForm").submit()');
         $response->Respond();
@@ -553,7 +557,7 @@ class userDAO extends baseDAO {
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         if (!$this->user->usertypeid == 1)
             trigger_error(__('You do not have permission to change this users homepage'));
@@ -581,7 +585,7 @@ class userDAO extends baseDAO {
     {
         $db         =& $this->db;
         $user       =& $this->user;
-        $response   = new ResponseManager();
+        $response   = new ApplicationState();
 
         $store = OAuthStore::instance();
 
@@ -600,7 +604,7 @@ class userDAO extends baseDAO {
         $output = Theme::RenderReturn('user_form_my_applications');
 
         $response->SetFormRequestResponse($output, __('My Applications'), '650', '450');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('User', 'Applications') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('User', 'Applications') . '")');
         $response->AddButton(__('Close'), 'XiboDialogClose()');
         $response->Respond();
     }
@@ -612,7 +616,7 @@ class userDAO extends baseDAO {
     {
         $db         =& $this->db;
         $user       =& $this->user;
-        $response   = new ResponseManager();
+        $response   = new ApplicationState();
 
         $msgOldPassword = __('Old Password');
         $msgNewPassword = __('New Password');
@@ -637,7 +641,7 @@ class userDAO extends baseDAO {
         Theme::Set('form_fields', $formFields);
 
         $response->SetFormRequestResponse(NULL, __('Change Password'), '450', '300');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('User', 'ChangePassword') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('User', 'ChangePassword') . '")');
         $response->AddButton(__('Close'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#ChangePasswordForm").submit()');
         $response->Respond();
@@ -653,7 +657,7 @@ class userDAO extends baseDAO {
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $oldPassword = \Kit::GetParam('oldPassword', _POST, _STRING);
         $newPassword = \Kit::GetParam('newPassword', _POST, _STRING);
@@ -676,7 +680,7 @@ class userDAO extends baseDAO {
     {
         $db         =& $this->db;
         $user       =& $this->user;
-        $response   = new ResponseManager();
+        $response   = new ApplicationState();
 
         $userId = \Kit::GetParam('userid', _GET, _INT);
 
@@ -695,7 +699,7 @@ class userDAO extends baseDAO {
         Theme::Set('form_fields', $formFields);
 
         $response->SetFormRequestResponse(NULL, __('Set Password'), '450', '300');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('User', 'SetPassword') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('User', 'SetPassword') . '")');
         $response->AddButton(__('Close'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#SetPasswordForm").submit()');
         $response->Respond();
@@ -711,7 +715,7 @@ class userDAO extends baseDAO {
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $newPassword = \Kit::GetParam('newPassword', _POST, _STRING);
         $retypeNewPassword = \Kit::GetParam('retypeNewPassword', _POST, _STRING);
@@ -737,7 +741,7 @@ class userDAO extends baseDAO {
      */
     public function permissionsForm()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $entity = \Kit::GetParam('entity', _GET, _STRING);
         if ($entity == '')
@@ -803,7 +807,7 @@ class userDAO extends baseDAO {
         $form = Theme::RenderReturn('form_render');
 
         $response->SetFormRequestResponse($form, __('Permissions'), '350px', '500px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Campaign', 'Permissions') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Campaign', 'Permissions') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#PermissionsForm").submit()');
         $response->Respond();
@@ -815,7 +819,7 @@ class userDAO extends baseDAO {
      */
     public function permissions()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         // Check the token
         if (!Kit::CheckToken())

@@ -18,6 +18,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\Help;
+use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Theme;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
  
 class contentDAO extends baseDAO {
@@ -53,7 +57,7 @@ class contentDAO extends baseDAO {
 		$id = uniqid();
 		Theme::Set('id', $id);
 		Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
-		Theme::Set('pager', ResponseManager::Pager($id));
+		Theme::Set('pager', ApplicationState::Pager($id));
 		Theme::Set('form_meta', '<input type="hidden" name="p" value="content"><input type="hidden" name="q" value="LibraryGrid">');
 
         $formFields = array();
@@ -155,7 +159,7 @@ class contentDAO extends baseDAO {
 	function LibraryGrid() 
 	{
 		$user =& $this->user;
-		$response = new ResponseManager();
+		$response = new ApplicationState();
 
 		//Get the input params and store them
 		$filter_type = \Kit::GetParam('filter_type', _REQUEST, _WORD);
@@ -166,14 +170,14 @@ class contentDAO extends baseDAO {
         $filter_showThumbnail = \Kit::GetParam('filter_showThumbnail', _REQUEST, _CHECKBOX);
         $showTags = \Kit::GetParam('showTags', _REQUEST, _CHECKBOX);
                 
-		setSession('content', 'filter_type', $filter_type);
-		setSession('content', 'filter_name', $filter_name);
-		setSession('content', 'filter_owner', $filter_userid);
-        setSession('content', 'filter_retired', $filter_retired);
-        setSession('content', 'filter_duration_in_seconds', $filter_duration_in_seconds);
-        setSession('content', 'filter_showThumbnail', $filter_showThumbnail);
-		setSession('content', 'showTags', $showTags);
-        setSession('content', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+		\Session::Set('content', 'filter_type', $filter_type);
+		\Session::Set('content', 'filter_name', $filter_name);
+		\Session::Set('content', 'filter_owner', $filter_userid);
+        \Session::Set('content', 'filter_retired', $filter_retired);
+        \Session::Set('content', 'filter_duration_in_seconds', $filter_duration_in_seconds);
+        \Session::Set('content', 'filter_showThumbnail', $filter_showThumbnail);
+		\Session::Set('content', 'showTags', $showTags);
+        \Session::Set('content', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 		
 		// Construct the SQL
 		$mediaList = $user->MediaList(NULL, array('type' => $filter_type, 'name' => $filter_name, 'ownerid' => $filter_userid, 'retired' => $filter_retired, 'showTags' => $showTags));
@@ -284,7 +288,7 @@ class contentDAO extends baseDAO {
 	 */
 	function fileUploadForm()
 	{
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         // Check we have room in the library
         $libraryLimit = Config::GetSetting('LIBRARY_SIZE_LIMIT_KB');
@@ -399,7 +403,7 @@ class contentDAO extends baseDAO {
      */
     public function deleteForm()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         // Get the MediaId
         $media = \Xibo\Factory\MediaFactory::getById(Kit::GetParam('mediaId', _GET, _INT));
@@ -420,7 +424,7 @@ class contentDAO extends baseDAO {
         $form = Theme::RenderReturn('form_render');
 
         $response->SetFormRequestResponse($form, __('Delete Media'), '300px', '200px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Media', 'Delete') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Media', 'Delete') . '")');
         $response->AddButton(__('No'), 'XiboDialogClose()');
         $response->AddButton(__('Yes'), '$("#MediaDeleteForm").submit()');
         $response->Respond();
@@ -431,7 +435,7 @@ class contentDAO extends baseDAO {
      */
     public function delete()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         // Get the MediaId
         $media = \Xibo\Factory\MediaFactory::getById(Kit::GetParam('mediaId', _GET, _INT));
@@ -566,12 +570,12 @@ class contentDAO extends baseDAO {
     {
         $db =& $this->db;
         $user =& $this->user;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $id = uniqid();
         Theme::Set('id', $id);
         Theme::Set('form_meta', '<input type="hidden" name="p" value="content"><input type="hidden" name="q" value="LibraryAssignView">');
-        Theme::Set('pager', ResponseManager::Pager($id, 'grid_pager'));
+        Theme::Set('pager', ApplicationState::Pager($id, 'grid_pager'));
         
         // Module types filter
         $modules = $this->user->ModuleAuth(0, '', 1);
@@ -603,7 +607,7 @@ class contentDAO extends baseDAO {
         $response->dialogHeight = '580px';
         $response->dialogTitle = __('Assign an item from the Library');
 
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Library', 'Assign') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Library', 'Assign') . '")');
         $response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutId . '&regionid=' . $regionId . '&q=RegionOptions")');
         $response->AddButton(__('Assign'), 'LibraryAssignSubmit("' . $layoutId . '","' . $regionId . '")');
 
@@ -618,7 +622,7 @@ class contentDAO extends baseDAO {
     {
         $db =& $this->db;
         $user =& $this->user;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         //Input vars
         $mediatype = \Kit::GetParam('filter_type', _POST, _STRING);
@@ -766,7 +770,7 @@ HTML;
 
     public function tidyLibraryForm()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         Theme::Set('form_id', 'TidyLibraryForm');
         Theme::Set('form_action', 'index.php?p=content&q=tidyLibrary');
@@ -782,7 +786,7 @@ HTML;
         Theme::Set('form_fields', $formFields);
 
         $response->SetFormRequestResponse(NULL, __('Tidy Library'), '350px', '275px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Content', 'TidyLibrary') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Content', 'TidyLibrary') . '")');
         $response->AddButton(__('No'), 'XiboDialogClose()');
         $response->AddButton(__('Yes'), '$("#TidyLibraryForm").submit()');
         $response->Respond();
@@ -793,7 +797,7 @@ HTML;
      */
     public function tidyLibrary()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         if (Config::GetSetting('SETTING_LIBRARY_TIDY_ENABLED') != 1)
             trigger_error(__('Sorry this function is disabled.'), E_USER_ERROR);

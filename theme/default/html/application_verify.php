@@ -22,6 +22,8 @@
  *  form_id = The ID of the Form
  *  form_action = The URL for calling the Add Transaction
  */
+use Xibo\Helper\Theme;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
 <h2>Xibo API - Authorization Requested</h2>

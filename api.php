@@ -26,7 +26,9 @@ require 'vendor/autoload.php';
 require 'lib/app/kit.class.php';
 require 'lib/app/debug.class.php';
 require 'config/config.class.php';
-require_once('lib/app/translationengine.class.php');
+require 'lib/app/translationengine.class.php';
+require 'lib/app/session.class.php';
+require 'modules/module_user_general.php';
 // END
 
 if (!file_exists('settings.php'))
@@ -38,8 +40,11 @@ ini_set('display_errors', 1);
 Config::Load();
 new Debug();
 
-$app = new \Slim\Slim();
-$app->add(new \Xibo\Middleware\ApiStorage());
+$app = new \Slim\Slim(array(
+    'debug' => true
+));
+$app->add(new \Xibo\Middleware\Storage());
+$app->add(new \Xibo\Middleware\State());
 
 // oAuth Resource
 /*$sessionStorage = new Storage\SessionStorage();
@@ -59,8 +64,20 @@ $app->add(new \Xibo\Middleware\ApiAuthenticationOAuth($server));*/
 $app->view(new JsonApiView());
 $app->add(new JsonApiMiddleware());
 
+// The current user
+// this should be injected by the ApiAuthenticationOAuth middleware
+$user = new \User();
+$app->container->singleton('user', function() use ($user) { return $user; });
+
+// Once we have a user, initialise the theme
+new \Xibo\Helper\Theme($app->user);
+
 $app->get('/layouts', function() use ($app) {
-    $app->render(200, \Xibo\Factory\LayoutFactory::query($app->request->get('sort'), $app->request->get()));
+    $controller = new \Xibo\Controller\Layout();
+    $controller->setApp($app);
+    $controller->LayoutGrid();
+
+    $app->render(200, $app->state);
 })->name('layoutSearch');
 
 $app->get('/layouts/:id', function($id) use ($app) {

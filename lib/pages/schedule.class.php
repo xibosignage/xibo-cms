@@ -17,7 +17,12 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- */ 
+ */
+use Xibo\Helper\Date;
+use Xibo\Helper\Help;
+use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Theme;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 require_once('lib/data/schedule.data.class.php');
@@ -208,7 +213,7 @@ class scheduleDAO extends baseDAO {
 
         $db =& $this->db;
         $user =& $this->user;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $displayGroupIds = \Kit::GetParam('displayGroupIds', _SESSION, _ARRAY);
 
@@ -378,7 +383,7 @@ class scheduleDAO extends baseDAO {
         
         $db =& $this->db;
         $user =& $this->user;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $campaignId = \Kit::GetParam('CampaignID', _POST, _INT, 0);
         $fromDT = \Kit::GetParam('starttime', _POST, _STRING);
@@ -396,11 +401,11 @@ class scheduleDAO extends baseDAO {
         Debug::Audit('Times received are: FromDt=' . $fromDT . '. ToDt=' . $toDT . '. RepeatToDt=' . $repeatToDt);
 
         // Convert our dates
-        $fromDT = DateManager::getTimestampFromString($fromDT);
-        $toDT = DateManager::getTimestampFromString($toDT);
+        $fromDT = Date::getTimestampFromString($fromDT);
+        $toDT = Date::getTimestampFromString($toDT);
 
         if ($repeatToDt != '')
-            $repeatToDt = DateManager::getTimestampFromString($repeatToDt);
+            $repeatToDt = Date::getTimestampFromString($repeatToDt);
 
         Debug::Audit('Converted Times received are: FromDt=' . $fromDT . '. ToDt=' . $toDT . '. RepeatToDt=' . $repeatToDt);
         
@@ -443,7 +448,7 @@ class scheduleDAO extends baseDAO {
     function EditEventForm() {
         $db =& $this->db;
         $user =& $this->user;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $eventID = \Kit::GetParam('EventID', _GET, _INT, 0);
 
@@ -548,15 +553,15 @@ class scheduleDAO extends baseDAO {
             'd', '', true, '', '', '', $optionGroups, array(array('name' => 'data-live-search', 'value' => "true"), array('name' => 'data-selected-text-format', 'value' => "count > 4")));
 
         // Time controls
-        $formFields['general'][] = FormManager::AddText('starttimeControl', __('Start Time'), DateManager::getLocalDate($fromDT), 
+        $formFields['general'][] = FormManager::AddText('starttimeControl', __('Start Time'), Date::getLocalDate($fromDT),
             __('Select the start time for this event'), 's', 'required');
 
-        $formFields['general'][] = FormManager::AddText('endtimeControl', __('End Time'), DateManager::getLocalDate($toDT), 
+        $formFields['general'][] = FormManager::AddText('endtimeControl', __('End Time'), Date::getLocalDate($toDT),
             __('Select the end time for this event'), 'e', 'required');
 
         // Add two hidden fields to always carry the ISO date
-        $formFields['general'][] = FormManager::AddHidden('starttime', DateManager::getLocalDate($fromDT, "Y-m-d H:i"));
-        $formFields['general'][] = FormManager::AddHidden('endtime', DateManager::getLocalDate($toDT, "Y-m-d H:i"));
+        $formFields['general'][] = FormManager::AddHidden('starttime', Date::getLocalDate($fromDT, "Y-m-d H:i"));
+        $formFields['general'][] = FormManager::AddHidden('endtime', Date::getLocalDate($toDT, "Y-m-d H:i"));
         
         // Generate a list of layouts.
         $layouts = $user->CampaignList(NULL, false /* isRetired */);
@@ -623,10 +628,10 @@ class scheduleDAO extends baseDAO {
         $formFields['repeats'][] = FormManager::AddNumber('rec_detail', __('Repeat every'), $recDetail, 
             __('How often does this event repeat?'), 'o', '', 'repeat-control-group');
 
-        $formFields['repeats'][] = FormManager::AddText('rec_rangeControl', __('Until'), ((($recToDT == 0) ? '' : DateManager::getLocalDate($recToDT))),
+        $formFields['repeats'][] = FormManager::AddText('rec_rangeControl', __('Until'), ((($recToDT == 0) ? '' : Date::getLocalDate($recToDT))),
             __('When should this event stop repeating?'), 'u', '', 'repeat-control-group');
         
-        $formFields['repeats'][] = FormManager::AddHidden('rec_range', DateManager::getLocalDate($recToDT, "Y-m-d H:i"));
+        $formFields['repeats'][] = FormManager::AddHidden('rec_range', Date::getLocalDate($recToDT, "Y-m-d H:i"));
 
         // Set some field dependencies
         $response->AddFieldAction('rec_type', 'init', '', array('.repeat-control-group' => array('display' => 'none')));
@@ -660,7 +665,7 @@ class scheduleDAO extends baseDAO {
         
         $db =& $this->db;
         $user =& $this->user;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $eventId = \Kit::GetParam('EventID', _POST, _INT, 0);
         $campaignId = \Kit::GetParam('CampaignID', _POST, _INT, 0);
@@ -677,11 +682,11 @@ class scheduleDAO extends baseDAO {
         $isNextButton = \Kit::GetParam('next', _GET, _BOOL, false);
         
         // Convert our ISO strings
-        $fromDT = DateManager::getTimestampFromString($fromDT);
-        $toDT = DateManager::getTimestampFromString($toDT);
+        $fromDT = Date::getTimestampFromString($fromDT);
+        $toDT = Date::getTimestampFromString($toDT);
 
         if ($repeatToDt != '')
-            $repeatToDt = DateManager::getTimestampFromString($repeatToDt);
+            $repeatToDt = Date::getTimestampFromString($repeatToDt);
 
         Debug::Audit('Times received are: FromDt=' . $fromDT . '. ToDt=' . $toDT . '. RepeatToDt=' . $repeatToDt);
 
@@ -719,7 +724,7 @@ class scheduleDAO extends baseDAO {
     function DeleteForm() {
         $db =& $this->db;
         $user =& $this->user;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
         
         $eventID = \Kit::GetParam('EventID', _GET, _INT, 0);
         
@@ -732,7 +737,7 @@ class scheduleDAO extends baseDAO {
         Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to delete this event from <b>all</b> displays? If you only want to delete this item from certain displays, please deselect the displays in the edit dialogue and click Save.'))));
 
         $response->SetFormRequestResponse(NULL, __('Delete Event.'), '480px', '240px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Schedule', 'Delete') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Schedule', 'Delete') . '")');
         $response->AddButton(__('No'), 'XiboDialogClose()');
         $response->AddButton(__('Yes'), '$("#DeleteEventForm").submit()');
         $response->Respond();
@@ -750,7 +755,7 @@ class scheduleDAO extends baseDAO {
         
         $db =& $this->db;
         $user =& $this->user;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
         
         $eventID = \Kit::GetParam('EventID', _POST, _INT, 0);
         
@@ -801,7 +806,7 @@ class scheduleDAO extends baseDAO {
     public function ScheduleNowForm() {
         $db =& $this->db;
         $user =& $this->user;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $date = time();
 
@@ -924,7 +929,7 @@ class scheduleDAO extends baseDAO {
         
         $db =& $this->db;
         $user =& $this->user;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $campaignId = \Kit::GetParam('CampaignID', _POST, _INT, 0);
         $displayGroupIds = \Kit::GetParam('DisplayGroupIDs', _POST, _ARRAY);

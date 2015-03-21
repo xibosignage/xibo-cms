@@ -18,6 +18,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\ApplicationState;
+
 class video extends Module
 {
     /**
@@ -25,7 +27,7 @@ class video extends Module
      */
     public function EditForm()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
         $formFields = array();
         $formFields[] = FormManager::AddCheckbox('loop', __('Loop?'),
             $this->GetOption('loop', 0), __('Should the video loop if it finishes before the provided duration?'),

@@ -18,7 +18,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  *
- */ 
+ */
+use Xibo\Helper\Help;
+use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Theme;
+
 class clock extends Module
 {
     public $codeSchemaVersion = 1;
@@ -38,7 +42,7 @@ class clock extends Module
      */
     public function AddForm()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         // Configure form
         $this->configureForm('AddMedia');
@@ -78,7 +82,7 @@ class clock extends Module
                     't',
                     'analogue-control-group');
 
-        $formFields[] = FormManager::AddMessage(sprintf(__('Enter a format for the Digital Clock below. e.g. [HH:mm] or [DD/MM/YYYY]. See the <a href="%s" target="_blank">format guide</a> for more information.'), HelpManager::Link('Widget', 'ClockFormat')), 'digital-control-group');
+        $formFields[] = FormManager::AddMessage(sprintf(__('Enter a format for the Digital Clock below. e.g. [HH:mm] or [DD/MM/YYYY]. See the <a href="%s" target="_blank">format guide</a> for more information.'), Help::Link('Widget', 'ClockFormat')), 'digital-control-group');
         
         $formFields[] = FormManager::AddMultiText('ta_text', NULL, '[HH:mm]', 
             __('Enter a format for the clock'), 'f', 10, '', 'digital-control-group');
@@ -104,7 +108,7 @@ class clock extends Module
      */
     public function AddMedia()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         // You must also provide a duration (all media items must provide this field)
         $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration(), false));
@@ -128,7 +132,7 @@ class clock extends Module
      */
     public function EditForm()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         // Edit calls are the same as add calls, except you will to check the user has permissions to do the edit
         if (!$this->auth->edit)
@@ -174,7 +178,7 @@ class clock extends Module
                     't',
                     'analogue-control-group');
 
-        $formFields[] = FormManager::AddMessage(sprintf(__('Enter a format for the Digital Clock below. e.g. [HH:mm] or [DD/MM/YYYY]. See the <a href="%s" target="_blank">format guide</a> for more information.'), HelpManager::Link('Widget', 'ClockFormat')), 'digital-control-group');
+        $formFields[] = FormManager::AddMessage(sprintf(__('Enter a format for the Digital Clock below. e.g. [HH:mm] or [DD/MM/YYYY]. See the <a href="%s" target="_blank">format guide</a> for more information.'), Help::Link('Widget', 'ClockFormat')), 'digital-control-group');
         
         $formFields[] = FormManager::AddMultiText('ta_text', NULL, $this->getRawNode('format', null),
             __('Enter a format for the clock'), 'f', 10, '', 'digital-control-group');
@@ -199,7 +203,7 @@ class clock extends Module
      */
     public function EditMedia()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         if (!$this->auth->edit)
             throw new Exception(__('You do not have permission to edit this widget.'));
@@ -223,7 +227,7 @@ class clock extends Module
     }
 
     /**
-     * @param ResponseManager $response
+     * @param ApplicationState $response
      */
     private function SetFieldDependencies(&$response)
     {

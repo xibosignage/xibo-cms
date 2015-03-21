@@ -18,6 +18,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Theme;
+
 class datasetview extends Module
 {
     /**
@@ -37,7 +40,7 @@ class datasetview extends Module
      */
     public function AddForm()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         // Configure form
         $this->configureForm('AddMedia');
@@ -69,7 +72,7 @@ class datasetview extends Module
      */
     public function EditForm()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
         if (!$this->auth->edit)
             throw new Exception(__('You do not have permission to edit this widget.'));
 
@@ -181,7 +184,7 @@ class datasetview extends Module
      */
     public function AddMedia()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         // Other properties
         $dataSetId = \Kit::GetParam('datasetid', _POST, _INT, 0);
@@ -224,7 +227,7 @@ class datasetview extends Module
      */
     public function EditMedia()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         if (!$this->auth->edit)
             throw new Exception(__('You do not have permission to edit this media.'));

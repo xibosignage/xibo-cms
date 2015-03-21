@@ -25,6 +25,7 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Permission;
 use Xibo\Exception\NotFoundException;
+use Xibo\Storage\PDOConnect;
 
 class PermissionFactory
 {
@@ -159,7 +160,7 @@ SELECT `permission`.`permissionId`, `permission`.`groupId`, `permission`.`object
 
         \Debug::sql($sql, $params);
 
-        foreach (\PDOConnect::select($sql, $params) as $row) {
+        foreach (PDOConnect::select($sql, $params) as $row) {
             $permission = new Permission();
             $permission->permissionId = $row['permissionId'];
             $permission->groupId = $row['groupId'];

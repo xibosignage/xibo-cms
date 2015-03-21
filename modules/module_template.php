@@ -23,7 +23,10 @@
  * This is a template module used to demonstrate how a module for Xibo can be made.
  *
  * The class name must be equal to the $this->type and the file name must be equal to modules/type.module.php
- */ 
+ */
+use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Theme;
+
 class moduletemplate extends Module
 {
     /**
@@ -83,7 +86,7 @@ class moduletemplate extends Module
      */
     public function AddForm()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         // You also have access to $settings, which is the array of settings you configured for your module.
         
@@ -119,7 +122,7 @@ class moduletemplate extends Module
      */
     public function AddMedia()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         // You must provide a duration (all media items must provide this field)
         $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration(), false));
@@ -152,7 +155,7 @@ class moduletemplate extends Module
     public function EditForm()
     {
         // Edit forms are the same as add forms, except you will have the $this->mediaid member variable available for use.
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         if (!$this->auth->edit)
             throw new Exception(__('You do not have permission to edit this widget.'));
@@ -173,7 +176,7 @@ class moduletemplate extends Module
      */
     public function EditMedia()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         if (!$this->auth->edit)
             throw new Exception(__('You do not have permission to edit this widget.'));

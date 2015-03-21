@@ -29,6 +29,8 @@
  * 	    text = The Text for the button
  * 	    url = The URL of the button
  */
+use Xibo\Helper\Theme;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
 <div class="info_table">

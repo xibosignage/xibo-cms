@@ -18,6 +18,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\Date;
+use Xibo\Helper\Theme;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
  
 class statusdashboardDAO extends baseDAO {
@@ -59,7 +62,7 @@ class statusdashboardDAO extends baseDAO {
                 $size = ((double)$row['size']) / (pow(1024, $base));
                 $remaining = $xmdsLimit - $size;
                 $output[] = array(
-                        'label' => DateManager::getLocalDate(DateManager::getDateFromGregorianString($row['month']), 'F'),
+                        'label' => Date::getLocalDate(Date::getDateFromGregorianString($row['month']), 'F'),
                         'value' => round($size, 2),
                         'limit' => round($remaining, 2)
                     );
@@ -68,7 +71,7 @@ class statusdashboardDAO extends baseDAO {
             // What if we are empty?
             if (count($output) == 0) {
                 $output[] = array(
-                        'label' => DateManager::getLocalDate(null, 'F'),
+                        'label' => Date::getLocalDate(null, 'F'),
                         'value' => 0,
                         'limit' => 0
                     );

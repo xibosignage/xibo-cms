@@ -17,7 +17,11 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- */ 
+ */
+use Xibo\Helper\Help;
+use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Theme;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 require_once('lib/data/setting.data.class.php');
 class adminDAO extends baseDAO {
@@ -147,7 +151,7 @@ class adminDAO extends baseDAO {
     }
 
     function Edit() {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         // Check the token
         if (!Kit::CheckToken())
@@ -282,7 +286,7 @@ class adminDAO extends baseDAO {
 	 */
 	public function SetMaxDebug()
 	{
-		$response	= new ResponseManager();
+		$response	= new ApplicationState();
 		$setting 	= new Setting();
 		
 		if (!$setting->Edit('audit', 'audit'))
@@ -298,7 +302,7 @@ class adminDAO extends baseDAO {
 	 */
 	public function SetMinDebug()
 	{
-		$response	= new ResponseManager();
+		$response	= new ApplicationState();
 		$setting 	= new Setting();
 		
 		if (!$setting->Edit('audit', 'error'))
@@ -314,7 +318,7 @@ class adminDAO extends baseDAO {
 	 */
 	public function SetServerProductionMode()
 	{
-		$response	= new ResponseManager();
+		$response	= new ApplicationState();
 		$setting 	= new Setting();
 		
 		if (!$setting->Edit('SERVER_MODE', 'Production'))
@@ -332,7 +336,7 @@ class adminDAO extends baseDAO {
 	 */
 	public function SetServerTestMode()
 	{
-		$response	= new ResponseManager();
+		$response	= new ApplicationState();
 		$setting 	= new Setting();
 		
 		if (!$setting->Edit('SERVER_MODE', 'Test'))
@@ -347,7 +351,7 @@ class adminDAO extends baseDAO {
     public function SendEmail()
     {
         $db				=& $this->db;
-        $response		= new ResponseManager();
+        $response		= new ApplicationState();
         $mail_to        = \Kit::ValidateParam(Config::GetSetting("mail_to"),_PASSWORD);
         $mail_from      = \Kit::ValidateParam(Config::GetSetting("mail_from"),_PASSWORD);
         $subject        = __('Email Test');
@@ -376,7 +380,7 @@ class adminDAO extends baseDAO {
      */
     public function BackupForm()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         // Check we have permission to do this
         if ($this->user->usertypeid != 1)
@@ -410,7 +414,7 @@ class adminDAO extends baseDAO {
      */
     public function RestoreForm()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         if (Config::GetSetting('SETTING_IMPORT_ENABLED') != 1)
         	trigger_error(__('Sorry this function is disabled.'), E_USER_ERROR);
@@ -519,7 +523,7 @@ FORM;
 
     public function TidyLibraryForm()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
         
         Theme::Set('form_id', 'TidyLibraryForm');
         Theme::Set('form_action', 'index.php?p=admin&q=TidyLibrary');
@@ -538,7 +542,7 @@ FORM;
         Theme::Set('form_fields', $formFields);
 
         $response->SetFormRequestResponse(NULL, __('Tidy Library'), '350px', '275px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Settings', 'TidyLibrary') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Settings', 'TidyLibrary') . '")');
         $response->AddButton(__('No'), 'XiboDialogClose()');
         $response->AddButton(__('Yes'), '$("#TidyLibraryForm").submit()');
         $response->Respond();
@@ -549,7 +553,7 @@ FORM;
      */
     public function TidyLibrary()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
         $tidyOldRevisions = (\Kit::GetParam('tidyOldRevisions', _POST, _CHECKBOX) == 1);
         $cleanUnusedFiles = (\Kit::GetParam('cleanUnusedFiles', _POST, _CHECKBOX) == 1);
 

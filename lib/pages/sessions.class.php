@@ -18,6 +18,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\Date;
+use Xibo\Helper\Help;
+use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Theme;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
  
 class sessionsDAO extends baseDAO {
@@ -31,7 +36,7 @@ class sessionsDAO extends baseDAO {
         Theme::Set('id', $id);
         Theme::Set('form_meta', '<input type="hidden" name="p" value="sessions"><input type="hidden" name="q" value="Grid">');
         Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
-        Theme::Set('pager', ResponseManager::Pager($id));
+        Theme::Set('pager', ApplicationState::Pager($id));
 		
 		// Construct Filter Form
         if (\Kit::IsFilterPinned('sessions', 'Filter')) {
@@ -84,14 +89,14 @@ class sessionsDAO extends baseDAO {
 	function Grid() 
 	{
 		$db =& $this->db;
-		$response = new ResponseManager();
+		$response = new ApplicationState();
 		
 		$type = \Kit::GetParam('filter_type', _POST, _WORD);
 		$fromDt = \Kit::GetParam('filter_fromdt', _POST, _STRING);
 
-        setSession('sessions', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
-        setSession('sessions', 'filter_type', $type);
-        setSession('sessions', 'filter_fromdt', $fromDt);
+        \Session::Set('sessions', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        \Session::Set('sessions', 'filter_type', $type);
+        \Session::Set('sessions', 'filter_fromdt', $fromDt);
 
         $SQL  = "SELECT session.userID, user.UserName,  IsExpired, LastPage,  session.LastAccessed,  RemoteAddr,  UserAgent ";
         $SQL .= "FROM `session` LEFT OUTER JOIN user ON user.userID = session.userID ";
@@ -99,7 +104,7 @@ class sessionsDAO extends baseDAO {
 
         if ($fromDt != '')
             // From Date is the Calendar Formatted DateTime in ISO format
-            $SQL .= sprintf(" AND session.LastAccessed < '%s' ", DateManager::getMidnightSystemDate(DateManager::getTimestampFromString($fromDt)));
+            $SQL .= sprintf(" AND session.LastAccessed < '%s' ", Date::getMidnightSystemDate(Date::getTimestampFromString($fromDt)));
 		
 		if ($type == "active")
 			$SQL .= " AND IsExpired = 0 ";
@@ -139,7 +144,7 @@ class sessionsDAO extends baseDAO {
 			$row['username'] = \Kit::ValidateParam($row['UserName'], _STRING);
 			$row['isexpired'] = (\Kit::ValidateParam($row['IsExpired'], _INT) == 1) ? 0 : 1;
 			$row['lastpage'] = \Kit::ValidateParam($row['LastPage'], _STRING);
-			$row['lastaccessed'] = DateManager::getLocalDate(strtotime(Kit::ValidateParam($row['LastAccessed'], _STRING)));
+			$row['lastaccessed'] = Date::getLocalDate(strtotime(Kit::ValidateParam($row['LastAccessed'], _STRING)));
 			$row['ip'] = \Kit::ValidateParam($row['RemoteAddr'], _STRING);
 			$row['browser'] = \Kit::ValidateParam($row['UserAgent'], _STRING);
 
@@ -162,7 +167,7 @@ class sessionsDAO extends baseDAO {
 	function ConfirmLogout()
 	{
 		$db =& $this->db;
-		$response = new ResponseManager();
+		$response = new ApplicationState();
 		
 		$userid = \Kit::GetParam('userid', _GET, _INT);
 		
@@ -174,7 +179,7 @@ class sessionsDAO extends baseDAO {
         Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to logout this user?'))));
 
 		$response->SetFormRequestResponse(NULL, __('Logout User'), '430px', '200px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Sessions', 'Logout') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Sessions', 'Logout') . '")');
 		$response->AddButton(__('No'), 'XiboDialogClose()');
 		$response->AddButton(__('Yes'), '$("#SessionsLogoutForm").submit()');
 		$response->Respond();
@@ -193,7 +198,7 @@ class sessionsDAO extends baseDAO {
 		$db =& $this->db;
 		
 		//ajax request handler
-		$response = new ResponseManager();
+		$response = new ApplicationState();
 		$userID = \Kit::GetParam('userid', _POST, _INT);
 		
 		$SQL = sprintf("UPDATE session SET IsExpired = 1 WHERE userID = %d", $userID);

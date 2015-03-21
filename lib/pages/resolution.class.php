@@ -18,6 +18,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\Help;
+use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Theme;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 include_once('lib/data/resolution.data.class.php');
@@ -34,7 +38,7 @@ class resolutionDAO extends baseDAO
         Theme::Set('id', $id);
         Theme::Set('form_meta', '<input type="hidden" name="p" value="resolution"><input type="hidden" name="q" value="ResolutionGrid">');
         Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
-        Theme::Set('pager', ResponseManager::Pager($id));
+        Theme::Set('pager', ApplicationState::Pager($id));
 
         if (\Kit::IsFilterPinned('resolution', 'ResolutionFilter')) {
             $pinned = 1;
@@ -92,12 +96,12 @@ class resolutionDAO extends baseDAO
     function ResolutionGrid()
     {
         $user =& $this->user;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
-        setSession('resolution', 'ResolutionFilter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        \Session::Set('resolution', 'ResolutionFilter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
         // Show enabled
         $filterEnabled = \Kit::GetParam('filterEnabled', _POST, _INT);
-        setSession('resolution', 'filterEnabled', $filterEnabled);
+        \Session::Set('resolution', 'filterEnabled', $filterEnabled);
 
         $resolutions = $user->ResolutionList(array('resolution'), array('enabled' => $filterEnabled));
         $rows = array();
@@ -149,7 +153,7 @@ class resolutionDAO extends baseDAO
      */
     function AddForm()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         Theme::Set('form_id', 'AddForm');
         Theme::Set('form_action', 'index.php?p=resolution&q=Add');
@@ -167,7 +171,7 @@ class resolutionDAO extends baseDAO
         Theme::Set('form_fields', $formFields);
 
         $response->SetFormRequestResponse(NULL, __('Add Resolution'), '350px', '250px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Resolution', 'Add') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Resolution', 'Add') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#AddForm").submit()');
         $response->Respond();
@@ -178,7 +182,7 @@ class resolutionDAO extends baseDAO
      */
     function EditForm()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $resolution = \Xibo\Factory\ResolutionFactory::getById(Kit::GetParam('resolutionid', _GET, _INT));
 
@@ -205,7 +209,7 @@ class resolutionDAO extends baseDAO
         Theme::Set('form_meta', '<input type="hidden" name="resolutionid" value="' . $resolution->resolutionId . '" >');
 
         $response->SetFormRequestResponse(NULL, __('Edit Resolution'), '350px', '250px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Resolution', 'Add') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Resolution', 'Add') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#ResolutionForm").submit()');
         $response->Respond();
@@ -216,7 +220,7 @@ class resolutionDAO extends baseDAO
      */
     function DeleteForm()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $resolution = \Xibo\Factory\ResolutionFactory::getById(Kit::GetParam('resolutionid', _GET, _INT));
 
@@ -230,7 +234,7 @@ class resolutionDAO extends baseDAO
         Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to delete?'))));
         
         $response->SetFormRequestResponse(Theme::RenderReturn('form_render'), __('Delete Resolution'), '250px', '150px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Resolution', 'Delete') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Resolution', 'Delete') . '")');
         $response->AddButton(__('No'), 'XiboDialogClose()');
         $response->AddButton(__('Yes'), '$("#DeleteForm").submit()');
         $response->Respond();
@@ -244,7 +248,7 @@ class resolutionDAO extends baseDAO
         
         $db 	=& $this->db;
         $user 	=& $this->user;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $resolution = \Kit::GetParam('resolution', _POST, _STRING);
         $width = \Kit::GetParam('width', _POST, _INT);
@@ -268,7 +272,7 @@ class resolutionDAO extends baseDAO
         
         $db 	=& $this->db;
         $user 	=& $this->user;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $resolutionID = \Kit::GetParam('resolutionid', _POST, _INT);
         $resolution = \Kit::GetParam('resolution', _POST, _STRING);
@@ -294,7 +298,7 @@ class resolutionDAO extends baseDAO
         
         $db 	=& $this->db;
         $user 	=& $this->user;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $resolutionID = \Kit::GetParam('resolutionid', _POST, _INT);
 

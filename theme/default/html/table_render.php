@@ -26,6 +26,8 @@
  *      text = The Text for the button
  *      url = The URL of the button
  */
+use Xibo\Helper\Theme;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 // Row class defined?
@@ -78,7 +80,7 @@ foreach(Theme::Get('table_rows') as $row) {
             <?php if (isset($col['icons']) && $col['icons']) { ?>
             <td><span <?php if (isset($col['iconDescription']) && isset($row[$col['iconDescription']]) && $row[$col['iconDescription']] != '') echo 'title="' . $row[$col['iconDescription']] . '"'; ?> class="<?php echo ($row[$col['name']] == 1) ? 'glyphicon glyphicon-ok' : (($row[$col['name']] == 0) ? 'glyphicon glyphicon-remove' : 'glyphicon glyphicon-exclamation-sign'); ?>"></span></td>
             <?php } else { ?>
-            <td><?php echo $row[$col['name']]; ?></td>
+            <td><?php echo (isset($row[$col['name']]) ? $row[$col['name']] : ''); ?></td>
             <?php } ?>
             <?php } ?>
             <?php if (isset($row['buttons']) && is_array($row['buttons']) && count($row['buttons'] > 0)) { ?>

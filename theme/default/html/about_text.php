@@ -21,6 +21,8 @@
  * Theme variables:
  * 	version
  */
+use Xibo\Helper\Theme;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?>
 <h2>License <small>Digital Signage for Everyone</small></h2>

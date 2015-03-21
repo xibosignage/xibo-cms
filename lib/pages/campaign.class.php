@@ -18,6 +18,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\Help;
+use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Theme;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 class campaignDAO extends baseDAO
@@ -29,7 +33,7 @@ class campaignDAO extends baseDAO
         Theme::Set('id', $id);
         Theme::Set('form_meta', '<input type="hidden" name="p" value="campaign"><input type="hidden" name="q" value="Grid">');
         Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
-        Theme::Set('pager', ResponseManager::Pager($id));
+        Theme::Set('pager', ApplicationState::Pager($id));
 
         // Call to render the template
         Theme::Set('header_text', __('Campaigns'));
@@ -56,7 +60,7 @@ class campaignDAO extends baseDAO
     public function Grid()
     {
         $user =& $this->user;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $campaigns = $user->CampaignList();
 
@@ -140,7 +144,7 @@ class campaignDAO extends baseDAO
     {
         $db =& $this->db;
         $user =& $this->user;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         Theme::Set('form_id', 'CampaignAddForm');
         Theme::Set('form_action', 'index.php?p=campaign&q=Add');
@@ -150,7 +154,7 @@ class campaignDAO extends baseDAO
         Theme::Set('form_fields', $formFields);
 
         $response->SetFormRequestResponse(Theme::RenderReturn('form_render'), __('Add Campaign'), '350px', '150px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Campaign', 'Add') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Campaign', 'Add') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#CampaignAddForm").submit()');
         $response->Respond();
@@ -166,7 +170,7 @@ class campaignDAO extends baseDAO
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $name = \Kit::GetParam('Name', _POST, _STRING);
 
@@ -187,7 +191,7 @@ class campaignDAO extends baseDAO
     {
         $db =& $this->db;
         $user =& $this->user;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
         
         $campaignId = \Kit::GetParam('CampaignID', _GET, _INT);
 
@@ -221,7 +225,7 @@ class campaignDAO extends baseDAO
         Theme::Set('form_meta', '<input type="hidden" name="CampaignID" value="' . $campaignId . '" />');
 
         $response->SetFormRequestResponse(Theme::RenderReturn('form_render'), __('Edit Campaign'), '350px', '150px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Campaign', 'Edit') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Campaign', 'Edit') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#CampaignEditForm").submit()');
         $response->Respond();
@@ -237,7 +241,7 @@ class campaignDAO extends baseDAO
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $campaignId = \Kit::GetParam('CampaignID', _POST, _INT);
         $name = \Kit::GetParam('Name', _POST, _STRING);
@@ -272,8 +276,8 @@ class campaignDAO extends baseDAO
     {
         $db =& $this->db;
         $user =& $this->user;
-        $response = new ResponseManager();
-        $helpManager = new HelpManager($db, $user);
+        $response = new ApplicationState();
+        $helpManager = new Help($db, $user);
 
         $campaignId = \Kit::GetParam('CampaignID', _GET, _INT);
 
@@ -290,7 +294,7 @@ class campaignDAO extends baseDAO
         Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to delete?'))));
 
         $response->SetFormRequestResponse(Theme::RenderReturn('form_render'), __('Delete Campaign'), '350px', '175px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Campaign', 'Delete') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Campaign', 'Delete') . '")');
         $response->AddButton(__('No'), 'XiboDialogClose()');
         $response->AddButton(__('Yes'), '$("#CampaignDeleteForm").submit()');
         $response->Respond();
@@ -306,7 +310,7 @@ class campaignDAO extends baseDAO
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
         $db =& $this->db;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $campaignId = \Kit::GetParam('CampaignID', _POST, _INT);
 
@@ -338,7 +342,7 @@ class campaignDAO extends baseDAO
         if (!Kit::CheckToken('assign_token'))
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
         
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $campaignObject = new Campaign();
 
@@ -386,14 +390,14 @@ class campaignDAO extends baseDAO
      */
     function LayoutAssignForm()
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $campaign = \Xibo\Factory\CampaignFactory::getById(Kit::GetParam('CampaignID', _GET, _INT));
 
         $id = uniqid();
         Theme::Set('id', $id);
         Theme::Set('form_meta', '<input type="hidden" name="p" value="campaign"><input type="hidden" name="q" value="LayoutAssignView">');
-        Theme::Set('pager', ResponseManager::Pager($id, 'grid_pager'));
+        Theme::Set('pager', ApplicationState::Pager($id, 'grid_pager'));
 
         // Get the currently assigned layouts and put them in the "well"
         $layoutsAssigned = \Xibo\Factory\LayoutFactory::query(array('lkcl.DisplayOrder'), array('campaignId' => $campaign->campaignId));
@@ -421,7 +425,7 @@ class campaignDAO extends baseDAO
         $response->dialogHeight = '580px';
         $response->dialogTitle = __('Layouts on Campaign');
 
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Campaign', 'Layouts') . '")');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Campaign', 'Layouts') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), 'LayoutsSubmit("' . $campaign->campaignId . '")');
 
@@ -433,7 +437,7 @@ class campaignDAO extends baseDAO
      */
     function LayoutAssignView() 
     {
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         // Input vars
         $name = \Kit::GetParam('filter_name', _POST, _STRING);

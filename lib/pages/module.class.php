@@ -18,6 +18,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\Help;
+use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Theme;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 class moduleDAO extends baseDAO 
@@ -57,7 +61,7 @@ class moduleDAO extends baseDAO
         $id = uniqid();
         Theme::Set('id', $id);
         Theme::Set('form_meta', '<input type="hidden" name="p" value="module"><input type="hidden" name="q" value="Grid">');
-        Theme::Set('pager', ResponseManager::Pager($id));
+        Theme::Set('pager', ApplicationState::Pager($id));
 
         // Do we have any modules to install?!
         if (Config::GetSetting('MODULE_CONFIG_LOCKED_CHECKB') != 'Checked') {
@@ -104,7 +108,7 @@ class moduleDAO extends baseDAO
     {
         $db =& $this->db;
         $user =& $this->user;
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         $SQL = '';
         $SQL .= 'SELECT ModuleID, ';
@@ -194,8 +198,8 @@ class moduleDAO extends baseDAO
     {
         $db =& $this->db;
         $user =& $this->user;
-        $response = new ResponseManager();
-        $helpManager = new HelpManager($db, $user);
+        $response = new ApplicationState();
+        $helpManager = new Help($db, $user);
 
         // Can we edit?
         if (Config::GetSetting('MODULE_CONFIG_LOCKED_CHECKB') == 'Checked')
@@ -269,7 +273,7 @@ class moduleDAO extends baseDAO
         if (!Kit::CheckToken())
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
 
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         // Can we edit?
         if (Config::GetSetting('MODULE_CONFIG_LOCKED_CHECKB') == 'Checked')
@@ -338,8 +342,8 @@ class moduleDAO extends baseDAO
     public function VerifyForm()
     {
         $user =& $this->user;
-        $response = new ResponseManager();
-        $helpManager = new HelpManager(NULL, $user);
+        $response = new ApplicationState();
+        $helpManager = new Help(NULL, $user);
 
         // Set some information about the form
         Theme::Set('form_id', 'VerifyForm');
@@ -363,7 +367,7 @@ class moduleDAO extends baseDAO
         if (!Kit::CheckToken())
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
 
-        $response = new ResponseManager();
+        $response = new ApplicationState();
 
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -428,7 +432,7 @@ class moduleDAO extends baseDAO
         Debug::LogEntry('audit', 'Module Installed: ' . $file, 'module', 'Install');
 
         // Excellent... capital... success
-        $response = new ResponseManager();
+        $response = new ApplicationState();
         $response->refresh = true;
         $response->refreshLocation = 'index.php?p=module';
         $response->Respond();
@@ -483,7 +487,7 @@ class moduleDAO extends baseDAO
         }
         else
         {
-            /* @var ResponseManager $response */
+            /* @var ApplicationState $response */
             $response->Respond();
         }
     }

@@ -17,7 +17,10 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- */ 
+ */
+use Xibo\Helper\Date;
+use Xibo\Helper\ApplicationState;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 class clockDAO extends baseDAO {
@@ -28,13 +31,13 @@ class clockDAO extends baseDAO {
      */
     function ShowTimeInfo()
     {
-        $response       = new ResponseManager();
+        $response       = new ApplicationState();
                 
         $output  = '<ul>';
-        $output .= '<li>' . __('Local Time') . ': ' . DateManager::getClock() . '</li>';
-        $output .= '<li>' . __('System Time') . ': ' . DateManager::getSystemClock() . '</li>';
-        $output .= '<li>' . __('Local Date') . ': ' . DateManager::getLocalDate() . '</li>';
-        $output .= '<li>' . __('System Date') . ': ' . DateManager::getSystemDate() . '</li>';
+        $output .= '<li>' . __('Local Time') . ': ' . Date::getClock() . '</li>';
+        $output .= '<li>' . __('System Time') . ': ' . Date::getSystemClock() . '</li>';
+        $output .= '<li>' . __('Local Date') . ': ' . Date::getLocalDate() . '</li>';
+        $output .= '<li>' . __('System Date') . ': ' . Date::getSystemDate() . '</li>';
         $output .= '</ul>';
         
         $response->SetFormRequestResponse($output, __('Date / Time Information'), '480px', '240px');
@@ -48,9 +51,9 @@ class clockDAO extends baseDAO {
     function GetClock()
     {
         $db             =& $this->db;
-        $response       = new ResponseManager();
+        $response       = new ApplicationState();
         
-        $output = DateManager::GetClock();
+        $output = Date::GetClock();
         
         $response->SetFormRequestResponse($output, __('Date / Time Information'), '480px', '240px');
         $response->clockUpdate  = true;
