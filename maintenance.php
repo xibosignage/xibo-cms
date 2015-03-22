@@ -127,7 +127,7 @@ else
         $pKey = \Xibo\Helper\Sanitize::getString('key');
         if(isset($argv[1]))
         {
-            $aKey = \Kit::ValidateParam($argv[1], _STRING);
+            $aKey = \Xibo\Helper\Sanitize::string($argv[1]);
         }
     }
 
@@ -145,7 +145,7 @@ else
         $alertForViewUsers = (Config::GetSetting('MAINTENANCE_ALERTS_FOR_VIEW_USERS') == 1);
         
         // The time in the past that the last connection must be later than globally.
-        $globalTimeout = time() - (60 * \Kit::ValidateParam(Config::GetSetting("MAINTENANCE_ALERT_TOUT"), _INT));
+        $globalTimeout = time() - (60 * \Xibo\Helper\Sanitize::int(Config::GetSetting("MAINTENANCE_ALERT_TOUT")));
         $msgTo = \Kit::ValidateParam(Config::GetSetting("mail_to"), _PASSWORD);
         $msgFrom = \Kit::ValidateParam(Config::GetSetting("mail_from"), _PASSWORD);
 
@@ -154,18 +154,18 @@ else
 
         foreach (Display::ValidateDisplays() as $display) {
             // Is this the first time this display has gone "off-line"
-            $displayGoneOffline = (\Kit::ValidateParam($display['loggedin'], _INT) == 1);
+            $displayGoneOffline = (\Xibo\Helper\Sanitize::int($display['loggedin']) == 1);
 
             // Should we send an email?
             if ($emailAlerts) {
-                if (\Kit::ValidateParam($display['email_alert'], _INT) == 1) {
+                if (\Xibo\Helper\Sanitize::int($display['email_alert']) == 1) {
                     if ($displayGoneOffline || $alwaysAlert) {
                         // Fields for email
-                        $subject = sprintf(__("Email Alert for Display %s"), \Kit::ValidateParam($display['display'], _STRING));
+                        $subject = sprintf(__("Email Alert for Display %s"), \Xibo\Helper\Sanitize::string($display['display']));
                         $body = sprintf(__("Display %s with ID %d was last seen at %s."), 
-                            \Kit::ValidateParam($display['display'], _STRING),
-                            \Kit::ValidateParam($display['displayid'], _INT),
-                            date("Y-m-d H:i:s", \Kit::ValidateParam($display['lastaccessed'], _INT)));
+                            \Xibo\Helper\Sanitize::string($display['display']),
+                            \Xibo\Helper\Sanitize::int($display['displayid']),
+                            date("Y-m-d H:i:s", \Xibo\Helper\Sanitize::int($display['lastaccessed'])));
 
                         // Get a list of people that have view access to the display?
                         if ($alertForViewUsers) {
@@ -202,7 +202,7 @@ else
         // Log Tidy
         print "<h1>" . __("Tidy Logs") . "</h1>";
         if (Config::GetSetting("MAINTENANCE_LOG_MAXAGE") != 0 && \Kit::GetParam('quick', _REQUEST, _INT) != 1) {
-            $maxage = date("Y-m-d H:i:s",time() - (86400 * \Kit::ValidateParam(Config::GetSetting("MAINTENANCE_LOG_MAXAGE"), _INT)));
+            $maxage = date("Y-m-d H:i:s",time() - (86400 * \Xibo\Helper\Sanitize::int(Config::GetSetting("MAINTENANCE_LOG_MAXAGE"))));
             
             try {
                 $dbh = \Xibo\Storage\PDOConnect::init();
@@ -264,10 +264,10 @@ else
             $sth->execute(array());
 
             foreach($sth->fetchAll() as $row) {
-                $displayId = \Kit::ValidateParam($row['DisplayID'], _INT);
-                $display = \Kit::ValidateParam($row['Display'], _STRING);
-                $wakeOnLanTime = \Kit::ValidateParam($row['WakeOnLanTime'], _STRING);
-                $lastWakeOnLan = \Kit::ValidateParam($row['LastWakeOnLanCommandSent'], _INT);
+                $displayId = \Xibo\Helper\Sanitize::int($row['DisplayID']);
+                $display = \Xibo\Helper\Sanitize::string($row['Display']);
+                $wakeOnLanTime = \Xibo\Helper\Sanitize::string($row['WakeOnLanTime']);
+                $lastWakeOnLan = \Xibo\Helper\Sanitize::int($row['LastWakeOnLanCommandSent']);
     
                 // Time to WOL (with respect to today)
                 $timeToWake = strtotime(date('Y-m-d') . ' ' . $wakeOnLanTime);

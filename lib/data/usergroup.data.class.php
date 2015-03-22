@@ -375,7 +375,7 @@ class UserGroup extends Data
             if (!$row = $sth->fetch())
                 $this->ThrowError(25005, __('Unable to get the UserGroup for this User.'));
     
-            $userGroupID = \Kit::ValidateParam($row['GroupID'], _INT);
+            $userGroupID = \Xibo\Helper\Sanitize::int($row['GroupID']);
     
             if ($userGroupID == 0)
             {

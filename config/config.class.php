@@ -73,7 +73,7 @@ class Config
 			//Log::debug('Retrieved setting ' . $result['value'] . ' for ' . $setting, 'Config', 'GetSetting');
 			
 			// Validate as a string and return
-			$result = \Kit::ValidateParam($result['value'], _STRING);
+			$result = \Xibo\Helper\Sanitize::string($result['value']);
 			
 			return ($result == '') ? $default : $result;
 		}
@@ -154,10 +154,10 @@ class Config
 			if (!$row = $sth->fetch(PDO::FETCH_ASSOC))
 				throw new Exception('No results returned');
 
-			$appVer = \Kit::ValidateParam($row['app_ver'], _STRING);
-			$xlfVer = \Kit::ValidateParam($row['XlfVersion'], _INT);
-			$xmdsVer = \Kit::ValidateParam($row['XmdsVersion'], _INT);
-			$dbVer = \Kit::ValidateParam($row['DBVersion'], _INT);
+			$appVer = \Xibo\Helper\Sanitize::string($row['app_ver']);
+			$xlfVer = \Xibo\Helper\Sanitize::int($row['XlfVersion']);
+			$xmdsVer = \Xibo\Helper\Sanitize::int($row['XmdsVersion']);
+			$dbVer = \Xibo\Helper\Sanitize::int($row['DBVersion']);
 	
 			if (!defined('VERSION')) 
 				define('VERSION', $appVer);

@@ -200,8 +200,8 @@ class ModuleFactory
             $SQL .= '  FROM `module` ';
             $SQL .= ' WHERE 1 = 1 ';
 
-            if (\Kit::GetParam('id', $filterBy, _INT, 0) != 0) {
-                $params['id'] = \Kit::GetParam('id', $filterBy, _INT);
+            if (\Xibo\Helper\Sanitize::int('id', 0, $filterBy) != 0) {
+                $params['id'] = \Xibo\Helper\Sanitize::int('id', $filterBy);
                 $SQL .= ' AND ModuleID = :id ';
             }
 
@@ -220,14 +220,14 @@ class ModuleFactory
                 $SQL .= ' AND ValidExtensions LIKE :extension ';
             }
 
-            if (\Kit::GetParam('assignable', $filterBy, _INT, -1) != -1) {
+            if (\Xibo\Helper\Sanitize::int('assignable', -1, $filterBy) != -1) {
                 $SQL .= " AND assignable = :assignable ";
-                $params['assignable'] = \Kit::GetParam('assignable', $filterBy, _INT);
+                $params['assignable'] = \Xibo\Helper\Sanitize::int('assignable', $filterBy);
             }
 
-            if (\Kit::GetParam('enabled', $filterBy, _INT, -1) != -1) {
+            if (\Xibo\Helper\Sanitize::int('enabled', -1, $filterBy) != -1) {
                 $SQL .= " AND enabled = :enabled ";
-                $params['enabled'] = \Kit::GetParam('enabled', $filterBy, _INT);
+                $params['enabled'] = \Xibo\Helper\Sanitize::int('enabled', $filterBy);
             }
 
             // Sorting?
@@ -239,20 +239,20 @@ class ModuleFactory
 
             foreach ($sth->fetchAll(\PDO::FETCH_ASSOC) as $row) {
                 $module = new Module();
-                $module->moduleId = \Kit::ValidateParam($row['ModuleID'], _INT);
-                $module->name = \Kit::ValidateParam($row['Name'], _STRING);
-                $module->description = \Kit::ValidateParam($row['Description'], _STRING);
-                $module->validExtensions = \Kit::ValidateParam($row['ValidExtensions'], _STRING);
-                $module->imageUri = \Kit::ValidateParam($row['ImageUri'], _STRING);
-                $module->renderAs = \Kit::ValidateParam($row['render_as'], _STRING);
+                $module->moduleId = \Xibo\Helper\Sanitize::int($row['ModuleID']);
+                $module->name = \Xibo\Helper\Sanitize::string($row['Name']);
+                $module->description = \Xibo\Helper\Sanitize::string($row['Description']);
+                $module->validExtensions = \Xibo\Helper\Sanitize::string($row['ValidExtensions']);
+                $module->imageUri = \Xibo\Helper\Sanitize::string($row['ImageUri']);
+                $module->renderAs = \Xibo\Helper\Sanitize::string($row['render_as']);
                 $module->type = strtolower(\Kit::ValidateParam($row['Module'], _WORD));
-                $module->enabled = \Kit::ValidateParam($row['Enabled'], _INT);
-                $module->regionSpecific = \Kit::ValidateParam($row['RegionSpecific'], _INT);
-                $module->previewEnabled = \Kit::ValidateParam($row['PreviewEnabled'], _INT);
-                $module->assignable = \Kit::ValidateParam($row['assignable'], _INT);
-                $module->schemaVersion = \Kit::ValidateParam($row['SchemaVersion'], _INT);
+                $module->enabled = \Xibo\Helper\Sanitize::int($row['Enabled']);
+                $module->regionSpecific = \Xibo\Helper\Sanitize::int($row['RegionSpecific']);
+                $module->previewEnabled = \Xibo\Helper\Sanitize::int($row['PreviewEnabled']);
+                $module->assignable = \Xibo\Helper\Sanitize::int($row['assignable']);
+                $module->schemaVersion = \Xibo\Helper\Sanitize::int($row['SchemaVersion']);
 
-                $settings = \Kit::ValidateParam($row['settings'], _STRING);
+                $settings = \Xibo\Helper\Sanitize::string($row['settings']);
                 $module->settings = ($settings == '') ? array() : json_decode($settings, true);
 
                 $entries[] = $module;

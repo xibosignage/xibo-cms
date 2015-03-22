@@ -254,10 +254,10 @@ class datasetDAO extends baseDAO
         Theme::Set('form_meta', '<input type="hidden" name="datasetid" value="' . $dataSetId . '" />');
 
         $formFields = array();
-        $formFields[] = FormManager::AddText('dataset', __('Name'), \Kit::ValidateParam($row['DataSet'], _STRING),
+        $formFields[] = FormManager::AddText('dataset', __('Name'), \Xibo\Helper\Sanitize::string($row['DataSet']),
             __('A name for this DataSet'), 'n', 'required');
 
-        $formFields[] = FormManager::AddText('description', __('Description'), \Kit::ValidateParam($row['Description'], _STRING),
+        $formFields[] = FormManager::AddText('description', __('Description'), \Xibo\Helper\Sanitize::string($row['Description']),
             __('An optional description'), 'd', 'maxlength="250"');
         
         Theme::Set('form_fields', $formFields);
@@ -536,13 +536,13 @@ class datasetDAO extends baseDAO
         Theme::Set('datasetcolumntype_field_list', $db->GetArray('SELECT datasetcolumntypeid, datasetcolumntype FROM datasetcolumntype'));
 
         $formFields = array();
-        $formFields[] = FormManager::AddText('heading', __('Heading'), \Kit::ValidateParam($row['Heading'], _STRING),
+        $formFields[] = FormManager::AddText('heading', __('Heading'), \Xibo\Helper\Sanitize::string($row['Heading']),
             __('The heading for this Column'), 'h', 'required');
 
         $formFields[] = FormManager::AddCombo(
                     'datasetcolumntypeid', 
                     __('Column Type'), 
-                    \Kit::ValidateParam($row['DataSetColumnTypeID'], _INT),
+                    \Xibo\Helper\Sanitize::int($row['DataSetColumnTypeID']),
                     $db->GetArray('SELECT datasetcolumntypeid, datasetcolumntype FROM datasetcolumntype'),
                     'datasetcolumntypeid',
                     'datasetcolumntype',
@@ -552,20 +552,20 @@ class datasetDAO extends baseDAO
         $formFields[] = FormManager::AddCombo(
                     'datatypeid', 
                     __('Data Type'), 
-                    \Kit::ValidateParam($row['DataTypeID'], _INT),
+                    \Xibo\Helper\Sanitize::int($row['DataTypeID']),
                     $db->GetArray('SELECT datatypeid, datatype FROM datatype'),
                     'datatypeid',
                     'datatype',
                     __('The DataType of the Intended Data'), 
                     'd');
 
-        $formFields[] = FormManager::AddText('listcontent', __('List Content'), \Kit::ValidateParam($row['ListContent'], _STRING),
+        $formFields[] = FormManager::AddText('listcontent', __('List Content'), \Xibo\Helper\Sanitize::string($row['ListContent']),
             __('A comma separated list of items to present in a combo box'), 'l', '');
 
-        $formFields[] = FormManager::AddNumber('columnorder', __('Column Order'), \Kit::ValidateParam($row['ColumnOrder'], _INT),
+        $formFields[] = FormManager::AddNumber('columnorder', __('Column Order'), \Xibo\Helper\Sanitize::int($row['ColumnOrder']),
             __('The order this column should be displayed in when entering data'), 'o', '');
 
-        $formFields[] = FormManager::AddText('formula', __('Formula'), \Kit::ValidateParam($row['Formula'], _STRING),
+        $formFields[] = FormManager::AddText('formula', __('Formula'), \Xibo\Helper\Sanitize::string($row['Formula']),
             __('A formula to use as a calculation for formula column types'), 'f', '');
         
         Theme::Set('form_fields', $formFields);
@@ -965,7 +965,7 @@ END;
 
             $checkbox = array(
                     'id' => $groupId,
-                    'name' => \Kit::ValidateParam($row['group'], _STRING),
+                    'name' => \Xibo\Helper\Sanitize::string($row['group']),
                     'class' => $rowClass,
                     'value_view' => $groupId . '_view',
                     'value_view_checked' => (($row['view'] == 1) ? 'checked' : ''),
@@ -1138,8 +1138,8 @@ END;
         foreach ($dataSetColumns as $row) {
             $i++;
 
-            $formFields[] = FormManager::AddNumber('csvImport_' . \Kit::ValidateParam($row['DataSetColumnID'], _INT),
-                \Kit::ValidateParam($row['Heading'], _STRING), $i, NULL, 'c');
+            $formFields[] = FormManager::AddNumber('csvImport_' . \Xibo\Helper\Sanitize::int($row['DataSetColumnID']),
+                \Xibo\Helper\Sanitize::string($row['Heading']), $i, NULL, 'c');
         }
 
         Theme::Set('form_fields', $formFields);
@@ -1202,7 +1202,7 @@ END;
 
         foreach ($dataSetColumns as $row) {
 
-            $dataSetColumnId = \Kit::ValidateParam($row['DataSetColumnID'], _INT);
+            $dataSetColumnId = \Xibo\Helper\Sanitize::int($row['DataSetColumnID']);
             $spreadSheetColumn = \Kit::GetParam('csvImport_' . $dataSetColumnId, _POST, _INT);
 
             // If it has been left blank, then skip

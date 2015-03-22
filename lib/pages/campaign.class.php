@@ -212,7 +212,7 @@ class campaignDAO extends baseDAO
             trigger_error(__('Error getting Campaign'));
         }
 
-        $campaign = \Kit::ValidateParam($row['Campaign'], _STRING);
+        $campaign = \Xibo\Helper\Sanitize::string($row['Campaign']);
 
         $formFields = array();
         $formFields[] = FormManager::AddText('Name', __('Name'), $campaign, __('The Name for this Campaign'), 'n', 'required');

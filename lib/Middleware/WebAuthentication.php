@@ -54,7 +54,7 @@ class WebAuthentication extends Middleware
             $user = $app->user;
             /* @var \Xibo\Entity\User $user */
 
-            $publicRoutes = array('/login', '/logout', '/clock', '/about');
+            $publicRoutes = array('/login', '/logout', '/clock', '/about', '/login/ping');
 
             // Get the current route pattern
             $resource = $app->router->getCurrentRoute()->getPattern();

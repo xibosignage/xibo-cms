@@ -97,14 +97,14 @@ class WidgetFactory
         $params = array();
         $sql = 'SELECT * FROM `widget` WHERE 1 = 1';
 
-        if (\Kit::GetParam('playlistId', $filterBy, _INT) != 0) {
+        if (\Xibo\Helper\Sanitize::int('playlistId', $filterBy) != 0) {
             $sql .= ' AND playlistId = :playlistId';
-            $params['playlistId'] = \Kit::GetParam('playlistId', $filterBy, _INT);
+            $params['playlistId'] = \Xibo\Helper\Sanitize::int('playlistId', $filterBy);
         }
 
-        if (\Kit::GetParam('widgetId', $filterBy, _INT) != 0) {
+        if (\Xibo\Helper\Sanitize::int('widgetId', $filterBy) != 0) {
             $sql .= ' AND widgetId = :widgetId';
-            $params['widgetId'] = \Kit::GetParam('widgetId', $filterBy, _INT);
+            $params['widgetId'] = \Xibo\Helper\Sanitize::int('widgetId', $filterBy);
         }
 
         // Sorting?
@@ -113,12 +113,12 @@ class WidgetFactory
 
         foreach (\PDOConnect::select($sql, $params) as $row) {
             $widget = new Widget();
-            $widget->widgetId = \Kit::ValidateParam($row['widgetId'], _INT);
-            $widget->playlistId = \Kit::ValidateParam($row['playlistId'], _INT);
-            $widget->ownerId = \Kit::ValidateParam($row['ownerId'], _INT);
+            $widget->widgetId = \Xibo\Helper\Sanitize::int($row['widgetId']);
+            $widget->playlistId = \Xibo\Helper\Sanitize::int($row['playlistId']);
+            $widget->ownerId = \Xibo\Helper\Sanitize::int($row['ownerId']);
             $widget->type = \Kit::ValidateParam($row['type'], _WORD);
-            $widget->duration = \Kit::ValidateParam($row['duration'], _INT);
-            $widget->displayOrder = \Kit::ValidateParam($row['displayOrder'], _INT);
+            $widget->duration = \Xibo\Helper\Sanitize::int($row['duration']);
+            $widget->displayOrder = \Xibo\Helper\Sanitize::int($row['displayOrder']);
 
             $entries[] = $widget;
         }

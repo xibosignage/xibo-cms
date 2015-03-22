@@ -29,6 +29,9 @@ use Xibo\Entity\Region;
 use Xibo\Entity\Widget;
 use Xibo\Entity\WidgetOption;
 use Xibo\Exception\NotFoundException;
+use Xibo\Helper\Log;
+use Xibo\Helper\Sanitize;
+use Xibo\Storage\PDOConnect;
 
 /**
  * Class LayoutFactory
@@ -287,7 +290,7 @@ class LayoutFactory
         $entries = array();
 
         try {
-            $dbh = \Xibo\Storage\PDOConnect::init();
+            $dbh = PDOConnect::init();
 
             $params = array();
             $sql  = "";
@@ -302,7 +305,7 @@ class LayoutFactory
             $sql .= "        layout.width, ";
             $sql .= "        layout.height, ";
             $sql .= "        layout.retired, ";
-            if (\Kit::GetParam('showTags', $filterBy, _INT) == 1)
+            if (Sanitize::getInt('showTags', $filterBy) == 1)
                 $sql .= " tag.tag AS tags, ";
             else
                 $sql .= " (SELECT GROUP_CONCAT(DISTINCT tag) FROM tag INNER JOIN lktaglayout ON lktaglayout.tagId = tag.tagId WHERE lktaglayout.layoutId = layout.LayoutID GROUP BY lktaglayout.layoutId) AS tags, ";
@@ -328,30 +331,30 @@ class LayoutFactory
             $sql .= "       AND campaign.IsLayoutSpecific = 1";
             $sql .= "   INNER JOIN `user` ON `user`.userId = `campaign`.userId ";
 
-            if (\Kit::GetParam('showTags', $filterBy, _INT) == 1) {
+            if (Sanitize::getInt('showTags', $filterBy) == 1) {
                 $sql .= " LEFT OUTER JOIN lktaglayout ON lktaglayout.layoutId = layout.layoutId ";
                 $sql .= " LEFT OUTER JOIN tag ON tag.tagId = lktaglayout.tagId ";
             }
 
-            if (\Kit::GetParam('campaignId', $filterBy, _INT, 0) != 0) {
+            if (Sanitize::getInt('campaignId', 0, $filterBy) != 0) {
                 // Join Campaign back onto it again
                 $sql .= " INNER JOIN `lkcampaignlayout` lkcl ON lkcl.layoutid = layout.layoutid AND lkcl.CampaignID = :campaignId ";
-                $params['campaignId'] = \Kit::GetParam('campaignId', $filterBy, _INT, 0);
+                $params['campaignId'] = Sanitize::getInt('campaignId', 0, $filterBy);
             }
 
             // MediaID
-            if (\Kit::GetParam('mediaId', $filterBy, _INT, 0) != 0) {
+            if (Sanitize::getInt('mediaId', 0, $filterBy) != 0) {
                 $sql .= " INNER JOIN `lklayoutmedia` ON lklayoutmedia.layoutid = layout.layoutid AND lklayoutmedia.mediaid = :mediaId";
                 $sql .= " INNER JOIN `media` ON lklayoutmedia.mediaid = media.mediaid ";
-                $params['mediaId'] = \Kit::GetParam('mediaId', $filterBy, _INT, 0);
+                $params['mediaId'] = Sanitize::getInt('mediaId', 0, $filterBy);
             }
 
             $sql .= " WHERE 1 = 1 ";
 
-            if (\Kit::GetParam('layout', $filterBy, _STRING) != '')
+            if (Sanitize::getString('layout', $filterBy) != '')
             {
                 // convert into a space delimited array
-                $names = explode(' ', \Kit::GetParam('layout', $filterBy, _STRING));
+                $names = explode(' ', Sanitize::getString('layout', $filterBy));
 
                 foreach($names as $searchName)
                 {
@@ -367,37 +370,37 @@ class LayoutFactory
                 }
             }
 
-            if (\Kit::GetParam('layoutExact', $filterBy, _STRING) != '') {
+            if (Sanitize::getString('layoutExact', $filterBy) != '') {
                 $sql.= " AND layout.layout = :exact ";
-                $params['exact'] = \Kit::GetParam('layoutExact', $filterBy, _STRING);
+                $params['exact'] = Sanitize::getString('layoutExact', $filterBy);
             }
 
             // Layout
-            if (\Kit::GetParam('layoutId', $filterBy, _INT, 0) != 0) {
+            if (Sanitize::getInt('layoutId', 0, $filterBy) != 0) {
                 $sql .= " AND layout.layoutId = :layoutId ";
-                $params['layoutId'] = \Kit::GetParam('layoutId', $filterBy, _INT, 0);
+                $params['layoutId'] = Sanitize::getInt('layoutId', 0, $filterBy);
             }
 
             // Not Layout
-            if (\Kit::GetParam('notLayoutId', $filterBy, _INT, 0) != 0) {
+            if (Sanitize::getInt('notLayoutId', 0, $filterBy) != 0) {
                 $sql .= " AND layout.layoutId <> :notLayoutId ";
-                $params['notLayoutId'] = \Kit::GetParam('notLayoutId', $filterBy, _INT, 0);
+                $params['notLayoutId'] = Sanitize::getInt('notLayoutId', 0, $filterBy);
             }
 
             // Owner filter
-            if (\Kit::GetParam('userId', $filterBy, _INT, 0) != 0) {
+            if (Sanitize::getInt('userId', 0, $filterBy) != 0) {
                 $sql .= " AND layout.userid = :userId ";
-                $params['userId'] = \Kit::GetParam('userId', $filterBy, _INT, 0);
+                $params['userId'] = Sanitize::getInt('userId', 0, $filterBy);
             }
 
             // Retired options (default to 0 - provide -1 to return all
-            if (\Kit::GetParam('retired', $filterBy, _INT, 0) != -1) {
+            if (Sanitize::getInt('retired', 0, $filterBy) != -1) {
                 $sql .= " AND layout.retired = :retired ";
-                $params['retired'] = \Kit::GetParam('retired', $filterBy, _INT);
+                $params['retired'] = Sanitize::getInt('retired', $filterBy);
             }
 
             // Tags
-            if (\Kit::GetParam('tags', $filterBy, _STRING) != '') {
+            if (Sanitize::getString('tags', $filterBy) != '') {
                 $sql .= " AND layout.layoutID IN (
                     SELECT lktaglayout.layoutId
                       FROM tag
@@ -405,17 +408,17 @@ class LayoutFactory
                         ON lktaglayout.tagId = tag.tagId
                     WHERE tag LIKE :tags
                     ) ";
-                $params['tags'] =  '%' . \Kit::GetParam('tags', $filterBy, _STRING) . '%';
+                $params['tags'] =  '%' . Sanitize::getString('tags', $filterBy) . '%';
             }
 
             // Exclude templates by default
-            if (\Kit::GetParam('excludeTemplates', $filterBy, _INT, 1) == 1) {
+            if (Sanitize::getInt('excludeTemplates', 1, $filterBy) == 1) {
                 $sql .= " AND layout.layoutID NOT IN (SELECT layoutId FROM lktaglayout WHERE tagId = 1) ";
             }
 
             // Show All, Used or UnUsed
-            if (\Kit::GetParam('filterLayoutStatusId', $filterBy, _INT, 1) != 1)  {
-                if (\Kit::GetParam('filterLayoutStatusId', $filterBy, _INT) == 2) {
+            if (Sanitize::getInt('filterLayoutStatusId', 1, $filterBy) != 1)  {
+                if (Sanitize::getInt('filterLayoutStatusId', $filterBy) == 2) {
                     // Only show used layouts
                     $sql .= ' AND ('
                         . '     campaign.CampaignID IN (SELECT DISTINCT schedule.CampaignID FROM schedule) '
@@ -433,7 +436,7 @@ class LayoutFactory
             if (is_array($sortOrder))
                 $sql .= 'ORDER BY ' . implode(',', $sortOrder);
 
-            \Xibo\Helper\Log::sql($sql, $params);
+            Log::sql($sql, $params);
 
             $sth = $dbh->prepare($sql);
             $sth->execute($params);
@@ -442,26 +445,26 @@ class LayoutFactory
                 $layout = new Layout();
 
                 // Validate each param and add it to the array.
-                $layout->layoutId = \Kit::ValidateParam($row['layoutID'], _INT);
-                $layout->schemaVersion = \Kit::ValidateParam($row['schemaVersion'], _INT);
-                $layout->layout = \Kit::ValidateParam($row['layout'], _STRING);
-                $layout->description = \Kit::ValidateParam($row['description'], _STRING);
-                $layout->tags = \Kit::ValidateParam($row['tags'], _STRING);
-                $layout->backgroundColor = \Kit::ValidateParam($row['backgroundColor'], _STRING);
-                $layout->owner = \Kit::ValidateParam($row['owner'], _STRING);
-                $layout->ownerId = \Kit::ValidateParam($row['userID'], _INT);
-                $layout->campaignId = \Kit::ValidateParam($row['CampaignID'], _INT);
-                $layout->retired = \Kit::ValidateParam($row['retired'], _INT);
-                $layout->status = \Kit::ValidateParam($row['status'], _INT);
-                $layout->backgroundImageId = \Kit::ValidateParam($row['backgroundImageId'], _INT);
-                $layout->backgroundzIndex = \Kit::ValidateParam($row['backgroundzIndex'], _INT);
-                $layout->width = \Kit::ValidateParam($row['width'], _DOUBLE);
-                $layout->height = \Kit::ValidateParam($row['height'], _DOUBLE);
+                $layout->layoutId = Sanitize::int($row['layoutID']);
+                $layout->schemaVersion = Sanitize::int($row['schemaVersion']);
+                $layout->layout = Sanitize::string($row['layout']);
+                $layout->description = Sanitize::string($row['description']);
+                $layout->tags = Sanitize::string($row['tags']);
+                $layout->backgroundColor = Sanitize::string($row['backgroundColor']);
+                $layout->owner = Sanitize::string($row['owner']);
+                $layout->ownerId = Sanitize::int($row['userID']);
+                $layout->campaignId = Sanitize::int($row['CampaignID']);
+                $layout->retired = Sanitize::int($row['retired']);
+                $layout->status = Sanitize::int($row['status']);
+                $layout->backgroundImageId = Sanitize::int($row['backgroundImageId']);
+                $layout->backgroundzIndex = Sanitize::int($row['backgroundzIndex']);
+                $layout->width = Sanitize::double($row['width']);
+                $layout->height = Sanitize::double($row['height']);
 
-                if (\Kit::GetParam('showLegacyXml', $filterBy, _INT) == 1)
+                if (Sanitize::int('showLegacyXml', $filterBy) == 1)
                     $layout->legacyXml = \Kit::ValidateParam($row['legacyXml'], _HTMLSTRING);
 
-                $layout->groupsWithPermissions = \Kit::ValidateParam($row['groupsWithPermissions'], _STRING);
+                $layout->groupsWithPermissions = Sanitize::string($row['groupsWithPermissions']);
 
                 $entries[] = $layout;
             }

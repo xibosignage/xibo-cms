@@ -63,7 +63,7 @@ class Media extends Data
                 if (!$row = $sth->fetch())
                     throw new Exception("Error Processing Request", 1);
                     
-                $fileSize = \Kit::ValidateParam($row['SumSize'], _INT);
+                $fileSize = \Xibo\Helper\Sanitize::int($row['SumSize']);
     
                 if (($fileSize / 1024) > $libraryLimit) {
                     $this->ThrowError(sprintf(__('Your library is full. Library Limit: %s K'), $libraryLimit));
@@ -269,7 +269,7 @@ class Media extends Data
                 if (!$row = $sth->fetch())
                     throw new Exception("Error Processing Request", 1);
                     
-                $fileSize = \Kit::ValidateParam($row['SumSize'], _INT);
+                $fileSize = \Xibo\Helper\Sanitize::int($row['SumSize']);
     
                 if (($fileSize / 1024) > $libraryLimit) {
                     $this->ThrowError(sprintf(__('Your library is full. Library Limit: %s K'), $libraryLimit));
@@ -369,7 +369,7 @@ class Media extends Data
                 $this->ThrowError(22, __('Cannot locate the files for this media. Unable to delete.'));
     
             // This will be used to delete the actual file (stored on disk)
-            $fileName = \Kit::ValidateParam($row['StoredAs'], _STRING);
+            $fileName = \Xibo\Helper\Sanitize::string($row['StoredAs']);
     
             // Remove permission assignments
             $security = new MediaGroupSecurity($this->db);
@@ -400,7 +400,7 @@ class Media extends Data
 
             if ($editedMediaRow = $sth->fetch()) {
                 // Unretire this edited record
-                $editedMediaId = \Kit::ValidateParam($editedMediaRow['MediaID'], _INT);
+                $editedMediaId = \Xibo\Helper\Sanitize::int($editedMediaRow['MediaID']);
 
                 $sth = $dbh->prepare('UPDATE media SET IsEdited = 0, EditedMediaID = NULL WHERE mediaid = :mediaid');
                 $sth->execute(array(
@@ -541,8 +541,8 @@ class Media extends Data
                 $this->ThrowError(20, __('No Module of this type found'));
     
             $this->moduleInfoLoaded = true;
-            $this->regionSpecific = \Kit::ValidateParam($row['RegionSpecific'], _INT);
-            $this->validExtensions = explode(',', \Kit::ValidateParam($row['ValidExtensions'], _STRING));
+            $this->regionSpecific = \Xibo\Helper\Sanitize::int($row['RegionSpecific']);
+            $this->validExtensions = explode(',', \Xibo\Helper\Sanitize::string($row['ValidExtensions']));
             
             return true;  
         }
@@ -635,10 +635,10 @@ class Media extends Data
                 $this->ThrowError(26, __('Error getting media extension before copy.'));
 
             // Get the file name
-            $fileName = \Kit::ValidateParam($row['StoredAs'], _STRING);
+            $fileName = \Xibo\Helper\Sanitize::string($row['StoredAs']);
             $extension = strtolower(substr(strrchr($fileName, '.'), 1));
     
-            $newMediaName = \Kit::ValidateParam($row['Name'], _STRING) . ' 2';
+            $newMediaName = \Xibo\Helper\Sanitize::string($row['Name']) . ' 2';
     
             if ($prefix != '')
                 $newMediaName = $prefix . ' ' . $newMediaName;
@@ -1007,7 +1007,7 @@ class Media extends Data
                 return $dbh->lastInsertId();
             }
             else {
-                return \Kit::ValidateParam($row['lkTagMediaId'], _INT);
+                return \Xibo\Helper\Sanitize::int($row['lkTagMediaId']);
             }
         }
         catch (Exception $e) {

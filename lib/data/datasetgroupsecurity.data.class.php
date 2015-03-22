@@ -37,12 +37,12 @@ class DataSetGroupSecurity extends Data
 
         foreach($result as $row) {
             $security[] = array(
-                    'groupid' => \Kit::ValidateParam($row['groupid'], _INT),
-                    'group' => \Kit::ValidateParam($row['group'], _STRING),
-                    'view' => \Kit::ValidateParam($row['view'], _INT),
-                    'edit' => \Kit::ValidateParam($row['edit'], _INT),
-                    'del' => \Kit::ValidateParam($row['del'], _INT),
-                    'isuserspecific' => \Kit::ValidateParam($row['isuserspecific'], _INT),
+                    'groupid' => \Xibo\Helper\Sanitize::int($row['groupid']),
+                    'group' => \Xibo\Helper\Sanitize::string($row['group']),
+                    'view' => \Xibo\Helper\Sanitize::int($row['view']),
+                    'edit' => \Xibo\Helper\Sanitize::int($row['edit']),
+                    'del' => \Xibo\Helper\Sanitize::int($row['del']),
+                    'isuserspecific' => \Xibo\Helper\Sanitize::int($row['isuserspecific']),
                 );
         }
       
@@ -115,7 +115,7 @@ class DataSetGroupSecurity extends Data
                 throw new Exception('Missing Everyone group');
 
             // Link
-            return $this->Link($dataSetId, \Kit::ValidateParam($row['GroupID'], _INT), $view, $edit, $del);
+            return $this->Link($dataSetId, \Xibo\Helper\Sanitize::int($row['GroupID']), $view, $edit, $del);
         }
         catch (Exception $e) {
             Log::error($e->getMessage());

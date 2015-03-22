@@ -68,10 +68,10 @@ class CampaignFactory
         $sql .= "   ON lkcampaignlayout.LayoutID = layout.LayoutID ";
         $sql .= " WHERE 1 = 1 ";
 
-        if (\Kit::GetParam('campaignId', $filterBy, _INT, 0) != 0) {
+        if (\Xibo\Helper\Sanitize::string('campaignId', 0, $filterBy) != 0) {
             // Join Campaign back onto it again
             $sql .= " AND `campaign`.campaignId = :campaignId ";
-            $params['campaignId'] = \Kit::GetParam('campaignId', $filterBy, _INT, 0);
+            $params['campaignId'] = \Xibo\Helper\Sanitize::string('campaignId', 0, $filterBy);
         }
 
         if (\Kit::GetParam('name', $filterBy, _STRING) != '') {
@@ -107,16 +107,16 @@ class CampaignFactory
             $campaign = new Campaign();
 
             // Validate each param and add it to the array.
-            $campaign->campaignId = \Kit::ValidateParam($row['CampaignID'], _INT);
-            $campaign->campaign = \Kit::ValidateParam($row['Campaign'], _STRING);
-            $campaign->numberLayouts = \Kit::ValidateParam($row['NumLayouts'], _INT);
-            $campaign->isLayout = (\Kit::ValidateParam($row['IsLayoutSpecific'], _INT) == 1);
-            $campaign->retired = \Kit::ValidateParam($row['Retired'], _INT);
-            $campaign->ownerId = \Kit::ValidateParam($row['userId'], _INT);
+            $campaign->campaignId = \Xibo\Helper\Sanitize::int($row['CampaignID']);
+            $campaign->campaign = \Xibo\Helper\Sanitize::string($row['Campaign']);
+            $campaign->numberLayouts = \Xibo\Helper\Sanitize::int($row['NumLayouts']);
+            $campaign->isLayout = (\Xibo\Helper\Sanitize::int($row['IsLayoutSpecific']) == 1);
+            $campaign->retired = \Xibo\Helper\Sanitize::int($row['Retired']);
+            $campaign->ownerId = \Xibo\Helper\Sanitize::int($row['userId']);
 
             // Filter out campaigns that have all retired layouts
-            if (\Kit::GetParam('retired', $filterBy, _INT, -1) != -1) {
-                if ($row['Retired'] != \Kit::GetParam('retired', $filterBy, _INT))
+            if (\Xibo\Helper\Sanitize::int('retired', -1, $filterBy) != -1) {
+                if ($row['Retired'] != \Xibo\Helper\Sanitize::int('retired', $filterBy))
                     continue;
             }
 

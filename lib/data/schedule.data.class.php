@@ -553,7 +553,7 @@ class Schedule extends Data
                 $this->ThrowError(25034,__('Error retriving information necessary to delete this event'));
                             
             // Get the Display Group IDs
-            $displayGroupIDs = \Kit::ValidateParam($row['DisplayGroupIDs'], _STRING);
+            $displayGroupIDs = \Xibo\Helper\Sanitize::string($row['DisplayGroupIDs']);
             
             // Load into an array and remove the one in $displayGroupID
             $displayGroupIDs = explode(',', $displayGroupIDs);
@@ -597,7 +597,7 @@ class Schedule extends Data
      * @param [int] $eventId The Event ID
      */
     public function DisplayGroupsForEvent($eventId) {
-        $eventId = \Kit::ValidateParam($eventId, _INT);
+        $eventId = \Xibo\Helper\Sanitize::int($eventId);
 
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -610,7 +610,7 @@ class Schedule extends Data
             $ids = array();
           
             while ($row = $sth->fetch()) {
-                $ids[] = \Kit::ValidateParam($row['DisplayGroupID'], _INT);
+                $ids[] = \Xibo\Helper\Sanitize::int($row['DisplayGroupID']);
             }
 
             return $ids;

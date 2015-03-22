@@ -46,8 +46,8 @@ class XMDSSoap3
     public function RegisterDisplay($serverKey, $hardwareKey, $displayName, $version)
     {
         // Sanitize
-        $serverKey = \Kit::ValidateParam($serverKey, _STRING);
-        $hardwareKey = \Kit::ValidateParam($hardwareKey, _STRING);
+        $serverKey = \Xibo\Helper\Sanitize::string($serverKey);
+        $hardwareKey = \Xibo\Helper\Sanitize::string($hardwareKey);
         
         // Check the serverKey matches the one we have
         if ($serverKey != Config::GetSetting('SERVER_KEY'))
@@ -115,9 +115,9 @@ class XMDSSoap3
     function RequiredFiles($serverKey, $hardwareKey, $version)
     {
         // Sanitize
-        $serverKey = \Kit::ValidateParam($serverKey, _STRING);
-        $hardwareKey = \Kit::ValidateParam($hardwareKey, _STRING);
-        $rfLookAhead = \Kit::ValidateParam(Config::GetSetting('REQUIRED_FILES_LOOKAHEAD'), _INT);
+        $serverKey = \Xibo\Helper\Sanitize::string($serverKey);
+        $hardwareKey = \Xibo\Helper\Sanitize::string($hardwareKey);
+        $rfLookAhead = \Xibo\Helper\Sanitize::int(Config::GetSetting('REQUIRED_FILES_LOOKAHEAD'));
 
         // Check the serverKey matches
         if ($serverKey != Config::GetSetting('SERVER_KEY'))
@@ -185,7 +185,7 @@ class XMDSSoap3
     
             // Build up the other layouts into an array
             foreach ($sth->fetchAll() as $row)
-                $layouts[] = \Kit::ValidateParam($row['layoutID'], _INT);
+                $layouts[] = \Xibo\Helper\Sanitize::int($row['layoutID']);
         }
         catch (Exception $e) {            
             Log::Error($e->getMessage(), $this->displayId);
@@ -239,10 +239,10 @@ class XMDSSoap3
 
             foreach ($sth->fetchAll() as $row) {
                 $recordType = \Kit::ValidateParam($row['RecordType'], _WORD);
-                $path = \Kit::ValidateParam($row['path'], _STRING);
-                $id = \Kit::ValidateParam($row['id'], _STRING);
+                $path = \Xibo\Helper\Sanitize::string($row['path']);
+                $id = \Xibo\Helper\Sanitize::string($row['id']);
                 $md5 = \Kit::ValidateParam($row['MD5'], _HTMLSTRING);
-                $fileSize = \Kit::ValidateParam($row['FileSize'], _INT);
+                $fileSize = \Xibo\Helper\Sanitize::int($row['FileSize']);
                 $xml = \Kit::ValidateParam($row['xml'], _HTMLSTRING);
 
                 if ($recordType == 'layout') {
@@ -375,12 +375,12 @@ class XMDSSoap3
     function GetFile($serverKey, $hardwareKey, $filePath, $fileType, $chunkOffset, $chunkSize, $version)
     {
         // Sanitize
-        $serverKey = \Kit::ValidateParam($serverKey, _STRING);
-        $hardwareKey = \Kit::ValidateParam($hardwareKey, _STRING);
-        $filePath = \Kit::ValidateParam($filePath, _STRING);
+        $serverKey = \Xibo\Helper\Sanitize::string($serverKey);
+        $hardwareKey = \Xibo\Helper\Sanitize::string($hardwareKey);
+        $filePath = \Xibo\Helper\Sanitize::string($filePath);
         $fileType = \Kit::ValidateParam($fileType, _WORD);
-        $chunkOffset = \Kit::ValidateParam($chunkOffset, _INT);
-        $chunkSize = \Kit::ValidateParam($chunkSize, _INT);
+        $chunkOffset = \Xibo\Helper\Sanitize::int($chunkOffset);
+        $chunkSize = \Xibo\Helper\Sanitize::int($chunkSize);
 
         $libraryLocation = Config::GetSetting("LIBRARY_LOCATION");
 
@@ -402,7 +402,7 @@ class XMDSSoap3
         $nonce = new Nonce();
 
         if ($fileType == "layout") {
-            $fileId = \Kit::ValidateParam($filePath, _INT);
+            $fileId = \Xibo\Helper\Sanitize::int($filePath);
 
             // Validate the nonce
             if (!$nonce->AllowedFile('layout', $this->displayId, NULL, $fileId))
@@ -468,9 +468,9 @@ class XMDSSoap3
     function Schedule($serverKey, $hardwareKey, $version)
     {
         // Sanitize
-        $serverKey = \Kit::ValidateParam($serverKey, _STRING);
-        $hardwareKey = \Kit::ValidateParam($hardwareKey, _STRING);
-        $rfLookAhead = \Kit::ValidateParam(Config::GetSetting('REQUIRED_FILES_LOOKAHEAD'), _INT);
+        $serverKey = \Xibo\Helper\Sanitize::string($serverKey);
+        $hardwareKey = \Xibo\Helper\Sanitize::string($hardwareKey);
+        $rfLookAhead = \Xibo\Helper\Sanitize::int(Config::GetSetting('REQUIRED_FILES_LOOKAHEAD'));
 
         // Check the serverKey matches
         if ($serverKey != Config::GetSetting('SERVER_KEY'))
@@ -545,8 +545,8 @@ class XMDSSoap3
                 $fromdt = date('Y-m-d H:i:s', $row[1]);
                 $todt = date('Y-m-d H:i:s', $row[2]);
                 $scheduleid = $row[3];
-                $is_priority = \Kit::ValidateParam($row[4], _INT);
-                $dependents = \Kit::ValidateParam($row[5], _STRING);
+                $is_priority = \Xibo\Helper\Sanitize::int($row[4]);
+                $dependents = \Xibo\Helper\Sanitize::string($row[5]);
     
                 // Add a layout node to the schedule
                 $layout = $scheduleXml->createElement("layout");
@@ -621,11 +621,11 @@ class XMDSSoap3
     function BlackList($serverKey, $hardwareKey, $mediaId, $type, $reason, $version)
     {
         // Sanitize
-        $serverKey = \Kit::ValidateParam($serverKey, _STRING);
-        $hardwareKey = \Kit::ValidateParam($hardwareKey, _STRING);
-        $mediaId = \Kit::ValidateParam($mediaId, _STRING);
-        $type = \Kit::ValidateParam($type, _STRING);
-        $reason = \Kit::ValidateParam($reason, _STRING);
+        $serverKey = \Xibo\Helper\Sanitize::string($serverKey);
+        $hardwareKey = \Xibo\Helper\Sanitize::string($hardwareKey);
+        $mediaId = \Xibo\Helper\Sanitize::string($mediaId);
+        $type = \Xibo\Helper\Sanitize::string($type);
+        $reason = \Xibo\Helper\Sanitize::string($reason);
 
         // Check the serverKey matches
         if ($serverKey != Config::GetSetting('SERVER_KEY'))
@@ -709,8 +709,8 @@ class XMDSSoap3
     function SubmitLog($version, $serverKey, $hardwareKey, $logXml)
     {
         // Sanitize
-        $serverKey = \Kit::ValidateParam($serverKey, _STRING);
-        $hardwareKey = \Kit::ValidateParam($hardwareKey, _STRING);
+        $serverKey = \Xibo\Helper\Sanitize::string($serverKey);
+        $hardwareKey = \Xibo\Helper\Sanitize::string($hardwareKey);
         $logXml = \Kit::ValidateParam($logXml, _HTMLSTRING);
 
         // Check the serverKey matches
@@ -821,8 +821,8 @@ class XMDSSoap3
     function SubmitStats($version, $serverKey, $hardwareKey, $statXml)
     {
         // Sanitize
-        $serverKey = \Kit::ValidateParam($serverKey, _STRING);
-        $hardwareKey = \Kit::ValidateParam($hardwareKey, _STRING);
+        $serverKey = \Xibo\Helper\Sanitize::string($serverKey);
+        $hardwareKey = \Xibo\Helper\Sanitize::string($hardwareKey);
         $statXml = \Kit::ValidateParam($statXml, _HTMLSTRING);
 
         // Check the serverKey matches
@@ -904,8 +904,8 @@ class XMDSSoap3
     public function MediaInventory($version, $serverKey, $hardwareKey, $inventory)
     {
         // Sanitize
-        $serverKey = \Kit::ValidateParam($serverKey, _STRING);
-        $hardwareKey = \Kit::ValidateParam($hardwareKey, _STRING);
+        $serverKey = \Xibo\Helper\Sanitize::string($serverKey);
+        $hardwareKey = \Xibo\Helper\Sanitize::string($hardwareKey);
         $inventory = \Kit::ValidateParam($inventory, _HTMLSTRING);
 
         // Check the serverKey matches
@@ -973,11 +973,11 @@ class XMDSSoap3
     function GetResource($serverKey, $hardwareKey, $layoutId, $regionId, $mediaId, $version)
     {
         // Sanitize
-        $serverKey = \Kit::ValidateParam($serverKey, _STRING);
-        $hardwareKey = \Kit::ValidateParam($hardwareKey, _STRING);
-        $layoutId = \Kit::ValidateParam($layoutId, _INT);
-        $regionId = \Kit::ValidateParam($regionId, _STRING);
-        $mediaId = \Kit::ValidateParam($mediaId, _STRING);
+        $serverKey = \Xibo\Helper\Sanitize::string($serverKey);
+        $hardwareKey = \Xibo\Helper\Sanitize::string($hardwareKey);
+        $layoutId = \Xibo\Helper\Sanitize::int($layoutId);
+        $regionId = \Xibo\Helper\Sanitize::string($regionId);
+        $mediaId = \Xibo\Helper\Sanitize::string($mediaId);
 
         // Check the serverKey matches
         if ($serverKey != Config::GetSetting('SERVER_KEY'))

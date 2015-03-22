@@ -66,10 +66,10 @@ class RegionOptionFactory
 
         $sql = 'SELECT * FROM `regionoption` WHERE regionId = :regionId';
 
-        foreach (\PDOConnect::select($sql, array('regionId' => \Kit::GetParam('regionId', $filterBy, _INT))) as $row) {
+        foreach (\PDOConnect::select($sql, array('regionId' => \Xibo\Helper\Sanitize::int('regionId', $filterBy))) as $row) {
             $region = new RegionOption();
-            $region->regionId = \Kit::ValidateParam($row['regionId'], _INT);
-            $region->option = \Kit::ValidateParam($row['option'], _STRING);
+            $region->regionId = \Xibo\Helper\Sanitize::int($row['regionId']);
+            $region->option = \Xibo\Helper\Sanitize::string($row['option']);
             $region->value = \Kit::ValidateParam($row['value'], _HTMLSTRING);
 
             $entries[] = $region;

@@ -217,10 +217,10 @@ class displaygroupDAO extends baseDAO
         Theme::Set('form_action', 'index.php?p=displaygroup&q=Edit');
         Theme::Set('form_meta', '<input type="hidden" name="DisplayGroupID" value="' . $displayGroupID . '" />');
         
-        $formFields[] = FormManager::AddText('group', __('Name'), \Kit::ValidateParam($row['DisplayGroup'], _STRING),
+        $formFields[] = FormManager::AddText('group', __('Name'), \Xibo\Helper\Sanitize::string($row['DisplayGroup']),
             __('The Name for this Group'), 'n', 'required');
 
-        $formFields[] = FormManager::AddText('desc', __('Description'), \Kit::ValidateParam($row['Description'], _STRING),
+        $formFields[] = FormManager::AddText('desc', __('Description'), \Xibo\Helper\Sanitize::string($row['Description']),
             __('A short description of this Group'), 'd', 'maxlength="254"');
 
         Theme::Set('form_fields', $formFields);
@@ -466,7 +466,7 @@ class displaygroupDAO extends baseDAO
         while($row = $db->get_assoc_row($resultIn))
         {
             // Test whether this ID is in the array or not
-            $displayID  = \Kit::ValidateParam($row['DisplayID'], _INT);
+            $displayID  = \Xibo\Helper\Sanitize::int($row['DisplayID']);
             
             if(!in_array($displayID, $displays))
             {
@@ -537,7 +537,7 @@ class displaygroupDAO extends baseDAO
 
             $checkbox = array(
                     'id' => $groupId,
-                    'name' => \Kit::ValidateParam($row['group'], _STRING),
+                    'name' => \Xibo\Helper\Sanitize::string($row['group']),
                     'class' => $rowClass,
                     'value_view' => $groupId . '_view',
                     'value_view_checked' => (($row['view'] == 1) ? 'checked' : ''),

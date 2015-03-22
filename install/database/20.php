@@ -25,8 +25,8 @@ class Step20 extends UpgradeStep
 		while ($row = $db->get_assoc_row($result))
 		{
                     // For each display create a display group and link it to the display
-                    $displayID		= \Kit::ValidateParam($row['DisplayID'], _INT);
-                    $display		= \Kit::ValidateParam($row['Display'], _STRING);
+                    $displayID		= \Xibo\Helper\Sanitize::int($row['DisplayID']);
+                    $display		= \Xibo\Helper\Sanitize::string($row['Display']);
 
                     $displayGroupID	= $dg->Add($display, 1);
 
@@ -61,8 +61,8 @@ class Step20 extends UpgradeStep
             while ($row = $db->get_assoc_row($result))
             {
                 // For each display create a display group and link it to the display
-                $eventID		= \Kit::ValidateParam($row['EventID'], _INT);
-                $displayGroupIDs	= \Kit::ValidateParam($row['DisplayGroupIDs'], _STRING);
+                $eventID		= \Xibo\Helper\Sanitize::int($row['EventID']);
+                $displayGroupIDs	= \Xibo\Helper\Sanitize::string($row['DisplayGroupIDs']);
 
                 // For the display ids in the list make us up a comma seperated list of display groups
                 $SQL = "SELECT displaygroup.DisplayGroupID FROM displaygroup ";
@@ -79,7 +79,7 @@ class Step20 extends UpgradeStep
 
                 while ($row = $db->get_assoc_row($dgResult))
                 {
-                    $displayGroupIDs[] = \Kit::ValidateParam($row['DisplayGroupID'], _INT);
+                    $displayGroupIDs[] = \Xibo\Helper\Sanitize::int($row['DisplayGroupID']);
                 }
 
                 $displayGroupIDs = implode(',', $displayGroupIDs);
@@ -105,8 +105,8 @@ class Step20 extends UpgradeStep
             while ($row = $db->get_assoc_row($result))
             {
                 // For each display create a display group and link it to the display
-                $eventID		= \Kit::ValidateParam($row['Schedule_DetailID'], _INT);
-                $displayGroupID 	= \Kit::ValidateParam($row['DisplayGroupID'], _INT);
+                $eventID		= \Xibo\Helper\Sanitize::int($row['Schedule_DetailID']);
+                $displayGroupID 	= \Xibo\Helper\Sanitize::int($row['DisplayGroupID']);
 
                 // For the display ids in the list make us up a comma seperated list of display groups
                 $SQL = "SELECT displaygroup.DisplayGroupID FROM displaygroup ";
@@ -121,7 +121,7 @@ class Step20 extends UpgradeStep
 
                 $row = $db->get_assoc_row($dgResult);
 
-                $displayGroupID = \Kit::ValidateParam($row['DisplayGroupID'], _INT);
+                $displayGroupID = \Xibo\Helper\Sanitize::int($row['DisplayGroupID']);
 
                 // Update the schedule with the new IDs
                 $SQL = "UPDATE schedule_detail SET DisplayGroupID = %d WHERE schedule_detailID = %d";
@@ -153,9 +153,9 @@ class Step20 extends UpgradeStep
             {
                 // For each display create a display group and link it to the display
                 $ugid           = 0;
-                $userID		= \Kit::ValidateParam($row['UserID'], _INT);
-                $groupID	= \Kit::ValidateParam($row['groupID'], _INT);
-                $username  	= \Kit::ValidateParam($row['UserName'], _STRING);
+                $userID		= \Xibo\Helper\Sanitize::int($row['UserID']);
+                $groupID	= \Xibo\Helper\Sanitize::int($row['groupID']);
+                $username  	= \Xibo\Helper\Sanitize::string($row['UserName']);
 
                 $ug = new UserGroup($db);
 

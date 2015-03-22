@@ -168,8 +168,8 @@ END;
 
 		while ($row = $db->get_assoc_row($results)) 
 		{
-			$groupid	= \Kit::ValidateParam($row['groupID'], _INT);
-			$group 		= \Kit::ValidateParam($row['group'], _STRING);
+			$groupid	= \Xibo\Helper\Sanitize::int($row['groupID']);
+			$group 		= \Xibo\Helper\Sanitize::string($row['group']);
 
 			$row['usergroup'] = $group;
 
@@ -392,7 +392,7 @@ END;
             $sth->execute(array('groupId' => $groupId));
 
             if ($row = $sth->fetch(PDO::FETCH_ASSOC)) {
-                $group = \Kit::ValidateParam($row['group'], _STRING);
+                $group = \Xibo\Helper\Sanitize::string($row['group']);
             }
         }
         catch (Exception $e) {
@@ -499,7 +499,7 @@ END;
 			
 			// The page ID actually refers to the pagegroup ID - we have to look up all the page ID's for this
 			// PageGroupID
-			$SQL = "SELECT pageID FROM pages WHERE pagegroupID = " . \Kit::ValidateParam($row[1], _INT);
+			$SQL = "SELECT pageID FROM pages WHERE pagegroupID = " . \Xibo\Helper\Sanitize::int($row[1]);
 			
 			if (!$results = $db->query($SQL))
 			{

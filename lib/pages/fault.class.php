@@ -75,9 +75,9 @@ class faultDAO extends baseDAO {
 		
 		while ($row = $db->get_row($results)) 
 		{
-			$logdate 	= \Kit::ValidateParam($row[0], _STRING);
-			$page 		= \Kit::ValidateParam($row[1], _STRING);
-			$function 	= \Kit::ValidateParam($row[2], _STRING);
+			$logdate 	= \Xibo\Helper\Sanitize::string($row[0]);
+			$page 		= \Xibo\Helper\Sanitize::string($row[1]);
+			$function 	= \Xibo\Helper\Sanitize::string($row[2]);
 			$message 	= \Kit::ValidateParam($row[3], _HTMLSTRING);
 			
 			echo '"' . $logdate . '","' . $page . '","' . $function . '","' . $message . '"' . PHP_EOL;

@@ -123,7 +123,7 @@ ORDER BY joinedGroup.IsEveryone DESC, joinedGroup.IsUserSpecific, joinedGroup.`G
             $permission->entity = $entity;
             $permission->entityId = $entityId;
             $permission->isUser = $row['isuserspecific'];
-            $permission->group = \Kit::ValidateParam($row['group'], _STRING);
+            $permission->group = \Xibo\Helper\Sanitize::string($row['group']);
 
             $permissions[] = $permission;
         }

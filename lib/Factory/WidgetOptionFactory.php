@@ -68,11 +68,11 @@ class WidgetOptionFactory
 
         $sql = 'SELECT * FROM `widgetoption` WHERE widgetId = :widgetId';
 
-        foreach (\PDOConnect::select($sql, array('widgetId' => \Kit::GetParam('widgetId', $filterBy, _INT))) as $row) {
+        foreach (\PDOConnect::select($sql, array('widgetId' => \Xibo\Helper\Sanitize::int('widgetId', $filterBy))) as $row) {
             $widget = new WidgetOption();
-            $widget->widgetId = \Kit::ValidateParam($row['widgetId'], _INT);
+            $widget->widgetId = \Xibo\Helper\Sanitize::int($row['widgetId']);
             $widget->type = \Kit::ValidateParam($row['type'], _WORD);
-            $widget->option = \Kit::ValidateParam($row['option'], _STRING);
+            $widget->option = \Xibo\Helper\Sanitize::string($row['option']);
             $widget->value = \Kit::ValidateParam($row['value'], _HTMLSTRING);
 
             $entries[] = $widget;

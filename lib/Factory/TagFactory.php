@@ -77,8 +77,8 @@ class TagFactory
 
         $row = $tags[0];
         $tag = new Tag();
-        $tag->tagId = \Kit::ValidateParam($row['tagId'], _INT);
-        $tag->tag = \Kit::ValidateParam($row['tag'], _STRING);
+        $tag->tagId = \Xibo\Helper\Sanitize::int($row['tagId']);
+        $tag->tag = \Xibo\Helper\Sanitize::string($row['tag']);
 
         return $tag;
     }
@@ -96,8 +96,8 @@ class TagFactory
 
         foreach (\PDOConnect::select($sql, array('layoutId' => $layoutId)) as $row) {
             $tag = new Tag();
-            $tag->tagId = \Kit::ValidateParam($row['tagId'], _INT);
-            $tag->tag = \Kit::ValidateParam($row['tag'], _STRING);
+            $tag->tagId = \Xibo\Helper\Sanitize::int($row['tagId']);
+            $tag->tag = \Xibo\Helper\Sanitize::string($row['tag']);
             $tag->assignLayout($layoutId);
 
             $tags[] = $tag;

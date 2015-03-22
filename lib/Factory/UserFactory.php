@@ -82,13 +82,13 @@ class UserFactory
         $SQL .= ' WHERE 1 = 1 ';
 
         // User Id Provided?
-        if (\Kit::GetParam('userId', $filterBy, _INT) != 0) {
+        if (\Xibo\Helper\Sanitize::getInt('userId', $filterBy) != 0) {
             $SQL .= " AND user.userId = :userId ";
             $params['userId'] = \Xibo\Helper\Sanitize::getInt('userId', $filterBy);
         }
 
         // User Type Provided
-        if (\Kit::GetParam('userTypeId', $filterBy, _INT) != 0) {
+        if (\Xibo\Helper\Sanitize::getInt('userTypeId', $filterBy) != 0) {
             $SQL .= " AND user.userTypeId = :userTypeId ";
             $params['userTypeId'] = \Xibo\Helper\Sanitize::getInt('userTypeId', $filterBy);
         }
@@ -107,7 +107,7 @@ class UserFactory
         }
 
         // Retired users?
-        if (\Kit::GetParam('retired', $filterBy, _INT) != -1) {
+        if (\Xibo\Helper\Sanitize::int('retired', $filterBy) != -1) {
             $SQL .= " AND user.retired = :retired ";
             $params['retired'] = \Xibo\Helper\Sanitize::getInt('retired', $filterBy);
         }
@@ -120,18 +120,18 @@ class UserFactory
 
         foreach (PDOConnect::select($SQL, $params) as $row) {
             $user = new User();
-            $user->userId = \Kit::ValidateParam($row['userId'], _INT);
-            $user->userName = \Kit::ValidateParam($row['userName'], _STRING);
-            $user->userTypeId = \Kit::ValidateParam($row['userTypeId'], _INT);
-            $user->loggedIn = \Kit::ValidateParam($row['loggedIn'], _INT);
-            $user->email = \Kit::ValidateParam($row['email'], _STRING);
-            $user->homePage = \Kit::ValidateParam($row['homePage'], _STRING);
-            $user->lastAccessed = \Kit::ValidateParam($row['lastAccessed'], _INT);
-            $user->newUserWizard = \Kit::ValidateParam($row['newUserWizard'], _INT);
-            $user->retired = \Kit::ValidateParam($row['retired'], _INT);
+            $user->userId = \Xibo\Helper\Sanitize::int($row['userId']);
+            $user->userName = \Xibo\Helper\Sanitize::string($row['userName']);
+            $user->userTypeId = \Xibo\Helper\Sanitize::int($row['userTypeId']);
+            $user->loggedIn = \Xibo\Helper\Sanitize::int($row['loggedIn']);
+            $user->email = \Xibo\Helper\Sanitize::string($row['email']);
+            $user->homePage = \Xibo\Helper\Sanitize::string($row['homePage']);
+            $user->lastAccessed = \Xibo\Helper\Sanitize::int($row['lastAccessed']);
+            $user->newUserWizard = \Xibo\Helper\Sanitize::int($row['newUserWizard']);
+            $user->retired = \Xibo\Helper\Sanitize::int($row['retired']);
 
             // Set the user credentials (set privately)
-            $user->setPassword(\Kit::ValidateParam($row['UserPassword'], _STRING), \Kit::ValidateParam($row['CSPRNG'], _INT));
+            $user->setPassword(\Xibo\Helper\Sanitize::int($row['UserPassword']), \Xibo\Helper\Sanitize::int($row['CSPRNG']));
 
             $entries[] = $user;
         }

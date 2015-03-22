@@ -135,6 +135,12 @@ $app->get('/layout/view', function () use ($app) {
     $controller->render();
 });
 
+$app->get('/layout/add', function () use ($app) {
+    $controller = new \Xibo\Controller\Layout($app);
+    $controller->AddForm();
+    $controller->render();
+})->setName('layoutAddForm');
+
 $app->post('/ExchangeGridTokenForFormToken', function () use ($app) {
     $controller = new \Xibo\Controller\Login($app);
     $controller->ExchangeGridTokenForFormToken();

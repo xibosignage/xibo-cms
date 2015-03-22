@@ -62,7 +62,7 @@ class MediaFactory
         $sql .= "   media.expires, ";
         $sql .= "   IFNULL((SELECT parentmedia.mediaid FROM media parentmedia WHERE parentmedia.editedmediaid = media.mediaid),0) AS ParentID, ";
 
-        if (\Kit::GetParam('showTags', $filterBy, _INT) == 1)
+        if (\Xibo\Helper\Sanitize::int('showTags', $filterBy) == 1)
             $sql .= " tag.tag AS tags, ";
         else
             $sql .= " (SELECT GROUP_CONCAT(DISTINCT tag) FROM tag INNER JOIN lktagmedia ON lktagmedia.tagId = tag.tagId WHERE lktagmedia.mediaId = media.mediaID GROUP BY lktagmedia.mediaId) AS tags, ";
@@ -85,14 +85,14 @@ class MediaFactory
         $sql .= "   ON parentmedia.MediaID = media.MediaID ";
         $sql .= "   INNER JOIN `user` ON `user`.userId = `media`.userId ";
 
-        if (\Kit::GetParam('showTags', $filterBy, _INT) == 1) {
+        if (\Xibo\Helper\Sanitize::int('showTags', $filterBy) == 1) {
             $sql .= " LEFT OUTER JOIN lktagmedia ON lktagmedia.mediaId = media.mediaId ";
             $sql .= " LEFT OUTER JOIN tag ON tag.tagId = lktagmedia.tagId";
         }
 
         $sql .= " WHERE media.isEdited = 0 ";
 
-        if (\Kit::GetParam('allModules', $filterBy, _INT) == 0) {
+        if (\Xibo\Helper\Sanitize::int('allModules', $filterBy) == 0) {
             $sql .= "AND media.type <> 'module'";
         }
 
@@ -114,9 +114,9 @@ class MediaFactory
             }
         }
 
-        if (\Kit::GetParam('mediaId', $filterBy, _INT, -1) != -1) {
+        if (\Xibo\Helper\Sanitize::int('mediaId', -1, $filterBy) != -1) {
             $sql .= " AND media.mediaId = :mediaId ";
-            $params['mediaId'] = \Kit::GetParam('mediaId', $filterBy, _INT);
+            $params['mediaId'] = \Xibo\Helper\Sanitize::int('mediaId', $filterBy);
         }
 
         if (\Kit::GetParam('type', $filterBy, _STRING) != '') {
@@ -129,21 +129,21 @@ class MediaFactory
             $params['storedAs'] = \Kit::GetParam('storedAs', $filterBy, _STRING);
         }
 
-        if (\Kit::GetParam('ownerId', $filterBy, _INT) != 0) {
+        if (\Xibo\Helper\Sanitize::int('ownerId', $filterBy) != 0) {
             $sql .= " AND media.userid = :ownerId ";
-            $params['ownerId'] = \Kit::GetParam('ownerid', $filterBy, _INT);
+            $params['ownerId'] = \Xibo\Helper\Sanitize::int('ownerid', $filterBy);
         }
 
-        if (\Kit::GetParam('retired', $filterBy, _INT, -1) == 1)
+        if (\Xibo\Helper\Sanitize::int('retired', -1, $filterBy) == 1)
             $sql .= " AND media.retired = 1 ";
 
-        if (\Kit::GetParam('retired', $filterBy, _INT, -1) == 0)
+        if (\Xibo\Helper\Sanitize::int('retired', -1, $filterBy) == 0)
             $sql .= " AND media.retired = 0 ";
 
         // Expired files?
-        if (\Kit::GetParam('expires', $filterBy, _INT) != 0) {
+        if (\Xibo\Helper\Sanitize::int('expires', $filterBy) != 0) {
             $sql .= ' AND media.expires < :expires AND IFNULL(media.expires, 0) <> 0 ';
-            $params['expires'] = \Kit::GetParam('expires', $filterBy, _INT);
+            $params['expires'] = \Xibo\Helper\Sanitize::int('expires', $filterBy);
         }
 
         // Sorting?
@@ -154,21 +154,21 @@ class MediaFactory
 
         foreach (\PDOConnect::select($sql, $params) as $row) {
             $media = new Media();
-            $media->mediaId = \Kit::ValidateParam($row['mediaID'], _INT);
-            $media->name = \Kit::ValidateParam($row['name'], _STRING);
+            $media->mediaId = \Xibo\Helper\Sanitize::int($row['mediaID']);
+            $media->name = \Xibo\Helper\Sanitize::string($row['name']);
             $media->mediaType = \Kit::ValidateParam($row['type'], _WORD);
-            $media->duration = \Kit::ValidateParam($row['duration'], _DOUBLE);
-            $media->ownerId = \Kit::ValidateParam($row['userID'], _INT);
-            $media->fileSize = \Kit::ValidateParam($row['FileSize'], _INT);
-            $media->parentId = \Kit::ValidateParam($row['ParentID'], _INT);
-            $media->fileName = \Kit::ValidateParam($row['originalFileName'], _STRING);
-            $media->tags = \Kit::ValidateParam($row['tags'], _STRING);
-            $media->storedAs = \Kit::ValidateParam($row['storedAs'], _STRING);
-            $media->valid = \Kit::ValidateParam($row['valid'], _INT);
-            $media->moduleSystemFile = \Kit::ValidateParam($row['moduleSystemFile'], _INT);
-            $media->expires = \Kit::ValidateParam($row['expires'], _INT);
-            $media->owner = \Kit::ValidateParam($row['owner'], _STRING);
-            $media->groupsWithPermissions = \Kit::ValidateParam($row['groupsWithPermissions'], _STRING);
+            $media->duration = \Xibo\Helper\Sanitize::double($row['duration']);
+            $media->ownerId = \Xibo\Helper\Sanitize::int($row['userID']);
+            $media->fileSize = \Xibo\Helper\Sanitize::int($row['FileSize']);
+            $media->parentId = \Xibo\Helper\Sanitize::int($row['ParentID']);
+            $media->fileName = \Xibo\Helper\Sanitize::string($row['originalFileName']);
+            $media->tags = \Xibo\Helper\Sanitize::string($row['tags']);
+            $media->storedAs = \Xibo\Helper\Sanitize::string($row['storedAs']);
+            $media->valid = \Xibo\Helper\Sanitize::int($row['valid']);
+            $media->moduleSystemFile = \Xibo\Helper\Sanitize::int($row['moduleSystemFile']);
+            $media->expires = \Xibo\Helper\Sanitize::int($row['expires']);
+            $media->owner = \Xibo\Helper\Sanitize::string($row['owner']);
+            $media->groupsWithPermissions = \Xibo\Helper\Sanitize::string($row['groupsWithPermissions']);
 
             $entries[] = $media;
         }

@@ -414,7 +414,7 @@ class displayDAO extends baseDAO
 
         // Do we want to make a VNC link out of the display name?
         $vncTemplate = Config::GetSetting('SHOW_DISPLAY_AS_VNCLINK');
-        $linkTarget = \Kit::ValidateParam(Config::GetSetting('SHOW_DISPLAY_AS_VNC_TGT'), _STRING);
+        $linkTarget = \Xibo\Helper\Sanitize::string(Config::GetSetting('SHOW_DISPLAY_AS_VNC_TGT'));
         
         $cols = array(
                 array('name' => 'displayid', 'title' => __('ID')),
@@ -949,7 +949,7 @@ class displayDAO extends baseDAO
         while($row = $db->get_assoc_row($resultIn))
         {
             // Test whether this ID is in the array or not
-            $displayGroupID = \Kit::ValidateParam($row['DisplayGroupID'], _INT);
+            $displayGroupID = \Xibo\Helper\Sanitize::int($row['DisplayGroupID']);
 
             if(!in_array($displayGroupID, $displayGroups))
             {

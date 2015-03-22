@@ -259,7 +259,7 @@ class timelineDAO extends baseDAO
 
         // Go through each region and update the region in the layout we have
         foreach ($regions as $newCoordinates) {
-            $regionId = \Kit::ValidateParam($newCoordinates->regionid, _INT);
+            $regionId = \Xibo\Helper\Sanitize::int($newCoordinates->regionid);
 
             // Load the region
             $region = $layout->getRegion($regionId);
@@ -270,10 +270,10 @@ class timelineDAO extends baseDAO
                 trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
 
             // New coordinates
-            $region->top = \Kit::ValidateParam($newCoordinates->top, _DOUBLE);
-            $region->left = \Kit::ValidateParam($newCoordinates->left, _DOUBLE);
-            $region->width = \Kit::ValidateParam($newCoordinates->width, _DOUBLE);
-            $region->height = \Kit::ValidateParam($newCoordinates->height, _DOUBLE);
+            $region->top = \Xibo\Helper\Sanitize::double($newCoordinates->top);
+            $region->left = \Xibo\Helper\Sanitize::double($newCoordinates->left);
+            $region->width = \Xibo\Helper\Sanitize::double($newCoordinates->width);
+            $region->height = \Xibo\Helper\Sanitize::double($newCoordinates->height);
             Log::Audit('Set ' . $region);
         }
 

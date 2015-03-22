@@ -91,10 +91,10 @@ SQL;
 
         foreach ($helplinks as $row) {
 
-            $row['helpid'] = \Kit::ValidateParam($row['HelpID'], _INT);
-            $row['topic'] = \Kit::ValidateParam($row['Topic'], _STRING);
-            $row['category'] = \Kit::ValidateParam($row['Category'], _STRING);
-            $row['link'] = \Kit::ValidateParam($row['Link'], _STRING);
+            $row['helpid'] = \Xibo\Helper\Sanitize::int($row['HelpID']);
+            $row['topic'] = \Xibo\Helper\Sanitize::string($row['Topic']);
+            $row['category'] = \Xibo\Helper\Sanitize::string($row['Category']);
+            $row['link'] = \Xibo\Helper\Sanitize::string($row['Link']);
 
             $row['buttons'] = array();
 
@@ -187,13 +187,13 @@ SQL;
         Theme::Set('form_meta', '<input type="hidden" name="HelpID" value="' . $helpId . '" />');
 
         $formFields = array();
-        $formFields[] = FormManager::AddText('Topic', __('Topic'), \Kit::ValidateParam($row['Topic'], _STRING),
+        $formFields[] = FormManager::AddText('Topic', __('Topic'), \Xibo\Helper\Sanitize::string($row['Topic']),
             __('The Topic for this Help Link'), 't', 'maxlength="254" required');
 
-        $formFields[] = FormManager::AddText('Category', __('Category'), \Kit::ValidateParam($row['Category'], _STRING),
+        $formFields[] = FormManager::AddText('Category', __('Category'), \Xibo\Helper\Sanitize::string($row['Category']),
             __('The Category for this Help Link'), 'c', 'maxlength="254" required');
 
-        $formFields[] = FormManager::AddText('Link', __('Link'), \Kit::ValidateParam($row['Link'], _STRING),
+        $formFields[] = FormManager::AddText('Link', __('Link'), \Xibo\Helper\Sanitize::string($row['Link']),
             __('The Link to open for this help topic and category'), 'c', 'maxlength="254" required');
 
         Theme::Set('form_fields', $formFields);

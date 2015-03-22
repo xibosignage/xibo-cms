@@ -224,11 +224,11 @@ class logDAO extends baseDAO {
 		
 		foreach ($log as $row) { 
 
-            $row['logid'] = \Kit::ValidateParam($row['logid'], _INT);
+            $row['logid'] = \Xibo\Helper\Sanitize::int($row['logid']);
 			$row['logdate'] = Date::getLocalDate(strtotime(Kit::ValidateParam($row['logdate'], _STRING)), 'y-m-d h:i:s');
-            $row['display'] = (\Kit::ValidateParam($row['display'], _STRING) == '') ? __('CMS') : \Kit::ValidateParam($row['display'], _STRING);
-			$row['page'] = \Kit::ValidateParam($row['page'], _STRING);
-			$row['function'] = \Kit::ValidateParam($row['function'], _STRING);
+            $row['display'] = (\Xibo\Helper\Sanitize::string($row['display'], _STRING) == '') ? __('CMS') : \Kit::ValidateParam($row['display']);
+			$row['page'] = \Xibo\Helper\Sanitize::string($row['page']);
+			$row['function'] = \Xibo\Helper\Sanitize::string($row['function']);
 			$row['message'] = nl2br(htmlspecialchars($row['message']));
 			
 			$rows[] = $row;
@@ -275,10 +275,10 @@ class logDAO extends baseDAO {
    
             foreach ($log as $row) { 
     
-                $row['logid'] = \Kit::ValidateParam($row['logid'], _INT);
-                $row['logdate'] = \Kit::ValidateParam($row['logdate'], _STRING);
-                $row['page'] = \Kit::ValidateParam($row['page'], _STRING);
-                $row['function'] = \Kit::ValidateParam($row['function'], _STRING);
+                $row['logid'] = \Xibo\Helper\Sanitize::int($row['logid']);
+                $row['logdate'] = \Xibo\Helper\Sanitize::string($row['logdate']);
+                $row['page'] = \Xibo\Helper\Sanitize::string($row['page']);
+                $row['function'] = \Xibo\Helper\Sanitize::string($row['function']);
                 $row['message'] = nl2br(htmlspecialchars($row['message']));
                 
                 $rows[] = $row;

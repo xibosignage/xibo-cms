@@ -63,9 +63,9 @@ class DataSetData extends Data
 
             foreach($results as $row) {
 
-                $col['datasetcolumnid'] = \Kit::ValidateParam($row['DataSetColumnID'], _INT);
-                $col['rownumber'] = \Kit::ValidateParam($row['RowNumber'], _INT);
-                $col['value'] = \Kit::ValidateParam($row['Value'], _STRING);
+                $col['datasetcolumnid'] = \Xibo\Helper\Sanitize::int($row['DataSetColumnID']);
+                $col['rownumber'] = \Xibo\Helper\Sanitize::int($row['RowNumber']);
+                $col['value'] = \Xibo\Helper\Sanitize::string($row['Value']);
 
                 $rows[] = $col;
             }
@@ -321,7 +321,7 @@ class DataSetData extends Data
                 if (!$row = $sth->fetch())
                     return $this->SetError(25005, __('Could not determine the Max row number'));
 
-                $rowNumber = \Kit::ValidateParam($row['RowNumber'], _INT);
+                $rowNumber = \Xibo\Helper\Sanitize::int($row['RowNumber']);
                 $rowNumber++;
             }
 

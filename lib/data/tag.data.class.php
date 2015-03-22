@@ -34,7 +34,7 @@ class Tag extends Data
 		    $sth->execute(array('tag' => $tag));
 
 		    if ($row = $sth->fetch()) {
-		    	return \Kit::ValidateParam($row['tagId'], _INT);
+		    	return \Xibo\Helper\Sanitize::int($row['tagId']);
 		    }
 		    
 		    // Insert if not

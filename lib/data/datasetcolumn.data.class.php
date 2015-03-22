@@ -59,7 +59,7 @@ class DataSetColumn extends Data
                 if (!$row = $sth->fetch())
                     return $this->SetError(25005, __('Could not determine the Column Order'));
                 
-                $columnOrder = \Kit::ValidateParam($row['ColumnOrder'], _INT);
+                $columnOrder = \Xibo\Helper\Sanitize::int($row['ColumnOrder']);
             }
 
             // Insert the data set column
@@ -236,12 +236,12 @@ class DataSetColumn extends Data
 
             foreach($results as $row) {
 
-                $col['datasetcolumnid'] = \Kit::ValidateParam($row['DataSetColumnID'], _INT);
-                $col['heading'] = \Kit::ValidateParam($row['Heading'], _STRING);
-                $col['listcontent'] = \Kit::ValidateParam($row['ListContent'], _STRING);
-                $col['columnorder'] = \Kit::ValidateParam($row['ColumnOrder'], _INT);
-                $col['datatype'] = \Kit::ValidateParam($row['DataType'], _STRING);
-                $col['datasetcolumntype'] = \Kit::ValidateParam($row['DataSetColumnType'], _STRING);
+                $col['datasetcolumnid'] = \Xibo\Helper\Sanitize::int($row['DataSetColumnID']);
+                $col['heading'] = \Xibo\Helper\Sanitize::string($row['Heading']);
+                $col['listcontent'] = \Xibo\Helper\Sanitize::string($row['ListContent']);
+                $col['columnorder'] = \Xibo\Helper\Sanitize::int($row['ColumnOrder']);
+                $col['datatype'] = \Xibo\Helper\Sanitize::string($row['DataType']);
+                $col['datasetcolumntype'] = \Xibo\Helper\Sanitize::string($row['DataSetColumnType']);
 
                 $rows[] = $col;
             }

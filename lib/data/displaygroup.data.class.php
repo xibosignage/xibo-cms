@@ -224,7 +224,7 @@ class DisplayGroup extends Data
                 $this->ThrowError(25005, __('Unable to get the DisplayGroup for this Display'));
             
             // Get the Display Group ID
-            $displayGroupID = \Kit::ValidateParam($row['DisplayGroupID'], _INT);
+            $displayGroupID = \Xibo\Helper\Sanitize::int($row['DisplayGroupID']);
         
             // If there is no region specific display record... what do we do?
             if ($displayGroupID == 0)
@@ -360,7 +360,7 @@ class DisplayGroup extends Data
                 $this->ThrowError(25005, __('Unable to get the DisplayGroup for this Display'));
             
             // Get the Display Group ID
-            $displayGroupID = \Kit::ValidateParam($row['DisplayGroupID'], _INT);
+            $displayGroupID = \Xibo\Helper\Sanitize::int($row['DisplayGroupID']);
         
             // If there is no region specific display record... what do we do?
             if ($displayGroupID == 0) {
@@ -434,7 +434,7 @@ class DisplayGroup extends Data
             // Loop through all the media
             foreach ($mediaList as $mediaId)
             {
-                $mediaId = \Kit::ValidateParam($mediaId, _INT);
+                $mediaId = \Xibo\Helper\Sanitize::int($mediaId);
     
                 // Check we have permissions to use this media (we will use this to copy the media later)
                 $mediaAuth = $user->MediaAuth($mediaId, true);

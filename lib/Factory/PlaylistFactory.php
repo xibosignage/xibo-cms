@@ -82,23 +82,23 @@ class PlaylistFactory
         $params = array();
         $sql = 'SELECT playlist.* FROM `playlist` ';
 
-        if (\Kit::GetParam('regionId', $filterBy, _INT) != 0) {
+        if (\Xibo\Helper\Sanitize::int('regionId', $filterBy) != 0) {
             $sql .= 'INNER JOIN `lkregionplaylist` ON lkregionplaylist.playlistId = playlist.playlistId AND lkregionplaylist.regionId = :regionId ';
-            $params['regionId'] = \Kit::GetParam('regionId', $filterBy, _INT);
+            $params['regionId'] = \Xibo\Helper\Sanitize::int('regionId', $filterBy);
         }
 
-        if (\Kit::GetParam('playlistId', $filterBy, _INT) != 0) {
+        if (\Xibo\Helper\Sanitize::int('playlistId', $filterBy) != 0) {
             $sql .= ' WHERE playlistId = :playlistId ';
-            $params['playlistId'] = \Kit::GetParam('playlistId', $filterBy, _INT);
+            $params['playlistId'] = \Xibo\Helper\Sanitize::int('playlistId', $filterBy);
         }
 
         \Xibo\Helper\Log::sql($sql, $params);
 
         foreach (\PDOConnect::select($sql, $params) as $row) {
             $playlist = new Playlist();
-            $playlist->name = \Kit::ValidateParam($row['name'], _STRING);
-            $playlist->ownerId = \Kit::ValidateParam($row['ownerId'], _INT);
-            $playlist->playlistId = \Kit::ValidateParam($row['playlistId'], _INT);
+            $playlist->name = \Xibo\Helper\Sanitize::string($row['name']);
+            $playlist->ownerId = \Xibo\Helper\Sanitize::int($row['ownerId']);
+            $playlist->playlistId = \Xibo\Helper\Sanitize::int($row['playlistId']);
 
             $entries[] = $playlist;
         }

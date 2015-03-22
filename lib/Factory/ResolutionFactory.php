@@ -25,6 +25,7 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Resolution;
 use Xibo\Exception\NotFoundException;
+use Xibo\Storage\PDOConnect;
 
 class ResolutionFactory
 {
@@ -68,36 +69,36 @@ class ResolutionFactory
         $params = array();
         $sql  = 'SELECT * FROM `resolution` WHERE 1 = 1 ';
 
-        if (\Kit::GetParam('enabled', $filterBy, _INT, -1) != -1) {
+        if (\Xibo\Helper\Sanitize::getInt('enabled', -1, $filterBy) != -1) {
             $sql .= ' AND enabled = :enabled ';
-            $params['enabled'] = \Kit::GetParam('enabled', $filterBy, _INT);
+            $params['enabled'] = \Xibo\Helper\Sanitize::getInt('enabled', $filterBy);
         }
 
-        if (\Kit::GetParam('resolutionId', $filterBy, _INT) != 0) {
+        if (\Xibo\Helper\Sanitize::getInt('resolutionId', $filterBy) != 0) {
             $sql .= ' AND resolutionId = :resolutionId';
-            $params['resolutionId'] = \Kit::GetParam('resolutionId', $filterBy, _INT);
+            $params['resolutionId'] = \Xibo\Helper\Sanitize::getInt('resolutionId', $filterBy);
         }
 
-        if (\Kit::GetParam('width', $filterBy, _INT) != 0) {
+        if (\Xibo\Helper\Sanitize::getInt('width', $filterBy) != 0) {
             $sql .= ' AND intended_width = :width';
-            $params['width'] = \Kit::GetParam('width', $filterBy, _INT);
+            $params['width'] = \Xibo\Helper\Sanitize::getInt('width', $filterBy);
         }
 
-        if (\Kit::GetParam('height', $filterBy, _INT) != 0) {
+        if (\Xibo\Helper\Sanitize::getInt('height', $filterBy) != 0) {
             $sql .= ' AND intended_height = :height';
-            $params['height'] = \Kit::GetParam('height', $filterBy, _INT);
+            $params['height'] = \Xibo\Helper\Sanitize::getInt('height', $filterBy);
         }
 
         \Xibo\Helper\Log::sql($sql, $params);
 
-        foreach(\PDOConnect::select($sql, $params) as $record) {
+        foreach(PDOConnect::select($sql, $params) as $record) {
             $resolution = new Resolution();
             $resolution->resolutionId = $record['resolutionID'];
             $resolution->resolution = $record['resolution'];
             $resolution->width = $record['intended_width'];
             $resolution->height = $record['intended_height'];
-            $resolution->version = \Kit::ValidateParam($record['version'], _INT);
-            $resolution->enabled = \Kit::ValidateParam($record['enabled'], _INT);
+            $resolution->version = \Xibo\Helper\Sanitize::int($record['version']);
+            $resolution->enabled = \Xibo\Helper\Sanitize::int($record['enabled']);
 
             $entities[] = $resolution;
         }

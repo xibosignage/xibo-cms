@@ -245,7 +245,7 @@ class Campaign extends Data {
                 throw new Exception('No Campaign returned');
 
             // Return the Campaign ID
-            return \Kit::ValidateParam($row['CampaignID'], _INT);
+            return \Xibo\Helper\Sanitize::int($row['CampaignID']);
         }       
         catch (Exception $e) {
             Log::error($e->getMessage());

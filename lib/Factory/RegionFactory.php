@@ -119,29 +119,29 @@ class RegionFactory
         $params = array();
         $sql = 'SELECT * FROM `region` WHERE 1 = 1 ';
 
-        if (\Kit::GetParam('regionId', $filterBy, _INT) != 0) {
+        if (\Xibo\Helper\Sanitize::int('regionId', $filterBy) != 0) {
             $sql .= ' AND regionId = :regionId ';
-            $params['regionId'] = \Kit::GetParam('regionId', $filterBy, _INT);
+            $params['regionId'] = \Xibo\Helper\Sanitize::int('regionId', $filterBy);
         }
 
-        if (\Kit::GetParam('layoutId', $filterBy, _INT) != 0) {
+        if (\Xibo\Helper\Sanitize::int('layoutId', $filterBy) != 0) {
             $sql .= ' AND layoutId = :layoutId ';
-            $params['layoutId'] = \Kit::GetParam('layoutId', $filterBy, _INT);
+            $params['layoutId'] = \Xibo\Helper\Sanitize::int('layoutId', $filterBy);
         }
 
         \Xibo\Helper\Log::sql($sql, $params);
 
         foreach (\PDOConnect::select($sql, $params) as $row) {
             $region = new Region();
-            $region->layoutId = \Kit::ValidateParam($row['layoutId'], _INT);
-            $region->regionId = \Kit::ValidateParam($row['regionId'], _INT);
-            $region->ownerId = \Kit::ValidateParam($row['ownerId'], _INT);
-            $region->name = \Kit::ValidateParam($row['name'], _STRING);
-            $region->width = \Kit::ValidateParam($row['width'], _DOUBLE);
-            $region->height = \Kit::ValidateParam($row['height'], _DOUBLE);
-            $region->top = \Kit::ValidateParam($row['top'], _DOUBLE);
-            $region->left = \Kit::ValidateParam($row['left'], _DOUBLE);
-            $region->zIndex = \Kit::ValidateParam($row['zIndex'], _DOUBLE);
+            $region->layoutId = \Xibo\Helper\Sanitize::int($row['layoutId']);
+            $region->regionId = \Xibo\Helper\Sanitize::int($row['regionId']);
+            $region->ownerId = \Xibo\Helper\Sanitize::int($row['ownerId']);
+            $region->name = \Xibo\Helper\Sanitize::string($row['name']);
+            $region->width = \Xibo\Helper\Sanitize::double($row['width']);
+            $region->height = \Xibo\Helper\Sanitize::double($row['height']);
+            $region->top = \Xibo\Helper\Sanitize::double($row['top']);
+            $region->left = \Xibo\Helper\Sanitize::double($row['left']);
+            $region->zIndex = \Xibo\Helper\Sanitize::double($row['zIndex']);
 
             $entries[] = $region;
         }

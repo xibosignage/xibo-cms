@@ -55,15 +55,15 @@ class DisplayProfile extends Data {
                 $this->ThrowError(25004, __('Cannot find display profile'));
 
             // Get the type so we can load the defaults in from file
-            $this->type = \Kit::ValidateParam($row['type'], _STRING);
+            $this->type = \Xibo\Helper\Sanitize::string($row['type']);
 
             // Load the config from disk
             $this->loadFromFile();
 
             // Overwrite the defaults with the values from this specific record
-            $this->name = \Kit::ValidateParam($row['name'], _STRING);
-            $this->isDefault = \Kit::ValidateParam($row['isdefault'], _INT);
-            $this->userId = \Kit::ValidateParam($row['userid'], _INT);
+            $this->name = \Xibo\Helper\Sanitize::string($row['name']);
+            $this->isDefault = \Xibo\Helper\Sanitize::int($row['isdefault']);
+            $this->userId = \Xibo\Helper\Sanitize::int($row['userid']);
 
             // Load the client settings into an array
             $config = \Kit::ValidateParam($row['config'], _HTMLSTRING);
@@ -117,10 +117,10 @@ class DisplayProfile extends Data {
             }
             else {
                 // We do, so we should overwrite the global default with our stored preferences
-                $this->name = \Kit::ValidateParam($row['name'], _STRING);
-                $this->type = \Kit::ValidateParam($row['type'], _STRING);
-                $this->isDefault = \Kit::ValidateParam($row['isdefault'], _INT);
-                $this->userId = \Kit::ValidateParam($row['userid'], _INT);
+                $this->name = \Xibo\Helper\Sanitize::string($row['name']);
+                $this->type = \Xibo\Helper\Sanitize::string($row['type']);
+                $this->isDefault = \Xibo\Helper\Sanitize::int($row['isdefault']);
+                $this->userId = \Xibo\Helper\Sanitize::int($row['userid']);
 
                 // Load the client settings into an array
                 $config = \Kit::ValidateParam($row['config'], _HTMLSTRING);

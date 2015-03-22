@@ -99,42 +99,42 @@ class Display extends Data {
             if (!$row = $sth->fetch())
                 $this->ThrowError(25004, __('Cannot find display record'));
 
-            $this->isAuditing = \Kit::ValidateParam($row['isAuditing'], _INT);
-            $this->display = \Kit::ValidateParam($row['display'], _STRING);
-            $this->description = \Kit::ValidateParam($row['description'], _STRING);
-            $this->defaultLayoutId = \Kit::ValidateParam($row['defaultlayoutid'], _INT);
-            $this->license = \Kit::ValidateParam($row['license'], _STRING);
-            $this->licensed = \Kit::ValidateParam($row['licensed'], _INT);
-            $this->loggedIn = \Kit::ValidateParam($row['loggedin'], _INT);
-            $this->lastAccessed = \Kit::ValidateParam($row['lastaccessed'], _INT);
-            $this->incSchedule = \Kit::ValidateParam($row['inc_schedule'], _INT);
-            $this->emailAlert = \Kit::ValidateParam($row['email_alert'], _INT);
-            $this->alertTimeout = \Kit::ValidateParam($row['alert_timeout'], _INT);
-            $this->clientAddress = \Kit::ValidateParam($row['ClientAddress'], _STRING);
-            $this->mediaInventoryStatus = \Kit::ValidateParam($row['MediaInventoryStatus'], _INT);
+            $this->isAuditing = \Xibo\Helper\Sanitize::int($row['isAuditing']);
+            $this->display = \Xibo\Helper\Sanitize::string($row['display']);
+            $this->description = \Xibo\Helper\Sanitize::string($row['description']);
+            $this->defaultLayoutId = \Xibo\Helper\Sanitize::int($row['defaultlayoutid']);
+            $this->license = \Xibo\Helper\Sanitize::string($row['license']);
+            $this->licensed = \Xibo\Helper\Sanitize::int($row['licensed']);
+            $this->loggedIn = \Xibo\Helper\Sanitize::int($row['loggedin']);
+            $this->lastAccessed = \Xibo\Helper\Sanitize::int($row['lastaccessed']);
+            $this->incSchedule = \Xibo\Helper\Sanitize::int($row['inc_schedule']);
+            $this->emailAlert = \Xibo\Helper\Sanitize::int($row['email_alert']);
+            $this->alertTimeout = \Xibo\Helper\Sanitize::int($row['alert_timeout']);
+            $this->clientAddress = \Xibo\Helper\Sanitize::string($row['ClientAddress']);
+            $this->mediaInventoryStatus = \Xibo\Helper\Sanitize::int($row['MediaInventoryStatus']);
             $this->mediaInventoryXml = \Kit::ValidateParam($row['MediaInventoryXml'], _HTMLSTRING);
-            $this->macAddress = \Kit::ValidateParam($row['MacAddress'], _STRING);
-            $this->lastChanged = \Kit::ValidateParam($row['LastChanged'], _INT);
-            $this->numberOfMacAddressChanges = \Kit::ValidateParam($row['NumberOfMacAddressChanges'], _INT);
-            $this->lastWakeOnLanCommandSent = \Kit::ValidateParam($row['LastWakeOnLanCommandSent'], _INT);
-            $this->wakeOnLanEnabled = \Kit::ValidateParam($row['WakeOnLan'], _INT);
-            $this->wakeOnLanTime = \Kit::ValidateParam($row['WakeOnLanTime'], _STRING);
-            $this->broadCastAddress = \Kit::ValidateParam($row['BroadCastAddress'], _STRING);
-            $this->secureOn = \Kit::ValidateParam($row['SecureOn'], _STRING);
-            $this->cidr = \Kit::ValidateParam($row['Cidr'], _STRING);
-            $this->latitude = \Kit::ValidateParam($row['Latitude'], _DOUBLE);
-            $this->longitude = \Kit::ValidateParam($row['Longitude'], _DOUBLE);
-            $this->versionInstructions = \Kit::ValidateParam($row['version_instructions'], _STRING);
-            $this->clientType = \Kit::ValidateParam($row['client_type'], _STRING);
-            $this->clientVersion = \Kit::ValidateParam($row['client_version'], _STRING);
-            $this->clientCode = \Kit::ValidateParam($row['client_code'], _INT);
-            $this->displayProfileId = \Kit::ValidateParam($row['displayprofileid'], _INT);
-            $this->currentLayoutId = \Kit::ValidateParam($row['currentLayoutId'], _INT);
-            $this->screenShotRequested = \Kit::ValidateParam($row['screenShotRequested'], _INT);
-            $this->storageAvailableSpace = \Kit::ValidateParam($row['storageAvailableSpace'], _INT);
-            $this->storageTotalSpace = \Kit::ValidateParam($row['storageTotalSpace'], _INT);
+            $this->macAddress = \Xibo\Helper\Sanitize::string($row['MacAddress']);
+            $this->lastChanged = \Xibo\Helper\Sanitize::int($row['LastChanged']);
+            $this->numberOfMacAddressChanges = \Xibo\Helper\Sanitize::int($row['NumberOfMacAddressChanges']);
+            $this->lastWakeOnLanCommandSent = \Xibo\Helper\Sanitize::int($row['LastWakeOnLanCommandSent']);
+            $this->wakeOnLanEnabled = \Xibo\Helper\Sanitize::int($row['WakeOnLan']);
+            $this->wakeOnLanTime = \Xibo\Helper\Sanitize::string($row['WakeOnLanTime']);
+            $this->broadCastAddress = \Xibo\Helper\Sanitize::string($row['BroadCastAddress']);
+            $this->secureOn = \Xibo\Helper\Sanitize::string($row['SecureOn']);
+            $this->cidr = \Xibo\Helper\Sanitize::string($row['Cidr']);
+            $this->latitude = \Xibo\Helper\Sanitize::double($row['Latitude']);
+            $this->longitude = \Xibo\Helper\Sanitize::double($row['Longitude']);
+            $this->versionInstructions = \Xibo\Helper\Sanitize::string($row['version_instructions']);
+            $this->clientType = \Xibo\Helper\Sanitize::string($row['client_type']);
+            $this->clientVersion = \Xibo\Helper\Sanitize::string($row['client_version']);
+            $this->clientCode = \Xibo\Helper\Sanitize::int($row['client_code']);
+            $this->displayProfileId = \Xibo\Helper\Sanitize::int($row['displayprofileid']);
+            $this->currentLayoutId = \Xibo\Helper\Sanitize::int($row['currentLayoutId']);
+            $this->screenShotRequested = \Xibo\Helper\Sanitize::int($row['screenShotRequested']);
+            $this->storageAvailableSpace = \Xibo\Helper\Sanitize::int($row['storageAvailableSpace']);
+            $this->storageTotalSpace = \Xibo\Helper\Sanitize::int($row['storageTotalSpace']);
 
-            $this->displayGroupId = \Kit::ValidateParam($row['displaygroupid'], _INT);
+            $this->displayGroupId = \Xibo\Helper\Sanitize::int($row['displaygroupid']);
 
             // Store the current licensed flag, in case we are changing it and need to check it.
             $this->currentLicensed = $this->licensed;
@@ -252,7 +252,7 @@ class Display extends Data {
                     if (!$row = $sth->fetch())
                         $this->ThrowError(1, __('Unable to get count of licensed displays.'));
 
-                    $count = \Kit::ValidateParam($row['CountLicensed'], _INT);
+                    $count = \Xibo\Helper\Sanitize::int($row['CountLicensed']);
 
                     $sth->closeCursor();
 
@@ -557,7 +557,7 @@ class Display extends Data {
             $dbh = \Xibo\Storage\PDOConnect::init();
 
             $currentdate = time();
-            $rfLookahead = \Kit::ValidateParam(Config::GetSetting('REQUIRED_FILES_LOOKAHEAD'), _INT);
+            $rfLookahead = \Xibo\Helper\Sanitize::int(Config::GetSetting('REQUIRED_FILES_LOOKAHEAD'));
             $rfLookahead = $currentdate + $rfLookahead;
 
             // Which displays does a change to this layout effect?
@@ -587,7 +587,7 @@ class Display extends Data {
 
             while ($row = $sth->fetch()) {
                 // Notify each display in turn
-                $displayId = \Kit::ValidateParam($row['DisplayID'], _INT);
+                $displayId = \Xibo\Helper\Sanitize::int($row['DisplayID']);
                 $this->FlagIncomplete($displayId);
             }
         }
@@ -750,15 +750,15 @@ class Display extends Data {
             $displays = $sth->fetchAll();
 
             foreach ($displays as $row) {
-                $displayid = \Kit::ValidateParam($row['displayid'], _INT);
-                $lastAccessed = \Kit::ValidateParam($row['lastaccessed'], _INT);
-                $alertTimeout = \Kit::ValidateParam($row['alert_timeout'], _INT);
+                $displayid = \Xibo\Helper\Sanitize::int($row['displayid']);
+                $lastAccessed = \Xibo\Helper\Sanitize::int($row['lastaccessed']);
+                $alertTimeout = \Xibo\Helper\Sanitize::int($row['alert_timeout']);
                 $clientType = \Kit::ValidateParam($row['client_type'], _WORD);
-                $loggedIn = \Kit::ValidateParam($row['loggedin'], _INT);
+                $loggedIn = \Xibo\Helper\Sanitize::int($row['loggedin']);
 
                 // Get the config object
                 if ($alertTimeout == 0 && $clientType != '') {
-                    $displayProfileId = (empty($row['displayprofileid']) ? 0 : \Kit::ValidateParam($row['displayprofileid'], _INT));
+                    $displayProfileId = (empty($row['displayprofileid']) ? 0 : \Xibo\Helper\Sanitize::int($row['displayprofileid']));
 
                     $display = new Display();
                     $display->displayId = $displayid;

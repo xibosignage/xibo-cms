@@ -116,15 +116,22 @@ class Theme
      */
     public static function RenderReturn($item)
     {
-        ob_start();
+        try {
+            ob_start();
 
-        Theme::Render($item);
+            Theme::Render($item);
 
-        $output = ob_get_contents();
+            $output = ob_get_contents();
 
-        ob_end_clean();
+            ob_end_clean();
 
-        return $output;
+            return $output;
+        }
+        catch (\ErrorException $e) {
+            Log::critical('Unable to render template. ' . $e->getMessage());
+            ob_end_clean();
+            throw $e;
+        }
     }
 
     /**

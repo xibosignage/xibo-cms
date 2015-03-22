@@ -276,7 +276,7 @@ class File extends Data
     {
         $results = \Xibo\Storage\PDOConnect::select('SELECT IFNULL(SUM(FileSize), 0) AS SumSize FROM media', array());
 
-        return \Kit::ValidateParam($results[0]['SumSize'], _INT);
+        return \Xibo\Helper\Sanitize::int($results[0]['SumSize']);
     }
 
     /**

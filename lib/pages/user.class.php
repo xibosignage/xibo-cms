@@ -363,10 +363,10 @@ class userDAO extends baseDAO {
 
             // Store some information for later use
             $username = \Kit::ValidateParam($aRow['username'], _USERNAME);
-            $usertypeid = \Kit::ValidateParam($aRow['usertypeid'], _INT);
-            $email = \Kit::ValidateParam($aRow['email'], _STRING);
-            $homepage = \Kit::ValidateParam($aRow['homepage'], _STRING);
-            $retired = \Kit::ValidateParam($aRow['retired'], _INT);
+            $usertypeid = \Xibo\Helper\Sanitize::int($aRow['usertypeid']);
+            $email = \Xibo\Helper\Sanitize::string($aRow['email']);
+            $homepage = \Xibo\Helper\Sanitize::string($aRow['homepage']);
+            $retired = \Xibo\Helper\Sanitize::int($aRow['retired']);
 
             $retiredFormField = FormManager::AddCheckbox('retired', __('Retired?'), 
                 $retired, __('Is this user retired?'),

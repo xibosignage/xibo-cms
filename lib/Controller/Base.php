@@ -123,8 +123,6 @@ class Base
         if ($method != null && method_exists($this, $method))
             $this->$method();
 
-        Log::debug('Application Controller render. %s', $this->fullPage);
-
         if ($this->isApi()) {
             $this->app->render(200, $this->getState()->getData());
         }

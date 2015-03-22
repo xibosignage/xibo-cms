@@ -149,7 +149,7 @@ class scheduleDAO extends baseDAO {
                 $editable = $this->IsEventEditable($eventDisplayGroupIds);
 
                 // Event Title
-                $title = sprintf(__('%s scheduled on %s'), \Kit::ValidateParam($row['Campaign'], _STRING), \Kit::ValidateParam($row['DisplayGroups'], _STRING));
+                $title = sprintf(__('%s scheduled on %s'), \Xibo\Helper\Sanitize::string($row['Campaign'], _STRING), \Kit::ValidateParam($row['DisplayGroups']));
 
                 // Event URL
                 $url = ($editable) ? sprintf('index.php?p=schedule&q=EditEventForm&EventID=%d', $row['EventID']) : '#';
@@ -483,15 +483,15 @@ class scheduleDAO extends baseDAO {
 
         $row = $db->get_assoc_row($result);
 
-        $fromDT = \Kit::ValidateParam($row['FromDT'], _INT);
-        $toDT = \Kit::ValidateParam($row['ToDT'], _INT);
-        $displayGroupIds = explode(',', \Kit::ValidateParam($row['DisplayGroupIDs'], _STRING));
-        $recType = \Kit::ValidateParam($row['recurrence_type'], _STRING);
-        $recDetail = \Kit::ValidateParam($row['recurrence_detail'], _STRING);
-        $recToDT = \Kit::ValidateParam($row['recurrence_range'], _INT);
-        $campaignId = \Kit::ValidateParam($row['CampaignID'], _STRING);
-        $isPriority = \Kit::ValidateParam($row['is_priority'], _INT);
-        $displayOrder = \Kit::ValidateParam($row['DisplayOrder'], _INT);
+        $fromDT = \Xibo\Helper\Sanitize::int($row['FromDT']);
+        $toDT = \Xibo\Helper\Sanitize::int($row['ToDT']);
+        $displayGroupIds = explode(',', \Xibo\Helper\Sanitize::string($row['DisplayGroupIDs']));
+        $recType = \Xibo\Helper\Sanitize::string($row['recurrence_type']);
+        $recDetail = \Xibo\Helper\Sanitize::string($row['recurrence_detail']);
+        $recToDT = \Xibo\Helper\Sanitize::int($row['recurrence_range']);
+        $campaignId = \Xibo\Helper\Sanitize::string($row['CampaignID']);
+        $isPriority = \Xibo\Helper\Sanitize::int($row['is_priority']);
+        $displayOrder = \Xibo\Helper\Sanitize::int($row['DisplayOrder']);
 
         // Check that we have permission to edit this event.
         if (!$this->IsEventEditable($displayGroupIds))

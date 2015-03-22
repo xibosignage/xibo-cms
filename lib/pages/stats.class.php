@@ -219,10 +219,10 @@ class statsDAO extends baseDAO
 
         while ($row = $db->get_assoc_row($results))
         {
-            $row['Display'] = \Kit::ValidateParam($row['Display'], _STRING);
-            $row['Layout'] = \Kit::ValidateParam($row['Layout'], _STRING);
-            $row['NumberPlays'] = \Kit::ValidateParam($row['NumberPlays'], _INT);
-            $row['DurationSec'] = \Kit::ValidateParam($row['Duration'], _INT);
+            $row['Display'] = \Xibo\Helper\Sanitize::string($row['Display']);
+            $row['Layout'] = \Xibo\Helper\Sanitize::string($row['Layout']);
+            $row['NumberPlays'] = \Xibo\Helper\Sanitize::int($row['NumberPlays']);
+            $row['DurationSec'] = \Xibo\Helper\Sanitize::int($row['Duration']);
             $row['Duration'] = sec2hms(Kit::ValidateParam($row['Duration'], _INT));
             $row['MinStart'] = Date::getLocalDate(strtotime(Kit::ValidateParam($row['MinStart'], _STRING)));
             $row['MaxEnd'] = Date::getLocalDate(strtotime(Kit::ValidateParam($row['MaxEnd'], _STRING)));
@@ -272,10 +272,10 @@ class statsDAO extends baseDAO
 
         while ($row = $db->get_assoc_row($results))
         {
-            $row['Display'] = \Kit::ValidateParam($row['Display'], _STRING);
-            $row['Media'] = \Kit::ValidateParam($row['Name'], _STRING);
-            $row['NumberPlays'] = \Kit::ValidateParam($row['NumberPlays'], _INT);
-            $row['DurationSec'] = \Kit::ValidateParam($row['Duration'], _INT);
+            $row['Display'] = \Xibo\Helper\Sanitize::string($row['Display']);
+            $row['Media'] = \Xibo\Helper\Sanitize::string($row['Name']);
+            $row['NumberPlays'] = \Xibo\Helper\Sanitize::int($row['NumberPlays']);
+            $row['DurationSec'] = \Xibo\Helper\Sanitize::int($row['Duration']);
             $row['Duration'] = sec2hms(Kit::ValidateParam($row['Duration'], _INT));
             $row['MinStart'] = Date::getLocalDate(strtotime(Kit::ValidateParam($row['MinStart'], _STRING)));
             $row['MaxEnd'] = Date::getLocalDate(strtotime(Kit::ValidateParam($row['MaxEnd'], _STRING)));
@@ -327,11 +327,11 @@ class statsDAO extends baseDAO
 
         while ($row = $db->get_assoc_row($results))
         {
-            $row['Display'] = \Kit::ValidateParam($row['Display'], _STRING);
-            $row['Layout'] = \Kit::ValidateParam($row['Layout'], _STRING);
-            $row['Media'] = \Kit::ValidateParam($row['Name'], _STRING);
-            $row['NumberPlays'] = \Kit::ValidateParam($row['NumberPlays'], _INT);
-            $row['DurationSec'] = \Kit::ValidateParam($row['Duration'], _INT);
+            $row['Display'] = \Xibo\Helper\Sanitize::string($row['Display']);
+            $row['Layout'] = \Xibo\Helper\Sanitize::string($row['Layout']);
+            $row['Media'] = \Xibo\Helper\Sanitize::string($row['Name']);
+            $row['NumberPlays'] = \Xibo\Helper\Sanitize::int($row['NumberPlays']);
+            $row['DurationSec'] = \Xibo\Helper\Sanitize::int($row['Duration']);
             $row['Duration'] = sec2hms(Kit::ValidateParam($row['Duration'], _INT));
             $row['MinStart'] = Date::getLocalDate(strtotime(Kit::ValidateParam($row['MinStart'], _STRING)));
             $row['MaxEnd'] = Date::getLocalDate(strtotime(Kit::ValidateParam($row['MaxEnd'], _STRING)));
@@ -408,8 +408,8 @@ class statsDAO extends baseDAO
             foreach ($sth->fetchAll() as $row) {
 
                 $output[] = array(
-                        'label' => \Kit::ValidateParam($row['display'], _STRING),
-                        'value' => (\Kit::ValidateParam($row['duration'], _DOUBLE) / 60)
+                        'label' => \Xibo\Helper\Sanitize::string($row['display']),
+                        'value' => (\Xibo\Helper\Sanitize::double($row['duration']) / 60)
                     );
             }
 
@@ -646,13 +646,13 @@ class statsDAO extends baseDAO
 		while($row = $db->get_assoc_row($result))
 		{
 			// Read the columns
-			$type		= \Kit::ValidateParam($row['Type'], _STRING);
-			$fromdt		= \Kit::ValidateParam($row['start'], _STRING);
-			$todt		= \Kit::ValidateParam($row['end'], _STRING);
-			$layout		= \Kit::ValidateParam($row['Layout'], _STRING);
-			$display	= \Kit::ValidateParam($row['Display'], _STRING);
-			$media		= \Kit::ValidateParam($row['MediaName'], _STRING);
-			$tag		= \Kit::ValidateParam($row['Tag'], _STRING);
+			$type		= \Xibo\Helper\Sanitize::string($row['Type']);
+			$fromdt		= \Xibo\Helper\Sanitize::string($row['start']);
+			$todt		= \Xibo\Helper\Sanitize::string($row['end']);
+			$layout		= \Xibo\Helper\Sanitize::string($row['Layout']);
+			$display	= \Xibo\Helper\Sanitize::string($row['Display']);
+			$media		= \Xibo\Helper\Sanitize::string($row['MediaName']);
+			$tag		= \Xibo\Helper\Sanitize::string($row['Tag']);
 			
 			$output		.= "$type, $fromdt, $todt, $layout, $display, $media, $tag\n";
 		}

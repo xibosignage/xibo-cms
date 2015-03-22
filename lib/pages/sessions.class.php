@@ -141,13 +141,13 @@ class sessionsDAO extends baseDAO {
 		
 		foreach ($log as $row) { 
 
-            $row['userid'] = \Kit::ValidateParam($row['userID'], _INT);
-			$row['username'] = \Kit::ValidateParam($row['UserName'], _STRING);
-			$row['isexpired'] = (\Kit::ValidateParam($row['IsExpired'], _INT) == 1) ? 0 : 1;
-			$row['lastpage'] = \Kit::ValidateParam($row['LastPage'], _STRING);
+            $row['userid'] = \Xibo\Helper\Sanitize::int($row['userID']);
+			$row['username'] = \Xibo\Helper\Sanitize::string($row['UserName']);
+			$row['isexpired'] = (\Xibo\Helper\Sanitize::int($row['IsExpired']) == 1) ? 0 : 1;
+			$row['lastpage'] = \Xibo\Helper\Sanitize::string($row['LastPage']);
 			$row['lastaccessed'] = Date::getLocalDate(strtotime(Kit::ValidateParam($row['LastAccessed'], _STRING)));
-			$row['ip'] = \Kit::ValidateParam($row['RemoteAddr'], _STRING);
-			$row['browser'] = \Kit::ValidateParam($row['UserAgent'], _STRING);
+			$row['ip'] = \Xibo\Helper\Sanitize::string($row['RemoteAddr']);
+			$row['browser'] = \Xibo\Helper\Sanitize::string($row['UserAgent']);
 
 			// Edit        
             $row['buttons'][] = array(

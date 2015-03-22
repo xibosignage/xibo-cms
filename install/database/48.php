@@ -17,7 +17,7 @@ class Step48 extends UpgradeStep
 
             foreach($layouts as $layout)
             {
-                $layoutId = \Kit::ValidateParam($layout['LayoutID'], _INT);
+                $layoutId = \Xibo\Helper\Sanitize::int($layout['LayoutID']);
                 $layoutXml = \Kit::ValidateParam($layout['Xml'], _HTMLSTRING);
 
                 echo '.';

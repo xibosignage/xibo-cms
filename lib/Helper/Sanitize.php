@@ -60,6 +60,16 @@ class Sanitize
         return filter_var($param, FILTER_SANITIZE_NUMBER_INT);
     }
 
+    public static function getDouble($param, $default = null, $source = null)
+    {
+        return Sanitize::double(Sanitize::parse($param, $default, $source));
+    }
+
+    public static function double($param)
+    {
+        return filter_var($param, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+    }
+
     public static function getString($param, $default = null, $source = null)
     {
         return Sanitize::string(Sanitize::parse($param, $default, $source));

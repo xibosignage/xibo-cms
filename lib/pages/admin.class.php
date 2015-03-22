@@ -469,7 +469,7 @@ FORM;
             Log::notice('Valid Upload', 'Backup', 'RestoreDatabase');
 
             // Directory location
-            $fileName = \Kit::ValidateParam($_FILES['dumpFile']['tmp_name'], _STRING);
+            $fileName = \Xibo\Helper\Sanitize::string($_FILES['dumpFile']['tmp_name']);
 
             if (is_uploaded_file($fileName))
             {

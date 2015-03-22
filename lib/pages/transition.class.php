@@ -82,12 +82,12 @@ class transitionDAO extends baseDAO {
         foreach($transitions as $transition)
         {
             $row = array();
-            $row['transitionid'] = \Kit::ValidateParam($transition['TransitionID'], _INT);
-            $row['name'] = \Kit::ValidateParam($transition['Transition'], _STRING);
-            $row['hasduration'] = \Kit::ValidateParam($transition['HasDuration'], _INT);
-            $row['hasdirection'] = \Kit::ValidateParam($transition['HasDirection'], _INT);
-            $row['enabledforin'] = \Kit::ValidateParam($transition['AvailableAsIn'], _INT);
-            $row['enabledforout'] = \Kit::ValidateParam($transition['AvailableAsOut'], _INT);
+            $row['transitionid'] = \Xibo\Helper\Sanitize::int($transition['TransitionID']);
+            $row['name'] = \Xibo\Helper\Sanitize::string($transition['Transition']);
+            $row['hasduration'] = \Xibo\Helper\Sanitize::int($transition['HasDuration']);
+            $row['hasdirection'] = \Xibo\Helper\Sanitize::int($transition['HasDirection']);
+            $row['enabledforin'] = \Xibo\Helper\Sanitize::int($transition['AvailableAsIn']);
+            $row['enabledforout'] = \Xibo\Helper\Sanitize::int($transition['AvailableAsOut']);
             
             // Initialise array of buttons, because we might not have any
             $row['buttons'] = array();
@@ -143,7 +143,7 @@ class transitionDAO extends baseDAO {
             trigger_error(__('Error getting Transition'));
         }
 
-        $name = \Kit::ValidateParam($row['Transition'], _STRING);
+        $name = \Xibo\Helper\Sanitize::string($row['Transition']);
 
         // Set some information about the form
         Theme::Set('form_id', 'TransitionEditForm');
@@ -153,11 +153,11 @@ class transitionDAO extends baseDAO {
         $formFields = array();
         
         $formFields[] = FormManager::AddCheckbox('EnabledForIn', __('Available for In Transitions?'), 
-            \Kit::ValidateParam($row['AvailableAsIn'], _INT), __('Can this transition be used for media start?'),
+            \Xibo\Helper\Sanitize::int($row['AvailableAsIn']), __('Can this transition be used for media start?'),
             'i');
         
         $formFields[] = FormManager::AddCheckbox('EnabledForOut', __('Available for Out Transitions?'), 
-            \Kit::ValidateParam($row['AvailableAsOut'], _INT), __('Can this transition be used for media end?'),
+            \Xibo\Helper\Sanitize::int($row['AvailableAsOut']), __('Can this transition be used for media end?'),
             'o');
 
         Theme::Set('form_fields', $formFields);

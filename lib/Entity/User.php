@@ -413,7 +413,7 @@ class User
         if (count($results) <= 0)
             throw new \Xibo\Exception\NotFoundException('File not found');
 
-        $userId = \Kit::ValidateParam($results[0]['UserID'], _INT);
+        $userId = \Xibo\Helper\Sanitize::int($results[0]['UserID']);
 
         return ($userId == $this->userId);
     }
@@ -596,10 +596,10 @@ class User
             $dataSetItem = array();
 
             // Validate each param and add it to the array.
-            $dataSetItem['datasetid'] = \Kit::ValidateParam($row['DataSetID'], _INT);
-            $dataSetItem['dataset'] = \Kit::ValidateParam($row['DataSet'], _STRING);
-            $dataSetItem['description'] = \Kit::ValidateParam($row['Description'], _STRING);
-            $dataSetItem['ownerid'] = \Kit::ValidateParam($row['UserID'], _INT);
+            $dataSetItem['datasetid'] = \Xibo\Helper\Sanitize::int($row['DataSetID']);
+            $dataSetItem['dataset'] = \Xibo\Helper\Sanitize::string($row['DataSet']);
+            $dataSetItem['description'] = \Xibo\Helper\Sanitize::string($row['Description']);
+            $dataSetItem['ownerid'] = \Xibo\Helper\Sanitize::int($row['UserID']);
 
             $auth = $this->DataSetAuth($dataSetItem['datasetid'], true);
 
@@ -716,11 +716,11 @@ class User
             $displayGroupItem = array();
 
             // Validate each param and add it to the array.
-            $displayGroupItem['displaygroupid'] = \Kit::ValidateParam($row['DisplayGroupID'], _INT);
-            $displayGroupItem['displaygroup'] = \Kit::ValidateParam($row['DisplayGroup'], _STRING);
-            $displayGroupItem['description'] = \Kit::ValidateParam($row['Description'], _STRING);
-            $displayGroupItem['isdisplayspecific'] = \Kit::ValidateParam($row['IsDisplaySpecific'], _STRING);
-            $displayGroupItem['displayid'] = (($isDisplaySpecific == 1) ? \Kit::ValidateParam($row['DisplayID'], _INT) : 0);
+            $displayGroupItem['displaygroupid'] = \Xibo\Helper\Sanitize::int($row['DisplayGroupID']);
+            $displayGroupItem['displaygroup'] = \Xibo\Helper\Sanitize::string($row['DisplayGroup']);
+            $displayGroupItem['description'] = \Xibo\Helper\Sanitize::string($row['Description']);
+            $displayGroupItem['isdisplayspecific'] = \Xibo\Helper\Sanitize::string($row['IsDisplaySpecific']);
+            $displayGroupItem['displayid'] = (($isDisplaySpecific == 1) ? \Xibo\Helper\Sanitize::int($row['DisplayID']) : 0);
 
             $auth = $this->DisplayGroupAuth($displayGroupItem['displaygroupid'], true);
 
@@ -827,27 +827,27 @@ class User
             $displayItem = array();
 
             // Validate each param and add it to the array.
-            $displayItem['displayid'] = \Kit::ValidateParam($row['displayid'], _INT);
-            $displayItem['display'] = \Kit::ValidateParam($row['display'], _STRING);
-            $displayItem['description'] = \Kit::ValidateParam($row['description'], _STRING);
-            $displayItem['layout'] = \Kit::ValidateParam($row['layout'], _STRING);
-            $displayItem['loggedin'] = \Kit::ValidateParam($row['loggedin'], _INT);
-            $displayItem['lastaccessed'] = \Kit::ValidateParam($row['lastaccessed'], _STRING);
-            $displayItem['inc_schedule'] = \Kit::ValidateParam($row['inc_schedule'], _INT);
-            $displayItem['licensed'] = \Kit::ValidateParam($row['licensed'], _INT);
-            $displayItem['email_alert'] = \Kit::ValidateParam($row['email_alert'], _INT);
-            $displayItem['displaygroupid'] = \Kit::ValidateParam($row['DisplayGroupID'], _INT);
-            $displayItem['clientaddress'] = \Kit::ValidateParam($row['ClientAddress'], _STRING);
-            $displayItem['mediainventorystatus'] = \Kit::ValidateParam($row['MediaInventoryStatus'], _INT);
-            $displayItem['macaddress'] = \Kit::ValidateParam($row['MacAddress'], _STRING);
-            $displayItem['client_type'] = \Kit::ValidateParam($row['client_type'], _STRING);
-            $displayItem['client_version'] = \Kit::ValidateParam($row['client_version'], _STRING);
-            $displayItem['client_code'] = \Kit::ValidateParam($row['client_code'], _STRING);
-            $displayItem['screenShotRequested'] = \Kit::ValidateParam($row['screenShotRequested'], _INT);
-            $displayItem['storageAvailableSpace'] = \Kit::ValidateParam($row['storageAvailableSpace'], _INT);
-            $displayItem['storageTotalSpace'] = \Kit::ValidateParam($row['storageTotalSpace'], _INT);
-            $displayItem['currentLayoutId'] = \Kit::ValidateParam($row['currentLayoutId'], _INT);
-            $displayItem['currentLayout'] = \Kit::ValidateParam($row['currentLayout'], _STRING);
+            $displayItem['displayid'] = \Xibo\Helper\Sanitize::int($row['displayid']);
+            $displayItem['display'] = \Xibo\Helper\Sanitize::string($row['display']);
+            $displayItem['description'] = \Xibo\Helper\Sanitize::string($row['description']);
+            $displayItem['layout'] = \Xibo\Helper\Sanitize::string($row['layout']);
+            $displayItem['loggedin'] = \Xibo\Helper\Sanitize::int($row['loggedin']);
+            $displayItem['lastaccessed'] = \Xibo\Helper\Sanitize::string($row['lastaccessed']);
+            $displayItem['inc_schedule'] = \Xibo\Helper\Sanitize::int($row['inc_schedule']);
+            $displayItem['licensed'] = \Xibo\Helper\Sanitize::int($row['licensed']);
+            $displayItem['email_alert'] = \Xibo\Helper\Sanitize::int($row['email_alert']);
+            $displayItem['displaygroupid'] = \Xibo\Helper\Sanitize::int($row['DisplayGroupID']);
+            $displayItem['clientaddress'] = \Xibo\Helper\Sanitize::string($row['ClientAddress']);
+            $displayItem['mediainventorystatus'] = \Xibo\Helper\Sanitize::int($row['MediaInventoryStatus']);
+            $displayItem['macaddress'] = \Xibo\Helper\Sanitize::string($row['MacAddress']);
+            $displayItem['client_type'] = \Xibo\Helper\Sanitize::string($row['client_type']);
+            $displayItem['client_version'] = \Xibo\Helper\Sanitize::string($row['client_version']);
+            $displayItem['client_code'] = \Xibo\Helper\Sanitize::string($row['client_code']);
+            $displayItem['screenShotRequested'] = \Xibo\Helper\Sanitize::int($row['screenShotRequested']);
+            $displayItem['storageAvailableSpace'] = \Xibo\Helper\Sanitize::int($row['storageAvailableSpace']);
+            $displayItem['storageTotalSpace'] = \Xibo\Helper\Sanitize::int($row['storageTotalSpace']);
+            $displayItem['currentLayoutId'] = \Xibo\Helper\Sanitize::int($row['currentLayoutId']);
+            $displayItem['currentLayout'] = \Xibo\Helper\Sanitize::string($row['currentLayout']);
 
             $auth = $this->DisplayGroupAuth($displayItem['displaygroupid'], true);
 
@@ -945,13 +945,13 @@ class User
         foreach ($rows as $transition) {
             $transitionItem = array();
 
-            $transitionItem['transitionid'] = \Kit::ValidateParam($transition['TransitionID'], _INT);
-            $transitionItem['transition'] = \Kit::ValidateParam($transition['Transition'], _STRING);
+            $transitionItem['transitionid'] = \Xibo\Helper\Sanitize::int($transition['TransitionID']);
+            $transitionItem['transition'] = \Xibo\Helper\Sanitize::string($transition['Transition']);
             $transitionItem['code'] = \Kit::ValidateParam($transition['Code'], _WORD);
-            $transitionItem['hasduration'] = \Kit::ValidateParam($transition['HasDuration'], _INT);
-            $transitionItem['hasdirection'] = \Kit::ValidateParam($transition['HasDirection'], _INT);
-            $transitionItem['enabledforin'] = \Kit::ValidateParam($transition['AvailableAsIn'], _INT);
-            $transitionItem['enabledforout'] = \Kit::ValidateParam($transition['AvailableAsOut'], _INT);
+            $transitionItem['hasduration'] = \Xibo\Helper\Sanitize::int($transition['HasDuration']);
+            $transitionItem['hasdirection'] = \Xibo\Helper\Sanitize::int($transition['HasDirection']);
+            $transitionItem['enabledforin'] = \Xibo\Helper\Sanitize::int($transition['AvailableAsIn']);
+            $transitionItem['enabledforout'] = \Xibo\Helper\Sanitize::int($transition['AvailableAsOut']);
             $transitionItem['class'] = (($transitionItem['hasduration'] == 1) ? 'hasDuration' : '') . ' ' . (($transitionItem['hasdirection'] == 1) ? 'hasDirection' : '');
 
             $transitions[] = $transitionItem;
@@ -991,12 +991,12 @@ class User
                 $displayItem = array();
 
                 // Validate each param and add it to the array.
-                $displayItem['displayprofileid'] = \Kit::ValidateParam($row['displayprofileid'], _INT);
-                $displayItem['name'] = \Kit::ValidateParam($row['name'], _STRING);
-                $displayItem['type'] = \Kit::ValidateParam($row['type'], _STRING);
-                $displayItem['config'] = \Kit::ValidateParam($row['config'], _STRING);
-                $displayItem['isdefault'] = \Kit::ValidateParam($row['isdefault'], _INT);
-                $displayItem['userid'] = \Kit::ValidateParam($row['userid'], _INT);
+                $displayItem['displayprofileid'] = \Xibo\Helper\Sanitize::int($row['displayprofileid']);
+                $displayItem['name'] = \Xibo\Helper\Sanitize::string($row['name']);
+                $displayItem['type'] = \Xibo\Helper\Sanitize::string($row['type']);
+                $displayItem['config'] = \Xibo\Helper\Sanitize::string($row['config']);
+                $displayItem['isdefault'] = \Xibo\Helper\Sanitize::int($row['isdefault']);
+                $displayItem['userid'] = \Xibo\Helper\Sanitize::int($row['userid']);
 
                 $auth = new PermissionManager($this);
 

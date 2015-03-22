@@ -149,15 +149,15 @@ class moduleDAO extends baseDAO
         foreach($modules as $module)
         {
             $row = array();
-            $row['moduleid'] = \Kit::ValidateParam($module['ModuleID'], _INT);
-            $row['name'] = \Kit::ValidateParam($module['Name'], _STRING);
-            $row['description'] = \Kit::ValidateParam($module['Description'], _STRING);
-            $row['isregionspecific'] = (\Kit::ValidateParam($module['RegionSpecific'], _INT) == 0) ? 1 : 0;
-            $row['validextensions'] = \Kit::ValidateParam($module['ValidExtensions'], _STRING);
-            $row['imageuri'] = \Kit::ValidateParam($module['ImageUri'], _STRING);
-            $row['enabled'] = \Kit::ValidateParam($module['Enabled'], _INT);
-            $row['preview_enabled'] = \Kit::ValidateParam($module['PreviewEnabled'], _INT);
-            $row['assignable'] = \Kit::ValidateParam($module['assignable'], _INT);
+            $row['moduleid'] = \Xibo\Helper\Sanitize::int($module['ModuleID']);
+            $row['name'] = \Xibo\Helper\Sanitize::string($module['Name']);
+            $row['description'] = \Xibo\Helper\Sanitize::string($module['Description']);
+            $row['isregionspecific'] = (\Xibo\Helper\Sanitize::int($module['RegionSpecific']) == 0) ? 1 : 0;
+            $row['validextensions'] = \Xibo\Helper\Sanitize::string($module['ValidExtensions']);
+            $row['imageuri'] = \Xibo\Helper\Sanitize::string($module['ImageUri']);
+            $row['enabled'] = \Xibo\Helper\Sanitize::int($module['Enabled']);
+            $row['preview_enabled'] = \Xibo\Helper\Sanitize::int($module['PreviewEnabled']);
+            $row['assignable'] = \Xibo\Helper\Sanitize::int($module['assignable']);
             $row['settings'] = json_decode(Kit::ValidateParam($module['settings'], _HTMLSTRING), true);
             
             // Initialise array of buttons, because we might not have any
@@ -239,18 +239,18 @@ class moduleDAO extends baseDAO
         Theme::Set('form_meta', '<input type="hidden" name="ModuleID" value="'. $moduleId . '" /><input type="hidden" name="type" value="' . $type . '" />');
 
         $formFields = array();
-        $formFields[] = FormManager::AddText('ValidExtensions', __('Valid Extensions'), \Kit::ValidateParam($row['ValidExtensions'], _STRING),
+        $formFields[] = FormManager::AddText('ValidExtensions', __('Valid Extensions'), \Xibo\Helper\Sanitize::string($row['ValidExtensions']),
             __('The Extensions allowed on files uploaded using this module. Comma Separated.'), 'e', '');
 
-        $formFields[] = FormManager::AddText('ImageUri', __('Image Uri'), \Kit::ValidateParam($row['ImageUri'], _STRING),
+        $formFields[] = FormManager::AddText('ImageUri', __('Image Uri'), \Xibo\Helper\Sanitize::string($row['ImageUri']),
             __('The Image to display for this module. This should be a path relative to the root of the installation.'), 'i', '');
 
         $formFields[] = FormManager::AddCheckbox('PreviewEnabled', __('Preview Enabled?'), 
-            \Kit::ValidateParam($row['PreviewEnabled'], _INT), __('When PreviewEnabled users will be able to see a preview in the layout designer'),
+            \Xibo\Helper\Sanitize::int($row['PreviewEnabled']), __('When PreviewEnabled users will be able to see a preview in the layout designer'),
             'p');
 
         $formFields[] = FormManager::AddCheckbox('Enabled', __('Enabled?'), 
-            \Kit::ValidateParam($row['Enabled'], _INT), __('When Enabled users will be able to add media using this module'),
+            \Xibo\Helper\Sanitize::int($row['Enabled']), __('When Enabled users will be able to add media using this module'),
             'b');
 
         // Set any module specific form fields

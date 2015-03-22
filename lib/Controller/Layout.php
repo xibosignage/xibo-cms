@@ -23,6 +23,7 @@ namespace Xibo\Controller;
 use Config;
 use database;
 use FormManager;
+use Xibo\Factory\LayoutFactory;
 use Xibo\Helper\Help;
 use Kit;
 use Media;
@@ -30,6 +31,7 @@ use Parsedown;
 use Xibo\Helper\ApplicationState;
 use Session;
 use Xibo\Helper\Log;
+use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 use Xibo\Entity\user;
 
@@ -144,7 +146,7 @@ class Layout extends Base
 
     public function displayDesigner()
     {
-        $layoutId = \Xibo\Helper\Sanitize::getInt('layoutid');
+        $layoutId = Sanitize::getInt('layoutid');
         $layout = \Xibo\Factory\LayoutFactory::loadById($layoutId);
 
         Theme::Set('layout_form_edit_url', 'index.php?p=layout&q=EditForm&designer=1&layoutid=' . $layoutId);
@@ -181,7 +183,7 @@ class Layout extends Base
             array('title' => __('Add Layout'),
                 'class' => 'XiboFormButton',
                 'selected' => false,
-                'link' => 'index.php?p=layout&q=AddForm',
+                'link' => $this->urlFor('layoutAddForm'),
                 'help' => __('Add a new Layout and jump to the layout designer.'),
                 'onclick' => ''
             ),
@@ -200,11 +202,11 @@ class Layout extends Base
      */
     function add()
     {
-        $name = \Xibo\Helper\Sanitize::getString('layout');
-        $description = \Xibo\Helper\Sanitize::getString('description');
-        $tags = \Xibo\Helper\Sanitize::getString('tags');
-        $templateId = \Xibo\Helper\Sanitize::getInt('templateid');
-        $resolutionId = \Xibo\Helper\Sanitize::getInt('resolutionid');
+        $name = Sanitize::getString('layout');
+        $description = Sanitize::getString('description');
+        $tags = Sanitize::getString('tags');
+        $templateId = Sanitize::getInt('templateid');
+        $resolutionId = Sanitize::getInt('resolutionid');
 
         if ($templateId != 0)
             $layout = \Xibo\Factory\LayoutFactory::createFromTemplate($templateId, $this->getUser()->userId, $name, $description, $tags);
@@ -239,13 +241,13 @@ class Layout extends Base
         if (!$this->getUser()->checkEditable($layout))
             trigger_error(__('You do not have permissions to edit this layout'), E_USER_ERROR);
 
-        $layout->layout = \Xibo\Helper\Sanitize::getString('layout');
-        $layout->description = \Xibo\Helper\Sanitize::getString('description');
+        $layout->layout = Sanitize::getString('layout');
+        $layout->description = Sanitize::getString('description');
         $layout->tags = \Xibo\Factory\TagFactory::tagsFromString(Kit::GetParam('tags', _POST, _STRING));
         $layout->retired = \Kit::GetParam('retired', _POST, _INT, 0);
-        $layout->backgroundColor = \Xibo\Helper\Sanitize::getString('backgroundColor');
-        $layout->backgroundImageId = \Xibo\Helper\Sanitize::getInt('backgroundImageId');
-        $layout->backgroundzIndex = \Xibo\Helper\Sanitize::getInt('backgroundzIndex');
+        $layout->backgroundColor = Sanitize::getString('backgroundColor');
+        $layout->backgroundImageId = Sanitize::getInt('backgroundImageId');
+        $layout->backgroundzIndex = Sanitize::getInt('backgroundzIndex');
 
         // Resolution
         $resolution = \Xibo\Factory\ResolutionFactory::getById(Kit::GetParam('resolutionId', _POST, _INT));
@@ -273,7 +275,7 @@ class Layout extends Base
     {
          
 
-        $layoutId = \Xibo\Helper\Sanitize::getInt('layoutId');
+        $layoutId = Sanitize::getInt('layoutId');
         $layout = \Xibo\Factory\LayoutFactory::loadById($layoutId);
 
         if (!$this->getUser()->checkDeleteable($layout))
@@ -304,7 +306,7 @@ class Layout extends Base
     {
          
 
-        $layoutId = \Xibo\Helper\Sanitize::getInt('layoutId');
+        $layoutId = Sanitize::getInt('layoutId');
         $layout = \Xibo\Factory\LayoutFactory::loadById(Kit::GetParam('layoutid', _POST, _INT));
 
         // Make sure we have permission
@@ -333,20 +335,16 @@ class Layout extends Base
      */
     function delete()
     {
+        $layoutId = Sanitize::getInt('layoutId');
 
-
-         
-        $layoutId = \Xibo\Helper\Sanitize::getInt('layoutId');
-
-        $layout = \Xibo\Factory\LayoutFactory::loadById($layoutId);
+        $layout = LayoutFactory::loadById($layoutId);
 
         if (!$this->getUser()->checkDeleteable($layout))
             trigger_error(__('You do not have permissions to delete this layout'), E_USER_ERROR);
 
         $layout->delete();
 
-         $this->getState()->SetFormSubmitResponse(__('The Layout has been Deleted'));
-
+        $this->getState()->SetFormSubmitResponse(__('The Layout has been Deleted'));
     }
 
     /**
@@ -377,31 +375,31 @@ class Layout extends Base
     function LayoutGrid()
     {
         // Filter by Name
-        $name = \Xibo\Helper\Sanitize::getString('filter_layout');
+        $name = Sanitize::getString('filter_layout');
         \Session::Set('layout', 'filter_layout', $name);
 
         // User ID
-        $filter_userid = \Xibo\Helper\Sanitize::getInt('filter_userid');
+        $filter_userid = Sanitize::getInt('filter_userid');
         \Session::Set('layout', 'filter_userid', $filter_userid);
 
         // Show retired
-        $filter_retired = \Xibo\Helper\Sanitize::getInt('filter_retired');
+        $filter_retired = Sanitize::getInt('filter_retired');
         \Session::Set('layout', 'filter_retired', $filter_retired);
 
         // Show filterLayoutStatusId
-        $filterLayoutStatusId = \Xibo\Helper\Sanitize::getInt('filterLayoutStatusId');
+        $filterLayoutStatusId = Sanitize::getInt('filterLayoutStatusId');
         \Session::Set('layout', 'filterLayoutStatusId', $filterLayoutStatusId);
 
         // Show showDescriptionId
-        $showDescriptionId = \Xibo\Helper\Sanitize::getInt('showDescriptionId');
+        $showDescriptionId = Sanitize::getInt('showDescriptionId');
         \Session::Set('layout', 'showDescriptionId', $showDescriptionId);
 
         // Show filter_showThumbnail
-        $showTags = \Xibo\Helper\Sanitize::getCheckbox('showTags');
+        $showTags = Sanitize::getCheckbox('showTags');
         \Session::Set('layout', 'showTags', $showTags);
 
         // Show filter_showThumbnail
-        $showThumbnail = \Xibo\Helper\Sanitize::getCheckbox('showThumbnail');
+        $showThumbnail = Sanitize::getCheckbox('showThumbnail');
         \Session::Set('layout', 'showThumbnail', $showThumbnail);
 
         // Tags list
@@ -598,9 +596,6 @@ class Layout extends Base
      */
     function AddForm()
     {
-        $user = $this->getUser();
-         
-
         Theme::Set('form_id', 'LayoutForm');
 
         // Two tabs
@@ -637,7 +632,7 @@ class Layout extends Base
             'resolutionid',
             __('Resolution'),
             NULL,
-            $this->getUser()->ResolutionList(),
+            array_map(function($element) { return array('resolutionid' => $element->resolutionId, 'resolution' => $element->resolution); }, $this->getUser()->ResolutionList()),
             'resolutionid',
             'resolution',
             __('Choose the resolution this Layout should be designed for.'),
@@ -664,7 +659,7 @@ class Layout extends Base
     function EditForm()
     {
          
-        $layoutId = \Xibo\Helper\Sanitize::getInt('layoutid');
+        $layoutId = Sanitize::getInt('layoutid');
 
         // Get the layout
         $layout = \Xibo\Factory\LayoutFactory::getById($layoutId);
@@ -895,7 +890,7 @@ HTML;
     {
          
 
-        $layoutId = \Xibo\Helper\Sanitize::getInt('layoutid');
+        $layoutId = Sanitize::getInt('layoutid');
 
         // Get the layout
         $layout = \Xibo\Factory\LayoutFactory::getById($layoutId);
@@ -939,8 +934,8 @@ HTML;
         // Load the layout for Copy
         $layout = clone \Xibo\Factory\LayoutFactory::loadById(Kit::GetParam('layoutid', _POST, _INT));
 
-        $layout->layout = \Xibo\Helper\Sanitize::getString('layout');
-        $layout->description = \Xibo\Helper\Sanitize::getString('description');
+        $layout->layout = Sanitize::getString('layout');
+        $layout->description = Sanitize::getString('description');
 
         // Validate the new layout
         $layout->validate();
@@ -961,7 +956,7 @@ HTML;
     {
         $db =& $this->db;
          
-        $layoutId = \Xibo\Helper\Sanitize::getInt('layoutId');
+        $layoutId = Sanitize::getInt('layoutId');
 
         \Kit::ClassLoader('Layout');
         $layout = new Layout($db);
@@ -998,7 +993,7 @@ HTML;
     public function Export()
     {
 
-        $layoutId = \Xibo\Helper\Sanitize::getInt('layoutid');
+        $layoutId = Sanitize::getInt('layoutid');
 
         \Kit::ClassLoader('layout');
         $layout = new Layout($this->db);
@@ -1068,18 +1063,18 @@ HTML;
         $template = \Kit::GetParam('template', _POST, _STRING, 'false');
         $template = ($template == 'true');
 
-        $layout = \Xibo\Helper\Sanitize::getString('layout');
-        $replaceExisting = \Xibo\Helper\Sanitize::getCheckbox('replaceExisting');
+        $layout = Sanitize::getString('layout');
+        $replaceExisting = Sanitize::getCheckbox('replaceExisting');
         $importTags = \Kit::GetParam('importTags', _POST, _CHECKBOX, (!$template));
 
         // File data
-        $tmpName = \Xibo\Helper\Sanitize::getString('hidFileID');
+        $tmpName = Sanitize::getString('hidFileID');
 
         if ($tmpName == '')
             trigger_error(__('Please ensure you have picked a file and it has finished uploading'), E_USER_ERROR);
 
         // File name and extension (original name)
-        $fileName = \Xibo\Helper\Sanitize::getString('txtFileName');
+        $fileName = Sanitize::getString('txtFileName');
         $fileName = basename($fileName);
         $ext = strtolower(substr(strrchr($fileName, "."), 1));
 
