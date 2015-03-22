@@ -25,6 +25,7 @@ namespace Xibo\Middleware;
 
 use Slim\Middleware;
 use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Log;
 
 class State extends Middleware
 {
@@ -37,6 +38,9 @@ class State extends Middleware
         // Create a session
         $this->app->container->singleton('session', function() { return new \Session(); });
         $this->app->session->Get('nothing');
+
+        // Attach a hook to log the route
+        $this->app->hook('slim.before.dispatch', function() { Log::debug('called'); });
 
         // Next middleware
         $this->next->call();

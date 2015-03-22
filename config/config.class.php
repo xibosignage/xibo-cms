@@ -70,7 +70,7 @@ class Config
 			if (!$result = $sth->fetch())
 				return $default;
 
-			//Debug::LogEntry('audit', 'Retrieved setting ' . $result['value'] . ' for ' . $setting, 'Config', 'GetSetting');
+			//Log::debug('Retrieved setting ' . $result['value'] . ' for ' . $setting, 'Config', 'GetSetting');
 			
 			// Validate as a string and return
 			$result = \Kit::ValidateParam($result['value'], _STRING);

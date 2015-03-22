@@ -27,6 +27,7 @@ require 'vendor/autoload.php';
 require 'lib/app/kit.class.php';
 require 'config/config.class.php';
 require 'lib/app/translationengine.class.php';
+require 'lib/app/formmanager.class.php';
 require 'lib/app/session.class.php';
 require 'lib/data/data.class.php';
 // END
@@ -46,6 +47,9 @@ TranslationEngine::InitLocale();
 $logger = new \Flynsarmy\SlimMonolog\Log\MonologWriter(array(
     'handlers' => array(
         new \Monolog\Handler\ChromePHPHandler()
+    ),
+    'processors' => array(
+        new \Xibo\Helper\RouteProcessor()
     )
 ));
 
@@ -75,7 +79,7 @@ $app->get('/', function () use ($app) {
     $controller->displayPage();
     $controller->render();
 
-});
+})->setName('home');
 
 // Special "login" route
 $app->get('/login', function () use ($app) {
@@ -88,20 +92,27 @@ $app->get('/login', function () use ($app) {
 
 // POST Login
 $app->post('/login', function () use ($app) {
+
+    // Capture the prior route (if there is one)
+    $priorRoute = ($app->request()->post('priorPage'));
+
     try {
         $controller = new \Xibo\Controller\Login($app);
         $controller->login();
     }
     catch (\Xibo\Exception\AccessDeniedException $e) {
         $app->flash('login_message', __('Username or Password incorrect'));
+        $app->flash('priorRoute', $priorRoute);
         $app->redirectTo('login');
     }
     catch (\Xibo\Exception\FormExpiredException $e) {
+        $app->flash('priorRoute', $priorRoute);
         $app->redirectTo('login');
     }
 
-    $priorRoute = ($app->session->get('priorRoute'));
-    $app->redirect(($priorRoute == '') ? '/' : $priorRoute);
+    \Xibo\Helper\Log::info('%s user logged in.', $app->user->userName);
+
+    $app->redirect($app->request->getRootUri() . (($priorRoute == '' || stripos($priorRoute, 'login')) ? '' : $priorRoute));
 });
 
 $app->get('/about', function () use ($app) {
@@ -110,12 +121,18 @@ $app->get('/about', function () use ($app) {
 
 })->setName('about');
 
-$app->get('/layouts/view', function () use ($app) {
+// Ping pong route
+$app->get('/ping', function () use ($app) {
+    $controller = new \Xibo\Controller\Login($app);
+    $controller->PingPong();
+    $controller->render();
+});
+
+$app->get('/layout/view', function () use ($app) {
     // This is a full page
     $controller = new \Xibo\Controller\Layout($app);
     $controller->displayPage();
     $controller->render();
-
 });
 
 // All application routes

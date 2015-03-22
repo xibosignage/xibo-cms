@@ -108,9 +108,9 @@ $(document).ready(function() {
         }());
     }
     
-    setInterval("XiboPing('index.php?p=clock&q=GetClock')", 1000 * 60); // Every minute
+    setInterval("XiboPing('index.php/clock')", 1000 * 60); // Every minute
     
-    setInterval("XiboPing('index.php?p=index&q=PingPong')", 1000 * 60 * 3); // Every 3 minutes  
+    setInterval("XiboPing('index.php/ping')", 1000 * 60 * 3); // Every 3 minutes
 
     XiboInitialise("");
 });
@@ -313,13 +313,13 @@ function XiboGridRender(gridId, autoRefresh) {
     var gridDiv     = '#' + gridId;
     var filter      = $('#' + gridId + ' .XiboFilter form');
     var outputDiv   = $('#' + gridId + ' .XiboData ');
-    var url = "index.php?ajax=true" + ((autoRefresh !== undefined && autoRefresh !== null) ? '&autoRefresh=true' : '');
+    var url = filter.attr("action") + ((autoRefresh !== undefined && autoRefresh !== null) ? '?autoRefresh=true' : '');
     // Add a spinner
     $(gridDiv).closest('.widget').children(".widget-title").append(' <span class="saving fa fa-cog fa-spin"></span>');
 
     // AJAX call to get the XiboData
     $.ajax({
-        type: "post",
+        type: "get",
         url: url,
         dataType: "json",
         data: filter.serialize() + "&gridId=" + gridId,

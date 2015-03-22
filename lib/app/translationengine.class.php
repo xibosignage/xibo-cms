@@ -99,7 +99,7 @@ class TranslationEngine
             $foundLanguage = $default;
         }
 
-        // Debug::LogEntry('audit', 'Creating new file streamer for '. $localeDir . '/' . $foundLanguage . '.mo', 'TranslationEngine', 'InitLocal');
+        // Log::debug('Creating new file streamer for '. $localeDir . '/' . $foundLanguage . '.mo', 'TranslationEngine', 'InitLocal');
         if (!$stream = new CachedFileReader($localeDir . '/' . $foundLanguage . '.mo')) {
             Log::Info('Resolved language ' . $foundLanguage . ' not available.');
             $transEngine = false;

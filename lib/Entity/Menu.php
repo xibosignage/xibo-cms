@@ -3,7 +3,7 @@
  * Xibo - Digital Signage - http://www.xibo.org.uk
  * Copyright (C) 2015 Spring Signage Ltd
  *
- * This file (routes.php) is part of Xibo.
+ * This file (Menu.php) is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -18,23 +18,28 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-defined('XIBO') or die('Sorry, you are not allowed to directly access this page.');
 
-$app->get('/clock', function() use ($app) {
-    $controller = new \Xibo\Controller\Clock($app);
-    $controller->GetClock();
-    $controller->render();
-})->name('clock');
 
-$app->get('/layout', function() use ($app) {
-    $controller = new \Xibo\Controller\Layout($app);
-    $controller->render('LayoutGrid');
-})->name('layoutSearch');
+namespace Xibo\Entity;
 
-$app->get('/layout/:id', function($id) use ($app) {
-    $app->render(200, array('layout' => \Xibo\Factory\LayoutFactory::getById($id)));
-})->name('layoutGet');
 
-$app->post('/layout/:id', function($id) use ($app) {
-    // Update the Layout
-})->name('layoutUpdate');
+class Menu
+{
+    public $menuId;
+    public $page;
+    public $args;
+    public $class;
+    public $title;
+    public $img;
+    public $external;
+
+    public function getId()
+    {
+        return $this->menuId;
+    }
+
+    public function getOwnerId()
+    {
+        return 1;
+    }
+}

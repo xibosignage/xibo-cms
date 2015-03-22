@@ -220,7 +220,7 @@ class displayprofileDAO extends baseDAO {
             else
                 $validated = $setting['default'];
 
-            //Debug::LogEntry('audit', 'Validated ' . $setting['name'] . '. [' . $setting['value'] . '] as [' . $validated . ']. With type ' . $setting['type']);
+            //Log::debug('Validated ' . $setting['name'] . '. [' . $setting['value'] . '] as [' . $validated . ']. With type ' . $setting['type']);
 
             // Each field needs to have a type, a name and a default
             $formFields[$setting['tabId']][] = array(

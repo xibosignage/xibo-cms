@@ -22,6 +22,10 @@ namespace Xibo\Entity;
 
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Factory\MenuFactory;
+use Xibo\Factory\PageFactory;
+use Xibo\Factory\UserFactory;
+use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
@@ -57,6 +61,16 @@ class User
      * @var array[Permission]
      */
     private $permissionCache = array();
+
+    public function getOwnerId()
+    {
+        return $this->getId();
+    }
+
+    public function getId()
+    {
+        return $this->userId;
+    }
 
     /**
      * Set the password
@@ -121,6 +135,7 @@ class User
             return false;
         }
         else {
+            $this->userId = $userId;
             return true;
         }
     }
@@ -187,123 +202,46 @@ class User
     }
 
     /**
-     * Authenticates the page given against the user credentials held.
-     * TODO: Would like to improve performance here by making these credentials cached
-     * @return
-     * @param $page string
+     * Authenticates the route given against the user credentials held
+     * @param $route string
+     * @throws AccessDeniedException if the user doesn't have access
      */
-    public function PageAuth($page)
+    public function routeAuthentication($route)
     {
-        $db =& $this->db;
-        $userid =& $this->userId;
-        $usertype =& $this->userTypeId;
+        // Look at the route and see if we are permission for it.
+        $page = PageFactory::getByRoute($route);
 
-        // Check the page exists
-        $dbh = \Xibo\Storage\PDOConnect::init();
-
-        $sth = $dbh->prepare('SELECT pageID FROM `pages` WHERE name = :name');
-        $sth->execute(array('name' => $page));
-
-        $pageId = $sth->fetchColumn();
-
-        if ($pageId == '') {
-            Debug::LogEntry('audit', 'Blocked assess to unrecognised page: ' . $page . '.', 'index', 'PageAuth');
-            throw new Exception(__('Requested page does not exist'));
-        }
-
-        // Check the security
-        if ($usertype == 1)
-            return true;
-
-        // We have access to only the pages assigned to this group
-        try {
-            $dbh = \Xibo\Storage\PDOConnect::init();
-
-            $SQL = "SELECT pageid ";
-            $SQL .= " FROM `lkpagegroup` ";
-            $SQL .= "    INNER JOIN `lkusergroup` ";
-            $SQL .= "    ON lkpagegroup.groupID = lkusergroup.GroupID ";
-            $SQL .= " WHERE lkusergroup.UserID = :userid AND pageid = :pageid";
-
-            $sth = $dbh->prepare($SQL);
-            $sth->execute(array(
-                'userid' => $userid,
-                'pageid' => $pageId
-            ));
-
-            $results = $sth->fetchAll();
-
-            return (count($results) > 0);
-        } catch (Exception $e) {
-
-            Debug::LogEntry('error', $e->getMessage());
-
-            return false;
+        if (!$this->checkViewable($page)) {
+            Log::debug('Blocked assess to unrecognised page: ' . $page->page . '.', 'index', 'PageAuth');
+            throw new AccessDeniedException();
         }
     }
 
     /**
      * Return a Menu for this user
-     * TODO: Would like to cache this menu array for future requests
-     * @return
-     * @param $menu Object
+     * @param string $menu
+     * @return array[Menu]
      */
-    public function MenuAuth($menu)
+    public function menuList($menu)
     {
-        $db =& $this->db;
-        $userid =& $this->userId;
-        $usertypeid =& $this->userTypeId;
+        $menu = MenuFactory::getByMenu($menu);
 
-        //Debug::LogEntry('audit', sprintf('Authing the menu for usertypeid [%d]', $usertypeid));
+        if ($this->userTypeId == 1)
+            return $menu;
 
-        // Get some information about this menu
-        // I.e. get the Menu Items this user has access to
-        $SQL = "";
-        $SQL .= "SELECT DISTINCT pages.name     , ";
-        $SQL .= "         menuitem.Args , ";
-        $SQL .= "         menuitem.Text , ";
-        $SQL .= "         menuitem.Class, ";
-        $SQL .= "         menuitem.Img, ";
-        $SQL .= "         menuitem.External ";
-        $SQL .= "FROM     menuitem ";
-        $SQL .= "         INNER JOIN menu ";
-        $SQL .= "         ON       menuitem.MenuID = menu.MenuID ";
-        $SQL .= "         INNER JOIN pages ";
-        $SQL .= "         ON       pages.pageID = menuitem.PageID ";
-        if ($usertypeid != 1) {
-            $SQL .= "       INNER JOIN lkmenuitemgroup ";
-            $SQL .= "       ON       lkmenuitemgroup.MenuItemID = menuitem.MenuItemID ";
-            $SQL .= "       INNER JOIN `group` ";
-            $SQL .= "       ON       lkmenuitemgroup.GroupID = group.GroupID ";
-            $SQL .= "       INNER JOIN lkusergroup ";
-            $SQL .= "       ON     group.groupID       = lkusergroup.GroupID ";
-        }
-        $SQL .= sprintf("WHERE    menu.Menu              = '%s' ", $db->escape_string($menu));
-        if ($usertypeid != 1) {
-            $SQL .= sprintf(" AND lkusergroup.UserID = %d", $userid);
-        }
-        $SQL .= " ORDER BY menuitem.Sequence";
+        foreach ($menu as $key => $menuItem) {
+            /* @var \Xibo\Entity\Menu $menuItem */
 
+            // Check to see if we are the owner
+            if ($menuItem->getOwnerId() == $this->userId)
+                continue;
 
-        if (!$result = $db->query($SQL)) {
-            trigger_error($db->error());
-
-            return false;
+            // Check we are viewable
+            if (!$this->checkViewable($menuItem))
+                unset($menu[$key]);
         }
 
-        // No permissions to see any of it
-        if ($db->num_rows($result) == 0) {
-            return false;
-        }
-
-        $theMenu = array();
-
-        // Load the results into a menu array
-        while ($row = $db->get_assoc_row($result)) {
-            $theMenu[] = $row;
-        }
-
-        return $theMenu;
+        return $menu;
     }
 
     /**
@@ -336,7 +274,7 @@ class User
     private function checkObjectCompatibility($object)
     {
         if (!method_exists($object, 'getId') || !method_exists($object, 'getOwnerId'))
-            throw new InvalidArgumentException(__('Provided Object not under permission management'));
+            throw new \InvalidArgumentException(__('Provided Object not under permission management'));
     }
 
     /**
@@ -618,7 +556,7 @@ class User
         $SQL .= 'GROUP BY dataset.UserID ';
 
         $SQL = sprintf($SQL, $dataSetId, implode(',', $this->GetUserGroups($this->userId, true)));
-        //Debug::LogEntry('audit', $SQL);
+        //Log::debug($SQL);
 
         if (!$row = $this->db->GetSingleRow($SQL))
             return $auth;
@@ -645,7 +583,7 @@ class User
         $SQL .= "  FROM dataset ";
         $SQL .= " ORDER BY DataSet ";
 
-        //Debug::LogEntry('audit', sprintf('Retreiving list of layouts for %s with SQL: %s', $this->userName, $SQL));
+        //Log::debug(sprintf('Retreiving list of layouts for %s with SQL: %s', $this->userName, $SQL));
 
         if (!$result = $this->db->query($SQL)) {
             trigger_error($this->db->error());
@@ -710,7 +648,7 @@ class User
         $SQL .= '   AND (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
 
         $SQL = sprintf($SQL, $displayGroupId, implode(',', $this->GetUserGroups($this->userId, true)));
-        //Debug::LogEntry('audit', $SQL);
+        //Log::debug($SQL);
 
         if (!$row = $this->db->GetSingleRow($SQL))
             return $auth;
@@ -765,7 +703,7 @@ class User
 
         $SQL .= " ORDER BY displaygroup.DisplayGroup ";
 
-        Debug::LogEntry('audit', sprintf('Retreiving list of displaygroups for %s with SQL: %s', $this->userName, $SQL));
+        Log::debug(sprintf('Retreiving list of displaygroups for %s with SQL: %s', $this->userName, $SQL));
 
         if (!$result = $this->db->query($SQL)) {
             trigger_error($this->db->error());
@@ -1094,46 +1032,36 @@ class User
             $filterBy['groupIds'] = (isset($filterBy['groupIds'])) ? array_merge($filterBy['groupIds'], $groups) : $groups;
         }
 
-        try {
-            $user = Userdata::entries($sortOrder, $filterBy);
-            $parsedUser = array();
+        $users = UserFactory::query($sortOrder, $filterBy);
 
-            foreach ($user as $row) {
-                $userItem = array();
+        if ($this->userTypeId == 1)
+            return $users;
 
-                // Validate each param and add it to the array.
-                $userItem['userid'] = $row->userId;
-                $userItem['username'] = $row->userName;
-                $userItem['usertypeid'] = $row->userTypeId;
-                $userItem['homepage'] = $row->homePage;
-                $userItem['email'] = $row->email;
-                $userItem['newuserwizard'] = $row->newUserWizard;
-                $userItem['lastaccessed'] = $row->lastAccessed;
-                $userItem['loggedin'] = $row->loggedIn;
-                $userItem['retired'] = $row->retired;
-                $userItem['object'] = $row;
+        foreach ($users as $key => $user) {
+            /* @var \Xibo\Entity\User $user */
 
-                // Add to the collection
-                $parsedUser[] = $userItem;
-            }
+            // Check to see if we are the user
+            if ($user->userId == $this->userId)
+                continue;
 
-            return $parsedUser;
-        } catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
-            return false;
+            // Check we are viewable
+            if (!$this->checkViewable($user))
+                unset($users[$key]);
         }
+
+        return $users;
     }
 
     public function GetPref($key, $default = NULL)
     {
-        $storedValue = Session::Get($key);
+        $storedValue = \Session::Get($key);
 
         return ($storedValue == NULL) ? $default : $storedValue;
     }
 
     public function SetPref($key, $value)
     {
-        Session::Set($key, $value);
+        \Session::Set($key, $value);
     }
 
     /*

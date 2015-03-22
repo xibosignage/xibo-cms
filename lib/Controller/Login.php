@@ -20,6 +20,7 @@
  */
 namespace Xibo\Controller;
 use dashboardDAO;
+use Xibo\Exception\FormExpiredException;
 use Xibo\Helper\Log;
 use Exception;
 use Kit;
@@ -39,7 +40,7 @@ class Login extends Base
     public function loginForm()
     {
         Theme::Set('form_action', $this->urlFor('login'));
-        Theme::Set('form_meta', '<input type="hidden" name="priorPage" value="' . $this->getSession()->get('priorPage') . '" />');
+        Theme::Set('form_meta', '<input type="hidden" name="priorPage" value="' . $this->getFlash('priorRoute') . '" />');
         Theme::Set('about_url', $this->urlFor('about'));
         Theme::Set('source_url', Theme::SourceLink());
 
@@ -56,6 +57,8 @@ class Login extends Base
         // Get our username and password
         $username = Sanitize::userName($this->param('username'));
         $password = Sanitize::password($this->param('password'));
+
+        Log::debug('Login with username %s', $this->param('username'));
 
         // Get our user
         try {
@@ -86,36 +89,25 @@ class Login extends Base
         }
     }
 
-    function logout($referingpage = '')
+    /**
+     * Log out
+     */
+    function logout()
     {
-        $user = $this->getUser();
-        $db =& $this->db;
+        $this->getUser()->loggedIn = 0;
 
-        $username = \Kit::GetParam('username', _SESSION, _USERNAME);
-
-        //logs the user out -- true if ok
-        $userId = \Kit::GetParam('userid', _SESSION, _INT);
-
-        //write out to the db that the logged in user has accessed the page still
-        $SQL = sprintf("UPDATE user SET loggedin = 0 WHERE userid = %d", $userId);
-        if (!$results = $db->query($SQL)) trigger_error("Can not write last accessed info.", E_USER_ERROR);
-
-        //to log out a user we need only to clear out some session vars
+        // to log out a user we need only to clear out some session vars
         unset($_SESSION['userid']);
         unset($_SESSION['username']);
         unset($_SESSION['password']);
 
         $session = $this->getSession();
         $session->setIsExpired(1);
-
-        if ($referingpage == '')
-            $referingpage = 'index';
-
-        //then go back to the index page
-        header('Location:index.php?p=' . $referingpage);
-        exit;
     }
 
+    /**
+     *
+     */
     function displayPage()
     {
         $db =& $this->db;
@@ -168,19 +160,15 @@ class Login extends Base
 
     /**
      * Ping Pong
-     * @return
      */
     public function PingPong()
     {
         $response = $this->getState();
-
         $response->success = true;
-
     }
 
     /**
      * Shows information about Xibo
-     * @return
      */
     function About()
     {
@@ -193,19 +181,17 @@ class Login extends Base
 
         $response->SetFormRequestResponse($output, __('About'), '500', '500');
         $response->AddButton(__('Close'), 'XiboDialogClose()');
-
     }
 
+    /**
+     * Exchange tokens
+     */
     function ExchangeGridTokenForFormToken()
     {
-
         // Check our grid token against the one provided.
         if (!Kit::CheckToken('gridToken'))
-            die(__('Sorry the form has expired. Please refresh.'));
+            throw new FormExpiredException();
 
-        echo \Kit::Token('token', false);
-        exit();
+        $this->getState()->html = \Kit::Token('token', false);
     }
 }
-
-?>

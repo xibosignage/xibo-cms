@@ -487,7 +487,7 @@ class statsDAO extends baseDAO
 
             $SQL .= 'ORDER BY display.display';
 
-            //Debug::LogEntry('audit', $SQL . '. Params = ' . var_export($params, true), get_class(), __FUNCTION__);
+            //Log::debug($SQL . '. Params = ' . var_export($params, true), get_class(), __FUNCTION__);
 
             $sth = $dbh->prepare($SQL);
 
@@ -657,7 +657,7 @@ class statsDAO extends baseDAO
 			$output		.= "$type, $fromdt, $todt, $layout, $display, $media, $tag\n";
 		}
 		
-		//Debug::LogEntry('audit', 'Output: ' . $output, 'Stats', 'OutputCSV');
+		//Log::debug('Output: ' . $output, 'Stats', 'OutputCSV');
 		
 		echo $output;
 		exit;

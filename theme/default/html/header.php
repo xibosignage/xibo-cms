@@ -105,7 +105,7 @@ use Xibo\Helper\Theme;defined('XIBO') or die("Sorry, you are not allowed to dire
 	              
                 <div class="sidebar-footer">
                     <div class="col-sm-6">
-                        <a class="XiboFormButton" href="index.php?p=index&q=About" title="<?php echo Theme::Translate('About the CMS'); ?>"><?php echo Theme::Translate('About'); ?></a>
+                        <a class="XiboFormButton" href="<?php echo Theme::urlFor('about'); ?>" title="<?php echo Theme::Translate('About the CMS'); ?>"><?php echo Theme::Translate('About'); ?></a>
                     </div>
                     <div class="col-sm-6">
                         <a href="<?php echo Config::GetSetting('HELP_BASE'); ?>" target="_blank" title="<?php echo Theme::Translate('Open the Manual in a new Window'); ?>"><?php echo Theme::Translate('Manual'); ?></a>

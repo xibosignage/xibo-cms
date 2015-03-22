@@ -25,6 +25,7 @@ namespace Xibo\Middleware;
 
 use Slim\Middleware;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Factory\UserFactory;
 use Xibo\Helper\Theme;
 
 class WebAuthentication extends Middleware
@@ -59,15 +60,19 @@ class WebAuthentication extends Middleware
 
             // Check to see if this is a public resource (there are only a few, so we have them in an array)
             if (!in_array($resource, $publicRoutes)) {
+                $app->public = false;
                 // Need to check
                 if ($user->hasIdentity() && $app->session->isExpired == 0) {
+                    // Replace our user with a fully loaded one
+                    $user = UserFactory::getById($user->userId);
                     // Do they have permission?
-                    if (!$user->PageAuth($resource))
-                        throw new AccessDeniedException();
+                    $user->routeAuthentication($resource);
+
+                    $app->user = $user;
                 }
                 else {
                     // Store the current route so we can come back to it after login
-                    $app->session->set('priorRoute', $resource);
+                    $app->flash('priorRoute', $resource);
 
                     if ($app->request->isAjax()) {
                         // Return a JSON response which tells the App to redirect to the login page
@@ -81,13 +86,16 @@ class WebAuthentication extends Middleware
                     }
                 }
             }
+            else {
+                $app->public = true;
+            }
         };
 
         $updateUser = function () use ($app) {
             $user = $app->user;
             /* @var \Xibo\Entity\User $user */
 
-            if ($user->hasIdentity()) {
+            if (!$app->public && $user->hasIdentity()) {
                 $user->lastAccessed = date("Y-m-d H:i:s");
                 $user->save();
             }

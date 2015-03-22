@@ -86,7 +86,7 @@ class Rest
      */
     public function DisplayList()
     {
-        if (!$this->user->PageAuth('display'))
+        if (!$this->user->routeAuthentication('display'))
             return $this->Error(1, 'Access Denied');
 
         \Kit::ClassLoader('Display');
@@ -100,7 +100,7 @@ class Rest
      */
     public function DisplayEdit()
     {
-        if (!$this->user->PageAuth('display'))
+        if (!$this->user->routeAuthentication('display'))
             return $this->Error(1, 'Access Denied');
 
         \Kit::ClassLoader('Display');
@@ -114,7 +114,7 @@ class Rest
      */
     public function DisplayRetire()
     {
-        if (!$this->user->PageAuth('display'))
+        if (!$this->user->routeAuthentication('display'))
             return $this->Error(1, 'Access Denied');
 
         \Kit::ClassLoader('Display');
@@ -128,7 +128,7 @@ class Rest
      */
     public function DisplayDelete()
     {
-        if (!$this->user->PageAuth('display'))
+        if (!$this->user->routeAuthentication('display'))
             return $this->Error(1, 'Access Denied');
 
         \Kit::ClassLoader('Display');
@@ -142,7 +142,7 @@ class Rest
      */
     public function DisplayWakeOnLan()
     {
-        if (!$this->user->PageAuth('display'))
+        if (!$this->user->routeAuthentication('display'))
             return $this->Error(1, 'Access Denied');
 
         \Kit::ClassLoader('Display');
@@ -164,7 +164,7 @@ class Rest
      */
     public function DisplayUserGroupSecurity()
     {
-        if (!$this->user->PageAuth('display'))
+        if (!$this->user->routeAuthentication('display'))
             return $this->Error(1, 'Access Denied');
 
         \Kit::ClassLoader('Display');
@@ -178,7 +178,7 @@ class Rest
      */
     public function DisplayUserGroupEdit()
     {
-        if (!$this->user->PageAuth('display'))
+        if (!$this->user->routeAuthentication('display'))
             return $this->Error(1, 'Access Denied');
 
         \Kit::ClassLoader('Display');
@@ -192,7 +192,7 @@ class Rest
      */
     public function DisplayGroupList()
     {
-        if (!$this->user->PageAuth('displaygroup'))
+        if (!$this->user->routeAuthentication('displaygroup'))
             return $this->Error(1, 'Access Denied');
 
         \Kit::ClassLoader('DisplayGroup');
@@ -206,7 +206,7 @@ class Rest
      */
     public function DisplayGroupAdd()
     {
-        if (!$this->user->PageAuth('displaygroup'))
+        if (!$this->user->routeAuthentication('displaygroup'))
             return $this->Error(1, 'Access Denied');
 
         \Kit::ClassLoader('DisplayGroup');
@@ -220,7 +220,7 @@ class Rest
      */
     public function DisplayGroupEdit()
     {
-        if (!$this->user->PageAuth('displaygroup'))
+        if (!$this->user->routeAuthentication('displaygroup'))
             return $this->Error(1, 'Access Denied');
 
         \Kit::ClassLoader('DisplayGroup');
@@ -234,7 +234,7 @@ class Rest
      */
     public function DisplayGroupDelete()
     {
-        if (!$this->user->PageAuth('displaygroup'))
+        if (!$this->user->routeAuthentication('displaygroup'))
             return $this->Error(1, 'Access Denied');
 
         \Kit::ClassLoader('DisplayGroup');
@@ -248,7 +248,7 @@ class Rest
      */
     public function DisplayGroupMembersList()
     {
-        if (!$this->user->PageAuth('displaygroup'))
+        if (!$this->user->routeAuthentication('displaygroup'))
             return $this->Error(1, 'Access Denied');
 
         \Kit::ClassLoader('DisplayGroup');
@@ -262,7 +262,7 @@ class Rest
      */
     public function DisplayGroupMembersEdit()
     {
-        if (!$this->user->PageAuth('displaygroup'))
+        if (!$this->user->routeAuthentication('displaygroup'))
             return $this->Error(1, 'Access Denied');
 
         \Kit::ClassLoader('DisplayGroup');
@@ -276,7 +276,7 @@ class Rest
      */
     public function DisplayGroupUserGroupList()
     {
-        if (!$this->user->PageAuth('displaygroup'))
+        if (!$this->user->routeAuthentication('displaygroup'))
             return $this->Error(1, 'Access Denied');
 
         \Kit::ClassLoader('DisplayGroup');
@@ -290,7 +290,7 @@ class Rest
      */
     public function DisplayGroupUserGroupEdit()
     {
-        if (!$this->user->PageAuth('displaygroup'))
+        if (!$this->user->routeAuthentication('displaygroup'))
             return $this->Error(1, 'Access Denied');
 
         \Kit::ClassLoader('DisplayGroup');
@@ -304,7 +304,7 @@ class Rest
      */
     public function LibraryMediaList()
     {
-        if (!$this->user->PageAuth('content'))
+        if (!$this->user->routeAuthentication('content'))
             return $this->Error(1, 'Access Denied');
 
         $media = $this->user->MediaList();
@@ -323,7 +323,7 @@ class Rest
     public function LibraryMediaFileUpload()
     {
         // Does this user have permission to call this webservice method?
-        if (!$this->user->PageAuth('content'))
+        if (!$this->user->routeAuthentication('content'))
             return $this->Error(1, 'Access Denied');
 
         \Kit::ClassLoader('file');
@@ -337,9 +337,9 @@ class Rest
         // Checksum the payload
         if ($payloadMd5 != $checkSum)
         {
-            // Debug::LogEntry('audit', 'Sent Checksum: ' . $checkSum, 'RestXml', 'LibraryMediaFileUpload');
-            // Debug::LogEntry('audit', 'Calculated Checksum: ' . $payloadMd5, 'RestXml', 'LibraryMediaFileUpload');
-            // Debug::LogEntry('audit', 'Payload: ' . $payload, 'RestXml', 'LibraryMediaFileUpload');
+            // Log::debug('Sent Checksum: ' . $checkSum, 'RestXml', 'LibraryMediaFileUpload');
+            // Log::debug('Calculated Checksum: ' . $payloadMd5, 'RestXml', 'LibraryMediaFileUpload');
+            // Log::debug('Payload: ' . $payload, 'RestXml', 'LibraryMediaFileUpload');
 
             return $this->Error(2);
         }
@@ -377,7 +377,7 @@ class Rest
     public function LibraryMediaAdd()
     {
         // Does this user have permission to call this webservice method?
-        if (!$this->user->PageAuth('content'))
+        if (!$this->user->routeAuthentication('content'))
             return $this->Error(1, 'Access Denied');
 
         \Kit::ClassLoader('Media');
@@ -407,7 +407,7 @@ class Rest
      */
     public function LibraryMediaEdit()
     {      
-        if (!$this->user->PageAuth('content'))
+        if (!$this->user->routeAuthentication('content'))
             return $this->Error(1, 'Access Denied');
 
         \Kit::ClassLoader('Media');
@@ -435,7 +435,7 @@ class Rest
      */
     public function LibraryMediaRetire()
     {
-        if (!$this->user->PageAuth('content'))
+        if (!$this->user->routeAuthentication('content'))
             return $this->Error(1, 'Access Denied');
 
         \Kit::ClassLoader('Media');
@@ -457,7 +457,7 @@ class Rest
      */
     public function LibraryMediaDelete()
     {
-        if (!$this->user->PageAuth('content'))
+        if (!$this->user->routeAuthentication('content'))
             return $this->Error(1, 'Access Denied');
 
         \Kit::ClassLoader('Media');
@@ -481,7 +481,7 @@ class Rest
     public function LibraryMediaFileRevise()
     {
         // Does this user have permission to call this webservice method?
-        if (!$this->user->PageAuth('content'))
+        if (!$this->user->routeAuthentication('content'))
             return $this->Error(1, 'Access Denied');
 
         \Kit::ClassLoader('Media');
@@ -510,7 +510,7 @@ class Rest
      */
     public function LayoutList()
     {
-        if (!$this->user->PageAuth('layout'))
+        if (!$this->user->routeAuthentication('layout'))
             return $this->Error(1, 'Access Denied');
 
         $layout = $this->user->LayoutList();
@@ -531,7 +531,7 @@ class Rest
      */
     public function LayoutAdd()
     {
-        if (!$this->user->PageAuth('layout'))
+        if (!$this->user->routeAuthentication('layout'))
             return $this->Error(1, 'Access Denied');
 
         \Kit::ClassLoader('layout');
@@ -559,7 +559,7 @@ class Rest
      */
     public function LayoutEdit()
     {
-        if (!$this->user->PageAuth('layout'))
+        if (!$this->user->routeAuthentication('layout'))
             return $this->Error(1, 'Access Denied');
 
         \Kit::ClassLoader('Layout');
@@ -579,7 +579,7 @@ class Rest
      */
     public function LayoutCopy()
     {
-        if (!$this->user->PageAuth('layout'))
+        if (!$this->user->routeAuthentication('layout'))
             return $this->Error(1, 'Access Denied');
 
         \Kit::ClassLoader('Layout');
@@ -599,7 +599,7 @@ class Rest
      */
     public function LayoutDelete()
     {
-        if (!$this->user->PageAuth('layout'))
+        if (!$this->user->routeAuthentication('layout'))
             return $this->Error(1, 'Access Denied');
 
         \Kit::ClassLoader('Layout');
@@ -622,7 +622,7 @@ class Rest
      */
     public function LayoutRetire()
     {
-        if (!$this->user->PageAuth('layout'))
+        if (!$this->user->routeAuthentication('layout'))
             return $this->Error(1, 'Access Denied');
 
         \Kit::ClassLoader('Layout');
@@ -642,7 +642,7 @@ class Rest
      */
     public function LayoutBackgroundList()
     {
-        if (!$this->user->PageAuth('layout'))
+        if (!$this->user->routeAuthentication('layout'))
             return $this->Error(1, 'Access Denied');
 
         \Kit::ClassLoader('Layout');
@@ -662,7 +662,7 @@ class Rest
      */
     public function LayoutBackgroundEdit()
     {
-        if (!$this->user->PageAuth('layout'))
+        if (!$this->user->routeAuthentication('layout'))
             return $this->Error(1, 'Access Denied');
 
         \Kit::ClassLoader('Layout');
@@ -682,7 +682,7 @@ class Rest
      */
     public function LayoutRegionList()
     {
-        if (!$this->user->PageAuth('layout'))
+        if (!$this->user->routeAuthentication('layout'))
             return $this->Error(1, 'Access Denied');
 
         $layoutId = $this->GetParam('layoutId', _INT);
@@ -727,7 +727,7 @@ class Rest
      */
     public function LayoutRegionAdd()
     {
-        if (!$this->user->PageAuth('layout'))
+        if (!$this->user->routeAuthentication('layout'))
             return $this->Error(1, 'Access Denied');
 
         $layoutId = $this->GetParam('layoutId', _INT);
@@ -757,7 +757,7 @@ class Rest
      */
     public function LayoutRegionEdit()
     {
-        if (!$this->user->PageAuth('layout'))
+        if (!$this->user->routeAuthentication('layout'))
             return $this->Error(1, 'Access Denied');
 
         $layoutId = $this->GetParam('layoutId', _INT);
@@ -796,7 +796,7 @@ class Rest
      */
     public function LayoutRegionDelete()
     {
-        if (!$this->user->PageAuth('layout'))
+        if (!$this->user->routeAuthentication('layout'))
             return $this->Error(1, 'Access Denied');
 
         $layoutId = $this->GetParam('layoutId', _INT);
@@ -830,7 +830,7 @@ class Rest
      */
     public function LayoutRegionTimelineList()
     {
-        if (!$this->user->PageAuth('layout'))
+        if (!$this->user->routeAuthentication('layout'))
             return $this->Error(1, 'Access Denied');
 
         $layoutId = $this->GetParam('layoutId', _INT);
@@ -892,7 +892,7 @@ class Rest
     public function LayoutRegionMediaAdd()
     {
         // Does this user have permission to call this webservice method?
-        if (!$this->user->PageAuth('layout'))
+        if (!$this->user->routeAuthentication('layout'))
             return $this->Error(1, 'Access Denied');
 
         $layoutId = $this->GetParam('layoutId', _INT);
@@ -933,7 +933,7 @@ class Rest
      */
     public function LayoutRegionMediaEdit()
     {
-        if (!$this->user->PageAuth('layout'))
+        if (!$this->user->routeAuthentication('layout'))
             return $this->Error(1, 'Access Denied');
 
         $layoutId = $this->GetParam('layoutId', _INT);
@@ -979,7 +979,7 @@ class Rest
      */
     public function LayoutRegionMediaDetails()
     {
-        if (!$this->user->PageAuth('layout'))
+        if (!$this->user->routeAuthentication('layout'))
             return $this->Error(1, 'Access Denied');
 
         $layoutId = $this->GetParam('layoutId', _INT);
@@ -1020,7 +1020,7 @@ class Rest
      */
     public function LayoutRegionMediaReorder()
     {
-        if (!$this->user->PageAuth('layout'))
+        if (!$this->user->routeAuthentication('layout'))
             return $this->Error(1, 'Access Denied');
 
         $layoutId = $this->GetParam('layoutId', _INT);
@@ -1056,7 +1056,7 @@ class Rest
      */
     public function LayoutRegionMediaDelete()
     {
-        if (!$this->user->PageAuth('layout'))
+        if (!$this->user->routeAuthentication('layout'))
             return $this->Error(1, 'Access Denied');
 
         $layoutId = $this->GetParam('layoutId', _INT);
@@ -1109,7 +1109,7 @@ class Rest
      */
     public function LayoutRegionLibraryAdd()
     {
-        if (!$this->user->PageAuth('layout'))
+        if (!$this->user->routeAuthentication('layout'))
             return $this->Error(1, 'Access Denied');
 
         $layoutId = $this->GetParam('layoutId', _INT);
@@ -1141,7 +1141,7 @@ class Rest
      */
     public function ScheduleList()
     {
-        if (!$this->user->PageAuth('schedule'))
+        if (!$this->user->routeAuthentication('schedule'))
             return $this->Error(1, 'Access Denied');
 
         return $this->Error(1000, 'Not implemented');
@@ -1153,7 +1153,7 @@ class Rest
      */
     public function ScheduleAdd()
     {
-        if (!$this->user->PageAuth('schedule'))
+        if (!$this->user->routeAuthentication('schedule'))
             return $this->Error(1, 'Access Denied');
 
         return $this->Error(1000, 'Not implemented');
@@ -1165,7 +1165,7 @@ class Rest
      */
     public function ScheduleEdit()
     {
-        if (!$this->user->PageAuth('schedule'))
+        if (!$this->user->routeAuthentication('schedule'))
             return $this->Error(1, 'Access Denied');
 
         return $this->Error(1000, 'Not implemented');
@@ -1177,7 +1177,7 @@ class Rest
      */
     public function ScheduleDelete()
     {
-        if (!$this->user->PageAuth('schedule'))
+        if (!$this->user->routeAuthentication('schedule'))
             return $this->Error(1, 'Access Denied');
 
         return $this->Error(1000, 'Not implemented');
@@ -1189,7 +1189,7 @@ class Rest
      */
     public function TemplateDelete()
     {
-        if (!$this->user->PageAuth('template'))
+        if (!$this->user->routeAuthentication('template'))
             return $this->Error(1, 'Access Denied');
 
         $layout     = new Layout();
@@ -1211,7 +1211,7 @@ class Rest
     public function ModuleList()
     {
         // Does this user have permission to call this webservice method?
-        if (!$this->user->PageAuth('content'))
+        if (!$this->user->routeAuthentication('content'))
             return $this->Error(1, 'Access Denied');
 
         \Kit::ClassLoader('Media');
@@ -1231,7 +1231,7 @@ class Rest
      */
     public function DataSetList() {
         // Auth
-        if (!$this->user->PageAuth('dataset'))
+        if (!$this->user->routeAuthentication('dataset'))
             return $this->Error(1, 'Access Denied');
 
         $dataset = $this->user->DataSetList();
@@ -1248,7 +1248,7 @@ class Rest
      */
     public function DataSetAdd() {
         // Auth
-        if (!$this->user->PageAuth('dataset'))
+        if (!$this->user->routeAuthentication('dataset'))
             return $this->Error(1, 'Access Denied');
 
         $dataSet = $this->GetParam('dataset', _STRING);
@@ -1268,7 +1268,7 @@ class Rest
      */
     public function DataSetEdit() {
         // Auth
-        if (!$this->user->PageAuth('dataset'))
+        if (!$this->user->routeAuthentication('dataset'))
             return $this->Error(1, 'Access Denied');
 
         $dataSetId = $this->GetParam('dataSetId', _INT);
@@ -1294,7 +1294,7 @@ class Rest
      */
     public function DataSetDelete() {
         // Auth
-        if (!$this->user->PageAuth('dataset'))
+        if (!$this->user->routeAuthentication('dataset'))
             return $this->Error(1, 'Access Denied');
 
         $dataSetId = $this->GetParam('dataSetId', _INT);
@@ -1317,7 +1317,7 @@ class Rest
      */
     public function DataSetColumnList() {
         // Auth
-        if (!$this->user->PageAuth('dataset'))
+        if (!$this->user->routeAuthentication('dataset'))
             return $this->Error(1, 'Access Denied');
 
         $dataSetId = $this->GetParam('dataSetId', _INT);
@@ -1340,7 +1340,7 @@ class Rest
      */
     public function DataSetColumnAdd() {
         // Auth
-        if (!$this->user->PageAuth('dataset'))
+        if (!$this->user->routeAuthentication('dataset'))
             return $this->Error(1, 'Access Denied');
 
         $dataSetId = $this->GetParam('dataSetId', _INT);
@@ -1370,7 +1370,7 @@ class Rest
      */
     public function DataSetColumnEdit() {
         // Auth
-        if (!$this->user->PageAuth('dataset'))
+        if (!$this->user->routeAuthentication('dataset'))
             return $this->Error(1, 'Access Denied');
 
         $dataSetId = $this->GetParam('dataSetId', _INT);
@@ -1401,7 +1401,7 @@ class Rest
      */
     public function DataSetColumnDelete() {
         // Auth
-        if (!$this->user->PageAuth('dataset'))
+        if (!$this->user->routeAuthentication('dataset'))
             return $this->Error(1, 'Access Denied');
 
         $dataSetId = $this->GetParam('dataSetId', _INT);
@@ -1426,7 +1426,7 @@ class Rest
      */
     public function DataSetDataList() {
         // Auth
-        if (!$this->user->PageAuth('dataset'))
+        if (!$this->user->routeAuthentication('dataset'))
             return $this->Error(1, 'Access Denied');
 
         $dataSetId = $this->GetParam('dataSetId', _INT);
@@ -1449,7 +1449,7 @@ class Rest
      */
     public function DataSetDataAdd() {
         // Auth
-        if (!$this->user->PageAuth('dataset'))
+        if (!$this->user->routeAuthentication('dataset'))
             return $this->Error(1, 'Access Denied');
 
         $dataSetId = $this->GetParam('dataSetId', _INT);
@@ -1479,7 +1479,7 @@ class Rest
      */
     public function DataSetDataEdit() {
         // Auth
-        if (!$this->user->PageAuth('dataset'))
+        if (!$this->user->routeAuthentication('dataset'))
             return $this->Error(1, 'Access Denied');
 
         $dataSetId = $this->GetParam('dataSetId', _INT);
@@ -1509,7 +1509,7 @@ class Rest
      */
     public function DataSetDataDelete() {
         // Auth
-        if (!$this->user->PageAuth('dataset'))
+        if (!$this->user->routeAuthentication('dataset'))
             return $this->Error(1, 'Access Denied');
 
         $dataSetId = $this->GetParam('dataSetId', _INT);
@@ -1538,7 +1538,7 @@ class Rest
      */
     public function DataSetSecurityList() {
         // Auth
-        if (!$this->user->PageAuth('dataset'))
+        if (!$this->user->routeAuthentication('dataset'))
             return $this->Error(1, 'Access Denied');
 
         $dataSetId = $this->GetParam('dataSetId', _INT);
@@ -1563,7 +1563,7 @@ class Rest
      */
     public function DataSetSecurityAdd() {
         // Auth
-        if (!$this->user->PageAuth('dataset'))
+        if (!$this->user->routeAuthentication('dataset'))
             return $this->Error(1, 'Access Denied');
 
         $dataSetId = $this->GetParam('dataSetId', _INT);
@@ -1593,7 +1593,7 @@ class Rest
      */
     public function DataSetSecurityDelete() {
         // Auth
-        if (!$this->user->PageAuth('dataset'))
+        if (!$this->user->routeAuthentication('dataset'))
             return $this->Error(1, 'Access Denied');
 
         $dataSetId = $this->GetParam('dataSetId', _INT);
@@ -1620,7 +1620,7 @@ class Rest
      */
     public function DataSetImportCsv() {
         // Auth
-        if (!$this->user->PageAuth('dataset'))
+        if (!$this->user->routeAuthentication('dataset'))
             return $this->Error(1, 'Access Denied');
 
         $dataSetId = $this->GetParam('dataSetId', _INT);
@@ -1674,7 +1674,7 @@ class Rest
 
     public function DataTypeList() {
         // Auth
-        if (!$this->user->PageAuth('dataset'))
+        if (!$this->user->routeAuthentication('dataset'))
             return $this->Error(1, 'Access Denied');
 
         \Kit::ClassLoader('dataset');
@@ -1685,7 +1685,7 @@ class Rest
 
     public function DataSetColumnTypeList() {
         // Auth
-        if (!$this->user->PageAuth('dataset'))
+        if (!$this->user->routeAuthentication('dataset'))
             return $this->Error(1, 'Access Denied');
 
         \Kit::ClassLoader('dataset');

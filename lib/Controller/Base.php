@@ -22,6 +22,8 @@
 
 namespace Xibo\Controller;
 use Slim\Slim;
+use Xibo\Helper\Log;
+use Xibo\Helper\Theme;
 
 /**
  * Class Base
@@ -112,12 +114,12 @@ class Base
     protected function param($param = null, $default = null)
     {
         switch ($this->app->request->getMethod()) {
-            case 'get':
+            case 'GET':
                 return $this->app->request->get($param, $default);
-            case 'post':
-            case 'delete':
+            case 'POST':
+            case 'DELETE':
                 return $this->app->request->post($param, $default);
-            case 'put':
+            case 'PUT':
                 return $this->app->request->put($param, $default);
             default:
                 return $default;
@@ -142,24 +144,25 @@ class Base
         if ($method != null && method_exists($this, $method))
             $this->$method();
 
+        Log::debug('Application Controller render. %s', $this->fullPage);
+
         if ($this->isApi()) {
             $this->app->render(200, $this->getState()->getData());
         }
         else {
             // Web App, either AJAX requested or normal
             if (!$this->app->request->isAjax() && $this->fullPage) {
-                \Xibo\Helper\Theme::Set('sidebar_html', $this->sideBarContent());
-                \Xibo\Helper\Theme::Set('action_menu', $this->actionMenu());
+                Theme::Set('sidebar_html', $this->sideBarContent());
+                Theme::Set('action_menu', $this->actionMenu());
 
                 // Display a page instead
-                $this->app->state->html = \Xibo\Helper\Theme::RenderReturn('header');
+                $header = Theme::RenderReturn('header');
+                $footer = Theme::RenderReturn('footer');
+
+                $this->getState()->html = $header . $this->getState()->html . $footer;
             }
 
             $this->app->render('response', array('response' => $this->getState()));
-
-            if (!$this->app->request->isAjax() && $this->fullPage) {
-                $this->app->state->html .= \Xibo\Helper\Theme::RenderReturn('footer');
-            }
         }
     }
 

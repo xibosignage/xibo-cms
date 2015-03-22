@@ -241,11 +241,13 @@ class Session {
 	
 	function set_user($key, $userid) 
 	{
+        $_SESSION['userid'] = $userid;
+
 		try {
 			$dbh = \Xibo\Storage\PDOConnect::init();
 
 			// Delete sessions older than 10 times the max lifetime
-			$sth = $dbh->prepare('UPDATE session SET userid = :userid WHERE session_id = :session_id');
+			$sth = $dbh->prepare('UPDATE `session` SET userid = :userid WHERE session_id = :session_id');
 			$sth->execute(array('session_id' => $key, 'userid' => $userid));
 		}
 		catch (Exception $e) {

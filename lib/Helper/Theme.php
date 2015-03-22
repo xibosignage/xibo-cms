@@ -20,6 +20,9 @@
  */
 namespace Xibo\Helper;
 use Config;
+use Slim\Slim;
+use Xibo\Entity\Menu;
+use Xibo\Factory\MenuFactory;
 use Xibo\Helper\Date;
 use Exception;
 use Extra;
@@ -91,7 +94,6 @@ class Theme
      */
     private static function Render($item)
     {
-
         $theme = Theme::GetInstance();
 
         // See if we have the requested file in the theme folder
@@ -114,7 +116,6 @@ class Theme
      */
     public static function RenderReturn($item)
     {
-
         ob_start();
 
         Theme::Render($item);
@@ -130,6 +131,7 @@ class Theme
      * Get an image from the Theme
      * @param string $item The image filename
      * @param string $class The class to apply [optional]
+     * @return string
      */
     public static function Image($item, $class = '')
     {
@@ -149,6 +151,7 @@ class Theme
     /**
      * Get an image URL
      * @param [string] $item the image
+     * @return string
      */
     public static function ImageUrl($item)
     {
@@ -168,6 +171,7 @@ class Theme
     /**
      * Get Item Path
      * @param string $item The Item required
+     * @return string
      */
     public static function ItemPath($item)
     {
@@ -187,6 +191,7 @@ class Theme
     /**
      * Get Item Path
      * @param string $item The Item required
+     * @return string
      */
     public static function Script($item)
     {
@@ -216,7 +221,7 @@ class Theme
     /**
      * Translate a string into the user language
      * @param string $string The String to Translate
-     * @param array $args Variables to insert (will replace %d %s in order)
+     * @return string
      */
     public static function Translate($string)
     {
@@ -284,7 +289,7 @@ class Theme
 
     public static function GetUserHomeLink()
     {
-        return 'index.php?p=' . Theme::GetInstance()->user->homePage;
+        return Theme::urlFor('home');
     }
 
     public static function GetPageHelpLink()
@@ -309,12 +314,18 @@ class Theme
 
     public static function SourceLink()
     {
-        return (isset(Theme::GetInstance()->config['cms_source_url']) ? Theme::GetInstance()->config['cms_source_url'] : 'https://launchpad.net/xibo/1.7');
+        return (isset(Theme::GetInstance()->config['cms_source_url']) ? Theme::GetInstance()->config['cms_source_url'] : 'https://github.com/xibosignage/xibo/');
     }
 
     public static function ThemeFolder()
     {
         return Theme::GetInstance()->name;
+    }
+
+    public static function urlFor($route)
+    {
+        $app = Slim::getInstance();
+        return $app->urlFor($route);
     }
 
     public static function GetConfig($settingName, $default = null)
@@ -334,21 +345,18 @@ class Theme
      */
     public static function GetMenu($menu)
     {
-
         $theme = Theme::GetInstance();
         $array = array();
 
-        if (!$menu = new MenuManager($theme->user, $menu))
-            trigger_error($menu->message, E_USER_ERROR);
-
-        while ($menuItem = $menu->GetNextMenuItem()) {
+        foreach (MenuFactory::getByMenu($menu) as $menuItem) {
+            /* @var Menu $menuItem */
             $item = array();
-            $item['page'] = \Kit::ValidateParam($menuItem['name'], _WORD);
-            $item['args'] = \Kit::ValidateParam($menuItem['Args'], _STRING);
-            $item['class'] = \Kit::ValidateParam($menuItem['Class'], _WORD);
-            $item['title'] = __(Kit::ValidateParam($menuItem['Text'], _STRING));
-            $item['img'] = \Kit::ValidateParam($menuItem['Img'], _STRING);
-            $item['external'] = \Kit::ValidateParam($menuItem['External'], _INT);
+            $item['page'] = $menuItem->page;
+            $item['args'] = $menuItem->args;
+            $item['class'] = $menuItem->class;
+            $item['title'] = __($menuItem->title);
+            $item['img'] = $menuItem->img;
+            $item['external'] = $menuItem->external;
 
             $item['selected'] = ($item['page'] == $theme->pageName);
 

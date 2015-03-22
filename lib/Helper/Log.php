@@ -24,52 +24,74 @@ use Slim\Slim;
 
 class Log
 {
+    /**
+     * Stringify string objects
+     * @param $object
+     * @return string
+     */
+    private static function prepare($object, $args)
+    {
+        if (is_string($object)) {
+            array_shift($args);
+
+            if (count($args) > 0)
+                $object = vsprintf($object, $args);
+        }
+
+        return $object;
+    }
+
+    public static function sql($sql, $params)
+    {
+        Log::debug('SQL = %s. Params = %s.', $sql, var_export($params, true));
+    }
+
     public static function debug($object)
     {
         $app = Slim::getInstance();
-        $app->log->debug($object);
+        $app->log->debug(Log::prepare($object, func_get_args()));
     }
 
     public static function info($object)
     {
         $app = Slim::getInstance();
-        $app->log->info($object);
+        $app->log->info(Log::prepare($object, func_get_args()));
     }
 
     public static function notice($object)
     {
         $app = Slim::getInstance();
-        $app->log->notice($object);
+        $app->log->notice(Log::prepare($object, func_get_args()));
     }
 
     public static function warning($object)
     {
         $app = Slim::getInstance();
-        $app->log->warning($object);
+        $app->log->warning(Log::prepare($object, func_get_args()));
     }
 
     public static function error($object)
     {
         $app = Slim::getInstance();
-        $app->log->error($object);
+        $app->log->error(Log::prepare($object, func_get_args()));
     }
 
     public static function critical($object)
     {
         $app = Slim::getInstance();
-        $app->log->critical($object);
+        $app->log->critical(Log::prepare($object, func_get_args()));
     }
 
     public static function alert($object)
     {
         $app = Slim::getInstance();
-        $app->log->alert($object);
+        $app->log->alert(Log::prepare($object, func_get_args()));
     }
 
     public static function emergency($object)
     {
         $app = Slim::getInstance();
-        $app->log->emergency($object);
+        $app->log->emergency(Log::prepare($object, func_get_args()));
     }
 
     /**

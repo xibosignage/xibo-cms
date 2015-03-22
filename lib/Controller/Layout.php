@@ -29,6 +29,7 @@ use Media;
 use Parsedown;
 use Xibo\Helper\ApplicationState;
 use Session;
+use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
 use Xibo\Entity\user;
 
@@ -39,142 +40,132 @@ class Layout extends Base
      */
     function displayPage()
     {
-        switch (\Kit::GetParam('modify', _GET, _WORD, 'view')) {
-            case 'view':
-
-                // Default options
-                if (\Kit::IsFilterPinned('layout', 'LayoutFilter')) {
-                    $layout = Session::Get('layout', 'filter_layout');
-                    $tags = Session::Get('layout', 'filter_tags');
-                    $retired = Session::Get('layout', 'filter_retired');
-                    $owner = Session::Get('layout', 'filter_userid');
-                    $filterLayoutStatusId = Session::Get('layout', 'filterLayoutStatusId');
-                    $showDescriptionId = Session::Get('layout', 'showDescriptionId');
-                    $showThumbnail = Session::Get('layout', 'showThumbnail');
-                    $showTags = Session::Get('content', 'showTags');
-                    $pinned = 1;
-                } else {
-                    $layout = NULL;
-                    $tags = NULL;
-                    $retired = 0;
-                    $owner = NULL;
-                    $filterLayoutStatusId = 1;
-                    $showDescriptionId = 2;
-                    $pinned = 0;
-                    $showThumbnail = 1;
-                    $showTags = 0;
-                }
-
-                $id = uniqid();
-                Theme::Set('header_text', __('Layouts'));
-                Theme::Set('id', $id);
-                Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
-                Theme::Set('pager', ApplicationState::Pager($id));
-                Theme::Set('form_meta', '<input type="hidden" name="p" value="layout"><input type="hidden" name="q" value="LayoutGrid">');
-
-                $formFields = array();
-                $formFields[] = FormManager::AddText('filter_layout', __('Name'), $layout, NULL, 'l');
-                $formFields[] = FormManager::AddText('filter_tags', __('Tags'), $tags, NULL, 't');
-
-                // Users we have permission to see
-                $users = $this->getUser()->userList();
-                array_unshift($users, array('userid' => '', 'username' => 'All'));
-
-                $formFields[] = FormManager::AddCombo(
-                    'filter_userid',
-                    __('Owner'),
-                    $owner,
-                    $users,
-                    'userid',
-                    'username',
-                    NULL,
-                    'r');
-                $formFields[] = FormManager::AddCombo(
-                    'filter_retired',
-                    __('Retired'),
-                    $retired,
-                    array(array('retiredid' => 1, 'retired' => 'Yes'), array('retiredid' => 0, 'retired' => 'No')),
-                    'retiredid',
-                    'retired',
-                    NULL,
-                    'r');
-                $formFields[] = FormManager::AddCombo(
-                    'filterLayoutStatusId',
-                    __('Show'),
-                    $filterLayoutStatusId,
-                    array(
-                        array('filterLayoutStatusId' => 1, 'filterLayoutStatus' => __('All')),
-                        array('filterLayoutStatusId' => 2, 'filterLayoutStatus' => __('Only Used')),
-                        array('filterLayoutStatusId' => 3, 'filterLayoutStatus' => __('Only Unused'))
-                    ),
-                    'filterLayoutStatusId',
-                    'filterLayoutStatus',
-                    NULL,
-                    's');
-                $formFields[] = FormManager::AddCombo(
-                    'showDescriptionId',
-                    __('Description'),
-                    $showDescriptionId,
-                    array(
-                        array('showDescriptionId' => 1, 'showDescription' => __('All')),
-                        array('showDescriptionId' => 2, 'showDescription' => __('1st line')),
-                        array('showDescriptionId' => 3, 'showDescription' => __('None'))
-                    ),
-                    'showDescriptionId',
-                    'showDescription',
-                    NULL,
-                    'd');
-
-                $formFields[] = FormManager::AddCheckbox('showTags', __('Show Tags'),
-                    $showTags, NULL,
-                    't');
-
-                $formFields[] = FormManager::AddCheckbox('showThumbnail', __('Show Thumbnails'),
-                    $showThumbnail, NULL,
-                    'i');
-
-                $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'),
-                    $pinned, NULL,
-                    'k');
-
-                Theme::Set('form_fields', $formFields);
-
-                // Call to render the template
-                $this->getState()->html .= Theme::RenderReturn('grid_render');
-                break;
-
-            case 'true':
-
-                $layoutId = \Kit::GetParam('layoutid', _GET, _INT);
-                $layout = \Xibo\Factory\LayoutFactory::loadById($layoutId);
-
-                Theme::Set('layout_form_edit_url', 'index.php?p=layout&q=EditForm&designer=1&layoutid=' . $layoutId);
-                Theme::Set('layout_form_savetemplate_url', 'index.php?p=template&q=TemplateForm&layoutid=' . $layoutId);
-                Theme::Set('layout_form_addregion_url', 'index.php?p=timeline&q=AddRegion&layoutid=' . $layoutId);
-                Theme::Set('layout_form_preview_url', 'index.php?p=preview&q=render&ajax=true&layoutid=' . $layoutId);
-                Theme::Set('layout_form_schedulenow_url', 'index.php?p=schedule&q=ScheduleNowForm&CampaignID=' . $layout->campaignId);
-                Theme::Set('layout', $layout->layout);
-                Theme::Set('layout_designer_editor', $this->RenderDesigner($layout));
-
-                // Set up the theme variables for the Layout Jump List
-                Theme::Set('layoutId', $layoutId);
-                Theme::Set('layouts', $this->getUser()->LayoutList());
-
-                // Set up any JavaScript translations
-                Theme::SetTranslation('save_position_button', __('Save Position'));
-                Theme::SetTranslation('revert_position_button', __('Undo'));
-                Theme::SetTranslation('savePositionsFirst', Theme::Translate('Please save the pending position changes first by clicking "Save Positions" or cancel by clicking "Undo".'));
-
-                // Call the render the template
-                $this->getState()->html .= Theme::RenderReturn('layout_designer');
-
-                break;
-
-            default:
-                break;
+        // Default options
+        if (\Kit::IsFilterPinned('layout', 'LayoutFilter')) {
+            $layout = Session::Get('layout', 'filter_layout');
+            $tags = Session::Get('layout', 'filter_tags');
+            $retired = Session::Get('layout', 'filter_retired');
+            $owner = Session::Get('layout', 'filter_userid');
+            $filterLayoutStatusId = Session::Get('layout', 'filterLayoutStatusId');
+            $showDescriptionId = Session::Get('layout', 'showDescriptionId');
+            $showThumbnail = Session::Get('layout', 'showThumbnail');
+            $showTags = Session::Get('content', 'showTags');
+            $pinned = 1;
+        } else {
+            $layout = NULL;
+            $tags = NULL;
+            $retired = 0;
+            $owner = NULL;
+            $filterLayoutStatusId = 1;
+            $showDescriptionId = 2;
+            $pinned = 0;
+            $showThumbnail = 1;
+            $showTags = 0;
         }
 
-        return false;
+        $id = uniqid();
+        Theme::Set('header_text', __('Layouts'));
+        Theme::Set('id', $id);
+        Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
+        Theme::Set('pager', ApplicationState::Pager($id));
+        Theme::Set('form_action', $this->urlFor('layoutSearch'));
+
+        $formFields = array();
+        $formFields[] = FormManager::AddText('filter_layout', __('Name'), $layout, NULL, 'l');
+        $formFields[] = FormManager::AddText('filter_tags', __('Tags'), $tags, NULL, 't');
+
+        // Users we have permission to see
+        $users = $this->getUser()->userList();
+        $users = array_map(function($element) { return array('userid' => $element->userId, 'username' => $element->userName); }, $users);
+        array_unshift($users, array('userid' => '', 'username' => 'All'));
+
+        $formFields[] = FormManager::AddCombo(
+            'filter_userid',
+            __('Owner'),
+            $owner,
+            $users,
+            'userid',
+            'username',
+            NULL,
+            'r');
+        $formFields[] = FormManager::AddCombo(
+            'filter_retired',
+            __('Retired'),
+            $retired,
+            array(array('retiredid' => 1, 'retired' => 'Yes'), array('retiredid' => 0, 'retired' => 'No')),
+            'retiredid',
+            'retired',
+            NULL,
+            'r');
+        $formFields[] = FormManager::AddCombo(
+            'filterLayoutStatusId',
+            __('Show'),
+            $filterLayoutStatusId,
+            array(
+                array('filterLayoutStatusId' => 1, 'filterLayoutStatus' => __('All')),
+                array('filterLayoutStatusId' => 2, 'filterLayoutStatus' => __('Only Used')),
+                array('filterLayoutStatusId' => 3, 'filterLayoutStatus' => __('Only Unused'))
+            ),
+            'filterLayoutStatusId',
+            'filterLayoutStatus',
+            NULL,
+            's');
+        $formFields[] = FormManager::AddCombo(
+            'showDescriptionId',
+            __('Description'),
+            $showDescriptionId,
+            array(
+                array('showDescriptionId' => 1, 'showDescription' => __('All')),
+                array('showDescriptionId' => 2, 'showDescription' => __('1st line')),
+                array('showDescriptionId' => 3, 'showDescription' => __('None'))
+            ),
+            'showDescriptionId',
+            'showDescription',
+            NULL,
+            'd');
+
+        $formFields[] = FormManager::AddCheckbox('showTags', __('Show Tags'),
+            $showTags, NULL,
+            't');
+
+        $formFields[] = FormManager::AddCheckbox('showThumbnail', __('Show Thumbnails'),
+            $showThumbnail, NULL,
+            'i');
+
+        $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'),
+            $pinned, NULL,
+            'k');
+
+        Theme::Set('form_fields', $formFields);
+
+        // Call to render the template
+        $this->getState()->html .= Theme::RenderReturn('grid_render');
+    }
+
+    public function displayDesigner()
+    {
+        $layoutId = \Kit::GetParam('layoutid', _GET, _INT);
+        $layout = \Xibo\Factory\LayoutFactory::loadById($layoutId);
+
+        Theme::Set('layout_form_edit_url', 'index.php?p=layout&q=EditForm&designer=1&layoutid=' . $layoutId);
+        Theme::Set('layout_form_savetemplate_url', 'index.php?p=template&q=TemplateForm&layoutid=' . $layoutId);
+        Theme::Set('layout_form_addregion_url', 'index.php?p=timeline&q=AddRegion&layoutid=' . $layoutId);
+        Theme::Set('layout_form_preview_url', 'index.php?p=preview&q=render&ajax=true&layoutid=' . $layoutId);
+        Theme::Set('layout_form_schedulenow_url', 'index.php?p=schedule&q=ScheduleNowForm&CampaignID=' . $layout->campaignId);
+        Theme::Set('layout', $layout->layout);
+        Theme::Set('layout_designer_editor', $this->RenderDesigner($layout));
+
+        // Set up the theme variables for the Layout Jump List
+        Theme::Set('layoutId', $layoutId);
+        Theme::Set('layouts', $this->getUser()->LayoutList());
+
+        // Set up any JavaScript translations
+        Theme::SetTranslation('save_position_button', __('Save Position'));
+        Theme::SetTranslation('revert_position_button', __('Undo'));
+        Theme::SetTranslation('savePositionsFirst', Theme::Translate('Please save the pending position changes first by clicking "Save Positions" or cancel by clicking "Undo".'));
+
+        // Call the render the template
+        $this->getState()->html .= Theme::RenderReturn('layout_designer');
     }
 
     function actionMenu()

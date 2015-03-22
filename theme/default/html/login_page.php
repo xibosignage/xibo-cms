@@ -87,7 +87,12 @@ use Xibo\Helper\Theme;defined('XIBO') or die("Sorry, you are not allowed to dire
 			<p class="text-center"><?php echo Theme::Translate('Version %s', VERSION); ?> | <a id="source-link" href="<?php echo Theme::Get('source_url'); ?>"><?php echo Theme::Translate('Source'); ?></a> | <a id="about-link" class="XiboFormButton" href="<?php echo Theme::Get('about_url'); ?>" title="<?php echo Theme::Translate('About'); ?>"><?php echo Theme::Translate('About'); ?></a></p>
 	    </div> <!-- /container -->
 
-
+    <script type="text/javascript">
+        var translations = <?php echo ((Theme::Get('translations') == '') ? '{}' : Theme::Get('translations')); ?>;
+        var language = "<?php echo TranslationEngine::GetJsLocale(); ?>";
+        var dateFormat = "<?php echo Config::GetSetting('DATE_FORMAT', 'Y-m-d h:i'); ?>";
+        var calendarType = "<?php echo Config::GetSetting('CALENDAR_TYPE'); ?>";
+    </script>
     <script src="<?php echo Theme::rootPath('theme/default/libraries/jquery/jquery-1.9.1.js"'); ?>"></script>
     <script src="<?php echo Theme::rootPath('theme/default/libraries/jquery/jquery.validate.min.js"'); ?>"></script>
     <script src="<?php echo Theme::rootPath('theme/default/libraries/jquery/additional-methods.min.js"'); ?>"></script>

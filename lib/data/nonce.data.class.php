@@ -102,7 +102,7 @@ class Nonce extends Data {
                     return false;
             }
 
-            // Debug::LogEntry('audit', var_export($params, true), get_class(), __FUNCTION__);
+            // Log::debug(var_export($params, true), get_class(), __FUNCTION__);
         
             // Insert
             $sth->execute($params);

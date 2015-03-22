@@ -25,25 +25,33 @@ namespace Xibo\Helper;
 
 class Sanitize
 {
-    public static function int($param)
+    private static function parse($param, $name)
     {
-        return filter_var($param, FILTER_SANITIZE_NUMBER_INT);
+        if ($name != null && is_array($param))
+            return isset($param[$name]) ? $param[$name] : null;
+        else
+            return $param;
     }
 
-    public static function string($param)
+    public static function int($param, $name = null)
     {
-        return filter_var($param, FILTER_SANITIZE_STRING);
+        return filter_var(Sanitize::parse($param, $name), FILTER_SANITIZE_NUMBER_INT);
     }
 
-    public static function userName($param)
+    public static function string($param, $name = null)
     {
-        $param = filter_var($param, FILTER_SANITIZE_STRING);
+        return filter_var(Sanitize::parse($param, $name), FILTER_SANITIZE_STRING);
+    }
+
+    public static function userName($param, $name = null)
+    {
+        $param = filter_var(Sanitize::parse($param, $name), FILTER_SANITIZE_STRING);
         $param = (string) preg_replace( '/[\x00-\x1F\x7F<>"\'%&]/', '', $param);
         return strtolower($param);
     }
 
-    public static function password($param)
+    public static function password($param, $name = null)
     {
-        return Sanitize::string($param);
+        return Sanitize::string($param, $name);
     }
 }
