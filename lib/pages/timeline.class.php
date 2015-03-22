@@ -80,7 +80,7 @@ class timelineDAO extends baseDAO
     {
         $response = $this->getState();
 
-        $layoutId = \Kit::GetParam('layoutId', _GET, _INT);
+        $layoutId = \Xibo\Helper\Sanitize::getInt('layoutId');
         $scale = \Kit::GetParam('scale', _GET, _DOUBLE);
         $zoom = \Kit::GetParam('zoom', _GET, _DOUBLE);
 
@@ -200,13 +200,13 @@ class timelineDAO extends baseDAO
             trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
 
         // Set the new values
-        $region->name = \Kit::GetParam('name', _POST, _STRING);
+        $region->name = \Xibo\Helper\Sanitize::getString('name');
         $region->zIndex = \Kit::GetParam('zindex', _POST, _INT, NULL);
 
-        $top  = \Kit::GetParam('top', _POST, _INT);
-        $left = \Kit::GetParam('left', _POST, _INT);
-        $width = \Kit::GetParam('width', _POST, _INT);
-        $height = \Kit::GetParam('height', _POST, _INT);
+        $top  = \Xibo\Helper\Sanitize::getInt('top');
+        $left = \Xibo\Helper\Sanitize::getInt('left');
+        $width = \Xibo\Helper\Sanitize::getInt('width');
+        $height = \Xibo\Helper\Sanitize::getInt('height');
         $scale = \Kit::GetParam('scale', _POST, _DOUBLE);
         $zoom = \Kit::GetParam('zoom', _POST, _DOUBLE);
 
@@ -386,7 +386,7 @@ class timelineDAO extends baseDAO
 		$response = $this->getState();
 		
 		// Keyed off the region id
-		$regionId = \Kit::GetParam('regionid', _POST, _STRING);
+		$regionId = \Xibo\Helper\Sanitize::getString('regionid');
 		
 		$seqGiven = \Kit::GetParam('seq', _POST, _INT, 0);
 		$seq = \Kit::GetParam('seq', _POST, _INT, 0);

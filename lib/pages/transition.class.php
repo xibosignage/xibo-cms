@@ -125,7 +125,7 @@ class transitionDAO extends baseDAO {
         if (Config::GetSetting('TRANSITION_CONFIG_LOCKED_CHECKB') == 'Checked')
             trigger_error(__('Transition Config Locked'), E_USER_ERROR);
 
-        $transitionId = \Kit::GetParam('TransitionID', _GET, _INT);
+        $transitionId = \Xibo\Helper\Sanitize::getInt('TransitionID');
 
         // Pull the currently known info from the DB
         $SQL = '';
@@ -183,9 +183,9 @@ class transitionDAO extends baseDAO {
         if (Config::GetSetting('TRANSITION_CONFIG_LOCKED_CHECKB') == 'Checked')
             trigger_error(__('Transition Config Locked'), E_USER_ERROR);
 
-        $transitionId = \Kit::GetParam('TransitionID', _POST, _INT);
-        $enabledForIn = \Kit::GetParam('EnabledForIn', _POST, _CHECKBOX);
-        $enabledForOut = \Kit::GetParam('EnabledForOut', _POST, _CHECKBOX);
+        $transitionId = \Xibo\Helper\Sanitize::getInt('TransitionID');
+        $enabledForIn = \Xibo\Helper\Sanitize::getCheckbox('EnabledForIn');
+        $enabledForOut = \Xibo\Helper\Sanitize::getCheckbox('EnabledForOut');
 
         // Validation
         if ($transitionId == 0 || $transitionId == '')

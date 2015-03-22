@@ -385,7 +385,7 @@ class ForecastIo extends Module
             throw new Exception(__('You do not have permission to edit this widget.'));
 
         //Other Properties
-	$name = \Kit::GetParam('name', _POST, _STRING);
+	$name = \Xibo\Helper\Sanitize::getString('name');
 
 	// You must also provide a duration (all media items must provide this field)
         $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration(), false));

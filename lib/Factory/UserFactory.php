@@ -25,6 +25,7 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
+use Xibo\Helper\Log;
 use Xibo\Storage\PDOConnect;
 
 class UserFactory
@@ -83,13 +84,13 @@ class UserFactory
         // User Id Provided?
         if (\Kit::GetParam('userId', $filterBy, _INT) != 0) {
             $SQL .= " AND user.userId = :userId ";
-            $params['userId'] = \Kit::GetParam('userId', $filterBy, _INT);
+            $params['userId'] = \Xibo\Helper\Sanitize::getInt('userId', $filterBy);
         }
 
         // User Type Provided
         if (\Kit::GetParam('userTypeId', $filterBy, _INT) != 0) {
             $SQL .= " AND user.userTypeId = :userTypeId ";
-            $params['userTypeId'] = \Kit::GetParam('userTypeId', $filterBy, _INT);
+            $params['userTypeId'] = \Xibo\Helper\Sanitize::getInt('userTypeId', $filterBy);
         }
 
         // User Name Provided
@@ -108,14 +109,14 @@ class UserFactory
         // Retired users?
         if (\Kit::GetParam('retired', $filterBy, _INT) != -1) {
             $SQL .= " AND user.retired = :retired ";
-            $params['retired'] = \Kit::GetParam('retired', $filterBy, _INT);
+            $params['retired'] = \Xibo\Helper\Sanitize::getInt('retired', $filterBy);
         }
 
         // Sorting?
         if (is_array($sortOrder))
             $SQL .= 'ORDER BY ' . implode(',', $sortOrder);
 
-        //Debug::Audit(sprintf('Retrieving list of users with SQL: %s. Params: %s', $SQL, var_export($params, true)));
+        Log::sql($SQL, $params);
 
         foreach (PDOConnect::select($SQL, $params) as $row) {
             $user = new User();

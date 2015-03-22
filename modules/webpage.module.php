@@ -220,9 +220,9 @@ class webpage extends Module
         $duration = \Kit::GetParam('duration', _POST, _INT, 0);
         $scaling = \Kit::GetParam('scaling', _POST, _INT, 100);
         $transparency = \Kit::GetParam('transparency', _POST, _CHECKBOX, 'off');
-        $offsetLeft = \Kit::GetParam('offsetLeft', _POST, _INT);
-        $offsetTop = \Kit::GetParam('offsetTop', _POST, _INT);
-	$name = \Kit::GetParam('name', _POST, _STRING);
+        $offsetLeft = \Xibo\Helper\Sanitize::getInt('offsetLeft');
+        $offsetTop = \Xibo\Helper\Sanitize::getInt('offsetTop');
+	$name = \Xibo\Helper\Sanitize::getString('name');
         
         // Validate the URL?
         if ($uri == "" || $uri == "http://")
@@ -269,9 +269,9 @@ class webpage extends Module
         $uri = \Kit::GetParam('uri', _POST, _URI);
         $scaling = \Kit::GetParam('scaling', _POST, _INT, 100);
         $transparency = \Kit::GetParam('transparency', _POST, _CHECKBOX, 'off');
-        $offsetLeft = \Kit::GetParam('offsetLeft', _POST, _INT);
-        $offsetTop = \Kit::GetParam('offsetTop', _POST, _INT);
-	$name = \Kit::GetParam('name', _POST, _STRING);
+        $offsetLeft = \Xibo\Helper\Sanitize::getInt('offsetLeft');
+        $offsetTop = \Xibo\Helper\Sanitize::getInt('offsetTop');
+	$name = \Xibo\Helper\Sanitize::getString('name');
 
         // Validate the URL?
         if ($uri == "" || $uri == "http://")

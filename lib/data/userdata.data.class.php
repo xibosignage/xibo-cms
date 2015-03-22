@@ -65,13 +65,13 @@ class Userdata extends Data
             // User Id Provided?
             if (\Kit::GetParam('userId', $filterBy, _INT) != 0) {
                 $SQL .= " AND user.userId = :userId ";
-                $params['userId'] = \Kit::GetParam('userId', $filterBy, _INT);
+                $params['userId'] = \Xibo\Helper\Sanitize::getInt('userId');
             }
 
             // User Type Provided
             if (\Kit::GetParam('userTypeId', $filterBy, _INT) != 0) {
                 $SQL .= " AND user.userTypeId = :userTypeId ";
-                $params['userTypeId'] = \Kit::GetParam('userTypeId', $filterBy, _INT);
+                $params['userTypeId'] = \Xibo\Helper\Sanitize::getInt('userTypeId');
             }
 
             // User Name Provided
@@ -90,7 +90,7 @@ class Userdata extends Data
             // Retired users?
             if (\Kit::GetParam('retired', $filterBy, _INT) != -1) {
                 $SQL .= " AND user.retired = :retired ";
-                $params['retired'] = \Kit::GetParam('retired', $filterBy, _INT);
+                $params['retired'] = \Xibo\Helper\Sanitize::getInt('retired');
             }
 
             // Sorting?

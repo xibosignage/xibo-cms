@@ -59,7 +59,7 @@ class XMDSSoap4
         $clientVersion = \Kit::ValidateParam($clientVersion, _STRING);
         $clientCode = \Kit::ValidateParam($clientCode, _INT);
         $macAddress = \Kit::ValidateParam($macAddress, _STRING);
-        $clientAddress = \Kit::GetParam('REMOTE_ADDR', $_SERVER, _STRING);
+        $clientAddress = \Xibo\Helper\Sanitize::getString('REMOTE_ADDR');
 
         // Audit in
         Log::Audit('serverKey: ' . $serverKey . ', hardwareKey: ' . $hardwareKey . ', displayName: ' . $displayName);

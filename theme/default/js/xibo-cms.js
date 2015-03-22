@@ -108,9 +108,9 @@ $(document).ready(function() {
         }());
     }
     
-    setInterval("XiboPing('index.php/clock')", 1000 * 60); // Every minute
+    setInterval("XiboPing('" + clockUrl + "')", 1000 * 60); // Every minute
     
-    setInterval("XiboPing('index.php/ping')", 1000 * 60 * 3); // Every 3 minutes
+    setInterval("XiboPing('" + pingUrl + "')", 1000 * 60 * 3); // Every 3 minutes
 
     XiboInitialise("");
 });
@@ -747,7 +747,7 @@ function XiboMultiSelectFormRender(button) {
             $(this).append(' <span class="saving fa fa-cog fa-spin"></span>');
 
             // We want to submit each action in turn (we don't actually have a form token yet, so we need one)
-            $.post('index.php?p=index&q=ExchangeGridTokenForFormToken', { gridToken: gridToken, ajax: true}, function(response) {
+            $.post(baseUrl + '/ExchangeGridTokenForFormToken', { gridToken: gridToken, ajax: true}, function(response) {
 
                 var token = response;
                 
@@ -862,7 +862,7 @@ function XiboPing(url, updateDiv) {
     // Call with AJAX
     $.ajax({
         type: "get",
-        url: url + "&ajax=true",
+        url: url,
         cache: false,
         dataType: "json",
         success: function(response){
@@ -914,7 +914,7 @@ function XiboClockUpdate(time)
 function XiboFormSubmit(form) {
 
     // Get the URL from the action part of the form)
-    var url = $(form).attr("action") + "&ajax=true";
+    var url = $(form).attr("action");
 
     // Pull any text editor instances we have
     for (var editor in CKEDITOR.instances) {
@@ -1039,7 +1039,7 @@ function XiboHoverRender(url, x, y)
     // TODO: Change this to be hover code
     $.ajax({
         type: "get",
-        url: url + "&ajax=true",
+        url: url,
         cache: false,
         dataType: "json",
         success: function(response){

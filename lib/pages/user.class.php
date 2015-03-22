@@ -117,11 +117,11 @@ class userDAO extends baseDAO {
         $response   = new ApplicationState();
         // Capture the filter options
         // User ID
-        $filter_username = \Kit::GetParam('filter_username', _POST, _STRING);
+        $filter_username = \Xibo\Helper\Sanitize::getString('filter_username');
         \Session::Set('user_admin', 'filter_username', $filter_username);
         
         // User Type ID
-        $filter_usertypeid = \Kit::GetParam('filter_usertypeid', _POST, _INT);
+        $filter_usertypeid = \Xibo\Helper\Sanitize::getInt('filter_usertypeid');
         \Session::Set('user_admin', 'filter_usertypeid', $filter_usertypeid);
 
         // Pinned option?        
@@ -234,12 +234,12 @@ class userDAO extends baseDAO {
         $response = $this->getState();
 
         $user = new Userdata();
-        $user->userName = \Kit::GetParam('edit_username', _POST, _STRING);
-        $password = \Kit::GetParam('edit_password', _POST, _STRING);
-        $user->email = \Kit::GetParam('email', _POST, _STRING);
+        $user->userName = \Xibo\Helper\Sanitize::getString('edit_username');
+        $password = \Xibo\Helper\Sanitize::getString('edit_password');
+        $user->email = \Xibo\Helper\Sanitize::getString('email');
         $user->userTypeId	= \Kit::GetParam('usertypeid', _POST, _INT, 3);
-        $user->homePage = \Kit::GetParam('homepage', _POST, _STRING);
-        $initialGroupId = \Kit::GetParam('groupid', _POST, _INT);
+        $user->homePage = \Xibo\Helper\Sanitize::getString('homepage');
+        $initialGroupId = \Xibo\Helper\Sanitize::getInt('groupid');
 
         // Add the user
         if (!$user->add($password, $initialGroupId))
@@ -267,14 +267,14 @@ class userDAO extends baseDAO {
             $user = $entries[0]['object'];
 
         // Create our user object
-        $user->userName = \Kit::GetParam('edit_username', _POST, _STRING);
-        $user->email = \Kit::GetParam('email', _POST, _STRING);
+        $user->userName = \Xibo\Helper\Sanitize::getString('edit_username');
+        $user->email = \Xibo\Helper\Sanitize::getString('email');
         $user->homePage = \Kit::GetParam('homepage', _POST, _STRING, 'dashboard');
-        $user->retired = \Kit::GetParam('retired', _POST, _CHECKBOX);
+        $user->retired = \Xibo\Helper\Sanitize::getCheckbox('retired');
 
         // Super Admins can change the user type
         if ($this->user->userTypeId == 1)
-            $user->userTypeId = \Kit::GetParam('usertypeid', _POST, _INT);
+            $user->userTypeId = \Xibo\Helper\Sanitize::getInt('usertypeid');
 
         if (!$user->edit())
             trigger_error($user->GetErrorMessage(), E_USER_ERROR);
@@ -340,7 +340,7 @@ class userDAO extends baseDAO {
         $user = $this->getUser();
         $response = $this->getState();
 
-        $userId = \Kit::GetParam('userID', _GET, _INT);
+        $userId = \Xibo\Helper\Sanitize::getInt('userID');
 
         // Set some information about the form
         Theme::Set('form_id', 'UserForm');
@@ -477,7 +477,7 @@ class userDAO extends baseDAO {
         $user = $this->getUser();
 		$response = $this->getState();
 		
-		$userid = \Kit::GetParam('userID', _GET, _INT);
+		$userid = \Xibo\Helper\Sanitize::getInt('userID');
 
         // Set some information about the form
         Theme::Set('form_id', 'UserDeleteForm');
@@ -508,7 +508,7 @@ class userDAO extends baseDAO {
     {
         $db =& $this->db;
         $response = $this->getState();
-        $userid = \Kit::GetParam('userid', _GET, _INT);
+        $userid = \Xibo\Helper\Sanitize::getInt('userid');
 
         // Set some information about the form
         Theme::Set('form_id', 'SetUserHomePageForm');
@@ -615,7 +615,7 @@ class userDAO extends baseDAO {
         $msgNewPassword = __('New Password');
         $msgRetype = __('Retype New Password');
 
-        $userId = \Kit::GetParam('userid', _GET, _INT);
+        $userId = \Xibo\Helper\Sanitize::getInt('userid');
 
         // Set some information about the form
         Theme::Set('form_id', 'ChangePasswordForm');
@@ -650,9 +650,9 @@ class userDAO extends baseDAO {
         $db =& $this->db;
         $response = $this->getState();
 
-        $oldPassword = \Kit::GetParam('oldPassword', _POST, _STRING);
-        $newPassword = \Kit::GetParam('newPassword', _POST, _STRING);
-        $retypeNewPassword = \Kit::GetParam('retypeNewPassword', _POST, _STRING);
+        $oldPassword = \Xibo\Helper\Sanitize::getString('oldPassword');
+        $newPassword = \Xibo\Helper\Sanitize::getString('newPassword');
+        $retypeNewPassword = \Xibo\Helper\Sanitize::getString('retypeNewPassword');
 
         \Kit::ClassLoader('userdata');
         $userData = new Userdata($db);
@@ -673,7 +673,7 @@ class userDAO extends baseDAO {
         $user       =& $this->user;
         $response   = new ApplicationState();
 
-        $userId = \Kit::GetParam('userid', _GET, _INT);
+        $userId = \Xibo\Helper\Sanitize::getInt('userid');
 
         // Set some information about the form
         Theme::Set('form_id', 'SetPasswordForm');
@@ -706,10 +706,10 @@ class userDAO extends baseDAO {
         $db =& $this->db;
         $response = $this->getState();
 
-        $newPassword = \Kit::GetParam('newPassword', _POST, _STRING);
-        $retypeNewPassword = \Kit::GetParam('retypeNewPassword', _POST, _STRING);
+        $newPassword = \Xibo\Helper\Sanitize::getString('newPassword');
+        $retypeNewPassword = \Xibo\Helper\Sanitize::getString('retypeNewPassword');
 
-        $userId = \Kit::GetParam('UserId', _POST, _INT);
+        $userId = \Xibo\Helper\Sanitize::getInt('UserId');
         
         // Check we are an admin
         if ($this->user->userTypeId != 1)
@@ -732,7 +732,7 @@ class userDAO extends baseDAO {
     {
         $response = $this->getState();
 
-        $entity = \Kit::GetParam('entity', _GET, _STRING);
+        $entity = \Xibo\Helper\Sanitize::getString('entity');
         if ($entity == '')
             throw new InvalidArgumentException(__('Permissions form requested without an entity'));
 
@@ -743,7 +743,7 @@ class userDAO extends baseDAO {
             throw new InvalidArgumentException(__('Permissions form requested with an invalid entity'));
 
         // Get the object
-        $objectId = \Kit::GetParam('objectId', _GET, _INT);
+        $objectId = \Xibo\Helper\Sanitize::getInt('objectId');
         if ($objectId == 0)
             throw new InvalidArgumentException(__('Permissions form requested without an object'));
 
@@ -812,7 +812,7 @@ class userDAO extends baseDAO {
 
 
 
-        $entity = \Kit::GetParam('entity', _POST, _STRING);
+        $entity = \Xibo\Helper\Sanitize::getString('entity');
         if ($entity == '')
             throw new InvalidArgumentException(__('Permissions form requested without an entity'));
 
@@ -823,7 +823,7 @@ class userDAO extends baseDAO {
             throw new InvalidArgumentException(__('Permissions form requested with an invalid entity'));
 
         // Get the object
-        $objectId = \Kit::GetParam('objectId', _POST, _INT);
+        $objectId = \Xibo\Helper\Sanitize::getInt('objectId');
         if ($objectId == 0)
             throw new InvalidArgumentException(__('Permissions form requested without an object'));
 
@@ -860,7 +860,7 @@ class userDAO extends baseDAO {
             }
         }
 
-        $cascade = \Kit::GetParam('cascade', _POST, _CHECKBOX);
+        $cascade = \Xibo\Helper\Sanitize::getCheckbox('cascade');
 
         if ($cascade) {
             Log::Audit('Permissions to push down: ' . var_export($newPermissions, true));

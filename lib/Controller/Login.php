@@ -55,10 +55,10 @@ class Login extends Base
     public function login()
     {
         // Get our username and password
-        $username = Sanitize::userName($this->param('username'));
-        $password = Sanitize::password($this->param('password'));
+        $username = Sanitize::getUserName('username');
+        $password = Sanitize::getPassword('password');
 
-        Log::debug('Login with username %s', $this->param('username'));
+        Log::debug('Login with username %s', $username);
 
         // Get our user
         try {

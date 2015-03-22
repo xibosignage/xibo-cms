@@ -46,6 +46,7 @@ class WebAuthentication extends Middleware
         // Initialise a theme
         new Theme($app->user);
 
+        Theme::Set('root', $app->request->getRootUri());
         Theme::Set('rootPath', str_replace('/index.php', '', $app->request->getRootUri()));
 
         // Define a callable to run our hook - curry in the $app object

@@ -55,8 +55,8 @@ class PageFactory
         $params = array();
         $sql = 'SELECT pageId, name FROM `pages` WHERE 1 = 1 ';
 
-        if (Sanitize::string($filterBy, 'name') != '') {
-            $params['name'] = Sanitize::string($filterBy, 'name');
+        if (Sanitize::getString('name', $filterBy) != '') {
+            $params['name'] = Sanitize::getString('name', $filterBy);
             $sql .= ' AND `name` = :name';
         }
 
@@ -65,7 +65,7 @@ class PageFactory
         foreach (PDOConnect::select($sql, $params) as $row) {
             $page = new Page();
             $page->pageId = $row['pageId'];
-            $page->page = Sanitize::string($row['name']);
+            $page->page = Sanitize::getString($row['name']);
 
             $entries[] = $page;
         }

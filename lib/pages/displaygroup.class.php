@@ -191,7 +191,7 @@ class displaygroupDAO extends baseDAO
         $response       = new ApplicationState();
         $helpManager    = new Help($db, $user);
         
-        $displayGroupID = \Kit::GetParam('DisplayGroupID', _REQUEST, _INT);
+        $displayGroupID = \Xibo\Helper\Sanitize::getInt('DisplayGroupID');
 
         // Auth
         $auth = $this->user->DisplayGroupAuth($displayGroupID, true);
@@ -239,7 +239,7 @@ class displaygroupDAO extends baseDAO
     {
         $db             =& $this->db;
         $response       = new ApplicationState();
-        $displayGroupID = \Kit::GetParam('DisplayGroupID', _REQUEST, _INT);
+        $displayGroupID = \Xibo\Helper\Sanitize::getInt('DisplayGroupID');
 
         // Auth
         $auth = $this->user->DisplayGroupAuth($displayGroupID, true);
@@ -267,7 +267,7 @@ class displaygroupDAO extends baseDAO
     {
         $db             =& $this->db;
         $response       = new ApplicationState();
-        $displayGroupID = \Kit::GetParam('DisplayGroupID', _REQUEST, _INT);
+        $displayGroupID = \Xibo\Helper\Sanitize::getInt('DisplayGroupID');
         
         // There needs to be two lists here.
         // One of which is the Displays currently assigned to this group
@@ -348,8 +348,8 @@ class displaygroupDAO extends baseDAO
         $db =& $this->db;
         $response = $this->getState();
 
-        $displayGroup = \Kit::GetParam('group', _POST, _STRING);
-        $description = \Kit::GetParam('desc', _POST, _STRING);
+        $displayGroup = \Xibo\Helper\Sanitize::getString('group');
+        $description = \Xibo\Helper\Sanitize::getString('desc');
         
         $displayGroupObject = new DisplayGroup($db);
         
@@ -379,9 +379,9 @@ class displaygroupDAO extends baseDAO
         $db             =& $this->db;
         $response       = new ApplicationState();
 
-        $displayGroupID = \Kit::GetParam('DisplayGroupID', _POST, _INT);
-        $displayGroup   = \Kit::GetParam('group', _POST, _STRING);
-        $description    = \Kit::GetParam('desc', _POST, _STRING);
+        $displayGroupID = \Xibo\Helper\Sanitize::getInt('DisplayGroupID');
+        $displayGroup   = \Xibo\Helper\Sanitize::getString('group');
+        $description    = \Xibo\Helper\Sanitize::getString('desc');
 
         // Auth
         $auth = $this->user->DisplayGroupAuth($displayGroupID, true);
@@ -411,7 +411,7 @@ class displaygroupDAO extends baseDAO
         $db             =& $this->db;   
         $response       = new ApplicationState();
     
-        $displayGroupID = \Kit::GetParam('DisplayGroupID', _POST, _INT);
+        $displayGroupID = \Xibo\Helper\Sanitize::getInt('DisplayGroupID');
 
         // Auth
         $auth = $this->user->DisplayGroupAuth($displayGroupID, true);
@@ -440,7 +440,7 @@ class displaygroupDAO extends baseDAO
         $response       = new ApplicationState();
         $displayGroupObject = new DisplayGroup($db);
     
-        $displayGroupID = \Kit::GetParam('DisplayGroupID', _REQUEST, _INT);
+        $displayGroupID = \Xibo\Helper\Sanitize::getInt('DisplayGroupID');
         $displays       = \Kit::GetParam('DisplayID', _POST, _ARRAY, array());
         $members        = array();
 
@@ -509,7 +509,7 @@ class displaygroupDAO extends baseDAO
         $response = $this->getState();
         $helpManager = new Help($db, $user);
 
-        $displayGroupId = \Kit::GetParam('DisplayGroupID', _GET, _INT);
+        $displayGroupId = \Xibo\Helper\Sanitize::getInt('DisplayGroupID');
 
         $auth = $this->user->DisplayGroupAuth($displayGroupId, true);
 
@@ -573,7 +573,7 @@ class displaygroupDAO extends baseDAO
         $user = $this->getUser();
         $response = $this->getState();
 
-        $displayGroupId = \Kit::GetParam('displayGroupId', _POST, _INT);
+        $displayGroupId = \Xibo\Helper\Sanitize::getInt('displayGroupId');
         $groupIds = \Kit::GetParam('groupids', _POST, _ARRAY);
 
         $auth = $this->user->DisplayGroupAuth($displayGroupId, true);
@@ -649,7 +649,7 @@ class displaygroupDAO extends baseDAO
 
     public function FileAssociations() {
 
-        $displayGroupId = \Kit::GetParam('DisplayGroupID', _GET, _INT);
+        $displayGroupId = \Xibo\Helper\Sanitize::getInt('DisplayGroupID');
 
         // Auth
         $auth = $this->user->DisplayGroupAuth($displayGroupId, true);
@@ -725,9 +725,9 @@ class displaygroupDAO extends baseDAO
         $user = $this->getUser();
 
         //Input vars
-        $mediatype = \Kit::GetParam('filter_type', _POST, _STRING);
-        $name = \Kit::GetParam('filter_name', _POST, _STRING);
-        $displaygroupid = \Kit::GetParam('displaygroupid', _POST, _INT);
+        $mediatype = \Xibo\Helper\Sanitize::getString('filter_type');
+        $name = \Xibo\Helper\Sanitize::getString('filter_name');
+        $displaygroupid = \Xibo\Helper\Sanitize::getInt('displaygroupid');
 
         // Get the currently associated media items and put them in the top bar
         $existing = array();
@@ -782,7 +782,7 @@ class displaygroupDAO extends baseDAO
         $user       =& $this->user;
         $response   = new ApplicationState();
 
-        $displayGroupId = \Kit::GetParam('displaygroupid', _GET, _INT);
+        $displayGroupId = \Xibo\Helper\Sanitize::getInt('displaygroupid');
         $mediaList = \Kit::GetParam('MediaID', _POST, _ARRAY_INT, NULL, false);
 
         if ($displayGroupId == 0)
@@ -807,8 +807,8 @@ class displaygroupDAO extends baseDAO
     public function VersionInstructionsForm() {
         $response = $this->getState();
 
-        $displayGroupId = \Kit::GetParam('displaygroupid', _GET, _INT);
-        $displayId = \Kit::GetParam('displayid', _GET, _INT);
+        $displayGroupId = \Xibo\Helper\Sanitize::getInt('displaygroupid');
+        $displayId = \Xibo\Helper\Sanitize::getInt('displayid');
         Theme::Set('installer_file_id', 0);
 
         // List of effected displays
@@ -862,8 +862,8 @@ class displaygroupDAO extends baseDAO
         \Kit::ClassLoader('display');
         \Kit::ClassLoader('lkmediadisplaygroup');
 
-        $displayGroupId = \Kit::GetParam('displaygroupid', _POST, _INT);
-        $mediaId = \Kit::GetParam('mediaid', _POST, _INT);
+        $displayGroupId = \Xibo\Helper\Sanitize::getInt('displaygroupid');
+        $mediaId = \Xibo\Helper\Sanitize::getInt('mediaid');
 
         // Make sure we have permission to do this to this display
         $auth = $this->user->DisplayGroupAuth($displayGroupId, true);

@@ -122,16 +122,22 @@ $app->get('/about', function () use ($app) {
 })->setName('about');
 
 // Ping pong route
-$app->get('/ping', function () use ($app) {
+$app->get('/login/ping', function () use ($app) {
     $controller = new \Xibo\Controller\Login($app);
     $controller->PingPong();
     $controller->render();
-});
+})->setName('ping');
 
 $app->get('/layout/view', function () use ($app) {
     // This is a full page
     $controller = new \Xibo\Controller\Layout($app);
     $controller->displayPage();
+    $controller->render();
+});
+
+$app->post('/ExchangeGridTokenForFormToken', function () use ($app) {
+    $controller = new \Xibo\Controller\Login($app);
+    $controller->ExchangeGridTokenForFormToken();
     $controller->render();
 });
 

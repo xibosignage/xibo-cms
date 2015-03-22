@@ -134,7 +134,7 @@ END;
 		$db =& $this->db;
 		$user = $this->getUser();
 		
-		$filter_name = \Kit::GetParam('filter_name', _POST, _STRING);
+		$filter_name = \Xibo\Helper\Sanitize::getString('filter_name');
                 
 		\Session::Set('usergroup', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 		\Session::Set('usergroup', 'filter_name', $filter_name);
@@ -307,7 +307,7 @@ END;
 	function PageSecurityFormGrid() 
 	{
 		$db	=& $this->db;
-		$groupId = \Kit::GetParam('groupid', _POST, _INT);
+		$groupId = \Xibo\Helper\Sanitize::getInt('groupid');
 
 		Theme::Set('form_id', 'UserGroupForm');
 		Theme::Set('form_meta', '<input type="hidden" name="groupid" value="' . $groupId . '">');
@@ -427,7 +427,7 @@ END;
         $db =& $this->db;
         $response = $this->getState();
 
-        $group 	= \Kit::GetParam('group', _POST, _STRING);
+        $group 	= \Xibo\Helper\Sanitize::getString('group');
 
         $userGroupObject = new UserGroup($db);
 
@@ -448,8 +448,8 @@ END;
         
 		$db =& $this->db;
 		
-		$groupid = \Kit::GetParam('groupid', _POST, _INT);
-		$group = \Kit::GetParam('group', _POST, _STRING);
+		$groupid = \Xibo\Helper\Sanitize::getInt('groupid');
+		$group = \Xibo\Helper\Sanitize::getString('group');
 
 		$userGroupObject = new UserGroup($db);
 
@@ -470,7 +470,7 @@ END;
 
         
 		$db =& $this->db;		
-		$groupid = \Kit::GetParam('groupid', _POST, _INT);
+		$groupid = \Xibo\Helper\Sanitize::getInt('groupid');
 		
 		$userGroupObject = new UserGroup($db);
 
@@ -489,7 +489,7 @@ END;
 	function assign() 
 	{
 		$db 		=& $this->db;
-		$groupid 	= \Kit::GetParam('groupid', _POST, _INT);
+		$groupid 	= \Xibo\Helper\Sanitize::getInt('groupid');
 
 		$pageids 	= $_POST['pageids'];
 		
@@ -591,9 +591,9 @@ END;
 	function MenuItemSecurityGrid() 
 	{
 		$db =& $this->db;
-		$groupid = \Kit::GetParam('groupid', _POST, _INT);
+		$groupid = \Xibo\Helper\Sanitize::getInt('groupid');
 		
-		$filter_menu = \Kit::GetParam('filter_menu', _POST, _STRING);
+		$filter_menu = \Xibo\Helper\Sanitize::getString('filter_menu');
 		
 		Theme::Set('form_id', 'UserGroupMenuForm');
 		Theme::Set('form_meta', '<input type="hidden" name="groupid" value="' . $groupid . '">');
@@ -666,7 +666,7 @@ END;
 
         
 		$db =& $this->db;
-		$groupid = \Kit::GetParam('groupid', _POST, _INT);
+		$groupid = \Xibo\Helper\Sanitize::getInt('groupid');
 
 		$pageids = $_POST['pageids'];
 		
@@ -715,7 +715,7 @@ END;
 	{
         $db =& $this->db;
         $response = $this->getState();
-        $groupID = \Kit::GetParam('groupid', _REQUEST, _INT);
+        $groupID = \Xibo\Helper\Sanitize::getInt('groupid');
 
         // There needs to be two lists here.
         
@@ -770,7 +770,7 @@ END;
         $response       = new ApplicationState();
         $groupObject    = new UserGroup($db);
 
-        $groupId = \Kit::GetParam('GroupID', _REQUEST, _INT);
+        $groupId = \Xibo\Helper\Sanitize::getInt('GroupID');
         $users = \Kit::GetParam('UserID', _POST, _ARRAY, array());
 
 		// We will receive a list of users from the UI which are in the "assign column" at the time the form is

@@ -235,7 +235,7 @@ class text extends Module
         // Other properties
         $duration = \Kit::GetParam('duration', _POST, _INT, 0, false);
         $text = \Kit::GetParam('ta_text', _POST, _HTMLSTRING);
-	$name 	      = \Kit::GetParam('name', _POST, _STRING);
+	$name 	      = \Xibo\Helper\Sanitize::getString('name');
 
         // Validation
         if ($text == '')
@@ -276,7 +276,7 @@ class text extends Module
 
         // Other properties
         $text = \Kit::GetParam('ta_text', _POST, _HTMLSTRING);
-        $name = \Kit::GetParam('name', _POST, _STRING);
+        $name = \Xibo\Helper\Sanitize::getString('name');
 
         // Validation
         if ($text == '')

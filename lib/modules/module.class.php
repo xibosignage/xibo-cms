@@ -359,7 +359,7 @@ abstract class Module implements ModuleInterface
         // Return
         $response->SetFormSubmitResponse(__('The Widget has been Edited'));
         $response->loadForm = true;
-        $response->loadFormUri= 'index.php?p=timeline&q=Timeline&regionid=' . \Kit::GetParam('regionId', _POST, _INT);
+        $response->loadFormUri= 'index.php?p=timeline&q=Timeline&regionid=' . \Xibo\Helper\Sanitize::getInt('regionId');
 
     }
 

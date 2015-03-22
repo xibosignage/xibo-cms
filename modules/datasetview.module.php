@@ -233,14 +233,14 @@ class datasetview extends Module
             throw new Exception(__('You do not have permission to edit this media.'));
 
         $columns = \Kit::GetParam('DataSetColumnId', _GET, _ARRAY, array());
-        $upperLimit = \Kit::GetParam('upperLimit', _POST, _INT);
-        $lowerLimit = \Kit::GetParam('lowerLimit', _POST, _INT);
+        $upperLimit = \Xibo\Helper\Sanitize::getInt('upperLimit');
+        $lowerLimit = \Xibo\Helper\Sanitize::getInt('lowerLimit');
         $filter = \Kit::GetParam('filter', _POST, _STRINGSPECIAL);
-        $ordering = \Kit::GetParam('ordering', _POST, _STRING);
-        $showHeadings = \Kit::GetParam('showHeadings', _POST, _CHECKBOX);
+        $ordering = \Xibo\Helper\Sanitize::getString('ordering');
+        $showHeadings = \Xibo\Helper\Sanitize::getCheckbox('showHeadings');
         $styleSheet = \Kit::GetParam('styleSheet', _POST, _HTMLSTRING);
-        $updateInterval = \Kit::GetParam('updateInterval', _POST, _INT);
-        $rowsPerPage = \Kit::GetParam('rowsPerPage', _POST, _INT);
+        $updateInterval = \Xibo\Helper\Sanitize::getInt('updateInterval');
+        $rowsPerPage = \Xibo\Helper\Sanitize::getInt('rowsPerPage');
 
         if (count($columns) == 0)
             $this->SetOption('columns', '');

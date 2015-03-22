@@ -154,8 +154,8 @@ class statsDAO extends baseDAO
 
         $fromDt = Date::getIsoDateFromString(Kit::GetParam('fromdt', _POST, _STRING));
         $toDt = Date::getIsoDateFromString(Kit::GetParam('todt', _POST, _STRING));
-        $displayId = \Kit::GetParam('displayid', _POST, _INT);
-        $mediaId = \Kit::GetParam('mediaid', _POST, _INT);
+        $displayId = \Xibo\Helper\Sanitize::getInt('displayid');
+        $mediaId = \Xibo\Helper\Sanitize::getInt('mediaid');
 
         // What if the fromdt and todt are exactly the same?
         // in this case assume an entire day from midnight on the fromdt to midnight on the todt (i.e. add a day to the todt)
@@ -352,7 +352,7 @@ class statsDAO extends baseDAO
     {
         $fromDt = Date::getTimestampFromString(Kit::GetParam('fromdt', _POST, _STRING));
         $toDt = Date::getTimestampFromString(Kit::GetParam('todt', _POST, _STRING));
-        $displayId = \Kit::GetParam('displayid', _POST, _INT);
+        $displayId = \Xibo\Helper\Sanitize::getInt('displayid');
 
         // Get an array of display id this user has access to.
         $displays = $this->user->DisplayList();
@@ -450,7 +450,7 @@ class statsDAO extends baseDAO
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
         
-            $displayId = \Kit::GetParam('displayid', _POST, _INT);
+            $displayId = \Xibo\Helper\Sanitize::getInt('displayid');
             $params = array(
                 'month' => $fromDt,
                 'month2' => $toDt
@@ -589,7 +589,7 @@ class statsDAO extends baseDAO
 		// We are expecting some parameters
 		$fromdt	= Date::getIsoDateFromString(Kit::GetParam('fromdt', _POST, _STRING));
 		$todt = Date::getIsoDateFromString(Kit::GetParam('todt', _POST, _STRING));
-		$displayID = \Kit::GetParam('displayid', _POST, _INT);
+		$displayID = \Xibo\Helper\Sanitize::getInt('displayid');
 
         if ($fromdt == $todt) {
             $todt = date("Y-m-d", strtotime($todt) + 86399);

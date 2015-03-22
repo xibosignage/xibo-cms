@@ -32,7 +32,9 @@ $app->get('/layout', function() use ($app) {
 })->name('layoutSearch');
 
 $app->get('/layout/:id', function($id) use ($app) {
-    $app->render(200, array('layout' => \Xibo\Factory\LayoutFactory::getById($id)));
+    $controller = new \Xibo\Controller\Layout($app);
+    $controller->EditForm();
+    $controller->render();
 })->name('layoutGet');
 
 $app->post('/layout/:id', function($id) use ($app) {

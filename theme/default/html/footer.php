@@ -87,6 +87,9 @@ Theme::SetTranslation('enterText', Theme::Translate('Enter text...'));
         var language = "<?php echo TranslationEngine::GetJsLocale(); ?>";
         var dateFormat = "<?php echo Config::GetSetting('DATE_FORMAT', 'Y-m-d h:i'); ?>";
         var calendarType = "<?php echo Config::GetSetting('CALENDAR_TYPE'); ?>";
+        var baseUrl = "<?php echo Theme::Get('root'); ?>";
+        var clockUrl = "<?php echo Theme::urlFor('clock'); ?>";
+        var pingUrl = "<?php echo Theme::urlFor('ping'); ?>";
         </script>
 	</body>
 </html>

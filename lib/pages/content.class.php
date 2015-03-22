@@ -164,12 +164,12 @@ class contentDAO extends baseDAO {
 
 		//Get the input params and store them
 		$filter_type = \Kit::GetParam('filter_type', _REQUEST, _WORD);
-		$filter_name = \Kit::GetParam('filter_name', _REQUEST, _STRING);
-		$filter_userid = \Kit::GetParam('filter_owner', _REQUEST, _INT);
-        $filter_retired = \Kit::GetParam('filter_retired', _REQUEST, _INT);
-        $filter_duration_in_seconds = \Kit::GetParam('filter_duration_in_seconds', _REQUEST, _CHECKBOX);
-        $filter_showThumbnail = \Kit::GetParam('filter_showThumbnail', _REQUEST, _CHECKBOX);
-        $showTags = \Kit::GetParam('showTags', _REQUEST, _CHECKBOX);
+		$filter_name = \Xibo\Helper\Sanitize::getString('filter_name');
+		$filter_userid = \Xibo\Helper\Sanitize::getInt('filter_owner');
+        $filter_retired = \Xibo\Helper\Sanitize::getInt('filter_retired');
+        $filter_duration_in_seconds = \Xibo\Helper\Sanitize::getCheckbox('filter_showThumbnail');
+        $filter_showThumbnail = \Xibo\Helper\Sanitize::getCheckbox('filter_showThumbnail');
+        $showTags = \Xibo\Helper\Sanitize::getCheckbox('showTags');
                 
 		\Session::Set('content', 'filter_type', $filter_type);
 		\Session::Set('content', 'filter_name', $filter_name);
@@ -308,11 +308,11 @@ class contentDAO extends baseDAO {
 
         // Do we come from the Background Image?
         $backgroundImage = \Kit::GetParam('backgroundImage', _GET, _BOOL, false);
-        $layoutId = \Kit::GetParam('layoutId', _GET, _INT);
+        $layoutId = \Xibo\Helper\Sanitize::getInt('layoutId');
 
         // Do we have a playlistId?
-        $playlistId = \Kit::GetParam('playlistId', _GET, _INT);
-        $regionId = \Kit::GetParam('regionId', _GET, _INT);
+        $playlistId = \Xibo\Helper\Sanitize::getInt('playlistId');
+        $regionId = \Xibo\Helper\Sanitize::getInt('regionId');
 
         // Save button is different depending on whether we came from the Layout Edit form or not.
         if ($backgroundImage) {
@@ -351,7 +351,7 @@ class contentDAO extends baseDAO {
     public function getFile()
     {
         // Get the MediaId
-        $mediaId = \Kit::GetParam('mediaId', _GET, _INT);
+        $mediaId = \Xibo\Helper\Sanitize::getInt('mediaId');
 
         // Can this user view?
         $entries = $this->user->MediaList(null, array('mediaId' => $mediaId));
@@ -360,8 +360,8 @@ class contentDAO extends baseDAO {
         /* @var \Xibo\Entity\Media $media */
 
         if (count($entries) <= 0) {
-            $width = \Kit::GetParam('width', _GET, _INT);
-            $height = \Kit::GetParam('height', _GET, _INT);
+            $width = \Xibo\Helper\Sanitize::getInt('width');
+            $height = \Xibo\Helper\Sanitize::getInt('height');
 
             // dynamically create an image of the correct size - used for previews
             ResizeImage(Theme::ImageUrl('forms/filenotfound.gif'), '', $width, $height, true, 'browser');
@@ -596,8 +596,8 @@ class contentDAO extends baseDAO {
         $output = Theme::RenderReturn('library_form_assign');
 
         // Input vars
-        $layoutId = \Kit::GetParam('layoutid', _REQUEST, _INT);
-        $regionId = \Kit::GetParam('regionid', _REQUEST, _STRING);
+        $layoutId = \Xibo\Helper\Sanitize::getInt('layoutid');
+        $regionId = \Xibo\Helper\Sanitize::getString('regionid');
 
         // Construct the Response
         $response->html = $output;
@@ -626,8 +626,8 @@ class contentDAO extends baseDAO {
         $response = $this->getState();
 
         //Input vars
-        $mediatype = \Kit::GetParam('filter_type', _POST, _STRING);
-        $name = \Kit::GetParam('filter_name', _POST, _STRING);
+        $mediatype = \Xibo\Helper\Sanitize::getString('filter_type');
+        $name = \Xibo\Helper\Sanitize::getString('filter_name');
 
         // Get a list of media
         $mediaList = $user->MediaList(NULL, array('type' => $mediatype, 'name' => $name));

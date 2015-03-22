@@ -100,7 +100,7 @@ class resolutionDAO extends baseDAO
 
         \Session::Set('resolution', 'ResolutionFilter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
         // Show enabled
-        $filterEnabled = \Kit::GetParam('filterEnabled', _POST, _INT);
+        $filterEnabled = \Xibo\Helper\Sanitize::getInt('filterEnabled');
         \Session::Set('resolution', 'filterEnabled', $filterEnabled);
 
         $resolutions = $user->ResolutionList(array('resolution'), array('enabled' => $filterEnabled));
@@ -248,9 +248,9 @@ class resolutionDAO extends baseDAO
         $user 	=& $this->user;
         $response = $this->getState();
 
-        $resolution = \Kit::GetParam('resolution', _POST, _STRING);
-        $width = \Kit::GetParam('width', _POST, _INT);
-        $height = \Kit::GetParam('height', _POST, _INT);
+        $resolution = \Xibo\Helper\Sanitize::getString('resolution');
+        $width = \Xibo\Helper\Sanitize::getInt('width');
+        $height = \Xibo\Helper\Sanitize::getInt('height');
 
         // Add the resolution
         $resObject = new Resolution($db);
@@ -270,11 +270,11 @@ class resolutionDAO extends baseDAO
         $user 	=& $this->user;
         $response = $this->getState();
 
-        $resolutionID = \Kit::GetParam('resolutionid', _POST, _INT);
-        $resolution = \Kit::GetParam('resolution', _POST, _STRING);
-        $width = \Kit::GetParam('width', _POST, _INT);
-        $height = \Kit::GetParam('height', _POST, _INT);
-        $enabled = \Kit::GetParam('enabled', _POST, _CHECKBOX);
+        $resolutionID = \Xibo\Helper\Sanitize::getInt('resolutionid');
+        $resolution = \Xibo\Helper\Sanitize::getString('resolution');
+        $width = \Xibo\Helper\Sanitize::getInt('width');
+        $height = \Xibo\Helper\Sanitize::getInt('height');
+        $enabled = \Xibo\Helper\Sanitize::getCheckbox('enabled');
 
         // Edit the resolution
         $resObject = new Resolution($db);
@@ -294,7 +294,7 @@ class resolutionDAO extends baseDAO
         $user 	=& $this->user;
         $response = $this->getState();
 
-        $resolutionID = \Kit::GetParam('resolutionid', _POST, _INT);
+        $resolutionID = \Xibo\Helper\Sanitize::getInt('resolutionid');
 
         // Remove the resolution
         $resObject = new Resolution($db);

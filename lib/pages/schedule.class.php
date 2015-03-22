@@ -387,16 +387,16 @@ class scheduleDAO extends baseDAO {
         $response = $this->getState();
 
         $campaignId = \Kit::GetParam('CampaignID', _POST, _INT, 0);
-        $fromDT = \Kit::GetParam('starttime', _POST, _STRING);
-        $toDT = \Kit::GetParam('endtime', _POST, _STRING);
+        $fromDT = \Xibo\Helper\Sanitize::getString('starttime');
+        $toDT = \Xibo\Helper\Sanitize::getString('endtime');
         $displayGroupIDs = \Kit::GetParam('DisplayGroupIDs', _POST, _ARRAY);
-        $isPriority = \Kit::GetParam('is_priority', _POST, _CHECKBOX);
+        $isPriority = \Xibo\Helper\Sanitize::getCheckbox('is_priority');
 
-        $repeatType = \Kit::GetParam('rec_type', _POST, _STRING);
-        $repeatInterval = \Kit::GetParam('rec_detail', _POST, _INT);
-        $repeatToDt = \Kit::GetParam('rec_range', _POST, _STRING);
+        $repeatType = \Xibo\Helper\Sanitize::getString('rec_type');
+        $repeatInterval = \Xibo\Helper\Sanitize::getInt('rec_detail');
+        $repeatToDt = \Xibo\Helper\Sanitize::getString('rec_range');
         
-        $displayOrder = \Kit::GetParam('DisplayOrder', _POST, _INT);
+        $displayOrder = \Xibo\Helper\Sanitize::getInt('DisplayOrder');
         $isNextButton = \Kit::GetParam('next', _GET, _BOOL, false);
 
         Log::Audit('Times received are: FromDt=' . $fromDT . '. ToDt=' . $toDT . '. RepeatToDt=' . $repeatToDt);
@@ -670,16 +670,16 @@ class scheduleDAO extends baseDAO {
 
         $eventId = \Kit::GetParam('EventID', _POST, _INT, 0);
         $campaignId = \Kit::GetParam('CampaignID', _POST, _INT, 0);
-        $fromDT = \Kit::GetParam('starttime', _POST, _STRING);
-        $toDT = \Kit::GetParam('endtime', _POST, _STRING);
+        $fromDT = \Xibo\Helper\Sanitize::getString('starttime');
+        $toDT = \Xibo\Helper\Sanitize::getString('endtime');
         $displayGroupIDs = \Kit::GetParam('DisplayGroupIDs', _POST, _ARRAY);
-        $isPriority = \Kit::GetParam('is_priority', _POST, _CHECKBOX);
+        $isPriority = \Xibo\Helper\Sanitize::getCheckbox('is_priority');
 
-        $repeatType = \Kit::GetParam('rec_type', _POST, _STRING);
-        $repeatInterval = \Kit::GetParam('rec_detail', _POST, _INT);
-        $repeatToDt = \Kit::GetParam('rec_range', _POST, _STRING);
+        $repeatType = \Xibo\Helper\Sanitize::getString('rec_type');
+        $repeatInterval = \Xibo\Helper\Sanitize::getInt('rec_detail');
+        $repeatToDt = \Xibo\Helper\Sanitize::getString('rec_range');
         
-        $displayOrder = \Kit::GetParam('DisplayOrder', _POST, _INT);
+        $displayOrder = \Xibo\Helper\Sanitize::getInt('DisplayOrder');
         $isNextButton = \Kit::GetParam('next', _GET, _BOOL, false);
         
         // Convert our ISO strings
@@ -930,14 +930,14 @@ class scheduleDAO extends baseDAO {
 
         $campaignId = \Kit::GetParam('CampaignID', _POST, _INT, 0);
         $displayGroupIds = \Kit::GetParam('DisplayGroupIDs', _POST, _ARRAY);
-        $isPriority = \Kit::GetParam('is_priority', _POST, _CHECKBOX);
+        $isPriority = \Xibo\Helper\Sanitize::getCheckbox('is_priority');
         $fromDt = time();
 
         $hours = \Kit::GetParam('hours', _POST, _INT, 0);
         $minutes = \Kit::GetParam('minutes', _POST, _INT, 0);
         $seconds = \Kit::GetParam('seconds', _POST, _INT, 0);
         $duration = ($hours * 3600) + ($minutes * 60) + $seconds;
-        $displayOrder = \Kit::GetParam('DisplayOrder', _POST, _INT);
+        $displayOrder = \Xibo\Helper\Sanitize::getInt('DisplayOrder');
 
         // Validate
         if ($campaignId == 0)

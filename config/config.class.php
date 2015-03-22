@@ -116,12 +116,12 @@ class Config
 
 			if (\Kit::GetParam('userChange', $filter_by, _INT, -1) != -1) {
 				$SQL .= ' AND userChange = :userChange ';
-				$params['userChange'] = \Kit::GetParam('userChange', $filter_by, _INT);
+				$params['userChange'] = \Xibo\Helper\Sanitize::getInt('userChange');
 			}
 
 			if (\Kit::GetParam('userSee', $filter_by, _INT, -1) != -1) {
 				$SQL .= ' AND userSee = :userSee ';
-				$params['userSee'] = \Kit::GetParam('userSee', $filter_by, _INT);
+				$params['userSee'] = \Xibo\Helper\Sanitize::getInt('userSee');
 			}
 			
 			// Sorting?

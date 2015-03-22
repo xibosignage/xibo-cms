@@ -99,10 +99,10 @@ class mediamanagerDAO extends baseDAO {
         $user = $this->getUser();
         $response = $this->getState();
 
-        $filterLayout = \Kit::GetParam('filter_layout_name', _POST, _STRING);
-        $filterRegion = \Kit::GetParam('filter_region_name', _POST, _STRING);
-        $filterMediaName = \Kit::GetParam('filter_media_name', _POST, _STRING);
-        $filterMediaType = \Kit::GetParam('filter_type', _POST, _INT);
+        $filterLayout = \Xibo\Helper\Sanitize::getString('filter_layout_name');
+        $filterRegion = \Xibo\Helper\Sanitize::getString('filter_region_name');
+        $filterMediaName = \Xibo\Helper\Sanitize::getString('filter_media_name');
+        $filterMediaType = \Xibo\Helper\Sanitize::getInt('filter_type');
 
         \Session::Set('mediamanager', 'filter_layout_name', $filterLayout);
         \Session::Set('mediamanager', 'filter_region_name', $filterRegion);

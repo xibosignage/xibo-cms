@@ -169,7 +169,7 @@ SQL;
         $user = $this->getUser();
         $response = $this->getState();
 
-        $helpId	= \Kit::GetParam('HelpID', _REQUEST, _INT);
+        $helpId	= \Xibo\Helper\Sanitize::getInt('HelpID');
 
         // Pull the currently known info from the DB
         $SQL = "SELECT HelpID, Topic, Category, Link FROM `help` WHERE HelpID = %d ";
@@ -211,7 +211,7 @@ SQL;
     {
         $db =& $this->db;
         $response = $this->getState();
-        $helpId	= \Kit::GetParam('HelpID', _REQUEST, _INT);
+        $helpId	= \Xibo\Helper\Sanitize::getInt('HelpID');
 
         // Set some information about the form
         Theme::Set('form_id', 'HelpDeleteForm');
@@ -236,9 +236,9 @@ SQL;
         $db =& $this->db;
         $response = $this->getState();
 
-        $topic = \Kit::GetParam('Topic', _POST, _STRING);
-        $category = \Kit::GetParam('Category', _POST, _STRING);
-        $link = \Kit::GetParam('Link', _POST, _STRING);
+        $topic = \Xibo\Helper\Sanitize::getString('Topic');
+        $category = \Xibo\Helper\Sanitize::getString('Category');
+        $link = \Xibo\Helper\Sanitize::getString('Link');
 
         // Deal with the Edit
         \Kit::ClassLoader('help');
@@ -261,10 +261,10 @@ SQL;
         $db =& $this->db;
         $response = $this->getState();
 
-        $helpId	= \Kit::GetParam('HelpID', _POST, _INT);
-        $topic = \Kit::GetParam('Topic', _POST, _STRING);
-        $category = \Kit::GetParam('Category', _POST, _STRING);
-        $link = \Kit::GetParam('Link', _POST, _STRING);
+        $helpId	= \Xibo\Helper\Sanitize::getInt('HelpID');
+        $topic = \Xibo\Helper\Sanitize::getString('Topic');
+        $category = \Xibo\Helper\Sanitize::getString('Category');
+        $link = \Xibo\Helper\Sanitize::getString('Link');
 
         // Deal with the Edit
         \Kit::ClassLoader('help');
@@ -284,7 +284,7 @@ SQL;
         $db =& $this->db;
         $response = $this->getState();
 
-        $helpId	= \Kit::GetParam('HelpID', _POST, _INT);
+        $helpId	= \Xibo\Helper\Sanitize::getInt('HelpID');
 
         // Deal with the Edit
         \Kit::ClassLoader('help');

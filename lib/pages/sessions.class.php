@@ -93,7 +93,7 @@ class sessionsDAO extends baseDAO {
 		$response = $this->getState();
 		
 		$type = \Kit::GetParam('filter_type', _POST, _WORD);
-		$fromDt = \Kit::GetParam('filter_fromdt', _POST, _STRING);
+		$fromDt = \Xibo\Helper\Sanitize::getString('filter_fromdt');
 
         \Session::Set('sessions', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
         \Session::Set('sessions', 'filter_type', $type);
@@ -170,7 +170,7 @@ class sessionsDAO extends baseDAO {
 		$db =& $this->db;
 		$response = $this->getState();
 		
-		$userid = \Kit::GetParam('userid', _GET, _INT);
+		$userid = \Xibo\Helper\Sanitize::getInt('userid');
 		
 		// Set some information about the form
         Theme::Set('form_id', 'SessionsLogoutForm');
@@ -198,7 +198,7 @@ class sessionsDAO extends baseDAO {
 		
 		//ajax request handler
 		$response = $this->getState();
-		$userID = \Kit::GetParam('userid', _POST, _INT);
+		$userID = \Xibo\Helper\Sanitize::getInt('userid');
 		
 		$SQL = sprintf("UPDATE session SET IsExpired = 1 WHERE userID = %d", $userID);
 		

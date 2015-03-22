@@ -139,9 +139,9 @@ class displayprofileDAO extends baseDAO {
     public function Add() {
         $response = $this->getState();
         $displayProfile = new DisplayProfile();
-        $displayProfile->name = \Kit::GetParam('name', _POST, _STRING);
-        $displayProfile->type = \Kit::GetParam('type', _POST, _STRING);
-        $displayProfile->isDefault = \Kit::GetParam('isdefault', _POST, _CHECKBOX);
+        $displayProfile->name = \Xibo\Helper\Sanitize::getString('name');
+        $displayProfile->type = \Xibo\Helper\Sanitize::getString('type');
+        $displayProfile->isDefault = \Xibo\Helper\Sanitize::getCheckbox('isdefault');
         $displayProfile->userId = $this->user->userId;
 
         if (!$displayProfile->Save())
@@ -154,7 +154,7 @@ class displayprofileDAO extends baseDAO {
     public function EditForm() {
         // Create a form out of the config object.
         $displayProfile  = new DisplayProfile();
-        $displayProfile->displayProfileId = \Kit::GetParam('displayprofileid', _GET, _INT);
+        $displayProfile->displayProfileId = \Xibo\Helper\Sanitize::getInt('displayprofileid');
 
         if (!$displayProfile->Load())
             trigger_error($displayProfile->GetErrorMessage(), E_USER_ERROR);
@@ -262,7 +262,7 @@ class displayprofileDAO extends baseDAO {
         
         // Create a form out of the config object.
         $displayProfile  = new DisplayProfile();
-        $displayProfile->displayProfileId = \Kit::GetParam('displayprofileid', _POST, _INT);
+        $displayProfile->displayProfileId = \Xibo\Helper\Sanitize::getInt('displayprofileid');
 
         if (!$displayProfile->Load())
             trigger_error($displayProfile->GetErrorMessage(), E_USER_ERROR);
@@ -273,8 +273,8 @@ class displayprofileDAO extends baseDAO {
         if (empty($displayProfile->type))
             trigger_error(__('Unknown Client Type'), E_USER_ERROR);
 
-        $displayProfile->name = \Kit::GetParam('name', _POST, _STRING);
-        $displayProfile->isDefault = \Kit::GetParam('isdefault', _POST, _CHECKBOX);
+        $displayProfile->name = \Xibo\Helper\Sanitize::getString('name');
+        $displayProfile->isDefault = \Xibo\Helper\Sanitize::getCheckbox('isdefault');
 
         // Capture and validate the posted form parameters in accordance with the display config object.
         include('config/client.config.php');
@@ -317,7 +317,7 @@ class displayprofileDAO extends baseDAO {
     function DeleteForm() {
         
         $displayProfile  = new DisplayProfile();
-        $displayProfile->displayProfileId = \Kit::GetParam('displayprofileid', _GET, _INT);
+        $displayProfile->displayProfileId = \Xibo\Helper\Sanitize::getInt('displayprofileid');
 
         if (!$displayProfile->Load())
             trigger_error($displayProfile->GetErrorMessage(), E_USER_ERROR);
@@ -352,7 +352,7 @@ class displayprofileDAO extends baseDAO {
         $response = $this->getState();
         
         $displayProfile  = new DisplayProfile();
-        $displayProfile->displayProfileId = \Kit::GetParam('displayprofileid', _POST, _INT);
+        $displayProfile->displayProfileId = \Xibo\Helper\Sanitize::getInt('displayprofileid');
 
         if (!$displayProfile->Load())
             trigger_error($displayProfile->GetErrorMessage(), E_USER_ERROR);

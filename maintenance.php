@@ -124,7 +124,7 @@ else
         $key = Config::GetSetting("MAINTENANCE_KEY");
 
         // Get key from POST or from ARGV
-        $pKey = \Kit::GetParam('key', _GET, _STRING);
+        $pKey = \Xibo\Helper\Sanitize::getString('key');
         if(isset($argv[1]))
         {
             $aKey = \Kit::ValidateParam($argv[1], _STRING);

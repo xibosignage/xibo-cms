@@ -138,7 +138,7 @@ class displayDAO extends baseDAO
         $response = $this->getState();
 
         $displayObject  = new Display();
-        $displayObject->displayId = \Kit::GetParam('displayid', _POST, _INT);
+        $displayObject->displayId = \Xibo\Helper\Sanitize::getInt('displayid');
 
         $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayObject->displayId), true);
         if (!$auth->edit)
@@ -148,22 +148,22 @@ class displayDAO extends baseDAO
             trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);
 
         // Update properties
-        $displayObject->display = \Kit::GetParam('display', _POST, _STRING);
-        $displayObject->description = \Kit::GetParam('description', _POST, _STRING);
-        $displayObject->isAuditing = \Kit::GetParam('auditing', _POST, _INT);
-        $displayObject->defaultLayoutId = \Kit::GetParam('defaultlayoutid', _POST, _INT);
-        $displayObject->licensed = \Kit::GetParam('licensed', _POST, _INT);
-        $displayObject->incSchedule = \Kit::GetParam('inc_schedule', _POST, _INT);
-        $displayObject->emailAlert = \Kit::GetParam('email_alert', _POST, _INT);
-        $displayObject->alertTimeout = \Kit::GetParam('alert_timeout', _POST, _CHECKBOX);
-        $displayObject->wakeOnLanEnabled = \Kit::GetParam('wakeOnLanEnabled', _POST, _CHECKBOX);
-        $displayObject->wakeOnLanTime = \Kit::GetParam('wakeOnLanTime', _POST, _STRING);
-        $displayObject->broadCastAddress = \Kit::GetParam('broadCastAddress', _POST, _STRING);
-        $displayObject->secureOn = \Kit::GetParam('secureOn', _POST, _STRING);
-        $displayObject->cidr = \Kit::GetParam('cidr', _POST, _STRING);
+        $displayObject->display = \Xibo\Helper\Sanitize::getString('display');
+        $displayObject->description = \Xibo\Helper\Sanitize::getString('description');
+        $displayObject->isAuditing = \Xibo\Helper\Sanitize::getInt('auditing');
+        $displayObject->defaultLayoutId = \Xibo\Helper\Sanitize::getInt('defaultlayoutid');
+        $displayObject->licensed = \Xibo\Helper\Sanitize::getInt('licensed');
+        $displayObject->incSchedule = \Xibo\Helper\Sanitize::getInt('inc_schedule');
+        $displayObject->emailAlert = \Xibo\Helper\Sanitize::getInt('email_alert');
+        $displayObject->alertTimeout = \Xibo\Helper\Sanitize::getCheckbox('alert_timeout');
+        $displayObject->wakeOnLanEnabled = \Xibo\Helper\Sanitize::getCheckbox('wakeOnLanEnabled');
+        $displayObject->wakeOnLanTime = \Xibo\Helper\Sanitize::getString('wakeOnLanTime');
+        $displayObject->broadCastAddress = \Xibo\Helper\Sanitize::getString('broadCastAddress');
+        $displayObject->secureOn = \Xibo\Helper\Sanitize::getString('secureOn');
+        $displayObject->cidr = \Xibo\Helper\Sanitize::getString('cidr');
         $displayObject->latitude = \Kit::GetParam('latitude', _POST, _DOUBLE);
         $displayObject->longitude = \Kit::GetParam('longitude', _POST, _DOUBLE);
-        $displayObject->displayProfileId = \Kit::GetParam('displayprofileid', _POST, _INT);
+        $displayObject->displayProfileId = \Xibo\Helper\Sanitize::getInt('displayprofileid');
 
         if (!$displayObject->Edit())
             trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);
@@ -181,7 +181,7 @@ class displayDAO extends baseDAO
 
         // Get the display Id
         $displayObject = new Display();
-        $displayObject->displayId = \Kit::GetParam('displayid', _GET, _INT);
+        $displayObject->displayId = \Xibo\Helper\Sanitize::getInt('displayid');
 
         $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayObject->displayId), true);
         if (!$auth->edit)
@@ -382,19 +382,19 @@ class displayDAO extends baseDAO
         $response   = new ApplicationState();
         
         // Filter by Name
-        $filter_display = \Kit::GetParam('filter_display', _POST, _STRING);
+        $filter_display = \Xibo\Helper\Sanitize::getString('filter_display');
         \Session::Set('display', 'filter_display', $filter_display);
 
         // Filter by Name
-        $filterMacAddress = \Kit::GetParam('filterMacAddress', _POST, _STRING);
+        $filterMacAddress = \Xibo\Helper\Sanitize::getString('filterMacAddress');
         \Session::Set('display', 'filterMacAddress', $filterMacAddress);
         
         // Display Group
-        $filter_displaygroupid = \Kit::GetParam('filter_displaygroup', _POST, _INT);
+        $filter_displaygroupid = \Xibo\Helper\Sanitize::getInt('filter_displaygroup');
         \Session::Set('display', 'filter_displaygroup', $filter_displaygroupid);
 
         // Thumbnail?
-        $filter_showView = \Kit::GetParam('filter_showView', _REQUEST, _INT);
+        $filter_showView = \Xibo\Helper\Sanitize::getInt('filter_showView');
         \Session::Set('display', 'filter_showView', $filter_showView);
 
         // filter_autoRefresh?
@@ -633,7 +633,7 @@ class displayDAO extends baseDAO
         $db =& $this->db;
         $user = $this->getUser();
         $response = $this->getState();
-        $displayid = \Kit::GetParam('displayid', _REQUEST, _INT);
+        $displayid = \Xibo\Helper\Sanitize::getInt('displayid');
 
         // Auth
         $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayid), true);
@@ -688,7 +688,7 @@ class displayDAO extends baseDAO
         $db =& $this->db;
         $response = $this->getState();
 
-        $displayId = \Kit::GetParam('DisplayId', _GET, _INT);
+        $displayId = \Xibo\Helper\Sanitize::getInt('DisplayId');
 
         $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayId), true);
         if (!$auth->edit)
@@ -735,8 +735,8 @@ class displayDAO extends baseDAO
         $response = $this->getState();
         $displayObject  = new Display($db);
 
-        $displayId = \Kit::GetParam('DisplayId', _POST, _INT);
-        $defaultLayoutId = \Kit::GetParam('defaultlayoutid', _POST, _INT);
+        $displayId = \Xibo\Helper\Sanitize::getInt('DisplayId');
+        $defaultLayoutId = \Xibo\Helper\Sanitize::getInt('defaultlayoutid');
 
         $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayId), true);
         if (!$auth->edit)
@@ -756,7 +756,7 @@ class displayDAO extends baseDAO
     {
         $db =& $this->db;
         $response = $this->getState();
-        $displayId = \Kit::GetParam('DisplayId', _GET, _INT);
+        $displayId = \Xibo\Helper\Sanitize::getInt('DisplayId');
 
         $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayId), true);
         if (!$auth->view)
@@ -843,7 +843,7 @@ class displayDAO extends baseDAO
     {
         $db =& $this->db;
         $response = $this->getState();
-        $displayID  = \Kit::GetParam('DisplayID', _REQUEST, _INT);
+        $displayID  = \Xibo\Helper\Sanitize::getInt('DisplayID');
 
         // Auth
         $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayID), true);
@@ -928,7 +928,7 @@ class displayDAO extends baseDAO
         \Kit::ClassLoader('displaygroup');
         $displayGroupObject = new DisplayGroup($db);
 
-        $displayID = \Kit::GetParam('DisplayID', _REQUEST, _INT);
+        $displayID = \Xibo\Helper\Sanitize::getInt('DisplayID');
         $displayGroups = \Kit::GetParam('DisplayGroupID', _POST, _ARRAY, array());
         $members = array();
 
@@ -990,7 +990,7 @@ class displayDAO extends baseDAO
         $db =& $this->db;
         $response = $this->getState();
 
-        $displayId = \Kit::GetParam('DisplayId', _GET, _INT);
+        $displayId = \Xibo\Helper\Sanitize::getInt('DisplayId');
 
         // Get the MAC Address
         $macAddress = $db->GetSingleValue(sprintf("SELECT MacAddress FROM `display` WHERE DisplayID = %d", $displayId), 'MacAddress', _STRING);
@@ -1022,7 +1022,7 @@ class displayDAO extends baseDAO
         $response = $this->getState();
         $displayObject  = new Display($db);
 
-        $displayId = \Kit::GetParam('DisplayId', _POST, _INT);
+        $displayId = \Xibo\Helper\Sanitize::getInt('DisplayId');
 
         if (!$displayObject->WakeOnLan($displayId))
             trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);
@@ -1032,7 +1032,7 @@ class displayDAO extends baseDAO
     }
 
     public function ScreenShot() {
-        $displayId = \Kit::GetParam('DisplayId', _GET, _INT);
+        $displayId = \Xibo\Helper\Sanitize::getInt('DisplayId');
         
         // Output an image if present, otherwise not found image.
         $file = 'screenshots/' . $displayId . '_screenshot.jpg';
@@ -1066,7 +1066,7 @@ class displayDAO extends baseDAO
         $db =& $this->db;
         $response = $this->getState();
 
-        $displayId = \Kit::GetParam('displayId', _GET, _INT);
+        $displayId = \Xibo\Helper\Sanitize::getInt('displayId');
 
         // Set some information about the form
         Theme::Set('form_id', 'RequestScreenShotForm');
@@ -1088,7 +1088,7 @@ class displayDAO extends baseDAO
         $response = $this->getState();
         $displayObject  = new Display($db);
 
-        $displayId = \Kit::GetParam('displayId', _POST, _INT);
+        $displayId = \Xibo\Helper\Sanitize::getInt('displayId');
 
         if (!$displayObject->RequestScreenShot($displayId))
             trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);

@@ -60,8 +60,8 @@ class Session {
 
 	function read($key) 
 	{
-		$userAgent	= substr(Kit::GetParam('HTTP_USER_AGENT', $_SERVER, _STRING, 'No user agent'), 0, 253);
-		$remoteAddr	= \Kit::GetParam('REMOTE_ADDR', $_SERVER, _STRING);
+		$userAgent	= substr(\Xibo\Helper\Sanitize::string($_SERVER['HTTP_USER_AGENT']), 0, 253);
+		$remoteAddr	= \Xibo\Helper\Sanitize::string($_SERVER['REMOTE_ADDR']);
 		$securityToken	= \Kit::GetParam('SecurityToken', _POST, _STRING, null);
 		
 		$this->key = $key;
@@ -128,7 +128,7 @@ class Session {
 		$newExp = time() + $this->max_lifetime;
 		$lastaccessed = date("Y-m-d H:i:s");
 		$userAgent	= substr(Kit::GetParam('HTTP_USER_AGENT', $_SERVER, _STRING, 'No user agent'), 0, 253);
-		$remoteAddr	= \Kit::GetParam('REMOTE_ADDR', $_SERVER, _STRING);
+		$remoteAddr	= \Xibo\Helper\Sanitize::getString('REMOTE_ADDR');
 		
 		try {
 			$dbh = \Xibo\Storage\PDOConnect::init();
@@ -334,10 +334,14 @@ class Session {
 	
 	public static function set($key, $secondKey, $value = null)
 	{
-        if ($value == null)
-		    $_SESSION[$key] = $secondKey;
-        else
-		    $_SESSION[$key][$secondKey] = $value;
+        if ($value === null) {
+            Log::debug('Storing %s in session with value %s', $key, $secondKey);
+            $_SESSION[$key] = $secondKey;
+        }
+        else {
+            Log::debug('Storing %s|%s in session with value %s', $key, $secondKey, $value);
+            $_SESSION[$key] = array($secondKey => $value);
+        }
 	}
         
     /**

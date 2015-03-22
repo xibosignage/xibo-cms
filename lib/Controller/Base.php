@@ -106,27 +106,6 @@ class Base
     }
 
     /**
-     * Get param
-     * @param $param
-     * @param $default
-     * @return mixed
-     */
-    protected function param($param = null, $default = null)
-    {
-        switch ($this->app->request->getMethod()) {
-            case 'GET':
-                return $this->app->request->get($param, $default);
-            case 'POST':
-            case 'DELETE':
-                return $this->app->request->post($param, $default);
-            case 'PUT':
-                return $this->app->request->put($param, $default);
-            default:
-                return $default;
-        }
-    }
-
-    /**
      * Set to not output a full page automatically
      */
     public function setNotAutomaticFullPage()

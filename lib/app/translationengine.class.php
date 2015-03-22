@@ -133,7 +133,7 @@ class TranslationEngine
     public static function parseHttpAcceptLanguageHeader($header = null)
     {
         if ($header == null)
-            $header = \Kit::GetParam('HTTP_ACCEPT_LANGUAGE', $_SERVER, _STRING);
+            $header = $_SERVER['HTTP_ACCEPT_LANGUAGE'];
 
         $languages = array();
 

@@ -167,8 +167,8 @@ if (DBVERSION != WEBSITE_VERSION && !($page == 'index' && $function == 'login'))
     $page = 'upgrade';
 
     if (\Kit::GetParam('includes', _POST, _BOOL)) {
-        $upgradeFrom = \Kit::GetParam('upgradeFrom', _POST, _INT);
-        $upgradeTo = \Kit::GetParam('upgradeTo', _POST, _INT);
+        $upgradeFrom = \Xibo\Helper\Sanitize::getInt('upgradeFrom');
+        $upgradeTo = \Xibo\Helper\Sanitize::getInt('upgradeTo');
 
         for ($i = $upgradeFrom + 1; $i <= $upgradeTo; $i++) {
             if (file_exists('install/database/' . $i . '.php')) {

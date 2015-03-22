@@ -155,10 +155,10 @@ class logDAO extends baseDAO {
 		$response	= new ApplicationState();
 		
 		$type 		= \Kit::GetParam('filter_type', _REQUEST, _INT, 0);
-		$function 	= \Kit::GetParam('filter_function', _REQUEST, _STRING);
-		$page 		= \Kit::GetParam('filter_page', _REQUEST, _STRING);
-		$fromdt 	= \Kit::GetParam('filter_fromdt', _REQUEST, _STRING);
-		$displayid	= \Kit::GetParam('filter_display', _REQUEST, _INT);
+		$function 	= \Xibo\Helper\Sanitize::getString('filter_function');
+		$page 		= \Xibo\Helper\Sanitize::getString('filter_page');
+		$fromdt 	= \Xibo\Helper\Sanitize::getString('filter_fromdt');
+		$displayid	= \Xibo\Helper\Sanitize::getInt('filter_display');
         $seconds    = \Kit::GetParam('filter_seconds', _POST, _INT, 120);
 		$filter_intervalTypeId = \Kit::GetParam('filter_intervalTypeId', _POST, _INT, 1);
                 
@@ -247,7 +247,7 @@ class logDAO extends baseDAO {
 
 	function LastHundredForDisplay() {
         $response = $this->getState();
-        $displayId = \Kit::GetParam('displayid', _GET, _INT);
+        $displayId = \Xibo\Helper\Sanitize::getInt('displayid');
 
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();

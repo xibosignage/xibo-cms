@@ -427,22 +427,22 @@ class Display extends Data {
             }
 
             // Pull in any of the optional parameters from the status array
-            $this->clientAddress = (\Kit::GetParam('clientAddress', $status, _STRING) == '') ? $this->clientAddress : \Kit::GetParam('clientAddress', $status, _STRING);
-            $this->mediaInventoryStatus = (\Kit::GetParam('mediaInventoryStatus', $status, _INT) == 0) ? $this->mediaInventoryStatus : \Kit::GetParam('mediaInventoryStatus', $status, _INT);
+            $this->clientAddress = (\Xibo\Helper\Sanitize::getString('clientAddress', $status, _STRING) == '') ? $this->clientAddress : \Kit::GetParam('clientAddress');
+            $this->mediaInventoryStatus = (\Xibo\Helper\Sanitize::getInt('mediaInventoryStatus', $status, _INT) == 0) ? $this->mediaInventoryStatus : \Kit::GetParam('mediaInventoryStatus');
             $this->mediaInventoryXml = (\Kit::GetParam('mediaInventoryXml', $status, _HTMLSTRING) == '') ? $this->mediaInventoryXml : \Kit::GetParam('mediaInventoryXml', $status, _HTMLSTRING);
-            $this->clientType = (\Kit::GetParam('clientType', $status, _STRING) == '') ? $this->clientType : \Kit::GetParam('clientType', $status, _STRING);
-            $this->clientVersion = (\Kit::GetParam('clientVersion', $status, _STRING) == '') ? $this->clientVersion : \Kit::GetParam('clientVersion', $status, _STRING);
-            $this->clientCode = (\Kit::GetParam('clientCode', $status, _INT) == 0) ? $this->clientCode : \Kit::GetParam('clientCode', $status, _INT);
-            $this->currentLayoutId = (\Kit::GetParam('currentLayoutId', $status, _INT) == 0) ? $this->currentLayoutId : \Kit::GetParam('currentLayoutId', $status, _INT);
-            $this->screenShotRequested = (\Kit::GetParam('screenShotRequested', $status, _INT, -1) == -1) ? $this->screenShotRequested : \Kit::GetParam('screenShotRequested', $status, _INT);
-            $this->storageAvailableSpace = (\Kit::GetParam('availableSpace', $status, _INT, -1) == -1) ? $this->storageAvailableSpace : \Kit::GetParam('availableSpace', $status, _INT);
-            $this->storageTotalSpace = (\Kit::GetParam('totalSpace', $status, _INT, -1) == -1) ? $this->storageTotalSpace : \Kit::GetParam('totalSpace', $status, _INT);
+            $this->clientType = (\Xibo\Helper\Sanitize::getString('clientType', $status, _STRING) == '') ? $this->clientType : \Kit::GetParam('clientType');
+            $this->clientVersion = (\Xibo\Helper\Sanitize::getString('clientVersion', $status, _STRING) == '') ? $this->clientVersion : \Kit::GetParam('clientVersion');
+            $this->clientCode = (\Xibo\Helper\Sanitize::getInt('clientCode', $status, _INT) == 0) ? $this->clientCode : \Kit::GetParam('clientCode');
+            $this->currentLayoutId = (\Xibo\Helper\Sanitize::getInt('currentLayoutId', $status, _INT) == 0) ? $this->currentLayoutId : \Kit::GetParam('currentLayoutId');
+            $this->screenShotRequested = (\Xibo\Helper\Sanitize::getInt('screenShotRequested', $status, _INT, -1) == -1) ? $this->screenShotRequested : \Kit::GetParam('screenShotRequested');
+            $this->storageAvailableSpace = (\Xibo\Helper\Sanitize::getInt('availableSpace', $status, _INT, -1) == -1) ? $this->storageAvailableSpace : \Kit::GetParam('availableSpace');
+            $this->storageTotalSpace = (\Xibo\Helper\Sanitize::getInt('totalSpace', $status, _INT, -1) == -1) ? $this->storageTotalSpace : \Kit::GetParam('totalSpace');
 
             // Has the mac address changed
             if (\Kit::GetParam('macAddress', $status, _STRING) != '') {
                 if ($this->macAddress != \Kit::GetParam('macAddress', $status, _STRING)) {
                     // Mac address change detected
-                    $this->macAddress = \Kit::GetParam('macAddress', $status, _STRING);
+                    $this->macAddress = \Xibo\Helper\Sanitize::getString('macAddress');
                     $this->numberOfMacAddressChanges++;
                     $this->lastChanged = time();
                 }

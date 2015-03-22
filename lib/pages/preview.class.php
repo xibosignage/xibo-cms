@@ -33,7 +33,7 @@ class previewDAO extends baseDAO
         $this->db =& $db;
         $this->user =& $user;
 
-        $layoutId = \Kit::GetParam('layoutid', _REQUEST, _INT);
+        $layoutId = \Xibo\Helper\Sanitize::getInt('layoutid');
 
         //if we have modify selected then we need to get some info
         if ($layoutId != 0) {

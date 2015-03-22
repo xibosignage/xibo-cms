@@ -171,7 +171,7 @@ class campaignDAO extends baseDAO
         $db =& $this->db;
         $response = $this->getState();
 
-        $name = \Kit::GetParam('Name', _POST, _STRING);
+        $name = \Xibo\Helper\Sanitize::getString('Name');
 
         \Kit::ClassLoader('campaign');
         $campaignObject = new Campaign($db);
@@ -192,7 +192,7 @@ class campaignDAO extends baseDAO
         $user = $this->getUser();
         $response = $this->getState();
         
-        $campaignId = \Kit::GetParam('CampaignID', _GET, _INT);
+        $campaignId = \Xibo\Helper\Sanitize::getInt('CampaignID');
 
         // Authenticate this user
         $auth = $this->user->CampaignAuth($campaignId, true);
@@ -240,8 +240,8 @@ class campaignDAO extends baseDAO
         $db =& $this->db;
         $response = $this->getState();
 
-        $campaignId = \Kit::GetParam('CampaignID', _POST, _INT);
-        $name = \Kit::GetParam('Name', _POST, _STRING);
+        $campaignId = \Xibo\Helper\Sanitize::getInt('CampaignID');
+        $name = \Xibo\Helper\Sanitize::getString('Name');
 
         // Authenticate this user
         $auth = $this->user->CampaignAuth($campaignId, true);
@@ -276,7 +276,7 @@ class campaignDAO extends baseDAO
         $response = $this->getState();
         $helpManager = new Help($db, $user);
 
-        $campaignId = \Kit::GetParam('CampaignID', _GET, _INT);
+        $campaignId = \Xibo\Helper\Sanitize::getInt('CampaignID');
 
         // Authenticate this user
         $auth = $this->user->CampaignAuth($campaignId, true);
@@ -307,7 +307,7 @@ class campaignDAO extends baseDAO
         $db =& $this->db;
         $response = $this->getState();
 
-        $campaignId = \Kit::GetParam('CampaignID', _POST, _INT);
+        $campaignId = \Xibo\Helper\Sanitize::getInt('CampaignID');
 
         // Authenticate this user
         $auth = $this->user->CampaignAuth($campaignId, true);
@@ -435,8 +435,8 @@ class campaignDAO extends baseDAO
         $response = $this->getState();
 
         // Input vars
-        $name = \Kit::GetParam('filter_name', _POST, _STRING);
-        $tags = \Kit::GetParam('filter_tags', _POST, _STRING);
+        $name = \Xibo\Helper\Sanitize::getString('filter_name');
+        $tags = \Xibo\Helper\Sanitize::getString('filter_tags');
 
         // Get a list of media
         $layoutList = $this->user->LayoutList(NULL, array('layout' => $name, 'tags' => $tags));

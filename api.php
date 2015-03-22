@@ -26,11 +26,9 @@ require 'vendor/autoload.php';
 
 // Classes we need to deprecate
 require 'lib/app/kit.class.php';
-require 'lib/app/debug.class.php';
 require 'config/config.class.php';
 require 'lib/app/translationengine.class.php';
 require 'lib/app/session.class.php';
-require 'modules/module_user_general.php';
 // END
 
 if (!file_exists('settings.php'))
@@ -40,7 +38,6 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 Config::Load();
-new Log();
 
 $app = new \Slim\Slim(array(
     'debug' => true
@@ -69,9 +66,7 @@ $app->add(new JsonApiMiddleware());
 
 // The current user
 // this should be injected by the ApiAuthenticationOAuth middleware
-$user = new \Xibo\Entity\User();
-$user->setIdentity(1);
-$app->user = $user;
+$app->user = \Xibo\Factory\UserFactory::getById(1);
 
 // Once we have a user, initialise the theme (again should be done in auth middleware)
 new \Xibo\Helper\Theme($app->user);

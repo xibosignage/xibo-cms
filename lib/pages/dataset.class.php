@@ -41,8 +41,8 @@ class datasetDAO extends baseDAO
         // Different pages for data entry and admin    
         if ($subpage == 'DataEntry') {
             Theme::Set('id', 'DataEntryGrid');
-            $dataSetId = \Kit::GetParam('datasetid', _GET, _INT);
-            $dataSet = \Kit::GetParam('dataset', _GET, _STRING);
+            $dataSetId = \Xibo\Helper\Sanitize::getInt('datasetid');
+            $dataSet = \Xibo\Helper\Sanitize::getString('dataset');
             
             Theme::Set('form_meta', '<input type="hidden" name="p" value="dataset"><input type="hidden" name="q" value="DataSetDataForm"><input type="hidden" name="datasetid" value="' . $dataSetId . '"><input type="hidden" name="dataset" value="' . $dataSet . '">');
             
@@ -215,8 +215,8 @@ class datasetDAO extends baseDAO
         $user = $this->getUser();
         $response = $this->getState();
 
-        $dataSet = \Kit::GetParam('dataset', _POST, _STRING);
-        $description = \Kit::GetParam('description', _POST, _STRING);
+        $dataSet = \Xibo\Helper\Sanitize::getString('dataset');
+        $description = \Xibo\Helper\Sanitize::getString('description');
 
         $dataSetObject = new DataSet($db);
         if (!$dataSetId = $dataSetObject->Add($dataSet, $description, $this->user->userId))
@@ -236,7 +236,7 @@ class datasetDAO extends baseDAO
         $user = $this->getUser();
         $response = $this->getState();
 
-        $dataSetId = \Kit::GetParam('datasetid', _GET, _INT);
+        $dataSetId = \Xibo\Helper\Sanitize::getInt('datasetid');
 
         $auth = $user->DataSetAuth($dataSetId, true);
         if (!$auth->edit)
@@ -277,14 +277,14 @@ class datasetDAO extends baseDAO
         $user = $this->getUser();
         $response = $this->getState();
 
-        $dataSetId = \Kit::GetParam('datasetid', _POST, _INT);
+        $dataSetId = \Xibo\Helper\Sanitize::getInt('datasetid');
 
         $auth = $user->DataSetAuth($dataSetId, true);
         if (!$auth->edit)
             trigger_error(__('Access Denied'));
 
-        $dataSet = \Kit::GetParam('dataset', _POST, _STRING);
-        $description = \Kit::GetParam('description', _POST, _STRING);
+        $dataSet = \Xibo\Helper\Sanitize::getString('dataset');
+        $description = \Xibo\Helper\Sanitize::getString('description');
 
         $dataSetObject = new DataSet($db);
         if (!$dataSetObject->Edit($dataSetId, $dataSet, $description))
@@ -303,7 +303,7 @@ class datasetDAO extends baseDAO
         $db =& $this->db;
         $response = $this->getState();
         
-        $dataSetId = \Kit::GetParam('datasetid', _GET, _INT);
+        $dataSetId = \Xibo\Helper\Sanitize::getInt('datasetid');
 
         $auth = $this->user->DataSetAuth($dataSetId, true);
         if (!$auth->del)
@@ -336,7 +336,7 @@ class datasetDAO extends baseDAO
         $user = $this->getUser();
         $response = $this->getState();
 
-        $dataSetId = \Kit::GetParam('datasetid', _POST, _INT);
+        $dataSetId = \Xibo\Helper\Sanitize::getInt('datasetid');
 
         $auth = $user->DataSetAuth($dataSetId, true);
         if (!$auth->del)
@@ -361,8 +361,8 @@ class datasetDAO extends baseDAO
         $response = $this->getState();
         $helpManager = new Help($db, $this->user);
 
-        $dataSetId = \Kit::GetParam('datasetid', _GET, _INT);
-        $dataSet = \Kit::GetParam('dataset', _GET, _STRING);
+        $dataSetId = \Xibo\Helper\Sanitize::getInt('datasetid');
+        $dataSet = \Xibo\Helper\Sanitize::getString('dataset');
 
         $auth = $this->user->DataSetAuth($dataSetId, true);
         if (!$auth->edit)
@@ -428,8 +428,8 @@ class datasetDAO extends baseDAO
         $response = $this->getState();
         $helpManager = new Help($db, $this->user);
 
-        $dataSetId = \Kit::GetParam('datasetid', _GET, _INT);
-        $dataSet = \Kit::GetParam('dataset', _GET, _STRING);
+        $dataSetId = \Xibo\Helper\Sanitize::getInt('datasetid');
+        $dataSet = \Xibo\Helper\Sanitize::getString('dataset');
 
         $auth = $this->user->DataSetAuth($dataSetId, true);
         if (!$auth->edit)
@@ -481,19 +481,19 @@ class datasetDAO extends baseDAO
         $user = $this->getUser();
         $response = $this->getState();
 
-        $dataSetId = \Kit::GetParam('datasetid', _POST, _INT);
-        $dataSet = \Kit::GetParam('dataset', _POST, _STRING);
+        $dataSetId = \Xibo\Helper\Sanitize::getInt('datasetid');
+        $dataSet = \Xibo\Helper\Sanitize::getString('dataset');
 
         $auth = $user->DataSetAuth($dataSetId, true);
         if (!$auth->edit)
             trigger_error(__('Access Denied'));
 
-        $heading = \Kit::GetParam('heading', _POST, _STRING);
-        $listContent = \Kit::GetParam('listcontent', _POST, _STRING);
-        $columnOrder = \Kit::GetParam('columnorder', _POST, _INT);
-        $dataTypeId = \Kit::GetParam('datatypeid', _POST, _INT);
-        $dataSetColumnTypeId = \Kit::GetParam('datasetcolumntypeid', _POST, _INT);
-        $formula = \Kit::GetParam('formula', _POST, _STRING);
+        $heading = \Xibo\Helper\Sanitize::getString('heading');
+        $listContent = \Xibo\Helper\Sanitize::getString('listcontent');
+        $columnOrder = \Xibo\Helper\Sanitize::getInt('columnorder');
+        $dataTypeId = \Xibo\Helper\Sanitize::getInt('datatypeid');
+        $dataSetColumnTypeId = \Xibo\Helper\Sanitize::getInt('datasetcolumntypeid');
+        $formula = \Xibo\Helper\Sanitize::getString('formula');
 
         $dataSetObject = new DataSetColumn($db);
         if (!$dataSetObject->Add($dataSetId, $heading, $dataTypeId, $listContent, $columnOrder, $dataSetColumnTypeId, $formula))
@@ -512,9 +512,9 @@ class datasetDAO extends baseDAO
         $response = $this->getState();
         $helpManager = new Help($db, $this->user);
 
-        $dataSetId = \Kit::GetParam('datasetid', _GET, _INT);
-        $dataSetColumnId = \Kit::GetParam('datasetcolumnid', _GET, _INT);
-        $dataSet = \Kit::GetParam('dataset', _GET, _STRING);
+        $dataSetId = \Xibo\Helper\Sanitize::getInt('datasetid');
+        $dataSetColumnId = \Xibo\Helper\Sanitize::getInt('datasetcolumnid');
+        $dataSet = \Xibo\Helper\Sanitize::getString('dataset');
 
         $auth = $this->user->DataSetAuth($dataSetId, true);
         if (!$auth->edit)
@@ -585,20 +585,20 @@ class datasetDAO extends baseDAO
         $user = $this->getUser();
         $response = $this->getState();
 
-        $dataSetId = \Kit::GetParam('datasetid', _POST, _INT);
-        $dataSet = \Kit::GetParam('dataset', _POST, _STRING);
+        $dataSetId = \Xibo\Helper\Sanitize::getInt('datasetid');
+        $dataSet = \Xibo\Helper\Sanitize::getString('dataset');
 
         $auth = $user->DataSetAuth($dataSetId, true);
         if (!$auth->edit)
             trigger_error(__('Access Denied'));
             
-        $dataSetColumnId = \Kit::GetParam('datasetcolumnid', _POST, _INT);
-        $heading = \Kit::GetParam('heading', _POST, _STRING);
-        $listContent = \Kit::GetParam('listcontent', _POST, _STRING);
-        $columnOrder = \Kit::GetParam('columnorder', _POST, _INT);
-        $dataTypeId = \Kit::GetParam('datatypeid', _POST, _INT);
-        $dataSetColumnTypeId = \Kit::GetParam('datasetcolumntypeid', _POST, _INT);
-        $formula = \Kit::GetParam('formula', _POST, _STRING);
+        $dataSetColumnId = \Xibo\Helper\Sanitize::getInt('datasetcolumnid');
+        $heading = \Xibo\Helper\Sanitize::getString('heading');
+        $listContent = \Xibo\Helper\Sanitize::getString('listcontent');
+        $columnOrder = \Xibo\Helper\Sanitize::getInt('columnorder');
+        $dataTypeId = \Xibo\Helper\Sanitize::getInt('datatypeid');
+        $dataSetColumnTypeId = \Xibo\Helper\Sanitize::getInt('datasetcolumntypeid');
+        $formula = \Xibo\Helper\Sanitize::getString('formula');
 
         $dataSetObject = new DataSetColumn($db);
         if (!$dataSetObject->Edit($dataSetColumnId, $heading, $dataTypeId, $listContent, $columnOrder, $dataSetColumnTypeId, $formula))
@@ -617,14 +617,14 @@ class datasetDAO extends baseDAO
         $response = $this->getState();
         $helpManager = new Help($db, $this->user);
 
-        $dataSetId = \Kit::GetParam('datasetid', _GET, _INT);
-        $dataSet = \Kit::GetParam('dataset', _GET, _STRING);
+        $dataSetId = \Xibo\Helper\Sanitize::getInt('datasetid');
+        $dataSet = \Xibo\Helper\Sanitize::getString('dataset');
 
         $auth = $this->user->DataSetAuth($dataSetId, true);
         if (!$auth->edit)
             trigger_error(__('Access Denied'));
 
-        $dataSetColumnId = \Kit::GetParam('datasetcolumnid', _GET, _INT);
+        $dataSetColumnId = \Xibo\Helper\Sanitize::getInt('datasetcolumnid');
 
          // Set some information about the form
         Theme::Set('form_id', 'DataSetColumnDeleteForm');
@@ -648,14 +648,14 @@ class datasetDAO extends baseDAO
         $user = $this->getUser();
         $response = $this->getState();
 
-        $dataSetId = \Kit::GetParam('datasetid', _POST, _INT);
-        $dataSet = \Kit::GetParam('dataset', _POST, _STRING);
+        $dataSetId = \Xibo\Helper\Sanitize::getInt('datasetid');
+        $dataSet = \Xibo\Helper\Sanitize::getString('dataset');
 
         $auth = $this->user->DataSetAuth($dataSetId, true);
         if (!$auth->edit)
             trigger_error(__('Access Denied'));
 
-        $dataSetColumnId = \Kit::GetParam('datasetcolumnid', _POST, _INT);
+        $dataSetColumnId = \Xibo\Helper\Sanitize::getInt('datasetcolumnid');
 
         $dataSetObject = new DataSetColumn($db);
         if (!$dataSetObject->Delete($dataSetColumnId))
@@ -673,8 +673,8 @@ class datasetDAO extends baseDAO
         $db =& $this->db;
         $response = $this->getState();
 
-        $dataSetId = \Kit::GetParam('datasetid', _POST, _INT);
-        $dataSet = \Kit::GetParam('dataset', _POST, _STRING);
+        $dataSetId = \Xibo\Helper\Sanitize::getInt('datasetid');
+        $dataSet = \Xibo\Helper\Sanitize::getString('dataset');
 
         $auth = $this->user->DataSetAuth($dataSetId, true);
         if (!$auth->edit)
@@ -832,11 +832,11 @@ END;
         $user = $this->getUser();
         $response = $this->getState();
 
-        $response->uniqueReference = \Kit::GetParam('fieldid', _POST, _STRING);
-        $dataSetId = \Kit::GetParam('datasetid', _POST, _INT);
-        $dataSetColumnId = \Kit::GetParam('datasetcolumnid', _POST, _INT);
-        $rowNumber = \Kit::GetParam('rownumber', _POST, _INT);
-        $value = \Kit::GetParam('value', _POST, _STRING);
+        $response->uniqueReference = \Xibo\Helper\Sanitize::getString('fieldid');
+        $dataSetId = \Xibo\Helper\Sanitize::getInt('datasetid');
+        $dataSetColumnId = \Xibo\Helper\Sanitize::getInt('datasetcolumnid');
+        $rowNumber = \Xibo\Helper\Sanitize::getInt('rownumber');
+        $value = \Xibo\Helper\Sanitize::getString('value');
 
         $auth = $user->DataSetAuth($dataSetId, true);
         if (!$auth->edit)
@@ -859,11 +859,11 @@ END;
         $user = $this->getUser();
         $response = $this->getState();
 
-        $response->uniqueReference = \Kit::GetParam('fieldid', _POST, _STRING);
-        $dataSetId = \Kit::GetParam('datasetid', _POST, _INT);
-        $dataSetColumnId = \Kit::GetParam('datasetcolumnid', _POST, _INT);
-        $rowNumber = \Kit::GetParam('rownumber', _POST, _INT);
-        $value = \Kit::GetParam('value', _POST, _STRING);
+        $response->uniqueReference = \Xibo\Helper\Sanitize::getString('fieldid');
+        $dataSetId = \Xibo\Helper\Sanitize::getInt('datasetid');
+        $dataSetColumnId = \Xibo\Helper\Sanitize::getInt('datasetcolumnid');
+        $rowNumber = \Xibo\Helper\Sanitize::getInt('rownumber');
+        $value = \Xibo\Helper\Sanitize::getString('value');
 
         $auth = $user->DataSetAuth($dataSetId, true);
         if (!$auth->edit)
@@ -937,7 +937,7 @@ END;
         $response = $this->getState();
         $helpManager = new Help($db, $user);
 
-        $dataSetId = \Kit::GetParam('datasetid', _GET, _INT);
+        $dataSetId = \Xibo\Helper\Sanitize::getInt('datasetid');
 
         $auth = $this->user->DataSetAuth($dataSetId, true);
 
@@ -999,7 +999,7 @@ END;
         $response = $this->getState();
         \Kit::ClassLoader('datasetgroupsecurity');
 
-        $dataSetId = \Kit::GetParam('datasetid', _POST, _INT);
+        $dataSetId = \Xibo\Helper\Sanitize::getInt('datasetid');
         $groupIds = \Kit::GetParam('groupids', _POST, _ARRAY);
 
         $auth = $this->user->DataSetAuth($dataSetId, true);
@@ -1078,8 +1078,8 @@ END;
         $db =& $this->db;
         $response = $this->getState();
         
-        $dataSetId = \Kit::GetParam('datasetid', _GET, _INT);
-        $dataSet = \Kit::GetParam('dataset', _GET, _STRING);
+        $dataSetId = \Xibo\Helper\Sanitize::getInt('datasetid');
+        $dataSet = \Xibo\Helper\Sanitize::getString('dataset');
 
         $auth = $this->user->DataSetAuth($dataSetId, true);
         if (!$auth->edit)
@@ -1155,22 +1155,22 @@ END;
 
         $db =& $this->db;
         $response = $this->getState();
-        $dataSetId = \Kit::GetParam('datasetid', _POST, _INT);
-        $overwrite = \Kit::GetParam('overwrite', _POST, _CHECKBOX);
-        $ignorefirstrow = \Kit::GetParam('ignorefirstrow', _POST, _CHECKBOX);
+        $dataSetId = \Xibo\Helper\Sanitize::getInt('datasetid');
+        $overwrite = \Xibo\Helper\Sanitize::getCheckbox('overwrite');
+        $ignorefirstrow = \Xibo\Helper\Sanitize::getCheckbox('ignorefirstrow');
 
         $auth = $this->user->DataSetAuth($dataSetId, true);
         if (!$auth->edit)
             trigger_error(__('Access Denied'), E_USER_ERROR);
 
         // File data
-        $tmpName = \Kit::GetParam('hidFileID', _POST, _STRING);
+        $tmpName = \Xibo\Helper\Sanitize::getString('hidFileID');
 
         if ($tmpName == '')
             trigger_error(__('Please ensure you have picked a file and it has finished uploading'), E_USER_ERROR);
 
         // File name and extension (original name)
-        $fileName = \Kit::GetParam('txtFileName', _POST, _STRING);
+        $fileName = \Xibo\Helper\Sanitize::getString('txtFileName');
         $fileName = basename($fileName);
         $ext = strtolower(substr(strrchr($fileName, "."), 1));
 

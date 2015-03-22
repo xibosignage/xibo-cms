@@ -23,35 +23,67 @@
 namespace Xibo\Helper;
 
 
+use Slim\Slim;
+
 class Sanitize
 {
-    private static function parse($param, $name)
+    private static function parse($param, $default, $source)
     {
-        if ($name != null && is_array($param))
-            return isset($param[$name]) ? $param[$name] : null;
+        if (is_array($default)) {
+            return isset($default[$param]) ? $default[$param] : null;
+        }
+        else if ($source == null) {
+            $app = Slim::getInstance();
+            switch ($app->request->getMethod()) {
+                case 'GET':
+                    return $app->request->get($param, $default);
+                case 'POST':
+                case 'DELETE':
+                    return $app->request->post($param, $default);
+                case 'PUT':
+                    return $app->request->put($param, $default);
+                default:
+                    return $default;
+            }
+        }
         else
-            return $param;
+            return isset($source[$param]) ? $source[$param] : $default;
     }
 
-    public static function int($param, $name = null)
+    public static function getInt($param, $default = null, $source = null)
     {
-        return filter_var(Sanitize::parse($param, $name), FILTER_SANITIZE_NUMBER_INT);
+        return Sanitize::int(Sanitize::parse($param, $default, $source));
     }
 
-    public static function string($param, $name = null)
+    public static function int($param)
     {
-        return filter_var(Sanitize::parse($param, $name), FILTER_SANITIZE_STRING);
+        return filter_var($param, FILTER_SANITIZE_NUMBER_INT);
     }
 
-    public static function userName($param, $name = null)
+    public static function getString($param, $default = null, $source = null)
     {
-        $param = filter_var(Sanitize::parse($param, $name), FILTER_SANITIZE_STRING);
+        return Sanitize::string(Sanitize::parse($param, $default, $source));
+    }
+
+    public static function string($param)
+    {
+        return filter_var($param, FILTER_SANITIZE_STRING);
+    }
+
+    public static function getUserName($param, $default = null, $source = null)
+    {
+        $param = filter_var(Sanitize::parse($param, $default, $source), FILTER_SANITIZE_STRING);
         $param = (string) preg_replace( '/[\x00-\x1F\x7F<>"\'%&]/', '', $param);
         return strtolower($param);
     }
 
-    public static function password($param, $name = null)
+    public static function getPassword($param, $default = null, $source = null)
     {
-        return Sanitize::string($param, $name);
+        return Sanitize::getString($param, $default, $source);
+    }
+
+    public static function getCheckbox($param, $default = null, $source = null)
+    {
+        return (Sanitize::parse($param, $default, $source) == 'on') ? 1 : 0;
     }
 }

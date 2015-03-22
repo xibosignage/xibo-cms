@@ -222,7 +222,7 @@ class upgradeDAO extends baseDAO {
         if ($fault)
             throw new Exception($fault_string);
 
-        $doBackup = \Kit::GetParam('doBackup', $_POST, _CHECKBOX);
+        $doBackup = \Xibo\Helper\Sanitize::getCheckbox('doBackup');
 
         if ($doBackup == 0)
             throw new Exception(__('You MUST have a valid database backup to continue. Please take and verify a backup and upgrade again.'));

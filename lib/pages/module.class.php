@@ -207,7 +207,7 @@ class moduleDAO extends baseDAO
         if (Config::GetSetting('MODULE_CONFIG_LOCKED_CHECKB') == 'Checked')
             trigger_error(__('Module Config Locked'), E_USER_ERROR);
 
-        $moduleId = \Kit::GetParam('ModuleID', _GET, _INT);
+        $moduleId = \Xibo\Helper\Sanitize::getInt('ModuleID');
 
         // Pull the currently known info from the DB
         $SQL = '';
@@ -279,12 +279,12 @@ class moduleDAO extends baseDAO
         if (Config::GetSetting('MODULE_CONFIG_LOCKED_CHECKB') == 'Checked')
             trigger_error(__('Module Config Locked'), E_USER_ERROR);
 
-        $moduleId = \Kit::GetParam('ModuleID', _POST, _INT);
+        $moduleId = \Xibo\Helper\Sanitize::getInt('ModuleID');
         $type = \Kit::GetParam('type', _POST, _WORD);
         $validExtensions = \Kit::GetParam('ValidExtensions', _POST, _STRING, '');
-        $imageUri = \Kit::GetParam('ImageUri', _POST, _STRING);
-        $enabled = \Kit::GetParam('Enabled', _POST, _CHECKBOX);
-        $previewEnabled = \Kit::GetParam('PreviewEnabled', _POST, _CHECKBOX);
+        $imageUri = \Xibo\Helper\Sanitize::getString('ImageUri');
+        $enabled = \Xibo\Helper\Sanitize::getCheckbox('Enabled');
+        $previewEnabled = \Xibo\Helper\Sanitize::getCheckbox('PreviewEnabled');
 
         // Validation
         if ($moduleId == 0 || $moduleId == '')
@@ -391,7 +391,7 @@ class moduleDAO extends baseDAO
     public function Install()
     {
         // Module file name
-        $file = \Kit::GetParam('module', _GET, _STRING);
+        $file = \Xibo\Helper\Sanitize::getString('module');
 
         if ($file == '')
             trigger_error(__('Unable to install module'), E_USER_ERROR);

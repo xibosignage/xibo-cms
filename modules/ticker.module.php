@@ -402,7 +402,7 @@ class ticker extends Module
         $response = $this->getState();
 
         // Other properties
-        $sourceId = \Kit::GetParam('sourceid', _POST, _INT);
+        $sourceId = \Xibo\Helper\Sanitize::getInt('sourceid');
         $uri = \Kit::GetParam('uri', _POST, _URI);
         $dataSetId = \Kit::GetParam('datasetid', _POST, _INT, 0);
         $duration = \Kit::GetParam('duration', _POST, _INT, 0, false);
@@ -474,22 +474,22 @@ class ticker extends Module
         
         // Other properties
         $uri          = \Kit::GetParam('uri', _POST, _URI);
-		$name = \Kit::GetParam('name', _POST, _STRING);
+		$name = \Xibo\Helper\Sanitize::getString('name');
         $text         = \Kit::GetParam('ta_text', _POST, _HTMLSTRING);
         $css = \Kit::GetParam('ta_css', _POST, _HTMLSTRING);
         $updateInterval = \Kit::GetParam('updateInterval', _POST, _INT, 360);
-        $copyright    = \Kit::GetParam('copyright', _POST, _STRING);
-        $numItems = \Kit::GetParam('numItems', _POST, _STRING);
-        $takeItemsFrom = \Kit::GetParam('takeItemsFrom', _POST, _STRING);
-        $durationIsPerItem = \Kit::GetParam('durationIsPerItem', _POST, _CHECKBOX);
-        $itemsSideBySide = \Kit::GetParam('itemsSideBySide', _POST, _CHECKBOX);
+        $copyright    = \Xibo\Helper\Sanitize::getString('copyright');
+        $numItems = \Xibo\Helper\Sanitize::getString('numItems');
+        $takeItemsFrom = \Xibo\Helper\Sanitize::getString('takeItemsFrom');
+        $durationIsPerItem = \Xibo\Helper\Sanitize::getCheckbox('durationIsPerItem');
+        $itemsSideBySide = \Xibo\Helper\Sanitize::getCheckbox('itemsSideBySide');
         
         // DataSet Specific Options
-        $itemsPerPage = \Kit::GetParam('itemsPerPage', _POST, _INT);
-        $upperLimit = \Kit::GetParam('upperLimit', _POST, _INT);
-        $lowerLimit = \Kit::GetParam('lowerLimit', _POST, _INT);
+        $itemsPerPage = \Xibo\Helper\Sanitize::getInt('itemsPerPage');
+        $upperLimit = \Xibo\Helper\Sanitize::getInt('upperLimit');
+        $lowerLimit = \Xibo\Helper\Sanitize::getInt('lowerLimit');
         $filter = \Kit::GetParam('filter', _POST, _STRINGSPECIAL);
-        $ordering = \Kit::GetParam('ordering', _POST, _STRING);
+        $ordering = \Xibo\Helper\Sanitize::getString('ordering');
         
         // Validation
         if ($text == '')

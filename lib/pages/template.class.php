@@ -95,15 +95,15 @@ class templateDAO extends baseDAO {
     {
         $response = $this->getState();
 
-        $filter_name = \Kit::GetParam('filter_name', _POST, _STRING);
-        $filter_tags = \Kit::GetParam('filter_tags', _POST, _STRING);
+        $filter_name = \Xibo\Helper\Sanitize::getString('filter_name');
+        $filter_tags = \Xibo\Helper\Sanitize::getString('filter_tags');
         
         \Session::Set('template', 'filter_name', $filter_name);
         \Session::Set('template', 'filter_tags', $filter_tags);
         \Session::Set('template', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
         
         // Show filter_showThumbnail
-        $showThumbnail = \Kit::GetParam('showThumbnail', _POST, _CHECKBOX);
+        $showThumbnail = \Xibo\Helper\Sanitize::getCheckbox('showThumbnail');
         \Session::Set('layout', 'showThumbnail', $showThumbnail);
     
         $templates = $this->user->TemplateList($filter_name, $filter_tags);
@@ -292,10 +292,10 @@ class templateDAO extends baseDAO {
         // Get the layout
         $layout = clone \Xibo\Factory\LayoutFactory::getById(Kit::GetParam('layoutid', _POST, _INT));
 
-        $layout->layout = \Kit::GetParam('template', _POST, _STRING);
+        $layout->layout = \Xibo\Helper\Sanitize::getString('template');
         $layout->tags = \Xibo\Factory\TagFactory::tagsFromString(Kit::GetParam('tags', _POST, _STRING));
         $layout->tags[] = \Xibo\Factory\TagFactory::getByTag('template');
-        $layout->description = \Kit::GetParam('description', _POST, _STRING);
+        $layout->description = \Xibo\Helper\Sanitize::getString('description');
 
         $layout->validate();
         $layout->save();
@@ -317,10 +317,10 @@ class templateDAO extends baseDAO {
         if (!$this->user->checkEditable($layout))
             trigger_error(__('You do not have permissions to view this layout'), E_USER_ERROR);
 
-        $layout->layout = \Kit::GetParam('layout', _POST, _STRING);
+        $layout->layout = \Xibo\Helper\Sanitize::getString('layout');
         $layout->tags = \Xibo\Factory\TagFactory::tagsFromString(Kit::GetParam('tags', _POST, _STRING));
         $layout->tags[] = \Xibo\Factory\TagFactory::getByTag('template');
-        $layout->description = \Kit::GetParam('description', _POST, _STRING);
+        $layout->description = \Xibo\Helper\Sanitize::getString('description');
         $layout->retired = \Kit::GetParam('retired', _POST, _INT, 0);
 
         $layout->validate();

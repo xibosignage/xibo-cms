@@ -149,18 +149,18 @@ class Install {
     public function Step3() {
 
         // Have we been told to create a new database
-        $this->db_create = \Kit::GetParam('db_create', _POST, _INT);
+        $this->db_create = \Xibo\Helper\Sanitize::getInt('db_create');
 
         // Check all parameters have been specified
         $this->db_admin_user = \Kit::GetParam('admin_username', _POST, _PASSWORD);
         $this->db_admin_pass = \Kit::GetParam('admin_password', _POST, _PASSWORD);
 
-        $this->new_db_host = \Kit::GetParam('host', _POST, _STRING);
+        $this->new_db_host = \Xibo\Helper\Sanitize::getString('host');
         $this->new_db_user = \Kit::GetParam('db_username', _POST, _PASSWORD);
         $this->new_db_pass = \Kit::GetParam('db_password', _POST, _PASSWORD);
         $this->new_db_name = \Kit::GetParam('db_name', _POST, _PASSWORD);
 
-        $this->existing_db_host = \Kit::GetParam('existing_host', _POST, _STRING);
+        $this->existing_db_host = \Xibo\Helper\Sanitize::getString('existing_host');
         $this->existing_db_user = \Kit::GetParam('existing_db_username', _POST, _PASSWORD);
         $this->existing_db_pass = \Kit::GetParam('existing_db_password', _POST, _PASSWORD);
         $this->existing_db_name = \Kit::GetParam('existing_db_name', _POST, _PASSWORD);
@@ -367,7 +367,7 @@ END;
 
     public function Step5() {
         // Configure the user account
-        $username = \Kit::GetParam('admin_username', _POST, _STRING);
+        $username = \Xibo\Helper\Sanitize::getString('admin_username');
         $password = \Kit::GetParam('admin_password', _POST, _PASSWORD);
 
         if ($username == '')
@@ -426,9 +426,9 @@ END;
     }
 
     public function Step7() {
-        $server_key = \Kit::GetParam('server_key', _POST, _STRING);
-        $library_location = \Kit::GetParam('library_location', _POST, _STRING);
-        $stats = \Kit::GetParam('stats', _POST, _CHECKBOX);
+        $server_key = \Xibo\Helper\Sanitize::getString('server_key');
+        $library_location = \Xibo\Helper\Sanitize::getString('library_location');
+        $stats = \Xibo\Helper\Sanitize::getCheckbox('stats');
 
         if ($server_key == '')
             throw new Exception(__('Missing the server key.'));

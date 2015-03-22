@@ -260,7 +260,7 @@ class oauthDAO extends baseDAO {
         $db =& $this->db;
         $user = $this->getUser();
         $response = $this->getState();
-        $userid = \Kit::GetParam('userid', _SESSION, _INT);
+        $userid = \Xibo\Helper\Sanitize::getInt('userid');
 
         $message = '';
 

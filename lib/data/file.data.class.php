@@ -335,8 +335,8 @@ class File extends Data
             }
 
             if ($dynamic && !$thumb && $info[2]) {
-                $width = \Kit::GetParam('width', _GET, _INT);
-                $height = \Kit::GetParam('height', _GET, _INT);
+                $width = \Xibo\Helper\Sanitize::getInt('width');
+                $height = \Xibo\Helper\Sanitize::getInt('height');
 
                 // dynamically create an image of the correct size - used for previews
                 ResizeImage($libraryPath, '', $width, $height, $proportional, 'browser');
