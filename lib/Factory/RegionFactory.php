@@ -129,7 +129,7 @@ class RegionFactory
             $params['layoutId'] = \Kit::GetParam('layoutId', $filterBy, _INT);
         }
 
-        \Debug::sql($sql, $params);
+        \Xibo\Helper\Log::sql($sql, $params);
 
         foreach (\PDOConnect::select($sql, $params) as $row) {
             $region = new Region();

@@ -18,6 +18,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\Log;
 use Xibo\Helper\Help;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Theme;
@@ -396,7 +397,7 @@ class campaignDAO extends baseDAO
         // Get the currently assigned layouts and put them in the "well"
         $layoutsAssigned = \Xibo\Factory\LayoutFactory::query(array('lkcl.DisplayOrder'), array('campaignId' => $campaign->campaignId));
 
-        Debug::LogEntry('audit', count($layoutsAssigned) . ' layouts assigned already');
+        Log::notice(count($layoutsAssigned) . ' layouts assigned already');
 
         $formFields = array();
         $formFields[] = FormManager::AddText('filter_name', __('Name'), NULL, NULL, 'l');

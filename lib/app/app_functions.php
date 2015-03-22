@@ -18,6 +18,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\Log;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
  
 define('VAR_FOR_SQL',1);
@@ -302,7 +304,7 @@ function CheckFormToken($token, $tokenName = "token")
 	{
 		unset($_SESSION[$tokenName]);
 
-		Debug::LogEntry('error', "Form token incorrect from: ". $_SERVER['REMOTE_ADDR']. " with token [$token] for session_id [" . session_id() . ']');
+		Log::error("Form token incorrect from: ". $_SERVER['REMOTE_ADDR']. " with token [$token] for session_id [" . session_id() . ']');
 		return false;
 	}
 }

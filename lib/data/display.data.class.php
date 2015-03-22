@@ -18,6 +18,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\Log;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 class Display extends Data {
@@ -143,7 +145,7 @@ class Display extends Data {
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
@@ -163,7 +165,7 @@ class Display extends Data {
      * @param $incSchedule Object
      */
     public function Add($display, $isAuditing, $defaultLayoutID, $license, $licensed, $incSchedule) {
-        Debug::LogEntry('audit', 'IN', get_class(), __FUNCTION__);
+        Log::notice('IN', get_class(), __FUNCTION__);
         
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -198,13 +200,13 @@ class Display extends Data {
             if (!$displayGroupObject->Link($displayGroupId, $displayId))
                 $this->ThrowError(25001, __('Could not link the new display with its group.'));
             
-            Debug::LogEntry('audit', 'OUT', 'Display', 'Add');
+            Log::notice('OUT', 'Display', 'Add');
 
             return $displayId;
         }
         catch (Exception $e) {
 
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
 
             if (!$this->IsError())
                 $this->SetError(25000, __('Could not add display'));
@@ -223,7 +225,7 @@ class Display extends Data {
      * @param $incSchedule Object
      */
     public function Edit() {
-        Debug::LogEntry('audit', 'IN', get_class(), __FUNCTION__);
+        Log::notice('IN', get_class(), __FUNCTION__);
 
         // Validation
         if ($this->display == '')
@@ -287,7 +289,7 @@ class Display extends Data {
                     $this->ThrowError(25015, __('Pattern of secureOn-password is not "xx-xx-xx-xx-xx-xx" (x = digit or CAPITAL letter)'));
             }
 
-            Debug::LogEntry('audit', 'Validation Complete and Passed', 'Display', 'Edit');
+            Log::notice('Validation Complete and Passed', 'Display', 'Edit');
 
             // Update the display record
             $SQL  = '
@@ -328,7 +330,7 @@ class Display extends Data {
                     'displayid' => $this->displayId
                 ));
 
-            Debug::LogEntry('audit', 'Display Edited', 'Display', 'Edit');
+            Log::notice('Display Edited', 'Display', 'Edit');
 
             // Use a DisplayGroup to handle the default layout and displaygroup name for this display
             \Kit::ClassLoader('displaygroup');
@@ -339,13 +341,13 @@ class Display extends Data {
                 $this->ThrowError(25002, __('Could not update this display with a new name.'));
             }
 
-            Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'Edit');
+            Log::notice('OUT', 'DisplayGroup', 'Edit');
             
             return true;
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+            Log::error($e->getMessage(), get_class(), __FUNCTION__);
 
             if (!$this->IsError())
                 $this->SetError(25000, __('Could not update display'));
@@ -361,7 +363,7 @@ class Display extends Data {
      */
     public function Delete($displayID)
     {
-        Debug::LogEntry('audit', 'IN', get_class(), __FUNCTION__);
+        Log::notice('IN', get_class(), __FUNCTION__);
         
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -387,13 +389,13 @@ class Display extends Data {
                     'displayid' => $displayID
                 ));
 
-            Debug::LogEntry('audit', 'OUT', 'Display', 'Delete');
+            Log::notice('OUT', 'Display', 'Delete');
 
             return true;
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
 
             if (!$this->IsError())
                 $this->SetError(25015,__('Unable to delete display record.'));
@@ -410,7 +412,7 @@ class Display extends Data {
      */
     public function Touch($displayId, $status = array())
     {
-        Debug::LogEntry('audit', 'IN', get_class(), __FUNCTION__);
+        Log::notice('IN', get_class(), __FUNCTION__);
 
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -490,7 +492,7 @@ class Display extends Data {
             return true;
         }
         catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
             return $this->SetError(25002, __("Error updating this displays last accessed information."));
         }
     }
@@ -503,7 +505,7 @@ class Display extends Data {
      */
     public function EditDisplayName($license, $display)
     {
-        Debug::Audit($license);
+        Log::Audit($license);
 
         $this->license = $license;
         if (!$this->Load())
@@ -525,7 +527,7 @@ class Display extends Data {
      */
     public function FlagIncomplete($displayId)
     {
-        Debug::LogEntry('audit', sprintf('Flag DisplayID %d incomplete.', $displayId), 'display', 'NotifyDisplays');
+        Log::notice(sprintf('Flag DisplayID %d incomplete.', $displayId), 'display', 'NotifyDisplays');
 
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -538,7 +540,7 @@ class Display extends Data {
             return true;
         }
         catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
             return $this->SetError(25004, 'Unable to Flag Display as incomplete');
         }
     }
@@ -549,7 +551,7 @@ class Display extends Data {
      */
     public function NotifyDisplays($campaignId)
     {
-        Debug::LogEntry('audit', sprintf('Checking for Displays to refresh on Layout %d', $campaignId), 'display', 'NotifyDisplays');
+        Log::notice(sprintf('Checking for Displays to refresh on Layout %d', $campaignId), 'display', 'NotifyDisplays');
 
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -590,7 +592,7 @@ class Display extends Data {
             }
         }
         catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
 
             if (!$this->IsError())
                 $this->SetError(25004, 'Unable to Flag Display as incomplete');
@@ -607,7 +609,7 @@ class Display extends Data {
      */
     public function EditDefaultLayout($displayId, $defaultLayoutId)
     {
-        Debug::LogEntry('audit', 'IN', get_class(), __FUNCTION__);
+        Log::notice('IN', get_class(), __FUNCTION__);
 
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -621,18 +623,18 @@ class Display extends Data {
             // Flag this display as not having all the content
             $this->FlagIncomplete($displayId);
 
-            Debug::LogEntry('audit', 'OUT', 'Display', 'EditDefaultLayout');
+            Log::notice('OUT', 'Display', 'EditDefaultLayout');
 
             return true;
         }
         catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
             return $this->SetError(25012, __('Error updating this displays default layout.'));
         }
     }
 
     public function SetVersionInstructions($displayId, $mediaId, $storedAs) {
-        Debug::LogEntry('audit', 'IN', get_class(), __FUNCTION__);
+        Log::notice('IN', get_class(), __FUNCTION__);
 
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -652,7 +654,7 @@ class Display extends Data {
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+            Log::error($e->getMessage(), get_class(), __FUNCTION__);
         
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
@@ -702,7 +704,7 @@ class Display extends Data {
             }
             catch (Exception $e) {
                 
-                Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+                Log::error($e->getMessage(), get_class(), __FUNCTION__);
             
                 if (!$this->IsError())
                     $this->SetError(1, __('Unknown Error'));
@@ -774,7 +776,7 @@ class Display extends Data {
     
                 // If the last time we accessed is less than now minus the time out
                 if ($timeOut < time()) {
-                    Debug::Audit('Timed out display. Last Accessed: ' . date('Y-m-d h:i:s', $lastAccessed) . '. Time out: ' . date('Y-m-d h:i:s', $timeOut));
+                    Log::Audit('Timed out display. Last Accessed: ' . date('Y-m-d h:i:s', $lastAccessed) . '. Time out: ' . date('Y-m-d h:i:s', $timeOut));
 
                     // If this is the first switch (i.e. the row was logged in before)
                     if ($loggedIn == 1) {
@@ -795,7 +797,7 @@ class Display extends Data {
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+            Log::error($e->getMessage(), get_class(), __FUNCTION__);
         
             return false;
         }
@@ -808,7 +810,7 @@ class Display extends Data {
      */
     public function WakeOnLan($displayId)
     {
-        Debug::LogEntry('audit', 'IN', get_class(), __FUNCTION__);
+        Log::notice('IN', get_class(), __FUNCTION__);
 
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -826,7 +828,7 @@ class Display extends Data {
             if ($row['MacAddress'] == '' || $row['BroadCastAddress'] == '')
                 $this->SetError(25014, __('This display has no mac address recorded against it yet. Make sure the display is running.'));
 
-            Debug::LogEntry('audit', 'About to send WOL packet to ' . $row['BroadCastAddress'] . ' with Mac Address ' . $row['MacAddress'], 'display', 'WakeOnLan');
+            Log::notice('About to send WOL packet to ' . $row['BroadCastAddress'] . ' with Mac Address ' . $row['MacAddress'], 'display', 'WakeOnLan');
 
             if (!$this->TransmitWakeOnLan($row['MacAddress'], $row['SecureOn'], $row['BroadCastAddress'], $row['Cidr'], "9"))
                 throw new Exception('Error in TransmitWakeOnLan');
@@ -841,7 +843,7 @@ class Display extends Data {
             return true;
         }
         catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
 
             if (!$this->IsError())
                 $this->SetError(25012, __('Unknown Error.'));
@@ -885,7 +887,7 @@ class Display extends Data {
             return $sth->fetchAll();
         }
         catch (Exception $e) {            
-            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+            Log::error($e->getMessage(), get_class(), __FUNCTION__);
             return false;
         }
     }
@@ -902,7 +904,7 @@ class Display extends Data {
      * Modified for use with the Xibo project by Dan Garner.
      */
     function TransmitWakeOnLan($mac_address, $secureon, $addr, $cidr, $port) {
-        Debug::LogEntry('audit', 'IN', get_class(), __FUNCTION__);
+        Log::notice('IN', get_class(), __FUNCTION__);
 
         // Prepare magic packet: part 1/3 (defined constant)
         $buf = "";
@@ -1062,7 +1064,7 @@ class Display extends Data {
                     
                     unset($socket);
                     
-                    Debug::LogEntry('audit', $sent_fsockopen, 'display', 'WakeOnLan');
+                    Log::notice($sent_fsockopen, 'display', 'WakeOnLan');
                     return true;
                 }
                 else
@@ -1076,7 +1078,7 @@ class Display extends Data {
             {
                 unset($socket);
                 
-                Debug::LogEntry('audit', __('Using fsockopen() failed, due to denied permission'));
+                Log::notice(__('Using fsockopen() failed, due to denied permission'));
             }
         }
 
@@ -1118,7 +1120,7 @@ class Display extends Data {
                     socket_close($socket);
                     unset($socket);
 
-                    Debug::LogEntry('audit', $socket_create, 'display', 'WakeOnLan');
+                    Log::notice($socket_create, 'display', 'WakeOnLan');
                     return true;
                 }
                 else

@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Helper;
-use Debug;
+use Xibo\Helper\Log;
 use Exception;
 use Kit;
 use Xibo\Helper\Theme;
@@ -98,7 +98,7 @@ class ApplicationState
             if (!$dbh->inTransaction())
                 $dbh->beginTransaction();
         } catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
             trigger_error(__('Unable to open connection and start transaction'), E_USER_ERROR);
         }
 

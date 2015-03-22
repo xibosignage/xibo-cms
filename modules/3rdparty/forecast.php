@@ -26,7 +26,7 @@ class Forecast
             $request_url .= '?'. http_build_query($options);
         }
 
-        \Debug::Audit('Calling API with: ' . $request_url);
+        \Xibo\Helper\Log::Audit('Calling API with: ' . $request_url);
 
         $request_url = str_replace('[APIKEY]', $this->api_key, $request_url);
 
@@ -58,16 +58,16 @@ class Forecast
 
         if ($outHeaders['http_code'] == 0) {
             // Unable to connect
-            \Debug::Error('Unable to reach Forecast API. No Host Found (HTTP Code 0). Curl Error = ' . curl_error($curl));
+            \Xibo\Helper\Log::Error('Unable to reach Forecast API. No Host Found (HTTP Code 0). Curl Error = ' . curl_error($curl));
             return false;
         }
         else if ($outHeaders['http_code'] != 200) {
-            \Debug::Error('ForecastIO API returned ' . $outHeaders['http_code'] . ' status. Unable to proceed. Headers = ' . var_export($outHeaders, true));
+            \Xibo\Helper\Log::Error('ForecastIO API returned ' . $outHeaders['http_code'] . ' status. Unable to proceed. Headers = ' . var_export($outHeaders, true));
 
             // See if we can parse the error.
             $body = json_decode($result);
 
-            \Debug::Error('ForecastIO Error: ' . ((isset($body->errors[0])) ? $body->errors[0]->message : 'Unknown Error'));
+            \Xibo\Helper\Log::Error('ForecastIO Error: ' . ((isset($body->errors[0])) ? $body->errors[0]->message : 'Unknown Error'));
 
             return false;
         }

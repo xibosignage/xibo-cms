@@ -100,7 +100,7 @@ class CampaignFactory
         if (is_array($sortOrder))
             $sql .= 'ORDER BY ' . implode(',', $sortOrder);
 
-        \Debug::sql($sql, $params);
+        \Xibo\Helper\Log::sql($sql, $params);
 
         foreach (\PDOConnect::select($sql, $params) as $row) {
 

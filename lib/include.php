@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 use Xibo\Entity\User;
+use Xibo\Helper\Log;
 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
@@ -124,7 +125,7 @@ if (!$db->select_db($dbname))
 date_default_timezone_set(Config::GetSetting("defaultTimezone"));
 
 // Error Handling (our error handler requires a DB connection
-set_error_handler(array(new Debug(), "ErrorHandler"));
+set_error_handler(array(new Log(), "ErrorHandler"));
 
 // Define the VERSION
 Config::Version();
@@ -146,7 +147,7 @@ if(Config::GetSetting('SERVER_MODE') == 'Test')
     ini_set('display_errors', 1);
 
 // Debugging?
-if (Debug::getLevel(Config::GetSetting('audit')) == 10)
+if (Log::getLevel(Config::GetSetting('audit')) == 10)
     error_reporting(E_ALL);
 
 // Setup the translations for gettext

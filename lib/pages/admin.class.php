@@ -18,6 +18,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\Log;
 use Xibo\Helper\Help;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Theme;
@@ -465,7 +466,7 @@ FORM;
         if (isset($_FILES['dumpFile']) && is_uploaded_file($_FILES['dumpFile']['tmp_name']) && $_FILES['dumpFile']['error'] == 0)
         {
             echo 'Restoring Database</br>';
-            Debug::LogEntry('audit', 'Valid Upload', 'Backup', 'RestoreDatabase');
+            Log::notice('Valid Upload', 'Backup', 'RestoreDatabase');
 
             // Directory location
             $fileName = \Kit::ValidateParam($_FILES['dumpFile']['tmp_name'], _STRING);

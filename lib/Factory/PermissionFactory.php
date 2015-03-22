@@ -110,7 +110,7 @@ ORDER BY joinedGroup.IsEveryone DESC, joinedGroup.IsUserSpecific, joinedGroup.`G
 ';
         $params = array('entityId' => $entityId, 'objectId' => $objectId);
 
-        \Debug::sql($sql, $params);
+        \Xibo\Helper\Log::sql($sql, $params);
 
         foreach (\PDOConnect::select($sql, $params) as $row) {
             $permission = new Permission();
@@ -158,7 +158,7 @@ SELECT `permission`.`permissionId`, `permission`.`groupId`, `permission`.`object
 ';
         $params = array('entity' => $entity, 'userId' => $userId);
 
-        \Debug::sql($sql, $params);
+        \Xibo\Helper\Log::sql($sql, $params);
 
         foreach (PDOConnect::select($sql, $params) as $row) {
             $permission = new Permission();

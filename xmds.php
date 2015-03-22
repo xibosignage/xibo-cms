@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 use Xibo\Entity\User;
+use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
 
 DEFINE('XIBO', true);
@@ -41,7 +42,7 @@ if (isset($_GET['file'])) {
     $sendFileMode = Config::GetSetting('SENDFILE_MODE');
 
     if ($sendFileMode == 'Off') {
-        Debug::LogEntry('audit', 'HTTP GetFile request received but SendFile Mode is Off. Issuing 404', 'services');
+        Log::notice('HTTP GetFile request received but SendFile Mode is Off. Issuing 404', 'services');
         header('HTTP/1.0 404 Not Found');
         exit;
     }
@@ -49,7 +50,7 @@ if (isset($_GET['file'])) {
     // Check nonce, output appropriate headers, log bandwidth and stop.
     $nonce = new Nonce();
     if (!$file = $nonce->Details(Kit::GetParam('file', _GET, _STRING))) {
-        Debug::LogEntry('audit', 'HTTP GetFile request received but unable to find XMDS Nonce. Issuing 404', 'services');
+        Log::notice('HTTP GetFile request received but unable to find XMDS Nonce. Issuing 404', 'services');
         // 404
         header('HTTP/1.0 404 Not Found');
     }
@@ -57,7 +58,7 @@ if (isset($_GET['file'])) {
         // Issue magic packet
         // Send via Apache X-Sendfile header?
         if ($sendFileMode == 'Apache') {
-            Debug::LogEntry('audit', 'HTTP GetFile request redirecting to ' . Config::GetSetting('LIBRARY_LOCATION') . $file['storedAs'], 'services');
+            Log::notice('HTTP GetFile request redirecting to ' . Config::GetSetting('LIBRARY_LOCATION') . $file['storedAs'], 'services');
             header('X-Sendfile: ' . Config::GetSetting('LIBRARY_LOCATION') . $file['storedAs']);
         }
         // Send via Nginx X-Accel-Redirect?
@@ -91,6 +92,6 @@ try {
     $soap->handle();
 }
 catch (Exception $e) {
-    Debug::LogEntry('error', $e->getMessage());
+    Log::error($e->getMessage());
     $serviceResponse->ErrorServerError('Unable to create SOAP Server: ' . $e->getMessage());
 }

@@ -17,7 +17,9 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- */ 
+ */
+use Xibo\Helper\Log;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 class Session {
@@ -103,7 +105,7 @@ class Session {
 			else
 			{
 				// Its set - but its wrong - not good
-				Debug::LogEntry('error', 'Incorrect SecurityToken from ' . $remoteAddr);
+				Log::error('Incorrect SecurityToken from ' . $remoteAddr);
 				
 				$this->isExpired = 1;
 			}
@@ -115,7 +117,7 @@ class Session {
 			return($row['session_data']);
 		}
 		catch (Exception $e) {
-			Debug::LogEntry('error', $e->getMessage());
+			Log::error($e->getMessage());
 			$empty = '';
 			return settype($empty, "string");
 		}
@@ -197,7 +199,7 @@ class Session {
 			}
 		}
 		catch (Exception $e) {
-			Debug::LogEntry('error', $e->getMessage());
+			Log::error($e->getMessage());
 			return false;
 		}
 		
@@ -213,7 +215,7 @@ class Session {
 			$sth->execute(array('session_id', $key));
 		}
 		catch (Exception $e) {
-			Debug::LogEntry('error', $e->getMessage());
+			Log::error($e->getMessage());
 		}
 
 		return true;
@@ -233,7 +235,7 @@ class Session {
 			$sth->execute(array('expiration' => time()));
 		}
 		catch (Exception $e) {
-			Debug::LogEntry('error', $e->getMessage());
+			Log::error($e->getMessage());
 		}
 	}
 	
@@ -247,7 +249,7 @@ class Session {
 			$sth->execute(array('session_id' => $key, 'userid' => $userid));
 		}
 		catch (Exception $e) {
-			Debug::LogEntry('error', $e->getMessage());
+			Log::error($e->getMessage());
 			return false;
 		}
 	}
@@ -272,7 +274,7 @@ class Session {
 			$sth->execute(array('session_id' => $oldSessionID, 'new_session_id' => $new_sess_id));
 		}
 		catch (Exception $e) {
-			Debug::LogEntry('error', $e->getMessage());
+			Log::error($e->getMessage());
 			return false;
 		}
     }
@@ -288,7 +290,7 @@ class Session {
 			$sth->execute(array('session_id' => $key, 'lastpage' => $lastpage));
 		}
 		catch (Exception $e) {
-			Debug::LogEntry('error', $e->getMessage());
+			Log::error($e->getMessage());
 			return false;
 		}
 	}
@@ -304,7 +306,7 @@ class Session {
 			$sth->execute(array('session_id' => $this->key, 'isexpired' => $isExpired));
 		}
 		catch (Exception $e) {
-			Debug::LogEntry('error', $e->getMessage());
+			Log::error($e->getMessage());
 			return false;
 		}
 	}
@@ -323,7 +325,7 @@ class Session {
 			return true;
 		}
 		catch (Exception $e) {
-			Debug::LogEntry('error', $e->getMessage());
+			Log::error($e->getMessage());
 			return false;
 		}
 	}

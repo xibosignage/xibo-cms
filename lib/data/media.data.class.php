@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 use Xibo\Entity\User;
+use Xibo\Helper\Log;
 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
@@ -46,7 +47,7 @@ class Media extends Data
      */
     public function Add($fileId, $type, $name, $duration, $fileName, $userId, $oldMediaId = 0)
     {
-        Debug::LogEntry('audit', 'IN', 'Media', 'Add');
+        Log::notice('IN', 'Media', 'Add');
 
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -77,7 +78,7 @@ class Media extends Data
                 
             // Check the extension is valid for that media type
             if (!$this->IsValidFile($type, $extension)) {
-                Debug::Error('Invalid extension: ' . $extension);
+                Log::Error('Invalid extension: ' . $extension);
                 $this->ThrowError(18, __('Invalid file extension'));
             }
     
@@ -157,7 +158,7 @@ class Media extends Data
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(13, __('Error adding media.'));
@@ -175,7 +176,7 @@ class Media extends Data
      */
     public function Edit($mediaId, $name, $duration, $userId, $tags = '')
     {
-        Debug::LogEntry('audit', 'IN', 'Media', 'Edit');
+        Log::notice('IN', 'Media', 'Edit');
 
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -235,7 +236,7 @@ class Media extends Data
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(30, 'Database failure updating media');
@@ -252,7 +253,7 @@ class Media extends Data
      */
     public function FileRevise($mediaId, $fileId, $fileName)
     {
-        Debug::LogEntry('audit', 'IN', 'Media', 'FileRevise');
+        Log::notice('IN', 'Media', 'FileRevise');
 
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -307,7 +308,7 @@ class Media extends Data
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(32, 'Unable to update existing media record');
@@ -318,7 +319,7 @@ class Media extends Data
 
     public function Retire($mediaId)
     {
-        Debug::LogEntry('audit', 'IN', 'Media', 'Retire');
+        Log::notice('IN', 'Media', 'Retire');
 
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -333,7 +334,7 @@ class Media extends Data
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(19, __('Error retiring media.'));
@@ -344,7 +345,7 @@ class Media extends Data
 
     public function Delete($mediaId)
     {
-        Debug::LogEntry('audit', 'IN', 'Media', 'Delete');
+        Log::notice('IN', 'Media', 'Delete');
         
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -411,7 +412,7 @@ class Media extends Data
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(23, __('Error deleting media.'));
@@ -421,7 +422,7 @@ class Media extends Data
     }
 
     public function GetStoredAs($mediaId) {
-        Debug::LogEntry('audit', 'IN', get_class(), __FUNCTION__);
+        Log::notice('IN', get_class(), __FUNCTION__);
 
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -433,7 +434,7 @@ class Media extends Data
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
@@ -459,7 +460,7 @@ class Media extends Data
         }
         catch (Exception $e) {
 
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
 
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
@@ -470,7 +471,7 @@ class Media extends Data
 
     public function DeleteMediaFile($fileName)
     {
-        Debug::LogEntry('audit', 'IN', 'Media', 'DeleteMediaFile');
+        Log::notice('IN', 'Media', 'DeleteMediaFile');
         
         // Library location
         $databaseDir = Config::GetSetting("LIBRARY_LOCATION");
@@ -491,7 +492,7 @@ class Media extends Data
 
     private function IsValidType($type)
     {
-        Debug::LogEntry('audit', 'IN', 'Media', 'IsValidType');
+        Log::notice('IN', 'Media', 'IsValidType');
         
         if (!$this->moduleInfoLoaded)
         {
@@ -511,7 +512,7 @@ class Media extends Data
                 return false;
         }
 
-        Debug::Audit('Valid Extensions: ' . var_export($this->validExtensions, true));
+        Log::Audit('Valid Extensions: ' . var_export($this->validExtensions, true));
 
         // TODO: Is this search case sensitive?
         return in_array($extension, $this->validExtensions);
@@ -523,7 +524,7 @@ class Media extends Data
      */
     private function LoadModuleInfo($type)
     {
-        Debug::LogEntry('audit', 'IN', 'Media', 'LoadModuleInfo');
+        Log::notice('IN', 'Media', 'LoadModuleInfo');
         
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -547,7 +548,7 @@ class Media extends Data
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(19, __('Database error checking module'));
@@ -562,7 +563,7 @@ class Media extends Data
      * @return [array] Array containing the valid extensions
      */
     public function ValidExtensions($type) {
-        Debug::LogEntry('audit', 'IN', 'Media', 'ValidExtensions');
+        Log::notice('IN', 'Media', 'ValidExtensions');
         
         if (!$this->moduleInfoLoaded)
         {
@@ -579,7 +580,7 @@ class Media extends Data
      */
     public function ModuleList()
     {
-        Debug::LogEntry('audit', 'IN', 'Media', 'ModuleList');
+        Log::notice('IN', 'Media', 'ModuleList');
         
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -604,7 +605,7 @@ class Media extends Data
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
@@ -619,7 +620,7 @@ class Media extends Data
      */
     public function Copy($oldMediaId, $prefix = '')
     {
-        Debug::LogEntry('audit', 'IN', 'Media', 'Copy');
+        Log::notice('IN', 'Media', 'Copy');
         
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -680,7 +681,7 @@ class Media extends Data
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(26, __('Error copying media.'));
@@ -720,7 +721,7 @@ class Media extends Data
         //Debug::Audit('Module File: ' . var_export($media, true));
 
         if ($media === false || $force) {
-            Debug::Audit('Adding: ' . $url . ' with Name: ' . $name . '. Expiry: ' . date('Y-m-d h:i:s', $expires));
+            Log::Audit('Adding: ' . $url . ' with Name: ' . $name . '. Expiry: ' . date('Y-m-d h:i:s', $expires));
             
             $fileName = Config::GetSetting('LIBRARY_LOCATION') . 'temp' . DIRECTORY_SEPARATOR . $name;
             
@@ -764,7 +765,7 @@ class Media extends Data
             // How can we tell?
             // - valid flag on the media
             if ($media !== false && $media['valid'] == 0) {
-                Debug::Audit('Media not valid, forcing update.');
+                Log::Audit('Media not valid, forcing update.');
                 $force = true;
             }
 
@@ -786,7 +787,7 @@ class Media extends Data
             // Get the name
             $storedAs = $libraryFolder . $name;
 
-            Debug::Audit('Updating: ' . $name);
+            Log::Audit('Updating: ' . $name);
              
             // Now copy the file
             if (!@copy($file, $storedAs))
@@ -841,7 +842,7 @@ class Media extends Data
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+            Log::error($e->getMessage(), get_class(), __FUNCTION__);
         
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
@@ -861,7 +862,7 @@ class Media extends Data
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
 
-            Debug::Audit('Removing: ' . $storedAs . ' ID:' . $mediaId);
+            Log::Audit('Removing: ' . $storedAs . ' ID:' . $mediaId);
         
             // Delete the links
             $sth = $dbh->prepare('DELETE FROM lklayoutmedia WHERE mediaId = :mediaId AND regionId = :regionId');
@@ -881,7 +882,7 @@ class Media extends Data
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
@@ -920,7 +921,7 @@ class Media extends Data
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+            Log::error($e->getMessage(), get_class(), __FUNCTION__);
         
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
@@ -1011,7 +1012,7 @@ class Media extends Data
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+            Log::error($e->getMessage(), get_class(), __FUNCTION__);
         
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
@@ -1039,7 +1040,7 @@ class Media extends Data
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+            Log::error($e->getMessage(), get_class(), __FUNCTION__);
         
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
@@ -1053,7 +1054,7 @@ class Media extends Data
      * @param  [int] $mediaId The Layout Id
      */
     public function unTagAll($mediaId) {
-        Debug::Audit('IN');
+        Log::Audit('IN');
 
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -1067,7 +1068,7 @@ class Media extends Data
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+            Log::error($e->getMessage(), get_class(), __FUNCTION__);
         
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
@@ -1139,7 +1140,7 @@ class Media extends Data
         }
         catch (Exception $e) {
 
-            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+            Log::error($e->getMessage(), get_class(), __FUNCTION__);
 
             return false;
         }
@@ -1198,7 +1199,7 @@ class Media extends Data
             }
         }
         catch (Exception $e) {
-            Debug::Error($e->getMessage());
+            Log::Error($e->getMessage());
             throw new Exception(__('Cannot get entries'));
         }
 
@@ -1213,7 +1214,7 @@ class Media extends Data
     public function deleteUnusedForUser($userId)
     {
         foreach (Media::entriesUnusedForUser($userId) as $item) {
-            Debug::Audit('Deleting unused media: ' . $item['mediaId']);
+            Log::Audit('Deleting unused media: ' . $item['mediaId']);
             if (!$this->Delete($item['mediaId']))
                 return false;
         }

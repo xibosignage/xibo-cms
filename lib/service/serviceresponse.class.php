@@ -19,6 +19,8 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+use Xibo\Helper\Log;
+
 class XiboServiceResponse
 {
     private $serviceLocation;
@@ -35,7 +37,7 @@ class XiboServiceResponse
             $dbh->beginTransaction();
         }
         catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
             trigger_error(__('Unable to open connection and start transaction'), E_USER_ERROR);
         }
     }
@@ -105,7 +107,7 @@ class XiboServiceResponse
             $dbh->rollBack();
         }
         catch (Exception $e) {
-            Debug::LogEntry('audit', 'Unable to rollBack');
+            Log::notice('Unable to rollBack');
         }
 
         die($message);

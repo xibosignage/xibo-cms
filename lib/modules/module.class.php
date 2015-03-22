@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 use Xibo\Entity\User;
+use Xibo\Helper\Log;
 use Xibo\Helper\Help;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Theme;
@@ -432,7 +433,7 @@ abstract class Module implements ModuleInterface
      */
     public function GetName()
     {
-        Debug::Audit('Media assigned: ' . count($this->widget->mediaIds));
+        Log::Audit('Media assigned: ' . count($this->widget->mediaIds));
 
         if (count($this->widget->mediaIds) > 0) {
             $media = new Media();
@@ -731,7 +732,7 @@ abstract class Module implements ModuleInterface
 
     public function InstallModule($name, $description, $imageUri, $previewEnabled, $assignable, $settings) {
         
-        Debug::LogEntry('audit', 'Request to install module with name: ' . $name, 'module', 'InstallModule');
+        Log::notice('Request to install module with name: ' . $name, 'module', 'InstallModule');
 
         try {
             // Validate some things.
@@ -759,7 +760,7 @@ abstract class Module implements ModuleInterface
                         :image_uri, :schema_version, :valid_extensions, :preview_enabled, :assignable, :render_as, :settings);
                 ');
 
-            Debug::LogEntry('audit', 'Executing SQL', 'module', 'InstallModule');
+            Log::notice('Executing SQL', 'module', 'InstallModule');
 
             $sth->execute(array(
                     'module' =>  $this->module->type,
@@ -777,7 +778,7 @@ abstract class Module implements ModuleInterface
                 ));
         }
         catch (Exception $e) {
-            Debug::Error($e->getMessage());
+            Log::Error($e->getMessage());
         
             throw new Exception(__('Unable to install module. Please check the Error Log'));
         }
@@ -824,7 +825,7 @@ abstract class Module implements ModuleInterface
         }
         catch (Exception $e) {
             
-            Debug::Error($e->getMessage());
+            Log::Error($e->getMessage());
 
             throw $e;
         }

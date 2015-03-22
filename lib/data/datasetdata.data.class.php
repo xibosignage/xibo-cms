@@ -18,6 +18,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\Log;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 class DataSetData extends Data
@@ -68,13 +70,13 @@ class DataSetData extends Data
                 $rows[] = $col;
             }
 
-            Debug::LogEntry('audit', sprintf('Returning %d columns.', count($rows)), 'DataSetColumn', 'GetData');
+            Log::notice(sprintf('Returning %d columns.', count($rows)), 'DataSetColumn', 'GetData');
           
             return $rows;          
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
@@ -109,12 +111,12 @@ class DataSetData extends Data
             // Update the Water Mark
             $this->UpdateWatermarkWithColumnId($dataSetColumnId);
 
-            Debug::LogEntry('audit', 'Complete', 'DataSetData', 'Add');
+            Log::notice('Complete', 'DataSetData', 'Add');
             
             return $id;
         }
         catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
             return $this->SetError(25005, __('Could not add DataSet Data'));
         }
     }
@@ -142,12 +144,12 @@ class DataSetData extends Data
 
             $this->UpdateWatermarkWithColumnId($dataSetColumnId);
 
-            Debug::LogEntry('audit', 'Complete', 'DataSetData', 'Edit');
+            Log::notice('Complete', 'DataSetData', 'Edit');
 
             return true;
         }
         catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
             return $this->SetError(25005, __('Could not edit DataSet Data'));
         }
     }
@@ -168,12 +170,12 @@ class DataSetData extends Data
 
             $this->UpdateWatermarkWithColumnId($dataSetColumnId);
 
-            Debug::LogEntry('audit', 'Complete', 'DataSetData', 'Delete');
+            Log::notice('Complete', 'DataSetData', 'Delete');
 
             return true;
         }
         catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
             return $this->SetError(25005, __('Could not delete Data for Column/Row'));
         }
     }
@@ -201,7 +203,7 @@ class DataSetData extends Data
             return true;
         }
         catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
             return $this->SetError(25005, __('Could not delete Data for entire DataSet'));
         }
     }
@@ -227,7 +229,7 @@ class DataSetData extends Data
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
@@ -248,7 +250,7 @@ class DataSetData extends Data
         if (!$this->updateWatermark)
             return;
 
-        Debug::LogEntry('audit', sprintf('Updating water mark on DataSetId: %d', $dataSetId), 'DataSetData', 'UpdateWatermark');
+        Log::notice(sprintf('Updating water mark on DataSetId: %d', $dataSetId), 'DataSetData', 'UpdateWatermark');
 
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -274,7 +276,7 @@ class DataSetData extends Data
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
@@ -294,7 +296,7 @@ class DataSetData extends Data
         if (!is_array($spreadSheetMapping) || count($spreadSheetMapping) <= 0)
             return $this->SetError(25001, __('Missing spreadSheetMapping'));
 
-        Debug::LogEntry('audit', 'spreadSheetMapping: ' . json_encode($spreadSheetMapping), 'DataSetData', 'ImportCsv');
+        Log::notice('spreadSheetMapping: ' . json_encode($spreadSheetMapping), 'DataSetData', 'ImportCsv');
         
         $this->updateWatermark = false;
 
@@ -372,7 +374,7 @@ class DataSetData extends Data
         }
         catch (Exception $e) {
 
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
 
             if (!$this->IsError())
                 $this->SetError(25005, __('Unable to Import'));

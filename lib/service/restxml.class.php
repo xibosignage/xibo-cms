@@ -18,6 +18,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\Log;
+
 class RestXml extends Rest
 {
     /**
@@ -35,7 +37,7 @@ class RestXml extends Rest
             $dbh->commit();
         }
         catch (Exception $e) {
-            Debug::LogEntry('audit', 'Unable to commit');
+            Log::notice('Unable to commit');
         }
 
         $xmlDoc = new DOMDocument();
@@ -57,7 +59,7 @@ class RestXml extends Rest
         $xmlDoc->documentElement->appendChild($node);
 
         // Log it
-        Debug::LogEntry('audit', $xmlDoc->saveXML(), 'RestXml', 'Respond');
+        Log::notice($xmlDoc->saveXML(), 'RestXml', 'Respond');
 
         // Return it as a string
         return $xmlDoc->saveXML();
@@ -67,7 +69,7 @@ class RestXml extends Rest
     {
         header('Content-Type: text/xml; charset=utf8');
         
-        Debug::LogEntry('audit', $errorMessage, 'RestXml', 'Error');
+        Log::notice($errorMessage, 'RestXml', 'Error');
 
         // Roll back any open transactions if we are in an error state
         try {
@@ -75,7 +77,7 @@ class RestXml extends Rest
             $dbh->rollBack();
         }
         catch (Exception $e) {
-            Debug::LogEntry('audit', 'Unable to rollback');
+            Log::notice('Unable to rollback');
         }
 
         // Output the error doc
@@ -100,7 +102,7 @@ class RestXml extends Rest
         $rootNode->appendChild($errorNode);
 
         // Log it
-        Debug::LogEntry('audit', $xmlDoc->saveXML());
+        Log::notice($xmlDoc->saveXML());
 
         // Return it as a string
         return $xmlDoc->saveXML();
@@ -149,7 +151,7 @@ class RestXml extends Rest
      */
     protected function NodeListFromArray($array, $nodeName)
     {
-        Debug::LogEntry('audit', sprintf('Building node list containing %d items', count($array)));
+        Log::notice(sprintf('Building node list containing %d items', count($array)));
 
         $xmlDoc = new DOMDocument();
         $xmlElement = $xmlDoc->createElement($nodeName . 'Items');

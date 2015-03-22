@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 use Xibo\Entity\User;
+use Xibo\Helper\Log;
 use Xibo\Helper\Help;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Theme;
@@ -326,7 +327,7 @@ class moduleDAO extends baseDAO
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
@@ -373,7 +374,7 @@ class moduleDAO extends baseDAO
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
@@ -395,7 +396,7 @@ class moduleDAO extends baseDAO
         if ($file == '')
             trigger_error(__('Unable to install module'), E_USER_ERROR);
 
-        Debug::LogEntry('audit', 'Request to install Module: ' . $file, 'module', 'Install');
+        Log::notice('Request to install Module: ' . $file, 'module', 'Install');
 
         // Check that the file exists
         if (!file_exists($file))
@@ -418,7 +419,7 @@ class moduleDAO extends baseDAO
             trigger_error(__('Module file does not contain a class of the correct name'), E_USER_ERROR);
 
         try {
-            Debug::LogEntry('audit', 'Validation passed, installing module.', 'module', 'Install');
+            Log::notice('Validation passed, installing module.', 'module', 'Install');
             $moduleObject = ModuleFactory::create($type, $this->db, $this->user);
             $moduleObject->InstallOrUpdate();
         }
@@ -426,7 +427,7 @@ class moduleDAO extends baseDAO
             trigger_error(__('Unable to install module'), E_USER_ERROR);
         }
 
-        Debug::LogEntry('audit', 'Module Installed: ' . $file, 'module', 'Install');
+        Log::notice('Module Installed: ' . $file, 'module', 'Install');
 
         // Excellent... capital... success
         $response = $this->getState();
@@ -443,7 +444,7 @@ class moduleDAO extends baseDAO
         $requestedModule = \Kit::GetParam('mod', _REQUEST, _WORD);
         $requestedMethod = \Kit::GetParam('method', _REQUEST, _WORD);
 
-        Debug::Audit('Module Exec for ' . $requestedModule  . ' with method ' . $requestedMethod);
+        Log::Audit('Module Exec for ' . $requestedModule  . ' with method ' . $requestedMethod);
 
         // Validate that GetResource calls have a region
         if ($requestedMethod == 'GetResource' && \Kit::GetParam('regionId', _REQUEST, _INT) == 0)

@@ -20,6 +20,7 @@
  */
 use Xibo\Helper\Date;
 use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
@@ -162,7 +163,7 @@ class statsDAO extends baseDAO
             $toDt = date("Y-m-d", strtotime($toDt) + 86399);
         }
 
-        Debug::Audit('Converted Times received are: FromDt=' . $fromDt . '. ToDt=' . $toDt);
+        Log::Audit('Converted Times received are: FromDt=' . $fromDt . '. ToDt=' . $toDt);
 
         // Get an array of display id this user has access to.
         $displays = $this->user->DisplayList();
@@ -195,7 +196,7 @@ class statsDAO extends baseDAO
         $SQL .= 'ORDER BY display.Display, layout.Layout';
 
         // Log
-        Debug::sql($SQL);
+        Log::sql($SQL);
 
         if (!$results = $this->db->query($SQL))
         {
@@ -396,7 +397,7 @@ class statsDAO extends baseDAO
                 GROUP BY display.display
             ';
 
-            Debug::LogEntry('audit', $SQL . '. Params = ' . var_export($params, true), get_class(), __FUNCTION__);
+            Log::notice($SQL . '. Params = ' . var_export($params, true), get_class(), __FUNCTION__);
 
             $sth = $dbh->prepare($SQL);
 
@@ -421,7 +422,7 @@ class statsDAO extends baseDAO
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             // Show the error in place of the bandwidth chart
             Theme::Set('widget-error', 'Unable to get widget details');
@@ -536,7 +537,7 @@ class statsDAO extends baseDAO
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             // Show the error in place of the bandwidth chart
             Theme::Set('widget-error', 'Unable to get widget details');
@@ -631,7 +632,7 @@ class statsDAO extends baseDAO
 
         $SQL .= " ORDER BY stat.start ";
 		
-		Debug::LogEntry('audit', $SQL, 'Stats', 'OutputCSV');
+		Log::notice($SQL, 'Stats', 'OutputCSV');
 		
 		if (!$result = $db->query($SQL))
 		{

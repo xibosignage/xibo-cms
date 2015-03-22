@@ -18,6 +18,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\Log;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 class Nonce extends Data {
@@ -40,7 +42,7 @@ class Nonce extends Data {
             $sth->execute(array('displayId' => $displayId));
         }
         catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+            Log::error($e->getMessage(), get_class(), __FUNCTION__);
         }
     }
 
@@ -108,7 +110,7 @@ class Nonce extends Data {
             return $nonce;
         }
         catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+            Log::error($e->getMessage(), get_class(), __FUNCTION__);
             return false;
         }
     }
@@ -177,7 +179,7 @@ class Nonce extends Data {
                     return false;
             }
 
-            Debug::LogEntry('audit', var_export($params, true), get_class(), __FUNCTION__);
+            Log::notice(var_export($params, true), get_class(), __FUNCTION__);
         
             // Check
             $sth->execute($params);
@@ -186,7 +188,7 @@ class Nonce extends Data {
             return (count($results) > 0);
         }
         catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+            Log::error($e->getMessage(), get_class(), __FUNCTION__);
             return false;
         }
     }
@@ -226,7 +228,7 @@ class Nonce extends Data {
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
@@ -247,7 +249,7 @@ class Nonce extends Data {
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+            Log::error($e->getMessage(), get_class(), __FUNCTION__);
         
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));

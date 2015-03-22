@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 use Xibo\Entity\User;
+use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
 
 DEFINE('XIBO', true);
@@ -44,7 +45,7 @@ if (defined('XMDS') || $method != '')
     {
         case 'oauth':
 
-            Debug::LogEntry('audit', 'OAuth Webservice call');
+            Log::notice('OAuth Webservice call');
 
             \Kit::ClassLoader('ServiceOAuth');
 
@@ -111,7 +112,7 @@ if (defined('XMDS') || $method != '')
                 $serviceResponse->ErrorServerError('Not signed.');
             }
 
-            Debug::LogEntry('audit', 'Authenticated API call for [' . $method . '] with a [' . $response . '] response. Issued by UserId: ' . $user->userId, 'Services');
+            Log::notice('Authenticated API call for [' . $method . '] with a [' . $response . '] response. Issued by UserId: ' . $user->userId, 'Services');
                 
             // Authenticated with OAuth.
             \Kit::ClassLoader('Rest');

@@ -18,6 +18,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\Log;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 // Companion classes
@@ -39,7 +41,7 @@ class DisplayProfile extends Data {
 
     public function Load() {
 
-        Debug::Audit('Load DisplayProfileId: ' . $this->displayProfileId);
+        Log::Audit('Load DisplayProfileId: ' . $this->displayProfileId);
 
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -84,7 +86,7 @@ class DisplayProfile extends Data {
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
@@ -95,7 +97,7 @@ class DisplayProfile extends Data {
 
     public function LoadDefault() {
 
-        Debug::Audit('Load Default ' . $this->type);
+        Log::Audit('Load Default ' . $this->type);
 
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -111,7 +113,7 @@ class DisplayProfile extends Data {
           
             if (!$row = $sth->fetch()) {
                 // We don't so we should stick with the global default
-                Debug::Audit('Fall back to global default');
+                Log::Audit('Fall back to global default');
             }
             else {
                 // We do, so we should overwrite the global default with our stored preferences
@@ -142,7 +144,7 @@ class DisplayProfile extends Data {
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
@@ -213,7 +215,7 @@ class DisplayProfile extends Data {
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+            Log::error($e->getMessage(), get_class(), __FUNCTION__);
         
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
@@ -240,7 +242,7 @@ class DisplayProfile extends Data {
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+            Log::error($e->getMessage(), get_class(), __FUNCTION__);
         
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
@@ -266,7 +268,7 @@ class DisplayProfile extends Data {
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+            Log::error($e->getMessage(), get_class(), __FUNCTION__);
         
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
@@ -294,7 +296,7 @@ class DisplayProfile extends Data {
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+            Log::error($e->getMessage(), get_class(), __FUNCTION__);
         
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));

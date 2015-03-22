@@ -18,6 +18,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\Log;
 use Xibo\Helper\Help;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Theme;
@@ -687,7 +688,7 @@ class datasetDAO extends baseDAO
         $SQL .= "   ON datasetcolumn.DataSetColumnID = datasetdata.DataSetColumnID ";
         $SQL .= sprintf("WHERE datasetcolumn.DataSetID = %d  AND datasetcolumn.DataSetColumnTypeID = 1 ", $dataSetId);
 
-        Debug::LogEntry('audit', $SQL, 'dataset', 'DataSetDataForm');
+        Log::notice($SQL, 'dataset', 'DataSetDataForm');
 
         if (!$maxResult = $db->GetSingleRow($SQL))
         {
@@ -751,7 +752,7 @@ class datasetDAO extends baseDAO
                     $SQL .= "   AND datasetdata.DataSetColumnID = %d ";
                     $SQL = sprintf($SQL, $row, $dataSetColumnId);
 
-                    Debug::LogEntry('audit', $SQL, 'dataset');
+                    Log::notice($SQL, 'dataset');
 
                     if (!$results = $db->query($SQL))
                     {

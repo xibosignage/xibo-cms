@@ -21,6 +21,7 @@
  */
 use Xibo\Helper\Date;
 use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
 
 include_once('modules/3rdparty/emoji.php');
@@ -84,7 +85,7 @@ class Twitter extends Module
             $this->module->settings['templates'][] = json_decode(file_get_contents($template), true);
         }
 
-        Debug::Audit(count($this->module->settings['templates']));
+        Log::Audit(count($this->module->settings['templates']));
     }
 
     /**
@@ -574,11 +575,11 @@ class Twitter extends Module
 
         // Check to see if we have the bearer token already cached
         if (Cache::has('bearer_' . $key)) {
-            Debug::Audit('Bearer Token served from cache');
+            Log::Audit('Bearer Token served from cache');
             return Cache::get('bearer_' . $key);
         }
 
-        Debug::Audit('Bearer Token served from API');
+        Log::Audit('Bearer Token served from API');
 
         // Shame - we will need to get it.
         // and store it.
@@ -617,7 +618,7 @@ class Twitter extends Module
         // Call exec
         if (!$result = curl_exec($curl)) {
             // Log the error
-            Debug::Error('Error contacting Twitter API: ' . curl_error($curl));
+            Log::Error('Error contacting Twitter API: ' . curl_error($curl));
             return false;
         }
 
@@ -625,13 +626,13 @@ class Twitter extends Module
         $outHeaders = curl_getinfo($curl);
 
         if ($outHeaders['http_code'] != 200) {
-            Debug::Error('Twitter API returned ' . $result . ' status. Unable to proceed. Headers = ' . var_export($outHeaders, true));
+            Log::Error('Twitter API returned ' . $result . ' status. Unable to proceed. Headers = ' . var_export($outHeaders, true));
 
             $body = substr($result, $outHeaders['header_size']);
             // See if we can parse the error.
             $body = json_decode($result);
 
-            Debug::Error('Twitter Error: ' . ((isset($body->errors[0])) ? $body->errors[0]->message : 'Unknown Error'));
+            Log::Error('Twitter Error: ' . ((isset($body->errors[0])) ? $body->errors[0]->message : 'Unknown Error'));
 
             return false;
         }
@@ -643,7 +644,7 @@ class Twitter extends Module
         // We have a 200 - therefore we want to think about caching the bearer token
         // First, lets check its a bearer token
         if ($body->token_type != 'bearer') {
-            Debug::Error('Twitter API returned OK, but without a bearer token. ' . var_export($body, true));
+            Log::Error('Twitter API returned OK, but without a bearer token. ' . var_export($body, true));
             return false;
         }
 
@@ -690,7 +691,7 @@ class Twitter extends Module
                 $httpOptions[CURLOPT_PROXYUSERPWD] = Config::GetSetting('PROXY_AUTH');
         }
 
-        Debug::Audit('Calling API with: ' . $url . $queryString);
+        Log::Audit('Calling API with: ' . $url . $queryString);
 
         $curl = curl_init();
         curl_setopt_array($curl, $httpOptions);
@@ -701,16 +702,16 @@ class Twitter extends Module
 
         if ($outHeaders['http_code'] == 0) {
             // Unable to connect
-            Debug::Error('Unable to reach twitter api.');
+            Log::Error('Unable to reach twitter api.');
             return false;
         }
         else if ($outHeaders['http_code'] != 200) {
-            Debug::Error('Twitter API returned ' . $outHeaders['http_code'] . ' status. Unable to proceed. Headers = ' . var_export($outHeaders, true));
+            Log::Error('Twitter API returned ' . $outHeaders['http_code'] . ' status. Unable to proceed. Headers = ' . var_export($outHeaders, true));
 
             // See if we can parse the error.
             $body = json_decode($result);
 
-            Debug::Error('Twitter Error: ' . ((isset($body->errors[0])) ? $body->errors[0]->message : 'Unknown Error'));
+            Log::Error('Twitter Error: ' . ((isset($body->errors[0])) ? $body->errors[0]->message : 'Unknown Error'));
 
             return false;
         }
@@ -756,7 +757,7 @@ class Twitter extends Module
         
         if (!Cache::has($key) || Cache::get($key) == '') {
 
-            Debug::Audit('Querying API for ' . $this->GetOption('searchTerm'));
+            Log::Audit('Querying API for ' . $this->GetOption('searchTerm'));
 
             // We need to search for it
             if (!$token = $this->getToken())
@@ -770,11 +771,11 @@ class Twitter extends Module
             Cache::put($key, $data, $this->GetSetting('cachePeriod'));
         }
         else {
-            Debug::Audit('Served from Cache');
+            Log::Audit('Served from Cache');
             $data = Cache::get($key);
         }
 
-        Debug::Audit(var_export(json_encode($data), true));
+        Log::Audit(var_export(json_encode($data), true));
 
         // Get the template
         $template = $this->getRawNode('template', null);
@@ -906,7 +907,7 @@ class Twitter extends Module
     {
         // Make sure we are set up correctly
         if ($this->GetSetting('apiKey') == '' || $this->GetSetting('apiSecret') == '') {
-            Debug::Error('Twitter Module not configured. Missing API Keys');
+            Log::Error('Twitter Module not configured. Missing API Keys');
             return '';
         }
 

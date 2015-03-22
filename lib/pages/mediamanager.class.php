@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
@@ -116,7 +117,7 @@ class mediamanagerDAO extends baseDAO {
             if (count($module) > 0) {
                 $filterMediaType = $module[0]['Name'];
 
-                Debug::LogEntry('audit', 'Matched module type ' . $filterMediaType, get_class(), __FUNCTION__);
+                Log::notice('Matched module type ' . $filterMediaType, get_class(), __FUNCTION__);
             }
         }
 

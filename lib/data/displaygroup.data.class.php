@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 use Xibo\Entity\User;
+use Xibo\Helper\Log;
 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
@@ -41,7 +42,7 @@ class DisplayGroup extends Data
      */
     public function Add($displayGroup, $isDisplaySpecific, $description = '')
     {
-        Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'Add');
+        Log::notice('IN', 'DisplayGroup', 'Add');
 
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -73,13 +74,13 @@ class DisplayGroup extends Data
 
             $displayGroupID = $dbh->lastInsertId();
             
-            Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'Add');
+            Log::notice('OUT', 'DisplayGroup', 'Add');
 
             return $displayGroupID;
         }
         catch (Exception $e) {
 
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
 
             if (!$this->IsError())
                 $this->SetError(25000, __('Could not add Display Group'));
@@ -97,7 +98,7 @@ class DisplayGroup extends Data
      */
     public function Edit($displayGroupID, $displayGroup, $description)
     {
-        Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'Edit');
+        Log::notice('IN', 'DisplayGroup', 'Edit');
 
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -131,13 +132,13 @@ class DisplayGroup extends Data
                     'displaygroupid' => $displayGroupID
                 ));
             
-            Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'Edit');        
+            Log::notice('OUT', 'DisplayGroup', 'Edit');
                         
             return true;
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
 
             if (!$this->IsError())
                 $this->SetError(25000, __('Could not add Display Group'));
@@ -178,13 +179,13 @@ class DisplayGroup extends Data
                     'displaygroupid' => $displayGroupID
                 ));
 
-            Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'Delete');
+            Log::notice('OUT', 'DisplayGroup', 'Delete');
                         
             return true;
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
 
             if (!$this->IsError())
                 $this->SetError(25015,__('Unable to delete Display Group.'));
@@ -261,7 +262,7 @@ class DisplayGroup extends Data
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
 
             if (!$this->IsError())
                 $this->SetError(25015,__('Unable to delete Display Group.'));
@@ -278,7 +279,7 @@ class DisplayGroup extends Data
      */
     public function Link($displayGroupID, $displayID)
     {
-        Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'Link');
+        Log::notice('IN', 'DisplayGroup', 'Link');
         
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -289,12 +290,12 @@ class DisplayGroup extends Data
                     'displayid' => $displayID
                 ));
 
-            Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'Link');
+            Log::notice('OUT', 'DisplayGroup', 'Link');
         
             return true;
         }
         catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
             return $this->SetError(25005, __('Could not Link Display Group to Display'));
         }
     }
@@ -307,7 +308,7 @@ class DisplayGroup extends Data
      */
     public function Unlink($displayGroupID, $displayID)
     {
-        Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'Unlink');
+        Log::notice('IN', 'DisplayGroup', 'Unlink');
         
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -318,12 +319,12 @@ class DisplayGroup extends Data
                     'displayid' => $displayID
                 ));
 
-            Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'Unlink');
+            Log::notice('OUT', 'DisplayGroup', 'Unlink');
         
             return true;
         }
         catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
             return $this->SetError(25007, __('Could not Unlink Display Group from Display'));
         }
     }
@@ -336,7 +337,7 @@ class DisplayGroup extends Data
      */
     public function EditDisplayGroup($displayID, $display, $description = '')
     {
-        Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'EditDisplayGroup');
+        Log::notice('IN', 'DisplayGroup', 'EditDisplayGroup');
         
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -384,13 +385,13 @@ class DisplayGroup extends Data
                     'description' => $description,
                 ));
             
-            Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'EditDisplayGroup');
+            Log::notice('OUT', 'DisplayGroup', 'EditDisplayGroup');
             
             return true;
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
 
             if (!$this->IsError())
                 $this->SetError(25005, __('Unable to update the DisplayGroup for this Display'));
@@ -407,7 +408,7 @@ class DisplayGroup extends Data
      */
     public function SetDefaultLayout($displayID, $layoutID)
     {
-        Debug::LogEntry('audit', 'Depricated method called.', 'DisplayGroup', 'SetDefaultLayout');
+        Log::notice('Depricated method called.', 'DisplayGroup', 'SetDefaultLayout');
         return true;
     }
 
@@ -418,7 +419,7 @@ class DisplayGroup extends Data
      * @param array $mediaList      The Media to Assign
      */
     public function AssociateFiles($user, $displayGroupId, $mediaList) {
-        Debug::LogEntry('audit', 'IN', get_class(), __FUNCTION__);
+        Log::notice('IN', get_class(), __FUNCTION__);
 
         \Kit::ClassLoader('lkmediadisplaygroup');
         $link = new LkMediaDisplayGroup($this->db);
@@ -453,7 +454,7 @@ class DisplayGroup extends Data
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+            Log::error($e->getMessage(), get_class(), __FUNCTION__);
         
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
@@ -467,7 +468,7 @@ class DisplayGroup extends Data
      * @param int $displayGroupId The Display Group ID
      */
     public function FlagIncomplete($displayGroupId) {
-        Debug::LogEntry('audit', 'IN', get_class(), __FUNCTION__);
+        Log::notice('IN', get_class(), __FUNCTION__);
 
         \Kit::ClassLoader('display');
         $display = new Display($this->db);
@@ -494,7 +495,7 @@ class DisplayGroup extends Data
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));

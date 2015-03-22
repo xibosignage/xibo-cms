@@ -20,6 +20,8 @@
  *
  * A very simple file cache
  */
+use Xibo\Helper\Log;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 class Cache {
@@ -67,19 +69,19 @@ class Cache {
         if ((isset(self::$_data[$key]) && self::$_data[$key] != null)) {
             // If the key has expired remove it
             if (self::$_data[$key]['expires'] < time()) {
-                Debug::Audit($key . ' Expired: ' . self::$_data[$key]['expires']);
+                Log::Audit($key . ' Expired: ' . self::$_data[$key]['expires']);
                 
                 // Remove it
                 self::remove($key);
                 return false;
             }
 
-            Debug::Audit($key . ' present and in date');
+            Log::Audit($key . ' present and in date');
 
             return true;
         }
 
-        Debug::Audit($key . ' not present');
+        Log::Audit($key . ' not present');
         return false;
     }
 

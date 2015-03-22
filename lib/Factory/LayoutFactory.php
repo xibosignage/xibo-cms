@@ -433,7 +433,7 @@ class LayoutFactory
             if (is_array($sortOrder))
                 $sql .= 'ORDER BY ' . implode(',', $sortOrder);
 
-            \Debug::sql($sql, $params);
+            \Xibo\Helper\Log::sql($sql, $params);
 
             $sth = $dbh->prepare($sql);
             $sth->execute($params);
@@ -470,7 +470,7 @@ class LayoutFactory
         }
         catch (\Exception $e) {
 
-            \Debug::Error($e->getMessage());
+            \Xibo\Helper\Log::Error($e->getMessage());
 
             throw new NotFoundException(__('Layout Not Found'));
         }

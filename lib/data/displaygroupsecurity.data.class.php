@@ -18,6 +18,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\Log;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 include_once('lib/data/schedule.data.class.php');
@@ -31,7 +33,7 @@ class DisplayGroupSecurity extends Data {
 	 */
 	public function Link($displayGroupId, $groupId, $view, $edit, $del)
 	{
-		Debug::LogEntry('audit', 'IN', 'DisplayGroupSecurity', 'Link');
+		Log::notice('IN', 'DisplayGroupSecurity', 'Link');
 		
 		try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -45,13 +47,13 @@ class DisplayGroupSecurity extends Data {
 					'del' => $del
 				));
 			
-			Debug::LogEntry('audit', 'OUT', 'DisplayGroupSecurity', 'Link');
+			Log::notice('OUT', 'DisplayGroupSecurity', 'Link');
 			
 			return true;
 		}
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
 
             if (!$this->IsError())
                 $this->SetError(25005, __('Could not Link Display Group to User Group'));
@@ -68,7 +70,7 @@ class DisplayGroupSecurity extends Data {
 	 */
 	public function Unlink($displayGroupId, $groupId)
 	{
-		Debug::LogEntry('audit', 'IN', 'DisplayGroupSecurity', 'Unlink');
+		Log::notice('IN', 'DisplayGroupSecurity', 'Unlink');
 		
 		try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -79,13 +81,13 @@ class DisplayGroupSecurity extends Data {
 					'groupid' => $groupId
 				));
 				
-			Debug::LogEntry('audit', 'OUT', 'DisplayGroupSecurity', 'Unlink');
+			Log::notice('OUT', 'DisplayGroupSecurity', 'Unlink');
 			
 			return true;
 		}
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
 
             if (!$this->IsError())
                 $this->SetError(25007, __('Could not Unlink Display Group from User Group'));
@@ -102,7 +104,7 @@ class DisplayGroupSecurity extends Data {
      */
     public function UnlinkAll($displayGroupId)
     {
-        Debug::LogEntry('audit', 'IN', 'DataSetGroupSecurity', 'Unlink');
+        Log::notice('IN', 'DataSetGroupSecurity', 'Unlink');
         
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -112,13 +114,13 @@ class DisplayGroupSecurity extends Data {
 					'displaygroupid' => $displayGroupId
 				));
 
-	        Debug::LogEntry('audit', 'OUT', 'DataSetGroupSecurity', 'Unlink');
+	        Log::notice('OUT', 'DataSetGroupSecurity', 'Unlink');
 
 	        return true;
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
 
             if (!$this->IsError())
                 $this->SetError(25007, __('Could not Unlink All Display Groups from User Group'));

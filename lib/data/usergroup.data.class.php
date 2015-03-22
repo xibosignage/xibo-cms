@@ -18,6 +18,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\Log;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 class UserGroup extends Data
@@ -56,7 +58,7 @@ class UserGroup extends Data
 
             $SQL .= 'ORDER BY joinedGroup.IsEveryone DESC, joinedGroup.IsUserSpecific, joinedGroup.`Group`; ';
 
-            Debug::sql($SQL, $params);
+            Log::sql($SQL, $params);
         
             $sth = $dbh->prepare($SQL);
             $sth->execute($params);
@@ -65,7 +67,7 @@ class UserGroup extends Data
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
@@ -83,7 +85,7 @@ class UserGroup extends Data
      */
     public function Add($group, $isUserSpecific)
     {
-        Debug::LogEntry('audit', 'IN', 'UserGroup', 'Add');
+        Log::notice('IN', 'UserGroup', 'Add');
         
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -100,13 +102,13 @@ class UserGroup extends Data
 
             $groupID = $dbh->lastInsertId();
     
-            Debug::LogEntry('audit', 'OUT', 'UserGroup', 'Add');
+            Log::notice('OUT', 'UserGroup', 'Add');
     
             return $groupID;  
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 return $this->SetError(25000, __('Could not add User Group'));
@@ -123,7 +125,7 @@ class UserGroup extends Data
      */
     public function Edit($userGroupID, $userGroup)
     {
-        Debug::LogEntry('audit', 'IN', 'UserGroup', 'Edit');
+        Log::notice('IN', 'UserGroup', 'Edit');
 
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -141,13 +143,13 @@ class UserGroup extends Data
                     'groupid' => $userGroupID
                 ));
     
-            Debug::LogEntry('audit', 'OUT', 'UserGroup', 'Edit');
+            Log::notice('OUT', 'UserGroup', 'Edit');
     
             return true;  
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 return $this->SetError(25005, __('Could not edit User Group'));
@@ -163,7 +165,7 @@ class UserGroup extends Data
      */
     public function Delete($userGroupId)
     {
-        Debug::Audit('IN: ' . $userGroupId);
+        Log::Audit('IN: ' . $userGroupId);
 
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -204,7 +206,7 @@ class UserGroup extends Data
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 return $this->SetError(25015,__('Unable to delete User Group.'));
@@ -221,7 +223,7 @@ class UserGroup extends Data
      */
     public function Link($userGroupID, $userID)
     {
-        Debug::LogEntry('audit', 'IN', 'UserGroup', 'Link');
+        Log::notice('IN', 'UserGroup', 'Link');
 
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -232,13 +234,13 @@ class UserGroup extends Data
                     'userid' => $userID
                 ));
 
-            Debug::LogEntry('audit', 'OUT', 'UserGroup', 'Link');
+            Log::notice('OUT', 'UserGroup', 'Link');
     
             return true;  
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(25005, __('Could not Link User Group to User'));
@@ -255,7 +257,7 @@ class UserGroup extends Data
      */
     public function Unlink($userGroupID, $userID)
     {
-        Debug::LogEntry('audit', 'IN', 'UserGroup', 'Unlink');
+        Log::notice('IN', 'UserGroup', 'Unlink');
         
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -266,13 +268,13 @@ class UserGroup extends Data
                     'userid' => $userID
                 ));
         
-            Debug::LogEntry('audit', 'OUT', 'UserGroup', 'Unlink');
+            Log::notice('OUT', 'UserGroup', 'Unlink');
     
             return true;  
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(25007, __('Could not Unlink User from User Group'));
@@ -287,7 +289,7 @@ class UserGroup extends Data
      */
     public function UnlinkAllUsers($userGroupId)
     {
-        Debug::LogEntry('audit', 'IN', 'UserGroup', 'UnlinkAllUsers');
+        Log::notice('IN', 'UserGroup', 'UnlinkAllUsers');
 
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -297,13 +299,13 @@ class UserGroup extends Data
                     'groupid' => $userGroupID
                 ));
 
-            Debug::LogEntry('audit', 'OUT', 'UserGroup', 'UnlinkAllUsers');
+            Log::notice('OUT', 'UserGroup', 'UnlinkAllUsers');
     
             return true;  
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(25007, __('Could not Unlink all Users from User Group'));
@@ -318,7 +320,7 @@ class UserGroup extends Data
      */
     public function UnlinkAllGroups($userId)
     {
-        Debug::LogEntry('audit', 'IN', 'UserGroup', 'UnlinkAllGroups');
+        Log::notice('IN', 'UserGroup', 'UnlinkAllGroups');
 
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -328,13 +330,13 @@ class UserGroup extends Data
                     'userid' => $userId
                 ));
 
-            Debug::LogEntry('audit', 'OUT', 'UserGroup', 'UnlinkAllGroups');
+            Log::notice('OUT', 'UserGroup', 'UnlinkAllGroups');
 
             return true;  
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(25007, __('Could not Unlink Groups from User'));
@@ -351,7 +353,7 @@ class UserGroup extends Data
      */
     public function EditUserGroup($userID, $userName)
     {
-        Debug::LogEntry('audit', 'IN', 'UserGroup', 'EditUserGroup');
+        Log::notice('IN', 'UserGroup', 'EditUserGroup');
 
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -395,13 +397,13 @@ class UserGroup extends Data
                     throw new Exception("Error Processing Request", 1);
             }
             
-            Debug::LogEntry('audit', 'OUT', 'UserGroup', 'EditUserGroup');
+            Log::notice('OUT', 'UserGroup', 'EditUserGroup');
     
             return true;  
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
@@ -442,7 +444,7 @@ class UserGroup extends Data
             return $types;
         }
         catch (Exception $e) {
-            Debug::Error($e->getMessage());
+            Log::Error($e->getMessage());
             throw $e;
         }
     }

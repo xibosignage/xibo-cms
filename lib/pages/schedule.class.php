@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 use Xibo\Helper\Date;
+use Xibo\Helper\Log;
 use Xibo\Helper\Help;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Theme;
@@ -133,7 +134,7 @@ class scheduleDAO extends baseDAO {
                     'end' => $end
                 );
 
-            Debug::sql($SQL, $params);
+            Log::sql($SQL, $params);
         
             $sth = $dbh->prepare($SQL);
             $sth->execute($params);
@@ -199,7 +200,7 @@ class scheduleDAO extends baseDAO {
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+            Log::error($e->getMessage(), get_class(), __FUNCTION__);
         
             die(json_encode(array('success' => 0, 'error' => __('Unable to get events'))));
         }
@@ -398,7 +399,7 @@ class scheduleDAO extends baseDAO {
         $displayOrder = \Kit::GetParam('DisplayOrder', _POST, _INT);
         $isNextButton = \Kit::GetParam('next', _GET, _BOOL, false);
 
-        Debug::Audit('Times received are: FromDt=' . $fromDT . '. ToDt=' . $toDT . '. RepeatToDt=' . $repeatToDt);
+        Log::Audit('Times received are: FromDt=' . $fromDT . '. ToDt=' . $toDT . '. RepeatToDt=' . $repeatToDt);
 
         // Convert our dates
         $fromDT = Date::getTimestampFromString($fromDT);
@@ -407,7 +408,7 @@ class scheduleDAO extends baseDAO {
         if ($repeatToDt != '')
             $repeatToDt = Date::getTimestampFromString($repeatToDt);
 
-        Debug::Audit('Converted Times received are: FromDt=' . $fromDT . '. ToDt=' . $toDT . '. RepeatToDt=' . $repeatToDt);
+        Log::Audit('Converted Times received are: FromDt=' . $fromDT . '. ToDt=' . $toDT . '. RepeatToDt=' . $repeatToDt);
         
         // Validate layout
         if ($campaignId == 0)
@@ -472,7 +473,7 @@ class scheduleDAO extends baseDAO {
         $SQL.= " WHERE 1=1 ";
         $SQL.= sprintf("   AND schedule.EventID = %d", $eventID);
         
-        Debug::LogEntry('audit', $SQL);
+        Log::notice($SQL);
 
         if (!$result = $db->query($SQL))
         {
@@ -688,7 +689,7 @@ class scheduleDAO extends baseDAO {
         if ($repeatToDt != '')
             $repeatToDt = Date::getTimestampFromString($repeatToDt);
 
-        Debug::Audit('Times received are: FromDt=' . $fromDT . '. ToDt=' . $toDT . '. RepeatToDt=' . $repeatToDt);
+        Log::Audit('Times received are: FromDt=' . $fromDT . '. ToDt=' . $toDT . '. RepeatToDt=' . $repeatToDt);
 
         // Validate layout
         if ($campaignId == 0)

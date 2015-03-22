@@ -18,6 +18,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\Log;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 require_once("3rdparty/php-gettext/streams.php");
@@ -89,7 +91,7 @@ class TranslationEngine
         if ($foundLanguage == '') {
             // Check the default
             if (!in_array($default . '.mo', $supportedLanguages)) {
-                Debug::Info('Resolved language ' . $default . ' not available.');
+                Log::Info('Resolved language ' . $default . ' not available.');
                 return;
             }
 
@@ -99,7 +101,7 @@ class TranslationEngine
 
         // Debug::LogEntry('audit', 'Creating new file streamer for '. $localeDir . '/' . $foundLanguage . '.mo', 'TranslationEngine', 'InitLocal');
         if (!$stream = new CachedFileReader($localeDir . '/' . $foundLanguage . '.mo')) {
-            Debug::Info('Resolved language ' . $foundLanguage . ' not available.');
+            Log::Info('Resolved language ' . $foundLanguage . ' not available.');
             $transEngine = false;
             return;
         }

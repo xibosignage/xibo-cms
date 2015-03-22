@@ -19,6 +19,7 @@
  * along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
  */
 use Xibo\Helper\Date;
+use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
@@ -191,7 +192,7 @@ class statusdashboardDAO extends baseDAO {
                 $latestNews = array();
 
                 if ($feed->error()) {
-                    Debug::LogEntry('audit', 'Feed Error: ' . $feed->error(), get_class(), __FUNCTION__);
+                    Log::notice('Feed Error: ' . $feed->error(), get_class(), __FUNCTION__);
                 }
                 else {
                     // Store our formatted items
@@ -212,7 +213,7 @@ class statusdashboardDAO extends baseDAO {
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             // Show the error in place of the bandwidth chart
             Theme::Set('widget-error', 'Unable to get widget details');

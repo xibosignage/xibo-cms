@@ -18,6 +18,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\Log;
 use Xibo\Helper\Help;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Theme;
@@ -841,7 +842,7 @@ class userDAO extends baseDAO {
         $newPermissions = array();
         array_map(function ($string) use (&$newPermissions) { $array = explode('_', $string); return $newPermissions[$array[0]][$array[1]] = 1; }, $groupIds);
 
-        Debug::Audit(var_export($newPermissions, true));
+        Log::Audit(var_export($newPermissions, true));
 
         // List of groupIds with view, edit and del assignments
         foreach ($permissions as $row) {
@@ -862,7 +863,7 @@ class userDAO extends baseDAO {
         $cascade = \Kit::GetParam('cascade', _POST, _CHECKBOX);
 
         if ($cascade) {
-            Debug::Audit('Permissions to push down: ' . var_export($newPermissions, true));
+            Log::Audit('Permissions to push down: ' . var_export($newPermissions, true));
 
             // TODO: Cascade permissions
         }

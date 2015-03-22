@@ -18,6 +18,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\Log;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 class Maintenance extends Data
@@ -56,7 +58,7 @@ class Maintenance extends Data
             return $this->SetError(__('Database dump failed.'));
 
         // Zippy
-        Debug::Audit($zipFile);
+        Log::Audit($zipFile);
         $zip = new ZipArchive();
         $zip->open($zipFile, ZIPARCHIVE::OVERWRITE);
         $zip->addFile($fileNameStructure, 'structure.dump');
@@ -116,7 +118,7 @@ class Maintenance extends Data
         // Push the file into msqldump
         exec('mysql --user=' . $dbuser . ' --password=' . $dbpass . ' ' . $dbname . ' < ' . escapeshellarg($fileName) . ' ');
 
-        Debug::LogEntry('audit', 'mysql --user=' . $dbuser . ' --password=' . $dbpass . ' ' . $dbname . ' < ' . escapeshellarg($fileName) . ' ' );
+        Log::notice('mysql --user=' . $dbuser . ' --password=' . $dbpass . ' ' . $dbname . ' < ' . escapeshellarg($fileName) . ' ' );
 
         return true;
     }
@@ -128,14 +130,14 @@ class Maintenance extends Data
         $library = rtrim($library, '/') . '/';
         $mediaObject = new Media();
 
-        Debug::Audit('Library Location: ' . $library);
+        Log::Audit('Library Location: ' . $library);
 
         // Dump the files in the temp folder
         foreach (scandir($library . 'temp') as $item) {
             if ($item == '.' || $item == '..')
                 continue;
 
-            Debug::Audit('Deleting temp file: ' . $item);
+            Log::Audit('Deleting temp file: ' . $item);
 
             unlink($library . 'temp' . DIRECTORY_SEPARATOR . $item);
         }
@@ -180,7 +182,7 @@ class Maintenance extends Data
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
@@ -207,19 +209,19 @@ class Maintenance extends Data
             // Is this file in the system anywhere?
             if (!array_key_exists($file, $media)) {
                 // Totally missing
-                Debug::Audit('Deleting file: ' . $file);
+                Log::Audit('Deleting file: ' . $file);
                 
                 // If not, delete it
                 $mediaObject->DeleteMediaFile($file);
             }
             else if (array_key_exists($file, $unusedRevisions)) {
                 // It exists but isn't being used any more
-                Debug::Audit('Deleting unused revision media: ' . $media[$file]['mediaid']);
+                Log::Audit('Deleting unused revision media: ' . $media[$file]['mediaid']);
                 $mediaObject->Delete($media[$file]['mediaid']);
             }
             else if (array_key_exists($file, $unusedMedia)) {
                 // It exists but isn't being used any more
-                Debug::Audit('Deleting unused media: ' . $media[$file]['mediaid']);
+                Log::Audit('Deleting unused media: ' . $media[$file]['mediaid']);
                 $mediaObject->Delete($media[$file]['mediaid']);
             }
         }

@@ -19,6 +19,8 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+use Xibo\Helper\Log;
+
 define('_SESSION', "session");
 define('_POST', "post");
 define('_GET', "get");
@@ -534,7 +536,7 @@ class Kit
      */
     public static function SendEmail($to, $from, $subject, $message)
     {
-        Debug::Audit('To: ' . $to . '. Subject: ' . $subject);
+        Log::Audit('To: ' . $to . '. Subject: ' . $subject);
 
         $headers  = sprintf("From: %s\r\nX-Mailer: php", $from);
         return mail($to, $subject, $message, $headers);
@@ -638,7 +640,7 @@ class Kit
         {
             unset($_SESSION[$tokenName]);
 
-            Debug::LogEntry('error', "Form token incorrect from: ". $_SERVER['REMOTE_ADDR']. " with token [" . $_POST[$tokenName] . "] for session_id [" . session_id() . ']');
+            Log::error("Form token incorrect from: ". $_SERVER['REMOTE_ADDR']. " with token [" . $_POST[$tokenName] . "] for session_id [" . session_id() . ']');
             return false;
         }
     }
@@ -711,22 +713,22 @@ class Kit
             case JSON_ERROR_NONE:
                 return $encoded;
             case JSON_ERROR_DEPTH:
-                Debug::Audit('Maximum stack depth exceeded');
+                Log::Audit('Maximum stack depth exceeded');
                 return false;
             case JSON_ERROR_STATE_MISMATCH:
-                Debug::Audit('Underflow or the modes mismatch');
+                Log::Audit('Underflow or the modes mismatch');
                 return false;
             case JSON_ERROR_CTRL_CHAR:
-                Debug::Audit('Unexpected control character found');
+                Log::Audit('Unexpected control character found');
                 return false;
             case JSON_ERROR_SYNTAX:
-                Debug::Audit('Syntax error, malformed JSON');
+                Log::Audit('Syntax error, malformed JSON');
                 return false;
             case JSON_ERROR_UTF8:
                 $clean = \Kit::utf8ize($mixed);
                 return \Kit::jsonEncode($clean);
             default:
-                Debug::Audit('Unknown error');
+                Log::Audit('Unknown error');
                 return false;
         }
     }

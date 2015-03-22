@@ -20,6 +20,7 @@
  */
 use Xibo\Helper\Date;
 use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
 
 class ticker extends Module
@@ -49,7 +50,7 @@ class ticker extends Module
             $this->module->settings['templates'][] = json_decode(file_get_contents($template), true);
         }
 
-        Debug::Audit(count($this->module->settings['templates']));
+        Log::Audit(count($this->module->settings['templates']));
     }
     
     /**
@@ -764,7 +765,7 @@ class ticker extends Module
         $matches = '';
         preg_match_all('/\[.*?\]/', $text, $matches);
 
-        Debug::Audit('Loading SimplePie to handle RSS parsing.' . urldecode($this->GetOption('uri')) . '. Will substitute items with ' . $text);
+        Log::Audit('Loading SimplePie to handle RSS parsing.' . urldecode($this->GetOption('uri')) . '. Will substitute items with ' . $text);
         
         // Use SimplePie to get the feed
         include_once('3rdparty/simplepie/autoloader.php');
@@ -794,7 +795,7 @@ class ticker extends Module
         $dateFormat = $this->GetOption('dateFormat');
 
         if ($feed->error()) {
-            Debug::LogEntry('audit', 'Feed Error: ' . $feed->error());
+            Log::notice('Feed Error: ' . $feed->error());
             return array();
         }
 
@@ -824,7 +825,7 @@ class ticker extends Module
                         list($tag, $namespace) = explode('|', $sub);
 
                     // What are we looking at
-                    Debug::Audit('Namespace: ' . str_replace(']', '', $namespace) . '. Tag: ' . str_replace('[', '', $tag) . '. ');
+                    Log::Audit('Namespace: ' . str_replace(']', '', $namespace) . '. Tag: ' . str_replace('[', '', $tag) . '. ');
 
                     // Are we an image place holder?
                     if (strstr($namespace, 'image') != false) {
@@ -863,7 +864,7 @@ class ticker extends Module
                     else {
                         $tags = $item->get_item_tags(str_replace(']', '', $namespace), str_replace('[', '', $tag));
                         
-                        Debug::LogEntry('audit', 'Tags:' . var_export($tags, true));
+                        Log::notice('Tags:' . var_export($tags, true));
 
                         // If we find some tags then do the business with them
                         if ($tags != NULL) {
@@ -946,7 +947,7 @@ class ticker extends Module
         $filter = $this->GetOption('filter');
         $ordering = $this->GetOption('ordering');
 
-        Debug::LogEntry('audit', 'Then template for each row is: ' . $text);
+        Log::notice('Then template for each row is: ' . $text);
 
         // Set an expiry time for the media
         $media = new Media();
@@ -961,7 +962,7 @@ class ticker extends Module
         
         foreach ($matches[1] as $match) {
             // Get the column id's we are interested in
-            Debug::LogEntry('audit', 'Matched column: ' . $match);
+            Log::notice('Matched column: ' . $match);
 
             $col = explode('|', $match);
             $columnIds[] = $col[1];
@@ -979,7 +980,7 @@ class ticker extends Module
             $columnMap[$col['Text']] = $col;
         }
 
-        Debug::Audit(var_export($columnMap, true));
+        Log::Audit(var_export($columnMap, true));
 
         $items = array();
 

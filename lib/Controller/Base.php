@@ -93,6 +93,17 @@ class Base
     }
 
     /**
+     * Get Flash Message
+     * @param $key
+     * @return string
+     */
+    protected function getFlash($key)
+    {
+        $template = $this->app->view()->get('flash');
+        return isset($template[$key]) ? $template[$key] : '';
+    }
+
+    /**
      * Get param
      * @param $param
      * @param $default

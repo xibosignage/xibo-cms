@@ -18,6 +18,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\Log;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 class DataSet extends Data
@@ -37,7 +39,7 @@ class DataSet extends Data
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+            Log::error($e->getMessage(), get_class(), __FUNCTION__);
         
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
@@ -90,12 +92,12 @@ class DataSet extends Data
 
             $id = $dbh->lastInsertId();
 
-            Debug::LogEntry('audit', 'Complete', 'DataSet', 'Add');
+            Log::notice('Complete', 'DataSet', 'Add');
 
             return $id;
         }
         catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
             return $this->SetError(25005, __('Could not add DataSet'));
         }
     }
@@ -147,7 +149,7 @@ class DataSet extends Data
             return true;
         }
         catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
             return $this->SetError(25005, sprintf(__('Cannot edit dataset %s'), $dataSet));
         }
     }
@@ -184,7 +186,7 @@ class DataSet extends Data
         }
         catch (Exception $e) {
 
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
 
             if (!$this->IsError())
                 $this->SetError(25005, sprintf(__('Cannot edit dataset %s'), $dataSet));
@@ -207,7 +209,7 @@ class DataSet extends Data
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
@@ -230,7 +232,7 @@ class DataSet extends Data
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
@@ -254,7 +256,7 @@ class DataSet extends Data
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
@@ -281,7 +283,7 @@ class DataSet extends Data
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
@@ -301,13 +303,13 @@ class DataSet extends Data
 
             $updateDate = $sth->fetchColumn(0);
           
-            Debug::LogEntry('audit', sprintf('Returning update date %s for DataSetId %d', $updateDate, $dataSetId), 'dataset', 'GetLastDataEditTime');
+            Log::notice(sprintf('Returning update date %s for DataSetId %d', $updateDate, $dataSetId), 'dataset', 'GetLastDataEditTime');
 
             return $updateDate;
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
@@ -441,7 +443,7 @@ class DataSet extends Data
 
                     // Check allowable
                     if (!in_array($sanitized, $allowedOrderCols)) {
-                        Debug::Info('Disallowed column: ' . $sanitized);
+                        Log::Info('Disallowed column: ' . $sanitized);
                         continue;
                     }
 
@@ -474,7 +476,7 @@ class DataSet extends Data
                 $SQL .= sprintf(' LIMIT %d, %d ', $lowerLimit, $upperLimit);
             }
     
-            Debug::Audit($SQL . ' ' . var_export($params, true));
+            Log::Audit($SQL . ' ' . var_export($params, true));
             $sth = $dbh->prepare($SQL);
             //$sth->debugDumpParams();
             $sth->execute($params);
@@ -485,7 +487,7 @@ class DataSet extends Data
         }
         catch (Exception $e) {
             
-            Debug::Error($e->getMessage());
+            Log::Error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
@@ -505,7 +507,7 @@ class DataSet extends Data
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
 
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
@@ -525,7 +527,7 @@ class DataSet extends Data
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
 
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));

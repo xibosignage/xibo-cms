@@ -1,4 +1,6 @@
-<?php 
+<?php
+
+use Xibo\Helper\Log;
 
 require_once('3rdparty/jquery-file-upload/UploadHandler.php');
 
@@ -15,7 +17,7 @@ class XiboUploadHandler extends UploadHandler
         if ($name == '')
             $name = $file->name;
 
-        Debug::Audit('Upload complete for name: ' . $file->name . '. Name: ' . $name . '.');
+        Log::Audit('Upload complete for name: ' . $file->name . '. Name: ' . $name . '.');
 
         // Upload and Save
         try {
@@ -38,7 +40,7 @@ class XiboUploadHandler extends UploadHandler
 
             // Are we assigning to a Playlist?
             if ($this->options['playlistId'] != 0) {
-                Debug::Audit('Assigning uploaded media to playlistId ' . $this->options['playlistId']);
+                Log::Audit('Assigning uploaded media to playlistId ' . $this->options['playlistId']);
 
                 // Get the Playlist
                 $playlist = \Xibo\Factory\PlaylistFactory::getById($this->options['playlistId']);

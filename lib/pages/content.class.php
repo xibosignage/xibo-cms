@@ -18,6 +18,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\Log;
 use Xibo\Helper\Help;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Theme;
@@ -460,7 +461,7 @@ class contentDAO extends baseDAO {
     {
         $count = 0;
 
-        Debug::LogEntry('audit', sprintf('Replacing mediaid %s with mediaid %s in all layouts', $oldMediaId, $newMediaId), 'module', 'ReplaceMediaInAllLayouts');
+        Log::notice(sprintf('Replacing mediaid %s with mediaid %s in all layouts', $oldMediaId, $newMediaId), 'module', 'ReplaceMediaInAllLayouts');
 
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -484,7 +485,7 @@ class contentDAO extends baseDAO {
                 if (count($results) <= 0)
                     continue;
 
-                Debug::LogEntry('audit', sprintf('%d linked media items for layoutid %d', count($results), $layoutId), 'module', 'ReplaceMediaInAllLayouts');
+                Log::notice(sprintf('%d linked media items for layoutid %d', count($results), $layoutId), 'module', 'ReplaceMediaInAllLayouts');
 
                 // Create a region object for later use (new one each time)
                 $layout = new Layout();
@@ -499,7 +500,7 @@ class contentDAO extends baseDAO {
 
                     if ($regionId == 'background') {
 
-                        Debug::Audit('Replacing background image');
+                        Log::Audit('Replacing background image');
 
                         if (!$replaceBackgroundImages)
                             continue;
@@ -518,12 +519,12 @@ class contentDAO extends baseDAO {
                             continue;
 
                         // Create a new media node use it to swap the nodes over
-                        Debug::LogEntry('audit', 'Creating new module with MediaID: ' . $newMediaId . ' LayoutID: ' . $layoutId . ' and RegionID: ' . $regionId, 'region', 'ReplaceMediaInAllLayouts');
+                        Log::notice('Creating new module with MediaID: ' . $newMediaId . ' LayoutID: ' . $layoutId . ' and RegionID: ' . $regionId, 'region', 'ReplaceMediaInAllLayouts');
                         try {
                             $module = ModuleFactory::createForMedia($type, $newMediaId, $this->db, $this->user);
                         }
                         catch (Exception $e) {
-                            Debug::Error($e->getMessage());
+                            Log::Error($e->getMessage());
                             return false;
                         }
 
@@ -551,7 +552,7 @@ class contentDAO extends baseDAO {
         }
         catch (Exception $e) {
 
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
 
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
@@ -559,7 +560,7 @@ class contentDAO extends baseDAO {
             return false;
         }
 
-        Debug::LogEntry('audit', sprintf('Replaced media in %d layouts', $count), 'module', 'ReplaceMediaInAllLayouts');
+        Log::notice(sprintf('Replaced media in %d layouts', $count), 'module', 'ReplaceMediaInAllLayouts');
     }
 	
     /**
@@ -659,7 +660,7 @@ class contentDAO extends baseDAO {
     {
         $db =& $this->db;
 
-        Debug::LogEntry('audit', 'Uploading a file', 'Library', 'FileUpload');
+        Log::notice('Uploading a file', 'Library', 'FileUpload');
 
         \Kit::ClassLoader('file');
         $fileObject = new File($db);
@@ -668,7 +669,7 @@ class contentDAO extends baseDAO {
         // Check we got a valid file
         if (isset($_FILES['media_file']) && is_uploaded_file($_FILES['media_file']['tmp_name']) && $_FILES['media_file']['error'] == 0)
         {
-            Debug::LogEntry('audit', 'Valid Upload', 'Library', 'FileUpload');
+            Log::notice('Valid Upload', 'Library', 'FileUpload');
 
             // Directory location
             $libraryFolder  = Config::GetSetting('LIBRARY_LOCATION');
@@ -681,11 +682,11 @@ class contentDAO extends baseDAO {
             File::EnsureLibraryExists();
 
             // Save the FILE
-            Debug::LogEntry('audit', 'Saving the file to: ' . $fileLocation, 'FileUpload');
+            Log::notice('Saving the file to: ' . $fileLocation, 'FileUpload');
 
             move_uploaded_file($_FILES['media_file']['tmp_name'], $fileLocation);
 
-            Debug::LogEntry('audit', 'Upload Success', 'FileUpload');
+            Log::notice('Upload Success', 'FileUpload');
         }
         else
         {
@@ -693,7 +694,7 @@ class contentDAO extends baseDAO {
             $fileName   = 'Error';
             $fileId     = 0;
             
-            Debug::LogEntry('audit', 'Error uploading the file. Error Number: ' . $error , 'FileUpload');
+            Log::notice('Error uploading the file. Error Number: ' . $error , 'FileUpload');
         }
 
         $complete_page = <<<HTML
@@ -720,8 +721,8 @@ HTML;
 
         echo $complete_page;
 
-        Debug::LogEntry("audit", $complete_page, "FileUpload");
-        Debug::LogEntry("audit", "[OUT]", "FileUpload");
+        Log::notice("audit", $complete_page, "FileUpload");
+        Log::notice("audit", "[OUT]", "FileUpload");
         exit;
     }
 

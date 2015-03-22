@@ -23,6 +23,7 @@ include_once('modules/3rdparty/forecast.php');
 use Forecast\Forecast;
 use Xibo\Helper\Date;
 use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
 
 class ForecastIo extends Module
@@ -117,7 +118,7 @@ class ForecastIo extends Module
             $this->module->settings['templates'][] = json_decode(file_get_contents($template), true);
         }
 
-        Debug::Audit(count($this->module->settings['templates']));
+        Log::Audit(count($this->module->settings['templates']));
     }
     
     /**
@@ -586,7 +587,7 @@ class ForecastIo extends Module
         $key = md5($defaultLat . $defaultLong . 'null' . implode('.', $apiOptions));
 
         if (!Cache::has($key)) {
-            Debug::LogEntry('audit', 'Getting Forecast from the API', $this->getModuleType(), __FUNCTION__);
+            Log::notice('Getting Forecast from the API', $this->getModuleType(), __FUNCTION__);
             if (!$data = $forecast->get($defaultLat, $defaultLong, null, $apiOptions)) {
                 return false;
             }
@@ -598,7 +599,7 @@ class ForecastIo extends Module
             Cache::put($key, $data, $cacheDuration);
         }
         else {
-            Debug::LogEntry('audit', 'Getting Forecast from the Cache with key: ' . $key, $this->getModuleType(), __FUNCTION__);
+            Log::notice('Getting Forecast from the Cache with key: ' . $key, $this->getModuleType(), __FUNCTION__);
             $data = Cache::get($key);
         }
 

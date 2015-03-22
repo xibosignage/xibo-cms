@@ -18,6 +18,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\Log;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
  
 class Schedule extends Data
@@ -38,7 +40,7 @@ class Schedule extends Data
      */
     public function Add($displayGroupIDs, $fromDT, $toDT, $campaignId, $recType, $recDetail, $recToDT, $isPriority, $userID, $displayOrder = 0)
     {
-        Debug::LogEntry('audit', 'IN', 'Schedule', 'Add');
+        Log::notice('IN', 'Schedule', 'Add');
         
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -117,7 +119,7 @@ class Schedule extends Data
                     $t_start_temp   = $fromDT;
                     $t_end_temp     = $toDT;
                     
-                    Debug::LogEntry('audit', sprintf('Recurrence detected until %d. Recurrence period is %s and interval is %s.', $recToDT, $recDetail, $recType), 'Schedule', 'Add');
+                    Log::notice(sprintf('Recurrence detected until %d. Recurrence period is %s and interval is %s.', $recToDT, $recDetail, $recType), 'Schedule', 'Add');
                     
                     //loop until we have added the recurring events for the schedule
                     while ($t_start_temp < $recToDT) 
@@ -169,13 +171,13 @@ class Schedule extends Data
             $displayObject = new Display();
             $displayObject->NotifyDisplays($campaignId);
             
-            Debug::LogEntry('audit', 'OUT', 'Schedule', 'Add');
+            Log::notice('OUT', 'Schedule', 'Add');
             
             return true;  
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(25001, __('Could not INSERT a new Schedule'));
@@ -201,7 +203,7 @@ class Schedule extends Data
      */
     public function Edit($eventID, $displayGroupIDs, $fromDT, $toDT, $campaignId, $rec_type, $rec_detail, $recToDT, $isPriority, $userid, $displayOrder)
     {
-        Debug::LogEntry('audit', 'IN', 'Schedule', 'Edit');
+        Log::notice('IN', 'Schedule', 'Edit');
 
         // Cant have a 0 increment as it creates a loop
         if ($rec_detail == 0)
@@ -218,7 +220,7 @@ class Schedule extends Data
         if (!$this->Add($displayGroupIDs, $fromDT, $toDT, $campaignId, $rec_type, $rec_detail, $recToDT, $isPriority, $userid, $displayOrder))
             return false;
         
-        Debug::LogEntry('audit', 'OUT', 'Schedule', 'Edit');
+        Log::notice('OUT', 'Schedule', 'Edit');
         
         return true;
     }
@@ -230,7 +232,7 @@ class Schedule extends Data
      */
     public function Delete($eventID)
     {
-        Debug::LogEntry('audit', 'IN', 'Schedule', 'Delete');
+        Log::notice('IN', 'Schedule', 'Delete');
         
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -244,13 +246,13 @@ class Schedule extends Data
                     'eventid' => $eventID
                 ));
                 
-            Debug::LogEntry('audit', 'OUT', 'Schedule', 'Delete');
+            Log::notice('OUT', 'Schedule', 'Delete');
             
             return true;  
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(25016,__('Unable to delete schedule record for this Event.'));
@@ -272,7 +274,7 @@ class Schedule extends Data
      */
     public function AddDetail($displayGroupID, $fromDT, $toDT, $userID, $eventID)
     {
-        Debug::LogEntry('audit', 'IN', 'Schedule', 'AddDetail');
+        Log::notice('IN', 'Schedule', 'AddDetail');
         
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -309,13 +311,13 @@ class Schedule extends Data
             $sth = $dbh->prepare($SQL);
             $sth->execute($params);
             
-            Debug::LogEntry('audit', 'OUT', 'Schedule', 'AddDetail');
+            Log::notice('OUT', 'Schedule', 'AddDetail');
             
             return true;  
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(25002, __('Could not update Layout on Schedule'));
@@ -331,7 +333,7 @@ class Schedule extends Data
      */
     public function DeleteScheduleForDisplayGroup($displayGroupID)
     {
-        Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'DeleteScheduleForDisplayGroup');
+        Log::notice('IN', 'DisplayGroup', 'DeleteScheduleForDisplayGroup');
         
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -345,13 +347,13 @@ class Schedule extends Data
             // Tidy up the schedule table. There might be orphaned records because of this delete
             $this->TidyScheduleTable();
 
-            Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'DeleteScheduleForDisplayGroup');
+            Log::notice('OUT', 'DisplayGroup', 'DeleteScheduleForDisplayGroup');
             
             return true;  
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(25015,__('Unable to delete schedule records for this Display Group.'));
@@ -386,7 +388,7 @@ class Schedule extends Data
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+            Log::error($e->getMessage(), get_class(), __FUNCTION__);
 
             throw new Exception(__('Unable to delete schedule records for Campaign.'), 25015);
         }
@@ -408,7 +410,7 @@ class Schedule extends Data
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             return false;
         }
@@ -430,7 +432,7 @@ class Schedule extends Data
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             return false;
         }
@@ -442,7 +444,7 @@ class Schedule extends Data
      * @param $displayGroupID Object
      */
     public function DeleteScheduleForEvent($eventID) {
-        Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'DeleteScheduleForEvent');
+        Log::notice('IN', 'DisplayGroup', 'DeleteScheduleForEvent');
         
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -453,13 +455,13 @@ class Schedule extends Data
                     'eventid' => $eventID
                 ));
             
-            Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'DeleteScheduleForEvent');
+            Log::notice('OUT', 'DisplayGroup', 'DeleteScheduleForEvent');
             
             return true;  
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(25016,__('Unable to delete schedule records for this Event.'));
@@ -474,7 +476,7 @@ class Schedule extends Data
      * @param $displayGroupID Object
      */
     public function DeleteScheduleForEventAndGroup($eventID, $displayGroupID) {
-        Debug::LogEntry('audit', 'IN', 'DisplayGroup', 'DeleteScheduleForEventAndGroup');
+        Log::notice('IN', 'DisplayGroup', 'DeleteScheduleForEventAndGroup');
         
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -486,13 +488,13 @@ class Schedule extends Data
                     'eventid' => $eventID
                 ));
 
-            Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'DeleteScheduleForEventAndGroup');
+            Log::notice('OUT', 'DisplayGroup', 'DeleteScheduleForEventAndGroup');
             
             return true;  
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(25016,__('Unable to delete schedule records for this Event and DisplayGroup.'));
@@ -507,7 +509,7 @@ class Schedule extends Data
      * @param $eventDetailID Object
      */
     public function DeleteEventDetail($eventDetailID) {
-        Debug::LogEntry('audit', 'IN', 'Schedule', 'DeleteEventDetail');
+        Log::notice('IN', 'Schedule', 'DeleteEventDetail');
         
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -518,13 +520,13 @@ class Schedule extends Data
                     'schedule_detailid' => $eventDetailID
                 ));
                 
-            Debug::LogEntry('audit', 'OUT', 'Schedule', 'DeleteEventDetail');
+            Log::notice('OUT', 'Schedule', 'DeleteEventDetail');
             
             return true;  
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(25016,__('Unable to delete schedule records for this Event.'));
@@ -535,7 +537,7 @@ class Schedule extends Data
     
     public function DeleteDisplayGroupFromEvent($eventID, $displayGroupID)
     {
-        Debug::LogEntry('audit', 'IN', 'Schedule', 'EditDisplayGroupsForEvent');
+        Log::notice('IN', 'Schedule', 'EditDisplayGroupsForEvent');
         
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -561,7 +563,7 @@ class Schedule extends Data
                 unset($displayGroupIDs[$key]);
             }
             else {
-                Debug::LogEntry('audit', 'Display Group ID is already removed from the Event - this is strange.', 'Schedule', 'EditDisplayGroupsForEvent');
+                Log::notice('Display Group ID is already removed from the Event - this is strange.', 'Schedule', 'EditDisplayGroupsForEvent');
                 return true;
             }
             
@@ -575,13 +577,13 @@ class Schedule extends Data
                     'displaygroupids' => $displayGroupIDList
                 ));
             
-            Debug::LogEntry('audit', 'OUT', 'Schedule', 'EditDisplayGroupsForEvent');
+            Log::notice('OUT', 'Schedule', 'EditDisplayGroupsForEvent');
             
             return true;  
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(25036,__('Unable to edit the display groups for this Event.'));
@@ -615,7 +617,7 @@ class Schedule extends Data
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));

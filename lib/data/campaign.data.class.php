@@ -18,6 +18,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\Log;
+
 defined('XIBO') or die('Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.');
 
 class Campaign extends Data {
@@ -29,7 +31,7 @@ class Campaign extends Data {
      * @return <type>
      */
     public function Add($campaign, $isLayoutSpecific, $userId) {
-        Debug::LogEntry('audit', 'IN', 'Campaign', 'Add');
+        Log::notice('IN', 'Campaign', 'Add');
         
         if ($campaign == '')
             return $this->SetError(25000, __('Campaign name cannot be empty'));
@@ -47,7 +49,7 @@ class Campaign extends Data {
             return $dbh->lastInsertId();
         }
         catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
             return $this->SetError(25500, __('Unable to add Campaign, Step 1'));
         }
     }
@@ -59,7 +61,7 @@ class Campaign extends Data {
      * @return <type>
      */
     public function Edit($campaignId, $campaign) {
-        Debug::LogEntry('audit', 'IN', 'Campaign', 'Edit');
+        Log::notice('IN', 'Campaign', 'Edit');
 
         if ($campaign == '')
             return $this->SetError(25000, __('Campaign name cannot be empty'));
@@ -76,7 +78,7 @@ class Campaign extends Data {
             return true;
         }
         catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
             return $this->SetError(25500, __('Unable to edit Campaign, Step 1'));
         }
     }
@@ -86,7 +88,7 @@ class Campaign extends Data {
      * @param <type> $campaignId
      */
     public function Delete($campaignId) {
-        Debug::LogEntry('audit', 'IN', 'Campaign', 'Delete');
+        Log::notice('IN', 'Campaign', 'Delete');
 
         // Delete the Campaign record
         try {
@@ -109,7 +111,7 @@ class Campaign extends Data {
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
 
             if (!$this->IsError())
                 $this->SetError(25500, __('Unable to delete Campaign'));
@@ -139,7 +141,7 @@ class Campaign extends Data {
             return true;
         }
         catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
             return $this->SetError(25500, __('Unable to link Campaign to Layout'));
         }
     }
@@ -165,7 +167,7 @@ class Campaign extends Data {
             return true;
         }
         catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
             return $this->SetError(25500, __('Unable to unlink Campaign from Layout'));
         }
     }
@@ -188,7 +190,7 @@ class Campaign extends Data {
             return true;
         }       
         catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
             return $this->SetError(25500, __('Unable to unlink all Layouts'));
         }
     }
@@ -212,7 +214,7 @@ class Campaign extends Data {
             return true;
         }
         catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
             return $this->SetError(25500, __('Unable to unlink Layout from all Campaigns'));
         }
     }
@@ -246,7 +248,7 @@ class Campaign extends Data {
             return \Kit::ValidateParam($row['CampaignID'], _INT);
         }       
         catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
             return $this->SetError(25000, __('Layout has no associated Campaign, corrupted Layout'));
         }
     }

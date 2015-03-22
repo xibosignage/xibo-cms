@@ -20,11 +20,14 @@
  */
 namespace Xibo\Controller;
 use dashboardDAO;
-use Debug;
+use Xibo\Helper\Log;
 use Exception;
 use Kit;
 use mediamanagerDAO;
 use statusdashboardDAO;
+use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\NotFoundException;
+use Xibo\Factory\UserFactory;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 
@@ -41,34 +44,69 @@ class Login extends Base
         Theme::Set('source_url', Theme::SourceLink());
 
         // Message (either from the URL or the session)
-        $message = \Kit::GetParam('message', _GET, _STRING, \Kit::GetParam('message', _SESSION, _STRING, ''));
-        Theme::Set('login_message', $message);
+        Theme::Set('login_message', $this->getFlash('login_message'));
         $this->getState()->html .= Theme::RenderReturn('login_page');
     }
 
-    function login()
+    /**
+     * login
+     */
+    public function login()
     {
-        $user = $this->getUser();
-
         // Get our username and password
         $username = Sanitize::userName($this->param('username'));
         $password = Sanitize::password($this->param('password'));
 
-        $user->login($username, $password);
-        $userId = \Kit::GetParam('userid', _SESSION, _INT);
+        // Get our user
+        try {
+            $user = UserFactory::getByName($username);
 
-        $this->getSession()->set_user(session_id(), $userId, 'user');
+            // Check password
+            $user->checkPassword($password);
+
+            // We are authenticated, so upgrade the user to the salted mechanism if necessary
+            if (!$user->isSalted()) {
+                // TODO: Call User controller to change the password
+            }
+
+            // We are logged in!
+            $user->loggedIn = 1;
+
+            // Overwrite our stored user with this new object.
+            $this->app->user = $user;
+
+            // Switch Session ID's
+            $session = $this->getSession();
+            $session->setIsExpired(0);
+            $session->RegenerateSessionID(session_id());
+            $session->set_user(session_id(), $user->userId, 'user');
+        }
+        catch (NotFoundException $e) {
+            throw new AccessDeniedException();
+        }
     }
 
     function logout($referingpage = '')
     {
-        global $user;
+        $user = $this->getUser();
         $db =& $this->db;
 
         $username = \Kit::GetParam('username', _SESSION, _USERNAME);
 
         //logs the user out -- true if ok
-        $user->logout();
+        $userId = \Kit::GetParam('userid', _SESSION, _INT);
+
+        //write out to the db that the logged in user has accessed the page still
+        $SQL = sprintf("UPDATE user SET loggedin = 0 WHERE userid = %d", $userId);
+        if (!$results = $db->query($SQL)) trigger_error("Can not write last accessed info.", E_USER_ERROR);
+
+        //to log out a user we need only to clear out some session vars
+        unset($_SESSION['userid']);
+        unset($_SESSION['username']);
+        unset($_SESSION['password']);
+
+        $session = $this->getSession();
+        $session->setIsExpired(1);
 
         if ($referingpage == '')
             $referingpage = 'index';
@@ -76,25 +114,6 @@ class Login extends Base
         //then go back to the index page
         header('Location:index.php?p=' . $referingpage);
         exit;
-    }
-
-    function random_word($length)
-    {
-        srand((double)microtime() * 1000000);
-
-        $vowels = array("a", "e", "i", "o", "u");
-        $cons = array("b", "c", "d", "g", "h", "j", "k", "l", "m", "n", "p", "r", "s", "t", "u", "v", "w", "tr",
-            "cr", "br", "fr", "th", "dr", "ch", "ph", "wr", "st", "sp", "sw", "pr", "sl", "cl");
-
-        $num_vowels = count($vowels);
-
-        $num_cons = count($cons);
-
-        $password = "";
-        for ($i = 0; $i < $length; $i++) {
-            $password .= $cons[rand(0, $num_cons - 1)] . $vowels[rand(0, $num_vowels - 1)];
-        }
-        return substr($password, 0, $length);
     }
 
     function displayPage()
@@ -112,7 +131,7 @@ class Login extends Base
 
             $newUserWizard = $sth->fetchColumn(0);
         } catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+            Log::error($e->getMessage(), get_class(), __FUNCTION__);
         }
 
         if ($newUserWizard == 0 || \Kit::GetParam('sp', _GET, _WORD) == 'welcome') {
@@ -124,7 +143,7 @@ class Login extends Base
                 $sth = $dbh->prepare('UPDATE `user` SET newUserWizard = 1 WHERE userid = :userid');
                 $sth->execute(array('userid' => $user->userId));
             } catch (Exception $e) {
-                Debug::LogEntry('error', $e->getMessage());
+                Log::error($e->getMessage());
             }
 
             $this->getState()->html .= Theme::RenderReturn('new_user_welcome');

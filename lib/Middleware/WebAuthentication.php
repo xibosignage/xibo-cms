@@ -60,7 +60,7 @@ class WebAuthentication extends Middleware
             // Check to see if this is a public resource (there are only a few, so we have them in an array)
             if (!in_array($resource, $publicRoutes)) {
                 // Need to check
-                if ($user->hasIdentity()) {
+                if ($user->hasIdentity() && $app->session->isExpired == 0) {
                     // Do they have permission?
                     if (!$user->PageAuth($resource))
                         throw new AccessDeniedException();
@@ -83,7 +83,18 @@ class WebAuthentication extends Middleware
             }
         };
 
+        $updateUser = function () use ($app) {
+            $user = $app->user;
+            /* @var \Xibo\Entity\User $user */
+
+            if ($user->hasIdentity()) {
+                $user->lastAccessed = date("Y-m-d H:i:s");
+                $user->save();
+            }
+        };
+
         $app->hook('slim.before.dispatch', $isAuthorised);
+        $app->hook('slim.after.dispatch', $updateUser);
 
         $this->next->call();
     }

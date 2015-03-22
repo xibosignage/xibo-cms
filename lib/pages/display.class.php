@@ -20,6 +20,7 @@
  */
 use Xibo\Entity\User;
 use Xibo\Helper\Date;
+use Xibo\Helper\Log;
 use Xibo\Helper\Help;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Theme;
@@ -893,7 +894,7 @@ class displayDAO extends baseDAO
         $SQL .= "       )";
         $SQL .= " ORDER BY displaygroup.DisplayGroup ";
 
-        Debug::LogEntry('audit', $SQL);
+        Log::notice($SQL);
 
         $displaygroups_available = $db->GetArray($SQL);
 

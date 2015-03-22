@@ -18,6 +18,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\Log;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 class File extends Data
@@ -48,7 +50,7 @@ class File extends Data
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(3);
@@ -81,7 +83,7 @@ class File extends Data
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
@@ -122,7 +124,7 @@ class File extends Data
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
@@ -180,7 +182,7 @@ class File extends Data
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(3, __('Unknown Error'));
@@ -311,7 +313,7 @@ class File extends Data
 
             // If the thumbnail doesn't exist then create one
             if (!file_exists($thumbPath)) {
-                Debug::LogEntry('audit', 'File doesn\'t exist, creating a thumbnail for ' . $fileName);
+                Log::notice('File doesn\'t exist, creating a thumbnail for ' . $fileName);
 
                 if (!$info = getimagesize($libraryPath))
                     die($libraryPath . ' is not an image');

@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 use Xibo\Entity\User;
+use Xibo\Helper\Log;
 
 class Rest
 {
@@ -547,7 +548,7 @@ class Rest
         if(!$id = $layoutObject->Add($layout, $description, $tags, $this->user->userId, $templateId, $resolutionId))
             return $this->Error($layoutObject->GetErrorNumber(), $layoutObject->GetErrorMessage());
 
-        Debug::LogEntry('audit', 'Added new layout with id' . $id);
+        Log::notice('Added new layout with id' . $id);
 
         return $this->Respond($this->ReturnId('layout', $id));
     }
@@ -1701,7 +1702,7 @@ class Rest
     {
         $version = Config::Version();
 
-        Debug::LogEntry('audit', 'Called Version');
+        Log::notice('Called Version');
 
         $xmlDoc = new DOMDocument();
         $xmlElement = $xmlDoc->createElement('version');

@@ -215,7 +215,7 @@ class Region
         if ($this->hash == null)
             $this->load();
 
-        \Debug::Audit('Deleting ' . $this);
+        \Xibo\Helper\Log::Audit('Deleting ' . $this);
 
         // Delete Permissions
         foreach ($this->permissions as $permission) {
@@ -250,7 +250,7 @@ class Region
      */
     private function add()
     {
-        \Debug::Audit('Adding region to LayoutId ' . $this->layoutId);
+        \Xibo\Helper\Log::Audit('Adding region to LayoutId ' . $this->layoutId);
 
         $sql = 'INSERT INTO `region` (`layoutId`, `ownerId`, `name`, `width`, `height`, `top`, `left`, `zIndex`) VALUES (:layoutId, :ownerId, :name, :width, :height, :top, :left, :zIndex)';
 
@@ -271,7 +271,7 @@ class Region
      */
     private function update()
     {
-        \Debug::Audit('Editing region ' . $this->regionId . ' on LayoutId ' . $this->layoutId . ' zIndex ' . $this->zIndex);
+        \Xibo\Helper\Log::Audit('Editing region ' . $this->regionId . ' on LayoutId ' . $this->layoutId . ' zIndex ' . $this->zIndex);
 
         $sql = 'UPDATE `region` SET `ownerId` = :ownerId, `name` = :name, `width` = :width, `height` = :height, `top` = :top, `left` = :left, zIndex = :zIndex WHERE `regionId` = :regionId';
 

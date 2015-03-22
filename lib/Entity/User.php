@@ -20,15 +20,37 @@
  */
 namespace Xibo\Entity;
 
-use Xibo\Helper\ApplicationState;
-use Xibo\Helper\Theme;
+use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\NotFoundException;
+use Xibo\Helper\Sanitize;
+use Xibo\Storage\PDOConnect;
+
+// These constants may be changed without breaking existing hashes.
+define("PBKDF2_HASH_ALGORITHM", "sha256");
+define("PBKDF2_ITERATIONS", 1000);
+define("PBKDF2_SALT_BYTES", 24);
+define("PBKDF2_HASH_BYTES", 24);
+
+define("HASH_SECTIONS", 4);
+define("HASH_ALGORITHM_INDEX", 0);
+define("HASH_ITERATION_INDEX", 1);
+define("HASH_SALT_INDEX", 2);
+define("HASH_PBKDF2_INDEX", 3);
 
 class User
 {
     public $userId;
-    public $userTypeId;
     public $userName;
+    public $userTypeId;
+    public $loggedIn;
+    public $email;
     public $homePage;
+    public $lastAccessed;
+    public $newUserWizard;
+    public $retired;
+
+    private $CSPRNG;
+    private $password;
 
     /**
      * Cached Permissions
@@ -37,101 +59,52 @@ class User
     private $permissionCache = array();
 
     /**
-     * Login a user
-     * @return bool
-     * @param string $username
+     * Set the password
      * @param string $password
+     * @param int $salted
      */
-    function login($username, $password)
+    public function setPassword($password, $salted)
     {
-        $results = \Xibo\Storage\PDOConnect::select('SELECT UserID, UserName, UserPassword, UserTypeID, CSPRNG FROM `user` WHERE UserName = :userName', array('userName' => $username));
-
-        if (count($results) <= 0) {
-            // User not found
-            throw new \Xibo\Exception\AccessDeniedException();
-        }
-
-        $userInfo = $results[0];
-
-        // User Data Object to check the password
-        $userData = new Userdata();
-
-        // Is SALT empty
-        if ($userInfo['CSPRNG'] == 0) {
-
-            // Check the password using a MD5
-            if ($userInfo['UserPassword'] != md5($password)) {
-                throw new \Xibo\Exception\AccessDeniedException();
-            }
-
-            // Now that we are validated, generate a new SALT and set the users password.
-            $userData->ChangePassword(Kit::ValidateParam($userInfo['UserID'], _INT), null, $password, $password, true /* Force Change */);
-        } else {
-
-            // Check the users password using the random SALTED password
-            if ($userData->validate_password($password, $userInfo['UserPassword']) === false) {
-                throw new \Xibo\Exception\AccessDeniedException();
-            }
-        }
-
-        // there is a result so we store the userID in the session variable
-        $_SESSION['userid'] = \Kit::ValidateParam($userInfo['UserID'], _INT);
-        $this->setIdentity($_SESSION['userid']);
-
-        // Switch Session ID's
-        global $session;
-        $session->setIsExpired(0);
-        $session->RegenerateSessionID(session_id());
-
-        return true;
+        $this->password = $password;
+        $this->CSPRNG = $salted;
     }
 
     /**
-     * Logs in a specific user
-     * @param int $userId
-     * @throws \Xibo\Exception\NotFoundException if the userId cannot be found
-     */
-    function setIdentity($userId)
-    {
-        $dbh = \Xibo\Storage\PDOConnect::init();
-        $sth = $dbh->prepare('SELECT UserName, usertypeid, homepage FROM `user` WHERE userID = :userId AND Retired = 0');
-        $sth->execute(array('userId' => $userId));
-
-        if (!$results = $sth->fetch())
-            throw new \Xibo\Exception\NotFoundException();
-
-        $this->userId = $userId;
-        $this->userName = \Kit::ValidateParam($results['UserName'], _USERNAME);
-        $this->userTypeId = \Kit::ValidateParam($results['usertypeid'], _INT);
-        $this->homePage = \Kit::ValidateParam($results['homepage'], _WORD);
-
-        //write out to the db that the logged in user has accessed the page still
-        \Xibo\Storage\PDOConnect::update('UPDATE `user` SET lastaccessed = :time, loggedIn = 1 WHERE userId = :userId', array('time' => date("Y-m-d H:i:s"), 'userId' => $userId));
-    }
-
-    /**
-     * Logout the user associated with this user object
+     * Is the user salted?
      * @return bool
      */
-    function logout()
+    public function isSalted()
     {
-        global $session;
-        $db =& $this->db;
+        return ($this->CSPRNG == 1);
+    }
 
-        $userId = \Kit::GetParam('userid', _SESSION, _INT);
+    /**
+     * Check password
+     * @param string $password
+     * @throws NotFoundException if the user has not been loaded
+     * @throws AccessDeniedException if the passwords don't match
+     */
+    public function checkPassword($password)
+    {
+        if ($this->userId == 0)
+            throw new NotFoundException(__('User not found'));
 
-        //write out to the db that the logged in user has accessed the page still
-        $SQL = sprintf("UPDATE user SET loggedin = 0 WHERE userid = %d", $userId);
-        if (!$results = $db->query($SQL)) trigger_error("Can not write last accessed info.", E_USER_ERROR);
+        if ($this->CSPRNG == 0) {
+            // Password is tested using a plain MD5 check
+            if ($this->password != md5($password))
+                throw new AccessDeniedException();
+        }
+        else {
+            $params = explode(":", $this->password);
+            if (count($params) < HASH_SECTIONS)
+                throw new AccessDeniedException();
 
-        //to log out a user we need only to clear out some session vars
-        unset($_SESSION['userid']);
-        unset($_SESSION['username']);
-        unset($_SESSION['password']);
+            $pbkdf2 = base64_decode($params[HASH_PBKDF2_INDEX]);
 
-        $session->setIsExpired(1);
-
-        return true;
+            // Check to see if the hash created from the provided password is the same as the hash we have stored already
+            if (!$this->slow_equals($pbkdf2, $this->pbkdf2($params[HASH_ALGORITHM_INDEX], $password, $params[HASH_SALT_INDEX], (int)$params[HASH_ITERATION_INDEX], strlen($pbkdf2), true)))
+                throw new AccessDeniedException();
+        }
     }
 
     /**
@@ -140,224 +113,77 @@ class User
      */
     public function hasIdentity()
     {
-        global $session;
-
-        $userId = \Kit::GetParam('userid', _SESSION, _INT, 0);
+        $userId = isset($_SESSION['userid']) ? Sanitize::int($_SESSION['userid']) : 0;
 
         // Checks for a user ID in the session variable
         if ($userId == 0) {
+            unset($_SESSION['userid']);
             return false;
-        } else {
-            if (!is_numeric($_SESSION['userid'])) {
-                unset($_SESSION['userid']);
-                return false;
-            } else if ($session->isExpired == 1) {
-                unset($_SESSION['userid']);
-                return false;
-            } else {
-                $result = \Xibo\Storage\PDOConnect::select('SELECT UserID FROM `user` WHERE loggedin = 1 AND userid = :userId', array('userId' => $userId));
-
-                if (count($result) <= 0) {
-                    unset($_SESSION['userid']);
-                    return false;
-                }
-
-                $this->setIdentity($userId);
-
-                return true;
-            }
         }
-    }
-
-    function getNameFromID($id)
-    {
-        $db =& $this->db;
-
-        $SQL = sprintf("SELECT username FROM user WHERE userid = %d", $id);
-
-        if (!$results = $db->query($SQL)) trigger_error("Unknown user id in the system", E_USER_NOTICE);
-
-        // if no user is returned
-        if ($db->num_rows($results) == 0) {
-            // assume that is the xibo_admin
-            return "None";
+        else {
+            return true;
         }
-
-        $row = $db->get_row($results);
-
-        return $row[0];
     }
 
     /**
-     * Get an array of user groups for the given user id
-     * @param <type> $id User ID
-     * @param <type> $returnID Whether to return ID's or Names
-     * @return <array>
+     * Save User
      */
-    public function GetUserGroups($id, $returnID = false)
+    public function save()
     {
-        $db =& $this->db;
-
-        $groupIDs = array();
-        $groups = array();
-
-        $SQL = "";
-        $SQL .= "SELECT group.group, ";
-        $SQL .= "       group.groupID ";
-        $SQL .= "FROM   `user` ";
-        $SQL .= "       INNER JOIN lkusergroup ";
-        $SQL .= "       ON     lkusergroup.UserID = user.UserID ";
-        $SQL .= "       INNER JOIN `group` ";
-        $SQL .= "       ON     group.groupID       = lkusergroup.GroupID ";
-        $SQL .= sprintf("WHERE  `user`.userid                     = %d ", $id);
-
-        if (!$results = $db->query($SQL)) {
-            trigger_error($db->error());
-            trigger_error("Error looking up user information (group)", E_USER_ERROR);
-        }
-
-        if ($db->num_rows($results) == 0) {
-            // Every user should have a group?
-            // Add one in!
-            \Kit::ClassLoader('usergroup');
-
-            $userGroupObject = new UserGroup($db);
-            if (!$groupID = $userGroupObject->Add($this->getNameFromID($id), 1)) {
-                // Error
-                trigger_error(__('User does not have a group and Xibo is unable to add one.'), E_USER_ERROR);
-            }
-
-            // Link the two
-            $userGroupObject->Link($groupID, $id);
-
-            if ($returnID)
-                return array($groupID);
-
-            return array('Unknown');
-        }
-
-        // Build an array of the groups to return
-        while ($row = $db->get_assoc_row($results)) {
-            $groupIDs[] = \Kit::ValidateParam($row['groupID'], _INT);
-            $groups[] = \Kit::ValidateParam($row['group'], _STRING);
-        }
-
-        if ($returnID)
-            return $groupIDs;
-
-
-        return $groups;
-    }
-
-    function getGroupFromID($id, $returnID = false)
-    {
-        $db =& $this->db;
-
-        $SQL = "";
-        $SQL .= "SELECT group.group, ";
-        $SQL .= "       group.groupID ";
-        $SQL .= "FROM   `user` ";
-        $SQL .= "       INNER JOIN lkusergroup ";
-        $SQL .= "       ON     lkusergroup.UserID = user.UserID ";
-        $SQL .= "       INNER JOIN `group` ";
-        $SQL .= "       ON     group.groupID       = lkusergroup.GroupID ";
-        $SQL .= sprintf("WHERE  `user`.userid                     = %d ", $id);
-        $SQL .= "AND    `group`.IsUserSpecific = 1";
-
-        if (!$results = $db->query($SQL)) {
-            trigger_error($db->error());
-            trigger_error("Error looking up user information (group)", E_USER_ERROR);
-        }
-
-        if ($db->num_rows($results) == 0) {
-            // Every user should have a group?
-            // Add one in!
-            \Kit::ClassLoader('usergroup');
-
-            $userGroupObject = new UserGroup($db);
-            if (!$groupID = $userGroupObject->Add($this->getNameFromID($id), 1)) {
-                // Error
-                trigger_error(__('User does not have a group and we are unable to add one.'), E_USER_ERROR);
-            }
-
-            // Link the two
-            $userGroupObject->Link($groupID, $id);
-
-            if ($returnID)
-                return $groupID;
-
-            return 'Unknown';
-        }
-
-        $row = $db->get_row($results);
-
-        if ($returnID) {
-            return $row[1];
-        }
-        return $row[0];
-    }
-
-    function getUserTypeFromID($id, $returnID = false)
-    {
-        $db =& $this->db;
-
-        $SQL = sprintf("SELECT usertype.usertype, usertype.usertypeid FROM user INNER JOIN usertype ON usertype.usertypeid = user.usertypeid WHERE userid = %d", $id);
-
-        if (!$results = $db->query($SQL)) {
-            trigger_error("Error looking up user information (usertype)");
-            trigger_error($db->error());
-        }
-
-        if ($db->num_rows($results) == 0) {
-            if ($returnID) {
-                return "3";
-            }
-            return "User";
-        }
-
-        $row = $db->get_row($results);
-
-        if ($returnID) {
-            return $row[1];
-        }
-        return $row[0];
-    }
-
-    function getEmailFromID($id)
-    {
-        $db =& $this->db;
-
-        $SQL = sprintf("SELECT email FROM user WHERE userid = %d", $id);
-
-        if (!$results = $db->query($SQL)) trigger_error("Unknown user id in the system", E_USER_NOTICE);
-
-        if ($db->num_rows($results) == 0) {
-            $SQL = "SELECT email FROM user WHERE userid = 1";
-
-            if (!$results = $db->query($SQL)) {
-                trigger_error("Unknown user id in the system [$id]");
-            }
-        }
-
-        $row = $db->get_row($results);
-        return $row[1];
+        if ($this->userId == 0)
+            $this->add();
+        else
+            $this->update();
     }
 
     /**
-     * Gets the homepage for the given userid
-     * @param <type> $userId
-     * @return <type>
+     * Delete User
      */
-    function GetHomePage($userId)
+    public function delete()
     {
-        $db =& $this->db;
+        // TODO: Delete user
+    }
 
-        $SQL = sprintf("SELECT homepage FROM `user` WHERE userid = %d", $userId);
+    /**
+     * Add user
+     */
+    private function add()
+    {
 
-        if (!$homepage = $db->GetSingleValue($SQL, 'homepage', _WORD))
-            trigger_error(__('Unknown User'));
+    }
 
-        return $homepage;
+    /**
+     * Update user
+     */
+    private function update()
+    {
+        $sql = 'UPDATE `user` SET UserName = :userName,
+                  HomePage = :homePage,
+                  Email = :email,
+                  Retired = :retired,
+                  userTypeId = :userTypeId,
+                  loggedIn = :loggedIn,
+                  lastAccessed = :lastAccessed,
+                  newUserWizard = :newUserWizard,
+                  CSPRNG = :CSPRNG,
+                  `UserPassword` = :password
+               WHERE userId = :userId';
+
+        $params = array(
+            'userName' => $this->userName,
+            'userTypeId' => $this->userTypeId,
+            'email' => $this->email,
+            'homePage' => $this->homePage,
+            'retired' => $this->retired,
+            'lastAccessed' => $this->lastAccessed,
+            'loggedIn' => $this->loggedIn,
+            'newUserWizard' => $this->newUserWizard,
+            'CSPRNG' => $this->CSPRNG,
+            'password' => $this->password,
+            'userId' => $this->userId
+        );
+
+        PDOConnect::update($sql, $params);
     }
 
     /**
@@ -1308,5 +1134,81 @@ class User
     public function SetPref($key, $value)
     {
         Session::Set($key, $value);
+    }
+
+    /*
+     * Password hashing with PBKDF2.
+     * Author: havoc AT defuse.ca
+     * www: https://defuse.ca/php-pbkdf2.htm
+     */
+    public function create_hash($password)
+    {
+        // format: algorithm:iterations:salt:hash
+        $salt = base64_encode(mcrypt_create_iv(PBKDF2_SALT_BYTES, MCRYPT_DEV_URANDOM));
+        return PBKDF2_HASH_ALGORITHM . ":" . PBKDF2_ITERATIONS . ":" .  $salt . ":" .
+        base64_encode($this->pbkdf2(
+            PBKDF2_HASH_ALGORITHM,
+            $password,
+            $salt,
+            PBKDF2_ITERATIONS,
+            PBKDF2_HASH_BYTES,
+            true
+        ));
+    }
+
+    // Compares two strings $a and $b in length-constant time.
+    public function slow_equals($a, $b)
+    {
+        $diff = strlen($a) ^ strlen($b);
+        for($i = 0; $i < strlen($a) && $i < strlen($b); $i++)
+        {
+            $diff |= ord($a[$i]) ^ ord($b[$i]);
+        }
+        return $diff === 0;
+    }
+
+    /*
+     * PBKDF2 key derivation function as defined by RSA's PKCS #5: https://www.ietf.org/rfc/rfc2898.txt
+     * $algorithm - The hash algorithm to use. Recommended: SHA256
+     * $password - The password.
+     * $salt - A salt that is unique to the password.
+     * $count - Iteration count. Higher is better, but slower. Recommended: At least 1000.
+     * $key_length - The length of the derived key in bytes.
+     * $raw_output - If true, the key is returned in raw binary format. Hex encoded otherwise.
+     * Returns: A $key_length-byte key derived from the password and salt.
+     *
+     * Test vectors can be found here: https://www.ietf.org/rfc/rfc6070.txt
+     *
+     * This implementation of PBKDF2 was originally created by https://defuse.ca
+     * With improvements by http://www.variations-of-shadow.com
+     */
+    public function pbkdf2($algorithm, $password, $salt, $count, $key_length, $raw_output = false)
+    {
+        $algorithm = strtolower($algorithm);
+        if(!in_array($algorithm, hash_algos(), true))
+            die('PBKDF2 ERROR: Invalid hash algorithm.');
+        if($count <= 0 || $key_length <= 0)
+            die('PBKDF2 ERROR: Invalid parameters.');
+
+        $hash_length = strlen(hash($algorithm, "", true));
+        $block_count = ceil($key_length / $hash_length);
+
+        $output = "";
+        for($i = 1; $i <= $block_count; $i++) {
+            // $i encoded as 4 bytes, big endian.
+            $last = $salt . pack("N", $i);
+            // first iteration
+            $last = $xorsum = hash_hmac($algorithm, $last, $password, true);
+            // perform the other $count - 1 iterations
+            for ($j = 1; $j < $count; $j++) {
+                $xorsum ^= ($last = hash_hmac($algorithm, $last, $password, true));
+            }
+            $output .= $xorsum;
+        }
+
+        if($raw_output)
+            return substr($output, 0, $key_length);
+        else
+            return bin2hex(substr($output, 0, $key_length));
     }
 }

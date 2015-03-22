@@ -20,6 +20,7 @@
  */
 
 use Xibo\Entity\User;
+use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
 
 define('SCHEDULEDTASK', true);
@@ -80,7 +81,7 @@ catch (PDOException $e) {
 date_default_timezone_set(Config::GetSetting("defaultTimezone"));
 
 // Error Handling (our error handler requires a DB connection
-set_error_handler(array(new Debug(), "ErrorHandler"));
+set_error_handler(array(new Log(), "ErrorHandler"));
 
 // Define the VERSION
 Config::Version();
@@ -90,7 +91,7 @@ if(Config::GetSetting("SERVER_MODE") == "Test")
     ini_set('display_errors', 1);
 
 // Debugging?
-if (Debug::getLevel(Config::GetSetting('audit')) == 10)
+if (Log::getLevel(Config::GetSetting('audit')) == 10)
     error_reporting(E_ALL);
 
 // Setup the translations for gettext
@@ -214,7 +215,7 @@ else
                 print __('Done.');
             }
             catch (Exception $e) {
-                Debug::LogEntry('error', $e->getMessage());
+                Log::error($e->getMessage());
             }
         }
         else {
@@ -239,7 +240,7 @@ else
                 print __('Done.');
             }
             catch (Exception $e) {
-                Debug::LogEntry('error', $e->getMessage());
+                Log::error($e->getMessage());
             }
         }
         else {
@@ -295,7 +296,7 @@ else
             print __('Done.');
         }
         catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         }
 
         flush();

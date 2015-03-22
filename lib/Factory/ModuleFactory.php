@@ -262,7 +262,7 @@ class ModuleFactory
         }
         catch (\Exception $e) {
 
-            \Debug::Error($e->getMessage());
+            \Xibo\Helper\Log::Error($e->getMessage());
 
             return array();
         }

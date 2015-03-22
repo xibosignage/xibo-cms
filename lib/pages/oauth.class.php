@@ -18,6 +18,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\Log;
 use Xibo\Helper\Help;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Theme;
@@ -182,7 +183,7 @@ class oauthDAO extends baseDAO {
                 else
                     $authorized = false;
 
-                Debug::LogEntry('audit', 'Allow submitted. Application is ' . (($authorized) ? 'authed' : 'denied'));
+                Log::notice('Allow submitted. Application is ' . (($authorized) ? 'authed' : 'denied'));
 
                 // Set the request token to be authorized or not authorized
                 // When there was a oauth_callback then this will redirect to the consumer

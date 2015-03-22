@@ -18,6 +18,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\Log;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 class Stat extends data
@@ -77,7 +79,7 @@ class Stat extends data
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(25000, 'Stat Insert Failed.');
@@ -110,7 +112,7 @@ class Stat extends data
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+            Log::error($e->getMessage(), get_class(), __FUNCTION__);
         
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
@@ -123,7 +125,7 @@ class Stat extends data
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
 
-            Debug::Audit('Display Up: ' . $displayId);
+            Log::Audit('Display Up: ' . $displayId);
         
             $sth = $dbh->prepare('UPDATE stat SET end = :toDt WHERE displayId = :displayId AND end IS NULL');
             $sth->execute(array(
@@ -135,7 +137,7 @@ class Stat extends data
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+            Log::error($e->getMessage(), get_class(), __FUNCTION__);
         
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));

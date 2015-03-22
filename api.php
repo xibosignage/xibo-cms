@@ -18,6 +18,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\Log;
+
 DEFINE('XIBO', true);
 require 'lib/autoload.php';
 require 'vendor/autoload.php';
@@ -38,7 +40,7 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 Config::Load();
-new Debug();
+new Log();
 
 $app = new \Slim\Slim(array(
     'debug' => true

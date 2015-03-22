@@ -195,7 +195,7 @@ class Layout
         if ($this->hash == null)
             $this->load();
 
-        \Debug::Audit('Deleting ' . $this);
+        \Xibo\Helper\Log::Audit('Deleting ' . $this);
 
         // Delete Permissions
         foreach ($this->permissions as $permission) {
@@ -284,7 +284,7 @@ class Layout
      */
     private function add()
     {
-        \Debug::Audit('Adding Layout ' . $this->layout);
+        \Xibo\Helper\Log::Audit('Adding Layout ' . $this->layout);
 
         $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, status, width, height, schemaVersion, backgroundImageId, backgroundColor, backgroundzIndex)
                   VALUES (:layout, :description, :userid, :createddt, :modifieddt, :status, :width, :height, 3, :backgroundImageId, :backgroundColor, :backgroundzIndex)';
@@ -319,7 +319,7 @@ class Layout
      */
     private function update()
     {
-        \Debug::Audit('Editing Layout ' . $this->layout . '. Id = ' . $this->layoutId);
+        \Xibo\Helper\Log::Audit('Editing Layout ' . $this->layout . '. Id = ' . $this->layoutId);
 
         $sql = '
         UPDATE layout SET layout = :layout, description = :description, modifiedDT = :modifieddt, retired = :retired, width = :width, height = :height, backgroundImageId = :backgroundImageId, backgroundColor = :backgroundColor, backgroundzIndex = :backgroundzIndex, xml = NULL

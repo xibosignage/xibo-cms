@@ -18,6 +18,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\Log;
+
 defined('XIBO') or die('Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.');
 
 class DataSetGroupSecurity extends Data
@@ -77,12 +79,12 @@ class DataSetGroupSecurity extends Data
                     'del' => $del
               ));
 
-            Debug::LogEntry('audit', 'OUT', 'DataSetGroupSecurity', 'Link');
+            Log::notice('OUT', 'DataSetGroupSecurity', 'Link');
 
             return true;
         }
         catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
             return $this->SetError(25024, __('Could not Link DataSet to Group'));
         }
     }
@@ -97,7 +99,7 @@ class DataSetGroupSecurity extends Data
      */
     public function LinkEveryone($dataSetId, $view, $edit, $del)
     {
-        Debug::LogEntry('audit', 'IN', 'DataSetGroupSecurity', 'LinkEveryone');
+        Log::notice('IN', 'DataSetGroupSecurity', 'LinkEveryone');
 
         if ($dataSetId == 0 || $dataSetId == '')
             return $this->SetError(25001, __('Missing dataSetId'));
@@ -116,7 +118,7 @@ class DataSetGroupSecurity extends Data
             return $this->Link($dataSetId, \Kit::ValidateParam($row['GroupID'], _INT), $view, $edit, $del);
         }
         catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
             return $this->SetError(25024, __('Could not Link DataSet to Group'));
         }
     }
@@ -144,12 +146,12 @@ class DataSetGroupSecurity extends Data
                     'groupid' => $groupId
                 ));
 
-            Debug::LogEntry('audit', 'OUT', 'DataSetGroupSecurity', 'Unlink');
+            Log::notice('OUT', 'DataSetGroupSecurity', 'Unlink');
 
             return true;
         }
         catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
             return $this->SetError(25025, __('Could not Unlink DataSet from Group'));
         }
     }
@@ -162,7 +164,7 @@ class DataSetGroupSecurity extends Data
      */
     public function UnlinkAll($dataSetId)
     {
-        Debug::LogEntry('audit', 'IN', 'DataSetGroupSecurity', 'UnlinkAll');
+        Log::notice('IN', 'DataSetGroupSecurity', 'UnlinkAll');
 
         if ($dataSetId == 0 || $dataSetId == '')
             return $this->SetError(25001, __('Missing dataSetId'));
@@ -175,12 +177,12 @@ class DataSetGroupSecurity extends Data
                     'datasetid' => $dataSetId
                 ));
 
-            Debug::LogEntry('audit', 'OUT', 'DataSetGroupSecurity', 'UnlinkAll');
+            Log::notice('OUT', 'DataSetGroupSecurity', 'UnlinkAll');
 
             return true;
         }
         catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
             return $this->SetError(25025, __('Could not Unlink DataSet from Group'));
         }
     }

@@ -18,13 +18,15 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\Log;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 class DataSetColumn extends Data
 {
     public function Add($dataSetId, $heading, $dataTypeId, $listContent, $columnOrder = 0, $dataSetColumnTypeId = 1, $formula = '')
     {
-        Debug::LogEntry('audit', sprintf('IN - DataSetID = %d', $dataSetId), 'DataSetColumn', 'Add');
+        Log::notice(sprintf('IN - DataSetID = %d', $dataSetId), 'DataSetColumn', 'Add');
 
         if ($dataSetId == 0 || $dataSetId == '')
             return $this->SetError(25001, __('Missing dataSetId'));
@@ -77,12 +79,12 @@ class DataSetColumn extends Data
 
             $id = $dbh->lastInsertId();
 
-            Debug::LogEntry('audit', 'Complete', 'DataSetColumn', 'Add');
+            Log::notice('Complete', 'DataSetColumn', 'Add');
 
             return $id;
         }
         catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
             return $this->SetError(25005, __('Could not add DataSet Column'));
         }
     }
@@ -146,12 +148,12 @@ class DataSetColumn extends Data
                     'formula' => $formula
                ));
 
-            Debug::LogEntry('audit', 'Complete for ' . $heading, 'DataSetColumn', 'Edit');
+            Log::notice('Complete for ' . $heading, 'DataSetColumn', 'Edit');
 
             return true;
         }
         catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
             return $this->SetError(25005, __('Could not edit DataSet Column'));
         }
     }
@@ -169,12 +171,12 @@ class DataSetColumn extends Data
                     'datasetcolumnid' => $dataSetColumnId
                 ));
 
-            Debug::LogEntry('audit', 'Complete', 'DataSetColumn', 'Delete');
+            Log::notice('Complete', 'DataSetColumn', 'Delete');
 
             return true;
         }
         catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
             return $this->SetError(25005, __('Could not delete DataSet Column'));
         }
     }
@@ -193,12 +195,12 @@ class DataSetColumn extends Data
                     'datasetid' => $dataSetId
                 ));
 
-            Debug::LogEntry('audit', 'Complete', 'DataSetColumn', 'DeleteAll');
+            Log::notice('Complete', 'DataSetColumn', 'DeleteAll');
 
             return true;
         }
         catch (Exception $e) {
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
             return $this->SetError(25005, __('Could not delete DataSet Column'));
         }
     }
@@ -244,13 +246,13 @@ class DataSetColumn extends Data
                 $rows[] = $col;
             }
 
-            Debug::LogEntry('audit', sprintf('Returning %d columns.', count($rows)), 'DataSetColumn', 'GetColumns');
+            Log::notice(sprintf('Returning %d columns.', count($rows)), 'DataSetColumn', 'GetColumns');
           
             return $rows;
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
 
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));

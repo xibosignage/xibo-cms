@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 use Xibo\Entity\User;
+use Xibo\Helper\Log;
 use Xibo\Helper\Help;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Theme;
@@ -370,7 +371,7 @@ END;
 
 		}
 		catch (Exception $e) {
-			Debug::Error($e);
+			Log::Error($e);
 			trigger_error(__('Unable to process request'), E_USER_ERROR);
 		}
 	}
@@ -395,7 +396,7 @@ END;
             }
         }
         catch (Exception $e) {
-            Debug::Error($e->getMessage());
+            Log::Error($e->getMessage());
         }
 		
 		// Set some information about the form

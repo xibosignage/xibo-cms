@@ -18,6 +18,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\Log;
+
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 class Data
@@ -87,7 +89,7 @@ class Data
 		$this->errorNo 		= $errNo;
 		$this->errorMessage	= $errMessage;
 		
-		Debug::LogEntry('audit', sprintf('Data Class: Error Number [%d] Error Message [%s]', $errNo, $errMessage), 'Data Module', 'SetError');
+		Log::notice(sprintf('Data Class: Error Number [%d] Error Message [%s]', $errNo, $errMessage), 'Data Module', 'SetError');
 
         // Return false so that we can use this method as the return call for parent methods
 		return false;

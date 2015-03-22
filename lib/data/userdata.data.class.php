@@ -18,6 +18,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\Log;
+
 defined('XIBO') or die(__('Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.'));
 
 // These constants may be changed without breaking existing hashes.
@@ -119,7 +121,7 @@ class Userdata extends Data
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+            Log::error($e->getMessage(), get_class(), __FUNCTION__);
         
             return false;
         }
@@ -191,7 +193,7 @@ class Userdata extends Data
         }
         catch (Exception $e) {
 
-            Debug::Error($e->getMessage());
+            Log::Error($e->getMessage());
 
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
@@ -243,7 +245,7 @@ class Userdata extends Data
         }
         catch (Exception $e) {
 
-            Debug::Error($e->getMessage());
+            Log::Error($e->getMessage());
 
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
@@ -296,7 +298,7 @@ class Userdata extends Data
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+            Log::error($e->getMessage(), get_class(), __FUNCTION__);
         
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
@@ -363,7 +365,7 @@ class Userdata extends Data
         }
         catch (Exception $e) {
             
-            Debug::LogEntry('error', $e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(25000, __('Could not edit Password'));
@@ -425,7 +427,7 @@ class Userdata extends Data
             return $types;
         }
         catch (Exception $e) {
-            Debug::Error($e->getMessage());
+            Log::Error($e->getMessage());
             throw $e;
         }
     }

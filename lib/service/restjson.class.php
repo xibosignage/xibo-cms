@@ -18,6 +18,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\Log;
+
 class RestJson extends Rest
 {
     /**
@@ -35,14 +37,14 @@ class RestJson extends Rest
             $dbh->commit();
         }
         catch (Exception $e) {
-            Debug::LogEntry('audit', 'Unable to commit');
+            Log::notice('Unable to commit');
         }
 
         // Create a response
         $response = json_encode($array);
 
         // Log it
-        Debug::LogEntry('audit', $response, 'RestJson', 'Respond');
+        Log::notice($response, 'RestJson', 'Respond');
 
         // Return it as a string
         return $response;
@@ -52,7 +54,7 @@ class RestJson extends Rest
     {
         header('Content-Type: text/json; charset=utf8');
         
-        Debug::LogEntry('audit', $errorMessage, 'RestJson', 'Error');
+        Log::notice($errorMessage, 'RestJson', 'Error');
 
         // Roll back any open transactions if we are in an error state
         try {
@@ -60,7 +62,7 @@ class RestJson extends Rest
             $dbh->rollBack();
         }
         catch (Exception $e) {
-            Debug::LogEntry('audit', 'Unable to rollback', 'RestJson', 'Error');
+            Log::notice('Unable to rollback', 'RestJson', 'Error');
         }
 
         // Error
@@ -75,7 +77,7 @@ class RestJson extends Rest
         $return = json_encode($array);
 
         // Log it
-        Debug::LogEntry('audit', $return, 'RestJson', 'Error');
+        Log::notice($return, 'RestJson', 'Error');
 
         // Return it as a string
         return $return;
@@ -111,7 +113,7 @@ class RestJson extends Rest
      */
     protected function NodeListFromArray($array, $nodeName)
     {
-        Debug::LogEntry('audit', sprintf('Building node list containing %d items', count($array)));
+        Log::notice(sprintf('Building node list containing %d items', count($array)));
 
         return array($nodeName => $array);
     }

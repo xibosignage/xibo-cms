@@ -90,6 +90,7 @@ class CsrfGuard extends Middleware
                 }
                 else {
                     // Quit entirely
+                    $this->app->flash('login_message', __('Sorry the form has expired. Please refresh.'));
                     throw new AccessDeniedException();
                 }
             }

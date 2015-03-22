@@ -18,6 +18,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\Log;
 use Xibo\Helper\Help;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Theme;
@@ -193,7 +194,7 @@ class timelineDAO extends baseDAO
 
         // Load the region and get the dimensions, applying the scale factor if necessary (only v1 layouts will have a scale factor != 1)
         $region = \Xibo\Factory\RegionFactory::loadByRegionId(Kit::GetParam('regionid', _POST, _INT));
-        Debug::Audit($region);
+        Log::Audit($region);
 
         if (!$this->user->checkEditable($region))
             trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
@@ -262,7 +263,7 @@ class timelineDAO extends baseDAO
 
             // Load the region
             $region = $layout->getRegion($regionId);
-            Debug::Audit('Editing Region ' . $region);
+            Log::Audit('Editing Region ' . $region);
 
             // Check Permissions
             if (!$this->user->checkEditable($region))
@@ -273,7 +274,7 @@ class timelineDAO extends baseDAO
             $region->left = \Kit::ValidateParam($newCoordinates->left, _DOUBLE);
             $region->width = \Kit::ValidateParam($newCoordinates->width, _DOUBLE);
             $region->height = \Kit::ValidateParam($newCoordinates->height, _DOUBLE);
-            Debug::Audit('Set ' . $region);
+            Log::Audit('Set ' . $region);
         }
 
         // Mark the layout as having changed
@@ -332,7 +333,7 @@ class timelineDAO extends baseDAO
         // Load the region
         $region = \Xibo\Factory\RegionFactory::getById(Kit::GetParam('regionid', _REQUEST, _INT));
 
-        Debug::Audit('Assigning files to ' . $region);
+        Log::Audit('Assigning files to ' . $region);
 
         // Make sure we have permission to edit this region
         if (!$this->user->checkEditable($region))
@@ -439,7 +440,7 @@ class timelineDAO extends baseDAO
         }
         catch (\Xibo\Exception\NotFoundException $e) {
             // Log it
-            Debug::Error($e->getMessage());
+            Log::Error($e->getMessage());
 
             // No media to preview
             $response->extra['text']  = __('Region cannot be found.');
@@ -725,7 +726,7 @@ class timelineDAO extends baseDAO
         $playlist = $region->playlists[0];
         /* @var \Xibo\Entity\Playlist $playlist */
 
-        Debug::Audit(count($playlist->widgets) . ' widgets on ' . $region);
+        Log::Audit(count($playlist->widgets) . ' widgets on ' . $region);
 
         foreach($playlist->widgets as $widget) {
             /* @var \Xibo\Entity\Widget $widget */
@@ -842,7 +843,7 @@ class timelineDAO extends baseDAO
         if (count($widgetList) <= 0)
             trigger_error(__('No widgets to reorder'), E_USER_ERROR);
 
-        Debug::Audit($playlist . ' reorder to ' . var_export($widgetList, true));
+        Log::Audit($playlist . ' reorder to ' . var_export($widgetList, true));
 
         // Go through each one and move it
         $i = 0;
@@ -851,9 +852,9 @@ class timelineDAO extends baseDAO
             // Find this item in the existing list and add it to our new order
             foreach ($playlist->widgets as $widget) {
                 /* @var \Xibo\Entity\Widget $widget */
-                Debug::Audit('Comparing ' . $widget . ' with ' . $widgetId);
+                Log::Audit('Comparing ' . $widget . ' with ' . $widgetId);
                 if ($widget->getId() == $widgetId) {
-                    Debug::Audit('Setting Display Order ' . $i . ' on widgetId ' . $widgetId);
+                    Log::Audit('Setting Display Order ' . $i . ' on widgetId ' . $widgetId);
                     $widget->displayOrder = $i;
                     $widget->save();
                     break;

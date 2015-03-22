@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 use Xibo\Helper\Date;
+use Xibo\Helper\Log;
 use Xibo\Helper\Help;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Theme;
@@ -118,7 +119,7 @@ class sessionsDAO extends baseDAO {
 		// Load results into an array
         $log = $db->GetArray($SQL);
 
-        Debug::LogEntry('audit', $SQL);
+        Log::notice($SQL);
 
         if (!is_array($log)) 
         {
