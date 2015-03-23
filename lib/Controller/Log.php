@@ -190,7 +190,7 @@ class Log extends Base
         );
 
         $sql = '
-          SELECT logid, logdate, page, function, message, display.display
+          SELECT logid, logdate, page, function, message, display.display, type
             FROM `log`
               LEFT OUTER JOIN display
               ON display.displayid = log.displayid
@@ -222,6 +222,7 @@ class Log extends Base
         $cols = array(
             array('name' => 'logid', 'title' => __('ID')),
             array('name' => 'logdate', 'title' => __('Date')),
+            array('name' => 'type', 'title' => __('Level')),
             array('name' => 'display', 'title' => __('Display')),
             array('name' => 'page', 'title' => __('Page')),
             array('name' => 'function', 'title' => __('Function')),
@@ -235,6 +236,7 @@ class Log extends Base
 
             $row['logid'] = \Xibo\Helper\Sanitize::int($row['logid']);
             $row['logdate'] = Date::getLocalDate(strtotime(Kit::ValidateParam($row['logdate'], _STRING)), 'y-m-d h:i:s');
+            $row['type'] = \Xibo\Helper\Sanitize::string($row['type']);
             $row['display'] = (\Xibo\Helper\Sanitize::string($row['display'], _STRING) == '') ? __('CMS') : \Kit::ValidateParam($row['display']);
             $row['page'] = \Xibo\Helper\Sanitize::string($row['page']);
             $row['function'] = \Xibo\Helper\Sanitize::string($row['function']);

@@ -285,7 +285,7 @@ CREATE TABLE IF NOT EXISTS `lkusergroup` (
 CREATE TABLE IF NOT EXISTS `log` (
   `logid` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'The log ID',
   `logdate` datetime NOT NULL COMMENT 'The log date',
-  `type` enum('error','audit') NOT NULL,
+  `type` varchar(254) NOT NULL,
   `page` varchar(50) NOT NULL,
   `function` varchar(50) DEFAULT NULL,
   `message` longtext NOT NULL,

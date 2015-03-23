@@ -46,7 +46,8 @@ TranslationEngine::InitLocale();
 // Create a logger
 $logger = new \Flynsarmy\SlimMonolog\Log\MonologWriter(array(
     'handlers' => array(
-        new \Monolog\Handler\ChromePHPHandler()
+        new \Monolog\Handler\ChromePHPHandler(),
+        new \Xibo\Helper\DatabaseLogHandler()
     ),
     'processors' => array(
         new \Xibo\Helper\RouteProcessor()
