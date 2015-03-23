@@ -107,4 +107,19 @@ class Sanitize
     {
         return filter_var($param, FILTER_VALIDATE_BOOLEAN);
     }
+
+    public static function htmlString($param)
+    {
+        // decimal notation
+        $return = preg_replace_callback('/&#(\d+);/m', function($m){
+            return chr($m[1]);
+        }, $param);
+
+        // convert hex
+        $return = preg_replace_callback('/&#x([a-f0-9]+);/mi', function($m){
+            return chr("0x".$m[1]);
+        }, $return);
+
+        return (string) $return;
+    }
 }

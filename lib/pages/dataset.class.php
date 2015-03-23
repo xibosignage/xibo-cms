@@ -18,9 +18,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-use Xibo\Helper\Log;
-use Xibo\Helper\Help;
 use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Help;
+use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
 
 defined('XIBO') or die('Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.');
@@ -378,7 +378,7 @@ class datasetDAO extends baseDAO
         $SQL .= sprintf(" WHERE DataSetID = %d ", $dataSetId);
         $SQL .= "ORDER BY ColumnOrder ";
 
-        \Kit::ClassLoader('datasetcolumn');
+
         $dataSetColumnObject = new DataSetColumn($db);
 
         // Load results into an array
@@ -950,7 +950,7 @@ END;
         Theme::Set('form_meta', '<input type="hidden" name="datasetid" value="' . $dataSetId . '" />');
 
         // List of all Groups with a view/edit/delete checkbox
-        \Kit::ClassLoader('datasetgroupsecurity');
+
         $security = new DataSetGroupSecurity($this->db);
 
         if (!$results = $security->ListSecurity($dataSetId, $user->getGroupFromId($user->userid, true))) {
@@ -997,7 +997,7 @@ END;
         $db =& $this->db;
         $user = $this->getUser();
         $response = $this->getState();
-        \Kit::ClassLoader('datasetgroupsecurity');
+
 
         $dataSetId = \Xibo\Helper\Sanitize::getInt('datasetid');
         $groupIds = \Kit::GetParam('groupids', _POST, _ARRAY);

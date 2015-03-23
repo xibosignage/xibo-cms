@@ -73,8 +73,8 @@ $app->add(new \Xibo\Middleware\CsrfGuard());
 $app->add(new \Xibo\Middleware\WebAuthentication());
 
 // All application routes
-require 'routes-web.php';
-require 'routes.php';
+require 'lib/routes-web.php';
+require 'lib/routes.php';
 
 // Run App
 $app->run();

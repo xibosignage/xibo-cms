@@ -262,11 +262,11 @@ class DataSetData extends Data
                 ));
 
             // Get affected Campaigns
-            \Kit::ClassLoader('dataset');
+
             $dataSet = new DataSet($this->db);
             $campaigns = $dataSet->GetCampaignsForDataSet($dataSetId);
 
-            \Kit::ClassLoader('display');
+
             $display = new Display($this->db);
 
             foreach ($campaigns as $campaignId) {

@@ -19,16 +19,12 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
-use dashboardDAO;
-use Xibo\Exception\FormExpiredException;
-use Xibo\Helper\Log;
-use Exception;
 use Kit;
-use mediamanagerDAO;
-use statusdashboardDAO;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\FormExpiredException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\UserFactory;
+use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 
@@ -106,56 +102,11 @@ class Login extends Base
     }
 
     /**
-     *
+     * User Welcome
      */
-    function displayPage()
+    public function userWelcome()
     {
-        $db =& $this->db;
-        $user = $this->getUser();
-
-        // Shall we show the new user dashboard?
-        $newUserWizard = 1;
-        try {
-            $dbh = \Xibo\Storage\PDOConnect::init();
-
-            $sth = $dbh->prepare('SELECT newUserWizard FROM `user` WHERE userid = :userid');
-            $sth->execute(array('userid' => $user->userId));
-
-            $newUserWizard = $sth->fetchColumn(0);
-        } catch (Exception $e) {
-            Log::error($e->getMessage(), get_class(), __FUNCTION__);
-        }
-
-        if ($newUserWizard == 0 || \Kit::GetParam('sp', _GET, _WORD) == 'welcome') {
-
-            // Update to say we have seen it
-            try {
-                $dbh = \Xibo\Storage\PDOConnect::init();
-
-                $sth = $dbh->prepare('UPDATE `user` SET newUserWizard = 1 WHERE userid = :userid');
-                $sth->execute(array('userid' => $user->userId));
-            } catch (Exception $e) {
-                Log::error($e->getMessage());
-            }
-
-            $this->getState()->html .= Theme::RenderReturn('new_user_welcome');
-        } else {
-
-            $homepage = $this->user->homePage;
-
-            if ($homepage == 'mediamanager') {
-                include('lib/pages/mediamanager.class.php');
-                $userHomepage = new mediamanagerDAO($db, $user);
-            } else if ($homepage == 'statusdashboard') {
-                include('lib/pages/statusdashboard.class.php');
-                $userHomepage = new statusdashboardDAO($db, $user);
-            } else {
-                include("lib/pages/dashboard.class.php");
-                $userHomepage = new dashboardDAO($db, $user);
-            }
-
-            $userHomepage->displayPage();
-        }
+        $this->getState()->html .= Theme::RenderReturn('new_user_welcome');
     }
 
     /**
@@ -179,6 +130,7 @@ class Login extends Base
         // Render the Theme and output
         $output = Theme::RenderReturn('about_text');
 
+        $response->setData(array('licenceHtml' => $output));
         $response->SetFormRequestResponse($output, __('About'), '500', '500');
         $response->AddButton(__('Close'), 'XiboDialogClose()');
     }

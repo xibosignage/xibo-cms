@@ -18,9 +18,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-use Xibo\Helper\Log;
-use Xibo\Helper\Help;
 use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Help;
+use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
@@ -173,7 +173,7 @@ class campaignDAO extends baseDAO
 
         $name = \Xibo\Helper\Sanitize::getString('Name');
 
-        \Kit::ClassLoader('campaign');
+
         $campaignObject = new Campaign($db);
 
         if (!$campaignObject->Add($name, 0, $this->user->userId))
@@ -255,7 +255,7 @@ class campaignDAO extends baseDAO
         if ($name == '')
             trigger_error(__('Name is a required field.'), E_USER_ERROR);
 
-        \Kit::ClassLoader('campaign');
+
         $campaignObject = new Campaign($db);
 
         if (!$campaignObject->Edit($campaignId, $name))
@@ -318,7 +318,7 @@ class campaignDAO extends baseDAO
         if ($campaignId == 0 || $campaignId == '')
             trigger_error(__('Campaign ID is missing'), E_USER_ERROR);
 
-        \Kit::ClassLoader('campaign');
+
         $campaignObject = new Campaign($db);
 
         if (!$campaignObject->Delete($campaignId))

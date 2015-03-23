@@ -333,7 +333,7 @@ class Display extends Data {
             Log::notice('Display Edited', 'Display', 'Edit');
 
             // Use a DisplayGroup to handle the default layout and displaygroup name for this display
-            \Kit::ClassLoader('displaygroup');
+
             $displayGroupObject = new DisplayGroup();
             
             // Do we also want to update the linked Display Groups name (seeing as that is what we will be presenting to everyone)

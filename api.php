@@ -18,7 +18,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-use Xibo\Helper\Log;
 
 DEFINE('XIBO', true);
 require 'lib/autoload.php';
@@ -72,7 +71,7 @@ $app->user = \Xibo\Factory\UserFactory::getById(1);
 new \Xibo\Helper\Theme($app->user);
 
 // All routes
-require 'routes.php';
+require 'lib/routes.php';
 
 // Run app
 $app->run();

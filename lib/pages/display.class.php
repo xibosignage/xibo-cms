@@ -19,10 +19,10 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 use Xibo\Entity\User;
-use Xibo\Helper\Date;
-use Xibo\Helper\Log;
-use Xibo\Helper\Help;
 use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Date;
+use Xibo\Helper\Help;
+use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
@@ -925,7 +925,7 @@ class displayDAO extends baseDAO
         $db =& $this->db;
         $response = $this->getState();
 
-        \Kit::ClassLoader('displaygroup');
+
         $displayGroupObject = new DisplayGroup($db);
 
         $displayID = \Xibo\Helper\Sanitize::getInt('DisplayID');

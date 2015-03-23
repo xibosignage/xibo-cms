@@ -22,6 +22,7 @@ namespace Xibo\Entity;
 
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\MenuFactory;
 use Xibo\Factory\PageFactory;
 use Xibo\Factory\UserFactory;
@@ -621,52 +622,6 @@ class User
     }
 
     /**
-     * Authorises a user against a DisplayGroupId
-     * @param <int> $displayGroupId
-     * @return <type>
-     */
-    public function DisplayGroupAuth($displayGroupId, $fullObject = false)
-    {
-        $auth = new PermissionManager($this);
-        $noOwnerId = 0;
-
-        // If we are the owner, or a super admin then give full permissions
-        if ($this->userTypeId == 1) {
-            $auth->FullAccess();
-
-            if ($fullObject)
-                return $auth;
-
-            return true;
-        }
-
-        // Permissions for groups the user is assigned to, and Everyone
-        $SQL = '';
-        $SQL .= 'SELECT MAX(IFNULL(View, 0)) AS View, MAX(IFNULL(Edit, 0)) AS Edit, MAX(IFNULL(Del, 0)) AS Del ';
-        $SQL .= '  FROM displaygroup ';
-        $SQL .= '   INNER JOIN lkdisplaygroupgroup ';
-        $SQL .= '   ON lkdisplaygroupgroup.DisplayGroupID = displaygroup.DisplayGroupID ';
-        $SQL .= '   INNER JOIN `group` ';
-        $SQL .= '   ON `group`.GroupID = lkdisplaygroupgroup.GroupID ';
-        $SQL .= ' WHERE displaygroup.DisplayGroupID = %d ';
-        $SQL .= '   AND (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
-
-        $SQL = sprintf($SQL, $displayGroupId, implode(',', $this->GetUserGroups($this->userId, true)));
-        //Log::debug($SQL);
-
-        if (!$row = $this->db->GetSingleRow($SQL))
-            return $auth;
-
-        // There are permissions to evaluate
-        $auth->Evaluate($noOwnerId, $row['View'], $row['Edit'], $row['Del']);
-
-        if ($fullObject)
-            return $auth;
-
-        return $auth->edit;
-    }
-
-    /**
      * Authenticates the current user and returns an array of display groups this user is authenticated on
      * @return
      */
@@ -743,134 +698,31 @@ class User
 
     /**
      * List of Displays this user has access to view
+     * @param array $sortOrder
+     * @param array $filterBy
+     * @return array[Display]
      */
-    public function DisplayList($sort_order = array('displayid'), $filter_by = array(), $auth_level = 'view')
+    public function DisplayList($sortOrder = array('displayid'), $filterBy = array())
     {
+        // Get the Layouts
+        $displays = DisplayFactory::query($sortOrder, $filterBy);
 
-        $SQL = 'SELECT display.displayid, ';
-        $SQL .= '    display.display, ';
-        $SQL .= '    displaygroup.description, ';
-        $SQL .= '    layout.layout, ';
-        $SQL .= '    display.loggedin, ';
-        $SQL .= '    IFNULL(display.lastaccessed, 0) AS lastaccessed, ';
-        $SQL .= '    display.inc_schedule, ';
-        $SQL .= '    display.licensed, ';
-        $SQL .= '    display.email_alert, ';
-        $SQL .= '    displaygroup.DisplayGroupID, ';
-        $SQL .= '    display.ClientAddress, ';
-        $SQL .= '    display.MediaInventoryStatus, ';
-        $SQL .= '    display.MacAddress, ';
-        $SQL .= '    display.client_type, ';
-        $SQL .= '    display.client_version, ';
-        $SQL .= '    display.client_code, ';
-        $SQL .= '    display.screenShotRequested, ';
-        $SQL .= '    display.storageAvailableSpace, ';
-        $SQL .= '    display.storageTotalSpace, ';
-        $SQL .= '    currentLayout.layout AS currentLayout, ';
-        $SQL .= '    currentLayout.layoutId AS currentLayoutId ';
-        $SQL .= '  FROM display ';
-        $SQL .= '    INNER JOIN lkdisplaydg ON lkdisplaydg.DisplayID = display.DisplayID ';
-        $SQL .= '    INNER JOIN displaygroup ON displaygroup.DisplayGroupID = lkdisplaydg.DisplayGroupID ';
-        $SQL .= '    LEFT OUTER JOIN layout ON layout.layoutid = display.defaultlayoutid ';
-        $SQL .= '    LEFT OUTER JOIN layout currentLayout ON currentLayout.layoutId = display.currentLayoutId';
+        if ($this->userTypeId == 1)
+            return $displays;
 
-        if (\Kit::GetParam('displaygroupid', $filter_by, _INT) != 0) {
-            // Restrict to a specific display group
-            $SQL .= sprintf(' WHERE displaygroup.displaygroupid = %d ', \Kit::GetParam('displaygroupid', $filter_by, _INT));
-        } else {
-            // Restrict to display specific groups
-            $SQL .= ' WHERE displaygroup.IsDisplaySpecific = 1 ';
-        }
+        foreach ($displays as $key => $layout) {
+            /* @var \Xibo\Entity\Layout $layout */
 
-        // Filter by Display ID?
-        if (\Kit::GetParam('displayid', $filter_by, _INT) != 0) {
-            $SQL .= sprintf(' AND display.displayid = %d ', \Kit::GetParam('displayid', $filter_by, _INT));
-        }
+            // Check to see if we are the owner
+            if ($layout->ownerId == $this->userId)
+                continue;
 
-        // Filter by Display Name?
-        if (\Kit::GetParam('display', $filter_by, _STRING) != '') {
-            // convert into a space delimited array
-            $names = explode(' ', \Kit::GetParam('display', $filter_by, _STRING));
-
-            foreach ($names as $searchName) {
-                // Not like, or like?
-                if (substr($searchName, 0, 1) == '-')
-                    $SQL .= " AND  (display.display NOT LIKE '%" . sprintf('%s', ltrim($this->db->escape_string($searchName), '-')) . "%') ";
-                else
-                    $SQL .= " AND  (display.display LIKE '%" . sprintf('%s', $this->db->escape_string($searchName)) . "%') ";
-            }
-        }
-
-        if (\Kit::GetParam('macAddress', $filter_by, _STRING) != '') {
-            $SQL .= sprintf(' AND display.macaddress LIKE \'%s\' ', '%' . $this->db->escape_string(Kit::GetParam('macAddress', $filter_by, _STRING)) . '%');
-        }
-
-        // Exclude a group?
-        if (\Kit::GetParam('exclude_displaygroupid', $filter_by, _INT) != 0) {
-            $SQL .= " AND display.DisplayID NOT IN ";
-            $SQL .= "       (SELECT display.DisplayID ";
-            $SQL .= "       FROM    display ";
-            $SQL .= "               INNER JOIN lkdisplaydg ";
-            $SQL .= "               ON      lkdisplaydg.DisplayID = display.DisplayID ";
-            $SQL .= sprintf("   WHERE  lkdisplaydg.DisplayGroupID   = %d ", \Kit::GetParam('exclude_displaygroupid', $filter_by, _INT));
-            $SQL .= "       )";
-        }
-
-        // Sorting?
-        if (is_array($sort_order))
-            $SQL .= 'ORDER BY ' . implode(',', $sort_order);
-
-        if (!$result = $this->db->query($SQL)) {
-            trigger_error($this->db->error());
-            return false;
-        }
-
-        $displays = array();
-
-        while ($row = $this->db->get_assoc_row($result)) {
-            $displayItem = array();
-
-            // Validate each param and add it to the array.
-            $displayItem['displayid'] = \Xibo\Helper\Sanitize::int($row['displayid']);
-            $displayItem['display'] = \Xibo\Helper\Sanitize::string($row['display']);
-            $displayItem['description'] = \Xibo\Helper\Sanitize::string($row['description']);
-            $displayItem['layout'] = \Xibo\Helper\Sanitize::string($row['layout']);
-            $displayItem['loggedin'] = \Xibo\Helper\Sanitize::int($row['loggedin']);
-            $displayItem['lastaccessed'] = \Xibo\Helper\Sanitize::string($row['lastaccessed']);
-            $displayItem['inc_schedule'] = \Xibo\Helper\Sanitize::int($row['inc_schedule']);
-            $displayItem['licensed'] = \Xibo\Helper\Sanitize::int($row['licensed']);
-            $displayItem['email_alert'] = \Xibo\Helper\Sanitize::int($row['email_alert']);
-            $displayItem['displaygroupid'] = \Xibo\Helper\Sanitize::int($row['DisplayGroupID']);
-            $displayItem['clientaddress'] = \Xibo\Helper\Sanitize::string($row['ClientAddress']);
-            $displayItem['mediainventorystatus'] = \Xibo\Helper\Sanitize::int($row['MediaInventoryStatus']);
-            $displayItem['macaddress'] = \Xibo\Helper\Sanitize::string($row['MacAddress']);
-            $displayItem['client_type'] = \Xibo\Helper\Sanitize::string($row['client_type']);
-            $displayItem['client_version'] = \Xibo\Helper\Sanitize::string($row['client_version']);
-            $displayItem['client_code'] = \Xibo\Helper\Sanitize::string($row['client_code']);
-            $displayItem['screenShotRequested'] = \Xibo\Helper\Sanitize::int($row['screenShotRequested']);
-            $displayItem['storageAvailableSpace'] = \Xibo\Helper\Sanitize::int($row['storageAvailableSpace']);
-            $displayItem['storageTotalSpace'] = \Xibo\Helper\Sanitize::int($row['storageTotalSpace']);
-            $displayItem['currentLayoutId'] = \Xibo\Helper\Sanitize::int($row['currentLayoutId']);
-            $displayItem['currentLayout'] = \Xibo\Helper\Sanitize::string($row['currentLayout']);
-
-            $auth = $this->DisplayGroupAuth($displayItem['displaygroupid'], true);
-
-            if ($auth->view) {
-                // If auth level = edit and we don't have edit, then leave them off
-                if ($auth_level == 'edit' && !$auth->edit)
-                    continue;
-
-                $displayItem['view'] = (int)$auth->view;
-                $displayItem['edit'] = (int)$auth->edit;
-                $displayItem['del'] = (int)$auth->del;
-                $displayItem['modifypermissions'] = (int)$auth->modifyPermissions;
-
-                $displays[] = $displayItem;
-            }
+            // Check we are viewable
+            if (!$this->checkViewable($layout))
+                unset($displays[$key]);
         }
 
         return $displays;
-
     }
 
     /**

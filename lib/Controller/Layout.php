@@ -23,17 +23,15 @@ namespace Xibo\Controller;
 use Config;
 use database;
 use FormManager;
-use Xibo\Factory\LayoutFactory;
-use Xibo\Helper\Help;
 use Kit;
 use Media;
 use Parsedown;
-use Xibo\Helper\ApplicationState;
 use Session;
-use Xibo\Helper\Log;
+use Xibo\Factory\LayoutFactory;
+use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Help;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
-use Xibo\Entity\user;
 
 class Layout extends Base
 {
@@ -960,7 +958,7 @@ HTML;
          
         $layoutId = Sanitize::getInt('layoutId');
 
-        \Kit::ClassLoader('Layout');
+
         $layout = new Layout($db);
 
         $status = "";
@@ -997,7 +995,7 @@ HTML;
 
         $layoutId = Sanitize::getInt('layoutid');
 
-        \Kit::ClassLoader('layout');
+
         $layout = new Layout($this->db);
 
         if (!$layout->Export($layoutId)) {
@@ -1083,7 +1081,7 @@ HTML;
         // File upload directory.. get this from the settings object
         $fileLocation = Config::GetSetting('LIBRARY_LOCATION') . 'temp/' . $tmpName;
 
-        \Kit::ClassLoader('layout');
+
         $layoutObject = new Layout($this->db);
 
         if (!$layoutObject->Import($fileLocation, $layout, $this->getUser()->userId, $template, $replaceExisting, $importTags)) {

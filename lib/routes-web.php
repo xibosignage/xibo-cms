@@ -22,15 +22,50 @@
 // Special "root" route
 $app->get('/', function () use ($app) {
     // Different controller depending on the homepage of the user.
+    $controller = null;
+    $user = $app->user;
+    /* @var \Xibo\Entity\User $user */
 
-    $controller = new \Xibo\Controller\Layout($app);
-    $controller->displayPage();
+    if ($user->newUserWizard == 0) {
+        $controller = new \Xibo\Controller\Login($app);
+        $controller->userWelcome();
+
+        // We've seen it
+        $user->newUserWizard = 1;
+    }
+    else {
+        \Xibo\Helper\Log::debug('Showing the homepage: %s', $user->homePage);
+        switch ($user->homePage) {
+
+            case 'xmediamanager':
+
+                break;
+
+            case 'statusdashboard':
+                $controller = new \Xibo\Controller\StatusDashboard($app);
+                $controller->displayPage();
+                break;
+
+            case 'xdashboard':
+
+                break;
+
+            default:
+                $controller = new \Xibo\Controller\Layout($app);
+                $controller->displayPage();
+        }
+    }
+
+    if ($controller == null)
+        throw new \Psr\Log\InvalidArgumentException(__('Homepage not set correctly'));
+
     $controller->render();
 
 })->setName('home');
 
-// Special "login" route
+// Login Form
 $app->get('/login', function () use ($app) {
+
     // Login form
     $controller = new \Xibo\Controller\Login($app);
     $controller->setNotAutomaticFullPage();
@@ -38,7 +73,7 @@ $app->get('/login', function () use ($app) {
 
 })->setName('login');
 
-// POST Login
+// Login Request
 $app->post('/login', function () use ($app) {
 
     // Capture the prior route (if there is one)
@@ -56,25 +91,26 @@ $app->post('/login', function () use ($app) {
         \Xibo\Helper\Log::warning($e->getMessage());
         $app->flash('login_message', __('Username or Password incorrect'));
         $app->flash('priorRoute', $priorRoute);
-        $app->redirectTo('login');
     }
     catch (\Xibo\Exception\FormExpiredException $e) {
         $app->flash('priorRoute', $priorRoute);
-        $app->redirectTo('login');
     }
+    $app->redirectTo('login');
 });
 
+// Logout Request
 $app->get('/logout', function () use ($app) {
     $controller = new \Xibo\Controller\Login($app);
     $controller->logout();
     $app->redirectTo('login');
 })->setName('logout');
 
-$app->get('/about', function () use ($app) {
+// Token Exchange
+$app->post('/ExchangeGridTokenForFormToken', function () use ($app) {
     $controller = new \Xibo\Controller\Login($app);
-    $controller->render('About');
-
-})->setName('about');
+    $controller->ExchangeGridTokenForFormToken();
+    $controller->render();
+});
 
 // Ping pong route
 $app->get('/login/ping', function () use ($app) {
@@ -84,6 +120,7 @@ $app->get('/login/ping', function () use ($app) {
     $controller->render();
 })->setName('ping');
 
+// Layouts
 $app->get('/layout/view', function () use ($app) {
     // This is a full page
     $controller = new \Xibo\Controller\Layout($app);
@@ -97,16 +134,18 @@ $app->get('/layout/add', function () use ($app) {
     $controller->render();
 })->setName('layoutAddForm');
 
-$app->post('/ExchangeGridTokenForFormToken', function () use ($app) {
-    $controller = new \Xibo\Controller\Login($app);
-    $controller->ExchangeGridTokenForFormToken();
-    $controller->render();
-});
-
+// Users
 $app->get('/user/welcome', function () use ($app) {
-
+    $controller = new \Xibo\Controller\Login($app);
+    $controller->userWelcome();
+    $controller->render();
 })->setName('welcomeWizard');
 
 $app->get('/user/password/view', function () use ($app) {
 
 })->setName('userChangePassword');
+
+// Stats
+$app->get('/stats', function () use ($app) {
+
+})->name('stats');

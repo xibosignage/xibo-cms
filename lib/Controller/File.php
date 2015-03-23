@@ -18,11 +18,15 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+namespace Xibo\Controller;
+
+use Config;
+use Exception;
+use finfo;
+use InvalidArgumentException;
 use Xibo\Helper\Log;
 
-defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
-
-class File extends Data
+class File extends Base
 {
     /**
      * Adds a new file and appends the first chunk.
@@ -34,27 +38,26 @@ class File extends Data
     {
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
-        
+
             $sth = $dbh->prepare('INSERT INTO file (CreatedDT, UserID) VALUES (:createddt, :userid)');
             $sth->execute(array(
-                    'createddt' => time(),
-                    'userid' => $userId
-                ));
+                'createddt' => time(),
+                'userid' => $userId
+            ));
 
             $fileId = $dbh->lastInsertId();
 
             if (!$this->WriteToDisk($fileId, $payload))
                 throw new Exception('Unable to WriteToDisk');
-        
+
             return $fileId;
-        }
-        catch (Exception $e) {
-            
+        } catch (Exception $e) {
+
             Log::error($e->getMessage());
-        
+
             if (!$this->IsError())
                 $this->SetError(3);
-        
+
             return false;
         }
     }
@@ -69,25 +72,24 @@ class File extends Data
     {
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
-        
+
             // Directory location
             $libraryFolder = Config::GetSetting('LIBRARY_LOCATION');
             $libraryFolder = $libraryFolder . 'temp';
-    
+
             // Append should only be called on existing files, if this file does not exist then we
             // need to error accordingly.
             if (!file_exists($libraryFolder . '/' . $fileId))
                 $this->ThrowError(7);
-        
-            return $this->WriteToDisk($fileId, $payload);  
-        }
-        catch (Exception $e) {
-            
+
+            return $this->WriteToDisk($fileId, $payload);
+        } catch (Exception $e) {
+
             Log::error($e->getMessage());
-        
+
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
-        
+
             return false;
         }
     }
@@ -101,34 +103,33 @@ class File extends Data
     {
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
-        
+
             // Directory location
             $libraryFolder = Config::GetSetting('LIBRARY_LOCATION');
             $libraryFolder = $libraryFolder . 'temp';
-    
+
             if (!File::EnsureLibraryExists($libraryFolder))
                 return false;
-    
+
             // Open a file pointer
             if (!$fp = fopen($libraryFolder . '/' . $fileId, 'a'))
                 $this->ThrowError(5);
-    
+
             // Write the payload to the file handle.
             if (fwrite($fp, $payload) === false)
                 $this->ThrowError(6);
-    
+
             // Close the file pointer
             fclose($fp);
-    
-            return true;  
-        }
-        catch (Exception $e) {
-            
+
+            return true;
+        } catch (Exception $e) {
+
             Log::error($e->getMessage());
-        
+
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
-        
+
             return false;
         }
     }
@@ -137,7 +138,8 @@ class File extends Data
      * Get the Path to a file
      * @param int $fileId The File ID
      */
-    public function GetPath($fileId) {
+    public function GetPath($fileId)
+    {
 
         if ($fileId == '' || $fileId == 0)
             return $this->SetError(25001, __('Missing fileId'));
@@ -155,7 +157,7 @@ class File extends Data
     public function Size($fileId)
     {
         // Directory location
-        $libraryFolder 	= Config::GetSetting("LIBRARY_LOCATION");
+        $libraryFolder = Config::GetSetting("LIBRARY_LOCATION");
         $libraryFolder = $libraryFolder . 'temp';
 
         return filesize($libraryFolder . '/' . $fileId);
@@ -169,31 +171,30 @@ class File extends Data
     {
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
-        
+
             $sth = $dbh->prepare('INSERT INTO file (CreatedDT, UserID) VALUES (:createddt, :userid)');
             $sth->execute(array(
-                    'createddt' => time(),
-                    'userid' => $userId
-                ));
+                'createddt' => time(),
+                'userid' => $userId
+            ));
 
             $fileId = $dbh->lastInsertId();
 
-            return $fileId;  
-        }
-        catch (Exception $e) {
-            
+            return $fileId;
+        } catch (Exception $e) {
+
             Log::error($e->getMessage());
-        
+
             if (!$this->IsError())
                 $this->SetError(3, __('Unknown Error'));
-        
+
             return false;
         }
     }
 
     public static function EnsureLibraryExists()
     {
-        $libraryFolder 	= Config::GetSetting('LIBRARY_LOCATION');
+        $libraryFolder = Config::GetSetting('LIBRARY_LOCATION');
 
         // Check that this location exists - and if not create it..
         if (!file_exists($libraryFolder))
@@ -215,11 +216,9 @@ class File extends Data
         return true;
     }
 
-    public function GetLibraryCacheUri() {
-
-        $libraryFolder  = Config::GetSetting('LIBRARY_LOCATION');
-
-        return $libraryFolder . '/cache';
+    public static function GetLibraryCacheUri()
+    {
+        return Config::GetSetting('LIBRARY_LOCATION') . '/cache';
     }
 
     /**
@@ -351,9 +350,8 @@ class File extends Data
             header('Content-Type: application/octet-stream');
             header("Content-Transfer-Encoding: Binary");
             header("Content-disposition: attachment; filename=\"" . (($downloadFromLibrary) ? $downloadFilename : basename($fileName)) . "\"");
-        }
-        else {
-            $fi = new finfo( FILEINFO_MIME_TYPE );
+        } else {
+            $fi = new finfo(FILEINFO_MIME_TYPE);
             $mime = $fi->file($libraryPath);
             header("Content-Type: {$mime}");
         }
@@ -361,7 +359,7 @@ class File extends Data
         //Output a header
         header('Pragma: public');
         header('Cache-Control: max-age=86400');
-        header('Expires: '. gmdate('D, d M Y H:i:s \G\M\T', time() + 86400));
+        header('Expires: ' . gmdate('D, d M Y H:i:s \G\M\T', time() + 86400));
         header('Content-Length: ' . $size);
 
         // Send via Apache X-Sendfile header?

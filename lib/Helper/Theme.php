@@ -20,19 +20,16 @@
  */
 namespace Xibo\Helper;
 use Config;
-use Slim\Slim;
-use Xibo\Entity\Menu;
-use Xibo\Factory\MenuFactory;
-use Xibo\Helper\Date;
 use Exception;
 use Extra;
-use Xibo\Helper\Help;
 use ID;
 use Key;
-use Kit;
 use MenuManager;
 use Select;
+use Slim\Slim;
+use Xibo\Entity\Menu;
 use Xibo\Entity\user;
+use Xibo\Factory\MenuFactory;
 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
@@ -117,6 +114,7 @@ class Theme
     public static function RenderReturn($item)
     {
         try {
+            Log::debug('Rendering %s', $item);
             ob_start();
 
             Theme::Render($item);
@@ -124,7 +122,7 @@ class Theme
             $output = ob_get_contents();
 
             ob_end_clean();
-
+            Log::debug('Rendered %s', $item);
             return $output;
         }
         catch (\ErrorException $e) {

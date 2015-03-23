@@ -18,9 +18,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-use Xibo\Helper\Log;
-use Xibo\Helper\Help;
 use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Help;
+use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
@@ -654,7 +654,7 @@ class userDAO extends baseDAO {
         $newPassword = \Xibo\Helper\Sanitize::getString('newPassword');
         $retypeNewPassword = \Xibo\Helper\Sanitize::getString('retypeNewPassword');
 
-        \Kit::ClassLoader('userdata');
+
         $userData = new Userdata($db);
 
         if (!$userData->ChangePassword($this->user->userId, $oldPassword, $newPassword, $retypeNewPassword))
@@ -715,7 +715,7 @@ class userDAO extends baseDAO {
         if ($this->user->userTypeId != 1)
             trigger_error(__('Trying to change the password for another user denied'), E_USER_ERROR);
 
-        \Kit::ClassLoader('userdata');
+
         $userData = new Userdata($db);
 
         if (!$userData->ChangePassword($userId, null, $newPassword, $retypeNewPassword, true))

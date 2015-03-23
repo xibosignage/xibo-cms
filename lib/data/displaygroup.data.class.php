@@ -167,7 +167,7 @@ class DisplayGroup extends Data
                 throw new Exception('Unable to DeleteScheduleForDisplayGroup');
 
             // Remove all permissions
-            \Kit::ClassLoader('displaygroupsecurity');
+
             $security = new DisplayGroupSecurity($this->db);
 
             if (!$security->UnlinkAll($displayGroupID))
@@ -201,7 +201,7 @@ class DisplayGroup extends Data
      */
     public function DeleteDisplay($displayID)
     {
-        \Kit::ClassLoader('lkmediadisplaygroup');
+
         
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -421,7 +421,7 @@ class DisplayGroup extends Data
     public function AssociateFiles($user, $displayGroupId, $mediaList) {
         Log::notice('IN', get_class(), __FUNCTION__);
 
-        \Kit::ClassLoader('lkmediadisplaygroup');
+
         $link = new LkMediaDisplayGroup($this->db);
 
         try {
@@ -470,7 +470,7 @@ class DisplayGroup extends Data
     public function FlagIncomplete($displayGroupId) {
         Log::notice('IN', get_class(), __FUNCTION__);
 
-        \Kit::ClassLoader('display');
+
         $display = new Display($this->db);
 
         try {

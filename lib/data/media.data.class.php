@@ -18,6 +18,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Controller\File;
 use Xibo\Entity\User;
 use Xibo\Helper\Log;
 
@@ -144,7 +145,7 @@ class Media extends Data
             // What permissions should we assign this with?
             if (Config::GetSetting('MEDIA_DEFAULT') == 'public')
             {
-                \Kit::ClassLoader('mediagroupsecurity');
+
     
                 $security = new MediaGroupSecurity($this->db);
                 $security->LinkEveryone($mediaId, 1, 0, 0);
@@ -292,7 +293,7 @@ class Media extends Data
                 throw new Exception("Error Processing Request", 1);
                 
             // We need to assign all permissions for the old media id to the new media id
-            \Kit::ClassLoader('mediagroupsecurity');
+
     
             $security = new MediaGroupSecurity($this->db);
             $security->Copy($mediaId, $newMediaId);

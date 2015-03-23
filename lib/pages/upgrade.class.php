@@ -117,7 +117,7 @@ class upgradeDAO extends baseDAO {
     }
 
     public function Step2() {
-        \Kit::ClassLoader('install');
+
 
         // Work out what is involved in this upgrade
         $_SESSION['upgradeFrom'] = Config::Version('DBVersion');
@@ -196,7 +196,7 @@ class upgradeDAO extends baseDAO {
     }
 
     public function Step3() {
-        \Kit::ClassLoader('install');
+
         set_time_limit(0);
         $fault = false;
         $fault_string = '';

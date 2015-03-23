@@ -47,7 +47,7 @@ if (defined('XMDS') || $method != '')
 
             Log::notice('OAuth Webservice call');
 
-            \Kit::ClassLoader('ServiceOAuth');
+
 
             $oauth = new ServiceOAuth();
 
@@ -115,20 +115,20 @@ if (defined('XMDS') || $method != '')
             Log::notice('Authenticated API call for [' . $method . '] with a [' . $response . '] response. Issued by UserId: ' . $user->userId, 'Services');
                 
             // Authenticated with OAuth.
-            \Kit::ClassLoader('Rest');
+
 
             // Detect response type requested.
             switch ($response)
             {
                 case 'json':
-                    \Kit::ClassLoader('RestJson');
+
                     
                     $rest = new RestJson($user, $_REQUEST);
 
                     break;
 
                 case 'xml':
-                    \Kit::ClassLoader('RestXml');
+
 
                     $rest = new RestXml($user, $_REQUEST);
 

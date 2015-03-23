@@ -44,7 +44,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
             <!-- Wrapper for slides -->
             <div class="carousel-inner">
                 <div class="item active">
-                    <img src="theme/default/img/screenshots/display_add_screenshot.png" alt="Slide 1">
+                    <img src="<?php echo Theme::ItemPath('img/screenshots/display_add_screenshot.png'); ?>" alt="Slide 1">
                     <div class="carousel-caption">
                         <h3><?php echo Theme::Translate('Display'); ?></h3>
                         <p><?php echo Theme::Translate('Displays are your physical hardware players connected to your TV/Projector. Connect your first display to get started.'); ?></p>
@@ -56,7 +56,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
                     </div>
                 </div>
                 <div class="item">
-                    <img src="theme/default/img/screenshots/layout_design_screenshot.png" alt="Slide 2">
+                    <img src="<?php echo Theme::ItemPath('img/screenshots/layout_design_screenshot.png'); ?>" alt="Slide 2">
                     <div class="carousel-caption">
                         <h3><?php echo Theme::Translate('Layout'); ?></h3>
                         <p><?php echo Theme::Translate('Screen design and presentation is managed on a Layout. You can have as many layouts as you want and design them in the CMS.'); ?></p>
@@ -67,7 +67,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
                     </div>
                 </div>
                 <div class="item">
-                    <img src="theme/default/img/screenshots/calendar_screenshot.png" alt="Slide 3">
+                    <img src="<?php echo Theme::ItemPath('img/screenshots/calendar_screenshot.png'); ?>" alt="Slide 3">
                     <div class="carousel-caption">
                         <h3><?php echo Theme::Translate('Schedule'); ?></h3>
                         <p><?php echo Theme::Translate('Send something down to your display and watch %s come alive! Create events on Displays / Groups for Layouts / Campaigns, create repeat events and much more.', Theme::GetConfig('app_name')); ?></p>
