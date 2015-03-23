@@ -120,13 +120,116 @@ $app->get('/login/ping', function () use ($app) {
     $controller->render();
 })->setName('ping');
 
-// Layouts
+//
+// Menu
+//
+// schedule
+$app->get('/schedule/view', function () use ($app) {
+
+})->name('scheduleView');
+
+// layouts
 $app->get('/layout/view', function () use ($app) {
     // This is a full page
     $controller = new \Xibo\Controller\Layout($app);
     $controller->displayPage();
     $controller->render();
-});
+})->name('layoutView');
+
+// content
+$app->get('/content/view', function () use ($app) {
+
+})->name('contentView');
+
+// display
+$app->get('/display/view', function () use ($app) {
+
+})->name('displayView');
+
+// user
+$app->get('/user/view', function () use ($app) {
+
+})->name('userView');
+
+// log
+$app->get('/log/view', function () use ($app) {
+
+})->name('logView');
+
+// campaign
+$app->get('/campaign/view', function () use ($app) {
+
+})->name('campaignView');
+
+// template
+$app->get('/template/view', function () use ($app) {
+
+})->name('templateView');
+
+// resolution
+$app->get('/resolution/view', function () use ($app) {
+
+})->name('resolutionView');
+
+// dataset
+$app->get('/dataset/view', function () use ($app) {
+
+})->name('datasetView');
+
+// displaygroup
+$app->get('/displaygroup/view', function () use ($app) {
+
+})->name('displaygroupView');
+
+// displayprofile
+$app->get('/displayprofile/view', function () use ($app) {
+
+})->name('displayprofileView');
+
+// group
+$app->get('/group/view', function () use ($app) {
+
+})->name('groupView');
+
+// admin
+$app->get('/admin/view', function () use ($app) {
+
+})->name('adminView');
+
+// oauth
+$app->get('/oauth/view', function () use ($app) {
+
+})->name('oauthView');
+
+// module
+$app->get('/module/view', function () use ($app) {
+
+})->name('moduleView');
+
+// transition
+$app->get('/transition/view', function () use ($app) {
+
+})->name('transitionView');
+
+// sessions
+$app->get('/sessions/view', function () use ($app) {
+
+})->name('sessionsView');
+
+// fault
+$app->get('/fault/view', function () use ($app) {
+
+})->name('faultView');
+
+// license
+$app->get('/license/view', function () use ($app) {
+
+})->name('licenseView');
+
+// help
+$app->get('/help/view', function () use ($app) {
+
+})->name('helpView');
 
 $app->get('/layout/add', function () use ($app) {
     $controller = new \Xibo\Controller\Layout($app);
@@ -148,4 +251,4 @@ $app->get('/user/password/view', function () use ($app) {
 // Stats
 $app->get('/stats', function () use ($app) {
 
-})->name('stats');
+})->name('statsView');

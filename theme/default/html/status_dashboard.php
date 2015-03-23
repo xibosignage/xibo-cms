@@ -105,7 +105,7 @@ $displays = (is_array($displays)) ? $displays : array();
                 else {
                     echo Theme::Translate('Bandwidth Usage (%s)', Theme::Get('bandwidthSuffix'));
                 } ?>
-                <a class="pull-right" href="<?php echo Theme::urlFor('stats'); ?>"><?php echo Theme::Translate('More Statistics'); ?></a>
+                <a class="pull-right" href="<?php echo Theme::urlFor('statsView'); ?>"><?php echo Theme::Translate('More Statistics'); ?></a>
                 <div class="clearfix"></div>
             </div>
             <div class="widget-body medium no-padding">

@@ -366,7 +366,7 @@ class Theme
             $item['selected'] = ($item['page'] == $theme->pageName);
 
             if ($item['external'] == 0) {
-                $item['link'] = 'index.php?p=' . $item['page'] . '&' . $item['args'];
+                $item['link'] = Theme::urlFor($item['page'] . 'View');
             } else {
                 $item['link'] = $item['args'];
             }
