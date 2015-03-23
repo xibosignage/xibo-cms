@@ -19,10 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Helper;
-use Xibo\Helper\Log;
-use Exception;
 use Kit;
-use Xibo\Helper\Theme;
 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
@@ -152,10 +149,9 @@ class ApplicationState
     }
 
     /**
-     * Sets the Defaul response for a grid
-     * @return
-     * @param $table Object
-     * @param $sortingDiv Object[optional]
+     * Sets the Default response for a grid
+     * @param $table string
+     * @param $sortingDiv string[optional]
      */
     public function SetGridResponse($table, $sortingDiv = 'table')
     {
@@ -164,8 +160,6 @@ class ApplicationState
         $this->sortable = true;
         $this->sortingDiv = $sortingDiv;
         $this->paging = true;
-
-        return;
     }
 
     /**

@@ -33,6 +33,9 @@ $app->get('/clock', function() use ($app) {
     $controller->render();
 })->setName('clock');
 
+//
+// Layouts
+//
 $app->get('/layout', function() use ($app) {
     $controller = new \Xibo\Controller\Layout($app);
     $controller->render('LayoutGrid');
@@ -51,3 +54,13 @@ $app->put('/layout', function() use ($app) {
 $app->post('/layout/:id', function($id) use ($app) {
     // Update the Layout
 })->setName('layoutUpdate');
+
+
+//
+// Log
+//
+$app->get('/log', function () use ($app) {
+    $controller = new \Xibo\Controller\Log($app);
+    $controller->Grid();
+    $controller->render();
+})->name('logSearch');

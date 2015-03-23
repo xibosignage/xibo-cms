@@ -153,7 +153,9 @@ $app->get('/user/view', function () use ($app) {
 
 // log
 $app->get('/log/view', function () use ($app) {
-
+    $controller = new \Xibo\Controller\Log($app);
+    $controller->displayPage();
+    $controller->render();
 })->name('logView');
 
 // campaign
@@ -223,7 +225,8 @@ $app->get('/fault/view', function () use ($app) {
 
 // license
 $app->get('/license/view', function () use ($app) {
-
+    $controller = new \Xibo\Controller\Login($app);
+    $controller->render('About');
 })->name('licenseView');
 
 // help

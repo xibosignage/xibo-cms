@@ -110,6 +110,7 @@ class Theme
      * Render Item but return the value as a string
      * @param string $item Item to Render
      * @return string
+     * @throws \ErrorException
      */
     public static function RenderReturn($item)
     {
