@@ -69,7 +69,7 @@ if (!$tabs)
             <?php } ?>
         </ul>
         <?php } ?>
-        <form id="<?php echo Theme::Get('form_id'); ?>" class="<?php echo $formClass; ?> form-horizontal" method="post" action="<?php echo Theme::Get('form_action'); ?>">
+        <form id="<?php echo Theme::Get('form_id'); ?>" class="<?php echo $formClass; ?> form-horizontal" method="<?php echo (Theme::Get('form_method') == '') ? 'post' : Theme::Get('form_method'); ?>" action="<?php echo Theme::Get('form_action'); ?>">
             <?php echo Theme::Get('form_meta'); 
 
             // Always add content container (it does no harm)

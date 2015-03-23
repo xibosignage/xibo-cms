@@ -613,9 +613,11 @@ class Layout extends Base
             __('An optional description of the Layout. (1 - 250 characters)'), 'd', 5, 'maxlength="250"');
 
         // We are adding
-        Theme::Set('form_action', 'index.php?p=layout&q=add');
+        Theme::Set('form_action', $this->urlFor('layoutAdd'));
+        Theme::Set('form_method', 'put');
 
         $templates = $this->getUser()->TemplateList();
+        $templates = array_map(function($element) { return array('layoutid' => $element->layoutId, 'layout' => $element->layout); }, $templates);
         array_unshift($templates, array('layoutid' => '0', 'layout' => 'None'));
 
         $formFields['general'][] = FormManager::AddCombo(
@@ -632,8 +634,8 @@ class Layout extends Base
             'resolutionid',
             __('Resolution'),
             NULL,
-            array_map(function($element) { return array('resolutionid' => $element->resolutionId, 'resolution' => $element->resolution); }, $this->getUser()->ResolutionList()),
-            'resolutionid',
+            $this->getUser()->ResolutionList(),
+            'resolutionId',
             'resolution',
             __('Choose the resolution this Layout should be designed for.'),
             'r',

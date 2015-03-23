@@ -25,7 +25,17 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 class Session {
 	private $max_lifetime;
 	private $key;
-	
+
+    /**
+     * Refresh expiry
+     * @var bool
+     */
+    public $refreshExpiry = true;
+
+    /**
+     * Is the session expired?
+     * @var int
+     */
 	public $isExpired = 1;
 
 	function __construct() 
@@ -111,7 +121,7 @@ class Session {
 			}
 			
 			// Either way - update this SESSION so that the security token is NULL
-			$usth = $dbh->prepare('UPDATE session SET SecurityToken = NULL WHERE session_id = :session_id');
+			$usth = $dbh->prepare('UPDATE `session` SET SecurityToken = NULL WHERE session_id = :session_id');
 			$usth->execute(array('session_id' => $key));
 
 			return($row['session_data']);
@@ -125,6 +135,7 @@ class Session {
 	
 	function write($key, $val) 
 	{
+        Log::debug('Writing Session. Refresh Expiry = %d', $this->refreshExpiry);
 		$newExp = time() + $this->max_lifetime;
 		$lastaccessed = date("Y-m-d H:i:s");
 		$userAgent	= substr(Kit::GetParam('HTTP_USER_AGENT', $_SERVER, _STRING, 'No user agent'), 0, 253);
@@ -160,11 +171,9 @@ class Session {
 			else {
 				// Punch a very small hole in the authentication system
 				// we do not want to update the expiry time of a session if it is the Clock Timer going off
-				$page = \Kit::GetParam('p', _REQUEST, _WORD);
-				$query = \Kit::GetParam('q', _REQUEST, _WORD);
-				$autoRefresh = (isset($_REQUEST['autoRefresh']) && \Kit::GetParam('autoRefresh', _REQUEST, _WORD, 'false') == 'true');
+				$autoRefresh = (isset($_REQUEST['autoRefresh']) && \Xibo\Helper\Sanitize::bool($_REQUEST['autoRefresh']));
 
-				if ($autoRefresh || ($page == 'clock' && $query == 'GetClock') || ($page == 'index' && $query == 'PingPong') || ($page == 'layout' && $query == 'LayoutStatus')) {
+				if (!$this->refreshExpiry || $autoRefresh) {
 
 					// Update the existing session without the expiry
 					$SQL  = "UPDATE session SET session_data = :session_data WHERE session_id = :session_id ";
@@ -227,11 +236,11 @@ class Session {
 			$dbh = \Xibo\Storage\PDOConnect::init();
 
 			// Delete sessions older than 10 times the max lifetime
-			$sth = $dbh->prepare('DELETE FROM session WHERE IsExpired = 1 AND session_expiration < :expiration');
+			$sth = $dbh->prepare('DELETE FROM `session` WHERE IsExpired = 1 AND session_expiration < :expiration');
 			$sth->execute(array('expiration' => (time() - ($max_lifetime * 10))));
 
 			// Update expired sessions as expired
-			$sth = $dbh->prepare('UPDATE session SET IsExpired = 1 WHERE session_expiration < :expiration');
+			$sth = $dbh->prepare('UPDATE `session` SET IsExpired = 1 WHERE session_expiration < :expiration');
 			$sth->execute(array('expiration' => time()));
 		}
 		catch (Exception $e) {

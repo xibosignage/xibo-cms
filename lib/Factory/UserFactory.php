@@ -26,6 +26,7 @@ namespace Xibo\Factory;
 use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
 use Xibo\Helper\Log;
+use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
 class UserFactory
@@ -82,21 +83,21 @@ class UserFactory
         $SQL .= ' WHERE 1 = 1 ';
 
         // User Id Provided?
-        if (\Xibo\Helper\Sanitize::getInt('userId', $filterBy) != 0) {
+        if (Sanitize::getInt('userId', $filterBy) != 0) {
             $SQL .= " AND user.userId = :userId ";
-            $params['userId'] = \Xibo\Helper\Sanitize::getInt('userId', $filterBy);
+            $params['userId'] = Sanitize::getInt('userId', $filterBy);
         }
 
         // User Type Provided
-        if (\Xibo\Helper\Sanitize::getInt('userTypeId', $filterBy) != 0) {
+        if (Sanitize::getInt('userTypeId', $filterBy) != 0) {
             $SQL .= " AND user.userTypeId = :userTypeId ";
-            $params['userTypeId'] = \Xibo\Helper\Sanitize::getInt('userTypeId', $filterBy);
+            $params['userTypeId'] = Sanitize::getInt('userTypeId', $filterBy);
         }
 
         // User Name Provided
-        if (\Kit::GetParam('userName', $filterBy, _STRING) != 0) {
-            $SQL .= " AND user.userName LIKE :userName ";
-            $params['userName'] = '%' . \Kit::GetParam('userName', $filterBy, _STRING) . '%';
+        if (Sanitize::getString('userName', $filterBy) != '') {
+            $SQL .= " AND user.userName = :userName ";
+            $params['userName'] = Sanitize::getString('userName', $filterBy);
         }
 
         // Groups Provided
@@ -107,9 +108,9 @@ class UserFactory
         }
 
         // Retired users?
-        if (\Xibo\Helper\Sanitize::int('retired', $filterBy) != -1) {
+        if (Sanitize::getInt('retired', $filterBy) != -1) {
             $SQL .= " AND user.retired = :retired ";
-            $params['retired'] = \Xibo\Helper\Sanitize::getInt('retired', $filterBy);
+            $params['retired'] = Sanitize::getInt('retired', $filterBy);
         }
 
         // Sorting?
@@ -120,18 +121,18 @@ class UserFactory
 
         foreach (PDOConnect::select($SQL, $params) as $row) {
             $user = new User();
-            $user->userId = \Xibo\Helper\Sanitize::int($row['userId']);
-            $user->userName = \Xibo\Helper\Sanitize::string($row['userName']);
-            $user->userTypeId = \Xibo\Helper\Sanitize::int($row['userTypeId']);
-            $user->loggedIn = \Xibo\Helper\Sanitize::int($row['loggedIn']);
-            $user->email = \Xibo\Helper\Sanitize::string($row['email']);
-            $user->homePage = \Xibo\Helper\Sanitize::string($row['homePage']);
-            $user->lastAccessed = \Xibo\Helper\Sanitize::int($row['lastAccessed']);
-            $user->newUserWizard = \Xibo\Helper\Sanitize::int($row['newUserWizard']);
-            $user->retired = \Xibo\Helper\Sanitize::int($row['retired']);
+            $user->userId = Sanitize::int($row['userId']);
+            $user->userName = Sanitize::string($row['userName']);
+            $user->userTypeId = Sanitize::int($row['userTypeId']);
+            $user->loggedIn = Sanitize::int($row['loggedIn']);
+            $user->email = Sanitize::string($row['email']);
+            $user->homePage = Sanitize::string($row['homePage']);
+            $user->lastAccessed = Sanitize::int($row['lastAccessed']);
+            $user->newUserWizard = Sanitize::int($row['newUserWizard']);
+            $user->retired = Sanitize::int($row['retired']);
 
             // Set the user credentials (set privately)
-            $user->setPassword(\Xibo\Helper\Sanitize::int($row['UserPassword']), \Xibo\Helper\Sanitize::int($row['CSPRNG']));
+            $user->setPassword(Sanitize::string($row['UserPassword']), Sanitize::int($row['CSPRNG']));
 
             $entries[] = $user;
         }

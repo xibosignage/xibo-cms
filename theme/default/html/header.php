@@ -137,11 +137,11 @@ use Xibo\Helper\Theme;defined('XIBO') or die("Sorry, you are not allowed to dire
                                             <a id="XiboClock" class="XiboFormButton" href="index.php?p=clock&q=ShowTimeInfo" title="<?php echo Theme::Translate('Click to show more time information'); ?>"><?php echo Theme::GetClock(); ?></a>
                                         </li>
                                         <li class="divider"></li>
-                                        <li><a class="XiboFormButton" href="index.php?p=user&q=ChangePasswordForm" title="<?php echo Theme::Translate('Change Password') ?>"><?php echo Theme::Translate('Change Password') ?></a></li>
-                                        <li><a href="index.php?p=index&sp=welcome"><?php echo Theme::Translate('Reshow welcome'); ?></a></li>
+                                        <li><a class="XiboFormButton" href="<?php echo Theme::urlFor('userChangePassword'); ?>" title="<?php echo Theme::Translate('Change Password') ?>"><?php echo Theme::Translate('Change Password') ?></a></li>
+                                        <li><a href="<?php echo Theme::urlFor('welcomeWizard'); ?>"><?php echo Theme::Translate('Reshow welcome'); ?></a></li>
                                         <li><a class="XiboHelpButton" href="<?php echo Theme::GetPageHelpLink(); ?>"><?php echo Theme::Translate('Help'); ?></a></li>
                                         <li class="divider"></li>
-                                        <li><a title="Logout" href="index.php?q=logout"><?php echo Theme::Translate("Logout"); ?></a></li>
+                                        <li><a title="Logout" href="<?php echo Theme::urlFor('logout'); ?>"><?php echo Theme::Translate("Logout"); ?></a></li>
                                     </ul>
                                 </div>
                             </div>

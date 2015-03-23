@@ -21,22 +21,27 @@
 defined('XIBO') or die('Sorry, you are not allowed to directly access this page.');
 
 $app->get('/clock', function() use ($app) {
+    $app->session->refreshExpiry = false;
     $controller = new \Xibo\Controller\Clock($app);
     $controller->GetClock();
     $controller->render();
-})->name('clock');
+})->setName('clock');
 
 $app->get('/layout', function() use ($app) {
     $controller = new \Xibo\Controller\Layout($app);
     $controller->render('LayoutGrid');
-})->name('layoutSearch');
+})->setName('layoutSearch');
 
 $app->get('/layout/:id', function($id) use ($app) {
     $controller = new \Xibo\Controller\Layout($app);
     $controller->EditForm();
     $controller->render();
-})->name('layoutGet');
+})->setName('layoutGet');
+
+$app->put('/layout', function() use ($app) {
+
+})->setName('layoutAdd');
 
 $app->post('/layout/:id', function($id) use ($app) {
     // Update the Layout
-})->name('layoutUpdate');
+})->setName('layoutUpdate');

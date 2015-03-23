@@ -57,6 +57,9 @@ class Sanitize
 
     public static function int($param)
     {
+        if ($param == null)
+            return 0;
+
         return filter_var($param, FILTER_SANITIZE_NUMBER_INT);
     }
 
@@ -67,6 +70,9 @@ class Sanitize
 
     public static function double($param)
     {
+        if ($param == null)
+            return 0;
+
         return filter_var($param, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
     }
 
@@ -95,5 +101,10 @@ class Sanitize
     public static function getCheckbox($param, $default = null, $source = null)
     {
         return (Sanitize::parse($param, $default, $source) == 'on') ? 1 : 0;
+    }
+
+    public static function bool($param)
+    {
+        return filter_var($param, FILTER_VALIDATE_BOOLEAN);
     }
 }

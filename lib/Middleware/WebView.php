@@ -25,6 +25,7 @@ namespace Xibo\Middleware;
 
 use Slim\Slim;
 use Slim\View;
+use Xibo\Helper\Log;
 
 class WebView extends View
 {

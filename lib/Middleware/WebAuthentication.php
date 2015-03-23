@@ -26,6 +26,7 @@ namespace Xibo\Middleware;
 use Slim\Middleware;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\UserFactory;
+use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
 
 class WebAuthentication extends Middleware
@@ -49,8 +50,22 @@ class WebAuthentication extends Middleware
         Theme::Set('root', $app->request->getRootUri());
         Theme::Set('rootPath', str_replace('/index.php', '', $app->request->getRootUri()));
 
+        $redirectToLogin = function () use ($app) {
+            Log::debug('Request to redirect to login. Ajax = %d', $app->request->isAjax());
+            if ($app->request->isAjax()) {
+                // Return a JSON response which tells the App to redirect to the login page
+                $app->state->Login();
+                $app->render('response', array('response' => $app->state));
+                $app->stop();
+            }
+            else {
+                // Redirect to login
+                $app->redirect($app->urlFor('login'));
+            }
+        };
+
         // Define a callable to run our hook - curry in the $app object
-        $isAuthorised = function () use ($app) {
+        $isAuthorised = function () use ($app, $redirectToLogin) {
             $user = $app->user;
             /* @var \Xibo\Entity\User $user */
 
@@ -75,20 +90,16 @@ class WebAuthentication extends Middleware
                     // Store the current route so we can come back to it after login
                     $app->flash('priorRoute', $resource);
 
-                    if ($app->request->isAjax()) {
-                        // Return a JSON response which tells the App to redirect to the login page
-                        $app->state->Login();
-                        $app->render('response', array('response' => $app->state));
-                        $app->halt(302);
-                    }
-                    else {
-                        // Redirect to login
-                        $app->redirect($app->urlFor('login'));
-                    }
+                    $redirectToLogin();
                 }
             }
             else {
                 $app->public = true;
+
+                // If we are expired and come from ping/clock, then we redirect
+                if ($app->session->isExpired == 1 && ($resource == '/login/ping' || $resource == 'clock')) {
+                    $redirectToLogin();
+                }
             }
         };
 

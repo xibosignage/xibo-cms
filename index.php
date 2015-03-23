@@ -55,11 +55,15 @@ $logger = new \Flynsarmy\SlimMonolog\Log\MonologWriter(array(
 
 // Slim Application
 $app = new \Slim\Slim(array(
+    'mode' => 'development',
     'log.writer' => $logger,
     'log.level' => \Slim\Log::DEBUG,
     'debug' => true
 ));
 $app->setName('web');
+
+// web view
+$app->view(new \Xibo\Middleware\WebView());
 
 // Middleware
 $app->add(new \Xibo\Middleware\Storage());
@@ -68,86 +72,8 @@ $app->add(new \Xibo\Middleware\Actions());
 $app->add(new \Xibo\Middleware\CsrfGuard());
 $app->add(new \Xibo\Middleware\WebAuthentication());
 
-// web view
-$app->view(new \Xibo\Middleware\WebView());
-
-// Special "root" route
-$app->get('/', function () use ($app) {
-    // Different controller depending on the homepage of the user.
-
-    $controller = new \Xibo\Controller\Layout($app);
-    $controller->displayPage();
-    $controller->render();
-
-})->setName('home');
-
-// Special "login" route
-$app->get('/login', function () use ($app) {
-    // Login form
-    $controller = new \Xibo\Controller\Login($app);
-    $controller->setNotAutomaticFullPage();
-    $controller->render('loginForm');
-
-})->setName('login');
-
-// POST Login
-$app->post('/login', function () use ($app) {
-
-    // Capture the prior route (if there is one)
-    $priorRoute = ($app->request()->post('priorPage'));
-
-    try {
-        $controller = new \Xibo\Controller\Login($app);
-        $controller->login();
-    }
-    catch (\Xibo\Exception\AccessDeniedException $e) {
-        $app->flash('login_message', __('Username or Password incorrect'));
-        $app->flash('priorRoute', $priorRoute);
-        $app->redirectTo('login');
-    }
-    catch (\Xibo\Exception\FormExpiredException $e) {
-        $app->flash('priorRoute', $priorRoute);
-        $app->redirectTo('login');
-    }
-
-    \Xibo\Helper\Log::info('%s user logged in.', $app->user->userName);
-
-    $app->redirect($app->request->getRootUri() . (($priorRoute == '' || stripos($priorRoute, 'login')) ? '' : $priorRoute));
-});
-
-$app->get('/about', function () use ($app) {
-    $controller = new \Xibo\Controller\Login($app);
-    $controller->render('About');
-
-})->setName('about');
-
-// Ping pong route
-$app->get('/login/ping', function () use ($app) {
-    $controller = new \Xibo\Controller\Login($app);
-    $controller->PingPong();
-    $controller->render();
-})->setName('ping');
-
-$app->get('/layout/view', function () use ($app) {
-    // This is a full page
-    $controller = new \Xibo\Controller\Layout($app);
-    $controller->displayPage();
-    $controller->render();
-});
-
-$app->get('/layout/add', function () use ($app) {
-    $controller = new \Xibo\Controller\Layout($app);
-    $controller->AddForm();
-    $controller->render();
-})->setName('layoutAddForm');
-
-$app->post('/ExchangeGridTokenForFormToken', function () use ($app) {
-    $controller = new \Xibo\Controller\Login($app);
-    $controller->ExchangeGridTokenForFormToken();
-    $controller->render();
-});
-
 // All application routes
+require 'routes-web.php';
 require 'routes.php';
 
 // Run App

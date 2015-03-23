@@ -28,8 +28,6 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 class ApplicationState
 {
-    private $ajax;
-
     public $message;
     public $success;
     public $html;
@@ -72,9 +70,6 @@ class ApplicationState
 
     public function __construct()
     {
-        // Determine if this is an AJAX call or not
-        $this->ajax = \Kit::GetParam('ajax', _REQUEST, _BOOL, false);
-
         // Assume success
         $this->success = true;
         $this->clockUpdate = false;
@@ -90,19 +85,6 @@ class ApplicationState
         $this->modal = false;
         $this->extra = array();
         $this->dialogClass = '';
-
-        // Start a DB transaction for all returns from the Web Portal
-        try {
-            $dbh = \Xibo\Storage\PDOConnect::init();
-
-            if (!$dbh->inTransaction())
-                $dbh->beginTransaction();
-        } catch (Exception $e) {
-            Log::error($e->getMessage());
-            trigger_error(__('Unable to open connection and start transaction'), E_USER_ERROR);
-        }
-
-        return true;
     }
 
     /**

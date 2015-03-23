@@ -110,8 +110,10 @@ class User
         }
         else {
             $params = explode(":", $this->password);
-            if (count($params) < HASH_SECTIONS)
+            if (count($params) < HASH_SECTIONS) {
+                Log::warning('Invalid password hash stored for userId %d', $this->userId);
                 throw new AccessDeniedException();
+            }
 
             $pbkdf2 = base64_decode($params[HASH_PBKDF2_INDEX]);
 
@@ -119,6 +121,8 @@ class User
             if (!$this->slow_equals($pbkdf2, $this->pbkdf2($params[HASH_ALGORITHM_INDEX], $password, $params[HASH_SALT_INDEX], (int)$params[HASH_ITERATION_INDEX], strlen($pbkdf2), true)))
                 throw new AccessDeniedException();
         }
+
+        Log::debug('Password checked out OK');
     }
 
     /**
