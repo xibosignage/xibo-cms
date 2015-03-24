@@ -18,14 +18,17 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-use Xibo\Helper\Log;
-use Xibo\Helper\Help;
+namespace Xibo\Controller;
+
 use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Help;
+use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-class oauthDAO extends baseDAO {
+class oAuth extends Base
+{
 
     /**
      * Display Page
@@ -44,24 +47,25 @@ class oauthDAO extends baseDAO {
         $this->getState()->html .= Theme::RenderReturn('grid_render');
     }
 
-    function actionMenu() {
+    function actionMenu()
+    {
 
         return array(
-                array('title' => __('Add Application'),
-                    'class' => 'XiboFormButton',
-                    'selected' => false,
-                    'link' => 'index.php?p=oauth&q=RegisterForm',
-                    'help' => __('Add an Application'),
-                    'onclick' => ''
-                    ),
-                array('title' => __('View Activity'),
-                    'class' => 'XiboFormButton',
-                    'selected' => false,
-                    'link' => 'index.php?p=oauth&q=ViewLog',
-                    'help' => __('View a log of application activity'),
-                    'onclick' => ''
-                    )
-            );                   
+            array('title' => __('Add Application'),
+                'class' => 'XiboFormButton',
+                'selected' => false,
+                'link' => 'index.php?p=oauth&q=RegisterForm',
+                'help' => __('Add an Application'),
+                'onclick' => ''
+            ),
+            array('title' => __('View Activity'),
+                'class' => 'XiboFormButton',
+                'selected' => false,
+                'link' => 'index.php?p=oauth&q=ViewLog',
+                'help' => __('View a log of application activity'),
+                'onclick' => ''
+            )
+        );
     }
 
     /**
@@ -69,35 +73,31 @@ class oauthDAO extends baseDAO {
      */
     public function Grid()
     {
-        $db =& $this->db;
+
         $user = $this->getUser();
         $response = $this->getState();
 
         $store = OAuthStore::instance();
 
-        try
-        {
+        try {
             $list = $store->listConsumers($this->user->userId);
-        }
-        catch (OAuthException $e)
-        {
+        } catch (OAuthException $e) {
             trigger_error($e->getMessage());
             trigger_error(__('Error listing Applications.'), E_USER_ERROR);
         }
 
         $cols = array(
-                array('name' => 'application_title', 'title' => __('Title')),
-                array('name' => 'application_descr', 'title' => __('Description')),
-                array('name' => 'application_uri', 'title' => __('Homepage')),
-                array('name' => 'consumer_key', 'title' => __('Key')),
-                array('name' => 'consumer_secret', 'title' => __('Secret'))
-            );
+            array('name' => 'application_title', 'title' => __('Title')),
+            array('name' => 'application_descr', 'title' => __('Description')),
+            array('name' => 'application_uri', 'title' => __('Homepage')),
+            array('name' => 'consumer_key', 'title' => __('Key')),
+            array('name' => 'consumer_secret', 'title' => __('Secret'))
+        );
         Theme::Set('table_cols', $cols);
 
         $rows = array();
 
-        foreach ($list as $app)
-        {
+        foreach ($list as $app) {
             $app['application_title'] = \Xibo\Helper\Sanitize::string($app['application_title']);
             $app['application_descr'] = \Xibo\Helper\Sanitize::string($app['application_descr']);
             $app['application_uri'] = \Kit::ValidateParam($app['application_uri'], _URI);
@@ -120,26 +120,22 @@ class oauthDAO extends baseDAO {
      */
     public function ViewLog()
     {
-        $db         =& $this->db;
-        $user       =& $this->user;
-        $response   = new ApplicationState();
+        $db =& $this->db;
+        $user =& $this->user;
+        $response = new ApplicationState();
 
         $store = OAuthStore::instance();
 
-        try
-        {
+        try {
             $list = $store->listLog(null, $this->user->userId);
-        }
-        catch (OAuthException $e)
-        {
+        } catch (OAuthException $e) {
             trigger_error($e->getMessage());
             trigger_error(__('Error listing Log.'), E_USER_ERROR);
         }
 
         $rows = array();
 
-        foreach($list as $row)
-        {
+        foreach ($list as $row) {
             $row['received'] = \Xibo\Helper\Sanitize::string($row['received']);
             $row['notes'] = \Xibo\Helper\Sanitize::string($row['notes']);
             $row['timestamp'] = \Xibo\Helper\Sanitize::string($row['timestamp']);
@@ -169,13 +165,11 @@ class oauthDAO extends baseDAO {
         $server = new OAuthServer();
 
         // Request must be signed
-        try
-        {
+        try {
             $consumerDetails = $server->authorizeVerify();
 
             // Has the user submitted the form?
-            if ($_SERVER['REQUEST_METHOD'] == 'POST')
-            {
+            if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                 // See if the user clicked the 'allow' submit button
                 if (isset($_POST['Allow']))
@@ -191,9 +185,7 @@ class oauthDAO extends baseDAO {
 
                 // No oauth_callback, show the user the result of the authorization
                 echo __('Request authorized. Please return to your application.');
-           }
-           else
-           {
+            } else {
                 // Not submitted the form, therefore we must show the login box.
                 $store = OAuthStore::instance();
                 $consumer = $store->getConsumer($consumerDetails['consumer_key'], $userid, true);
@@ -206,10 +198,8 @@ class oauthDAO extends baseDAO {
                 $this->getState()->html .= Theme::RenderReturn('application_verify');
                 $this->getState()->html .= Theme::RenderReturn('footer');
                 exit();
-           }
-        }
-        catch (OAuthException $e)
-        {
+            }
+        } catch (OAuthException $e) {
             // Unsigned request is not allowed.
             trigger_error($e->getMessage());
             trigger_error(__('Unsigned requests are not allowed to the authorize page.'), E_USER_ERROR);
@@ -221,24 +211,24 @@ class oauthDAO extends baseDAO {
      */
     public function RegisterForm()
     {
-        $db 		=& $this->db;
-        $user		=& $this->user;
-        $response	= new ApplicationState();
+        $db =& $this->db;
+        $user =& $this->user;
+        $response = new ApplicationState();
 
         Theme::Set('form_id', 'RegisterOAuth');
         Theme::Set('form_action', 'index.php?p=oauth&q=Register');
 
         $formFields = array();
-        $formFields[] = FormManager::AddText('requester_name', __('Full Name'), NULL, 
+        $formFields[] = FormManager::AddText('requester_name', __('Full Name'), NULL,
             __('The name of the person or organization that authored this application.'), 'n', 'required');
 
-        $formFields[] = FormManager::AddEmail('requester_email', __('Email Address'), NULL, 
+        $formFields[] = FormManager::AddEmail('requester_email', __('Email Address'), NULL,
             __('The email address of the person or organization that authored this application.'), 'e', 'required');
 
-        $formFields[] = FormManager::AddText('application_uri', __('Application Homepage'), NULL, 
+        $formFields[] = FormManager::AddText('application_uri', __('Application Homepage'), NULL,
             __('The URL of your application homepage'), 'h', '');
 
-        $formFields[] = FormManager::AddText('callback_uri', __('Application Homepage'), NULL, 
+        $formFields[] = FormManager::AddText('callback_uri', __('Application Homepage'), NULL,
             __('The call back URL for requests'), 'c', '');
 
         Theme::Set('form_fields', $formFields);
@@ -256,28 +246,24 @@ class oauthDAO extends baseDAO {
     public function Register()
     {
 
-        
-        $db =& $this->db;
+
         $user = $this->getUser();
         $response = $this->getState();
         $userid = \Xibo\Helper\Sanitize::getInt('userid');
 
         $message = '';
 
-        try
-    	{
+        try {
             $store = OAuthStore::instance();
-            $key   = $store->updateConsumer($_POST, $userid);
+            $key = $store->updateConsumer($_POST, $userid);
 
             $c = $store->getConsumer($key, $userid);
 
-            $message .= sprintf(__('Your consumer key is: %s'),$c['consumer_key']) . '<br />';
+            $message .= sprintf(__('Your consumer key is: %s'), $c['consumer_key']) . '<br />';
             $message .= sprintf(__('Your consumer secret is: %s'), $c['consumer_secret']) . '<br />';
-    	}
-    	catch (OAuthException $e)
-    	{
+        } catch (OAuthException $e) {
             trigger_error('Error: ' . $e->getMessage(), E_USER_ERROR);
-    	}
+        }
 
         $response->SetFormSubmitResponse($message, false);
 
@@ -288,26 +274,22 @@ class oauthDAO extends baseDAO {
      */
     public function UserTokens()
     {
-        $db         =& $this->db;
-        $user       =& $this->user;
-        $response   = new ApplicationState();
+        $db =& $this->db;
+        $user =& $this->user;
+        $response = new ApplicationState();
 
         $store = OAuthStore::instance();
 
-        try
-        {
+        try {
             $list = $store->listConsumerTokens(Kit::GetParam('userID', _GET, _INT));
-        }
-        catch (OAuthException $e)
-        {
+        } catch (OAuthException $e) {
             trigger_error($e->getMessage());
             trigger_error(__('Error listing Log.'), E_USER_ERROR);
         }
 
         $rows = array();
 
-        foreach ($list as $app)
-        {
+        foreach ($list as $app) {
             $app['application_title'] = \Xibo\Helper\Sanitize::string($app['application_title']);
             $app['enabled'] = \Xibo\Helper\Sanitize::string($app['enabled']);
             $app['status'] = \Xibo\Helper\Sanitize::string($app['status']);
@@ -325,4 +307,5 @@ class oauthDAO extends baseDAO {
 
     }
 }
+
 ?>

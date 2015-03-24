@@ -18,7 +18,16 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-use Xibo\Entity\User;
+namespace Xibo\Controller;
+use baseDAO;
+use Config;
+use database;
+use DisplayGroup;
+use DOMDocument;
+use DOMXPath;
+use finfo;
+use FormManager;
+use Session;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Date;
 use Xibo\Helper\Help;
@@ -27,16 +36,8 @@ use Xibo\Helper\Theme;
 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-class displayDAO extends baseDAO
+class Display extends Base
 {
-    function __construct(database $db, user $user)
-    {
-        $this->db   =& $db;
-        $this->user =& $user;
-
-        $this->sub_page = \Kit::GetParam('sp', _GET, _WORD, 'view');
-        $this->ajax     = \Kit::GetParam('ajax', _REQUEST, _WORD, 'false');
-    }
 
     /**
      * Include display page template page based on sub page selected
@@ -59,8 +60,7 @@ class displayDAO extends baseDAO
             $filterMacAddress = Session::Get('display', 'filterMacAddress');
             $filter_showView = Session::Get('display', 'filter_showView');
             $filter_autoRefresh = Session::Get('display', 'filter_autoRefresh');
-        }
-        else {
+        } else {
             $filter_pinned = 0;
             $filter_displaygroup = NULL;
             $filter_display = NULL;
@@ -101,11 +101,11 @@ class displayDAO extends baseDAO
             NULL,
             'd');
 
-        $formFields[] = FormManager::AddNumber('filter_autoRefresh', __('Auto Refresh'), $filter_autoRefresh, 
+        $formFields[] = FormManager::AddNumber('filter_autoRefresh', __('Auto Refresh'), $filter_autoRefresh,
             NULL, 'r');
 
-        $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'), 
-            $filter_pinned, NULL, 
+        $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'),
+            $filter_pinned, NULL,
             'k');
 
         // Call to render the template
@@ -114,17 +114,18 @@ class displayDAO extends baseDAO
         $this->getState()->html .= Theme::RenderReturn('grid_render');
     }
 
-    function actionMenu() {
+    function actionMenu()
+    {
 
         return array(
-                array('title' => __('Filter'),
-                    'class' => '',
-                    'selected' => false,
-                    'link' => '#',
-                    'help' => __('Open the filter form'),
-                    'onclick' => 'ToggleFilterView(\'Filter\')'
-                    )
-            );                   
+            array('title' => __('Filter'),
+                'class' => '',
+                'selected' => false,
+                'link' => '#',
+                'help' => __('Open the filter form'),
+                'onclick' => 'ToggleFilterView(\'Filter\')'
+            )
+        );
     }
 
     /**
@@ -134,10 +135,10 @@ class displayDAO extends baseDAO
     function modify()
     {
 
-        
+
         $response = $this->getState();
 
-        $displayObject  = new Display();
+        $displayObject = new Display();
         $displayObject->displayId = \Xibo\Helper\Sanitize::getInt('displayid');
 
         $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayObject->displayId), true);
@@ -195,125 +196,125 @@ class displayDAO extends baseDAO
         Theme::Set('form_id', 'DisplayEditForm');
         Theme::Set('form_action', 'index.php?p=display&q=modify');
         Theme::Set('form_meta', '<input type="hidden" name="displayid" value="' . $displayObject->displayId . '" />');
-        
+
         // Column 1
         $formFields = array();
-        $formFields[] = FormManager::AddText('display', __('Display'), $displayObject->display, 
+        $formFields[] = FormManager::AddText('display', __('Display'), $displayObject->display,
             __('The Name of the Display - (1 - 50 characters).'), 'd', 'required');
 
-        $formFields[] = FormManager::AddText('hardwareKey', __('Display\'s Hardware Key'), $displayObject->license, 
+        $formFields[] = FormManager::AddText('hardwareKey', __('Display\'s Hardware Key'), $displayObject->license,
             __('A unique identifier for this display.'), 'h', 'required', NULL, false);
 
-        $formFields[] = FormManager::AddText('description', __('Description'), $displayObject->description, 
+        $formFields[] = FormManager::AddText('description', __('Description'), $displayObject->description,
             __('A description - (1 - 254 characters).'), 'p', 'maxlength="50"');
 
         $formFields[] = FormManager::AddCombo(
-                    'licensed', 
-                    __('Licence Display?'), 
-                    $displayObject->licensed,
-                    array(array('licensedid' => '1', 'licensed' => 'Yes'), array('licensedid' => '0', 'licensed' => 'No')),
-                    'licensedid',
-                    'licensed',
-                    __('Use one of the available licenses for this display?'), 
-                    'l');
+            'licensed',
+            __('Licence Display?'),
+            $displayObject->licensed,
+            array(array('licensedid' => '1', 'licensed' => 'Yes'), array('licensedid' => '0', 'licensed' => 'No')),
+            'licensedid',
+            'licensed',
+            __('Use one of the available licenses for this display?'),
+            'l');
 
         $formFields[] = FormManager::AddCombo(
-                    'defaultlayoutid', 
-                    __('Default Layout'), 
-                    $displayObject->defaultLayoutId,
-                    $this->user->LayoutList(),
-                    'layoutid',
-                    'layout',
-                    __('The Default Layout to Display where there is no other content.'), 
-                    't');
+            'defaultlayoutid',
+            __('Default Layout'),
+            $displayObject->defaultLayoutId,
+            $this->user->LayoutList(),
+            'layoutid',
+            'layout',
+            __('The Default Layout to Display where there is no other content.'),
+            't');
 
         Theme::Set('form_fields_general', $formFields);
 
         // Maintenance
         $formFields = array();
         $formFields[] = FormManager::AddCombo(
-                    'email_alert', 
-                    __('Email Alerts'), 
-                    $displayObject->emailAlert,
-                    array(array('id' => '1', 'value' => 'Yes'), array('id' => '0', 'value' => 'No')),
-                    'id',
-                    'value',
-                    __('Do you want to be notified by email if there is a problem with this display?'), 
-                    'a');
+            'email_alert',
+            __('Email Alerts'),
+            $displayObject->emailAlert,
+            array(array('id' => '1', 'value' => 'Yes'), array('id' => '0', 'value' => 'No')),
+            'id',
+            'value',
+            __('Do you want to be notified by email if there is a problem with this display?'),
+            'a');
 
-        $formFields[] = FormManager::AddCheckbox('alert_timeout', __('Use the Global Timeout?'), $displayObject->alertTimeout, 
-            __('Should this display be tested against the global time out or the client collection interval?'), 
+        $formFields[] = FormManager::AddCheckbox('alert_timeout', __('Use the Global Timeout?'), $displayObject->alertTimeout,
+            __('Should this display be tested against the global time out or the client collection interval?'),
             'o');
 
         Theme::Set('form_fields_maintenance', $formFields);
-        
+
         // Location
         $formFields = array();
 
-        $formFields[] = FormManager::AddNumber('latitude', __('Latitude'), $displayObject->latitude, 
+        $formFields[] = FormManager::AddNumber('latitude', __('Latitude'), $displayObject->latitude,
             __('The Latitude of this display'), 'g');
 
-        $formFields[] = FormManager::AddNumber('longitude', __('Longitude'), $displayObject->longitude, 
+        $formFields[] = FormManager::AddNumber('longitude', __('Longitude'), $displayObject->longitude,
             __('The Longitude of this Display'), 'g');
 
         Theme::Set('form_fields_location', $formFields);
 
         // Wake on LAN
         $formFields = array();
-        
-        $formFields[] = FormManager::AddCheckbox('wakeOnLanEnabled', __('Enable Wake on LAN'), 
-            $displayObject->wakeOnLanEnabled, __('Wake on Lan requires the correct network configuration to route the magic packet to the display PC'), 
+
+        $formFields[] = FormManager::AddCheckbox('wakeOnLanEnabled', __('Enable Wake on LAN'),
+            $displayObject->wakeOnLanEnabled, __('Wake on Lan requires the correct network configuration to route the magic packet to the display PC'),
             'w');
 
-        $formFields[] = FormManager::AddText('broadCastAddress', __('BroadCast Address'), (($displayObject->broadCastAddress == '') ? $displayObject->clientAddress : $displayObject->broadCastAddress), 
+        $formFields[] = FormManager::AddText('broadCastAddress', __('BroadCast Address'), (($displayObject->broadCastAddress == '') ? $displayObject->clientAddress : $displayObject->broadCastAddress),
             __('The IP address of the remote host\'s broadcast address (or gateway)'), 'b');
 
-        $formFields[] = FormManager::AddText('secureOn', __('Wake on LAN SecureOn'), $displayObject->secureOn, 
+        $formFields[] = FormManager::AddText('secureOn', __('Wake on LAN SecureOn'), $displayObject->secureOn,
             __('Enter a hexadecimal password of a SecureOn enabled Network Interface Card (NIC) of the remote host. Enter a value in this pattern: \'xx-xx-xx-xx-xx-xx\'. Leave the following field empty, if SecureOn is not used (for example, because the NIC of the remote host does not support SecureOn).'), 's');
 
-        $formFields[] = FormManager::AddText('wakeOnLanTime', __('Wake on LAN Time'), $displayObject->wakeOnLanTime, 
+        $formFields[] = FormManager::AddText('wakeOnLanTime', __('Wake on LAN Time'), $displayObject->wakeOnLanTime,
             __('The time this display should receive the WOL command, using the 24hr clock - e.g. 19:00. Maintenance must be enabled.'), 't');
 
-        $formFields[] = FormManager::AddText('cidr', __('Wake on LAN CIDR'), $displayObject->cidr, 
+        $formFields[] = FormManager::AddText('cidr', __('Wake on LAN CIDR'), $displayObject->cidr,
             __('Enter a number within the range of 0 to 32 in the following field. Leave the following field empty, if no subnet mask should be used (CIDR = 0). If the remote host\'s broadcast address is unknown: Enter the host name or IP address of the remote host in Broad Cast Address and enter the CIDR subnet mask of the remote host in this field.'), 'c');
 
         Theme::Set('form_fields_wol', $formFields);
 
         // Advanced
         $formFields = array();
-        
+
         $displayProfileList = $this->user->DisplayProfileList(NULL, array('type' => $displayObject->clientType));
         array_unshift($displayProfileList, array('displayprofileid' => 0, 'name' => ''));
 
         $formFields[] = FormManager::AddCombo(
-                    'displayprofileid', 
-                    __('Settings Profile?'), 
-                    $displayObject->displayProfileId,
-                    $displayProfileList,
-                    'displayprofileid',
-                    'name',
-                    __('What display profile should this display use?'), 
-                    'p');
+            'displayprofileid',
+            __('Settings Profile?'),
+            $displayObject->displayProfileId,
+            $displayProfileList,
+            'displayprofileid',
+            'name',
+            __('What display profile should this display use?'),
+            'p');
 
         $formFields[] = FormManager::AddCombo(
-                    'inc_schedule', 
-                    __('Interleave Default'), 
-                    $displayObject->incSchedule,
-                    array(array('id' => '1', 'value' => 'Yes'), array('id' => '0', 'value' => 'No')),
-                    'id',
-                    'value',
-                    __('Whether to always put the default layout into the cycle.'), 
-                    'i');
+            'inc_schedule',
+            __('Interleave Default'),
+            $displayObject->incSchedule,
+            array(array('id' => '1', 'value' => 'Yes'), array('id' => '0', 'value' => 'No')),
+            'id',
+            'value',
+            __('Whether to always put the default layout into the cycle.'),
+            'i');
 
         $formFields[] = FormManager::AddCombo(
-                    'auditing', 
-                    __('Auditing'), 
-                    $displayObject->isAuditing,
-                    array(array('id' => '1', 'value' => 'Yes'), array('id' => '0', 'value' => 'No')),
-                    'id',
-                    'value',
-                    __('Collect auditing from this client. Should only be used if there is a problem with the display.'), 
-                    'a');
+            'auditing',
+            __('Auditing'),
+            $displayObject->isAuditing,
+            array(array('id' => '1', 'value' => 'Yes'), array('id' => '0', 'value' => 'No')),
+            'id',
+            'value',
+            __('Collect auditing from this client. Should only be used if there is a problem with the display.'),
+            'a');
 
         // Show the resolved settings for this display.
         $formFields[] = FormManager::AddMessage(__('The settings for this display are shown below. They are taken from the active Display Profile for this Display, which can be changed in Display Settings. If you have altered the Settings Profile above, you will need to save and re-show the form.'));
@@ -339,14 +340,13 @@ class displayDAO extends baseDAO
                     if ($option['id'] == $profile[$i]['value'])
                         $profile[$i]['valueString'] = $option['value'];
                 }
-            }
-            else if ($profile[$i]['fieldType'] == 'timePicker') {
+            } else if ($profile[$i]['fieldType'] == 'timePicker') {
                 $profile[$i]['valueString'] = Date::getSystemDate($profile[$i]['value'] / 1000, 'H:i');
             }
         }
 
         Theme::Set('table_cols', $cols);
-        Theme::Set('table_rows',$profile);
+        Theme::Set('table_rows', $profile);
         $formFields[] = FormManager::AddRaw(Theme::RenderReturn('table_render'));
 
         Theme::Set('form_fields_advanced', $formFields);
@@ -377,10 +377,10 @@ class displayDAO extends baseDAO
         // validate displays so we get a realistic view of the table
         Display::ValidateDisplays();
 
-        $db         =& $this->db;
-        $user       =& $this->user;
-        $response   = new ApplicationState();
-        
+
+        $user =& $this->user;
+        $response = new ApplicationState();
+
         // Filter by Name
         $filter_display = \Xibo\Helper\Sanitize::getString('filter_display');
         \Session::Set('display', 'filter_display', $filter_display);
@@ -388,7 +388,7 @@ class displayDAO extends baseDAO
         // Filter by Name
         $filterMacAddress = \Xibo\Helper\Sanitize::getString('filterMacAddress');
         \Session::Set('display', 'filterMacAddress', $filterMacAddress);
-        
+
         // Display Group
         $filter_displaygroupid = \Xibo\Helper\Sanitize::getInt('filter_displaygroup');
         \Session::Set('display', 'filter_displaygroup', $filter_displaygroupid);
@@ -401,13 +401,12 @@ class displayDAO extends baseDAO
         $filter_autoRefresh = \Kit::GetParam('filter_autoRefresh', _REQUEST, _INT, 0);
         \Session::Set('display', 'filter_autoRefresh', $filter_autoRefresh);
 
-        // Pinned option?        
+        // Pinned option?
         \Session::Set('display', 'DisplayFilter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 
         $displays = $user->DisplayList(array('displayid'), array('displaygroupid' => $filter_displaygroupid, 'display' => $filter_display, 'macAddress' => $filterMacAddress));
 
-        if (!is_array($displays))
-        {
+        if (!is_array($displays)) {
             trigger_error($db->error());
             trigger_error(__('Unable to get list of displays'), E_USER_ERROR);
         }
@@ -415,42 +414,41 @@ class displayDAO extends baseDAO
         // Do we want to make a VNC link out of the display name?
         $vncTemplate = Config::GetSetting('SHOW_DISPLAY_AS_VNCLINK');
         $linkTarget = \Xibo\Helper\Sanitize::string(Config::GetSetting('SHOW_DISPLAY_AS_VNC_TGT'));
-        
+
         $cols = array(
-                array('name' => 'displayid', 'title' => __('ID')),
-                array('name' => 'displayWithLink', 'title' => __('Display')),
-                array('name' => 'status', 'title' => __('Status'), 'icons' => true, 'iconDescription' => 'statusDescription'),
-                array('name' => 'licensed', 'title' => __('License'), 'icons' => true),
-                array('name' => 'currentLayout', 'title' => __('Current Layout'), 'hidden' => ($filter_showView != 3)),
-                array('name' => 'storageAvailableSpaceFormatted', 'title' => __('Storage Available'), 'hidden' => ($filter_showView != 3)),
-                array('name' => 'storageTotalSpaceFormatted', 'title' => __('Storage Total'), 'hidden' => ($filter_showView != 3)),
-                array('name' => 'storagePercentage', 'title' => __('Storage Free %'), 'hidden' => ($filter_showView != 3)),
-                array('name' => 'description', 'title' => __('Description'), 'hidden' => ($filter_showView != 0)),
-                array('name' => 'layout', 'title' => __('Default Layout'), 'hidden' => ($filter_showView == 1 || $filter_showView == 2)),
-                array('name' => 'inc_schedule', 'title' => __('Interleave Default'), 'icons' => true, 'hidden' => ($filter_showView == 1 || $filter_showView == 2)),
-                array('name' => 'email_alert', 'title' => __('Email Alert'), 'icons' => true, 'hidden' => ($filter_showView != 0)),
-                array('name' => 'loggedin', 'title' => __('Logged In'), 'icons' => true),
-                array('name' => 'lastaccessed', 'title' => __('Last Accessed')),
-                array('name' => 'clientaddress', 'title' => __('IP Address'), 'hidden' => ($filter_showView == 1)),
-                array('name' => 'macaddress', 'title' => __('Mac Address'), 'hidden' => ($filter_showView == 1)),
-                array('name' => 'screenShotRequested', 'title' => __('Screen shot?'), 'icons' => true, 'hidden' => ($filter_showView != 1 && $filter_showView != 2)),
-                array('name' => 'thumbnail', 'title' => __('Thumbnail'), 'hidden' => ($filter_showView != 1 && $filter_showView != 2))
-            );
-        
+            array('name' => 'displayid', 'title' => __('ID')),
+            array('name' => 'displayWithLink', 'title' => __('Display')),
+            array('name' => 'status', 'title' => __('Status'), 'icons' => true, 'iconDescription' => 'statusDescription'),
+            array('name' => 'licensed', 'title' => __('License'), 'icons' => true),
+            array('name' => 'currentLayout', 'title' => __('Current Layout'), 'hidden' => ($filter_showView != 3)),
+            array('name' => 'storageAvailableSpaceFormatted', 'title' => __('Storage Available'), 'hidden' => ($filter_showView != 3)),
+            array('name' => 'storageTotalSpaceFormatted', 'title' => __('Storage Total'), 'hidden' => ($filter_showView != 3)),
+            array('name' => 'storagePercentage', 'title' => __('Storage Free %'), 'hidden' => ($filter_showView != 3)),
+            array('name' => 'description', 'title' => __('Description'), 'hidden' => ($filter_showView != 0)),
+            array('name' => 'layout', 'title' => __('Default Layout'), 'hidden' => ($filter_showView == 1 || $filter_showView == 2)),
+            array('name' => 'inc_schedule', 'title' => __('Interleave Default'), 'icons' => true, 'hidden' => ($filter_showView == 1 || $filter_showView == 2)),
+            array('name' => 'email_alert', 'title' => __('Email Alert'), 'icons' => true, 'hidden' => ($filter_showView != 0)),
+            array('name' => 'loggedin', 'title' => __('Logged In'), 'icons' => true),
+            array('name' => 'lastaccessed', 'title' => __('Last Accessed')),
+            array('name' => 'clientaddress', 'title' => __('IP Address'), 'hidden' => ($filter_showView == 1)),
+            array('name' => 'macaddress', 'title' => __('Mac Address'), 'hidden' => ($filter_showView == 1)),
+            array('name' => 'screenShotRequested', 'title' => __('Screen shot?'), 'icons' => true, 'hidden' => ($filter_showView != 1 && $filter_showView != 2)),
+            array('name' => 'thumbnail', 'title' => __('Thumbnail'), 'hidden' => ($filter_showView != 1 && $filter_showView != 2))
+        );
+
         Theme::Set('table_cols', $cols);
         Theme::Set('rowClass', 'rowColor');
 
         $rows = array();
 
-        foreach($displays as $row) {
+        foreach ($displays as $row) {
             // VNC Template as display name?
             if ($vncTemplate != '' && $row['clientaddress'] != '') {
                 if ($linkTarget == '')
                     $linkTarget = '_top';
 
                 $row['displayWithLink'] = sprintf('<a href="' . $vncTemplate . '" title="VNC to ' . $row['display'] . '" target="' . $linkTarget . '">' . Theme::Prepare($row['display']) . '</a>', $row['clientaddress']);
-            }
-            else {
+            } else {
                 $row['displayWithLink'] = $row['display'];
             }
 
@@ -484,8 +482,7 @@ class displayDAO extends baseDAO
             // If we aren't logged in, and we are showThumbnail == 2, then show a circle
             if ($filter_showView == 2 && $row['loggedin'] == 0) {
                 $row['thumbnail'] = '<i class="fa fa-times-circle"></i>';
-            }
-            else if ($filter_showView <> 0 && file_exists(Config::GetSetting('LIBRARY_LOCATION') . 'screenshots/' . $row['displayid'] . '_screenshot.jpg')) {
+            } else if ($filter_showView <> 0 && file_exists(Config::GetSetting('LIBRARY_LOCATION') . 'screenshots/' . $row['displayid'] . '_screenshot.jpg')) {
                 $row['thumbnail'] = '<a data-toggle="lightbox" data-type="image" href="index.php?p=display&q=ScreenShot&DisplayId=' . $row['displayid'] . '"><img class="display-screenshot" src="index.php?p=display&q=ScreenShot&DisplayId=' . $row['displayid'] . '&' . \Kit::uniqueId() . '" /></a>';
             }
 
@@ -498,19 +495,19 @@ class displayDAO extends baseDAO
             if ($row['edit'] == 1) {
                 // Edit
                 $row['buttons'][] = array(
-                        'id' => 'display_button_edit',
-                        'url' => 'index.php?p=display&q=displayForm&displayid=' . $row['displayid'],
-                        'text' => __('Edit')
-                    );
+                    'id' => 'display_button_edit',
+                    'url' => 'index.php?p=display&q=displayForm&displayid=' . $row['displayid'],
+                    'text' => __('Edit')
+                );
             }
 
             // Delete
             if ($row['del'] == 1) {
                 $row['buttons'][] = array(
-                        'id' => 'display_button_delete',
-                        'url' => 'index.php?p=display&q=DeleteForm&displayid=' . $row['displayid'],
-                        'text' => __('Delete')
-                    );
+                    'id' => 'display_button_delete',
+                    'url' => 'index.php?p=display&q=DeleteForm&displayid=' . $row['displayid'],
+                    'text' => __('Delete')
+                );
             }
 
             if ($row['edit'] == 1 || $row['del'] == 1) {
@@ -520,59 +517,59 @@ class displayDAO extends baseDAO
             // Schedule Now
             if ($row['edit'] == 1 || Config::GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes') {
                 $row['buttons'][] = array(
-                        'id' => 'display_button_schedulenow',
-                        'url' => 'index.php?p=schedule&q=ScheduleNowForm&displayGroupId=' . $row['displaygroupid'],
-                        'text' => __('Schedule Now')
-                    );
+                    'id' => 'display_button_schedulenow',
+                    'url' => 'index.php?p=schedule&q=ScheduleNowForm&displayGroupId=' . $row['displaygroupid'],
+                    'text' => __('Schedule Now')
+                );
             }
 
             if ($row['edit'] == 1) {
 
                 // Default Layout
                 $row['buttons'][] = array(
-                        'id' => 'display_button_defaultlayout',
-                        'url' => 'index.php?p=display&q=DefaultLayoutForm&DisplayId=' . $row['displayid'],
-                        'text' => __('Default Layout')
-                    );
+                    'id' => 'display_button_defaultlayout',
+                    'url' => 'index.php?p=display&q=DefaultLayoutForm&DisplayId=' . $row['displayid'],
+                    'text' => __('Default Layout')
+                );
 
                 // File Associations
                 $row['buttons'][] = array(
-                        'id' => 'displaygroup_button_fileassociations',
-                        'url' => 'index.php?p=displaygroup&q=FileAssociations&DisplayGroupID=' . $row['displaygroupid'],
-                        'text' => __('Assign Files')
-                    );
+                    'id' => 'displaygroup_button_fileassociations',
+                    'url' => 'index.php?p=displaygroup&q=FileAssociations&DisplayGroupID=' . $row['displaygroupid'],
+                    'text' => __('Assign Files')
+                );
 
                 // Screen Shot
                 $row['buttons'][] = array(
-                        'id' => 'display_button_requestScreenShot',
-                        'url' => 'index.php?p=display&q=RequestScreenShotForm&displayId=' . $row['displayid'],
-                        'text' => __('Request Screen Shot'),
-                        'multi-select' => true,
-                        'dataAttributes' => array(
-                            array('name' => 'multiselectlink', 'value' => 'index.php?p=display&q=RequestScreenShot'),
-                            array('name' => 'rowtitle', 'value' => $row['display']),
-                            array('name' => 'displayId', 'value' => $row['displayid'])
-                        )
-                    );
+                    'id' => 'display_button_requestScreenShot',
+                    'url' => 'index.php?p=display&q=RequestScreenShotForm&displayId=' . $row['displayid'],
+                    'text' => __('Request Screen Shot'),
+                    'multi-select' => true,
+                    'dataAttributes' => array(
+                        array('name' => 'multiselectlink', 'value' => 'index.php?p=display&q=RequestScreenShot'),
+                        array('name' => 'rowtitle', 'value' => $row['display']),
+                        array('name' => 'displayId', 'value' => $row['displayid'])
+                    )
+                );
 
                 $row['buttons'][] = array('linkType' => 'divider');
             }
 
             // Media Inventory
             $row['buttons'][] = array(
-                    'id' => 'display_button_mediainventory',
-                    'url' => 'index.php?p=display&q=MediaInventory&DisplayId=' . $row['displayid'],
-                    'text' => __('Media Inventory')
-                );
+                'id' => 'display_button_mediainventory',
+                'url' => 'index.php?p=display&q=MediaInventory&DisplayId=' . $row['displayid'],
+                'text' => __('Media Inventory')
+            );
 
             if ($row['edit'] == 1) {
 
                 // Logs
                 $row['buttons'][] = array(
-                        'id' => 'displaygroup_button_logs',
-                        'url' => 'index.php?p=log&q=LastHundredForDisplay&displayid=' . $row['displayid'],
-                        'text' => __('Recent Log')
-                    );
+                    'id' => 'displaygroup_button_logs',
+                    'url' => 'index.php?p=log&q=LastHundredForDisplay&displayid=' . $row['displayid'],
+                    'text' => __('Recent Log')
+                );
 
                 $row['buttons'][] = array('linkType' => 'divider');
             }
@@ -581,24 +578,24 @@ class displayDAO extends baseDAO
 
                 // Display Groups
                 $row['buttons'][] = array(
-                        'id' => 'display_button_group_membership',
-                        'url' => 'index.php?p=display&q=MemberOfForm&DisplayID=' . $row['displayid'],
-                        'text' => __('Display Groups')
-                    );
+                    'id' => 'display_button_group_membership',
+                    'url' => 'index.php?p=display&q=MemberOfForm&DisplayID=' . $row['displayid'],
+                    'text' => __('Display Groups')
+                );
 
                 // Permissions
                 $row['buttons'][] = array(
-                        'id' => 'display_button_group_membership',
-                        'url' => 'index.php?p=displaygroup&q=PermissionsForm&DisplayGroupID=' . $row['displaygroupid'],
-                        'text' => __('Permissions')
-                    );
+                    'id' => 'display_button_group_membership',
+                    'url' => 'index.php?p=displaygroup&q=PermissionsForm&DisplayGroupID=' . $row['displaygroupid'],
+                    'text' => __('Permissions')
+                );
 
                 // Version Information
                 $row['buttons'][] = array(
-                        'id' => 'display_button_version_instructions',
-                        'url' => 'index.php?p=displaygroup&q=VersionInstructionsForm&displaygroupid=' . $row['displaygroupid'] . '&displayid=' . $row['displayid'],
-                        'text' => __('Version Information')
-                    );
+                    'id' => 'display_button_version_instructions',
+                    'url' => 'index.php?p=displaygroup&q=VersionInstructionsForm&displaygroupid=' . $row['displaygroupid'] . '&displayid=' . $row['displayid'],
+                    'text' => __('Version Information')
+                );
 
                 $row['buttons'][] = array('linkType' => 'divider');
             }
@@ -606,10 +603,10 @@ class displayDAO extends baseDAO
             if ($row['edit'] == 1) {
                 // Wake On LAN
                 $row['buttons'][] = array(
-                        'id' => 'display_button_wol',
-                        'url' => 'index.php?p=display&q=WakeOnLanForm&DisplayId=' . $row['displayid'],
-                        'text' => __('Wake on LAN')
-                    );
+                    'id' => 'display_button_wol',
+                    'url' => 'index.php?p=display&q=WakeOnLanForm&DisplayId=' . $row['displayid'],
+                    'text' => __('Wake on LAN')
+                );
             }
 
             // Assign this to the table row
@@ -630,7 +627,7 @@ class displayDAO extends baseDAO
      */
     function DeleteForm()
     {
-        $db =& $this->db;
+
         $user = $this->getUser();
         $response = $this->getState();
         $displayid = \Xibo\Helper\Sanitize::getInt('displayid');
@@ -659,8 +656,8 @@ class displayDAO extends baseDAO
     function Delete()
     {
 
-        
-        $db =& $this->db;
+
+
         $response = $this->getState();
         $displayid = \Kit::GetParam('displayid', _POST, _INT, 0);
 
@@ -685,7 +682,7 @@ class displayDAO extends baseDAO
      */
     public function DefaultLayoutForm()
     {
-        $db =& $this->db;
+
         $response = $this->getState();
 
         $displayId = \Xibo\Helper\Sanitize::getInt('DisplayId');
@@ -694,8 +691,7 @@ class displayDAO extends baseDAO
         if (!$auth->edit)
             trigger_error(__('You do not have permission to edit this display'), E_USER_ERROR);
 
-        if (!$defaultLayoutId = $this->db->GetSingleValue(sprintf("SELECT defaultlayoutid FROM display WHERE displayid = %d", $displayId), 'defaultlayoutid', _INT))
-        {
+        if (!$defaultLayoutId = $this->db->GetSingleValue(sprintf("SELECT defaultlayoutid FROM display WHERE displayid = %d", $displayId), 'defaultlayoutid', _INT)) {
             trigger_error($db->error());
             trigger_error(__('Unable to get the default layout'), E_USER_ERROR);
         }
@@ -706,14 +702,14 @@ class displayDAO extends baseDAO
 
         $formFields = array();
         $formFields[] = FormManager::AddCombo(
-                    'defaultlayoutid', 
-                    __('Default Layout'), 
-                    $defaultLayoutId,
-                    $this->user->LayoutList(),
-                    'layoutid',
-                    'layout',
-                    __('The Default Layout will be shown there are no other scheduled Layouts. It is usually a full screen logo or holding image.'), 
-                    'd');
+            'defaultlayoutid',
+            __('Default Layout'),
+            $defaultLayoutId,
+            $this->user->LayoutList(),
+            'layoutid',
+            'layout',
+            __('The Default Layout will be shown there are no other scheduled Layouts. It is usually a full screen logo or holding image.'),
+            'd');
 
         Theme::Set('form_fields', $formFields);
 
@@ -730,10 +726,10 @@ class displayDAO extends baseDAO
     public function DefaultLayout()
     {
 
-        
-        $db =& $this->db;
+
+
         $response = $this->getState();
-        $displayObject  = new Display($db);
+        $displayObject = new Display($db);
 
         $displayId = \Xibo\Helper\Sanitize::getInt('DisplayId');
         $defaultLayoutId = \Xibo\Helper\Sanitize::getInt('defaultlayoutid');
@@ -754,7 +750,7 @@ class displayDAO extends baseDAO
      */
     public function MediaInventory()
     {
-        $db =& $this->db;
+
         $response = $this->getState();
         $displayId = \Xibo\Helper\Sanitize::getInt('DisplayId');
 
@@ -769,8 +765,7 @@ class displayDAO extends baseDAO
         $SQL = "SELECT IFNULL(MediaInventoryXml, '<xml></xml>') AS MediaInventoryXml FROM display WHERE DisplayId = %d";
         $SQL = sprintf($SQL, $displayId);
 
-        if (!$mediaInventoryXml = $db->GetSingleValue($SQL, 'MediaInventoryXml', _HTMLSTRING))
-        {
+        if (!$mediaInventoryXml = $db->GetSingleValue($SQL, 'MediaInventoryXml', _HTMLSTRING)) {
             trigger_error($db->error());
             trigger_error(__('Unable to get the Inventory for this Display'), E_USER_ERROR);
         }
@@ -782,11 +777,11 @@ class displayDAO extends baseDAO
             trigger_error(__('Invalid Media Inventory'), E_USER_ERROR);
 
         $cols = array(
-                array('name' => 'id', 'title' => __('ID')),
-                array('name' => 'type', 'title' => __('Type')),
-                array('name' => 'complete', 'title' => __('Complete')),
-                array('name' => 'last_checked', 'title' => __('Last Checked'))
-            );
+            array('name' => 'id', 'title' => __('ID')),
+            array('name' => 'type', 'title' => __('Type')),
+            array('name' => 'complete', 'title' => __('Complete')),
+            array('name' => 'last_checked', 'title' => __('Last Checked'))
+        );
         Theme::Set('table_cols', $cols);
 
         // Need to parse the XML and return a set of rows
@@ -795,8 +790,7 @@ class displayDAO extends baseDAO
 
         $rows = array();
 
-        foreach ($fileNodes as $node)
-        {
+        foreach ($fileNodes as $node) {
             $row = array();
             $row['type'] = $node->getAttribute('type');
             $row['id'] = $node->getAttribute('id');
@@ -827,8 +821,7 @@ class displayDAO extends baseDAO
         $sql .= "   INNER JOIN `lkdisplaydg` ON lkdisplaydg.DisplayGroupID = displaygroup.DisplayGroupID ";
         $sql .= " WHERE displaygroup.IsDisplaySpecific = 1 AND lkdisplaydg.DisplayID = %d";
 
-        if (!$id = $this->db->GetSingleValue(sprintf($sql, $displayId), 'DisplayGroupID', _INT))
-        {
+        if (!$id = $this->db->GetSingleValue(sprintf($sql, $displayId), 'DisplayGroupID', _INT)) {
             trigger_error($this->db->error());
             trigger_error(__('Unable to determine permissions'), E_USER_ERROR);
         }
@@ -841,9 +834,9 @@ class displayDAO extends baseDAO
      */
     public function MemberOfForm()
     {
-        $db =& $this->db;
+
         $response = $this->getState();
-        $displayID  = \Xibo\Helper\Sanitize::getInt('DisplayID');
+        $displayID = \Xibo\Helper\Sanitize::getInt('DisplayID');
 
         // Auth
         $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayID), true);
@@ -860,7 +853,7 @@ class displayDAO extends baseDAO
         Theme::Set('displaygroups_assigned_url', 'index.php?p=display&q=SetMemberOf&DisplayID=' . $displayID);
 
         // Display Groups Assigned
-        $SQL  = "";
+        $SQL = "";
         $SQL .= "SELECT displaygroup.DisplayGroupID, ";
         $SQL .= "       displaygroup.DisplayGroup, ";
         $SQL .= "       CONCAT('DisplayGroupID_', displaygroup.DisplayGroupID) AS list_id ";
@@ -872,8 +865,7 @@ class displayDAO extends baseDAO
 
         $displaygroupsAssigned = $db->GetArray($SQL);
 
-        if (!is_array($displaygroupsAssigned))
-        {
+        if (!is_array($displaygroupsAssigned)) {
             trigger_error($db->error());
             trigger_error(__('Error getting Display Groups'), E_USER_ERROR);
         }
@@ -881,7 +873,7 @@ class displayDAO extends baseDAO
         Theme::Set('displaygroups_assigned', $displaygroupsAssigned);
 
         // Display Groups not assigned
-        $SQL  = "";
+        $SQL = "";
         $SQL .= "SELECT displaygroup.DisplayGroupID, ";
         $SQL .= "       displaygroup.DisplayGroup, ";
         $SQL .= "       CONCAT('DisplayGroupID_', displaygroup.DisplayGroupID) AS list_id ";
@@ -898,12 +890,11 @@ class displayDAO extends baseDAO
 
         $displaygroups_available = $db->GetArray($SQL);
 
-        if (!is_array($displaygroups_available))
-        {
+        if (!is_array($displaygroups_available)) {
             trigger_error($db->error());
             trigger_error(__('Error getting Display Groups'), E_USER_ERROR);
         }
-        
+
         Theme::Set('displaygroups_available', $displaygroups_available);
 
         // Render the theme
@@ -922,7 +913,7 @@ class displayDAO extends baseDAO
      */
     public function SetMemberOf()
     {
-        $db =& $this->db;
+
         $response = $this->getState();
 
 
@@ -933,46 +924,37 @@ class displayDAO extends baseDAO
         $members = array();
 
         // Get a list of current members
-        $SQL  = "";
+        $SQL = "";
         $SQL .= "SELECT displaygroup.DisplayGroupID ";
         $SQL .= "FROM   displaygroup ";
         $SQL .= "   INNER JOIN lkdisplaydg ON lkdisplaydg.DisplayGroupID = displaygroup.DisplayGroupID ";
         $SQL .= sprintf("WHERE  lkdisplaydg.DisplayID   = %d ", $displayID);
         $SQL .= " AND displaygroup.IsDisplaySpecific = 0 ";
 
-        if(!$resultIn = $db->query($SQL))
-        {
+        if (!$resultIn = $db->query($SQL)) {
             trigger_error($db->error());
             trigger_error(__('Error getting Display Groups'), E_USER_ERROR);
         }
 
-        while($row = $db->get_assoc_row($resultIn))
-        {
+        while ($row = $db->get_assoc_row($resultIn)) {
             // Test whether this ID is in the array or not
             $displayGroupID = \Xibo\Helper\Sanitize::int($row['DisplayGroupID']);
 
-            if(!in_array($displayGroupID, $displayGroups))
-            {
+            if (!in_array($displayGroupID, $displayGroups)) {
                 // Its currently assigned but not in the $displays array
                 //  so we unassign
-                if (!$displayGroupObject->Unlink($displayGroupID, $displayID))
-                {
+                if (!$displayGroupObject->Unlink($displayGroupID, $displayID)) {
                     trigger_error($displayGroupObject->GetErrorMessage(), E_USER_ERROR);
                 }
-            }
-            else
-            {
+            } else {
                 $members[] = $displayGroupID;
             }
         }
 
-        foreach($displayGroups as $displayGroupID)
-        {
+        foreach ($displayGroups as $displayGroupID) {
             // Add any that are missing
-            if(!in_array($displayGroupID, $members))
-            {
-                if (!$displayGroupObject->Link($displayGroupID, $displayID))
-                {
+            if (!in_array($displayGroupID, $members)) {
+                if (!$displayGroupObject->Link($displayGroupID, $displayID)) {
                     trigger_error($displayGroupObject->GetErrorMessage(), E_USER_ERROR);
                 }
             }
@@ -987,7 +969,7 @@ class displayDAO extends baseDAO
      */
     public function WakeOnLanForm()
     {
-        $db =& $this->db;
+
         $response = $this->getState();
 
         $displayId = \Xibo\Helper\Sanitize::getInt('DisplayId');
@@ -1017,10 +999,10 @@ class displayDAO extends baseDAO
     public function WakeOnLan()
     {
 
-        
-        $db =& $this->db;
+
+
         $response = $this->getState();
-        $displayObject  = new Display($db);
+        $displayObject = new Display($db);
 
         $displayId = \Xibo\Helper\Sanitize::getInt('DisplayId');
 
@@ -1031,30 +1013,31 @@ class displayDAO extends baseDAO
 
     }
 
-    public function ScreenShot() {
+    public function ScreenShot()
+    {
         $displayId = \Xibo\Helper\Sanitize::getInt('DisplayId');
-        
+
         // Output an image if present, otherwise not found image.
         $file = 'screenshots/' . $displayId . '_screenshot.jpg';
-        
+
         // File upload directory.. get this from the settings object
         $library = Config::GetSetting("LIBRARY_LOCATION");
         $fileName = $library . $file;
-        
+
         if (!file_exists($fileName)) {
             $fileName = Theme::ImageUrl('forms/filenotfound.gif');
         }
 
         $size = filesize($fileName);
 
-        $fi = new finfo( FILEINFO_MIME_TYPE );
-        $mime = $fi->file( $fileName );
+        $fi = new finfo(FILEINFO_MIME_TYPE);
+        $mime = $fi->file($fileName);
         header("Content-Type: {$mime}");
 
         //Output a header
         header('Cache-Control: no-cache, must-revalidate');
         header('Content-Length: ' . $size);
-        
+
         // Return the file with PHP
         // Disable any buffering to prevent OOM errors.
         @ob_end_clean();
@@ -1062,8 +1045,9 @@ class displayDAO extends baseDAO
         readfile($fileName);
     }
 
-    public function RequestScreenShotForm() {
-        $db =& $this->db;
+    public function RequestScreenShotForm()
+    {
+
         $response = $this->getState();
 
         $displayId = \Xibo\Helper\Sanitize::getInt('displayId');
@@ -1081,12 +1065,13 @@ class displayDAO extends baseDAO
 
     }
 
-    public function RequestScreenShot() {
+    public function RequestScreenShot()
+    {
 
-        
-        $db =& $this->db;
+
+
         $response = $this->getState();
-        $displayObject  = new Display($db);
+        $displayObject = new Display($db);
 
         $displayId = \Xibo\Helper\Sanitize::getInt('displayId');
 
@@ -1097,4 +1082,5 @@ class displayDAO extends baseDAO
 
     }
 }
+
 ?>

@@ -18,6 +18,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+namespace Xibo\Controller;
+
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
@@ -25,11 +27,8 @@ use Xibo\Helper\Theme;
 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-include_once('lib/data/displaygroup.data.class.php');
-include_once('lib/data/displaygroupsecurity.data.class.php');
-
-class displaygroupDAO extends baseDAO
-{    
+class DisplayGroup extends Base
+{
     /**
      * Display Group Page Render
      */
@@ -48,28 +47,29 @@ class displaygroupDAO extends baseDAO
         $this->getState()->html .= Theme::RenderReturn('grid_render');
     }
 
-    function actionMenu() {
+    function actionMenu()
+    {
 
         return array(
-                array('title' => __('Add Display Group'),
-                    'class' => 'XiboFormButton',
-                    'selected' => false,
-                    'link' => 'index.php?p=displaygroup&q=AddForm',
-                    'help' => __('Add a new Display Group'),
-                    'onclick' => ''
-                    )
-            );                   
+            array('title' => __('Add Display Group'),
+                'class' => 'XiboFormButton',
+                'selected' => false,
+                'link' => 'index.php?p=displaygroup&q=AddForm',
+                'help' => __('Add a new Display Group'),
+                'onclick' => ''
+            )
+        );
     }
-    
+
     /**
      * Shows the Display groups
-     * @return 
+     * @return
      */
     public function Grid()
     {
-        $db =& $this->db;
+
         $user = $this->getUser();
-        $response   = new ApplicationState();
+        $response = new ApplicationState();
 
         $displayGroups = $this->user->DisplayGroupList();
 
@@ -77,69 +77,65 @@ class displaygroupDAO extends baseDAO
             trigger_error(__('Cannot get list of display groups.'), E_USER_ERROR);
 
         $cols = array(
-                array('name' => 'displaygroup', 'title' => __('Name')),
-                array('name' => 'description', 'title' => __('Description'))
-            );
+            array('name' => 'displaygroup', 'title' => __('Name')),
+            array('name' => 'description', 'title' => __('Description'))
+        );
         Theme::Set('table_cols', $cols);
 
         $rows = array();
 
-        foreach ($displayGroups as $row)
-        {
+        foreach ($displayGroups as $row) {
             if ($row['isdisplayspecific'] != 0)
                 continue;
 
-            if ($row['edit'] == 1)
-            {
+            if ($row['edit'] == 1) {
                 // Show the edit button, members button
-                
+
                 // Group Members
                 $row['buttons'][] = array(
-                        'id' => 'displaygroup_button_group_members',
-                        'url' => 'index.php?p=displaygroup&q=MembersForm&DisplayGroupID=' . $row['displaygroupid'] . '&DisplayGroup=' . $row['displaygroup'],
-                        'text' => __('Group Members')
-                    );
+                    'id' => 'displaygroup_button_group_members',
+                    'url' => 'index.php?p=displaygroup&q=MembersForm&DisplayGroupID=' . $row['displaygroupid'] . '&DisplayGroup=' . $row['displaygroup'],
+                    'text' => __('Group Members')
+                );
 
                 // Edit
                 $row['buttons'][] = array(
-                        'id' => 'displaygroup_button_edit',
-                        'url' => 'index.php?p=displaygroup&q=EditForm&DisplayGroupID=' . $row['displaygroupid'],
-                        'text' => __('Edit')
-                    );
+                    'id' => 'displaygroup_button_edit',
+                    'url' => 'index.php?p=displaygroup&q=EditForm&DisplayGroupID=' . $row['displaygroupid'],
+                    'text' => __('Edit')
+                );
 
                 // File Associations
                 $row['buttons'][] = array(
-                        'id' => 'displaygroup_button_fileassociations',
-                        'url' => 'index.php?p=displaygroup&q=FileAssociations&DisplayGroupID=' . $row['displaygroupid'],
-                        'text' => __('Assign Files')
-                    );
+                    'id' => 'displaygroup_button_fileassociations',
+                    'url' => 'index.php?p=displaygroup&q=FileAssociations&DisplayGroupID=' . $row['displaygroupid'],
+                    'text' => __('Assign Files')
+                );
             }
 
-            if ($row['del'] == 1)
-            {
+            if ($row['del'] == 1) {
                 // Show the delete button
                 $row['buttons'][] = array(
-                        'id' => 'displaygroup_button_delete',
-                        'url' => 'index.php?p=displaygroup&q=DeleteForm&DisplayGroupID=' . $row['displaygroupid'],
-                        'text' => __('Delete')
-                    );
+                    'id' => 'displaygroup_button_delete',
+                    'url' => 'index.php?p=displaygroup&q=DeleteForm&DisplayGroupID=' . $row['displaygroupid'],
+                    'text' => __('Delete')
+                );
             }
 
-            if ($row['modifypermissions'] == 1)
-            {
+            if ($row['modifypermissions'] == 1) {
                 // Show the modify permissions button
                 $row['buttons'][] = array(
-                        'id' => 'displaygroup_button_permissions',
-                        'url' => 'index.php?p=displaygroup&q=PermissionsForm&DisplayGroupID=' . $row['displaygroupid'],
-                        'text' => __('Permissions')
-                    );
+                    'id' => 'displaygroup_button_permissions',
+                    'url' => 'index.php?p=displaygroup&q=PermissionsForm&DisplayGroupID=' . $row['displaygroupid'],
+                    'text' => __('Permissions')
+                );
 
                 // Version Information
                 $row['buttons'][] = array(
-                        'id' => 'display_button_version_instructions',
-                        'url' => 'index.php?p=displaygroup&q=VersionInstructionsForm&displaygroupid=' . $row['displaygroupid'],
-                        'text' => __('Version Information')
-                    );
+                    'id' => 'display_button_version_instructions',
+                    'url' => 'index.php?p=displaygroup&q=VersionInstructionsForm&displaygroupid=' . $row['displaygroupid'],
+                    'text' => __('Version Information')
+                );
             }
 
             // Assign this to the table row
@@ -153,23 +149,23 @@ class displaygroupDAO extends baseDAO
         $response->SetGridResponse($output);
 
     }
-    
+
     /**
      * Shows an add form for a display group
      */
     public function AddForm()
     {
-        $db =& $this->db;
+
         $user = $this->getUser();
         $response = $this->getState();
-        
+
         Theme::Set('form_id', 'DisplayGroupAddForm');
         Theme::Set('form_action', 'index.php?p=displaygroup&q=Add');
 
-        $formFields[] = FormManager::AddText('group', __('Name'), NULL, 
+        $formFields[] = FormManager::AddText('group', __('Name'), NULL,
             __('The Name for this Group'), 'n', 'required');
 
-        $formFields[] = FormManager::AddText('desc', __('Description'), NULL, 
+        $formFields[] = FormManager::AddText('desc', __('Description'), NULL,
             __('A short description of this Group'), 'd', 'maxlength="254"');
 
         Theme::Set('form_fields', $formFields);
@@ -180,43 +176,42 @@ class displaygroupDAO extends baseDAO
         $response->AddButton(__('Save'), '$("#DisplayGroupAddForm").submit()');
 
     }
-    
+
     /**
      * Shows an edit form for a display group
      */
     public function EditForm()
     {
-        $db             =& $this->db;
-        $user           =& $this->user;
-        $response       = new ApplicationState();
-        $helpManager    = new Help($db, $user);
-        
+
+        $user =& $this->user;
+        $response = new ApplicationState();
+        $helpManager = new Help($db, $user);
+
         $displayGroupID = \Xibo\Helper\Sanitize::getInt('DisplayGroupID');
 
         // Auth
         $auth = $this->user->DisplayGroupAuth($displayGroupID, true);
         if (!$auth->edit)
             trigger_error(__('You do not have permission to edit this display group'), E_USER_ERROR);
-        
+
         // Pull the currently known info from the DB
         $SQL = "SELECT DisplayGroupID, DisplayGroup, Description FROM displaygroup WHERE DisplayGroupID = %d AND IsDisplaySpecific = 0";
         $SQL = sprintf($SQL, $displayGroupID);
-        
-        if (!$row = $db->GetSingleRow($SQL))
-        {
+
+        if (!$row = $db->GetSingleRow($SQL)) {
             trigger_error($db->error());
             trigger_error(__('Error getting Display Group'), E_USER_ERROR);
         }
-        
+
         // Pull out these columns
         if (count($row) <= 0)
             trigger_error(__('No display group found.'), E_USER_ERROR);
-        
+
         // Set some information about the form
         Theme::Set('form_id', 'DisplayGroupEditForm');
         Theme::Set('form_action', 'index.php?p=displaygroup&q=Edit');
         Theme::Set('form_meta', '<input type="hidden" name="DisplayGroupID" value="' . $displayGroupID . '" />');
-        
+
         $formFields[] = FormManager::AddText('group', __('Name'), \Xibo\Helper\Sanitize::string($row['DisplayGroup']),
             __('The Name for this Group'), 'n', 'required');
 
@@ -231,44 +226,44 @@ class displaygroupDAO extends baseDAO
         $response->AddButton(__('Save'), '$("#DisplayGroupEditForm").submit()');
 
     }
-    
+
     /**
      * Shows the Delete Group Form
      */
-    function DeleteForm() 
+    function DeleteForm()
     {
-        $db             =& $this->db;
-        $response       = new ApplicationState();
+
+        $response = new ApplicationState();
         $displayGroupID = \Xibo\Helper\Sanitize::getInt('DisplayGroupID');
 
         // Auth
         $auth = $this->user->DisplayGroupAuth($displayGroupID, true);
         if (!$auth->del)
             trigger_error(__('You do not have permission to edit this display group'), E_USER_ERROR);
-        
+
         // Set some information about the form
         Theme::Set('form_id', 'DisplayGroupDeleteForm');
         Theme::Set('form_action', 'index.php?p=displaygroup&q=Delete');
         Theme::Set('form_meta', '<input type="hidden" name="DisplayGroupID" value="' . $displayGroupID . '" />');
 
         Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to delete this display? This cannot be undone.'))));
-        
+
         $response->SetFormRequestResponse(NULL, __('Delete Display Group'), '350px', '175px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('DisplayGroup', 'Delete') . '")');
         $response->AddButton(__('No'), 'XiboDialogClose()');
         $response->AddButton(__('Yes'), '$("#DisplayGroupDeleteForm").submit()');
 
     }
-    
+
     /**
      * Display Group Members form
      */
     public function MembersForm()
     {
-        $db             =& $this->db;
-        $response       = new ApplicationState();
+
+        $response = new ApplicationState();
         $displayGroupID = \Xibo\Helper\Sanitize::getInt('DisplayGroupID');
-        
+
         // There needs to be two lists here.
         // One of which is the Displays currently assigned to this group
         // The other is a list of displays that are available to be assigned (i.e. the opposite of the first list)
@@ -279,7 +274,7 @@ class displaygroupDAO extends baseDAO
         Theme::Set('displays_assigned_url', 'index.php?p=displaygroup&q=SetMembers&DisplayGroupID=' . $displayGroupID);
 
         // Displays in group
-        $SQL  = "";
+        $SQL = "";
         $SQL .= "SELECT display.DisplayID, ";
         $SQL .= "       display.Display, ";
         $SQL .= "       CONCAT('DisplayID_', display.DisplayID) AS list_id ";
@@ -288,7 +283,7 @@ class displaygroupDAO extends baseDAO
         $SQL .= "       ON     lkdisplaydg.DisplayID = display.DisplayID ";
         $SQL .= sprintf("WHERE  lkdisplaydg.DisplayGroupID   = %d", $displayGroupID);
         $SQL .= " ORDER BY display.Display ";
-        
+
         $displays_assigned = $this->user->DisplayList(array('display'), array('displaygroupid' => $displayGroupID), 'edit');
 
         if (!is_array($displays_assigned))
@@ -298,19 +293,19 @@ class displaygroupDAO extends baseDAO
         $displaysAssigned = array();
 
         foreach ($displays_assigned as $display) {
-            
+
             // Go through each and set the appropriate fields
             $displaysAssigned[] = array(
-                    'Display' => $display['display'],
-                    'list_id' => 'DisplayID_' . $display['displayid']
-                );
+                'Display' => $display['display'],
+                'list_id' => 'DisplayID_' . $display['displayid']
+            );
         }
 
         Theme::Set('displays_assigned', $displaysAssigned);
-        
-        // All Displays 
+
+        // All Displays
         $displays = $this->user->DisplayList(array('display'), array('exclude_displaygroupid' => $displayGroupID), 'edit');
-        
+
         if (!is_array($displays))
             trigger_error(__('Error getting Displays'), E_USER_ERROR);
 
@@ -320,14 +315,14 @@ class displaygroupDAO extends baseDAO
         foreach ($displays as $display) {
             // Go through each and set the appropriate fields
             $displaysAvailable[] = array(
-                    'Display' => $display['display'],
-                    'list_id' => 'DisplayID_' . $display['displayid']
-                );
+                'Display' => $display['display'],
+                'list_id' => 'DisplayID_' . $display['displayid']
+            );
         }
 
         Theme::Set('displays_available', $displaysAvailable);
-        
-        
+
+
         $form = Theme::RenderReturn('displaygroup_form_display_assign');
 
         $response->SetFormRequestResponse($form, __('Manage Membership'), '400', '375', 'DisplayGroupManageMembersCallBack');
@@ -336,25 +331,24 @@ class displaygroupDAO extends baseDAO
         $response->AddButton(__('Save'), 'DisplayGroupMembersSubmit()');
 
     }
-    
+
     /**
      * Adds a Display Group
-     * @return 
+     * @return
      */
     public function Add()
     {
 
-        
-        $db =& $this->db;
+
+
         $response = $this->getState();
 
         $displayGroup = \Xibo\Helper\Sanitize::getString('group');
         $description = \Xibo\Helper\Sanitize::getString('desc');
-        
+
         $displayGroupObject = new DisplayGroup($db);
-        
-        if (!$displayGroupId = $displayGroupObject->Add($displayGroup, 0, $description))
-        {
+
+        if (!$displayGroupId = $displayGroupObject->Add($displayGroup, 0, $description)) {
             trigger_error($displayGroupObject->GetErrorMessage(), E_USER_ERROR);
         }
 
@@ -363,54 +357,53 @@ class displaygroupDAO extends baseDAO
 
         if (!$security->Link($displayGroupId, $this->user->getGroupFromID($this->user->userId, true), 1, 1, 1))
             trigger_error(__('Unable to set permissions'));
-        
+
         $response->SetFormSubmitResponse(__('Display Group Added'), false);
 
     }
-    
+
     /**
      * Edits a Display Group
-     * @return 
+     * @return
      */
     public function Edit()
     {
 
-        
-        $db             =& $this->db;
-        $response       = new ApplicationState();
+
+
+        $response = new ApplicationState();
 
         $displayGroupID = \Xibo\Helper\Sanitize::getInt('DisplayGroupID');
-        $displayGroup   = \Xibo\Helper\Sanitize::getString('group');
-        $description    = \Xibo\Helper\Sanitize::getString('desc');
+        $displayGroup = \Xibo\Helper\Sanitize::getString('group');
+        $description = \Xibo\Helper\Sanitize::getString('desc');
 
         // Auth
         $auth = $this->user->DisplayGroupAuth($displayGroupID, true);
         if (!$auth->edit)
             trigger_error(__('You do not have permission to edit this display group'), E_USER_ERROR);
-        
+
         // Deal with the Edit
         $displayGroupObject = new DisplayGroup($db);
-        
-        if (!$displayGroupObject->Edit($displayGroupID, $displayGroup, $description))
-        {
+
+        if (!$displayGroupObject->Edit($displayGroupID, $displayGroup, $description)) {
             trigger_error($displayGroupObject->GetErrorMessage(), E_USER_ERROR);
         }
-        
+
         $response->SetFormSubmitResponse(__('Display Group Edited'), false);
 
     }
-    
+
     /**
      * Deletes a Group
-     * @return 
+     * @return
      */
-    function Delete() 
+    function Delete()
     {
 
-        
-        $db             =& $this->db;   
-        $response       = new ApplicationState();
-    
+
+
+        $response = new ApplicationState();
+
         $displayGroupID = \Xibo\Helper\Sanitize::getInt('DisplayGroupID');
 
         // Auth
@@ -420,81 +413,71 @@ class displaygroupDAO extends baseDAO
 
         // Deal with the Delete
         $displayGroupObject = new DisplayGroup($db);
-        
-        if (!$displayGroupObject->Delete($displayGroupID))
-        {
+
+        if (!$displayGroupObject->Delete($displayGroupID)) {
             trigger_error($displayGroupObject->GetErrorMessage(), E_USER_ERROR);
         }
-        
+
         $response->SetFormSubmitResponse(__('Display Group Deleted'), false);
 
     }
-    
+
     /**
      * Sets the Members of a group
-     * @return 
+     * @return
      */
     public function SetMembers()
     {
-        $db             =& $this->db;   
-        $response       = new ApplicationState();
+
+        $response = new ApplicationState();
         $displayGroupObject = new DisplayGroup($db);
-    
+
         $displayGroupID = \Xibo\Helper\Sanitize::getInt('DisplayGroupID');
-        $displays       = \Kit::GetParam('DisplayID', _POST, _ARRAY, array());
-        $members        = array();
+        $displays = \Kit::GetParam('DisplayID', _POST, _ARRAY, array());
+        $members = array();
 
         // Auth
         $auth = $this->user->DisplayGroupAuth($displayGroupID, true);
         if (!$auth->del)
             trigger_error(__('You do not have permission to edit this display group'), E_USER_ERROR);
-        
+
         // Get a list of current members
-        $SQL  = "";
+        $SQL = "";
         $SQL .= "SELECT display.DisplayID ";
         $SQL .= "FROM   display ";
         $SQL .= "       INNER JOIN lkdisplaydg ";
         $SQL .= "       ON     lkdisplaydg.DisplayID = display.DisplayID ";
         $SQL .= sprintf("WHERE  lkdisplaydg.DisplayGroupID   = %d", $displayGroupID);
-        
-        if(!$resultIn = $db->query($SQL))
-        {
+
+        if (!$resultIn = $db->query($SQL)) {
             trigger_error($db->error());
             trigger_error(__('Error getting Displays'), E_USER_ERROR);
         }
-        
-        while($row = $db->get_assoc_row($resultIn))
-        {
+
+        while ($row = $db->get_assoc_row($resultIn)) {
             // Test whether this ID is in the array or not
-            $displayID  = \Xibo\Helper\Sanitize::int($row['DisplayID']);
-            
-            if(!in_array($displayID, $displays))
-            {
+            $displayID = \Xibo\Helper\Sanitize::int($row['DisplayID']);
+
+            if (!in_array($displayID, $displays)) {
                 // Its currently assigned but not in the $displays array
                 //  so we unassign
-                if (!$displayGroupObject->Unlink($displayGroupID, $displayID))
-                {
+                if (!$displayGroupObject->Unlink($displayGroupID, $displayID)) {
                     trigger_error($displayGroupObject->GetErrorMessage(), E_USER_ERROR);
                 }
-            }
-            else
-            {
+            } else {
                 $members[] = $displayID;
             }
         }
-        
-        foreach($displays as $displayID)
-        {
+
+        foreach ($displays as $displayID) {
             // Add any that are missing
-            if(!in_array($displayID, $members))
-            {
-                if (!$displayGroupObject->Link($displayGroupID, $displayID))
-                {
+            if (!in_array($displayID, $members)) {
+                if (!$displayGroupObject->Link($displayGroupID, $displayID)) {
                     trigger_error($displayGroupObject->GetErrorMessage(), E_USER_ERROR);
                 }
             }
         }
-        
+
         $response->SetFormSubmitResponse(__('Group membership set'), false);
 
     }
@@ -504,7 +487,7 @@ class displaygroupDAO extends baseDAO
      */
     public function PermissionsForm()
     {
-        $db =& $this->db;
+
         $user = $this->getUser();
         $response = $this->getState();
         $helpManager = new Help($db, $user);
@@ -536,23 +519,23 @@ class displaygroupDAO extends baseDAO
             $rowClass = ($row['isuserspecific'] == 0) ? 'strong_text' : '';
 
             $checkbox = array(
-                    'id' => $groupId,
-                    'name' => \Xibo\Helper\Sanitize::string($row['group']),
-                    'class' => $rowClass,
-                    'value_view' => $groupId . '_view',
-                    'value_view_checked' => (($row['view'] == 1) ? 'checked' : ''),
-                    'value_edit' => $groupId . '_edit',
-                    'value_edit_checked' => (($row['edit'] == 1) ? 'checked' : ''),
-                    'value_del' => $groupId . '_del',
-                    'value_del_checked' => (($row['del'] == 1) ? 'checked' : ''),
-                );
+                'id' => $groupId,
+                'name' => \Xibo\Helper\Sanitize::string($row['group']),
+                'class' => $rowClass,
+                'value_view' => $groupId . '_view',
+                'value_view_checked' => (($row['view'] == 1) ? 'checked' : ''),
+                'value_edit' => $groupId . '_edit',
+                'value_edit_checked' => (($row['edit'] == 1) ? 'checked' : ''),
+                'value_del' => $groupId . '_del',
+                'value_del_checked' => (($row['del'] == 1) ? 'checked' : ''),
+            );
 
             $checkboxes[] = $checkbox;
         }
 
         $formFields = array();
         $formFields[] = FormManager::AddPermissions('groupids[]', $checkboxes);
-        
+
         Theme::Set('form_fields', $formFields);
 
         $response->SetFormRequestResponse(NULL, __('Permissions'), '350px', '500px');
@@ -568,8 +551,8 @@ class displaygroupDAO extends baseDAO
     public function Permissions()
     {
 
-        
-        $db =& $this->db;
+
+
         $user = $this->getUser();
         $response = $this->getState();
 
@@ -594,20 +577,17 @@ class displaygroupDAO extends baseDAO
         $del = 0;
 
         // List of groupIds with view, edit and del assignments
-        foreach($groupIds as $groupPermission)
-        {
+        foreach ($groupIds as $groupPermission) {
             $groupPermission = explode('_', $groupPermission);
             $groupId = $groupPermission[0];
 
-            if ($first)
-            {
+            if ($first) {
                 // First time through
                 $first = false;
                 $lastGroupId = $groupId;
             }
 
-            if ($groupId != $lastGroupId)
-            {
+            if ($groupId != $lastGroupId) {
                 // The groupId has changed, so we need to write the current settings to the db.
                 // Link new permissions
                 if (!$security->Link($displayGroupId, $lastGroupId, $view, $edit, $del))
@@ -620,8 +600,7 @@ class displaygroupDAO extends baseDAO
                 $del = 0;
             }
 
-            switch ($groupPermission[1])
-            {
+            switch ($groupPermission[1]) {
                 case 'view':
                     $view = 1;
                     break;
@@ -637,17 +616,17 @@ class displaygroupDAO extends baseDAO
         }
 
         // Need to do the last one
-        if (!$first)
-        {
+        if (!$first) {
             if (!$security->Link($displayGroupId, $lastGroupId, $view, $edit, $del))
-                    trigger_error(__('Unable to set permissions'));
+                trigger_error(__('Unable to set permissions'));
         }
 
         $response->SetFormSubmitResponse(__('Permissions Changed'));
 
     }
 
-    public function FileAssociations() {
+    public function FileAssociations()
+    {
 
         $displayGroupId = \Xibo\Helper\Sanitize::getInt('DisplayGroupID');
 
@@ -660,7 +639,7 @@ class displaygroupDAO extends baseDAO
         Theme::Set('id', $id);
         Theme::Set('form_meta', '<input type="hidden" name="p" value="displaygroup"><input type="hidden" name="q" value="FileAssociationsView"><input type="hidden" name="displaygroupid" value="' . $displayGroupId . '">');
         Theme::Set('pager', ApplicationState::Pager($id, 'grid_pager'));
-        
+
         // Module types filter
         $modules = $this->user->ModuleAuth(0, '', -1);
         $types = array();
@@ -680,23 +659,22 @@ class displaygroupDAO extends baseDAO
 
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
-        
+
             $sth = $dbh->prepare('
-                SELECT media.MediaID, media.Name 
-                  FROM `media` 
-                    INNER JOIN `lkmediadisplaygroup` 
-                    ON lkmediadisplaygroup.mediaid = media.mediaid 
+                SELECT media.MediaID, media.Name
+                  FROM `media`
+                    INNER JOIN `lkmediadisplaygroup`
+                    ON lkmediadisplaygroup.mediaid = media.mediaid
                  WHERE lkmediadisplaygroup.displaygroupid = :displaygroupid
             ');
 
             $sth->execute(array('displaygroupid' => $displayGroupId));
 
             $existing = $sth->fetchAll();
-        }
-        catch (Exception $e) {
-            
+        } catch (Exception $e) {
+
             Log::error($e->getMessage(), get_class(), __FUNCTION__);
-        
+
             trigger_error(__('Unable to get existing assignments.'), E_USER_ERROR);
         }
 
@@ -717,11 +695,12 @@ class displaygroupDAO extends baseDAO
 
         $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('DisplayGroup', 'FileAssociations') . '")');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Assign'), 'FileAssociationsSubmit(' . $displayGroupId  . ')');
+        $response->AddButton(__('Assign'), 'FileAssociationsSubmit(' . $displayGroupId . ')');
 
     }
 
-    public function FileAssociationsView() {
+    public function FileAssociationsView()
+    {
         $user = $this->getUser();
 
         //Input vars
@@ -734,21 +713,20 @@ class displaygroupDAO extends baseDAO
 
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
-        
+
             $sth = $dbh->prepare('
                 SELECT mediaid
-                  FROM `lkmediadisplaygroup` 
+                  FROM `lkmediadisplaygroup`
                  WHERE displaygroupid = :displaygroupid
             ');
 
             $sth->execute(array('displaygroupid' => $displaygroupid));
 
-            while ($existing[] = $sth->fetchColumn());
-        }
-        catch (Exception $e) {
-            
+            while ($existing[] = $sth->fetchColumn()) ;
+        } catch (Exception $e) {
+
             Log::error($e->getMessage(), get_class(), __FUNCTION__);
-        
+
             trigger_error(__('Unable to get existing assignments.'), E_USER_ERROR);
         }
 
@@ -778,9 +756,10 @@ class displaygroupDAO extends baseDAO
 
     }
 
-    public function SetFileAssociations() {
-        $user       =& $this->user;
-        $response   = new ApplicationState();
+    public function SetFileAssociations()
+    {
+        $user =& $this->user;
+        $response = new ApplicationState();
 
         $displayGroupId = \Xibo\Helper\Sanitize::getInt('displaygroupid');
         $mediaList = \Kit::GetParam('MediaID', _POST, _ARRAY_INT, NULL, false);
@@ -804,7 +783,8 @@ class displaygroupDAO extends baseDAO
 
     }
 
-    public function VersionInstructionsForm() {
+    public function VersionInstructionsForm()
+    {
         $response = $this->getState();
 
         $displayGroupId = \Xibo\Helper\Sanitize::getInt('displaygroupid');
@@ -818,8 +798,7 @@ class displaygroupDAO extends baseDAO
             // Get some version information about this display.
             if (!$displays = $this->user->DisplayList(array('display'), array('displayid' => $displayId)))
                 trigger_error(__('Unknown Display'), E_USER_ERROR);
-        }
-        else {
+        } else {
             // Get a list of displays with their version information?
             if (!$displays = $this->user->DisplayList(array('display'), array('displaygroupid' => $displayGroupId)))
                 trigger_error(__('No displays in this group'), E_USER_ERROR);
@@ -827,11 +806,11 @@ class displaygroupDAO extends baseDAO
 
         foreach ($displays as $display) {
             $rows[] = array(
-                    'display' => Theme::Prepare($display['display']),
-                    'client_type' => Theme::Prepare($display['client_type']),
-                    'client_version' => Theme::Prepare($display['client_version']),
-                    'client_code' => Theme::Prepare($display['client_code'])
-                );
+                'display' => Theme::Prepare($display['display']),
+                'client_type' => Theme::Prepare($display['client_type']),
+                'client_version' => Theme::Prepare($display['client_version']),
+                'client_code' => Theme::Prepare($display['client_code'])
+            );
         }
 
         // Store this for use in the theme
@@ -855,11 +834,9 @@ class displaygroupDAO extends baseDAO
 
     }
 
-    public function VersionInstructions() {
+    public function VersionInstructions()
+    {
         $response = $this->getState();
-
-
-
 
 
         $displayGroupId = \Xibo\Helper\Sanitize::getInt('displaygroupid');
@@ -872,7 +849,7 @@ class displaygroupDAO extends baseDAO
 
         // Make sure we have permission to use this file
         $mediaAuth = $this->user->MediaAuth($mediaId, true);
-    
+
         if (!$mediaAuth->view)
             trigger_error(__('You have selected media that you no longer have permission to use. Please reload the form.'), E_USER_ERROR);
 
@@ -899,4 +876,5 @@ class displaygroupDAO extends baseDAO
 
     }
 }
+
 ?>

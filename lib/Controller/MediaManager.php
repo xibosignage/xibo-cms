@@ -18,18 +18,25 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+namespace Xibo\Controller;
+use baseDAO;
+use DOMDocument;
+use DOMXPath;
+use FormManager;
+use Session;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-class mediamanagerDAO extends baseDAO {
+class MediaManager extends Base
+{
 
     public function displayPage()
     {
-        $db =& $this->db;
-        
+
+
         // Default options
         if (\Kit::IsFilterPinned('mediamanager', 'Filter')) {
             $filter_pinned = 1;
@@ -37,21 +44,20 @@ class mediamanagerDAO extends baseDAO {
             $filter_region_name = Session::Get('mediamanager', 'filter_region_name');
             $filter_media_name = Session::Get('mediamanager', 'filter_media_name');
             $filter_type = Session::Get('mediamanager', 'filter_type');
-        }
-        else {
+        } else {
             $filter_pinned = 0;
             $filter_layout_name = NULL;
             $filter_region_name = NULL;
             $filter_media_name = NULL;
             $filter_type = 0;
         }
-        
+
         $id = uniqid();
         Theme::Set('id', $id);
         Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
         Theme::Set('pager', ApplicationState::Pager($id));
         Theme::Set('form_meta', '<input type="hidden" name="p" value="mediamanager"><input type="hidden" name="q" value="MediaManagerGrid">');
-        
+
         $formFields = array();
         $formFields[] = FormManager::AddText('filter_layout_name', __('Layout'), $filter_layout_name, NULL, 'l');
         $formFields[] = FormManager::AddText('filter_region_name', __('Region'), $filter_region_name, NULL, 'r');
@@ -59,19 +65,19 @@ class mediamanagerDAO extends baseDAO {
 
         $types = $db->GetArray("SELECT moduleid AS moduleid, Name AS module FROM `module` WHERE Enabled = 1 ORDER BY 2");
         array_unshift($types, array('moduleid' => 0, 'module' => 'All'));
-        
+
         $formFields[] = FormManager::AddCombo(
-            'filter_type', 
-            __('Type'), 
+            'filter_type',
+            __('Type'),
             $filter_type,
             $types,
             'moduleid',
             'module',
-            NULL, 
+            NULL,
             't');
 
-        $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'), 
-            $filter_pinned, NULL, 
+        $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'),
+            $filter_pinned, NULL,
             'k');
 
         // Call to render the template
@@ -80,22 +86,23 @@ class mediamanagerDAO extends baseDAO {
         $this->getState()->html .= Theme::RenderReturn('grid_render');
     }
 
-    function actionMenu() {
+    function actionMenu()
+    {
 
         return array(
-                array('title' => __('Filter'),
-                    'class' => '',
-                    'selected' => false,
-                    'link' => '#',
-                    'help' => __('Open the filter form'),
-                    'onclick' => 'ToggleFilterView(\'Filter\')'
-                    )
-            );                   
+            array('title' => __('Filter'),
+                'class' => '',
+                'selected' => false,
+                'link' => '#',
+                'help' => __('Open the filter form'),
+                'onclick' => 'ToggleFilterView(\'Filter\')'
+            )
+        );
     }
 
     public function MediaManagerGrid()
     {
-        $db =& $this->db;
+
         $user = $this->getUser();
         $response = $this->getState();
 
@@ -122,22 +129,21 @@ class mediamanagerDAO extends baseDAO {
         }
 
         $cols = array(
-                array('name' => 'layout', 'title' => __('Layout'), 'colClass' => 'group-word'),
-                array('name' => 'region', 'title' => __('Region')),
-                array('name' => 'media', 'title' => __('Media')),
-                array('name' => 'mediatype', 'title' => __('Type')),
-                array('name' => 'seq', 'title' => __('Sequence')),
-            );
+            array('name' => 'layout', 'title' => __('Layout'), 'colClass' => 'group-word'),
+            array('name' => 'region', 'title' => __('Region')),
+            array('name' => 'media', 'title' => __('Media')),
+            array('name' => 'mediatype', 'title' => __('Type')),
+            array('name' => 'seq', 'title' => __('Sequence')),
+        );
         Theme::Set('table_cols', $cols);
-        
+
         // We would like a list of all layouts, media and media assignments that this user
         // has access to.
         $layouts = $user->LayoutList(NULL, array('layout' => $filterLayout));
 
         $rows = array();
 
-        foreach ($layouts as $layout)
-        {
+        foreach ($layouts as $layout) {
             // We have edit permissions?
             if (!$layout['edit'])
                 continue;
@@ -151,8 +157,7 @@ class mediamanagerDAO extends baseDAO {
             $regionNodeSequence = 0;
 
             //get the regions
-            foreach ($regionNodeList as $region)
-            {
+            foreach ($regionNodeList as $region) {
                 $regionId = $region->getAttribute('id');
                 $ownerId = ($region->getAttribute('userId') == '') ? $layout['ownerid'] : $region->getAttribute('userId');
 
@@ -173,8 +178,7 @@ class mediamanagerDAO extends baseDAO {
                 $mediaNodes = $xpath->query("//region[@id='$regionId']/media");
                 $mediaNodeSequence = 0;
 
-        		foreach ($mediaNodes as $mediaNode)
-        		{
+                foreach ($mediaNodes as $mediaNode) {
                     $mediaId = $mediaNode->getAttribute('id');
                     $lkId = $mediaNode->getAttribute('lkid');
                     $mediaOwnerId = ($mediaNode->getAttribute('userId') == '') ? $layout['ownerid'] : $mediaNode->getAttribute('userId');
@@ -196,7 +200,7 @@ class mediamanagerDAO extends baseDAO {
 
                     if ($filterMediaType != '' && $mediaType != strtolower($filterMediaType))
                         continue;
-                    
+
                     $mediaNodeSequence++;
 
                     $layout['region'] = $regionName;
@@ -207,10 +211,10 @@ class mediamanagerDAO extends baseDAO {
 
                     // Edit
                     $layout['buttons'][] = array(
-                            'id' => 'homepage_mediamanager_edit_button',
-                            'url' => 'index.php?p=module&mod=' . $mediaType . '&q=Exec&method=EditForm&showRegionOptions=0&layoutid=' . $layout['layoutid'] . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId,
-                            'text' => __('Edit')
-                        );
+                        'id' => 'homepage_mediamanager_edit_button',
+                        'url' => 'index.php?p=module&mod=' . $mediaType . '&q=Exec&method=EditForm&showRegionOptions=0&layoutid=' . $layout['layoutid'] . '&regionid=' . $regionId . '&mediaid=' . $mediaId . '&lkid=' . $lkId,
+                        'text' => __('Edit')
+                    );
 
                     $rows[] = $layout;
                 }
@@ -218,11 +222,12 @@ class mediamanagerDAO extends baseDAO {
         }
 
         Theme::Set('table_rows', $rows);
-        
+
         $output = Theme::RenderReturn('table_render');
 
         $response->SetGridResponse($output);
 
     }
 }
+
 ?>

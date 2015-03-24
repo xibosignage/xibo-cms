@@ -18,22 +18,28 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+namespace Xibo\Controller;
+use baseDAO;
+use FormManager;
+use Kit;
+use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Date;
 use Xibo\Helper\Help;
-use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Theme;
 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 // Companion classes
-Kit::ClassLoader('displayprofile');
 
-class displayprofileDAO extends baseDAO {
+
+class DisplayProfile extends Base
+{
     /**
      * Include display page template page based on sub page selected
      * @return
      */
-    function displayPage() {
+    function displayPage()
+    {
         // Configure the theme
         $id = uniqid();
         Theme::Set('id', $id);
@@ -47,38 +53,40 @@ class displayprofileDAO extends baseDAO {
         $this->getState()->html .= Theme::RenderReturn('grid_render');
     }
 
-    function actionMenu() {
+    function actionMenu()
+    {
 
         return array(
-                array('title' => __('Add Profile'),
-                    'class' => 'XiboFormButton',
-                    'selected' => false,
-                    'link' => 'index.php?p=displayprofile&q=AddForm',
-                    'help' => __('Add a new Display Settings Profile'),
-                    'onclick' => ''
-                    )
-            );                   
+            array('title' => __('Add Profile'),
+                'class' => 'XiboFormButton',
+                'selected' => false,
+                'link' => 'index.php?p=displayprofile&q=AddForm',
+                'help' => __('Add a new Display Settings Profile'),
+                'onclick' => ''
+            )
+        );
     }
 
-    function Grid() {
+    function Grid()
+    {
 
         $cols = array(
-                array('name' => 'name', 'title' => __('Name')),
-                array('name' => 'type', 'title' => __('Type')),
-                array('name' => 'isdefault', 'title' => __('Default'), 'icons' => true)
-            );
+            array('name' => 'name', 'title' => __('Name')),
+            array('name' => 'type', 'title' => __('Type')),
+            array('name' => 'isdefault', 'title' => __('Default'), 'icons' => true)
+        );
         Theme::Set('table_cols', $cols);
 
         $rows = array();
 
         foreach ($this->user->DisplayProfileList() as $profile) {
-            
+
             // Default Layout
             $profile['buttons'][] = array(
-                    'id' => 'displayprofile_button_edit',
-                    'url' => 'index.php?p=displayprofile&q=EditForm&displayprofileid=' . $profile['displayprofileid'],
-                    'text' => __('Edit')
-                );
+                'id' => 'displayprofile_button_edit',
+                'url' => 'index.php?p=displayprofile&q=EditForm&displayprofileid=' . $profile['displayprofileid'],
+                'text' => __('Edit')
+            );
 
             if ($profile['del'] == 1) {
                 $profile['buttons'][] = array(
@@ -100,31 +108,32 @@ class displayprofileDAO extends baseDAO {
 
     }
 
-    function AddForm() {
+    function AddForm()
+    {
         // Show a form for adding a display profile.
         Theme::Set('form_id', 'ProfileForm');
         Theme::Set('form_action', 'index.php?p=displayprofile&q=Add');
 
         $formFields = array();
-        $formFields[] = FormManager::AddText('name', __('Name'), NULL, 
+        $formFields[] = FormManager::AddText('name', __('Name'), NULL,
             __('The Name of the Profile - (1 - 50 characters)'), 'n', 'maxlength="50" required');
 
         $formFields[] = FormManager::AddCombo(
-                    'type', 
-                    __('Client Type'), 
-                    NULL,
-                    array(
-                        array('typeid' => 'windows', 'type' => 'Windows'), 
-                        array('typeid' => 'ubuntu', 'type' => 'Ubuntu'),
-                        array('typeid' => 'android', 'type' => 'Android')
-                    ),
-                    'typeid',
-                    'type',
-                    __('What type of display client is this profile intended for?'), 
-                    't');
+            'type',
+            __('Client Type'),
+            NULL,
+            array(
+                array('typeid' => 'windows', 'type' => 'Windows'),
+                array('typeid' => 'ubuntu', 'type' => 'Ubuntu'),
+                array('typeid' => 'android', 'type' => 'Android')
+            ),
+            'typeid',
+            'type',
+            __('What type of display client is this profile intended for?'),
+            't');
 
-        $formFields[] = FormManager::AddCheckbox('isdefault', __('Default Profile?'), 
-            NULL, __('Is this the default profile for all Displays of this type? Only 1 profile can be the default.'), 
+        $formFields[] = FormManager::AddCheckbox('isdefault', __('Default Profile?'),
+            NULL, __('Is this the default profile for all Displays of this type? Only 1 profile can be the default.'),
             'd');
 
         Theme::Set('form_fields', $formFields);
@@ -136,7 +145,8 @@ class displayprofileDAO extends baseDAO {
 
     }
 
-    public function Add() {
+    public function Add()
+    {
         $response = $this->getState();
         $displayProfile = new DisplayProfile();
         $displayProfile->name = \Xibo\Helper\Sanitize::getString('name');
@@ -151,9 +161,10 @@ class displayprofileDAO extends baseDAO {
 
     }
 
-    public function EditForm() {
+    public function EditForm()
+    {
         // Create a form out of the config object.
-        $displayProfile  = new DisplayProfile();
+        $displayProfile = new DisplayProfile();
         $displayProfile->displayProfileId = \Xibo\Helper\Sanitize::getInt('displayprofileid');
 
         if (!$displayProfile->Load())
@@ -180,7 +191,7 @@ class displayprofileDAO extends baseDAO {
         $formTabs = array();
 
         // Tabs?
-        foreach($CLIENT_CONFIG[$displayProfile->type]['tabs'] as $tab) {
+        foreach ($CLIENT_CONFIG[$displayProfile->type]['tabs'] as $tab) {
             // Create an empty array of form fields for this tab.
             $formFields[$tab['id']] = array();
 
@@ -189,14 +200,14 @@ class displayprofileDAO extends baseDAO {
         }
 
         // Go through each setting and output a form control to the theme.
-        $formFields['general'][] = FormManager::AddText('name', __('Name'), $displayProfile->name, 
+        $formFields['general'][] = FormManager::AddText('name', __('Name'), $displayProfile->name,
             __('The Name of the Profile - (1 - 50 characters)'), 'n', 'maxlength="50" required');
 
-        $formFields['general'][] = FormManager::AddCheckbox('isdefault', __('Default Profile?'), 
-            $displayProfile->isDefault, __('Is this the default profile for all Displays of this type? Only 1 profile can be the default.'), 
+        $formFields['general'][] = FormManager::AddCheckbox('isdefault', __('Default Profile?'),
+            $displayProfile->isDefault, __('Is this the default profile for all Displays of this type? Only 1 profile can be the default.'),
             'd');
 
-        foreach($CLIENT_CONFIG[$displayProfile->type]['settings'] as $setting) {
+        foreach ($CLIENT_CONFIG[$displayProfile->type]['settings'] as $setting) {
 
             // Check to see if we have a value for this setting as yet, if so we use that.
             // TODO: there must be a way to improve this?
@@ -214,8 +225,7 @@ class displayprofileDAO extends baseDAO {
                 else {
                     $validated = Date::getSystemDate($setting['value'] / 1000, 'H:i');
                 }
-            }
-            else if (isset($setting['value']))
+            } else if (isset($setting['value']))
                 $validated = \Kit::ValidateParam($setting['value'], $setting['type']);
             else
                 $validated = $setting['default'];
@@ -224,24 +234,24 @@ class displayprofileDAO extends baseDAO {
 
             // Each field needs to have a type, a name and a default
             $formFields[$setting['tabId']][] = array(
-                    'name' => $setting['name'],
-                    'fieldType' => $setting['fieldType'],
-                    'helpText' => $setting['helpText'],
-                    'title' => $setting['title'],
-                    'options' => ((isset($setting['options']) ? $setting['options'] : array())),
-                    'optionId' => 'id',
-                    'optionValue' => 'value',
-                    'validation' => ((isset($setting['validation']) ? $setting['validation'] : '')),
-                    'value' => $validated,
-                    'enabled' => $setting['enabled'],
-                    'groupClass' => NULL,
-                    'accesskey' => ''
-                );
+                'name' => $setting['name'],
+                'fieldType' => $setting['fieldType'],
+                'helpText' => $setting['helpText'],
+                'title' => $setting['title'],
+                'options' => ((isset($setting['options']) ? $setting['options'] : array())),
+                'optionId' => 'id',
+                'optionValue' => 'value',
+                'validation' => ((isset($setting['validation']) ? $setting['validation'] : '')),
+                'value' => $validated,
+                'enabled' => $setting['enabled'],
+                'groupClass' => NULL,
+                'accesskey' => ''
+            );
         }
 
         Theme::Set('form_tabs', $formTabs);
 
-        foreach($CLIENT_CONFIG[$displayProfile->type]['tabs'] as $tab) {
+        foreach ($CLIENT_CONFIG[$displayProfile->type]['tabs'] as $tab) {
             Theme::Set('form_fields_' . $tab['id'], $formFields[$tab['id']]);
         }
 
@@ -253,15 +263,16 @@ class displayprofileDAO extends baseDAO {
 
     }
 
-    public function Edit() {
+    public function Edit()
+    {
         // Check the token
         if (!Kit::CheckToken())
             trigger_error('Token does not match', E_USER_ERROR);
 
         $response = $this->getState();
-        
+
         // Create a form out of the config object.
-        $displayProfile  = new DisplayProfile();
+        $displayProfile = new DisplayProfile();
         $displayProfile->displayProfileId = \Xibo\Helper\Sanitize::getInt('displayprofileid');
 
         if (!$displayProfile->Load())
@@ -284,7 +295,7 @@ class displayprofileDAO extends baseDAO {
 
         $combined = array();
 
-        foreach($CLIENT_CONFIG[$displayProfile->type]['settings'] as $setting) {
+        foreach ($CLIENT_CONFIG[$displayProfile->type]['settings'] as $setting) {
             // Validate the parameter
             $value = \Kit::GetParam($setting['name'], _POST, $setting['type'], (($setting['type'] == 'checkbox') ? NULL : $setting['default']));
 
@@ -295,10 +306,10 @@ class displayprofileDAO extends baseDAO {
 
             // Add to the combined array
             $combined[] = array(
-                    'name' => $setting['name'],
-                    'value' => $value,
-                    'type' => $setting['type']
-                );
+                'name' => $setting['name'],
+                'value' => $value,
+                'type' => $setting['type']
+            );
         }
 
         // Recursively merge the arrays and update
@@ -314,9 +325,10 @@ class displayprofileDAO extends baseDAO {
     /**
      * Shows the Delete Group Form
      */
-    function DeleteForm() {
-        
-        $displayProfile  = new DisplayProfile();
+    function DeleteForm()
+    {
+
+        $displayProfile = new DisplayProfile();
         $displayProfile->displayProfileId = \Xibo\Helper\Sanitize::getInt('displayprofileid');
 
         if (!$displayProfile->Load())
@@ -324,15 +336,15 @@ class displayprofileDAO extends baseDAO {
 
         if ($this->user->userTypeId != 1 && $this->user->userId != $displayProfile->userId)
             trigger_error(__('You do not have permission to edit this profile'), E_USER_ERROR);
-        
+
         // Set some information about the form
         Theme::Set('form_id', 'DisplayProfileDeleteForm');
         Theme::Set('form_action', 'index.php?p=displayprofile&q=Delete');
         Theme::Set('form_meta', '<input type="hidden" name="displayprofileid" value="' . $displayProfile->displayProfileId . '" />');
 
         Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to delete?'))));
-        
-        $response  = new ApplicationState();
+
+        $response = new ApplicationState();
         $response->SetFormRequestResponse(NULL, __('Delete Display Profile'), '350px', '175px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('DisplayProfile', 'Delete') . '")');
         $response->AddButton(__('No'), 'XiboDialogClose()');
@@ -342,16 +354,17 @@ class displayprofileDAO extends baseDAO {
 
     /**
      * Deletes a Group
-     * @return 
+     * @return
      */
-    function Delete() {
+    function Delete()
+    {
         // Check the token
         if (!Kit::CheckToken())
             trigger_error('Token does not match', E_USER_ERROR);
 
         $response = $this->getState();
-        
-        $displayProfile  = new DisplayProfile();
+
+        $displayProfile = new DisplayProfile();
         $displayProfile->displayProfileId = \Xibo\Helper\Sanitize::getInt('displayprofileid');
 
         if (!$displayProfile->Load())
@@ -359,7 +372,7 @@ class displayprofileDAO extends baseDAO {
 
         if ($this->user->userTypeId != 1 && $this->user->userId != $displayProfile->userId)
             trigger_error(__('You do not have permission to edit this profile'), E_USER_ERROR);
-        
+
         if (!$displayProfile->Delete($displayProfile->displayProfileId))
             trigger_error($displayProfile->GetErrorMessage(), E_USER_ERROR);
 
@@ -367,4 +380,5 @@ class displayprofileDAO extends baseDAO {
 
     }
 }
+
 ?>

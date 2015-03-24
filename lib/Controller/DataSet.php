@@ -18,6 +18,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+namespace Xibo\Controller;
+use baseDAO;
+use Config;
+use DataSetColumn;
+use DataSetData;
+use DataSetGroupSecurity;
+use FormManager;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
@@ -25,11 +32,8 @@ use Xibo\Helper\Theme;
 
 defined('XIBO') or die('Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.');
 
-Kit::ClassLoader('dataset');
-Kit::ClassLoader('datasetcolumn');
-Kit::ClassLoader('datasetdata');
 
-class datasetDAO extends baseDAO
+class DataSet extends Base
 {
     public function displayPage()
     {
@@ -37,21 +41,20 @@ class datasetDAO extends baseDAO
 
         // Configure the theme
         $id = uniqid();
-        
-        // Different pages for data entry and admin    
+
+        // Different pages for data entry and admin
         if ($subpage == 'DataEntry') {
             Theme::Set('id', 'DataEntryGrid');
             $dataSetId = \Xibo\Helper\Sanitize::getInt('datasetid');
             $dataSet = \Xibo\Helper\Sanitize::getString('dataset');
-            
+
             Theme::Set('form_meta', '<input type="hidden" name="p" value="dataset"><input type="hidden" name="q" value="DataSetDataForm"><input type="hidden" name="datasetid" value="' . $dataSetId . '"><input type="hidden" name="dataset" value="' . $dataSet . '">');
-            
+
             // Call to render the template
             Theme::Set('header_text', $dataSet);
             Theme::Set('form_fields', array());
             $this->getState()->html .= Theme::RenderReturn('grid_render');
-        }
-        else {
+        } else {
             $id = uniqid();
             Theme::Set('id', $id);
             Theme::Set('form_meta', '<input type="hidden" name="p" value="dataset"><input type="hidden" name="q" value="DataSetGrid">');
@@ -64,7 +67,8 @@ class datasetDAO extends baseDAO
         }
     }
 
-    function actionMenu() {
+    function actionMenu()
+    {
 
         if (\Kit::GetParam('sp', _GET, _WORD, 'view') == 'view') {
             return array(
@@ -74,10 +78,9 @@ class datasetDAO extends baseDAO
                     'link' => 'index.php?p=dataset&q=AddDataSetForm',
                     'help' => __('Add a new DataSet'),
                     'onclick' => ''
-                    )
+                )
             );
-        }
-        else if (\Kit::GetParam('sp', _GET, _WORD, 'view') == 'DataEntry') {
+        } else if (\Kit::GetParam('sp', _GET, _WORD, 'view') == 'DataEntry') {
             return array(
                 array('title' => __('More Rows'),
                     'class' => '',
@@ -85,93 +88,91 @@ class datasetDAO extends baseDAO
                     'link' => '#',
                     'help' => __('Add more rows to the end of this DataSet'),
                     'onclick' => 'XiboGridRender(\'DataEntryGrid\')'
-                    )
+                )
             );
-        }
-        else
+        } else
             return NULL;
     }
 
     public function DataSetGrid()
     {
-        $db =& $this->db;
+
         $user = $this->getUser();
         $response = $this->getState();
 
         $cols = array(
-                array('name' => 'dataset', 'title' => __('Name')),
-                array('name' => 'description', 'title' => __('Description')),
-                array('name' => 'owner', 'title' => __('Owner')),
-                array('name' => 'groups', 'title' => __('Permissions'))
-            );
+            array('name' => 'dataset', 'title' => __('Name')),
+            array('name' => 'description', 'title' => __('Description')),
+            array('name' => 'owner', 'title' => __('Owner')),
+            array('name' => 'groups', 'title' => __('Permissions'))
+        );
         Theme::Set('table_cols', $cols);
 
         $rows = array();
 
-        foreach ($this->user->DataSetList() as $dataSet)
-        {
+        foreach ($this->user->DataSetList() as $dataSet) {
             // Add some additional info
             $dataSet['owner'] = $user->getNameFromID($dataSet['ownerid']);
             $dataSet['groups'] = $this->GroupsForDataSet($dataSet['datasetid']);
             $dataSet['buttons'] = array();
 
             if ($dataSet['edit']) {
-                
+
                 // View Data
                 $dataSet['buttons'][] = array(
-                        'id' => 'dataset_button_viewdata',
-                        'class' => 'XiboRedirectButton',
-                        'url' => 'index.php?p=dataset&sp=DataEntry&datasetid=' . $dataSet['datasetid'] . '&dataset=' . $dataSet['dataset'],
-                        'text' => __('View Data')
-                    );
+                    'id' => 'dataset_button_viewdata',
+                    'class' => 'XiboRedirectButton',
+                    'url' => 'index.php?p=dataset&sp=DataEntry&datasetid=' . $dataSet['datasetid'] . '&dataset=' . $dataSet['dataset'],
+                    'text' => __('View Data')
+                );
 
                 // View Columns
                 $dataSet['buttons'][] = array(
-                        'id' => 'dataset_button_viewcolumns',
-                        'url' => 'index.php?p=dataset&q=DataSetColumnsForm&datasetid=' . $dataSet['datasetid'] . '&dataset=' . $dataSet['dataset'],
-                        'text' => __('View Columns')
-                    );
+                    'id' => 'dataset_button_viewcolumns',
+                    'url' => 'index.php?p=dataset&q=DataSetColumnsForm&datasetid=' . $dataSet['datasetid'] . '&dataset=' . $dataSet['dataset'],
+                    'text' => __('View Columns')
+                );
 
                 // Edit DataSet
                 $dataSet['buttons'][] = array(
-                        'id' => 'dataset_button_edit',
-                        'url' => 'index.php?p=dataset&q=EditDataSetForm&datasetid=' . $dataSet['datasetid'] . '&dataset=' . $dataSet['dataset'],
-                        'text' => __('Edit')
-                    );
+                    'id' => 'dataset_button_edit',
+                    'url' => 'index.php?p=dataset&q=EditDataSetForm&datasetid=' . $dataSet['datasetid'] . '&dataset=' . $dataSet['dataset'],
+                    'text' => __('Edit')
+                );
 
                 // Edit DataSet
                 $dataSet['buttons'][] = array(
-                        'id' => 'dataset_button_import',
-                        'url' => 'index.php?p=dataset&q=ImportCsvForm&datasetid=' . $dataSet['datasetid'] . '&dataset=' . $dataSet['dataset'],
-                        'text' => __('Import CSV')
-                    );            
+                    'id' => 'dataset_button_import',
+                    'url' => 'index.php?p=dataset&q=ImportCsvForm&datasetid=' . $dataSet['datasetid'] . '&dataset=' . $dataSet['dataset'],
+                    'text' => __('Import CSV')
+                );
             }
 
             if ($dataSet['del']) {
 
                 // Delete DataSet
                 $dataSet['buttons'][] = array(
-                        'id' => 'dataset_button_delete',
-                        'url' => 'index.php?p=dataset&q=DeleteDataSetForm&datasetid=' . $dataSet['datasetid'] . '&dataset=' . $dataSet['dataset'],
-                        'text' => __('Delete')
-                    ); 
+                    'id' => 'dataset_button_delete',
+                    'url' => 'index.php?p=dataset&q=DeleteDataSetForm&datasetid=' . $dataSet['datasetid'] . '&dataset=' . $dataSet['dataset'],
+                    'text' => __('Delete')
+                );
             }
-                
+
             if ($dataSet['modifyPermissions']) {
 
                 // Edit Permissions
                 $dataSet['buttons'][] = array(
-                        'id' => 'dataset_button_delete',
-                        'url' => 'index.php?p=dataset&q=PermissionsForm&datasetid=' . $dataSet['datasetid'] . '&dataset=' . $dataSet['dataset'],
-                        'text' => __('Permissions')
-                    ); 
+                    'id' => 'dataset_button_delete',
+                    'url' => 'index.php?p=dataset&q=PermissionsForm&datasetid=' . $dataSet['datasetid'] . '&dataset=' . $dataSet['dataset'],
+                    'text' => __('Permissions')
+                );
             }
 
             $rows[] = $dataSet;
         }
 
         Theme::Set('table_rows', $rows);
-        
+
         $output = Theme::RenderReturn('table_render');
 
         $response->SetGridResponse($output);
@@ -180,7 +181,7 @@ class datasetDAO extends baseDAO
 
     public function AddDataSetForm()
     {
-        $db =& $this->db;
+
         $user = $this->getUser();
         $response = $this->getState();
 
@@ -189,12 +190,12 @@ class datasetDAO extends baseDAO
         Theme::Set('form_action', 'index.php?p=dataset&q=AddDataSet');
 
         $formFields = array();
-        $formFields[] = FormManager::AddText('dataset', __('Name'), NULL, 
+        $formFields[] = FormManager::AddText('dataset', __('Name'), NULL,
             __('A name for this DataSet'), 'n', 'required');
 
-        $formFields[] = FormManager::AddText('description', __('Description'), NULL, 
+        $formFields[] = FormManager::AddText('description', __('Description'), NULL,
             __('An optional description'), 'd', 'maxlength="250"');
-        
+
         Theme::Set('form_fields', $formFields);
 
         $response->SetFormRequestResponse(NULL, __('Add DataSet'), '350px', '275px');
@@ -210,8 +211,8 @@ class datasetDAO extends baseDAO
     public function AddDataSet()
     {
 
-        
-        $db =& $this->db;
+
+
         $user = $this->getUser();
         $response = $this->getState();
 
@@ -225,14 +226,14 @@ class datasetDAO extends baseDAO
         // Also add one column
         $dataSetColumn = new DataSetColumn($db);
         $dataSetColumn->Add($dataSetId, 'Col1', 1, null, 1);
-            
+
         $response->SetFormSubmitResponse(__('DataSet Added'));
 
     }
 
     public function EditDataSetForm()
     {
-        $db =& $this->db;
+
         $user = $this->getUser();
         $response = $this->getState();
 
@@ -259,7 +260,7 @@ class datasetDAO extends baseDAO
 
         $formFields[] = FormManager::AddText('description', __('Description'), \Xibo\Helper\Sanitize::string($row['Description']),
             __('An optional description'), 'd', 'maxlength="250"');
-        
+
         Theme::Set('form_fields', $formFields);
 
         $response->SetFormRequestResponse(NULL, __('Edit DataSet'), '350px', '275px');
@@ -272,8 +273,8 @@ class datasetDAO extends baseDAO
     public function EditDataSet()
     {
 
-        
-        $db =& $this->db;
+
+
         $user = $this->getUser();
         $response = $this->getState();
 
@@ -300,9 +301,9 @@ class datasetDAO extends baseDAO
      */
     public function DeleteDataSetForm()
     {
-        $db =& $this->db;
+
         $response = $this->getState();
-        
+
         $dataSetId = \Xibo\Helper\Sanitize::getInt('datasetid');
 
         $auth = $this->user->DataSetAuth($dataSetId, true);
@@ -316,7 +317,7 @@ class datasetDAO extends baseDAO
 
         $formFields = array();
         $formFields[] = FormManager::AddMessage(__('Are you sure you want to delete?'));
-        $formFields[] = FormManager::AddCheckbox('deleteData', __('Delete any associated data?'), NULL, 
+        $formFields[] = FormManager::AddCheckbox('deleteData', __('Delete any associated data?'), NULL,
             __('Please tick the box if you would like to delete all the Data contained in this DataSet'), 'c');
 
         Theme::Set('form_fields', $formFields);
@@ -331,8 +332,8 @@ class datasetDAO extends baseDAO
     public function DeleteDataSet()
     {
 
-        
-        $db =& $this->db;
+
+
         $user = $this->getUser();
         $response = $this->getState();
 
@@ -357,7 +358,7 @@ class datasetDAO extends baseDAO
 
     public function DataSetColumnsForm()
     {
-        $db =& $this->db;
+
         $response = $this->getState();
         $helpManager = new Help($db, $this->user);
 
@@ -368,7 +369,7 @@ class datasetDAO extends baseDAO
         if (!$auth->edit)
             trigger_error(__('Access Denied'));
 
-        $SQL  = "";
+        $SQL = "";
         $SQL .= "SELECT DataSetColumnID, Heading, datatype.DataType, datasetcolumntype.DataSetColumnType, ListContent, ColumnOrder ";
         $SQL .= "  FROM datasetcolumn ";
         $SQL .= "   INNER JOIN `datatype` ";
@@ -392,29 +393,29 @@ class datasetDAO extends baseDAO
             $row['datatype'] = __($row['datatype']);
             $row['datasetcolumntype'] = __($row['datasetcolumntype']);
 
-            // Edit        
+            // Edit
             $row['buttons'][] = array(
-                    'id' => 'dataset_button_edit',
-                    'url' => 'index.php?p=dataset&q=EditDataSetColumnForm&datasetid=' . $dataSetId . '&datasetcolumnid=' . $row['datasetcolumnid'] . '&dataset=' . $dataSet,
-                    'text' => __('Edit')
-                );
+                'id' => 'dataset_button_edit',
+                'url' => 'index.php?p=dataset&q=EditDataSetColumnForm&datasetid=' . $dataSetId . '&datasetcolumnid=' . $row['datasetcolumnid'] . '&dataset=' . $dataSet,
+                'text' => __('Edit')
+            );
 
             if ($auth->del) {
                 // Delete
                 $row['buttons'][] = array(
-                        'id' => 'dataset_button_delete',
-                        'url' => 'index.php?p=dataset&q=DeleteDataSetColumnForm&datasetid=' . $dataSetId . '&datasetcolumnid=' . $row['datasetcolumnid'] . '&dataset=' . $dataSet,
-                        'text' => __('Delete')
-                    );
+                    'id' => 'dataset_button_delete',
+                    'url' => 'index.php?p=dataset&q=DeleteDataSetColumnForm&datasetid=' . $dataSetId . '&datasetcolumnid=' . $row['datasetcolumnid'] . '&dataset=' . $dataSet,
+                    'text' => __('Delete')
+                );
             }
 
             $rows[] = $row;
         }
 
         Theme::Set('table_rows', $rows);
-        
+
         $form = Theme::RenderReturn('dataset_form_column_grid');
-        
+
         $response->SetFormRequestResponse($form, sprintf(__('Columns for %s'), $dataSet), '550px', '400px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('DataSet', 'ViewColumns') . '")');
         $response->AddButton(__('Close'), 'XiboDialogClose()');
@@ -424,7 +425,7 @@ class datasetDAO extends baseDAO
 
     public function AddDataSetColumnForm()
     {
-        $db =& $this->db;
+
         $response = $this->getState();
         $helpManager = new Help($db, $this->user);
 
@@ -439,31 +440,31 @@ class datasetDAO extends baseDAO
         Theme::Set('form_id', 'DataSetColumnAddForm');
         Theme::Set('form_action', 'index.php?p=dataset&q=AddDataSetColumn');
         Theme::Set('form_meta', '<input type="hidden" name="dataset" value="' . $dataSet . '" /><input type="hidden" name="datasetid" value="' . $dataSetId . '" />');
-        
+
         $formFields = array();
         $formFields[] = FormManager::AddText('heading', __('Heading'), NULL, __('The heading for this Column'), 'h', 'required');
         $formFields[] = FormManager::AddCombo(
-                    'datasetcolumntypeid', 
-                    __('Column Type'), 
-                    NULL,
-                    $db->GetArray('SELECT datasetcolumntypeid, datasetcolumntype FROM datasetcolumntype'),
-                    'datasetcolumntypeid',
-                    'datasetcolumntype',
-                    __('Whether this column is a value or a formula'), 
-                    't');
+            'datasetcolumntypeid',
+            __('Column Type'),
+            NULL,
+            $db->GetArray('SELECT datasetcolumntypeid, datasetcolumntype FROM datasetcolumntype'),
+            'datasetcolumntypeid',
+            'datasetcolumntype',
+            __('Whether this column is a value or a formula'),
+            't');
         $formFields[] = FormManager::AddCombo(
-                    'datatypeid', 
-                    __('Data Type'), 
-                    NULL,
-                    $db->GetArray('SELECT datatypeid, datatype FROM datatype'),
-                    'datatypeid',
-                    'datatype',
-                    __('The DataType of the Intended Data'), 
-                    'd');
+            'datatypeid',
+            __('Data Type'),
+            NULL,
+            $db->GetArray('SELECT datatypeid, datatype FROM datatype'),
+            'datatypeid',
+            'datatype',
+            __('The DataType of the Intended Data'),
+            'd');
         $formFields[] = FormManager::AddText('listcontent', __('List Content'), NULL, __('A comma separated list of items to present in a combo box'), 'l', '');
         $formFields[] = FormManager::AddNumber('columnorder', __('Column Order'), NULL, __('The order this column should be displayed in when entering data'), 'o', '');
         $formFields[] = FormManager::AddText('formula', __('Formula'), NULL, __('A formula to use as a calculation for formula column types'), 'f', '');
-        
+
         Theme::Set('form_fields', $formFields);
 
         $response->SetFormRequestResponse(NULL, __('Add Column'), '350px', '200px');
@@ -476,8 +477,8 @@ class datasetDAO extends baseDAO
     public function AddDataSetColumn()
     {
 
-        
-        $db =& $this->db;
+
+
         $user = $this->getUser();
         $response = $this->getState();
 
@@ -508,7 +509,7 @@ class datasetDAO extends baseDAO
 
     public function EditDataSetColumnForm()
     {
-        $db =& $this->db;
+
         $response = $this->getState();
         $helpManager = new Help($db, $this->user);
 
@@ -527,7 +528,7 @@ class datasetDAO extends baseDAO
 
         // Get some information about this data set column
         $SQL = sprintf("SELECT Heading, ListContent, ColumnOrder, DataTypeID, DataSetColumnTypeID, Formula FROM datasetcolumn WHERE DataSetColumnID = %d", $dataSetColumnId);
-        
+
         if (!$row = $db->GetSingleRow($SQL))
             trigger_error(__('Unabled to get Data Column information'), E_USER_ERROR);
 
@@ -540,24 +541,24 @@ class datasetDAO extends baseDAO
             __('The heading for this Column'), 'h', 'required');
 
         $formFields[] = FormManager::AddCombo(
-                    'datasetcolumntypeid', 
-                    __('Column Type'), 
-                    \Xibo\Helper\Sanitize::int($row['DataSetColumnTypeID']),
-                    $db->GetArray('SELECT datasetcolumntypeid, datasetcolumntype FROM datasetcolumntype'),
-                    'datasetcolumntypeid',
-                    'datasetcolumntype',
-                    __('Whether this column is a value or a formula'), 
-                    't');
+            'datasetcolumntypeid',
+            __('Column Type'),
+            \Xibo\Helper\Sanitize::int($row['DataSetColumnTypeID']),
+            $db->GetArray('SELECT datasetcolumntypeid, datasetcolumntype FROM datasetcolumntype'),
+            'datasetcolumntypeid',
+            'datasetcolumntype',
+            __('Whether this column is a value or a formula'),
+            't');
 
         $formFields[] = FormManager::AddCombo(
-                    'datatypeid', 
-                    __('Data Type'), 
-                    \Xibo\Helper\Sanitize::int($row['DataTypeID']),
-                    $db->GetArray('SELECT datatypeid, datatype FROM datatype'),
-                    'datatypeid',
-                    'datatype',
-                    __('The DataType of the Intended Data'), 
-                    'd');
+            'datatypeid',
+            __('Data Type'),
+            \Xibo\Helper\Sanitize::int($row['DataTypeID']),
+            $db->GetArray('SELECT datatypeid, datatype FROM datatype'),
+            'datatypeid',
+            'datatype',
+            __('The DataType of the Intended Data'),
+            'd');
 
         $formFields[] = FormManager::AddText('listcontent', __('List Content'), \Xibo\Helper\Sanitize::string($row['ListContent']),
             __('A comma separated list of items to present in a combo box'), 'l', '');
@@ -567,7 +568,7 @@ class datasetDAO extends baseDAO
 
         $formFields[] = FormManager::AddText('formula', __('Formula'), \Xibo\Helper\Sanitize::string($row['Formula']),
             __('A formula to use as a calculation for formula column types'), 'f', '');
-        
+
         Theme::Set('form_fields', $formFields);
 
         $response->SetFormRequestResponse(NULL, __('Edit Column'), '350px', '200px');
@@ -580,8 +581,8 @@ class datasetDAO extends baseDAO
     public function EditDataSetColumn()
     {
 
-        
-        $db =& $this->db;
+
+
         $user = $this->getUser();
         $response = $this->getState();
 
@@ -591,7 +592,7 @@ class datasetDAO extends baseDAO
         $auth = $user->DataSetAuth($dataSetId, true);
         if (!$auth->edit)
             trigger_error(__('Access Denied'));
-            
+
         $dataSetColumnId = \Xibo\Helper\Sanitize::getInt('datasetcolumnid');
         $heading = \Xibo\Helper\Sanitize::getString('heading');
         $listContent = \Xibo\Helper\Sanitize::getString('listcontent');
@@ -613,7 +614,7 @@ class datasetDAO extends baseDAO
 
     public function DeleteDataSetColumnForm()
     {
-        $db =& $this->db;
+
         $response = $this->getState();
         $helpManager = new Help($db, $this->user);
 
@@ -626,7 +627,7 @@ class datasetDAO extends baseDAO
 
         $dataSetColumnId = \Xibo\Helper\Sanitize::getInt('datasetcolumnid');
 
-         // Set some information about the form
+        // Set some information about the form
         Theme::Set('form_id', 'DataSetColumnDeleteForm');
         Theme::Set('form_action', 'index.php?p=dataset&q=DeleteDataSetColumn');
         Theme::Set('form_meta', '<input type="hidden" name="dataset" value="' . $dataSet . '" /><input type="hidden" name="datasetid" value="' . $dataSetId . '" /><input type="hidden" name="datasetcolumnid" value="' . $dataSetColumnId . '" />');
@@ -643,8 +644,8 @@ class datasetDAO extends baseDAO
     public function DeleteDataSetColumn()
     {
 
-        
-        $db =& $this->db;
+
+
         $user = $this->getUser();
         $response = $this->getState();
 
@@ -670,7 +671,7 @@ class datasetDAO extends baseDAO
 
     public function DataSetDataForm()
     {
-        $db =& $this->db;
+
         $response = $this->getState();
 
         $dataSetId = \Xibo\Helper\Sanitize::getInt('datasetid');
@@ -681,7 +682,7 @@ class datasetDAO extends baseDAO
             trigger_error(__('Access Denied'), E_USER_ERROR);
 
         // Get the max number of rows
-        $SQL  = "";
+        $SQL = "";
         $SQL .= "SELECT MAX(RowNumber) AS RowNumber, COUNT(DISTINCT datasetcolumn.DataSetColumnID) AS ColNumber ";
         $SQL .= "  FROM datasetdata ";
         $SQL .= "   RIGHT OUTER JOIN datasetcolumn ";
@@ -690,8 +691,7 @@ class datasetDAO extends baseDAO
 
         Log::notice($SQL, 'dataset', 'DataSetDataForm');
 
-        if (!$maxResult = $db->GetSingleRow($SQL))
-        {
+        if (!$maxResult = $db->GetSingleRow($SQL)) {
             trigger_error($db->error());
             trigger_error(__('Unable to find the number of data points'), E_USER_ERROR);
         }
@@ -700,23 +700,21 @@ class datasetDAO extends baseDAO
         $maxCols = $maxResult['ColNumber'];
 
         // Get some information about the columns in this dataset
-        $SQL  = "SELECT Heading, DataSetColumnID, ListContent, ColumnOrder, DataTypeID FROM datasetcolumn WHERE DataSetID = %d  AND DataSetColumnTypeID = 1 ";
+        $SQL = "SELECT Heading, DataSetColumnID, ListContent, ColumnOrder, DataTypeID FROM datasetcolumn WHERE DataSetID = %d  AND DataSetColumnTypeID = 1 ";
         $SQL .= "ORDER BY ColumnOrder ";
-        
-        if (!$results = $db->query(sprintf($SQL, $dataSetId)))
-        {
+
+        if (!$results = $db->query(sprintf($SQL, $dataSetId))) {
             trigger_error($db->error());
             trigger_error(__('Unable to find the column headings'), E_USER_ERROR);
         }
 
         $columnDefinition = array();
-        
+
         $form = '<table class="table table-bordered">';
         $form .= '   <tr>';
         $form .= '      <th>#</th>';
 
-        while ($row = $db->get_assoc_row($results))
-        {
+        while ($row = $db->get_assoc_row($results)) {
             $columnDefinition[] = $row;
             $heading = $row['Heading'];
 
@@ -726,14 +724,12 @@ class datasetDAO extends baseDAO
         $form .= '</tr>';
 
         // Loop through the max rows
-        for ($row = 1; $row <= $maxRows + 2; $row++)
-        {
+        for ($row = 1; $row <= $maxRows + 2; $row++) {
             $form .= '<tr>';
             $form .= '  <td>' . $row . '</td>';
 
             // $row is the current row
-            for ($col = 0; $col < $maxCols; $col++)
-            {
+            for ($col = 0; $col < $maxCols; $col++) {
                 $dataSetColumnId = $columnDefinition[$col]['DataSetColumnID'];
                 $listContent = $columnDefinition[$col]['ListContent'];
                 $columnOrder = $columnDefinition[$col]['ColumnOrder'];
@@ -742,10 +738,9 @@ class datasetDAO extends baseDAO
                 // Value for this Col/Row
                 $value = '';
 
-                if ($row <= $maxRows)
-                {
+                if ($row <= $maxRows) {
                     // This is intended to be a blank row
-                    $SQL  = "";
+                    $SQL = "";
                     $SQL .= "SELECT Value ";
                     $SQL .= "  FROM datasetdata ";
                     $SQL .= "WHERE datasetdata.RowNumber = %d ";
@@ -754,42 +749,34 @@ class datasetDAO extends baseDAO
 
                     Log::notice($SQL, 'dataset');
 
-                    if (!$results = $db->query($SQL))
-                    {
+                    if (!$results = $db->query($SQL)) {
                         trigger_error($db->error());
                         trigger_error(__('Can not get the data row/column'), E_USER_ERROR);
                     }
 
-                    if ($db->num_rows($results) == 0)
-                    {
+                    if ($db->num_rows($results) == 0) {
                         $value = '';
-                    }
-                    else
-                    {
+                    } else {
                         $valueRow = $db->get_assoc_row($results);
                         $value = $valueRow['Value'];
                     }
                 }
-                
+
                 // Do we need a select list?
-                if ($listContent != '')
-                {
+                if ($listContent != '') {
                     $listItems = explode(',', $listContent);
                     $selected = ($value == '') ? ' selected' : '';
                     $select = '<select class="form-control" name="value">';
-                    $select.= '     <option value="" ' . $selected . '></option>';
+                    $select .= '     <option value="" ' . $selected . '></option>';
 
-                    for ($i=0; $i < count($listItems); $i++)
-                    {
+                    for ($i = 0; $i < count($listItems); $i++) {
                         $selected = ($listItems[$i] == $value) ? ' selected' : '';
 
                         $select .= '<option value="' . $listItems[$i] . '" ' . $selected . '>' . $listItems[$i] . '</option>';
                     }
 
                     $select .= '</select>';
-                }
-                else
-                {
+                } else {
                     // Numbers are always small
                     $size = ($dataTypeId == 2) ? ' class="form-control col-sm-3"' : '';
 
@@ -802,7 +789,7 @@ class datasetDAO extends baseDAO
 
                 $action = ($value == '') ? 'AddDataSetData' : 'EditDataSetData';
                 $fieldId = uniqid();
-                
+
                 $form .= <<<END
                 <td>
                     <form id="$fieldId" class="XiboDataSetDataForm form-inline" action="index.php?p=dataset&q=$action">
@@ -820,7 +807,7 @@ END;
         } //rows loop
 
         $form .= '</table>';
-        
+
         $response->SetGridResponse($form);
         $response->callBack = 'dataSetData';
 
@@ -828,7 +815,7 @@ END;
 
     public function AddDataSetData()
     {
-        $db =& $this->db;
+
         $user = $this->getUser();
         $response = $this->getState();
 
@@ -855,7 +842,7 @@ END;
 
     public function EditDataSetData()
     {
-        $db =& $this->db;
+
         $user = $this->getUser();
         $response = $this->getState();
 
@@ -869,17 +856,14 @@ END;
         if (!$auth->edit)
             trigger_error(__('Access Denied'));
 
-        if ($value == '')
-        {
+        if ($value == '') {
             $dataSetObject = new DataSetData($db);
             if (!$dataSetObject->Delete($dataSetColumnId, $rowNumber))
                 trigger_error($dataSetObject->GetErrorMessage(), E_USER_ERROR);
 
             $response->SetFormSubmitResponse(__('Data Deleted'));
             $response->loadFormUri = 'index.php?p=dataset&q=AddDataSetData';
-        }
-        else
-        {
+        } else {
             $dataSetObject = new DataSetData($db);
             if (!$dataSetObject->Edit($dataSetColumnId, $rowNumber, $value))
                 trigger_error($dataSetObject->GetErrorMessage(), E_USER_ERROR);
@@ -900,7 +884,7 @@ END;
      */
     private function GroupsForDataSet($dataSetId)
     {
-        $db =& $this->db;
+
 
         $SQL = '';
         $SQL .= 'SELECT `group`.Group ';
@@ -911,16 +895,14 @@ END;
 
         $SQL = sprintf($SQL, $dataSetId);
 
-        if (!$results = $db->query($SQL))
-        {
+        if (!$results = $db->query($SQL)) {
             trigger_error($db->error());
             trigger_error(__('Unable to get group information for dataset'), E_USER_ERROR);
         }
 
         $groups = '';
 
-        while ($row = $db->get_assoc_row($results))
-        {
+        while ($row = $db->get_assoc_row($results)) {
             $groups .= $row['Group'] . ', ';
         }
 
@@ -932,7 +914,7 @@ END;
 
     public function PermissionsForm()
     {
-        $db =& $this->db;
+
         $user = $this->getUser();
         $response = $this->getState();
         $helpManager = new Help($db, $user);
@@ -964,23 +946,23 @@ END;
             $rowClass = ($row['isuserspecific'] == 0) ? 'strong_text' : '';
 
             $checkbox = array(
-                    'id' => $groupId,
-                    'name' => \Xibo\Helper\Sanitize::string($row['group']),
-                    'class' => $rowClass,
-                    'value_view' => $groupId . '_view',
-                    'value_view_checked' => (($row['view'] == 1) ? 'checked' : ''),
-                    'value_edit' => $groupId . '_edit',
-                    'value_edit_checked' => (($row['edit'] == 1) ? 'checked' : ''),
-                    'value_del' => $groupId . '_del',
-                    'value_del_checked' => (($row['del'] == 1) ? 'checked' : ''),
-                );
+                'id' => $groupId,
+                'name' => \Xibo\Helper\Sanitize::string($row['group']),
+                'class' => $rowClass,
+                'value_view' => $groupId . '_view',
+                'value_view_checked' => (($row['view'] == 1) ? 'checked' : ''),
+                'value_edit' => $groupId . '_edit',
+                'value_edit_checked' => (($row['edit'] == 1) ? 'checked' : ''),
+                'value_del' => $groupId . '_del',
+                'value_del_checked' => (($row['del'] == 1) ? 'checked' : ''),
+            );
 
             $checkboxes[] = $checkbox;
         }
 
         $formFields = array();
         $formFields[] = FormManager::AddPermissions('groupids[]', $checkboxes);
-        
+
         Theme::Set('form_fields', $formFields);
 
         $response->SetFormRequestResponse(NULL, __('Permissions'), '350px', '500px');
@@ -993,8 +975,8 @@ END;
     public function Permissions()
     {
 
-        
-        $db =& $this->db;
+
+
         $user = $this->getUser();
         $response = $this->getState();
 
@@ -1020,20 +1002,17 @@ END;
         $del = 0;
 
         // List of groupIds with view, edit and del assignments
-        foreach($groupIds as $groupPermission)
-        {
+        foreach ($groupIds as $groupPermission) {
             $groupPermission = explode('_', $groupPermission);
             $groupId = $groupPermission[0];
 
-            if ($first)
-            {
+            if ($first) {
                 // First time through
                 $first = false;
                 $lastGroupId = $groupId;
             }
 
-            if ($groupId != $lastGroupId)
-            {
+            if ($groupId != $lastGroupId) {
                 // The groupId has changed, so we need to write the current settings to the db.
                 // Link new permissions
                 if (!$security->Link($dataSetId, $lastGroupId, $view, $edit, $del))
@@ -1046,8 +1025,7 @@ END;
                 $del = 0;
             }
 
-            switch ($groupPermission[1])
-            {
+            switch ($groupPermission[1]) {
                 case 'view':
                     $view = 1;
                     break;
@@ -1063,8 +1041,7 @@ END;
         }
 
         // Need to do the last one
-        if (!$first)
-        {
+        if (!$first) {
             if (!$security->Link($dataSetId, $lastGroupId, $view, $edit, $del))
                 trigger_error(__('Unable to set permissions'), E_USER_ERROR);
         }
@@ -1073,11 +1050,12 @@ END;
 
     }
 
-    public function ImportCsvForm() {
+    public function ImportCsvForm()
+    {
         global $session;
-        $db =& $this->db;
+
         $response = $this->getState();
-        
+
         $dataSetId = \Xibo\Helper\Sanitize::getInt('datasetid');
         $dataSet = \Xibo\Helper\Sanitize::getString('dataset');
 
@@ -1094,7 +1072,7 @@ END;
         // Find the max file size
         $maxFileSizeBytes = convertBytes(ini_get('upload_max_filesize'));
 
-         // Set some information about the form
+        // Set some information about the form
         Theme::Set('form_id', 'DataSetImportCsvForm');
         Theme::Set('form_action', 'index.php?p=dataset&q=ImportCsv');
         Theme::Set('form_meta', '<input type="hidden" name="dataset" value="' . $dataSet . '" /><input type="hidden" name="datasetid" value="' . $dataSetId . '" /><input type="hidden" id="txtFileName" name="txtFileName" readonly="true" /><input type="hidden" name="hidFileID" id="hidFileID" value="" />');
@@ -1106,18 +1084,18 @@ END;
         Theme::Set('prepend', Theme::RenderReturn('form_file_upload_single'));
 
         $formFields = array();
-        $formFields[] = FormManager::AddCheckbox('overwrite', __('Overwrite existing data?'), 
-            NULL, 
-            __('Erase all content in this DataSet and overwrite it with the new content in this import.'), 
+        $formFields[] = FormManager::AddCheckbox('overwrite', __('Overwrite existing data?'),
+            NULL,
+            __('Erase all content in this DataSet and overwrite it with the new content in this import.'),
             'o');
 
-        $formFields[] = FormManager::AddCheckbox('ignorefirstrow', __('Ignore first row?'), 
-            NULL, 
-            __('Ignore the first row? Useful if the CSV has headings.'), 
+        $formFields[] = FormManager::AddCheckbox('ignorefirstrow', __('Ignore first row?'),
+            NULL,
+            __('Ignore the first row? Useful if the CSV has headings.'),
             'i');
-    
+
         // Enumerate over the columns in the DataSet and offer a column mapping for each one (from the file)
-        $SQL  = "";
+        $SQL = "";
         $SQL .= "SELECT DataSetColumnID, Heading ";
         $SQL .= "  FROM datasetcolumn ";
         $SQL .= sprintf(" WHERE DataSetID = %d ", $dataSetId);
@@ -1127,8 +1105,7 @@ END;
         // Load results into an array
         $dataSetColumns = $db->GetArray($SQL);
 
-        if (!is_array($dataSetColumns)) 
-        {
+        if (!is_array($dataSetColumns)) {
             trigger_error($db->error());
             trigger_error(__('Error getting list of dataSetColumns'), E_USER_ERROR);
         }
@@ -1151,9 +1128,10 @@ END;
 
     }
 
-    public function ImportCsv() {
+    public function ImportCsv()
+    {
 
-        $db =& $this->db;
+
         $response = $this->getState();
         $dataSetId = \Xibo\Helper\Sanitize::getInt('datasetid');
         $overwrite = \Xibo\Helper\Sanitize::getCheckbox('overwrite');
@@ -1182,7 +1160,7 @@ END;
         $csvFileLocation = Config::GetSetting('LIBRARY_LOCATION') . 'temp/' . $tmpName;
 
         // Enumerate over the columns in the DataSet and offer a column mapping for each one (from the file)
-        $SQL  = "";
+        $SQL = "";
         $SQL .= "SELECT DataSetColumnID ";
         $SQL .= "  FROM datasetcolumn ";
         $SQL .= sprintf(" WHERE DataSetID = %d ", $dataSetId);
@@ -1192,8 +1170,7 @@ END;
         // Load results into an array
         $dataSetColumns = $db->GetArray($SQL);
 
-        if (!is_array($dataSetColumns)) 
-        {
+        if (!is_array($dataSetColumns)) {
             trigger_error($db->error());
             trigger_error(__('Error getting list of dataSetColumns'), E_USER_ERROR);
         }
@@ -1219,4 +1196,5 @@ END;
 
     }
 }
+
 ?>

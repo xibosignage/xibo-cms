@@ -18,15 +18,20 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-use Xibo\Helper\Help;
+namespace Xibo\Controller;
+
+use baseDAO;
+use FormManager;
+use Kit;
+use Session;
 use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Help;
 use Xibo\Helper\Theme;
 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-include_once('lib/data/resolution.data.class.php');
 
-class resolutionDAO extends baseDAO
+class Resolution extends Base
 {
     /**
      * Display the Resolution Page
@@ -43,8 +48,7 @@ class resolutionDAO extends baseDAO
         if (\Kit::IsFilterPinned('resolution', 'ResolutionFilter')) {
             $pinned = 1;
             $enabled = Session::Get('resolution', 'filterEnabled');
-        }
-        else {
+        } else {
             $enabled = 1;
             $pinned = 0;
         }
@@ -70,7 +74,8 @@ class resolutionDAO extends baseDAO
         $this->getState()->html .= Theme::RenderReturn('grid_render');
     }
 
-    function actionMenu() {
+    function actionMenu()
+    {
 
         return array(
             array('title' => __('Filter'),
@@ -81,13 +86,13 @@ class resolutionDAO extends baseDAO
                 'onclick' => 'ToggleFilterView(\'Filter\')'
             ),
             array('title' => __('Add Resolution'),
-                    'class' => 'XiboFormButton',
-                    'selected' => false,
-                    'link' => 'index.php?p=resolution&q=AddForm',
-                    'help' => __('Add a new resolution for use on layouts'),
-                    'onclick' => ''
-                    )
-            );                   
+                'class' => 'XiboFormButton',
+                'selected' => false,
+                'link' => 'index.php?p=resolution&q=AddForm',
+                'help' => __('Add a new resolution for use on layouts'),
+                'onclick' => ''
+            )
+        );
     }
 
     /**
@@ -107,12 +112,12 @@ class resolutionDAO extends baseDAO
         $rows = array();
 
         $cols = array(
-                array('name' => 'resolutionid', 'title' => __('ID')),
-                array('name' => 'resolution', 'title' => __('Resolution')),
-                array('name' => 'intended_width', 'title' => __('Width')),
-                array('name' => 'intended_height', 'title' => __('Height')),
-                array('name' => 'enabled', 'title' => __('Enabled?'), 'icons' => true)
-            );
+            array('name' => 'resolutionid', 'title' => __('ID')),
+            array('name' => 'resolution', 'title' => __('Resolution')),
+            array('name' => 'intended_width', 'title' => __('Width')),
+            array('name' => 'intended_height', 'title' => __('Height')),
+            array('name' => 'enabled', 'title' => __('Enabled?'), 'icons' => true)
+        );
         Theme::Set('table_cols', $cols);
 
         foreach ($resolutions as $resolution) {
@@ -126,17 +131,17 @@ class resolutionDAO extends baseDAO
 
             // Edit Button
             $row['buttons'][] = array(
-                    'id' => 'resolution_button_edit',
-                    'url' => 'index.php?p=resolution&q=EditForm&resolutionid=' . $row['resolutionid'],
-                    'text' => __('Edit')
-                );
+                'id' => 'resolution_button_edit',
+                'url' => 'index.php?p=resolution&q=EditForm&resolutionid=' . $row['resolutionid'],
+                'text' => __('Edit')
+            );
 
             // Delete Button
             $row['buttons'][] = array(
-                    'id' => 'resolution_button_delete',
-                    'url' => 'index.php?p=resolution&q=DeleteForm&resolutionid=' . $row['resolutionid'],
-                    'text' => __('Delete')
-                );
+                'id' => 'resolution_button_delete',
+                'url' => 'index.php?p=resolution&q=DeleteForm&resolutionid=' . $row['resolutionid'],
+                'text' => __('Delete')
+            );
 
             // Add to the rows objects
             $rows[] = $row;
@@ -159,15 +164,15 @@ class resolutionDAO extends baseDAO
         Theme::Set('form_action', 'index.php?p=resolution&q=Add');
 
         $formFields = array();
-        $formFields[] = FormManager::AddText('resolution', __('Resolution'), NULL, 
+        $formFields[] = FormManager::AddText('resolution', __('Resolution'), NULL,
             __('A name for this Resolution'), 'r', 'required');
 
-        $formFields[] = FormManager::AddNumber('width', __('Width'), NULL, 
+        $formFields[] = FormManager::AddNumber('width', __('Width'), NULL,
             __('The Width for this Resolution'), 'w', 'required');
 
-        $formFields[] = FormManager::AddNumber('height', __('Height'), NULL, 
+        $formFields[] = FormManager::AddNumber('height', __('Height'), NULL,
             __('The Height for this Resolution'), 'h', 'required');
-        
+
         Theme::Set('form_fields', $formFields);
 
         $response->SetFormRequestResponse(NULL, __('Add Resolution'), '350px', '250px');
@@ -193,7 +198,7 @@ class resolutionDAO extends baseDAO
         $formFields[] = FormManager::AddText('resolution', __('Resolution'), $resolution->resolution,
             __('A name for this Resolution'), 'r', 'required');
 
-        $formFields[] = FormManager::AddNumber('width', __('Width'),$resolution->width,
+        $formFields[] = FormManager::AddNumber('width', __('Width'), $resolution->width,
             __('The Width for this Resolution'), 'w', 'required');
 
         $formFields[] = FormManager::AddNumber('height', __('Height'), $resolution->height,
@@ -201,7 +206,7 @@ class resolutionDAO extends baseDAO
 
         $formFields[] = FormManager::AddCheckbox('enabled', __('Enable?'), $resolution->enabled,
             __('Is the Resolution enabled for use?'), 'e');
-        
+
         Theme::Set('form_fields', $formFields);
 
         Theme::Set('form_id', 'ResolutionForm');
@@ -232,7 +237,7 @@ class resolutionDAO extends baseDAO
         Theme::Set('form_action', 'index.php?p=resolution&q=Delete');
         Theme::Set('form_meta', '<input type="hidden" name="resolutionid" value="' . $resolution->resolutionId . '" />');
         Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to delete?'))));
-        
+
         $response->SetFormRequestResponse(Theme::RenderReturn('form_render'), __('Delete Resolution'), '250px', '150px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Resolution', 'Delete') . '")');
         $response->AddButton(__('No'), 'XiboDialogClose()');
@@ -243,9 +248,9 @@ class resolutionDAO extends baseDAO
     function Add()
     {
 
-        
-        $db 	=& $this->db;
-        $user 	=& $this->user;
+
+        $db =& $this->db;
+        $user =& $this->user;
         $response = $this->getState();
 
         $resolution = \Xibo\Helper\Sanitize::getString('resolution');
@@ -265,9 +270,9 @@ class resolutionDAO extends baseDAO
     function Edit()
     {
 
-        
-        $db 	=& $this->db;
-        $user 	=& $this->user;
+
+        $db =& $this->db;
+        $user =& $this->user;
         $response = $this->getState();
 
         $resolutionID = \Xibo\Helper\Sanitize::getInt('resolutionid');
@@ -289,9 +294,9 @@ class resolutionDAO extends baseDAO
     function Delete()
     {
 
-        
-        $db 	=& $this->db;
-        $user 	=& $this->user;
+
+        $db =& $this->db;
+        $user =& $this->user;
         $response = $this->getState();
 
         $resolutionID = \Xibo\Helper\Sanitize::getInt('resolutionid');
@@ -306,4 +311,5 @@ class resolutionDAO extends baseDAO
 
     }
 }
+
 ?>

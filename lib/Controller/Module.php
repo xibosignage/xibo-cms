@@ -18,15 +18,17 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+namespace Xibo\Controller;
+
 use Xibo\Entity\User;
-use Xibo\Helper\Log;
-use Xibo\Helper\Help;
 use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Help;
+use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-class moduleDAO extends baseDAO 
+class Module extends Base
 {
     private $module;
 
@@ -37,21 +39,21 @@ class moduleDAO extends baseDAO
      */
     function __construct(database $db, user $user)
     {
-        $this->db   =& $db;
+        $this->db =& $db;
         $this->user =& $user;
     }
 
     function actionMenu()
     {
         return array(
-                array('title' => __('Verify All'),
-                    'class' => 'XiboFormButton',
-                    'selected' => false,
-                    'link' => 'index.php?p=module&q=VerifyForm',
-                    'help' => __('Verify all modules have been installed correctly.'),
-                    'onclick' => ''
-                    )
-            );
+            array('title' => __('Verify All'),
+                'class' => 'XiboFormButton',
+                'selected' => false,
+                'link' => 'index.php?p=module&q=VerifyForm',
+                'help' => __('Verify all modules have been installed correctly.'),
+                'onclick' => ''
+            )
+        );
     }
 
     /**
@@ -80,10 +82,9 @@ class moduleDAO extends baseDAO
                 $rows = $sth->fetchAll();
                 $installed = array();
 
-                foreach($rows as $row)
+                foreach ($rows as $row)
                     $installed[] = $row['Module'];
-            }
-            catch (Exception $e) {
+            } catch (Exception $e) {
                 trigger_error(__('Cannot get installed modules'), E_USER_ERROR);
             }
 
@@ -108,7 +109,7 @@ class moduleDAO extends baseDAO
      */
     public function Grid()
     {
-        $db =& $this->db;
+
         $user = $this->getUser();
         $response = $this->getState();
 
@@ -126,28 +127,26 @@ class moduleDAO extends baseDAO
         $SQL .= '  FROM `module` ';
         $SQL .= ' ORDER BY Name ';
 
-        if (!$modules = $db->GetArray($SQL))
-        {
+        if (!$modules = $db->GetArray($SQL)) {
             trigger_error($db->error());
             trigger_error(__('Unable to get the list of modules'), E_USER_ERROR);
         }
 
         $cols = array(
-                array('name' => 'name', 'title' => __('Name')),
-                array('name' => 'description', 'title' => __('Description')),
-                array('name' => 'isregionspecific', 'title' => __('Library Media'), 'icons' => true),
-                array('name' => 'validextensions', 'title' => __('Valid Extensions')),
-                array('name' => 'imageuri', 'title' => __('Image Uri')),
-                array('name' => 'preview_enabled', 'title' => __('Preview Enabled'), 'icons' => true),
-                array('name' => 'assignable', 'title' => __('Assignable'), 'icons' => true, 'helpText' => __('Can this module be assigned to a Layout?')),
-                array('name' => 'enabled', 'title' => __('Enabled'), 'icons' => true)
-            );
+            array('name' => 'name', 'title' => __('Name')),
+            array('name' => 'description', 'title' => __('Description')),
+            array('name' => 'isregionspecific', 'title' => __('Library Media'), 'icons' => true),
+            array('name' => 'validextensions', 'title' => __('Valid Extensions')),
+            array('name' => 'imageuri', 'title' => __('Image Uri')),
+            array('name' => 'preview_enabled', 'title' => __('Preview Enabled'), 'icons' => true),
+            array('name' => 'assignable', 'title' => __('Assignable'), 'icons' => true, 'helpText' => __('Can this module be assigned to a Layout?')),
+            array('name' => 'enabled', 'title' => __('Enabled'), 'icons' => true)
+        );
         Theme::Set('table_cols', $cols);
 
         $rows = array();
 
-        foreach($modules as $module)
-        {
+        foreach ($modules as $module) {
             $row = array();
             $row['moduleid'] = \Xibo\Helper\Sanitize::int($module['ModuleID']);
             $row['name'] = \Xibo\Helper\Sanitize::string($module['Name']);
@@ -159,24 +158,24 @@ class moduleDAO extends baseDAO
             $row['preview_enabled'] = \Xibo\Helper\Sanitize::int($module['PreviewEnabled']);
             $row['assignable'] = \Xibo\Helper\Sanitize::int($module['assignable']);
             $row['settings'] = json_decode(Kit::ValidateParam($module['settings'], _HTMLSTRING), true);
-            
+
             // Initialise array of buttons, because we might not have any
             $row['buttons'] = array();
 
             // If the module config is not locked, present some buttons
             if (Config::GetSetting('MODULE_CONFIG_LOCKED_CHECKB') != 'Checked') {
-                
+
                 // Edit button
                 $row['buttons'][] = array(
-                        'id' => 'module_button_edit',
-                        'url' => 'index.php?p=module&q=EditForm&ModuleID=' . $row['moduleid'],
-                        'text' => __('Edit')
-                    );
+                    'id' => 'module_button_edit',
+                    'url' => 'index.php?p=module&q=EditForm&ModuleID=' . $row['moduleid'],
+                    'text' => __('Edit')
+                );
             }
 
             // Are there any buttons we need to provide as part of the module?
             if (isset($row['settings']['buttons'])) {
-                foreach($row['settings']['buttons'] as $button) {
+                foreach ($row['settings']['buttons'] as $button) {
                     $button['text'] = __($button['text']);
                     $row['buttons'][] = $button;
                 }
@@ -198,7 +197,7 @@ class moduleDAO extends baseDAO
      */
     public function EditForm()
     {
-        $db =& $this->db;
+
         $user = $this->getUser();
         $response = $this->getState();
         $helpManager = new Help($db, $user);
@@ -225,8 +224,7 @@ class moduleDAO extends baseDAO
 
         $SQL = sprintf($SQL, $moduleId);
 
-        if (!$row = $db->GetSingleRow($SQL))
-        {
+        if (!$row = $db->GetSingleRow($SQL)) {
             trigger_error($db->error());
             trigger_error(__('Error getting Module'));
         }
@@ -236,7 +234,7 @@ class moduleDAO extends baseDAO
         // Set some information about the form
         Theme::Set('form_id', 'ModuleEditForm');
         Theme::Set('form_action', 'index.php?p=module&q=Edit');
-        Theme::Set('form_meta', '<input type="hidden" name="ModuleID" value="'. $moduleId . '" /><input type="hidden" name="type" value="' . $type . '" />');
+        Theme::Set('form_meta', '<input type="hidden" name="ModuleID" value="' . $moduleId . '" /><input type="hidden" name="type" value="' . $type . '" />');
 
         $formFields = array();
         $formFields[] = FormManager::AddText('ValidExtensions', __('Valid Extensions'), \Xibo\Helper\Sanitize::string($row['ValidExtensions']),
@@ -245,11 +243,11 @@ class moduleDAO extends baseDAO
         $formFields[] = FormManager::AddText('ImageUri', __('Image Uri'), \Xibo\Helper\Sanitize::string($row['ImageUri']),
             __('The Image to display for this module. This should be a path relative to the root of the installation.'), 'i', '');
 
-        $formFields[] = FormManager::AddCheckbox('PreviewEnabled', __('Preview Enabled?'), 
+        $formFields[] = FormManager::AddCheckbox('PreviewEnabled', __('Preview Enabled?'),
             \Xibo\Helper\Sanitize::int($row['PreviewEnabled']), __('When PreviewEnabled users will be able to see a preview in the layout designer'),
             'p');
 
-        $formFields[] = FormManager::AddCheckbox('Enabled', __('Enabled?'), 
+        $formFields[] = FormManager::AddCheckbox('Enabled', __('Enabled?'),
             \Xibo\Helper\Sanitize::int($row['Enabled']), __('When Enabled users will be able to add media using this module'),
             'b');
 
@@ -257,9 +255,9 @@ class moduleDAO extends baseDAO
         $module = \Xibo\Factory\ModuleFactory::create($type);
 
         // Merge in the fields from the settings
-        foreach($module->ModuleSettingsForm() as $field)
+        foreach ($module->ModuleSettingsForm() as $field)
             $formFields[] = $field;
-        
+
         Theme::Set('form_fields', $formFields);
 
         $response->SetFormRequestResponse(NULL, __('Edit Module'), '350px', '325px');
@@ -305,33 +303,32 @@ class moduleDAO extends baseDAO
         try {
             // Get the settings (may throw an exception)
             $settings = json_encode($module->ModuleSettings());
-            
+
             $dbh = \Xibo\Storage\PDOConnect::init();
-        
+
             $sth = $dbh->prepare('
-                UPDATE `module` SET ImageUri = :image_url, ValidExtensions = :valid_extensions, 
-                    Enabled = :enabled, PreviewEnabled = :preview_enabled, settings = :settings 
+                UPDATE `module` SET ImageUri = :image_url, ValidExtensions = :valid_extensions,
+                    Enabled = :enabled, PreviewEnabled = :preview_enabled, settings = :settings
                  WHERE ModuleID = :module_id');
 
             $sth->execute(array(
-                    'image_url' => $imageUri,
-                    'valid_extensions' => $validExtensions,
-                    'enabled' => $enabled,
-                    'preview_enabled' => $previewEnabled,
-                    'settings' => $settings,
-                    'module_id' => $moduleId
-                ));
-          
+                'image_url' => $imageUri,
+                'valid_extensions' => $validExtensions,
+                'enabled' => $enabled,
+                'preview_enabled' => $previewEnabled,
+                'settings' => $settings,
+                'module_id' => $moduleId
+            ));
+
             $response->SetFormSubmitResponse(__('Module Edited'), false);
 
-        }
-        catch (Exception $e) {
-            
+        } catch (Exception $e) {
+
             Log::error($e->getMessage());
-        
+
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
-        
+
             trigger_error(__('Unable to update module'), E_USER_ERROR);
         }
     }
@@ -351,7 +348,7 @@ class moduleDAO extends baseDAO
 
         $formFields = array();
         $formFields[] = FormManager::AddMessage(__('Verify all modules have been installed correctly by reinstalling any module related files'));
-        
+
         Theme::Set('form_fields', $formFields);
 
         $response->SetFormRequestResponse(NULL, __('Verify'), '350px', '325px');
@@ -369,16 +366,15 @@ class moduleDAO extends baseDAO
 
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
-        
+
             $dbh->exec('UPDATE `media` SET valid = 0 WHERE moduleSystemFile = 1');
-        }
-        catch (Exception $e) {
-            
+        } catch (Exception $e) {
+
             Log::error($e->getMessage());
-        
+
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
-        
+
             return false;
         }
 
@@ -404,7 +400,7 @@ class moduleDAO extends baseDAO
 
         // Make sure the file is in our list of expected module files
         $files = glob('modules/*.module.php');
-        
+
         if (!in_array($file, $files))
             trigger_error(__('Not a module file'), E_USER_ERROR);
 
@@ -422,8 +418,7 @@ class moduleDAO extends baseDAO
             Log::notice('Validation passed, installing module.', 'module', 'Install');
             $moduleObject = ModuleFactory::create($type, $this->db, $this->user);
             $moduleObject->InstallOrUpdate();
-        }
-        catch (Exception $e) {
+        } catch (Exception $e) {
             trigger_error(__('Unable to install module'), E_USER_ERROR);
         }
 
@@ -435,7 +430,7 @@ class moduleDAO extends baseDAO
         $response->refreshLocation = 'index.php?p=module';
 
     }
-    
+
     /**
      * Execute a Module Action
      */
@@ -444,7 +439,7 @@ class moduleDAO extends baseDAO
         $requestedModule = \Kit::GetParam('mod', _REQUEST, _WORD);
         $requestedMethod = \Kit::GetParam('method', _REQUEST, _WORD);
 
-        Log::Audit('Module Exec for ' . $requestedModule  . ' with method ' . $requestedMethod);
+        Log::Audit('Module Exec for ' . $requestedModule . ' with method ' . $requestedMethod);
 
         // Validate that GetResource calls have a region
         if ($requestedMethod == 'GetResource' && \Kit::GetParam('regionId', _REQUEST, _INT) == 0)
@@ -468,23 +463,17 @@ class moduleDAO extends baseDAO
         $method = \Kit::GetParam('method', _REQUEST, _WORD);
         $raw = \Kit::GetParam('raw', _REQUEST, _WORD);
 
-        if (method_exists($module, $method))
-        {
+        if (method_exists($module, $method)) {
             $response = $module->$method();
-        }
-        else
-        {
+        } else {
             // Set the error to display
             trigger_error(__('This Module does not exist'), E_USER_ERROR);
         }
 
-        if ($raw == 'true')
-        {
+        if ($raw == 'true') {
             echo $response;
             exit();
-        }
-        else
-        {
+        } else {
             /* @var ApplicationState $response */
 
         }

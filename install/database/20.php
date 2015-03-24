@@ -48,7 +48,7 @@ class Step20 extends UpgradeStep
          */
         private function UpdateSchedules()
         {
-            $db =& $this->db;
+
 
             // Get all schedules
             $SQL = "SELECT EventID, DisplayGroupIDs FROM schedule WHERE DisplayGroupIDs <> ''";
@@ -139,7 +139,7 @@ class Step20 extends UpgradeStep
          */
         private function UpdateUserGroups()
         {
-            $db =& $this->db;
+
 
             // Get all the current users in the system
             $SQL = "SELECT UserID, groupID, UserName FROM `user`";

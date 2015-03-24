@@ -22,8 +22,8 @@ namespace Xibo\Controller;
 use Config;
 use Exception;
 use FormManager;
-use Install;
 use Media;
+use Xibo\Helper\Install;
 use Xibo\Helper\Theme;
 
 class Upgrade extends Base

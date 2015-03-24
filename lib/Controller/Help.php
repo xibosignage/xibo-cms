@@ -18,13 +18,16 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+namespace Xibo\Controller;
+use baseDAO;
+use FormManager;
 use Xibo\Helper\ApplicationState;
-use Xibo\Helper\Help;
 use Xibo\Helper\Theme;
 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-class helpDAO extends baseDAO {
+class Help extends Base
+{
     private $helpLink;
 
     /**
@@ -45,22 +48,23 @@ class helpDAO extends baseDAO {
         $this->getState()->html .= Theme::RenderReturn('grid_render');
     }
 
-    function actionMenu() {
+    function actionMenu()
+    {
 
         return array(
-                array('title' => __('Add Help Link'),
-                    'class' => 'XiboFormButton',
-                    'selected' => false,
-                    'link' => 'index.php?p=help&q=AddForm',
-                    'help' => __('Add a new Help page'),
-                    'onclick' => ''
-                    )
-            );
+            array('title' => __('Add Help Link'),
+                'class' => 'XiboFormButton',
+                'selected' => false,
+                'link' => 'index.php?p=help&q=AddForm',
+                'help' => __('Add a new Help page'),
+                'onclick' => ''
+            )
+        );
     }
 
     public function Grid()
     {
-        $db =& $this->db;
+
         $user = $this->getUser();
         $response = $this->getState();
 
@@ -74,17 +78,16 @@ SQL;
         // Load results into an array
         $helplinks = $db->GetArray($SQL);
 
-        if (!is_array($helplinks)) 
-        {
+        if (!is_array($helplinks)) {
             trigger_error($db->error());
             trigger_error(__('Error getting list of helplinks'), E_USER_ERROR);
         }
 
         $cols = array(
-                array('name' => 'topic', 'title' => __('Topic')),
-                array('name' => 'category', 'title' => __('Category')),
-                array('name' => 'link', 'title' => __('Link'))
-            );
+            array('name' => 'topic', 'title' => __('Topic')),
+            array('name' => 'category', 'title' => __('Category')),
+            array('name' => 'link', 'title' => __('Link'))
+        );
         Theme::Set('table_cols', $cols);
 
         $rows = array();
@@ -100,34 +103,34 @@ SQL;
 
             // we only want to show certain buttons, depending on the user logged in
             if ($user->usertypeid == 1) {
-                
-                // Edit        
-                $row['buttons'][] = array(
-                        'id' => 'help_button_edit',
-                        'url' => 'index.php?p=help&q=EditForm&HelpID=' . $row['helpid'],
-                        'text' => __('Edit')
-                    );
 
-                // Delete        
+                // Edit
                 $row['buttons'][] = array(
-                        'id' => 'help_button_delete',
-                        'url' => 'index.php?p=help&q=DeleteForm&HelpID=' . $row['helpid'],
-                        'text' => __('Delete')
-                    );
+                    'id' => 'help_button_edit',
+                    'url' => 'index.php?p=help&q=EditForm&HelpID=' . $row['helpid'],
+                    'text' => __('Edit')
+                );
+
+                // Delete
+                $row['buttons'][] = array(
+                    'id' => 'help_button_delete',
+                    'url' => 'index.php?p=help&q=DeleteForm&HelpID=' . $row['helpid'],
+                    'text' => __('Delete')
+                );
 
                 // Test
                 $row['buttons'][] = array(
-                        'id' => 'help_button_test',
-                        'url' => Help::Link($row['topic'], $row['category']),
-                        'text' => __('Test')
-                    );
+                    'id' => 'help_button_test',
+                    'url' => Help::Link($row['topic'], $row['category']),
+                    'text' => __('Test')
+                );
             }
 
             $rows[] = $row;
         }
 
         Theme::Set('table_rows', $rows);
-        
+
         $output = Theme::RenderReturn('table_render');
 
         $response->SetGridResponse($output);
@@ -137,19 +140,19 @@ SQL;
     public function AddForm()
     {
         $response = $this->getState();
-        
+
         // Set some information about the form
         Theme::Set('form_id', 'HelpAddForm');
         Theme::Set('form_action', 'index.php?p=help&q=Add');
 
         $formFields = array();
-        $formFields[] = FormManager::AddText('Topic', __('Topic'), NULL, 
+        $formFields[] = FormManager::AddText('Topic', __('Topic'), NULL,
             __('The Topic for this Help Link'), 't', 'maxlength="254" required');
 
-        $formFields[] = FormManager::AddText('Category', __('Category'), NULL, 
+        $formFields[] = FormManager::AddText('Category', __('Category'), NULL,
             __('The Category for this Help Link'), 'c', 'maxlength="254" required');
 
-        $formFields[] = FormManager::AddText('Link', __('Link'), NULL, 
+        $formFields[] = FormManager::AddText('Link', __('Link'), NULL,
             __('The Link to open for this help topic and category'), 'c', 'maxlength="254" required');
 
         Theme::Set('form_fields', $formFields);
@@ -165,18 +168,17 @@ SQL;
      */
     public function EditForm()
     {
-        $db =& $this->db;
+
         $user = $this->getUser();
         $response = $this->getState();
 
-        $helpId	= \Xibo\Helper\Sanitize::getInt('HelpID');
+        $helpId = \Xibo\Helper\Sanitize::getInt('HelpID');
 
         // Pull the currently known info from the DB
         $SQL = "SELECT HelpID, Topic, Category, Link FROM `help` WHERE HelpID = %d ";
         $SQL = sprintf($SQL, $helpId);
 
-        if (!$row = $db->GetSingleRow($SQL))
-        {
+        if (!$row = $db->GetSingleRow($SQL)) {
             trigger_error($db->error());
             trigger_error(__('Error getting Help Link'));
         }
@@ -209,9 +211,9 @@ SQL;
      */
     public function DeleteForm()
     {
-        $db =& $this->db;
+
         $response = $this->getState();
-        $helpId	= \Xibo\Helper\Sanitize::getInt('HelpID');
+        $helpId = \Xibo\Helper\Sanitize::getInt('HelpID');
 
         // Set some information about the form
         Theme::Set('form_id', 'HelpDeleteForm');
@@ -232,8 +234,7 @@ SQL;
     public function Add()
     {
 
-        
-        $db =& $this->db;
+
         $response = $this->getState();
 
         $topic = \Xibo\Helper\Sanitize::getString('Topic');
@@ -257,11 +258,10 @@ SQL;
     public function Edit()
     {
 
-        
-        $db =& $this->db;
+
         $response = $this->getState();
 
-        $helpId	= \Xibo\Helper\Sanitize::getInt('HelpID');
+        $helpId = \Xibo\Helper\Sanitize::getInt('HelpID');
         $topic = \Xibo\Helper\Sanitize::getString('Topic');
         $category = \Xibo\Helper\Sanitize::getString('Category');
         $link = \Xibo\Helper\Sanitize::getString('Link');
@@ -280,11 +280,10 @@ SQL;
     public function Delete()
     {
 
-        
-        $db =& $this->db;
+
         $response = $this->getState();
 
-        $helpId	= \Xibo\Helper\Sanitize::getInt('HelpID');
+        $helpId = \Xibo\Helper\Sanitize::getInt('HelpID');
 
         // Deal with the Edit
 
@@ -297,4 +296,5 @@ SQL;
 
     }
 }
+
 ?>

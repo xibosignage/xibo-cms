@@ -18,23 +18,25 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-use Xibo\Controller\File;
+namespace Xibo\Controller;
+
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
- 
-class contentDAO extends baseDAO {
-	/**
-	 * Displays the page logic
-	 */
-	function displayPage() 
-	{
-		$db =& $this->db;
-		
-		// Default options
+
+class Library extends Base
+{
+    /**
+     * Displays the page logic
+     */
+    function displayPage()
+    {
+
+
+        // Default options
         if (\Kit::IsFilterPinned('content', 'Filter')) {
             $filter_pinned = 1;
             $filter_name = Session::Get('content', 'filter_name');
@@ -44,8 +46,7 @@ class contentDAO extends baseDAO {
             $filter_duration_in_seconds = Session::Get('content', 'filter_duration_in_seconds');
             $showTags = Session::Get('content', 'showTags');
             $filter_showThumbnail = Session::Get('content', 'filter_showThumbnail');
-        }
-        else {
+        } else {
             $filter_pinned = 0;
             $filter_name = NULL;
             $filter_type = NULL;
@@ -56,74 +57,75 @@ class contentDAO extends baseDAO {
             $showTags = 0;
         }
 
-		$id = uniqid();
-		Theme::Set('id', $id);
-		Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
-		Theme::Set('pager', ApplicationState::Pager($id));
-		Theme::Set('form_meta', '<input type="hidden" name="p" value="content"><input type="hidden" name="q" value="LibraryGrid">');
+        $id = uniqid();
+        Theme::Set('id', $id);
+        Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
+        Theme::Set('pager', ApplicationState::Pager($id));
+        Theme::Set('form_meta', '<input type="hidden" name="p" value="content"><input type="hidden" name="q" value="LibraryGrid">');
 
         $formFields = array();
         $formFields[] = FormManager::AddText('filter_name', __('Name'), $filter_name, NULL, 'n');
-        
+
         // Users we have permission to see
         $users = $this->user->userList();
         array_unshift($users, array('userid' => '', 'username' => 'All'));
 
         $formFields[] = FormManager::AddCombo(
-            'filter_owner', 
-            __('Owner'), 
+            'filter_owner',
+            __('Owner'),
             $filter_owner,
             $users,
             'userid',
             'username',
-            NULL, 
+            NULL,
             'o');
 
         $types = $db->GetArray("SELECT Module AS moduleid, Name AS module FROM `module` WHERE RegionSpecific = 0 AND Enabled = 1 ORDER BY 2");
         array_unshift($types, array('moduleid' => '', 'module' => 'All'));
         $formFields[] = FormManager::AddCombo(
-            'filter_type', 
-            __('Type'), 
+            'filter_type',
+            __('Type'),
             $filter_type,
             $types,
             'moduleid',
             'module',
-            NULL, 
+            NULL,
             'y');
 
         $formFields[] = FormManager::AddCombo(
-            'filter_retired', 
-            __('Retired'), 
+            'filter_retired',
+            __('Retired'),
             $filter_retired,
             array(array('retiredid' => 1, 'retired' => 'Yes'), array('retiredid' => 0, 'retired' => 'No')),
             'retiredid',
             'retired',
-            NULL, 
+            NULL,
             'r');
 
-        $formFields[] = FormManager::AddCheckbox('filter_duration_in_seconds', __('Duration in Seconds'), 
-            $filter_duration_in_seconds, NULL, 
+        $formFields[] = FormManager::AddCheckbox('filter_duration_in_seconds', __('Duration in Seconds'),
+            $filter_duration_in_seconds, NULL,
             's');
 
-        $formFields[] = FormManager::AddCheckbox('showTags', __('Show Tags'), 
-            $showTags, NULL, 
-            't');
-        
-        $formFields[] = FormManager::AddCheckbox('filter_showThumbnail', __('Show Thumbnails'), 
-            $filter_showThumbnail, NULL, 
+        $formFields[] = FormManager::AddCheckbox('showTags', __('Show Tags'),
+            $showTags, NULL,
             't');
 
-        $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'), 
-            $filter_pinned, NULL, 
+        $formFields[] = FormManager::AddCheckbox('filter_showThumbnail', __('Show Thumbnails'),
+            $filter_showThumbnail, NULL,
+            't');
+
+        $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'),
+            $filter_pinned, NULL,
             'k');
 
         // Call to render the template
         Theme::Set('header_text', __('Library'));
         Theme::Set('form_fields', $formFields);
         $this->getState()->html .= Theme::RenderReturn('grid_render');
-	}
+    }
 
-    function actionMenu() {
+    function actionMenu()
+    {
 
         $menu = array();
         $menu[] = array('title' => __('Filter'),
@@ -147,42 +149,42 @@ class contentDAO extends baseDAO {
         $menu[] = array('title' => __('Add Media'),
             'class' => 'XiboFormButton',
             'selected' => false,
-                    'link' => 'index.php?p=content&q=fileUploadForm',
+            'link' => 'index.php?p=content&q=fileUploadForm',
             'help' => __('Add a new media item to the library'),
             'onclick' => ''
         );
 
         return $menu;
     }
-	
-	/**
-	 * Prints out a Table of all media items
-	 */
-	function LibraryGrid() 
-	{
-		$user = $this->getUser();
-		$response = $this->getState();
 
-		//Get the input params and store them
-		$filter_type = \Kit::GetParam('filter_type', _REQUEST, _WORD);
-		$filter_name = \Xibo\Helper\Sanitize::getString('filter_name');
-		$filter_userid = \Xibo\Helper\Sanitize::getInt('filter_owner');
+    /**
+     * Prints out a Table of all media items
+     */
+    function LibraryGrid()
+    {
+        $user = $this->getUser();
+        $response = $this->getState();
+
+        //Get the input params and store them
+        $filter_type = \Kit::GetParam('filter_type', _REQUEST, _WORD);
+        $filter_name = \Xibo\Helper\Sanitize::getString('filter_name');
+        $filter_userid = \Xibo\Helper\Sanitize::getInt('filter_owner');
         $filter_retired = \Xibo\Helper\Sanitize::getInt('filter_retired');
         $filter_duration_in_seconds = \Xibo\Helper\Sanitize::getCheckbox('filter_showThumbnail');
         $filter_showThumbnail = \Xibo\Helper\Sanitize::getCheckbox('filter_showThumbnail');
         $showTags = \Xibo\Helper\Sanitize::getCheckbox('showTags');
-                
-		\Session::Set('content', 'filter_type', $filter_type);
-		\Session::Set('content', 'filter_name', $filter_name);
-		\Session::Set('content', 'filter_owner', $filter_userid);
+
+        \Session::Set('content', 'filter_type', $filter_type);
+        \Session::Set('content', 'filter_name', $filter_name);
+        \Session::Set('content', 'filter_owner', $filter_userid);
         \Session::Set('content', 'filter_retired', $filter_retired);
         \Session::Set('content', 'filter_duration_in_seconds', $filter_duration_in_seconds);
         \Session::Set('content', 'filter_showThumbnail', $filter_showThumbnail);
-		\Session::Set('content', 'showTags', $showTags);
+        \Session::Set('content', 'showTags', $showTags);
         \Session::Set('content', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
-		
-		// Construct the SQL
-		$mediaList = $user->MediaList(NULL, array('type' => $filter_type, 'name' => $filter_name, 'ownerid' => $filter_userid, 'retired' => $filter_retired, 'showTags' => $showTags));
+
+        // Construct the SQL
+        $mediaList = $user->MediaList(NULL, array('type' => $filter_type, 'name' => $filter_name, 'ownerid' => $filter_userid, 'retired' => $filter_retired, 'showTags' => $showTags));
 
         $cols = array();
         $cols[] = array('name' => 'mediaid', 'title' => __('ID'));
@@ -199,13 +201,13 @@ class contentDAO extends baseDAO {
         $cols[] = array('name' => 'permissions', 'title' => __('Permissions'));
         $cols[] = array('name' => 'revised', 'title' => __('Revised?'), 'icons' => true);
         $cols[] = array('name' => 'filename', 'title' => __('File Name'));
-            
+
         Theme::Set('table_cols', $cols);
 
-		$rows = array();
+        $rows = array();
 
-		// Add some additional row content
-		foreach ($mediaList as $media) {
+        // Add some additional row content
+        foreach ($mediaList as $media) {
             /* @var \Xibo\Entity\Media $media */
             $row = array();
 
@@ -216,13 +218,13 @@ class contentDAO extends baseDAO {
             $row['duration'] = $media->duration;
             $row['tags'] = $media->tags;
 
-			$row['duration_text'] = ($filter_duration_in_seconds == 1) ? $media->duration : sec2hms($media->duration);
-			$row['owner'] = $media->owner;
-			$row['permissions'] = $media->groupsWithPermissions;
-			$row['revised'] = ($media->parentId != 0) ? 1 : 0;
+            $row['duration_text'] = ($filter_duration_in_seconds == 1) ? $media->duration : sec2hms($media->duration);
+            $row['owner'] = $media->owner;
+            $row['permissions'] = $media->groupsWithPermissions;
+            $row['revised'] = ($media->parentId != 0) ? 1 : 0;
 
-			// Display a friendly file size
-			$row['size_text'] = \Kit::FormatBytes($media->fileSize);
+            // Display a friendly file size
+            $row['size_text'] = \Kit::FormatBytes($media->fileSize);
 
             // Thumbnail URL
             $row['thumbnail'] = '';
@@ -231,72 +233,71 @@ class contentDAO extends baseDAO {
                 $row['thumbnail'] = '<a class="img-replace" data-toggle="lightbox" data-type="image" data-img-src="index.php?p=content&q=getFile&mediaid=' . $media->mediaId . '&width=100&height=100&dynamic=true&thumb=true" href="index.php?p=content&q=getFile&mediaid=' . $media->mediaId . '"><i class="fa fa-file-image-o"></i></a>';
             }
 
-			$row['buttons'] = array();
+            $row['buttons'] = array();
 
-			// Buttons
+            // Buttons
             if ($user->checkEditable($media)) {
-                
+
                 // Edit
                 $row['buttons'][] = array(
-                        'id' => 'content_button_edit',
-                        'url' => 'index.php?p=content&q=editForm&mediaid=' . $media->mediaId,
-                        'text' => __('Edit')
-                    );
+                    'id' => 'content_button_edit',
+                    'url' => 'index.php?p=content&q=editForm&mediaid=' . $media->mediaId,
+                    'text' => __('Edit')
+                );
             }
-            
+
             if ($user->checkDeleteable($media)) {
-				// Delete
+                // Delete
                 $row['buttons'][] = array(
-                        'id' => 'content_button_delete',
-                        'url' => 'index.php?p=content&q=deleteForm&mediaid=' . $media->mediaId,
-                        'text' => __('Delete')
-                    );
+                    'id' => 'content_button_delete',
+                    'url' => 'index.php?p=content&q=deleteForm&mediaid=' . $media->mediaId,
+                    'text' => __('Delete')
+                );
             }
 
             if ($user->checkPermissionsModifyable($media)) {
 
-        		// Permissions
+                // Permissions
                 $row['buttons'][] = array(
-                        'id' => 'content_button_permissions',
-                        'url' => 'index.php?p=user&q=permissionsForm&entity=Media&objectId=' . $media->mediaId,
-                        'text' => __('Permissions')
-                    );
+                    'id' => 'content_button_permissions',
+                    'url' => 'index.php?p=user&q=permissionsForm&entity=Media&objectId=' . $media->mediaId,
+                    'text' => __('Permissions')
+                );
             }
-            
+
             // Download
             $row['buttons'][] = array(
-                    'id' => 'content_button_download',
-                    'linkType' => '_self',
-                    'url' => 'index.php?p=content&q=getFile&download=1&downloadFromLibrary=1&mediaid=' . $media->mediaId,
-                    'text' => __('Download')
-                );
+                'id' => 'content_button_download',
+                'linkType' => '_self',
+                'url' => 'index.php?p=content&q=getFile&download=1&downloadFromLibrary=1&mediaid=' . $media->mediaId,
+                'text' => __('Download')
+            );
 
             // Add to the collection
-			$rows[] = $row;
-		}
-		
-    	Theme::Set('table_rows', $rows);
-        
+            $rows[] = $row;
+        }
+
+        Theme::Set('table_rows', $rows);
+
         $output = Theme::RenderReturn('table_render');
 
-    	$response->SetGridResponse($output);
+        $response->SetGridResponse($output);
         $response->initialSortColumn = 2;
 
     }
-	
-	/**
-	 * File Uploader
+
+    /**
+     * File Uploader
      * Presents a form which can be used to upload file based media
-	 */
-	function fileUploadForm()
-	{
+     */
+    function fileUploadForm()
+    {
         $response = $this->getState();
 
         // Check we have room in the library
         $libraryLimit = Config::GetSetting('LIBRARY_SIZE_LIMIT_KB');
 
-        if ($libraryLimit > 0)
-        {
+        if ($libraryLimit > 0) {
             $fileSize = File::libraryUsage();
 
             if (($fileSize / 1024) > $libraryLimit)
@@ -321,11 +322,9 @@ class contentDAO extends baseDAO {
 
             // Background override url is used on the theme to add a button next to each uploaded file (if in background override)
             Theme::Set('background_override_url', "index.php?p=layout&q=EditForm&modify=true&layoutid=$layoutId&backgroundOveride=");
-        }
-        else if ($playlistId != 0) {
+        } else if ($playlistId != 0) {
             $response->AddButton(__('Finish'), 'XiboSwapDialog("index.php?p=timeline&q=Timeline&modify=true&layoutid=' . $layoutId . '&regionId=' . $regionId . '")');
-        }
-        else {
+        } else {
             $response->AddButton(__('Close'), 'XiboDialogClose(); XiboRefreshAllGrids();');
         }
 
@@ -344,7 +343,7 @@ class contentDAO extends baseDAO {
         $response->callBack = 'MediaFormInitUpload';
         $response->dialogClass = 'modal-big';
 
-	}
+    }
 
     /**
      * Gets a file from the library
@@ -472,7 +471,7 @@ class contentDAO extends baseDAO {
             $sth_update = $dbh->prepare('UPDATE lklayoutmedia SET mediaid = :media_id WHERE lklayoutmediaid = :lklayoutmediaid');
 
             // Loop through a list of layouts this user has access to
-            foreach($this->user->LayoutList() as $layout) {
+            foreach ($this->user->LayoutList() as $layout) {
                 $layoutId = $layout['layoutid'];
 
                 // Does this layout use the old media id?
@@ -493,8 +492,7 @@ class contentDAO extends baseDAO {
                 $region = new region($this->db);
 
                 // Loop through each media link for this layout
-                foreach ($results as $row)
-                {
+                foreach ($results as $row) {
                     // Get the LKID of the link between this layout and this media.. could be more than one?
                     $lkId = $row['lklayoutmediaid'];
                     $regionId = $row['regionid'];
@@ -509,8 +507,7 @@ class contentDAO extends baseDAO {
                         // Straight swap this background image node.
                         if (!$layout->EditBackgroundImage($layoutId, $newMediaId))
                             return false;
-                    }
-                    else {
+                    } else {
 
                         if (!$replaceInLayouts)
                             continue;
@@ -523,8 +520,7 @@ class contentDAO extends baseDAO {
                         Log::notice('Creating new module with MediaID: ' . $newMediaId . ' LayoutID: ' . $layoutId . ' and RegionID: ' . $regionId, 'region', 'ReplaceMediaInAllLayouts');
                         try {
                             $module = ModuleFactory::createForMedia($type, $newMediaId, $this->db, $this->user);
-                        }
-                        catch (Exception $e) {
+                        } catch (Exception $e) {
                             Log::Error($e->getMessage());
                             return false;
                         }
@@ -550,8 +546,7 @@ class contentDAO extends baseDAO {
                     $count++;
                 }
             }
-        }
-        catch (Exception $e) {
+        } catch (Exception $e) {
 
             Log::error($e->getMessage());
 
@@ -563,14 +558,14 @@ class contentDAO extends baseDAO {
 
         Log::notice(sprintf('Replaced media in %d layouts', $count), 'module', 'ReplaceMediaInAllLayouts');
     }
-	
+
     /**
      * Displays the Library Assign form
      * @return
      */
     function LibraryAssignForm()
     {
-        $db =& $this->db;
+
         $user = $this->getUser();
         $response = $this->getState();
 
@@ -578,7 +573,7 @@ class contentDAO extends baseDAO {
         Theme::Set('id', $id);
         Theme::Set('form_meta', '<input type="hidden" name="p" value="content"><input type="hidden" name="q" value="LibraryAssignView">');
         Theme::Set('pager', ApplicationState::Pager($id, 'grid_pager'));
-        
+
         // Module types filter
         $modules = $this->user->ModuleAuth(0, '', 1);
         $types = array();
@@ -615,14 +610,14 @@ class contentDAO extends baseDAO {
 
 
     }
-	
+
     /**
      * Show the library
-     * @return 
+     * @return
      */
-    function LibraryAssignView() 
+    function LibraryAssignView()
     {
-        $db =& $this->db;
+
         $user = $this->getUser();
         $response = $this->getState();
 
@@ -652,32 +647,31 @@ class contentDAO extends baseDAO {
         $response->pageSize = 5;
 
     }
-	
+
     /**
      * Gets called by the SWFUpload Object for uploading files
      * @return
      */
     function FileUpload()
     {
-        $db =& $this->db;
+
 
         Log::notice('Uploading a file', 'Library', 'FileUpload');
 
 
         $fileObject = new File($db);
 
-        
+
         // Check we got a valid file
-        if (isset($_FILES['media_file']) && is_uploaded_file($_FILES['media_file']['tmp_name']) && $_FILES['media_file']['error'] == 0)
-        {
+        if (isset($_FILES['media_file']) && is_uploaded_file($_FILES['media_file']['tmp_name']) && $_FILES['media_file']['error'] == 0) {
             Log::notice('Valid Upload', 'Library', 'FileUpload');
 
             // Directory location
-            $libraryFolder  = Config::GetSetting('LIBRARY_LOCATION');
-            $error          = 0;
-            $fileName       = \Kit::ValidateParam($_FILES['media_file']['name'], _FILENAME);
-            $fileId         = $fileObject->GenerateFileId($this->user->userId);
-            $fileLocation   = $libraryFolder . 'temp/' . $fileId;
+            $libraryFolder = Config::GetSetting('LIBRARY_LOCATION');
+            $error = 0;
+            $fileName = \Kit::ValidateParam($_FILES['media_file']['name'], _FILENAME);
+            $fileId = $fileObject->GenerateFileId($this->user->userId);
+            $fileLocation = $libraryFolder . 'temp/' . $fileId;
 
             // Make sure the library exists
             File::EnsureLibraryExists();
@@ -688,14 +682,12 @@ class contentDAO extends baseDAO {
             move_uploaded_file($_FILES['media_file']['tmp_name'], $fileLocation);
 
             Log::notice('Upload Success', 'FileUpload');
-        }
-        else
-        {
-            $error      = (isset($_FILES['media_file'])) ? $_FILES['media_file']['error'] : -1;
-            $fileName   = 'Error';
-            $fileId     = 0;
-            
-            Log::notice('Error uploading the file. Error Number: ' . $error , 'FileUpload');
+        } else {
+            $error = (isset($_FILES['media_file'])) ? $_FILES['media_file']['error'] : -1;
+            $fileName = 'Error';
+            $fileId = 0;
+
+            Log::notice('Error uploading the file. Error Number: ' . $error, 'FileUpload');
         }
 
         $complete_page = <<<HTML
@@ -730,7 +722,8 @@ HTML;
     /**
      * End point for jQuery file uploader
      */
-    public function JqueryFileUpload() {
+    public function JqueryFileUpload()
+    {
 
         require_once('3rdparty/jquery-file-upload/XiboUploadHandler.php');
 
@@ -761,8 +754,7 @@ HTML;
             // Must commit if in a transaction
             if ($dbh->inTransaction())
                 $dbh->commit();
-        }
-        catch (Exception $e) {
+        } catch (Exception $e) {
             // We must not issue an error, the file upload return should have the error object already
         }
 
@@ -783,7 +775,9 @@ HTML;
         // Work out how many files there are
         $media = Media::entriesUnusedForUser($this->user->userId);
 
-        $formFields[] = FormManager::AddMessage(sprintf(__('There is %s of data stored in %d files . Are you sure you want to proceed?', \Kit::formatBytes(array_sum(array_map(function ($element) { return $element['fileSize']; }, $media))), count($media))));
+        $formFields[] = FormManager::AddMessage(sprintf(__('There is %s of data stored in %d files . Are you sure you want to proceed?', \Kit::formatBytes(array_sum(array_map(function ($element) {
+            return $element['fileSize'];
+        }, $media))), count($media))));
 
         Theme::Set('form_fields', $formFields);
 

@@ -18,12 +18,16 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+namespace Xibo\Controller;
+
+use baseDAO;
+use database;
 use Xibo\Entity\User;
 use Xibo\Helper\Theme;
 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-class previewDAO extends baseDAO
+class Preview extends Base
 {
     /* @var \Xibo\Entity\Layout $layout */
     private $layout;
@@ -50,13 +54,13 @@ class previewDAO extends baseDAO
     function render()
     {
         $favicon = Theme::ImageUrl('favicon.ico');
-        
+
         // Render a specific layout in the previewer
         // layoutid must be provided
         $pfl = __('Preview for Layout');
 
         $previewCss = Theme::ItemPath('css/html-preview.css');
-        
+
         $output = <<<EOT
             <!DOCTYPE html>
             <html>

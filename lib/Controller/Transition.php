@@ -18,15 +18,21 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-use Xibo\Helper\Help;
+namespace Xibo\Controller;
+
+use baseDAO;
+use Config;
+use FormManager;
 use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Help;
 use Xibo\Helper\Theme;
 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-class transitionDAO extends baseDAO {
-	private $transition;
-	
+class Transition extends Base
+{
+    private $transition;
+
     /**
      * No display page functionaility
      * @return
@@ -47,7 +53,7 @@ class transitionDAO extends baseDAO {
 
     public function Grid()
     {
-        $db =& $this->db;
+
         $user = $this->getUser();
         $response = $this->getState();
 
@@ -62,25 +68,23 @@ class transitionDAO extends baseDAO {
         $SQL .= '  FROM `transition` ';
         $SQL .= ' ORDER BY Transition ';
 
-        if (!$transitions = $db->GetArray($SQL))
-        {
+        if (!$transitions = $db->GetArray($SQL)) {
             trigger_error($db->error());
             trigger_error(__('Unable to get the list of transitions'), E_USER_ERROR);
         }
 
         $cols = array(
-                array('name' => 'name', 'title' => __('Name')),
-                array('name' => 'hasduration', 'title' => __('Has Duration'), 'icons' => true),
-                array('name' => 'hasdirection', 'title' => __('Has Direction'), 'icons' => true),
-                array('name' => 'enabledforin', 'title' => __('Enabled for In'), 'icons' => true),
-                array('name' => 'enabledforout', 'title' => __('Enabled for Out'), 'icons' => true)
-            );
+            array('name' => 'name', 'title' => __('Name')),
+            array('name' => 'hasduration', 'title' => __('Has Duration'), 'icons' => true),
+            array('name' => 'hasdirection', 'title' => __('Has Direction'), 'icons' => true),
+            array('name' => 'enabledforin', 'title' => __('Enabled for In'), 'icons' => true),
+            array('name' => 'enabledforout', 'title' => __('Enabled for Out'), 'icons' => true)
+        );
         Theme::Set('table_cols', $cols);
 
         $rows = array();
 
-        foreach($transitions as $transition)
-        {
+        foreach ($transitions as $transition) {
             $row = array();
             $row['transitionid'] = \Xibo\Helper\Sanitize::int($transition['TransitionID']);
             $row['name'] = \Xibo\Helper\Sanitize::string($transition['Transition']);
@@ -88,19 +92,19 @@ class transitionDAO extends baseDAO {
             $row['hasdirection'] = \Xibo\Helper\Sanitize::int($transition['HasDirection']);
             $row['enabledforin'] = \Xibo\Helper\Sanitize::int($transition['AvailableAsIn']);
             $row['enabledforout'] = \Xibo\Helper\Sanitize::int($transition['AvailableAsOut']);
-            
+
             // Initialise array of buttons, because we might not have any
             $row['buttons'] = array();
 
             // If the module config is not locked, present some buttons
             if (Config::GetSetting('TRANSITION_CONFIG_LOCKED_CHECKB') != 'Checked') {
-                
+
                 // Edit button
                 $row['buttons'][] = array(
-                        'id' => 'transition_button_edit',
-                        'url' => 'index.php?p=transition&q=EditForm&TransitionID=' . $row['transitionid'],
-                        'text' => __('Edit')
-                    );
+                    'id' => 'transition_button_edit',
+                    'url' => 'index.php?p=transition&q=EditForm&TransitionID=' . $row['transitionid'],
+                    'text' => __('Edit')
+                );
             }
 
             $rows[] = $row;
@@ -116,7 +120,7 @@ class transitionDAO extends baseDAO {
 
     public function EditForm()
     {
-        $db =& $this->db;
+
         $user = $this->getUser();
         $response = $this->getState();
         $helpManager = new Help($db, $user);
@@ -137,8 +141,7 @@ class transitionDAO extends baseDAO {
 
         $SQL = sprintf($SQL, $transitionId);
 
-        if (!$row = $db->GetSingleRow($SQL))
-        {
+        if (!$row = $db->GetSingleRow($SQL)) {
             trigger_error($db->error());
             trigger_error(__('Error getting Transition'));
         }
@@ -148,15 +151,15 @@ class transitionDAO extends baseDAO {
         // Set some information about the form
         Theme::Set('form_id', 'TransitionEditForm');
         Theme::Set('form_action', 'index.php?p=transition&q=Edit');
-        Theme::Set('form_meta', '<input type="hidden" name="TransitionID" value="'. $transitionId . '" />');
-        
+        Theme::Set('form_meta', '<input type="hidden" name="TransitionID" value="' . $transitionId . '" />');
+
         $formFields = array();
-        
-        $formFields[] = FormManager::AddCheckbox('EnabledForIn', __('Available for In Transitions?'), 
+
+        $formFields[] = FormManager::AddCheckbox('EnabledForIn', __('Available for In Transitions?'),
             \Xibo\Helper\Sanitize::int($row['AvailableAsIn']), __('Can this transition be used for media start?'),
             'i');
-        
-        $formFields[] = FormManager::AddCheckbox('EnabledForOut', __('Available for Out Transitions?'), 
+
+        $formFields[] = FormManager::AddCheckbox('EnabledForOut', __('Available for Out Transitions?'),
             \Xibo\Helper\Sanitize::int($row['AvailableAsOut']), __('Can this transition be used for media end?'),
             'o');
 
@@ -175,8 +178,7 @@ class transitionDAO extends baseDAO {
     public function Edit()
     {
 
-        
-        $db =& $this->db;
+
         $response = $this->getState();
 
         // Can we edit?
@@ -195,8 +197,7 @@ class transitionDAO extends baseDAO {
         $SQL = "UPDATE `transition` SET AvailableAsIn = %d, AvailableAsOut = %d WHERE TransitionID = %d";
         $SQL = sprintf($SQL, $enabledForIn, $enabledForOut, $transitionId);
 
-        if (!$db->query($SQL))
-        {
+        if (!$db->query($SQL)) {
             trigger_error($db->error());
             trigger_error(__('Unable to update transition'), E_USER_ERROR);
         }
@@ -205,4 +206,5 @@ class transitionDAO extends baseDAO {
 
     }
 }
+
 ?>

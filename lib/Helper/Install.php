@@ -18,11 +18,12 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-use Xibo\Helper\Theme;
+namespace Xibo\Helper;
 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-class Install {
+class Install
+{
 
     public $errorMessage;
 
@@ -39,7 +40,8 @@ class Install {
     private $existing_db_pass;
     private $existing_db_name;
 
-    public function Step1() {
+    public function Step1()
+    {
         Theme::Set('form_action', 'install.php');
         // Check environment
         $config = new Config();
@@ -55,13 +57,11 @@ class Install {
         if ($config->EnvironmentFault()) {
             $formFields[] = FormManager::AddHidden('step', 1);
             $formButtons[] = FormManager::AddButton(__('Retest'));
-        }
-        else if ($config->EnvironmentWarning()) {
+        } else if ($config->EnvironmentWarning()) {
             $formFields[] = FormManager::AddHidden('step', 2);
             $formButtons[] = FormManager::AddButton(__('Retest'), 'link', 'install.php?step=1');
             $formButtons[] = FormManager::AddButton(__('Next'));
-        }
-        else {
+        } else {
             $formFields[] = FormManager::AddHidden('step', 2);
             $formButtons[] = FormManager::AddButton(__('Next'));
         }
@@ -72,7 +72,8 @@ class Install {
         return Theme::RenderReturn('form_render');
     }
 
-    public function Step2() {
+    public function Step2()
+    {
         Theme::Set('form_action', 'install.php');
         // Choice of new or existing database
         // Tabs
@@ -98,38 +99,38 @@ class Install {
         $formFields['new'][] = FormManager::AddRadio('db_create', 'db_create1', __('Create a new database'), $this->db_create, 1,
             __('Select to create a new database'), 'c');
 
-        $formFields['new'][] = FormManager::AddText('host', __('Host'), $this->new_db_host, 
+        $formFields['new'][] = FormManager::AddText('host', __('Host'), $this->new_db_host,
             __('Please enter the hostname for the MySQL server. This is usually localhost.'), 'h');
 
-        $formFields['new'][] = FormManager::AddText('admin_username', __('Admin Username'), $this->db_admin_user, 
+        $formFields['new'][] = FormManager::AddText('admin_username', __('Admin Username'), $this->db_admin_user,
             __('Please enter the user name of an account that has administrator privileges on the MySQL server.'), 'h');
 
-        $formFields['new'][] = FormManager::AddPassword('admin_password', __('Admin Password'), $this->db_admin_pass, 
+        $formFields['new'][] = FormManager::AddPassword('admin_password', __('Admin Password'), $this->db_admin_pass,
             __('Please enter password for the Admin account.'), 'h');
 
-        $formFields['new'][] = FormManager::AddText('db_name', __('Database Name'), $this->new_db_name, 
+        $formFields['new'][] = FormManager::AddText('db_name', __('Database Name'), $this->new_db_name,
             __('Please enter the name of the database that should be created.'), 'h');
 
-        $formFields['new'][] = FormManager::AddText('db_username', __('Database Username'), $this->new_db_user, 
+        $formFields['new'][] = FormManager::AddText('db_username', __('Database Username'), $this->new_db_user,
             __('Please enter the name of the database user that should be created.'), 'h');
 
-        $formFields['new'][] = FormManager::AddPassword('db_password', __('Database Password'), $this->new_db_pass, 
+        $formFields['new'][] = FormManager::AddPassword('db_password', __('Database Password'), $this->new_db_pass,
             __('Please enter a password for this user.'), 'h');
 
         // Existing DB tab
         $formFields['existing'][] = FormManager::AddRadio('db_create', 'db_create2', __('Use an existing database'), $this->db_create, 2,
             __('Select to use an existing database. Please note that when you use an existing database it must be empty of all other contents.'), 'e');
 
-        $formFields['existing'][] = FormManager::AddText('existing_host', __('Host'), $this->existing_db_host, 
+        $formFields['existing'][] = FormManager::AddText('existing_host', __('Host'), $this->existing_db_host,
             __('Please enter the hostname for the MySQL server. This is usually localhost.'), 'h');
 
-        $formFields['existing'][] = FormManager::AddText('existing_db_name', __('Database Name'), $this->existing_db_name, 
+        $formFields['existing'][] = FormManager::AddText('existing_db_name', __('Database Name'), $this->existing_db_name,
             __('Please enter the name of the database that should be created.'), 'h');
 
-        $formFields['existing'][] = FormManager::AddText('existing_db_username', __('Database Username'), $this->existing_db_user, 
+        $formFields['existing'][] = FormManager::AddText('existing_db_username', __('Database Username'), $this->existing_db_user,
             __('Please enter the name of the database user that should be created.'), 'h');
 
-        $formFields['existing'][] = FormManager::AddPassword('existing_db_password', __('Database Password'), $this->existing_db_pass, 
+        $formFields['existing'][] = FormManager::AddPassword('existing_db_password', __('Database Password'), $this->existing_db_pass,
             __('Please enter a password for this user.'), 'h');
 
         // Put up an error message if one has been set (and then unset it)
@@ -146,7 +147,8 @@ class Install {
         return Theme::RenderReturn('form_render');
     }
 
-    public function Step3() {
+    public function Step3()
+    {
 
         // Have we been told to create a new database
         $this->db_create = \Xibo\Helper\Sanitize::getInt('db_create');
@@ -170,7 +172,7 @@ class Install {
             // Check details for a new database
             if ($this->new_db_host == '')
                 throw new Exception(__('Please provide a database host. This is usually localhost.'));
-            
+
             if ($this->new_db_user == '')
                 throw new Exception(__('Please provide a user for the new database.'));
 
@@ -187,8 +189,7 @@ class Install {
             // Try and connect using these details and create the new database
             try {
                 $dbh = \Xibo\Storage\PDOConnect::connect($this->new_db_host, $this->db_admin_user, $this->db_admin_pass);
-            }
-            catch (Exception $e) {
+            } catch (Exception $e) {
                 throw new Exception(sprintf(__('Could not connect to MySQL with the administrator details. Please check and try again. Error Message = [%s]'), $e->getMessage()));
             }
 
@@ -196,36 +197,33 @@ class Install {
             try {
                 $dbh = \Xibo\Storage\PDOConnect::init();
                 $dbh->exec(sprintf('CREATE DATABASE `%s`', $this->new_db_name));
-            }
-            catch (Exception $e) {
+            } catch (Exception $e) {
                 throw new Exception(sprintf(__('Could not create a new database with the administrator details [%s]. Please check and try again. Error Message = [%s]'), $this->db_admin_user, $e->getMessage()));
             }
 
             // Try to create the new user
             try {
                 $dbh = \Xibo\Storage\PDOConnect::init();
-            
+
                 // Create the user and grant privileges
                 if ($this->new_db_host == 'localhost') {
                     $dbh->exec(sprintf('GRANT ALL PRIVILEGES ON `%s`.* to %s@%s IDENTIFIED BY %s',
-                        $this->new_db_name,
-                        $dbh->quote($this->new_db_user),
-                        $dbh->quote($this->new_db_host),
-                        $dbh->quote($this->new_db_pass))
+                            $this->new_db_name,
+                            $dbh->quote($this->new_db_user),
+                            $dbh->quote($this->new_db_host),
+                            $dbh->quote($this->new_db_pass))
                     );
-                }
-                else {
+                } else {
                     $dbh->exec(sprintf("GRANT ALL PRIVILEGES ON `%s`.* to %s@%% IDENTIFIED BY %s",
-                        $this->new_db_name,
-                        $dbh->quote($this->new_db_user),
-                        $dbh->quote($this->new_db_pass))
+                            $this->new_db_name,
+                            $dbh->quote($this->new_db_user),
+                            $dbh->quote($this->new_db_pass))
                     );
                 }
 
                 // Flush
                 $dbh->exec('FLUSH PRIVILEGES');
-            }
-            catch (Exception $e) {
+            } catch (Exception $e) {
                 throw new Exception(sprintf(__('Could not create a new user with the administrator details. Please check and try again. Error Message = [%s]'), $e->getMessage()));
             }
 
@@ -237,12 +235,11 @@ class Install {
 
             // Close the connection
             \Xibo\Storage\PDOConnect::close();
-        }
-        else {
+        } else {
             // Check details for a new database
             if ($this->existing_db_host == '')
                 throw new Exception(__('Please provide a database host. This is usually localhost.'));
-            
+
             if ($this->existing_db_user == '')
                 throw new Exception(__('Please provide a user for the existing database.'));
 
@@ -256,8 +253,7 @@ class Install {
         // Try and make a connection with this database
         try {
             $dbh = \Xibo\Storage\PDOConnect::connect($this->existing_db_host, $this->existing_db_user, $this->existing_db_pass, $this->existing_db_name);
-        }
-        catch (Exception $e) {
+        } catch (Exception $e) {
             throw new Exception(sprintf(__('Could not connect to MySQL with the administrator details. Please check and try again. Error Message = [%s]'), $e->getMessage()));
         }
 
@@ -269,24 +265,23 @@ class Install {
 
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
-        
+
             foreach ($sql_files as $filename) {
                 $delimiter = ';';
                 $sql_file = @file_get_contents('install/master/' . $filename);
                 $sql_file = Install::remove_remarks($sql_file);
                 $sql_file = Install::split_sql_file($sql_file, $delimiter);
-                
+
                 foreach ($sql_file as $sql) {
                     $sqlStatementCount++;
 
                     $dbh->exec($sql);
                 }
             }
-        }
-        catch (Exception $e) {
+        } catch (Exception $e) {
             throw new Exception(sprintf(__('An error occurred populating the database. Statement number: %d. Error Message = [%s]. File = [%s]. SQL = [%s].'), $sqlStatementCount, $e->getMessage(), $sql_file, $sql));
         }
-        
+
         // Write out a new settings.php
         $fh = fopen('settings.php', 'wt');
 
@@ -332,11 +327,12 @@ END;
 
         fclose($fh);
 
-        // If we get here, we want to move on to the next step. 
+        // If we get here, we want to move on to the next step.
         // This is handled by the calling function (i.e. there is no output from this call, we just reload and move on)
     }
 
-    public function Step4() {
+    public function Step4()
+    {
         // Form to collect an admin user account and password.
         $formFields = array();
 
@@ -345,10 +341,10 @@ END;
         $formFields[] = FormManager::AddMessage(sprintf(__("%s needs an administrator user account to be the first user account that has access to the CMS. Please enter your chosen details below."), Theme::GetConfig('app_name')));
 
         // User name and password
-        $formFields[] = FormManager::AddText('admin_username', __('Admin Username'), NULL, 
+        $formFields[] = FormManager::AddText('admin_username', __('Admin Username'), NULL,
             __('Please enter a user name for the first administrator account.'), 'n');
 
-        $formFields[] = FormManager::AddPassword('admin_password', __('Admin Password'), NULL, 
+        $formFields[] = FormManager::AddPassword('admin_password', __('Admin Password'), NULL,
             __('Please enter a password for this user. This user will have full access to the system'), 'p');
 
         // Put up an error message if one has been set (and then unset it)
@@ -365,7 +361,8 @@ END;
         return Theme::RenderReturn('form_render');
     }
 
-    public function Step5() {
+    public function Step5()
+    {
         // Configure the user account
         $username = \Xibo\Helper\Sanitize::getString('admin_username');
         $password = \Kit::GetParam('admin_password', _POST, _PASSWORD);
@@ -379,36 +376,36 @@ END;
         // Update user id 1 with these details.
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
-        
+
             $sth = $dbh->prepare('UPDATE `user` SET UserName = :username, UserPassword = :password WHERE UserID = 1 LIMIT 1');
             $sth->execute(array(
-                    'username' => $username,
-                    'password' => md5($password)
-                ));
+                'username' => $username,
+                'password' => md5($password)
+            ));
 
             // Update group ID 3 with the user name
             $sth = $dbh->prepare('UPDATE `group` SET `group` = :username WHERE groupId = 3 LIMIT 1');
             $sth->execute(array(
-                    'username' => $username
-                ));
-        }
-        catch (Exception $e) {
+                'username' => $username
+            ));
+        } catch (Exception $e) {
             throw new Exception(sprintf(__('Unable to set the user details. This is an unexpected error, please contact support. Error Message = [%s]'), $e->getMessage()));
         }
     }
 
-    public function Step6() {
+    public function Step6()
+    {
         // Form to collect the library location and server key
         $formFields = array();
         $formFields[] = FormManager::AddHidden('step', 7);
 
-        $formFields[] = FormManager::AddText('library_location', __('Library Location'), NULL, 
+        $formFields[] = FormManager::AddText('library_location', __('Library Location'), NULL,
             sprintf(__('%s needs somewhere to store the things you upload to be shown. Ideally, this should be somewhere outside the root of your web server - that is such that is not accessible by a web browser. Please input the full path to this folder. If the folder does not already exist, we will attempt to create it for you.'), Theme::GetConfig('app_name')), 'n');
 
-        $formFields[] = FormManager::AddText('server_key', __('Server Key'), Install::gen_secret(6), 
+        $formFields[] = FormManager::AddText('server_key', __('Server Key'), Install::gen_secret(6),
             sprintf(__('%s needs you to choose a "key". This will be required each time you set-up a new client. It should be complicated, and hard to remember. It is visible in the CMS interface, so it need not be written down separately.'), Theme::GetConfig('app_name')), 'n');
 
-        $formFields[] = FormManager::AddCheckbox('stats', __('Statistics'), 1, 
+        $formFields[] = FormManager::AddCheckbox('stats', __('Statistics'), 1,
             sprintf(__('We\'d love to know you\'re running %s. If you\'re happy for us to collect anonymous statistics (version number, number of displays) then please leave the box ticked. Please un tick the box if your server does not have direct access to the internet.'), Theme::GetConfig('app_name')), 'n');
 
         // Put up an error message if one has been set (and then unset it)
@@ -425,7 +422,8 @@ END;
         return Theme::RenderReturn('form_render');
     }
 
-    public function Step7() {
+    public function Step7()
+    {
         $server_key = \Xibo\Helper\Sanitize::getString('server_key');
         $library_location = \Xibo\Helper\Sanitize::getString('library_location');
         $stats = \Xibo\Helper\Sanitize::getCheckbox('stats');
@@ -439,7 +437,7 @@ END;
         // Remove trailing white space from the path given.
         $library_location = trim($library_location);
 
-        if (! is_dir($library_location)) {
+        if (!is_dir($library_location)) {
             // Make sure they haven't given a file as the library location
             if (is_file($library_location))
                 throw new Exception(__('A file exists with the name you gave for the Library Location. Please choose another location'));
@@ -457,7 +455,7 @@ END;
             throw new Exception(__('The Library Location you gave is not writable by the webserver. Please fix the permissions and try again.'));
 
         // Is library_location empty?
-        if (count(Install::ls("*",$library_location,true)) > 0)
+        if (count(Install::ls("*", $library_location, true)) > 0)
             throw new Exception(__('The Library Location you gave is not empty. Please give the location of an empty folder'));
 
         // Check if the user has added a trailing slash. If not, add one.
@@ -467,11 +465,11 @@ END;
 
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
-        
+
             // Library Location
             $sth = $dbh->prepare('UPDATE `setting` SET `value` = :value WHERE `setting`.`setting` = \'LIBRARY_LOCATION\' LIMIT 1');
             $sth->execute(array('value' => $library_location));
-            
+
             // Server Key
             $sth = $dbh->prepare('UPDATE `setting` SET `value` = :value WHERE `setting`.`setting` = \'SERVER_KEY\' LIMIT 1');
             $sth->execute(array('value' => $server_key));
@@ -487,19 +485,19 @@ END;
             // Phone Home Key
             $sth = $dbh->prepare('UPDATE `setting` SET `value` = :value WHERE `setting`.`setting` = \'PHONE_HOME_KEY\' LIMIT 1');
             $sth->execute(array('value' => md5(uniqid(rand(), true))));
-        }
-        catch (Exception $e) {
+        } catch (Exception $e) {
             throw new Exception(sprintf(__('An error occurred updating these settings. This is an unexpected error, please contact support. Error Message = [%s]'), $e->getMessage()));
         }
     }
 
-    public function Step8() {
+    public function Step8()
+    {
 
         \Xibo\Storage\PDOConnect::init();
 
         // Define the VERSION
         Config::Version();
-        
+
         Theme::Set('form_action', 'index.php?q=login');
         Theme::Set('about_url', 'index.php?p=index&q=About');
         Theme::Set('source_url', Theme::SourceLink());
@@ -524,24 +522,26 @@ END;
      */
 
     // Taken from http://forums.devshed.com/php-development-5/php-wont-load-sql-from-file-515902.html
-    // By Crackster 
+    // By Crackster
     /**
      * remove_remarks will strip the sql comment lines out of an uploaded sql file
      */
-    public static function remove_remarks($sql){
+    public static function remove_remarks($sql)
+    {
         $sql = preg_replace('/\n{2,}/', "\n", preg_replace('/^[-].*$/m', "\n", $sql));
         $sql = preg_replace('/\n{2,}/', "\n", preg_replace('/^#.*$/m', "\n", $sql));
         return $sql;
     }
 
     // Taken from http://forums.devshed.com/php-development-5/php-wont-load-sql-from-file-515902.html
-    // By Crackster              
+    // By Crackster
     /**
      * split_sql_file will split an uploaded sql file into single sql statements.
      * Note: expects trim() to have already been run on $sql.
      */
-    public static function split_sql_file($sql, $delimiter){
-        $sql = str_replace("\r" , '', $sql);
+    public static function split_sql_file($sql, $delimiter)
+    {
+        $sql = str_replace("\r", '', $sql);
         $data = preg_split('/' . preg_quote($delimiter, '/') . '$/m', $sql);
         $data = array_map('trim', $data);
         // The empty case
@@ -551,9 +551,9 @@ END;
         }
         return $data;
     }
-     
+
     /**
-     * This function will take a pattern and a folder as the argument and go thru it(recursively if needed)and return the list of 
+     * This function will take a pattern and a folder as the argument and go thru it(recursively if needed)and return the list of
      *               all files in that folder.
      * Link             : http://www.bin-co.com/php/scripts/filesystem/ls/
      * License  : BSD
@@ -563,44 +563,44 @@ END;
      *                    $options - An array of values 'return_files' or 'return_folders' or both
      * Returns       : A flat list with the path of all the files(no folders) that matches the condition given.
      */
-    public static function ls($pattern="*", $folder="", $recursivly=false, $options=array('return_files','return_folders')) {
-        if($folder) {
+    public static function ls($pattern = "*", $folder = "", $recursivly = false, $options = array('return_files', 'return_folders'))
+    {
+        if ($folder) {
             $current_folder = realpath('.');
-            if(in_array('quiet', $options)) { // If quiet is on, we will suppress the 'no such folder' error
-                if(!file_exists($folder)) return array();
+            if (in_array('quiet', $options)) { // If quiet is on, we will suppress the 'no such folder' error
+                if (!file_exists($folder)) return array();
             }
-            
-            if(!chdir($folder)) return array();
+
+            if (!chdir($folder)) return array();
         }
-        
-        
-        $get_files    = in_array('return_files', $options);
-        $get_folders= in_array('return_folders', $options);
+
+
+        $get_files = in_array('return_files', $options);
+        $get_folders = in_array('return_folders', $options);
         $both = array();
         $folders = array();
-        
+
         // Get the all files and folders in the given directory.
-        if($get_files) $both = glob($pattern, GLOB_BRACE + GLOB_MARK);
-        if($recursivly or $get_folders) $folders = glob("*", GLOB_ONLYDIR + GLOB_MARK);
-        
+        if ($get_files) $both = glob($pattern, GLOB_BRACE + GLOB_MARK);
+        if ($recursivly or $get_folders) $folders = glob("*", GLOB_ONLYDIR + GLOB_MARK);
+
         //If a pattern is specified, make sure even the folders match that pattern.
         $matching_folders = array();
-        if($pattern !== '*') $matching_folders = glob($pattern, GLOB_ONLYDIR + GLOB_MARK);
-        
+        if ($pattern !== '*') $matching_folders = glob($pattern, GLOB_ONLYDIR + GLOB_MARK);
+
         //Get just the files by removing the folders from the list of all files.
-        $all = array_values(array_diff($both,$folders));
-            
-        if($recursivly or $get_folders) {
+        $all = array_values(array_diff($both, $folders));
+
+        if ($recursivly or $get_folders) {
             foreach ($folders as $this_folder) {
-                if($get_folders) {
+                if ($get_folders) {
                     //If a pattern is specified, make sure even the folders match that pattern.
-                    if($pattern !== '*') {
-                        if(in_array($this_folder, $matching_folders)) array_push($all, $this_folder);
-                    }
-                    else array_push($all, $this_folder);
+                    if ($pattern !== '*') {
+                        if (in_array($this_folder, $matching_folders)) array_push($all, $this_folder);
+                    } else array_push($all, $this_folder);
                 }
-                
-                if($recursivly) {
+
+                if ($recursivly) {
                     // Continue calling this function for all the folders
                     $deep_items = Install::ls($pattern, $this_folder, $recursivly, $options); # :RECURSION:
                     foreach ($deep_items as $item) {
@@ -609,28 +609,27 @@ END;
                 }
             }
         }
-        
-        if($folder) chdir($current_folder);
+
+        if ($folder) chdir($current_folder);
         return $all;
     }
 
-    public static function gen_secret($length = 12) {
-      # Generates a random 12 character alphanumeric string to use as a salt
-      mt_srand((double)microtime()*1000000);
-      $key = "";
-      for ($i=0; $i < $length; $i++) {
-        $c = mt_rand(0,2);
-        if ($c == 0) {
-          $key .= chr(mt_rand(65,90));
+    public static function gen_secret($length = 12)
+    {
+        # Generates a random 12 character alphanumeric string to use as a salt
+        mt_srand((double)microtime() * 1000000);
+        $key = "";
+        for ($i = 0; $i < $length; $i++) {
+            $c = mt_rand(0, 2);
+            if ($c == 0) {
+                $key .= chr(mt_rand(65, 90));
+            } elseif ($c == 1) {
+                $key .= chr(mt_rand(97, 122));
+            } else {
+                $key .= chr(mt_rand(48, 57));
+            }
         }
-        elseif ($c == 1) {
-          $key .= chr(mt_rand(97,122));
-        }
-        else {
-          $key .= chr(mt_rand(48,57));
-        }
-      } 
-      
-      return $key;
+
+        return $key;
     }
 }

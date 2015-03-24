@@ -18,25 +18,26 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+namespace Xibo\Controller;
+
 use Xibo\Helper\Date;
-use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-class statsDAO extends baseDAO
-{	
+class Stats extends Base
+{
     /**
      * Stats page
      */
-	function displayPage() 
-	{
+    function displayPage()
+    {
         // Render a Bandwidth Widget
         $id = \Kit::uniqueId();
         Theme::Set('id', $id);
         Theme::Set('form_meta', '<input type="hidden" name="p" value="stats"><input type="hidden" name="q" value="BandwidthGrid">');
-        
+
         $formFields = array();
         $formFields[] = FormManager::AddDatePicker('fromdt', __('From Date'), Date::getLocalDate(time() - (86400 * 35), 'Y-m-d'), NULL, 'f');
         $formFields[] = FormManager::AddDatePicker('todt', __('To Date'), Date::getLocalDate(null, 'Y-m-d'), NULL, 't');
@@ -45,13 +46,13 @@ class statsDAO extends baseDAO
         $displays = $this->user->DisplayGroupList(1);
         array_unshift($displays, array('displayid' => 0, 'displaygroup' => 'All'));
         $formFields[] = FormManager::AddCombo(
-            'displayid', 
-            __('Display'), 
+            'displayid',
+            __('Display'),
             NULL,
             $displays,
             'displayid',
             'displaygroup',
-            NULL, 
+            NULL,
             'd');
 
         Theme::Set('header_text', __('Bandwidth'));
@@ -62,7 +63,7 @@ class statsDAO extends baseDAO
         $id = \Kit::uniqueId();
         Theme::Set('id', $id);
         Theme::Set('form_meta', '<input type="hidden" name="p" value="stats"><input type="hidden" name="q" value="AvailabilityGrid">');
-        
+
         $formFields = array();
         $formFields[] = FormManager::AddDatePicker('fromdt', __('From Date'), Date::getLocalDate(time() - (86400 * 35), 'Y-m-d'), NULL, 'f');
         $formFields[] = FormManager::AddDatePicker('todt', __('To Date'), Date::getLocalDate(null, 'Y-m-d'), NULL, 't');
@@ -71,13 +72,13 @@ class statsDAO extends baseDAO
         $displays = $this->user->DisplayGroupList(1);
         array_unshift($displays, array('displayid' => 0, 'displaygroup' => 'All'));
         $formFields[] = FormManager::AddCombo(
-            'displayid', 
-            __('Display'), 
+            'displayid',
+            __('Display'),
             NULL,
             $displays,
             'displayid',
             'displaygroup',
-            NULL, 
+            NULL,
             'd');
 
         Theme::Set('header_text', __('Availability'));
@@ -85,11 +86,11 @@ class statsDAO extends baseDAO
         $this->getState()->html .= Theme::RenderReturn('grid_render');
 
 
-		// Proof of Play stats widget
+        // Proof of Play stats widget
         $id = \Kit::uniqueId();
         Theme::Set('id', $id);
         Theme::Set('form_meta', '<input type="hidden" name="p" value="stats"><input type="hidden" name="q" value="StatsGrid">');
-        
+
         $formFields = array();
         $formFields[] = FormManager::AddDatePicker('fromdt', __('From Date'), Date::getLocalDate(time() - 86400, 'Y-m-d'), NULL, 'f');
         $formFields[] = FormManager::AddDatePicker('todt', __('To Date'), Date::getLocalDate(null, 'Y-m-d'), NULL, 't');
@@ -98,38 +99,39 @@ class statsDAO extends baseDAO
         $displays = $this->user->DisplayGroupList(1);
         array_unshift($displays, array('displayid' => 0, 'displaygroup' => 'All'));
         $formFields[] = FormManager::AddCombo(
-            'displayid', 
-            __('Display'), 
+            'displayid',
+            __('Display'),
             NULL,
             $displays,
             'displayid',
             'displaygroup',
-            NULL, 
+            NULL,
             'd');
 
         // List of Media this user has permission for
         $media = $this->user->MediaList();
         array_unshift($media, array('mediaid' => 0, 'media' => 'All'));
         $formFields[] = FormManager::AddCombo(
-            'mediaid', 
-            __('Media'), 
+            'mediaid',
+            __('Media'),
             NULL,
             $media,
             'mediaid',
             'media',
-            NULL, 
+            NULL,
             'm');
 
         // Call to render the template
         Theme::Set('header_text', __('Statistics'));
         Theme::Set('form_fields', $formFields);
         $this->getState()->html .= Theme::RenderReturn('grid_render');
-	}
+    }
 
-    public function actionMenu() {
+    public function actionMenu()
+    {
 
         $menu = array();
-        
+
         // Always show export
         $menu[] = array(
             'title' => __('Export'),
@@ -138,7 +140,7 @@ class statsDAO extends baseDAO
             'link' => 'index.php?p=stats&q=OutputCsvForm',
             'help' => __('Export raw data to CSV'),
             'onclick' => ''
-            );
+        );
 
         return $menu;
     }
@@ -148,7 +150,7 @@ class statsDAO extends baseDAO
      */
     public function StatsGrid()
     {
-        $db =& $this->db;
+
         $user = $this->getUser();
         $response = $this->getState();
 
@@ -169,7 +171,7 @@ class statsDAO extends baseDAO
         $displays = $this->user->DisplayList();
         $display_ids = array();
 
-        foreach($displays as $display) {
+        foreach ($displays as $display) {
             $display_ids[] = $display['displayid'];
         }
 
@@ -179,7 +181,7 @@ class statsDAO extends baseDAO
         // 3 grids showing different stats.
 
         // Layouts Ran
-        $SQL =  'SELECT display.Display, layout.Layout, COUNT(StatID) AS NumberPlays, SUM(TIME_TO_SEC(TIMEDIFF(end, start))) AS Duration, MIN(start) AS MinStart, MAX(end) AS MaxEnd ';
+        $SQL = 'SELECT display.Display, layout.Layout, COUNT(StatID) AS NumberPlays, SUM(TIME_TO_SEC(TIMEDIFF(end, start))) AS Duration, MIN(start) AS MinStart, MAX(end) AS MaxEnd ';
         $SQL .= '  FROM stat ';
         $SQL .= '  INNER JOIN layout ON layout.LayoutID = stat.LayoutID ';
         $SQL .= '  INNER JOIN display ON stat.DisplayID = display.DisplayID ';
@@ -198,27 +200,25 @@ class statsDAO extends baseDAO
         // Log
         Log::sql($SQL);
 
-        if (!$results = $this->db->query($SQL))
-        {
+        if (!$results = $this->db->query($SQL)) {
             trigger_error($db->error());
             trigger_error(__('Unable to get Layouts Shown'), E_USER_ERROR);
         }
 
         $cols = array(
-                array('name' => 'Display', 'title' => __('Display')),
-                array('name' => 'Layout', 'title' => __('Layout')),
-                array('name' => 'NumberPlays', 'title' => __('Number of Plays')),
-                array('name' => 'DurationSec', 'title' => __('Total Duration (s)')),
-                array('name' => 'Duration', 'title' => __('Total Duration')),
-                array('name' => 'MinStart', 'title' => __('First Shown')),
-                array('name' => 'MaxEnd', 'title' => __('Last Shown'))
-            );
+            array('name' => 'Display', 'title' => __('Display')),
+            array('name' => 'Layout', 'title' => __('Layout')),
+            array('name' => 'NumberPlays', 'title' => __('Number of Plays')),
+            array('name' => 'DurationSec', 'title' => __('Total Duration (s)')),
+            array('name' => 'Duration', 'title' => __('Total Duration')),
+            array('name' => 'MinStart', 'title' => __('First Shown')),
+            array('name' => 'MaxEnd', 'title' => __('Last Shown'))
+        );
         Theme::Set('table_cols', $cols);
 
         $rows = array();
 
-        while ($row = $db->get_assoc_row($results))
-        {
+        while ($row = $db->get_assoc_row($results)) {
             $row['Display'] = \Xibo\Helper\Sanitize::string($row['Display']);
             $row['Layout'] = \Xibo\Helper\Sanitize::string($row['Layout']);
             $row['NumberPlays'] = \Xibo\Helper\Sanitize::int($row['NumberPlays']);
@@ -234,7 +234,7 @@ class statsDAO extends baseDAO
         Theme::Set('table_layouts_shown', Theme::RenderReturn('table_render'));
 
         // Media Ran
-        $SQL =  'SELECT display.Display, media.Name, COUNT(StatID) AS NumberPlays, SUM(TIME_TO_SEC(TIMEDIFF(end, start))) AS Duration, MIN(start) AS MinStart, MAX(end) AS MaxEnd ';
+        $SQL = 'SELECT display.Display, media.Name, COUNT(StatID) AS NumberPlays, SUM(TIME_TO_SEC(TIMEDIFF(end, start))) AS Duration, MIN(start) AS MinStart, MAX(end) AS MaxEnd ';
         $SQL .= '  FROM stat ';
         $SQL .= '  INNER JOIN display ON stat.DisplayID = display.DisplayID ';
         $SQL .= '  INNER JOIN  media ON media.MediaID = stat.MediaID ';
@@ -252,26 +252,24 @@ class statsDAO extends baseDAO
         $SQL .= 'GROUP BY display.Display, media.Name ';
         $SQL .= 'ORDER BY display.Display, media.Name';
 
-        if (!$results = $this->db->query($SQL))
-        {
+        if (!$results = $this->db->query($SQL)) {
             trigger_error($db->error());
             trigger_error(__('Unable to get Library Media Ran'), E_USER_ERROR);
         }
 
         $cols = array(
-                array('name' => 'Display', 'title' => __('Display')),
-                array('name' => 'Media', 'title' => __('Media')),
-                array('name' => 'NumberPlays', 'title' => __('Number of Plays')),
-                array('name' => 'DurationSec', 'title' => __('Total Duration (s)')),
-                array('name' => 'Duration', 'title' => __('Total Duration')),
-                array('name' => 'MinStart', 'title' => __('First Shown')),
-                array('name' => 'MaxEnd', 'title' => __('Last Shown'))
-            );
+            array('name' => 'Display', 'title' => __('Display')),
+            array('name' => 'Media', 'title' => __('Media')),
+            array('name' => 'NumberPlays', 'title' => __('Number of Plays')),
+            array('name' => 'DurationSec', 'title' => __('Total Duration (s)')),
+            array('name' => 'Duration', 'title' => __('Total Duration')),
+            array('name' => 'MinStart', 'title' => __('First Shown')),
+            array('name' => 'MaxEnd', 'title' => __('Last Shown'))
+        );
         Theme::Set('table_cols', $cols);
         $rows = array();
 
-        while ($row = $db->get_assoc_row($results))
-        {
+        while ($row = $db->get_assoc_row($results)) {
             $row['Display'] = \Xibo\Helper\Sanitize::string($row['Display']);
             $row['Media'] = \Xibo\Helper\Sanitize::string($row['Name']);
             $row['NumberPlays'] = \Xibo\Helper\Sanitize::int($row['NumberPlays']);
@@ -286,7 +284,7 @@ class statsDAO extends baseDAO
         Theme::Set('table_media_shown', Theme::RenderReturn('table_render'));
 
         // Media on Layouts Ran
-        $SQL =  "SELECT display.Display, layout.Layout, IFNULL(media.Name, 'Text/Rss/Webpage') AS Name, COUNT(StatID) AS NumberPlays, SUM(TIME_TO_SEC(TIMEDIFF(end, start))) AS Duration, MIN(start) AS MinStart, MAX(end) AS MaxEnd ";
+        $SQL = "SELECT display.Display, layout.Layout, IFNULL(media.Name, 'Text/Rss/Webpage') AS Name, COUNT(StatID) AS NumberPlays, SUM(TIME_TO_SEC(TIMEDIFF(end, start))) AS Duration, MIN(start) AS MinStart, MAX(end) AS MaxEnd ";
         $SQL .= '  FROM stat ';
         $SQL .= '  INNER JOIN display ON stat.DisplayID = display.DisplayID ';
         $SQL .= '  INNER JOIN layout ON layout.LayoutID = stat.LayoutID ';
@@ -305,28 +303,26 @@ class statsDAO extends baseDAO
         $SQL .= "GROUP BY display.Display, layout.Layout, IFNULL(media.Name, 'Text/Rss/Webpage') ";
         $SQL .= "ORDER BY display.Display, layout.Layout, IFNULL(media.Name, 'Text/Rss/Webpage')";
 
-        if (!$results = $this->db->query($SQL))
-        {
+        if (!$results = $this->db->query($SQL)) {
             trigger_error($db->error());
             trigger_error(__('Unable to get Library Media Ran'), E_USER_ERROR);
         }
 
         $cols = array(
-                array('name' => 'Display', 'title' => __('Display')),
-                array('name' => 'Layout', 'title' => __('Layout')),
-                array('name' => 'Media', 'title' => __('Media')),
-                array('name' => 'NumberPlays', 'title' => __('Number of Plays')),
-                array('name' => 'DurationSec', 'title' => __('Total Duration (s)')),
-                array('name' => 'Duration', 'title' => __('Total Duration')),
-                array('name' => 'MinStart', 'title' => __('First Shown')),
-                array('name' => 'MaxEnd', 'title' => __('Last Shown'))
-            );
+            array('name' => 'Display', 'title' => __('Display')),
+            array('name' => 'Layout', 'title' => __('Layout')),
+            array('name' => 'Media', 'title' => __('Media')),
+            array('name' => 'NumberPlays', 'title' => __('Number of Plays')),
+            array('name' => 'DurationSec', 'title' => __('Total Duration (s)')),
+            array('name' => 'Duration', 'title' => __('Total Duration')),
+            array('name' => 'MinStart', 'title' => __('First Shown')),
+            array('name' => 'MaxEnd', 'title' => __('Last Shown'))
+        );
         Theme::Set('table_cols', $cols);
 
         $rows = array();
 
-        while ($row = $db->get_assoc_row($results))
-        {
+        while ($row = $db->get_assoc_row($results)) {
             $row['Display'] = \Xibo\Helper\Sanitize::string($row['Display']);
             $row['Layout'] = \Xibo\Helper\Sanitize::string($row['Layout']);
             $row['Media'] = \Xibo\Helper\Sanitize::string($row['Name']);
@@ -348,7 +344,7 @@ class statsDAO extends baseDAO
 
     }
 
-    public function AvailabilityGrid() 
+    public function AvailabilityGrid()
     {
         $fromDt = Date::getTimestampFromString(Kit::GetParam('fromdt', _POST, _STRING));
         $toDt = Date::getTimestampFromString(Kit::GetParam('todt', _POST, _STRING));
@@ -358,7 +354,7 @@ class statsDAO extends baseDAO
         $displays = $this->user->DisplayList();
         $displayIds = array();
 
-        foreach($displays as $display) {
+        foreach ($displays as $display) {
             $displayIds[] = $display['displayid'];
         }
 
@@ -368,24 +364,24 @@ class statsDAO extends baseDAO
         // Get some data for a bandwidth chart
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
-        
+
             $params = array(
                 'type' => 'displaydown',
                 'start' => date('Y-m-d h:i:s', $fromDt),
                 'boundaryStart' => date('Y-m-d h:i:s', $fromDt),
                 'end' => date('Y-m-d h:i:s', $toDt),
                 'boundaryEnd' => date('Y-m-d h:i:s', $toDt)
-                );
+            );
 
             $SQL = '
-                SELECT display.display, 
+                SELECT display.display,
                     SUM(TIME_TO_SEC(TIMEDIFF(LEAST(end, :boundaryEnd), GREATEST(start, :boundaryStart)))) AS duration
                   FROM `stat`
                     INNER JOIN `display`
                     ON display.displayId = stat.displayId
                  WHERE start <= :end
                     AND end >= :start
-                    AND type = :type 
+                    AND type = :type
                     AND display.displayId IN (' . implode(',', $displayIds) . ') ';
 
             if ($displayId != 0) {
@@ -408,9 +404,9 @@ class statsDAO extends baseDAO
             foreach ($sth->fetchAll() as $row) {
 
                 $output[] = array(
-                        'label' => \Xibo\Helper\Sanitize::string($row['display']),
-                        'value' => (\Xibo\Helper\Sanitize::double($row['duration']) / 60)
-                    );
+                    'label' => \Xibo\Helper\Sanitize::string($row['display']),
+                    'value' => (\Xibo\Helper\Sanitize::double($row['duration']) / 60)
+                );
             }
 
             Theme::Set('availabilityWidget', json_encode($output));
@@ -419,17 +415,16 @@ class statsDAO extends baseDAO
             $response = $this->getState();
             $response->SetGridResponse($output);
 
-        }
-        catch (Exception $e) {
-            
+        } catch (Exception $e) {
+
             Log::error($e->getMessage());
-        
+
             // Show the error in place of the bandwidth chart
             Theme::Set('widget-error', 'Unable to get widget details');
         }
     }
 
-    public function BandwidthGrid() 
+    public function BandwidthGrid()
     {
 
         $fromDt = Date::getTimestampFromString(Kit::GetParam('fromdt', _POST, _STRING));
@@ -439,7 +434,7 @@ class statsDAO extends baseDAO
         $displays = $this->user->DisplayList();
         $displayIds = array();
 
-        foreach($displays as $display) {
+        foreach ($displays as $display) {
             $displayIds[] = $display['displayid'];
         }
 
@@ -449,15 +444,15 @@ class statsDAO extends baseDAO
         // Get some data for a bandwidth chart
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
-        
+
             $displayId = \Xibo\Helper\Sanitize::getInt('displayid');
             $params = array(
                 'month' => $fromDt,
                 'month2' => $toDt
-                );
+            );
 
             $SQL = 'SELECT display.display, IFNULL(SUM(Size), 0) AS size ';
-            
+
             if ($displayId != 0)
                 $SQL .= ', bandwidthtype.name AS type ';
 
@@ -465,13 +460,13 @@ class statsDAO extends baseDAO
                     INNER JOIN `display`
                     ON display.displayid = bandwidth.displayid';
 
-            if ($displayId  != 0)
+            if ($displayId != 0)
                 $SQL .= '
                         INNER JOIN bandwidthtype
                         ON bandwidthtype.bandwidthtypeid = bandwidth.type
                     ';
 
-            $SQL .= '  WHERE month > :month 
+            $SQL .= '  WHERE month > :month
                     AND month < :month2
                     AND display.displayId IN (' . implode(',', $displayIds) . ') ';
 
@@ -511,101 +506,100 @@ class statsDAO extends baseDAO
                 // label depends whether we are filtered by display
                 if ($displayId != 0) {
                     $label = $row['type'];
-                }
-                else {
+                } else {
                     $label = $row['display'];
                 }
 
                 $output[] = array(
-                        'label' => $label, 
-                        'value' => round((double)$row['size'] / (pow(1024, $base)), 2)
-                    );
+                    'label' => $label,
+                    'value' => round((double)$row['size'] / (pow(1024, $base)), 2)
+                );
             }
 
             // Set the data
             Theme::Set('bandwidthWidget', json_encode($output));
 
             // Set up some suffixes
-            $suffixes = array('bytes', 'k', 'M', 'G', 'T');    
+            $suffixes = array('bytes', 'k', 'M', 'G', 'T');
             Theme::Set('bandwidthWidgetUnits', (isset($suffixes[$base]) ? $suffixes[$base] : ''));
-            
+
             $output = Theme::RenderReturn('stats_page_bandwidth');
 
             $response = $this->getState();
             $response->SetGridResponse($output);
 
-        }
-        catch (Exception $e) {
-            
+        } catch (Exception $e) {
+
             Log::error($e->getMessage());
-        
+
             // Show the error in place of the bandwidth chart
             Theme::Set('widget-error', 'Unable to get widget details');
         }
     }
 
-    public function OutputCsvForm() {
+    public function OutputCsvForm()
+    {
         $response = $this->getState();
 
         Theme::Set('form_id', 'OutputCsvForm');
         Theme::Set('form_action', 'index.php?p=stats&q=OutputCSV');
-        
+
         $formFields = array();
-        $formFields[] = FormManager::AddText('fromdt', __('From Date'),Date::getLocalDate(time() - (86400 * 35), 'Y-m-d'), NULL, 'f');
+        $formFields[] = FormManager::AddText('fromdt', __('From Date'), Date::getLocalDate(time() - (86400 * 35), 'Y-m-d'), NULL, 'f');
         $formFields[] = FormManager::AddText('todt', __('To Date'), Date::getLocalDate(null, 'Y-m-d'), NULL, 't');
 
         // List of Displays this user has permission for
         $displays = $this->user->DisplayGroupList(1);
         array_unshift($displays, array('displayid' => 0, 'displaygroup' => 'All'));
         $formFields[] = FormManager::AddCombo(
-            'displayid', 
-            __('Display'), 
+            'displayid',
+            __('Display'),
             NULL,
             $displays,
             'displayid',
             'displaygroup',
-            NULL, 
+            NULL,
             'd');
 
         Theme::Set('header_text', __('Bandwidth'));
         Theme::Set('form_fields', $formFields);
         Theme::Set('form_class', 'XiboManualSubmit');
-        
+
         $response->SetFormRequestResponse(NULL, __('Export Statistics'), '550px', '275px');
         $response->AddButton(__('Export'), '$("#OutputCsvForm").submit()');
         $response->AddButton(__('Close'), 'XiboDialogClose()');
 
     }
-	
-	/**
-	 * Outputs a CSV of stats
-	 * @return 
-	 */
-	public function OutputCSV()
-	{
-		$db 		=& $this->db;
-		$output		= '';
-		
-		// We are expecting some parameters
-		$fromdt	= Date::getIsoDateFromString(Kit::GetParam('fromdt', _POST, _STRING));
-		$todt = Date::getIsoDateFromString(Kit::GetParam('todt', _POST, _STRING));
-		$displayID = \Xibo\Helper\Sanitize::getInt('displayid');
+
+    /**
+     * Outputs a CSV of stats
+     * @return
+     */
+    public function OutputCSV()
+    {
+        $db =& $this->db;
+        $output = '';
+
+        // We are expecting some parameters
+        $fromdt = Date::getIsoDateFromString(Kit::GetParam('fromdt', _POST, _STRING));
+        $todt = Date::getIsoDateFromString(Kit::GetParam('todt', _POST, _STRING));
+        $displayID = \Xibo\Helper\Sanitize::getInt('displayid');
 
         if ($fromdt == $todt) {
             $todt = date("Y-m-d", strtotime($todt) + 86399);
         }
 
-		// We want to output a load of stuff to the browser as a text file.
-		header('Content-Type: text/csv');
-		header('Content-Disposition: attachment; filename="stats.csv"');
-		header("Content-Transfer-Encoding: binary");
-		header('Accept-Ranges: bytes');
-		
+        // We want to output a load of stuff to the browser as a text file.
+        header('Content-Type: text/csv');
+        header('Content-Disposition: attachment; filename="stats.csv"');
+        header("Content-Transfer-Encoding: binary");
+        header('Accept-Ranges: bytes');
+
         // Get an array of display id this user has access to.
         $displays = $this->user->DisplayList();
         $display_ids = array();
 
-        foreach($displays as $display) {
+        foreach ($displays as $display) {
             $display_ids[] = $display['displayid'];
         }
 
@@ -613,54 +607,52 @@ class statsDAO extends baseDAO
             echo __('No displays with View permissions');
             exit;
         }
-        
-		$SQL =  'SELECT stat.*, display.Display, layout.Layout, media.Name AS MediaName ';
-		$SQL .= '  FROM stat ';
-		$SQL .= '  INNER JOIN display ON stat.DisplayID = display.DisplayID ';
-		$SQL .= '  LEFT OUTER JOIN layout ON layout.LayoutID = stat.LayoutID ';
-		$SQL .= '  LEFT OUTER JOIN media ON media.mediaID = stat.mediaID ';
-		$SQL .= ' WHERE 1=1 ';
-		$SQL .= sprintf("  AND stat.end > '%s' ", $fromdt);
-		$SQL .= sprintf("  AND stat.start <= '%s' ", $todt);
+
+        $SQL = 'SELECT stat.*, display.Display, layout.Layout, media.Name AS MediaName ';
+        $SQL .= '  FROM stat ';
+        $SQL .= '  INNER JOIN display ON stat.DisplayID = display.DisplayID ';
+        $SQL .= '  LEFT OUTER JOIN layout ON layout.LayoutID = stat.LayoutID ';
+        $SQL .= '  LEFT OUTER JOIN media ON media.mediaID = stat.mediaID ';
+        $SQL .= ' WHERE 1=1 ';
+        $SQL .= sprintf("  AND stat.end > '%s' ", $fromdt);
+        $SQL .= sprintf("  AND stat.start <= '%s' ", $todt);
 
         $SQL .= ' AND stat.displayID IN (' . implode(',', $display_ids) . ') ';
 
-		if ($displayID != 0)
-		{
-			$SQL .= sprintf("  AND stat.displayID = %d ", $displayID);
-		}
+        if ($displayID != 0) {
+            $SQL .= sprintf("  AND stat.displayID = %d ", $displayID);
+        }
 
         $SQL .= " ORDER BY stat.start ";
-		
-		Log::notice($SQL, 'Stats', 'OutputCSV');
-		
-		if (!$result = $db->query($SQL))
-		{
-			trigger_error($db->error());
-			trigger_error('Failed to query for Stats.', E_USER_ERROR);
-		}
-		
-		// Header row
-		$output		.= "Type, FromDT, ToDT, Layout, Display, Media, Tag\n";
-		
-		while($row = $db->get_assoc_row($result))
-		{
-			// Read the columns
-			$type		= \Xibo\Helper\Sanitize::string($row['Type']);
-			$fromdt		= \Xibo\Helper\Sanitize::string($row['start']);
-			$todt		= \Xibo\Helper\Sanitize::string($row['end']);
-			$layout		= \Xibo\Helper\Sanitize::string($row['Layout']);
-			$display	= \Xibo\Helper\Sanitize::string($row['Display']);
-			$media		= \Xibo\Helper\Sanitize::string($row['MediaName']);
-			$tag		= \Xibo\Helper\Sanitize::string($row['Tag']);
-			
-			$output		.= "$type, $fromdt, $todt, $layout, $display, $media, $tag\n";
-		}
-		
-		//Log::debug('Output: ' . $output, 'Stats', 'OutputCSV');
-		
-		echo $output;
-		exit;
-	}
+
+        Log::notice($SQL, 'Stats', 'OutputCSV');
+
+        if (!$result = $db->query($SQL)) {
+            trigger_error($db->error());
+            trigger_error('Failed to query for Stats.', E_USER_ERROR);
+        }
+
+        // Header row
+        $output .= "Type, FromDT, ToDT, Layout, Display, Media, Tag\n";
+
+        while ($row = $db->get_assoc_row($result)) {
+            // Read the columns
+            $type = \Xibo\Helper\Sanitize::string($row['Type']);
+            $fromdt = \Xibo\Helper\Sanitize::string($row['start']);
+            $todt = \Xibo\Helper\Sanitize::string($row['end']);
+            $layout = \Xibo\Helper\Sanitize::string($row['Layout']);
+            $display = \Xibo\Helper\Sanitize::string($row['Display']);
+            $media = \Xibo\Helper\Sanitize::string($row['MediaName']);
+            $tag = \Xibo\Helper\Sanitize::string($row['Tag']);
+
+            $output .= "$type, $fromdt, $todt, $layout, $display, $media, $tag\n";
+        }
+
+        //Log::debug('Output: ' . $output, 'Stats', 'OutputCSV');
+
+        echo $output;
+        exit;
+    }
 }
+
 ?>

@@ -18,23 +18,25 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-use Xibo\Helper\Log;
-use Xibo\Helper\Help;
+namespace Xibo\Controller;
+
 use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Help;
+use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-class timelineDAO extends baseDAO
+class Timeline extends Base
 {
     /**
-	 * Adds a new region for a layout
-	 */
-	function AddRegion()
-	{
-		$response = $this->getState();
-		
-		$layout = \Xibo\Factory\LayoutFactory::loadById(Kit::GetParam('layoutid', _REQUEST, _INT));
+     * Adds a new region for a layout
+     */
+    function AddRegion()
+    {
+        $response = $this->getState();
+
+        $layout = \Xibo\Factory\LayoutFactory::loadById(Kit::GetParam('layoutid', _REQUEST, _INT));
 
         // Check Permissions
         if (!$this->user->checkEditable($layout))
@@ -48,17 +50,17 @@ class timelineDAO extends baseDAO
 
         // Save everything
         $layout->save();
-		
-		$response->SetFormSubmitResponse(__('Region Added.'), true, 'index.php?p=layout&modify=true&layoutid=' . $layout->layoutId);
 
-	}
-	
-	/**
-	 * Deletes a region and all the assigned widgets
-	 */
-	function DeleteRegion()
-	{
-		$response = $this->getState();
+        $response->SetFormSubmitResponse(__('Region Added.'), true, 'index.php?p=layout&modify=true&layoutid=' . $layout->layoutId);
+
+    }
+
+    /**
+     * Deletes a region and all the assigned widgets
+     */
+    function DeleteRegion()
+    {
+        $response = $this->getState();
 
         $region = \Xibo\Factory\RegionFactory::getById(Kit::GetParam('regionid', _REQUEST, _INT));
 
@@ -71,7 +73,7 @@ class timelineDAO extends baseDAO
 
         $response->SetFormSubmitResponse(__('Region Deleted.'), true, sprintf('index.php?p=layout&layoutid=%d&modify=true', $region->layoutId));
 
-	}
+    }
 
     /*
      * Form called by the layout which shows a manual positioning/sizing form.
@@ -99,22 +101,22 @@ class timelineDAO extends baseDAO
         // Set some information about the form
         Theme::Set('form_id', 'RegionProperties');
         Theme::Set('form_action', 'index.php?p=timeline&q=ManualRegionPosition');
-        Theme::Set('form_meta', '<input type="hidden" name="regionid" value="' . $region->regionId . '"><input type="hidden" name="scale" value="' . $scale .'"><input type="hidden" name="zoom" value="' . $zoom .'">');
-        
+        Theme::Set('form_meta', '<input type="hidden" name="regionid" value="' . $region->regionId . '"><input type="hidden" name="scale" value="' . $scale . '"><input type="hidden" name="zoom" value="' . $zoom . '">');
+
         $formFields = array();
         $formFields[] = FormManager::AddText('name', __('Name'), $region->name,
             __('Name of the Region'), 'n', 'maxlength="50"');
 
-        $formFields[] = FormManager::AddNumber('top', __('Top'), $top, 
+        $formFields[] = FormManager::AddNumber('top', __('Top'), $top,
             __('Offset from the Top Corner'), 't');
 
-        $formFields[] = FormManager::AddNumber('left', __('Left'), $left, 
+        $formFields[] = FormManager::AddNumber('left', __('Left'), $left,
             __('Offset from the Left Corner'), 'l');
 
-        $formFields[] = FormManager::AddNumber('width', __('Width'), $width, 
+        $formFields[] = FormManager::AddNumber('width', __('Width'), $width,
             __('Width of the Region'), 'w');
 
-        $formFields[] = FormManager::AddNumber('height', __('Height'), $height, 
+        $formFields[] = FormManager::AddNumber('height', __('Height'), $height,
             __('Height of the Region'), 'h');
 
         // Transitions
@@ -124,40 +126,40 @@ class timelineDAO extends baseDAO
             $transitions[] = array('code' => '', 'transition' => 'None', 'class' => '');
 
             $formFields[] = FormManager::AddCombo(
-                        'transitionType', 
-                        __('Exit Transition'), 
-                        $region->getOptionValue('transOut', ''),
-                        $transitions,
-                        'code',
-                        'transition',
-                        __('What transition should be applied when this region is finished?'), 
-                        't');
+                'transitionType',
+                __('Exit Transition'),
+                $region->getOptionValue('transOut', ''),
+                $transitions,
+                'code',
+                'transition',
+                __('What transition should be applied when this region is finished?'),
+                't');
 
             $formFields[] = FormManager::AddNumber('transitionDuration', __('Duration'), $region->getOptionValue('transOutDuration', 0),
                 __('The duration for this transition, in milliseconds.'), 'l', '', 'transition-group');
 
             // Compass points for direction
             $compassPoints = array(
-                array('id' => 'N', 'name' => __('North')), 
-                array('id' => 'NE', 'name' => __('North East')), 
-                array('id' => 'E', 'name' => __('East')), 
-                array('id' => 'SE', 'name' => __('South East')), 
-                array('id' => 'S', 'name' => __('South')), 
-                array('id' => 'SW', 'name' => __('South West')), 
+                array('id' => 'N', 'name' => __('North')),
+                array('id' => 'NE', 'name' => __('North East')),
+                array('id' => 'E', 'name' => __('East')),
+                array('id' => 'SE', 'name' => __('South East')),
+                array('id' => 'S', 'name' => __('South')),
+                array('id' => 'SW', 'name' => __('South West')),
                 array('id' => 'W', 'name' => __('West')),
                 array('id' => 'NW', 'name' => __('North West'))
             );
 
             $formFields[] = FormManager::AddCombo(
-                        'transitionDirection', 
-                        __('Direction'), 
-                        $region->getOptionValue('transOutDirection', ''),
-                        $compassPoints,
-                        'id',
-                        'name',
-                        __('The direction for this transition. Only appropriate for transitions that move, such as Fly.'),
-                        'd',
-                        'transition-group transition-direction');
+                'transitionDirection',
+                __('Direction'),
+                $region->getOptionValue('transOutDirection', ''),
+                $compassPoints,
+                'id',
+                'name',
+                __('The direction for this transition. Only appropriate for transitions that move, such as Fly.'),
+                'd',
+                'transition-group transition-direction');
 
             // Add some dependencies
             $response->AddFieldAction('transitionType', 'init', '', array('.transition-group' => array('display' => 'none')));
@@ -166,7 +168,7 @@ class timelineDAO extends baseDAO
             $response->AddFieldAction('transitionType', 'change', '', array('.transition-group' => array('display' => 'block')), 'not');
         }
 
-        $formFields[] = FormManager::AddCheckbox('loop', __('Loop?'), 
+        $formFields[] = FormManager::AddCheckbox('loop', __('Loop?'),
             $region->getOptionValue('loop', 0), __('If there is only one item in this region should it loop? Not currently available for Windows Players.'),
             'l');
 
@@ -178,7 +180,7 @@ class timelineDAO extends baseDAO
         // Add some information about the whole layout to this request.
         $layout = \Xibo\Factory\LayoutFactory::getById($layoutId);
         $response->extra['layoutInformation'] = array('width' => $layout->width, 'height' => $layout->height);
-        
+
         $response->SetFormRequestResponse(NULL, __('Region Options'), '350px', '275px');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#RegionProperties").submit()');
@@ -189,7 +191,7 @@ class timelineDAO extends baseDAO
     function ManualRegionPosition()
     {
 
-        
+
         $response = $this->getState();
 
         // Load the region and get the dimensions, applying the scale factor if necessary (only v1 layouts will have a scale factor != 1)
@@ -203,7 +205,7 @@ class timelineDAO extends baseDAO
         $region->name = \Xibo\Helper\Sanitize::getString('name');
         $region->zIndex = \Kit::GetParam('zindex', _POST, _INT, NULL);
 
-        $top  = \Xibo\Helper\Sanitize::getInt('top');
+        $top = \Xibo\Helper\Sanitize::getInt('top');
         $left = \Xibo\Helper\Sanitize::getInt('left');
         $width = \Xibo\Helper\Sanitize::getInt('width');
         $height = \Xibo\Helper\Sanitize::getInt('height');
@@ -211,10 +213,10 @@ class timelineDAO extends baseDAO
         $zoom = \Kit::GetParam('zoom', _POST, _DOUBLE);
 
         // Remove the "px" from them
-        $width  = str_replace('px', '', $width);
+        $width = str_replace('px', '', $width);
         $height = str_replace('px', '', $height);
-        $top    = str_replace('px', '', $top);
-        $left   = str_replace('px', '', $left);
+        $top = str_replace('px', '', $top);
+        $left = str_replace('px', '', $left);
 
         // Adjust the dimensions
         // For version 2 layouts and above, the scale will always be 1.
@@ -238,16 +240,16 @@ class timelineDAO extends baseDAO
         $response->SetFormSubmitResponse('Region Resized', true, "index.php?p=layout&modify=true&layoutid=$region->layoutId&zoom=$zoom");
 
     }
-	
-	/**
-	 * Edits the region information
-	 */
-	function RegionChange()
-	{
-		$response = $this->getState();
-		
-		// Create the layout
-		$layout = \Xibo\Factory\LayoutFactory::loadById(Kit::GetParam('layoutid', _REQUEST, _INT));
+
+    /**
+     * Edits the region information
+     */
+    function RegionChange()
+    {
+        $response = $this->getState();
+
+        // Create the layout
+        $layout = \Xibo\Factory\LayoutFactory::loadById(Kit::GetParam('layoutid', _REQUEST, _INT));
 
         // Pull in the regions and convert them to stdObjects
         $regions = \Kit::GetParam('regions', _POST, _HTMLSTRING);
@@ -281,11 +283,11 @@ class timelineDAO extends baseDAO
         $layout->status = 0;
         $layout->save();
 
-		$response->SetFormSubmitResponse('');
-		$response->hideMessage = true;
+        $response->SetFormSubmitResponse('');
+        $response->hideMessage = true;
 
-	}
-	
+    }
+
     /**
      * Delete Region Form
      */
@@ -299,8 +301,8 @@ class timelineDAO extends baseDAO
         // Do we have permission
         if (!$this->user->checkDeleteable($region))
             trigger_error(__('You do not have permissions to delete this region'), E_USER_ERROR);
-		
-		// Set some information about the form
+
+        // Set some information about the form
         Theme::Set('form_id', 'RegionDeleteForm');
         Theme::Set('form_action', 'index.php?p=timeline&q=DeleteRegion');
         Theme::Set('form_meta', '<input type="hidden" name="regionid" value="' . $region->regionId . '" />');
@@ -322,7 +324,7 @@ class timelineDAO extends baseDAO
         $this->Timeline();
         exit();
     }
-	
+
     /**
      * Adds the media into the region provided
      */
@@ -378,26 +380,26 @@ class timelineDAO extends baseDAO
     }
 
     /**
-	 * Represents the Preview inside the Layout Designer
-	 */
-	public function RegionPreview()
-	{
-		// Response Manager
-		$response = $this->getState();
-		
-		// Keyed off the region id
-		$regionId = \Xibo\Helper\Sanitize::getString('regionid');
-		
-		$seqGiven = \Kit::GetParam('seq', _POST, _INT, 0);
-		$seq = \Kit::GetParam('seq', _POST, _INT, 0);
-		$width = \Kit::GetParam('width', _POST, _INT, 0);
+     * Represents the Preview inside the Layout Designer
+     */
+    public function RegionPreview()
+    {
+        // Response Manager
+        $response = $this->getState();
+
+        // Keyed off the region id
+        $regionId = \Xibo\Helper\Sanitize::getString('regionid');
+
+        $seqGiven = \Kit::GetParam('seq', _POST, _INT, 0);
+        $seq = \Kit::GetParam('seq', _POST, _INT, 0);
+        $width = \Kit::GetParam('width', _POST, _INT, 0);
         $height = \Kit::GetParam('height', _POST, _INT, 0);
-		$scaleOverride = \Kit::GetParam('scale_override', _POST, _DOUBLE, 0);
-		
-		// The sequence will not be zero based, so adjust it
-		$seq--;
-		
-		// Load our region
+        $scaleOverride = \Kit::GetParam('scale_override', _POST, _DOUBLE, 0);
+
+        // The sequence will not be zero based, so adjust it
+        $seq--;
+
+        // Load our region
         try {
             $region = \Xibo\Factory\RegionFactory::getById($regionId);
             $playlists = \Xibo\Factory\PlaylistFactory::getByRegionId($regionId);
@@ -413,7 +415,7 @@ class timelineDAO extends baseDAO
             // We want to load the widget in the given sequence
             if (count($widgets) <= 0) {
                 // No media to preview
-                $response->extra['text']  = __('Empty Region');
+                $response->extra['text'] = __('Empty Region');
                 $response->html = '';
 
             }
@@ -426,7 +428,7 @@ class timelineDAO extends baseDAO
             // Otherwise, output a preview
             $module = \Xibo\Factory\ModuleFactory::createWithWidget($widget, $region);
 
-            $return  = '<div class="regionPreviewOverlay"></div>';
+            $return = '<div class="regionPreviewOverlay"></div>';
             $return .= $module->Preview($width, $height, $scaleOverride);
 
             $response->html = $return;
@@ -437,17 +439,16 @@ class timelineDAO extends baseDAO
             $response->extra['current_item'] = $seqGiven;
 
 
-        }
-        catch (\Xibo\Exception\NotFoundException $e) {
+        } catch (\Xibo\Exception\NotFoundException $e) {
             // Log it
             Log::Error($e->getMessage());
 
             // No media to preview
-            $response->extra['text']  = __('Region cannot be found.');
+            $response->extra['text'] = __('Region cannot be found.');
             $response->html = '';
 
         }
-	}
+    }
 
     /**
      * Set the Module Buttons for a Form
@@ -461,10 +462,10 @@ class timelineDAO extends baseDAO
 
         // Always output a Library assignment button
         $buttons[] = array(
-                'id' => 'media_button_library',
-                'url' => 'index.php?p=content&q=LibraryAssignForm&regionId=' . $regionId,
-                'text' => __('Library')
-            );
+            'id' => 'media_button_library',
+            'url' => 'index.php?p=content&q=LibraryAssignForm&regionId=' . $regionId,
+            'text' => __('Library')
+        );
 
         // Get a list of the enabled modules and then create buttons for them
         foreach (\Xibo\Factory\ModuleFactory::getAssignableModules() as $module) {
@@ -534,7 +535,7 @@ class timelineDAO extends baseDAO
         $playlist = $region->playlists[0];
         /* @var \Xibo\Entity\Playlist $playlist */
 
-        foreach($playlist->widgets as $widget) {
+        foreach ($playlist->widgets as $widget) {
             /* @var \Xibo\Entity\Widget $widget */
             // Put this node vertically in the region time line
             if (!$this->user->checkViewable($widget))
@@ -545,32 +546,31 @@ class timelineDAO extends baseDAO
             $tmpModule = null;
             try {
                 $tmpModule = \Xibo\Factory\ModuleFactory::createWithWidget($widget, $region);
-            }
-            catch (Exception $e) {
+            } catch (Exception $e) {
                 trigger_error($e->getMessage(), E_USER_ERROR);
             }
 
             $mediaName = $tmpModule->GetName();
             $transitionIn = $tmpModule->GetTransition('in');
             $transitionOut = $tmpModule->GetTransition('out');
-            
+
             // Colouring for the media block
             if ($timeBarColouring == 'Permissions')
                 $mediaBlockColouringClass = 'timelineMediaItemColouring_' . (($this->user->checkEditable($widget)) ? 'enabled' : 'disabled');
             else
                 $mediaBlockColouringClass = 'timelineMediaItemColouringDefault timelineMediaItemColouring_' . $tmpModule->getModuleType();
-            
+
             // Create the list item
             $response->html .= '<li class="timelineMediaListItem" widgetid="' . $widget->widgetId . '">';
-            
+
             // In transition
             $response->html .= '    <div class="timelineMediaInTransition">';
-            
+
             if ($transitionIn != 'None')
                 $response->html .= '<span>' . $transitionIn . '</span>';
-            
+
             $response->html .= '    </div>';
-            
+
             // Media Bar
             $response->html .= '    <div class="timelineMediaItem">';
             $response->html .= '        <ul class="timelineMediaItemLinks">';
@@ -587,10 +587,10 @@ class timelineDAO extends baseDAO
 
             if (count($this->user->TransitionAuth('in')) > 0)
                 $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=TransitionEditForm&type=in&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '" title="' . __('Click to edit this transition') . '">' . __('In Transition') . '</a></li>';
-            
+
             if (count($this->user->TransitionAuth('out')) > 0)
                 $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=TransitionEditForm&type=out&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '" title="' . __('Click to edit this transition') . '">' . __('Out Transition') . '</a></li>';
-            
+
             $response->html .= '        </ul>';
 
             // Put the media name in
@@ -604,15 +604,15 @@ class timelineDAO extends baseDAO
 
             // End the time line media item
             $response->html .= '    </div>';
-            
+
             // Out transition
             $response->html .= '    <div class="timelineMediaOutTransition">';
-            
+
             if ($transitionOut != 'None')
                 $response->html .= '<span>' . $transitionOut . '</span>';
-            
+
             $response->html .= '    </div>';
-            
+
             // End of this media item
             $response->html .= '</li>';
         }
@@ -631,9 +631,9 @@ class timelineDAO extends baseDAO
         // Finish constructing the response
         $response->callBack = 'LoadTimeLineCallback';
         $response->dialogClass = 'modal-big';
-        $response->dialogTitle 	= __('Region Timeline');
-        $response->dialogSize 	= true;
-        $response->dialogWidth 	= '1000px';
+        $response->dialogTitle = __('Region Timeline');
+        $response->dialogSize = true;
+        $response->dialogWidth = '1000px';
         $response->dialogHeight = '550px';
         $response->focusInFirstInput = false;
 
@@ -649,7 +649,8 @@ class timelineDAO extends baseDAO
     /**
      * Timeline in Grid mode
      */
-    public function TimelineGrid() {
+    public function TimelineGrid()
+    {
         $this->user->SetPref('timeLineView', 'grid');
 
         $response = $this->getState();
@@ -675,15 +676,15 @@ class timelineDAO extends baseDAO
         Theme::Set('form_meta', '<input type="hidden" name="p" value="timeline">
             <input type="hidden" name="q" value="TimelineGridView">
             <input type="hidden" name="regionid" value="' . $region->regionId . '">');
-        
+
         // Call to render the template
         $response->html = Theme::RenderReturn('grid_render');
 
         // Finish constructing the response
         $response->dialogClass = 'modal-big';
-        $response->dialogTitle  = __('Region Timeline');
-        $response->dialogSize   = true;
-        $response->dialogWidth  = '1000px';
+        $response->dialogTitle = __('Region Timeline');
+        $response->dialogSize = true;
+        $response->dialogWidth = '1000px';
         $response->dialogHeight = '550px';
         $response->focusInFirstInput = false;
 
@@ -710,12 +711,12 @@ class timelineDAO extends baseDAO
 
         // Columns
         $cols = array(
-                array('name' => 'order', 'title' => __('Order')),
-                array('name' => 'name', 'title' => __('Name')),
-                array('name' => 'type', 'title' => __('Type')),
-                array('name' => 'duration', 'title' => __('Duration')),
-                array('name' => 'transition', 'title' => __('Transition'))
-            );
+            array('name' => 'order', 'title' => __('Order')),
+            array('name' => 'name', 'title' => __('Name')),
+            array('name' => 'type', 'title' => __('Type')),
+            array('name' => 'duration', 'title' => __('Duration')),
+            array('name' => 'transition', 'title' => __('Transition'))
+        );
         Theme::Set('table_cols', $cols);
 
         $rows = array();
@@ -728,7 +729,7 @@ class timelineDAO extends baseDAO
 
         Log::Audit(count($playlist->widgets) . ' widgets on ' . $region);
 
-        foreach($playlist->widgets as $widget) {
+        foreach ($playlist->widgets as $widget) {
             /* @var \Xibo\Entity\Widget $widget */
             // Put this node vertically in the region time line
             if (!$this->user->checkViewable($widget))
@@ -744,8 +745,7 @@ class timelineDAO extends baseDAO
             $tmpModule = null;
             try {
                 $tmpModule = \Xibo\Factory\ModuleFactory::createWithWidget($widget, $region);
-            }
-            catch (Exception $e) {
+            } catch (Exception $e) {
                 trigger_error($e->getMessage(), E_USER_ERROR);
             }
 
@@ -759,50 +759,50 @@ class timelineDAO extends baseDAO
 
             if ($this->user->checkEditable($widget)) {
                 $row['buttons'][] = array(
-                        'id' => 'timeline_button_edit',
-                        'url' => 'index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=EditForm&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '"',
-                        'text' => __('Edit')
-                    );
+                    'id' => 'timeline_button_edit',
+                    'url' => 'index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=EditForm&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '"',
+                    'text' => __('Edit')
+                );
             }
 
             if ($this->user->checkDeleteable($widget)) {
                 $row['buttons'][] = array(
-                        'id' => 'timeline_button_delete',
-                        'url' => 'index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=DeleteForm&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '"',
-                        'text' => __('Remove'),
-                        'multi-select' => true,
-                        'dataAttributes' => array(
-                            array('name' => 'multiselectlink', 'value' => 'index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=DeleteMedia'),
-                            array('name' => 'rowtitle', 'value' => $row['name']),
-                            array('name' => 'regionid', 'value' => $region->regionId),
-                            array('name' => 'lkid', 'value' => $widget->widgetId),
-                            array('name' => 'options', 'value' => 'unassign')
-                        )
-                    );
+                    'id' => 'timeline_button_delete',
+                    'url' => 'index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=DeleteForm&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '"',
+                    'text' => __('Remove'),
+                    'multi-select' => true,
+                    'dataAttributes' => array(
+                        array('name' => 'multiselectlink', 'value' => 'index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=DeleteMedia'),
+                        array('name' => 'rowtitle', 'value' => $row['name']),
+                        array('name' => 'regionid', 'value' => $region->regionId),
+                        array('name' => 'lkid', 'value' => $widget->widgetId),
+                        array('name' => 'options', 'value' => 'unassign')
+                    )
+                );
             }
 
             if ($this->user->checkPermissionsModifyable($widget)) {
                 $row['buttons'][] = array(
-                        'id' => 'timeline_button_permissions',
-                        'url' => 'index.php?p=user&q=permissionsForm&entity=Widget&objectId=' . $widget->widgetId . '"',
-                        'text' => __('Permissions')
-                    );
+                    'id' => 'timeline_button_permissions',
+                    'url' => 'index.php?p=user&q=permissionsForm&entity=Widget&objectId=' . $widget->widgetId . '"',
+                    'text' => __('Permissions')
+                );
             }
 
             if (count($this->user->TransitionAuth('in')) > 0) {
                 $row['buttons'][] = array(
-                        'id' => 'timeline_button_trans_in',
-                        'url' => 'index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=TransitionEditForm&type=in&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '"',
-                        'text' => __('In Transition')
-                    );
+                    'id' => 'timeline_button_trans_in',
+                    'url' => 'index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=TransitionEditForm&type=in&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '"',
+                    'text' => __('In Transition')
+                );
             }
 
             if (count($this->user->TransitionAuth('out')) > 0) {
                 $row['buttons'][] = array(
-                        'id' => 'timeline_button_trans_in',
-                        'url' => 'index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=TransitionEditForm&type=out&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '"',
-                        'text' => __('Out Transition')
-                    );
+                    'id' => 'timeline_button_trans_in',
+                    'url' => 'index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=TransitionEditForm&type=out&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '"',
+                    'text' => __('Out Transition')
+                );
             }
 
             $rows[] = $row;
@@ -814,7 +814,7 @@ class timelineDAO extends baseDAO
 
         // Initialise the theme and capture the output
         $output = Theme::RenderReturn('table_render');
-        
+
         $response->SetGridResponse($output);
         $response->initialSortColumn = 1;
 

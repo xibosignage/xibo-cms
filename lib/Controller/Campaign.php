@@ -18,6 +18,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+namespace Xibo\Controller;
+
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
@@ -25,7 +27,7 @@ use Xibo\Helper\Theme;
 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-class campaignDAO extends baseDAO
+class Campaign extends Base
 {
     public function displayPage()
     {
@@ -42,17 +44,18 @@ class campaignDAO extends baseDAO
         $this->getState()->html .= Theme::RenderReturn('grid_render');
     }
 
-    function actionMenu() {
+    function actionMenu()
+    {
 
         return array(
-                array('title' => __('Add Campaign'),
-                    'class' => 'XiboFormButton',
-                    'selected' => false,
-                    'link' => 'index.php?p=campaign&q=AddForm',
-                    'help' => __('Add a new Campaign'),
-                    'onclick' => ''
-                    )
-            );
+            array('title' => __('Add Campaign'),
+                'class' => 'XiboFormButton',
+                'selected' => false,
+                'link' => 'index.php?p=campaign&q=AddForm',
+                'help' => __('Add a new Campaign'),
+                'onclick' => ''
+            )
+        );
     }
 
     /**
@@ -66,14 +69,14 @@ class campaignDAO extends baseDAO
         $campaigns = $user->CampaignList();
 
         $cols = array(
-                array('name' => 'campaign', 'title' => __('Name')),
-                array('name' => 'numlayouts', 'title' => __('# Layouts'))
-            );
+            array('name' => 'campaign', 'title' => __('Name')),
+            array('name' => 'numlayouts', 'title' => __('# Layouts'))
+        );
         Theme::Set('table_cols', $cols);
-        
+
         $rows = array();
 
-        foreach($campaigns as $campaign) {
+        foreach ($campaigns as $campaign) {
             /* @var \Xibo\Entity\Campaign $campaign */
 
             if ($campaign->isLayout)
@@ -86,44 +89,44 @@ class campaignDAO extends baseDAO
 
             // Schedule Now
             $row['buttons'][] = array(
-                    'id' => 'campaign_button_schedulenow',
-                    'url' => 'index.php?p=schedule&q=ScheduleNowForm&CampaignID=' . $row['campaignid'],
-                    'text' => __('Schedule Now')
-                );
-            
+                'id' => 'campaign_button_schedulenow',
+                'url' => 'index.php?p=schedule&q=ScheduleNowForm&CampaignID=' . $row['campaignid'],
+                'text' => __('Schedule Now')
+            );
+
             // Buttons based on permissions
             if ($this->user->checkEditable($campaign)) {
                 // Assign Layouts
                 $row['buttons'][] = array(
-                        'id' => 'campaign_button_layouts',
-                        'url' => 'index.php?p=campaign&q=LayoutAssignForm&CampaignID=' . $row['campaignid'] . '&Campaign=' . $row['campaign'],
-                        'text' => __('Layouts')
-                    );
-                
+                    'id' => 'campaign_button_layouts',
+                    'url' => 'index.php?p=campaign&q=LayoutAssignForm&CampaignID=' . $row['campaignid'] . '&Campaign=' . $row['campaign'],
+                    'text' => __('Layouts')
+                );
+
                 // Edit the Campaign
                 $row['buttons'][] = array(
-                        'id' => 'campaign_button_edit',
-                        'url' => 'index.php?p=campaign&q=EditForm&CampaignID=' . $row['campaignid'],
-                        'text' => __('Edit')
-                    );
+                    'id' => 'campaign_button_edit',
+                    'url' => 'index.php?p=campaign&q=EditForm&CampaignID=' . $row['campaignid'],
+                    'text' => __('Edit')
+                );
             }
 
             if ($this->user->checkDeleteable($campaign)) {
                 // Delete Campaign
                 $row['buttons'][] = array(
-                        'id' => 'campaign_button_delete',
-                        'url' => 'index.php?p=campaign&q=DeleteForm&CampaignID=' . $row['campaignid'],
-                        'text' => __('Delete')
-                    );
+                    'id' => 'campaign_button_delete',
+                    'url' => 'index.php?p=campaign&q=DeleteForm&CampaignID=' . $row['campaignid'],
+                    'text' => __('Delete')
+                );
             }
 
             if ($this->user->checkPermissionsModifyable($campaign)) {
                 // Permissions for Campaign
                 $row['buttons'][] = array(
-                        'id' => 'campaign_button_delete',
-                        'url' => 'index.php?p=user&q=permissionsForm&entity=Campaign&objectId=' . $row['campaignid'],
-                        'text' => __('Permissions')
-                    );
+                    'id' => 'campaign_button_delete',
+                    'url' => 'index.php?p=user&q=permissionsForm&entity=Campaign&objectId=' . $row['campaignid'],
+                    'text' => __('Permissions')
+                );
             }
 
             // Assign this to the table row
@@ -143,7 +146,7 @@ class campaignDAO extends baseDAO
      */
     public function AddForm()
     {
-        $db =& $this->db;
+
         $user = $this->getUser();
         $response = $this->getState();
 
@@ -167,8 +170,8 @@ class campaignDAO extends baseDAO
     public function Add()
     {
 
-        
-        $db =& $this->db;
+
+
         $response = $this->getState();
 
         $name = \Xibo\Helper\Sanitize::getString('Name');
@@ -188,10 +191,10 @@ class campaignDAO extends baseDAO
      */
     public function EditForm()
     {
-        $db =& $this->db;
+
         $user = $this->getUser();
         $response = $this->getState();
-        
+
         $campaignId = \Xibo\Helper\Sanitize::getInt('CampaignID');
 
         // Authenticate this user
@@ -200,14 +203,13 @@ class campaignDAO extends baseDAO
             trigger_error(__('You do not have permission to edit this campaign'), E_USER_ERROR);
 
         // Pull the currently known info from the DB
-        $SQL  = "SELECT CampaignID, Campaign, IsLayoutSpecific ";
+        $SQL = "SELECT CampaignID, Campaign, IsLayoutSpecific ";
         $SQL .= "  FROM `campaign` ";
         $SQL .= " WHERE CampaignID = %d ";
 
         $SQL = sprintf($SQL, $campaignId);
 
-        if (!$row = $db->GetSingleRow($SQL))
-        {
+        if (!$row = $db->GetSingleRow($SQL)) {
             trigger_error($db->error());
             trigger_error(__('Error getting Campaign'));
         }
@@ -236,8 +238,8 @@ class campaignDAO extends baseDAO
     public function Edit()
     {
 
-        
-        $db =& $this->db;
+
+
         $response = $this->getState();
 
         $campaignId = \Xibo\Helper\Sanitize::getInt('CampaignID');
@@ -271,7 +273,7 @@ class campaignDAO extends baseDAO
      */
     function DeleteForm()
     {
-        $db =& $this->db;
+
         $user = $this->getUser();
         $response = $this->getState();
         $helpManager = new Help($db, $user);
@@ -303,8 +305,8 @@ class campaignDAO extends baseDAO
     public function Delete()
     {
 
-        
-        $db =& $this->db;
+
+
         $response = $this->getState();
 
         $campaignId = \Xibo\Helper\Sanitize::getInt('CampaignID');
@@ -336,7 +338,7 @@ class campaignDAO extends baseDAO
         // Check the token
         if (!Kit::CheckToken('assign_token'))
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
-        
+
         $response = $this->getState();
 
         $campaignObject = new Campaign();
@@ -352,7 +354,9 @@ class campaignDAO extends baseDAO
         $currentMembers = \Xibo\Factory\LayoutFactory::query(null, array('campaignId' => $campaign->campaignId));
 
         // Flatten
-        $currentLayouts = array_map(function($element) { return $element->layoutId; }, $currentMembers);
+        $currentLayouts = array_map(function ($element) {
+            return $element->layoutId;
+        }, $currentMembers);
 
         // Work out which ones are NEW
         $newLayouts = array_diff($currentLayouts, $layouts);
@@ -370,7 +374,7 @@ class campaignDAO extends baseDAO
         // Add all new members
         $displayOrder = 1;
 
-        foreach($layouts as $layoutId) {
+        foreach ($layouts as $layoutId) {
             // By this point everything should be authenticated
             $campaignObject->Link($campaign->campaignId, $layoutId, $displayOrder);
             $displayOrder++;
@@ -426,11 +430,11 @@ class campaignDAO extends baseDAO
 
 
     }
-    
+
     /**
      * Show the library
      */
-    function LayoutAssignView() 
+    function LayoutAssignView()
     {
         $response = $this->getState();
 
@@ -442,8 +446,8 @@ class campaignDAO extends baseDAO
         $layoutList = $this->user->LayoutList(NULL, array('layout' => $name, 'tags' => $tags));
 
         $cols = array(
-                array('name' => 'layout', 'title' => __('Name'))
-            );
+            array('name' => 'layout', 'title' => __('Name'))
+        );
         Theme::Set('table_cols', $cols);
 
         $rows = array();
@@ -458,12 +462,12 @@ class campaignDAO extends baseDAO
 
             $row['list_id'] = 'LayoutID_' . $row['layoutid'];
             $row['assign_icons'][] = array(
-                    'assign_icons_class' => 'layout_assign_list_select'
-                );
+                'assign_icons_class' => 'layout_assign_list_select'
+            );
             $row['dataAttributes'] = array(
-                    array('name' => 'rowid', 'value' => $row['list_id']),
-                    array('name' => 'litext', 'value' => $row['layout'])
-                );
+                array('name' => 'rowid', 'value' => $row['list_id']),
+                array('name' => 'litext', 'value' => $row['layout'])
+            );
 
             $rows[] = $row;
         }

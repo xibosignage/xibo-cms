@@ -18,6 +18,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+namespace Xibo\Controller;
+
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
@@ -27,13 +29,14 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 include_once('lib/data/usergroup.data.class.php');
 
-class userDAO extends baseDAO {
-	
+class User extends Base
+{
+
     /**
      * Controls which pages are to be displayed
-     * @return 
+     * @return
      */
-    function displayPage() 
+    function displayPage()
     {
         // Configure the theme
         $id = uniqid();
@@ -47,8 +50,7 @@ class userDAO extends baseDAO {
             $filter_pinned = 1;
             $filter_username = Session::Get('user_admin', 'filter_username');
             $filter_usertypeid = Session::Get('user_admin', 'filter_usertypeid');
-        }
-        else {
+        } else {
             $filter_pinned = 0;
             $filter_username = NULL;
             $filter_usertypeid = NULL;
@@ -60,17 +62,17 @@ class userDAO extends baseDAO {
         $usertypes = $this->db->GetArray("SELECT usertypeID, usertype FROM usertype ORDER BY usertype");
         array_unshift($usertypes, array('usertypeID' => 0, 'usertype' => 'All'));
         $formFields[] = FormManager::AddCombo(
-            'filter_usertypeid', 
-            __('User Type'), 
+            'filter_usertypeid',
+            __('User Type'),
             $filter_usertypeid,
             $usertypes,
             'usertypeID',
             'usertype',
-            NULL, 
+            NULL,
             't');
-        
-        $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'), 
-            $filter_pinned, NULL, 
+
+        $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'),
+            $filter_pinned, NULL,
             'k');
 
         // Call to render the template
@@ -79,52 +81,53 @@ class userDAO extends baseDAO {
         $this->getState()->html .= Theme::RenderReturn('grid_render');
     }
 
-    function actionMenu() {
+    function actionMenu()
+    {
 
         return array(
-                array('title' => __('Add User'),
-                    'class' => 'XiboFormButton',
-                    'selected' => false,
-                    'link' => 'index.php?p=user&q=DisplayForm',
-                    'help' => __('Add a new User'),
-                    'onclick' => ''
-                    ),
-                array('title' => __('My Applications'),
-                    'class' => 'XiboFormButton',
-                    'selected' => false,
-                    'link' => 'index.php?p=user&q=MyApplications',
-                    'help' => __('View my authenticated applications'),
-                    'onclick' => ''
-                    ),
-                array('title' => __('Filter'),
-                    'class' => '',
-                    'selected' => false,
-                    'link' => '#',
-                    'help' => __('Open the filter form'),
-                    'onclick' => 'ToggleFilterView(\'Filter\')'
-                    )
-            );                   
+            array('title' => __('Add User'),
+                'class' => 'XiboFormButton',
+                'selected' => false,
+                'link' => 'index.php?p=user&q=DisplayForm',
+                'help' => __('Add a new User'),
+                'onclick' => ''
+            ),
+            array('title' => __('My Applications'),
+                'class' => 'XiboFormButton',
+                'selected' => false,
+                'link' => 'index.php?p=user&q=MyApplications',
+                'help' => __('View my authenticated applications'),
+                'onclick' => ''
+            ),
+            array('title' => __('Filter'),
+                'class' => '',
+                'selected' => false,
+                'link' => '#',
+                'help' => __('Open the filter form'),
+                'onclick' => 'ToggleFilterView(\'Filter\')'
+            )
+        );
     }
 
     /**
      * Prints the user information in a table based on a check box selection
      *
      */
-    function UserGrid() 
+    function UserGrid()
     {
-        $db         =& $this->db;
-        $user       =& $this->user;
-        $response   = new ApplicationState();
+        $db =& $this->db;
+        $user =& $this->user;
+        $response = new ApplicationState();
         // Capture the filter options
         // User ID
         $filter_username = \Xibo\Helper\Sanitize::getString('filter_username');
         \Session::Set('user_admin', 'filter_username', $filter_username);
-        
+
         // User Type ID
         $filter_usertypeid = \Xibo\Helper\Sanitize::getInt('filter_usertypeid');
         \Session::Set('user_admin', 'filter_usertypeid', $filter_usertypeid);
 
-        // Pinned option?        
+        // Pinned option?
         \Session::Set('user_admin', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 
         // Filter our users?
@@ -135,21 +138,21 @@ class userDAO extends baseDAO {
             $filterBy['userTypeId'] = $filter_usertypeid;
 
         // Filter on User Name
-        if ($filter_username != '') 
+        if ($filter_username != '')
             $filterBy['userName'] = $filter_username;
 
         // Load results into an array
         $users = $user->userList(array('userName'), $filterBy);
 
-        if (!is_array($users)) 
+        if (!is_array($users))
             trigger_error(__('Error getting list of users'), E_USER_ERROR);
-        
+
         $cols = array(
-                array('name' => 'username', 'title' => __('Name')),
-                array('name' => 'homepage', 'title' => __('Homepage')),
-                array('name' => 'email', 'title' => __('Email')),
-                array('name' => 'retired', 'title' => __('Retired?'), 'icons' => true)
-            );
+            array('name' => 'username', 'title' => __('Name')),
+            array('name' => 'homepage', 'title' => __('Homepage')),
+            array('name' => 'email', 'title' => __('Email')),
+            array('name' => 'retired', 'title' => __('Retired?'), 'icons' => true)
+        );
         Theme::Set('table_cols', $cols);
 
         $rows = array();
@@ -160,84 +163,84 @@ class userDAO extends baseDAO {
 
             // Super admins have some buttons
             if ($user->userTypeId == 1) {
-                
-                // Edit        
+
+                // Edit
                 $row['buttons'][] = array(
-                        'id' => 'user_button_edit',
-                        'url' => 'index.php?p=user&q=DisplayForm&userID=' . $row['userid'],
-                        'text' => __('Edit')
-                    );
+                    'id' => 'user_button_edit',
+                    'url' => 'index.php?p=user&q=DisplayForm&userID=' . $row['userid'],
+                    'text' => __('Edit')
+                );
 
                 // Delete
                 $row['buttons'][] = array(
-                        'id' => 'user_button_delete',
-                        'url' => 'index.php?p=user&q=DeleteForm&userID=' . $row['userid'],
-                        'text' => __('Delete')
-                    );
+                    'id' => 'user_button_delete',
+                    'url' => 'index.php?p=user&q=DeleteForm&userID=' . $row['userid'],
+                    'text' => __('Delete')
+                );
 
                 // Page Security
                 $row['buttons'][] = array(
-                        'id' => 'user_button_page_security',
-                        'url' => 'index.php?p=group&q=PageSecurityForm&groupid=' . $row['groupid'],
-                        'text' => __('Page Security')
-                    );
+                    'id' => 'user_button_page_security',
+                    'url' => 'index.php?p=group&q=PageSecurityForm&groupid=' . $row['groupid'],
+                    'text' => __('Page Security')
+                );
 
                 // Menu Security
                 $row['buttons'][] = array(
-                        'id' => 'user_button_menu_security',
-                        'url' => 'index.php?p=group&q=MenuItemSecurityForm&groupid=' . $row['groupid'],
-                        'text' => __('Menu Security')
-                    );
+                    'id' => 'user_button_menu_security',
+                    'url' => 'index.php?p=group&q=MenuItemSecurityForm&groupid=' . $row['groupid'],
+                    'text' => __('Menu Security')
+                );
 
                 // Applications
                 $row['buttons'][] = array(
-                        'id' => 'user_button_applications',
-                        'url' => 'index.php?p=oauth&q=UserTokens&userID=' . $row['userid'],
-                        'text' => __('Applications')
-                    );
+                    'id' => 'user_button_applications',
+                    'url' => 'index.php?p=oauth&q=UserTokens&userID=' . $row['userid'],
+                    'text' => __('Applications')
+                );
 
                 // Set Home Page
                 $row['buttons'][] = array(
-                        'id' => 'user_button_homepage',
-                        'url' => 'index.php?p=user&q=SetUserHomePageForm&userid=' . $row['userid'],
-                        'text' => __('Set Homepage')
-                    );
+                    'id' => 'user_button_homepage',
+                    'url' => 'index.php?p=user&q=SetUserHomePageForm&userid=' . $row['userid'],
+                    'text' => __('Set Homepage')
+                );
 
                 // Set Password
                 $row['buttons'][] = array(
-                        'id' => 'user_button_delete',
-                        'url' => 'index.php?p=user&q=SetPasswordForm&userid=' . $row['userid'],
-                        'text' => __('Set Password')
-                    );
+                    'id' => 'user_button_delete',
+                    'url' => 'index.php?p=user&q=SetPasswordForm&userid=' . $row['userid'],
+                    'text' => __('Set Password')
+                );
             }
 
             $rows[] = $row;
         }
 
         Theme::Set('table_rows', $rows);
-        
+
         $table = Theme::RenderReturn('table_render');
-        
+
         $response->SetGridResponse($table);
 
     }
 
-	/**
-	 * Adds a user
-	 *
-	 * @return unknown
-	 */
-	function AddUser () 
-	{
+    /**
+     * Adds a user
+     *
+     * @return unknown
+     */
+    function AddUser()
+    {
 
-        
+
         $response = $this->getState();
 
         $user = new Userdata();
         $user->userName = \Xibo\Helper\Sanitize::getString('edit_username');
         $password = \Xibo\Helper\Sanitize::getString('edit_password');
         $user->email = \Xibo\Helper\Sanitize::getString('email');
-        $user->userTypeId	= \Kit::GetParam('usertypeid', _POST, _INT, 3);
+        $user->userTypeId = \Kit::GetParam('usertypeid', _POST, _INT, 3);
         $user->homePage = \Xibo\Helper\Sanitize::getString('homepage');
         $initialGroupId = \Xibo\Helper\Sanitize::getInt('groupid');
 
@@ -247,15 +250,14 @@ class userDAO extends baseDAO {
 
         $response->SetFormSubmitResponse('User Saved.');
 
-	}
+    }
 
-	/**
-	 * Modify a user
-	 */
-	function EditUser() 
-	{
+    /**
+     * Modify a user
+     */
+    function EditUser()
+    {
         $response = $this->getState();
-
 
 
         // Do we have permission?
@@ -281,13 +283,13 @@ class userDAO extends baseDAO {
 
         $response->SetFormSubmitResponse('User Saved.');
 
-	}
+    }
 
-	/**
-	 * Deletes a user
-	 */
-	function DeleteUser() 
-	{
+    /**
+     * Deletes a user
+     */
+    function DeleteUser()
+    {
 
 
         $response = $this->getState();
@@ -328,15 +330,15 @@ class userDAO extends baseDAO {
 
         $response->SetFormSubmitResponse(__('User Deleted.'));
 
-	}
+    }
 
-	/**
-	 * Displays the User form (from Ajax)
-	 * @return 
-	 */
-	function DisplayForm() 
-	{
-        $db =& $this->db;
+    /**
+     * Displays the User form (from Ajax)
+     * @return
+     */
+    function DisplayForm()
+    {
+
         $user = $this->getUser();
         $response = $this->getState();
 
@@ -368,11 +370,10 @@ class userDAO extends baseDAO {
             $homepage = \Xibo\Helper\Sanitize::string($aRow['homepage']);
             $retired = \Xibo\Helper\Sanitize::int($aRow['retired']);
 
-            $retiredFormField = FormManager::AddCheckbox('retired', __('Retired?'), 
+            $retiredFormField = FormManager::AddCheckbox('retired', __('Retired?'),
                 $retired, __('Is this user retired?'),
                 'r');
-        }
-        else {
+        } else {
 
             $form_title = 'Add Form';
             $form_help_link = Help::Link('User', 'Add');
@@ -380,11 +381,10 @@ class userDAO extends baseDAO {
 
             // We are adding a new user
             $usertype = Config::GetSetting('defaultUsertype');
-            
+
             $SQL = sprintf("SELECT usertypeid FROM usertype WHERE usertype = '%s'", $db->escape_string($usertype));
 
-            if (!$usertypeid = $db->GetSingleValue($SQL, 'usertypeid', _INT))
-            {
+            if (!$usertypeid = $db->GetSingleValue($SQL, 'usertypeid', _INT)) {
                 trigger_error($db->error());
                 trigger_error("Can not get Usertype information", E_USER_ERROR);
             }
@@ -398,14 +398,14 @@ class userDAO extends baseDAO {
 
             // List of values for the initial user group
             $userGroupField = FormManager::AddCombo(
-                    'groupid', 
-                    __('Initial User Group'), 
-                    NULL,
-                    $db->GetArray('SELECT GroupID, `Group` FROM `group` WHERE IsUserSpecific = 0 AND IsEveryone = 0 ORDER BY 2'),
-                    'GroupID',
-                    'Group',
-                    __('What is the initial user group for this user?'), 
-                    'g');
+                'groupid',
+                __('Initial User Group'),
+                NULL,
+                $db->GetArray('SELECT GroupID, `Group` FROM `group` WHERE IsUserSpecific = 0 AND IsEveryone = 0 ORDER BY 2'),
+                'GroupID',
+                'Group',
+                __('What is the initial user group for this user?'),
+                'g');
 
             $passwordField = FormManager::AddPassword('edit_password', __('Password'), $password,
                 __('The Password for this user.'), 'p', 'required');
@@ -413,25 +413,25 @@ class userDAO extends baseDAO {
 
         // Render the return and output
         $formFields = array();
-        $formFields[] = FormManager::AddText('edit_username', __('User Name'), $username, 
+        $formFields[] = FormManager::AddText('edit_username', __('User Name'), $username,
             __('The Login Name of the user.'), 'n', 'required maxlength="50"');
 
         $formFields[] = FormManager::AddText('email', __('Email'), $email,
             __('The Email Address for this user.'), 'e', NULL);
 
         $formFields[] = FormManager::AddCombo(
-                    'homepage', 
-                    __('Homepage'), 
-                    $homepage,
-                    array(
-                        array("homepageid" => "dashboard", 'homepage' => 'Icon Dashboard'), 
-                        array("homepageid" => "mediamanager", 'homepage' => 'Media Dashboard'), 
-                        array("homepageid" => "statusdashboard", 'homepage' => 'Status Dashboard')
-                    ),
-                    'homepageid',
-                    'homepage',
-                    __('Homepage for this user. This is the page they will be taken to when they login.'), 
-                    'h');
+            'homepage',
+            __('Homepage'),
+            $homepage,
+            array(
+                array("homepageid" => "dashboard", 'homepage' => 'Icon Dashboard'),
+                array("homepageid" => "mediamanager", 'homepage' => 'Media Dashboard'),
+                array("homepageid" => "statusdashboard", 'homepage' => 'Status Dashboard')
+            ),
+            'homepageid',
+            'homepage',
+            __('Homepage for this user. This is the page they will be taken to when they login.'),
+            'h');
 
         // Only allow the selection of a usertype if we are a super admin
         $SQL = 'SELECT usertypeid, usertype FROM usertype';
@@ -439,14 +439,14 @@ class userDAO extends baseDAO {
             $SQL .= ' WHERE UserTypeID = 3';
 
         $formFields[] = FormManager::AddCombo(
-                    'usertypeid', 
-                    __('User Type'), 
-                    $usertypeid,
-                    $db->GetArray($SQL),
-                    'usertypeid',
-                    'usertype',
-                    __('What is this users type?'),
-                    't', NULL, ($user->usertypeid == 1));
+            'usertypeid',
+            __('User Type'),
+            $usertypeid,
+            $db->GetArray($SQL),
+            'usertypeid',
+            'usertype',
+            __('What is this users type?'),
+            't', NULL, ($user->usertypeid == 1));
 
         // Add the user group field if set
         if (isset($passwordField) && is_array($passwordField))
@@ -465,19 +465,19 @@ class userDAO extends baseDAO {
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
         $response->AddButton(__('Save'), '$("#UserForm").submit()');
 
-	}
-	
-	/**
-	 * Delete User form
-	 * @return 
-	 */
-	function DeleteForm() 
-	{
-		$db =& $this->db;
+    }
+
+    /**
+     * Delete User form
+     * @return
+     */
+    function DeleteForm()
+    {
+
         $user = $this->getUser();
-		$response = $this->getState();
-		
-		$userid = \Xibo\Helper\Sanitize::getInt('userID');
+        $response = $this->getState();
+
+        $userid = \Xibo\Helper\Sanitize::getInt('userID');
 
         // Set some information about the form
         Theme::Set('form_id', 'UserDeleteForm');
@@ -493,20 +493,20 @@ class userDAO extends baseDAO {
 
         Theme::Set('form_fields', $formFields);
 
-		$response->SetFormRequestResponse(NULL, __('Delete this User?'), '430px', '200px');
+        $response->SetFormRequestResponse(NULL, __('Delete this User?'), '430px', '200px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('User', 'Delete') . '")');
-		$response->AddButton(__('No'), 'XiboDialogClose()');
-		$response->AddButton(__('Yes'), '$("#UserDeleteForm").submit()');
+        $response->AddButton(__('No'), 'XiboDialogClose()');
+        $response->AddButton(__('Yes'), '$("#UserDeleteForm").submit()');
 
-	}
-	
+    }
+
     /**
      * Sets the users home page
      * @return
      */
     function SetUserHomepageForm()
     {
-        $db =& $this->db;
+
         $response = $this->getState();
         $userid = \Xibo\Helper\Sanitize::getInt('userid');
 
@@ -519,18 +519,18 @@ class userDAO extends baseDAO {
         $formFields = array();
 
         $formFields[] = FormManager::AddCombo(
-                    'homepage', 
-                    __('Homepage'), 
-                    $this->user->GetHomePage($userid),
-                    array(
-                        array("homepageid" => "dashboard", 'homepage' => 'Icon Dashboard'), 
-                        array("homepageid" => "mediamanager", 'homepage' => 'Media Dashboard'), 
-                        array("homepageid" => "statusdashboard", 'homepage' => 'Status Dashboard')
-                    ),
-                    'homepageid',
-                    'homepage',
-                    __('The users Homepage. This should not be changed until you want to reset their homepage.'), 
-                    'h');
+            'homepage',
+            __('Homepage'),
+            $this->user->GetHomePage($userid),
+            array(
+                array("homepageid" => "dashboard", 'homepage' => 'Icon Dashboard'),
+                array("homepageid" => "mediamanager", 'homepage' => 'Media Dashboard'),
+                array("homepageid" => "statusdashboard", 'homepage' => 'Status Dashboard')
+            ),
+            'homepageid',
+            'homepage',
+            __('The users Homepage. This should not be changed until you want to reset their homepage.'),
+            'h');
 
         Theme::Set('form_fields', $formFields);
 
@@ -548,20 +548,18 @@ class userDAO extends baseDAO {
     function SetUserHomepage()
     {
 
-        
-        $db =& $this->db;
+
         $response = $this->getState();
 
         if (!$this->user->userTypeId == 1)
             trigger_error(__('You do not have permission to change this users homepage'));
 
-        $userid	= \Kit::GetParam('userid', _POST, _INT, 0);
+        $userid = \Kit::GetParam('userid', _POST, _INT, 0);
         $homepage = \Kit::GetParam('homepage', _POST, _WORD);
 
         $SQL = sprintf("UPDATE user SET homepage = '%s' WHERE userID = %d", $homepage, $userid);
 
-        if (!$db->query($SQL))
-        {
+        if (!$db->query($SQL)) {
             trigger_error($db->error());
             $response->SetError(__('Unknown error setting this users homepage'));
 
@@ -576,18 +574,15 @@ class userDAO extends baseDAO {
      */
     public function MyApplications()
     {
-        $db         =& $this->db;
-        $user       =& $this->user;
-        $response   = new ApplicationState();
+        $db =& $this->db;
+        $user =& $this->user;
+        $response = new ApplicationState();
 
         $store = OAuthStore::instance();
 
-        try
-        {
+        try {
             $list = $store->listConsumerTokens($this->user->userId);
-        }
-        catch (OAuthException $e)
-        {
+        } catch (OAuthException $e) {
             trigger_error($e->getMessage());
             trigger_error(__('Error listing Log.'), E_USER_ERROR);
         }
@@ -607,9 +602,9 @@ class userDAO extends baseDAO {
      */
     public function ChangePasswordForm()
     {
-        $db         =& $this->db;
-        $user       =& $this->user;
-        $response   = new ApplicationState();
+        $db =& $this->db;
+        $user =& $this->user;
+        $response = new ApplicationState();
 
         $msgOldPassword = __('Old Password');
         $msgNewPassword = __('New Password');
@@ -622,15 +617,15 @@ class userDAO extends baseDAO {
         Theme::Set('form_action', 'index.php?p=user&q=ChangePassword');
 
         $formFields = array();
-        $formFields[] = FormManager::AddPassword('oldPassword', __('Current Password'), NULL, 
+        $formFields[] = FormManager::AddPassword('oldPassword', __('Current Password'), NULL,
             __('Please enter your current password'), 'p', 'required');
 
-        $formFields[] = FormManager::AddPassword('newPassword', __('New Password'), NULL, 
+        $formFields[] = FormManager::AddPassword('newPassword', __('New Password'), NULL,
             __('Please enter your new password'), 'n', 'required');
 
-        $formFields[] = FormManager::AddPassword('retypeNewPassword', __('Retype New Password'), NULL, 
+        $formFields[] = FormManager::AddPassword('retypeNewPassword', __('Retype New Password'), NULL,
             __('Please repeat the new Password.'), 'r', 'required');
-        
+
         Theme::Set('form_fields', $formFields);
 
         $response->SetFormRequestResponse(NULL, __('Change Password'), '450', '300');
@@ -646,8 +641,7 @@ class userDAO extends baseDAO {
     public function ChangePassword()
     {
 
-        
-        $db =& $this->db;
+
         $response = $this->getState();
 
         $oldPassword = \Xibo\Helper\Sanitize::getString('oldPassword');
@@ -669,9 +663,9 @@ class userDAO extends baseDAO {
      */
     public function SetPasswordForm()
     {
-        $db         =& $this->db;
-        $user       =& $this->user;
-        $response   = new ApplicationState();
+        $db =& $this->db;
+        $user =& $this->user;
+        $response = new ApplicationState();
 
         $userId = \Xibo\Helper\Sanitize::getInt('userid');
 
@@ -681,12 +675,12 @@ class userDAO extends baseDAO {
         Theme::Set('form_meta', '<input type="hidden" name="UserId" value="' . $userId . '" />');
 
         $formFields = array();
-        $formFields[] = FormManager::AddPassword('newPassword', __('New Password'), NULL, 
+        $formFields[] = FormManager::AddPassword('newPassword', __('New Password'), NULL,
             __('The new Password for this user.'), 'p', 'required');
 
-        $formFields[] = FormManager::AddPassword('retypeNewPassword', __('Retype New Password'), NULL, 
+        $formFields[] = FormManager::AddPassword('retypeNewPassword', __('Retype New Password'), NULL,
             __('Repeat the new Password for this user.'), 'r', 'required');
-        
+
         Theme::Set('form_fields', $formFields);
 
         $response->SetFormRequestResponse(NULL, __('Set Password'), '450', '300');
@@ -702,15 +696,14 @@ class userDAO extends baseDAO {
     public function SetPassword()
     {
 
-        
-        $db =& $this->db;
+
         $response = $this->getState();
 
         $newPassword = \Xibo\Helper\Sanitize::getString('newPassword');
         $retypeNewPassword = \Xibo\Helper\Sanitize::getString('retypeNewPassword');
 
         $userId = \Xibo\Helper\Sanitize::getInt('UserId');
-        
+
         // Check we are an admin
         if ($this->user->userTypeId != 1)
             trigger_error(__('Trying to change the password for another user denied'), E_USER_ERROR);
@@ -811,7 +804,6 @@ class userDAO extends baseDAO {
         $response = $this->getState();
 
 
-
         $entity = \Xibo\Helper\Sanitize::getString('entity');
         if ($entity == '')
             throw new InvalidArgumentException(__('Permissions form requested without an entity'));
@@ -840,7 +832,10 @@ class userDAO extends baseDAO {
         // Get the provided permissions
         $groupIds = \Kit::GetParam('groupids', _POST, _ARRAY);
         $newPermissions = array();
-        array_map(function ($string) use (&$newPermissions) { $array = explode('_', $string); return $newPermissions[$array[0]][$array[1]] = 1; }, $groupIds);
+        array_map(function ($string) use (&$newPermissions) {
+            $array = explode('_', $string);
+            return $newPermissions[$array[0]][$array[1]] = 1;
+        }, $groupIds);
 
         Log::Audit(var_export($newPermissions, true));
 
@@ -854,8 +849,7 @@ class userDAO extends baseDAO {
                 $row->edit = (array_key_exists('edit', $newPermissions[$row->groupId]) ? 1 : 0);
                 $row->delete = (array_key_exists('del', $newPermissions[$row->groupId]) ? 1 : 0);
                 $row->save();
-            }
-            else {
+            } else {
                 $row->delete();
             }
         }

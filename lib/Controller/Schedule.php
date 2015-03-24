@@ -18,19 +18,25 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+namespace Xibo\Controller;
+use baseDAO;
+use Config;
+use Exception;
+use FormManager;
+use Kit;
+use Session;
 use Xibo\Helper\Date;
-use Xibo\Helper\Log;
 use Xibo\Helper\Help;
-use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-require_once('lib/data/schedule.data.class.php');
 
-class scheduleDAO extends baseDAO {    
+class Schedule extends Base
+{
 
-    function displayPage() 
+    function displayPage()
     {
         Theme::Set('event_add_url', 'index.php?p=schedule&q=AddEventForm');
 
@@ -45,12 +51,11 @@ class scheduleDAO extends baseDAO {
 
             if ($display['isdisplayspecific'] == 1) {
                 $displays[] = $display;
-            }
-            else {
+            } else {
                 $groups[] = $display;
             }
         }
-        
+
         Theme::Set('id', 'DisplayList');
         Theme::Set('allSelected', in_array(-1, $displayGroupIds));
         Theme::Set('groups', $groups);
@@ -60,7 +65,7 @@ class scheduleDAO extends baseDAO {
         // Render the Theme and output
         $this->getState()->html .= Theme::RenderReturn('schedule_page');
     }
-    
+
     /**
      * Generates the calendar that we draw events on
      */
@@ -75,26 +80,26 @@ class scheduleDAO extends baseDAO {
 
         if (count($displayGroupIds) <= 0)
             die(json_encode(array('success' => 1, 'result' => array())));
-        
+
         // Get Events between the provided dates
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
 
             // Query for all events between the dates
             $SQL = "";
-            $SQL.= "SELECT schedule.EventID, ";
-            $SQL.= "       schedule_detail.FromDT, ";
-            $SQL.= "       schedule_detail.ToDT,";
-            $SQL.= "       schedule.DisplayGroupIDs, ";
-            $SQL.= "       schedule.is_priority, ";
-            $SQL.= "       schedule.recurrence_type, ";
-            $SQL.= "       campaign.Campaign, ";
-            $SQL.= "       GROUP_CONCAT(displaygroup.DisplayGroup) AS DisplayGroups ";
-            $SQL.= "  FROM schedule_detail ";
-            $SQL.= "  INNER JOIN schedule ON schedule_detail.EventID = schedule.EventID ";
-            $SQL.= "  INNER JOIN campaign ON campaign.CampaignID = schedule.CampaignID ";
-            $SQL.= "  INNER JOIN displaygroup ON displaygroup.DisplayGroupID = schedule_detail.DisplayGroupID ";
-            $SQL.= " WHERE 1=1 ";
+            $SQL .= "SELECT schedule.EventID, ";
+            $SQL .= "       schedule_detail.FromDT, ";
+            $SQL .= "       schedule_detail.ToDT,";
+            $SQL .= "       schedule.DisplayGroupIDs, ";
+            $SQL .= "       schedule.is_priority, ";
+            $SQL .= "       schedule.recurrence_type, ";
+            $SQL .= "       campaign.Campaign, ";
+            $SQL .= "       GROUP_CONCAT(displaygroup.DisplayGroup) AS DisplayGroups ";
+            $SQL .= "  FROM schedule_detail ";
+            $SQL .= "  INNER JOIN schedule ON schedule_detail.EventID = schedule.EventID ";
+            $SQL .= "  INNER JOIN campaign ON campaign.CampaignID = schedule.CampaignID ";
+            $SQL .= "  INNER JOIN displaygroup ON displaygroup.DisplayGroupID = schedule_detail.DisplayGroupID ";
+            $SQL .= " WHERE 1=1 ";
 
             // If we have minus 1, then show all
             if (in_array(-1, $displayGroupIds)) {
@@ -114,28 +119,28 @@ class scheduleDAO extends baseDAO {
             $SQL .= "   AND schedule_detail.DisplayGroupID IN (" . implode(',', $sanitized) . ")";
 
             // Events that fall inside the two dates
-            $SQL.= "   AND schedule_detail.ToDT > :start ";
-            $SQL.= "   AND schedule_detail.FromDT < :end ";
+            $SQL .= "   AND schedule_detail.ToDT > :start ";
+            $SQL .= "   AND schedule_detail.FromDT < :end ";
 
             // Grouping
-            $SQL.= "GROUP BY schedule.EventID, ";
-            $SQL.= "       schedule_detail.FromDT, ";
-            $SQL.= "       schedule_detail.ToDT,";
-            $SQL.= "       schedule.DisplayGroupIDs, ";
-            $SQL.= "       schedule.is_priority, ";
-            $SQL.= "       schedule.recurrence_type, ";
-            $SQL.= "       campaign.Campaign ";
+            $SQL .= "GROUP BY schedule.EventID, ";
+            $SQL .= "       schedule_detail.FromDT, ";
+            $SQL .= "       schedule_detail.ToDT,";
+            $SQL .= "       schedule.DisplayGroupIDs, ";
+            $SQL .= "       schedule.is_priority, ";
+            $SQL .= "       schedule.recurrence_type, ";
+            $SQL .= "       campaign.Campaign ";
 
             // Ordering
-            $SQL.= " ORDER BY schedule_detail.FromDT DESC";
+            $SQL .= " ORDER BY schedule_detail.FromDT DESC";
 
             $params = array(
-                    'start' => $start,
-                    'end' => $end
-                );
+                'start' => $start,
+                'end' => $end
+            );
 
             Log::sql($SQL, $params);
-        
+
             $sth = $dbh->prepare($SQL);
             $sth->execute($params);
 
@@ -156,13 +161,12 @@ class scheduleDAO extends baseDAO {
 
                 // Classes used to distinguish between events
                 //$class = 'event-warning';
-            
+
                 // Event is on a single display
                 if (count($eventDisplayGroupIds) <= 1) {
                     $class = 'event-info';
                     $extra = 'single-display';
-                }
-                else {
+                } else {
                     $class = "event-success";
                     $extra = 'multi-display';
                 }
@@ -197,22 +201,22 @@ class scheduleDAO extends baseDAO {
 
             echo json_encode(array('success' => 1, 'result' => $events));
             die;
-        }
-        catch (Exception $e) {
-            
+        } catch (Exception $e) {
+
             Log::error($e->getMessage(), get_class(), __FUNCTION__);
-        
+
             die(json_encode(array('success' => 0, 'error' => __('Unable to get events'))));
         }
     }
-        
+
     /**
      * Shows a form to add an event
-     * @return 
+     * @return
      */
-    function AddEventForm() {
+    function AddEventForm()
+    {
 
-        $db =& $this->db;
+
         $user = $this->getUser();
         $response = $this->getState();
 
@@ -221,7 +225,7 @@ class scheduleDAO extends baseDAO {
         $token_id = uniqid();
         $token_field = '<input type="hidden" name="token_id" value="' . $token_id . '" />';
         $token = \Kit::Token($token_id);
-        
+
         Theme::Set('form_id', 'AddEventForm');
         Theme::Set('form_action', 'index.php?p=schedule&q=AddEvent');
         Theme::Set('form_meta', $token_field . $token);
@@ -238,7 +242,7 @@ class scheduleDAO extends baseDAO {
         $optionGroups = array(
             array('id' => 'group', 'label' => __('Groups')),
             array('id' => 'display', 'label' => __('Displays'))
-            );
+        );
 
         $groups = array();
         $displays = array();
@@ -258,101 +262,99 @@ class scheduleDAO extends baseDAO {
 
             if ($display['isdisplayspecific'] == 1) {
                 $displays[] = $display;
-            }
-            else {
+            } else {
                 $groups[] = $display;
             }
         }
 
         $formFields['general'][] = FormManager::AddMultiCombo(
-                    'DisplayGroupIDs[]', 
-                    __('Display'), 
-                    $displayGroupIds,
-                    array('group' => $groups, 'display' => $displays),
-                    'displaygroupid',
-                    'displaygroup',
-                    __('Please select one or more displays / groups for this event to be shown on.'), 
-                    'd', '', true, '', '', '', $optionGroups, array(array('name' => 'data-live-search', 'value' => "true"), array('name' => 'data-selected-text-format', 'value' => "count > 4")));
+            'DisplayGroupIDs[]',
+            __('Display'),
+            $displayGroupIds,
+            array('group' => $groups, 'display' => $displays),
+            'displaygroupid',
+            'displaygroup',
+            __('Please select one or more displays / groups for this event to be shown on.'),
+            'd', '', true, '', '', '', $optionGroups, array(array('name' => 'data-live-search', 'value' => "true"), array('name' => 'data-selected-text-format', 'value' => "count > 4")));
 
         // Time controls
-        $formFields['general'][] = FormManager::AddText('starttimeControl', __('Start Time'), NULL, 
+        $formFields['general'][] = FormManager::AddText('starttimeControl', __('Start Time'), NULL,
             __('Select the start time for this event'), 's', 'required');
 
-        $formFields['general'][] = FormManager::AddText('endtimeControl', __('End Time'), NULL, 
+        $formFields['general'][] = FormManager::AddText('endtimeControl', __('End Time'), NULL,
             __('Select the end time for this event'), 'e', 'required');
 
         // Add two hidden fields to always carry the ISO date
         $formFields['general'][] = FormManager::AddHidden('starttime', NULL);
         $formFields['general'][] = FormManager::AddHidden('endtime', NULL);
-        
+
         // Generate a list of layouts.
         $layouts = $user->CampaignList(NULL, false /* isRetired */);
-        
+
         $optionGroups = array(
             array('id' => 'campaign', 'label' => __('Campaigns')),
             array('id' => 'layout', 'label' => __('Layouts'))
-            );
+        );
 
         $layoutOptions = array();
         $campaignOptions = array();
 
-        foreach($layouts as $layout) {
+        foreach ($layouts as $layout) {
 
             if ($layout['islayoutspecific'] == 1) {
                 $layoutOptions[] = array(
-                        'id' => $layout['campaignid'],
-                        'value' => $layout['campaign']
-                    );
-            }
-            else {
+                    'id' => $layout['campaignid'],
+                    'value' => $layout['campaign']
+                );
+            } else {
                 $campaignOptions[] = array(
-                        'id' => $layout['campaignid'],
-                        'value' => $layout['campaign']
-                    );
+                    'id' => $layout['campaignid'],
+                    'value' => $layout['campaign']
+                );
             }
         }
 
         $formFields['general'][] = FormManager::AddCombo(
-                    'CampaignID', 
-                    __('Layout / Campaign'), 
-                    NULL,
-                    array('campaign' => $campaignOptions, 'layout' => $layoutOptions),
-                    'id',
-                    'value',
-                    __('Please select a Layout or Campaign for this Event to show'), 
-                    'l', '', true, '', '', '', $optionGroups);
+            'CampaignID',
+            __('Layout / Campaign'),
+            NULL,
+            array('campaign' => $campaignOptions, 'layout' => $layoutOptions),
+            'id',
+            'value',
+            __('Please select a Layout or Campaign for this Event to show'),
+            'l', '', true, '', '', '', $optionGroups);
 
-        $formFields['general'][] = FormManager::AddNumber('DisplayOrder', __('Display Order'), NULL, 
+        $formFields['general'][] = FormManager::AddNumber('DisplayOrder', __('Display Order'), NULL,
             __('Please select the order this event should appear in relation to others when there is more than one event scheduled'), 'o');
 
-        $formFields['general'][] = FormManager::AddCheckbox('is_priority', __('Priority'), 
-            NULL, __('Sets whether or not this event has priority. If set the event will be show in preference to other events.'), 
+        $formFields['general'][] = FormManager::AddCheckbox('is_priority', __('Priority'),
+            NULL, __('Sets whether or not this event has priority. If set the event will be show in preference to other events.'),
             'p');
 
         $formFields['repeats'][] = FormManager::AddCombo(
-                    'rec_type', 
-                    __('Repeats'), 
-                    NULL,
-                    array(
-                        array('id' => '', 'name' => __('None')),
-                        array('id' => 'Minute', 'name' => __('Per Minute')),
-                        array('id' => 'Hour', 'name' => __('Hourly')),
-                        array('id' => 'Day', 'name' => __('Daily')),
-                        array('id' => 'Week', 'name' => __('Weekly')),
-                        array('id' => 'Month', 'name' => __('Monthly')),
-                        array('id' => 'Year', 'name' => __('Yearly'))
-                    ),
-                    'id',
-                    'name',
-                    __('What type of repeat is required?'), 
-                    'r');
+            'rec_type',
+            __('Repeats'),
+            NULL,
+            array(
+                array('id' => '', 'name' => __('None')),
+                array('id' => 'Minute', 'name' => __('Per Minute')),
+                array('id' => 'Hour', 'name' => __('Hourly')),
+                array('id' => 'Day', 'name' => __('Daily')),
+                array('id' => 'Week', 'name' => __('Weekly')),
+                array('id' => 'Month', 'name' => __('Monthly')),
+                array('id' => 'Year', 'name' => __('Yearly'))
+            ),
+            'id',
+            'name',
+            __('What type of repeat is required?'),
+            'r');
 
-        $formFields['repeats'][] = FormManager::AddNumber('rec_detail', __('Repeat every'), NULL, 
+        $formFields['repeats'][] = FormManager::AddNumber('rec_detail', __('Repeat every'), NULL,
             __('How often does this event repeat?'), 'o', '', 'repeat-control-group');
 
-        $formFields['repeats'][] = FormManager::AddText('rec_rangeControl', __('Until'), NULL, 
+        $formFields['repeats'][] = FormManager::AddText('rec_rangeControl', __('Until'), NULL,
             __('When should this event stop repeating?'), 'u', '', 'repeat-control-group');
-        
+
         $formFields['repeats'][] = FormManager::AddHidden('rec_range', NULL);
 
         // Set some field dependencies
@@ -375,14 +377,15 @@ class scheduleDAO extends baseDAO {
 
     /**
      * Add Event
-     * @return 
+     * @return
      */
-    public function AddEvent() {
+    public function AddEvent()
+    {
         // Check the token
         if (!Kit::CheckToken(Kit::GetParam('token_id', _POST, _STRING)))
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
-        
-        $db =& $this->db;
+
+
         $user = $this->getUser();
         $response = $this->getState();
 
@@ -395,7 +398,7 @@ class scheduleDAO extends baseDAO {
         $repeatType = \Xibo\Helper\Sanitize::getString('rec_type');
         $repeatInterval = \Xibo\Helper\Sanitize::getInt('rec_detail');
         $repeatToDt = \Xibo\Helper\Sanitize::getString('rec_range');
-        
+
         $displayOrder = \Xibo\Helper\Sanitize::getInt('DisplayOrder');
         $isNextButton = \Kit::GetParam('next', _GET, _BOOL, false);
 
@@ -409,74 +412,74 @@ class scheduleDAO extends baseDAO {
             $repeatToDt = Date::getTimestampFromString($repeatToDt);
 
         Log::Audit('Converted Times received are: FromDt=' . $fromDT . '. ToDt=' . $toDT . '. RepeatToDt=' . $repeatToDt);
-        
+
         // Validate layout
         if ($campaignId == 0)
             trigger_error(__("No layout selected"), E_USER_ERROR);
-        
+
         // check that at least one display has been selected
-        if ($displayGroupIDs == '') 
+        if ($displayGroupIDs == '')
             trigger_error(__("No displays selected"), E_USER_ERROR);
-        
+
         // validate the dates
-        if ($toDT < $fromDT) 
-            trigger_error(__('Can not have an end time earlier than your start time'), E_USER_ERROR);   
-        
-        if ($fromDT < (time() - 86400)) 
+        if ($toDT < $fromDT)
+            trigger_error(__('Can not have an end time earlier than your start time'), E_USER_ERROR);
+
+        if ($fromDT < (time() - 86400))
             trigger_error(__("Your start time is in the past. Cannot schedule events in the past"), E_USER_ERROR);
-        
+
         // Check recurrence dT is in the future or empty
         if ($repeatType != '' && ($repeatToDt != '' && ($repeatToDt < (time() - 86400))))
             trigger_error(__("Your repeat until date is in the past. Cannot schedule events to repeat in to the past"), E_USER_ERROR);
-        
-        // Ready to do the add 
+
+        // Ready to do the add
         $scheduleObject = new Schedule($db);
         if (!$scheduleObject->Add($displayGroupIDs, $fromDT, $toDT, $campaignId, $repeatType, $repeatInterval, $repeatToDt, $isPriority, $this->user->userId, $displayOrder))
             trigger_error($scheduleObject->GetErrorMessage(), E_USER_ERROR);
-        
+
         $response->SetFormSubmitResponse(__("The Event has been Added."));
         $response->callBack = 'CallGenerateCalendar';
         if ($isNextButton)
             $response->keepOpen = true;
 
     }
-    
+
     /**
      * Shows a form to add an event
      *  will default to the current date if non is provided
-     * @return 
+     * @return
      */
-    function EditEventForm() {
-        $db =& $this->db;
+    function EditEventForm()
+    {
+
         $user = $this->getUser();
         $response = $this->getState();
 
         $eventID = \Kit::GetParam('EventID', _GET, _INT, 0);
 
-        if ($eventID == 0) 
+        if ($eventID == 0)
             trigger_error(__('No event selected.'), E_USER_ERROR);
 
         // Get the relevant details for this event
         $SQL = "";
-        $SQL.= "SELECT schedule.FromDT, ";
-        $SQL.= "       schedule.ToDT,";
-        $SQL.= "       schedule.CampaignID, ";
-        $SQL.= "       schedule.userid, ";
-        $SQL.= "       schedule.is_priority, ";
-        $SQL.= "       schedule.DisplayGroupIDs, ";
-        $SQL.= "       schedule.recurrence_type, ";
-        $SQL.= "       schedule.recurrence_detail, ";
-        $SQL.= "       schedule.recurrence_range, ";
-        $SQL.= "       schedule.EventID, ";
-        $SQL.= "       schedule.DisplayOrder ";
-        $SQL.= "  FROM schedule ";
-        $SQL.= " WHERE 1=1 ";
-        $SQL.= sprintf("   AND schedule.EventID = %d", $eventID);
-        
+        $SQL .= "SELECT schedule.FromDT, ";
+        $SQL .= "       schedule.ToDT,";
+        $SQL .= "       schedule.CampaignID, ";
+        $SQL .= "       schedule.userid, ";
+        $SQL .= "       schedule.is_priority, ";
+        $SQL .= "       schedule.DisplayGroupIDs, ";
+        $SQL .= "       schedule.recurrence_type, ";
+        $SQL .= "       schedule.recurrence_detail, ";
+        $SQL .= "       schedule.recurrence_range, ";
+        $SQL .= "       schedule.EventID, ";
+        $SQL .= "       schedule.DisplayOrder ";
+        $SQL .= "  FROM schedule ";
+        $SQL .= " WHERE 1=1 ";
+        $SQL .= sprintf("   AND schedule.EventID = %d", $eventID);
+
         Log::notice($SQL);
 
-        if (!$result = $db->query($SQL))
-        {
+        if (!$result = $db->query($SQL)) {
             trigger_error($db->error());
             trigger_error(__('Error getting details for this event.'), E_USER_ERROR);
         }
@@ -496,7 +499,7 @@ class scheduleDAO extends baseDAO {
         // Check that we have permission to edit this event.
         if (!$this->IsEventEditable($displayGroupIds))
             trigger_error(__('You do not have permission to edit this event.'), E_USER_ERROR);
-        
+
         $token_id = uniqid();
         $token_field = '<input type="hidden" name="token_id" value="' . $token_id . '" />';
         $token = \Kit::Token($token_id);
@@ -517,7 +520,7 @@ class scheduleDAO extends baseDAO {
         $optionGroups = array(
             array('id' => 'group', 'label' => __('Groups')),
             array('id' => 'display', 'label' => __('Displays'))
-            );
+        );
 
         $groups = array();
         $displays = array();
@@ -537,20 +540,19 @@ class scheduleDAO extends baseDAO {
 
             if ($display['isdisplayspecific'] == 1) {
                 $displays[] = $display;
-            }
-            else {
+            } else {
                 $groups[] = $display;
             }
         }
 
         $formFields['general'][] = FormManager::AddMultiCombo(
-            'DisplayGroupIDs[]', 
-            __('Display'), 
+            'DisplayGroupIDs[]',
+            __('Display'),
             $displayGroupIds,
             array('group' => $groups, 'display' => $displays),
             'displaygroupid',
             'displaygroup',
-            __('Please select one or more displays / groups for this event to be shown on.'), 
+            __('Please select one or more displays / groups for this event to be shown on.'),
             'd', '', true, '', '', '', $optionGroups, array(array('name' => 'data-live-search', 'value' => "true"), array('name' => 'data-selected-text-format', 'value' => "count > 4")));
 
         // Time controls
@@ -563,75 +565,74 @@ class scheduleDAO extends baseDAO {
         // Add two hidden fields to always carry the ISO date
         $formFields['general'][] = FormManager::AddHidden('starttime', Date::getLocalDate($fromDT, "Y-m-d H:i"));
         $formFields['general'][] = FormManager::AddHidden('endtime', Date::getLocalDate($toDT, "Y-m-d H:i"));
-        
+
         // Generate a list of layouts.
         $layouts = $user->CampaignList(NULL, false /* isRetired */);
-        
+
         $optionGroups = array(
             array('id' => 'campaign', 'label' => __('Campaigns')),
             array('id' => 'layout', 'label' => __('Layouts'))
-            );
+        );
 
         $layoutOptions = array();
         $campaignOptions = array();
 
-        foreach($layouts as $layout) {
+        foreach ($layouts as $layout) {
 
             if ($layout['islayoutspecific'] == 1) {
                 $layoutOptions[] = array(
-                        'id' => $layout['campaignid'],
-                        'value' => $layout['campaign']
-                    );
-            }
-            else {
+                    'id' => $layout['campaignid'],
+                    'value' => $layout['campaign']
+                );
+            } else {
                 $campaignOptions[] = array(
-                        'id' => $layout['campaignid'],
-                        'value' => $layout['campaign']
-                    );
+                    'id' => $layout['campaignid'],
+                    'value' => $layout['campaign']
+                );
             }
         }
 
         $formFields['general'][] = FormManager::AddCombo(
-                    'CampaignID', 
-                    __('Layout / Campaign'), 
-                    $campaignId,
-                    array('campaign' => $campaignOptions, 'layout' => $layoutOptions),
-                    'id',
-                    'value',
-                    __('Please select a Layout or Campaign for this Event to show'), 
-                    'l', '', true, '', '', '', $optionGroups);
+            'CampaignID',
+            __('Layout / Campaign'),
+            $campaignId,
+            array('campaign' => $campaignOptions, 'layout' => $layoutOptions),
+            'id',
+            'value',
+            __('Please select a Layout or Campaign for this Event to show'),
+            'l', '', true, '', '', '', $optionGroups);
 
-        $formFields['general'][] = FormManager::AddNumber('DisplayOrder', __('Display Order'), $displayOrder, 
+        $formFields['general'][] = FormManager::AddNumber('DisplayOrder', __('Display Order'), $displayOrder,
             __('Please select the order this event should appear in relation to others when there is more than one event scheduled'), 'o');
 
-        $formFields['general'][] = FormManager::AddCheckbox('is_priority', __('Priority'), 
-            $isPriority, __('Sets whether or not this event has priority. If set the event will be show in preference to other events.'), 
+        $formFields['general'][] = FormManager::AddCheckbox('is_priority', __('Priority'),
+            $isPriority, __('Sets whether or not this event has priority. If set the event will be show in preference to other events.'),
             'p');
 
         $formFields['repeats'][] = FormManager::AddCombo(
-                    'rec_type', 
-                    __('Repeats'), 
-                    $recType,
-                    array(
-                        array('id' => '', 'name' => __('None')),
-                        array('id' => 'Minute', 'name' => __('Per Minute')),
-                        array('id' => 'Hour', 'name' => __('Hourly')),
-                        array('id' => 'Day', 'name' => __('Daily')),
-                        array('id' => 'Week', 'name' => __('Weekly')),
-                        array('id' => 'Month', 'name' => __('Monthly')),
-                        array('id' => 'Year', 'name' => __('Yearly'))
-                    ),
-                    'id',
-                    'name',
-                    __('What type of repeat is required?'), 
-                    'r');
+            'rec_type',
+            __('Repeats'),
+            $recType,
+            array(
+                array('id' => '', 'name' => __('None')),
+                array('id' => 'Minute', 'name' => __('Per Minute')),
+                array('id' => 'Hour', 'name' => __('Hourly')),
+                array('id' => 'Day', 'name' => __('Daily')),
+                array('id' => 'Week', 'name' => __('Weekly')),
+                array('id' => 'Month', 'name' => __('Monthly')),
+                array('id' => 'Year', 'name' => __('Yearly'))
+            ),
+            'id',
+            'name',
+            __('What type of repeat is required?'),
+            'r');
 
-        $formFields['repeats'][] = FormManager::AddNumber('rec_detail', __('Repeat every'), $recDetail, 
+        $formFields['repeats'][] = FormManager::AddNumber('rec_detail', __('Repeat every'), $recDetail,
             __('How often does this event repeat?'), 'o', '', 'repeat-control-group');
 
         $formFields['repeats'][] = FormManager::AddText('rec_rangeControl', __('Until'), ((($recToDT == 0) ? '' : Date::getLocalDate($recToDT))),
             __('When should this event stop repeating?'), 'u', '', 'repeat-control-group');
-        
+
         $formFields['repeats'][] = FormManager::AddHidden('rec_range', Date::getLocalDate($recToDT, "Y-m-d H:i"));
 
         // Set some field dependencies
@@ -642,7 +643,7 @@ class scheduleDAO extends baseDAO {
 
         Theme::Set('form_fields_general', $formFields['general']);
         Theme::Set('form_fields_repeats', $formFields['repeats']);
-        
+
         $response->SetFormRequestResponse(NULL, __('Edit Event'), '800px', '600px');
         $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=Edit')");
         $response->AddButton(__('Delete'), 'XiboFormRender("index.php?p=schedule&q=DeleteForm&EventID=' . $eventID . '")');
@@ -651,20 +652,19 @@ class scheduleDAO extends baseDAO {
         $response->callBack = 'setupScheduleForm';
 
     }
-    
-    
-    
+
+
     /**
      * Edits an event
-     * @return 
+     * @return
      */
     public function EditEvent()
     {
         // Check the token
         if (!Kit::CheckToken(Kit::GetParam('token_id', _POST, _STRING)))
             trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
-        
-        $db =& $this->db;
+
+
         $user = $this->getUser();
         $response = $this->getState();
 
@@ -678,10 +678,10 @@ class scheduleDAO extends baseDAO {
         $repeatType = \Xibo\Helper\Sanitize::getString('rec_type');
         $repeatInterval = \Xibo\Helper\Sanitize::getInt('rec_detail');
         $repeatToDt = \Xibo\Helper\Sanitize::getString('rec_range');
-        
+
         $displayOrder = \Xibo\Helper\Sanitize::getInt('DisplayOrder');
         $isNextButton = \Kit::GetParam('next', _GET, _BOOL, false);
-        
+
         // Convert our ISO strings
         $fromDT = Date::getTimestampFromString($fromDT);
         $toDT = Date::getTimestampFromString($toDT);
@@ -694,44 +694,45 @@ class scheduleDAO extends baseDAO {
         // Validate layout
         if ($campaignId == 0)
             trigger_error(__("No layout selected"), E_USER_ERROR);
-        
+
         // check that at least one display has been selected
-        if ($displayGroupIDs == '') 
+        if ($displayGroupIDs == '')
             trigger_error(__("No displays selected"), E_USER_ERROR);
-        
+
         // validate the dates
-        if ($toDT < $fromDT) 
-            trigger_error(__('Can not have an end time earlier than your start time'), E_USER_ERROR);   
-        
+        if ($toDT < $fromDT)
+            trigger_error(__('Can not have an end time earlier than your start time'), E_USER_ERROR);
+
         // Check recurrence dT is in the future or empty
-        if (($repeatToDt != '') && ($repeatToDt < (time()- 86400)))
+        if (($repeatToDt != '') && ($repeatToDt < (time() - 86400)))
             trigger_error(__("Your repeat until date is in the past. Cannot schedule events to repeat in to the past"), E_USER_ERROR);
-        
-        
-        // Ready to do the edit 
+
+
+        // Ready to do the edit
         $scheduleObject = new Schedule($db);
         if (!$scheduleObject->Edit($eventId, $displayGroupIDs, $fromDT, $toDT, $campaignId, $repeatType, $repeatInterval, $repeatToDt, $isPriority, $this->user->userId, $displayOrder))
             trigger_error($scheduleObject->GetErrorMessage(), E_USER_ERROR);
-        
+
         $response->SetFormSubmitResponse(__("The Event has been Modified."));
         $response->callBack = 'CallGenerateCalendar';
 
     }
-    
+
     /**
      * Shows the DeleteEvent form
-     * @return 
+     * @return
      */
-    function DeleteForm() {
-        $db =& $this->db;
+    function DeleteForm()
+    {
+
         $user = $this->getUser();
         $response = $this->getState();
-        
+
         $eventID = \Kit::GetParam('EventID', _GET, _INT, 0);
-        
-        if ($eventID == 0) 
+
+        if ($eventID == 0)
             trigger_error(__('No event selected.'), E_USER_ERROR);
-        
+
         Theme::Set('form_id', 'DeleteEventForm');
         Theme::Set('form_action', 'index.php?p=schedule&q=DeleteEvent');
         Theme::Set('form_meta', '<input type="hidden" name="EventID" value="' . $eventID . '" />');
@@ -743,47 +744,46 @@ class scheduleDAO extends baseDAO {
         $response->AddButton(__('Yes'), '$("#DeleteEventForm").submit()');
 
     }
-    
+
     /**
      * Deletes an Event from all displays
-     * @return 
+     * @return
      */
     public function DeleteEvent()
     {
 
-        
-        $db =& $this->db;
+
         $user = $this->getUser();
         $response = $this->getState();
-        
+
         $eventID = \Kit::GetParam('EventID', _POST, _INT, 0);
-        
-        if ($eventID == 0) 
+
+        if ($eventID == 0)
             trigger_error(__('No event selected.'), E_USER_ERROR);
-        
+
         // Create an object to use for the delete
         $scheduleObject = new Schedule($db);
-        
+
         // Delete the entire schedule.
-        if (!$scheduleObject->Delete($eventID)) 
-        {
+        if (!$scheduleObject->Delete($eventID)) {
             trigger_error($scheduleObject->GetErrorMessage(), E_USER_ERROR);
         }
-        
+
         $response->SetFormSubmitResponse(__("The Event has been Deleted."));
         $response->callBack = 'CallGenerateCalendar';
 
     }
-    
+
     /**
      * Is this event editable?
-     * @return 
+     * @return
      * @param $eventDGIDs Object
      */
-    private function IsEventEditable($eventDGIDs) {
-        
+    private function IsEventEditable($eventDGIDs)
+    {
+
         $scheduleWithView = (Config::GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
-        
+
         // Work out if this event is editable or not. To do this we need to compare the permissions
         // of each display group this event is associated with
         foreach ($eventDGIDs as $dgID) {
@@ -798,12 +798,13 @@ class scheduleDAO extends baseDAO {
             if (!$scheduleWithView && !$auth->edit)
                 return false;
         }
-        
+
         return true;
     }
 
-    public function ScheduleNowForm() {
-        $db =& $this->db;
+    public function ScheduleNowForm()
+    {
+
         $user = $this->getUser();
         $response = $this->getState();
 
@@ -812,63 +813,62 @@ class scheduleDAO extends baseDAO {
         // We might have a layout id, or a display id
         $campaignId = \Kit::GetParam('CampaignID', _GET, _INT, 0);
         $displayGroupIds = \Kit::GetParam('displayGroupId', _GET, _ARRAY);
-        
+
         Theme::Set('form_id', 'ScheduleNowForm');
         Theme::Set('form_action', 'index.php?p=schedule&q=ScheduleNow');
 
         $formFields = array();
-        
+
         // Generate a list of layouts.
         $layouts = $user->CampaignList(NULL, false /* isRetired */);
-        
+
         $optionGroups = array(
             array('id' => 'campaign', 'label' => __('Campaigns')),
             array('id' => 'layout', 'label' => __('Layouts'))
-            );
+        );
 
         $layoutOptions = array();
         $campaignOptions = array();
 
-        foreach($layouts as $layout) {
+        foreach ($layouts as $layout) {
 
             if ($layout['islayoutspecific'] == 1) {
                 $layoutOptions[] = array(
-                        'id' => $layout['campaignid'],
-                        'value' => $layout['campaign']
-                    );
-            }
-            else {
+                    'id' => $layout['campaignid'],
+                    'value' => $layout['campaign']
+                );
+            } else {
                 $campaignOptions[] = array(
-                        'id' => $layout['campaignid'],
-                        'value' => $layout['campaign']
-                    );
+                    'id' => $layout['campaignid'],
+                    'value' => $layout['campaign']
+                );
             }
         }
 
         $formFields[] = FormManager::AddCombo(
-                    'CampaignID', 
-                    __('Layout'), 
-                    $campaignId,
-                    array('campaign' => $campaignOptions, 'layout' => $layoutOptions),
-                    'id',
-                    'value',
-                    __('Please select a Layout or Campaign for this Event to show'), 
-                    'l', '', true, '', '', '', $optionGroups);
+            'CampaignID',
+            __('Layout'),
+            $campaignId,
+            array('campaign' => $campaignOptions, 'layout' => $layoutOptions),
+            'id',
+            'value',
+            __('Please select a Layout or Campaign for this Event to show'),
+            'l', '', true, '', '', '', $optionGroups);
 
-        $formFields[] = FormManager::AddText('hours', __('Hours'), NULL, 
+        $formFields[] = FormManager::AddText('hours', __('Hours'), NULL,
             __('Hours this event should be scheduled for'), 'h', '');
 
-        $formFields[] = FormManager::AddText('minutes', __('Minutes'), NULL, 
+        $formFields[] = FormManager::AddText('minutes', __('Minutes'), NULL,
             __('Minutes this event should be scheduled for'), 'h', '');
 
-        $formFields[] = FormManager::AddText('seconds', __('Seconds'), NULL, 
+        $formFields[] = FormManager::AddText('seconds', __('Seconds'), NULL,
             __('Seconds this event should be scheduled for'), 'h', '');
 
         // List of Display Groups
         $optionGroups = array(
             array('id' => 'group', 'label' => __('Groups')),
             array('id' => 'display', 'label' => __('Displays'))
-            );
+        );
 
         $groups = array();
         $displays = array();
@@ -888,27 +888,26 @@ class scheduleDAO extends baseDAO {
 
             if ($display['isdisplayspecific'] == 1) {
                 $displays[] = $display;
-            }
-            else {
+            } else {
                 $groups[] = $display;
             }
         }
 
         $formFields[] = FormManager::AddMultiCombo(
-                    'DisplayGroupIDs[]', 
-                    __('Display'), 
-                    $displayGroupIds,
-                    array('group' => $groups, 'display' => $displays),
-                    'displaygroupid',
-                    'displaygroup',
-                    __('Please select one or more displays / groups for this event to be shown on.'), 
-                    'd', '', true, '', '', '', $optionGroups, array(array('name' => 'data-live-search', 'value' => "true"), array('name' => 'data-selected-text-format', 'value' => "count > 4")));
+            'DisplayGroupIDs[]',
+            __('Display'),
+            $displayGroupIds,
+            array('group' => $groups, 'display' => $displays),
+            'displaygroupid',
+            'displaygroup',
+            __('Please select one or more displays / groups for this event to be shown on.'),
+            'd', '', true, '', '', '', $optionGroups, array(array('name' => 'data-live-search', 'value' => "true"), array('name' => 'data-selected-text-format', 'value' => "count > 4")));
 
-        $formFields[] = FormManager::AddNumber('DisplayOrder', __('Display Order'), 0, 
+        $formFields[] = FormManager::AddNumber('DisplayOrder', __('Display Order'), 0,
             __('Should this event have an order?'), 'o', '');
 
-        $formFields[] = FormManager::AddCheckbox('is_priority', __('Priority?'), 
-            NULL, __('Sets whether or not this event has priority. If set the event will be show in preference to other events.'), 
+        $formFields[] = FormManager::AddCheckbox('is_priority', __('Priority?'),
+            NULL, __('Sets whether or not this event has priority. If set the event will be show in preference to other events.'),
             'p');
 
         Theme::Set('form_fields', $formFields);
@@ -921,10 +920,10 @@ class scheduleDAO extends baseDAO {
 
     }
 
-    public function ScheduleNow() {
+    public function ScheduleNow()
+    {
 
-        
-        $db =& $this->db;
+
         $user = $this->getUser();
         $response = $this->getState();
 
@@ -950,7 +949,7 @@ class scheduleDAO extends baseDAO {
         if ($displayGroupIds == '')
             trigger_error(__('No displays selected'), E_USER_ERROR);
 
-        if ($fromDt < (time()- 86400))
+        if ($fromDt < (time() - 86400))
             trigger_error(__('Your start time is in the past. Cannot schedule events in the past'), E_USER_ERROR);
 
         $toDt = $fromDt + $duration;
@@ -963,6 +962,7 @@ class scheduleDAO extends baseDAO {
 
         $response->SetFormSubmitResponse(__('The Event has been Scheduled'));
 
-    }  
+    }
 }
+
 ?>

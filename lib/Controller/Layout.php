@@ -954,7 +954,7 @@ HTML;
 
     public function LayoutStatus()
     {
-        $db =& $this->db;
+
          
         $layoutId = Sanitize::getInt('layoutId');
 
@@ -1008,7 +1008,7 @@ HTML;
     public function ImportForm()
     {
         global $session;
-        $db =& $this->db;
+
          
 
         // Set the Session / Security information
@@ -1056,7 +1056,7 @@ HTML;
     public function Import()
     {
 
-        $db =& $this->db;
+
          
 
         // What are we importing?

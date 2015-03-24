@@ -627,7 +627,7 @@ class User
      */
     public function DisplayGroupList($isDisplaySpecific = 0, $name = '')
     {
-        $db =& $this->db;
+
         $userid =& $this->userId;
 
         $SQL = "SELECT displaygroup.DisplayGroupID, displaygroup.DisplayGroup, displaygroup.IsDisplaySpecific, displaygroup.Description ";
