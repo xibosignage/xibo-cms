@@ -27,6 +27,7 @@ use Session;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Date;
 use Xibo\Helper\Help;
+use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
@@ -131,7 +132,7 @@ class Log extends Base
             array('title' => __('Truncate'),
                 'class' => 'XiboFormButton',
                 'selected' => false,
-                'link' => 'index.php?p=log&q=TruncateForm',
+                'link' => $this->urlFor('logTruncateForm'),
                 'help' => __('Truncate the Log'),
                 'onclick' => ''
             ),
@@ -157,10 +158,10 @@ class Log extends Base
         $response = $this->getState();
 
         $type = \Kit::GetParam('filter_type', _REQUEST, _INT, 0);
-        $function = \Xibo\Helper\Sanitize::getString('filter_function');
-        $page = \Xibo\Helper\Sanitize::getString('filter_page');
-        $fromdt = \Xibo\Helper\Sanitize::getString('filter_fromdt');
-        $displayid = \Xibo\Helper\Sanitize::getInt('filter_display');
+        $function = Sanitize::getString('filter_function');
+        $page = Sanitize::getString('filter_page');
+        $fromdt = Sanitize::getString('filter_fromdt');
+        $displayid = Sanitize::getInt('filter_display');
         $seconds = \Kit::GetParam('filter_seconds', _POST, _INT, 120);
         $filter_intervalTypeId = \Kit::GetParam('filter_intervalTypeId', _POST, _INT, 1);
 
@@ -234,12 +235,12 @@ class Log extends Base
 
         foreach (\Xibo\Storage\PDOConnect::select($sql, $params) as $row) {
 
-            $row['logid'] = \Xibo\Helper\Sanitize::int($row['logid']);
-            $row['logdate'] = Date::getLocalDate(strtotime(Kit::ValidateParam($row['logdate'], _STRING)), 'y-m-d h:i:s');
-            $row['type'] = \Xibo\Helper\Sanitize::string($row['type']);
-            $row['display'] = (\Xibo\Helper\Sanitize::string($row['display'], _STRING) == '') ? __('CMS') : \Kit::ValidateParam($row['display']);
-            $row['page'] = \Xibo\Helper\Sanitize::string($row['page']);
-            $row['function'] = \Xibo\Helper\Sanitize::string($row['function']);
+            $row['logid'] = Sanitize::int($row['logid']);
+            $row['logdate'] = Date::getLocalDate(strtotime(Sanitize::string($row['logdate'])), 'y-m-d h:i:s');
+            $row['type'] = Sanitize::string($row['type']);
+            $row['display'] = (Sanitize::string($row['display']) == '') ? __('CMS') : Sanitize::string($row['display']);
+            $row['page'] = Sanitize::string($row['page']);
+            $row['function'] = Sanitize::string($row['function']);
             $row['message'] = nl2br(htmlspecialchars($row['message']));
 
             $rows[] = $row;
@@ -258,7 +259,7 @@ class Log extends Base
     function LastHundredForDisplay()
     {
         $response = $this->getState();
-        $displayId = \Xibo\Helper\Sanitize::getInt('displayid');
+        $displayId = Sanitize::getInt('displayid');
 
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -286,10 +287,10 @@ class Log extends Base
 
             foreach ($log as $row) {
 
-                $row['logid'] = \Xibo\Helper\Sanitize::int($row['logid']);
-                $row['logdate'] = \Xibo\Helper\Sanitize::string($row['logdate']);
-                $row['page'] = \Xibo\Helper\Sanitize::string($row['page']);
-                $row['function'] = \Xibo\Helper\Sanitize::string($row['function']);
+                $row['logid'] = Sanitize::int($row['logid']);
+                $row['logdate'] = Sanitize::string($row['logdate']);
+                $row['page'] = Sanitize::string($row['page']);
+                $row['function'] = Sanitize::string($row['function']);
                 $row['message'] = nl2br(htmlspecialchars($row['message']));
 
                 $rows[] = $row;
@@ -321,7 +322,7 @@ class Log extends Base
 
         // Set some information about the form
         Theme::Set('form_id', 'TruncateForm');
-        Theme::Set('form_action', 'index.php?p=log&q=Truncate');
+        Theme::Set('form_action', $this->urlFor('logTruncate'));
 
         Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to truncate?'))));
 

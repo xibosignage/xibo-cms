@@ -1,9 +1,9 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2014 Daniel Garner
+ * Copyright (C) 2006-2015 Daniel Garner
  *
- * This file is part of Xibo.
+ * This file (Upgrade.php) is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -18,15 +18,20 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+namespace Xibo\Controller;
+use Config;
+use Exception;
+use FormManager;
+use Install;
+use Media;
 use Xibo\Helper\Theme;
 
-defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
-
-class upgradeDAO extends baseDAO {
-
+class Upgrade extends Base
+{
     public $errorMessage;
 
-    public function displayPage() {
+    public function displayPage()
+    {
 
         if (DBVERSION == WEBSITE_VERSION) {
             Theme::Set('message', sprintf(__('Sorry you have arrived at this page in error, please try to navigate away.'), Theme::GetConfig('app_name')));
@@ -35,14 +40,13 @@ class upgradeDAO extends baseDAO {
             return;
         }
 
-        if ($this->user->userTypeId != 1) {
+        if ($this->getUser()->userTypeId != 1) {
             // Make sure we actually need to do an upgrade
             Theme::Set('message', sprintf(__('The CMS is temporarily off-line as an upgrade is in progress. Please check with your system administrator for updates or refresh your page in a few minutes.'), Theme::GetConfig('app_name')));
 
             $this->getState()->html .= Theme::RenderReturn('message_box');
             return;
-        }
-        else {
+        } else {
             // We want a static form (traditional rather than ajax)
             Theme::Set('form_class', 'StaticForm');
 
@@ -50,7 +54,7 @@ class upgradeDAO extends baseDAO {
             $xibo_step = \Kit::GetParam('step', _REQUEST, _INT, 1);
 
             $content = '';
-            
+
             switch ($xibo_step) {
 
                 case 1:
@@ -67,8 +71,7 @@ class upgradeDAO extends baseDAO {
                     // Execute upgrade
                     try {
                         $content = $this->Step3();
-                    }
-                    catch (Exception $e) {
+                    } catch (Exception $e) {
                         $this->errorMessage = $e->getMessage();
 
                         // Reload step 2
@@ -83,7 +86,8 @@ class upgradeDAO extends baseDAO {
         }
     }
 
-    public function Step1() {
+    public function Step1()
+    {
         Theme::Set('form_action', 'index.php?p=upgrade');
         // Check environment
         $config = new Config();
@@ -99,13 +103,11 @@ class upgradeDAO extends baseDAO {
         if ($config->EnvironmentFault()) {
             $formFields[] = FormManager::AddHidden('step', 1);
             $formButtons[] = FormManager::AddButton(__('Retest'));
-        }
-        else if ($config->EnvironmentWarning()) {
+        } else if ($config->EnvironmentWarning()) {
             $formFields[] = FormManager::AddHidden('step', 2);
             $formButtons[] = FormManager::AddButton(__('Retest'), 'link', 'index.php?p=upgrade&step=1');
             $formButtons[] = FormManager::AddButton(__('Next'));
-        }
-        else {
+        } else {
             $formFields[] = FormManager::AddHidden('step', 2);
             $formButtons[] = FormManager::AddButton(__('Next'));
         }
@@ -116,7 +118,8 @@ class upgradeDAO extends baseDAO {
         return Theme::RenderReturn('form_render');
     }
 
-    public function Step2() {
+    public function Step2()
+    {
 
 
         // Work out what is involved in this upgrade
@@ -127,9 +130,9 @@ class upgradeDAO extends baseDAO {
         }
 
         // Get a list of .sql and .php files for the upgrade
-        $sql_files = Install::ls('*.sql','install/database', false, array('return_files'));
-        $php_files = Install::ls('*.php','install/database', false, array('return_files'));
-        
+        $sql_files = Install::ls('*.sql', 'install/database', false, array('return_files'));
+        $php_files = Install::ls('*.php', 'install/database', false, array('return_files'));
+
         // Sort by natural filename (eg 10 is bigger than 2)
         natcasesort($sql_files);
         natcasesort($php_files);
@@ -137,8 +140,8 @@ class upgradeDAO extends baseDAO {
         $_SESSION['phpFiles'] = $php_files;
         $_SESSION['sqlFiles'] = $sql_files;
 
-        $max_sql = \Kit::ValidateParam(substr(end($sql_files),0,-4),_INT);
-        $max_php = \Kit::ValidateParam(substr(end($php_files),0,-4),_INT);
+        $max_sql = \Kit::ValidateParam(substr(end($sql_files), 0, -4), _INT);
+        $max_php = \Kit::ValidateParam(substr(end($php_files), 0, -4), _INT);
         $_SESSION['upgradeTo'] = max($max_sql, $max_php);
 
         if (!$_SESSION['upgradeTo'])
@@ -172,15 +175,14 @@ class upgradeDAO extends baseDAO {
             if (file_exists('install/database/' . $i . '.php')) {
                 include_once('install/database/' . $i . '.php');
                 $stepName = 'Step' . $i;
-                
+
                 // Check that a class called Step$i exists
                 if (class_exists($stepName)) {
                     $_SESSION['Step' . $i] = new $stepName($this->db);
                     // Call Questions on the object and send the resulting hash to createQuestions routine
                     $questionFields = $this->createQuestions($i, $_SESSION['Step' . $i]->Questions());
                     $formFields = array_merge($formFields, $questionFields);
-                }
-                else {
+                } else {
                     $formFields[] = FormManager::AddMessage(sprintf(__('Warning: We included %s.php, but it did not include a class of appropriate name.'), $i));
                 }
             }
@@ -195,7 +197,8 @@ class upgradeDAO extends baseDAO {
         return Theme::RenderReturn('form_render');
     }
 
-    public function Step3() {
+    public function Step3()
+    {
 
         set_time_limit(0);
         $fault = false;
@@ -211,7 +214,7 @@ class upgradeDAO extends baseDAO {
                 include_once('install/database/' . $parts[0] . '.php');
 
                 $response = $_SESSION[$step_num]->ValidateQuestion($parts[1], $post);
-                if (! $response == true) {
+                if (!$response == true) {
                     // The upgrade routine for this step wasn't happy.
                     $fault = true;
                     $fault_string .= $response . "<br />\n";
@@ -243,7 +246,7 @@ class upgradeDAO extends baseDAO {
                     $sql_file = @file_get_contents('install/database/' . $i . '.sql');
                     $sql_file = Install::remove_remarks($sql_file);
                     $sql_file = Install::split_sql_file($sql_file, $delimiter);
-                    
+
                     foreach ($sql_file as $sql) {
                         $dbh->exec($sql);
                     }
@@ -251,15 +254,14 @@ class upgradeDAO extends baseDAO {
 
                 if (file_exists('install/database/' . $i . '.php')) {
                     $stepName = 'Step' . $i;
-                    
+
                     if (!$_SESSION[$stepName]->Boot())
                         throw new Exception(__('Failed with %s', $stepName));
                 }
             }
 
             //$dbh->commit();
-        }
-        catch (Exception $e) {
+        } catch (Exception $e) {
             //$dbh->rollBack();
             throw new Exception(sprintf(__('An error occurred running the upgrade. Please take a screen shot of this page and seek help. Statement number: %d. Error Message = [%s]. File = [%s]. SQL = [%s].'), $i, $e->getMessage(), $sql_file, $sql));
         }
@@ -270,7 +272,7 @@ class upgradeDAO extends baseDAO {
         // Delete install
         if (!unlink('install.php'))
             $formFields[] = FormManager::AddMessage(__("Unable to delete install.php. Please ensure the webserver has permission to unlink this file and retry"));
-        
+
         $formFields[] = FormManager::AddMessage(__('The upgrade was a success!'));
 
         // Return a rendered form
@@ -278,26 +280,25 @@ class upgradeDAO extends baseDAO {
         return Theme::RenderReturn('form_render');
     }
 
-    private function createQuestions($step, $questions) {
+    private function createQuestions($step, $questions)
+    {
         // Takes a multi-dimensional array eg:
         // $q[0]['question'] = "May we collect anonymous usage statistics?";
         // $q[0]['type'] = _CHECKBOX;
         // $q[0]['default'] = true;
         $formFields = array();
-        
+
         foreach ($questions as $qnum => $question) {
-            
+
             $title = ($step < 80) ? __('Question %d of Step %s', $qnum + 1, $step) : $question['title'];
 
             if ($question['type'] == _INPUTBOX) {
                 $formFields[] = FormManager::AddText($step . '-' . $qnum, $title, $question['default'],
                     $question['question'], 'q');
-            }
-            elseif ($question['type'] == _PASSWORD) {
+            } elseif ($question['type'] == _PASSWORD) {
                 $formFields[] = FormManager::AddPassword($step . '-' . $qnum, $title, $question['default'],
                     $question['question'], 'q');
-            }
-            elseif ($question['type'] == _CHECKBOX) {
+            } elseif ($question['type'] == _CHECKBOX) {
                 $formFields[] = FormManager::AddCheckbox($step . '-' . $qnum, $title, (($question['default']) ? 1 : 0),
                     $question['question'], 'q');
             }
@@ -306,4 +307,5 @@ class upgradeDAO extends baseDAO {
         return $formFields;
     }
 }
+
 ?>

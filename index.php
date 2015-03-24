@@ -35,9 +35,7 @@ require 'lib/data/data.class.php';
 if (!file_exists('settings.php'))
     die('Not configured');
 
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
+// Load the config
 Config::Load();
 
 // Setup the translations for gettext
@@ -56,10 +54,8 @@ $logger = new \Flynsarmy\SlimMonolog\Log\MonologWriter(array(
 
 // Slim Application
 $app = new \Slim\Slim(array(
-    'mode' => 'development',
-    'log.writer' => $logger,
-    'log.level' => \Slim\Log::DEBUG,
-    'debug' => true
+    'mode' => Config::GetSetting('SERVER_MODE'),
+    'log.writer' => $logger
 ));
 $app->setName('web');
 

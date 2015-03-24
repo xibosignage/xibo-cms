@@ -39,6 +39,34 @@ class State extends Middleware
         $this->app->container->singleton('session', function() { return new \Session(); });
         $this->app->session->Get('nothing');
 
+        // Configure the timezone information
+        date_default_timezone_set(\Config::GetSetting("defaultTimezone"));
+
+        // Do we need SSL/STS?
+        // Deal with HTTPS/STS config
+        if (\Kit::isSSL()) {
+            \Kit::IssueStsHeaderIfNecessary();
+        }
+        else {
+            if (\Config::GetSetting('FORCE_HTTPS', 0) == 1) {
+                $redirect = "https://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+                header("Location: $redirect");
+                exit();
+            }
+        }
+
+        // Configure logging
+        if (strtolower($this->app->getMode()) == 'test') {
+            $this->app->config('debug', true);
+            $this->app->config('log.level', \Slim\Log::DEBUG);
+            error_reporting(E_ALL);
+        }
+        else {
+            // TODO: Use the log levels defined in the config
+            $this->app->config('log.level', \Slim\Log::ERROR);
+            error_reporting(0);
+        }
+
         // Attach a hook to log the route
         $this->app->hook('slim.before.dispatch', function() { Log::debug('called'); });
 

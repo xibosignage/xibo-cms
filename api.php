@@ -33,9 +33,6 @@ require 'lib/app/session.class.php';
 if (!file_exists('settings.php'))
     die('Not configured');
 
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
 Config::Load();
 
 $app = new \Slim\Slim(array(

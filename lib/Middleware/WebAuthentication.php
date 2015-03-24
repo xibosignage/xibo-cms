@@ -24,7 +24,6 @@ namespace Xibo\Middleware;
 
 
 use Slim\Middleware;
-use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\UserFactory;
 use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
@@ -85,6 +84,14 @@ class WebAuthentication extends Middleware
                     $user->routeAuthentication($resource);
 
                     $app->user = $user;
+
+                    // We are authenticated
+                    // Handle if we are an upgrade
+                    // Does the version in the DB match the version of the code?
+                    // If not then we need to run an upgrade.
+                    if (DBVERSION != WEBSITE_VERSION && $resource != '/upgrade') {
+                        $app->redirectTo('upgradeView');
+                    }
                 }
                 else {
                     // Store the current route so we can come back to it after login

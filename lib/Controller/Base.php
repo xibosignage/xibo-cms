@@ -22,7 +22,7 @@
 
 namespace Xibo\Controller;
 use Slim\Slim;
-use Xibo\Helper\Log;
+use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Helper\Theme;
 
 /**
@@ -124,7 +124,12 @@ class Base
             $this->$method();
 
         if ($this->isApi()) {
-            $this->app->render(200, $this->getState()->getData());
+            $data = $this->getState()->getData();
+
+            if (!is_array($data))
+                throw new ControllerNotImplemented();
+
+            $this->app->render(200, $data);
         }
         else {
             // Web App, either AJAX requested or normal

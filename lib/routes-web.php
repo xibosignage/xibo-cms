@@ -121,14 +121,24 @@ $app->get('/login/ping', function () use ($app) {
 })->setName('ping');
 
 //
-// Menu
+// upgrade
+//
+$app->get('/update', function () use ($app) {
+    $controller = new \Xibo\Controller\Upgrade($app);
+    $controller->displayPage();
+    $controller->render();
+})->name('upgradeView');
+
 //
 // schedule
+//
 $app->get('/schedule/view', function () use ($app) {
 
 })->name('scheduleView');
 
+//
 // layouts
+//
 $app->get('/layout/view', function () use ($app) {
     // This is a full page
     $controller = new \Xibo\Controller\Layout($app);
@@ -136,122 +146,179 @@ $app->get('/layout/view', function () use ($app) {
     $controller->render();
 })->name('layoutView');
 
+//
 // content
+//
 $app->get('/content/view', function () use ($app) {
 
 })->name('contentView');
 
+//
 // display
+//
 $app->get('/display/view', function () use ($app) {
 
 })->name('displayView');
 
+//
 // user
+//
 $app->get('/user/view', function () use ($app) {
 
 })->name('userView');
 
+//
 // log
+//
 $app->get('/log/view', function () use ($app) {
     $controller = new \Xibo\Controller\Log($app);
     $controller->displayPage();
     $controller->render();
 })->name('logView');
 
+$app->get('/log/delete', function () use ($app) {
+    $controller = new \Xibo\Controller\Log($app);
+    $controller->TruncateForm();
+    $controller->render();
+})->name('logTruncateForm');
+
+$app->delete('/log', function () use ($app) {
+    $controller = new \Xibo\Controller\Log($app);
+    $controller->Truncate();
+    $controller->render();
+});
+
+//
 // campaign
+//
 $app->get('/campaign/view', function () use ($app) {
 
 })->name('campaignView');
 
+//
 // template
+//
 $app->get('/template/view', function () use ($app) {
 
 })->name('templateView');
 
+//
 // resolution
+//
 $app->get('/resolution/view', function () use ($app) {
 
 })->name('resolutionView');
 
+//
 // dataset
+//
 $app->get('/dataset/view', function () use ($app) {
 
 })->name('datasetView');
 
+//
 // displaygroup
+//
 $app->get('/displaygroup/view', function () use ($app) {
 
 })->name('displaygroupView');
 
+//
 // displayprofile
+//
 $app->get('/displayprofile/view', function () use ($app) {
 
 })->name('displayprofileView');
 
+//
 // group
+//
 $app->get('/group/view', function () use ($app) {
 
 })->name('groupView');
 
+//
 // admin
+//
 $app->get('/admin/view', function () use ($app) {
 
 })->name('adminView');
 
+//
 // oauth
+//
 $app->get('/oauth/view', function () use ($app) {
 
 })->name('oauthView');
 
+//
 // module
+//
 $app->get('/module/view', function () use ($app) {
 
 })->name('moduleView');
 
+//
 // transition
+//
 $app->get('/transition/view', function () use ($app) {
 
 })->name('transitionView');
 
+//
 // sessions
+//
 $app->get('/sessions/view', function () use ($app) {
 
 })->name('sessionsView');
 
+//
 // fault
+//
 $app->get('/fault/view', function () use ($app) {
 
 })->name('faultView');
 
+//
 // license
+//
 $app->get('/license/view', function () use ($app) {
     $controller = new \Xibo\Controller\Login($app);
     $controller->render('About');
 })->name('licenseView');
 
+//
 // help
+//
 $app->get('/help/view', function () use ($app) {
 
 })->name('helpView');
+//
 
+//
 $app->get('/layout/add', function () use ($app) {
     $controller = new \Xibo\Controller\Layout($app);
     $controller->AddForm();
     $controller->render();
 })->setName('layoutAddForm');
 
+//
 // Users
+//
 $app->get('/user/welcome', function () use ($app) {
     $controller = new \Xibo\Controller\Login($app);
     $controller->userWelcome();
     $controller->render();
 })->setName('welcomeWizard');
 
+// Change Password
 $app->get('/user/password/view', function () use ($app) {
 
 })->setName('userChangePassword');
 
+//
 // Stats
+//
 $app->get('/stats', function () use ($app) {
 
 })->name('statsView');

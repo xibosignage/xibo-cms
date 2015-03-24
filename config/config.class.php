@@ -21,7 +21,9 @@
 use Xibo\Helper\Theme;
 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
- 
+
+define('WEBSITE_VERSION', 120);
+
 class Config 
 {
 	public static $VERSION_REQUIRED = '5.3.3';
