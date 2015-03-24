@@ -81,6 +81,7 @@ $app->post('/login', function () use ($app) {
 
     try {
         $controller = new \Xibo\Controller\Login($app);
+        $controller->setNoOutput();
         $controller->login();
 
         \Xibo\Helper\Log::info('%s user logged in.', $app->user->userName);
@@ -173,12 +174,12 @@ $app->get('/user/view', function () use ($app) {
 $app->get('/log/view', function () use ($app) {
     $controller = new \Xibo\Controller\Log($app);
     $controller->displayPage();
+    $controller->render();
 })->name('logView');
 
 $app->get('/log/delete', function () use ($app) {
     $controller = new \Xibo\Controller\Log($app);
     $controller->TruncateForm();
-    $controller->render();
 })->name('logTruncateForm');
 
 //
@@ -292,7 +293,6 @@ $app->get('/help/view', function () use ($app) {
 $app->get('/layout/add', function () use ($app) {
     $controller = new \Xibo\Controller\Layout($app);
     $controller->AddForm();
-    $controller->render();
 })->setName('layoutAddForm');
 
 //
@@ -301,7 +301,6 @@ $app->get('/layout/add', function () use ($app) {
 $app->get('/user/welcome', function () use ($app) {
     $controller = new \Xibo\Controller\Login($app);
     $controller->userWelcome();
-    $controller->render();
 })->setName('welcomeWizard');
 
 // Change Password

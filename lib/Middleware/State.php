@@ -24,7 +24,6 @@ namespace Xibo\Middleware;
 
 
 use Slim\Middleware;
-use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
@@ -96,15 +95,14 @@ class State extends Middleware
             Log::debug('called %s', $this->app->router->getCurrentRoute()->getPattern());
         });
 
-        Log::debug('State Middleware Configured');
+        // Attach a hook to be called after the route has been dispatched
+        $this->app->hook('slim.after.dispatch', function() use ($app) {
+            // On our way back out the onion, we want to render the controller.
+            if ($app->controller != null)
+                $app->controller->render();
+        });
 
         // Next middleware
         $this->next->call();
-
-        // On our way back out the onion, we want to render the controller.
-        if ($this->app->controller == null)
-            throw new ControllerNotImplemented();
-
-        $this->app->controller->render();
     }
 }

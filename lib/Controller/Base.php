@@ -55,6 +55,12 @@ class Base
     private $rendered = false;
 
     /**
+     * Is this controller expected to output anything?
+     * @var bool
+     */
+    private $noOutput = false;
+
+    /**
      * Create the controller
      * @param Slim $app
      */
@@ -123,6 +129,15 @@ class Base
     }
 
     /**
+     * Set No output
+     * @param bool $bool
+     */
+    public function setNoOutput($bool = true)
+    {
+        $this->noOutput = $bool;
+    }
+
+    /**
      * End the controller execution, calling render
      *
      * @param string $method
@@ -130,7 +145,7 @@ class Base
      */
     public function render($method = null)
     {
-        if ($this->rendered)
+        if ($this->rendered || $this->noOutput)
             return;
 
         if ($method != null && method_exists($this, $method))
