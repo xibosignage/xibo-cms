@@ -19,9 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-use Xibo\Entity\User;
 use Xibo\Helper\Log;
-use Xibo\Helper\Theme;
 
 define('SCHEDULEDTASK', true);
 define('XIBO', true);
@@ -150,7 +148,7 @@ else
         $msgFrom = \Kit::ValidateParam(Config::GetSetting("mail_from"), _PASSWORD);
 
         // We need a theme
-        new Theme(new User());
+
 
         foreach (Display::ValidateDisplays() as $display) {
             // Is this the first time this display has gone "off-line"

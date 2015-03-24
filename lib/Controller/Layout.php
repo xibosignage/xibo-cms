@@ -612,7 +612,6 @@ class Layout extends Base
 
         // We are adding
         Theme::Set('form_action', $this->urlFor('layoutAdd'));
-        Theme::Set('form_method', 'put');
 
         $templates = $this->getUser()->TemplateList();
         $templates = array_map(function($element) { return array('layoutid' => $element->layoutId, 'layout' => $element->layout); }, $templates);

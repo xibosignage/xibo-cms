@@ -64,3 +64,9 @@ $app->get('/log', function () use ($app) {
     $controller->Grid();
     $controller->render();
 })->name('logSearch');
+
+$app->delete('/log', function () use ($app) {
+    $controller = new \Xibo\Controller\Log($app);
+    $controller->Truncate();
+    $controller->render();
+})->name('logTruncate');

@@ -313,8 +313,6 @@ class Log extends Base
 
     public function TruncateForm()
     {
-        
-        $user = $this->getUser();
         $response = $this->getState();
 
         if ($this->getUser()->userTypeId != 1)

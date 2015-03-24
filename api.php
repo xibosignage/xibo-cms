@@ -64,9 +64,6 @@ $app->add(new JsonApiMiddleware());
 // this should be injected by the ApiAuthenticationOAuth middleware
 $app->user = \Xibo\Factory\UserFactory::getById(1);
 
-// Once we have a user, initialise the theme (again should be done in auth middleware)
-new \Xibo\Helper\Theme($app->user);
-
 // All routes
 require 'lib/routes.php';
 

@@ -49,12 +49,21 @@ class Base
     private $fullPage = true;
 
     /**
+     * Have we already rendered this controller.
+     * @var bool
+     */
+    private $rendered = false;
+
+    /**
      * Create the controller
      * @param Slim $app
      */
     public function __construct(Slim $app)
     {
         $this->app = $app;
+
+        // Reference back to this from the app
+        $app->controller = $this;
     }
 
     /**
@@ -117,9 +126,13 @@ class Base
      * End the controller execution, calling render
      *
      * @param string $method
+     * @throws ControllerNotImplemented if the controller is not implemented correctly
      */
     public function render($method = null)
     {
+        if ($this->rendered)
+            return;
+
         if ($method != null && method_exists($this, $method))
             $this->$method();
 
@@ -133,6 +146,7 @@ class Base
         }
         else {
             // Web App, either AJAX requested or normal
+            // Check if we want to output a full page
             if (!$this->app->request->isAjax() && $this->fullPage) {
                 Theme::Set('sidebar_html', $this->sideBarContent());
                 Theme::Set('action_menu', $this->actionMenu());
@@ -146,6 +160,8 @@ class Base
 
             $this->app->render('response', array('response' => $this->getState()));
         }
+
+        $this->rendered = true;
     }
 
     /**

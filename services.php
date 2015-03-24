@@ -20,7 +20,6 @@
  */
 use Xibo\Entity\User;
 use Xibo\Helper\Log;
-use Xibo\Helper\Theme;
 
 DEFINE('XIBO', true);
 include_once("lib/xmds.inc.php");
@@ -35,7 +34,7 @@ if (isset($_GET['xrds']))
     $serviceResponse->XRDS();
 
 // We need a theme
-new Theme(new User());
+
 
 // Check to see if we are going to consume a service (if we came from xmds.php then we will always use the SOAP service)
 if (defined('XMDS') || $method != '')

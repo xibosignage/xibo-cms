@@ -18,9 +18,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-use Xibo\Entity\User;
 use Xibo\Helper\Log;
-use Xibo\Helper\Theme;
 
 DEFINE('XIBO', true);
 require 'lib/xmds.inc.php';
@@ -77,7 +75,7 @@ if (isset($_GET['file'])) {
 }
 
 // We need a theme
-new Theme(new User());
+
 
 try {
     $wsdl = 'lib/service/service_v' . $version . '.wsdl';

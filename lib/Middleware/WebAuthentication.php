@@ -44,8 +44,6 @@ class WebAuthentication extends Middleware
         $app->user = new \Xibo\Entity\User();
 
         // Initialise a theme
-        new Theme($app->user);
-
         Theme::Set('root', $app->request->getRootUri());
         Theme::Set('rootPath', str_replace('/index.php', '', $app->request->getRootUri()));
 
@@ -84,6 +82,9 @@ class WebAuthentication extends Middleware
                     $user->routeAuthentication($resource);
 
                     $app->user = $user;
+
+                    // Set the username in the theme
+                    Theme::Set('thisUserName', $user->userName);
 
                     // We are authenticated
                     // Handle if we are an upgrade

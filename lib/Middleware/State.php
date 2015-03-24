@@ -24,8 +24,10 @@ namespace Xibo\Middleware;
 
 
 use Slim\Middleware;
+use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Log;
+use Xibo\Helper\Theme;
 
 class State extends Middleware
 {
@@ -60,6 +62,7 @@ class State extends Middleware
             $this->app->config('debug', true);
             $this->app->config('log.level', \Slim\Log::DEBUG);
             error_reporting(E_ALL);
+            ini_set('display_errors', 1);
         }
         else {
             // TODO: Use the log levels defined in the config
@@ -67,10 +70,41 @@ class State extends Middleware
             error_reporting(0);
         }
 
+        $app = $this->app;
+
         // Attach a hook to log the route
-        $this->app->hook('slim.before.dispatch', function() { Log::debug('called'); });
+        $this->app->hook('slim.before.dispatch', function() use ($app) {
+            // Configure some things in the theme
+            // Set the form method based on the route
+            // this is a bit of fluff really, as this is just a naming convention
+            // all forms are requested with the route: /controller/form
+            $pattern = explode('/', $this->app->router->getCurrentRoute()->getPattern());
+            switch ($pattern[count($pattern) - 1]) {
+
+                case 'add':
+                    Theme::Set('form_method', 'put');
+                    break;
+
+                case 'delete':
+                    Theme::Set('form_method', 'delete');
+                    break;
+
+                default:
+                    Theme::Set('form_method', 'post');
+            }
+
+            Log::debug('called %s', $this->app->router->getCurrentRoute()->getPattern());
+        });
+
+        Log::debug('State Middleware Configured');
 
         // Next middleware
         $this->next->call();
+
+        // On our way back out the onion, we want to render the controller.
+        if ($this->app->controller == null)
+            throw new ControllerNotImplemented();
+
+        $this->app->controller->render();
     }
 }

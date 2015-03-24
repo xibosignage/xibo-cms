@@ -173,7 +173,6 @@ $app->get('/user/view', function () use ($app) {
 $app->get('/log/view', function () use ($app) {
     $controller = new \Xibo\Controller\Log($app);
     $controller->displayPage();
-    $controller->render();
 })->name('logView');
 
 $app->get('/log/delete', function () use ($app) {
@@ -181,12 +180,6 @@ $app->get('/log/delete', function () use ($app) {
     $controller->TruncateForm();
     $controller->render();
 })->name('logTruncateForm');
-
-$app->delete('/log', function () use ($app) {
-    $controller = new \Xibo\Controller\Log($app);
-    $controller->Truncate();
-    $controller->render();
-});
 
 //
 // campaign

@@ -28,7 +28,6 @@ use MenuManager;
 use Select;
 use Slim\Slim;
 use Xibo\Entity\Menu;
-use Xibo\Entity\user;
 use Xibo\Factory\MenuFactory;
 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
@@ -37,7 +36,6 @@ class Theme
 {
     private static $instance = null;
 
-    private $user;
     private $dateManager;
 
     private $name = '';
@@ -45,11 +43,9 @@ class Theme
     private $vars = null;
     private $config = null;
 
-    public function __construct(user $user, $theme = NULL)
+    public function __construct($theme = NULL)
     {
-
         // Store some things for the Theme engine to use
-        $this->user =& $user;
         $this->help = new Help();
         $this->dateManager = new Date();
 
@@ -79,7 +75,7 @@ class Theme
     private static function GetInstance()
     {
         if (!isset(self::$instance))
-            throw new Exception(__("Theme not initialised"));
+            self::$instance = new Theme();
 
         return self::$instance;
     }
@@ -290,7 +286,7 @@ class Theme
 
     public static function GetUsername()
     {
-        return Theme::GetInstance()->user->userName;
+        return Theme::Get('thisUserName');
     }
 
     public static function GetUserHomeLink()
