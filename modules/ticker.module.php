@@ -866,7 +866,9 @@ class ticker extends Module
         $javaScriptContent .= '   var items = ' . json_encode($items) . ';';
         $javaScriptContent .= '   $(document).ready(function() { ';
         $javaScriptContent .= '       $("body").xiboLayoutScaler(options); $("#content").xiboTextRender(options, items);';
-	$javaScriptContent .= '       $(".xibo-resize").boxfit({multiline: true, step_size: 1, step_limit: 5500, align_middle: false, align_center: false, maximum_font_size: 500});';
+	if ($boxfit == 1) {
+		$javaScriptContent .= '       $(".xibo-resize").boxfit({multiline: true, step_size: 1, step_limit: 5500, align_middle: false, align_center: false, maximum_font_size: 500});';
+	}
         $javaScriptContent .= '   }); ';
         $javaScriptContent .= '</script>';
 
