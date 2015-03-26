@@ -94,7 +94,7 @@ class TagFactory
 
         $sql = 'SELECT tag.tagId, tag.tag FROM `tag` INNER JOIN `lktaglayout` ON lktaglayout.tagId = tag.tagId WHERE lktaglayout.layoutId = :layoutId';
 
-        foreach (\PDOConnect::select($sql, array('layoutId' => $layoutId)) as $row) {
+        foreach (\Xibo\Storage\PDOConnect::select($sql, array('layoutId' => $layoutId)) as $row) {
             $tag = new Tag();
             $tag->tagId = \Xibo\Helper\Sanitize::int($row['tagId']);
             $tag->tag = \Xibo\Helper\Sanitize::string($row['tag']);

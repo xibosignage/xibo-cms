@@ -498,7 +498,7 @@ class Library extends Base
 
                     if ($regionId == 'background') {
 
-                        Log::Audit('Replacing background image');
+                        Log::debug('Replacing background image');
 
                         if (!$replaceBackgroundImages)
                             continue;
@@ -520,7 +520,7 @@ class Library extends Base
                         try {
                             $module = ModuleFactory::createForMedia($type, $newMediaId, $this->db, $this->user);
                         } catch (Exception $e) {
-                            Log::Error($e->getMessage());
+                            Log::error($e->getMessage());
                             return false;
                         }
 

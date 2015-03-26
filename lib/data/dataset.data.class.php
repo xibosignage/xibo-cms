@@ -476,7 +476,7 @@ class DataSet extends Data
                 $SQL .= sprintf(' LIMIT %d, %d ', $lowerLimit, $upperLimit);
             }
     
-            Log::Audit($SQL . ' ' . var_export($params, true));
+            Log::debug($SQL . ' ' . var_export($params, true));
             $sth = $dbh->prepare($SQL);
             //$sth->debugDumpParams();
             $sth->execute($params);
@@ -487,7 +487,7 @@ class DataSet extends Data
         }
         catch (Exception $e) {
             
-            Log::Error($e->getMessage());
+            Log::error($e->getMessage());
         
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));

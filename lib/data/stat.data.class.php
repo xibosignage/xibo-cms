@@ -124,7 +124,7 @@ class Stat extends data
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
 
-            Log::Audit('Display Up: ' . $displayId);
+            Log::debug('Display Up: ' . $displayId);
         
             $sth = $dbh->prepare('UPDATE stat SET end = :toDt WHERE displayId = :displayId AND end IS NULL');
             $sth->execute(array(

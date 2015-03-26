@@ -48,7 +48,8 @@ $app->get('/layout/:id', function($id) use ($app) {
 })->setName('layoutGet');
 
 $app->put('/layout', function() use ($app) {
-
+    $controller = new \Xibo\Controller\Layout($app);
+    $controller->add();
 })->setName('layoutAdd');
 
 $app->post('/layout/:id', function($id) use ($app) {

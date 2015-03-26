@@ -400,7 +400,7 @@ class Schedule extends Base
         $displayOrder = \Xibo\Helper\Sanitize::getInt('DisplayOrder');
         $isNextButton = \Kit::GetParam('next', _GET, _BOOL, false);
 
-        Log::Audit('Times received are: FromDt=' . $fromDT . '. ToDt=' . $toDT . '. RepeatToDt=' . $repeatToDt);
+        Log::debug('Times received are: FromDt=' . $fromDT . '. ToDt=' . $toDT . '. RepeatToDt=' . $repeatToDt);
 
         // Convert our dates
         $fromDT = Date::getTimestampFromString($fromDT);
@@ -409,7 +409,7 @@ class Schedule extends Base
         if ($repeatToDt != '')
             $repeatToDt = Date::getTimestampFromString($repeatToDt);
 
-        Log::Audit('Converted Times received are: FromDt=' . $fromDT . '. ToDt=' . $toDT . '. RepeatToDt=' . $repeatToDt);
+        Log::debug('Converted Times received are: FromDt=' . $fromDT . '. ToDt=' . $toDT . '. RepeatToDt=' . $repeatToDt);
 
         // Validate layout
         if ($campaignId == 0)
@@ -687,7 +687,7 @@ class Schedule extends Base
         if ($repeatToDt != '')
             $repeatToDt = Date::getTimestampFromString($repeatToDt);
 
-        Log::Audit('Times received are: FromDt=' . $fromDT . '. ToDt=' . $toDT . '. RepeatToDt=' . $repeatToDt);
+        Log::debug('Times received are: FromDt=' . $fromDT . '. ToDt=' . $toDT . '. RepeatToDt=' . $repeatToDt);
 
         // Validate layout
         if ($campaignId == 0)

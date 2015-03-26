@@ -112,7 +112,7 @@ ORDER BY joinedGroup.IsEveryone DESC, joinedGroup.IsUserSpecific, joinedGroup.`G
 
         \Xibo\Helper\Log::sql($sql, $params);
 
-        foreach (\PDOConnect::select($sql, $params) as $row) {
+        foreach (\Xibo\Storage\PDOConnect::select($sql, $params) as $row) {
             $permission = new Permission();
             $permission->permissionId = $row['permissionId'];
             $permission->groupId = $row['groupId'];

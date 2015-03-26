@@ -164,7 +164,7 @@ class UserGroup extends Data
      */
     public function Delete($userGroupId)
     {
-        Log::Audit('IN: ' . $userGroupId);
+        Log::debug('IN: ' . $userGroupId);
 
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -443,7 +443,7 @@ class UserGroup extends Data
             return $types;
         }
         catch (Exception $e) {
-            Log::Error($e->getMessage());
+            Log::error($e->getMessage());
             throw $e;
         }
     }

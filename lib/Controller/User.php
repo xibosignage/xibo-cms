@@ -836,7 +836,7 @@ class User extends Base
             return $newPermissions[$array[0]][$array[1]] = 1;
         }, $groupIds);
 
-        Log::Audit(var_export($newPermissions, true));
+        Log::debug(var_export($newPermissions, true));
 
         // List of groupIds with view, edit and del assignments
         foreach ($permissions as $row) {
@@ -856,7 +856,7 @@ class User extends Base
         $cascade = \Xibo\Helper\Sanitize::getCheckbox('cascade');
 
         if ($cascade) {
-            Log::Audit('Permissions to push down: ' . var_export($newPermissions, true));
+            Log::debug('Permissions to push down: ' . var_export($newPermissions, true));
 
             // TODO: Cascade permissions
         }

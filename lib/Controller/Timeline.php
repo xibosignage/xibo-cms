@@ -195,7 +195,7 @@ class Timeline extends Base
 
         // Load the region and get the dimensions, applying the scale factor if necessary (only v1 layouts will have a scale factor != 1)
         $region = \Xibo\Factory\RegionFactory::loadByRegionId(Kit::GetParam('regionid', _POST, _INT));
-        Log::Audit($region);
+        Log::debug($region);
 
         if (!$this->user->checkEditable($region))
             trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
@@ -264,7 +264,7 @@ class Timeline extends Base
 
             // Load the region
             $region = $layout->getRegion($regionId);
-            Log::Audit('Editing Region ' . $region);
+            Log::debug('Editing Region ' . $region);
 
             // Check Permissions
             if (!$this->user->checkEditable($region))
@@ -275,7 +275,7 @@ class Timeline extends Base
             $region->left = \Xibo\Helper\Sanitize::double($newCoordinates->left);
             $region->width = \Xibo\Helper\Sanitize::double($newCoordinates->width);
             $region->height = \Xibo\Helper\Sanitize::double($newCoordinates->height);
-            Log::Audit('Set ' . $region);
+            Log::debug('Set ' . $region);
         }
 
         // Mark the layout as having changed
@@ -334,7 +334,7 @@ class Timeline extends Base
         // Load the region
         $region = \Xibo\Factory\RegionFactory::getById(Kit::GetParam('regionid', _REQUEST, _INT));
 
-        Log::Audit('Assigning files to ' . $region);
+        Log::debug('Assigning files to ' . $region);
 
         // Make sure we have permission to edit this region
         if (!$this->user->checkEditable($region))
@@ -440,7 +440,7 @@ class Timeline extends Base
 
         } catch (\Xibo\Exception\NotFoundException $e) {
             // Log it
-            Log::Error($e->getMessage());
+            Log::error($e->getMessage());
 
             // No media to preview
             $response->extra['text'] = __('Region cannot be found.');
@@ -726,7 +726,7 @@ class Timeline extends Base
         $playlist = $region->playlists[0];
         /* @var \Xibo\Entity\Playlist $playlist */
 
-        Log::Audit(count($playlist->widgets) . ' widgets on ' . $region);
+        Log::debug(count($playlist->widgets) . ' widgets on ' . $region);
 
         foreach ($playlist->widgets as $widget) {
             /* @var \Xibo\Entity\Widget $widget */
@@ -842,7 +842,7 @@ class Timeline extends Base
         if (count($widgetList) <= 0)
             trigger_error(__('No widgets to reorder'), E_USER_ERROR);
 
-        Log::Audit($playlist . ' reorder to ' . var_export($widgetList, true));
+        Log::debug($playlist . ' reorder to ' . var_export($widgetList, true));
 
         // Go through each one and move it
         $i = 0;
@@ -851,9 +851,9 @@ class Timeline extends Base
             // Find this item in the existing list and add it to our new order
             foreach ($playlist->widgets as $widget) {
                 /* @var \Xibo\Entity\Widget $widget */
-                Log::Audit('Comparing ' . $widget . ' with ' . $widgetId);
+                Log::debug('Comparing ' . $widget . ' with ' . $widgetId);
                 if ($widget->getId() == $widgetId) {
-                    Log::Audit('Setting Display Order ' . $i . ' on widgetId ' . $widgetId);
+                    Log::debug('Setting Display Order ' . $i . ' on widgetId ' . $widgetId);
                     $widget->displayOrder = $i;
                     $widget->save();
                     break;

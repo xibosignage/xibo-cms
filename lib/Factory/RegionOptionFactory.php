@@ -66,7 +66,7 @@ class RegionOptionFactory
 
         $sql = 'SELECT * FROM `regionoption` WHERE regionId = :regionId';
 
-        foreach (\PDOConnect::select($sql, array('regionId' => \Xibo\Helper\Sanitize::int('regionId', $filterBy))) as $row) {
+        foreach (\Xibo\Storage\PDOConnect::select($sql, array('regionId' => \Xibo\Helper\Sanitize::int('regionId', $filterBy))) as $row) {
             $region = new RegionOption();
             $region->regionId = \Xibo\Helper\Sanitize::int($row['regionId']);
             $region->option = \Xibo\Helper\Sanitize::string($row['option']);

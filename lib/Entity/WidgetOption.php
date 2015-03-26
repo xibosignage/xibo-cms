@@ -43,7 +43,7 @@ class WidgetOption
 
     public function save()
     {
-        \Xibo\Helper\Log::Audit('Saving ' . $this);
+        \Xibo\Helper\Log::debug('Saving ' . $this);
 
         $sql = 'INSERT INTO `widgetoption` (`widgetId`, `type`, `option`, `value`) VALUES (:widgetId, :type, :option, :value) ON DUPLICATE KEY UPDATE `value` = :value2';
         \Xibo\Storage\PDOConnect::insert($sql, array(

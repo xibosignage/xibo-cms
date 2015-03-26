@@ -927,7 +927,7 @@ function XiboFormSubmit(form) {
     }
 
     $.ajax({
-        type:"post",
+        type:$(form).attr("method"),
         url:url,
         cache:false,
         dataType:"json",

@@ -79,7 +79,7 @@ class TwitterOAuth {
     $parameters['oauth_callback'] = $oauth_callback; 
     $request = $this->TwitteroAuthRequest($this->requestTokenURL(), 'GET', $parameters);
     $token = TwitterOAuthUtil::parse_parameters($request);
-    Log::Audit(var_export($token, true));
+    Log::debug(var_export($token, true));
     $this->token = new TwitterOAuthConsumer($token['oauth_token'], $token['oauth_token_secret']);
     return $token;
   }
@@ -114,7 +114,7 @@ class TwitterOAuth {
     $parameters['oauth_verifier'] = $Twitteroauth_verifier;
     $request = $this->TwitteroAuthRequest($this->accessTokenURL(), 'GET', $parameters);
     $token = TwitterOAuthUtil::parse_parameters($request);
-    Log::Audit(var_export($token, true));
+    Log::debug(var_export($token, true));
     $this->token = new TwitterOAuthConsumer($token['oauth_token'], $token['oauth_token_secret']);
     return $token;
   }

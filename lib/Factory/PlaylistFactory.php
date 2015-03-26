@@ -94,7 +94,7 @@ class PlaylistFactory
 
         \Xibo\Helper\Log::sql($sql, $params);
 
-        foreach (\PDOConnect::select($sql, $params) as $row) {
+        foreach (\Xibo\Storage\PDOConnect::select($sql, $params) as $row) {
             $playlist = new Playlist();
             $playlist->name = \Xibo\Helper\Sanitize::string($row['name']);
             $playlist->ownerId = \Xibo\Helper\Sanitize::int($row['ownerId']);

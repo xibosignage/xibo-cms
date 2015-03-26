@@ -79,7 +79,7 @@ class Media extends Data
                 
             // Check the extension is valid for that media type
             if (!$this->IsValidFile($type, $extension)) {
-                Log::Error('Invalid extension: ' . $extension);
+                Log::error('Invalid extension: ' . $extension);
                 $this->ThrowError(18, __('Invalid file extension'));
             }
     
@@ -513,7 +513,7 @@ class Media extends Data
                 return false;
         }
 
-        Log::Audit('Valid Extensions: ' . var_export($this->validExtensions, true));
+        Log::debug('Valid Extensions: ' . var_export($this->validExtensions, true));
 
         // TODO: Is this search case sensitive?
         return in_array($extension, $this->validExtensions);
@@ -722,7 +722,7 @@ class Media extends Data
         //Debug::Audit('Module File: ' . var_export($media, true));
 
         if ($media === false || $force) {
-            Log::Audit('Adding: ' . $url . ' with Name: ' . $name . '. Expiry: ' . date('Y-m-d h:i:s', $expires));
+            Log::debug('Adding: ' . $url . ' with Name: ' . $name . '. Expiry: ' . date('Y-m-d h:i:s', $expires));
             
             $fileName = Config::GetSetting('LIBRARY_LOCATION') . 'temp' . DIRECTORY_SEPARATOR . $name;
             
@@ -766,7 +766,7 @@ class Media extends Data
             // How can we tell?
             // - valid flag on the media
             if ($media !== false && $media['valid'] == 0) {
-                Log::Audit('Media not valid, forcing update.');
+                Log::debug('Media not valid, forcing update.');
                 $force = true;
             }
 
@@ -788,7 +788,7 @@ class Media extends Data
             // Get the name
             $storedAs = $libraryFolder . $name;
 
-            Log::Audit('Updating: ' . $name);
+            Log::debug('Updating: ' . $name);
              
             // Now copy the file
             if (!@copy($file, $storedAs))
@@ -863,7 +863,7 @@ class Media extends Data
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
 
-            Log::Audit('Removing: ' . $storedAs . ' ID:' . $mediaId);
+            Log::debug('Removing: ' . $storedAs . ' ID:' . $mediaId);
         
             // Delete the links
             $sth = $dbh->prepare('DELETE FROM lklayoutmedia WHERE mediaId = :mediaId AND regionId = :regionId');
@@ -1055,7 +1055,7 @@ class Media extends Data
      * @param  [int] $mediaId The Layout Id
      */
     public function unTagAll($mediaId) {
-        Log::Audit('IN');
+        Log::debug('IN');
 
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -1200,7 +1200,7 @@ class Media extends Data
             }
         }
         catch (Exception $e) {
-            Log::Error($e->getMessage());
+            Log::error($e->getMessage());
             throw new Exception(__('Cannot get entries'));
         }
 
@@ -1215,7 +1215,7 @@ class Media extends Data
     public function deleteUnusedForUser($userId)
     {
         foreach (Media::entriesUnusedForUser($userId) as $item) {
-            Log::Audit('Deleting unused media: ' . $item['mediaId']);
+            Log::debug('Deleting unused media: ' . $item['mediaId']);
             if (!$this->Delete($item['mediaId']))
                 return false;
         }

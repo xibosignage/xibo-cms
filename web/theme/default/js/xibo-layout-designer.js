@@ -60,9 +60,7 @@ $(document).ready(function(){
         });
 
         // Set an interval
-        XiboPing('index.php?p=layout&q=LayoutStatus&layoutId=' + $(this).attr("layoutid"), '.layout-status');
-
-        setInterval("XiboPing('index.php?p=layout&q=LayoutStatus&layoutId=" + $(this).attr("layoutid") + "', '.layout-status')", 1000 * 60); // Every minute
+        setInterval("XiboPing('" + $(this).data('statusUrl') + "', '.layout-status')", 1000 * 60); // Every minute
     });
 
     $('.RegionOptionsMenuItem').click(function() {

@@ -438,7 +438,7 @@ class Module extends Base
         $requestedModule = \Kit::GetParam('mod', _REQUEST, _WORD);
         $requestedMethod = \Kit::GetParam('method', _REQUEST, _WORD);
 
-        Log::Audit('Module Exec for ' . $requestedModule . ' with method ' . $requestedMethod);
+        Log::debug('Module Exec for ' . $requestedModule . ' with method ' . $requestedMethod);
 
         // Validate that GetResource calls have a region
         if ($requestedMethod == 'GetResource' && \Kit::GetParam('regionId', _REQUEST, _INT) == 0)

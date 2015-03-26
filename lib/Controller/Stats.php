@@ -164,7 +164,7 @@ class Stats extends Base
             $toDt = date("Y-m-d", strtotime($toDt) + 86399);
         }
 
-        Log::Audit('Converted Times received are: FromDt=' . $fromDt . '. ToDt=' . $toDt);
+        Log::debug('Converted Times received are: FromDt=' . $fromDt . '. ToDt=' . $toDt);
 
         // Get an array of display id this user has access to.
         $displays = $this->user->DisplayList();

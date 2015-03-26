@@ -24,8 +24,6 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\Layout;
-use Xibo\Entity\Playlist;
-use Xibo\Entity\Region;
 use Xibo\Entity\Widget;
 use Xibo\Entity\WidgetOption;
 use Xibo\Exception\NotFoundException;
@@ -470,10 +468,10 @@ class LayoutFactory
             }
 
             return $entries;
-        }
-        catch (\Exception $e) {
 
-            \Xibo\Helper\Log::Error($e->getMessage());
+        } catch (\Exception $e) {
+
+            \Xibo\Helper\Log::error($e->getMessage());
 
             throw new NotFoundException(__('Layout Not Found'));
         }

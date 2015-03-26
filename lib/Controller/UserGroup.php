@@ -371,7 +371,7 @@ END;
             $response->initialSortColumn = 2;
 
         } catch (Exception $e) {
-            Log::Error($e);
+            Log::error($e);
             trigger_error(__('Unable to process request'), E_USER_ERROR);
         }
     }
@@ -395,7 +395,7 @@ END;
                 $group = \Xibo\Helper\Sanitize::string($row['group']);
             }
         } catch (Exception $e) {
-            Log::Error($e->getMessage());
+            Log::error($e->getMessage());
         }
 
         // Set some information about the form

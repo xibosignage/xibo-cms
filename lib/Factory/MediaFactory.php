@@ -152,7 +152,7 @@ class MediaFactory
 
         \Xibo\Helper\Log::sql($sql, $params);
 
-        foreach (\PDOConnect::select($sql, $params) as $row) {
+        foreach (\Xibo\Storage\PDOConnect::select($sql, $params) as $row) {
             $media = new Media();
             $media->mediaId = \Xibo\Helper\Sanitize::int($row['mediaID']);
             $media->name = \Xibo\Helper\Sanitize::string($row['name']);

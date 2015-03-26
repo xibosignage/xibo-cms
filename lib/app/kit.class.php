@@ -521,22 +521,22 @@ class Kit
             case JSON_ERROR_NONE:
                 return $encoded;
             case JSON_ERROR_DEPTH:
-                Log::Audit('Maximum stack depth exceeded');
+                Log::debug('Maximum stack depth exceeded');
                 return false;
             case JSON_ERROR_STATE_MISMATCH:
-                Log::Audit('Underflow or the modes mismatch');
+                Log::debug('Underflow or the modes mismatch');
                 return false;
             case JSON_ERROR_CTRL_CHAR:
-                Log::Audit('Unexpected control character found');
+                Log::debug('Unexpected control character found');
                 return false;
             case JSON_ERROR_SYNTAX:
-                Log::Audit('Syntax error, malformed JSON');
+                Log::debug('Syntax error, malformed JSON');
                 return false;
             case JSON_ERROR_UTF8:
                 $clean = \Kit::utf8ize($mixed);
                 return \Kit::jsonEncode($clean);
             default:
-                Log::Audit('Unknown error');
+                Log::debug('Unknown error');
                 return false;
         }
     }

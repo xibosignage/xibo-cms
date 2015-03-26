@@ -237,7 +237,7 @@ class Widget
 
     private function add()
     {
-        \Xibo\Helper\Log::Audit('Adding Widget ' . $this->type . ' to PlaylistId ' . $this->playlistId);
+        \Xibo\Helper\Log::debug('Adding Widget ' . $this->type . ' to PlaylistId ' . $this->playlistId);
 
         $sql = 'INSERT INTO `widget` (`playlistId`, `ownerId`, `type`, `duration`, `displayOrder`) VALUES (:playlistId, :ownerId, :type, :duration, :displayOrder)';
         $this->widgetId = \Xibo\Storage\PDOConnect::insert($sql, array(
@@ -251,7 +251,7 @@ class Widget
 
     private function update()
     {
-        \Xibo\Helper\Log::Audit('Saving Widget ' . $this->type . ' on PlaylistId ' . $this->playlistId . ' WidgetId: ' . $this->widgetId);
+        \Xibo\Helper\Log::debug('Saving Widget ' . $this->type . ' on PlaylistId ' . $this->playlistId . ' WidgetId: ' . $this->widgetId);
 
         $sql = 'UPDATE `widget` SET `playlistId` = :playlistId, `ownerId` = :ownerId, `type` = :type, `duration` = :duration, `displayOrder` = :displayOrder WHERE `widgetId` = :widgetId';
         \Xibo\Storage\PDOConnect::update($sql, array(

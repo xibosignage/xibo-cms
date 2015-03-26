@@ -194,7 +194,7 @@ class Userdata extends Data
         }
         catch (Exception $e) {
 
-            Log::Error($e->getMessage());
+            Log::error($e->getMessage());
 
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
@@ -246,7 +246,7 @@ class Userdata extends Data
         }
         catch (Exception $e) {
 
-            Log::Error($e->getMessage());
+            Log::error($e->getMessage());
 
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
@@ -428,7 +428,7 @@ class Userdata extends Data
             return $types;
         }
         catch (Exception $e) {
-            Log::Error($e->getMessage());
+            Log::error($e->getMessage());
             throw $e;
         }
     }

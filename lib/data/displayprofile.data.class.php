@@ -40,7 +40,7 @@ class DisplayProfile extends Data {
 
     public function Load() {
 
-        Log::Audit('Load DisplayProfileId: ' . $this->displayProfileId);
+        Log::debug('Load DisplayProfileId: ' . $this->displayProfileId);
 
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -96,7 +96,7 @@ class DisplayProfile extends Data {
 
     public function LoadDefault() {
 
-        Log::Audit('Load Default ' . $this->type);
+        Log::debug('Load Default ' . $this->type);
 
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -112,7 +112,7 @@ class DisplayProfile extends Data {
           
             if (!$row = $sth->fetch()) {
                 // We don't so we should stick with the global default
-                Log::Audit('Fall back to global default');
+                Log::debug('Fall back to global default');
             }
             else {
                 // We do, so we should overwrite the global default with our stored preferences

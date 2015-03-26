@@ -102,7 +102,7 @@ class CampaignFactory
 
         \Xibo\Helper\Log::sql($sql, $params);
 
-        foreach (\PDOConnect::select($sql, $params) as $row) {
+        foreach (\Xibo\Storage\PDOConnect::select($sql, $params) as $row) {
 
             $campaign = new Campaign();
 

@@ -111,7 +111,7 @@ class WidgetFactory
         if (is_array($sortOrder))
             $sql .= ' ORDER BY ' . implode(',', $sortOrder);
 
-        foreach (\PDOConnect::select($sql, $params) as $row) {
+        foreach (\Xibo\Storage\PDOConnect::select($sql, $params) as $row) {
             $widget = new Widget();
             $widget->widgetId = \Xibo\Helper\Sanitize::int($row['widgetId']);
             $widget->playlistId = \Xibo\Helper\Sanitize::int($row['playlistId']);

@@ -77,7 +77,7 @@ class Soap4
         $clientAddress = \Xibo\Helper\Sanitize::getString('REMOTE_ADDR');
 
         // Audit in
-        Log::Audit('serverKey: ' . $serverKey . ', hardwareKey: ' . $hardwareKey . ', displayName: ' . $displayName);
+        Log::debug('serverKey: ' . $serverKey . ', hardwareKey: ' . $hardwareKey . ', displayName: ' . $displayName);
 
         // Check the serverKey matches
         if ($serverKey != Config::GetSetting('SERVER_KEY'))
@@ -101,7 +101,7 @@ class Soap4
 
             $result = $sth->fetchAll();
         } catch (Exception $e) {
-            Log::Error('Error trying to check hardware key. ' . $e->getMessage());
+            Log::error('Error trying to check hardware key. ' . $e->getMessage());
             throw new SoapFault('Sender', 'Cannot check client key.');
         }
 
@@ -201,7 +201,7 @@ class Soap4
                         $displayElement->appendChild($node);
                     }
                 } catch (Exception $e) {
-                    Log::Error('Error loading display config. ' . $e->getMessage());
+                    Log::error('Error loading display config. ' . $e->getMessage());
                     throw new SoapFault('Sender', 'Error after display found');
                 }
 
@@ -226,7 +226,7 @@ class Soap4
 
         // Audit our return
         if ($isAuditing == 1)
-            Log::Audit($returnXml, $displayId);
+            Log::debug($returnXml, $displayId);
 
         return $returnXml;
     }
@@ -260,7 +260,7 @@ class Soap4
             throw new SoapFault('Sender', 'This display is not licensed.');
 
         if ($this->isAuditing == 1)
-            Log::Audit('hardwareKey = ' . $hardwareKey, $this->displayId);
+            Log::debug('hardwareKey = ' . $hardwareKey, $this->displayId);
 
         // Remove all Nonces for this display
         $nonce = new Nonce();
@@ -281,7 +281,7 @@ class Soap4
         $toFilter = $rfLookAhead - ($rfLookAhead % 3600);
 
         if ($this->isAuditing == 1)
-            Log::Audit(sprintf('Required files date criteria. FromDT = %s. ToDt = %s', date('Y-m-d h:i:s', $fromFilter), date('Y-m-d h:i:s', $toFilter)), $this->displayId);
+            Log::debug(sprintf('Required files date criteria. FromDT = %s. ToDt = %s', date('Y-m-d h:i:s', $fromFilter), date('Y-m-d h:i:s', $toFilter)), $this->displayId);
 
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -313,7 +313,7 @@ class Soap4
             foreach ($sth->fetchAll() as $row)
                 $layouts[] = \Xibo\Helper\Sanitize::int($row['layoutID']);
         } catch (Exception $e) {
-            Log::Error('Error getting layout listing. ' . $e->getMessage(), $this->displayId);
+            Log::error('Error getting layout listing. ' . $e->getMessage(), $this->displayId);
             return new SoapFault('Sender', 'Unable to get a list of layouts');
         }
 
@@ -379,7 +379,7 @@ class Soap4
                     $fileSize = strlen($xml);
 
                     if ($this->isAuditing == 1)
-                        Log::Audit('MD5 for layoutId ' . $id . ' is: [' . $md5 . ']', $this->displayId);
+                        Log::debug('MD5 for layoutId ' . $id . ' is: [' . $md5 . ']', $this->displayId);
 
                     // Add nonce
                     $nonce->AddXmdsNonce('layout', $this->displayId, NULL, $fileSize, NULL, $id);
@@ -420,7 +420,7 @@ class Soap4
                 $fileElements->appendChild($file);
             }
         } catch (Exception $e) {
-            Log::Error('Unable to get a list of required files. ' . $e->getMessage(), $this->displayId);
+            Log::error('Unable to get a list of required files. ' . $e->getMessage(), $this->displayId);
             return new SoapFault('Sender', 'Unable to get a list of files');
         }
 
@@ -473,7 +473,7 @@ class Soap4
                 $blackList->appendChild($file);
             }
         } catch (Exception $e) {
-            Log::Error('Unable to get a list of blacklisted files. ' . $e->getMessage(), $this->displayId);
+            Log::error('Unable to get a list of blacklisted files. ' . $e->getMessage(), $this->displayId);
             return new SoapFault('Sender', 'Unable to get a list of blacklisted files');
         }
 
@@ -481,7 +481,7 @@ class Soap4
         $this->PhoneHome();
 
         if ($this->isAuditing == 1)
-            Log::Audit($requiredFilesXml->saveXML(), $this->displayId);
+            Log::debug($requiredFilesXml->saveXML(), $this->displayId);
 
         // Return the results of requiredFiles()
         $requiredFilesXml->formatOutput = true;
@@ -529,7 +529,7 @@ class Soap4
             throw new SoapFault('Receiver', "This display client is not licensed");
 
         if ($this->isAuditing == 1)
-            Log::Audit('hardwareKey: ' . $hardwareKey . ', fileId: ' . $fileId . ', fileType: ' . $fileType . ', chunkOffset: ' . $chunkOffset . ', chunkSize: ' . $chunkSize, $this->displayId);
+            Log::debug('hardwareKey: ' . $hardwareKey . ', fileId: ' . $fileId . ', fileType: ' . $fileType . ', chunkOffset: ' . $chunkOffset . ', chunkSize: ' . $chunkSize, $this->displayId);
 
         $nonce = new Nonce();
 
@@ -554,7 +554,7 @@ class Soap4
                 // Store file size for bandwidth log
                 $chunkSize = strlen($file);
             } catch (Exception $e) {
-                Log::Error('Unable to find the layout to download. ' . $e->getMessage(), $this->displayId);
+                Log::error('Unable to find the layout to download. ' . $e->getMessage(), $this->displayId);
                 return new SoapFault('Receiver', 'Unable the find layout.');
             }
         } else if ($fileType == "media") {
@@ -581,7 +581,7 @@ class Soap4
                 // Store file size for bandwidth log
                 $chunkSize = strlen($file);
             } catch (Exception $e) {
-                Log::Error('Unable to find the media to download. ' . $e->getMessage(), $this->displayId);
+                Log::error('Unable to find the media to download. ' . $e->getMessage(), $this->displayId);
                 return new SoapFault('Receiver', 'Unable the find media.');
             }
         } else {
@@ -639,7 +639,7 @@ class Soap4
             $toFilter = ($fromFilter + 3600) - (($fromFilter + 3600) % 3600);
 
         if ($this->isAuditing == 1)
-            Log::Audit(sprintf('FromDT = %s. ToDt = %s', date('Y-m-d h:i:s', $fromFilter), date('Y-m-d h:i:s', $toFilter)), $this->displayId);
+            Log::debug(sprintf('FromDT = %s. ToDt = %s', date('Y-m-d h:i:s', $fromFilter), date('Y-m-d h:i:s', $toFilter)), $this->displayId);
 
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -697,7 +697,7 @@ class Soap4
                 $layoutElements->appendChild($layout);
             }
         } catch (Exception $e) {
-            Log::Error('Error getting a list of layouts for the schedule. ' . $e->getMessage(), $this->displayId);
+            Log::error('Error getting a list of layouts for the schedule. ' . $e->getMessage(), $this->displayId);
             return new SoapFault('Sender', 'Unable to get A list of layouts for the schedule');
         }
 
@@ -733,7 +733,7 @@ class Soap4
         $scheduleXml->formatOutput = true;
 
         if ($this->isAuditing == 1)
-            Log::Audit($scheduleXml->saveXML(), $this->displayId);
+            Log::debug($scheduleXml->saveXML(), $this->displayId);
 
         $output = $scheduleXml->saveXML();
 
@@ -775,7 +775,7 @@ class Soap4
             throw new SoapFault('Receiver', "This display client is not licensed", $hardwareKey);
 
         if ($this->isAuditing == 1)
-            Log::Audit('Blacklisting ' . $mediaId . ' for ' . $reason, $this->displayId);
+            Log::debug('Blacklisting ' . $mediaId . ' for ' . $reason, $this->displayId);
 
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -820,10 +820,10 @@ class Soap4
                 }
             } else {
                 if ($this->isAuditing == 1)
-                    Log::Audit($mediaId . ' already black listed', $this->displayId);
+                    Log::debug($mediaId . ' already black listed', $this->displayId);
             }
         } catch (Exception $e) {
-            Log::Error('Unable to query for Blacklist records. ' . $e->getMessage(), $this->displayId);
+            Log::error('Unable to query for Blacklist records. ' . $e->getMessage(), $this->displayId);
             return new SoapFault('Sender', "Unable to query for BlackList records.");
         }
 
@@ -860,13 +860,13 @@ class Soap4
             throw new SoapFault('Sender', 'This display client is not licensed.');
 
         if ($this->isAuditing == 1)
-            Log::Audit('XML log: ' . $logXml, $this->displayId);
+            Log::debug('XML log: ' . $logXml, $this->displayId);
 
         // Load the XML into a DOMDocument
         $document = new DOMDocument("1.0");
 
         if (!$document->loadXML($logXml)) {
-            Log::Error('Malformed XML from Player, this will be discarded. The Raw XML String provided is: ' . $logXml, $this->displayId);
+            Log::error('Malformed XML from Player, this will be discarded. The Raw XML String provided is: ' . $logXml, $this->displayId);
             return true;
         }
 
@@ -892,7 +892,7 @@ class Soap4
             $cat = strtolower($node->getAttribute('category'));
 
             if ($date == '' || $cat == '') {
-                Log::Error('Log submitted without a date or category attribute', $this->displayId);
+                Log::error('Log submitted without a date or category attribute', $this->displayId);
                 continue;
             }
 
@@ -960,7 +960,7 @@ class Soap4
             throw new SoapFault('Receiver', "This display client is not licensed");
 
         if ($this->isAuditing == 1)
-            Log::Audit('Received XML. ' . $statXml, $this->displayId);
+            Log::debug('Received XML. ' . $statXml, $this->displayId);
 
         if ($statXml == "")
             throw new SoapFault('Receiver', "Stat XML is empty.");
@@ -983,7 +983,7 @@ class Soap4
             $type = $node->getAttribute('type');
 
             if ($fromdt == '' || $todt == '' || $type == '') {
-                Log::Error('Stat submitted without the fromdt, todt or type attributes.', $this->displayId);
+                Log::error('Stat submitted without the fromdt, todt or type attributes.', $this->displayId);
                 continue;
             }
 
@@ -994,7 +994,7 @@ class Soap4
 
             // Write the stat record with the information we have available to us.
             if (!$statObject->Add($type, $fromdt, $todt, $scheduleID, $this->displayId, $layoutID, $mediaID, $tag)) {
-                Log::Error(sprintf('Stat Add failed with error: %s', $statObject->GetErrorMessage()), $this->displayId);
+                Log::error(sprintf('Stat Add failed with error: %s', $statObject->GetErrorMessage()), $this->displayId);
                 continue;
             }
         }
@@ -1032,7 +1032,7 @@ class Soap4
             throw new SoapFault('Receiver', 'This display client is not licensed');
 
         if ($this->isAuditing == 1)
-            Log::Audit($inventory, $this->displayId);
+            Log::debug($inventory, $this->displayId);
 
         // Check that the $inventory contains something
         if ($inventory == '')
@@ -1126,7 +1126,7 @@ class Soap4
         try {
             $module = ModuleFactory::load($type, $layoutId, $regionId, $mediaId, null, null, $user);
         } catch (Exception $e) {
-            Log::Error($e->getMessage(), $this->displayId);
+            Log::error($e->getMessage(), $this->displayId);
             throw new SoapFault('Receiver', 'Cannot create module. Check CMS Log');
         }
 
@@ -1169,7 +1169,7 @@ class Soap4
             throw new SoapFault('Receiver', 'This display client is not licensed');
 
         if ($this->isAuditing == 1)
-            Log::Audit($status, $this->displayId);
+            Log::debug($status, $this->displayId);
 
         $this->LogBandwidth($this->displayId, Bandwidth::$NOTIFYSTATUS, strlen($status));
 
@@ -1208,7 +1208,7 @@ class Soap4
             throw new SoapFault('Receiver', 'This display client is not licensed');
 
         if ($this->isAuditing == 1)
-            Log::Audit('Received Screen shot', $this->displayId);
+            Log::debug('Received Screen shot', $this->displayId);
 
         // Open this displays screen shot file and save this.
         File::EnsureLibraryExists();
@@ -1263,9 +1263,9 @@ class Soap4
                     @file_get_contents($PHONE_HOME_URL);
 
                     if ($this->isAuditing == 1)
-                        Log::Audit("PHONE_HOME [OUT]", $this->displayId);
+                        Log::debug("PHONE_HOME [OUT]", $this->displayId);
                 } catch (Exception $e) {
-                    Log::Error($e->getMessage(), $this->displayId);
+                    Log::error($e->getMessage(), $this->displayId);
                     return false;
                 }
             }
@@ -1326,7 +1326,7 @@ class Soap4
 
             return true;
         } catch (Exception $e) {
-            Log::Error('hardwareKey: ' . $hardwareKey . '. ' . $e->getMessage());
+            Log::error('hardwareKey: ' . $hardwareKey . '. ' . $e->getMessage());
             return false;
         }
     }
@@ -1395,7 +1395,7 @@ class Soap4
 
             return ($bandwidthUsage >= ($xmdsLimit * 1024)) ? false : true;
         } catch (Exception $e) {
-            Log::Error($e->getMessage(), $this->displayId);
+            Log::error($e->getMessage(), $this->displayId);
             return false;
         }
     }

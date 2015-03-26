@@ -71,19 +71,19 @@ class Cache
         if ((isset(self::$_data[$key]) && self::$_data[$key] != null)) {
             // If the key has expired remove it
             if (self::$_data[$key]['expires'] < time()) {
-                Log::Audit($key . ' Expired: ' . self::$_data[$key]['expires']);
+                Log::debug($key . ' Expired: ' . self::$_data[$key]['expires']);
 
                 // Remove it
                 self::remove($key);
                 return false;
             }
 
-            Log::Audit($key . ' present and in date');
+            Log::debug($key . ' present and in date');
 
             return true;
         }
 
-        Log::Audit($key . ' not present');
+        Log::debug($key . ' not present');
         return false;
     }
 

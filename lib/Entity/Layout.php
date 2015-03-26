@@ -25,6 +25,7 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\TagFactory;
+use Xibo\Helper\Log;
 
 class Layout
 {
@@ -137,6 +138,8 @@ class Layout
      */
     public function load()
     {
+        Log::debug('Loading Layout ' . $this->layoutId);
+
         // Load permissions
         $this->permissions = PermissionFactory::getByObjectId('campaign', $this->campaignId);
 
@@ -195,7 +198,7 @@ class Layout
         if ($this->hash == null)
             $this->load();
 
-        \Xibo\Helper\Log::Audit('Deleting ' . $this);
+        \Xibo\Helper\Log::debug('Deleting ' . $this);
 
         // Delete Permissions
         foreach ($this->permissions as $permission) {
@@ -284,7 +287,7 @@ class Layout
      */
     private function add()
     {
-        \Xibo\Helper\Log::Audit('Adding Layout ' . $this->layout);
+        \Xibo\Helper\Log::debug('Adding Layout ' . $this->layout);
 
         $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, status, width, height, schemaVersion, backgroundImageId, backgroundColor, backgroundzIndex)
                   VALUES (:layout, :description, :userid, :createddt, :modifieddt, :status, :width, :height, 3, :backgroundImageId, :backgroundColor, :backgroundzIndex)';
@@ -304,13 +307,6 @@ class Layout
             'backgroundColor' => $this->backgroundColor,
             'backgroundzIndex' => $this->backgroundzIndex,
         ));
-
-        // Add a Campaign
-        $campaign = new \Campaign();
-        $this->campaignId = $campaign->Add($this->layout, 1, $this->ownerId);
-
-        // Link them
-        $campaign->Link($this->campaignId, $this->layoutId, 0);
     }
 
     /**
@@ -319,7 +315,7 @@ class Layout
      */
     private function update()
     {
-        \Xibo\Helper\Log::Audit('Editing Layout ' . $this->layout . '. Id = ' . $this->layoutId);
+        \Xibo\Helper\Log::debug('Editing Layout ' . $this->layout . '. Id = ' . $this->layoutId);
 
         $sql = '
         UPDATE layout SET layout = :layout, description = :description, modifiedDT = :modifieddt, retired = :retired, width = :width, height = :height, backgroundImageId = :backgroundImageId, backgroundColor = :backgroundColor, backgroundzIndex = :backgroundzIndex, xml = NULL

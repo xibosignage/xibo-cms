@@ -147,6 +147,17 @@ $app->get('/layout/view', function () use ($app) {
     $controller->render();
 })->name('layoutView');
 
+$app->get('/layout/designer/:id', function ($id) use ($app) {
+    // This is a full page
+    $controller = new \Xibo\Controller\Layout($app);
+    $controller->displayDesigner($id);
+})->name('layoutDesigner');
+
+$app->get('/layout/status/:id', function($id) use ($app) {
+    $controller = new \Xibo\Controller\Layout($app);
+    $controller->LayoutStatus();
+})->setName('layoutStatus');
+
 //
 // content
 //

@@ -435,7 +435,7 @@ abstract class Module implements ModuleInterface
      */
     public function GetName()
     {
-        Log::Audit('Media assigned: ' . count($this->widget->mediaIds));
+        Log::debug('Media assigned: ' . count($this->widget->mediaIds));
 
         if (count($this->widget->mediaIds) > 0) {
             $media = new Media();
@@ -775,7 +775,7 @@ abstract class Module implements ModuleInterface
                 'settings' => json_encode($settings)
             ));
         } catch (Exception $e) {
-            Log::Error($e->getMessage());
+            Log::error($e->getMessage());
 
             throw new Exception(__('Unable to install module. Please check the Error Log'));
         }
@@ -822,7 +822,7 @@ abstract class Module implements ModuleInterface
             ));
         } catch (Exception $e) {
 
-            Log::Error($e->getMessage());
+            Log::error($e->getMessage());
 
             throw $e;
         }

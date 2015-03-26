@@ -162,7 +162,7 @@ class Playlist
         if ($this->hash == null)
             $this->load();
 
-        \Xibo\Helper\Log::Audit('Deleting ' . $this);
+        \Xibo\Helper\Log::debug('Deleting ' . $this);
 
         // Delete Permissions
         foreach ($this->permissions as $permission) {
@@ -188,7 +188,7 @@ class Playlist
 
     private function add()
     {
-        \Xibo\Helper\Log::Audit('Adding Playlist ' . $this->name);
+        \Xibo\Helper\Log::debug('Adding Playlist ' . $this->name);
 
         $sql = 'INSERT INTO `playlist` (`name`, `ownerId`) VALUES (:name, :ownerId)';
         $this->playlistId = \Xibo\Storage\PDOConnect::insert($sql, array(
@@ -199,7 +199,7 @@ class Playlist
 
     private function update()
     {
-        \Xibo\Helper\Log::Audit('Updating Playlist ' . $this->name . '. Id = ' . $this->playlistId);
+        \Xibo\Helper\Log::debug('Updating Playlist ' . $this->name . '. Id = ' . $this->playlistId);
 
         $sql = 'UPDATE `playlist` SET `name` = :name WHERE `playlistId` = :playlistId';
         \Xibo\Storage\PDOConnect::update($sql, array(

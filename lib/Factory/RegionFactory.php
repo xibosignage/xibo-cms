@@ -23,9 +23,9 @@
 namespace Xibo\Factory;
 
 
-use Xibo\Entity\Layout;
 use Xibo\Entity\Region;
 use Xibo\Exception\NotFoundException;
+use Xibo\Helper\Sanitize;
 
 class RegionFactory
 {
@@ -119,29 +119,29 @@ class RegionFactory
         $params = array();
         $sql = 'SELECT * FROM `region` WHERE 1 = 1 ';
 
-        if (\Xibo\Helper\Sanitize::int('regionId', $filterBy) != 0) {
+        if (Sanitize::getInt('regionId', $filterBy) != 0) {
             $sql .= ' AND regionId = :regionId ';
-            $params['regionId'] = \Xibo\Helper\Sanitize::int('regionId', $filterBy);
+            $params['regionId'] = Sanitize::getInt('regionId', $filterBy);
         }
 
-        if (\Xibo\Helper\Sanitize::int('layoutId', $filterBy) != 0) {
+        if (Sanitize::getInt('layoutId', $filterBy) != 0) {
             $sql .= ' AND layoutId = :layoutId ';
-            $params['layoutId'] = \Xibo\Helper\Sanitize::int('layoutId', $filterBy);
+            $params['layoutId'] = Sanitize::getInt('layoutId', $filterBy);
         }
 
         \Xibo\Helper\Log::sql($sql, $params);
 
-        foreach (\PDOConnect::select($sql, $params) as $row) {
+        foreach (\Xibo\Storage\PDOConnect::select($sql, $params) as $row) {
             $region = new Region();
-            $region->layoutId = \Xibo\Helper\Sanitize::int($row['layoutId']);
-            $region->regionId = \Xibo\Helper\Sanitize::int($row['regionId']);
-            $region->ownerId = \Xibo\Helper\Sanitize::int($row['ownerId']);
-            $region->name = \Xibo\Helper\Sanitize::string($row['name']);
-            $region->width = \Xibo\Helper\Sanitize::double($row['width']);
-            $region->height = \Xibo\Helper\Sanitize::double($row['height']);
-            $region->top = \Xibo\Helper\Sanitize::double($row['top']);
-            $region->left = \Xibo\Helper\Sanitize::double($row['left']);
-            $region->zIndex = \Xibo\Helper\Sanitize::double($row['zIndex']);
+            $region->layoutId = Sanitize::int($row['layoutId']);
+            $region->regionId = Sanitize::int($row['regionId']);
+            $region->ownerId = Sanitize::int($row['ownerId']);
+            $region->name = Sanitize::string($row['name']);
+            $region->width = Sanitize::double($row['width']);
+            $region->height = Sanitize::double($row['height']);
+            $region->top = Sanitize::double($row['top']);
+            $region->left = Sanitize::double($row['left']);
+            $region->zIndex = Sanitize::double($row['zIndex']);
 
             $entries[] = $region;
         }

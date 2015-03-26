@@ -24,6 +24,7 @@ use database;
 use Kit;
 use Media;
 use Parsedown;
+use Xibo\Entity\Campaign;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Config;
@@ -142,10 +143,9 @@ class Layout extends Base
         $this->getState()->html .= Theme::RenderReturn('grid_render');
     }
 
-    public function displayDesigner()
+    public function displayDesigner($layoutId)
     {
-        $layoutId = Sanitize::getInt('layoutid');
-        $layout = \Xibo\Factory\LayoutFactory::loadById($layoutId);
+        $layout = LayoutFactory::loadById($layoutId);
 
         Theme::Set('layout_form_edit_url', 'index.php?p=layout&q=EditForm&designer=1&layoutid=' . $layoutId);
         Theme::Set('layout_form_savetemplate_url', 'index.php?p=template&q=TemplateForm&layoutid=' . $layoutId);
@@ -170,6 +170,9 @@ class Layout extends Base
 
     function actionMenu()
     {
+        if ($this->app->router()->getCurrentRoute()->getName() == 'layoutDesigner')
+            return array();
+
         return array(
             array('title' => __('Filter'),
                 'class' => '',
@@ -207,9 +210,9 @@ class Layout extends Base
         $resolutionId = Sanitize::getInt('resolutionid');
 
         if ($templateId != 0)
-            $layout = \Xibo\Factory\LayoutFactory::createFromTemplate($templateId, $this->getUser()->userId, $name, $description, $tags);
+            $layout = LayoutFactory::createFromTemplate($templateId, $this->getUser()->userId, $name, $description, $tags);
         else
-            $layout = \Xibo\Factory\LayoutFactory::createFromResolution($resolutionId, $this->getUser()->userId, $name, $description, $tags);
+            $layout = LayoutFactory::createFromResolution($resolutionId, $this->getUser()->userId, $name, $description, $tags);
 
         // Validate
         $layout->validate();
@@ -217,11 +220,21 @@ class Layout extends Base
         // Save
         $layout->save();
 
+        // Add a Campaign
+        $campaign = new Campaign();
+        $campaign->campaign = $layout->layout;
+        $campaign->isLayout = 1;
+        $campaign->ownerId = $layout->getOwnerId();
+        $campaign->assignLayout($layout->layoutId);
+
+        // Ready to save the Campaign
+        $campaign->save();
+
         // TODO: Set the default permissions on the regions
 
         // Successful layout creation
         $this->getState()->setData(array('layoutId' => $layout->getId()));
-        $this->getState()->SetFormSubmitResponse(__('Layout Details Changed.'), true, sprintf("index.php?p=layout&layoutid=%d&modify=true", $layout->layoutId));
+        $this->getState()->SetFormSubmitResponse(__('Layout Details Changed.'), true, $this->urlFor('layoutDesigner', array('id', $layout->layoutId)));
     }
 
     /**
@@ -233,7 +246,7 @@ class Layout extends Base
 
          
 
-        $layout = \Xibo\Factory\LayoutFactory::loadById(Kit::GetParam('layoutid', _POST, _INT));
+        $layout = LayoutFactory::loadById(Kit::GetParam('layoutid', _POST, _INT));
 
         // Make sure we have permission
         if (!$this->getUser()->checkEditable($layout))
@@ -274,7 +287,7 @@ class Layout extends Base
          
 
         $layoutId = Sanitize::getInt('layoutId');
-        $layout = \Xibo\Factory\LayoutFactory::loadById($layoutId);
+        $layout = LayoutFactory::loadById($layoutId);
 
         if (!$this->getUser()->checkDeleteable($layout))
             trigger_error(__('You do not have permissions to delete this layout'), E_USER_ERROR);
@@ -305,7 +318,7 @@ class Layout extends Base
          
 
         $layoutId = Sanitize::getInt('layoutId');
-        $layout = \Xibo\Factory\LayoutFactory::loadById(Kit::GetParam('layoutid', _POST, _INT));
+        $layout = LayoutFactory::loadById(Kit::GetParam('layoutid', _POST, _INT));
 
         // Make sure we have permission
         if (!$this->getUser()->checkEditable($layout))
@@ -661,7 +674,7 @@ class Layout extends Base
         $layoutId = Sanitize::getInt('layoutid');
 
         // Get the layout
-        $layout = \Xibo\Factory\LayoutFactory::getById($layoutId);
+        $layout = LayoutFactory::getById($layoutId);
 
         // Check Permissions
         if (!$this->getUser()->checkEditable($layout))
@@ -766,7 +779,7 @@ class Layout extends Base
     function RenderDesigner($layout)
     {
         // What zoom level are we at?
-        $zoom = \Kit::GetParam('zoom', _GET, _DOUBLE, 1);
+        $zoom = Sanitize::getDouble('zoom', 1);
 
         // Get the width and the height
         $version = $layout->schemaVersion;
@@ -872,9 +885,11 @@ class Layout extends Base
             $regionHtml .= '</div>';
         }
 
+        $statusUrl = $this->urlFor('layoutStatus', array('id' => $layout->layoutId));
+
         //render the view pane
         $surface = <<<HTML
-        <div id="layout" zoom="$zoom" tip_scale="1" designer_scale="$designerScale" class="layout" layoutid="{$layout->layoutId}" data-background-color="{$layout->backgroundColor}" style="position:relative; width:$width; height:$height; background:$backgroundCss;">
+        <div id="layout" zoom="$zoom" tip_scale="1" designer_scale="$designerScale" class="layout" layoutid="{$layout->layoutId}" data-background-color="{$layout->backgroundColor}" data-status-url="{$statusUrl}" style="position:relative; width:$width; height:$height; background:$backgroundCss;">
         $regionHtml
         </div>
 HTML;
@@ -892,7 +907,7 @@ HTML;
         $layoutId = Sanitize::getInt('layoutid');
 
         // Get the layout
-        $layout = \Xibo\Factory\LayoutFactory::getById($layoutId);
+        $layout = LayoutFactory::getById($layoutId);
 
         // Check Permissions
         if (!$this->getUser()->checkViewable($layout))
@@ -931,7 +946,7 @@ HTML;
          
 
         // Load the layout for Copy
-        $layout = clone \Xibo\Factory\LayoutFactory::loadById(Kit::GetParam('layoutid', _POST, _INT));
+        $layout = clone LayoutFactory::loadById(Kit::GetParam('layoutid', _POST, _INT));
 
         $layout->layout = Sanitize::getString('layout');
         $layout->description = Sanitize::getString('description');
@@ -1095,7 +1110,7 @@ HTML;
     {
          
 
-        $layout = \Xibo\Factory\LayoutFactory::loadById(Kit::GetParam('layoutId', _GET, _INT));
+        $layout = LayoutFactory::loadById(Kit::GetParam('layoutId', _GET, _INT));
 
          $this->getState()->SetFormRequestResponse('<pre>' . json_format(json_encode($layout)) . '</pre>', 'Test', '350px', '200px');
          $this->getState()->dialogClass = 'modal-big';

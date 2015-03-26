@@ -52,7 +52,7 @@ class ticker extends Module
             $this->module->settings['templates'][] = json_decode(file_get_contents($template), true);
         }
 
-        Log::Audit(count($this->module->settings['templates']));
+        Log::debug(count($this->module->settings['templates']));
     }
     
     /**
@@ -767,7 +767,7 @@ class ticker extends Module
         $matches = '';
         preg_match_all('/\[.*?\]/', $text, $matches);
 
-        Log::Audit('Loading SimplePie to handle RSS parsing.' . urldecode($this->GetOption('uri')) . '. Will substitute items with ' . $text);
+        Log::debug('Loading SimplePie to handle RSS parsing.' . urldecode($this->GetOption('uri')) . '. Will substitute items with ' . $text);
         
         // Use SimplePie to get the feed
         include_once('3rdparty/simplepie/autoloader.php');
@@ -827,7 +827,7 @@ class ticker extends Module
                         list($tag, $namespace) = explode('|', $sub);
 
                     // What are we looking at
-                    Log::Audit('Namespace: ' . str_replace(']', '', $namespace) . '. Tag: ' . str_replace('[', '', $tag) . '. ');
+                    Log::debug('Namespace: ' . str_replace(']', '', $namespace) . '. Tag: ' . str_replace('[', '', $tag) . '. ');
 
                     // Are we an image place holder?
                     if (strstr($namespace, 'image') != false) {
@@ -982,7 +982,7 @@ class ticker extends Module
             $columnMap[$col['Text']] = $col;
         }
 
-        Log::Audit(var_export($columnMap, true));
+        Log::debug(var_export($columnMap, true));
 
         $items = array();
 

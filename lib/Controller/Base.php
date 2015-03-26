@@ -101,12 +101,13 @@ class Base
 
     /**
      * Get Url For Route
-     * @param $route
+     * @param string $route
+     * @param array[mixed] $params
      * @return string
      */
-    protected function urlFor($route)
+    protected function urlFor($route, $params = array())
     {
-        return $this->app->urlFor($route);
+        return $this->app->urlFor($route, $params);
     }
 
     /**

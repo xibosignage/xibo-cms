@@ -670,7 +670,8 @@ class DisplayGroup extends Base
             $sth->execute(array('displaygroupid' => $displayGroupId));
 
             $existing = $sth->fetchAll();
-        } catch (Exception $e) {
+
+        } catch (\Exception $e) {
 
             Log::error($e->getMessage(), get_class(), __FUNCTION__);
 

@@ -58,7 +58,7 @@ class Maintenance extends Data
             return $this->SetError(__('Database dump failed.'));
 
         // Zippy
-        Log::Audit($zipFile);
+        Log::debug($zipFile);
         $zip = new ZipArchive();
         $zip->open($zipFile, ZIPARCHIVE::OVERWRITE);
         $zip->addFile($fileNameStructure, 'structure.dump');
@@ -130,14 +130,14 @@ class Maintenance extends Data
         $library = rtrim($library, '/') . '/';
         $mediaObject = new Media();
 
-        Log::Audit('Library Location: ' . $library);
+        Log::debug('Library Location: ' . $library);
 
         // Dump the files in the temp folder
         foreach (scandir($library . 'temp') as $item) {
             if ($item == '.' || $item == '..')
                 continue;
 
-            Log::Audit('Deleting temp file: ' . $item);
+            Log::debug('Deleting temp file: ' . $item);
 
             unlink($library . 'temp' . DIRECTORY_SEPARATOR . $item);
         }
@@ -209,19 +209,19 @@ class Maintenance extends Data
             // Is this file in the system anywhere?
             if (!array_key_exists($file, $media)) {
                 // Totally missing
-                Log::Audit('Deleting file: ' . $file);
+                Log::debug('Deleting file: ' . $file);
                 
                 // If not, delete it
                 $mediaObject->DeleteMediaFile($file);
             }
             else if (array_key_exists($file, $unusedRevisions)) {
                 // It exists but isn't being used any more
-                Log::Audit('Deleting unused revision media: ' . $media[$file]['mediaid']);
+                Log::debug('Deleting unused revision media: ' . $media[$file]['mediaid']);
                 $mediaObject->Delete($media[$file]['mediaid']);
             }
             else if (array_key_exists($file, $unusedMedia)) {
                 // It exists but isn't being used any more
-                Log::Audit('Deleting unused media: ' . $media[$file]['mediaid']);
+                Log::debug('Deleting unused media: ' . $media[$file]['mediaid']);
                 $mediaObject->Delete($media[$file]['mediaid']);
             }
         }

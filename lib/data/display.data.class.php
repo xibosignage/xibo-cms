@@ -505,7 +505,7 @@ class Display extends Data {
      */
     public function EditDisplayName($license, $display)
     {
-        Log::Audit($license);
+        Log::debug($license);
 
         $this->license = $license;
         if (!$this->Load())
@@ -776,7 +776,7 @@ class Display extends Data {
     
                 // If the last time we accessed is less than now minus the time out
                 if ($timeOut < time()) {
-                    Log::Audit('Timed out display. Last Accessed: ' . date('Y-m-d h:i:s', $lastAccessed) . '. Time out: ' . date('Y-m-d h:i:s', $timeOut));
+                    Log::debug('Timed out display. Last Accessed: ' . date('Y-m-d h:i:s', $lastAccessed) . '. Time out: ' . date('Y-m-d h:i:s', $timeOut));
 
                     // If this is the first switch (i.e. the row was logged in before)
                     if ($loggedIn == 1) {

@@ -123,7 +123,7 @@ class ForecastIo extends Module
             $this->module->settings['templates'][] = json_decode(file_get_contents($template), true);
         }
 
-        Log::Audit(count($this->module->settings['templates']));
+        Log::debug(count($this->module->settings['templates']));
     }
     
     /**
