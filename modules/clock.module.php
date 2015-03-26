@@ -19,8 +19,9 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-use Xibo\Helper\Help;
 use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Form;
+use Xibo\Helper\Help;
 use Xibo\Helper\Theme;
 
 class clock extends Module
@@ -50,7 +51,7 @@ class clock extends Module
         $formFields = array();
 
         // Offer a choice of clock type
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
                     'clockTypeId', 
                     __('Clock Type'), 
                     NULL,
@@ -64,14 +65,14 @@ class clock extends Module
                     __('Please select the type of clock to display.'), 
                     'c');
 
-        $formFields[] = FormManager::AddNumber('duration', __('Duration'), NULL, 
+        $formFields[] = Form::AddNumber('duration', __('Duration'), NULL,
             __('The duration in seconds this item should be displayed.'), 'd', 'required');
 
-        $formFields[] = FormManager::AddNumber('offset', __('Offset'), NULL, 
+        $formFields[] = Form::AddNumber('offset', __('Offset'), NULL,
             __('The offset in minutes that should be applied to the current time.'), 'o', NULL, 'offset-control-group');
 
         // Offer a choice of theme
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
                     'themeid', 
                     __('Theme'), 
                     NULL,
@@ -82,9 +83,9 @@ class clock extends Module
                     't',
                     'analogue-control-group');
 
-        $formFields[] = FormManager::AddMessage(sprintf(__('Enter a format for the Digital Clock below. e.g. [HH:mm] or [DD/MM/YYYY]. See the <a href="%s" target="_blank">format guide</a> for more information.'), Help::Link('Widget', 'ClockFormat')), 'digital-control-group');
+        $formFields[] = Form::AddMessage(sprintf(__('Enter a format for the Digital Clock below. e.g. [HH:mm] or [DD/MM/YYYY]. See the <a href="%s" target="_blank">format guide</a> for more information.'), Help::Link('Widget', 'ClockFormat')), 'digital-control-group');
         
-        $formFields[] = FormManager::AddMultiText('ta_text', NULL, '[HH:mm]', 
+        $formFields[] = Form::AddMultiText('ta_text', NULL, '[HH:mm]',
             __('Enter a format for the clock'), 'f', 10, '', 'digital-control-group');
 
         Theme::Set('form_fields', $formFields);
@@ -145,7 +146,7 @@ class clock extends Module
         $formFields = array();
 
         // Offer a choice of clock type
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
                     'clockTypeId', 
                     __('Clock Type'), 
                     $this->GetOption('clockTypeId'),
@@ -159,15 +160,15 @@ class clock extends Module
                     __('Please select the type of clock to display.'), 
                     'c');
 
-        $formFields[] = FormManager::AddNumber('duration', __('Duration'), $this->getDuration(),
+        $formFields[] = Form::AddNumber('duration', __('Duration'), $this->getDuration(),
             __('The duration in seconds this item should be displayed'), 'd', 'required');
 
 
-        $formFields[] = FormManager::AddNumber('offset', __('Offset'), $this->GetOption('offset'), 
+        $formFields[] = Form::AddNumber('offset', __('Offset'), $this->GetOption('offset'),
             __('The offset in minutes that should be applied to the current time.'), 'o', NULL, 'offset-control-group');
 
         // Offer a choice of theme
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
                     'themeid', 
                     __('Theme'), 
                     $this->GetOption('theme'),
@@ -178,9 +179,9 @@ class clock extends Module
                     't',
                     'analogue-control-group');
 
-        $formFields[] = FormManager::AddMessage(sprintf(__('Enter a format for the Digital Clock below. e.g. [HH:mm] or [DD/MM/YYYY]. See the <a href="%s" target="_blank">format guide</a> for more information.'), Help::Link('Widget', 'ClockFormat')), 'digital-control-group');
+        $formFields[] = Form::AddMessage(sprintf(__('Enter a format for the Digital Clock below. e.g. [HH:mm] or [DD/MM/YYYY]. See the <a href="%s" target="_blank">format guide</a> for more information.'), Help::Link('Widget', 'ClockFormat')), 'digital-control-group');
         
-        $formFields[] = FormManager::AddMultiText('ta_text', NULL, $this->getRawNode('format', null),
+        $formFields[] = Form::AddMultiText('ta_text', NULL, $this->getRawNode('format', null),
             __('Enter a format for the clock'), 'f', 10, '', 'digital-control-group');
 
         Theme::Set('form_fields', $formFields);

@@ -18,7 +18,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Form;
 
 class video extends Module
 {
@@ -29,11 +29,11 @@ class video extends Module
     {
         $response = $this->getState();
         $formFields = array();
-        $formFields[] = FormManager::AddCheckbox('loop', __('Loop?'),
+        $formFields[] = Form::AddCheckbox('loop', __('Loop?'),
             $this->GetOption('loop', 0), __('Should the video loop if it finishes before the provided duration?'),
             'l', 'loop-fields');
 
-        $formFields[] = FormManager::AddCheckbox('mute', __('Mute?'),
+        $formFields[] = Form::AddCheckbox('mute', __('Mute?'),
             $this->GetOption('mute', 1), __('Should the video be muted?'),
             'm', 'mute-fields');
 

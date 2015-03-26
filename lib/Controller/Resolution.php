@@ -21,9 +21,9 @@
 namespace Xibo\Controller;
 
 use baseDAO;
-use FormManager;
 use Kit;
 use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Form;
 use Xibo\Helper\Help;
 use Xibo\Helper\Session;
 use Xibo\Helper\Theme;
@@ -52,7 +52,7 @@ class Resolution extends Base
         }
 
         $formFields = array();
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
             'filterEnabled',
             __('Enabled'),
             $enabled,
@@ -62,7 +62,7 @@ class Resolution extends Base
             NULL,
             'e');
 
-        $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'),
+        $formFields[] = Form::AddCheckbox('XiboFilterPinned', __('Keep Open'),
             $pinned, NULL,
             'k');
 
@@ -162,13 +162,13 @@ class Resolution extends Base
         Theme::Set('form_action', 'index.php?p=resolution&q=Add');
 
         $formFields = array();
-        $formFields[] = FormManager::AddText('resolution', __('Resolution'), NULL,
+        $formFields[] = Form::AddText('resolution', __('Resolution'), NULL,
             __('A name for this Resolution'), 'r', 'required');
 
-        $formFields[] = FormManager::AddNumber('width', __('Width'), NULL,
+        $formFields[] = Form::AddNumber('width', __('Width'), NULL,
             __('The Width for this Resolution'), 'w', 'required');
 
-        $formFields[] = FormManager::AddNumber('height', __('Height'), NULL,
+        $formFields[] = Form::AddNumber('height', __('Height'), NULL,
             __('The Height for this Resolution'), 'h', 'required');
 
         Theme::Set('form_fields', $formFields);
@@ -193,16 +193,16 @@ class Resolution extends Base
             trigger_error(__('Access Denied'));
 
         $formFields = array();
-        $formFields[] = FormManager::AddText('resolution', __('Resolution'), $resolution->resolution,
+        $formFields[] = Form::AddText('resolution', __('Resolution'), $resolution->resolution,
             __('A name for this Resolution'), 'r', 'required');
 
-        $formFields[] = FormManager::AddNumber('width', __('Width'), $resolution->width,
+        $formFields[] = Form::AddNumber('width', __('Width'), $resolution->width,
             __('The Width for this Resolution'), 'w', 'required');
 
-        $formFields[] = FormManager::AddNumber('height', __('Height'), $resolution->height,
+        $formFields[] = Form::AddNumber('height', __('Height'), $resolution->height,
             __('The Height for this Resolution'), 'h', 'required');
 
-        $formFields[] = FormManager::AddCheckbox('enabled', __('Enable?'), $resolution->enabled,
+        $formFields[] = Form::AddCheckbox('enabled', __('Enable?'), $resolution->enabled,
             __('Is the Resolution enabled for use?'), 'e');
 
         Theme::Set('form_fields', $formFields);
@@ -234,7 +234,7 @@ class Resolution extends Base
         Theme::Set('form_id', 'DeleteForm');
         Theme::Set('form_action', 'index.php?p=resolution&q=Delete');
         Theme::Set('form_meta', '<input type="hidden" name="resolutionid" value="' . $resolution->resolutionId . '" />');
-        Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to delete?'))));
+        Theme::Set('form_fields', array(Form::AddMessage(__('Are you sure you want to delete?'))));
 
         $response->SetFormRequestResponse(Theme::RenderReturn('form_render'), __('Delete Resolution'), '250px', '150px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Resolution', 'Delete') . '")');

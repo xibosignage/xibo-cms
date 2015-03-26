@@ -18,7 +18,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Form;
 use Xibo\Helper\Theme;
 
 class embedded extends Module
@@ -44,31 +44,31 @@ class embedded extends Module
 
         $formFields = array();
         
-        $formFields[] = FormManager::AddText('name', __('Name'), NULL, 
+        $formFields[] = Form::AddText('name', __('Name'), NULL,
             __('An optional name for this media'), 'n');
 
-        $formFields[] = FormManager::AddNumber('duration', __('Duration'), $this->getDuration(),
+        $formFields[] = Form::AddNumber('duration', __('Duration'), $this->getDuration(),
             __('The duration in seconds this item should be displayed'), 'd', 'required');
 
-        $formFields[] = FormManager::AddCheckbox('transparency', __('Background transparent?'), 
+        $formFields[] = Form::AddCheckbox('transparency', __('Background transparent?'),
             NULL, __('Should the HTML be shown with a transparent background. Not current available on the Windows Display Client.'), 
             't');
 
-        $formFields[] = FormManager::AddCheckbox('scaleContent', __('Scale Content?'), 
+        $formFields[] = Form::AddCheckbox('scaleContent', __('Scale Content?'),
             $this->GetOption('scaleContent'), __('Should the embedded content be scaled along with the layout?'), 
             's');
 
-        $formFields[] = FormManager::AddMultiText('embedHtml', NULL, NULL, 
+        $formFields[] = Form::AddMultiText('embedHtml', NULL, NULL,
             __('HTML to Embed'), 'h', 10);
 
-        $formFields[] = FormManager::AddMultiText('embedStyle', NULL, '
+        $formFields[] = Form::AddMultiText('embedStyle', NULL, '
 <style type="text/css">
 
 </style>',
             __('Custom Style Sheets'), 'h', 10);
 
 
-        $formFields[] = FormManager::AddMultiText('embedScript', NULL, '
+        $formFields[] = Form::AddMultiText('embedScript', NULL, '
 <script type="text/javascript">
 function EmbedInit()
 {
@@ -102,27 +102,27 @@ function EmbedInit()
         $this->configureForm('EditMedia');
         
         $formFields = array();
-        $formFields[] = FormManager::AddText('name', __('Name'), $this->GetOption('name'), 
+        $formFields[] = Form::AddText('name', __('Name'), $this->GetOption('name'),
             __('An optional name for this media'), 'n');
         
-        $formFields[] = FormManager::AddNumber('duration', __('Duration'), $this->getDuration(),
+        $formFields[] = Form::AddNumber('duration', __('Duration'), $this->getDuration(),
             __('The duration in seconds this item should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
 
-        $formFields[] = FormManager::AddCheckbox('transparency', __('Background transparent?'), 
+        $formFields[] = Form::AddCheckbox('transparency', __('Background transparent?'),
             $this->GetOption('transparency'), __('Should the HTML be shown with a transparent background. Not current available on the Windows Display Client.'), 
             't');
 
-        $formFields[] = FormManager::AddCheckbox('scaleContent', __('Scale Content?'), 
+        $formFields[] = Form::AddCheckbox('scaleContent', __('Scale Content?'),
             $this->GetOption('scaleContent'), __('Should the embedded content be scaled along with the layout?'), 
             's');
 
-        $formFields[] = FormManager::AddMultiText('embedHtml', NULL, $this->getRawNode('embedHtml', null),
+        $formFields[] = Form::AddMultiText('embedHtml', NULL, $this->getRawNode('embedHtml', null),
             __('HTML to Embed'), 'h', 10);
 
-        $formFields[] = FormManager::AddMultiText('embedStyle', NULL, $this->getRawNode('embedStyle', null),
+        $formFields[] = Form::AddMultiText('embedStyle', NULL, $this->getRawNode('embedStyle', null),
             __('Custom Style Sheets'), 'h', 10);
 
-        $formFields[] = FormManager::AddMultiText('embedScript', NULL, $this->getRawNode('embedScript', null),
+        $formFields[] = Form::AddMultiText('embedScript', NULL, $this->getRawNode('embedScript', null),
             __('HEAD content to Embed (including script tags)'), 'h', 10);
 
         Theme::Set('form_fields', $formFields);

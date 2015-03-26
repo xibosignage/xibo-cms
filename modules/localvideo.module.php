@@ -18,7 +18,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Form;
 use Xibo\Helper\Theme;
 
 class localvideo extends Module
@@ -35,10 +35,10 @@ class localvideo extends Module
 
         $formFields = array();
         
-        $formFields[] = FormManager::AddText('uri', __('Video Path'), NULL, 
+        $formFields[] = Form::AddText('uri', __('Video Path'), NULL,
             __('A local file path or URL to the video. This can be a RTSP stream.'), 'p', 'required');
 
-        $formFields[] = FormManager::AddNumber('duration', __('Duration'), NULL, 
+        $formFields[] = Form::AddNumber('duration', __('Duration'), NULL,
             __('The duration in seconds this counter should be displayed'), 'd', 'required');
 
         Theme::Set('form_fields', $formFields);
@@ -66,10 +66,10 @@ class localvideo extends Module
 
         $formFields = array();
         
-        $formFields[] = FormManager::AddText('uri', __('Video Path'), urldecode($this->GetOption('uri')), 
+        $formFields[] = Form::AddText('uri', __('Video Path'), urldecode($this->GetOption('uri')),
             __('A local file path or URL to the video. This can be a RTSP stream.'), 'p', 'required');
 
-        $formFields[] = FormManager::AddNumber('duration', __('Duration'), $this->getDuration(),
+        $formFields[] = Form::AddNumber('duration', __('Duration'), $this->getDuration(),
             __('The duration in seconds this counter should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
 
         Theme::Set('form_fields', $formFields);

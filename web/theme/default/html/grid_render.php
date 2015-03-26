@@ -18,6 +18,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\Form;
 use Xibo\Helper\Theme;
 
 
@@ -26,7 +27,7 @@ $form_tabs = Theme::Get('form_tabs');
 $tabs = (is_array($form_tabs) && count($form_tabs > 0));
 
 if (!$tabs)
-    $form_tabs = array(FormManager::AddTab('general', 'General'));
+    $form_tabs = array(Form::AddTab('general', 'General'));
 
 ?>
 <?php if (Theme::Get('header_text') != '') { ?>

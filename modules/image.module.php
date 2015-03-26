@@ -18,7 +18,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Form;
 
 class image extends Module
 {
@@ -32,7 +32,7 @@ class image extends Module
         // Provide some extra form fields
         $formFields = array();
 
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
                     'scaleTypeId',
                     __('Scale Type'),
                     $this->GetOption('scaleType'),
@@ -42,7 +42,7 @@ class image extends Module
                     __('How should this image be scaled?'),
                     's');
 
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
                     'alignId',
                     __('Align'),
                     $this->GetOption('align', 'center'),
@@ -52,7 +52,7 @@ class image extends Module
                     __('How should this image be aligned?'),
                     'a', 'align-fields');
 
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
                     'valignId',
                     __('Vertical Align'),
                     $this->GetOption('valign', 'middle'),

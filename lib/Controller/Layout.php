@@ -21,13 +21,13 @@
 namespace Xibo\Controller;
 
 use database;
-use FormManager;
 use Kit;
 use Media;
 use Parsedown;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Config;
+use Xibo\Helper\Form;
 use Xibo\Helper\Help;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Session;
@@ -71,15 +71,15 @@ class Layout extends Base
         Theme::Set('form_action', $this->urlFor('layoutSearch'));
 
         $formFields = array();
-        $formFields[] = FormManager::AddText('filter_layout', __('Name'), $layout, NULL, 'l');
-        $formFields[] = FormManager::AddText('filter_tags', __('Tags'), $tags, NULL, 't');
+        $formFields[] = Form::AddText('filter_layout', __('Name'), $layout, NULL, 'l');
+        $formFields[] = Form::AddText('filter_tags', __('Tags'), $tags, NULL, 't');
 
         // Users we have permission to see
         $users = $this->getUser()->userList();
         $users = array_map(function($element) { return array('userid' => $element->userId, 'username' => $element->userName); }, $users);
         array_unshift($users, array('userid' => '', 'username' => 'All'));
 
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
             'filter_userid',
             __('Owner'),
             $owner,
@@ -88,7 +88,7 @@ class Layout extends Base
             'username',
             NULL,
             'r');
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
             'filter_retired',
             __('Retired'),
             $retired,
@@ -97,7 +97,7 @@ class Layout extends Base
             'retired',
             NULL,
             'r');
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
             'filterLayoutStatusId',
             __('Show'),
             $filterLayoutStatusId,
@@ -110,7 +110,7 @@ class Layout extends Base
             'filterLayoutStatus',
             NULL,
             's');
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
             'showDescriptionId',
             __('Description'),
             $showDescriptionId,
@@ -124,15 +124,15 @@ class Layout extends Base
             NULL,
             'd');
 
-        $formFields[] = FormManager::AddCheckbox('showTags', __('Show Tags'),
+        $formFields[] = Form::AddCheckbox('showTags', __('Show Tags'),
             $showTags, NULL,
             't');
 
-        $formFields[] = FormManager::AddCheckbox('showThumbnail', __('Show Thumbnails'),
+        $formFields[] = Form::AddCheckbox('showThumbnail', __('Show Thumbnails'),
             $showThumbnail, NULL,
             'i');
 
-        $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'),
+        $formFields[] = Form::AddCheckbox('XiboFilterPinned', __('Keep Open'),
             $pinned, NULL,
             'k');
 
@@ -283,8 +283,8 @@ class Layout extends Base
         Theme::Set('form_action', 'index.php?p=layout&q=delete');
         Theme::Set('form_meta', '<input type="hidden" name="layoutId" value="' . $layoutId . '">');
         Theme::Set('form_fields', array(
-            FormManager::AddMessage(__('Are you sure you want to delete this layout?')),
-            FormManager::AddMessage(__('All media will be unassigned and any layout specific media such as text/rss will be lost. The layout will be removed from all Schedules.')),
+            Form::AddMessage(__('Are you sure you want to delete this layout?')),
+            Form::AddMessage(__('All media will be unassigned and any layout specific media such as text/rss will be lost. The layout will be removed from all Schedules.')),
         ));
 
         $form = Theme::RenderReturn('form_render');
@@ -316,7 +316,7 @@ class Layout extends Base
 
         // Retire the layout
         Theme::Set('form_action', 'index.php?p=layout&q=Retire');
-        Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to retire this layout ?'))));
+        Theme::Set('form_fields', array(Form::AddMessage(__('Are you sure you want to retire this layout ?'))));
 
         $form = Theme::RenderReturn('form_render');
 
@@ -598,16 +598,16 @@ class Layout extends Base
 
         // Two tabs
         $tabs = array();
-        $tabs[] = FormManager::AddTab('general', __('General'));
-        $tabs[] = FormManager::AddTab('description', __('Description'));
+        $tabs[] = Form::AddTab('general', __('General'));
+        $tabs[] = Form::AddTab('description', __('Description'));
 
         Theme::Set('form_tabs', $tabs);
 
         $formFields = array();
-        $formFields['general'][] = FormManager::AddText('layout', __('Name'), (isset($layout['layout']) ? $layout['layout'] : NULL), __('The Name of the Layout - (1 - 50 characters)'), 'n', 'required');
-        $formFields['general'][] = FormManager::AddText('tags', __('Tags'), (isset($layout['tags']) ? $layout['tags'] : NULL), __('Tags for this layout - used when searching for it. Comma delimited. (1 - 250 characters)'), 't', 'maxlength="250"');
+        $formFields['general'][] = Form::AddText('layout', __('Name'), (isset($layout['layout']) ? $layout['layout'] : NULL), __('The Name of the Layout - (1 - 50 characters)'), 'n', 'required');
+        $formFields['general'][] = Form::AddText('tags', __('Tags'), (isset($layout['tags']) ? $layout['tags'] : NULL), __('Tags for this layout - used when searching for it. Comma delimited. (1 - 250 characters)'), 't', 'maxlength="250"');
 
-        $formFields['description'][] = FormManager::AddMultiText('description', __('Description'), (isset($layout['description']) ? $layout['description'] : NULL),
+        $formFields['description'][] = Form::AddMultiText('description', __('Description'), (isset($layout['description']) ? $layout['description'] : NULL),
             __('An optional description of the Layout. (1 - 250 characters)'), 'd', 5, 'maxlength="250"');
 
         // We are adding
@@ -617,7 +617,7 @@ class Layout extends Base
         $templates = array_map(function($element) { return array('layoutid' => $element->layoutId, 'layout' => $element->layout); }, $templates);
         array_unshift($templates, array('layoutid' => '0', 'layout' => 'None'));
 
-        $formFields['general'][] = FormManager::AddCombo(
+        $formFields['general'][] = Form::AddCombo(
             'templateid',
             __('Template'),
             NULL,
@@ -627,7 +627,7 @@ class Layout extends Base
             __('Optionally choose a template you have saved before.'),
             't');
 
-        $formFields['general'][] = FormManager::AddCombo(
+        $formFields['general'][] = Form::AddCombo(
             'resolutionid',
             __('Resolution'),
             NULL,
@@ -674,20 +674,20 @@ class Layout extends Base
 
         // Two tabs
         $tabs = array();
-        $tabs[] = FormManager::AddTab('general', __('General'));
-        $tabs[] = FormManager::AddTab('description', __('Description'));
-        $tabs[] = FormManager::AddTab('background', __('Background'));
+        $tabs[] = Form::AddTab('general', __('General'));
+        $tabs[] = Form::AddTab('description', __('Description'));
+        $tabs[] = Form::AddTab('background', __('Background'));
 
         Theme::Set('form_tabs', $tabs);
 
         $formFields = array();
-        $formFields['general'][] = FormManager::AddText('layout', __('Name'), $layout->layout, __('The Name of the Layout - (1 - 50 characters)'), 'n', 'required');
-        $formFields['general'][] = FormManager::AddText('tags', __('Tags'), $layout->tags, __('Tags for this layout - used when searching for it. Comma delimited. (1 - 250 characters)'), 't', 'maxlength="250"');
+        $formFields['general'][] = Form::AddText('layout', __('Name'), $layout->layout, __('The Name of the Layout - (1 - 50 characters)'), 'n', 'required');
+        $formFields['general'][] = Form::AddText('tags', __('Tags'), $layout->tags, __('Tags for this layout - used when searching for it. Comma delimited. (1 - 250 characters)'), 't', 'maxlength="250"');
 
-        $formFields['description'][] = FormManager::AddMultiText('description', __('Description'), $layout->description,
+        $formFields['description'][] = Form::AddMultiText('description', __('Description'), $layout->description,
             __('An optional description of the Layout. (1 - 250 characters)'), 'd', 5, 'maxlength="250"');
 
-        $formFields['general'][] = FormManager::AddCombo(
+        $formFields['general'][] = Form::AddCombo(
             'retired',
             __('Retired'),
             $layout->retired,
@@ -711,7 +711,7 @@ class Layout extends Base
         $resolution = \Xibo\Factory\ResolutionFactory::getByDimensions($layout->width, $layout->height);
 
         // A list of web safe colours
-        $formFields['background'][] = FormManager::AddText('backgroundColor', __('Background Colour'), $layout->backgroundColor,
+        $formFields['background'][] = Form::AddText('backgroundColor', __('Background Colour'), $layout->backgroundColor,
             __('Use the colour picker to select the background colour'), 'c', 'required');
 
         // A list of available backgrounds
@@ -722,7 +722,7 @@ class Layout extends Base
         }, $backgrounds);
         array_unshift($backgrounds, array('mediaid' => '0', 'media' => 'None'));
 
-        $formFields['background'][] = FormManager::AddCombo(
+        $formFields['background'][] = Form::AddCombo(
             'backgroundImageId',
             __('Background Image'),
             $backgroundImageId,
@@ -732,7 +732,7 @@ class Layout extends Base
             __('Pick the background image from the library'),
             'b', '', true, 'onchange="background_button_callback()"');
 
-        $formFields['background'][] = FormManager::AddCombo(
+        $formFields['background'][] = Form::AddCombo(
             'resolutionId',
             __('Resolution'),
             $resolution->resolutionId,
@@ -742,10 +742,10 @@ class Layout extends Base
             __('Change the resolution'),
             'r');
 
-        $formFields['background'][] = FormManager::AddNumber('backgroundzIndex', __('Layer'), $layout->backgroundzIndex,
+        $formFields['background'][] = Form::AddNumber('backgroundzIndex', __('Layer'), $layout->backgroundzIndex,
             __('The layering order of the background image (z-index). Advanced use only. '), 'z');
 
-        $formFields['background'][] = FormManager::AddRaw('<img id="bg_image_image" src="' . $thumbBgImage . '" alt="' . __('Background thumbnail') . '" />');
+        $formFields['background'][] = Form::AddRaw('<img id="bg_image_image" src="' . $thumbBgImage . '" alt="' . __('Background thumbnail') . '" />');
 
         Theme::Set('form_fields_background', $formFields['background']);
 
@@ -905,9 +905,9 @@ HTML;
         Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layout->layoutId . '">');
 
         $formFields = array();
-        $formFields[] = FormManager::AddText('layout', __('Name'), $layout->layout . ' 2', __('The Name of the Layout - (1 - 50 characters)'), 'n', 'required');
-        $formFields[] = FormManager::AddText('description', __('Description'), $layout->description, __('An optional description of the Layout. (1 - 250 characters)'), 'd', 'maxlength="250"');
-        $formFields[] = FormManager::AddCheckbox('copyMediaFiles', __('Make new copies of all media on this layout?'), $copyMediaChecked,
+        $formFields[] = Form::AddText('layout', __('Name'), $layout->layout . ' 2', __('The Name of the Layout - (1 - 50 characters)'), 'n', 'required');
+        $formFields[] = Form::AddText('description', __('Description'), $layout->description, __('An optional description of the Layout. (1 - 250 characters)'), 'd', 'maxlength="250"');
+        $formFields[] = Form::AddCheckbox('copyMediaFiles', __('Make new copies of all media on this layout?'), $copyMediaChecked,
             __('This will duplicate all media that is currently assigned to the Layout being copied.'), 'c');
 
         Theme::Set('form_fields', $formFields);
@@ -1031,14 +1031,14 @@ HTML;
         Theme::Set('prepend', Theme::RenderReturn('form_file_upload_single'));
 
         $formFields = array();
-        $formFields[] = FormManager::AddText('layout', __('Name'), NULL, __('The Name of the Layout - (1 - 50 characters). Leave blank to use the name from the import.'), 'n');
-        $formFields[] = FormManager::AddCheckbox('replaceExisting', __('Replace Existing Media?'),
+        $formFields[] = Form::AddText('layout', __('Name'), NULL, __('The Name of the Layout - (1 - 50 characters). Leave blank to use the name from the import.'), 'n');
+        $formFields[] = Form::AddCheckbox('replaceExisting', __('Replace Existing Media?'),
             NULL,
             __('If the import finds existing media with the same name, should it be replaced in the Layout or should the Layout use that media.'),
             'r');
 
         if (\Kit::GetParam('template', _GET, _STRING, 'false') != 'true')
-            $formFields[] = FormManager::AddCheckbox('importTags', __('Import Tags?'),
+            $formFields[] = Form::AddCheckbox('importTags', __('Import Tags?'),
                 NULL,
                 __('Would you like to import any tags contained on the layout.'),
                 't');

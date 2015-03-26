@@ -23,6 +23,7 @@ use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Cache;
 use Xibo\Helper\Config;
 use Xibo\Helper\Date;
+use Xibo\Helper\Form;
 use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
 
@@ -96,24 +97,24 @@ class Twitter extends Module
     public function ModuleSettingsForm()
     {
         // API Key
-        $formFields[] = FormManager::AddText('apiKey', __('API Key'), $this->GetSetting('apiKey'), 
+        $formFields[] = Form::AddText('apiKey', __('API Key'), $this->GetSetting('apiKey'),
             __('Enter your API Key from Twitter.'), 'a', 'required');
 
         // API Secret
-        $formFields[] = FormManager::AddText('apiSecret', __('API Secret'), $this->GetSetting('apiSecret'), 
+        $formFields[] = Form::AddText('apiSecret', __('API Secret'), $this->GetSetting('apiSecret'),
             __('Enter your API Secret from Twitter.'), 's', 'required');
         
         // Cache Period
-        $formFields[] = FormManager::AddText('cachePeriod', __('Cache Period'), $this->GetSetting('cachePeriod', 300), 
+        $formFields[] = Form::AddText('cachePeriod', __('Cache Period'), $this->GetSetting('cachePeriod', 300),
             __('Enter the number of seconds you would like to cache twitter search results.'), 'c', 'required');
         
         // Cache Period Images
-        $formFields[] = FormManager::AddText('cachePeriodImages', __('Cache Period for Images'), $this->GetSetting('cachePeriodImages', 24), 
+        $formFields[] = Form::AddText('cachePeriodImages', __('Cache Period for Images'), $this->GetSetting('cachePeriodImages', 24),
             __('Enter the number of hours you would like to cache twitter images.'), 'i', 'required');
 
         // Present an error message if we don't have the required extension enabled. Don't prevent further configuration.
         if (!extension_loaded('curl')) {
-            $formFields[] = FormManager::AddMessage(__('The php-curl extension is required for the Twitter Module and it does not appear to be enabled on this CMS. Please enable it before using this module.'), 'alert alert-danger');
+            $formFields[] = Form::AddMessage(__('The php-curl extension is required for the Twitter Module and it does not appear to be enabled on this CMS. Please enable it before using this module.'), 'alert alert-danger');
         }
         
         return $formFields;
@@ -159,25 +160,25 @@ class Twitter extends Module
         $this->configureForm('AddMedia');
 
         $tabs = array();
-        $tabs[] = FormManager::AddTab('general', __('General'));
-        $tabs[] = FormManager::AddTab('template', __('Template'), array(array('name' => 'enlarge', 'value' => true)));
-        $tabs[] = FormManager::AddTab('effect', __('Effect'));
-        $tabs[] = FormManager::AddTab('advanced', __('Advanced'));
+        $tabs[] = Form::AddTab('general', __('General'));
+        $tabs[] = Form::AddTab('template', __('Template'), array(array('name' => 'enlarge', 'value' => true)));
+        $tabs[] = Form::AddTab('effect', __('Effect'));
+        $tabs[] = Form::AddTab('advanced', __('Advanced'));
         Theme::Set('form_tabs', $tabs);
 
-        $formFields['general'][] = FormManager::AddText('name', __('Name'), NULL, 
+        $formFields['general'][] = Form::AddText('name', __('Name'), NULL,
             __('An optional name for this media'), 'n');
 
         // Any values for the form fields should be added to the theme here.
-        $formFields['general'][] = FormManager::AddNumber('duration', __('Duration'), NULL, 
+        $formFields['general'][] = Form::AddNumber('duration', __('Duration'), NULL,
             __('The duration in seconds this item should be displayed.'), 'd', 'required');
 
         // Any values for the form fields should be added to the theme here.
-        $formFields['general'][] = FormManager::AddText('searchTerm', __('Search Term'), NULL, 
+        $formFields['general'][] = Form::AddText('searchTerm', __('Search Term'), NULL,
             __('Search term. You can test your search term in the twitter.com search box first.'), 's', 'required');
 
         // Type
-        $formFields['general'][] = FormManager::AddCombo('resultType', __('Type'), 'mixed',
+        $formFields['general'][] = Form::AddCombo('resultType', __('Type'), 'mixed',
             array(
                 array('typeid' => 'mixed', 'type' => __('Mixed')), 
                 array('typeid' => 'recent', 'type' => __('Recent')),
@@ -188,15 +189,15 @@ class Twitter extends Module
             __('Recent shows only the most recent tweets, Popular the most popular and Mixed includes both popular and recent results.'), 't', 'required');
 
         // Distance
-        $formFields['general'][] = FormManager::AddNumber('tweetDistance', __('Distance'), NULL,
+        $formFields['general'][] = Form::AddNumber('tweetDistance', __('Distance'), NULL,
             __('Distance in miles that the tweets should be returned from. Set to 0 for no restrictions.'), 'd');
 
         // Distance
-        $formFields['general'][] = FormManager::AddNumber('tweetCount', __('Count'), 15, 
+        $formFields['general'][] = Form::AddNumber('tweetCount', __('Count'), 15,
             __('The number of Tweets to return.'), 'c');
 
         // Common fields
-        $formFields['effect'][] = FormManager::AddCombo(
+        $formFields['effect'][] = Form::AddCombo(
                 'effect', 
                 __('Effect'), 
                 $this->GetOption('effect'),
@@ -221,23 +222,23 @@ class Twitter extends Module
                 __('Please select the effect that will be used to transition between items. If all items should be output, select None. Marquee effects are CPU intensive and may not be suitable for lower power displays.'), 
                 'e');
 
-        $formFields['effect'][] = FormManager::AddNumber('speed', __('Speed'), NULL, 
+        $formFields['effect'][] = Form::AddNumber('speed', __('Speed'), NULL,
             __('The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1).'), 's', NULL, 'effect-controls');
 
         // A list of web safe colours
-        $formFields['advanced'][] = FormManager::AddText('backgroundColor', __('Background Colour'), NULL, 
+        $formFields['advanced'][] = Form::AddText('backgroundColor', __('Background Colour'), NULL,
             __('The selected effect works best with a background colour. Optionally add one here.'), 'c', NULL, 'background-color-group');
 
         // Field empty
-        $formFields['advanced'][] = FormManager::AddText('noTweetsMessage', __('No tweets'), NULL, 
+        $formFields['advanced'][] = Form::AddText('noTweetsMessage', __('No tweets'), NULL,
             __('A message to display when there are no tweets returned by the search query'), 'n');
 
         // Date format
-        $formFields['advanced'][] = FormManager::AddText('dateFormat', __('Date Format'), 'd M',
+        $formFields['advanced'][] = Form::AddText('dateFormat', __('Date Format'), 'd M',
             __('The format to apply to all dates returned by the ticker. In PHP date format: http://uk3.php.net/manual/en/function.date.php'), 'f');
         
         // Template - for standard stuff
-        $formFields['template'][] = FormManager::AddCombo('templateId', __('Template'), $this->GetOption('templateId', 'tweet-only'), 
+        $formFields['template'][] = Form::AddCombo('templateId', __('Template'), $this->GetOption('templateId', 'tweet-only'),
             $this->module->settings['templates'], 
             'id', 
             'value', 
@@ -245,15 +246,15 @@ class Twitter extends Module
 
         // Add a field for whether to override the template or not.
         // Default to 1 so that it will work correctly with old items (that didn't have a template selected at all)
-        $formFields['template'][] = FormManager::AddCheckbox('overrideTemplate', __('Override the template?'), $this->GetOption('overrideTemplate', 0), 
+        $formFields['template'][] = Form::AddCheckbox('overrideTemplate', __('Override the template?'), $this->GetOption('overrideTemplate', 0),
         __('Tick if you would like to override the template.'), 'o');
         
         // Add a text template
-        $formFields['template'][] = FormManager::AddMultiText('ta_text', NULL, null,
+        $formFields['template'][] = Form::AddMultiText('ta_text', NULL, null,
             __('Enter the template. Please note that the background colour has automatically coloured to your layout background colour.'), 't', 10, NULL, 'template-override-controls');
         
         // Field for the style sheet (optional)
-        $formFields['template'][] = FormManager::AddMultiText('ta_css', NULL, null,
+        $formFields['template'][] = Form::AddMultiText('ta_css', NULL, null,
             __('Optional Stylesheet'), 's', 10, NULL, 'template-override-controls');
 
         // Add some field dependencies
@@ -281,7 +282,7 @@ class Twitter extends Module
 
         // Present an error message if the module has not been configured. Don't prevent further configuration.
         if (!extension_loaded('curl') || $this->GetSetting('apiKey') == '' || $this->GetSetting('apiSecret') == '') {
-            $formFields['general'][] = FormManager::AddMessage(__('The Twitter Widget has not been configured yet, please ask your CMS Administrator to look at it for you.'), 'alert alert-danger');
+            $formFields['general'][] = Form::AddMessage(__('The Twitter Widget has not been configured yet, please ask your CMS Administrator to look at it for you.'), 'alert alert-danger');
         }
 
         // Modules should be rendered using the theme engine.
@@ -358,25 +359,25 @@ class Twitter extends Module
         $this->loadTemplates();
 
         $tabs = array();
-        $tabs[] = FormManager::AddTab('general', __('General'));
-        $tabs[] = FormManager::AddTab('template', __('Appearance'), array(array('name' => 'enlarge', 'value' => true)));
-        $tabs[] = FormManager::AddTab('effect', __('Effect'));
-        $tabs[] = FormManager::AddTab('advanced', __('Advanced'));
+        $tabs[] = Form::AddTab('general', __('General'));
+        $tabs[] = Form::AddTab('template', __('Appearance'), array(array('name' => 'enlarge', 'value' => true)));
+        $tabs[] = Form::AddTab('effect', __('Effect'));
+        $tabs[] = Form::AddTab('advanced', __('Advanced'));
         Theme::Set('form_tabs', $tabs);
 
-        $formFields['general'][] = FormManager::AddText('name', __('Name'), $this->GetOption('name'), 
+        $formFields['general'][] = Form::AddText('name', __('Name'), $this->GetOption('name'),
             __('An optional name for this media'), 'n');
 
         // Duration
-        $formFields['general'][] = FormManager::AddNumber('duration', __('Duration'), $this->getDuration(),
+        $formFields['general'][] = Form::AddNumber('duration', __('Duration'), $this->getDuration(),
             __('The duration in seconds this item should be displayed.'), 'd', 'required');
 
         // Search Term
-        $formFields['general'][] = FormManager::AddText('searchTerm', __('Search Term'), $this->GetOption('searchTerm'), 
+        $formFields['general'][] = Form::AddText('searchTerm', __('Search Term'), $this->GetOption('searchTerm'),
             __('Search term. You can test your search term in the twitter.com search box first.'), 's', 'required');
 
         // Type
-        $formFields['general'][] = FormManager::AddCombo('resultType', __('Type'), $this->GetOption('resultType'),
+        $formFields['general'][] = Form::AddCombo('resultType', __('Type'), $this->GetOption('resultType'),
             array(
                 array('typeid' => 'mixed', 'type' => __('Mixed')), 
                 array('typeid' => 'recent', 'type' => __('Recent')),
@@ -387,15 +388,15 @@ class Twitter extends Module
             __('Recent shows only the most recent tweets, Popular the most popular and Mixed includes both popular and recent results.'), 't', 'required');
 
         // Distance
-        $formFields['general'][] = FormManager::AddNumber('tweetDistance', __('Distance'), $this->GetOption('tweetDistance'), 
+        $formFields['general'][] = Form::AddNumber('tweetDistance', __('Distance'), $this->GetOption('tweetDistance'),
             __('Distance in miles that the tweets should be returned from. Set to 0 for no restrictions.'), 'd');
 
         // Distance
-        $formFields['general'][] = FormManager::AddNumber('tweetCount', __('Count'), $this->GetOption('tweetCount'), 
+        $formFields['general'][] = Form::AddNumber('tweetCount', __('Count'), $this->GetOption('tweetCount'),
             __('The number of Tweets to return.'), 'c');
 
         // Common fields
-        $formFields['effect'][] = FormManager::AddCombo(
+        $formFields['effect'][] = Form::AddCombo(
                 'effect', 
                 __('Effect'), 
                 $this->GetOption('effect'),
@@ -420,29 +421,29 @@ class Twitter extends Module
                 __('Please select the effect that will be used to transition between items. If all items should be output, select None. Marquee effects are CPU intensive and may not be suitable for lower power displays.'), 
                 'e');
 
-        $formFields['effect'][] = FormManager::AddNumber('speed', __('Speed'), $this->GetOption('speed'), 
+        $formFields['effect'][] = Form::AddNumber('speed', __('Speed'), $this->GetOption('speed'),
             __('The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1).'), 's', NULL, 'effect-controls');
 
         // A list of web safe colours
-        $formFields['advanced'][] = FormManager::AddText('backgroundColor', __('Background Colour'), $this->GetOption('backgroundColor'), 
+        $formFields['advanced'][] = Form::AddText('backgroundColor', __('Background Colour'), $this->GetOption('backgroundColor'),
             __('The selected effect works best with a background colour. Optionally add one here.'), 'c', NULL, 'background-color-group');
 
         // Field empty
-        $formFields['advanced'][] = FormManager::AddText('noTweetsMessage', __('No tweets'), $this->GetOption('noTweetsMessage'), 
+        $formFields['advanced'][] = Form::AddText('noTweetsMessage', __('No tweets'), $this->GetOption('noTweetsMessage'),
             __('A message to display when there are no tweets returned by the search query'), 'n');
 
-        $formFields['advanced'][] = FormManager::AddText('dateFormat', __('Date Format'), $this->GetOption('dateFormat'),
+        $formFields['advanced'][] = Form::AddText('dateFormat', __('Date Format'), $this->GetOption('dateFormat'),
             __('The format to apply to all dates returned by the ticker. In PHP date format: http://uk3.php.net/manual/en/function.date.php'), 'f');
 
-        $formFields['advanced'][] = FormManager::AddCheckbox('removeUrls', __('Remove URLs?'), $this->GetOption('removeUrls', 1), 
+        $formFields['advanced'][] = Form::AddCheckbox('removeUrls', __('Remove URLs?'), $this->GetOption('removeUrls', 1),
             __('Should URLs be removed from the Tweet Text. Most URLs do not compliment digital signage.'), 'u');
 
         // Encode up the template
         if ($this->getUser()->userTypeId == 1)
-            $formFields['advanced'][] = FormManager::AddMessage('<pre>' . htmlentities(json_encode(array('id' => 'ID', 'value' => 'TITLE', 'template' => $this->getRawNode('template', null), 'css' => $this->getRawNode('styleSheet', null)))) . '</pre>');
+            $formFields['advanced'][] = Form::AddMessage('<pre>' . htmlentities(json_encode(array('id' => 'ID', 'value' => 'TITLE', 'template' => $this->getRawNode('template', null), 'css' => $this->getRawNode('styleSheet', null)))) . '</pre>');
 
         // Template - for standard stuff
-        $formFields['template'][] = FormManager::AddCombo('templateId', __('Template'), $this->GetOption('templateId', 'tweet-only'), 
+        $formFields['template'][] = Form::AddCombo('templateId', __('Template'), $this->GetOption('templateId', 'tweet-only'),
             $this->module->settings['templates'], 
             'id', 
             'value', 
@@ -450,15 +451,15 @@ class Twitter extends Module
 
         // Add a field for whether to override the template or not.
         // Default to 1 so that it will work correctly with old items (that didn't have a template selected at all)
-        $formFields['template'][] = FormManager::AddCheckbox('overrideTemplate', __('Override the template?'), $this->GetOption('overrideTemplate', 0), 
+        $formFields['template'][] = Form::AddCheckbox('overrideTemplate', __('Override the template?'), $this->GetOption('overrideTemplate', 0),
         __('Tick if you would like to override the template.'), 'o');
         
         // Add a text template
-        $formFields['template'][] = FormManager::AddMultiText('ta_text', NULL, $this->getRawNode('template', null),
+        $formFields['template'][] = Form::AddMultiText('ta_text', NULL, $this->getRawNode('template', null),
             __('Enter the template. Please note that the background colour has automatically coloured to your layout background colour.'), 't', 10, NULL, 'template-override-controls');
         
         // Field for the style sheet (optional)
-        $formFields['template'][] = FormManager::AddMultiText('ta_css', NULL, $this->getRawNode('styleSheet', null),
+        $formFields['template'][] = Form::AddMultiText('ta_css', NULL, $this->getRawNode('styleSheet', null),
             __('Optional Stylesheet'), 's', 10, NULL, 'template-override-controls');
 
         // Add some field dependencies
@@ -486,7 +487,7 @@ class Twitter extends Module
 
         // Present an error message if the module has not been configured. Don't prevent further configuration.
         if (!extension_loaded('curl') || $this->GetSetting('apiKey') == '' || $this->GetSetting('apiSecret') == '') {
-            $formFields['general'][] = FormManager::AddMessage(__('The Twitter Widget has not been configured yet, please ask your CMS Administrator to look at it for you.'), 'alert alert-danger');
+            $formFields['general'][] = Form::AddMessage(__('The Twitter Widget has not been configured yet, please ask your CMS Administrator to look at it for you.'), 'alert alert-danger');
         }
 
         // Modules should be rendered using the theme engine.

@@ -17,12 +17,16 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- */ 
+ */
 
-    
-class FormManager {
 
-    public static function AddMessage($message, $groupClass = '') {
+namespace Xibo\Helper;
+
+class Form
+{
+
+    public static function AddMessage($message, $groupClass = '')
+    {
         return array(
             'name' => NULL,
             'title' => NULL,
@@ -37,7 +41,8 @@ class FormManager {
         );
     }
 
-    public static function AddRaw($raw) {
+    public static function AddRaw($raw)
+    {
         return array(
             'name' => NULL,
             'title' => NULL,
@@ -52,7 +57,8 @@ class FormManager {
         );
     }
 
-    public static function AddHidden($name, $value) {
+    public static function AddHidden($name, $value)
+    {
         return array(
             'name' => $name,
             'value' => $value,
@@ -61,7 +67,8 @@ class FormManager {
         );
     }
 
-    public static function AddButton($title, $type = 'submit', $link = '', $groupClass = '') {
+    public static function AddButton($title, $type = 'submit', $link = '', $groupClass = '')
+    {
         return array(
             'title' => $title,
             'type' => $type,
@@ -72,7 +79,8 @@ class FormManager {
         );
     }
 
-    public static function AddText($name, $title, $value, $helpText, $accessKey, $validation = '', $groupClass = '', $enabled = true) {
+    public static function AddText($name, $title, $value, $helpText, $accessKey, $validation = '', $groupClass = '', $enabled = true)
+    {
         return array(
             'name' => $name,
             'title' => $title,
@@ -87,7 +95,8 @@ class FormManager {
         );
     }
 
-    public static function AddMultiText($name, $title, $value, $helpText, $accessKey, $rows, $validation = '', $groupClass = '', $enabled = true) {
+    public static function AddMultiText($name, $title, $value, $helpText, $accessKey, $rows, $validation = '', $groupClass = '', $enabled = true)
+    {
         return array(
             'name' => $name,
             'title' => $title,
@@ -103,7 +112,8 @@ class FormManager {
         );
     }
 
-    public static function AddNumber($name, $title, $value, $helpText, $accessKey, $validation = '', $groupClass = '', $enabled = true) {
+    public static function AddNumber($name, $title, $value, $helpText, $accessKey, $validation = '', $groupClass = '', $enabled = true)
+    {
         return array(
             'name' => $name,
             'title' => $title,
@@ -118,7 +128,8 @@ class FormManager {
         );
     }
 
-    public static function AddEmail($name, $title, $value, $helpText, $accessKey, $validation = '', $groupClass = '', $enabled = true) {
+    public static function AddEmail($name, $title, $value, $helpText, $accessKey, $validation = '', $groupClass = '', $enabled = true)
+    {
         return array(
             'name' => $name,
             'title' => $title,
@@ -133,7 +144,8 @@ class FormManager {
         );
     }
 
-    public static function AddCheckbox($name, $title, $value, $helpText, $accessKey, $groupClass = '', $enabled = true) {
+    public static function AddCheckbox($name, $title, $value, $helpText, $accessKey, $groupClass = '', $enabled = true)
+    {
         return array(
             'name' => $name,
             'title' => $title,
@@ -148,7 +160,8 @@ class FormManager {
         );
     }
 
-    public static function AddRadio($name, $id, $title, $value, $setValue, $helpText, $accessKey, $groupClass = '', $enabled = true) {
+    public static function AddRadio($name, $id, $title, $value, $setValue, $helpText, $accessKey, $groupClass = '', $enabled = true)
+    {
         return array(
             'id' => $id,
             'name' => $name,
@@ -165,7 +178,8 @@ class FormManager {
         );
     }
 
-    public static function AddPassword($name, $title, $value, $helpText, $accessKey, $groupClass = '', $enabled = true) {
+    public static function AddPassword($name, $title, $value, $helpText, $accessKey, $groupClass = '', $enabled = true)
+    {
         return array(
             'name' => $name,
             'title' => $title,
@@ -180,7 +194,8 @@ class FormManager {
         );
     }
 
-    public static function AddCombo($name, $title, $value, $options, $optionId, $optionValue, $helpText, $accessKey, $groupClass = '', $enabled = true, $callBack = '', $classColumn = '', $styleColumn = '', $optionGroups = '', $attributes = array()) {
+    public static function AddCombo($name, $title, $value, $options, $optionId, $optionValue, $helpText, $accessKey, $groupClass = '', $enabled = true, $callBack = '', $classColumn = '', $styleColumn = '', $optionGroups = '', $attributes = array())
+    {
         return array(
             'name' => $name,
             'title' => $title,
@@ -202,7 +217,8 @@ class FormManager {
         );
     }
 
-    public static function AddMultiCombo($name, $title, $value, $options, $optionId, $optionValue, $helpText, $accessKey, $groupClass = '', $enabled = true, $callBack = '', $classColumn = '', $styleColumn = '', $optionGroups = '', $attributes = array()) {
+    public static function AddMultiCombo($name, $title, $value, $options, $optionId, $optionValue, $helpText, $accessKey, $groupClass = '', $enabled = true, $callBack = '', $classColumn = '', $styleColumn = '', $optionGroups = '', $attributes = array())
+    {
         return array(
             'name' => $name,
             'title' => $title,
@@ -224,7 +240,8 @@ class FormManager {
         );
     }
 
-    public static function AddPermissions($name, $options) {
+    public static function AddPermissions($name, $options)
+    {
         return array(
             'name' => $name,
             'fieldType' => 'permissions',
@@ -234,13 +251,15 @@ class FormManager {
         );
     }
 
-    public static function AddTab($id, $name, $dataAttributes = array()) {
+    public static function AddTab($id, $name, $dataAttributes = array())
+    {
         return array(
             'id' => $id, 'name' => $name, 'dataAttributes' => $dataAttributes
         );
     }
 
-    public static function AddDatePicker($name, $title, $value, $helpText, $accessKey, $validation = '', $groupClass = '') {
+    public static function AddDatePicker($name, $title, $value, $helpText, $accessKey, $validation = '', $groupClass = '')
+    {
         return array(
             'name' => $name,
             'title' => $title,
@@ -254,4 +273,5 @@ class FormManager {
         );
     }
 }
+
 ?>

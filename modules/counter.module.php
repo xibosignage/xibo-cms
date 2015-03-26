@@ -18,7 +18,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Form;
 use Xibo\Helper\Theme;
 
 class counter extends Module
@@ -34,16 +34,16 @@ class counter extends Module
         $this->configureForm('AddMedia');
 
         $formFields = array();
-        $formFields[] = FormManager::AddMessage(__('Ubuntu Client Only'));
+        $formFields[] = Form::AddMessage(__('Ubuntu Client Only'));
 
-        $formFields[] = FormManager::AddNumber('duration', __('Duration'), $this->duration, 
+        $formFields[] = Form::AddNumber('duration', __('Duration'), $this->duration,
             __('The duration in seconds this counter should be displayed'), 'd', 'required');
 
-        $formFields[] = FormManager::AddCheckbox('popupNotification', __('Pop-up Notification?'), 
+        $formFields[] = Form::AddCheckbox('popupNotification', __('Pop-up Notification?'),
             NULL, __('Popup a notification when the counter changes?'), 
             'n');
 
-        $formFields[] = FormManager::AddMultiText('ta_text', NULL, NULL, 
+        $formFields[] = Form::AddMultiText('ta_text', NULL, NULL,
             __('Enter a format that should be applied to the counter when it is show.'), 't', 10);
 
         Theme::Set('form_fields', $formFields);
@@ -72,16 +72,16 @@ class counter extends Module
 
         // Build the Form
         $formFields = array();
-        $formFields[] = FormManager::AddMessage(__('Ubuntu Client Only'));
+        $formFields[] = Form::AddMessage(__('Ubuntu Client Only'));
 
-        $formFields[] = FormManager::AddNumber('duration', __('Duration'), $this->getDuration(),
+        $formFields[] = Form::AddNumber('duration', __('Duration'), $this->getDuration(),
             __('The duration in seconds this counter should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
 
-        $formFields[] = FormManager::AddCheckbox('popupNotification', __('Pop-up Notification?'),
+        $formFields[] = Form::AddCheckbox('popupNotification', __('Pop-up Notification?'),
             $this->GetOption('popupNotification'), __('Popup a notification when the counter changes?'),
             'n');
 
-        $formFields[] = FormManager::AddMultiText('ta_text', NULL, $this->getRawNode('template', null),
+        $formFields[] = Form::AddMultiText('ta_text', NULL, $this->getRawNode('template', null),
             __('Enter a format that should be applied to the counter when it is show.'), 't', 10);
 
         Theme::Set('form_fields', $formFields);

@@ -18,7 +18,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Form;
 use Xibo\Helper\Theme;
 
 class webpage extends Module
@@ -46,16 +46,16 @@ class webpage extends Module
 
         $formFields = array();
          
-        $formFields[] = FormManager::AddText('uri', __('Link'), NULL, 
+        $formFields[] = Form::AddText('uri', __('Link'), NULL,
             __('The Location (URL) of the webpage'), 'l', 'required');
 
-        $formFields[] = FormManager::AddText('name', __('Name'), NULL, 
+        $formFields[] = Form::AddText('name', __('Name'), NULL,
             __('An optional name for this media'), 'n');
 
-        $formFields[] = FormManager::AddNumber('duration', __('Duration'), NULL, 
+        $formFields[] = Form::AddNumber('duration', __('Duration'), NULL,
             __('The duration in seconds this item should be displayed'), 'd', 'required');
 
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
             'modeid', 
             __('Options'), 
             NULL,
@@ -69,22 +69,22 @@ class webpage extends Module
             __('How should this web page be embedded?'), 
             'm');
 
-        $formFields[] = FormManager::AddNumber('pageWidth', __('Page Width'), NULL, 
+        $formFields[] = Form::AddNumber('pageWidth', __('Page Width'), NULL,
             __('The width of the page. Leave empty to use the region width.'), 'w', NULL, 'webpage-widths');
 
-        $formFields[] = FormManager::AddNumber('pageHeight', __('Page Height'), NULL, 
+        $formFields[] = Form::AddNumber('pageHeight', __('Page Height'), NULL,
             __('The height of the page. Leave empty to use the region height'), 'h', NULL, 'webpage-widths');
 
-        $formFields[] = FormManager::AddNumber('offsetTop', __('Offset Top'), NULL, 
+        $formFields[] = Form::AddNumber('offsetTop', __('Offset Top'), NULL,
             __('The starting point from the top in pixels'), 't', NULL, 'webpage-offsets');
 
-        $formFields[] = FormManager::AddNumber('offsetLeft', __('Offset Left'), NULL, 
+        $formFields[] = Form::AddNumber('offsetLeft', __('Offset Left'), NULL,
             __('The starting point from the left in pixels'), 'l', NULL, 'webpage-offsets');
 
-        $formFields[] = FormManager::AddNumber('scaling', __('Scale Percentage'), NULL, 
+        $formFields[] = Form::AddNumber('scaling', __('Scale Percentage'), NULL,
             __('The Percentage to Scale this Webpage (0 - 100)'), 's', NULL, 'webpage-offsets');
 
-        $formFields[] = FormManager::AddCheckbox('transparency', __('Background transparent?'), 
+        $formFields[] = Form::AddCheckbox('transparency', __('Background transparent?'),
             NULL, __('Should the HTML be shown with a transparent background. Not currently available on the Windows Display Client.'), 
             't');
 
@@ -135,16 +135,16 @@ class webpage extends Module
 
         $formFields = array();
         
-        $formFields[] = FormManager::AddText('uri', __('Link'), urldecode($this->GetOption('uri')), 
+        $formFields[] = Form::AddText('uri', __('Link'), urldecode($this->GetOption('uri')),
             __('The Location (URL) of the webpage'), 'l', 'required');
 
-        $formFields[] = FormManager::AddText('name', __('Name'), $this->GetOption('name'), 
+        $formFields[] = Form::AddText('name', __('Name'), $this->GetOption('name'),
             __('An optional name for this media'), 'n');
 
-        $formFields[] = FormManager::AddNumber('duration', __('Duration'), $this->getDuration(),
+        $formFields[] = Form::AddNumber('duration', __('Duration'), $this->getDuration(),
             __('The duration in seconds this item should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
 
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
             'modeid', 
             __('Options'), 
             $this->GetOption('modeid'),
@@ -158,22 +158,22 @@ class webpage extends Module
             __('How should this web page be embedded?'), 
             'm');
 
-        $formFields[] = FormManager::AddNumber('pageWidth', __('Page Width'), $this->GetOption('pageWidth'), 
+        $formFields[] = Form::AddNumber('pageWidth', __('Page Width'), $this->GetOption('pageWidth'),
             __('The width of the page. Leave empty to use the region width.'), 'w', NULL, 'webpage-widths');
 
-        $formFields[] = FormManager::AddNumber('pageHeight', __('Page Height'), $this->GetOption('pageHeight'), 
+        $formFields[] = Form::AddNumber('pageHeight', __('Page Height'), $this->GetOption('pageHeight'),
             __('The height of the page. Leave empty to use the region height'), 'h', NULL, 'webpage-widths');
 
-        $formFields[] = FormManager::AddNumber('offsetTop', __('Offset Top'), $this->GetOption('offsetTop'), 
+        $formFields[] = Form::AddNumber('offsetTop', __('Offset Top'), $this->GetOption('offsetTop'),
             __('The starting point from the top in pixels'), 't', NULL, 'webpage-offsets');
 
-        $formFields[] = FormManager::AddNumber('offsetLeft', __('Offset Left'), $this->GetOption('offsetLeft'), 
+        $formFields[] = Form::AddNumber('offsetLeft', __('Offset Left'), $this->GetOption('offsetLeft'),
             __('The starting point from the left in pixels'), 'l', NULL, 'webpage-offsets');
 
-        $formFields[] = FormManager::AddNumber('scaling', __('Scale Percentage'), $this->GetOption('scaling'), 
+        $formFields[] = Form::AddNumber('scaling', __('Scale Percentage'), $this->GetOption('scaling'),
             __('The Percentage to Scale this Webpage (0 - 100)'), 's', NULL, 'webpage-offsets');
            
-        $formFields[] = FormManager::AddCheckbox('transparency', __('Background transparent?'), 
+        $formFields[] = Form::AddCheckbox('transparency', __('Background transparent?'),
             $this->GetOption('transparency'), __('Should the HTML be shown with a transparent background. Not currently available on the Windows Display Client.'), 
             't');
 

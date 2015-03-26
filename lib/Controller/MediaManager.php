@@ -22,8 +22,8 @@ namespace Xibo\Controller;
 use baseDAO;
 use DOMDocument;
 use DOMXPath;
-use FormManager;
 use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Form;
 use Xibo\Helper\Log;
 use Xibo\Helper\Session;
 use Xibo\Helper\Theme;
@@ -58,14 +58,14 @@ class MediaManager extends Base
         Theme::Set('form_meta', '<input type="hidden" name="p" value="mediamanager"><input type="hidden" name="q" value="MediaManagerGrid">');
 
         $formFields = array();
-        $formFields[] = FormManager::AddText('filter_layout_name', __('Layout'), $filter_layout_name, NULL, 'l');
-        $formFields[] = FormManager::AddText('filter_region_name', __('Region'), $filter_region_name, NULL, 'r');
-        $formFields[] = FormManager::AddText('filter_media_name', __('Media'), $filter_media_name, NULL, 'm');
+        $formFields[] = Form::AddText('filter_layout_name', __('Layout'), $filter_layout_name, NULL, 'l');
+        $formFields[] = Form::AddText('filter_region_name', __('Region'), $filter_region_name, NULL, 'r');
+        $formFields[] = Form::AddText('filter_media_name', __('Media'), $filter_media_name, NULL, 'm');
 
         $types = $db->GetArray("SELECT moduleid AS moduleid, Name AS module FROM `module` WHERE Enabled = 1 ORDER BY 2");
         array_unshift($types, array('moduleid' => 0, 'module' => 'All'));
 
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
             'filter_type',
             __('Type'),
             $filter_type,
@@ -75,7 +75,7 @@ class MediaManager extends Base
             NULL,
             't');
 
-        $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'),
+        $formFields[] = Form::AddCheckbox('XiboFilterPinned', __('Keep Open'),
             $filter_pinned, NULL,
             'k');
 

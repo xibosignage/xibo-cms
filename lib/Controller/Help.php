@@ -20,8 +20,8 @@
  */
 namespace Xibo\Controller;
 use baseDAO;
-use FormManager;
 use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Form;
 use Xibo\Helper\Theme;
 
 
@@ -145,13 +145,13 @@ SQL;
         Theme::Set('form_action', 'index.php?p=help&q=Add');
 
         $formFields = array();
-        $formFields[] = FormManager::AddText('Topic', __('Topic'), NULL,
+        $formFields[] = Form::AddText('Topic', __('Topic'), NULL,
             __('The Topic for this Help Link'), 't', 'maxlength="254" required');
 
-        $formFields[] = FormManager::AddText('Category', __('Category'), NULL,
+        $formFields[] = Form::AddText('Category', __('Category'), NULL,
             __('The Category for this Help Link'), 'c', 'maxlength="254" required');
 
-        $formFields[] = FormManager::AddText('Link', __('Link'), NULL,
+        $formFields[] = Form::AddText('Link', __('Link'), NULL,
             __('The Link to open for this help topic and category'), 'c', 'maxlength="254" required');
 
         Theme::Set('form_fields', $formFields);
@@ -188,13 +188,13 @@ SQL;
         Theme::Set('form_meta', '<input type="hidden" name="HelpID" value="' . $helpId . '" />');
 
         $formFields = array();
-        $formFields[] = FormManager::AddText('Topic', __('Topic'), \Xibo\Helper\Sanitize::string($row['Topic']),
+        $formFields[] = Form::AddText('Topic', __('Topic'), \Xibo\Helper\Sanitize::string($row['Topic']),
             __('The Topic for this Help Link'), 't', 'maxlength="254" required');
 
-        $formFields[] = FormManager::AddText('Category', __('Category'), \Xibo\Helper\Sanitize::string($row['Category']),
+        $formFields[] = Form::AddText('Category', __('Category'), \Xibo\Helper\Sanitize::string($row['Category']),
             __('The Category for this Help Link'), 'c', 'maxlength="254" required');
 
-        $formFields[] = FormManager::AddText('Link', __('Link'), \Xibo\Helper\Sanitize::string($row['Link']),
+        $formFields[] = Form::AddText('Link', __('Link'), \Xibo\Helper\Sanitize::string($row['Link']),
             __('The Link to open for this help topic and category'), 'c', 'maxlength="254" required');
 
         Theme::Set('form_fields', $formFields);
@@ -219,7 +219,7 @@ SQL;
         Theme::Set('form_action', 'index.php?p=help&q=Delete');
         Theme::Set('form_meta', '<input type="hidden" name="HelpID" value="' . $helpId . '" />');
 
-        Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to delete?'))));
+        Theme::Set('form_fields', array(Form::AddMessage(__('Are you sure you want to delete?'))));
 
         $response->SetFormRequestResponse(NULL, __('Delete Help Link'), '350px', '175px');
         $response->AddButton(__('No'), 'XiboDialogClose()');

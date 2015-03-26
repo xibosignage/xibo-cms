@@ -23,9 +23,9 @@ use baseDAO;
 use DataSetColumn;
 use DataSetData;
 use DataSetGroupSecurity;
-use FormManager;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Config;
+use Xibo\Helper\Form;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
@@ -188,10 +188,10 @@ class DataSet extends Base
         Theme::Set('form_action', 'index.php?p=dataset&q=AddDataSet');
 
         $formFields = array();
-        $formFields[] = FormManager::AddText('dataset', __('Name'), NULL,
+        $formFields[] = Form::AddText('dataset', __('Name'), NULL,
             __('A name for this DataSet'), 'n', 'required');
 
-        $formFields[] = FormManager::AddText('description', __('Description'), NULL,
+        $formFields[] = Form::AddText('description', __('Description'), NULL,
             __('An optional description'), 'd', 'maxlength="250"');
 
         Theme::Set('form_fields', $formFields);
@@ -253,10 +253,10 @@ class DataSet extends Base
         Theme::Set('form_meta', '<input type="hidden" name="datasetid" value="' . $dataSetId . '" />');
 
         $formFields = array();
-        $formFields[] = FormManager::AddText('dataset', __('Name'), \Xibo\Helper\Sanitize::string($row['DataSet']),
+        $formFields[] = Form::AddText('dataset', __('Name'), \Xibo\Helper\Sanitize::string($row['DataSet']),
             __('A name for this DataSet'), 'n', 'required');
 
-        $formFields[] = FormManager::AddText('description', __('Description'), \Xibo\Helper\Sanitize::string($row['Description']),
+        $formFields[] = Form::AddText('description', __('Description'), \Xibo\Helper\Sanitize::string($row['Description']),
             __('An optional description'), 'd', 'maxlength="250"');
 
         Theme::Set('form_fields', $formFields);
@@ -314,8 +314,8 @@ class DataSet extends Base
         Theme::Set('form_meta', '<input type="hidden" name="datasetid" value="' . $dataSetId . '" />');
 
         $formFields = array();
-        $formFields[] = FormManager::AddMessage(__('Are you sure you want to delete?'));
-        $formFields[] = FormManager::AddCheckbox('deleteData', __('Delete any associated data?'), NULL,
+        $formFields[] = Form::AddMessage(__('Are you sure you want to delete?'));
+        $formFields[] = Form::AddCheckbox('deleteData', __('Delete any associated data?'), NULL,
             __('Please tick the box if you would like to delete all the Data contained in this DataSet'), 'c');
 
         Theme::Set('form_fields', $formFields);
@@ -440,8 +440,8 @@ class DataSet extends Base
         Theme::Set('form_meta', '<input type="hidden" name="dataset" value="' . $dataSet . '" /><input type="hidden" name="datasetid" value="' . $dataSetId . '" />');
 
         $formFields = array();
-        $formFields[] = FormManager::AddText('heading', __('Heading'), NULL, __('The heading for this Column'), 'h', 'required');
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddText('heading', __('Heading'), NULL, __('The heading for this Column'), 'h', 'required');
+        $formFields[] = Form::AddCombo(
             'datasetcolumntypeid',
             __('Column Type'),
             NULL,
@@ -450,7 +450,7 @@ class DataSet extends Base
             'datasetcolumntype',
             __('Whether this column is a value or a formula'),
             't');
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
             'datatypeid',
             __('Data Type'),
             NULL,
@@ -459,9 +459,9 @@ class DataSet extends Base
             'datatype',
             __('The DataType of the Intended Data'),
             'd');
-        $formFields[] = FormManager::AddText('listcontent', __('List Content'), NULL, __('A comma separated list of items to present in a combo box'), 'l', '');
-        $formFields[] = FormManager::AddNumber('columnorder', __('Column Order'), NULL, __('The order this column should be displayed in when entering data'), 'o', '');
-        $formFields[] = FormManager::AddText('formula', __('Formula'), NULL, __('A formula to use as a calculation for formula column types'), 'f', '');
+        $formFields[] = Form::AddText('listcontent', __('List Content'), NULL, __('A comma separated list of items to present in a combo box'), 'l', '');
+        $formFields[] = Form::AddNumber('columnorder', __('Column Order'), NULL, __('The order this column should be displayed in when entering data'), 'o', '');
+        $formFields[] = Form::AddText('formula', __('Formula'), NULL, __('A formula to use as a calculation for formula column types'), 'f', '');
 
         Theme::Set('form_fields', $formFields);
 
@@ -535,10 +535,10 @@ class DataSet extends Base
         Theme::Set('datasetcolumntype_field_list', $db->GetArray('SELECT datasetcolumntypeid, datasetcolumntype FROM datasetcolumntype'));
 
         $formFields = array();
-        $formFields[] = FormManager::AddText('heading', __('Heading'), \Xibo\Helper\Sanitize::string($row['Heading']),
+        $formFields[] = Form::AddText('heading', __('Heading'), \Xibo\Helper\Sanitize::string($row['Heading']),
             __('The heading for this Column'), 'h', 'required');
 
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
             'datasetcolumntypeid',
             __('Column Type'),
             \Xibo\Helper\Sanitize::int($row['DataSetColumnTypeID']),
@@ -548,7 +548,7 @@ class DataSet extends Base
             __('Whether this column is a value or a formula'),
             't');
 
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
             'datatypeid',
             __('Data Type'),
             \Xibo\Helper\Sanitize::int($row['DataTypeID']),
@@ -558,13 +558,13 @@ class DataSet extends Base
             __('The DataType of the Intended Data'),
             'd');
 
-        $formFields[] = FormManager::AddText('listcontent', __('List Content'), \Xibo\Helper\Sanitize::string($row['ListContent']),
+        $formFields[] = Form::AddText('listcontent', __('List Content'), \Xibo\Helper\Sanitize::string($row['ListContent']),
             __('A comma separated list of items to present in a combo box'), 'l', '');
 
-        $formFields[] = FormManager::AddNumber('columnorder', __('Column Order'), \Xibo\Helper\Sanitize::int($row['ColumnOrder']),
+        $formFields[] = Form::AddNumber('columnorder', __('Column Order'), \Xibo\Helper\Sanitize::int($row['ColumnOrder']),
             __('The order this column should be displayed in when entering data'), 'o', '');
 
-        $formFields[] = FormManager::AddText('formula', __('Formula'), \Xibo\Helper\Sanitize::string($row['Formula']),
+        $formFields[] = Form::AddText('formula', __('Formula'), \Xibo\Helper\Sanitize::string($row['Formula']),
             __('A formula to use as a calculation for formula column types'), 'f', '');
 
         Theme::Set('form_fields', $formFields);
@@ -630,7 +630,7 @@ class DataSet extends Base
         Theme::Set('form_action', 'index.php?p=dataset&q=DeleteDataSetColumn');
         Theme::Set('form_meta', '<input type="hidden" name="dataset" value="' . $dataSet . '" /><input type="hidden" name="datasetid" value="' . $dataSetId . '" /><input type="hidden" name="datasetcolumnid" value="' . $dataSetColumnId . '" />');
 
-        Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to delete?'))));
+        Theme::Set('form_fields', array(Form::AddMessage(__('Are you sure you want to delete?'))));
 
         $response->SetFormRequestResponse(NULL, __('Delete this Column?'), '350px', '200px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('DataSet', 'DeleteColumn') . '")');
@@ -959,7 +959,7 @@ END;
         }
 
         $formFields = array();
-        $formFields[] = FormManager::AddPermissions('groupids[]', $checkboxes);
+        $formFields[] = Form::AddPermissions('groupids[]', $checkboxes);
 
         Theme::Set('form_fields', $formFields);
 
@@ -1082,12 +1082,12 @@ END;
         Theme::Set('prepend', Theme::RenderReturn('form_file_upload_single'));
 
         $formFields = array();
-        $formFields[] = FormManager::AddCheckbox('overwrite', __('Overwrite existing data?'),
+        $formFields[] = Form::AddCheckbox('overwrite', __('Overwrite existing data?'),
             NULL,
             __('Erase all content in this DataSet and overwrite it with the new content in this import.'),
             'o');
 
-        $formFields[] = FormManager::AddCheckbox('ignorefirstrow', __('Ignore first row?'),
+        $formFields[] = Form::AddCheckbox('ignorefirstrow', __('Ignore first row?'),
             NULL,
             __('Ignore the first row? Useful if the CSV has headings.'),
             'i');
@@ -1113,7 +1113,7 @@ END;
         foreach ($dataSetColumns as $row) {
             $i++;
 
-            $formFields[] = FormManager::AddNumber('csvImport_' . \Xibo\Helper\Sanitize::int($row['DataSetColumnID']),
+            $formFields[] = Form::AddNumber('csvImport_' . \Xibo\Helper\Sanitize::int($row['DataSetColumnID']),
                 \Xibo\Helper\Sanitize::string($row['Heading']), $i, NULL, 'c');
         }
 

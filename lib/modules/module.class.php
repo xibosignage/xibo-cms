@@ -21,6 +21,7 @@
 use Xibo\Controller\File;
 use Xibo\Entity\User;
 use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Form;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
@@ -317,10 +318,10 @@ abstract class Module implements ModuleInterface
 
         $formFields = array();
 
-        $formFields[] = FormManager::AddText('name', __('Name'), $this->GetOption('name'),
+        $formFields[] = Form::AddText('name', __('Name'), $this->GetOption('name'),
             __('The Name of this item - Leave blank to use the file name'), 'n');
 
-        $formFields[] = FormManager::AddNumber('duration', __('Duration'), $this->getDuration(),
+        $formFields[] = Form::AddNumber('duration', __('Duration'), $this->getDuration(),
             __('The duration in seconds this item should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
 
         // Add in any extra form fields we might have provided
@@ -380,13 +381,13 @@ abstract class Module implements ModuleInterface
         Theme::Set('form_action', 'index.php?p=module&mod=' . $this->module->type . '&q=Exec&method=DeleteMedia');
         Theme::Set('form_meta', '<input type="hidden" name="widgetId" value="' . $this->getWidgetId() . '"><input type="hidden" name"regionId" value="' . \Kit::GetParam('regionId', _POST, _INT) . '">');
         $formFields = array(
-            FormManager::AddMessage(__('Are you sure you want to remove this widget?')),
-            FormManager::AddMessage(__('This action cannot be undone.')),
+            Form::AddMessage(__('Are you sure you want to remove this widget?')),
+            Form::AddMessage(__('This action cannot be undone.')),
         );
 
         // If we have linked media items, should we also delete them?
         if (count($this->widget->mediaIds) > 0) {
-            $formFields[] = FormManager::AddCheckbox('deleteMedia', __('Also delete from the Library?'), 0, __('This widget is linked to Media in the Library. Check this option to also delete that Media.'), 'd');
+            $formFields[] = Form::AddCheckbox('deleteMedia', __('Also delete from the Library?'), 0, __('This widget is linked to Media in the Library. Check this option to also delete that Media.'), 'd');
         }
 
         Theme::Set('form_fields', $formFields);
@@ -579,7 +580,7 @@ abstract class Module implements ModuleInterface
             <input type="hidden" name="widgetId" value="' . $this->getWidgetId() . '">
             ');
 
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
                     'transitionType', 
                     __('Transition'), 
                     $transition,
@@ -589,10 +590,10 @@ abstract class Module implements ModuleInterface
                     __('What transition should be applied when this region is finished?'), 
                     't');
 
-        $formFields[] = FormManager::AddNumber('transitionDuration', __('Duration'), $duration,
+        $formFields[] = Form::AddNumber('transitionDuration', __('Duration'), $duration,
             __('The duration for this transition, in milliseconds.'), 'l', '', 'transition-group');
         
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
                     'transitionDirection', 
                     __('Direction'), 
                     $direction,

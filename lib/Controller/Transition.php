@@ -21,9 +21,9 @@
 namespace Xibo\Controller;
 
 use baseDAO;
-use FormManager;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Config;
+use Xibo\Helper\Form;
 use Xibo\Helper\Help;
 use Xibo\Helper\Theme;
 
@@ -154,11 +154,11 @@ class Transition extends Base
 
         $formFields = array();
 
-        $formFields[] = FormManager::AddCheckbox('EnabledForIn', __('Available for In Transitions?'),
+        $formFields[] = Form::AddCheckbox('EnabledForIn', __('Available for In Transitions?'),
             \Xibo\Helper\Sanitize::int($row['AvailableAsIn']), __('Can this transition be used for media start?'),
             'i');
 
-        $formFields[] = FormManager::AddCheckbox('EnabledForOut', __('Available for Out Transitions?'),
+        $formFields[] = Form::AddCheckbox('EnabledForOut', __('Available for Out Transitions?'),
             \Xibo\Helper\Sanitize::int($row['AvailableAsOut']), __('Can this transition be used for media end?'),
             'o');
 

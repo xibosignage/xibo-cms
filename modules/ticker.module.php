@@ -20,6 +20,7 @@
  */
 use Xibo\Controller\File;
 use Xibo\Helper\Date;
+use Xibo\Helper\Form;
 use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
 
@@ -67,7 +68,7 @@ class ticker extends Module
         $this->loadTemplates();
 
         $formFields = array();
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
                     'sourceid', 
                     __('Source Type'), 
                     NULL,
@@ -77,14 +78,14 @@ class ticker extends Module
                     __('The source for this Ticker'), 
                     's');
 
-        $formFields[] = FormManager::AddText('uri', __('Feed URL'), NULL, 
+        $formFields[] = Form::AddText('uri', __('Feed URL'), NULL,
             __('The Link for the RSS feed'), 'f', '', 'feed-fields');
 
         $datasets = $this->getUser()->DataSetList();
         array_unshift($datasets, array('datasetid' => '0', 'dataset' => 'None'));
         Theme::Set('dataset_field_list', $datasets);
 
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
                     'datasetid', 
                     __('DataSet'), 
                     NULL,
@@ -94,7 +95,7 @@ class ticker extends Module
                     __('Please select the DataSet to use as a source of data for this ticker.'), 
                     'd', 'dataset-fields');
 
-        $formFields[] = FormManager::AddNumber('duration', __('Duration'), NULL, 
+        $formFields[] = Form::AddNumber('duration', __('Duration'), NULL,
             __('The duration in seconds this should be displayed'), 'd', 'required');
 
         Theme::Set('form_fields', $formFields);
@@ -147,16 +148,16 @@ class ticker extends Module
         $dataSetId = $this->GetOption('datasetid');
 
         $tabs = array();
-        $tabs[] = FormManager::AddTab('general', __('General'));
-        $tabs[] = FormManager::AddTab('template', __('Appearance'), array(array('name' => 'enlarge', 'value' => true)));
-        $tabs[] = FormManager::AddTab('format', __('Format'));
-        $tabs[] = FormManager::AddTab('advanced', __('Advanced'));
+        $tabs[] = Form::AddTab('general', __('General'));
+        $tabs[] = Form::AddTab('template', __('Appearance'), array(array('name' => 'enlarge', 'value' => true)));
+        $tabs[] = Form::AddTab('format', __('Format'));
+        $tabs[] = Form::AddTab('advanced', __('Advanced'));
         Theme::Set('form_tabs', $tabs);
 
-        $field_name = FormManager::AddText('name', __('Name'), $this->GetOption('name'), 
+        $field_name = Form::AddText('name', __('Name'), $this->GetOption('name'),
             __('An optional name for this media'), 'n');
 
-        $field_duration = FormManager::AddNumber('duration', __('Duration'), $this->getDuration(),
+        $field_duration = Form::AddNumber('duration', __('Duration'), $this->getDuration(),
             __('The duration in seconds this item should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
 
         // Common fields
@@ -167,7 +168,7 @@ class ticker extends Module
         else if ($oldDirection != 'none')
             $oldDirection = 'marquee' . ucfirst($oldDirection);
 
-        $fieldFx = FormManager::AddCombo(
+        $fieldFx = Form::AddCombo(
                 'effect', 
                 __('Effect'), 
                 $this->GetOption('effect', $oldDirection),
@@ -192,24 +193,24 @@ class ticker extends Module
                 __('Please select the effect that will be used to transition between items. If all items should be output, select None. Marquee effects are CPU intensive and may not be suitable for lower power displays.'), 
                 'e');
 
-        $fieldScrollSpeed = FormManager::AddNumber('speed', __('Speed'), $this->GetOption('speed', $this->GetOption('scrollSpeed')), 
+        $fieldScrollSpeed = Form::AddNumber('speed', __('Speed'), $this->GetOption('speed', $this->GetOption('scrollSpeed')),
             __('The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1).'), 's', NULL, 'effect-controls');
 
-        $fieldBackgroundColor = FormManager::AddText('backgroundColor', __('Background Colour'), $this->GetOption('backgroundColor'), 
+        $fieldBackgroundColor = Form::AddText('backgroundColor', __('Background Colour'), $this->GetOption('backgroundColor'),
             __('The selected effect works best with a background colour. Optionally add one here.'), 'c', NULL, 'background-color-group');
 
-        $field_itemsPerPage = FormManager::AddNumber('itemsPerPage', __('Items per page'), $this->GetOption('itemsPerPage'), 
+        $field_itemsPerPage = Form::AddNumber('itemsPerPage', __('Items per page'), $this->GetOption('itemsPerPage'),
             __('When in single mode how many items per page should be shown.'), 'p');
 
-        $field_updateInterval = FormManager::AddNumber('updateInterval', __('Update Interval (mins)'), $this->GetOption('updateInterval', 5), 
+        $field_updateInterval = Form::AddNumber('updateInterval', __('Update Interval (mins)'), $this->GetOption('updateInterval', 5),
             __('Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60.'),
             'n', 'required');
 
-        $field_durationIsPerItem = FormManager::AddCheckbox('durationIsPerItem', __('Duration is per item'), 
+        $field_durationIsPerItem = Form::AddCheckbox('durationIsPerItem', __('Duration is per item'),
             $this->GetOption('durationIsPerItem'), __('The duration specified is per item otherwise it is per feed.'), 
             'i');
 
-        $field_itemsSideBySide = FormManager::AddCheckbox('itemsSideBySide', __('Show items side by side?'), 
+        $field_itemsSideBySide = Form::AddCheckbox('itemsSideBySide', __('Show items side by side?'),
             $this->GetOption('itemsSideBySide'), __('Should items be shown side by side?'), 
             's');
 
@@ -225,16 +226,16 @@ class ticker extends Module
             $formFields['advanced'][] = $field_updateInterval;
 
             // Extra Fields for the DataSet
-            $formFields['general'][] = FormManager::AddText('ordering', __('Order'), $this->GetOption('ordering'),
+            $formFields['general'][] = Form::AddText('ordering', __('Order'), $this->GetOption('ordering'),
                 __('Please enter a SQL clause for how this dataset should be ordered'), 'o');
 
-            $formFields['general'][] = FormManager::AddText('filter', __('Filter'), $this->GetOption('filter'), 
+            $formFields['general'][] = Form::AddText('filter', __('Filter'), $this->GetOption('filter'),
                 __('Please enter a SQL clause to filter this DataSet.'), 'f');
 
-            $formFields['advanced'][] = FormManager::AddNumber('lowerLimit', __('Lower Row Limit'), $this->GetOption('lowerLimit'), 
+            $formFields['advanced'][] = Form::AddNumber('lowerLimit', __('Lower Row Limit'), $this->GetOption('lowerLimit'),
                 __('Please enter the Lower Row Limit for this DataSet (enter 0 for no limit)'), 'l');
 
-            $formFields['advanced'][] = FormManager::AddNumber('upperLimit', __('Upper Row Limit'), $this->GetOption('upperLimit'), 
+            $formFields['advanced'][] = Form::AddNumber('upperLimit', __('Upper Row Limit'), $this->GetOption('upperLimit'),
                 __('Please enter the Upper Row Limit for this DataSet (enter 0 for no limit)'), 'u');
 
             $formFields['format'][] = $field_itemsPerPage;
@@ -242,11 +243,11 @@ class ticker extends Module
 
             Theme::Set('columns', \Xibo\Storage\PDOConnect::select(sprintf("SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetID = %d ", $dataSetId), array()));
 
-            $formFields['template'][] = FormManager::AddRaw(Theme::RenderReturn('media_form_ticker_dataset_edit'));
+            $formFields['template'][] = Form::AddRaw(Theme::RenderReturn('media_form_ticker_dataset_edit'));
         }
         else {
             // Extra Fields for the Ticker
-            $formFields['general'][] = FormManager::AddText('uri', __('Feed URL'), urldecode($this->GetOption('uri')), 
+            $formFields['general'][] = Form::AddText('uri', __('Feed URL'), urldecode($this->GetOption('uri')),
                 __('The Link for the RSS feed'), 'f');
 
             $formFields['general'][] = $field_name;
@@ -255,7 +256,7 @@ class ticker extends Module
             $formFields['format'][] = $fieldScrollSpeed;
 
             // Add a field for RTL tickers
-            $formFields['format'][] = FormManager::AddCombo(
+            $formFields['format'][] = Form::AddCombo(
                     'textDirection', 
                     __('Text direction'), 
                     $this->GetOption('textDirection'),
@@ -270,17 +271,17 @@ class ticker extends Module
 
             $formFields['advanced'][] = $fieldBackgroundColor;
             
-            $formFields['format'][] = FormManager::AddNumber('numItems', __('Number of Items'), $this->GetOption('numItems'), 
+            $formFields['format'][] = Form::AddNumber('numItems', __('Number of Items'), $this->GetOption('numItems'),
                 __('The Number of RSS items you want to display'), 'o');
 
             $formFields['format'][] = $field_itemsPerPage;
 
-            $formFields['advanced'][] = FormManager::AddText('copyright', __('Copyright'), $this->GetOption('copyright'), 
+            $formFields['advanced'][] = Form::AddText('copyright', __('Copyright'), $this->GetOption('copyright'),
                 __('Copyright information to display as the last item in this feed. This can be styled with the #copyright CSS selector.'), 'f');
 
             $formFields['advanced'][] = $field_updateInterval;
 
-            $formFields['format'][] = FormManager::AddCombo(
+            $formFields['format'][] = Form::AddCombo(
                     'takeItemsFrom', 
                     __('Take items from the '), 
                     $this->GetOption('takeItemsFrom'),
@@ -296,7 +297,7 @@ class ticker extends Module
             $formFields['format'][] = $field_durationIsPerItem;
             $formFields['advanced'][] = $field_itemsSideBySide;
 
-            $formFields['advanced'][] = FormManager::AddText('dateFormat', __('Date Format'), $this->GetOption('dateFormat'), 
+            $formFields['advanced'][] = Form::AddText('dateFormat', __('Date Format'), $this->GetOption('dateFormat'),
                 __('The format to apply to all dates returned by the ticker. In PHP date format: http://uk3.php.net/manual/en/function.date.php'), 'f');
 
             $subs = array(
@@ -312,15 +313,15 @@ class ticker extends Module
                 );
             Theme::Set('substitutions', $subs);
 
-            $formFieldSubs = FormManager::AddRaw(Theme::RenderReturn('media_form_ticker_edit'));
+            $formFieldSubs = Form::AddRaw(Theme::RenderReturn('media_form_ticker_edit'));
 
-            $formFields['advanced'][] = FormManager::AddText('allowedAttributes', __('Allowable Attributes'), $this->GetOption('allowedAttributes'), 
+            $formFields['advanced'][] = Form::AddText('allowedAttributes', __('Allowable Attributes'), $this->GetOption('allowedAttributes'),
                 __('A comma separated list of attributes that should not be stripped from the incoming feed.'), '');
 
-            $formFields['advanced'][] = FormManager::AddText('stripTags', __('Strip Tags'), $this->GetOption('stripTags'), 
+            $formFields['advanced'][] = Form::AddText('stripTags', __('Strip Tags'), $this->GetOption('stripTags'),
                 __('A comma separated list of HTML tags that should be stripped from the feed in addition to the default ones.'), '');
 
-            $formFields['advanced'][] = FormManager::AddCheckbox('disableDateSort', __('Disable Date Sort'), $this->GetOption('disableDateSort'),
+            $formFields['advanced'][] = Form::AddCheckbox('disableDateSort', __('Disable Date Sort'), $this->GetOption('disableDateSort'),
                 __('Should the date sort applied to the feed be disabled?'), '');
 
             // Encode up the template
@@ -328,11 +329,11 @@ class ticker extends Module
         }
 
         // Get the CSS node
-        $formFields['template'][] = FormManager::AddMultiText('ta_css', NULL, $this->getRawNode('css', null),
+        $formFields['template'][] = Form::AddMultiText('ta_css', NULL, $this->getRawNode('css', null),
             __('Optional Style sheet'), 's', 10, NULL, 'template-override-controls');
 
         // Get the Text Node out of this
-        $formFields['template'][] = FormManager::AddMultiText('ta_text', NULL, $this->getRawNode('template', null),
+        $formFields['template'][] = Form::AddMultiText('ta_text', NULL, $this->getRawNode('template', null),
             __('Enter the template. Please note that the background colour has automatically coloured to your layout background colour.'), 't', 10, NULL, 'template-override-controls');
 
         // RSS
@@ -345,11 +346,11 @@ class ticker extends Module
 
             // Add a field for whether to override the template or not.
             // Default to 1 so that it will work correctly with old items (that didn't have a template selected at all)
-            $formFields['template'][] = FormManager::AddCheckbox('overrideTemplate', __('Override the template?'), $this->GetOption('overrideTemplate', 1), 
+            $formFields['template'][] = Form::AddCheckbox('overrideTemplate', __('Override the template?'), $this->GetOption('overrideTemplate', 1),
             __('Tick if you would like to override the template.'), 'o');
 
             // Template - for standard stuff
-            $formFields['template'][] = FormManager::AddCombo('templateId', __('Template'), $this->GetOption('templateId', 'title-only'), 
+            $formFields['template'][] = Form::AddCombo('templateId', __('Template'), $this->GetOption('templateId', 'title-only'),
                 $this->module->settings['templates'],
                 'id', 
                 'value', 

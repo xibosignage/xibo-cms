@@ -20,9 +20,9 @@
  */
 namespace Xibo\Controller;
 use Exception;
-use FormManager;
 use Media;
 use Xibo\Helper\Config;
+use Xibo\Helper\Form;
 use Xibo\Helper\Install;
 use Xibo\Helper\Theme;
 
@@ -97,20 +97,20 @@ class Upgrade extends Base
 
         $formFields = array();
         $formButtons = array();
-        $formFields[] = FormManager::AddMessage(sprintf(__('First we need to re-check if your server meets %s\'s requirements. The CMS requirements may change from release to release. If this is the case there will be further information in the release notes.'), Theme::GetConfig('app_name')));
+        $formFields[] = Form::AddMessage(sprintf(__('First we need to re-check if your server meets %s\'s requirements. The CMS requirements may change from release to release. If this is the case there will be further information in the release notes.'), Theme::GetConfig('app_name')));
 
-        $formFields[] = FormManager::AddRaw($environment);
+        $formFields[] = Form::AddRaw($environment);
 
         if ($config->EnvironmentFault()) {
-            $formFields[] = FormManager::AddHidden('step', 1);
-            $formButtons[] = FormManager::AddButton(__('Retest'));
+            $formFields[] = Form::AddHidden('step', 1);
+            $formButtons[] = Form::AddButton(__('Retest'));
         } else if ($config->EnvironmentWarning()) {
-            $formFields[] = FormManager::AddHidden('step', 2);
-            $formButtons[] = FormManager::AddButton(__('Retest'), 'link', 'index.php?p=upgrade&step=1');
-            $formButtons[] = FormManager::AddButton(__('Next'));
+            $formFields[] = Form::AddHidden('step', 2);
+            $formButtons[] = Form::AddButton(__('Retest'), 'link', 'index.php?p=upgrade&step=1');
+            $formButtons[] = Form::AddButton(__('Next'));
         } else {
-            $formFields[] = FormManager::AddHidden('step', 2);
-            $formButtons[] = FormManager::AddButton(__('Next'));
+            $formFields[] = Form::AddHidden('step', 2);
+            $formButtons[] = Form::AddButton(__('Next'));
         }
 
         // Return a rendered form
@@ -162,12 +162,12 @@ class Upgrade extends Base
             $this->errorMessage == '';
         }
 
-        $formFields[] = FormManager::AddHidden('step', 3);
-        $formFields[] = FormManager::AddHidden('upgradeFrom', $_SESSION['upgradeFrom']);
-        $formFields[] = FormManager::AddHidden('upgradeTo', $_SESSION['upgradeTo']);
-        $formFields[] = FormManager::AddHidden('includes', true);
+        $formFields[] = Form::AddHidden('step', 3);
+        $formFields[] = Form::AddHidden('upgradeFrom', $_SESSION['upgradeFrom']);
+        $formFields[] = Form::AddHidden('upgradeTo', $_SESSION['upgradeTo']);
+        $formFields[] = Form::AddHidden('includes', true);
 
-        $formFields[] = FormManager::AddMessage(sprintf(__('Upgrading from database version %d to %d'), $_SESSION['upgradeFrom'], $_SESSION['upgradeTo']));
+        $formFields[] = Form::AddMessage(sprintf(__('Upgrading from database version %d to %d'), $_SESSION['upgradeFrom'], $_SESSION['upgradeTo']));
 
         // Loop for $i between upgradeFrom + 1 and upgradeTo.
         // If a php file exists for that upgrade, make an instance of it and call Questions so we can
@@ -184,17 +184,17 @@ class Upgrade extends Base
                     $questionFields = $this->createQuestions($i, $_SESSION['Step' . $i]->Questions());
                     $formFields = array_merge($formFields, $questionFields);
                 } else {
-                    $formFields[] = FormManager::AddMessage(sprintf(__('Warning: We included %s.php, but it did not include a class of appropriate name.'), $i));
+                    $formFields[] = Form::AddMessage(sprintf(__('Warning: We included %s.php, but it did not include a class of appropriate name.'), $i));
                 }
             }
         }
 
-        $formFields[] = FormManager::AddCheckbox('doBackup', 'I agree I have a valid database backup and can restore it should the upgrade process fail', 0, __('It is important to take a database backup before running the upgrade wizard. A backup is essential for recovering your CMS should there be a problem with the upgrade.'), 'b');
+        $formFields[] = Form::AddCheckbox('doBackup', 'I agree I have a valid database backup and can restore it should the upgrade process fail', 0, __('It is important to take a database backup before running the upgrade wizard. A backup is essential for recovering your CMS should there be a problem with the upgrade.'), 'b');
 
         // Return a rendered form
         Theme::Set('form_action', 'index.php?p=upgrade');
         Theme::Set('form_fields', $formFields);
-        Theme::Set('form_buttons', array(FormManager::AddButton(__('Next'))));
+        Theme::Set('form_buttons', array(Form::AddButton(__('Next'))));
         return Theme::RenderReturn('form_render');
     }
 
@@ -272,9 +272,9 @@ class Upgrade extends Base
 
         // Delete install
         if (!unlink('install.php'))
-            $formFields[] = FormManager::AddMessage(__("Unable to delete install.php. Please ensure the webserver has permission to unlink this file and retry"));
+            $formFields[] = Form::AddMessage(__("Unable to delete install.php. Please ensure the webserver has permission to unlink this file and retry"));
 
-        $formFields[] = FormManager::AddMessage(__('The upgrade was a success!'));
+        $formFields[] = Form::AddMessage(__('The upgrade was a success!'));
 
         // Return a rendered form
         Theme::Set('form_fields', $formFields);
@@ -294,13 +294,13 @@ class Upgrade extends Base
             $title = ($step < 80) ? __('Question %d of Step %s', $qnum + 1, $step) : $question['title'];
 
             if ($question['type'] == _INPUTBOX) {
-                $formFields[] = FormManager::AddText($step . '-' . $qnum, $title, $question['default'],
+                $formFields[] = Form::AddText($step . '-' . $qnum, $title, $question['default'],
                     $question['question'], 'q');
             } elseif ($question['type'] == _PASSWORD) {
-                $formFields[] = FormManager::AddPassword($step . '-' . $qnum, $title, $question['default'],
+                $formFields[] = Form::AddPassword($step . '-' . $qnum, $title, $question['default'],
                     $question['question'], 'q');
             } elseif ($question['type'] == _CHECKBOX) {
-                $formFields[] = FormManager::AddCheckbox($step . '-' . $qnum, $title, (($question['default']) ? 1 : 0),
+                $formFields[] = Form::AddCheckbox($step . '-' . $qnum, $title, (($question['default']) ? 1 : 0),
                     $question['question'], 'q');
             }
         }

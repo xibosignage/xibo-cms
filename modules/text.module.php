@@ -18,7 +18,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Form;
 use Xibo\Helper\Theme;
 
 class text extends Module
@@ -47,17 +47,17 @@ class text extends Module
         
         // Two tabs
         $tabs = array();
-        $tabs[] = FormManager::AddTab('general', __('General'), array(array('name' => 'enlarge', 'value' => true)));
-        $tabs[] = FormManager::AddTab('options', __('Options'));
+        $tabs[] = Form::AddTab('general', __('General'), array(array('name' => 'enlarge', 'value' => true)));
+        $tabs[] = Form::AddTab('options', __('Options'));
 
         Theme::Set('form_tabs', $tabs);
 
         $formFields = array();
 	
-	$formFields['options'][] = FormManager::AddText('name', __('Name'), NULL, 
+	$formFields['options'][] = Form::AddText('name', __('Name'), NULL,
             __('An optional name for this media'), 'n');
 
-        $formFields['options'][] = FormManager::AddCombo(
+        $formFields['options'][] = Form::AddCombo(
                 'effect', 
                 __('Effect'), 
                 $this->GetOption('effect'),
@@ -82,14 +82,14 @@ class text extends Module
                 __('Please select the effect that will be used. Some effects will transition between paragraphs in the text. Marquee effects are CPU intensive and may not be suitable for lower power displays.'), 
                 'e');
 
-        $formFields['options'][] = FormManager::AddNumber('speed', __('Speed'), NULL, 
+        $formFields['options'][] = Form::AddNumber('speed', __('Speed'), NULL,
             __('The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1).'), 's', NULL, 'effect-controls');
 
         // A list of web safe colours
-        $formFields['options'][] = FormManager::AddText('backgroundColor', __('Background Colour'), NULL, 
+        $formFields['options'][] = Form::AddText('backgroundColor', __('Background Colour'), NULL,
             __('The selected effect works best with a background colour. Optionally add one here.'), 'c', NULL, 'effect-controls');
 
-        $formFields['options'][] = FormManager::AddNumber('duration', __('Duration'), NULL, 
+        $formFields['options'][] = Form::AddNumber('duration', __('Duration'), NULL,
             __('The duration in seconds this should be displayed'), 'd', 'required');
 
         // Handle the substitutions as RAW items
@@ -100,9 +100,9 @@ class text extends Module
                 array('Substitute' => 'Clock|DD/MM/YYYY')
             );
         Theme::Set('substitutions', $subs);
-        $formFields['general'][] = FormManager::AddRaw(Theme::RenderReturn('media_form_text_edit'));
+        $formFields['general'][] = Form::AddRaw(Theme::RenderReturn('media_form_text_edit'));
 
-        $formFields['general'][] = FormManager::AddMultiText('ta_text', NULL, NULL, 
+        $formFields['general'][] = Form::AddMultiText('ta_text', NULL, NULL,
             __('Enter the text to display. Please note that the background colour has automatically coloured to your layout background colour.'), 't', 10);
 
         Theme::Set('form_fields_general', $formFields['general']);
@@ -140,8 +140,8 @@ class text extends Module
 
         // Two tabs
         $tabs = array();
-        $tabs[] = FormManager::AddTab('general', __('General'), array(array('name' => 'enlarge', 'value' => true)));
-        $tabs[] = FormManager::AddTab('options', __('Options'));
+        $tabs[] = Form::AddTab('general', __('General'), array(array('name' => 'enlarge', 'value' => true)));
+        $tabs[] = Form::AddTab('options', __('Options'));
 
         Theme::Set('form_tabs', $tabs);
 
@@ -152,10 +152,10 @@ class text extends Module
         if ($oldDirection != 'none')
             $oldDirection = 'marquee' . ucfirst($oldDirection);
 	
-	$formFields['options'][] = FormManager::AddText('name', __('Name'), $this->GetOption('name'), 
+	$formFields['options'][] = Form::AddText('name', __('Name'), $this->GetOption('name'),
 	    __('An optional name for this media'), 'n');
 
-        $formFields['options'][] = FormManager::AddCombo(
+        $formFields['options'][] = Form::AddCombo(
                 'effect', 
                 __('Effect'), 
                 $this->GetOption('effect', $oldDirection),
@@ -180,14 +180,14 @@ class text extends Module
                 __('Please select the effect that will be used to transition between items. If all items should be output, select None. Marquee effects are CPU intensive and may not be suitable for lower power displays.'), 
                 'e');
 
-        $formFields['options'][] = FormManager::AddNumber('speed', __('Speed'), $this->GetOption('speed'), 
+        $formFields['options'][] = Form::AddNumber('speed', __('Speed'), $this->GetOption('speed'),
             __('The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1).'), 's', NULL, 'effect-controls');
 
         // A list of web safe colours
-        $formFields['options'][] = FormManager::AddText('backgroundColor', __('Background Colour'), $this->GetOption('backgroundColor'), 
+        $formFields['options'][] = Form::AddText('backgroundColor', __('Background Colour'), $this->GetOption('backgroundColor'),
             __('The selected effect works best with a background colour. Optionally add one here.'), 'c', NULL, 'effect-controls');
 
-        $formFields['options'][] = FormManager::AddNumber('duration', __('Duration'), $this->getDuration(),
+        $formFields['options'][] = Form::AddNumber('duration', __('Duration'), $this->getDuration(),
             __('The duration in seconds this counter should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
 
         // Handle the substitutions as RAW items
@@ -201,10 +201,10 @@ class text extends Module
 
         $textNode = $this->getRawNode('text', null);
 
-        $formFields['general'][] = FormManager::AddMultiText('ta_text', NULL, $textNode,
+        $formFields['general'][] = Form::AddMultiText('ta_text', NULL, $textNode,
             __('Enter the text to display. Please note that the background colour has automatically coloured to your layout background colour.'), 't', 10);
 
-        $formFields['general'][] = FormManager::AddRaw(Theme::RenderReturn('media_form_text_edit'));
+        $formFields['general'][] = Form::AddRaw(Theme::RenderReturn('media_form_text_edit'));
 
         Theme::Set('form_fields_general', $formFields['general']);
         Theme::Set('form_fields_options', $formFields['options']);

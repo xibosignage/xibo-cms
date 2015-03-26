@@ -20,10 +20,10 @@
  */
 namespace Xibo\Controller;
 use baseDAO;
-use FormManager;
 use Kit;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Date;
+use Xibo\Helper\Form;
 use Xibo\Helper\Help;
 use Xibo\Helper\Theme;
 
@@ -114,10 +114,10 @@ class DisplayProfile extends Base
         Theme::Set('form_action', 'index.php?p=displayprofile&q=Add');
 
         $formFields = array();
-        $formFields[] = FormManager::AddText('name', __('Name'), NULL,
+        $formFields[] = Form::AddText('name', __('Name'), NULL,
             __('The Name of the Profile - (1 - 50 characters)'), 'n', 'maxlength="50" required');
 
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
             'type',
             __('Client Type'),
             NULL,
@@ -131,7 +131,7 @@ class DisplayProfile extends Base
             __('What type of display client is this profile intended for?'),
             't');
 
-        $formFields[] = FormManager::AddCheckbox('isdefault', __('Default Profile?'),
+        $formFields[] = Form::AddCheckbox('isdefault', __('Default Profile?'),
             NULL, __('Is this the default profile for all Displays of this type? Only 1 profile can be the default.'),
             'd');
 
@@ -195,14 +195,14 @@ class DisplayProfile extends Base
             $formFields[$tab['id']] = array();
 
             // Also add the tab
-            $formTabs[] = FormManager::AddTab($tab['id'], $tab['name']);
+            $formTabs[] = Form::AddTab($tab['id'], $tab['name']);
         }
 
         // Go through each setting and output a form control to the theme.
-        $formFields['general'][] = FormManager::AddText('name', __('Name'), $displayProfile->name,
+        $formFields['general'][] = Form::AddText('name', __('Name'), $displayProfile->name,
             __('The Name of the Profile - (1 - 50 characters)'), 'n', 'maxlength="50" required');
 
-        $formFields['general'][] = FormManager::AddCheckbox('isdefault', __('Default Profile?'),
+        $formFields['general'][] = Form::AddCheckbox('isdefault', __('Default Profile?'),
             $displayProfile->isDefault, __('Is this the default profile for all Displays of this type? Only 1 profile can be the default.'),
             'd');
 
@@ -341,7 +341,7 @@ class DisplayProfile extends Base
         Theme::Set('form_action', 'index.php?p=displayprofile&q=Delete');
         Theme::Set('form_meta', '<input type="hidden" name="displayprofileid" value="' . $displayProfile->displayProfileId . '" />');
 
-        Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to delete?'))));
+        Theme::Set('form_fields', array(Form::AddMessage(__('Are you sure you want to delete?'))));
 
         $response = new ApplicationState();
         $response->SetFormRequestResponse(NULL, __('Delete Display Profile'), '350px', '175px');

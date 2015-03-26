@@ -18,7 +18,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Form;
 use Xibo\Helper\Theme;
 
 class datasetview extends Module
@@ -46,7 +46,7 @@ class datasetview extends Module
         $this->configureForm('AddMedia');
 
         $formFields = array();
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
             'datasetid',
             __('DataSet'),
             NULL,
@@ -56,7 +56,7 @@ class datasetview extends Module
             __('Please select the DataSet to use as a source of data for this view.'),
             'd');
 
-        $formFields[] = FormManager::AddNumber('duration', __('Duration'), NULL, 
+        $formFields[] = Form::AddNumber('duration', __('Duration'), NULL,
             __('The duration in seconds this counter should be displayed'), 'd', 'required');
 
         Theme::Set('form_fields', $formFields);
@@ -81,23 +81,23 @@ class datasetview extends Module
 
         // We want 2 tabs
         $tabs = array();
-        $tabs[] = FormManager::AddTab('general', __('General'));
-        $tabs[] = FormManager::AddTab('advanced', __('Advanced'));
+        $tabs[] = Form::AddTab('general', __('General'));
+        $tabs[] = Form::AddTab('advanced', __('Advanced'));
         Theme::Set('form_tabs', $tabs);
 
         $formFields = array();
-        $formFields[] = FormManager::AddHidden('dataSetId', $this->GetOption('datasetid'));
+        $formFields[] = Form::AddHidden('dataSetId', $this->GetOption('datasetid'));
 
-        $formFields[] = FormManager::AddNumber('duration', __('Duration'), $this->getDuration(),
+        $formFields[] = Form::AddNumber('duration', __('Duration'), $this->getDuration(),
             __('The duration in seconds this item should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
 
-        $formFields[] = FormManager::AddText('ordering', __('Order'), $this->GetOption('ordering'),
+        $formFields[] = Form::AddText('ordering', __('Order'), $this->GetOption('ordering'),
             __('Please enter a SQL clause for how this dataset should be ordered'), 'o');
 
-        $formFields[] = FormManager::AddText('filter', __('Filter'), $this->GetOption('filter'), 
+        $formFields[] = Form::AddText('filter', __('Filter'), $this->GetOption('filter'),
             __('Please enter a SQL clause to filter this DataSet.'), 'f');
 
-        $formFields[] = FormManager::AddCheckbox('showHeadings', __('Show the table headings?'), 
+        $formFields[] = Form::AddCheckbox('showHeadings', __('Show the table headings?'),
             $this->GetOption('showHeadings'), __('Should the Table headings be shown?'), 
             'h');
 
@@ -145,26 +145,26 @@ class datasetview extends Module
         Theme::Set('columns_available_list', $columnsNotSelected);
 
         // Add the columns in as a RAW message
-        $formFields[] = FormManager::AddRaw(Theme::RenderReturn('media_form_datasetview_edit'));
+        $formFields[] = Form::AddRaw(Theme::RenderReturn('media_form_datasetview_edit'));
 
         Theme::Set('form_fields_general', $formFields);
         
         // Advanced Tab
         $formFields = array();
-        $formFields[] = FormManager::AddNumber('lowerLimit', __('Lower Row Limit'), $this->GetOption('lowerLimit'), 
+        $formFields[] = Form::AddNumber('lowerLimit', __('Lower Row Limit'), $this->GetOption('lowerLimit'),
             __('Please enter the Lower Row Limit for this DataSet (enter 0 for no limit)'), 'l');
 
-        $formFields[] = FormManager::AddNumber('upperLimit', __('Upper Row Limit'), $this->GetOption('upperLimit'), 
+        $formFields[] = Form::AddNumber('upperLimit', __('Upper Row Limit'), $this->GetOption('upperLimit'),
             __('Please enter the Upper Row Limit for this DataSet (enter 0 for no limit)'), 'u');
 
-        $formFields[] = FormManager::AddNumber('updateInterval', __('Update Interval (mins)'), $this->GetOption('updateInterval', 5), 
+        $formFields[] = Form::AddNumber('updateInterval', __('Update Interval (mins)'), $this->GetOption('updateInterval', 5),
             __('Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per day this could be set to 60.'),
             'n', 'required');
 
-        $formFields[] = FormManager::AddNumber('rowsPerPage', __('Rows per page'), $this->GetOption('rowsPerPage'), 
+        $formFields[] = Form::AddNumber('rowsPerPage', __('Rows per page'), $this->GetOption('rowsPerPage'),
             __('Please enter the number of rows per page. 0 for no pages.'), 'u');
 
-        $formFields[] = FormManager::AddMultiText('styleSheet', NULL, $this->getRawNode('styleSheet', $this->DefaultStyleSheet()),
+        $formFields[] = Form::AddMultiText('styleSheet', NULL, $this->getRawNode('styleSheet', $this->DefaultStyleSheet()),
             __('Enter a style sheet for the table'), 's', 10);
 
         Theme::Set('form_fields_advanced', $formFields);

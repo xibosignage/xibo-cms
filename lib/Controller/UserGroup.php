@@ -22,12 +22,12 @@ namespace Xibo\Controller;
 use baseDAO;
 use database;
 use Exception;
-use FormManager;
 use JSON;
 use Kit;
 use PDO;
 use Xibo\Entity\User;
 use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Form;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
 use Xibo\Helper\Session;
@@ -98,9 +98,9 @@ END;
         }
 
         $formFields = array();
-        $formFields[] = FormManager::AddText('filter_name', __('Name'), $filter_name, NULL, 'n');
+        $formFields[] = Form::AddText('filter_name', __('Name'), $filter_name, NULL, 'n');
 
-        $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'),
+        $formFields[] = Form::AddCheckbox('XiboFilterPinned', __('Keep Open'),
             $filter_pinned, NULL,
             'k');
 
@@ -256,7 +256,7 @@ END;
         }
 
         $formFields = array();
-        $formFields[] = FormManager::AddText('group', __('Name'), $this->group,
+        $formFields[] = Form::AddText('group', __('Name'), $this->group,
             __('The Name for this User Group'), 'n', 'maxlength="50" required');
 
         Theme::Set('form_fields', $formFields);
@@ -286,7 +286,7 @@ END;
         Theme::Set('form_meta', '<input type="hidden" name="p" value="group"><input type="hidden" name="q" value="PageSecurityFormGrid"><input type="hidden" name="groupid" value="' . $this->groupid . '">');
 
         $formFields = array();
-        $formFields[] = FormManager::AddText('filter_name', __('Name'), NULL, NULL, 'n');
+        $formFields[] = Form::AddText('filter_name', __('Name'), NULL, NULL, 'n');
         Theme::Set('form_fields', $formFields);
 
         // Call to render the template
@@ -403,7 +403,7 @@ END;
         Theme::Set('form_action', 'index.php?p=group&q=Delete');
         Theme::Set('form_meta', '<input type="hidden" name="groupid" value="' . $groupId . '">');
 
-        Theme::Set('form_fields', array(FormManager::AddMessage(sprintf(__('Are you sure you want to delete %s?'), $group))));
+        Theme::Set('form_fields', array(Form::AddMessage(sprintf(__('Are you sure you want to delete %s?'), $group))));
 
         // Construct the Response
         $response->SetFormRequestResponse(NULL, sprintf(__('Delete %s'), $group), '400', '180');
@@ -545,7 +545,7 @@ END;
         Theme::Set('form_meta', '<input type="hidden" name="p" value="group"><input type="hidden" name="q" value="MenuItemSecurityGrid"><input type="hidden" name="groupid" value="' . $this->groupid . '">');
 
         $formFields = array();
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
             'filter_menu',
             __('Menu'),
             null,

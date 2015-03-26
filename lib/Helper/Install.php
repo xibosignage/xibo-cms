@@ -50,20 +50,20 @@ class Install
 
         $formFields = array();
         $formButtons = array();
-        $formFields[] = FormManager::AddMessage(sprintf(__("First we need to check if your server meets %s's requirements."), Theme::GetConfig('app_name')));
+        $formFields[] = Form::AddMessage(sprintf(__("First we need to check if your server meets %s's requirements."), Theme::GetConfig('app_name')));
 
-        $formFields[] = FormManager::AddRaw($environment);
+        $formFields[] = Form::AddRaw($environment);
 
         if ($config->EnvironmentFault()) {
-            $formFields[] = FormManager::AddHidden('step', 1);
-            $formButtons[] = FormManager::AddButton(__('Retest'));
+            $formFields[] = Form::AddHidden('step', 1);
+            $formButtons[] = Form::AddButton(__('Retest'));
         } else if ($config->EnvironmentWarning()) {
-            $formFields[] = FormManager::AddHidden('step', 2);
-            $formButtons[] = FormManager::AddButton(__('Retest'), 'link', 'install.php?step=1');
-            $formButtons[] = FormManager::AddButton(__('Next'));
+            $formFields[] = Form::AddHidden('step', 2);
+            $formButtons[] = Form::AddButton(__('Retest'), 'link', 'install.php?step=1');
+            $formButtons[] = Form::AddButton(__('Next'));
         } else {
-            $formFields[] = FormManager::AddHidden('step', 2);
-            $formButtons[] = FormManager::AddButton(__('Next'));
+            $formFields[] = Form::AddHidden('step', 2);
+            $formButtons[] = Form::AddButton(__('Next'));
         }
 
         // Return a rendered form
@@ -78,8 +78,8 @@ class Install
         // Choice of new or existing database
         // Tabs
         $tabs = array();
-        $tabs[] = FormManager::AddTab('new', __('Create a new database'));
-        $tabs[] = FormManager::AddTab('existing', __('Use an existing database'));
+        $tabs[] = Form::AddTab('new', __('Create a new database'));
+        $tabs[] = Form::AddTab('existing', __('Use an existing database'));
         Theme::Set('form_tabs', $tabs);
 
         $formFields = array();
@@ -90,47 +90,47 @@ class Install
         $this->db_admin_user = ($this->db_admin_user == '') ? 'root' : $this->db_admin_user;
 
         // New DB tab
-        $formFields['new'][] = FormManager::AddHidden('step', 3);
+        $formFields['new'][] = Form::AddHidden('step', 3);
 
-        $formFields['new'][] = FormManager::AddMessage(sprintf(__("%s needs to set-up a connection to your MySQL database."), Theme::GetConfig('app_name')));
+        $formFields['new'][] = Form::AddMessage(sprintf(__("%s needs to set-up a connection to your MySQL database."), Theme::GetConfig('app_name')));
 
-        $formFields['new'][] = FormManager::AddMessage(__('If you have not yet created an empty database and database user for Xibo to use, and know the user name / password of a MySQL administrator stay on this tab, otherwise click "Use Existing".'));
+        $formFields['new'][] = Form::AddMessage(__('If you have not yet created an empty database and database user for Xibo to use, and know the user name / password of a MySQL administrator stay on this tab, otherwise click "Use Existing".'));
 
-        $formFields['new'][] = FormManager::AddRadio('db_create', 'db_create1', __('Create a new database'), $this->db_create, 1,
+        $formFields['new'][] = Form::AddRadio('db_create', 'db_create1', __('Create a new database'), $this->db_create, 1,
             __('Select to create a new database'), 'c');
 
-        $formFields['new'][] = FormManager::AddText('host', __('Host'), $this->new_db_host,
+        $formFields['new'][] = Form::AddText('host', __('Host'), $this->new_db_host,
             __('Please enter the hostname for the MySQL server. This is usually localhost.'), 'h');
 
-        $formFields['new'][] = FormManager::AddText('admin_username', __('Admin Username'), $this->db_admin_user,
+        $formFields['new'][] = Form::AddText('admin_username', __('Admin Username'), $this->db_admin_user,
             __('Please enter the user name of an account that has administrator privileges on the MySQL server.'), 'h');
 
-        $formFields['new'][] = FormManager::AddPassword('admin_password', __('Admin Password'), $this->db_admin_pass,
+        $formFields['new'][] = Form::AddPassword('admin_password', __('Admin Password'), $this->db_admin_pass,
             __('Please enter password for the Admin account.'), 'h');
 
-        $formFields['new'][] = FormManager::AddText('db_name', __('Database Name'), $this->new_db_name,
+        $formFields['new'][] = Form::AddText('db_name', __('Database Name'), $this->new_db_name,
             __('Please enter the name of the database that should be created.'), 'h');
 
-        $formFields['new'][] = FormManager::AddText('db_username', __('Database Username'), $this->new_db_user,
+        $formFields['new'][] = Form::AddText('db_username', __('Database Username'), $this->new_db_user,
             __('Please enter the name of the database user that should be created.'), 'h');
 
-        $formFields['new'][] = FormManager::AddPassword('db_password', __('Database Password'), $this->new_db_pass,
+        $formFields['new'][] = Form::AddPassword('db_password', __('Database Password'), $this->new_db_pass,
             __('Please enter a password for this user.'), 'h');
 
         // Existing DB tab
-        $formFields['existing'][] = FormManager::AddRadio('db_create', 'db_create2', __('Use an existing database'), $this->db_create, 2,
+        $formFields['existing'][] = Form::AddRadio('db_create', 'db_create2', __('Use an existing database'), $this->db_create, 2,
             __('Select to use an existing database. Please note that when you use an existing database it must be empty of all other contents.'), 'e');
 
-        $formFields['existing'][] = FormManager::AddText('existing_host', __('Host'), $this->existing_db_host,
+        $formFields['existing'][] = Form::AddText('existing_host', __('Host'), $this->existing_db_host,
             __('Please enter the hostname for the MySQL server. This is usually localhost.'), 'h');
 
-        $formFields['existing'][] = FormManager::AddText('existing_db_name', __('Database Name'), $this->existing_db_name,
+        $formFields['existing'][] = Form::AddText('existing_db_name', __('Database Name'), $this->existing_db_name,
             __('Please enter the name of the database that should be created.'), 'h');
 
-        $formFields['existing'][] = FormManager::AddText('existing_db_username', __('Database Username'), $this->existing_db_user,
+        $formFields['existing'][] = Form::AddText('existing_db_username', __('Database Username'), $this->existing_db_user,
             __('Please enter the name of the database user that should be created.'), 'h');
 
-        $formFields['existing'][] = FormManager::AddPassword('existing_db_password', __('Database Password'), $this->existing_db_pass,
+        $formFields['existing'][] = Form::AddPassword('existing_db_password', __('Database Password'), $this->existing_db_pass,
             __('Please enter a password for this user.'), 'h');
 
         // Put up an error message if one has been set (and then unset it)
@@ -143,7 +143,7 @@ class Install
         // Return a rendered form
         Theme::Set('form_fields_new', $formFields['new']);
         Theme::Set('form_fields_existing', $formFields['existing']);
-        Theme::Set('form_buttons', array(FormManager::AddButton(__('Next'))));
+        Theme::Set('form_buttons', array(Form::AddButton(__('Next'))));
         return Theme::RenderReturn('form_render');
     }
 
@@ -336,15 +336,15 @@ END;
         // Form to collect an admin user account and password.
         $formFields = array();
 
-        $formFields[] = FormManager::AddHidden('step', 5);
+        $formFields[] = Form::AddHidden('step', 5);
 
-        $formFields[] = FormManager::AddMessage(sprintf(__("%s needs an administrator user account to be the first user account that has access to the CMS. Please enter your chosen details below."), Theme::GetConfig('app_name')));
+        $formFields[] = Form::AddMessage(sprintf(__("%s needs an administrator user account to be the first user account that has access to the CMS. Please enter your chosen details below."), Theme::GetConfig('app_name')));
 
         // User name and password
-        $formFields[] = FormManager::AddText('admin_username', __('Admin Username'), NULL,
+        $formFields[] = Form::AddText('admin_username', __('Admin Username'), NULL,
             __('Please enter a user name for the first administrator account.'), 'n');
 
-        $formFields[] = FormManager::AddPassword('admin_password', __('Admin Password'), NULL,
+        $formFields[] = Form::AddPassword('admin_password', __('Admin Password'), NULL,
             __('Please enter a password for this user. This user will have full access to the system'), 'p');
 
         // Put up an error message if one has been set (and then unset it)
@@ -357,7 +357,7 @@ END;
         // Return a rendered form
         Theme::Set('form_action', 'install.php');
         Theme::Set('form_fields', $formFields);
-        Theme::Set('form_buttons', array(FormManager::AddButton(__('Next'))));
+        Theme::Set('form_buttons', array(Form::AddButton(__('Next'))));
         return Theme::RenderReturn('form_render');
     }
 
@@ -397,15 +397,15 @@ END;
     {
         // Form to collect the library location and server key
         $formFields = array();
-        $formFields[] = FormManager::AddHidden('step', 7);
+        $formFields[] = Form::AddHidden('step', 7);
 
-        $formFields[] = FormManager::AddText('library_location', __('Library Location'), NULL,
+        $formFields[] = Form::AddText('library_location', __('Library Location'), NULL,
             sprintf(__('%s needs somewhere to store the things you upload to be shown. Ideally, this should be somewhere outside the root of your web server - that is such that is not accessible by a web browser. Please input the full path to this folder. If the folder does not already exist, we will attempt to create it for you.'), Theme::GetConfig('app_name')), 'n');
 
-        $formFields[] = FormManager::AddText('server_key', __('Server Key'), Install::gen_secret(6),
+        $formFields[] = Form::AddText('server_key', __('Server Key'), Install::gen_secret(6),
             sprintf(__('%s needs you to choose a "key". This will be required each time you set-up a new client. It should be complicated, and hard to remember. It is visible in the CMS interface, so it need not be written down separately.'), Theme::GetConfig('app_name')), 'n');
 
-        $formFields[] = FormManager::AddCheckbox('stats', __('Statistics'), 1,
+        $formFields[] = Form::AddCheckbox('stats', __('Statistics'), 1,
             sprintf(__('We\'d love to know you\'re running %s. If you\'re happy for us to collect anonymous statistics (version number, number of displays) then please leave the box ticked. Please un tick the box if your server does not have direct access to the internet.'), Theme::GetConfig('app_name')), 'n');
 
         // Put up an error message if one has been set (and then unset it)
@@ -418,7 +418,7 @@ END;
         // Return a rendered form
         Theme::Set('form_action', 'install.php');
         Theme::Set('form_fields', $formFields);
-        Theme::Set('form_buttons', array(FormManager::AddButton(__('Next'))));
+        Theme::Set('form_buttons', array(Form::AddButton(__('Next'))));
         return Theme::RenderReturn('form_render');
     }
 

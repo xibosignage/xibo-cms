@@ -25,10 +25,10 @@ use DisplayGroup;
 use DOMDocument;
 use DOMXPath;
 use finfo;
-use FormManager;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Config;
 use Xibo\Helper\Date;
+use Xibo\Helper\Form;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
 use Xibo\Helper\Session;
@@ -70,7 +70,7 @@ class Display extends Base
 
         $formFields = array();
 
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
             'filter_showView',
             __('View'),
             $filter_showView,
@@ -85,12 +85,12 @@ class Display extends Base
             NULL,
             't');
 
-        $formFields[] = FormManager::AddText('filter_display', __('Name'), $filter_display, NULL, 'n');
-        $formFields[] = FormManager::AddText('filterMacAddress', __('Mac Address'), $filterMacAddress, NULL, 'm');
+        $formFields[] = Form::AddText('filter_display', __('Name'), $filter_display, NULL, 'n');
+        $formFields[] = Form::AddText('filterMacAddress', __('Mac Address'), $filterMacAddress, NULL, 'm');
 
         $displayGroups = $this->user->DisplayGroupList(0);
         array_unshift($displayGroups, array('displaygroupid' => '0', 'displaygroup' => 'All'));
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
             'filter_displaygroup',
             __('Display Group'),
             $filter_displaygroup,
@@ -100,10 +100,10 @@ class Display extends Base
             NULL,
             'd');
 
-        $formFields[] = FormManager::AddNumber('filter_autoRefresh', __('Auto Refresh'), $filter_autoRefresh,
+        $formFields[] = Form::AddNumber('filter_autoRefresh', __('Auto Refresh'), $filter_autoRefresh,
             NULL, 'r');
 
-        $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'),
+        $formFields[] = Form::AddCheckbox('XiboFilterPinned', __('Keep Open'),
             $filter_pinned, NULL,
             'k');
 
@@ -198,16 +198,16 @@ class Display extends Base
 
         // Column 1
         $formFields = array();
-        $formFields[] = FormManager::AddText('display', __('Display'), $displayObject->display,
+        $formFields[] = Form::AddText('display', __('Display'), $displayObject->display,
             __('The Name of the Display - (1 - 50 characters).'), 'd', 'required');
 
-        $formFields[] = FormManager::AddText('hardwareKey', __('Display\'s Hardware Key'), $displayObject->license,
+        $formFields[] = Form::AddText('hardwareKey', __('Display\'s Hardware Key'), $displayObject->license,
             __('A unique identifier for this display.'), 'h', 'required', NULL, false);
 
-        $formFields[] = FormManager::AddText('description', __('Description'), $displayObject->description,
+        $formFields[] = Form::AddText('description', __('Description'), $displayObject->description,
             __('A description - (1 - 254 characters).'), 'p', 'maxlength="50"');
 
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
             'licensed',
             __('Licence Display?'),
             $displayObject->licensed,
@@ -217,7 +217,7 @@ class Display extends Base
             __('Use one of the available licenses for this display?'),
             'l');
 
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
             'defaultlayoutid',
             __('Default Layout'),
             $displayObject->defaultLayoutId,
@@ -231,7 +231,7 @@ class Display extends Base
 
         // Maintenance
         $formFields = array();
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
             'email_alert',
             __('Email Alerts'),
             $displayObject->emailAlert,
@@ -241,7 +241,7 @@ class Display extends Base
             __('Do you want to be notified by email if there is a problem with this display?'),
             'a');
 
-        $formFields[] = FormManager::AddCheckbox('alert_timeout', __('Use the Global Timeout?'), $displayObject->alertTimeout,
+        $formFields[] = Form::AddCheckbox('alert_timeout', __('Use the Global Timeout?'), $displayObject->alertTimeout,
             __('Should this display be tested against the global time out or the client collection interval?'),
             'o');
 
@@ -250,10 +250,10 @@ class Display extends Base
         // Location
         $formFields = array();
 
-        $formFields[] = FormManager::AddNumber('latitude', __('Latitude'), $displayObject->latitude,
+        $formFields[] = Form::AddNumber('latitude', __('Latitude'), $displayObject->latitude,
             __('The Latitude of this display'), 'g');
 
-        $formFields[] = FormManager::AddNumber('longitude', __('Longitude'), $displayObject->longitude,
+        $formFields[] = Form::AddNumber('longitude', __('Longitude'), $displayObject->longitude,
             __('The Longitude of this Display'), 'g');
 
         Theme::Set('form_fields_location', $formFields);
@@ -261,20 +261,20 @@ class Display extends Base
         // Wake on LAN
         $formFields = array();
 
-        $formFields[] = FormManager::AddCheckbox('wakeOnLanEnabled', __('Enable Wake on LAN'),
+        $formFields[] = Form::AddCheckbox('wakeOnLanEnabled', __('Enable Wake on LAN'),
             $displayObject->wakeOnLanEnabled, __('Wake on Lan requires the correct network configuration to route the magic packet to the display PC'),
             'w');
 
-        $formFields[] = FormManager::AddText('broadCastAddress', __('BroadCast Address'), (($displayObject->broadCastAddress == '') ? $displayObject->clientAddress : $displayObject->broadCastAddress),
+        $formFields[] = Form::AddText('broadCastAddress', __('BroadCast Address'), (($displayObject->broadCastAddress == '') ? $displayObject->clientAddress : $displayObject->broadCastAddress),
             __('The IP address of the remote host\'s broadcast address (or gateway)'), 'b');
 
-        $formFields[] = FormManager::AddText('secureOn', __('Wake on LAN SecureOn'), $displayObject->secureOn,
+        $formFields[] = Form::AddText('secureOn', __('Wake on LAN SecureOn'), $displayObject->secureOn,
             __('Enter a hexadecimal password of a SecureOn enabled Network Interface Card (NIC) of the remote host. Enter a value in this pattern: \'xx-xx-xx-xx-xx-xx\'. Leave the following field empty, if SecureOn is not used (for example, because the NIC of the remote host does not support SecureOn).'), 's');
 
-        $formFields[] = FormManager::AddText('wakeOnLanTime', __('Wake on LAN Time'), $displayObject->wakeOnLanTime,
+        $formFields[] = Form::AddText('wakeOnLanTime', __('Wake on LAN Time'), $displayObject->wakeOnLanTime,
             __('The time this display should receive the WOL command, using the 24hr clock - e.g. 19:00. Maintenance must be enabled.'), 't');
 
-        $formFields[] = FormManager::AddText('cidr', __('Wake on LAN CIDR'), $displayObject->cidr,
+        $formFields[] = Form::AddText('cidr', __('Wake on LAN CIDR'), $displayObject->cidr,
             __('Enter a number within the range of 0 to 32 in the following field. Leave the following field empty, if no subnet mask should be used (CIDR = 0). If the remote host\'s broadcast address is unknown: Enter the host name or IP address of the remote host in Broad Cast Address and enter the CIDR subnet mask of the remote host in this field.'), 'c');
 
         Theme::Set('form_fields_wol', $formFields);
@@ -285,7 +285,7 @@ class Display extends Base
         $displayProfileList = $this->user->DisplayProfileList(NULL, array('type' => $displayObject->clientType));
         array_unshift($displayProfileList, array('displayprofileid' => 0, 'name' => ''));
 
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
             'displayprofileid',
             __('Settings Profile?'),
             $displayObject->displayProfileId,
@@ -295,7 +295,7 @@ class Display extends Base
             __('What display profile should this display use?'),
             'p');
 
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
             'inc_schedule',
             __('Interleave Default'),
             $displayObject->incSchedule,
@@ -305,7 +305,7 @@ class Display extends Base
             __('Whether to always put the default layout into the cycle.'),
             'i');
 
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
             'auditing',
             __('Auditing'),
             $displayObject->isAuditing,
@@ -316,7 +316,7 @@ class Display extends Base
             'a');
 
         // Show the resolved settings for this display.
-        $formFields[] = FormManager::AddMessage(__('The settings for this display are shown below. They are taken from the active Display Profile for this Display, which can be changed in Display Settings. If you have altered the Settings Profile above, you will need to save and re-show the form.'));
+        $formFields[] = Form::AddMessage(__('The settings for this display are shown below. They are taken from the active Display Profile for this Display, which can be changed in Display Settings. If you have altered the Settings Profile above, you will need to save and re-show the form.'));
 
         // Build a table for the settings to be shown in
         $cols = array(
@@ -346,17 +346,17 @@ class Display extends Base
 
         Theme::Set('table_cols', $cols);
         Theme::Set('table_rows', $profile);
-        $formFields[] = FormManager::AddRaw(Theme::RenderReturn('table_render'));
+        $formFields[] = Form::AddRaw(Theme::RenderReturn('table_render'));
 
         Theme::Set('form_fields_advanced', $formFields);
 
         // Two tabs
         $tabs = array();
-        $tabs[] = FormManager::AddTab('general', __('General'));
-        $tabs[] = FormManager::AddTab('location', __('Location'));
-        $tabs[] = FormManager::AddTab('maintenance', __('Maintenance'));
-        $tabs[] = FormManager::AddTab('wol', __('Wake on LAN'));
-        $tabs[] = FormManager::AddTab('advanced', __('Advanced'));
+        $tabs[] = Form::AddTab('general', __('General'));
+        $tabs[] = Form::AddTab('location', __('Location'));
+        $tabs[] = Form::AddTab('maintenance', __('Maintenance'));
+        $tabs[] = Form::AddTab('wol', __('Wake on LAN'));
+        $tabs[] = Form::AddTab('advanced', __('Advanced'));
 
         Theme::Set('form_tabs', $tabs);
 
@@ -640,7 +640,7 @@ class Display extends Base
         Theme::Set('form_action', 'index.php?p=display&q=Delete');
         Theme::Set('form_meta', '<input type="hidden" name="displayid" value="' . $displayid . '">');
 
-        Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to delete this display? This cannot be undone.'))));
+        Theme::Set('form_fields', array(Form::AddMessage(__('Are you sure you want to delete this display? This cannot be undone.'))));
 
         $response->SetFormRequestResponse(NULL, __('Delete this Display?'), '350px', '210');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Display', 'Delete') . '")');
@@ -700,7 +700,7 @@ class Display extends Base
         Theme::Set('form_meta', '<input type="hidden" name="DisplayId" value="' . $displayId . '">');
 
         $formFields = array();
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
             'defaultlayoutid',
             __('Default Layout'),
             $defaultLayoutId,
@@ -984,7 +984,7 @@ class Display extends Base
         Theme::Set('form_action', 'index.php?p=display&q=WakeOnLan');
         Theme::Set('form_meta', '<input type="hidden" name="DisplayId" value="' . $displayId . '"><input type="hidden" name="MacAddress" value="' . $macAddress . '">');
 
-        Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to send a Wake On Lan message to this display?'))));
+        Theme::Set('form_fields', array(Form::AddMessage(__('Are you sure you want to send a Wake On Lan message to this display?'))));
 
         $response->SetFormRequestResponse(NULL, __('Wake On Lan'), '300px', '250px');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');
@@ -1056,7 +1056,7 @@ class Display extends Base
         Theme::Set('form_action', 'index.php?p=display&q=RequestScreenShot');
         Theme::Set('form_meta', '<input type="hidden" name="displayId" value="' . $displayId . '">');
 
-        Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to request a screen shot? The next time the client connects to the CMS the screen shot will be sent.'))));
+        Theme::Set('form_fields', array(Form::AddMessage(__('Are you sure you want to request a screen shot? The next time the client connects to the CMS the screen shot will be sent.'))));
 
         $response->SetFormRequestResponse(NULL, __('Request Screen Shot'), '300px', '250px');
         $response->AddButton(__('Cancel'), 'XiboDialogClose()');

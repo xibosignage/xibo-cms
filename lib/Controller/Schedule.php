@@ -21,10 +21,10 @@
 namespace Xibo\Controller;
 use baseDAO;
 use Exception;
-use FormManager;
 use Kit;
 use Xibo\Helper\Config;
 use Xibo\Helper\Date;
+use Xibo\Helper\Form;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
 use Xibo\Helper\Session;
@@ -230,8 +230,8 @@ class Schedule extends Base
 
         // Two tabs
         $tabs = array();
-        $tabs[] = FormManager::AddTab('general', __('General'));
-        $tabs[] = FormManager::AddTab('repeats', __('Repeats'));
+        $tabs[] = Form::AddTab('general', __('General'));
+        $tabs[] = Form::AddTab('repeats', __('Repeats'));
         Theme::Set('form_tabs', $tabs);
 
         $formFields = array();
@@ -265,7 +265,7 @@ class Schedule extends Base
             }
         }
 
-        $formFields['general'][] = FormManager::AddMultiCombo(
+        $formFields['general'][] = Form::AddMultiCombo(
             'DisplayGroupIDs[]',
             __('Display'),
             $displayGroupIds,
@@ -276,15 +276,15 @@ class Schedule extends Base
             'd', '', true, '', '', '', $optionGroups, array(array('name' => 'data-live-search', 'value' => "true"), array('name' => 'data-selected-text-format', 'value' => "count > 4")));
 
         // Time controls
-        $formFields['general'][] = FormManager::AddText('starttimeControl', __('Start Time'), NULL,
+        $formFields['general'][] = Form::AddText('starttimeControl', __('Start Time'), NULL,
             __('Select the start time for this event'), 's', 'required');
 
-        $formFields['general'][] = FormManager::AddText('endtimeControl', __('End Time'), NULL,
+        $formFields['general'][] = Form::AddText('endtimeControl', __('End Time'), NULL,
             __('Select the end time for this event'), 'e', 'required');
 
         // Add two hidden fields to always carry the ISO date
-        $formFields['general'][] = FormManager::AddHidden('starttime', NULL);
-        $formFields['general'][] = FormManager::AddHidden('endtime', NULL);
+        $formFields['general'][] = Form::AddHidden('starttime', NULL);
+        $formFields['general'][] = Form::AddHidden('endtime', NULL);
 
         // Generate a list of layouts.
         $layouts = $user->CampaignList(NULL, false /* isRetired */);
@@ -312,7 +312,7 @@ class Schedule extends Base
             }
         }
 
-        $formFields['general'][] = FormManager::AddCombo(
+        $formFields['general'][] = Form::AddCombo(
             'CampaignID',
             __('Layout / Campaign'),
             NULL,
@@ -322,14 +322,14 @@ class Schedule extends Base
             __('Please select a Layout or Campaign for this Event to show'),
             'l', '', true, '', '', '', $optionGroups);
 
-        $formFields['general'][] = FormManager::AddNumber('DisplayOrder', __('Display Order'), NULL,
+        $formFields['general'][] = Form::AddNumber('DisplayOrder', __('Display Order'), NULL,
             __('Please select the order this event should appear in relation to others when there is more than one event scheduled'), 'o');
 
-        $formFields['general'][] = FormManager::AddCheckbox('is_priority', __('Priority'),
+        $formFields['general'][] = Form::AddCheckbox('is_priority', __('Priority'),
             NULL, __('Sets whether or not this event has priority. If set the event will be show in preference to other events.'),
             'p');
 
-        $formFields['repeats'][] = FormManager::AddCombo(
+        $formFields['repeats'][] = Form::AddCombo(
             'rec_type',
             __('Repeats'),
             NULL,
@@ -347,13 +347,13 @@ class Schedule extends Base
             __('What type of repeat is required?'),
             'r');
 
-        $formFields['repeats'][] = FormManager::AddNumber('rec_detail', __('Repeat every'), NULL,
+        $formFields['repeats'][] = Form::AddNumber('rec_detail', __('Repeat every'), NULL,
             __('How often does this event repeat?'), 'o', '', 'repeat-control-group');
 
-        $formFields['repeats'][] = FormManager::AddText('rec_rangeControl', __('Until'), NULL,
+        $formFields['repeats'][] = Form::AddText('rec_rangeControl', __('Until'), NULL,
             __('When should this event stop repeating?'), 'u', '', 'repeat-control-group');
 
-        $formFields['repeats'][] = FormManager::AddHidden('rec_range', NULL);
+        $formFields['repeats'][] = Form::AddHidden('rec_range', NULL);
 
         // Set some field dependencies
         $response->AddFieldAction('rec_type', 'init', '', array('.repeat-control-group' => array('display' => 'none')));
@@ -508,8 +508,8 @@ class Schedule extends Base
 
         // Two tabs
         $tabs = array();
-        $tabs[] = FormManager::AddTab('general', __('General'));
-        $tabs[] = FormManager::AddTab('repeats', __('Repeats'));
+        $tabs[] = Form::AddTab('general', __('General'));
+        $tabs[] = Form::AddTab('repeats', __('Repeats'));
         Theme::Set('form_tabs', $tabs);
 
         $formFields = array();
@@ -543,7 +543,7 @@ class Schedule extends Base
             }
         }
 
-        $formFields['general'][] = FormManager::AddMultiCombo(
+        $formFields['general'][] = Form::AddMultiCombo(
             'DisplayGroupIDs[]',
             __('Display'),
             $displayGroupIds,
@@ -554,15 +554,15 @@ class Schedule extends Base
             'd', '', true, '', '', '', $optionGroups, array(array('name' => 'data-live-search', 'value' => "true"), array('name' => 'data-selected-text-format', 'value' => "count > 4")));
 
         // Time controls
-        $formFields['general'][] = FormManager::AddText('starttimeControl', __('Start Time'), Date::getLocalDate($fromDT),
+        $formFields['general'][] = Form::AddText('starttimeControl', __('Start Time'), Date::getLocalDate($fromDT),
             __('Select the start time for this event'), 's', 'required');
 
-        $formFields['general'][] = FormManager::AddText('endtimeControl', __('End Time'), Date::getLocalDate($toDT),
+        $formFields['general'][] = Form::AddText('endtimeControl', __('End Time'), Date::getLocalDate($toDT),
             __('Select the end time for this event'), 'e', 'required');
 
         // Add two hidden fields to always carry the ISO date
-        $formFields['general'][] = FormManager::AddHidden('starttime', Date::getLocalDate($fromDT, "Y-m-d H:i"));
-        $formFields['general'][] = FormManager::AddHidden('endtime', Date::getLocalDate($toDT, "Y-m-d H:i"));
+        $formFields['general'][] = Form::AddHidden('starttime', Date::getLocalDate($fromDT, "Y-m-d H:i"));
+        $formFields['general'][] = Form::AddHidden('endtime', Date::getLocalDate($toDT, "Y-m-d H:i"));
 
         // Generate a list of layouts.
         $layouts = $user->CampaignList(NULL, false /* isRetired */);
@@ -590,7 +590,7 @@ class Schedule extends Base
             }
         }
 
-        $formFields['general'][] = FormManager::AddCombo(
+        $formFields['general'][] = Form::AddCombo(
             'CampaignID',
             __('Layout / Campaign'),
             $campaignId,
@@ -600,14 +600,14 @@ class Schedule extends Base
             __('Please select a Layout or Campaign for this Event to show'),
             'l', '', true, '', '', '', $optionGroups);
 
-        $formFields['general'][] = FormManager::AddNumber('DisplayOrder', __('Display Order'), $displayOrder,
+        $formFields['general'][] = Form::AddNumber('DisplayOrder', __('Display Order'), $displayOrder,
             __('Please select the order this event should appear in relation to others when there is more than one event scheduled'), 'o');
 
-        $formFields['general'][] = FormManager::AddCheckbox('is_priority', __('Priority'),
+        $formFields['general'][] = Form::AddCheckbox('is_priority', __('Priority'),
             $isPriority, __('Sets whether or not this event has priority. If set the event will be show in preference to other events.'),
             'p');
 
-        $formFields['repeats'][] = FormManager::AddCombo(
+        $formFields['repeats'][] = Form::AddCombo(
             'rec_type',
             __('Repeats'),
             $recType,
@@ -625,13 +625,13 @@ class Schedule extends Base
             __('What type of repeat is required?'),
             'r');
 
-        $formFields['repeats'][] = FormManager::AddNumber('rec_detail', __('Repeat every'), $recDetail,
+        $formFields['repeats'][] = Form::AddNumber('rec_detail', __('Repeat every'), $recDetail,
             __('How often does this event repeat?'), 'o', '', 'repeat-control-group');
 
-        $formFields['repeats'][] = FormManager::AddText('rec_rangeControl', __('Until'), ((($recToDT == 0) ? '' : Date::getLocalDate($recToDT))),
+        $formFields['repeats'][] = Form::AddText('rec_rangeControl', __('Until'), ((($recToDT == 0) ? '' : Date::getLocalDate($recToDT))),
             __('When should this event stop repeating?'), 'u', '', 'repeat-control-group');
 
-        $formFields['repeats'][] = FormManager::AddHidden('rec_range', Date::getLocalDate($recToDT, "Y-m-d H:i"));
+        $formFields['repeats'][] = Form::AddHidden('rec_range', Date::getLocalDate($recToDT, "Y-m-d H:i"));
 
         // Set some field dependencies
         $response->AddFieldAction('rec_type', 'init', '', array('.repeat-control-group' => array('display' => 'none')));
@@ -734,7 +734,7 @@ class Schedule extends Base
         Theme::Set('form_id', 'DeleteEventForm');
         Theme::Set('form_action', 'index.php?p=schedule&q=DeleteEvent');
         Theme::Set('form_meta', '<input type="hidden" name="EventID" value="' . $eventID . '" />');
-        Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to delete this event from <b>all</b> displays? If you only want to delete this item from certain displays, please deselect the displays in the edit dialogue and click Save.'))));
+        Theme::Set('form_fields', array(Form::AddMessage(__('Are you sure you want to delete this event from <b>all</b> displays? If you only want to delete this item from certain displays, please deselect the displays in the edit dialogue and click Save.'))));
 
         $response->SetFormRequestResponse(NULL, __('Delete Event.'), '480px', '240px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Schedule', 'Delete') . '")');
@@ -843,7 +843,7 @@ class Schedule extends Base
             }
         }
 
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
             'CampaignID',
             __('Layout'),
             $campaignId,
@@ -853,13 +853,13 @@ class Schedule extends Base
             __('Please select a Layout or Campaign for this Event to show'),
             'l', '', true, '', '', '', $optionGroups);
 
-        $formFields[] = FormManager::AddText('hours', __('Hours'), NULL,
+        $formFields[] = Form::AddText('hours', __('Hours'), NULL,
             __('Hours this event should be scheduled for'), 'h', '');
 
-        $formFields[] = FormManager::AddText('minutes', __('Minutes'), NULL,
+        $formFields[] = Form::AddText('minutes', __('Minutes'), NULL,
             __('Minutes this event should be scheduled for'), 'h', '');
 
-        $formFields[] = FormManager::AddText('seconds', __('Seconds'), NULL,
+        $formFields[] = Form::AddText('seconds', __('Seconds'), NULL,
             __('Seconds this event should be scheduled for'), 'h', '');
 
         // List of Display Groups
@@ -891,7 +891,7 @@ class Schedule extends Base
             }
         }
 
-        $formFields[] = FormManager::AddMultiCombo(
+        $formFields[] = Form::AddMultiCombo(
             'DisplayGroupIDs[]',
             __('Display'),
             $displayGroupIds,
@@ -901,10 +901,10 @@ class Schedule extends Base
             __('Please select one or more displays / groups for this event to be shown on.'),
             'd', '', true, '', '', '', $optionGroups, array(array('name' => 'data-live-search', 'value' => "true"), array('name' => 'data-selected-text-format', 'value' => "count > 4")));
 
-        $formFields[] = FormManager::AddNumber('DisplayOrder', __('Display Order'), 0,
+        $formFields[] = Form::AddNumber('DisplayOrder', __('Display Order'), 0,
             __('Should this event have an order?'), 'o', '');
 
-        $formFields[] = FormManager::AddCheckbox('is_priority', __('Priority?'),
+        $formFields[] = Form::AddCheckbox('is_priority', __('Priority?'),
             NULL, __('Sets whether or not this event has priority. If set the event will be show in preference to other events.'),
             'p');
 

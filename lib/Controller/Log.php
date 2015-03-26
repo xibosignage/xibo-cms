@@ -21,10 +21,10 @@
 namespace Xibo\Controller;
 
 use Exception;
-use FormManager;
 use Kit;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Date;
+use Xibo\Helper\Form;
 use Xibo\Helper\Help;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Session;
@@ -64,11 +64,11 @@ class Log extends Base
 
         // Two tabs
         $tabs = array();
-        $tabs[] = FormManager::AddTab('general', __('General'));
-        $tabs[] = FormManager::AddTab('advanced', __('Advanced'));
+        $tabs[] = Form::AddTab('general', __('General'));
+        $tabs[] = Form::AddTab('advanced', __('Advanced'));
 
         $formFields = array();
-        $formFields['general'][] = FormManager::AddCombo(
+        $formFields['general'][] = Form::AddCombo(
             'filter_type',
             __('Type'),
             $filter_type,
@@ -78,7 +78,7 @@ class Log extends Base
             NULL,
             't');
 
-        $formFields['general'][] = FormManager::AddCombo(
+        $formFields['general'][] = Form::AddCombo(
             'filter_intervalTypeId',
             __('Interval'),
             $filter_intervalTypeId,
@@ -90,23 +90,23 @@ class Log extends Base
             NULL,
             'i');
 
-        $formFields['general'][] = FormManager::AddText('filter_seconds', __('Duration back'), $filter_seconds, NULL, 's');
+        $formFields['general'][] = Form::AddText('filter_seconds', __('Duration back'), $filter_seconds, NULL, 's');
 
-        $formFields['general'][] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'),
+        $formFields['general'][] = Form::AddCheckbox('XiboFilterPinned', __('Keep Open'),
             $filter_pinned, NULL,
             'k');
 
         // Advanced Tab
-        $formFields['advanced'][] = FormManager::AddDatePicker('filter_fromdt', __('From Date'), $filter_fromdt, NULL, 't');
-        $formFields['advanced'][] = FormManager::AddText('filter_page', __('Page'), $filter_page, NULL, 'p');
-        $formFields['advanced'][] = FormManager::AddText('filter_function', __('Function'), $filter_function, NULL, 'f');
+        $formFields['advanced'][] = Form::AddDatePicker('filter_fromdt', __('From Date'), $filter_fromdt, NULL, 't');
+        $formFields['advanced'][] = Form::AddText('filter_page', __('Page'), $filter_page, NULL, 'p');
+        $formFields['advanced'][] = Form::AddText('filter_function', __('Function'), $filter_function, NULL, 'f');
 
         // Display
         $displays = $this->getUser()->DisplayList();
         $displays = array_map(function($element) { return array('displayid' => $element->displayId, 'display' => $element->display); }, $displays);
         array_unshift($displays, array('displayid' => 0, 'display' => 'All'));
 
-        $formFields['advanced'][] = FormManager::AddCombo(
+        $formFields['advanced'][] = Form::AddCombo(
             'filter_display',
             __('Display'),
             $filter_display,
@@ -321,7 +321,7 @@ class Log extends Base
         Theme::Set('form_id', 'TruncateForm');
         Theme::Set('form_action', $this->urlFor('logTruncate'));
 
-        Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to truncate?'))));
+        Theme::Set('form_fields', array(Form::AddMessage(__('Are you sure you want to truncate?'))));
 
         $response->SetFormRequestResponse(NULL, __('Truncate Log'), '430px', '200px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Log', 'Truncate') . '")');

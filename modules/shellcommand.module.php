@@ -18,7 +18,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Form;
 use Xibo\Helper\Theme;
 
 class shellcommand extends Module
@@ -35,10 +35,10 @@ class shellcommand extends Module
         
         $formFields = array();
         
-        $formFields[] = FormManager::AddText('windowsCommand', __('Windows Command'), NULL, 
+        $formFields[] = Form::AddText('windowsCommand', __('Windows Command'), NULL,
             __('Enter a Windows Command Line compatible command'), 'w');
         
-        $formFields[] = FormManager::AddText('linuxCommand', __('Android / Linux Command'), NULL, 
+        $formFields[] = Form::AddText('linuxCommand', __('Android / Linux Command'), NULL,
             __('Enter an Android / Linux Command Line compatible command'), 'l');
 
         Theme::Set('form_fields', $formFields);
@@ -66,10 +66,10 @@ class shellcommand extends Module
 
         $formFields = array();
         
-        $formFields[] = FormManager::AddText('windowsCommand', __('Windows Command'), htmlentities(urldecode($this->GetOption('windowsCommand'))), 
+        $formFields[] = Form::AddText('windowsCommand', __('Windows Command'), htmlentities(urldecode($this->GetOption('windowsCommand'))),
             __('Enter a Windows Command Line compatible command'), 'w');
         
-        $formFields[] = FormManager::AddText('linuxCommand', __('Android / Linux Command'), htmlentities(urldecode($this->GetOption('linuxCommand'))), 
+        $formFields[] = Form::AddText('linuxCommand', __('Android / Linux Command'), htmlentities(urldecode($this->GetOption('linuxCommand'))),
             __('Enter an Android / Linux Command Line compatible command'), 'l');
 
         Theme::Set('form_fields', $formFields);
