@@ -19,7 +19,6 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Helper;
-use Config;
 use Exception;
 use Extra;
 use ID;
@@ -30,7 +29,6 @@ use Slim\Slim;
 use Xibo\Entity\Menu;
 use Xibo\Factory\MenuFactory;
 
-defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 class Theme
 {

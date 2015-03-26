@@ -24,7 +24,6 @@ use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Help;
 use Xibo\Helper\Theme;
 
-defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 class Template extends Base
 {
@@ -100,13 +99,13 @@ class Template extends Base
         $filter_name = \Xibo\Helper\Sanitize::getString('filter_name');
         $filter_tags = \Xibo\Helper\Sanitize::getString('filter_tags');
 
-        \Session::Set('template', 'filter_name', $filter_name);
-        \Session::Set('template', 'filter_tags', $filter_tags);
-        \Session::Set('template', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        \Xibo\Helper\Session::Set('template', 'filter_name', $filter_name);
+        \Xibo\Helper\Session::Set('template', 'filter_tags', $filter_tags);
+        \Xibo\Helper\Session::Set('template', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 
         // Show filter_showThumbnail
         $showThumbnail = \Xibo\Helper\Sanitize::getCheckbox('showThumbnail');
-        \Session::Set('layout', 'showThumbnail', $showThumbnail);
+        \Xibo\Helper\Session::Set('layout', 'showThumbnail', $showThumbnail);
 
         $templates = $this->user->TemplateList($filter_name, $filter_tags);
 

@@ -23,7 +23,7 @@
  */
 use Xibo\Helper\Theme;
 
-defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
+
 ?>
 <form id="<?php echo Theme::Get('form_upload_id'); ?>" action="<?php echo Theme::Get('form_action'); ?>" method="POST" enctype="multipart/form-data" data-max-file-size="<?php echo Theme::Get('form_max_size'); ?>" data-accept-file-types="<?php echo Theme::Get('form_valid_ext'); ?>">
     <?php echo Theme::Get('form_meta'); ?>

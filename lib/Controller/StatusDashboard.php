@@ -19,9 +19,9 @@
  * along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
-use Config;
 use Exception;
 use SimplePie;
+use Xibo\Helper\Config;
 use Xibo\Helper\Date;
 use Xibo\Helper\Log;
 use Xibo\Helper\Theme;

@@ -1,4 +1,6 @@
 <?php
+use Xibo\Helper\Config;
+
 include_once('lib/data/data.class.php');
 include_once('lib/data/campaign.data.class.php');
 include_once('lib/data/campaignsecurity.data.class.php');

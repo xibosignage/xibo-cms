@@ -20,6 +20,7 @@
  */
 use Xibo\Controller\File;
 use Xibo\Entity\User;
+use Xibo\Helper\Config;
 use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
 

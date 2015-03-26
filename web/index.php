@@ -18,6 +18,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\Config;
+
 DEFINE('XIBO', true);
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
@@ -27,7 +29,6 @@ require '../vendor/autoload.php';
 
 // Classes we need to deprecate, namespace or put in composer
 require '../lib/app/kit.class.php';
-require '../config/config.class.php';
 require '../lib/app/formmanager.class.php';
 require '../lib/app/session.class.php';
 require '../lib/data/data.class.php';

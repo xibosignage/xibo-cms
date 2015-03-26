@@ -23,7 +23,7 @@
  */
 use Xibo\Helper\Theme;
 
-defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
+
 ?>
 <h2>License <small>Digital Signage for Everyone</small></h2>
 <p>Xibo Digital Signage - <a target="_blank"  href="http://www.xibo.org.uk" title="Xibo Website">www.xibo.org.uk</a>. Version <?php echo Theme::Get('version'); ?><br />

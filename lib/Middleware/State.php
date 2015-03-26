@@ -40,11 +40,11 @@ class State extends Middleware
         $this->app->container->singleton('state', function() { return new ApplicationState(); });
 
         // Create a session
-        $this->app->container->singleton('session', function() { return new \Session(); });
+        $this->app->container->singleton('session', function() { return new \Xibo\Helper\Session(); });
         $this->app->session->Get('nothing');
 
         // Configure the timezone information
-        date_default_timezone_set(\Config::GetSetting("defaultTimezone"));
+        date_default_timezone_set(\Xibo\Helper\Config::GetSetting("defaultTimezone"));
 
         // Do we need SSL/STS?
         // Deal with HTTPS/STS config
@@ -52,7 +52,7 @@ class State extends Middleware
             \Kit::IssueStsHeaderIfNecessary();
         }
         else {
-            if (\Config::GetSetting('FORCE_HTTPS', 0) == 1) {
+            if (\Xibo\Helper\Config::GetSetting('FORCE_HTTPS', 0) == 1) {
                 $redirect = "https://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
                 header("Location: $redirect");
                 exit();

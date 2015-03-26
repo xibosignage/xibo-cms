@@ -41,12 +41,12 @@ class Forecast
         );
 
         // Proxy support
-        if (\Config::GetSetting('PROXY_HOST') != '') {
-            $httpOptions[CURLOPT_PROXY] = \Config::GetSetting('PROXY_HOST');
-            $httpOptions[CURLOPT_PROXYPORT] = \Config::GetSetting('PROXY_PORT');
+        if (\Xibo\Helper\Config::GetSetting('PROXY_HOST') != '') {
+            $httpOptions[CURLOPT_PROXY] = \Xibo\Helper\Config::GetSetting('PROXY_HOST');
+            $httpOptions[CURLOPT_PROXYPORT] = \Xibo\Helper\Config::GetSetting('PROXY_PORT');
 
-            if (\Config::GetSetting('PROXY_AUTH') != '')
-            $httpOptions[CURLOPT_PROXYUSERPWD] = \Config::GetSetting('PROXY_AUTH');
+            if (\Xibo\Helper\Config::GetSetting('PROXY_AUTH') != '')
+            $httpOptions[CURLOPT_PROXYUSERPWD] = \Xibo\Helper\Config::GetSetting('PROXY_AUTH');
         }
 
         $curl = curl_init();

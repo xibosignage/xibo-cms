@@ -26,14 +26,13 @@ use FormManager;
 use JSON;
 use Kit;
 use PDO;
-use Session;
 use Xibo\Entity\User;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
+use Xibo\Helper\Session;
 use Xibo\Helper\Theme;
 
-defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 class UserGroup extends Base
 {
@@ -144,8 +143,8 @@ END;
 
         $filter_name = \Xibo\Helper\Sanitize::getString('filter_name');
 
-        \Session::Set('usergroup', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
-        \Session::Set('usergroup', 'filter_name', $filter_name);
+        \Xibo\Helper\Session::Set('usergroup', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        \Xibo\Helper\Session::Set('usergroup', 'filter_name', $filter_name);
 
         $SQL = <<<END
 		SELECT 	group.group,

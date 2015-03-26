@@ -92,7 +92,7 @@ class Base
 
     /**
      * Get the Session
-     * @return \Session
+     * @return \Xibo\Helper\Session
      */
     protected function getSession()
     {

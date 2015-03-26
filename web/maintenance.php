@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+use Xibo\Helper\Config;
 use Xibo\Helper\Log;
 use Xibo\Helper\Translate;
 

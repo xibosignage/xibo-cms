@@ -23,7 +23,7 @@
  */
 use Xibo\Helper\Theme;
 
-defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
+
 ?>
 <div class="connectedlist col-sm-6">
     <p class="text-info"><?php echo Theme::Translate('Columns Selected'); ?></p>

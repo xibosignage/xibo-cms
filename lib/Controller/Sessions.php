@@ -26,7 +26,6 @@ use Xibo\Helper\Help;
 use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
 
-defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 class Sessions extends Base
 {
@@ -98,9 +97,9 @@ class Sessions extends Base
         $type = \Kit::GetParam('filter_type', _POST, _WORD);
         $fromDt = \Xibo\Helper\Sanitize::getString('filter_fromdt');
 
-        \Session::Set('sessions', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
-        \Session::Set('sessions', 'filter_type', $type);
-        \Session::Set('sessions', 'filter_fromdt', $fromDt);
+        \Xibo\Helper\Session::Set('sessions', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        \Xibo\Helper\Session::Set('sessions', 'filter_type', $type);
+        \Xibo\Helper\Session::Set('sessions', 'filter_fromdt', $fromDt);
 
         $SQL = "SELECT session.userID, user.UserName,  IsExpired, LastPage,  session.LastAccessed,  RemoteAddr,  UserAgent ";
         $SQL .= "FROM `session` LEFT OUTER JOIN user ON user.userID = session.userID ";

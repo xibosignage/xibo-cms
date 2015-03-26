@@ -23,12 +23,11 @@ use baseDAO;
 use DOMDocument;
 use DOMXPath;
 use FormManager;
-use Session;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Log;
+use Xibo\Helper\Session;
 use Xibo\Helper\Theme;
 
-defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 class MediaManager extends Base
 {
@@ -111,11 +110,11 @@ class MediaManager extends Base
         $filterMediaName = \Xibo\Helper\Sanitize::getString('filter_media_name');
         $filterMediaType = \Xibo\Helper\Sanitize::getInt('filter_type');
 
-        \Session::Set('mediamanager', 'filter_layout_name', $filterLayout);
-        \Session::Set('mediamanager', 'filter_region_name', $filterRegion);
-        \Session::Set('mediamanager', 'filter_media_name', $filterMediaName);
-        \Session::Set('mediamanager', 'filter_type', $filterMediaType);
-        \Session::Set('mediamanager', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        \Xibo\Helper\Session::Set('mediamanager', 'filter_layout_name', $filterLayout);
+        \Xibo\Helper\Session::Set('mediamanager', 'filter_region_name', $filterRegion);
+        \Xibo\Helper\Session::Set('mediamanager', 'filter_media_name', $filterMediaName);
+        \Xibo\Helper\Session::Set('mediamanager', 'filter_type', $filterMediaType);
+        \Xibo\Helper\Session::Set('mediamanager', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 
         // Lookup the module name
         if ($filterMediaType != 0) {

@@ -23,12 +23,10 @@ namespace Xibo\Controller;
 use baseDAO;
 use FormManager;
 use Kit;
-use Session;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Help;
+use Xibo\Helper\Session;
 use Xibo\Helper\Theme;
-
-defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 
 class Resolution extends Base
@@ -103,10 +101,10 @@ class Resolution extends Base
         $user = $this->getUser();
         $response = $this->getState();
 
-        \Session::Set('resolution', 'ResolutionFilter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        \Xibo\Helper\Session::Set('resolution', 'ResolutionFilter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
         // Show enabled
         $filterEnabled = \Xibo\Helper\Sanitize::getInt('filterEnabled');
-        \Session::Set('resolution', 'filterEnabled', $filterEnabled);
+        \Xibo\Helper\Session::Set('resolution', 'filterEnabled', $filterEnabled);
 
         $resolutions = $user->ResolutionList(array('resolution'), array('enabled' => $filterEnabled));
         $rows = array();

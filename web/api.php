@@ -19,6 +19,8 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+use Xibo\Helper\Config;
+
 DEFINE('XIBO', true);
 require '../lib/autoload.php';
 require '../vendor/autoload.php';

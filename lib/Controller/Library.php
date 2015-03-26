@@ -25,7 +25,6 @@ use Xibo\Helper\Help;
 use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
 
-defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 class Library extends Base
 {
@@ -174,14 +173,14 @@ class Library extends Base
         $filter_showThumbnail = \Xibo\Helper\Sanitize::getCheckbox('filter_showThumbnail');
         $showTags = \Xibo\Helper\Sanitize::getCheckbox('showTags');
 
-        \Session::Set('content', 'filter_type', $filter_type);
-        \Session::Set('content', 'filter_name', $filter_name);
-        \Session::Set('content', 'filter_owner', $filter_userid);
-        \Session::Set('content', 'filter_retired', $filter_retired);
-        \Session::Set('content', 'filter_duration_in_seconds', $filter_duration_in_seconds);
-        \Session::Set('content', 'filter_showThumbnail', $filter_showThumbnail);
-        \Session::Set('content', 'showTags', $showTags);
-        \Session::Set('content', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        \Xibo\Helper\Session::Set('content', 'filter_type', $filter_type);
+        \Xibo\Helper\Session::Set('content', 'filter_name', $filter_name);
+        \Xibo\Helper\Session::Set('content', 'filter_owner', $filter_userid);
+        \Xibo\Helper\Session::Set('content', 'filter_retired', $filter_retired);
+        \Xibo\Helper\Session::Set('content', 'filter_duration_in_seconds', $filter_duration_in_seconds);
+        \Xibo\Helper\Session::Set('content', 'filter_showThumbnail', $filter_showThumbnail);
+        \Xibo\Helper\Session::Set('content', 'showTags', $showTags);
+        \Xibo\Helper\Session::Set('content', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 
         // Construct the SQL
         $mediaList = $user->MediaList(NULL, array('type' => $filter_type, 'name' => $filter_name, 'ownerid' => $filter_userid, 'retired' => $filter_retired, 'showTags' => $showTags));

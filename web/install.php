@@ -20,6 +20,7 @@
  */
 use Xibo\Entity\User;
 use Xibo\Helper\Install;
+use Xibo\Helper\Session;
 use Xibo\Helper\Theme;
 use Xibo\Helper\Translate;
 

@@ -20,17 +20,17 @@
  */
 namespace Xibo\Controller;
 
-use Config;
 use database;
 use FormManager;
 use Kit;
 use Media;
 use Parsedown;
-use Session;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Config;
 use Xibo\Helper\Help;
 use Xibo\Helper\Sanitize;
+use Xibo\Helper\Session;
 use Xibo\Helper\Theme;
 
 class Layout extends Base
@@ -374,38 +374,38 @@ class Layout extends Base
     {
         // Filter by Name
         $name = Sanitize::getString('filter_layout');
-        \Session::Set('layout', 'filter_layout', $name);
+        \Xibo\Helper\Session::Set('layout', 'filter_layout', $name);
 
         // User ID
         $filter_userid = Sanitize::getInt('filter_userid');
-        \Session::Set('layout', 'filter_userid', $filter_userid);
+        \Xibo\Helper\Session::Set('layout', 'filter_userid', $filter_userid);
 
         // Show retired
         $filter_retired = Sanitize::getInt('filter_retired');
-        \Session::Set('layout', 'filter_retired', $filter_retired);
+        \Xibo\Helper\Session::Set('layout', 'filter_retired', $filter_retired);
 
         // Show filterLayoutStatusId
         $filterLayoutStatusId = Sanitize::getInt('filterLayoutStatusId');
-        \Session::Set('layout', 'filterLayoutStatusId', $filterLayoutStatusId);
+        \Xibo\Helper\Session::Set('layout', 'filterLayoutStatusId', $filterLayoutStatusId);
 
         // Show showDescriptionId
         $showDescriptionId = Sanitize::getInt('showDescriptionId');
-        \Session::Set('layout', 'showDescriptionId', $showDescriptionId);
+        \Xibo\Helper\Session::Set('layout', 'showDescriptionId', $showDescriptionId);
 
         // Show filter_showThumbnail
         $showTags = Sanitize::getCheckbox('showTags');
-        \Session::Set('layout', 'showTags', $showTags);
+        \Xibo\Helper\Session::Set('layout', 'showTags', $showTags);
 
         // Show filter_showThumbnail
         $showThumbnail = Sanitize::getCheckbox('showThumbnail');
-        \Session::Set('layout', 'showThumbnail', $showThumbnail);
+        \Xibo\Helper\Session::Set('layout', 'showThumbnail', $showThumbnail);
 
         // Tags list
         $filter_tags = \Kit::GetParam("filter_tags", _POST, _STRING);
-        \Session::Set('layout', 'filter_tags', $filter_tags);
+        \Xibo\Helper\Session::Set('layout', 'filter_tags', $filter_tags);
 
         // Pinned option?
-        \Session::Set('layout', 'LayoutFilter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        \Xibo\Helper\Session::Set('layout', 'LayoutFilter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 
         // Get all layouts
         $layouts = $this->getUser()->LayoutList(NULL, array('layout' => $name, 'userId' => $filter_userid, 'retired' => $filter_retired, 'tags' => $filter_tags, 'filterLayoutStatusId' => $filterLayoutStatusId, 'showTags' => $showTags));

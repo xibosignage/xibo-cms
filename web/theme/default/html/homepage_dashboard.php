@@ -26,7 +26,7 @@
  */
 use Xibo\Helper\Theme;
 
-defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
+
 ?>
 <div id="dashbuttons">
 	<?php foreach (Theme::GetMenu('Dashboard') as $item) { ?>

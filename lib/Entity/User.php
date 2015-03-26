@@ -910,14 +910,14 @@ class User
 
     public function GetPref($key, $default = NULL)
     {
-        $storedValue = \Session::Get($key);
+        $storedValue = \Xibo\Helper\Session::Get($key);
 
         return ($storedValue == NULL) ? $default : $storedValue;
     }
 
     public function SetPref($key, $value)
     {
-        \Session::Set($key, $value);
+        \Xibo\Helper\Session::Set($key, $value);
     }
 
     /*

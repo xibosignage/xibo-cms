@@ -31,12 +31,12 @@ class Actions extends Middleware
     public function call()
     {
         // Process Actions
-        if (\Config::GetSetting('DEFAULTS_IMPORTED') == 0) {
+        if (\Xibo\Helper\Config::GetSetting('DEFAULTS_IMPORTED') == 0) {
 
             //$layout = new Layout();
             //$layout->importFolder('theme' . DIRECTORY_SEPARATOR . Theme::ThemeFolder() . DIRECTORY_SEPARATOR . 'layouts');
 
-            \Config::ChangeSetting('DEFAULTS_IMPORTED', 1);
+            \Xibo\Helper\Config::ChangeSetting('DEFAULTS_IMPORTED', 1);
         }
 
         // Process notifications

@@ -20,10 +20,10 @@
  */
 namespace Xibo\Controller;
 
-use Config;
 use Exception;
 use finfo;
 use InvalidArgumentException;
+use Xibo\Helper\Config;
 use Xibo\Helper\Log;
 
 class File extends Base

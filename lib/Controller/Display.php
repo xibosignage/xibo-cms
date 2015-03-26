@@ -20,21 +20,20 @@
  */
 namespace Xibo\Controller;
 use baseDAO;
-use Config;
 use database;
 use DisplayGroup;
 use DOMDocument;
 use DOMXPath;
 use finfo;
 use FormManager;
-use Session;
 use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Config;
 use Xibo\Helper\Date;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
+use Xibo\Helper\Session;
 use Xibo\Helper\Theme;
 
-defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 class Display extends Base
 {
@@ -383,26 +382,26 @@ class Display extends Base
 
         // Filter by Name
         $filter_display = \Xibo\Helper\Sanitize::getString('filter_display');
-        \Session::Set('display', 'filter_display', $filter_display);
+        \Xibo\Helper\Session::Set('display', 'filter_display', $filter_display);
 
         // Filter by Name
         $filterMacAddress = \Xibo\Helper\Sanitize::getString('filterMacAddress');
-        \Session::Set('display', 'filterMacAddress', $filterMacAddress);
+        \Xibo\Helper\Session::Set('display', 'filterMacAddress', $filterMacAddress);
 
         // Display Group
         $filter_displaygroupid = \Xibo\Helper\Sanitize::getInt('filter_displaygroup');
-        \Session::Set('display', 'filter_displaygroup', $filter_displaygroupid);
+        \Xibo\Helper\Session::Set('display', 'filter_displaygroup', $filter_displaygroupid);
 
         // Thumbnail?
         $filter_showView = \Xibo\Helper\Sanitize::getInt('filter_showView');
-        \Session::Set('display', 'filter_showView', $filter_showView);
+        \Xibo\Helper\Session::Set('display', 'filter_showView', $filter_showView);
 
         // filter_autoRefresh?
         $filter_autoRefresh = \Kit::GetParam('filter_autoRefresh', _REQUEST, _INT, 0);
-        \Session::Set('display', 'filter_autoRefresh', $filter_autoRefresh);
+        \Xibo\Helper\Session::Set('display', 'filter_autoRefresh', $filter_autoRefresh);
 
         // Pinned option?
-        \Session::Set('display', 'DisplayFilter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        \Xibo\Helper\Session::Set('display', 'DisplayFilter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 
         $displays = $user->DisplayList(array('displayid'), array('displaygroupid' => $filter_displaygroupid, 'display' => $filter_display, 'macAddress' => $filterMacAddress));
 

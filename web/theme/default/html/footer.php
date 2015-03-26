@@ -18,10 +18,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+use Xibo\Helper\Config;
 use Xibo\Helper\Theme;
 use Xibo\Helper\Translate;
 
-defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 // Translations we want always available
 Theme::SetTranslation('multiselect', Theme::Translate('Multiple Items Selected'));

@@ -20,7 +20,7 @@
  */
 namespace Xibo\Helper;
 
-defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
+
 
 class Install
 {

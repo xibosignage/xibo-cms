@@ -20,9 +20,9 @@
  */
 use Xibo\Controller\File;
 use Xibo\Entity\User;
+use Xibo\Helper\Config;
 use Xibo\Helper\Log;
 
-defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 class Media extends Data
 {

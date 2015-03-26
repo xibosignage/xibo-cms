@@ -21,7 +21,7 @@
 use Xibo\Helper\Help;
 use Xibo\Helper\Theme;
 
-defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
+
 ?>
 <div class="jumbotron">
     <div class="container">

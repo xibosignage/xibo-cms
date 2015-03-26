@@ -21,7 +21,6 @@
 namespace Xibo\Helper;
 
 use CachedFileReader;
-use Config;
 use Gettext\Translations;
 use Gettext\Translator;
 use gettext_reader;

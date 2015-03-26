@@ -23,7 +23,7 @@
  */
 use Xibo\Helper\Theme;
 
-defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
+
 ?>
 <form class="form-horizontal" id="<?php echo Theme::Get('form_upload_id'); ?>" method="post" action="<?php echo Theme::Get('form_upload_action'); ?>" enctype="multipart/form-data" target="fileupload">
 	<fieldset>

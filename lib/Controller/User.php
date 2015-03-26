@@ -25,7 +25,6 @@ use Xibo\Helper\Help;
 use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
 
-defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 include_once('lib/data/usergroup.data.class.php');
 
@@ -121,14 +120,14 @@ class User extends Base
         // Capture the filter options
         // User ID
         $filter_username = \Xibo\Helper\Sanitize::getString('filter_username');
-        \Session::Set('user_admin', 'filter_username', $filter_username);
+        \Xibo\Helper\Session::Set('user_admin', 'filter_username', $filter_username);
 
         // User Type ID
         $filter_usertypeid = \Xibo\Helper\Sanitize::getInt('filter_usertypeid');
-        \Session::Set('user_admin', 'filter_usertypeid', $filter_usertypeid);
+        \Xibo\Helper\Session::Set('user_admin', 'filter_usertypeid', $filter_usertypeid);
 
         // Pinned option?
-        \Session::Set('user_admin', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        \Xibo\Helper\Session::Set('user_admin', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 
         // Filter our users?
         $filterBy = array();

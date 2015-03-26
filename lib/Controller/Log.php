@@ -23,14 +23,13 @@ namespace Xibo\Controller;
 use Exception;
 use FormManager;
 use Kit;
-use Session;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Date;
 use Xibo\Helper\Help;
 use Xibo\Helper\Sanitize;
+use Xibo\Helper\Session;
 use Xibo\Helper\Theme;
 
-defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
 class Log extends Base
 {
@@ -165,14 +164,14 @@ class Log extends Base
         $seconds = \Kit::GetParam('filter_seconds', _POST, _INT, 120);
         $filter_intervalTypeId = \Kit::GetParam('filter_intervalTypeId', _POST, _INT, 1);
 
-        \Session::Set('log', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
-        \Session::Set('log', 'filter_type', $type);
-        \Session::Set('log', 'filter_function', $function);
-        \Session::Set('log', 'filter_page', $page);
-        \Session::Set('log', 'filter_fromdt', $fromdt);
-        \Session::Set('log', 'filter_display', $displayid);
-        \Session::Set('log', 'filter_seconds', $seconds);
-        \Session::Set('log', 'filter_intervalTypeId', $filter_intervalTypeId);
+        \Xibo\Helper\Session::Set('log', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        \Xibo\Helper\Session::Set('log', 'filter_type', $type);
+        \Xibo\Helper\Session::Set('log', 'filter_function', $function);
+        \Xibo\Helper\Session::Set('log', 'filter_page', $page);
+        \Xibo\Helper\Session::Set('log', 'filter_fromdt', $fromdt);
+        \Xibo\Helper\Session::Set('log', 'filter_display', $displayid);
+        \Xibo\Helper\Session::Set('log', 'filter_seconds', $seconds);
+        \Xibo\Helper\Session::Set('log', 'filter_intervalTypeId', $filter_intervalTypeId);
 
         //get the dates and times
         if ($fromdt == '') {

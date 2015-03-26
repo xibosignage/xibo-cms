@@ -19,10 +19,10 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
-use Config;
 use Exception;
 use FormManager;
 use Media;
+use Xibo\Helper\Config;
 use Xibo\Helper\Install;
 use Xibo\Helper\Theme;
 
