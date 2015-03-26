@@ -3,6 +3,25 @@ ADD  `height` DECIMAL NOT NULL ,
 ADD  `backgroundColor` VARCHAR( 25 ) NULL ,
 ADD  `schemaVersion` TINYINT NOT NULL;
 
+ALTER TABLE  `layout` ADD  `backgroundzIndex` INT NOT NULL DEFAULT  '1' AFTER  `backgroundColor`;
+
+CREATE TABLE IF NOT EXISTS `permission` (
+  `permissionId` int(11) NOT NULL AUTO_INCREMENT,
+  `entityId` int(11) NOT NULL,
+  `groupId` int(11) NOT NULL,
+  `objectId` int(11) NOT NULL,
+  `view` tinyint(4) NOT NULL,
+  `edit` tinyint(4) NOT NULL,
+  `delete` tinyint(4) NOT NULL,
+  PRIMARY KEY (`permissionId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
+CREATE TABLE IF NOT EXISTS `permissionentity` (
+  `entityId` int(11) NOT NULL,
+  `entity` varchar(50) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
 /* Take existing permissions and pull them into the permissions table */
 INSERT INTO `permission` (`groupId`, `entityId`, `objectId`, `objectIdString`, `view`, `edit`, `delete`)
 SELECT groupId, 4, NULL, CONCAT(LayoutId, '_', RegionID, '_', MediaID), view, edit, del
