@@ -171,12 +171,14 @@ $displays = (is_array($displays)) ? $displays : array();
                 <div class="clearfix"></div>
             </div>
             <div class="widget-body medium">
-                <?php foreach(Theme::Get('latestNews') as $news) { ?>
-                <div class="article">
-                    <h4 class="article_title"><?php echo $news['title']; ?></h4>
-                    <p><?php echo $news['description']; ?> <?php if ($news['link'] != '') { ?><a href="<?php echo $news['link']; ?>" title="Read" target="_blank"><?php echo Theme::Translate('Full Article'); ?></a>.<?php } ?></p>
-                </div>
-                <?php } ?>
+                <?php if (Theme::Get('latestNews') != '') {
+                    foreach(Theme::Get('latestNews') as $news) { ?>
+                        <div class="article">
+                            <h4 class="article_title"><?php echo $news['title']; ?></h4>
+                            <p><?php echo $news['description']; ?> <?php if ($news['link'] != '') { ?><a href="<?php echo $news['link']; ?>" title="Read" target="_blank"><?php echo Theme::Translate('Full Article'); ?></a>.<?php } ?></p>
+                        </div>
+                    <?php }
+                } ?>
             </div>
         </div>
     </div>

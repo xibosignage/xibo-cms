@@ -31,7 +31,6 @@ DROP TABLE `lkmediagroup`;
 
 DROP TABLE `lklayoutmedia`;
 
-
 ALTER TABLE  `log` CHANGE  `type`  `type` VARCHAR( 254 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL;
 
 UPDATE `version` SET `app_ver` = '1.8.0-alpha', `XmdsVersion` = 4, `XlfVersion` = 2;

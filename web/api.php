@@ -20,14 +20,14 @@
  */
 
 DEFINE('XIBO', true);
-require 'lib/autoload.php';
-require 'vendor/autoload.php';
+require '../lib/autoload.php';
+require '../vendor/autoload.php';
 
 // Classes we need to deprecate
-require 'lib/app/kit.class.php';
-require 'config/config.class.php';
-require 'lib/app/translationengine.class.php';
-require 'lib/app/session.class.php';
+require '../lib/app/kit.class.php';
+require '../config/config.class.php';
+require '../lib/app/translationengine.class.php';
+require '../lib/app/session.class.php';
 // END
 
 if (!file_exists('settings.php'))
@@ -65,7 +65,7 @@ $app->add(new JsonApiMiddleware());
 $app->user = \Xibo\Factory\UserFactory::getById(1);
 
 // All routes
-require 'lib/routes.php';
+require '../lib/routes.php';
 
 // Run app
 $app->run();

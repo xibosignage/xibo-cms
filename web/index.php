@@ -19,17 +19,18 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */ 
 DEFINE('XIBO', true);
+require '../lib/autoload.php';
+require '../vendor/autoload.php';
 
-require 'lib/autoload.php';
-require 'vendor/autoload.php';
-
-// Classes we need to deprecate
-require 'lib/app/kit.class.php';
-require 'config/config.class.php';
-require 'lib/app/translationengine.class.php';
-require 'lib/app/formmanager.class.php';
-require 'lib/app/session.class.php';
-require 'lib/data/data.class.php';
+// Classes we need to deprecate, namespace or put in composer
+require_once("../3rdparty/php-gettext/streams.php");
+require_once("../3rdparty/php-gettext/gettext.php");
+require '../lib/app/kit.class.php';
+require '../config/config.class.php';
+require '../lib/app/translationengine.class.php';
+require '../lib/app/formmanager.class.php';
+require '../lib/app/session.class.php';
+require '../lib/data/data.class.php';
 // END
 
 if (!file_exists('settings.php'))
@@ -70,8 +71,8 @@ $app->add(new \Xibo\Middleware\CsrfGuard());
 $app->add(new \Xibo\Middleware\WebAuthentication());
 
 // All application routes
-require 'lib/routes-web.php';
-require 'lib/routes.php';
+require '../lib/routes-web.php';
+require '../lib/routes.php';
 
 // Run App
 $app->run();

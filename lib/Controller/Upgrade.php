@@ -46,7 +46,8 @@ class Upgrade extends Base
 
             $this->getState()->html .= Theme::RenderReturn('message_box');
             return;
-        } else {
+        }
+        else {
             // We want a static form (traditional rather than ajax)
             Theme::Set('form_class', 'StaticForm');
 

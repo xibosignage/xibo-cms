@@ -50,7 +50,7 @@ SELECT `permissionId`, `groupId`, `view`, `edit`, `delete`, permissionentity.ent
         $params = array('entity' => $entity, 'objectId' => $objectId);
         //\Debug::sql($sql, $params);
 
-        foreach (\PDOConnect::select($sql, $params) as $row) {
+        foreach (PDOConnect::select($sql, $params) as $row) {
             $permission = new Permission();
             $permission->permissionId = $row['permissionId'];
             $permission->groupId = $row['groupId'];
@@ -77,7 +77,7 @@ SELECT `permissionId`, `groupId`, `view`, `edit`, `delete`, permissionentity.ent
     public static function getAllByObjectId($entity, $objectId)
     {
         // Look up the entityId for any add operation that might occur
-        $entityId = \Xibo\Storage\PDOConnect::select('SELECT entityId FROM permissionentity WHERE entity = :entity', array('entity' => $entity));
+        $entityId = PDOConnect::select('SELECT entityId FROM permissionentity WHERE entity = :entity', array('entity' => $entity));
 
         if (count($entityId) <= 0)
             throw new NotFoundException(__('Entity not found'));

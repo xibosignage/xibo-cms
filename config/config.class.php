@@ -174,7 +174,7 @@ class Config
 		}
 		catch (Exception $e) {
 			trigger_error($e->getMessage());
-			trigger_error(__('No Version information - please contact technical support'), E_USER_WARNING);
+			throw new Exception(__('No Version information - please contact technical support'));
 		}
 	}
 	

@@ -20,10 +20,7 @@
  */
 use Xibo\Helper\Log;
 
-defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-require_once("3rdparty/php-gettext/streams.php");
-require_once("3rdparty/php-gettext/gettext.php");
 $transEngine = '';
 $stream = '';
 
@@ -38,7 +35,7 @@ class TranslationEngine
 	 */
 	public static function InitLocale($language = NULL)
 	{
-        $localeDir	= 'locale';
+        $localeDir	= '../locale';
         $default = ($language == NULL) ? Config::GetSetting('DEFAULT_LANGUAGE') : $language;
 
         global $transEngine;
