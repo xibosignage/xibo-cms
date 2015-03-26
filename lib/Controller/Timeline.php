@@ -38,11 +38,11 @@ class Timeline extends Base
         $layout = \Xibo\Factory\LayoutFactory::loadById(Kit::GetParam('layoutid', _REQUEST, _INT));
 
         // Check Permissions
-        if (!$this->user->checkEditable($layout))
+        if (!$this->getUser()->checkEditable($layout))
             trigger_error(__('You do not have permission to edit this Layout'), E_USER_ERROR);
 
         // Create a new region
-        $region = \Xibo\Factory\RegionFactory::create($this->user->userId, $layout->layout . '-' . (count($layout->regions) + 1), 250, 250, 50, 50);
+        $region = \Xibo\Factory\RegionFactory::create($this->getUser()->userId, $layout->layout . '-' . (count($layout->regions) + 1), 250, 250, 50, 50);
 
         // Add the region to the layout
         $layout->regions[] = $region;
@@ -64,7 +64,7 @@ class Timeline extends Base
         $region = \Xibo\Factory\RegionFactory::getById(Kit::GetParam('regionid', _REQUEST, _INT));
 
         // Do we have permission
-        if (!$this->user->checkDeleteable($region))
+        if (!$this->getUser()->checkDeleteable($region))
             trigger_error(__('You do not have permissions to delete this region'), E_USER_ERROR);
 
         // Delete the region
@@ -88,7 +88,7 @@ class Timeline extends Base
         // Load the region and get the dimensions, applying the scale factor if necessary (only v1 layouts will have a scale factor != 1)
         $region = \Xibo\Factory\RegionFactory::loadByRegionId(Kit::GetParam('regionid', _GET, _INT));
 
-        if (!$this->user->checkEditable($region))
+        if (!$this->getUser()->checkEditable($region))
             trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
 
         $top = round($region->top * $scale, 0);
@@ -103,28 +103,28 @@ class Timeline extends Base
         Theme::Set('form_meta', '<input type="hidden" name="regionid" value="' . $region->regionId . '"><input type="hidden" name="scale" value="' . $scale . '"><input type="hidden" name="zoom" value="' . $zoom . '">');
 
         $formFields = array();
-        $formFields[] = FormManager::AddText('name', __('Name'), $region->name,
+        $formFields[] = Form::AddText('name', __('Name'), $region->name,
             __('Name of the Region'), 'n', 'maxlength="50"');
 
-        $formFields[] = FormManager::AddNumber('top', __('Top'), $top,
+        $formFields[] = Form::AddNumber('top', __('Top'), $top,
             __('Offset from the Top Corner'), 't');
 
-        $formFields[] = FormManager::AddNumber('left', __('Left'), $left,
+        $formFields[] = Form::AddNumber('left', __('Left'), $left,
             __('Offset from the Left Corner'), 'l');
 
-        $formFields[] = FormManager::AddNumber('width', __('Width'), $width,
+        $formFields[] = Form::AddNumber('width', __('Width'), $width,
             __('Width of the Region'), 'w');
 
-        $formFields[] = FormManager::AddNumber('height', __('Height'), $height,
+        $formFields[] = Form::AddNumber('height', __('Height'), $height,
             __('Height of the Region'), 'h');
 
         // Transitions
-        if (count($this->user->TransitionAuth('out')) > 0) {
+        if (count($this->getUser()->TransitionAuth('out')) > 0) {
             // Add none to the list
-            $transitions = $this->user->TransitionAuth('out');
+            $transitions = $this->getUser()->TransitionAuth('out');
             $transitions[] = array('code' => '', 'transition' => 'None', 'class' => '');
 
-            $formFields[] = FormManager::AddCombo(
+            $formFields[] = Form::AddCombo(
                 'transitionType',
                 __('Exit Transition'),
                 $region->getOptionValue('transOut', ''),
@@ -134,7 +134,7 @@ class Timeline extends Base
                 __('What transition should be applied when this region is finished?'),
                 't');
 
-            $formFields[] = FormManager::AddNumber('transitionDuration', __('Duration'), $region->getOptionValue('transOutDuration', 0),
+            $formFields[] = Form::AddNumber('transitionDuration', __('Duration'), $region->getOptionValue('transOutDuration', 0),
                 __('The duration for this transition, in milliseconds.'), 'l', '', 'transition-group');
 
             // Compass points for direction
@@ -149,7 +149,7 @@ class Timeline extends Base
                 array('id' => 'NW', 'name' => __('North West'))
             );
 
-            $formFields[] = FormManager::AddCombo(
+            $formFields[] = Form::AddCombo(
                 'transitionDirection',
                 __('Direction'),
                 $region->getOptionValue('transOutDirection', ''),
@@ -167,11 +167,11 @@ class Timeline extends Base
             $response->AddFieldAction('transitionType', 'change', '', array('.transition-group' => array('display' => 'block')), 'not');
         }
 
-        $formFields[] = FormManager::AddCheckbox('loop', __('Loop?'),
+        $formFields[] = Form::AddCheckbox('loop', __('Loop?'),
             $region->getOptionValue('loop', 0), __('If there is only one item in this region should it loop? Not currently available for Windows Players.'),
             'l');
 
-        $formFields[] = FormManager::AddNumber('zindex', __('Layer'), ($zIndex == 0) ? NULL : $zIndex,
+        $formFields[] = Form::AddNumber('zindex', __('Layer'), ($zIndex == 0) ? NULL : $zIndex,
             __('The layering order of this region (z-index). Advanced use only. '), 'z');
 
         Theme::Set('form_fields', $formFields);
@@ -197,7 +197,7 @@ class Timeline extends Base
         $region = \Xibo\Factory\RegionFactory::loadByRegionId(Kit::GetParam('regionid', _POST, _INT));
         Log::debug($region);
 
-        if (!$this->user->checkEditable($region))
+        if (!$this->getUser()->checkEditable($region))
             trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
 
         // Set the new values
@@ -267,7 +267,7 @@ class Timeline extends Base
             Log::debug('Editing Region ' . $region);
 
             // Check Permissions
-            if (!$this->user->checkEditable($region))
+            if (!$this->getUser()->checkEditable($region))
                 trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
 
             // New coordinates
@@ -298,14 +298,14 @@ class Timeline extends Base
         $region = \Xibo\Factory\RegionFactory::getById(Kit::GetParam('regionid', _REQUEST, _INT));
 
         // Do we have permission
-        if (!$this->user->checkDeleteable($region))
+        if (!$this->getUser()->checkDeleteable($region))
             trigger_error(__('You do not have permissions to delete this region'), E_USER_ERROR);
 
         // Set some information about the form
         Theme::Set('form_id', 'RegionDeleteForm');
         Theme::Set('form_action', 'index.php?p=timeline&q=DeleteRegion');
         Theme::Set('form_meta', '<input type="hidden" name="regionid" value="' . $region->regionId . '" />');
-        Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to remove this region? All media files will be unassigned and any context saved to the region itself (such as Text, Tickers) will be lost permanently.'))));
+        Theme::Set('form_fields', array(Form::AddMessage(__('Are you sure you want to remove this region? All media files will be unassigned and any context saved to the region itself (such as Text, Tickers) will be lost permanently.'))));
 
         $response->SetFormRequestResponse(NULL, __('Delete this region?'), '350px', '200px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Region', 'Delete') . '")');
@@ -337,7 +337,7 @@ class Timeline extends Base
         Log::debug('Assigning files to ' . $region);
 
         // Make sure we have permission to edit this region
-        if (!$this->user->checkEditable($region))
+        if (!$this->getUser()->checkEditable($region))
             trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
 
         // Media to assign
@@ -358,11 +358,11 @@ class Timeline extends Base
             /* @var int $mediaId */
             $media = \Xibo\Factory\MediaFactory::getById($mediaId);
 
-            if (!$this->user->checkViewable($media))
+            if (!$this->getUser()->checkViewable($media))
                 trigger_error(__('You do not have permissions to use this media'), E_USER_ERROR);
 
             // Create a Widget and add it to our region
-            $widget = \Xibo\Factory\WidgetFactory::create($this->user->userId, $playlist->playlistId, $media->mediaType, $media->duration);
+            $widget = \Xibo\Factory\WidgetFactory::create($this->getUser()->userId, $playlist->playlistId, $media->mediaType, $media->duration);
             $widget->assignMedia($mediaId);
 
             $playlist->widgets[] = $widget;
@@ -486,7 +486,7 @@ class Timeline extends Base
      */
     public function TimeLine()
     {
-        if ($this->user->GetPref('timeLineView') == 'grid')
+        if ($this->getUser()->GetPref('timeLineView') == 'grid')
             $this->TimeLineGrid();
         else
             $this->TimeLineList();
@@ -505,7 +505,7 @@ class Timeline extends Base
         // Load the region and get the dimensions, applying the scale factor if necessary (only v1 layouts will have a scale factor != 1)
         $region = \Xibo\Factory\RegionFactory::loadByRegionId(Kit::GetParam('regionid', _GET, _INT));
 
-        if (!$this->user->checkEditable($region))
+        if (!$this->getUser()->checkEditable($region))
             trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
 
         // Start buildings the Timeline List
@@ -537,7 +537,7 @@ class Timeline extends Base
         foreach ($playlist->widgets as $widget) {
             /* @var \Xibo\Entity\Widget $widget */
             // Put this node vertically in the region time line
-            if (!$this->user->checkViewable($widget))
+            if (!$this->getUser()->checkViewable($widget))
                 // Skip over media assignments that we do not have permission to see
                 continue;
 
@@ -555,7 +555,7 @@ class Timeline extends Base
 
             // Colouring for the media block
             if ($timeBarColouring == 'Permissions')
-                $mediaBlockColouringClass = 'timelineMediaItemColouring_' . (($this->user->checkEditable($widget)) ? 'enabled' : 'disabled');
+                $mediaBlockColouringClass = 'timelineMediaItemColouring_' . (($this->getUser()->checkEditable($widget)) ? 'enabled' : 'disabled');
             else
                 $mediaBlockColouringClass = 'timelineMediaItemColouringDefault timelineMediaItemColouring_' . $tmpModule->getModuleType();
 
@@ -575,19 +575,19 @@ class Timeline extends Base
             $response->html .= '        <ul class="timelineMediaItemLinks">';
 
             // Create some links
-            if ($this->user->checkEditable($widget))
+            if ($this->getUser()->checkEditable($widget))
                 $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=EditForm&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '" title="' . __('Click to edit this media') . '">' . __('Edit') . '</a></li>';
 
-            if ($this->user->checkDeleteable($widget))
+            if ($this->getUser()->checkDeleteable($widget))
                 $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=DeleteForm&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '" title="' . __('Click to delete this media') . '">' . __('Delete') . '</a></li>';
 
-            if ($this->user->checkPermissionsModifyable($widget))
+            if ($this->getUser()->checkPermissionsModifyable($widget))
                 $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=user&q=permissionsForm&entity=Widget&objectId=' . $widget->widgetId . '" title="' . __('Click to change permissions for this media') . '">' . __('Permissions') . '</a></li>';
 
-            if (count($this->user->TransitionAuth('in')) > 0)
+            if (count($this->getUser()->TransitionAuth('in')) > 0)
                 $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=TransitionEditForm&type=in&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '" title="' . __('Click to edit this transition') . '">' . __('In Transition') . '</a></li>';
 
-            if (count($this->user->TransitionAuth('out')) > 0)
+            if (count($this->getUser()->TransitionAuth('out')) > 0)
                 $response->html .= '<li><a class="XiboFormButton timelineMediaBarLink" href="index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=TransitionEditForm&type=out&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '" title="' . __('Click to edit this transition') . '">' . __('Out Transition') . '</a></li>';
 
             $response->html .= '        </ul>';
@@ -650,7 +650,7 @@ class Timeline extends Base
      */
     public function TimelineGrid()
     {
-        $this->user->SetPref('timeLineView', 'grid');
+        $this->getUser()->SetPref('timeLineView', 'grid');
 
         $response = $this->getState();
         $response->html = '';
@@ -658,7 +658,7 @@ class Timeline extends Base
         // Load the region and get the dimensions, applying the scale factor if necessary (only v1 layouts will have a scale factor != 1)
         $region = \Xibo\Factory\RegionFactory::loadByRegionId(Kit::GetParam('regionid', _GET, _INT));
 
-        if (!$this->user->checkEditable($region))
+        if (!$this->getUser()->checkEditable($region))
             trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
 
         // Set the theme module buttons
@@ -705,7 +705,7 @@ class Timeline extends Base
         // Load the region and get the dimensions, applying the scale factor if necessary (only v1 layouts will have a scale factor != 1)
         $region = \Xibo\Factory\RegionFactory::loadByRegionId(Kit::GetParam('regionid', _POST, _INT));
 
-        if (!$this->user->checkEditable($region))
+        if (!$this->getUser()->checkEditable($region))
             trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
 
         // Columns
@@ -731,7 +731,7 @@ class Timeline extends Base
         foreach ($playlist->widgets as $widget) {
             /* @var \Xibo\Entity\Widget $widget */
             // Put this node vertically in the region time line
-            if (!$this->user->checkViewable($widget))
+            if (!$this->getUser()->checkViewable($widget))
                 // Skip over media assignments that we do not have permission to see
                 continue;
 
@@ -756,7 +756,7 @@ class Timeline extends Base
             $row['duration'] = sprintf('%d seconds', $widget->duration);
             $row['transition'] = sprintf('%s / %s', $tmpModule->GetTransition('in'), $tmpModule->GetTransition('out'));
 
-            if ($this->user->checkEditable($widget)) {
+            if ($this->getUser()->checkEditable($widget)) {
                 $row['buttons'][] = array(
                     'id' => 'timeline_button_edit',
                     'url' => 'index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=EditForm&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '"',
@@ -764,7 +764,7 @@ class Timeline extends Base
                 );
             }
 
-            if ($this->user->checkDeleteable($widget)) {
+            if ($this->getUser()->checkDeleteable($widget)) {
                 $row['buttons'][] = array(
                     'id' => 'timeline_button_delete',
                     'url' => 'index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=DeleteForm&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '"',
@@ -780,7 +780,7 @@ class Timeline extends Base
                 );
             }
 
-            if ($this->user->checkPermissionsModifyable($widget)) {
+            if ($this->getUser()->checkPermissionsModifyable($widget)) {
                 $row['buttons'][] = array(
                     'id' => 'timeline_button_permissions',
                     'url' => 'index.php?p=user&q=permissionsForm&entity=Widget&objectId=' . $widget->widgetId . '"',
@@ -788,7 +788,7 @@ class Timeline extends Base
                 );
             }
 
-            if (count($this->user->TransitionAuth('in')) > 0) {
+            if (count($this->getUser()->TransitionAuth('in')) > 0) {
                 $row['buttons'][] = array(
                     'id' => 'timeline_button_trans_in',
                     'url' => 'index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=TransitionEditForm&type=in&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '"',
@@ -796,7 +796,7 @@ class Timeline extends Base
                 );
             }
 
-            if (count($this->user->TransitionAuth('out')) > 0) {
+            if (count($this->getUser()->TransitionAuth('out')) > 0) {
                 $row['buttons'][] = array(
                     'id' => 'timeline_button_trans_in',
                     'url' => 'index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=TransitionEditForm&type=out&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '"',
@@ -831,7 +831,7 @@ class Timeline extends Base
         $playlist = $playlists[0];
         /* @var \Xibo\Entity\Playlist $playlist */
 
-        if (!$this->user->checkEditable($playlist))
+        if (!$this->getUser()->checkEditable($playlist))
             trigger_error(__('You do not have permissions to edit this playlist'), E_USER_ERROR);
 
         // Load the widgets

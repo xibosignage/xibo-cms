@@ -94,7 +94,7 @@ class Campaign extends Base
             );
 
             // Buttons based on permissions
-            if ($this->user->checkEditable($campaign)) {
+            if ($this->getUser()->checkEditable($campaign)) {
                 // Assign Layouts
                 $row['buttons'][] = array(
                     'id' => 'campaign_button_layouts',
@@ -110,7 +110,7 @@ class Campaign extends Base
                 );
             }
 
-            if ($this->user->checkDeleteable($campaign)) {
+            if ($this->getUser()->checkDeleteable($campaign)) {
                 // Delete Campaign
                 $row['buttons'][] = array(
                     'id' => 'campaign_button_delete',
@@ -119,7 +119,7 @@ class Campaign extends Base
                 );
             }
 
-            if ($this->user->checkPermissionsModifyable($campaign)) {
+            if ($this->getUser()->checkPermissionsModifyable($campaign)) {
                 // Permissions for Campaign
                 $row['buttons'][] = array(
                     'id' => 'campaign_button_delete',
@@ -153,7 +153,7 @@ class Campaign extends Base
         Theme::Set('form_action', 'index.php?p=campaign&q=Add');
 
         $formFields = array();
-        $formFields[] = FormManager::AddText('Name', __('Name'), NULL, __('The Name for this Campaign'), 'n', 'required');
+        $formFields[] = Form::AddText('Name', __('Name'), NULL, __('The Name for this Campaign'), 'n', 'required');
         Theme::Set('form_fields', $formFields);
 
         $response->SetFormRequestResponse(Theme::RenderReturn('form_render'), __('Add Campaign'), '350px', '150px');
@@ -178,7 +178,7 @@ class Campaign extends Base
 
         $campaignObject = new Campaign($db);
 
-        if (!$campaignObject->Add($name, 0, $this->user->userId))
+        if (!$campaignObject->Add($name, 0, $this->getUser()->userId))
             trigger_error($campaignObject->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse(__('Campaign Added'), false);
@@ -197,7 +197,7 @@ class Campaign extends Base
         $campaignId = \Xibo\Helper\Sanitize::getInt('CampaignID');
 
         // Authenticate this user
-        $auth = $this->user->CampaignAuth($campaignId, true);
+        $auth = $this->getUser()->CampaignAuth($campaignId, true);
         if (!$auth->edit)
             trigger_error(__('You do not have permission to edit this campaign'), E_USER_ERROR);
 
@@ -216,7 +216,7 @@ class Campaign extends Base
         $campaign = \Xibo\Helper\Sanitize::string($row['Campaign']);
 
         $formFields = array();
-        $formFields[] = FormManager::AddText('Name', __('Name'), $campaign, __('The Name for this Campaign'), 'n', 'required');
+        $formFields[] = Form::AddText('Name', __('Name'), $campaign, __('The Name for this Campaign'), 'n', 'required');
         Theme::Set('form_fields', $formFields);
 
         // Set some information about the form
@@ -245,7 +245,7 @@ class Campaign extends Base
         $name = \Xibo\Helper\Sanitize::getString('Name');
 
         // Authenticate this user
-        $auth = $this->user->CampaignAuth($campaignId, true);
+        $auth = $this->getUser()->CampaignAuth($campaignId, true);
         if (!$auth->edit)
             trigger_error(__('You do not have permission to edit this campaign'), E_USER_ERROR);
 
@@ -280,7 +280,7 @@ class Campaign extends Base
         $campaignId = \Xibo\Helper\Sanitize::getInt('CampaignID');
 
         // Authenticate this user
-        $auth = $this->user->CampaignAuth($campaignId, true);
+        $auth = $this->getUser()->CampaignAuth($campaignId, true);
         if (!$auth->del)
             trigger_error(__('You do not have permission to delete this campaign'), E_USER_ERROR);
 
@@ -289,7 +289,7 @@ class Campaign extends Base
         Theme::Set('form_action', 'index.php?p=campaign&q=Delete');
         Theme::Set('form_meta', '<input type="hidden" name="CampaignID" value="' . $campaignId . '" />');
 
-        Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to delete?'))));
+        Theme::Set('form_fields', array(Form::AddMessage(__('Are you sure you want to delete?'))));
 
         $response->SetFormRequestResponse(Theme::RenderReturn('form_render'), __('Delete Campaign'), '350px', '175px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Campaign', 'Delete') . '")');
@@ -311,7 +311,7 @@ class Campaign extends Base
         $campaignId = \Xibo\Helper\Sanitize::getInt('CampaignID');
 
         // Authenticate this user
-        $auth = $this->user->CampaignAuth($campaignId, true);
+        $auth = $this->getUser()->CampaignAuth($campaignId, true);
         if (!$auth->del)
             trigger_error(__('You do not have permission to delete this campaign'), E_USER_ERROR);
 
@@ -346,7 +346,7 @@ class Campaign extends Base
         $layouts = \Kit::GetParam('LayoutID', _POST, _ARRAY, array());
 
         // Authenticate this user
-        if (!$this->user->checkEditable($campaign))
+        if (!$this->getUser()->checkEditable($campaign))
             trigger_error(__('You do not have permission to edit this campaign'), E_USER_ERROR);
 
         // Get all current members
@@ -363,7 +363,7 @@ class Campaign extends Base
         // Check permissions to all new layouts that have been selected
         foreach ($newLayouts as $layoutId) {
             // Authenticate
-            if (!$this->user->checkViewable(\Xibo\Factory\LayoutFactory::getById($layoutId)))
+            if (!$this->getUser()->checkViewable(\Xibo\Factory\LayoutFactory::getById($layoutId)))
                 trigger_error(__('Your permissions to view a layout you are adding have been revoked. Please reload the Layouts form.'), E_USER_ERROR);
         }
 
@@ -403,8 +403,8 @@ class Campaign extends Base
         Log::notice(count($layoutsAssigned) . ' layouts assigned already');
 
         $formFields = array();
-        $formFields[] = FormManager::AddText('filter_name', __('Name'), NULL, NULL, 'l');
-        $formFields[] = FormManager::AddText('filter_tags', __('Tags'), NULL, NULL, 't');
+        $formFields[] = Form::AddText('filter_name', __('Name'), NULL, NULL, 'l');
+        $formFields[] = Form::AddText('filter_tags', __('Tags'), NULL, NULL, 't');
         Theme::Set('form_fields', $formFields);
 
         // Set the layouts assigned
@@ -442,7 +442,7 @@ class Campaign extends Base
         $tags = \Xibo\Helper\Sanitize::getString('filter_tags');
 
         // Get a list of media
-        $layoutList = $this->user->LayoutList(NULL, array('layout' => $name, 'tags' => $tags));
+        $layoutList = $this->getUser()->LayoutList(NULL, array('layout' => $name, 'tags' => $tags));
 
         $cols = array(
             array('name' => 'layout', 'title' => __('Name'))

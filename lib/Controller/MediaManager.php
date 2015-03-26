@@ -119,7 +119,7 @@ class MediaManager extends Base
         // Lookup the module name
         if ($filterMediaType != 0) {
 
-            $module = $this->user->ModuleList(NULL, array('id' => $filterMediaType));
+            $module = $this->getUser()->ModuleList(NULL, array('id' => $filterMediaType));
             if (count($module) > 0) {
                 $filterMediaType = $module[0]['Name'];
 

@@ -21,8 +21,10 @@
 namespace Xibo\Controller;
 
 use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Form;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
+use Xibo\Helper\Session;
 use Xibo\Helper\Theme;
 
 
@@ -63,13 +65,13 @@ class Library extends Base
         Theme::Set('form_meta', '<input type="hidden" name="p" value="content"><input type="hidden" name="q" value="LibraryGrid">');
 
         $formFields = array();
-        $formFields[] = FormManager::AddText('filter_name', __('Name'), $filter_name, NULL, 'n');
+        $formFields[] = Form::AddText('filter_name', __('Name'), $filter_name, NULL, 'n');
 
         // Users we have permission to see
-        $users = $this->user->userList();
+        $users = $this->getUser()->userList();
         array_unshift($users, array('userid' => '', 'username' => 'All'));
 
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
             'filter_owner',
             __('Owner'),
             $filter_owner,
@@ -81,7 +83,7 @@ class Library extends Base
 
         $types = $db->GetArray("SELECT Module AS moduleid, Name AS module FROM `module` WHERE RegionSpecific = 0 AND Enabled = 1 ORDER BY 2");
         array_unshift($types, array('moduleid' => '', 'module' => 'All'));
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
             'filter_type',
             __('Type'),
             $filter_type,
@@ -91,7 +93,7 @@ class Library extends Base
             NULL,
             'y');
 
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
             'filter_retired',
             __('Retired'),
             $filter_retired,
@@ -101,19 +103,19 @@ class Library extends Base
             NULL,
             'r');
 
-        $formFields[] = FormManager::AddCheckbox('filter_duration_in_seconds', __('Duration in Seconds'),
+        $formFields[] = Form::AddCheckbox('filter_duration_in_seconds', __('Duration in Seconds'),
             $filter_duration_in_seconds, NULL,
             's');
 
-        $formFields[] = FormManager::AddCheckbox('showTags', __('Show Tags'),
+        $formFields[] = Form::AddCheckbox('showTags', __('Show Tags'),
             $showTags, NULL,
             't');
 
-        $formFields[] = FormManager::AddCheckbox('filter_showThumbnail', __('Show Thumbnails'),
+        $formFields[] = Form::AddCheckbox('filter_showThumbnail', __('Show Thumbnails'),
             $filter_showThumbnail, NULL,
             't');
 
-        $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'),
+        $formFields[] = Form::AddCheckbox('XiboFilterPinned', __('Keep Open'),
             $filter_pinned, NULL,
             'k');
 
@@ -353,7 +355,7 @@ class Library extends Base
         $mediaId = \Xibo\Helper\Sanitize::getInt('mediaId');
 
         // Can this user view?
-        $entries = $this->user->MediaList(null, array('mediaId' => $mediaId));
+        $entries = $this->getUser()->MediaList(null, array('mediaId' => $mediaId));
 
         $media = $entries[0];
         /* @var \Xibo\Entity\Media $media */
@@ -376,22 +378,22 @@ class Library extends Base
     function editForm()
     {
         //TODO: Editform
-        $formFields[] = FormManager::AddText('tags', __('Tags'), $this->widget->tags,
+        $formFields[] = Form::AddText('tags', __('Tags'), $this->widget->tags,
             __('Tag this media. Comma Separated.'), 'n');
 
-        $formFields[] = FormManager::AddCheckbox('replaceBackgroundImages', __('Replace background images?'),
+        $formFields[] = Form::AddCheckbox('replaceBackgroundImages', __('Replace background images?'),
             0,
             __('If the current image is used as a background, should the new image replace it?'),
             '', 'replacement-controls');
 
         if ($this->assignable) {
-            $formFields[] = FormManager::AddCheckbox('replaceInLayouts', __('Update this media in all layouts it is assigned to?'),
+            $formFields[] = Form::AddCheckbox('replaceInLayouts', __('Update this media in all layouts it is assigned to?'),
                 ((Config::GetSetting('LIBRARY_MEDIA_UPDATEINALL_CHECKB') == 'Checked') ? 1 : 0),
                 __('Note: It will only be replaced in layouts you have permission to edit.'),
                 'r');
         }
 
-        $formFields[] = FormManager::AddCheckbox('deleteOldVersion', __('Delete the old version?'),
+        $formFields[] = Form::AddCheckbox('deleteOldVersion', __('Delete the old version?'),
             ((Config::GetSetting('LIBRARY_MEDIA_UPDATEINALL_CHECKB') == 'Checked') ? 1 : 0),
             __('Completely remove the old version of this media item if a new file is being uploaded.'),
             '');
@@ -409,15 +411,15 @@ class Library extends Base
         $media = \Xibo\Factory\MediaFactory::getById(Kit::GetParam('mediaId', _GET, _INT));
 
         // Can this user delete?
-        if (!$this->user->checkDeleteable($media))
+        if (!$this->getUser()->checkDeleteable($media))
             throw new Exception(__('You do not have permission to delete this media.'));
 
         Theme::Set('form_id', 'MediaDeleteForm');
         Theme::Set('form_action', 'index.php?p=content&q=delete');
         Theme::Set('form_meta', '<input type="hidden" name="mediaId" value="' . $media->mediaId . '">');
         $formFields = array(
-            FormManager::AddMessage(__('Are you sure you want to remove this Media?')),
-            FormManager::AddMessage(__('This action cannot be undone.')),
+            Form::AddMessage(__('Are you sure you want to remove this Media?')),
+            Form::AddMessage(__('This action cannot be undone.')),
         );
 
         Theme::Set('form_fields', $formFields);
@@ -441,7 +443,7 @@ class Library extends Base
         $media = \Xibo\Factory\MediaFactory::getById(Kit::GetParam('mediaId', _GET, _INT));
 
         // Can this user delete?
-        if (!$this->user->checkDeleteable($media))
+        if (!$this->getUser()->checkDeleteable($media))
             throw new Exception(__('You do not have permission to delete this media.'));
 
         // Delete
@@ -470,7 +472,7 @@ class Library extends Base
             $sth_update = $dbh->prepare('UPDATE lklayoutmedia SET mediaid = :media_id WHERE lklayoutmediaid = :lklayoutmediaid');
 
             // Loop through a list of layouts this user has access to
-            foreach ($this->user->LayoutList() as $layout) {
+            foreach ($this->getUser()->LayoutList() as $layout) {
                 $layoutId = $layout['layoutid'];
 
                 // Does this layout use the old media id?
@@ -574,7 +576,7 @@ class Library extends Base
         Theme::Set('pager', ApplicationState::Pager($id, 'grid_pager'));
 
         // Module types filter
-        $modules = $this->user->ModuleAuth(0, '', 1);
+        $modules = $this->getUser()->ModuleAuth(0, '', 1);
         $types = array();
 
         foreach ($modules as $module) {
@@ -669,7 +671,7 @@ class Library extends Base
             $libraryFolder = Config::GetSetting('LIBRARY_LOCATION');
             $error = 0;
             $fileName = \Kit::ValidateParam($_FILES['media_file']['name'], _FILENAME);
-            $fileId = $fileObject->GenerateFileId($this->user->userId);
+            $fileId = $fileObject->GenerateFileId($this->getUser()->userId);
             $fileLocation = $libraryFolder . 'temp/' . $fileId;
 
             // Make sure the library exists
@@ -735,7 +737,7 @@ HTML;
         $validExt = \Xibo\Factory\ModuleFactory::getValidExtensions();
 
         $options = array(
-            'userId' => $this->user->userId,
+            'userId' => $this->getUser()->userId,
             'playlistId' => \Kit::GetParam('playlistId', _REQUEST, _INT),
             'upload_dir' => $libraryFolder . 'temp/',
             'download_via_php' => true,
@@ -769,12 +771,12 @@ HTML;
         Theme::Set('form_action', 'index.php?p=content&q=tidyLibrary');
 
         $formFields = array();
-        $formFields[] = FormManager::AddMessage(__('Tidying your Library will delete any media that is not currently in use.'));
+        $formFields[] = Form::AddMessage(__('Tidying your Library will delete any media that is not currently in use.'));
 
         // Work out how many files there are
-        $media = Media::entriesUnusedForUser($this->user->userId);
+        $media = Media::entriesUnusedForUser($this->getUser()->userId);
 
-        $formFields[] = FormManager::AddMessage(sprintf(__('There is %s of data stored in %d files . Are you sure you want to proceed?', \Kit::formatBytes(array_sum(array_map(function ($element) {
+        $formFields[] = Form::AddMessage(sprintf(__('There is %s of data stored in %d files . Are you sure you want to proceed?', \Kit::formatBytes(array_sum(array_map(function ($element) {
             return $element['fileSize'];
         }, $media))), count($media))));
 
@@ -798,7 +800,7 @@ HTML;
             trigger_error(__('Sorry this function is disabled.'), E_USER_ERROR);
 
         $media = new Media();
-        if (!$media->deleteUnusedForUser($this->user->userId))
+        if (!$media->deleteUnusedForUser($this->getUser()->userId))
             trigger_error($media->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse(__('Library Tidy Complete'));

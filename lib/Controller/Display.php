@@ -88,7 +88,7 @@ class Display extends Base
         $formFields[] = Form::AddText('filter_display', __('Name'), $filter_display, NULL, 'n');
         $formFields[] = Form::AddText('filterMacAddress', __('Mac Address'), $filterMacAddress, NULL, 'm');
 
-        $displayGroups = $this->user->DisplayGroupList(0);
+        $displayGroups = $this->getUser()->DisplayGroupList(0);
         array_unshift($displayGroups, array('displaygroupid' => '0', 'displaygroup' => 'All'));
         $formFields[] = Form::AddCombo(
             'filter_displaygroup',
@@ -140,7 +140,7 @@ class Display extends Base
         $displayObject = new Display();
         $displayObject->displayId = \Xibo\Helper\Sanitize::getInt('displayid');
 
-        $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayObject->displayId), true);
+        $auth = $this->getUser()->DisplayGroupAuth($this->GetDisplayGroupId($displayObject->displayId), true);
         if (!$auth->edit)
             trigger_error(__('You do not have permission to edit this display'), E_USER_ERROR);
 
@@ -183,7 +183,7 @@ class Display extends Base
         $displayObject = new Display();
         $displayObject->displayId = \Xibo\Helper\Sanitize::getInt('displayid');
 
-        $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayObject->displayId), true);
+        $auth = $this->getUser()->DisplayGroupAuth($this->GetDisplayGroupId($displayObject->displayId), true);
         if (!$auth->edit)
             trigger_error(__('You do not have permission to edit this display'), E_USER_ERROR);
 
@@ -221,7 +221,7 @@ class Display extends Base
             'defaultlayoutid',
             __('Default Layout'),
             $displayObject->defaultLayoutId,
-            $this->user->LayoutList(),
+            $this->getUser()->LayoutList(),
             'layoutid',
             'layout',
             __('The Default Layout to Display where there is no other content.'),
@@ -282,7 +282,7 @@ class Display extends Base
         // Advanced
         $formFields = array();
 
-        $displayProfileList = $this->user->DisplayProfileList(NULL, array('type' => $displayObject->clientType));
+        $displayProfileList = $this->getUser()->DisplayProfileList(NULL, array('type' => $displayObject->clientType));
         array_unshift($displayProfileList, array('displayprofileid' => 0, 'name' => ''));
 
         $formFields[] = Form::AddCombo(
@@ -632,7 +632,7 @@ class Display extends Base
         $displayid = \Xibo\Helper\Sanitize::getInt('displayid');
 
         // Auth
-        $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayid), true);
+        $auth = $this->getUser()->DisplayGroupAuth($this->GetDisplayGroupId($displayid), true);
         if (!$auth->del)
             trigger_error(__('You do not have permission to edit this display'), E_USER_ERROR);
 
@@ -660,7 +660,7 @@ class Display extends Base
         $response = $this->getState();
         $displayid = \Kit::GetParam('displayid', _POST, _INT, 0);
 
-        $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayid), true);
+        $auth = $this->getUser()->DisplayGroupAuth($this->GetDisplayGroupId($displayid), true);
         if (!$auth->del)
             trigger_error(__('You do not have permission to edit this display'), E_USER_ERROR);
 
@@ -686,7 +686,7 @@ class Display extends Base
 
         $displayId = \Xibo\Helper\Sanitize::getInt('DisplayId');
 
-        $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayId), true);
+        $auth = $this->getUser()->DisplayGroupAuth($this->GetDisplayGroupId($displayId), true);
         if (!$auth->edit)
             trigger_error(__('You do not have permission to edit this display'), E_USER_ERROR);
 
@@ -704,7 +704,7 @@ class Display extends Base
             'defaultlayoutid',
             __('Default Layout'),
             $defaultLayoutId,
-            $this->user->LayoutList(),
+            $this->getUser()->LayoutList(),
             'layoutid',
             'layout',
             __('The Default Layout will be shown there are no other scheduled Layouts. It is usually a full screen logo or holding image.'),
@@ -733,7 +733,7 @@ class Display extends Base
         $displayId = \Xibo\Helper\Sanitize::getInt('DisplayId');
         $defaultLayoutId = \Xibo\Helper\Sanitize::getInt('defaultlayoutid');
 
-        $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayId), true);
+        $auth = $this->getUser()->DisplayGroupAuth($this->GetDisplayGroupId($displayId), true);
         if (!$auth->edit)
             trigger_error(__('You do not have permission to edit this display'), E_USER_ERROR);
 
@@ -753,7 +753,7 @@ class Display extends Base
         $response = $this->getState();
         $displayId = \Xibo\Helper\Sanitize::getInt('DisplayId');
 
-        $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayId), true);
+        $auth = $this->getUser()->DisplayGroupAuth($this->GetDisplayGroupId($displayId), true);
         if (!$auth->view)
             trigger_error(__('You do not have permission to view this display'), E_USER_ERROR);
 
@@ -838,7 +838,7 @@ class Display extends Base
         $displayID = \Xibo\Helper\Sanitize::getInt('DisplayID');
 
         // Auth
-        $auth = $this->user->DisplayGroupAuth($this->GetDisplayGroupId($displayID), true);
+        $auth = $this->getUser()->DisplayGroupAuth($this->GetDisplayGroupId($displayID), true);
         if (!$auth->modifyPermissions)
             trigger_error(__('You do not have permission to change Display Groups on this display'), E_USER_ERROR);
 

@@ -326,7 +326,7 @@ class ticker extends Module
                 __('Should the date sort applied to the feed be disabled?'), '');
 
             // Encode up the template
-            //$formFields['advanced'][] = FormManager::AddMessage('<pre>' . htmlentities(json_encode(array('id' => 'media-rss-with-title', 'value' => 'Image overlaid with the Title', 'template' => '<div class="image">[Link|image]<div class="cycle-overlay"><p style="font-family: Arial, Verdana, sans-serif; font-size:48px;">[Title]</p></div></div>', 'css' => '.image img { width:100%;}.cycle-overlay {color: white;background: black;opacity: .6;filter: alpha(opacity=60);position: absolute;bottom: 0;width: 100%;padding: 15px;text-align:center;}'))) . '</pre>');
+            //$formFields['advanced'][] = Form::AddMessage('<pre>' . htmlentities(json_encode(array('id' => 'media-rss-with-title', 'value' => 'Image overlaid with the Title', 'template' => '<div class="image">[Link|image]<div class="cycle-overlay"><p style="font-family: Arial, Verdana, sans-serif; font-size:48px;">[Title]</p></div></div>', 'css' => '.image img { width:100%;}.cycle-overlay {color: white;background: black;opacity: .6;filter: alpha(opacity=60);position: absolute;bottom: 0;width: 100%;padding: 15px;text-align:center;}'))) . '</pre>');
         }
 
         // Get the CSS node

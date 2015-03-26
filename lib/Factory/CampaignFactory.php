@@ -25,6 +25,9 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Campaign;
 use Xibo\Exception\NotFoundException;
+use Xibo\Helper\Log;
+use Xibo\Helper\Sanitize;
+use Xibo\Storage\PDOConnect;
 
 class CampaignFactory
 {
@@ -68,15 +71,15 @@ class CampaignFactory
         $sql .= "   ON lkcampaignlayout.LayoutID = layout.LayoutID ";
         $sql .= " WHERE 1 = 1 ";
 
-        if (\Xibo\Helper\Sanitize::string('campaignId', 0, $filterBy) != 0) {
+        if (Sanitize::getString('campaignId', 0, $filterBy) != 0) {
             // Join Campaign back onto it again
             $sql .= " AND `campaign`.campaignId = :campaignId ";
-            $params['campaignId'] = \Xibo\Helper\Sanitize::string('campaignId', 0, $filterBy);
+            $params['campaignId'] = Sanitize::getString('campaignId', 0, $filterBy);
         }
 
-        if (\Kit::GetParam('name', $filterBy, _STRING) != '') {
+        if (Sanitize::getString('name', $filterBy) != '') {
             // convert into a space delimited array
-            $names = explode(' ', \Kit::GetParam('name', $filterBy, _STRING));
+            $names = explode(' ', Sanitize::getString('name', $filterBy));
 
             $i = 0;
             foreach($names as $searchName) {
@@ -100,23 +103,23 @@ class CampaignFactory
         if (is_array($sortOrder))
             $sql .= 'ORDER BY ' . implode(',', $sortOrder);
 
-        \Xibo\Helper\Log::sql($sql, $params);
+        Log::sql($sql, $params);
 
-        foreach (\Xibo\Storage\PDOConnect::select($sql, $params) as $row) {
+        foreach (PDOConnect::select($sql, $params) as $row) {
 
             $campaign = new Campaign();
 
             // Validate each param and add it to the array.
-            $campaign->campaignId = \Xibo\Helper\Sanitize::int($row['CampaignID']);
-            $campaign->campaign = \Xibo\Helper\Sanitize::string($row['Campaign']);
-            $campaign->numberLayouts = \Xibo\Helper\Sanitize::int($row['NumLayouts']);
-            $campaign->isLayout = (\Xibo\Helper\Sanitize::int($row['IsLayoutSpecific']) == 1);
-            $campaign->retired = \Xibo\Helper\Sanitize::int($row['Retired']);
-            $campaign->ownerId = \Xibo\Helper\Sanitize::int($row['userId']);
+            $campaign->campaignId = Sanitize::int($row['CampaignID']);
+            $campaign->campaign = Sanitize::string($row['Campaign']);
+            $campaign->numberLayouts = Sanitize::int($row['NumLayouts']);
+            $campaign->isLayout = (Sanitize::int($row['IsLayoutSpecific']) == 1);
+            $campaign->retired = Sanitize::int($row['Retired']);
+            $campaign->ownerId = Sanitize::int($row['userId']);
 
             // Filter out campaigns that have all retired layouts
-            if (\Xibo\Helper\Sanitize::int('retired', -1, $filterBy) != -1) {
-                if ($row['Retired'] != \Xibo\Helper\Sanitize::int('retired', $filterBy))
+            if (Sanitize::int('retired', -1, $filterBy) != -1) {
+                if ($row['Retired'] != Sanitize::int('retired', $filterBy))
                     continue;
             }
 

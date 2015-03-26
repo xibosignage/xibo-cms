@@ -78,7 +78,7 @@ class DisplayProfile extends Base
 
         $rows = array();
 
-        foreach ($this->user->DisplayProfileList() as $profile) {
+        foreach ($this->getUser()->DisplayProfileList() as $profile) {
 
             // Default Layout
             $profile['buttons'][] = array(
@@ -151,7 +151,7 @@ class DisplayProfile extends Base
         $displayProfile->name = \Xibo\Helper\Sanitize::getString('name');
         $displayProfile->type = \Xibo\Helper\Sanitize::getString('type');
         $displayProfile->isDefault = \Xibo\Helper\Sanitize::getCheckbox('isdefault');
-        $displayProfile->userId = $this->user->userId;
+        $displayProfile->userId = $this->getUser()->userId;
 
         if (!$displayProfile->Save())
             trigger_error($displayProfile->GetErrorMessage(), E_USER_ERROR);
@@ -169,7 +169,7 @@ class DisplayProfile extends Base
         if (!$displayProfile->Load())
             trigger_error($displayProfile->GetErrorMessage(), E_USER_ERROR);
 
-        if ($this->user->userTypeId != 1 && $this->user->userId != $displayProfile->userId)
+        if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $displayProfile->userId)
             trigger_error(__('You do not have permission to edit this profile'), E_USER_ERROR);
 
         if (empty($displayProfile->type))
@@ -277,7 +277,7 @@ class DisplayProfile extends Base
         if (!$displayProfile->Load())
             trigger_error($displayProfile->GetErrorMessage(), E_USER_ERROR);
 
-        if ($this->user->userTypeId != 1 && $this->user->userId != $displayProfile->userId)
+        if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $displayProfile->userId)
             trigger_error(__('You do not have permission to edit this profile'), E_USER_ERROR);
 
         if (empty($displayProfile->type))
@@ -333,7 +333,7 @@ class DisplayProfile extends Base
         if (!$displayProfile->Load())
             trigger_error($displayProfile->GetErrorMessage(), E_USER_ERROR);
 
-        if ($this->user->userTypeId != 1 && $this->user->userId != $displayProfile->userId)
+        if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $displayProfile->userId)
             trigger_error(__('You do not have permission to edit this profile'), E_USER_ERROR);
 
         // Set some information about the form
@@ -369,7 +369,7 @@ class DisplayProfile extends Base
         if (!$displayProfile->Load())
             trigger_error($displayProfile->GetErrorMessage(), E_USER_ERROR);
 
-        if ($this->user->userTypeId != 1 && $this->user->userId != $displayProfile->userId)
+        if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $displayProfile->userId)
             trigger_error(__('You do not have permission to edit this profile'), E_USER_ERROR);
 
         if (!$displayProfile->Delete($displayProfile->displayProfileId))

@@ -43,6 +43,7 @@ class Layout extends Base
     {
         // Default options
         if (\Kit::IsFilterPinned('layout', 'LayoutFilter')) {
+
             $layout = Session::Get('layout', 'filter_layout');
             $tags = Session::Get('layout', 'filter_tags');
             $retired = Session::Get('layout', 'filter_retired');
@@ -52,7 +53,9 @@ class Layout extends Base
             $showThumbnail = Session::Get('layout', 'showThumbnail');
             $showTags = Session::Get('content', 'showTags');
             $pinned = 1;
+
         } else {
+
             $layout = NULL;
             $tags = NULL;
             $retired = 0;
@@ -143,6 +146,12 @@ class Layout extends Base
         $this->getState()->html .= Theme::RenderReturn('grid_render');
     }
 
+    /**
+     * Display the Layout Designer
+     * @param int $layoutId
+     * @throws \ErrorException if the theme file cannot be rendered
+     * @throws \Exception if the layout doesn't load correctly
+     */
     public function displayDesigner($layoutId)
     {
         $layout = LayoutFactory::loadById($layoutId);

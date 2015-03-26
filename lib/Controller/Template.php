@@ -54,12 +54,12 @@ class Template extends Base
         Theme::Set('form_meta', '<input type="hidden" name="p" value="template"><input type="hidden" name="q" value="TemplateView">');
 
         $formFields = array();
-        $formFields[] = FormManager::AddText('filter_name', __('Name'), $name, NULL, 'n');
-        $formFields[] = FormManager::AddText('filter_tags', __('Tags'), $tags, NULL, 't');
-        $formFields[] = FormManager::AddCheckbox('showThumbnail', __('Show Thumbnails'),
+        $formFields[] = Form::AddText('filter_name', __('Name'), $name, NULL, 'n');
+        $formFields[] = Form::AddText('filter_tags', __('Tags'), $tags, NULL, 't');
+        $formFields[] = Form::AddCheckbox('showThumbnail', __('Show Thumbnails'),
             $showThumbnail, NULL,
             't');
-        $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'),
+        $formFields[] = Form::AddCheckbox('XiboFilterPinned', __('Keep Open'),
             $pinned, NULL,
             'k');
 
@@ -107,7 +107,7 @@ class Template extends Base
         $showThumbnail = \Xibo\Helper\Sanitize::getCheckbox('showThumbnail');
         \Xibo\Helper\Session::Set('layout', 'showThumbnail', $showThumbnail);
 
-        $templates = $this->user->TemplateList($filter_name, $filter_tags);
+        $templates = $this->getUser()->TemplateList($filter_name, $filter_tags);
 
         if (!is_array($templates)) {
             trigger_error(__('Unable to get list of templates for this user'), E_USER_ERROR);
@@ -144,7 +144,7 @@ class Template extends Base
             $row['description'] = $template->description;
             $row['descriptionWithMarkup'] = Parsedown::instance()->text($row['description']);
 
-            if ($this->user->checkEditable($template)) {
+            if ($this->getUser()->checkEditable($template)) {
                 // Edit Button
                 $row['buttons'][] = array(
                     'id' => 'template_button_edit',
@@ -153,7 +153,7 @@ class Template extends Base
                 );
             }
 
-            if ($this->user->checkDeleteable($template)) {
+            if ($this->getUser()->checkDeleteable($template)) {
                 // Delete Button
                 $row['buttons'][] = array(
                     'id' => 'layout_button_delete',
@@ -162,7 +162,7 @@ class Template extends Base
                 );
             }
 
-            if ($this->user->checkPermissionsModifyable($template)) {
+            if ($this->getUser()->checkPermissionsModifyable($template)) {
                 // Permissions Button
                 $row['buttons'][] = array(
                     'id' => 'layout_button_delete',
@@ -202,7 +202,7 @@ class Template extends Base
         $layout = \Xibo\Factory\LayoutFactory::getById(Kit::GetParam('layoutid', _GET, _INT));
 
         // Check Permissions
-        if (!$this->user->checkViewable($layout))
+        if (!$this->getUser()->checkViewable($layout))
             trigger_error(__('You do not have permissions to view this layout'), E_USER_ERROR);
 
         Theme::Set('form_id', 'TemplateAddForm');
@@ -210,13 +210,13 @@ class Template extends Base
         Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layout->layoutId . '">');
 
         $formFields = array();
-        $formFields[] = FormManager::AddText('template', __('Name'), NULL,
+        $formFields[] = Form::AddText('template', __('Name'), NULL,
             __('The Name of the Template - (1 - 50 characters)'), 'n', 'maxlength="50" required');
 
-        $formFields[] = FormManager::AddText('tags', __('Tags'), NULL,
+        $formFields[] = Form::AddText('tags', __('Tags'), NULL,
             __('Tags for this Template - used when searching for it. Comma delimited. (1 - 250 characters)'), 't', 'maxlength="250"');
 
-        $formFields[] = FormManager::AddMultiText('description', __('Description'), NULL,
+        $formFields[] = Form::AddMultiText('description', __('Description'), NULL,
             __('An optional description of the Template. (1 - 250 characters)'), 'd', 5, 'maxlength="250"');
 
         Theme::Set('form_fields', $formFields);
@@ -236,29 +236,29 @@ class Template extends Base
         $layout = \Xibo\Factory\LayoutFactory::getById(Kit::GetParam('layoutid', _GET, _INT));
 
         // Check Permissions
-        if (!$this->user->checkEditable($layout))
+        if (!$this->getUser()->checkEditable($layout))
             trigger_error(__('You do not have permissions to view this layout'), E_USER_ERROR);
 
         Theme::Set('form_id', 'TemplateEditForm');
 
         // Two tabs
         $tabs = array();
-        $tabs[] = FormManager::AddTab('general', __('General'));
-        $tabs[] = FormManager::AddTab('description', __('Description'));
+        $tabs[] = Form::AddTab('general', __('General'));
+        $tabs[] = Form::AddTab('description', __('Description'));
 
         Theme::Set('form_tabs', $tabs);
 
         $formFields = array();
-        $formFields['general'][] = FormManager::AddText('layout', __('Name'), $layout->layout, __('The Name of the Layout - (1 - 50 characters)'), 'n', 'required');
+        $formFields['general'][] = Form::AddText('layout', __('Name'), $layout->layout, __('The Name of the Layout - (1 - 50 characters)'), 'n', 'required');
 
-        $formFields['description'][] = FormManager::AddMultiText('description', __('Description'), $layout->description,
+        $formFields['description'][] = Form::AddMultiText('description', __('Description'), $layout->description,
             __('An optional description of the Layout. (1 - 250 characters)'), 'd', 5, 'maxlength="250"');
 
         // We are editing
         Theme::Set('form_action', 'index.php?p=template&q=Edit');
         Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layout->layoutId . '">');
 
-        $formFields['general'][] = FormManager::AddCombo(
+        $formFields['general'][] = Form::AddCombo(
             'retired',
             __('Retired'),
             $layout->retired,
@@ -315,7 +315,7 @@ class Template extends Base
         $layout = \Xibo\Factory\LayoutFactory::getById(Kit::GetParam('layoutid', _POST, _INT));
 
         // Check Permissions
-        if (!$this->user->checkEditable($layout))
+        if (!$this->getUser()->checkEditable($layout))
             trigger_error(__('You do not have permissions to view this layout'), E_USER_ERROR);
 
         $layout->layout = \Xibo\Helper\Sanitize::getString('layout');
@@ -344,7 +344,7 @@ class Template extends Base
         $layout = \Xibo\Factory\LayoutFactory::getById(Kit::GetParam('layoutid', _POST, _INT));
 
         // Check Permissions
-        if (!$this->user->checkDeleteable($layout))
+        if (!$this->getUser()->checkDeleteable($layout))
             trigger_error(__('You do not have permissions to view this layout'), E_USER_ERROR);
 
         $layout->delete();
@@ -364,14 +364,14 @@ class Template extends Base
         $layout = \Xibo\Factory\LayoutFactory::getById(Kit::GetParam('layoutid', _GET, _INT));
 
         // Check Permissions
-        if (!$this->user->checkDeleteable($layout))
+        if (!$this->getUser()->checkDeleteable($layout))
             trigger_error(__('You do not have permissions to view this layout'), E_USER_ERROR);
 
         Theme::Set('form_id', 'DeleteForm');
         Theme::Set('form_action', 'index.php?p=template&q=DeleteTemplate');
         Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layout->layoutId . '">');
         Theme::Set('form_fields', array(
-            FormManager::AddMessage(__('Are you sure you want to delete this template?'))
+            Form::AddMessage(__('Are you sure you want to delete this template?'))
         ));
 
         $form = Theme::RenderReturn('form_render');

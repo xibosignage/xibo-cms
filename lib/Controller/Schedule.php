@@ -43,7 +43,7 @@ class Schedule extends Base
         $groups = array();
         $displays = array();
 
-        foreach ($this->user->DisplayGroupList(-1 /*IsDisplaySpecific*/) as $display) {
+        foreach ($this->getUser()->DisplayGroupList(-1 /*IsDisplaySpecific*/) as $display) {
 
             $display['checked_text'] = (in_array($display['displaygroupid'], $displayGroupIds)) ? ' selected' : '';
 
@@ -102,7 +102,7 @@ class Schedule extends Base
             // If we have minus 1, then show all
             if (in_array(-1, $displayGroupIds)) {
                 // Get all display groups this user has permission to view
-                $displayGroupIdsThisUser = $this->user->DisplayGroupList(-1);
+                $displayGroupIdsThisUser = $this->getUser()->DisplayGroupList(-1);
 
                 foreach ($displayGroupIdsThisUser as $row) {
                     $displayGroupIds[] = $row['displaygroupid'];
@@ -246,7 +246,7 @@ class Schedule extends Base
         $displays = array();
         $scheduleWithView = (Config::GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
 
-        foreach ($this->user->DisplayGroupList(-1 /*IsDisplaySpecific*/) as $display) {
+        foreach ($this->getUser()->DisplayGroupList(-1 /*IsDisplaySpecific*/) as $display) {
 
             // Can schedule with view, but no view permissions
             if ($scheduleWithView && $display['view'] != 1)
@@ -432,7 +432,7 @@ class Schedule extends Base
 
         // Ready to do the add
         $scheduleObject = new Schedule($db);
-        if (!$scheduleObject->Add($displayGroupIDs, $fromDT, $toDT, $campaignId, $repeatType, $repeatInterval, $repeatToDt, $isPriority, $this->user->userId, $displayOrder))
+        if (!$scheduleObject->Add($displayGroupIDs, $fromDT, $toDT, $campaignId, $repeatType, $repeatInterval, $repeatToDt, $isPriority, $this->getUser()->userId, $displayOrder))
             trigger_error($scheduleObject->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse(__("The Event has been Added."));
@@ -524,7 +524,7 @@ class Schedule extends Base
         $displays = array();
         $scheduleWithView = (Config::GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
 
-        foreach ($this->user->DisplayGroupList(-1 /*IsDisplaySpecific*/) as $display) {
+        foreach ($this->getUser()->DisplayGroupList(-1 /*IsDisplaySpecific*/) as $display) {
 
             // Can schedule with view, but no view permissions
             if ($scheduleWithView && $display['view'] != 1)
@@ -708,7 +708,7 @@ class Schedule extends Base
 
         // Ready to do the edit
         $scheduleObject = new Schedule($db);
-        if (!$scheduleObject->Edit($eventId, $displayGroupIDs, $fromDT, $toDT, $campaignId, $repeatType, $repeatInterval, $repeatToDt, $isPriority, $this->user->userId, $displayOrder))
+        if (!$scheduleObject->Edit($eventId, $displayGroupIDs, $fromDT, $toDT, $campaignId, $repeatType, $repeatInterval, $repeatToDt, $isPriority, $this->getUser()->userId, $displayOrder))
             trigger_error($scheduleObject->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse(__("The Event has been Modified."));
@@ -786,7 +786,7 @@ class Schedule extends Base
         // of each display group this event is associated with
         foreach ($eventDGIDs as $dgID) {
             // Permissions for display group
-            $auth = $this->user->DisplayGroupAuth($dgID, true);
+            $auth = $this->getUser()->DisplayGroupAuth($dgID, true);
 
             // Can schedule with view, but no view permissions
             if ($scheduleWithView && !$auth->view)
@@ -872,7 +872,7 @@ class Schedule extends Base
         $displays = array();
         $scheduleWithView = (Config::GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
 
-        foreach ($this->user->DisplayGroupList(-1 /*IsDisplaySpecific*/) as $display) {
+        foreach ($this->getUser()->DisplayGroupList(-1 /*IsDisplaySpecific*/) as $display) {
 
             // Can schedule with view, but no view permissions
             if ($scheduleWithView && $display['view'] != 1)
@@ -955,7 +955,7 @@ class Schedule extends Base
         // Ready to do the add
         $scheduleObject = new Schedule($db);
 
-        if (!$scheduleObject->Add($displayGroupIds, $fromDt, $toDt, $campaignId, '', '', '', $isPriority, $this->user->userId, $displayOrder))
+        if (!$scheduleObject->Add($displayGroupIds, $fromDt, $toDt, $campaignId, '', '', '', $isPriority, $this->getUser()->userId, $displayOrder))
             trigger_error($scheduleObject->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse(__('The Event has been Scheduled'));

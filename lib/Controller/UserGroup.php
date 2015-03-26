@@ -42,7 +42,7 @@ class UserGroup extends Base
 
 
     //init
-    function __construct(database $db, user $user)
+    function replace(user $user)
     {
         $this->db =& $db;
         $this->user =& $user;
@@ -71,9 +71,6 @@ END;
 
             $this->group = $aRow['Group'];
         }
-
-        // Include the group data classes
-        include_once('lib/data/usergroup.data.class.php');
     }
 
     /**
@@ -702,12 +699,12 @@ END;
         Theme::Set('users_assigned_url', 'index.php?p=group&q=SetMembers&GroupID=' . $groupID);
 
         // Users in group
-        $usersAssigned = $this->user->userList(null, array('groupIds' => array($groupID)));
+        $usersAssigned = $this->getUser()->userList(null, array('groupIds' => array($groupID)));
 
         Theme::Set('users_assigned', $usersAssigned);
 
         // Users not in group
-        if (!$allUsers = $this->user->userList())
+        if (!$allUsers = $this->getUser()->userList())
             trigger_error(__('Error getting all users'), E_USER_ERROR);
 
         // The available users are all users except users already in assigned users
@@ -757,7 +754,7 @@ END;
         // We want to add any users that are in that list (but aren't already assigned)
 
         // All users that this session has access to
-        if (!$allUsers = $this->user->userList())
+        if (!$allUsers = $this->getUser()->userList())
             trigger_error(__('Error getting all users'), E_USER_ERROR);
 
         // Convert to an array of ID's for convenience
@@ -766,7 +763,7 @@ END;
         }, $allUsers);
 
         // Users in group
-        $usersAssigned = $this->user->userList(null, array('groupIds' => array($groupId)));
+        $usersAssigned = $this->getUser()->userList(null, array('groupIds' => array($groupId)));
 
         foreach ($usersAssigned as $row) {
             // Did this session have permission to do anything to this user?

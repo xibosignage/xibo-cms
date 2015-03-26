@@ -20,27 +20,16 @@
  */
 namespace Xibo\Controller;
 
-use Xibo\Entity\User;
 use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Config;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
+use Xibo\Storage\PDOConnect;
 
 
 class Module extends Base
 {
-    private $module;
-
-    /**
-     * Module constructor.
-     * @param $db database
-     * @param $user user
-     */
-    function __construct(database $db, user $user)
-    {
-        $this->db =& $db;
-        $this->user =& $user;
-    }
 
     function actionMenu()
     {
@@ -73,7 +62,7 @@ class Module extends Base
 
             // Get a list of all currently installed modules
             try {
-                $dbh = \Xibo\Storage\PDOConnect::init();
+                $dbh = PDOConnect::init();
 
                 $sth = $dbh->prepare("SELECT CONCAT('modules/', LOWER(Module), '.module.php') AS Module FROM `module`");
                 $sth->execute();
@@ -83,7 +72,8 @@ class Module extends Base
 
                 foreach ($rows as $row)
                     $installed[] = $row['Module'];
-            } catch (Exception $e) {
+
+            } catch (\Exception $e) {
                 trigger_error(__('Cannot get installed modules'), E_USER_ERROR);
             }
 
@@ -236,17 +226,17 @@ class Module extends Base
         Theme::Set('form_meta', '<input type="hidden" name="ModuleID" value="' . $moduleId . '" /><input type="hidden" name="type" value="' . $type . '" />');
 
         $formFields = array();
-        $formFields[] = FormManager::AddText('ValidExtensions', __('Valid Extensions'), \Xibo\Helper\Sanitize::string($row['ValidExtensions']),
+        $formFields[] = Form::AddText('ValidExtensions', __('Valid Extensions'), \Xibo\Helper\Sanitize::string($row['ValidExtensions']),
             __('The Extensions allowed on files uploaded using this module. Comma Separated.'), 'e', '');
 
-        $formFields[] = FormManager::AddText('ImageUri', __('Image Uri'), \Xibo\Helper\Sanitize::string($row['ImageUri']),
+        $formFields[] = Form::AddText('ImageUri', __('Image Uri'), \Xibo\Helper\Sanitize::string($row['ImageUri']),
             __('The Image to display for this module. This should be a path relative to the root of the installation.'), 'i', '');
 
-        $formFields[] = FormManager::AddCheckbox('PreviewEnabled', __('Preview Enabled?'),
+        $formFields[] = Form::AddCheckbox('PreviewEnabled', __('Preview Enabled?'),
             \Xibo\Helper\Sanitize::int($row['PreviewEnabled']), __('When PreviewEnabled users will be able to see a preview in the layout designer'),
             'p');
 
-        $formFields[] = FormManager::AddCheckbox('Enabled', __('Enabled?'),
+        $formFields[] = Form::AddCheckbox('Enabled', __('Enabled?'),
             \Xibo\Helper\Sanitize::int($row['Enabled']), __('When Enabled users will be able to add media using this module'),
             'b');
 
@@ -346,7 +336,7 @@ class Module extends Base
         Theme::Set('form_action', 'index.php?p=module&q=Verify');
 
         $formFields = array();
-        $formFields[] = FormManager::AddMessage(__('Verify all modules have been installed correctly by reinstalling any module related files'));
+        $formFields[] = Form::AddMessage(__('Verify all modules have been installed correctly by reinstalling any module related files'));
 
         Theme::Set('form_fields', $formFields);
 
@@ -445,14 +435,14 @@ class Module extends Base
             die(__('Get Resource Call without a Region'));
 
         // Create a new module to handle this request
-        $module = \Xibo\Factory\ModuleFactory::createForWidget(Kit::GetParam('mod', _REQUEST, _WORD), \Kit::GetParam('widgetId', _REQUEST, _INT), $this->user->userId, \Kit::GetParam('playlistId', _REQUEST, _INT), \Kit::GetParam('regionId', _REQUEST, _INT));
+        $module = \Xibo\Factory\ModuleFactory::createForWidget(Kit::GetParam('mod', _REQUEST, _WORD), \Kit::GetParam('widgetId', _REQUEST, _INT), $this->getUser()->userId, \Kit::GetParam('playlistId', _REQUEST, _INT), \Kit::GetParam('regionId', _REQUEST, _INT));
 
         // Authenticate access to this widget
-        if (!$this->user->checkViewable($module->widget))
+        if (!$this->getUser()->checkViewable($module->widget))
             die(__('Access Denied'));
 
         // Set the permissions for this module
-        $module->setPermission($this->user->getPermission($module->widget));
+        $module->setPermission($this->getUser()->getPermission($module->widget));
 
         // Set the user - it is used in forms to return other entities
         $module->setUser($this->user);

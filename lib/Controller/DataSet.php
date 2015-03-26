@@ -108,7 +108,7 @@ class DataSet extends Base
 
         $rows = array();
 
-        foreach ($this->user->DataSetList() as $dataSet) {
+        foreach ($this->getUser()->DataSetList() as $dataSet) {
             // Add some additional info
             $dataSet['owner'] = $user->getNameFromID($dataSet['ownerid']);
             $dataSet['groups'] = $this->GroupsForDataSet($dataSet['datasetid']);
@@ -218,7 +218,7 @@ class DataSet extends Base
         $description = \Xibo\Helper\Sanitize::getString('description');
 
         $dataSetObject = new DataSet($db);
-        if (!$dataSetId = $dataSetObject->Add($dataSet, $description, $this->user->userId))
+        if (!$dataSetId = $dataSetObject->Add($dataSet, $description, $this->getUser()->userId))
             trigger_error($dataSetObject->GetErrorMessage(), E_USER_ERROR);
 
         // Also add one column
@@ -304,7 +304,7 @@ class DataSet extends Base
 
         $dataSetId = \Xibo\Helper\Sanitize::getInt('datasetid');
 
-        $auth = $this->user->DataSetAuth($dataSetId, true);
+        $auth = $this->getUser()->DataSetAuth($dataSetId, true);
         if (!$auth->del)
             trigger_error(__('Access Denied'));
 
@@ -363,7 +363,7 @@ class DataSet extends Base
         $dataSetId = \Xibo\Helper\Sanitize::getInt('datasetid');
         $dataSet = \Xibo\Helper\Sanitize::getString('dataset');
 
-        $auth = $this->user->DataSetAuth($dataSetId, true);
+        $auth = $this->getUser()->DataSetAuth($dataSetId, true);
         if (!$auth->edit)
             trigger_error(__('Access Denied'));
 
@@ -430,7 +430,7 @@ class DataSet extends Base
         $dataSetId = \Xibo\Helper\Sanitize::getInt('datasetid');
         $dataSet = \Xibo\Helper\Sanitize::getString('dataset');
 
-        $auth = $this->user->DataSetAuth($dataSetId, true);
+        $auth = $this->getUser()->DataSetAuth($dataSetId, true);
         if (!$auth->edit)
             trigger_error(__('Access Denied'));
 
@@ -515,7 +515,7 @@ class DataSet extends Base
         $dataSetColumnId = \Xibo\Helper\Sanitize::getInt('datasetcolumnid');
         $dataSet = \Xibo\Helper\Sanitize::getString('dataset');
 
-        $auth = $this->user->DataSetAuth($dataSetId, true);
+        $auth = $this->getUser()->DataSetAuth($dataSetId, true);
         if (!$auth->edit)
             trigger_error(__('Access Denied'));
 
@@ -619,7 +619,7 @@ class DataSet extends Base
         $dataSetId = \Xibo\Helper\Sanitize::getInt('datasetid');
         $dataSet = \Xibo\Helper\Sanitize::getString('dataset');
 
-        $auth = $this->user->DataSetAuth($dataSetId, true);
+        $auth = $this->getUser()->DataSetAuth($dataSetId, true);
         if (!$auth->edit)
             trigger_error(__('Access Denied'));
 
@@ -650,7 +650,7 @@ class DataSet extends Base
         $dataSetId = \Xibo\Helper\Sanitize::getInt('datasetid');
         $dataSet = \Xibo\Helper\Sanitize::getString('dataset');
 
-        $auth = $this->user->DataSetAuth($dataSetId, true);
+        $auth = $this->getUser()->DataSetAuth($dataSetId, true);
         if (!$auth->edit)
             trigger_error(__('Access Denied'));
 
@@ -675,7 +675,7 @@ class DataSet extends Base
         $dataSetId = \Xibo\Helper\Sanitize::getInt('datasetid');
         $dataSet = \Xibo\Helper\Sanitize::getString('dataset');
 
-        $auth = $this->user->DataSetAuth($dataSetId, true);
+        $auth = $this->getUser()->DataSetAuth($dataSetId, true);
         if (!$auth->edit)
             trigger_error(__('Access Denied'), E_USER_ERROR);
 
@@ -919,7 +919,7 @@ END;
 
         $dataSetId = \Xibo\Helper\Sanitize::getInt('datasetid');
 
-        $auth = $this->user->DataSetAuth($dataSetId, true);
+        $auth = $this->getUser()->DataSetAuth($dataSetId, true);
 
         if (!$auth->modifyPermissions)
             trigger_error(__('You do not have permissions to edit this dataset'), E_USER_ERROR);
@@ -982,7 +982,7 @@ END;
         $dataSetId = \Xibo\Helper\Sanitize::getInt('datasetid');
         $groupIds = \Kit::GetParam('groupids', _POST, _ARRAY);
 
-        $auth = $this->user->DataSetAuth($dataSetId, true);
+        $auth = $this->getUser()->DataSetAuth($dataSetId, true);
 
         if (!$auth->modifyPermissions)
             trigger_error(__('You do not have permissions to edit this dataset'), E_USER_ERROR);
@@ -1057,7 +1057,7 @@ END;
         $dataSetId = \Xibo\Helper\Sanitize::getInt('datasetid');
         $dataSet = \Xibo\Helper\Sanitize::getString('dataset');
 
-        $auth = $this->user->DataSetAuth($dataSetId, true);
+        $auth = $this->getUser()->DataSetAuth($dataSetId, true);
         if (!$auth->edit)
             trigger_error(__('Access Denied'), E_USER_ERROR);
 
@@ -1135,7 +1135,7 @@ END;
         $overwrite = \Xibo\Helper\Sanitize::getCheckbox('overwrite');
         $ignorefirstrow = \Xibo\Helper\Sanitize::getCheckbox('ignorefirstrow');
 
-        $auth = $this->user->DataSetAuth($dataSetId, true);
+        $auth = $this->getUser()->DataSetAuth($dataSetId, true);
         if (!$auth->edit)
             trigger_error(__('Access Denied'), E_USER_ERROR);
 

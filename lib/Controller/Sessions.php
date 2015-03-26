@@ -53,9 +53,9 @@ class Sessions extends Base
         }
 
         $formFields = array();
-        $formFields[] = FormManager::AddDatePicker('filter_fromdt', __('From Date'), $filter_fromdt, NULL, 't');
+        $formFields[] = Form::AddDatePicker('filter_fromdt', __('From Date'), $filter_fromdt, NULL, 't');
 
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
             'filter_type',
             __('Type'),
             $filter_type,
@@ -65,7 +65,7 @@ class Sessions extends Base
             NULL,
             'd');
 
-        $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'),
+        $formFields[] = Form::AddCheckbox('XiboFilterPinned', __('Keep Open'),
             $filter_pinned, NULL,
             'k');
 
@@ -178,7 +178,7 @@ class Sessions extends Base
         Theme::Set('form_action', 'index.php?p=sessions&q=LogoutUser');
         Theme::Set('form_meta', '<input type="hidden" name="userid" value="' . $userid . '" />');
 
-        Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to logout this user?'))));
+        Theme::Set('form_fields', array(Form::AddMessage(__('Are you sure you want to logout this user?'))));
 
         $response->SetFormRequestResponse(NULL, __('Logout User'), '430px', '200px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Sessions', 'Logout') . '")');

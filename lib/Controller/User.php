@@ -56,11 +56,11 @@ class User extends Base
         }
 
         $formFields = array();
-        $formFields[] = FormManager::AddText('filter_username', __('Name'), $filter_username, NULL, 'n');
+        $formFields[] = Form::AddText('filter_username', __('Name'), $filter_username, NULL, 'n');
 
         $usertypes = $this->db->GetArray("SELECT usertypeID, usertype FROM usertype ORDER BY usertype");
         array_unshift($usertypes, array('usertypeID' => 0, 'usertype' => 'All'));
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
             'filter_usertypeid',
             __('User Type'),
             $filter_usertypeid,
@@ -70,7 +70,7 @@ class User extends Base
             NULL,
             't');
 
-        $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'),
+        $formFields[] = Form::AddCheckbox('XiboFilterPinned', __('Keep Open'),
             $filter_pinned, NULL,
             'k');
 
@@ -260,7 +260,7 @@ class User extends Base
 
 
         // Do we have permission?
-        $entries = $this->user->userList(null, array('userId' => \Kit::GetParam('userid', _POST, _INT)));
+        $entries = $this->getUser()->userList(null, array('userId' => \Kit::GetParam('userid', _POST, _INT)));
 
         if (count($entries) == 0)
             trigger_error(__('You do not have permission to edit this user'), E_USER_ERROR);
@@ -274,7 +274,7 @@ class User extends Base
         $user->retired = \Xibo\Helper\Sanitize::getCheckbox('retired');
 
         // Super Admins can change the user type
-        if ($this->user->userTypeId == 1)
+        if ($this->getUser()->userTypeId == 1)
             $user->userTypeId = \Xibo\Helper\Sanitize::getInt('usertypeid');
 
         if (!$user->edit())
@@ -295,7 +295,7 @@ class User extends Base
         $deleteAllItems = (\Kit::GetParam('deleteAllItems', _POST, _CHECKBOX) == 1);
 
         $userId = \Kit::GetParam('userid', _POST, _INT, 0);
-        $groupId = $this->user->getGroupFromID($userId, true);
+        $groupId = $this->getUser()->getGroupFromID($userId, true);
 
         $user = new Userdata();
         $user->userId = $userId;
@@ -355,7 +355,7 @@ class User extends Base
             Theme::Set('form_meta', '<input type="hidden" name="userid" value="' . $userId . '" />');
 
             // We are editing a user
-            $entries = $this->user->userList(null, array('userId' => $userId));
+            $entries = $this->getUser()->userList(null, array('userId' => $userId));
 
             if (count($entries) == 0)
                 trigger_error(__('You do not have permission to edit this user.'), E_USER_ERROR);
@@ -369,7 +369,7 @@ class User extends Base
             $homepage = \Xibo\Helper\Sanitize::string($aRow['homepage']);
             $retired = \Xibo\Helper\Sanitize::int($aRow['retired']);
 
-            $retiredFormField = FormManager::AddCheckbox('retired', __('Retired?'),
+            $retiredFormField = Form::AddCheckbox('retired', __('Retired?'),
                 $retired, __('Is this user retired?'),
                 'r');
         } else {
@@ -396,7 +396,7 @@ class User extends Base
             $retired = NULL;
 
             // List of values for the initial user group
-            $userGroupField = FormManager::AddCombo(
+            $userGroupField = Form::AddCombo(
                 'groupid',
                 __('Initial User Group'),
                 NULL,
@@ -406,19 +406,19 @@ class User extends Base
                 __('What is the initial user group for this user?'),
                 'g');
 
-            $passwordField = FormManager::AddPassword('edit_password', __('Password'), $password,
+            $passwordField = Form::AddPassword('edit_password', __('Password'), $password,
                 __('The Password for this user.'), 'p', 'required');
         }
 
         // Render the return and output
         $formFields = array();
-        $formFields[] = FormManager::AddText('edit_username', __('User Name'), $username,
+        $formFields[] = Form::AddText('edit_username', __('User Name'), $username,
             __('The Login Name of the user.'), 'n', 'required maxlength="50"');
 
-        $formFields[] = FormManager::AddText('email', __('Email'), $email,
+        $formFields[] = Form::AddText('email', __('Email'), $email,
             __('The Email Address for this user.'), 'e', NULL);
 
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
             'homepage',
             __('Homepage'),
             $homepage,
@@ -437,7 +437,7 @@ class User extends Base
         if ($user->usertypeid != 1)
             $SQL .= ' WHERE UserTypeID = 3';
 
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
             'usertypeid',
             __('User Type'),
             $usertypeid,
@@ -483,8 +483,8 @@ class User extends Base
         Theme::Set('form_action', 'index.php?p=user&q=DeleteUser');
         Theme::Set('form_meta', '<input type="hidden" name="userid" value="' . $userid . '" />');
 
-        $formFields = array(FormManager::AddMessage(__('Are you sure you want to delete? You may not be able to delete this user if they have associated content. You can retire users by using the Edit Button.')));
-        $formFields[] = FormManager::AddCheckbox('deleteAllItems',
+        $formFields = array(Form::AddMessage(__('Are you sure you want to delete? You may not be able to delete this user if they have associated content. You can retire users by using the Edit Button.')));
+        $formFields[] = Form::AddCheckbox('deleteAllItems',
             __('Delete all items owned by this User?'),
             0,
             __('Check to delete all items owned by this user, including Layouts, Media, Schedules, etc.'),
@@ -517,10 +517,10 @@ class User extends Base
         // Render the return and output
         $formFields = array();
 
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
             'homepage',
             __('Homepage'),
-            $this->user->GetHomePage($userid),
+            $this->getUser()->GetHomePage($userid),
             array(
                 array("homepageid" => "dashboard", 'homepage' => 'Icon Dashboard'),
                 array("homepageid" => "mediamanager", 'homepage' => 'Media Dashboard'),
@@ -550,7 +550,7 @@ class User extends Base
 
         $response = $this->getState();
 
-        if (!$this->user->userTypeId == 1)
+        if (!$this->getUser()->userTypeId == 1)
             trigger_error(__('You do not have permission to change this users homepage'));
 
         $userid = \Kit::GetParam('userid', _POST, _INT, 0);
@@ -580,7 +580,7 @@ class User extends Base
         $store = OAuthStore::instance();
 
         try {
-            $list = $store->listConsumerTokens($this->user->userId);
+            $list = $store->listConsumerTokens($this->getUser()->userId);
         } catch (OAuthException $e) {
             trigger_error($e->getMessage());
             trigger_error(__('Error listing Log.'), E_USER_ERROR);
@@ -616,13 +616,13 @@ class User extends Base
         Theme::Set('form_action', 'index.php?p=user&q=ChangePassword');
 
         $formFields = array();
-        $formFields[] = FormManager::AddPassword('oldPassword', __('Current Password'), NULL,
+        $formFields[] = Form::AddPassword('oldPassword', __('Current Password'), NULL,
             __('Please enter your current password'), 'p', 'required');
 
-        $formFields[] = FormManager::AddPassword('newPassword', __('New Password'), NULL,
+        $formFields[] = Form::AddPassword('newPassword', __('New Password'), NULL,
             __('Please enter your new password'), 'n', 'required');
 
-        $formFields[] = FormManager::AddPassword('retypeNewPassword', __('Retype New Password'), NULL,
+        $formFields[] = Form::AddPassword('retypeNewPassword', __('Retype New Password'), NULL,
             __('Please repeat the new Password.'), 'r', 'required');
 
         Theme::Set('form_fields', $formFields);
@@ -650,7 +650,7 @@ class User extends Base
 
         $userData = new Userdata($db);
 
-        if (!$userData->ChangePassword($this->user->userId, $oldPassword, $newPassword, $retypeNewPassword))
+        if (!$userData->ChangePassword($this->getUser()->userId, $oldPassword, $newPassword, $retypeNewPassword))
             trigger_error($userData->GetErrorMessage(), E_USER_ERROR);
 
         $response->SetFormSubmitResponse(__('Password Changed'));
@@ -674,10 +674,10 @@ class User extends Base
         Theme::Set('form_meta', '<input type="hidden" name="UserId" value="' . $userId . '" />');
 
         $formFields = array();
-        $formFields[] = FormManager::AddPassword('newPassword', __('New Password'), NULL,
+        $formFields[] = Form::AddPassword('newPassword', __('New Password'), NULL,
             __('The new Password for this user.'), 'p', 'required');
 
-        $formFields[] = FormManager::AddPassword('retypeNewPassword', __('Retype New Password'), NULL,
+        $formFields[] = Form::AddPassword('retypeNewPassword', __('Retype New Password'), NULL,
             __('Repeat the new Password for this user.'), 'r', 'required');
 
         Theme::Set('form_fields', $formFields);
@@ -704,7 +704,7 @@ class User extends Base
         $userId = \Xibo\Helper\Sanitize::getInt('UserId');
 
         // Check we are an admin
-        if ($this->user->userTypeId != 1)
+        if ($this->getUser()->userTypeId != 1)
             trigger_error(__('Trying to change the password for another user denied'), E_USER_ERROR);
 
 
@@ -743,7 +743,7 @@ class User extends Base
         $object = $entity::getById($objectId);
 
         // Does this user have permission to edit the permissions?!
-        if (!$this->user->checkPermissionsModifyable($object))
+        if (!$this->getUser()->checkPermissionsModifyable($object))
             throw new Exception(__('You do not have permission to edit these permissions.'));
 
         // Set some information about the form
@@ -777,8 +777,8 @@ class User extends Base
         }
 
         $formFields = array();
-        $formFields[] = FormManager::AddPermissions('groupids[]', $checkboxes);
-        $formFields[] = FormManager::AddCheckbox('cascade',
+        $formFields[] = Form::AddPermissions('groupids[]', $checkboxes);
+        $formFields[] = Form::AddCheckbox('cascade',
             __('Cascade permissions to all items underneath this one.'), 0,
             __('For example, if this is a Layout then update the permissions on all Regions, Playlists and Widgets.'),
             'r');
@@ -822,7 +822,7 @@ class User extends Base
         $object = $entity::getById($objectId);
 
         // Does this user have permission to edit the permissions?!
-        if (!$this->user->checkPermissionsModifyable($object))
+        if (!$this->getUser()->checkPermissionsModifyable($object))
             throw new Exception(__('You do not have permission to edit these permissions.'));
 
         // Get all current permissions

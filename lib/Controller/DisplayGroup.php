@@ -70,7 +70,7 @@ class DisplayGroup extends Base
         $user = $this->getUser();
         $response = new ApplicationState();
 
-        $displayGroups = $this->user->DisplayGroupList();
+        $displayGroups = $this->getUser()->DisplayGroupList();
 
         if (!is_array($displayGroups))
             trigger_error(__('Cannot get list of display groups.'), E_USER_ERROR);
@@ -161,10 +161,10 @@ class DisplayGroup extends Base
         Theme::Set('form_id', 'DisplayGroupAddForm');
         Theme::Set('form_action', 'index.php?p=displaygroup&q=Add');
 
-        $formFields[] = FormManager::AddText('group', __('Name'), NULL,
+        $formFields[] = Form::AddText('group', __('Name'), NULL,
             __('The Name for this Group'), 'n', 'required');
 
-        $formFields[] = FormManager::AddText('desc', __('Description'), NULL,
+        $formFields[] = Form::AddText('desc', __('Description'), NULL,
             __('A short description of this Group'), 'd', 'maxlength="254"');
 
         Theme::Set('form_fields', $formFields);
@@ -189,7 +189,7 @@ class DisplayGroup extends Base
         $displayGroupID = \Xibo\Helper\Sanitize::getInt('DisplayGroupID');
 
         // Auth
-        $auth = $this->user->DisplayGroupAuth($displayGroupID, true);
+        $auth = $this->getUser()->DisplayGroupAuth($displayGroupID, true);
         if (!$auth->edit)
             trigger_error(__('You do not have permission to edit this display group'), E_USER_ERROR);
 
@@ -211,10 +211,10 @@ class DisplayGroup extends Base
         Theme::Set('form_action', 'index.php?p=displaygroup&q=Edit');
         Theme::Set('form_meta', '<input type="hidden" name="DisplayGroupID" value="' . $displayGroupID . '" />');
 
-        $formFields[] = FormManager::AddText('group', __('Name'), \Xibo\Helper\Sanitize::string($row['DisplayGroup']),
+        $formFields[] = Form::AddText('group', __('Name'), \Xibo\Helper\Sanitize::string($row['DisplayGroup']),
             __('The Name for this Group'), 'n', 'required');
 
-        $formFields[] = FormManager::AddText('desc', __('Description'), \Xibo\Helper\Sanitize::string($row['Description']),
+        $formFields[] = Form::AddText('desc', __('Description'), \Xibo\Helper\Sanitize::string($row['Description']),
             __('A short description of this Group'), 'd', 'maxlength="254"');
 
         Theme::Set('form_fields', $formFields);
@@ -236,7 +236,7 @@ class DisplayGroup extends Base
         $displayGroupID = \Xibo\Helper\Sanitize::getInt('DisplayGroupID');
 
         // Auth
-        $auth = $this->user->DisplayGroupAuth($displayGroupID, true);
+        $auth = $this->getUser()->DisplayGroupAuth($displayGroupID, true);
         if (!$auth->del)
             trigger_error(__('You do not have permission to edit this display group'), E_USER_ERROR);
 
@@ -245,7 +245,7 @@ class DisplayGroup extends Base
         Theme::Set('form_action', 'index.php?p=displaygroup&q=Delete');
         Theme::Set('form_meta', '<input type="hidden" name="DisplayGroupID" value="' . $displayGroupID . '" />');
 
-        Theme::Set('form_fields', array(FormManager::AddMessage(__('Are you sure you want to delete this display? This cannot be undone.'))));
+        Theme::Set('form_fields', array(Form::AddMessage(__('Are you sure you want to delete this display? This cannot be undone.'))));
 
         $response->SetFormRequestResponse(NULL, __('Delete Display Group'), '350px', '175px');
         $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('DisplayGroup', 'Delete') . '")');
@@ -283,7 +283,7 @@ class DisplayGroup extends Base
         $SQL .= sprintf("WHERE  lkdisplaydg.DisplayGroupID   = %d", $displayGroupID);
         $SQL .= " ORDER BY display.Display ";
 
-        $displays_assigned = $this->user->DisplayList(array('display'), array('displaygroupid' => $displayGroupID), 'edit');
+        $displays_assigned = $this->getUser()->DisplayList(array('display'), array('displaygroupid' => $displayGroupID), 'edit');
 
         if (!is_array($displays_assigned))
             trigger_error(__('Error getting Displays'), E_USER_ERROR);
@@ -303,7 +303,7 @@ class DisplayGroup extends Base
         Theme::Set('displays_assigned', $displaysAssigned);
 
         // All Displays
-        $displays = $this->user->DisplayList(array('display'), array('exclude_displaygroupid' => $displayGroupID), 'edit');
+        $displays = $this->getUser()->DisplayList(array('display'), array('exclude_displaygroupid' => $displayGroupID), 'edit');
 
         if (!is_array($displays))
             trigger_error(__('Error getting Displays'), E_USER_ERROR);
@@ -354,7 +354,7 @@ class DisplayGroup extends Base
         // Add full permissions for this user to this group
         $security = new DisplayGroupSecurity($db);
 
-        if (!$security->Link($displayGroupId, $this->user->getGroupFromID($this->user->userId, true), 1, 1, 1))
+        if (!$security->Link($displayGroupId, $this->getUser()->getGroupFromID($this->getUser()->userId, true), 1, 1, 1))
             trigger_error(__('Unable to set permissions'));
 
         $response->SetFormSubmitResponse(__('Display Group Added'), false);
@@ -377,7 +377,7 @@ class DisplayGroup extends Base
         $description = \Xibo\Helper\Sanitize::getString('desc');
 
         // Auth
-        $auth = $this->user->DisplayGroupAuth($displayGroupID, true);
+        $auth = $this->getUser()->DisplayGroupAuth($displayGroupID, true);
         if (!$auth->edit)
             trigger_error(__('You do not have permission to edit this display group'), E_USER_ERROR);
 
@@ -406,7 +406,7 @@ class DisplayGroup extends Base
         $displayGroupID = \Xibo\Helper\Sanitize::getInt('DisplayGroupID');
 
         // Auth
-        $auth = $this->user->DisplayGroupAuth($displayGroupID, true);
+        $auth = $this->getUser()->DisplayGroupAuth($displayGroupID, true);
         if (!$auth->del)
             trigger_error(__('You do not have permission to edit this display group'), E_USER_ERROR);
 
@@ -436,7 +436,7 @@ class DisplayGroup extends Base
         $members = array();
 
         // Auth
-        $auth = $this->user->DisplayGroupAuth($displayGroupID, true);
+        $auth = $this->getUser()->DisplayGroupAuth($displayGroupID, true);
         if (!$auth->del)
             trigger_error(__('You do not have permission to edit this display group'), E_USER_ERROR);
 
@@ -493,7 +493,7 @@ class DisplayGroup extends Base
 
         $displayGroupId = \Xibo\Helper\Sanitize::getInt('DisplayGroupID');
 
-        $auth = $this->user->DisplayGroupAuth($displayGroupId, true);
+        $auth = $this->getUser()->DisplayGroupAuth($displayGroupId, true);
 
         if (!$auth->modifyPermissions)
             trigger_error(__('You do not have permissions to edit this display group'), E_USER_ERROR);
@@ -533,7 +533,7 @@ class DisplayGroup extends Base
         }
 
         $formFields = array();
-        $formFields[] = FormManager::AddPermissions('groupids[]', $checkboxes);
+        $formFields[] = Form::AddPermissions('groupids[]', $checkboxes);
 
         Theme::Set('form_fields', $formFields);
 
@@ -558,7 +558,7 @@ class DisplayGroup extends Base
         $displayGroupId = \Xibo\Helper\Sanitize::getInt('displayGroupId');
         $groupIds = \Kit::GetParam('groupids', _POST, _ARRAY);
 
-        $auth = $this->user->DisplayGroupAuth($displayGroupId, true);
+        $auth = $this->getUser()->DisplayGroupAuth($displayGroupId, true);
 
         if (!$auth->modifyPermissions)
             trigger_error(__('You do not have permissions to edit this display group'), E_USER_ERROR);
@@ -630,7 +630,7 @@ class DisplayGroup extends Base
         $displayGroupId = \Xibo\Helper\Sanitize::getInt('DisplayGroupID');
 
         // Auth
-        $auth = $this->user->DisplayGroupAuth($displayGroupId, true);
+        $auth = $this->getUser()->DisplayGroupAuth($displayGroupId, true);
         if (!$auth->edit)
             trigger_error(__('You do not have permission to edit this display group'), E_USER_ERROR);
 
@@ -640,7 +640,7 @@ class DisplayGroup extends Base
         Theme::Set('pager', ApplicationState::Pager($id, 'grid_pager'));
 
         // Module types filter
-        $modules = $this->user->ModuleAuth(0, '', -1);
+        $modules = $this->getUser()->ModuleAuth(0, '', -1);
         $types = array();
 
         foreach ($modules as $module) {
@@ -768,7 +768,7 @@ class DisplayGroup extends Base
             trigger_error(__('Display Group not selected'), E_USER_ERROR);
 
         // Auth
-        $auth = $this->user->DisplayGroupAuth($displayGroupId, true);
+        $auth = $this->getUser()->DisplayGroupAuth($displayGroupId, true);
         if (!$auth->del)
             trigger_error(__('You do not have permission to edit this display group'), E_USER_ERROR);
 
@@ -796,11 +796,11 @@ class DisplayGroup extends Base
 
         if ($displayId != 0) {
             // Get some version information about this display.
-            if (!$displays = $this->user->DisplayList(array('display'), array('displayid' => $displayId)))
+            if (!$displays = $this->getUser()->DisplayList(array('display'), array('displayid' => $displayId)))
                 trigger_error(__('Unknown Display'), E_USER_ERROR);
         } else {
             // Get a list of displays with their version information?
-            if (!$displays = $this->user->DisplayList(array('display'), array('displaygroupid' => $displayGroupId)))
+            if (!$displays = $this->getUser()->DisplayList(array('display'), array('displaygroupid' => $displayGroupId)))
                 trigger_error(__('No displays in this group'), E_USER_ERROR);
         }
 
@@ -817,7 +817,7 @@ class DisplayGroup extends Base
         Theme::Set('displays', $displays);
 
         // Present a list of possible files to choose from (generic file module)
-        $mediaList = $this->user->MediaList(NULL, array('type' => 'genericfile'));
+        $mediaList = $this->getUser()->MediaList(NULL, array('type' => 'genericfile'));
         array_unshift($mediaList, array('mediaid' => 0, 'media' => ''));
         Theme::Set('media_field_list', $mediaList);
 
@@ -843,12 +843,12 @@ class DisplayGroup extends Base
         $mediaId = \Xibo\Helper\Sanitize::getInt('mediaid');
 
         // Make sure we have permission to do this to this display
-        $auth = $this->user->DisplayGroupAuth($displayGroupId, true);
+        $auth = $this->getUser()->DisplayGroupAuth($displayGroupId, true);
         if (!$auth->edit)
             trigger_error(__('You do not have permission to edit this display group'), E_USER_ERROR);
 
         // Make sure we have permission to use this file
-        $mediaAuth = $this->user->MediaAuth($mediaId, true);
+        $mediaAuth = $this->getUser()->MediaAuth($mediaId, true);
 
         if (!$mediaAuth->view)
             trigger_error(__('You have selected media that you no longer have permission to use. Please reload the form.'), E_USER_ERROR);
@@ -863,7 +863,7 @@ class DisplayGroup extends Base
         $storedAs = $media->GetStoredAs($mediaId);
 
         // Get a list of displays for this group
-        $displays = $this->user->DisplayList(array('displayid'), array('displaygroupid' => $displayGroupId));
+        $displays = $this->getUser()->DisplayList(array('displayid'), array('displaygroupid' => $displayGroupId));
 
         foreach ($displays as $display) {
             // Update the Display with the new instructions

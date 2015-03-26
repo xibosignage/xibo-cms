@@ -79,7 +79,7 @@ class OAuth extends Base
         $store = OAuthStore::instance();
 
         try {
-            $list = $store->listConsumers($this->user->userId);
+            $list = $store->listConsumers($this->getUser()->userId);
         } catch (OAuthException $e) {
             trigger_error($e->getMessage());
             trigger_error(__('Error listing Applications.'), E_USER_ERROR);
@@ -126,7 +126,7 @@ class OAuth extends Base
         $store = OAuthStore::instance();
 
         try {
-            $list = $store->listLog(null, $this->user->userId);
+            $list = $store->listLog(null, $this->getUser()->userId);
         } catch (OAuthException $e) {
             trigger_error($e->getMessage());
             trigger_error(__('Error listing Log.'), E_USER_ERROR);
@@ -159,7 +159,7 @@ class OAuth extends Base
     public function authorize()
     {
         // Do we have an OAuth signed request?
-        $userid = $this->user->userId;
+        $userid = $this->getUser()->userId;
 
         $server = new OAuthServer();
 
@@ -218,16 +218,16 @@ class OAuth extends Base
         Theme::Set('form_action', 'index.php?p=oauth&q=Register');
 
         $formFields = array();
-        $formFields[] = FormManager::AddText('requester_name', __('Full Name'), NULL,
+        $formFields[] = Form::AddText('requester_name', __('Full Name'), NULL,
             __('The name of the person or organization that authored this application.'), 'n', 'required');
 
-        $formFields[] = FormManager::AddEmail('requester_email', __('Email Address'), NULL,
+        $formFields[] = Form::AddEmail('requester_email', __('Email Address'), NULL,
             __('The email address of the person or organization that authored this application.'), 'e', 'required');
 
-        $formFields[] = FormManager::AddText('application_uri', __('Application Homepage'), NULL,
+        $formFields[] = Form::AddText('application_uri', __('Application Homepage'), NULL,
             __('The URL of your application homepage'), 'h', '');
 
-        $formFields[] = FormManager::AddText('callback_uri', __('Application Homepage'), NULL,
+        $formFields[] = Form::AddText('callback_uri', __('Application Homepage'), NULL,
             __('The call back URL for requests'), 'c', '');
 
         Theme::Set('form_fields', $formFields);

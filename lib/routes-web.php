@@ -134,7 +134,8 @@ $app->get('/update', function () use ($app) {
 // schedule
 //
 $app->get('/schedule/view', function () use ($app) {
-
+    $controller = new \Xibo\Controller\Schedule($app);
+    $controller->displayPage();
 })->name('scheduleView');
 
 //
@@ -162,22 +163,35 @@ $app->get('/layout/status/:id', function($id) use ($app) {
 // content
 //
 $app->get('/content/view', function () use ($app) {
-
+    $controller = new \Xibo\Controller\Library($app);
+    $controller->displayPage();
 })->name('contentView');
 
 //
 // display
 //
 $app->get('/display/view', function () use ($app) {
-
+    $controller = new \Xibo\Controller\Display($app);
+    $controller->displayPage();
 })->name('displayView');
 
 //
 // user
 //
 $app->get('/user/view', function () use ($app) {
-
+    $controller = new \Xibo\Controller\User($app);
+    $controller->displayPage();
 })->name('userView');
+
+$app->get('/user/welcome', function () use ($app) {
+    $controller = new \Xibo\Controller\Login($app);
+    $controller->userWelcome();
+})->setName('welcomeWizard');
+
+// Change Password
+$app->get('/user/password/view', function () use ($app) {
+
+})->setName('userChangePassword');
 
 //
 // log
@@ -197,56 +211,64 @@ $app->get('/log/delete', function () use ($app) {
 // campaign
 //
 $app->get('/campaign/view', function () use ($app) {
-
+    $controller = new \Xibo\Controller\Campaign($app);
+    $controller->displayPage();
 })->name('campaignView');
 
 //
 // template
 //
 $app->get('/template/view', function () use ($app) {
-
+    $controller = new \Xibo\Controller\Template($app);
+    $controller->displayPage();
 })->name('templateView');
 
 //
 // resolution
 //
 $app->get('/resolution/view', function () use ($app) {
-
+    $controller = new \Xibo\Controller\Resolution($app);
+    $controller->displayPage();
 })->name('resolutionView');
 
 //
 // dataset
 //
 $app->get('/dataset/view', function () use ($app) {
-
+    $controller = new \Xibo\Controller\DataSet($app);
+    $controller->displayPage();
 })->name('datasetView');
 
 //
 // displaygroup
 //
 $app->get('/displaygroup/view', function () use ($app) {
-
+    $controller = new \Xibo\Controller\DisplayGroup($app);
+    $controller->displayPage();
 })->name('displaygroupView');
 
 //
 // displayprofile
 //
 $app->get('/displayprofile/view', function () use ($app) {
-
+    $controller = new \Xibo\Controller\DisplayProfile($app);
+    $controller->displayPage();
 })->name('displayprofileView');
 
 //
 // group
 //
 $app->get('/group/view', function () use ($app) {
-
+    $controller = new \Xibo\Controller\UserGroup($app);
+    $controller->displayPage();
 })->name('groupView');
 
 //
 // admin
 //
 $app->get('/admin/view', function () use ($app) {
-
+    $controller = new \Xibo\Controller\Settings($app);
+    $controller->displayPage();
 })->name('adminView');
 
 //
@@ -260,28 +282,32 @@ $app->get('/oauth/view', function () use ($app) {
 // module
 //
 $app->get('/module/view', function () use ($app) {
-
+    $controller = new \Xibo\Controller\Module($app);
+    $controller->displayPage();
 })->name('moduleView');
 
 //
 // transition
 //
 $app->get('/transition/view', function () use ($app) {
-
+    $controller = new \Xibo\Controller\Transition($app);
+    $controller->displayPage();
 })->name('transitionView');
 
 //
 // sessions
 //
 $app->get('/sessions/view', function () use ($app) {
-
+    $controller = new \Xibo\Controller\Sessions($app);
+    $controller->displayPage();
 })->name('sessionsView');
 
 //
 // fault
 //
 $app->get('/fault/view', function () use ($app) {
-
+    $controller = new \Xibo\Controller\Fault($app);
+    $controller->displayPage();
 })->name('faultView');
 
 //
@@ -296,7 +322,8 @@ $app->get('/license/view', function () use ($app) {
 // help
 //
 $app->get('/help/view', function () use ($app) {
-
+    $controller = new \Xibo\Controller\Help($app);
+    $controller->displayPage();
 })->name('helpView');
 //
 
@@ -307,21 +334,9 @@ $app->get('/layout/add', function () use ($app) {
 })->setName('layoutAddForm');
 
 //
-// Users
-//
-$app->get('/user/welcome', function () use ($app) {
-    $controller = new \Xibo\Controller\Login($app);
-    $controller->userWelcome();
-})->setName('welcomeWizard');
-
-// Change Password
-$app->get('/user/password/view', function () use ($app) {
-
-})->setName('userChangePassword');
-
-//
 // Stats
 //
 $app->get('/stats', function () use ($app) {
-
+    $controller = new \Xibo\Controller\Stats($app);
+    $controller->displayPage();
 })->name('statsView');

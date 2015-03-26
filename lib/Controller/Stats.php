@@ -38,13 +38,13 @@ class Stats extends Base
         Theme::Set('form_meta', '<input type="hidden" name="p" value="stats"><input type="hidden" name="q" value="BandwidthGrid">');
 
         $formFields = array();
-        $formFields[] = FormManager::AddDatePicker('fromdt', __('From Date'), Date::getLocalDate(time() - (86400 * 35), 'Y-m-d'), NULL, 'f');
-        $formFields[] = FormManager::AddDatePicker('todt', __('To Date'), Date::getLocalDate(null, 'Y-m-d'), NULL, 't');
+        $formFields[] = Form::AddDatePicker('fromdt', __('From Date'), Date::getLocalDate(time() - (86400 * 35), 'Y-m-d'), NULL, 'f');
+        $formFields[] = Form::AddDatePicker('todt', __('To Date'), Date::getLocalDate(null, 'Y-m-d'), NULL, 't');
 
         // List of Displays this user has permission for
-        $displays = $this->user->DisplayGroupList(1);
+        $displays = $this->getUser()->DisplayGroupList(1);
         array_unshift($displays, array('displayid' => 0, 'displaygroup' => 'All'));
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
             'displayid',
             __('Display'),
             NULL,
@@ -64,13 +64,13 @@ class Stats extends Base
         Theme::Set('form_meta', '<input type="hidden" name="p" value="stats"><input type="hidden" name="q" value="AvailabilityGrid">');
 
         $formFields = array();
-        $formFields[] = FormManager::AddDatePicker('fromdt', __('From Date'), Date::getLocalDate(time() - (86400 * 35), 'Y-m-d'), NULL, 'f');
-        $formFields[] = FormManager::AddDatePicker('todt', __('To Date'), Date::getLocalDate(null, 'Y-m-d'), NULL, 't');
+        $formFields[] = Form::AddDatePicker('fromdt', __('From Date'), Date::getLocalDate(time() - (86400 * 35), 'Y-m-d'), NULL, 'f');
+        $formFields[] = Form::AddDatePicker('todt', __('To Date'), Date::getLocalDate(null, 'Y-m-d'), NULL, 't');
 
         // List of Displays this user has permission for
-        $displays = $this->user->DisplayGroupList(1);
+        $displays = $this->getUser()->DisplayGroupList(1);
         array_unshift($displays, array('displayid' => 0, 'displaygroup' => 'All'));
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
             'displayid',
             __('Display'),
             NULL,
@@ -91,13 +91,13 @@ class Stats extends Base
         Theme::Set('form_meta', '<input type="hidden" name="p" value="stats"><input type="hidden" name="q" value="StatsGrid">');
 
         $formFields = array();
-        $formFields[] = FormManager::AddDatePicker('fromdt', __('From Date'), Date::getLocalDate(time() - 86400, 'Y-m-d'), NULL, 'f');
-        $formFields[] = FormManager::AddDatePicker('todt', __('To Date'), Date::getLocalDate(null, 'Y-m-d'), NULL, 't');
+        $formFields[] = Form::AddDatePicker('fromdt', __('From Date'), Date::getLocalDate(time() - 86400, 'Y-m-d'), NULL, 'f');
+        $formFields[] = Form::AddDatePicker('todt', __('To Date'), Date::getLocalDate(null, 'Y-m-d'), NULL, 't');
 
         // List of Displays this user has permission for
-        $displays = $this->user->DisplayGroupList(1);
+        $displays = $this->getUser()->DisplayGroupList(1);
         array_unshift($displays, array('displayid' => 0, 'displaygroup' => 'All'));
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
             'displayid',
             __('Display'),
             NULL,
@@ -108,9 +108,9 @@ class Stats extends Base
             'd');
 
         // List of Media this user has permission for
-        $media = $this->user->MediaList();
+        $media = $this->getUser()->MediaList();
         array_unshift($media, array('mediaid' => 0, 'media' => 'All'));
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
             'mediaid',
             __('Media'),
             NULL,
@@ -167,7 +167,7 @@ class Stats extends Base
         Log::debug('Converted Times received are: FromDt=' . $fromDt . '. ToDt=' . $toDt);
 
         // Get an array of display id this user has access to.
-        $displays = $this->user->DisplayList();
+        $displays = $this->getUser()->DisplayList();
         $display_ids = array();
 
         foreach ($displays as $display) {
@@ -350,7 +350,7 @@ class Stats extends Base
         $displayId = \Xibo\Helper\Sanitize::getInt('displayid');
 
         // Get an array of display id this user has access to.
-        $displays = $this->user->DisplayList();
+        $displays = $this->getUser()->DisplayList();
         $displayIds = array();
 
         foreach ($displays as $display) {
@@ -430,7 +430,7 @@ class Stats extends Base
         $toDt = Date::getTimestampFromString(Kit::GetParam('todt', _POST, _STRING));
 
         // Get an array of display id this user has access to.
-        $displays = $this->user->DisplayList();
+        $displays = $this->getUser()->DisplayList();
         $displayIds = array();
 
         foreach ($displays as $display) {
@@ -544,13 +544,13 @@ class Stats extends Base
         Theme::Set('form_action', 'index.php?p=stats&q=OutputCSV');
 
         $formFields = array();
-        $formFields[] = FormManager::AddText('fromdt', __('From Date'), Date::getLocalDate(time() - (86400 * 35), 'Y-m-d'), NULL, 'f');
-        $formFields[] = FormManager::AddText('todt', __('To Date'), Date::getLocalDate(null, 'Y-m-d'), NULL, 't');
+        $formFields[] = Form::AddText('fromdt', __('From Date'), Date::getLocalDate(time() - (86400 * 35), 'Y-m-d'), NULL, 'f');
+        $formFields[] = Form::AddText('todt', __('To Date'), Date::getLocalDate(null, 'Y-m-d'), NULL, 't');
 
         // List of Displays this user has permission for
-        $displays = $this->user->DisplayGroupList(1);
+        $displays = $this->getUser()->DisplayGroupList(1);
         array_unshift($displays, array('displayid' => 0, 'displaygroup' => 'All'));
-        $formFields[] = FormManager::AddCombo(
+        $formFields[] = Form::AddCombo(
             'displayid',
             __('Display'),
             NULL,
@@ -595,7 +595,7 @@ class Stats extends Base
         header('Accept-Ranges: bytes');
 
         // Get an array of display id this user has access to.
-        $displays = $this->user->DisplayList();
+        $displays = $this->getUser()->DisplayList();
         $display_ids = array();
 
         foreach ($displays as $display) {

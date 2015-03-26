@@ -41,7 +41,7 @@ class Preview extends Base
         //if we have modify selected then we need to get some info
         if ($layoutId != 0) {
             // get the permissions
-            $layout = $this->user->LayoutList(NULL, array('layoutId' => $layoutId));
+            $layout = $this->getUser()->LayoutList(NULL, array('layoutId' => $layoutId));
 
             if (count($layout) <= 0)
                 trigger_error(__('You do not have permissions to view this layout'), E_USER_ERROR);

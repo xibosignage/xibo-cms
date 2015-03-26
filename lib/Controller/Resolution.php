@@ -189,7 +189,7 @@ class Resolution extends Base
 
         $resolution = \Xibo\Factory\ResolutionFactory::getById(Kit::GetParam('resolutionid', _GET, _INT));
 
-        if (!$this->user->checkEditable($resolution))
+        if (!$this->getUser()->checkEditable($resolution))
             trigger_error(__('Access Denied'));
 
         $formFields = array();
@@ -227,7 +227,7 @@ class Resolution extends Base
 
         $resolution = \Xibo\Factory\ResolutionFactory::getById(Kit::GetParam('resolutionid', _GET, _INT));
 
-        if (!$this->user->checkDeleteable($resolution))
+        if (!$this->getUser()->checkDeleteable($resolution))
             trigger_error(__('Access Denied'));
 
         // Set some information about the form
