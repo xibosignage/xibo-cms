@@ -119,7 +119,7 @@ class Session
             $usth->execute(array('session_id' => $key));
 
             return ($row['session_data']);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             Log::error($e->getMessage());
             $empty = '';
             return settype($empty, "string");
@@ -131,7 +131,8 @@ class Session
         Log::debug('Writing Session. Refresh Expiry = %d', $this->refreshExpiry);
         $newExp = time() + $this->max_lifetime;
         $lastaccessed = date("Y-m-d H:i:s");
-        $userAgent = substr(Kit::GetParam('HTTP_USER_AGENT', $_SERVER, _STRING, 'No user agent'), 0, 253);
+
+        $userAgent = substr(Sanitize::getString('HTTP_USER_AGENT', 'No user agent', $_SERVER), 0, 253);
         $remoteAddr = \Xibo\Helper\Sanitize::getString('REMOTE_ADDR');
 
         try {
@@ -142,8 +143,8 @@ class Session
 
             if (!$row = $sth->fetch()) {
                 // Insert a new session
-                $SQL = 'INSERT INTO session (session_id, session_data, session_expiration, lastaccessed, lastpage, userid, isexpired, useragent, remoteaddr) ';
-                $SQL .= ' VALUES (:session_id, :session_data, :session_expiration, :lastaccessed, :lastpage, :userid, :isexpired, :useragent, :remoteaddr) ';
+                $SQL = 'INSERT INTO `session` (session_id, session_data, session_expiration, lastaccessed, lastpage, userid, isexpired, useragent, remoteaddr)
+                          VALUES (:session_id, :session_data, :session_expiration, :lastaccessed, :lastpage, :userid, :isexpired, :useragent, :remoteaddr) ';
 
                 $isth = $dbh->prepare($SQL);
 
@@ -177,12 +178,12 @@ class Session
                     );
                 } else {
                     // Update the existing session
-                    $SQL = "UPDATE session SET ";
-                    $SQL .= " 	session_data = :session_data, ";
-                    $SQL .= " 	session_expiration = :session_expiration, ";
-                    $SQL .= " 	lastaccessed 	= :lastaccessed, ";
-                    $SQL .= " 	remoteaddr 	= :remoteaddr ";
-                    $SQL .= " WHERE session_id = :session_id ";
+                    $SQL = "UPDATE `session` SET
+                         	session_data = :session_data,
+                         	session_expiration = :session_expiration,
+                         	lastaccessed 	= :lastaccessed,
+                         	remoteaddr 	= :remoteaddr
+                         WHERE session_id = :session_id ";
 
                     $isth = $dbh->prepare($SQL);
 
@@ -197,7 +198,7 @@ class Session
                     );
                 }
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             Log::error($e->getMessage());
             return false;
         }

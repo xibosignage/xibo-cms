@@ -24,7 +24,7 @@
  *
  * The class name must be equal to the $this->type and the file name must be equal to modules/type.module.php
  */
-use Xibo\Helper\ApplicationState;
+use Widget\Module;
 use Xibo\Helper\Theme;
 
 class moduletemplate extends Module

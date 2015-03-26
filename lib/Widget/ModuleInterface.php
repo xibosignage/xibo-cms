@@ -20,20 +20,24 @@
  */
 
 
+namespace Widget;
 interface ModuleInterface
 {
-	// Some Default Add/Edit/Delete functionality each module should have
-	public function EditForm();
-	public function DeleteForm();
-	public function EditMedia();
-	public function DeleteMedia();
+    // Some Default Add/Edit/Delete functionality each module should have
+    public function EditForm();
 
-	// Return the name of the media as input by the user
-	public function GetName();
+    public function DeleteForm();
 
-	/**
-	 * HTML Content to completely render this module.
-	 */
+    public function EditMedia();
+
+    public function DeleteMedia();
+
+    // Return the name of the media as input by the user
+    public function GetName();
+
+    /**
+     * HTML Content to completely render this module.
+     */
     public function GetResource();
 
     /**
@@ -44,11 +48,15 @@ interface ModuleInterface
 
     /**
      * Install or Upgrade this module
-     * 	Expects $this->codeSchemaVersion to be set by the module.
+     *    Expects $this->codeSchemaVersion to be set by the module.
      */
     public function InstallOrUpdate();
+
     public function InstallModule($name, $description, $imageUri, $previewEnabled, $assignable, $settings);
+
     public function UpgradeModule($name, $description, $imageUri, $previewEnabled, $assignable, $settings);
+
     public function ModuleSettingsForm();
+
     public function ModuleSettings();
 }

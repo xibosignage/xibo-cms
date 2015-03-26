@@ -25,26 +25,29 @@ namespace Xibo\Middleware;
 
 use Slim\Middleware;
 use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Config;
 use Xibo\Helper\Log;
+use Xibo\Helper\Session;
 use Xibo\Helper\Theme;
+use Xibo\Helper\Translate;
 
 class State extends Middleware
 {
     public function call()
     {
         // Setup the translations for gettext
-        \Xibo\Helper\Translate::InitLocale();
+        Translate::InitLocale();
 
         // Inject
         // The state of the application response
         $this->app->container->singleton('state', function() { return new ApplicationState(); });
 
         // Create a session
-        $this->app->container->singleton('session', function() { return new \Xibo\Helper\Session(); });
+        $this->app->container->singleton('session', function() { return new Session(); });
         $this->app->session->Get('nothing');
 
         // Configure the timezone information
-        date_default_timezone_set(\Xibo\Helper\Config::GetSetting("defaultTimezone"));
+        date_default_timezone_set(Config::GetSetting("defaultTimezone"));
 
         // Do we need SSL/STS?
         // Deal with HTTPS/STS config
@@ -52,7 +55,7 @@ class State extends Middleware
             \Kit::IssueStsHeaderIfNecessary();
         }
         else {
-            if (\Xibo\Helper\Config::GetSetting('FORCE_HTTPS', 0) == 1) {
+            if (Config::GetSetting('FORCE_HTTPS', 0) == 1) {
                 $redirect = "https://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
                 header("Location: $redirect");
                 exit();

@@ -21,6 +21,7 @@
  */ 
 include_once('modules/3rdparty/forecast.php');
 use Forecast\Forecast;
+use Widget\Module;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Cache;
 use Xibo\Helper\Config;

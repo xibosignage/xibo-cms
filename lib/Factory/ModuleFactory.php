@@ -33,7 +33,7 @@ class ModuleFactory
     /**
      * Create a Module
      * @param string $type
-     * @return \Module
+     * @return \Widget\Module
      * @throws NotFoundException
      */
     public static function create($type)
@@ -49,7 +49,7 @@ class ModuleFactory
         $type = $module->type;
 
         $type = new $type();
-        /* @var \Module $type */
+        /* @var \Widget\Module $type */
         $type->setModule($module);
 
         return $type;
@@ -62,7 +62,7 @@ class ModuleFactory
      * @param int $ownerId
      * @param int $playlistId
      * @param int $regionId
-     * @return \Module
+     * @return \Widget\Module
      * @throws NotFoundException
      */
     public static function createForWidget($type, $widgetId = 0, $ownerId = 0, $playlistId = 0, $regionId = 0)
@@ -100,7 +100,7 @@ class ModuleFactory
      * Create a Module using a Widget
      * @param Widget $widget
      * @param Region $region
-     * @return \Module
+     * @return \Widget\Module
      */
     public static function createWithWidget($widget, $region)
     {

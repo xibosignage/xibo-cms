@@ -18,6 +18,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+namespace Widget;
+
 use Xibo\Controller\File;
 use Xibo\Entity\User;
 use Xibo\Helper\ApplicationState;
@@ -121,8 +123,7 @@ abstract class Module implements ModuleInterface
         // Save
         try {
             $this->module->save();
-        }
-        catch (Exception $e) {
+        } catch (Exception $e) {
             trigger_error(__('Cannot Save Settings'), E_USER_ERROR);
         }
     }
@@ -140,7 +141,7 @@ abstract class Module implements ModuleInterface
     /**
      * Get Option or Default
      * @param string $name
-     * @param mixed[Optional] $default
+     * @param mixed [Optional] $default
      * @return mixed
      */
     final protected function GetOption($name, $default = null)
@@ -154,7 +155,7 @@ abstract class Module implements ModuleInterface
      */
     final protected function getUser()
     {
-       return $this->user;
+        return $this->user;
     }
 
     /**
@@ -326,7 +327,7 @@ abstract class Module implements ModuleInterface
 
         // Add in any extra form fields we might have provided
         if ($extraFormFields != NULL && is_array($extraFormFields)) {
-            foreach($extraFormFields as $field) {
+            foreach ($extraFormFields as $field) {
                 $formFields[] = $field;
             }
         }
@@ -360,7 +361,7 @@ abstract class Module implements ModuleInterface
         // Return
         $response->SetFormSubmitResponse(__('The Widget has been Edited'));
         $response->loadForm = true;
-        $response->loadFormUri= 'index.php?p=timeline&q=Timeline&regionid=' . \Xibo\Helper\Sanitize::getInt('regionId');
+        $response->loadFormUri = 'index.php?p=timeline&q=Timeline&regionid=' . \Xibo\Helper\Sanitize::getInt('regionId');
 
     }
 
@@ -439,8 +440,7 @@ abstract class Module implements ModuleInterface
         if (count($this->widget->mediaIds) > 0) {
             $media = new Media();
             $name = $media->getName($this->widget->mediaIds[0]);
-        }
-        else {
+        } else {
             $name = $this->module->name;
         }
 
@@ -451,14 +451,14 @@ abstract class Module implements ModuleInterface
      * Preview code for a module
      * @param double $width
      * @param double $height
-     * @param int[Optional] $scaleOverride
+     * @param int [Optional] $scaleOverride
      * @return string
      */
     public function Preview($width, $height, $scaleOverride = 0)
     {
         if ($this->module->previewEnabled == 0)
             return $this->previewIcon();
-            
+
         return $this->PreviewAsClient($width, $height, $scaleOverride);
     }
 
@@ -475,13 +475,13 @@ abstract class Module implements ModuleInterface
      * Preview as the Client
      * @param double $width
      * @param double $height
-     * @param int[Optional] $scaleOverride
+     * @param int [Optional] $scaleOverride
      * @return string
      */
     public function PreviewAsClient($width, $height, $scaleOverride = 0)
     {
-        $widthPx = $width .'px';
-        $heightPx = $height .'px';
+        $widthPx = $width . 'px';
+        $heightPx = $height . 'px';
 
         return '<iframe scrolling="no" src="index.php?p=module&mod=' . $this->module->type . '&q=Exec&method=GetResource&raw=true&preview=true&scale_override=' . $scaleOverride . '&regionId=' . $this->region->regionId . '&widgetId=' . $this->getWidgetId() . '&width=' . $width . '&height=' . $height . '" width="' . $widthPx . '" height="' . $heightPx . '" style="border:0;"></iframe>';
     }
@@ -516,7 +516,7 @@ abstract class Module implements ModuleInterface
     {
         return false;
     }
-    
+
     /**
      * Form to Edit a transition
      */
@@ -524,55 +524,53 @@ abstract class Module implements ModuleInterface
     {
         $response = $this->getState();
 
-        if (!$this->auth->edit)
-        {
+        if (!$this->auth->edit) {
             $response->SetError('You do not have permission to edit this media.');
             $response->keepOpen = false;
             return $response;
         }
-        
+
         // Are we dealing with an IN or an OUT
         $type = \Kit::GetParam('type', _REQUEST, _WORD);
         $transition = '';
         $duration = '';
         $direction = '';
 
-        switch ($type)
-        {
+        switch ($type) {
             case 'in':
                 $transition = $this->GetOption('transIn');
                 $duration = $this->GetOption('transInDuration', 0);
                 $direction = $this->GetOption('transInDirection');
-                
+
                 break;
-            
+
             case 'out':
                 $transition = $this->GetOption('transOut');
                 $duration = $this->GetOption('transOutDuration', 0);
                 $direction = $this->GetOption('transOutDirection');
-                
+
                 break;
-            
+
             default:
                 trigger_error(_('Unknown transition type'), E_USER_ERROR);
         }
-        
+
         // Add none to the list
         $transitions = $this->user->TransitionAuth($type);
         $transitions[] = array('code' => '', 'transition' => 'None', 'class' => '');
-        
+
         // Compass points for direction
         $compassPoints = array(
-            array('id' => 'N', 'name' => __('North')), 
-            array('id' => 'NE', 'name' => __('North East')), 
-            array('id' => 'E', 'name' => __('East')), 
-            array('id' => 'SE', 'name' => __('South East')), 
-            array('id' => 'S', 'name' => __('South')), 
-            array('id' => 'SW', 'name' => __('South West')), 
+            array('id' => 'N', 'name' => __('North')),
+            array('id' => 'NE', 'name' => __('North East')),
+            array('id' => 'E', 'name' => __('East')),
+            array('id' => 'SE', 'name' => __('South East')),
+            array('id' => 'S', 'name' => __('South')),
+            array('id' => 'SW', 'name' => __('South West')),
             array('id' => 'W', 'name' => __('West')),
             array('id' => 'NW', 'name' => __('North West'))
         );
-        
+
         Theme::Set('form_id', 'TransitionForm');
         Theme::Set('form_action', 'index.php?p=module&mod=' . $this->module->type . '&q=Exec&method=TransitionEdit');
         Theme::Set('form_meta', '
@@ -581,28 +579,28 @@ abstract class Module implements ModuleInterface
             ');
 
         $formFields[] = Form::AddCombo(
-                    'transitionType', 
-                    __('Transition'), 
-                    $transition,
-                    $transitions,
-                    'code',
-                    'transition',
-                    __('What transition should be applied when this region is finished?'), 
-                    't');
+            'transitionType',
+            __('Transition'),
+            $transition,
+            $transitions,
+            'code',
+            'transition',
+            __('What transition should be applied when this region is finished?'),
+            't');
 
         $formFields[] = Form::AddNumber('transitionDuration', __('Duration'), $duration,
             __('The duration for this transition, in milliseconds.'), 'l', '', 'transition-group');
-        
+
         $formFields[] = Form::AddCombo(
-                    'transitionDirection', 
-                    __('Direction'), 
-                    $direction,
-                    $compassPoints,
-                    'id',
-                    'name',
-                    __('The direction for this transition. Only appropriate for transitions that move, such as Fly.'),
-                    'd',
-                    'transition-group transition-direction');
+            'transitionDirection',
+            __('Direction'),
+            $direction,
+            $compassPoints,
+            'id',
+            'name',
+            __('The direction for this transition. Only appropriate for transitions that move, such as Fly.'),
+            'd',
+            'transition-group transition-direction');
 
         // Add some dependencies
         $response->AddFieldAction('transitionType', 'init', '', array('.transition-group' => array('display' => 'none')));
@@ -618,7 +616,7 @@ abstract class Module implements ModuleInterface
 
         // Always include the save button
         $response->AddButton(__('Save'), '$("#TransitionForm").submit()');
-        
+
         // Output the form and dialog
         Theme::Set('form_fields', $formFields);
         $response->html = Theme::RenderReturn('form_render');
@@ -626,10 +624,10 @@ abstract class Module implements ModuleInterface
         $response->dialogSize = true;
         $response->dialogWidth = '450px';
         $response->dialogHeight = '280px';
-        
+
         return $response;
     }
-    
+
     /**
      * Edit a transition
      */
@@ -639,38 +637,36 @@ abstract class Module implements ModuleInterface
 
         if (!$this->auth->edit)
             throw new Exception(__('You do not have permission to edit this media.'));
-        
+
         // Get the transition type
         $transitionType = \Kit::GetParam('transitionType', _POST, _WORD);
         $duration = \Kit::GetParam('transitionDuration', _POST, _INT, 0);
         $direction = \Kit::GetParam('transitionDirection', _POST, _WORD, '');
         $type = \Kit::GetParam('type', _REQUEST, _WORD);
-        
-        switch ($type)
-        {
+
+        switch ($type) {
             case 'in':
                 $this->SetOption('transIn', $transitionType);
                 $this->SetOption('transInDuration', $duration);
                 $this->SetOption('transInDirection', $direction);
-                
+
                 break;
-            
+
             case 'out':
                 $this->SetOption('transOut', $transitionType);
                 $this->SetOption('transOutDuration', $duration);
                 $this->SetOption('transOutDirection', $direction);
-                
+
                 break;
-            
+
             default:
                 trigger_error(_('Unknown transition type'), E_USER_ERROR);
         }
-        
+
         // This saves the Media Object to the Region
         $this->saveWidget();
-        
-        if (\Kit::GetParam('designer', _REQUEST, _INT))
-        {
+
+        if (\Kit::GetParam('designer', _REQUEST, _INT)) {
             // We want to load a new form
             $response->loadForm = true;
             $response->loadFormUri = 'index.php?p=timeline&regionid=' . \Kit::GetParam('regionId', _REQUEST, _INT) . '&q=RegionOptions';
@@ -678,7 +674,7 @@ abstract class Module implements ModuleInterface
 
         return $response;
     }
-    
+
     /**
      * Get the the Transition for this media
      * @param string $type Either "in" or "out"
@@ -687,27 +683,26 @@ abstract class Module implements ModuleInterface
     public function GetTransition($type)
     {
 
-        switch ($type)
-        {
+        switch ($type) {
             case 'in':
                 $code = $this->GetOption('transIn');
                 break;
-            
+
             case 'out':
                 $code = $this->GetOption('transOut');
                 break;
-            
+
             default:
                 $code = '';
                 trigger_error(_('Unknown transition type'), E_USER_ERROR);
         }
-        
+
         if ($code == '')
             return __('None');
-        
+
         // Look up the real transition name
         $transition = $this->user->TransitionAuth('', $code);
-        
+
         return __($transition[0]['transition']);
     }
 
@@ -715,7 +710,8 @@ abstract class Module implements ModuleInterface
      * Default behaviour for install / upgrade
      * this should be overridden for new modules
      */
-    public function InstallOrUpdate() {
+    public function InstallOrUpdate()
+    {
 
         if ($this->module->renderAs != 'native')
             throw new Exception(__('Module must implement InstallOrUpgrade'));
@@ -731,8 +727,9 @@ abstract class Module implements ModuleInterface
 
     }
 
-    public function InstallModule($name, $description, $imageUri, $previewEnabled, $assignable, $settings) {
-        
+    public function InstallModule($name, $description, $imageUri, $previewEnabled, $assignable, $settings)
+    {
+
         Log::notice('Request to install module with name: ' . $name, 'module', 'InstallModule');
 
         try {
@@ -753,40 +750,40 @@ abstract class Module implements ModuleInterface
                 throw new Exception(__('Assignable variable must be a number'));
 
             $dbh = \Xibo\Storage\PDOConnect::init();
-        
+
             $sth = $dbh->prepare('
-                    INSERT INTO `module` (`Module`, `Name`, `Enabled`, `RegionSpecific`, `Description`, 
-                        `ImageUri`, `SchemaVersion`, `ValidExtensions`, `PreviewEnabled`, `assignable`, `render_as`, `settings`) 
-                    VALUES (:module, :name, :enabled, :region_specific, :description, 
+                    INSERT INTO `module` (`Module`, `Name`, `Enabled`, `RegionSpecific`, `Description`,
+                        `ImageUri`, `SchemaVersion`, `ValidExtensions`, `PreviewEnabled`, `assignable`, `render_as`, `settings`)
+                    VALUES (:module, :name, :enabled, :region_specific, :description,
                         :image_uri, :schema_version, :valid_extensions, :preview_enabled, :assignable, :render_as, :settings);
                 ');
 
             Log::notice('Executing SQL', 'module', 'InstallModule');
 
             $sth->execute(array(
-                    'module' =>  $this->module->type,
-                    'name' =>  $name,
-                    'enabled' =>  1,
-                    'region_specific' =>  1,
-                    'description' =>  $description, 
-                    'image_uri' =>  $imageUri,
-                    'schema_version' =>  $this->codeSchemaVersion,
-                    'valid_extensions' =>  '',
-                    'preview_enabled' =>  $previewEnabled,
-                    'assignable' =>  $assignable,
-                    'render_as' =>  'html',
-                    'settings' => json_encode($settings)
-                ));
-        }
-        catch (Exception $e) {
+                'module' => $this->module->type,
+                'name' => $name,
+                'enabled' => 1,
+                'region_specific' => 1,
+                'description' => $description,
+                'image_uri' => $imageUri,
+                'schema_version' => $this->codeSchemaVersion,
+                'valid_extensions' => '',
+                'preview_enabled' => $previewEnabled,
+                'assignable' => $assignable,
+                'render_as' => 'html',
+                'settings' => json_encode($settings)
+            ));
+        } catch (Exception $e) {
             Log::Error($e->getMessage());
-        
+
             throw new Exception(__('Unable to install module. Please check the Error Log'));
         }
     }
 
-    public function UpgradeModule($name, $description, $imageUri, $previewEnabled, $assignable, $settings) {
-        
+    public function UpgradeModule($name, $description, $imageUri, $previewEnabled, $assignable, $settings)
+    {
+
         try {
             // Validate some things.
             if ($this->module->moduleId == '')
@@ -805,27 +802,26 @@ abstract class Module implements ModuleInterface
                 throw new Exception(__('Assignable variable must be a number'));
 
             $dbh = \Xibo\Storage\PDOConnect::init();
-        
+
             $sth = $dbh->prepare('
-                    UPDATE `module` SET `Name` = :name, `Description` = :description, 
-                        `ImageUri` = :image_uri, `SchemaVersion` = :schema_version, `PreviewEnabled` = :preview_enabled, 
+                    UPDATE `module` SET `Name` = :name, `Description` = :description,
+                        `ImageUri` = :image_uri, `SchemaVersion` = :schema_version, `PreviewEnabled` = :preview_enabled,
                         `assignable` = :assignable, `settings` = :settings
                      WHERE ModuleID = :module_id
                 ');
 
             $sth->execute(array(
-                    'name' =>  $name,
-                    'description' =>  $description, 
-                    'image_uri' =>  $imageUri,
-                    'schema_version' =>  $this->codeSchemaVersion,
-                    'preview_enabled' =>  $previewEnabled,
-                    'assignable' =>  $assignable,
-                    'settings' => $settings,
-                    'module_id' => $this->module->moduleId
-                ));
-        }
-        catch (Exception $e) {
-            
+                'name' => $name,
+                'description' => $description,
+                'image_uri' => $imageUri,
+                'schema_version' => $this->codeSchemaVersion,
+                'preview_enabled' => $previewEnabled,
+                'assignable' => $assignable,
+                'settings' => $settings,
+                'module_id' => $this->module->moduleId
+            ));
+        } catch (Exception $e) {
+
             Log::Error($e->getMessage());
 
             throw $e;
@@ -835,14 +831,16 @@ abstract class Module implements ModuleInterface
     /**
      * Form for updating the module settings
      */
-    public function ModuleSettingsForm() {
+    public function ModuleSettingsForm()
+    {
         return array();
     }
 
     /**
      * Process any module settings
      */
-    public function ModuleSettings() {
+    public function ModuleSettings()
+    {
         return array();
     }
 
@@ -851,7 +849,8 @@ abstract class Module implements ModuleInterface
      * @param array $settings The Settings
      * @throws InvalidArgumentException
      */
-    public function UpdateModuleSettings($settings) {
+    public function UpdateModuleSettings($settings)
+    {
         if (!is_array($settings))
             throw new InvalidArgumentException(__('Module settings must be an array'));
 
@@ -871,7 +870,8 @@ abstract class Module implements ModuleInterface
      * @param mixed $default
      * @return mixed
      */
-    public function GetSetting($setting, $default = NULL) {
+    public function GetSetting($setting, $default = NULL)
+    {
         if (isset($this->module->settings[$setting]))
             return $this->module->settings[$setting];
         else
