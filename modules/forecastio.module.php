@@ -21,8 +21,8 @@
  */ 
 include_once('modules/3rdparty/forecast.php');
 use Forecast\Forecast;
-use Xibo\Helper\Date;
 use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Date;
 use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
 
@@ -756,10 +756,11 @@ class ForecastIo extends Module
         return $template;
     }
     
+    public function GetName()
+    {
+        return $this->GetOption('name');
     }
 
-    public function GetName() {
-        return $this->GetOption('name');
     public function IsValid() {
         // Using the information you have in your module calculate whether it is valid or not.
         // 0 = Invalid

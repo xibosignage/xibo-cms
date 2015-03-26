@@ -54,12 +54,15 @@ class Date
 
         if (Date::getCalendarType() == 'Jalali') {
             return JDateTime::date($format, $timestamp, false);
-        } else {
+        }
+        else {
+
             // Do we have the international date formatter?
             if (Config::GetSetting('USE_INTL_DATEFORMAT') == 1 && Config::CheckIntlDateFormat()) {
                 $formatter = new IntlDateFormatter(Config::GetSetting('DEFAULT_LANGUAGE'), IntlDateFormatter::FULL, IntlDateFormatter::FULL, Config::GetSetting('DEFAULT_TIMEZONE'), IntlDateFormatter::GREGORIAN, $format);
                 return $formatter->format($timestamp);
-            } else {
+            }
+            else {
                 return date($format, $timestamp);
             }
         }
@@ -74,7 +77,7 @@ class Date
             $format = 'Y-m-d H:i:s';
 
         // Always return ISO formatted dates
-        return date($format, $timestamp);
+        return gmdate($format, $timestamp);
     }
 
     public static function getMidnightSystemDate($timestamp = NULL, $format = NULL)
