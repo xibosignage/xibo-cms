@@ -181,8 +181,6 @@ class StatusDashboard extends Base
                 File::EnsureLibraryExists();
 
                 // Use SimplePie to get the feed
-                include_once('3rdparty/simplepie/autoloader.php');
-
                 $feed = new SimplePie();
                 $feed->set_cache_location(File::GetLibraryCacheUri());
                 $feed->set_feed_url(Theme::GetConfig('latest_news_url'));

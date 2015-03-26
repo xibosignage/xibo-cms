@@ -4,7 +4,7 @@
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "cd09309a39a18f4f4f7eb8dbf42b993c",
+    "hash": "22b71b5faecc3281ad723beaae6f1ce2",
     "packages": [
         {
             "name": "entomb/slim-json-api",
@@ -407,6 +407,62 @@
             "time": "2012-12-21 11:40:51"
         },
         {
+            "name": "simplepie/simplepie",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/dasgarner/simplepie.git",
+                "reference": "7cddd258acb2475b4e43377105c1f85684cd5091"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/dasgarner/simplepie/zipball/7cddd258acb2475b4e43377105c1f85684cd5091",
+                "reference": "7cddd258acb2475b4e43377105c1f85684cd5091",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.2.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "SimplePie": "library"
+                }
+            },
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "authors": [
+                {
+                    "name": "Ryan Parman",
+                    "homepage": "http://ryanparman.com/",
+                    "role": "Creator, alumnus developer"
+                },
+                {
+                    "name": "Geoffrey Sneddon",
+                    "homepage": "http://gsnedders.com/",
+                    "role": "Alumnus developer"
+                },
+                {
+                    "name": "Ryan McCue",
+                    "email": "me@ryanmccue.info",
+                    "homepage": "http://ryanmccue.info/",
+                    "role": "Developer"
+                }
+            ],
+            "description": "A simple Atom/RSS parsing library for PHP",
+            "homepage": "http://simplepie.org/",
+            "keywords": [
+                "atom",
+                "feeds",
+                "rss"
+            ],
+            "support": {
+                "source": "https://github.com/dasgarner/simplepie/tree/master"
+            },
+            "time": "2015-03-26 15:16:20"
+        },
+        {
             "name": "slim/slim",
             "version": "2.6.2",
             "source": {
@@ -511,7 +567,8 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "ezyang/htmlpurifier": 20
+        "ezyang/htmlpurifier": 20,
+        "simplepie/simplepie": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,
