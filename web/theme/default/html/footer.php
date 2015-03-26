@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 use Xibo\Helper\Theme;
+use Xibo\Helper\Translate;
 
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
@@ -46,7 +47,7 @@ Theme::SetTranslation('enterText', Theme::Translate('Enter text...'));
         <script src="<?php echo Theme::rootPath('theme/default/libraries/bootstrap/js/bootbox.min.js'); ?>"></script>
         <script src="<?php echo Theme::rootPath('theme/default/libraries/bootstrap-datetimepicker/js/jalali-date.js'); ?>"></script>
         <script src="<?php echo Theme::rootPath('theme/default/libraries/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js'); ?>"></script>
-        <?php echo Theme::Script('libraries/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.' . TranslationEngine::GetJsLocale() . '.js'); ?>
+        <?php echo Theme::Script('libraries/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.' . Translate::GetJsLocale() . '.js'); ?>
         <script src="<?php echo Theme::rootPath('theme/default/libraries/jquery-tablesorter/js/jquery.tablesorter.min.js'); ?>"></script>
         <script src="<?php echo Theme::rootPath('theme/default/libraries/jquery-tablesorter/js/jquery.tablesorter.widgets.min.js'); ?>"></script>
         <script src="<?php echo Theme::rootPath('theme/default/libraries/jquery-tablesorter/js/parsers/parser-input-select.js'); ?>"></script>
@@ -59,7 +60,7 @@ Theme::SetTranslation('enterText', Theme::Translate('Enter text...'));
         <script src="<?php echo Theme::rootPath('theme/default/libraries/underscore/underscore-min.js'); ?>"></script>
         <script src="<?php echo Theme::rootPath('theme/default/libraries/jstimezonedetect/jstz.min.js'); ?>"></script>
         <script src="<?php echo Theme::rootPath('theme/default/libraries/calendar/js/calendar.js'); ?>"></script>
-        <?php echo Theme::Script('libraries/calendar/js/language/' . TranslationEngine::GetJsLocale() . '.js'); ?>
+        <?php echo Theme::Script('libraries/calendar/js/language/' . Translate::GetJsLocale() . '.js'); ?>
         <script src="<?php echo Theme::rootPath('theme/default/libraries/ckeditor/ckeditor.js'); ?>"></script>
     	<script src="<?php echo Theme::rootPath('theme/default/libraries/bootstrap/js/bootstrap-ckeditor-fix.js'); ?>"></script>
         <script src="<?php echo Theme::rootPath('theme/default/libraries/jquery-file-upload/js/tmpl.min.js'); ?>"></script>
@@ -84,7 +85,7 @@ Theme::SetTranslation('enterText', Theme::Translate('Enter text...'));
     	<script src="<?php echo Theme::rootPath('theme/default/js/xibo-datasets.js'); ?>"></script>
         <script type="text/javascript">
         var translations = <?php echo ((Theme::Get('translations') == '') ? '{}' : Theme::Get('translations')); ?>;
-        var language = "<?php echo TranslationEngine::GetJsLocale(); ?>";
+        var language = "<?php echo Translate::GetJsLocale(); ?>";
         var dateFormat = "<?php echo Config::GetSetting('DATE_FORMAT', 'Y-m-d h:i'); ?>";
         var calendarType = "<?php echo Config::GetSetting('CALENDAR_TYPE'); ?>";
         var baseUrl = "<?php echo Theme::Get('root'); ?>";

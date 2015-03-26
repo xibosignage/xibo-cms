@@ -18,7 +18,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-use Xibo\Helper\Theme;defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
+use Xibo\Helper\Theme;use Xibo\Helper\Translate;defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 ?><!DOCTYPE html>
 <html lang="en">
   <head>
@@ -89,7 +89,7 @@ use Xibo\Helper\Theme;defined('XIBO') or die("Sorry, you are not allowed to dire
 
     <script type="text/javascript">
         var translations = <?php echo ((Theme::Get('translations') == '') ? '{}' : Theme::Get('translations')); ?>;
-        var language = "<?php echo TranslationEngine::GetJsLocale(); ?>";
+        var language = "<?php echo Translate::GetJsLocale(); ?>";
         var dateFormat = "<?php echo Config::GetSetting('DATE_FORMAT', 'Y-m-d h:i'); ?>";
         var calendarType = "<?php echo Config::GetSetting('CALENDAR_TYPE'); ?>";
     </script>

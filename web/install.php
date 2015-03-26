@@ -21,6 +21,7 @@
 use Xibo\Entity\User;
 use Xibo\Helper\Install;
 use Xibo\Helper\Theme;
+use Xibo\Helper\Translate;
 
 DEFINE('XIBO', true);
 DEFINE('MAX_EXECUTION', true);
@@ -57,12 +58,12 @@ $settingsExists = false;
 if (file_exists('settings.php')) {
     include_once('settings.php');
     // Set-up the translations for get text
-    TranslationEngine::InitLocale('en_GB');
+    Translate::InitLocale('en_GB');
 
     $settingsExists = true;
 }
 else {
-    TranslationEngine::InitLocale();
+    Translate::InitLocale();
 }
 
 // Define an auto-load function

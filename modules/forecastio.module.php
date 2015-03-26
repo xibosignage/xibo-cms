@@ -25,6 +25,7 @@ use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Date;
 use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
+use Xibo\Helper\Translate;
 
 class ForecastIo extends Module
 {
@@ -180,7 +181,7 @@ class ForecastIo extends Module
             'value', 
             __('Select the units you would like to use.'), 'u');
 
-        $formFields['advanced'][] = FormManager::AddCombo('lang', __('Language'), TranslationEngine::GetLocale(2),
+        $formFields['advanced'][] = FormManager::AddCombo('lang', __('Language'), Translate::GetLocale(2),
             $this->supportedLanguages(),
             'id',
             'value',
@@ -323,7 +324,7 @@ class ForecastIo extends Module
             'value', 
             __('Select the units you would like to use.'), 'u');
 
-        $formFields['advanced'][] = FormManager::AddCombo('lang', __('Language'), $this->GetOption('lang', TranslationEngine::GetLocale(2)),
+        $formFields['advanced'][] = FormManager::AddCombo('lang', __('Language'), $this->GetOption('lang', Translate::GetLocale(2)),
             $this->supportedLanguages(),
             'id',
             'value',

@@ -20,6 +20,7 @@
  */
 
 use Xibo\Helper\Log;
+use Xibo\Helper\Translate;
 
 define('SCHEDULEDTASK', true);
 define('XIBO', true);
@@ -93,7 +94,7 @@ if (Log::getLevel(Config::GetSetting('audit')) == 10)
     error_reporting(E_ALL);
 
 // Setup the translations for gettext
-TranslationEngine::InitLocale();
+Translate::InitLocale();
 
 // Output HTML Headers
 print '<html>';

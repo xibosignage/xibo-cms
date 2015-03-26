@@ -17,17 +17,17 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- */ 
+ */
 DEFINE('XIBO', true);
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 require '../lib/autoload.php';
 require '../vendor/autoload.php';
 
 // Classes we need to deprecate, namespace or put in composer
-require_once("../3rdparty/php-gettext/streams.php");
-require_once("../3rdparty/php-gettext/gettext.php");
 require '../lib/app/kit.class.php';
 require '../config/config.class.php';
-require '../lib/app/translationengine.class.php';
 require '../lib/app/formmanager.class.php';
 require '../lib/app/session.class.php';
 require '../lib/data/data.class.php';
@@ -38,9 +38,6 @@ if (!file_exists('settings.php'))
 
 // Load the config
 Config::Load();
-
-// Setup the translations for gettext
-TranslationEngine::InitLocale();
 
 // Create a logger
 $logger = new \Flynsarmy\SlimMonolog\Log\MonologWriter(array(

@@ -13,6 +13,7 @@
     "flynsarmy/slim-monolog": "~1.0",
     "ezyang/htmlpurifier": "dev-master",
     "simplepie/simplepie": "dev-master",
-    "sallar/jdatetime": "dev-master"
+    "sallar/jdatetime": "dev-master",
+    "gettext/gettext": "~3.3"
   }
 }

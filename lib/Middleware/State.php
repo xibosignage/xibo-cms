@@ -32,6 +32,9 @@ class State extends Middleware
 {
     public function call()
     {
+        // Setup the translations for gettext
+        \Xibo\Helper\Translate::InitLocale();
+
         // Inject
         // The state of the application response
         $this->app->container->singleton('state', function() { return new ApplicationState(); });
