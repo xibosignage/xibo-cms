@@ -514,7 +514,7 @@ class Config
 			$status = 1;
 		}
 		else {
-			$this->envWarning = true;
+            $this->envFault = true;
 		}
 
 		$rows[] = array(
