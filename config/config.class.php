@@ -559,6 +559,23 @@ class Config
             'status' => $status,
             'advice' => $advice
         );
+
+        // Check to see if cURL is installed
+        $advice = __('cURL is used to fetch data from the Internet or Local Network');
+        if ($this->checkCurlInstalled()) {
+            $status = 1;
+        }
+        else {
+            $this->envFault = true;
+            $status = 0;
+            $advice .= __(' and is required.');
+        }
+
+        $rows[] = array(
+            'item' => __('cURL'),
+            'status' => $status,
+            'advice' => $advice
+        );
 		
 		$this->envTested = true;
 
@@ -733,6 +750,14 @@ class Config
     static function CheckIntlDateFormat()
     {
         return class_exists('IntlDateFormatter');
+    }
+
+    /**
+     * Check to see if curl is installed
+     */
+    static function checkCurlInstalled()
+    {
+        return function_exists('curl_version');
     }
 	
 	/**
