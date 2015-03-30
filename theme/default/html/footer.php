@@ -57,7 +57,7 @@ Theme::SetTranslation('enterText', Theme::Translate('Enter text...'));
         <script src="theme/default/libraries/underscore/underscore-min.js"></script>
         <script src="theme/default/libraries/jstimezonedetect/jstz.min.js"></script>
         <script src="theme/default/libraries/calendar/js/calendar.js"></script>
-        <?php echo Theme::Script('libraries/calendar/js/language/' . TranslationEngine::GetJsLocale() . '.js'); ?>
+        <?php echo Theme::Script('libraries/calendar/js/language/' . ((strlen(TranslationEngine::GetJsLocale() <= 2)) ? TranslationEngine::GetJsLocale() . '-' . strtoupper(TranslationEngine::GetJsLocale()) : TranslationEngine::GetJsLocale()) . '.js'); ?>
         <script src="theme/default/libraries/ckeditor/ckeditor.js"></script>
     	<script src="theme/default/libraries/bootstrap/js/bootstrap-ckeditor-fix.js"></script>
         <script src="theme/default/libraries/jquery-file-upload/js/tmpl.min.js"></script>
@@ -85,6 +85,7 @@ Theme::SetTranslation('enterText', Theme::Translate('Enter text...'));
         var language = "<?php echo TranslationEngine::GetJsLocale(); ?>";
         var dateFormat = "<?php echo Config::GetSetting('DATE_FORMAT', 'Y-m-d h:i'); ?>";
         var calendarType = "<?php echo Config::GetSetting('CALENDAR_TYPE'); ?>";
+        var calendarLanguage = "<?php echo ((strlen(TranslationEngine::GetJsLocale() <= 2)) ? TranslationEngine::GetJsLocale() . '-' . strtoupper(TranslationEngine::GetJsLocale()) : TranslationEngine::GetJsLocale()); ?>";
         </script>
 	</body>
 </html>
