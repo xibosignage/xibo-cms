@@ -542,6 +542,23 @@ class Config
 				'status' => $status,
 				'advice' => $advice
 			);
+
+        // Check to see if Internationalization support is available
+        $advice = __('International Support for formatting Dates, Numbers, etc.');
+        if ($this->CheckIntlDateFormat()) {
+            $status = 1;
+        }
+        else {
+            $this->envWarning = true;
+            $status = 2;
+            $advice .= __('Translations will still function without this PHP module, however dates, times and numbers will not be shown in your locale.');
+        }
+
+        $rows[] = array(
+            'item' => __('Internationalization'),
+            'status' => $status,
+            'advice' => $advice
+        );
 		
 		$this->envTested = true;
 
