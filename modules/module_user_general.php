@@ -1366,9 +1366,17 @@ class User {
             $SQL .= "       )";
         }
 
+        // Filter by client version
+        if (Kit::GetParam('clientVersion', $filter_by, _STRING) != '') {
+            $clientVersion = '%' . $this->db->escape_string(Kit::GetParam('clientVersion', $filter_by, _STRING)) . '%';
+            $SQL .= sprintf(" AND (display.client_version LIKE '%s' OR display.client_type LIKE '%s') ", $clientVersion, $clientVersion);
+        }
+
         // Sorting?
         if (is_array($sort_order))
             $SQL .= 'ORDER BY ' . implode(',', $sort_order);
+
+        Debug::sql($SQL, $filter_by);
 
         if (!$result = $this->db->query($SQL))
         {
