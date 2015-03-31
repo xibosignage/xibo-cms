@@ -172,6 +172,18 @@ class Config
 			trigger_error(__('No Version information - please contact technical support'), E_USER_WARNING);
 		}
 	}
+
+    /**
+     * Should the host be considered a proxy exception
+     * @param $host
+     * @return bool
+     */
+    public static function isProxyException($host)
+    {
+        $proxyException = Config::GetSetting('PROXY_EXCEPTIONS');
+Debug::Audit($host . ' in ' . $proxyException . '. Pos = ' . stripos($host, $proxyException));
+        return ($proxyException != '' && stripos($host, $proxyException) > -1);
+    }
 	
 	/**
 	 * Checks the Environment and Determines if it is suitable
