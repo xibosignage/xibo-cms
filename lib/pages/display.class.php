@@ -72,6 +72,7 @@ class displayDAO extends baseDAO
             $filter_showView,
             array(
                 array('key' => 0, 'value' => __('Default')),
+                array('key' => 4, 'value' => __('Default with Description')),
                 array('key' => 1, 'value' => __('Screen shot thumbnails')),
                 array('key' => 2, 'value' => __('Screen shot thumbnails when Logged In')),
                 array('key' => 3, 'value' => __('Extended Display Status'))
@@ -428,7 +429,7 @@ class displayDAO extends baseDAO
                 array('name' => 'storageAvailableSpaceFormatted', 'title' => __('Storage Available'), 'hidden' => ($filter_showView != 3)),
                 array('name' => 'storageTotalSpaceFormatted', 'title' => __('Storage Total'), 'hidden' => ($filter_showView != 3)),
                 array('name' => 'storagePercentage', 'title' => __('Storage Free %'), 'hidden' => ($filter_showView != 3)),
-                array('name' => 'description', 'title' => __('Description'), 'hidden' => ($filter_showView != 0)),
+                array('name' => 'description', 'title' => __('Description'), 'hidden' => ($filter_showView != 4)),
                 array('name' => 'layout', 'title' => __('Default Layout'), 'hidden' => ($filter_showView != 0)),
                 array('name' => 'inc_schedule', 'title' => __('Interleave Default'), 'icons' => true, 'hidden' => ($filter_showView == 1 || $filter_showView == 2)),
                 array('name' => 'email_alert', 'title' => __('Email Alert'), 'icons' => true, 'hidden' => ($filter_showView != 0)),
