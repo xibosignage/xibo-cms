@@ -93,8 +93,8 @@ CREATE TABLE IF NOT EXISTS `display` (
   `displayprofileid` int(11) NULL,
   `currentLayoutId` int(11) NULL,
   `screenShotRequested` tinyint(4) NOT NULL DEFAULT '0',
-  `storageAvailableSpace` int(11) NULL,
-  `storageTotalSpace` int(11) NULL,
+  `storageAvailableSpace` bigint(20) NULL,
+  `storageTotalSpace` bigint(20) NULL,
   PRIMARY KEY (`displayid`),
   KEY `defaultplaylistid` (`defaultlayoutid`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
