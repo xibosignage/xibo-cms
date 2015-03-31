@@ -109,18 +109,23 @@ class User {
         $db =& $this->db;
 
         Kit::ClassLoader('userdata');
-        
-        // Get the SALT for this username
-        if (!$userInfo = $db->GetSingleRow(sprintf("SELECT UserID, UserName, UserPassword, UserTypeID, CSPRNG FROM `user` WHERE UserName = '%s'", $db->escape_string($username)))) {
-            setMessage(__('Username or Password incorrect'));
-            return false;
-        }
 
-        // User Data Object to check the password
-        $userData = new Userdata($db);
+        if (Config::Version('DBVersion') < 62) {
 
-        // Is SALT empty
-        if ($userInfo['CSPRNG'] == 0) {
+            // We can't do CSPRNG because the field doesn't exist, so we need to do standard user login
+            // This can ONLY happen during an upgrade.
+            $dbh = PDOConnect::init();
+            $sth = $dbh->prepare('SELECT UserID, UserName, UserPassword, UserTypeID FROM `user` WHERE UserName = :userName');
+            $sth->execute(array('userName' => $username));
+
+            $rows = $sth->fetchAll();
+
+            if (count($rows) != 1) {
+                setMessage(__('Username or Password incorrect'));
+                return false;
+            }
+
+            $userInfo = $rows[0];
 
             // Check the password using a MD5
             if ($userInfo['UserPassword'] != md5($password)) {
@@ -128,15 +133,35 @@ class User {
                 return false;
             }
 
-            // Now that we are validated, generate a new SALT and set the users password.
-            $userData->ChangePassword(Kit::ValidateParam($userInfo['UserID'], _INT), null, $password, $password, true /* Force Change */);
         }
         else {
-            
-            // Check the users password using the random SALTED password
-            if ($userData->validate_password($password, $userInfo['UserPassword']) === false) {
+            // Get the SALT for this username
+            if (!$userInfo = $db->GetSingleRow(sprintf("SELECT UserID, UserName, UserPassword, UserTypeID, CSPRNG FROM `user` WHERE UserName = '%s'", $db->escape_string($username)))) {
                 setMessage(__('Username or Password incorrect'));
                 return false;
+            }
+
+            // User Data Object to check the password
+            $userData = new Userdata($db);
+
+            // Is SALT empty
+            if ($userInfo['CSPRNG'] == 0) {
+
+                // Check the password using a MD5
+                if ($userInfo['UserPassword'] != md5($password)) {
+                    setMessage(__('Username or Password incorrect'));
+                    return false;
+                }
+
+                // Now that we are validated, generate a new SALT and set the users password.
+                $userData->ChangePassword(Kit::ValidateParam($userInfo['UserID'], _INT), null, $password, $password, true /* Force Change */);
+            } else {
+
+                // Check the users password using the random SALTED password
+                if ($userData->validate_password($password, $userInfo['UserPassword']) === false) {
+                    setMessage(__('Username or Password incorrect'));
+                    return false;
+                }
             }
         }
         
