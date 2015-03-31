@@ -73,7 +73,7 @@ class Userdata extends Data
             }
 
             // User Name Provided
-            if (Kit::GetParam('userName', $filterBy, _STRING) != 0) {
+            if (Kit::GetParam('userName', $filterBy, _STRING) != '') {
                 $SQL .= " AND user.userName LIKE :userName ";
                 $params['userName'] = '%' . Kit::GetParam('userName', $filterBy, _STRING) . '%';
             }
@@ -95,7 +95,7 @@ class Userdata extends Data
             if (is_array($sortOrder))
                 $SQL .= 'ORDER BY ' . implode(',', $sortOrder);
 
-            //Debug::Audit(sprintf('Retrieving list of users with SQL: %s. Params: %s', $SQL, var_export($params, true)));
+            Debug::sql($SQL, $params);
         
             $sth = $dbh->prepare($SQL);
             $sth->execute($params);

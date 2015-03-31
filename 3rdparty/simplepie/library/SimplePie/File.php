@@ -114,7 +114,7 @@ class SimplePie_File
 				}
 
 				// Dan Garner PATCH
-				if (Config::GetSetting('PROXY_HOST') != '') {
+				if (Config::GetSetting('PROXY_HOST') != '' && !Config::isProxyException($url)) {
 					curl_setopt($fp, CURLOPT_PROXY, Config::GetSetting('PROXY_HOST')); 
  					curl_setopt($fp, CURLOPT_PROXYPORT, Config::GetSetting('PROXY_PORT'));
 

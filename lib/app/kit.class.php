@@ -240,8 +240,12 @@ class Kit
                         $return = 0;
                 }
                 else {
-                    if (!$return = filter_var($return, FILTER_VALIDATE_INT))
-                        trigger_error(sprintf(__('Expecting a whole number but found %s'), $param), E_USER_ERROR);
+                    if (!$return = filter_var($return, FILTER_VALIDATE_INT)) {
+                        if ($param == '0')
+                            $return = 0;
+                        else
+                            trigger_error(sprintf(__('Expecting a whole number but found %s'), $param), E_USER_ERROR);
+                    }
                 }
 
                 break;

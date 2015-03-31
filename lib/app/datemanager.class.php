@@ -70,7 +70,7 @@ class DateManager
             $format = 'Y-m-d H:i:s';
 
         // Always return ISO formatted dates
-        return date($format, $timestamp);
+        return gmdate($format, $timestamp);
     }
 
     public static function getMidnightSystemDate($timestamp = NULL, $format = NULL)

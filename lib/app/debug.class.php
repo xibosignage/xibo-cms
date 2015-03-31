@@ -271,10 +271,10 @@ class Debug
                 'remoteaddr' => $requestIp,
                 'useragent' => $requestUserAgent,
                 'userid' => $userId,
-                'displayid' => $displayId,
-                'scheduleid' => $scheduleId,
-                'layoutid' => $layoutId,
-                'mediaid' => $mediaId
+                'displayid' => Kit::ValidateParam($displayId, _INT),
+                'scheduleid' => Kit::ValidateParam($scheduleId, _INT),
+                'layoutid' => Kit::ValidateParam($layoutId, _INT),
+                'mediaid' => Kit::ValidateParam($mediaId, _INT)
             );
 
             $sth->execute($params);
