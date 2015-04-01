@@ -190,6 +190,13 @@ class Media extends Data
         Debug::LogEntry('audit', 'IN', 'Media', 'Add');
 
         try {
+            $libraryFolder = Config::GetSetting('LIBRARY_LOCATION');
+
+            // Check that the file exists
+            if (!file_exists($libraryFolder . 'temp/' . $fileId)) {
+                $this->ThrowError(__('File cannot be found. Please check library permissions.'));
+            }
+
             $dbh = PDOConnect::init();
         
             // Check we have room in the library
@@ -266,8 +273,6 @@ class Media extends Data
             $mediaId = $dbh->lastInsertId();
     
             // Now move the file
-            $libraryFolder = Config::GetSetting('LIBRARY_LOCATION');
-    
             if (!@rename($libraryFolder . 'temp/' . $fileId, $libraryFolder . $mediaId . '.' . $extension))
                 $this->ThrowError(15, 'Error storing file.');
     

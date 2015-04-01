@@ -172,6 +172,18 @@ class Config
 			trigger_error(__('No Version information - please contact technical support'), E_USER_WARNING);
 		}
 	}
+
+    /**
+     * Should the host be considered a proxy exception
+     * @param $host
+     * @return bool
+     */
+    public static function isProxyException($host)
+    {
+        $proxyException = Config::GetSetting('PROXY_EXCEPTIONS');
+Debug::Audit($host . ' in ' . $proxyException . '. Pos = ' . stripos($host, $proxyException));
+        return ($proxyException != '' && stripos($host, $proxyException) > -1);
+    }
 	
 	/**
 	 * Checks the Environment and Determines if it is suitable
@@ -514,7 +526,7 @@ class Config
 			$status = 1;
 		}
 		else {
-			$this->envWarning = true;
+            $this->envFault = true;
 		}
 
 		$rows[] = array(
@@ -542,6 +554,40 @@ class Config
 				'status' => $status,
 				'advice' => $advice
 			);
+
+        // Check to see if Internationalization support is available
+        $advice = __('International Support for formatting Dates, Numbers, etc.');
+        if ($this->CheckIntlDateFormat()) {
+            $status = 1;
+        }
+        else {
+            $this->envWarning = true;
+            $status = 2;
+            $advice .= __('Translations will still function without this PHP module, however dates, times and numbers will not be shown in your locale.');
+        }
+
+        $rows[] = array(
+            'item' => __('Internationalization'),
+            'status' => $status,
+            'advice' => $advice
+        );
+
+        // Check to see if cURL is installed
+        $advice = __('cURL is used to fetch data from the Internet or Local Network');
+        if ($this->checkCurlInstalled()) {
+            $status = 1;
+        }
+        else {
+            $this->envFault = true;
+            $status = 0;
+            $advice .= __(' and is required.');
+        }
+
+        $rows[] = array(
+            'item' => __('cURL'),
+            'status' => $status,
+            'advice' => $advice
+        );
 		
 		$this->envTested = true;
 
@@ -716,6 +762,14 @@ class Config
     static function CheckIntlDateFormat()
     {
         return class_exists('IntlDateFormatter');
+    }
+
+    /**
+     * Check to see if curl is installed
+     */
+    static function checkCurlInstalled()
+    {
+        return function_exists('curl_version');
     }
 	
 	/**

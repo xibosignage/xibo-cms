@@ -246,7 +246,7 @@ class File extends Data
         );
 
         // Proxy support
-        if (Config::GetSetting('PROXY_HOST') != '') {
+        if (Config::GetSetting('PROXY_HOST') != '' && !Config::isProxyException($url)) {
             $httpOptions[CURLOPT_PROXY] = Config::GetSetting('PROXY_HOST');
             $httpOptions[CURLOPT_PROXYPORT] = Config::GetSetting('PROXY_PORT');
 

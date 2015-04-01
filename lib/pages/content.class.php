@@ -32,6 +32,7 @@ class contentDAO extends baseDAO {
         if (Kit::IsFilterPinned('content', 'Filter')) {
             $filter_pinned = 1;
             $filter_name = Session::Get('content', 'filter_name');
+            $filterId = Session::Get('content', 'fiterId');
             $filter_type = Session::Get('content', 'filter_type');
             $filter_retired = Session::Get('content', 'filter_retired');
             $filter_owner = Session::Get('content', 'filter_owner');
@@ -42,6 +43,7 @@ class contentDAO extends baseDAO {
         else {
             $filter_pinned = 0;
             $filter_name = NULL;
+            $filterId = NULL;
             $filter_type = NULL;
             $filter_retired = 0;
             $filter_owner = NULL;
@@ -58,7 +60,8 @@ class contentDAO extends baseDAO {
 
         $formFields = array();
         $formFields[] = FormManager::AddText('filter_name', __('Name'), $filter_name, NULL, 'n');
-        
+        $formFields[] = FormManager::AddText('filterId', __('ID'), $filterId, NULL, 'i');
+
         // Users we have permission to see
         $users = $this->user->userList();
         array_unshift($users, array('userid' => '', 'username' => 'All'));
@@ -161,6 +164,7 @@ class contentDAO extends baseDAO {
 		//Get the input params and store them
 		$filter_type = Kit::GetParam('filter_type', _REQUEST, _WORD);
 		$filter_name = Kit::GetParam('filter_name', _REQUEST, _STRING);
+		$filterId = Kit::GetParam('filterId', _REQUEST, _INT);
 		$filter_userid = Kit::GetParam('filter_owner', _REQUEST, _INT);
         $filter_retired = Kit::GetParam('filter_retired', _REQUEST, _INT);
         $filter_duration_in_seconds = Kit::GetParam('filter_duration_in_seconds', _REQUEST, _CHECKBOX);
@@ -169,15 +173,19 @@ class contentDAO extends baseDAO {
                 
 		setSession('content', 'filter_type', $filter_type);
 		setSession('content', 'filter_name', $filter_name);
+		setSession('content', 'filterId', $filterId);
 		setSession('content', 'filter_owner', $filter_userid);
         setSession('content', 'filter_retired', $filter_retired);
         setSession('content', 'filter_duration_in_seconds', $filter_duration_in_seconds);
         setSession('content', 'filter_showThumbnail', $filter_showThumbnail);
 		setSession('content', 'showTags', $showTags);
         setSession('content', 'Filter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
-		
+
+        // Reset the mediaId filter if it is empty (we have to do this after we have stored it in the session)
+        $filterId = ($filterId == 0) ? -1 : $filterId;
+
 		// Construct the SQL
-		$mediaList = $user->MediaList(NULL, array('type' => $filter_type, 'name' => $filter_name, 'ownerid' => $filter_userid, 'retired' => $filter_retired, 'showTags' => $showTags));
+		$mediaList = $user->MediaList(NULL, array('type' => $filter_type, 'name' => $filter_name, 'mediaId' => $filterId, 'ownerid' => $filter_userid, 'retired' => $filter_retired, 'showTags' => $showTags));
 
         $cols = array();
         $cols[] = array('name' => 'mediaid', 'title' => __('ID'));
