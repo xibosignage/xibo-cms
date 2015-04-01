@@ -42,8 +42,12 @@ Theme::SetTranslation('enterText', Theme::Translate('Enter text...'));
 		<script src="theme/default/libraries/jquery/additional-methods.min.js"></script>
         <script src="theme/default/libraries/bootstrap/js/bootstrap.min.js"></script>
         <script src="theme/default/libraries/bootstrap/js/bootbox.min.js"></script>
+        <?php if (Config::GetSetting('CALENDAR_TYPE') == 'Jalali') { ?>
         <script src="theme/default/libraries/bootstrap-datetimepicker/js/jalali-date.js"></script>
+        <script src="theme/default/libraries/bootstrap-datetimepicker/js/bootstrap-datetimepicker-jalali.min.js"></script>
+        <?php } else { ?>
         <script src="theme/default/libraries/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
+        <?php } ?>
         <?php echo Theme::Script('libraries/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.' . TranslationEngine::GetJsLocale() . '.js'); ?>
         <script src="theme/default/libraries/jquery-tablesorter/js/jquery.tablesorter.min.js"></script>
         <script src="theme/default/libraries/jquery-tablesorter/js/jquery.tablesorter.widgets.min.js"></script>

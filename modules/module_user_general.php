@@ -1514,17 +1514,20 @@ class User {
      * Authenticates the current user and returns an array ofcampaigns this user is authenticated on
      * @return
      */
-    public function CampaignList($name = '', $isRetired = false)
+    public function CampaignList($name = '', $isRetired = false, $showEmpty = true)
     {
         $db         =& $this->db;
         $userid     =& $this->userid;
 
+        $layoutJoin = ($showEmpty) ? 'LEFT OUTER JOIN' : 'INNER JOIN';
+
         $SQL  = "SELECT campaign.CampaignID, Campaign, IsLayoutSpecific, COUNT(lkcampaignlayout.LayoutID) AS NumLayouts, MIN(layout.retired) AS Retired ";
         $SQL .= "  FROM `campaign` ";
-        $SQL .= "   LEFT OUTER JOIN `lkcampaignlayout` ";
+        $SQL .= "   $layoutJoin `lkcampaignlayout` ";
         $SQL .= "   ON lkcampaignlayout.CampaignID = campaign.CampaignID ";
-        $SQL .= "   LEFT OUTER JOIN `layout` ";
+        $SQL .= "   $layoutJoin `layout` ";
         $SQL .= "   ON lkcampaignlayout.LayoutID = layout.LayoutID ";
+        $SQL .= "       AND layout.layoutID NOT IN (SELECT layoutId FROM lktaglayout WHERE tagId = 1) ";
         $SQL .= " WHERE 1 = 1 ";
         
         if ($name != '')

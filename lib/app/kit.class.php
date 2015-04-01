@@ -83,132 +83,102 @@ class Kit
      */
     static public function GetParam($param, $source = _POST, $type = _STRING, $default = '', $sanitize = true)
     {
-        // lower case param (we dont care)
-        $param = strtolower($param);
+        try {
+            // lower case param (we dont care)
+            $param = strtolower($param);
 
-        if (is_array($source))
-        {
-            $source = array_change_key_case($source);
-            
-            if(!isset($source[$param])) 
-            {
-                $return = $default;
-            }
-            else 
-            {
-                $return = $source[$param];  
-            }
-        }
-        else
-        {
-            switch ($source)
-            {
-                case 'session':
+            if (is_array($source)) {
+                $source = array_change_key_case($source);
 
-                    if (isset($_SESSION))
-                        $_tempSESSION = array_change_key_case($_SESSION);
-                
-                    if(!isset($_tempSESSION[$param])) 
-                    {
-                        $return = $default;
-                    }
-                    else if ($type == _CHECKBOX)
-                    {
-                        // this means that it was defined correctly and it was set
-                        $return = 1;
-                    }
-                    else 
-                    {
-                        if ($_tempSESSION[$param] == '')
-                        {
+                if (!isset($source[$param])) {
+                    $return = $default;
+                } else {
+                    $return = $source[$param];
+                }
+            } else {
+                switch ($source) {
+                    case 'session':
+
+                        if (isset($_SESSION))
+                            $_tempSESSION = array_change_key_case($_SESSION);
+
+                        if (!isset($_tempSESSION[$param])) {
                             $return = $default;
-                        } 
-                        else
-                        {
-                            $return = $_tempSESSION[$param];
+                        } else if ($type == _CHECKBOX) {
+                            // this means that it was defined correctly and it was set
+                            $return = 1;
+                        } else {
+                            if ($_tempSESSION[$param] == '') {
+                                $return = $default;
+                            } else {
+                                $return = $_tempSESSION[$param];
+                            }
                         }
-                    }
-                
-                    break;
-                
-                case 'request':
 
-                    $_tempREQUEST = array_change_key_case($_REQUEST);
-                
-                    if(!isset($_tempREQUEST[$param])) 
-                    {
-                        $return = $default;
-                    }
-                    else 
-                    {
-                        if ($_tempREQUEST[$param] == '')
-                        {
-                            $return = $default;
-                        } 
-                        else
-                        {
-                            $return = $_tempREQUEST[$param];
-                        }   
-                    }
-                
-                    break;
-                    
-                case 'get':
+                        break;
 
-                    $_tempGET = array_change_key_case($_GET);
-                
-                    if(!isset($_tempGET[$param])) 
-                    {
-                        $return = $default;
-                    }
-                    else 
-                    {
-                        if ($_tempGET[$param] == '')
-                        {
-                            $return = $default;
-                        } 
-                        else
-                        {
-                            $return = $_tempGET[$param];
-                        }       
-                    }
-                
-                    break;
-                    
-                case 'post':
+                    case 'request':
 
-                    $_tempPOST = array_change_key_case($_POST);
-        
-                    if(!isset($_tempPOST[$param])) 
-                    {
-                        $return = $default;
-                    }
-                    else if ($type == _CHECKBOX)
-                    {
-                        // this means that it was defined correctly and it was set
-                        $return = 1;
-                    }
-                    else 
-                    {
-                        if ($_tempPOST[$param] == '')
-                        {
+                        $_tempREQUEST = array_change_key_case($_REQUEST);
+
+                        if (!isset($_tempREQUEST[$param])) {
                             $return = $default;
-                        } 
-                        else
-                        {
-                            $return = $_tempPOST[$param];
-                        }       
-                    }
-                
-                    break;
-                
-                default:
-                    return $default;
+                        } else {
+                            if ($_tempREQUEST[$param] == '') {
+                                $return = $default;
+                            } else {
+                                $return = $_tempREQUEST[$param];
+                            }
+                        }
+
+                        break;
+
+                    case 'get':
+
+                        $_tempGET = array_change_key_case($_GET);
+
+                        if (!isset($_tempGET[$param])) {
+                            $return = $default;
+                        } else {
+                            if ($_tempGET[$param] == '') {
+                                $return = $default;
+                            } else {
+                                $return = $_tempGET[$param];
+                            }
+                        }
+
+                        break;
+
+                    case 'post':
+
+                        $_tempPOST = array_change_key_case($_POST);
+
+                        if (!isset($_tempPOST[$param])) {
+                            $return = $default;
+                        } else if ($type == _CHECKBOX) {
+                            // this means that it was defined correctly and it was set
+                            $return = 1;
+                        } else {
+                            if ($_tempPOST[$param] == '') {
+                                $return = $default;
+                            } else {
+                                $return = $_tempPOST[$param];
+                            }
+                        }
+
+                        break;
+
+                    default:
+                        return $default;
+                }
             }
+
+            // Validate this param
+            return Kit::ValidateParam($return, $type, $sanitize);
         }
-        
-        // Validate this param  
-        return Kit::ValidateParam($return, $type, $sanitize);
+        catch (Exception $e) {
+            trigger_error(sprintf(__('Validation error with %s. %s'), $param, $e->getMessage()), E_USER_ERROR);
+        }
     }
     
     /**
@@ -244,7 +214,7 @@ class Kit
                         if ($param == '0')
                             $return = 0;
                         else
-                            trigger_error(sprintf(__('Expecting a whole number but found %s'), $param), E_USER_ERROR);
+                            throw new Exception(sprintf(__('Expecting a whole number but found %s'), $param));
                     }
                 }
 
@@ -259,7 +229,7 @@ class Kit
                 }
                 else {
                     if (!$return = filter_var($return, FILTER_VALIDATE_FLOAT, FILTER_FLAG_ALLOW_FRACTION))
-                        trigger_error(sprintf(__('Expecting a number but found %s'), $param), E_USER_ERROR);
+                        throw new Exception(sprintf(__('Expecting a number but found %s'), $param));
                 }
 
                 break;
@@ -294,7 +264,7 @@ class Kit
                     }
                     else {
                         if (!$return = filter_var_array($return, FILTER_VALIDATE_INT))
-                            trigger_error(sprintf(__('No integer found for %s, and return value is not an integer'), $param), E_USER_ERROR);
+                            throw new Exception(sprintf(__('No integer found for %s, and return value is not an integer'), $param));
                     }
                 }
                 break;
@@ -370,7 +340,7 @@ class Kit
             default :
                 // No casting necessary
                 if (!$sanitize)
-                    trigger_error(sprintf(__('Unknown Type %s'), $type), E_USER_ERROR);
+                    throw new Exception(sprintf(__('Unknown Type %s'), $type));
 
                 break;
         }
