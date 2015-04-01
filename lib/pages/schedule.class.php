@@ -280,7 +280,7 @@ class scheduleDAO extends baseDAO {
         $formFields['general'][] = FormManager::AddHidden('endtime', NULL);
         
         // Generate a list of layouts.
-        $layouts = $user->CampaignList(NULL, false /* isRetired */);
+        $layouts = $user->CampaignList(NULL, false /* isRetired */, false /* show Empty */);
         
         $optionGroups = array(
             array('id' => 'campaign', 'label' => __('Campaigns')),
@@ -559,7 +559,7 @@ class scheduleDAO extends baseDAO {
         $formFields['general'][] = FormManager::AddHidden('endtime', DateManager::getLocalDate($toDT, "Y-m-d H:i"));
         
         // Generate a list of layouts.
-        $layouts = $user->CampaignList(NULL, false /* isRetired */);
+        $layouts = $user->CampaignList(NULL, false /* isRetired */, false /* show Empty */);
         
         $optionGroups = array(
             array('id' => 'campaign', 'label' => __('Campaigns')),
@@ -815,7 +815,7 @@ class scheduleDAO extends baseDAO {
         $formFields = array();
         
         // Generate a list of layouts.
-        $layouts = $user->CampaignList(NULL, false /* isRetired */);
+        $layouts = $user->CampaignList(NULL, false /* isRetired */, false /* show Empty */);
         
         $optionGroups = array(
             array('id' => 'campaign', 'label' => __('Campaigns')),
