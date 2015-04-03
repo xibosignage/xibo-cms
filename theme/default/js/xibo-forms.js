@@ -328,13 +328,24 @@ function DisplayGroupMembersSubmit() {
 function MediaFormInitUpload(dialog) {
     // URL for the file upload handler
     var url = $('#fileupload').attr("action");
+    var chunked_upload_size = 0;
+    chunked_upload_size = $('#chunked_upload_size_id').attr("value");
     
-    // Initialize the jQuery File Upload widget:
-    $('#fileupload').fileupload({
-        url: url,
-        disableImageResize: false
-    });
-
+    if(chunked_upload_size > 0) {
+		// Initialize the jQuery File Upload widget:
+		$('#fileupload').fileupload({
+			maxChunkSize: chunked_upload_size,
+			url: url,
+			disableImageResize: false
+		});	
+	} else {
+		// Initialize the jQuery File Upload widget:
+		$('#fileupload').fileupload({
+			url: url,
+			disableImageResize: false
+		});
+	}
+	
     // Upload server status check for browsers with CORS support:
     if ($.support.cors) {
         $.ajax({
