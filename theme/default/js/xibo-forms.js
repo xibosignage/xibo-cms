@@ -329,7 +329,7 @@ function MediaFormInitUpload(dialog) {
     // URL for the file upload handler
     var url = $('#fileupload').attr("action");
     var chunked_upload_size = 0;
-    chunked_upload_size = $('#chunked_upload_size_id').attr("value");
+    chunked_upload_size = parseInt($('#chunked_upload_size_id').attr("value"));
     
     if(chunked_upload_size > 0) {
 		// Initialize the jQuery File Upload widget:
