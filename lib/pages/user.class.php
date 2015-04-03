@@ -42,11 +42,13 @@ class userDAO extends baseDAO {
             $filter_pinned = 1;
             $filter_username = Session::Get('user_admin', 'filter_username');
             $filter_usertypeid = Session::Get('user_admin', 'filter_usertypeid');
+            $filterRetired = Session::Get('user_admin', 'filterRetired');
         }
         else {
             $filter_pinned = 0;
             $filter_username = NULL;
             $filter_usertypeid = NULL;
+            $filterRetired = 0;
         }
 
         $formFields = array();
@@ -63,6 +65,20 @@ class userDAO extends baseDAO {
             'usertype',
             NULL, 
             't');
+
+        $formFields[] = FormManager::AddCombo(
+            'filterRetired',
+            __('Retired?'),
+            $filterRetired,
+            array(
+                array('retiredId' => -1, 'retired' => 'All'),
+                array('retiredId' => 1, 'retired' => 'Yes'),
+                array('retiredId' => 0, 'retired' => 'No')
+            ),
+            'retiredId',
+            'retired',
+            NULL,
+            'r');
         
         $formFields[] = FormManager::AddCheckbox('XiboFilterPinned', __('Keep Open'), 
             $filter_pinned, NULL, 
@@ -119,6 +135,9 @@ class userDAO extends baseDAO {
         $filter_usertypeid = Kit::GetParam('filter_usertypeid', _POST, _INT);
         setSession('user_admin', 'filter_usertypeid', $filter_usertypeid);
 
+        $filterRetired = Kit::GetParam('filterRetired', _POST, _INT);
+        setSession('user_admin', 'filterRetired', $filterRetired);
+
         // Pinned option?        
         setSession('user_admin', 'Filter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 
@@ -132,6 +151,8 @@ class userDAO extends baseDAO {
         // Filter on User Name
         if ($filter_username != '') 
             $filterBy['userName'] = $filter_username;
+
+        $filterBy['retired'] = $filterRetired;
 
         // Load results into an array
         $users = $user->userList(array('userName'), $filterBy);

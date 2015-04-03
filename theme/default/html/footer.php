@@ -42,8 +42,12 @@ Theme::SetTranslation('enterText', Theme::Translate('Enter text...'));
 		<script src="theme/default/libraries/jquery/additional-methods.min.js"></script>
         <script src="theme/default/libraries/bootstrap/js/bootstrap.min.js"></script>
         <script src="theme/default/libraries/bootstrap/js/bootbox.min.js"></script>
+        <?php if (Config::GetSetting('CALENDAR_TYPE') == 'Jalali') { ?>
         <script src="theme/default/libraries/bootstrap-datetimepicker/js/jalali-date.js"></script>
+        <script src="theme/default/libraries/bootstrap-datetimepicker/js/bootstrap-datetimepicker-jalali.min.js"></script>
+        <?php } else { ?>
         <script src="theme/default/libraries/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
+        <?php } ?>
         <?php echo Theme::Script('libraries/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.' . TranslationEngine::GetJsLocale() . '.js'); ?>
         <script src="theme/default/libraries/jquery-tablesorter/js/jquery.tablesorter.min.js"></script>
         <script src="theme/default/libraries/jquery-tablesorter/js/jquery.tablesorter.widgets.min.js"></script>
@@ -57,7 +61,7 @@ Theme::SetTranslation('enterText', Theme::Translate('Enter text...'));
         <script src="theme/default/libraries/underscore/underscore-min.js"></script>
         <script src="theme/default/libraries/jstimezonedetect/jstz.min.js"></script>
         <script src="theme/default/libraries/calendar/js/calendar.js"></script>
-        <?php echo Theme::Script('libraries/calendar/js/language/' . TranslationEngine::GetJsLocale() . '.js'); ?>
+        <?php echo Theme::Script('libraries/calendar/js/language/' . ((strlen(TranslationEngine::GetJsLocale() <= 2)) ? TranslationEngine::GetJsLocale() . '-' . strtoupper(TranslationEngine::GetJsLocale()) : TranslationEngine::GetJsLocale()) . '.js'); ?>
         <script src="theme/default/libraries/ckeditor/ckeditor.js"></script>
     	<script src="theme/default/libraries/bootstrap/js/bootstrap-ckeditor-fix.js"></script>
         <script src="theme/default/libraries/jquery-file-upload/js/tmpl.min.js"></script>
@@ -85,6 +89,7 @@ Theme::SetTranslation('enterText', Theme::Translate('Enter text...'));
         var language = "<?php echo TranslationEngine::GetJsLocale(); ?>";
         var dateFormat = "<?php echo Config::GetSetting('DATE_FORMAT', 'Y-m-d h:i'); ?>";
         var calendarType = "<?php echo Config::GetSetting('CALENDAR_TYPE'); ?>";
+        var calendarLanguage = "<?php echo ((strlen(TranslationEngine::GetJsLocale() <= 2)) ? TranslationEngine::GetJsLocale() . '-' . strtoupper(TranslationEngine::GetJsLocale()) : TranslationEngine::GetJsLocale()); ?>";
         </script>
 	</body>
 </html>

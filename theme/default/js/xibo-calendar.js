@@ -55,7 +55,7 @@ $(document).ready(function() {
             $('.btn-group button').removeClass('active');
             $('button[data-calendar-view="' + view + '"]').addClass('active');
         },
-        language: language
+        language: calendarLanguage
     };
 
     // Calendar is initialised without any event_source (that is changed when the selector is used)

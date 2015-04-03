@@ -40,7 +40,7 @@ class Theme {
 		$this->dateManager = new DateManager();
 
 		// What is the currently selected theme?
-		$globalTheme = ($theme == NULL) ? Config::GetSetting('GLOBAL_THEME_NAME') : $theme;
+		$globalTheme = ($theme == NULL) ? Config::GetSetting('GLOBAL_THEME_NAME', 'default') : $theme;
 
 		// Is this theme valid?
 		if (!is_dir('theme/' . $globalTheme))
