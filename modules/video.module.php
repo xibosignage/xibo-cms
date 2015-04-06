@@ -31,6 +31,9 @@ class video extends Module
 
         // Get the max upload size from PHP
         $this->maxFileSize 	= ini_get('upload_max_filesize');
+        if (defined('CHUNKED_UPLOAD')) {
+			$this->maxFileSize 	= CHUNKED_UPLOAD;
+		}        
         $this->maxFileSizeBytes = convertBytes($this->maxFileSize);
 
         // Must call the parent class

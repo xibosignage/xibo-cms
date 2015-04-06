@@ -35,6 +35,11 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 	            <i class="glyphicon glyphicon-plus glyphicon glyphicon-white"></i>
 	            <span><?php echo Theme::Translate('Add files'); ?></span>
 	            <input type="file" name="files[]" multiple>
+<?php				
+if (defined('CHUNKED_UPLOAD_SIZE')) {
+	print('<input name="chunked_upload_size" type="hidden" id="chunked_upload_size_id" value="'.CHUNKED_UPLOAD_SIZE.'" />');
+}
+?>	   
 	        </span>
 	        <button type="submit" class="btn btn-primary start">
 	            <i class="glyphicon glyphicon-upload glyphicon glyphicon-white"></i>
