@@ -35,7 +35,6 @@ class ticker extends Module
         $media->addModuleFile('modules/preview/vendor/moment.js');
         $media->addModuleFile('modules/preview/vendor/jquery.marquee.min.js');
         $media->addModuleFile('modules/preview/vendor/jquery-cycle-2.1.6.min.js');
-	$media->addModuleFile('modules/preview/vendor/jquery.boxfit.min.js');
         $media->addModuleFile('modules/preview/xibo-layout-scaler.js');
         $media->addModuleFile('modules/preview/xibo-text-render.js');
     }
@@ -245,10 +244,6 @@ class ticker extends Module
             $this->GetOption('itemsSideBySide'), __('Should items be shown side by side?'), 
             's');
 
-        $field_boxfit = FormManager::AddCheckbox('boxfit', __('Resize Text?'), 
-            $this->GetOption('boxfit'), __('Use Boxfit jQuery plugin for fitting text into divs with class "xibo-resize" (Important: Set width and height!)'), 
-            's'); 
-
         // Data Set Source
         if ($sourceId == 2) {
 
@@ -275,7 +270,6 @@ class ticker extends Module
 
             $formFields['format'][] = $field_itemsPerPage;
             $formFields['format'][] = $field_itemsSideBySide;
-            $formFields['format'][] = $field_boxfit;
 
             Theme::Set('columns', $db->GetArray(sprintf("SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetID = %d ", $dataSetId)));
 
@@ -332,7 +326,6 @@ class ticker extends Module
 
             $formFields['format'][] = $field_durationIsPerItem;
             $formFields['advanced'][] = $field_itemsSideBySide;
-            $formFields['format'][] = $field_boxfit;
 
             $formFields['advanced'][] = FormManager::AddText('dateFormat', __('Date Format'), $this->GetOption('dateFormat'), 
                 __('The format to apply to all dates returned by the ticker. In PHP date format: http://uk3.php.net/manual/en/function.date.php'), 'f');
@@ -552,7 +545,6 @@ class ticker extends Module
         $takeItemsFrom = Kit::GetParam('takeItemsFrom', _POST, _STRING);
         $durationIsPerItem = Kit::GetParam('durationIsPerItem', _POST, _CHECKBOX);
         $itemsSideBySide = Kit::GetParam('itemsSideBySide', _POST, _CHECKBOX);
-	$boxfit = Kit::GetParam('boxfit', _POST, _CHECKBOX);
         
         // DataSet Specific Options
         $itemsPerPage = Kit::GetParam('itemsPerPage', _POST, _INT);
@@ -642,7 +634,6 @@ class ticker extends Module
         $this->SetOption('textDirection', Kit::GetParam('textDirection', _POST, _WORD));
         $this->SetOption('overrideTemplate', Kit::GetParam('overrideTemplate', _POST, _CHECKBOX));
         $this->SetOption('templateId', Kit::GetParam('templateId', _POST, _WORD));
-	$this->SetOption('boxfit', $boxfit);
         
         // Text Template
         $this->SetRaw('<template><![CDATA[' . $text . ']]></template><css><![CDATA[' . $css . ']]></css>');
@@ -738,7 +729,6 @@ class ticker extends Module
         $numItems = $this->GetOption('numItems', 0);
         $takeItemsFrom = $this->GetOption('takeItemsFrom', 'start');
         $itemsPerPage = $this->GetOption('itemsPerPage', 0);
-	$boxfit = $this->GetOption('boxfit', 0);
 
         // Get the text out of RAW
         $rawXml = new DOMDocument();
@@ -854,10 +844,6 @@ class ticker extends Module
         if ($effect != 'none')
             $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-cycle-2.1.6.min.js"></script>';
         
-        // Need the boxfit plugin?
-        if ($boxfit == 1)
-	    $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery.boxfit.min.js"></script>';
-
         $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-layout-scaler.js"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-text-render.js"></script>';
 
@@ -866,7 +852,6 @@ class ticker extends Module
         $javaScriptContent .= '   var items = ' . json_encode($items) . ';';
         $javaScriptContent .= '   $(document).ready(function() { ';
         $javaScriptContent .= '       $("body").xiboLayoutScaler(options); $("#content").xiboTextRender(options, items);';
-	$javaScriptContent .= '       $(".xibo-resize").boxfit({multiline: true, step_size: 1, step_limit: 5500, align_middle: false, align_center: false, maximum_font_size: 500});';
         $javaScriptContent .= '   }); ';
         $javaScriptContent .= '</script>';
 
