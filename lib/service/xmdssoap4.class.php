@@ -21,7 +21,7 @@
 define('BLACKLIST_ALL', "All");
 define('BLACKLIST_SINGLE', "Single");
 
-class XMDSSoap4 
+class XMDSSoap4
 {
     private $licensed;
     private $includeSchedule;
@@ -73,13 +73,13 @@ class XMDSSoap4
             $dbh = PDOConnect::init();
             $sth = $dbh->prepare('
                 SELECT licensed, display, displayid, displayprofileid, client_type, version_instructions, screenShotRequested, email_alert, loggedin, isAuditing
-                  FROM display 
+                  FROM display
                 WHERE license = :hardwareKey');
 
             $sth->execute(array(
                    'hardwareKey' => $hardwareKey
                 ));
-            
+
             $result = $sth->fetchAll();
         }
         catch (Exception $e) {
@@ -272,7 +272,7 @@ class XMDSSoap4
 
         try {
             $dbh = PDOConnect::init();
-        
+
             // Get a list of all layout ids in the schedule right now.
             $SQL  = " SELECT DISTINCT layout.layoutID ";
             $SQL .= " FROM `campaign` ";
@@ -291,14 +291,14 @@ class XMDSSoap4
                     'fromdt' => $toFilter,
                     'todt' => $fromFilter
                 ));
-    
+
             // Our layout list will always include the default layout
             $layouts = array();
             $layouts[] = $this->defaultLayoutId;
-    
+
             // Build up the other layouts into an array
             foreach ($sth->fetchAll() as $row)
-                $layouts[] = Kit::ValidateParam($row['layoutID'], _INT);  
+                $layouts[] = Kit::ValidateParam($row['layoutID'], _INT);
         }
         catch (Exception $e) {
             Debug::Error('Error getting layout listing. ' . $e->getMessage(), $this->displayId);
@@ -310,13 +310,13 @@ class XMDSSoap4
 
         try {
             $dbh = PDOConnect::init();
-        
+
             // Add file nodes to the $fileElements
             $SQL  = "
-                    SELECT 1 AS DownloadOrder, 'media' AS RecordType, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize, NULL AS xml 
+                    SELECT 1 AS DownloadOrder, 'media' AS RecordType, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize, NULL AS xml
                        FROM `media`
                      WHERE media.type = 'font'
-                        OR (media.type = 'module' AND media.moduleSystemFile = 1) 
+                        OR (media.type = 'module' AND media.moduleSystemFile = 1)
                     UNION
                     ";
             $SQL .= " SELECT 4 AS DownloadOrder, 'layout' AS RecordType, layout.layoutID AS path, layout.layoutID AS id, MD5(layout.xml) AS `MD5`, NULL AS FileSize, layout.xml AS xml ";
@@ -332,16 +332,16 @@ class XMDSSoap4
             $SQL .= sprintf(" WHERE layout.layoutid IN (%s)  ", $layoutIdList);
             $SQL .= "
                     UNION
-                    SELECT 2 AS DownloadOrder, 'media' AS RecordType, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize, NULL AS xml 
+                    SELECT 2 AS DownloadOrder, 'media' AS RecordType, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize, NULL AS xml
                        FROM `media`
                         INNER JOIN `lkmediadisplaygroup`
                         ON lkmediadisplaygroup.mediaid = media.MediaID
-                        INNER JOIN lkdisplaydg 
+                        INNER JOIN lkdisplaydg
                         ON lkdisplaydg.DisplayGroupID = lkmediadisplaygroup.DisplayGroupID
                     ";
             $SQL .= " WHERE lkdisplaydg.DisplayID = :displayId ";
             $SQL .= " ORDER BY DownloadOrder, RecordType DESC";
-    
+
             $sth = $dbh->prepare($SQL);
             $sth->execute(array(
                     'displayId' => $this->displayId
@@ -353,6 +353,9 @@ class XMDSSoap4
             // What is the send file mode?
             $sendFileMode = Config::GetSetting('SENDFILE_MODE');
 
+            // Keep a list of path names added to RF to prevent duplicates
+            $pathsAdded = array();
+
             foreach ($sth->fetchAll() as $row) {
                 $recordType = Kit::ValidateParam($row['RecordType'], _WORD);
                 $path = Kit::ValidateParam($row['path'], _STRING);
@@ -363,28 +366,42 @@ class XMDSSoap4
                 $mediaNonce = '';
 
                 if ($recordType == 'layout') {
+
+                    // Check we haven't added this before
+                    if (in_array('layout_' . $id, $pathsAdded))
+                        continue;
+
                     // For layouts the MD5 column is the layout xml
                     $fileSize = strlen($xml);
-                    
+
                     if ($this->isAuditing == 1)
                         Debug::Audit('MD5 for layoutId ' . $id . ' is: [' . $md5 . ']', $this->displayId);
 
                     // Add nonce
                     $nonce->AddXmdsNonce('layout', $this->displayId, NULL, $fileSize, NULL, $id);
+
+                    $pathsAdded[] = 'layout_' . $id;
                 }
                 else if ($recordType == 'media') {
+
+                    // Check we haven't added this before
+                    if (in_array('media_' . $path, $pathsAdded))
+                        continue;
+
                     // If they are empty calculate them and save them back to the media.
                     if ($md5 == '' || $fileSize == 0) {
 
                         $md5 = md5_file($libraryLocation.$path);
                         $fileSize = filesize($libraryLocation.$path);
-                        
+
                         // Update the media record with this information
                         $mediaSth->execute(array('md5' => $md5, 'size' => $fileSize, 'mediaid' => $id));
                     }
 
                     // Add nonce
                     $mediaNonce = $nonce->AddXmdsNonce('file', $this->displayId, $id, $fileSize, $path);
+
+                    $pathsAdded = 'media_' . $path;
                 }
                 else {
                     continue;
@@ -407,7 +424,7 @@ class XMDSSoap4
                     $file->setAttribute("download", 'xmds');
                     $file->setAttribute("path", $path);
                 }
-                
+
                 $fileElements->appendChild($file);
             }
         }
@@ -434,7 +451,7 @@ class XMDSSoap4
                         $file->setAttribute('regionid', $region['regionid']);
                         $file->setAttribute('mediaid', $media['mediaid']);
                         $file->setAttribute('updated', (isset($media['updated']) ? $media['updated'] : 0));
-                        
+
                         $fileElements->appendChild($file);
 
                         $nonce->AddXmdsNonce('resource', $this->displayId, NULL, NULL, NULL, $layoutId, $region['regionid'], $media['mediaid']);
@@ -451,19 +468,19 @@ class XMDSSoap4
 
         try {
             $dbh = PDOConnect::init();
-        
+
             $sth = $dbh->prepare('SELECT MediaID FROM blacklist WHERE DisplayID = :displayid AND isIgnored = 0');
             $sth->execute(array(
                     'displayid' => $this->displayId
                 ));
-        
+
             // Add a black list element for each file
             foreach ($sth->fetchAll() as $row) {
                 $file = $requiredFilesXml->createElement("file");
                 $file->setAttribute("id", $row['MediaID']);
-    
+
                 $blackList->appendChild($file);
-            }  
+            }
         }
         catch (Exception $e) {
             Debug::Error('Unable to get a list of blacklisted files. ' . $e->getMessage(), $this->displayId);
@@ -523,7 +540,7 @@ class XMDSSoap4
 
         if ($this->isAuditing == 1)
             Debug::Audit('hardwareKey: ' . $hardwareKey . ', fileId: ' . $fileId . ', fileType: ' . $fileType . ', chunkOffset: ' . $chunkOffset . ', chunkSize: ' . $chunkSize, $this->displayId);
-        
+
         $nonce = new Nonce();
 
         if ($fileType == "layout") {
@@ -535,15 +552,15 @@ class XMDSSoap4
 
             try {
                 $dbh = PDOConnect::init();
-            
+
                 $sth = $dbh->prepare('SELECT xml FROM layout WHERE layoutid = :layoutid');
                 $sth->execute(array('layoutid' => $fileId));
-            
+
                 if (!$row = $sth->fetch())
                     throw new Exception('No file found with that ID');
 
                 $file = $row['xml'];
-                
+
                 // Store file size for bandwidth log
                 $chunkSize = strlen($file);
             }
@@ -560,10 +577,10 @@ class XMDSSoap4
 
             try {
                 $dbh = PDOConnect::init();
-            
+
                 $sth = $dbh->prepare('SELECT storedAs FROM `media` WHERE mediaid = :mediaid');
                 $sth->execute(array('mediaid' => $fileId));
-            
+
                 if (!$row = $sth->fetch())
                     throw new Exception('No file found with that ID');
 
@@ -573,7 +590,7 @@ class XMDSSoap4
                 fseek($f, $chunkOffset);
 
                 $file = fread($f, $chunkSize);
-                
+
                 // Store file size for bandwidth log
                 $chunkSize = strlen($file);
             }
@@ -588,7 +605,7 @@ class XMDSSoap4
 
         // Log Bandwidth
         $this->LogBandwidth($this->displayId, Bandwidth::$GETFILE, $chunkSize);
-        
+
         return $file;
     }
 
@@ -633,12 +650,12 @@ class XMDSSoap4
 
         if (Config::GetSetting('SCHEDULE_LOOKAHEAD') == 'On')
             $toFilter = $rfLookAhead - ($rfLookAhead % 3600);
-        else 
+        else
             $toFilter = ($fromFilter + 3600) - (($fromFilter + 3600) % 3600);
 
         if ($this->isAuditing == 1)
             Debug::Audit(sprintf('FromDT = %s. ToDt = %s', date('Y-m-d h:i:s', $fromFilter), date('Y-m-d h:i:s', $toFilter)), $this->displayId);
-        
+
         try {
             $dbh = PDOConnect::init();
 
@@ -650,7 +667,7 @@ class XMDSSoap4
 
             foreach($rows as $dependent)
                 $moduleDependents[] = $dependent['StoredAs'];
-        
+
             // Add file nodes to the $fileElements
             // Firstly get all the scheduled layouts
             $SQL  = " SELECT layout.layoutID, schedule_detail.FromDT, schedule_detail.ToDT, schedule.eventID, schedule.is_priority, ";
@@ -665,14 +682,14 @@ class XMDSSoap4
             $SQL .= " AND (schedule_detail.FromDT < :fromdt AND schedule_detail.ToDT > :todt )";
             $SQL .= "   AND layout.retired = 0  ";
             $SQL .= " ORDER BY schedule.DisplayOrder, lkcampaignlayout.DisplayOrder, schedule_detail.eventID ";
-    
+
             $sth = $dbh->prepare($SQL);
             $sth->execute(array(
                     'displayId' => $this->displayId,
                     'fromdt' => $toFilter,
                     'todt' => $fromFilter
                 ));
-    
+
             // We must have some results in here by this point
             foreach ($sth->fetchAll() as $row) {
                 $layoutId = $row[0];
@@ -681,17 +698,17 @@ class XMDSSoap4
                 $scheduleId = $row[3];
                 $is_priority = Kit::ValidateParam($row[4], _INT);
                 $dependents = Kit::ValidateParam($row[5], _STRING);
-    
+
                 // Add a layout node to the schedule
                 $layout = $scheduleXml->createElement("layout");
-    
+
                 $layout->setAttribute("file", $layoutId);
                 $layout->setAttribute("fromdt", $fromDt);
                 $layout->setAttribute("todt", $toDt);
                 $layout->setAttribute("scheduleid", $scheduleId);
                 $layout->setAttribute("priority", $is_priority);
                 $layout->setAttribute("dependents", $dependents);
-    
+
                 $layoutElements->appendChild($layout);
             }
         }
@@ -730,7 +747,7 @@ class XMDSSoap4
 
         // Format the output
         $scheduleXml->formatOutput = true;
-        
+
         if ($this->isAuditing == 1)
             Debug::Audit($scheduleXml->saveXML(), $this->displayId);
 
@@ -778,7 +795,7 @@ class XMDSSoap4
 
         try {
             $dbh = PDOConnect::init();
-        
+
             // Check to see if this media / display is already blacklisted (and not ignored)
             $sth = $dbh->prepare('SELECT BlackListID FROM blacklist WHERE MediaID = :mediaid AND isIgnored = 0 AND DisplayID = :displayid');
             $sth->execute(array(
@@ -787,7 +804,7 @@ class XMDSSoap4
                 ));
 
             $results = $sth->fetchAll();
-            
+
             if (count($results) == 0) {
 
                 $insertSth = $dbh->prepare('
@@ -798,9 +815,9 @@ class XMDSSoap4
                 // Insert the black list record
                 if ($type == BLACKLIST_SINGLE) {
                     $insertSth->execute(array(
-                            'mediaid' => $mediaId, 
+                            'mediaid' => $mediaId,
                             'displayid' => $this->displayId,
-                            'reportingdisplayid' => $this->displayId, 
+                            'reportingdisplayid' => $this->displayId,
                             'reason' => $reason
                         ));
                 }
@@ -811,9 +828,9 @@ class XMDSSoap4
                     foreach ($displaySth->fetchAll() as $row) {
 
                         $insertSth->execute(array(
-                            'mediaid' => $mediaId, 
-                            'displayid' => $row['displayID'], 
-                            'reportingdisplayid' => $this->displayId, 
+                            'mediaid' => $mediaId,
+                            'displayid' => $row['displayID'],
+                            'reportingdisplayid' => $this->displayId,
                             'reason' => $reason
                         ));
                     }
@@ -852,7 +869,7 @@ class XMDSSoap4
         // Check the serverKey matches
         if ($serverKey != Config::GetSetting('SERVER_KEY'))
             throw new SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
-        
+
         // Make sure we are sticking to our bandwidth limit
         if (!$this->CheckBandwidth())
             throw new SoapFault('Receiver', "Bandwidth Limit exceeded");
@@ -860,7 +877,7 @@ class XMDSSoap4
         // Auth this request...
         if (!$this->AuthDisplay($hardwareKey))
             throw new SoapFault('Sender', 'This display client is not licensed.');
-        
+
         if ($this->isAuditing == 1)
             Debug::Audit('XML log: ' . $logXml, $this->displayId);
 
@@ -873,9 +890,9 @@ class XMDSSoap4
         }
 
         foreach ($document->documentElement->childNodes as $node) {
-            
+
             // Make sure we don't consider any text nodes
-            if ($node->nodeType == XML_TEXT_NODE) 
+            if ($node->nodeType == XML_TEXT_NODE)
                 continue;
 
             // Zero out the common vars
@@ -931,7 +948,7 @@ class XMDSSoap4
 
             // We should have enough information to log this now.
             $logType = ($cat == 'error') ? 'error' : 'audit';
-            
+
             Debug::LogEntry($logType, $message, 'Client', $thread . $method . $type, $date, $this->displayId, $scheduleId, $layoutId, $mediaId);
         }
 
@@ -958,7 +975,7 @@ class XMDSSoap4
         // Check the serverKey matches
         if ($serverKey != Config::GetSetting('SERVER_KEY'))
             throw new SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
-        
+
         // Make sure we are sticking to our bandwidth limit
         if (!$this->CheckBandwidth())
             throw new SoapFault('Receiver', "Bandwidth Limit exceeded");
@@ -966,13 +983,13 @@ class XMDSSoap4
         // Auth this request...
         if (!$this->AuthDisplay($hardwareKey))
             throw new SoapFault('Receiver', "This display client is not licensed");
-        
+
         if ($this->isAuditing == 1)
             Debug::Audit('Received XML. ' . $statXml, $this->displayId);
 
         if ($statXml == "")
             throw new SoapFault('Receiver', "Stat XML is empty.");
-        
+
         // Log
         $statObject = new Stat();
 
@@ -982,7 +999,7 @@ class XMDSSoap4
 
         foreach ($document->documentElement->childNodes as $node) {
             // Make sure we don't consider any text nodes
-            if ($node->nodeType == XML_TEXT_NODE) 
+            if ($node->nodeType == XML_TEXT_NODE)
                 continue;
 
             // Each element should have these attributes
@@ -1039,7 +1056,7 @@ class XMDSSoap4
         if (!$this->AuthDisplay($hardwareKey))
             throw new SoapFault('Receiver', 'This display client is not licensed');
 
-        if ($this->isAuditing == 1) 
+        if ($this->isAuditing == 1)
             Debug::Audit($inventory, $this->displayId);
 
         // Check that the $inventory contains something
@@ -1177,7 +1194,7 @@ class XMDSSoap4
         if (!$this->AuthDisplay($hardwareKey))
             throw new SoapFault('Receiver', 'This display client is not licensed');
 
-        if ($this->isAuditing == 1) 
+        if ($this->isAuditing == 1)
             Debug::Audit($status, $this->displayId);
 
         $this->LogBandwidth($this->displayId, Bandwidth::$NOTIFYSTATUS, strlen($status));
@@ -1216,7 +1233,7 @@ class XMDSSoap4
         if (!$this->AuthDisplay($hardwareKey))
             throw new SoapFault('Receiver', 'This display client is not licensed');
 
-        if ($this->isAuditing == 1) 
+        if ($this->isAuditing == 1)
             Debug::Audit('Received Screen shot', $this->displayId);
 
         // Open this displays screen shot file and save this.
@@ -1244,33 +1261,33 @@ class XMDSSoap4
             // Find out when we last PHONED_HOME :D
             // If it's been > 28 days since last PHONE_HOME then
             if (Config::GetSetting('PHONE_HOME_DATE') < (time() - (60 * 60 * 24 * 28))) {
-                
+
                 try {
                     $dbh = PDOConnect::init();
-                
+
                     // Retrieve number of displays
                     $sth = $dbh->prepare('SELECT COUNT(*) AS Cnt FROM `display` WHERE `licensed` = 1');
                     $sth->execute();
 
                     $PHONE_HOME_CLIENTS = $sth->fetchColumn();
-                
+
                     // Retrieve version number
                     $PHONE_HOME_VERSION = Config::Version('app_ver');
-                
+
                     $PHONE_HOME_URL = Config::GetSetting('PHONE_HOME_URL') . "?id=" . urlencode(Config::GetSetting('PHONE_HOME_KEY')) . "&version=" . urlencode($PHONE_HOME_VERSION) . "&numClients=" . urlencode($PHONE_HOME_CLIENTS);
-                
+
                     if ($this->isAuditing == 1)
                         Debug::LogEntry("audit", "PHONE_HOME_URL " . $PHONE_HOME_URL , "xmds", "RequiredFiles");
-                    
+
                     // Set PHONE_HOME_TIME to NOW.
                     $sth = $dbh->prepare('UPDATE `setting` SET `value` = :time WHERE `setting`.`setting` = :setting LIMIT 1');
                     $sth->execute(array(
                             'time' => time(),
                             'setting' => 'PHONE_HOME_DATE'
                         ));
-                                
+
                     @file_get_contents($PHONE_HOME_URL);
-                
+
                     if ($this->isAuditing == 1)
                         Debug::Audit("PHONE_HOME [OUT]", $this->displayId);
                 }
@@ -1292,11 +1309,11 @@ class XMDSSoap4
     {
         try {
             $dbh = PDOConnect::init();
-        
+
             $sth = $dbh->prepare('
-                SELECT licensed, inc_schedule, isAuditing, displayID, defaultlayoutid, loggedin, 
+                SELECT licensed, inc_schedule, isAuditing, displayID, defaultlayoutid, loggedin,
                     email_alert, display, version_instructions, client_type, client_code, client_version
-                  FROM display 
+                  FROM display
                  WHERE license = :hardwareKey
                 ');
 
@@ -1305,17 +1322,17 @@ class XMDSSoap4
                 ));
 
             $result = $sth->fetchAll();
-        
+
             // Is it there?
             if (count($result) == 0)
                 return false;
-            
+
             // We have seen this display before, so check the licensed value
             $row = $result[0];
 
             if ($row['licensed'] == 0)
                 return false;
-        
+
             // See if the client was off-line and if appropriate send an alert
             // to say that it has come back on-line
             $this->AlertDisplayUp($row['displayID'], $row['display'], $row['loggedin'], $row['email_alert']);
@@ -1329,11 +1346,11 @@ class XMDSSoap4
             $this->clientType = $row['client_type'];
             $this->clientVersion = $row['client_version'];
             $this->clientCode = $row['client_code'];
-            
+
             // Last accessed date on the display
             $displayObject = new Display();
             $displayObject->Touch($this->displayId, array('clientAddress' => Kit::GetParam('REMOTE_ADDR', $_SERVER, _STRING)));
-                
+
             return true;
         }
         catch (Exception $e) {
@@ -1352,7 +1369,7 @@ class XMDSSoap4
     private function AlertDisplayUp($displayId, $display, $loggedIn, $emailAlert)
     {
         $maintenanceEnabled = Config::GetSetting('MAINTENANCE_ENABLED');
-        
+
         if ($loggedIn == 0) {
 
             // Log display up
@@ -1395,7 +1412,7 @@ class XMDSSoap4
 
         try {
             $dbh = PDOConnect::init();
-        
+
             // Test bandwidth for the current month
             $sth = $dbh->prepare('SELECT IFNULL(SUM(Size), 0) AS BandwidthUsage FROM `bandwidth` WHERE Month = :month');
             $sth->execute(array(
@@ -1403,8 +1420,8 @@ class XMDSSoap4
                 ));
 
             $bandwidthUsage = $sth->fetchColumn(0);
-    
-            return ($bandwidthUsage >= ($xmdsLimit * 1024)) ? false : true;  
+
+            return ($bandwidthUsage >= ($xmdsLimit * 1024)) ? false : true;
         }
         catch (Exception $e) {
             Debug::Error($e->getMessage(), $this->displayId);
@@ -1419,7 +1436,7 @@ class XMDSSoap4
      * @param <type> $sizeInBytes
      */
     private function LogBandwidth($displayId, $type, $sizeInBytes)
-    {    
+    {
         $bandwidth = new Bandwidth();
         $bandwidth->Log($displayId, $type, $sizeInBytes);
     }
