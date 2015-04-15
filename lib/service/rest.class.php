@@ -1308,7 +1308,7 @@ class Rest
         $dataSetId = $this->GetParam('dataSetId', _INT);
 
         $auth = $this->user->DataSetAuth($dataSetId, true);
-        if (!$auth->delete)
+        if (!$auth->del)
             return $this->Error(1, 'Access Denied');
 
         Kit::ClassLoader('dataset');
@@ -1523,7 +1523,7 @@ class Rest
         $dataSetId = $this->GetParam('dataSetId', _INT);
 
         $auth = $this->user->DataSetAuth($dataSetId, true);
-        if (!$auth->delete)
+        if (!$auth->del)
             return $this->Error(1, 'Access Denied');
 
         // Parameters
