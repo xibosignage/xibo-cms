@@ -401,7 +401,7 @@ class XMDSSoap4
                     // Add nonce
                     $mediaNonce = $nonce->AddXmdsNonce('file', $this->displayId, $id, $fileSize, $path);
 
-                    $pathsAdded = 'media_' . $path;
+                    $pathsAdded[] = 'media_' . $path;
                 }
                 else {
                     continue;
