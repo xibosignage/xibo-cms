@@ -962,6 +962,15 @@ class ticker extends Module
                                 }
                         }
 
+			if ($link == NULL) {
+				$dom = new DOMDocument;
+				$dom->loadHTML($item->get_description());
+				$images = $dom->getElementsByTagName('img');
+				foreach ($images as $key => $value) {
+				    if($key == 0) { $link = html_entity_decode($images->item($key)->getAttribute('src')); }
+				}
+			}
+
                         // If we have managed to resolve a link, download it and replace the tag with the downloaded
                         // image url
                         if ($link != NULL) {
@@ -1024,17 +1033,18 @@ class ticker extends Module
                             $replace = $item->get_link();
                             break;
                     }
-                }
+                
 
-		if ($this->GetOption('stripTags') != '') {
-			require_once '3rdparty/htmlpurifier/library/HTMLPurifier.auto.php';
+			if ($this->GetOption('stripTags') != '') {
+				require_once '3rdparty/htmlpurifier/library/HTMLPurifier.auto.php';
 
-			$config = HTMLPurifier_Config::createDefault();
-			$config->set('HTML.ForbiddenElements', array_merge($feed->strip_htmltags, explode(',', $this->GetOption('stripTags'))));
-			$purifier = new HTMLPurifier($config);
-			$replace = $purifier->purify($replace);
+				$config = HTMLPurifier_Config::createDefault();
+				$config->set('HTML.ForbiddenElements', array_merge($feed->strip_htmltags, explode(',', $this->GetOption('stripTags'))));
+				$purifier = new HTMLPurifier($config);
+				$replace = $purifier->purify($replace);
+			}
+
 		}
-
                 // Substitute the replacement we have found (it might be '')
                 $rowString = str_replace($sub, $replace, $rowString);
             }
