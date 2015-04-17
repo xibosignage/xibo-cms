@@ -964,12 +964,21 @@ class ticker extends Module
 
 			if ($link == NULL) {
 				$dom = new DOMDocument;
-				$dom->loadHTML($item->get_description());
+				$dom->loadHTML($item->get_content()); // Full
 				$images = $dom->getElementsByTagName('img');
 				foreach ($images as $key => $value) {
 				    if($key == 0) { $link = html_entity_decode($images->item($key)->getAttribute('src')); }
 				}
 			}
+
+                        if ($link == NULL) {
+                                $dom = new DOMDocument;
+                                $dom->loadHTML($item->get_description()); //Summary
+                                $images = $dom->getElementsByTagName('img');
+                                foreach ($images as $key => $value) {
+                                    if($key == 0) { $link = html_entity_decode($images->item($key)->getAttribute('src')); }
+                                }
+                        }
 
                         // If we have managed to resolve a link, download it and replace the tag with the downloaded
                         // image url
