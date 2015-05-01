@@ -168,8 +168,8 @@ class Schedule extends Data
             // Notify (dont error)
             $displayObject = new Display();
             $displayObject->NotifyDisplays($campaignId);
-            
-            Debug::LogEntry('audit', 'OUT', 'Schedule', 'Add');
+
+            \Xibo\Helper\Log::audit('Schedule', $eventID, 'New Scheduled Event', $params);
             
             return true;  
         }
@@ -217,8 +217,21 @@ class Schedule extends Data
         // Add the new one
         if (!$this->Add($displayGroupIDs, $fromDT, $toDT, $campaignId, $rec_type, $rec_detail, $recToDT, $isPriority, $userid, $displayOrder))
             return false;
-        
-        Debug::LogEntry('audit', 'OUT', 'Schedule', 'Edit');
+
+        $params = [
+            'displayGroupIds' => implode(',', $displayGroupIDs),
+            'fromDt' => $fromDT,
+            'toDt' => $toDT,
+            'campaignId' => $campaignId,
+            'recType' => $rec_type,
+            'recDetail' => $rec_detail,
+            'recToDt' => $recToDT,
+            'isPriority' => $isPriority,
+            'userId' => $userid,
+            'displayOrder' => $displayOrder
+        ];
+
+        \Xibo\Helper\Log::audit('Display', $eventID, 'Schedule Event Edited', $params);
         
         return true;
     }
@@ -226,7 +239,7 @@ class Schedule extends Data
     /**
      * Deletes a scheduled event
      * @return 
-     * @param $eventID Object
+     * @param $eventID int
      */
     public function Delete($eventID)
     {
@@ -243,8 +256,8 @@ class Schedule extends Data
             $sth->execute(array(
                     'eventid' => $eventID
                 ));
-                
-            Debug::LogEntry('audit', 'OUT', 'Schedule', 'Delete');
+
+            \Xibo\Helper\Log::audit('Display', $eventID, 'Schedule Event Deleted', ['eventId' => $eventID]);
             
             return true;  
         }
