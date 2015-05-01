@@ -651,6 +651,17 @@ CREATE TABLE IF NOT EXISTS `lktagmedia` (
   PRIMARY KEY (`lkTagMediaId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
+CREATE TABLE IF NOT EXISTS `auditlog` (
+  `logId` int(11) NOT NULL AUTO_INCREMENT,
+  `logDate` int(11) NOT NULL,
+  `userId` int(11) NOT NULL,
+  `message` varchar(254) NOT NULL,
+  `entity` varchar(50) NOT NULL,
+  `entityId` int(11) NOT NULL,
+  `objectAfter` text NOT NULL,
+  PRIMARY KEY (`logId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
 --
 -- Constraints for dumped tables
 --
