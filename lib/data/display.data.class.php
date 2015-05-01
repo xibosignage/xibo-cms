@@ -22,7 +22,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
 
 class Display extends Data {
 
-    public $loaded;
+    private $loaded;
 
     public $displayId;
     public $isAuditing;
@@ -63,6 +63,8 @@ class Display extends Data {
 
     public $displayGroupId;
     private $_config;
+
+    protected $jsonExclude = ['mediaInventoryXml'];
     
     public function Load() {
         try {
@@ -174,16 +176,19 @@ class Display extends Data {
             $SQL .= " VALUES (:display, :isauditing, :defaultlayoutid, :license, :licensed, :inc_schedule, :email_alert, :alert_timeout) ";
             
             $sth = $dbh->prepare($SQL);
-            $sth->execute(array(
-                    'display' => $display,
-                    'isauditing' => 0,
-                    'defaultlayoutid' => 1,
-                    'license' => $license,
-                    'licensed' => 0,
-                    'inc_schedule' => 0,
-                    'email_alert' => 0,
-                    'alert_timeout' => 0
-                ));
+
+            $params = array(
+                'display' => $display,
+                'isauditing' => 0,
+                'defaultlayoutid' => 1,
+                'license' => $license,
+                'licensed' => 0,
+                'inc_schedule' => 0,
+                'email_alert' => 0,
+                'alert_timeout' => 0
+            );
+
+            $sth->execute($params);
         
             // Get the ID of the inserted record
             $displayId = $dbh->lastInsertId();
@@ -198,7 +203,7 @@ class Display extends Data {
             if (!$displayGroupObject->Link($displayGroupId, $displayId))
                 $this->ThrowError(25001, __('Could not link the new display with its group.'));
             
-            Debug::LogEntry('audit', 'OUT', 'Display', 'Add');
+            \Xibo\Helper\Log::audit('Display', $displayId, 'Display Added', $params);
 
             return $displayId;
         }
@@ -339,7 +344,7 @@ class Display extends Data {
                 $this->ThrowError(25002, __('Could not update this display with a new name.'));
             }
 
-            Debug::LogEntry('audit', 'OUT', 'DisplayGroup', 'Edit');
+            \Xibo\Helper\Log::audit('Display', $this->displayId, 'Display Edited', $this->jsonSerialize());
             
             return true;
         }
@@ -357,7 +362,7 @@ class Display extends Data {
     /**
      * Deletes a Display
      * @return 
-     * @param $displayID Object
+     * @param $displayID int
      */
     public function Delete($displayID)
     {
@@ -387,7 +392,7 @@ class Display extends Data {
                     'displayid' => $displayID
                 ));
 
-            Debug::LogEntry('audit', 'OUT', 'Display', 'Delete');
+            \Xibo\Helper\Log::audit('Display', $displayID, 'Display Deleted', ['displayId' => $displayID]);
 
             return true;
         }

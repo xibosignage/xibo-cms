@@ -49,6 +49,8 @@ require_once("lib/app/session.class.php");
 require_once("lib/app/cache.class.php");
 require_once("lib/app/thememanager.class.php");
 require_once("lib/pages/base.class.php");
+require_once("lib/Helper/Log.php");
+require_once("lib/Helper/ObjectVars.php");
 require_once("3rdparty/parsedown/parsedown.php");
 require_once("3rdparty/jdatetime/jdatetime.class.php");
 

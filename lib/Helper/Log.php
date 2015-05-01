@@ -32,7 +32,7 @@ class Log
      * @param string $entity
      * @param int $entityId
      * @param string $message
-     * @param object|array $object
+     * @param string|object|array $object
      */
     public static function audit($entity, $entityId, $message, $object)
     {
@@ -41,10 +41,14 @@ class Log
         if (self::$_auditLogStatement == null) {
             $dbh = \PDOConnect::newConnection();
             self::$_auditLogStatement = $dbh->prepare('
-                INSERT INTO `audit_log` (logDate, userId, entity, message, entityId, objectAfter)
+                INSERT INTO `auditlog` (logDate, userId, entity, message, entityId, objectAfter)
                   VALUES (:logDate, :userId, :entity, :message, :entityId, :objectAfter)
             ');
         }
+
+        // If we aren't a string then encode
+        if (!is_string($object))
+            $object = json_encode($object);
 
         self::$_auditLogStatement->execute([
             'logDate' => time(),
@@ -52,7 +56,7 @@ class Log
             'entity' => $entity,
             'message' => $message,
             'entityId' => $entityId,
-            'objectAfter' => json_encode($object)
+            'objectAfter' => $object
         ]);
     }
 }

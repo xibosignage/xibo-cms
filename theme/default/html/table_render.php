@@ -77,6 +77,17 @@ foreach(Theme::Get('table_rows') as $row) {
             ?>
             <?php if (isset($col['icons']) && $col['icons']) { ?>
             <td><span <?php if (isset($col['iconDescription']) && isset($row[$col['iconDescription']]) && $row[$col['iconDescription']] != '') echo 'title="' . $row[$col['iconDescription']] . '"'; ?> class="<?php echo ($row[$col['name']] == 1) ? 'glyphicon glyphicon-ok' : (($row[$col['name']] == 0) ? 'glyphicon glyphicon-remove' : 'glyphicon glyphicon-exclamation-sign'); ?>"></span></td>
+            <?php } else if (isset($col['array']) && $col['array'] && is_array($row[$col['name']])) { ?>
+            <td>
+                <table class="arrayViewer">
+                    <?php foreach ($row[$col['name']] as $key => $item) { ?>
+                    <tr>
+                        <td><?php echo $key; ?></td>
+                        <td><?php echo $item; ?></td>
+                    </tr>
+                    <?php } ?>
+                </table>
+            </td>
             <?php } else { ?>
             <td><?php echo $row[$col['name']]; ?></td>
             <?php } ?>
