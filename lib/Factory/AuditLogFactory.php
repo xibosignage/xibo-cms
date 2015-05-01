@@ -45,10 +45,10 @@ class AuditLogFactory
         $select = ' SELECT logId, logDate, user.userName, message, objectAfter, entity, entityId, auditlog.userId ';
         $body = 'FROM `auditlog` LEFT OUTER JOIN user ON user.userId = auditlog.userId WHERE 1 = 1 ';
 
-        if (\Kit::GetParam('search', _STRING, $filterBy) != '') {
+        if (\Kit::GetParam('search', $filterBy, _STRING) != '') {
             // tokenize
             $i = 0;
-            foreach (explode(' ', \Kit::GetParam('search', _STRING, $filterBy)) as $searchTerm) {
+            foreach (explode(' ', \Kit::GetParam('search', $filterBy, _STRING)) as $searchTerm) {
                 $i++;
 
                 if (stripos($searchTerm, '|') > -1) {
@@ -57,16 +57,33 @@ class AuditLogFactory
                     if (!isset($complexTerm[1]) || $complexTerm[1] == '')
                         continue;
 
+                    $like = false;
+
                     switch (strtolower($complexTerm[0])) {
+                        case 'fromtimestamp':
+                            $body .= ' AND auditlog.logDate >= :search' . $i;
+                            break;
+
+                        case 'totimestamp':
+                            $body .= ' AND auditlog.logDate < :search' . $i;
+                            break;
+
                         case 'entity':
+                            $like = true;
                             $body .= ' AND auditlog.entity LIKE :search' . $i;
                             break;
 
+                        case 'username':
+                            $like = true;
+                            $body .= ' AND user.userName LIKE :search' . $i;
+                            break;
+
                         default:
+                            $like = true;
                             $body .= ' AND auditlog.message LIKE :search' . $i;
                     }
 
-                    $params['search' . $i] = '%' . $complexTerm[1] . '%';
+                    $params['search' . $i] = (($like) ? '%' . $complexTerm[1] . '%' : $complexTerm[1]);
                 }
                 else {
                     $body .= ' AND auditlog.message LIKE :search' . $i;

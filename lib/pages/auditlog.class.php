@@ -101,23 +101,39 @@ class auditlogDAO extends baseDAO {
         setSession('auditlog', 'filterToDt', $filterToDt);
         setSession('auditlog', 'filterUser', $filterEntity);
         setSession('auditlog', 'filterEntity', $filterFromDt);
-		
+
+        $search = [];
+
 		// Get the dates and times
 		if ($filterFromDt == '') {
-			$fromTimestamp = time();
+			$fromTimestamp = (new DateTime())->sub(new DateInterval("P1D"));
 		}
 		else {
-			$start_date = DateManager::getTimestampFromString($filterFromDt);
-			$fromTimestamp = strtotime($start_date[1] . "/" . $start_date[0] . "/" . $start_date[2] . ' ' . date("H", time()) . ":" . date("i", time()) . ':59');
+            $fromTimestamp = (new DateTime())->setTimestamp($filterFromDt);
+            $fromTimestamp->setTime(0, 0, 0);
 		}
 
-        if ($filterToDt == '') {
-			$toTimeStamp = time();
+		if ($filterToDt == '') {
+			$toTimestamp = (new DateTime());
 		}
 		else {
-			$start_date = DateManager::getTimestampFromString($filterToDt);
-			$toTimeStamp = strtotime($start_date[1] . "/" . $start_date[0] . "/" . $start_date[2] . ' ' . date("H", time()) . ":" . date("i", time()) . ':59');
+            $toTimestamp = (new DateTime())->setTimestamp($filterToDt);
+            $toTimestamp->setTime(0, 0, 0);
 		}
+
+        $search[] = ['fromTimeStamp', $fromTimestamp->format('U')];
+        $search[] = ['toTimeStamp', $toTimestamp->format('U')];
+
+        if ($filterUser != '')
+            $search[] = ['userName', $filterUser];
+
+        if ($filterEntity != '')
+            $search[] = ['entity', $filterEntity];
+
+        // Build the search string
+        $search = implode(' ', array_map(function ($element) {
+            return implode('|', $element);
+        }, $search));
 
         $cols = array(
             array('name' => 'logId', 'title' => __('ID')),
@@ -129,16 +145,13 @@ class auditlogDAO extends baseDAO {
         );
         Theme::Set('table_cols', $cols);
 
-        $rows = \Xibo\Factory\AuditLogFactory::query('logId', ['search' => '']);
+        $rows = \Xibo\Factory\AuditLogFactory::query('logId', ['search' => $search]);
 
         // Do some post processing
         foreach ($rows as $row) {
             /* @var \Xibo\Entity\AuditLog $row */
             $row->logDate = DateManager::getLocalDate($row->logDate);
-            Debug::Audit(var_export($row->objectAfter, true));
             $row->objectAfter = json_decode($row->objectAfter);
-
-            Debug::Audit(var_export($row->objectAfter, true));
         }
 
 		Theme::Set('table_rows', json_decode(json_encode($rows), true));
