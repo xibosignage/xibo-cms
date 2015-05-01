@@ -127,7 +127,7 @@ span.error {
 }
 
 .regionInfo {
-    z-index:50;
+    z-index: 200;
 }
 
 .preview {
