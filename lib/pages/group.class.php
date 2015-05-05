@@ -788,30 +788,45 @@ END;
 		// Convert to an array of ID's for convenience
 		$allUserIds = array_map(function ($array) { return $array['userid']; }, $allUsers);
 
-		// Users in group
-		$usersAssigned = $this->user->userList(null, array('groupIds' => array($groupId)));
+        // Users in group
+		$usersAssigned = UserData::entries(null, array('groupIds' => array($groupId)));
 
-        foreach ($usersAssigned as $row) {
+        Debug::Audit('All userIds we want to assign: ' . var_export($users, true));
+        Debug::Audit('All userIds we have access to: ' . var_export($allUserIds, true));
+
+        foreach ($usersAssigned as $user) {
+            /* @var Userdata $user */
 			// Did this session have permission to do anything to this user?
 			// If not, move on
-			if (!in_array($row['userid'], $allUserIds))
+			if (!in_array($user->userId, $allUserIds))
 				continue;
 
+            Debug::Audit('Logged in user has permission to make changes to this assigned user ' . $user->userId);
+
             // Is this user in the provided list of users?
-			if (in_array($row['userid'], $users)) {
+			if (in_array($user->userId, $users)) {
                 // This user is already assigned, so we remove it from the $users array
-				unset($users[$row['userid']]);
+                Debug::Audit('This user is already assigned ' . $user->userId);
+
+                if (($key = array_search($user->userId, $users)) !== false) {
+                    unset($users[$key]);
+                }
             }
             else
             {
+                Debug::Audit('This user is assigned, but not in the list of assignments ' . $user->userId);
+
 				// It isn't therefore needs to be removed
-				if (!$groupObject->Unlink($groupId, $row['userid']))
+				if (!$groupObject->Unlink($groupId, $user->userId))
 					trigger_error($groupObject->GetErrorMessage(), E_USER_ERROR);
             }
         }
 
+        Debug::Audit('All userIds we want to assign after sorting: ' . var_export($users, true));
+
 		// Add any users that are still missing after tha assignment process
-        foreach($users as $userId) {
+        foreach ($users as $userId) {
+            Debug::Audit('User was missing, linking them: ' . $userId);
             // Add any that are missing
 			if (!$groupObject->Link($groupId, $userId))
 			{
