@@ -828,7 +828,7 @@ class Media extends Data
 
             //Debug::Audit('Found file: ' . $file);
 
-            $this->addModuleFile($folder . DIRECTORY_SEPARATOR . $file, $force);
+            $this->addModuleFile($folder . DIRECTORY_SEPARATOR . $file, 0, true, $force);
         }
     }
 
