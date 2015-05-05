@@ -170,7 +170,7 @@ class ForecastIo extends Module
 
         Theme::Set('form_tabs', $tabs);
 
-	$formFields['general'][] = FormManager::AddText('name', __('Name'), NULL,
+	    $formFields['general'][] = FormManager::AddText('name', __('Name'), NULL,
             __('An optional name for this media'), 'n');
 
         $formFields['general'][] = FormManager::AddNumber('duration', __('Duration'), NULL, 
@@ -213,7 +213,10 @@ class ForecastIo extends Module
             'value',
             __('Select the language you would like to use.'), 'l');
 
-	$formFields['general'][] = FormManager::AddText('color', __('Colour'), '#000',
+	    $formFields['advanced'][] = FormManager::AddCheckbox('dayConditionsOnly', __('Only show Daytime weather conditions'), 1,
+            __('Tick if you would like to only show the Daytime weather conditions.'), 'd');
+
+	    $formFields['general'][] = FormManager::AddText('color', __('Colour'), '#000',
             __('Please select a colour for the foreground text.'), 'c', 'required');
 
         $formFields['advanced'][] = FormManager::AddCheckbox('overrideTemplate', __('Override the template?'), 0, 
@@ -287,6 +290,7 @@ class ForecastIo extends Module
         $this->SetOption('size', Kit::GetParam('size', _POST, _INT));
         $this->SetOption('units', Kit::GetParam('units', _POST, _WORD));
         $this->SetOption('lang', Kit::GetParam('lang', _POST, _WORD));
+        $this->SetOption('dayConditionsOnly', Kit::GetParam('dayConditionsOnly', _POST, _CHECKBOX));
 
         $this->SetRaw('<styleSheet><![CDATA[' . Kit::GetParam('styleSheet', _POST, _HTMLSTRING) . ']]></styleSheet>
             <currentTemplate><![CDATA[' . Kit::GetParam('currentTemplate', _POST, _HTMLSTRING) . ']]></currentTemplate>
@@ -380,6 +384,9 @@ class ForecastIo extends Module
             'value',
             __('Select the language you would like to use.'), 'l');
 
+        $formFields['advanced'][] = FormManager::AddCheckbox('dayConditionsOnly', __('Only show Daytime weather conditions'), $this->GetOption('dayConditionsOnly', 1),
+            __('Tick if you would like to only show the Daytime weather conditions.'), 'd');
+
         $formFields['general'][] = FormManager::AddText('color', __('Colour'), $this->GetOption('color', '000'), 
             __('Please select a colour for the foreground text.'), 'c', 'required');
 
@@ -463,6 +470,7 @@ class ForecastIo extends Module
         $this->SetOption('size', Kit::GetParam('size', _POST, _INT));
         $this->SetOption('units', Kit::GetParam('units', _POST, _WORD));
         $this->SetOption('lang', Kit::GetParam('lang', _POST, _WORD));
+        $this->SetOption('dayConditionsOnly', Kit::GetParam('dayConditionsOnly', _POST, _CHECKBOX));
 
         $this->SetRaw('<styleSheet><![CDATA[' . Kit::GetParam('styleSheet', _POST, _HTMLSTRING) . ']]></styleSheet>
             <currentTemplate><![CDATA[' . Kit::GetParam('currentTemplate', _POST, _HTMLSTRING) . ']]></currentTemplate>
@@ -690,6 +698,11 @@ class ForecastIo extends Module
             }
         }
 
+        // Are we set to only show daytime weather conditions?
+        if ($this->GetOption('dayConditionsOnly') == 1) {
+            if ($data->currently->icon == 'partly-cloudy-night')
+                $data->currently->icon = 'clear-day';
+        }
 
         $data->currently->wicon = (isset($icons[$data->currently->icon]) ? $icons[$data->currently->icon] : $icons['unmapped']);
         $data->currently->temperatureFloor = (isset($data->currently->temperature) ? floor($data->currently->temperature) : '--');
@@ -702,6 +715,12 @@ class ForecastIo extends Module
 
         // Process the icon for each day
         for ($i = 0; $i < 7; $i++) {
+            // Are we set to only show daytime weather conditions?
+            if ($this->GetOption('dayConditionsOnly') == 1) {
+                if ($data['daily']['data'][$i]['icon'] == 'partly-cloudy-night')
+                    $data['daily']['data'][$i]['icon'] = 'clear-day';
+            }
+
             $data['daily']['data'][$i]['wicon'] = (isset($icons[$data['daily']['data'][$i]['icon']]) ? $icons[$data['daily']['data'][$i]['icon']] : $icons['unmapped']);
             $data['daily']['data'][$i]['temperatureMaxFloor'] = (isset($data['daily']['data'][$i]['temperatureMax'])) ? floor($data['daily']['data'][$i]['temperatureMax']) : '--';
             $data['daily']['data'][$i]['temperatureMinFloor'] = (isset($data['daily']['data'][$i]['temperatureMin'])) ? floor($data['daily']['data'][$i]['temperatureMin']) : '--';
