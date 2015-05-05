@@ -217,21 +217,6 @@ class Schedule extends Data
         // Add the new one
         if (!$this->Add($displayGroupIDs, $fromDT, $toDT, $campaignId, $rec_type, $rec_detail, $recToDT, $isPriority, $userid, $displayOrder))
             return false;
-
-        $params = [
-            'displayGroupIds' => implode(',', $displayGroupIDs),
-            'fromDt' => $fromDT,
-            'toDt' => $toDT,
-            'campaignId' => $campaignId,
-            'recType' => $rec_type,
-            'recDetail' => $rec_detail,
-            'recToDt' => $recToDT,
-            'isPriority' => $isPriority,
-            'userId' => $userid,
-            'displayOrder' => $displayOrder
-        ];
-
-        \Xibo\Helper\Log::audit('Display', $eventID, 'Schedule Event Edited', $params);
         
         return true;
     }
@@ -257,7 +242,7 @@ class Schedule extends Data
                     'eventid' => $eventID
                 ));
 
-            \Xibo\Helper\Log::audit('Display', $eventID, 'Schedule Event Deleted', ['eventId' => $eventID]);
+            \Xibo\Helper\Log::audit('Schedule', $eventID, 'Schedule Event Deleted', ['eventId' => $eventID]);
             
             return true;  
         }
