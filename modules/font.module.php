@@ -118,7 +118,7 @@ class font extends Module
         try {
             $dbh = PDOConnect::init();
         
-            $sth = $dbh->prepare('SELECT mediaID, name, storedAs FROM `media` WHERE type = :type AND IsEdited = 0');
+            $sth = $dbh->prepare('SELECT mediaID, name, storedAs FROM `media` WHERE type = :type AND IsEdited = 0 ORDER BY name');
             $sth->execute(array(
                     'type' => 'font'
                 ));
