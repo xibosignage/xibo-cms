@@ -132,8 +132,8 @@ span.error {
 
 .preview {
     position:absolute;
-    top:0px;
-    left:0px;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
 }
@@ -142,6 +142,10 @@ span.error {
     position: absolute;
     left: 2px;
     bottom: -20px;
+}
+
+.previewNav .prevSeq, .previewNav .nextSeq {
+    cursor: pointer;
 }
 
 .preview-media-information {
@@ -273,7 +277,7 @@ ul.dropdown-menu-form {
 }
 
 .page-header {
-  maring: 0;
+  margin: 0;
 }
 
 #new-user-welcome-carousel .carousel-caption {
