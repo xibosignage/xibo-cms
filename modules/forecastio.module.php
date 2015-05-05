@@ -547,11 +547,11 @@ class ForecastIo extends Module
     private function unitsAvailable()
     {
         return array(
-                array('id' => 'auto', 'value' => 'Automatically select based on geographic location'),
-                array('id' => 'ca', 'value' => 'Canada'),
-                array('id' => 'si', 'value' => 'Standard International Units'),
-                array('id' => 'uk', 'value' => 'United Kingdom'),
-                array('id' => 'us', 'value' => 'United States'),
+                array('id' => 'auto', 'value' => 'Automatically select based on geographic location', 'tempUnit' => ''),
+                array('id' => 'ca', 'value' => 'Canada', 'tempUnit' => 'F'),
+                array('id' => 'si', 'value' => 'Standard International Units', 'tempUnit' => 'C'),
+                array('id' => 'uk', 'value' => 'United Kingdom', 'tempUnit' => 'C'),
+                array('id' => 'us', 'value' => 'United States', 'tempUnit' => 'F'),
             );
     }
 
@@ -681,10 +681,21 @@ class ForecastIo extends Module
                 'partly-cloudy-night' => 'wi-night-partly-cloudy',
             );
 
+        // Temperature Unit Mappings
+        $temperatureUnit = '';
+        foreach ($this->unitsAvailable() as $unit) {
+            if ($unit['id'] == $this->GetOption('units', 'auto')) {
+                $temperatureUnit = $unit['tempUnit'];
+                break;
+            }
+        }
+
+
         $data->currently->wicon = (isset($icons[$data->currently->icon]) ? $icons[$data->currently->icon] : $icons['unmapped']);
         $data->currently->temperatureFloor = (isset($data->currently->temperature) ? floor($data->currently->temperature) : '--');
         $data->currently->summary = (isset($data->currently->summary) ? $data->currently->summary : '--');
         $data->currently->weekSummary = (isset($data->daily->summary) ? $data->daily->summary : '--');
+        $data->currently->temperatureUnit = $temperatureUnit;
 
         // Convert a stdObject to an array
         $data = json_decode(json_encode($data), true);
@@ -695,6 +706,7 @@ class ForecastIo extends Module
             $data['daily']['data'][$i]['temperatureMaxFloor'] = (isset($data['daily']['data'][$i]['temperatureMax'])) ? floor($data['daily']['data'][$i]['temperatureMax']) : '--';
             $data['daily']['data'][$i]['temperatureMinFloor'] = (isset($data['daily']['data'][$i]['temperatureMin'])) ? floor($data['daily']['data'][$i]['temperatureMin']) : '--';
             $data['daily']['data'][$i]['temperatureFloor'] = ($data['daily']['data'][$i]['temperatureMinFloor'] != '--' && $data['daily']['data'][$i]['temperatureMaxFloor'] != '--') ? floor((($data['daily']['data'][$i]['temperatureMinFloor'] + $data['daily']['data'][$i]['temperatureMaxFloor']) / 2)) : '--';
+            $data['daily']['data'][$i]['temperatureUnit'] = $temperatureUnit;
         }
 
         return $data;
