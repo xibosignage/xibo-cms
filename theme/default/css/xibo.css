@@ -339,3 +339,7 @@ ul.dropdown-menu-form {
 	}
 
 }
+
+table.arrayViewer {
+    display: none;
+}

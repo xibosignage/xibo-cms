@@ -450,6 +450,11 @@ function XiboGridRender(gridId, autoRefresh) {
                 }
             });
 
+            // Hook up Array Viewers
+            $(sortingDiv).find(".arrayViewerToggle").click(function() {
+                $(this).parent().find(".arrayViewer").toggle();
+            });
+
             // Multi-select check box
             $(outputDiv).find(".selectAllCheckbox").click(function() {
                 // Are we checked?

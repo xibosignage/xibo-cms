@@ -99,8 +99,8 @@ class auditlogDAO extends baseDAO {
         setSession('auditlog', 'Filter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
         setSession('auditlog', 'filterFromDt', $filterFromDt);
         setSession('auditlog', 'filterToDt', $filterToDt);
-        setSession('auditlog', 'filterUser', $filterEntity);
-        setSession('auditlog', 'filterEntity', $filterFromDt);
+        setSession('auditlog', 'filterUser', $filterUser);
+        setSession('auditlog', 'filterEntity', $filterEntity);
 
         $search = [];
 
@@ -109,7 +109,7 @@ class auditlogDAO extends baseDAO {
 			$fromTimestamp = (new DateTime())->sub(new DateInterval("P1D"));
 		}
 		else {
-            $fromTimestamp = (new DateTime())->setTimestamp($filterFromDt);
+            $fromTimestamp = DateTime::createFromFormat('Y-m-d', $filterFromDt);
             $fromTimestamp->setTime(0, 0, 0);
 		}
 
@@ -117,7 +117,7 @@ class auditlogDAO extends baseDAO {
 			$toTimestamp = (new DateTime());
 		}
 		else {
-            $toTimestamp = (new DateTime())->setTimestamp($filterToDt);
+            $toTimestamp = DateTime::createFromFormat('Y-m-d', $filterToDt);
             $toTimestamp->setTime(0, 0, 0);
 		}
 
