@@ -1750,7 +1750,7 @@ class Layout extends Data
             File::EnsureLibraryExists();
             $zip = new ZipArchive();
             $fileName = $libraryPath . 'temp/export_' . Kit::ValidateParam($row['layout'], _FILENAME) . '.zip';
-            $result = $zip->open($fileName, ZIPARCHIVE::OVERWRITE);
+            $result = $zip->open($fileName, ZIPARCHIVE::CREATE | ZIPARCHIVE::OVERWRITE);
             if ($result !== true)
                 $this->ThrowError(__('Can\'t create ZIP. Error Code: ' . $result));
             

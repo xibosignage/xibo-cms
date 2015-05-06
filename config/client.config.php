@@ -534,7 +534,7 @@ $CLIENT_CONFIG = array(
                         'type' => _CHECKBOX,
                         'fieldType' => 'checkbox',
                         'default' => 0,
-                        'helpText' => __('When enabled the client will send the current layout to the CMS each time it changes. Warning: This is bandwidth intensive and should be disabled unless on a LAN.'),
+                        'helpText' => __('Expire Modified Layouts immediately on change. This means a layout can be cut during playback if it receives an update from the CMS'),
                         'enabled' => true,
                         'groupClass' => NULL
                     ),

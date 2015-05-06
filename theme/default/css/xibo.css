@@ -127,7 +127,7 @@ span.error {
 }
 
 .regionInfo {
-    z-index:50;
+    z-index: 200;
 }
 
 .preview {
@@ -342,4 +342,8 @@ ul.dropdown-menu-form {
 		padding-left: 0
 	}
 
+}
+
+table.arrayViewer {
+    display: none;
 }

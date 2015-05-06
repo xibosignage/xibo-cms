@@ -57,6 +57,7 @@ echo __('Resolutions');
 echo __('User Groups');
 echo __('Display Settings');
 echo __('Help Links');
+echo __('Audit Trail');
 
 // Settings translations
 echo __('Media Permissions');

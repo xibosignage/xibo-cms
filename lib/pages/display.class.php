@@ -464,7 +464,6 @@ class displayDAO extends baseDAO
 
             // Create some login lights
             $row['rowColor'] = ($row['mediainventorystatus'] == 1) ? 'success' : (($row['mediainventorystatus'] == 2) ? 'danger' : 'warning');
-            $row['status'] = ($row['mediainventorystatus'] == 1) ? 1 : (($row['mediainventorystatus'] == 2) ? 0 : -1);
 
             // Set some text for the display status
             switch ($row['status']) {
@@ -483,6 +482,8 @@ class displayDAO extends baseDAO
                 default:
                     $row['statusDescription'] = __('Unknown Display Status');
             }
+
+            $row['status'] = ($row['mediainventorystatus'] == 1) ? 1 : (($row['mediainventorystatus'] == 2) ? 0 : -1);
 
             // Thumbnail
             $row['thumbnail'] = '';

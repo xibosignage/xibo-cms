@@ -39,6 +39,18 @@ class font extends Module
     }
 
     /**
+     * Installs any files specific to this module
+     */
+    public function InstallFiles()
+    {
+        $fontsCss = 'modules/preview/fonts.css';
+
+        if (!file_exists($fontsCss)) {
+            touch($fontsCss);
+        }
+    }
+
+    /**
      * Sets the Layout and Region Information
      *  it will then fill in any blanks it has about this media if it can
      * @return
@@ -118,7 +130,7 @@ class font extends Module
         try {
             $dbh = PDOConnect::init();
         
-            $sth = $dbh->prepare('SELECT mediaID, name, storedAs FROM `media` WHERE type = :type AND IsEdited = 0');
+            $sth = $dbh->prepare('SELECT mediaID, name, storedAs FROM `media` WHERE type = :type AND IsEdited = 0 ORDER BY name');
             $sth->execute(array(
                     'type' => 'font'
                 ));
