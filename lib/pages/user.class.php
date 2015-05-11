@@ -229,7 +229,7 @@ class userDAO extends baseDAO {
                 // User Quota
                 $row['buttons'][] = array(
                     'id' => 'usergroup_button_quota',
-                    'url' => 'index.php?p=group&q=userQuotaForm&groupid=' . $row['groupid'],
+                    'url' => 'index.php?p=group&q=quotaForm&groupid=' . $row['groupid'],
                     'text' => __('Set User Quota')
                 );
             }

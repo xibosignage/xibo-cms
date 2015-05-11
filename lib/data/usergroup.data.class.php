@@ -499,6 +499,32 @@ class UserGroup extends Data
     }
 
     /**
+     * Get the library quota for this group
+     * @param int $groupId
+     * @return int
+     * @throws Exception
+     */
+    public static function getLibraryQuota($groupId)
+    {
+        $dbh = PDOConnect::init();
+
+        // Get the maximum quota of this users groups and their own quota
+        $quotaSth = $dbh->prepare('
+            SELECT IFNULL(group.libraryQuota, 0) AS libraryQuota
+              FROM `group`
+             WHERE group.groupId = :groupId
+        ');
+
+        $quotaSth->execute(['groupId' => $groupId]);
+
+        if (!$row = $quotaSth->fetch()) {
+            throw new Exception('Problem getting this users library quota.');
+        }
+
+        return $row['libraryQuota'];
+    }
+
+    /**
      * Update the library quota for a group
      * @param int $groupId
      * @param int $libraryQuota the quote in KB

@@ -208,7 +208,7 @@ END;
 				// User Quota
 	            $row['buttons'][] = array(
 	                    'id' => 'usergroup_button_quota',
-	                    'url' => 'index.php?p=group&q=userQuotaForm&groupid=' . $groupid,
+	                    'url' => 'index.php?p=group&q=quotaForm&groupid=' . $groupid,
 	                    'text' => __('Set User Quota')
 	                );
 			}
@@ -845,20 +845,44 @@ END;
         $response->Respond();
 	}
 
-    public function userQuotaForm()
+    public function quotaForm()
     {
+        $response = new ResponseManager();
+        $groupId = Kit::GetParam('groupId', _GET, _INT);
 
+        // Look up the existing quota
+        $libraryQuota = UserGroup::getLibraryQuota($groupId);
+
+        $formFields = array();
+        $formFields[] = FormManager::AddNumber('libraryQuota', __('Library Quota'), $libraryQuota, __('The quota in Kb that should be applied. Enter 0 for no quota.'), 'q', 'required');
+        Theme::Set('form_fields', $formFields);
+
+        // Set some information about the form
+        Theme::Set('form_id', 'GroupQuotaForm');
+        Theme::Set('form_action', 'index.php?p=group&q=userQuota');
+        Theme::Set('form_meta', '<input type="hidden" name="groupId" value="' . $groupId . '" />');
+
+        $response->SetFormRequestResponse(Theme::RenderReturn('form_render'), __('Edit Library Quota'), '350px', '150px');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Group', 'Edit') . '")');
+        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        $response->AddButton(__('Save'), '$("#GroupQuotaForm").submit()');
+        $response->Respond();
     }
 
-    public function userQuota()
+    public function quota()
     {
         $response = new ResponseManager();
 
         $groupId = Kit::GetParam('groupId', _POST, _INT);
         $libraryQuota = Kit::GetParam('libraryQuota', _POST, _INT);
 
-        if (!UserGroup::updateLibraryQuota($groupId, $libraryQuota))
-            trigger_error(__('Problem setting quota'));
+        try {
+            UserGroup::updateLibraryQuota($groupId, $libraryQuota);
+        }
+        catch (Exception $e) {
+            Debug::Error($e->getMessage());
+            trigger_error(__('Problem setting quota'), E_USER_ERROR);
+        }
 
         $response->SetFormSubmitResponse(__('Group membership set'), false);
         $response->Respond();
