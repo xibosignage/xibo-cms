@@ -294,7 +294,7 @@ class UserGroup extends Data
         
             $sth = $dbh->prepare('DELETE FROM lkusergroup WHERE GroupID = :groupid');
             $sth->execute(array(
-                    'groupid' => $userGroupID
+                    'groupid' => $userGroupId
                 ));
 
             Debug::LogEntry('audit', 'OUT', 'UserGroup', 'UnlinkAllUsers');
@@ -445,5 +445,73 @@ class UserGroup extends Data
             Debug::Error($e->getMessage());
             throw $e;
         }
+    }
+
+    /**
+     * Is this users library quota full
+     * @param int $userId
+     * @return bool true if the quota is full otherwise false
+     * @throws Exception when there is a query error
+     */
+    public static function isQuotaFullByUser($userId)
+    {
+        $dbh = PDOConnect::init();
+
+        // Get the maximum quota of this users groups and their own quota
+        $quotaSth = $dbh->prepare('
+            SELECT group.groupId, IFNULL(group.libraryQuota, 0) AS libraryQuota
+              FROM `group`
+                INNER JOIN `lkgroupuser`
+                ON group.groupId = lkgroupuser.groupId
+             WHERE lkgroupuser.userId = :userId
+            ORDER BY IFNULL(group.libraryQuota, 0) DESC
+        ');
+
+        $quotaSth->execute(['userId' => $userId]);
+
+        if (!$row = $quotaSth->fetch()) {
+            throw new Exception('Problem calculating this users library quota.');
+        }
+
+        $groupId = $row['groupId'];
+        $userQuota = $row['libraryQuota'];
+
+        if ($userQuota <= 0)
+            return true;
+
+        // If there is a quota, then test it against the current library position for this user.
+        //   use the groupId that generated the quota in order to calculate the usage
+        $sth = $dbh->prepare('
+          SELECT IFNULL(SUM(FileSize), 0) AS SumSize
+            FROM `media`
+              INNER JOIN `lkgroupuser`
+              ON lkgroupuser.userId = media.userId
+           WHERE lkgroupuser.groupId = :groupId
+          ');
+        $sth->execute(['groupId' => $groupId]);
+
+        if (!$row = $sth->fetch())
+            throw new Exception("Error Processing Request", 1);
+
+        $fileSize = Kit::ValidateParam($row['SumSize'], _INT);
+
+        return (($fileSize / 1024) <= $userQuota);
+    }
+
+    /**
+     * Update the library quota for a group
+     * @param int $groupId
+     * @param int $libraryQuota the quote in KB
+     */
+    public static function updateLibraryQuota($groupId, $libraryQuota)
+    {
+        $dbh = PDOConnect::init();
+
+        $sth = $dbh->prepare('
+            UPDATE `group` SET libraryQuota = :libraryQuota
+             WHERE groupId = :groupId
+        ');
+
+        $sth->execute(['libraryQuota' => $libraryQuota, 'groupId' => $groupId]);
     }
 }

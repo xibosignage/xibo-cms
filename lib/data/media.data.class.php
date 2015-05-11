@@ -216,6 +216,10 @@ class Media extends Data
                     $this->ThrowError(sprintf(__('Your library is full. Library Limit: %s K'), $libraryLimit));
                 }
             }
+
+            // Check this user doesn't have a quota
+            if (!UserGroup::isQuotaFullByUser($userId))
+                $this->ThrowError(__('You have exceeded your library quota.'));
     
             $extension = strtolower(substr(strrchr($fileName, '.'), 1));
     
@@ -396,11 +400,13 @@ class Media extends Data
 
     /**
      * Revises the file for this media id
-     * @param <type> $mediaId
-     * @param <type> $fileId
-     * @param <type> $fileName
+     * @param int $mediaId
+     * @param int $fileId
+     * @param string $fileName
+     * @param int $userId
+     * @return bool|int
      */
-    public function FileRevise($mediaId, $fileId, $fileName)
+    public function FileRevise($mediaId, $fileId, $fileName, $userId)
     {
         Debug::LogEntry('audit', 'IN', 'Media', 'FileRevise');
 
@@ -424,6 +430,10 @@ class Media extends Data
                     $this->ThrowError(sprintf(__('Your library is full. Library Limit: %s K'), $libraryLimit));
                 }
             }
+
+            // Check this user doesn't have a quota
+            if (!UserGroup::isQuotaFullByUser($userId))
+                $this->ThrowError(__('You have exceeded your library quota.'));
     
             // Call add with this file Id and then update the existing mediaId with the returned mediaId
             // from the add call.

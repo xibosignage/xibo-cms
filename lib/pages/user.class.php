@@ -225,6 +225,13 @@ class userDAO extends baseDAO {
                         'url' => 'index.php?p=user&q=SetPasswordForm&userid=' . $row['userid'],
                         'text' => __('Set Password')
                     );
+
+                // User Quota
+                $row['buttons'][] = array(
+                    'id' => 'usergroup_button_quota',
+                    'url' => 'index.php?p=group&q=userQuotaForm&groupid=' . $row['groupid'],
+                    'text' => __('Set User Quota')
+                );
             }
 
             $rows[] = $row;

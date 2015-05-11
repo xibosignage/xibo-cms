@@ -204,6 +204,13 @@ END;
 	                    'url' => 'index.php?p=group&q=MenuItemSecurityForm&groupid=' . $groupid,
 	                    'text' => __('Menu Security')
 	                );
+
+				// User Quota
+	            $row['buttons'][] = array(
+	                    'id' => 'usergroup_button_quota',
+	                    'url' => 'index.php?p=group&q=userQuotaForm&groupid=' . $groupid,
+	                    'text' => __('Set User Quota')
+	                );
 			}
 
 			$rows[] = $row;
@@ -837,5 +844,24 @@ END;
         $response->SetFormSubmitResponse(__('Group membership set'), false);
         $response->Respond();
 	}
+
+    public function userQuotaForm()
+    {
+
+    }
+
+    public function userQuota()
+    {
+        $response = new ResponseManager();
+
+        $groupId = Kit::GetParam('groupId', _POST, _INT);
+        $libraryQuota = Kit::GetParam('libraryQuota', _POST, _INT);
+
+        if (!UserGroup::updateLibraryQuota($groupId, $libraryQuota))
+            trigger_error(__('Problem setting quota'));
+
+        $response->SetFormSubmitResponse(__('Group membership set'), false);
+        $response->Respond();
+    }
 }
 ?>
