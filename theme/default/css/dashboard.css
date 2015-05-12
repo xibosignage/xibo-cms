@@ -30,7 +30,6 @@ body {
   width: 180px;
   position: fixed;
   height: 100%;
-  z-index: 999;
 }
 .green {
   background: #23ae89 !important;

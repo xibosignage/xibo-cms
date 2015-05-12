@@ -340,6 +340,7 @@ class statsDAO extends baseDAO
         $output = Theme::RenderReturn('stats_page_grid');
 
         $response->SetGridResponse($output);
+        $response->paging = false;
         $response->Respond();
     }
 
