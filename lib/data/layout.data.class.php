@@ -96,6 +96,12 @@ class Layout extends Data
                 $params['campaignId'] = Kit::GetParam('campaignId', $filter_by, _INT, 0);
             }
 
+            // Get the Layout by CampaignId
+            if (Kit::GetParam('layoutSpecificCampaignId', $filter_by, _INT, 0) != 0) {
+                $SQL .= " AND `campaign`.campaignId = :layoutSpecificCampaignId ";
+                $params['layoutSpecificCampaignId'] = Kit::GetParam('layoutSpecificCampaignId', $filter_by, _INT, 0);
+            }
+
             // MediaID
             if (Kit::GetParam('mediaId', $filter_by, _INT, 0) != 0) {
                 $SQL .= " INNER JOIN `lklayoutmedia` ON lklayoutmedia.layoutid = layout.layoutid AND lklayoutmedia.mediaid = :mediaId";
@@ -2135,5 +2141,25 @@ class Layout extends Data
         }
 
         return true;
+    }
+
+    /**
+     * Set the owner
+     * @param int $layoutId
+     * @param int $userId
+     */
+    public static function setOwner($layoutId, $userId)
+    {
+        $dbh = PDOConnect::init();
+
+        $params = array(
+            'userId' => $userId,
+            'layoutId' => $layoutId
+        );
+
+        $sth = $dbh->prepare('UPDATE `layout` SET userId = :userId WHERE layoutId = :layoutId');
+        $sth->execute($params);
+
+        \Xibo\Helper\Log::audit('layout', $layoutId, 'Changing Ownership', $params);
     }
 }
