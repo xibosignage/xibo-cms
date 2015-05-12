@@ -54,6 +54,25 @@ $(document).ready(function() {
 
             $('.btn-group button').removeClass('active');
             $('button[data-calendar-view="' + view + '"]').addClass('active');
+
+            // Hook up any pop-overs (for small events)
+            $('[data-toggle="popover"]').popover({
+                trigger: "click",
+                html: true,
+                content: function() {
+                    return $(this).html();
+                }
+            })
+            .on('shown.bs.popover', function() {
+                var source = $(this);
+                var popover = source.attr("aria-describedby");
+
+                $("#" + popover + " a").click(function(e) {
+                    e.preventDefault();
+                    XiboFormRender($(this).attr('href'));
+                    source.popover("hide");
+                });
+            });
         },
         language: calendarLanguage
     };
