@@ -135,7 +135,8 @@ END;
 	
 		$SQL = <<<END
 		SELECT 	group.group,
-				group.groupID
+				group.groupID,
+				group.libraryQuota
 		FROM `group`
 		WHERE IsUserSpecific = 0 AND IsEveryone = 0
 END;
@@ -154,7 +155,8 @@ END;
 		}
 
 		$cols = array(
-                array('name' => 'usergroup', 'title' => __('User Group'))
+                array('name' => 'usergroup', 'title' => __('User Group')),
+                array('name' => 'libraryQuotaText', 'title' => __('Library Quota'))
             );
         Theme::Set('table_cols', $cols);
 
@@ -162,12 +164,14 @@ END;
 
 		while ($row = $db->get_assoc_row($results)) 
 		{
-			$groupid	= Kit::ValidateParam($row['groupID'], _INT);
-			$group 		= Kit::ValidateParam($row['group'], _STRING);
+			$groupid = Kit::ValidateParam($row['groupID'], _INT);
+			$group = Kit::ValidateParam($row['group'], _STRING);
 
-			$row['usergroup'] = $group;
+            $row['usergroup'] = $group;
+            $row['libraryQuota'] = Kit::ValidateParam($row['libraryQuota'], _INT);
+            $row['libraryQuotaText'] = ($row['libraryQuota'] == 0) ? '' : Kit::formatBytes($row['libraryQuota'] * 1024);
 
-			// we only want to show certain buttons, depending on the user logged in
+            // we only want to show certain buttons, depending on the user logged in
 			if ($user->GetUserTypeID() == 1) 
 			{
 				// Edit
@@ -859,7 +863,7 @@ END;
 
         // Set some information about the form
         Theme::Set('form_id', 'GroupQuotaForm');
-        Theme::Set('form_action', 'index.php?p=group&q=userQuota');
+        Theme::Set('form_action', 'index.php?p=group&q=quota');
         Theme::Set('form_meta', '<input type="hidden" name="groupId" value="' . $groupId . '" />');
 
         $response->SetFormRequestResponse(Theme::RenderReturn('form_render'), __('Edit Library Quota'), '350px', '150px');
@@ -884,8 +888,7 @@ END;
             trigger_error(__('Problem setting quota'), E_USER_ERROR);
         }
 
-        $response->SetFormSubmitResponse(__('Group membership set'), false);
+        $response->SetFormSubmitResponse(__('Quota has been updated'), false);
         $response->Respond();
     }
 }
-?>

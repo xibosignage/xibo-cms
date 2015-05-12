@@ -461,9 +461,9 @@ class UserGroup extends Data
         $quotaSth = $dbh->prepare('
             SELECT group.groupId, IFNULL(group.libraryQuota, 0) AS libraryQuota
               FROM `group`
-                INNER JOIN `lkgroupuser`
-                ON group.groupId = lkgroupuser.groupId
-             WHERE lkgroupuser.userId = :userId
+                INNER JOIN `lkusergroup`
+                ON group.groupId = lkusergroup.groupId
+             WHERE lkusergroup.userId = :userId
             ORDER BY IFNULL(group.libraryQuota, 0) DESC
         ');
 
@@ -484,9 +484,9 @@ class UserGroup extends Data
         $sth = $dbh->prepare('
           SELECT IFNULL(SUM(FileSize), 0) AS SumSize
             FROM `media`
-              INNER JOIN `lkgroupuser`
-              ON lkgroupuser.userId = media.userId
-           WHERE lkgroupuser.groupId = :groupId
+              INNER JOIN `lkusergroup`
+              ON lkusergroup.userId = media.userId
+           WHERE lkusergroup.groupId = :groupId
           ');
         $sth->execute(['groupId' => $groupId]);
 
