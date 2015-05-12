@@ -866,7 +866,7 @@ class Layout extends Data
             if ($row = $sth->fetch()) {
                 // This layout does have a background image
                 // Link it to the new one
-                if (!$lkId = $this->AddLk($newLayoutId, 'background', $row['mediaId']))
+                if (!$newLkId = $this->AddLk($newLayoutId, 'background', $row['mediaId']))
                     throw new Exception(__('Unable to link background'));
             }
 
@@ -877,6 +877,8 @@ class Layout extends Data
             $mediaNodes = $xpath->query("//media");
     
             Debug::LogEntry('audit', 'About to loop through media nodes', 'layout', 'Copy');
+
+            $copiesMade = [];
             
             // On each media node, take the existing LKID and MediaID and create a new LK record in the database
             $sth = $dbh->prepare('SELECT StoredAs FROM media WHERE MediaID = :mediaid');
@@ -885,7 +887,7 @@ class Layout extends Data
             {
                 $mediaId = $mediaNode->getAttribute('id');
                 $type = $mediaNode->getAttribute('type');
-    
+
                 // Store the old media id
                 $oldMediaId = $mediaId;
     
@@ -904,6 +906,9 @@ class Layout extends Data
                     $security->CopyAllForMedia($oldLayoutId, $newLayoutId, $mediaId, $newMediaId);
                     continue;
                 }
+
+                // Library media assigned to the layout, it will have a lkid
+                $lkId = $mediaNode->getAttribute('lkid');
     
                 // Get the regionId
                 $regionNode = $mediaNode->parentNode;
@@ -939,18 +944,29 @@ class Layout extends Data
     
                     // Replace it
                     $uriNode->parentNode->replaceChild($newNode, $uriNode);
+
+                    // Update the permissions for this media on this layout
+                    $security = new LayoutMediaGroupSecurity($this->db);
+                    $security->CopyAllForMedia($oldLayoutId, $newLayoutId, $oldMediaId, $mediaId);
+                }
+                else {
+                    // We haven't copied the media file, therefore we only want to copy permissions once per region
+                    // this is due to https://github.com/xibosignage/xibo/issues/487
+                    if (!isset($copiesMade[$regionId]) || !in_array($mediaId, $copiesMade[$regionId])) {
+                        // Update the permissions for this media on this layout
+                        $security = new LayoutMediaGroupSecurity($this->db);
+                        $security->CopyAllForMedia($oldLayoutId, $newLayoutId, $oldMediaId, $mediaId);
+
+                        $copiesMade[$regionId][] = $mediaId;
+                    }
                 }
     
                 // Add the database link for this media record
-                if (!$lkId = $this->AddLk($newLayoutId, $regionId, $mediaId))
+                if (!$newLkId = $this->AddLk($newLayoutId, $regionId, $mediaId))
                     throw new Exception("Error Processing Request", 1);
     
-                // Update the permissions for this media on this layout
-                $security = new LayoutMediaGroupSecurity($this->db);
-                $security->CopyAllForMedia($oldLayoutId, $newLayoutId, $oldMediaId, $mediaId);
-    
                 // Set this LKID on the media node
-                $mediaNode->setAttribute('lkid', $lkId);
+                $mediaNode->setAttribute('lkid', $newLkId);
             }
     
             Debug::LogEntry('audit', 'Finished looping through media nodes', 'layout', 'Copy');
