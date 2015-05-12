@@ -86,6 +86,10 @@ class Schedule extends Data
                 if ($recToDT == '' || $recToDT == 0)
                     $this->ThrowError(__('Please provide an until date or set repeats to None'));
 
+                // Check that we are non-negative
+                if ($recDetail < 0)
+                    $this->ThrowError(__('Repeat every cannot be a negative number.'));
+
                 $SQL .= ", :recurrence_type, :recurrence_detail, :recurrence_range ";
                 $params['recurrence_type'] = $recType;
                 $params['recurrence_detail'] = $recDetail;
