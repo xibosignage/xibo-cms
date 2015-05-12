@@ -22,6 +22,18 @@
 var calendar;
 
 $(document).ready(function() {
+
+    // Set a listener for popover clicks
+    //  http://stackoverflow.com/questions/11703093/how-to-dismiss-a-twitter-bootstrap-popover-by-clicking-outside
+    $('body').on('click', function (e) {
+        $('[data-toggle="popover"]').each(function () {
+            //the 'is' for buttons that trigger popups
+            //the 'has' for icons within a button that triggers a popup
+            if (!$(this).is(e.target) && $(this).has(e.target).length === 0 && $('.popover').has(e.target).length === 0) {
+                $(this).popover('hide');
+            }
+        });
+    });
 	
     // Set up the navigational controls
     $('.btn-group button[data-calendar-nav]').each(function() {
@@ -59,6 +71,7 @@ $(document).ready(function() {
             $('[data-toggle="popover"]').popover({
                 trigger: "click",
                 html: true,
+                placement: "bottom",
                 content: function() {
                     return $(this).html();
                 }
