@@ -456,6 +456,8 @@ class UserGroup extends Data
     public static function isQuotaFullByUser($userId)
     {
         $dbh = PDOConnect::init();
+        $groupId = 0;
+        $userQuota = 0;
 
         // Get the maximum quota of this users groups and their own quota
         $quotaSth = $dbh->prepare('
@@ -464,17 +466,26 @@ class UserGroup extends Data
                 INNER JOIN `lkusergroup`
                 ON group.groupId = lkusergroup.groupId
              WHERE lkusergroup.userId = :userId
-            ORDER BY IFNULL(group.libraryQuota, 0) DESC
+            ORDER BY `group`.isUserSpecific DESC, IFNULL(group.libraryQuota, 0) DESC
         ');
 
         $quotaSth->execute(['userId' => $userId]);
 
-        if (!$row = $quotaSth->fetch()) {
+        // Loop over until we have a quota
+        $rows = $quotaSth->fetchAll(PDO::FETCH_ASSOC);
+
+        if (count($rows) <= 0) {
             throw new Exception('Problem calculating this users library quota.');
         }
 
-        $groupId = $row['groupId'];
-        $userQuota = $row['libraryQuota'];
+        foreach ($rows as $row) {
+
+            if ($row['libraryQuota'] > 0) {
+                $groupId = $row['groupId'];
+                $userQuota = $row['libraryQuota'];
+                break;
+            }
+        }
 
         if ($userQuota <= 0)
             return true;
