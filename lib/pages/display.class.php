@@ -466,7 +466,7 @@ class displayDAO extends baseDAO
             $row['rowColor'] = ($row['mediainventorystatus'] == 1) ? 'success' : (($row['mediainventorystatus'] == 2) ? 'danger' : 'warning');
 
             // Set some text for the display status
-            switch ($row['status']) {
+            switch ($row['mediainventorystatus']) {
                 case 1:
                     $row['statusDescription'] = __('Display is up to date');
                     break;
