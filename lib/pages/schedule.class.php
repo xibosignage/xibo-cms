@@ -555,8 +555,8 @@ class scheduleDAO extends baseDAO {
             __('Select the end time for this event'), 'e', 'required');
 
         // Add two hidden fields to always carry the ISO date
-        $formFields['general'][] = FormManager::AddHidden('starttime', DateManager::getLocalDate($fromDT, "Y-m-d H:i"));
-        $formFields['general'][] = FormManager::AddHidden('endtime', DateManager::getLocalDate($toDT, "Y-m-d H:i"));
+        $formFields['general'][] = FormManager::AddHidden('starttime', DateManager::getLocalDate($fromDT, "Y-m-d H:i", false));
+        $formFields['general'][] = FormManager::AddHidden('endtime', DateManager::getLocalDate($toDT, "Y-m-d H:i", false));
         
         // Generate a list of layouts.
         $layouts = $user->CampaignList(NULL, false /* isRetired */, false /* show Empty */);
