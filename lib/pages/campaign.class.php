@@ -390,6 +390,15 @@ class campaignDAO extends baseDAO
             __('Note: It will only be replaced in layouts you have permission to edit.'), 
             'r');
 
+        $users = $user->userList(array('userName'));
+        $users[] = [
+            'userid' => -1,
+            'username' => ''
+        ];
+
+        $formFields[] = FormManager::AddCombo('ownerId', __('Owner'), -1, $users, 'userid', 'username',
+            __('Change the Owner of this item. Leave empty to keep the current owner.'), 'o');
+
         Theme::Set('form_fields', $formFields);
 
         $form = Theme::RenderReturn('form_render');
@@ -413,11 +422,18 @@ class campaignDAO extends baseDAO
 
         $campaignId = Kit::GetParam('campaignId', _POST, _INT);
         $groupIds = Kit::GetParam('groupids', _POST, _ARRAY);
+        $ownerId = Kit::GetParam('ownerId', _POST, _INT);
 
         $auth = $this->user->CampaignAuth($campaignId, true);
 
         if (!$auth->modifyPermissions)
             trigger_error(__('You do not have permissions to edit this campaign'), E_USER_ERROR);
+
+        // Change the owner?
+        if ($ownerId > 0) {
+            // Update this Campaign with a new owner
+            Campaign::setOwner($campaignId, $ownerId);
+        }
 
         // Unlink all
         Kit::ClassLoader('campaignsecurity');

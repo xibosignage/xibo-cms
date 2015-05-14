@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2010 Daniel Garner
+ * Copyright (C) 2006-2015 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -85,6 +85,9 @@ if (defined('XMDS') || $method != '')
                     else {
                         header('HTTP/1.0 404 Not Found');
                     }
+
+                    // Debug
+                    Debug::Audit('File request via magic packet. ' . $file['storedAs'], $file['displayId']);
 
                     // Log bandwidth
                     $bandwidth = new Bandwidth();

@@ -135,7 +135,8 @@ END;
 	
 		$SQL = <<<END
 		SELECT 	group.group,
-				group.groupID
+				group.groupID,
+				group.libraryQuota
 		FROM `group`
 		WHERE IsUserSpecific = 0 AND IsEveryone = 0
 END;
@@ -154,7 +155,8 @@ END;
 		}
 
 		$cols = array(
-                array('name' => 'usergroup', 'title' => __('User Group'))
+                array('name' => 'usergroup', 'title' => __('User Group')),
+                array('name' => 'libraryQuotaText', 'title' => __('Library Quota'))
             );
         Theme::Set('table_cols', $cols);
 
@@ -162,12 +164,14 @@ END;
 
 		while ($row = $db->get_assoc_row($results)) 
 		{
-			$groupid	= Kit::ValidateParam($row['groupID'], _INT);
-			$group 		= Kit::ValidateParam($row['group'], _STRING);
+			$groupid = Kit::ValidateParam($row['groupID'], _INT);
+			$group = Kit::ValidateParam($row['group'], _STRING);
 
-			$row['usergroup'] = $group;
+            $row['usergroup'] = $group;
+            $row['libraryQuota'] = Kit::ValidateParam($row['libraryQuota'], _INT);
+            $row['libraryQuotaText'] = ($row['libraryQuota'] == 0) ? '' : Kit::formatBytes($row['libraryQuota'] * 1024);
 
-			// we only want to show certain buttons, depending on the user logged in
+            // we only want to show certain buttons, depending on the user logged in
 			if ($user->GetUserTypeID() == 1) 
 			{
 				// Edit
@@ -203,6 +207,13 @@ END;
 	                    'id' => 'usergroup_button_menu_security',
 	                    'url' => 'index.php?p=group&q=MenuItemSecurityForm&groupid=' . $groupid,
 	                    'text' => __('Menu Security')
+	                );
+
+				// User Quota
+	            $row['buttons'][] = array(
+	                    'id' => 'usergroup_button_quota',
+	                    'url' => 'index.php?p=group&q=quotaForm&groupid=' . $groupid,
+	                    'text' => __('Set User Quota')
 	                );
 			}
 
@@ -837,5 +848,47 @@ END;
         $response->SetFormSubmitResponse(__('Group membership set'), false);
         $response->Respond();
 	}
+
+    public function quotaForm()
+    {
+        $response = new ResponseManager();
+        $groupId = Kit::GetParam('groupId', _GET, _INT);
+
+        // Look up the existing quota
+        $libraryQuota = UserGroup::getLibraryQuota($groupId);
+
+        $formFields = array();
+        $formFields[] = FormManager::AddNumber('libraryQuota', __('Library Quota'), $libraryQuota, __('The quota in Kb that should be applied. Enter 0 for no quota.'), 'q', 'required');
+        Theme::Set('form_fields', $formFields);
+
+        // Set some information about the form
+        Theme::Set('form_id', 'GroupQuotaForm');
+        Theme::Set('form_action', 'index.php?p=group&q=quota');
+        Theme::Set('form_meta', '<input type="hidden" name="groupId" value="' . $groupId . '" />');
+
+        $response->SetFormRequestResponse(Theme::RenderReturn('form_render'), __('Edit Library Quota'), '350px', '150px');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Group', 'Edit') . '")');
+        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        $response->AddButton(__('Save'), '$("#GroupQuotaForm").submit()');
+        $response->Respond();
+    }
+
+    public function quota()
+    {
+        $response = new ResponseManager();
+
+        $groupId = Kit::GetParam('groupId', _POST, _INT);
+        $libraryQuota = Kit::GetParam('libraryQuota', _POST, _INT);
+
+        try {
+            UserGroup::updateLibraryQuota($groupId, $libraryQuota);
+        }
+        catch (Exception $e) {
+            Debug::Error($e->getMessage());
+            trigger_error(__('Problem setting quota'), E_USER_ERROR);
+        }
+
+        $response->SetFormSubmitResponse(__('Quota has been updated'), false);
+        $response->Respond();
+    }
 }
-?>

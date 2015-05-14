@@ -44,6 +44,10 @@ class Userdata extends Data
     public $newUserWizard;
     public $retired;
 
+    // Group Specific
+    public $groupId;
+    public $libraryQuota;
+
     public static function entries($sortOrder = array(), $filterBy = array())
     {
         $entries = array();
@@ -56,9 +60,19 @@ class Userdata extends Data
             $dbh = PDOConnect::init();
 
             $params = array();
-            $SQL  = 'SELECT userId, userName, userTypeId, loggedIn, email, homePage, lastAccessed, newUserWizard, retired ';
-            $SQL .= '  FROM `user` ';
-            $SQL .= ' WHERE 1 = 1 ';
+            $SQL  = '
+              SELECT `user`.userId, userName, userTypeId, loggedIn, email, homePage, lastAccessed, newUserWizard, retired, `userGroups`.groupId, `userGroups`.libraryQuota
+                FROM `user`
+                  LEFT OUTER JOIN (
+                    SELECT `group`.groupId, `group`.libraryQuota, `lkusergroup`.userId
+                      FROM `lkusergroup`
+                        INNER JOIN `group`
+                        ON `group`.groupId = `lkusergroup`.groupId
+                          AND `group`.isUserSpecific = 1
+                  ) userGroups
+                  ON userGroups.userId = `user`.userId
+               WHERE 1 = 1
+            ';
 
             // User Id Provided?
             if (Kit::GetParam('userId', $filterBy, _INT) != 0) {
@@ -111,6 +125,9 @@ class Userdata extends Data
                 $user->lastAccessed = Kit::ValidateParam($row['lastAccessed'], _INT);
                 $user->newUserWizard = Kit::ValidateParam($row['newUserWizard'], _INT);
                 $user->retired = Kit::ValidateParam($row['retired'], _INT);
+
+                $user->groupId = Kit::ValidateParam($row['groupId'], _INT);
+                $user->libraryQuota = Kit::ValidateParam($row['libraryQuota'], _INT);
 
                 $entries[] = $user;
             }

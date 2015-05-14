@@ -120,6 +120,7 @@ CREATE TABLE IF NOT EXISTS `group` (
   `group` varchar(50) NOT NULL,
   `IsUserSpecific` tinyint(4) NOT NULL DEFAULT '0',
   `IsEveryone` tinyint(4) NOT NULL DEFAULT '0',
+  `libraryQuota` int(11) NULL,
   PRIMARY KEY (`groupID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='Groups' AUTO_INCREMENT=4 ;
 

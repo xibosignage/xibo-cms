@@ -274,11 +274,11 @@ class LayoutMediaGroupSecurity extends Data
 
     /**
      * Copys all security for specific media on a layout
-     * @param <type> $layoutId
-     * @param <type> $newLayoutId
-     * @param <type> $oldMediaId
-     * @param <type> $newMediaId
-     * @return <type>
+     * @param int $layoutId
+     * @param int $newLayoutId
+     * @param string $oldMediaId
+     * @param string $newMediaId
+     * @return bool
      */
     public function CopyAllForMedia($layoutId, $newLayoutId, $oldMediaId, $newMediaId)
     {
