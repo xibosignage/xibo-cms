@@ -213,6 +213,10 @@ class ForecastIo extends Module
             'value',
             __('Select the language you would like to use.'), 'l');
 
+        $formFields['advanced'][] = FormManager::AddNumber('updateInterval', __('Update Interval (mins)'), $this->GetOption('updateInterval', 60),
+            __('Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60.'),
+            'n', 'required');
+
 	    $formFields['advanced'][] = FormManager::AddCheckbox('dayConditionsOnly', __('Only show Daytime weather conditions'), 1,
             __('Tick if you would like to only show the Daytime weather conditions.'), 'd');
 
@@ -290,6 +294,7 @@ class ForecastIo extends Module
         $this->SetOption('size', Kit::GetParam('size', _POST, _INT));
         $this->SetOption('units', Kit::GetParam('units', _POST, _WORD));
         $this->SetOption('lang', Kit::GetParam('lang', _POST, _WORD));
+        $this->SetOption('updateInterval', Kit::GetParam('updateInterval', _POST, _INT, 60));
         $this->SetOption('dayConditionsOnly', Kit::GetParam('dayConditionsOnly', _POST, _CHECKBOX));
 
         $this->SetRaw('<styleSheet><![CDATA[' . Kit::GetParam('styleSheet', _POST, _HTMLSTRING) . ']]></styleSheet>
@@ -384,6 +389,10 @@ class ForecastIo extends Module
             'value',
             __('Select the language you would like to use.'), 'l');
 
+        $formFields['advanced'][] = FormManager::AddNumber('updateInterval', __('Update Interval (mins)'), $this->GetOption('updateInterval', 60),
+            __('Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60.'),
+            'n', 'required');
+
         $formFields['advanced'][] = FormManager::AddCheckbox('dayConditionsOnly', __('Only show Daytime weather conditions'), $this->GetOption('dayConditionsOnly', 1),
             __('Tick if you would like to only show the Daytime weather conditions.'), 'd');
 
@@ -405,14 +414,11 @@ class ForecastIo extends Module
         $formFields['forecast'][] = FormManager::AddMessage(__('Please press Request Forecast to show the current forecast and all available substitutions.'));
 
         // Encode up the template
-        if ($this->user->usertypeid == 1)
+        if (Config::GetSetting('SERVER_MODE') == 'Test' && $this->user->usertypeid == 1)
             $formFields['forecast'][] = FormManager::AddMessage('<pre>' . htmlentities(json_encode(array('id' => 'ID', 'value' => 'TITLE', 'main' => $this->GetRawNode('currentTemplate'), 'daily' => $this->GetRawNode('dailyTemplate'), 'css' => $this->GetRawNode('styleSheet')))) . '</pre>');
 
         // Configure the field dependencies
         $this->SetFieldDepencencies();
-
-        // Encode up the template
-        //$formFields['forecast'][] = FormManager::AddMessage('<pre>' . htmlentities(json_encode(array('id' => 'picture', 'value' => 'Pictures', 'main' => '', 'daily' => '', 'css' => ''))) . '</pre>');
 
         // Append the Templates to the response
         $this->response->extra = $this->settings['templates'];
@@ -470,6 +476,7 @@ class ForecastIo extends Module
         $this->SetOption('size', Kit::GetParam('size', _POST, _INT));
         $this->SetOption('units', Kit::GetParam('units', _POST, _WORD));
         $this->SetOption('lang', Kit::GetParam('lang', _POST, _WORD));
+        $this->SetOption('updateInterval', Kit::GetParam('updateInterval', _POST, _INT, 60));
         $this->SetOption('dayConditionsOnly', Kit::GetParam('dayConditionsOnly', _POST, _CHECKBOX));
 
         $this->SetRaw('<styleSheet><![CDATA[' . Kit::GetParam('styleSheet', _POST, _HTMLSTRING) . ']]></styleSheet>
