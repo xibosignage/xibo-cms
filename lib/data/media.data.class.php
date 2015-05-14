@@ -502,7 +502,7 @@ class Media extends Data
         }
     }
 
-    public function Delete($mediaId)
+    public function Delete($mediaId, $newRevisionMediaId = NULL)
     {
         Debug::LogEntry('audit', 'IN', 'Media', 'Delete');
         
@@ -561,10 +561,21 @@ class Media extends Data
                 // Unretire this edited record
                 $editedMediaId = Kit::ValidateParam($editedMediaRow['MediaID'], _INT);
 
-                $sth = $dbh->prepare('UPDATE media SET IsEdited = 0, EditedMediaID = NULL WHERE mediaid = :mediaid');
-                $sth->execute(array(
+                if ($newRevisionMediaId == null) {
+                    // Bring back the old one
+                    $sth = $dbh->prepare('UPDATE media SET IsEdited = 0, EditedMediaID = NULL WHERE mediaid = :mediaid');
+                    $sth->execute(array(
                         'mediaid' => $editedMediaId
                     ));
+
+                } else {
+                    // Link up the old one
+                    $sth = $dbh->prepare('UPDATE media SET EditedMediaID = :newRevisionMediaId WHERE mediaid = :mediaid');
+                    $sth->execute(array(
+                        'mediaid' => $editedMediaId,
+                        'newRevisionMediaId' => $newRevisionMediaId
+                    ));
+                }
             }
     
             return true;  

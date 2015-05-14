@@ -1252,7 +1252,8 @@ END;
 
         // Do we need to delete the old media item?
         if ($tmpName != '' && Kit::GetParam('deleteOldVersion', _POST, _CHECKBOX) == 1) {
-            if (!$mediaObject->Delete($mediaid))
+            // We pass in the newMediaId as the second parameter so that we can correctly link a prior revision if one exists.
+            if (!$mediaObject->Delete($mediaid, $this->mediaid))
                 $this->response->message .= ' ' . __('Failed to remove old media');
         }
         
