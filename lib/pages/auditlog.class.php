@@ -77,6 +77,14 @@ class auditlogDAO extends baseDAO {
                     'help' => __('Truncate the Log'),
                     'onclick' => 'XiboGridRender(\'LogGridForRefresh\')'
                     ),
+                array(
+                    'title' => __('Export'),
+                    'class' => 'XiboFormButton',
+                    'selected' => false,
+                    'link' => 'index.php?p=auditlog&q=outputCsvForm',
+                    'help' => __('Export raw data to CSV'),
+                    'onclick' => ''
+                ),
                 array('title' => __('Filter'),
                     'class' => '',
                     'selected' => false,
@@ -164,4 +172,73 @@ class auditlogDAO extends baseDAO {
 		$response->SetGridResponse($output);
 		$response->Respond();
 	}
+
+    /**
+     * Output CSV Form
+     */
+    public function outputCsvForm()
+    {
+        $response = new ResponseManager();
+
+        Theme::Set('form_id', 'OutputCsvForm');
+        Theme::Set('form_action', 'index.php?p=auditlog&q=OutputCSV');
+
+        $formFields = array();
+        $formFields[] = FormManager::AddText('filterFromDt', __('From Date'),DateManager::getLocalDate(time() - (86400 * 35), 'Y-m-d'), NULL, 'f');
+        $formFields[] = FormManager::AddText('filterToDt', __('To Date'), DateManager::getLocalDate(null, 'Y-m-d'), NULL, 't');
+
+        Theme::Set('header_text', __('Audit Trail'));
+        Theme::Set('form_fields', $formFields);
+        Theme::Set('form_class', 'XiboManualSubmit');
+
+        $response->SetFormRequestResponse(NULL, __('Output Audit Trail as CSV'), '550px', '275px');
+        $response->AddButton(__('Export'), '$("#OutputCsvForm").submit()');
+        $response->AddButton(__('Close'), 'XiboDialogClose()');
+        $response->Respond();
+    }
+
+    /**
+     * Outputs a CSV of audit trail messages
+     */
+    public function outputCSV()
+    {
+        // We are expecting some parameters
+        $filterFromDt = Kit::GetParam('filterFromDt', _REQUEST, _STRING);
+        $filterToDt = Kit::GetParam('filterToDt', _REQUEST, _STRING);
+
+        $fromTimestamp = DateTime::createFromFormat('Y-m-d', $filterFromDt);
+        $fromTimestamp->setTime(0, 0, 0);
+        $toTimestamp = DateTime::createFromFormat('Y-m-d', $filterToDt);
+        $toTimestamp->setTime(0, 0, 0);
+
+        $search = [
+            ['fromTimeStamp', $fromTimestamp->format('U')],
+            ['toTimeStamp', $toTimestamp->format('U')]
+        ];
+
+        // Build the search string
+        $search = implode(' ', array_map(function ($element) {
+            return implode('|', $element);
+        }, $search));
+
+        $rows = \Xibo\Factory\AuditLogFactory::query('logId', ['search' => $search]);
+
+        // We want to output a load of stuff to the browser as a text file.
+        header('Content-Type: text/csv');
+        header('Content-Disposition: attachment; filename="audittrail.csv"');
+        header("Content-Transfer-Encoding: binary");
+        header('Accept-Ranges: bytes');
+
+        $out = fopen('php://output', 'w');
+        fputcsv($out, ['ID', 'Date', 'User', 'Entity', 'Message', 'Object']);
+
+        // Do some post processing
+        foreach ($rows as $row) {
+            /* @var \Xibo\Entity\AuditLog $row */
+            fputcsv($out, [$row->logId, DateManager::getLocalDate($row->logDate), $row->userName, $row->entity, $row->message, $row->objectAfter]);
+        }
+
+        fclose($out);
+        exit;
+    }
 }
