@@ -539,6 +539,17 @@ $CLIENT_CONFIG = array(
                         'groupClass' => NULL
                     ),
                     array(
+                        'name' => 'screenShotIntent',
+                        'tabId' => 'advanced',
+                        'title' => __('Action for Screen Shot Intent'),
+                        'type' => _STRING,
+                        'fieldType' => 'text',
+                        'default' => '',
+                        'helpText' => __('The Intent Action to use for requesting a screen shot. Leave empty to natively create an image from the player screen content.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
                         'name' => 'updateStartWindow',
                         'tabId' => 'advanced',
                         'title' => __('Update Window Start Time'),
