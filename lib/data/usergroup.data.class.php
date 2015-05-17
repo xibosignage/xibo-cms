@@ -456,7 +456,7 @@ class UserGroup extends Data
      */
     public static function isQuotaFullByUser($userId)
     {
-        $dbh = PDOConnect::init();
+        $dbh = \Xibo\Storage\PDOConnect::init();
         $groupId = 0;
         $userQuota = 0;
 

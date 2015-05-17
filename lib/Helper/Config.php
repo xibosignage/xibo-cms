@@ -168,6 +168,18 @@ class Config
     }
 
     /**
+     * Should the host be considered a proxy exception
+     * @param $host
+     * @return bool
+    */
+    public static function isProxyException($host)
+    {
+        $proxyException = Config::GetSetting('PROXY_EXCEPTIONS');
+        Log::debug($host . ' in ' . $proxyException . '. Pos = ' . stripos($host, $proxyException));
+        return ($proxyException != '' && stripos($host, $proxyException) > -1);
+     }
+
+    /**
      * Checks the Environment and Determines if it is suitable
      * @return string
      */
@@ -442,6 +454,7 @@ class Config
         if (function_exists('timezone_identifiers_list')) {
             $status = 1;
         } else {
+            $status = 2;
             $this->envWarning = true;
         }
 
@@ -456,7 +469,8 @@ class Config
         if ($this->CheckZip()) {
             $status = 1;
         } else {
-            $this->envWarning = true;
+            $status = 0;
+            $this->envFault = true;
         }
 
         $rows[] = array(
@@ -478,6 +492,22 @@ class Config
 
         $rows[] = array(
             'item' => __('Large File Uploads'),
+            'status' => $status,
+            'advice' => $advice
+        );
+
+        // Check to see if cURL is installed
+        $advice = __('cURL is used to fetch data from the Internet or Local Network');
+        if ($this->checkCurlInstalled()) {
+            $status = 1;
+        } else {
+            $this->envFault = true;
+            $status = 0;
+            $advice .= __(' and is required.');
+        }
+
+        $rows[] = array(
+            'item' => __('cURL'),
             'status' => $status,
             'advice' => $advice
         );
@@ -659,6 +689,15 @@ class Config
     {
         return class_exists('IntlDateFormatter');
     }
+
+
+     /**
+      * Check to see if curl is installed
+      */
+     static function checkCurlInstalled()
+     {
+         return function_exists('curl_version');
+     }
 
     /**
      * Check PHP is setup for large file uploads

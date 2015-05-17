@@ -92,6 +92,8 @@ use Xibo\Helper\Config;use Xibo\Helper\Theme;use Xibo\Helper\Translate;
         var language = "<?php echo Translate::GetJsLocale(); ?>";
         var dateFormat = "<?php echo Config::GetSetting('DATE_FORMAT', 'Y-m-d h:i'); ?>";
         var calendarType = "<?php echo Config::GetSetting('CALENDAR_TYPE'); ?>";
+        var clockUrl = "<?php echo Theme::urlFor('clock'); ?>";
+        var pingUrl = "<?php echo Theme::urlFor('ping'); ?>";
     </script>
     <script src="<?php echo Theme::rootPath('theme/default/libraries/jquery/jquery-1.9.1.js"'); ?>"></script>
     <script src="<?php echo Theme::rootPath('theme/default/libraries/jquery/jquery.validate.min.js"'); ?>"></script>

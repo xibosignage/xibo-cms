@@ -33,7 +33,7 @@ class Campaign extends Base
         // Configure the theme
         $id = uniqid();
         Theme::Set('id', $id);
-        Theme::Set('form_meta', '<input type="hidden" name="p" value="campaign"><input type="hidden" name="q" value="Grid">');
+        Theme::Set('form_action', $this->urlFor('campaignSearch'));
         Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
         Theme::Set('pager', ApplicationState::Pager($id));
 

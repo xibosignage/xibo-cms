@@ -90,6 +90,7 @@ Theme::SetTranslation('enterText', Theme::Translate('Enter text...'));
         var calendarType = "<?php echo Config::GetSetting('CALENDAR_TYPE'); ?>";
         var baseUrl = "<?php echo Theme::Get('root'); ?>";
         var clockUrl = "<?php echo Theme::urlFor('clock'); ?>";
+        var calendarLanguage = "<?php echo ((strlen(Translate::GetJsLocale() <= 2)) ? Translate::GetJsLocale() . '-' . strtoupper(Translate::GetJsLocale()) : Translate::GetJsLocale()); ?>";
         var pingUrl = "<?php echo Theme::urlFor('ping'); ?>";
         </script>
 	</body>

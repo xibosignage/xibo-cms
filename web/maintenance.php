@@ -257,7 +257,7 @@ else
 
             // Get a list of all displays
             try {
-                $dbh = PDOConnect::init();
+                $dbh = \Xibo\Storage\PDOConnect::init();
                 $sth = $dbh->prepare('SELECT displayId, display FROM `display` WHERE licensed = 1 ORDER BY lastAccessed');
                 $sth->execute();
 
@@ -287,7 +287,7 @@ else
                 }
             }
             catch (Exception $e) {
-                Debug::LogEntry('error', $e->getMessage());
+                Log::error($e);
             }
 
             flush();

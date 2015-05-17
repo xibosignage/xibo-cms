@@ -56,6 +56,12 @@ $app->post('/layout/:id', function($id) use ($app) {
     // Update the Layout
 })->setName('layoutUpdate');
 
+//
+// Campaign
+//
+$app->get('/campaign', function() use ($app) {
+
+})->name('campaignSearch');
 
 //
 // Log

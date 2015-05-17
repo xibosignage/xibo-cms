@@ -26,6 +26,7 @@ use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\MenuFactory;
 use Xibo\Factory\PageFactory;
 use Xibo\Factory\UserFactory;
+use Xibo\Helper\Config;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
@@ -104,7 +105,7 @@ class User
         if ($this->userId == 0)
             throw new NotFoundException(__('User not found'));
 
-        if ($this->CSPRNG == 0) {
+        if ($this->CSPRNG == 0 || Config::Version('DBVersion') < 62) {
             // Password is tested using a plain MD5 check
             if ($this->password != md5($password))
                 throw new AccessDeniedException();

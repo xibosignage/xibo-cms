@@ -20,7 +20,9 @@
  */
 namespace Xibo\Controller;
 
+use Xibo\Exception\LibraryFullException;
 use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Config;
 use Xibo\Helper\Form;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
@@ -304,6 +306,10 @@ class Library extends Base
             if (($fileSize / 1024) > $libraryLimit)
                 trigger_error(sprintf(__('Your library is full. Library Limit: %s K'), $libraryLimit), E_USER_ERROR);
         }
+
+        // Check this user doesn't have a quota
+        if (!\UserGroup::isQuotaFullByUser($this->getUser()->userId))
+            throw new LibraryFullException(__('You have exceeded your library quota'));
 
         // Set the Session / Security information
         $sessionId = session_id();

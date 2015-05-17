@@ -23,6 +23,9 @@
 namespace Xibo\Helper;
 
 
+use Slim\Slim;
+use Xibo\Storage\PDOConnect;
+
 class Log
 {
     private static $_auditLogStatement;
@@ -36,10 +39,10 @@ class Log
      */
     public static function audit($entity, $entityId, $message, $object)
     {
-        \Debug::Audit(sprintf('Audit Trail message recorded for %s with id %d. Message: %s', $entity, $entityId, $message));
+        \Log::Audit(sprintf('Audit Trail message recorded for %s with id %d. Message: %s', $entity, $entityId, $message));
 
         if (self::$_auditLogStatement == null) {
-            $dbh = \PDOConnect::newConnection();
+            $dbh = PDOConnect::newConnection();
             self::$_auditLogStatement = $dbh->prepare('
                 INSERT INTO `auditlog` (logDate, userId, entity, message, entityId, objectAfter)
                   VALUES (:logDate, :userId, :entity, :message, :entityId, :objectAfter)
@@ -59,15 +62,27 @@ class Log
             'objectAfter' => $object
         ]);
     }
-}
-        $app = Slim::getInstance();
-        $app->log->notice(Log::prepare($object, func_get_args()));
+
+    public static function sql($sql, $params)
+    {
+        Log::debug('SQL = %s. Params = %s.', $sql, var_export($params, true));
     }
-    
+
     public static function debug($object)
     {
         $app = Slim::getInstance();
         $app->log->debug(Log::prepare($object, func_get_args()));
+    }
+
+    public static function notice($object)
+    {
+        $app = Slim::getInstance();
+        $app->log->notice(Log::prepare($object, func_get_args()));
+    }
+    public static function info($object)
+    {
+        $app = Slim::getInstance();
+        $app->log->info(Log::prepare($object, func_get_args()));
     }
 
     public static function warning($object)
@@ -116,71 +131,4 @@ class Log
 
         return $object;
     }
-
-    /**
-     * Log
-     * @param string $type
-     * @param string $message
-     * @param string $page [Optional]
-     * @param string $function [Optional]
-     * @param string $logDate [Optional]
-     * @param int $displayId [Optional]
-     * @param int $scheduleId [Optional]
-     * @param int $layoutId [Optional]
-     * @param string $mediaId [Optional]
-     */
-    public static function log($type, $message, $page = null, $function = null, $logDate = null, $displayId = 0, $scheduleId = 0, $layoutId = 0, $mediaId = null)
-    {
-        if (self::$pdo == NULL)
-            self::$pdo = \Xibo\Storage\PDOConnect::newConnection();
-
-        $currentDate = date("Y-m-d H:i:s");
-        $requestUri = \Kit::GetParam('REQUEST_URI', $_SERVER, _STRING, 'Not Supplied');
-        $requestIp = \Kit::GetParam('REMOTE_ADDR', $_SERVER, _STRING, 'Not Supplied');
-        $requestUserAgent = \Kit::GetParam('HTTP_USER_AGENT', $_SERVER, _STRING, 'Not Supplied');
-        $requestUserAgent = substr($requestUserAgent, 0, 253);
-        $userId = \Kit::GetParam('userid', _SESSION, _INT, 0);
-        $message = \Kit::ValidateParam($message, _HTMLSTRING);
-
-        // Prepare the variables
-        if ($logDate == null)
-            $logDate = $currentDate;
-
-        if ($page == null)
-            $page = \Kit::GetParam('p', _GET, _WORD);
-
-        // Insert into the DB
-        try {
-            $dbh = self::$pdo;
-
-            $SQL = 'INSERT INTO log (logdate, type, page, function, message, requesturi, remoteaddr, useragent, userid, displayid, scheduleid, layoutid, mediaid)
-                      VALUES (:logdate, :type, :page, :function, :message, :requesturi, :remoteaddr, :useragent, :userid, :displayid, :scheduleid, :layoutid, :mediaid) ';
-
-            $sth = $dbh->prepare($SQL);
-
-            $params = array(
-                'logdate' => $logDate,
-                'type' => $type,
-                'page' => $page,
-                'function' => $function,
-                'message' => $message,
-                'requesturi' => $requestUri,
-                'remoteaddr' => $requestIp,
-                'useragent' => $requestUserAgent,
-                'userid' => $userId,
-                'displayid' => $displayId,
-                'scheduleid' => $scheduleId,
-                'layoutid' => $layoutId,
-                'mediaid' => $mediaId
-            );
-
-            $sth->execute($params);
-        } catch (PDOException $e) {
-            // In this case just silently log the error
-            error_log($message . '\n\n', 3, './err_log.xml');
-            error_log($e->getMessage() . '\n\n', 3, './err_log.xml');
-        }
-    }
 }
-
-?>
