@@ -23,16 +23,7 @@ use Xibo\Helper\Theme;
 use Xibo\Helper\Translate;
 
 
-// Translations we want always available
-Theme::SetTranslation('multiselect', Theme::Translate('Multiple Items Selected'));
-Theme::SetTranslation('multiselectNoItemsMessage', Theme::Translate('Sorry, no items have been selected.'));
-Theme::SetTranslation('multiselectMessage', Theme::Translate('Caution, you have selected %1 items. Clicking save will run the %2 transaction on all these items.'));
-Theme::SetTranslation('save', Theme::Translate('Save'));
-Theme::SetTranslation('cancel', Theme::Translate('Cancel'));
-Theme::SetTranslation('close', Theme::Translate('Close'));
-Theme::SetTranslation('success', Theme::Translate('Success'));
-Theme::SetTranslation('failure', Theme::Translate('Failure'));
-Theme::SetTranslation('enterText', Theme::Translate('Enter text...'));
+
 ?>
                 </div>
             </div>

@@ -14,6 +14,9 @@
     "ezyang/htmlpurifier": "dev-master",
     "simplepie/simplepie": "dev-master",
     "sallar/jdatetime": "dev-master",
-    "gettext/gettext": "~3.3"
+    "gettext/gettext": "~3.3",
+    "slim/views": "0.1.*",
+    "twig/twig": "~1.18",
+    "twig/extensions": "~1.2"
   }
 }

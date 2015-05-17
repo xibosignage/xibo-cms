@@ -125,13 +125,10 @@ class Login extends Base
     {
         $response = $this->getState();
 
-        Theme::Set('version', VERSION);
-
         // Render the Theme and output
-        $output = Theme::RenderReturn('about_text');
-
-        $response->setData(array('licenceHtml' => $output));
-        $response->SetFormRequestResponse($output, __('About'), '500', '500');
+        $response->template = 'about-text';
+        $response->setData(['version' => VERSION]);
+        $response->setFormProperties(__('About'));
         $response->AddButton(__('Close'), 'XiboDialogClose()');
     }
 

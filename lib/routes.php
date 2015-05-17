@@ -21,10 +21,7 @@
 defined('XIBO') or die('Sorry, you are not allowed to directly access this page.');
 
 // About Page
-$app->get('/about', function () use ($app) {
-    $controller = new \Xibo\Controller\Login($app);
-    $controller->render('About');
-})->setName('about');
+$app->get('/about', '\Xibo\Controller\Login:About')->name('about');
 
 $app->get('/clock', function() use ($app) {
     $app->session->refreshExpiry = false;

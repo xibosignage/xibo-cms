@@ -62,14 +62,22 @@ class Base
 
     /**
      * Create the controller
-     * @param Slim $app
      */
-    public function __construct(Slim $app)
+    public function __construct()
     {
-        $this->app = $app;
+        $this->app = Slim::getInstance();
 
         // Reference back to this from the app
-        $app->controller = $this;
+        $this->app->controller = $this;
+    }
+
+    /**
+     * Get the App
+     * @return Slim
+     */
+    protected function getApp()
+    {
+        return $this->app;
     }
 
     /**
@@ -97,6 +105,15 @@ class Base
     protected function getSession()
     {
         return $this->app->session;
+    }
+
+    /**
+     * Is this the Api?
+     * @return bool
+     */
+    protected function isApi()
+    {
+        return ($this->getApp()->getName() == 'api');
     }
 
     /**
@@ -140,53 +157,41 @@ class Base
 
     /**
      * End the controller execution, calling render
-     *
-     * @param string $method
      * @throws ControllerNotImplemented if the controller is not implemented correctly
      */
-    public function render($method = null)
+    public function render()
     {
         if ($this->rendered || $this->noOutput)
             return;
 
-        if ($method != null && method_exists($this, $method))
-            $this->$method();
+        $app = $this->getApp();
+        $state = $this->getState();
 
         if ($this->isApi()) {
-            $data = $this->getState()->getData();
+            $data = $state->getData();
 
             if (!is_array($data))
                 throw new ControllerNotImplemented();
 
             $this->app->render(200, $data);
         }
-        else {
-            // Web App, either AJAX requested or normal
-            // Check if we want to output a full page
-            if (!$this->app->request->isAjax() && $this->fullPage) {
-                Theme::Set('sidebar_html', $this->sideBarContent());
-                Theme::Set('action_menu', $this->actionMenu());
+        else if ($this->app->request->isAjax()) {
 
-                // Display a page instead
-                $header = Theme::RenderReturn('header');
-                $footer = Theme::RenderReturn('footer');
-
-                $this->getState()->html = $header . $this->getState()->html . $footer;
+            if ($state->template != '') {
+                $state->html = $app->view()->getInstance()->render($state->template . '.twig', $state->getData());
             }
 
-            $this->app->render('response', array('response' => $this->getState()));
+            // AJAX web app
+            echo $state->asJson();
+        }
+        else {
+            if (empty($state->template))
+                throw new ControllerNotImplemented(__('Template Missing'));
+
+            $this->app->render($state->template . '.twig', []);
         }
 
         $this->rendered = true;
-    }
-
-    /**
-     * Does the controller belong to the API application?
-     * @return bool
-     */
-    private function isApi()
-    {
-        return ($this->app->getName() == 'api');
     }
 
     /**

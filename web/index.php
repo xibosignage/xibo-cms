@@ -56,8 +56,21 @@ $app = new \Slim\Slim(array(
 ));
 $app->setName('web');
 
-// web view
-$app->view(new \Xibo\Middleware\WebView());
+// Twig templating
+$twig = new \Slim\Views\Twig();
+$twig->parserOptions = array(
+    'debug' => true,
+    'cache' => '../cache'
+);
+$twig->parserExtensions = array(
+    new \Slim\Views\TwigExtension(),
+    new Twig_Extensions_Extension_I18n()
+);
+
+// Configure the template folder
+$twig->twigTemplateDirs = ['../views'];
+
+$app->view($twig);
 
 // Middleware
 $app->add(new \Xibo\Middleware\Storage());

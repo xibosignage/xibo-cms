@@ -143,6 +143,7 @@ class Layout extends Base
         Theme::Set('form_fields', $formFields);
 
         // Call to render the template
+        $this->getState()->template = 'layout-page';
         $this->getState()->html .= Theme::RenderReturn('grid_render');
     }
 

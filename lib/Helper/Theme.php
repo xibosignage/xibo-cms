@@ -63,6 +63,7 @@ class Theme
 
         require('theme/' . $this->name . '/config.php');
         $this->config = $config;
+        $this->config['themeCode'] = $this->name;
 
         self::$instance = $this;
     }
@@ -328,9 +329,12 @@ class Theme
         return $app->urlFor($route);
     }
 
-    public static function GetConfig($settingName, $default = null)
+    public static function GetConfig($settingName = null, $default = null)
     {
         $theme = Theme::GetInstance();
+
+        if ($settingName == null)
+            return $theme->config;
 
         if (isset($theme->config[$settingName]))
             return $theme->config[$settingName];

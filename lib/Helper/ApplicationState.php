@@ -24,6 +24,7 @@ use Kit;
 
 class ApplicationState
 {
+    public $template;
     public $message;
     public $success;
     public $html;
@@ -108,6 +109,17 @@ class ApplicationState
         //output the code and exit
         echo "$code|$html";
         exit;
+    }
+
+    /**
+     * Set form properties
+     * @param string $title
+     * @param string $callBack
+     */
+    public function setFormProperties($title, $callBack = '')
+    {
+        $this->dialogTitle = $title;
+        $this->callBack = $callBack;
     }
 
     /**

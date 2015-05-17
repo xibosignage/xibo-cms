@@ -24,6 +24,7 @@ namespace Xibo\Middleware;
 
 use Slim\Middleware;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\TokenExpiredException;
 use Xibo\Helper\Theme;
 
 class CsrfGuard extends Middleware
@@ -80,24 +81,20 @@ class CsrfGuard extends Middleware
 
         // Validate the CSRF token.
         if (in_array($this->app->request()->getMethod(), array('POST', 'PUT', 'DELETE'))) {
-            $userToken = $this->app->request()->post($this->key);
+            $userToken = $this->app->request()->headers('X-XSRF-TOKEN');
+            if ($userToken == '') {
+                $userToken = $this->app->request()->params($this->key);
+            }
+
             if ($token !== $userToken) {
-                if ($this->app->request->isAjax()) {
-                    // Return a JSON error response
-                    $this->app->state->Error(__('Sorry the form has expired. Please refresh.'));
-                    $this->app->render('response', array('response' => $this->app->state));
-                    $this->app->halt(200);
-                }
-                else {
-                    // Quit entirely
-                    $this->app->flash('login_message', __('Sorry the form has expired. Please refresh.'));
-                    throw new AccessDeniedException();
-                }
+                throw new TokenExpiredException('Sorry the form has expired. Please refresh.');
             }
         }
 
         // Assign CSRF token key and value to view.
-        Theme::Set('csrfKey', $this->key);
-        Theme::Set('csrfToken', $token);
+        $this->app->view()->appendData(array(
+            'csrfKey'=> $this->key,
+            'csrfToken' => $token
+        ));
     }
 }

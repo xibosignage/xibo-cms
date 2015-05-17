@@ -79,24 +79,29 @@ class State extends Middleware
 
         // Attach a hook to log the route
         $this->app->hook('slim.before.dispatch', function() use ($app) {
+            // Translations we want always available
+            Theme::SetTranslation('multiselect', Theme::Translate('Multiple Items Selected'));
+            Theme::SetTranslation('multiselectNoItemsMessage', Theme::Translate('Sorry, no items have been selected.'));
+            Theme::SetTranslation('multiselectMessage', Theme::Translate('Caution, you have selected %1 items. Clicking save will run the %2 transaction on all these items.'));
+            Theme::SetTranslation('save', Theme::Translate('Save'));
+            Theme::SetTranslation('cancel', Theme::Translate('Cancel'));
+            Theme::SetTranslation('close', Theme::Translate('Close'));
+            Theme::SetTranslation('success', Theme::Translate('Success'));
+            Theme::SetTranslation('failure', Theme::Translate('Failure'));
+            Theme::SetTranslation('enterText', Theme::Translate('Enter text...'));
+
             // Configure some things in the theme
-            // Set the form method based on the route
-            // this is a bit of fluff really, as this is just a naming convention
-            // all forms are requested with the route: /controller/form
-            $pattern = explode('/', $this->app->router->getCurrentRoute()->getPattern());
-            switch ($pattern[count($pattern) - 1]) {
-
-                case 'add':
-                    Theme::Set('form_method', 'put');
-                    break;
-
-                case 'delete':
-                    Theme::Set('form_method', 'delete');
-                    break;
-
-                default:
-                    Theme::Set('form_method', 'post');
-            }
+            $app->view()->appendData(array(
+                'baseUrl' => rtrim(str_replace('index.php', '', $app->request()->getRootUri()), '/') . '/',
+                'route' => $app->router()->getCurrentRoute(),
+                'theme' => Theme::GetConfig(),
+                'settings' => Config::GetAll(),
+                'translate' => [
+                    'translations' => ((Theme::Get('translations') == '') ? '{}' : Theme::Get('translations')),
+                    'jsLocale' => Translate::GetJsLocale(),
+                    'calendarLanguage' => ((strlen(Translate::GetJsLocale() <= 2)) ? Translate::GetJsLocale() . '-' . strtoupper(Translate::GetJsLocale()) : Translate::GetJsLocale())
+                ]
+            ));
 
             Log::debug('called %s', $this->app->router->getCurrentRoute()->getPattern());
         });
