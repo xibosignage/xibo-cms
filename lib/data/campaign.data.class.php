@@ -280,4 +280,47 @@ class Campaign extends Data {
 
         return true;
     }
+
+    /**
+     * Set the Owner
+     * @param int $campaignId
+     * @param int $userId
+     * @throws Exception
+     */
+    public static function setOwner($campaignId, $userId)
+    {
+        $dbh = PDOConnect::init();
+
+        // Get some details about the campaign
+        $select = $dbh->prepare('SELECT campaignId, campaign, userId, isLayoutSpecific FROM `campaign` WHERE campaignId = :campaignId');
+        $select->execute(['campaignId' => $campaignId]);
+
+        if (!$row = $select->fetch(PDO::FETCH_ASSOC))
+            throw new Exception('Unable to find Campaign/Layout');
+
+        // Set the user id
+        $row['userId'] = $userId;
+
+        $sth = $dbh->prepare('UPDATE `campaign` SET userId = :userId WHERE CampaignID = :campaignId');
+        $sth->execute(array(
+            'userId' => $userId,
+            'campaignId' => $campaignId
+        ));
+
+        // Should we also update the layout?
+        if ($row['isLayoutSpecific'] == 1) {
+            $layouts = Layout::Entries(null, ['layoutSpecificCampaignId' => $campaignId]);
+
+            if (count($layouts) <= 0)
+                throw new Exception('Unable to find Layout');
+
+            $layout = $layouts[0];
+
+            /* @var $layout Layout */
+            $layout->setOwner($layout->layoutId, $userId);
+        }
+        else {
+            \Xibo\Helper\Log::audit('campaign', $campaignId, 'Changing Ownership', $row);
+        }
+    }
 }

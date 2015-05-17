@@ -93,8 +93,8 @@ CREATE TABLE IF NOT EXISTS `display` (
   `displayprofileid` int(11) NULL,
   `currentLayoutId` int(11) NULL,
   `screenShotRequested` tinyint(4) NOT NULL DEFAULT '0',
-  `storageAvailableSpace` int(11) NULL,
-  `storageTotalSpace` int(11) NULL,
+  `storageAvailableSpace` bigint(20) NULL,
+  `storageTotalSpace` bigint(20) NULL,
   PRIMARY KEY (`displayid`),
   KEY `defaultplaylistid` (`defaultlayoutid`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
@@ -120,6 +120,7 @@ CREATE TABLE IF NOT EXISTS `group` (
   `group` varchar(50) NOT NULL,
   `IsUserSpecific` tinyint(4) NOT NULL DEFAULT '0',
   `IsEveryone` tinyint(4) NOT NULL DEFAULT '0',
+  `libraryQuota` int(11) NULL,
   PRIMARY KEY (`groupID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='Groups' AUTO_INCREMENT=4 ;
 
@@ -653,6 +654,17 @@ CREATE TABLE IF NOT EXISTS `lktagmedia` (
   `tagId` int(11) NOT NULL,
   `mediaId` int(11) NOT NULL,
   PRIMARY KEY (`lkTagMediaId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `auditlog` (
+  `logId` int(11) NOT NULL AUTO_INCREMENT,
+  `logDate` int(11) NOT NULL,
+  `userId` int(11) NOT NULL,
+  `message` varchar(254) NOT NULL,
+  `entity` varchar(50) NOT NULL,
+  `entityId` int(11) NOT NULL,
+  `objectAfter` text NOT NULL,
+  PRIMARY KEY (`logId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 --

@@ -57,7 +57,7 @@ use Xibo\Helper\Theme;
 		</li>
 
 		<li><p><?php echo Theme::Translate('Click on the below link to open the bug report page for this release.'); ?> <?php echo Theme::Translate('Describe the problem and upload the file you obtained earlier.'); ?></p>
-		<a class="btn btn-default" href="https://github.com/xibosignage/xibo/issues/new" title="<?php echo Theme::Translate('Ask a question'); ?>" target="_blank"><?php echo Theme::Translate('Ask a question'); ?></a>
+		<a class="btn btn-default" href="https://community.xibo.org.uk/c/support" title="<?php echo Theme::Translate('Ask a question'); ?>" target="_blank"><?php echo Theme::Translate('Ask a question'); ?></a>
 		</li>
 
 		</ol>
@@ -77,7 +77,7 @@ use Xibo\Helper\Theme;
 			</form>
 		</li>
 
-		<li><p><?php echo Theme::Translate('Recreate the Problem in a new window and Capture a screenshot.'); ?><?php echo Theme::Translate('You should send your screenshot to info@xibo.org.uk with a reference to the Launchpad Question/Bug you have created previously.'); ?></p>	
+		<li><p><?php echo Theme::Translate('Recreate the Problem in a new window and Capture a screenshot.'); ?><?php echo Theme::Translate('You should post your screenshot in the same topic as the question you asked previously.'); ?></p>
 		</li>
 
 		<li><p><?php echo Theme::Translate('Switch to Production Mode.'); ?></p>

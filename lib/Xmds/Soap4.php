@@ -365,6 +365,9 @@ class Soap4
             // What is the send file mode?
             $sendFileMode = Config::GetSetting('SENDFILE_MODE');
 
+            // Keep a list of path names added to RF to prevent duplicates
+            $pathsAdded = array();
+
             foreach ($sth->fetchAll() as $row) {
                 $recordType = \Kit::ValidateParam($row['RecordType'], _WORD);
                 $path = \Xibo\Helper\Sanitize::string($row['path']);
@@ -375,6 +378,11 @@ class Soap4
                 $mediaNonce = '';
 
                 if ($recordType == 'layout') {
+
+                    // Check we haven't added this before
+                    if (in_array('layout_' . $id, $pathsAdded))
+                        continue;
+
                     // For layouts the MD5 column is the layout xml
                     $fileSize = strlen($xml);
 
@@ -383,7 +391,14 @@ class Soap4
 
                     // Add nonce
                     $nonce->AddXmdsNonce('layout', $this->displayId, NULL, $fileSize, NULL, $id);
+                    $pathsAdded[] = 'layout_' . $id;
+                    
                 } else if ($recordType == 'media') {
+
+                    // Check we haven't added this before
+                    if (in_array('media_' . $path, $pathsAdded))
+                        continue;
+
                     // If they are empty calculate them and save them back to the media.
                     if ($md5 == '' || $fileSize == 0) {
 
@@ -396,6 +411,7 @@ class Soap4
 
                     // Add nonce
                     $mediaNonce = $nonce->AddXmdsNonce('file', $this->displayId, $id, $fileSize, $path);
+                    $pathsAdded[] = 'media_' . $path;
                 } else {
                     continue;
                 }

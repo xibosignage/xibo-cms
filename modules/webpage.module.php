@@ -376,7 +376,7 @@ class webpage extends Module
         $after_body .= '<script>
             var options = ' . json_encode($options) . '
             $(document).ready(function() {
-                $("#content").xiboLayoutScaler(options)
+                $("#content").xiboLayoutScaler(options);
                 $("#iframe").xiboIframeScaler(options);
             });
             </script>';

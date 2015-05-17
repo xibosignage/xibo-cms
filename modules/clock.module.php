@@ -330,9 +330,9 @@ class clock extends Module
                 $javaScriptContent  = '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
                 $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'moment.js"></script>';
                 $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-layout-scaler.js"></script>';
-                $javaScriptContent .= <<<END
-<script>
-    var options = ' . json_encode($options) . '
+                $javaScriptContent .= '<script type="text/javascript">
+                    var locale = "' . TranslationEngine::GetJsLocale() . '";
+                    var options = ' . json_encode($options) . ';
 
     function updateClock() {
         $(".clock").each(function() {
@@ -341,6 +341,7 @@ class clock extends Module
     }
 
     $(document).ready(function() {
+                        moment.locale(locale);
         updateClock();
         setInterval(updateClock, 1000);
         $("body").xiboLayoutScaler(options);

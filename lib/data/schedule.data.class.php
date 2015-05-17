@@ -87,6 +87,10 @@ class Schedule extends Data
                 if ($recToDT == '' || $recToDT == 0)
                     $this->ThrowError(__('Please provide an until date or set repeats to None'));
 
+                // Check that we are non-negative
+                if ($recDetail < 0)
+                    $this->ThrowError(__('Repeat every cannot be a negative number.'));
+
                 $SQL .= ", :recurrence_type, :recurrence_detail, :recurrence_range ";
                 $params['recurrence_type'] = $recType;
                 $params['recurrence_detail'] = $recDetail;
@@ -169,8 +173,8 @@ class Schedule extends Data
             // Notify (dont error)
             $displayObject = new Display();
             $displayObject->NotifyDisplays($campaignId);
-            
-            Log::notice('OUT', 'Schedule', 'Add');
+
+            \Xibo\Helper\Log::audit('Schedule', $eventID, 'New Scheduled Event', $params);
             
             return true;  
         }
@@ -219,15 +223,13 @@ class Schedule extends Data
         if (!$this->Add($displayGroupIDs, $fromDT, $toDT, $campaignId, $rec_type, $rec_detail, $recToDT, $isPriority, $userid, $displayOrder))
             return false;
         
-        Log::notice('OUT', 'Schedule', 'Edit');
-        
         return true;
     }
     
     /**
      * Deletes a scheduled event
      * @return 
-     * @param $eventID Object
+     * @param $eventID int
      */
     public function Delete($eventID)
     {
@@ -244,8 +246,8 @@ class Schedule extends Data
             $sth->execute(array(
                     'eventid' => $eventID
                 ));
-                
-            Log::notice('OUT', 'Schedule', 'Delete');
+
+            \Xibo\Helper\Log::audit('Schedule', $eventID, 'Schedule Event Deleted', ['eventId' => $eventID]);
             
             return true;  
         }

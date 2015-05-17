@@ -340,7 +340,7 @@ class Stats extends Base
         $output = Theme::RenderReturn('stats_page_grid');
 
         $response->SetGridResponse($output);
-
+        $response->paging = false;
     }
 
     public function AvailabilityGrid()

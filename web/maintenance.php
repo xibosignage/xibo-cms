@@ -249,6 +249,49 @@ else
 
         flush();
 
+        // Validate Display Licence Slots
+        $maxDisplays = Config::GetSetting('MAX_LICENSED_DISPLAYS');
+
+        if ($maxDisplays > 0) {
+            print '<h1>' . __('Licence Slot Validation') . '</h1>';
+
+            // Get a list of all displays
+            try {
+                $dbh = PDOConnect::init();
+                $sth = $dbh->prepare('SELECT displayId, display FROM `display` WHERE licensed = 1 ORDER BY lastAccessed');
+                $sth->execute();
+
+                $displays = $sth->fetchAll(PDO::FETCH_ASSOC);
+
+                if (count($displays) > $maxDisplays) {
+                    // :(
+                    // We need to un-licence some displays
+                    $difference = count($displays) - $maxDisplays;
+
+                    $update = $dbh->prepare('UPDATE `display` SET licensed = 0 WHERE displayId = :displayId');
+
+                    foreach ($displays as $display) {
+
+                        // If we are down to 0 difference, then stop
+                        if ($difference == 0)
+                            break;
+
+                        echo sprintf(__('Disabling %s'), $display['display']) . '<br/>' . PHP_EOL;
+                        $update->execute(['displayId' => $display['displayId']]);
+
+                        $difference--;
+                    }
+                }
+                else {
+                    echo __('Done.');
+                }
+            }
+            catch (Exception $e) {
+                Debug::LogEntry('error', $e->getMessage());
+            }
+
+            flush();
+        }
 
         // Wake On LAN
         print '<h1>' . __('Wake On LAN') . '</h1>';

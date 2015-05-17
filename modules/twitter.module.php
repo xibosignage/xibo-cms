@@ -237,6 +237,10 @@ class Twitter extends Module
         // Date format
         $formFields['advanced'][] = Form::AddText('dateFormat', __('Date Format'), 'd M',
             __('The format to apply to all dates returned by the ticker. In PHP date format: http://uk3.php.net/manual/en/function.date.php'), 'f');
+
+        $formFields['advanced'][] = FormManager::AddNumber('updateInterval', __('Update Interval (mins)'), 60,
+            __('Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60.'),
+            'n', 'required');
         
         // Template - for standard stuff
         $formFields['template'][] = Form::AddCombo('templateId', __('Template'), $this->GetOption('templateId', 'tweet-only'),
@@ -330,6 +334,7 @@ class Twitter extends Module
         $this->setRawNode('template', \Kit::GetParam('ta_text', _POST, _HTMLSTRING));
         $this->setRawNode('styleSheet', \Kit::GetParam('ta_css', _POST, _HTMLSTRING));
         $this->SetOption('overrideTemplate', \Kit::GetParam('overrideTemplate', _POST, _CHECKBOX));
+        $this->SetOption('updateInterval', Kit::GetParam('updateInterval', _POST, _INT, 60));
         $this->SetOption('templateId', \Kit::GetParam('templateId', _POST, _WORD));
 
         // Save the widget
@@ -439,8 +444,12 @@ class Twitter extends Module
         $formFields['advanced'][] = Form::AddCheckbox('removeUrls', __('Remove URLs?'), $this->GetOption('removeUrls', 1),
             __('Should URLs be removed from the Tweet Text. Most URLs do not compliment digital signage.'), 'u');
 
+        $formFields['advanced'][] = FormManager::AddNumber('updateInterval', __('Update Interval (mins)'), $this->GetOption('updateInterval', 60),
+            __('Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60.'),
+            'n', 'required');
+
         // Encode up the template
-        if ($this->getUser()->userTypeId == 1)
+        if (Config::GetSetting('SERVER_MODE') == 'Test' && $this->getUser()->userTypeId == 1)
             $formFields['advanced'][] = Form::AddMessage('<pre>' . htmlentities(json_encode(array('id' => 'ID', 'value' => 'TITLE', 'template' => $this->getRawNode('template', null), 'css' => $this->getRawNode('styleSheet', null)))) . '</pre>');
 
         // Template - for standard stuff
@@ -540,6 +549,7 @@ class Twitter extends Module
         $this->SetOption('removeUrls', \Kit::GetParam('removeUrls', _POST, _CHECKBOX));
         $this->SetOption('overrideTemplate', \Kit::GetParam('overrideTemplate', _POST, _CHECKBOX));
         $this->SetOption('templateId', \Kit::GetParam('templateId', _POST, _WORD));
+        $this->SetOption('updateInterval', Kit::GetParam('updateInterval', _POST, _INT, 60));
 
         // Text Template
         $this->setRawNode('template', \Kit::GetParam('ta_text', _POST, _HTMLSTRING));
@@ -606,7 +616,7 @@ class Twitter extends Module
         );
 
         // Proxy support
-        if (Config::GetSetting('PROXY_HOST') != '') {
+        if (Config::GetSetting('PROXY_HOST') != '' && !Config::isProxyException($url)) {
             $httpOptions[CURLOPT_PROXY] = Config::GetSetting('PROXY_HOST');
             $httpOptions[CURLOPT_PROXYPORT] = Config::GetSetting('PROXY_PORT');
 
@@ -687,7 +697,7 @@ class Twitter extends Module
         );
 
         // Proxy support
-        if (Config::GetSetting('PROXY_HOST') != '') {
+        if (Config::GetSetting('PROXY_HOST') != '' && !Config::isProxyException($url)) {
             $httpOptions[CURLOPT_PROXY] = Config::GetSetting('PROXY_HOST');
             $httpOptions[CURLOPT_PROXYPORT] = Config::GetSetting('PROXY_PORT');
 

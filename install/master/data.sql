@@ -1,5 +1,5 @@
 INSERT INTO `version` (`app_ver`, `XmdsVersion`, `XlfVersion`, `DBVersion`) VALUES
-('1.7.2', 4, 2, 86);
+('1.7.4', 4, 2, 89);
 
 INSERT INTO `group` (`groupID`, `group`, `IsUserSpecific`, `IsEveryone`) VALUES
 (1, 'Users', 0, 0),
@@ -162,7 +162,8 @@ INSERT INTO `pages` (`pageID`, `name`, `pagegroupID`) VALUES
 (40, 'sessions', 9),
 (41, 'preview', 3),
 (42, 'statusdashboard', 2),
-(43, 'displayprofile', 7);
+(43, 'displayprofile', 7),
+(44, 'auditlog', 9);
 
 INSERT INTO `menuitem` (`MenuItemID`, `MenuID`, `PageID`, `Args`, `Text`, `Class`, `Img`, `Sequence`, `External`) VALUES
 (1, 1, 2, NULL, 'Schedule', NULL, NULL, 1, 0),
@@ -199,7 +200,8 @@ INSERT INTO `menuitem` (`MenuItemID`, `MenuID`, `PageID`, `Args`, `Text`, `Class
 (37, 6, 37, NULL, 'Campaigns', NULL, NULL, 1, 0),
 (38, 8, 38, NULL, 'Transitions', NULL, NULL, 6, 0),
 (39, 9, 30, NULL, 'Help Links', NULL, NULL, 6, 0),
-(40, 7, 43, NULL, 'Display Settings', NULL, NULL, 4, 0);
+(40, 7, 43, NULL, 'Display Settings', NULL, NULL, 4, 0),
+(41, 9, 44, NULL, 'Audit Trail', NULL, NULL, 2, 0);
 
 
 INSERT INTO `resolution` (`resolutionID`, `resolution`, `width`, `height`, `intended_width`, `intended_height`, `version`, `enabled`) VALUES
@@ -273,7 +275,8 @@ INSERT INTO `setting` (`settingid`, `setting`, `value`, `fieldType`, `helptext`,
 (81, 'CALENDAR_TYPE', 'Gregorian', 'dropdown', 'Which Calendar Type should the CMS use?', 'Gregorian|Jalali', 'regional', 1, 'Calendar Type', '', 50, 'Gregorian', 1, 'string'),
 (82, 'DASHBOARD_LATEST_NEWS_ENABLED', '1', 'checkbox', 'Should the Dashboard show latest news? The address is provided by the theme.', '', 'general', 1, 'Enable Latest News?', '', 110, '1', 1, 'checkbox'),
 (83, 'LIBRARY_MEDIA_DELETEOLDVER_CHECKB','Unchecked','dropdown','Default the checkbox for Deleting Old Version of media when a new file is being uploaded to the library.','Checked|Unchecked','defaults',1,'Default for "Delete old version of Media" checkbox. Shown when Editing Library Media.', '', 50, 'Unchecked', 1, 'dropdown'),
-(84, 'USE_INTL_DATEFORMAT', '0', 'checkbox', 'Should dates be internationalised where possible.', '', 'regional', 1, 'Show international dates?', '', 60, '0', 1, 'checkbox');
+(84, 'USE_INTL_DATEFORMAT', '0', 'checkbox', 'Should dates be internationalised where possible.', '', 'regional', 1, 'Show international dates?', '', 60, '0', 1, 'checkbox'),
+(85, 'PROXY_EXCEPTIONS', '', 'text', 'Hosts and Keywords that should not be loaded via the Proxy Specified. These should be comma separated.', '', 'network', 1, 'Proxy Exceptions', '', 32, '', 1, 'text');
 
 INSERT INTO `usertype` (`usertypeid`, `usertype`) VALUES
 (1, 'Super Admin'),

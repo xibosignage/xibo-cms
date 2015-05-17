@@ -86,7 +86,7 @@ $(document).ready(function(){
     setTimeout(function() {
         $(".region .regionInfo").hide("200");
         $(".region .previewNav").hide("200");
-    }, 1000);
+    }, 500);
 
 });
 

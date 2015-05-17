@@ -19,6 +19,18 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 use Widget\Module;
+     * Installs any files specific to this module
+     */
+    public function InstallFiles()
+    {
+        $fontsCss = 'modules/preview/fonts.css';
+
+        if (!file_exists($fontsCss)) {
+            touch($fontsCss);
+        }
+    }
+
+    /**
 
 class font extends Module
 {

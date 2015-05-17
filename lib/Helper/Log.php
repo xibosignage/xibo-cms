@@ -1,14 +1,14 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006,2007,2008 Daniel Garner and James Packer
+ * Copyright (C) 2015 Spring Signage Ltd
  *
- * This file is part of Xibo.
+ * This file (Log.php) is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,50 +18,56 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+
 namespace Xibo\Helper;
-use PDOException;
-use Slim\Slim;
+
 
 class Log
 {
-    /**
-     * Stringify string objects
-     * @param $object
-     * @return string
-     */
-    private static function prepare($object, $args)
-    {
-        if (is_string($object)) {
-            array_shift($args);
+    private static $_auditLogStatement;
 
-            if (count($args) > 0)
-                $object = vsprintf($object, $args);
+    /**
+     * Audit Log
+     * @param string $entity
+     * @param int $entityId
+     * @param string $message
+     * @param string|object|array $object
+     */
+    public static function audit($entity, $entityId, $message, $object)
+    {
+        \Debug::Audit(sprintf('Audit Trail message recorded for %s with id %d. Message: %s', $entity, $entityId, $message));
+
+        if (self::$_auditLogStatement == null) {
+            $dbh = \PDOConnect::newConnection();
+            self::$_auditLogStatement = $dbh->prepare('
+                INSERT INTO `auditlog` (logDate, userId, entity, message, entityId, objectAfter)
+                  VALUES (:logDate, :userId, :entity, :message, :entityId, :objectAfter)
+            ');
         }
 
-        return $object;
-    }
+        // If we aren't a string then encode
+        if (!is_string($object))
+            $object = json_encode($object);
 
-    public static function sql($sql, $params)
-    {
-        Log::debug('SQL = %s. Params = %s.', $sql, var_export($params, true));
+        self::$_auditLogStatement->execute([
+            'logDate' => time(),
+            'userId' => \Kit::GetParam('userid', _SESSION, _INT, 0),
+            'entity' => $entity,
+            'message' => $message,
+            'entityId' => $entityId,
+            'objectAfter' => $object
+        ]);
     }
-
+}
+        $app = Slim::getInstance();
+        $app->log->notice(Log::prepare($object, func_get_args()));
+    }
+    
     public static function debug($object)
     {
         $app = Slim::getInstance();
         $app->log->debug(Log::prepare($object, func_get_args()));
-    }
-
-    public static function info($object)
-    {
-        $app = Slim::getInstance();
-        $app->log->info(Log::prepare($object, func_get_args()));
-    }
-
-    public static function notice($object)
-    {
-        $app = Slim::getInstance();
-        $app->log->notice(Log::prepare($object, func_get_args()));
     }
 
     public static function warning($object)
@@ -92,6 +98,23 @@ class Log
     {
         $app = Slim::getInstance();
         $app->log->emergency(Log::prepare($object, func_get_args()));
+    }
+    
+    /**
+     * Stringify string objects
+     * @param $object
+     * @return string
+     */
+    private static function prepare($object, $args)
+    {
+        if (is_string($object)) {
+            array_shift($args);
+
+            if (count($args) > 0)
+                $object = vsprintf($object, $args);
+        }
+
+        return $object;
     }
 
     /**

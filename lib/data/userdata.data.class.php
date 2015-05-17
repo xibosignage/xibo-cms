@@ -47,6 +47,10 @@ class Userdata extends Data
     public $newUserWizard;
     public $retired;
 
+    // Group Specific
+    public $groupId;
+    public $libraryQuota;
+
     public static function entries($sortOrder = array(), $filterBy = array())
     {
         $entries = array();
@@ -59,9 +63,19 @@ class Userdata extends Data
             $dbh = \Xibo\Storage\PDOConnect::init();
 
             $params = array();
-            $SQL  = 'SELECT userId, userName, userTypeId, loggedIn, email, homePage, lastAccessed, newUserWizard, retired ';
-            $SQL .= '  FROM `user` ';
-            $SQL .= ' WHERE 1 = 1 ';
+            $SQL  = '
+              SELECT `user`.userId, userName, userTypeId, loggedIn, email, homePage, lastAccessed, newUserWizard, retired, `userGroups`.groupId, `userGroups`.libraryQuota
+                FROM `user`
+                  LEFT OUTER JOIN (
+                    SELECT `group`.groupId, `group`.libraryQuota, `lkusergroup`.userId
+                      FROM `lkusergroup`
+                        INNER JOIN `group`
+                        ON `group`.groupId = `lkusergroup`.groupId
+                          AND `group`.isUserSpecific = 1
+                  ) userGroups
+                  ON userGroups.userId = `user`.userId
+               WHERE 1 = 1
+            ';
 
             // User Id Provided?
             if (\Xibo\Helper\Sanitize::int('userId', $filterBy) != 0) {
@@ -76,7 +90,7 @@ class Userdata extends Data
             }
 
             // User Name Provided
-            if (\Kit::GetParam('userName', $filterBy, _STRING) != 0) {
+            if (Kit::GetParam('userName', $filterBy, _STRING) != '') {
                 $SQL .= " AND user.userName LIKE :userName ";
                 $params['userName'] = '%' . \Kit::GetParam('userName', $filterBy, _STRING) . '%';
             }
@@ -98,7 +112,7 @@ class Userdata extends Data
             if (is_array($sortOrder))
                 $SQL .= 'ORDER BY ' . implode(',', $sortOrder);
 
-            //Debug::Audit(sprintf('Retrieving list of users with SQL: %s. Params: %s', $SQL, var_export($params, true)));
+            Debug::sql($SQL, $params);
         
             $sth = $dbh->prepare($SQL);
             $sth->execute($params);
@@ -114,6 +128,9 @@ class Userdata extends Data
                 $user->lastAccessed = \Xibo\Helper\Sanitize::int($row['lastAccessed']);
                 $user->newUserWizard = \Xibo\Helper\Sanitize::int($row['newUserWizard']);
                 $user->retired = \Xibo\Helper\Sanitize::int($row['retired']);
+
+                $user->groupId = Kit::ValidateParam($row['groupId'], _INT);
+                $user->libraryQuota = Kit::ValidateParam($row['libraryQuota'], _INT);
 
                 $entries[] = $user;
             }

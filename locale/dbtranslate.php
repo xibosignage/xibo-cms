@@ -57,6 +57,7 @@ echo __('Resolutions');
 echo __('User Groups');
 echo __('Display Settings');
 echo __('Help Links');
+echo __('Audit Trail');
 
 // Settings translations
 echo __('Media Permissions');
@@ -125,8 +126,10 @@ echo __('Email maintenance alerts for users with view permissions to effected Di
 echo __('Set the level of logging the CMS should record. In production systems "error" is recommended.');
 echo __('Which Calendar Type should the CMS use?');
 echo __('Enable Latest News?');
-echo __('Default for "Delete old version of Media" checkbox. Showen when Editing Library Media.');
+echo __('Default for "Delete old version of Media" checkbox. Shown when Editing Library Media.');
 echo __('Should the Dashboard show latest news? The address is provided by the theme.');
+echo __('Proxy Exceptions');
+echo __('Hosts and Keywords that should not be loaded via the Proxy Specified. These should be comma separated.');
 
 // Transitions
 echo __('Fade In');

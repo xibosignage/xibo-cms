@@ -52,6 +52,13 @@ class Media extends Data
 
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
+            $libraryFolder = Config::GetSetting('LIBRARY_LOCATION');
+
+            // Check that the file exists
+            if (!file_exists($libraryFolder . 'temp/' . $fileId)) {
+                $this->ThrowError(__('File cannot be found. Please check library permissions.'));
+            }
+
         
             // Check we have room in the library
             $libraryLimit = Config::GetSetting('LIBRARY_SIZE_LIMIT_KB');
@@ -70,6 +77,10 @@ class Media extends Data
                     $this->ThrowError(sprintf(__('Your library is full. Library Limit: %s K'), $libraryLimit));
                 }
             }
+
+            // Check this user doesn't have a quota
+            if (!UserGroup::isQuotaFullByUser($userId))
+                $this->ThrowError(__('You have exceeded your library quota.'));
     
             $extension = strtolower(substr(strrchr($fileName, '.'), 1));
     
@@ -123,8 +134,6 @@ class Media extends Data
             $mediaId = $dbh->lastInsertId();
     
             // Now move the file
-            $libraryFolder = Config::GetSetting('LIBRARY_LOCATION');
-    
             if (!@rename($libraryFolder . 'temp/' . $fileId, $libraryFolder . $mediaId . '.' . $extension))
                 $this->ThrowError(15, 'Error storing file.');
     
@@ -248,11 +257,13 @@ class Media extends Data
 
     /**
      * Revises the file for this media id
-     * @param <type> $mediaId
-     * @param <type> $fileId
-     * @param <type> $fileName
+     * @param int $mediaId
+     * @param int $fileId
+     * @param string $fileName
+     * @param int $userId
+     * @return bool|int
      */
-    public function FileRevise($mediaId, $fileId, $fileName)
+    public function FileRevise($mediaId, $fileId, $fileName, $userId)
     {
         Log::notice('IN', 'Media', 'FileRevise');
 
@@ -276,6 +287,10 @@ class Media extends Data
                     $this->ThrowError(sprintf(__('Your library is full. Library Limit: %s K'), $libraryLimit));
                 }
             }
+
+            // Check this user doesn't have a quota
+            if (!UserGroup::isQuotaFullByUser($userId))
+                $this->ThrowError(__('You have exceeded your library quota.'));
     
             // Call add with this file Id and then update the existing mediaId with the returned mediaId
             // from the add call.
@@ -344,7 +359,7 @@ class Media extends Data
         }
     }
 
-    public function Delete($mediaId)
+    public function Delete($mediaId, $newRevisionMediaId = NULL)
     {
         Log::notice('IN', 'Media', 'Delete');
         
@@ -403,10 +418,21 @@ class Media extends Data
                 // Unretire this edited record
                 $editedMediaId = \Xibo\Helper\Sanitize::int($editedMediaRow['MediaID']);
 
-                $sth = $dbh->prepare('UPDATE media SET IsEdited = 0, EditedMediaID = NULL WHERE mediaid = :mediaid');
-                $sth->execute(array(
+                if ($newRevisionMediaId == null) {
+                    // Bring back the old one
+                    $sth = $dbh->prepare('UPDATE media SET IsEdited = 0, EditedMediaID = NULL WHERE mediaid = :mediaid');
+                    $sth->execute(array(
                         'mediaid' => $editedMediaId
                     ));
+
+                } else {
+                    // Link up the old one
+                    $sth = $dbh->prepare('UPDATE media SET EditedMediaID = :newRevisionMediaId WHERE mediaid = :mediaid');
+                    $sth->execute(array(
+                        'mediaid' => $editedMediaId,
+                        'newRevisionMediaId' => $newRevisionMediaId
+                    ));
+                }
             }
     
             return true;  
@@ -706,7 +732,7 @@ class Media extends Data
 
             //Debug::Audit('Found file: ' . $file);
 
-            $this->addModuleFile($folder . DIRECTORY_SEPARATOR . $file, $force);
+            $this->addModuleFile($folder . DIRECTORY_SEPARATOR . $file, 0, true, $force);
         }
     }
 

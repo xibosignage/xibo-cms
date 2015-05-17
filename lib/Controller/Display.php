@@ -58,6 +58,7 @@ class Display extends Base
             $filter_display = Session::Get('display', 'filter_display');
             $filterMacAddress = Session::Get('display', 'filterMacAddress');
             $filter_showView = Session::Get('display', 'filter_showView');
+            $filterVersion = Session::Get('display', 'filterVersion');
             $filter_autoRefresh = Session::Get('display', 'filter_autoRefresh');
         } else {
             $filter_pinned = 0;
@@ -65,6 +66,7 @@ class Display extends Base
             $filter_display = NULL;
             $filterMacAddress = NULL;
             $filter_showView = 0;
+            $filterVersion = NULL;
             $filter_autoRefresh = 0;
         }
 
@@ -76,9 +78,10 @@ class Display extends Base
             $filter_showView,
             array(
                 array('key' => 0, 'value' => __('Default')),
+                array('key' => 4, 'value' => __('Default with Description')),
                 array('key' => 1, 'value' => __('Screen shot thumbnails')),
                 array('key' => 2, 'value' => __('Screen shot thumbnails when Logged In')),
-                array('key' => 3, 'value' => __('Extended Display Status')),
+                array('key' => 3, 'value' => __('Extended Display Status'))
             ),
             'key',
             'value',
@@ -100,7 +103,7 @@ class Display extends Base
             NULL,
             'd');
 
-        $formFields[] = Form::AddNumber('filter_autoRefresh', __('Auto Refresh'), $filter_autoRefresh,
+        $formFields[] = FormManager::AddNumber('filter_autoRefresh', __('Auto Refresh'), $filter_autoRefresh,
             NULL, 'r');
 
         $formFields[] = Form::AddCheckbox('XiboFilterPinned', __('Keep Open'),
@@ -396,6 +399,9 @@ class Display extends Base
         $filter_showView = \Xibo\Helper\Sanitize::getInt('filter_showView');
         \Xibo\Helper\Session::Set('display', 'filter_showView', $filter_showView);
 
+        $filterVersion = Kit::GetParam('filterVersion', _REQUEST, _STRING);
+        setSession('display', 'filterVersion', $filterVersion);
+
         // filter_autoRefresh?
         $filter_autoRefresh = \Kit::GetParam('filter_autoRefresh', _REQUEST, _INT, 0);
         \Xibo\Helper\Session::Set('display', 'filter_autoRefresh', $filter_autoRefresh);
@@ -403,7 +409,7 @@ class Display extends Base
         // Pinned option?
         \Xibo\Helper\Session::Set('display', 'DisplayFilter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 
-        $displays = $user->DisplayList(array('displayid'), array('displaygroupid' => $filter_displaygroupid, 'display' => $filter_display, 'macAddress' => $filterMacAddress));
+        $displays = $user->DisplayList(array('displayid'), array('displaygroupid' => $filter_displaygroupid, 'display' => $filter_display, 'macAddress' => $filterMacAddress, 'clientVersion' => $filterVersion));
 
         if (!is_array($displays)) {
             trigger_error($db->error());
@@ -423,12 +429,13 @@ class Display extends Base
             array('name' => 'storageAvailableSpaceFormatted', 'title' => __('Storage Available'), 'hidden' => ($filter_showView != 3)),
             array('name' => 'storageTotalSpaceFormatted', 'title' => __('Storage Total'), 'hidden' => ($filter_showView != 3)),
             array('name' => 'storagePercentage', 'title' => __('Storage Free %'), 'hidden' => ($filter_showView != 3)),
-            array('name' => 'description', 'title' => __('Description'), 'hidden' => ($filter_showView != 0)),
-            array('name' => 'layout', 'title' => __('Default Layout'), 'hidden' => ($filter_showView == 1 || $filter_showView == 2)),
+                array('name' => 'description', 'title' => __('Description'), 'hidden' => ($filter_showView != 4)),
+                array('name' => 'layout', 'title' => __('Default Layout'), 'hidden' => ($filter_showView != 0)),
             array('name' => 'inc_schedule', 'title' => __('Interleave Default'), 'icons' => true, 'hidden' => ($filter_showView == 1 || $filter_showView == 2)),
             array('name' => 'email_alert', 'title' => __('Email Alert'), 'icons' => true, 'hidden' => ($filter_showView != 0)),
             array('name' => 'loggedin', 'title' => __('Logged In'), 'icons' => true),
             array('name' => 'lastaccessed', 'title' => __('Last Accessed')),
+                array('name' => 'clientVersionCombined', 'title' => __('Version'), 'hidden' => ($filter_showView != 3)),
             array('name' => 'clientaddress', 'title' => __('IP Address'), 'hidden' => ($filter_showView == 1)),
             array('name' => 'macaddress', 'title' => __('Mac Address'), 'hidden' => ($filter_showView == 1)),
             array('name' => 'screenShotRequested', 'title' => __('Screen shot?'), 'icons' => true, 'hidden' => ($filter_showView != 1 && $filter_showView != 2)),
@@ -456,10 +463,9 @@ class Display extends Base
 
             // Create some login lights
             $row['rowColor'] = ($row['mediainventorystatus'] == 1) ? 'success' : (($row['mediainventorystatus'] == 2) ? 'danger' : 'warning');
-            $row['status'] = ($row['mediainventorystatus'] == 1) ? 1 : (($row['mediainventorystatus'] == 2) ? 0 : -1);
 
             // Set some text for the display status
-            switch ($row['status']) {
+            switch ($row['mediainventorystatus']) {
                 case 1:
                     $row['statusDescription'] = __('Display is up to date');
                     break;
@@ -476,6 +482,8 @@ class Display extends Base
                     $row['statusDescription'] = __('Unknown Display Status');
             }
 
+            $row['status'] = ($row['mediainventorystatus'] == 1) ? 1 : (($row['mediainventorystatus'] == 2) ? 0 : -1);
+
             // Thumbnail
             $row['thumbnail'] = '';
             // If we aren't logged in, and we are showThumbnail == 2, then show a circle
@@ -484,6 +492,9 @@ class Display extends Base
             } else if ($filter_showView <> 0 && file_exists(Config::GetSetting('LIBRARY_LOCATION') . 'screenshots/' . $row['displayid'] . '_screenshot.jpg')) {
                 $row['thumbnail'] = '<a data-toggle="lightbox" data-type="image" href="index.php?p=display&q=ScreenShot&DisplayId=' . $row['displayid'] . '"><img class="display-screenshot" src="index.php?p=display&q=ScreenShot&DisplayId=' . $row['displayid'] . '&' . \Kit::uniqueId() . '" /></a>';
             }
+
+            // Version
+            $row['clientVersionCombined'] = $row['client_type'] . ' / ' . $row['client_version'];
 
             // Format the storage available / total space
             $row['storageAvailableSpaceFormatted'] = \Kit::formatBytes($row['storageAvailableSpace']);

@@ -300,7 +300,7 @@ class DisplayProfile extends Base
 
             // If we are a time picker, then process the received time
             if ($setting['fieldType'] == 'timePicker') {
-                $value = ($value == '00:00') ? '0' : Date::getTimestampFromTimeString($value) * 1000;
+                $value = ($value == '00:00') ? '0' : DateManager::getTimestampFromTimeString($value . ' GMT') * 1000;
             }
 
             // Add to the combined array

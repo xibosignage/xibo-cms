@@ -287,7 +287,7 @@ class Schedule extends Base
         $formFields['general'][] = Form::AddHidden('endtime', NULL);
 
         // Generate a list of layouts.
-        $layouts = $user->CampaignList(NULL, false /* isRetired */);
+        $layouts = $user->CampaignList(NULL, false /* isRetired */, false /* show Empty */);
 
         $optionGroups = array(
             array('id' => 'campaign', 'label' => __('Campaigns')),
@@ -561,11 +561,11 @@ class Schedule extends Base
             __('Select the end time for this event'), 'e', 'required');
 
         // Add two hidden fields to always carry the ISO date
-        $formFields['general'][] = Form::AddHidden('starttime', Date::getLocalDate($fromDT, "Y-m-d H:i"));
-        $formFields['general'][] = Form::AddHidden('endtime', Date::getLocalDate($toDT, "Y-m-d H:i"));
+        $formFields['general'][] = FormManager::AddHidden('starttime', DateManager::getLocalDate($fromDT, "Y-m-d H:i", false));
+        $formFields['general'][] = FormManager::AddHidden('endtime', DateManager::getLocalDate($toDT, "Y-m-d H:i", false));
 
         // Generate a list of layouts.
-        $layouts = $user->CampaignList(NULL, false /* isRetired */);
+        $layouts = $user->CampaignList(NULL, false /* isRetired */, false /* show Empty */);
 
         $optionGroups = array(
             array('id' => 'campaign', 'label' => __('Campaigns')),
@@ -818,7 +818,7 @@ class Schedule extends Base
         $formFields = array();
 
         // Generate a list of layouts.
-        $layouts = $user->CampaignList(NULL, false /* isRetired */);
+        $layouts = $user->CampaignList(NULL, false /* isRetired */, false /* show Empty */);
 
         $optionGroups = array(
             array('id' => 'campaign', 'label' => __('Campaigns')),

@@ -41,7 +41,7 @@ class Forecast
         );
 
         // Proxy support
-        if (\Xibo\Helper\Config::GetSetting('PROXY_HOST') != '') {
+        if (\Xibo\Helper\Config::GetSetting('PROXY_HOST') != '' && !\Xibo\Helper\Config::isProxyException($request_url)) {
             $httpOptions[CURLOPT_PROXY] = \Xibo\Helper\Config::GetSetting('PROXY_HOST');
             $httpOptions[CURLOPT_PROXYPORT] = \Xibo\Helper\Config::GetSetting('PROXY_PORT');
 
