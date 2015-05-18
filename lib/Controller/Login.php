@@ -120,7 +120,5 @@ class Login extends Base
         // Render the Theme and output
         $response->template = 'about-text';
         $response->setData(['version' => VERSION]);
-        $response->setFormProperties(__('About'));
-        $response->AddButton(__('Close'), 'XiboDialogClose()');
     }
 }

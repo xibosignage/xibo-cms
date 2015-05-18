@@ -271,7 +271,7 @@ class Library extends Base
             // Download
             $row['buttons'][] = array(
                 'id' => 'content_button_download',
-                'linkType' => '_self',
+                'linkType' => '_self', 'external' => true,
                 'url' => 'index.php?p=content&q=getFile&download=1&downloadFromLibrary=1&mediaid=' . $media->mediaId,
                 'text' => __('Download')
             );

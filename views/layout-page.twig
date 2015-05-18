@@ -79,7 +79,22 @@
                 { "data": "thumbnail" },
                 { "data": "owner" },
                 { "data": "permissions" },
-                { "data": "status" },
+                {
+                    "data": function(data, type) {
+                        if (type != "display")
+                            return data.status;
+
+                        var icon = "";
+                        if (data.status == 1)
+                            icon = "glyphicon-ok";
+                        else if (data.status == 0)
+                            icon = "glyphicon-remove";
+                        else
+                            icon = "glyphicon-exclamation-sign";
+
+                        return "<span class='glyphicon " + icon + "' title='" + (data.statusDescription) + "'></span>";
+                    }
+                },
                 {
                     "orderable": false,
                     "data": function(data, type, row, meta) {

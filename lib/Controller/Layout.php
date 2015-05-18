@@ -209,8 +209,6 @@ class Layout extends Base
      */
     function DeleteLayoutForm()
     {
-         
-
         $layoutId = Sanitize::getInt('layoutId');
         $layout = LayoutFactory::loadById($layoutId);
 
@@ -227,12 +225,11 @@ class Layout extends Base
 
         $form = Theme::RenderReturn('form_render');
 
-         $this->getState()->SetFormRequestResponse($form, sprintf(__('Delete %s'), $layout->layout), '300px', '200px');
-         $this->getState()->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Layout', 'Delete') . '")');
-         $this->getState()->AddButton(__('Retire'), 'XiboSwapDialog("index.php?p=layout&q=RetireForm&layoutid=' . $layoutId . '")');
-         $this->getState()->AddButton(__('No'), 'XiboDialogClose()');
-         $this->getState()->AddButton(__('Yes'), '$("#LayoutDeleteForm").submit()');
-
+        $this->getState()->SetFormRequestResponse($form, sprintf(__('Delete %s'), $layout->layout), '300px', '200px');
+        $this->getState()->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Layout', 'Delete') . '")');
+        $this->getState()->AddButton(__('Retire'), 'XiboSwapDialog("index.php?p=layout&q=RetireForm&layoutid=' . $layoutId . '")');
+        $this->getState()->AddButton(__('No'), 'XiboDialogClose()');
+        $this->getState()->AddButton(__('Yes'), '$("#LayoutDeleteForm").submit()');
     }
 
     /**
@@ -416,7 +413,7 @@ class Layout extends Base
                 // Design Button
                 $row['buttons'][] = array(
                     'id' => 'layout_button_design',
-                    'linkType' => '_self',
+                    'linkType' => '_self', 'external' => true,
                     'url' => $this->app->urlFor('layoutUpdate', array('id' => $layout->layoutId)),
                     'text' => __('Design')
                 );
@@ -425,7 +422,7 @@ class Layout extends Base
             // Preview
             $row['buttons'][] = array(
                 'id' => 'layout_button_preview',
-                'linkType' => '_blank',
+                'linkType' => '_blank', 'external' => true,
                 'url' => 'index.php?p=preview&q=render&ajax=true&layoutid=' . $layout->layoutId,
                 'text' => __('Preview Layout')
             );
@@ -490,7 +487,7 @@ class Layout extends Base
                 // Export Button
                 $row['buttons'][] = array(
                     'id' => 'layout_button_export',
-                    'linkType' => '_self',
+                    'linkType' => '_self', 'external' => true,
                     'url' => 'index.php?p=layout&q=Export&layoutid=' . $layout->layoutId,
                     'text' => __('Export')
                 );

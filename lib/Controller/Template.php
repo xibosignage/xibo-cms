@@ -176,7 +176,7 @@ class Template extends Base
             // Export Button
             $row['buttons'][] = array(
                 'id' => 'layout_button_export',
-                'linkType' => '_self',
+                'linkType' => '_self', 'external' => true,
                 'url' => 'index.php?p=layout&q=Export&layoutid=' . $template->layoutId,
                 'text' => __('Export')
             );

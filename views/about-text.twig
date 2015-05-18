@@ -1,3 +1,14 @@
+{% extends "form-base.twig" %}
+
+{% block formTitle %}{% trans "About" %}{% endblock %}
+
+{% block formButtons %}
+    {
+        "{% trans "Close" %}": "XiboDialogClose()"
+    }
+{% endblock %}
+
+{% block formHtml %}
 <h2>License <small>Digital Signage for Everyone</small></h2>
 <p>Xibo Digital Signage - <a target="_blank"  href="http://www.xibo.org.uk" title="Xibo Website">www.xibo.org.uk</a>. Version {{ version }}<br />
     Copyright &copy 2006-2015 Daniel Garner, Alex Harrington, Spring Signage Ltd and
@@ -26,3 +37,4 @@
     third party libraries are included with that library and attributed in the code.</p>
 
 <p>Xibo is supported and maintained by <a target="_blank"  href="http://springsignage.com/" title="Xibo Commercial Sponsor">Spring Signage Ltd</a>.</p>
+{% endblock %}

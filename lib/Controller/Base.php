@@ -195,17 +195,18 @@ class Base
             // WEB Ajax
             $app->response()->header('Content-Type', 'application/json');
 
-            if ($grid) {
-                // Grid output
-                echo json_encode($data);
+            // Standard output handler
+            if ($state->template != '' && $state->template != 'grid') {
+                $view = $app->view()->getInstance()->render($state->template . '.twig', $data);
+
+                Log::debug('View: ' . $view);
+                $view = json_decode($view, true);
+                $state->html = $view['html'];
+                $state->dialogTitle = $view['title'];
+                $state->buttons = $view['buttons'];
             }
-            else {
-                // Standard output handler
-                if ($state->template != '') {
-                    $state->html = $app->view()->getInstance()->render($state->template . '.twig', $state->getData());
-                }
-                echo $state->asJson();
-            }
+
+            echo $state->asJson();
         }
         else {
             // WEB Normal
