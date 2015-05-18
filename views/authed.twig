@@ -6,6 +6,32 @@
             <div id="sidebar-wrapper">
                 <ul class="sidebar">
                     <li class="sidebar-main"><a href="{{ urlFor("home") }}">{% trans "Dashboard" %}</a></li>
+                    {% for item in navigation.top %}
+                        {% set menu = null %}
+                        {% if item.page == "layout" %}
+                            {% set menu = navigation.design %}
+                        {% elseif item.page == "content" %}
+                            {% set menu = navigation.library %}
+                        {% elseif item.page == "display" %}
+                            {% set menu = navigation.display %}
+                        {% elseif item.page == "user" %}
+                            {% set menu = navigation.admin %}
+                        {% elseif item.page == "log" %}
+                            {% set menu = navigation.advanced %}
+                        {% endif %}
+
+                        {% if menu %}
+                            <li class="sidebar-title"><a>{{ item.title }}</a></li>
+                        {% else %}
+                            <li class="sidebar-list {{ item.class }} {% if item.selected %}active{% endif %}"><a href="{{ item.link }}" class="{{ item.class }} {% if item.selected %}active{% endif %}">{{ item.title }}</a></li>
+                        {% endif %}
+
+                        {% if menu %}
+                            {% for subItem in menu %}
+                                <li class="sidebar-list {{ subItem.class }} {% if subItem.selected %}active{% endif %}"><a href="{{ subItem.link }}" class="{{ subItem.class }} {% if subItem.selected %}active{% endif %}">{{ subItem.title }}</a></li>
+                            {% endfor %}
+                        {% endif %}
+                    {% endfor %}
                 </ul>
                 <div class="sidebar-footer">
                     <div class="col-sm-6">
@@ -16,64 +42,71 @@
                     </div>
                 </div>
             </div>
+        </div>
 
-            <div id="content-wrapper">
-                <div class="page-content">
-                    <div class="row header">
-                        <div class="col-sm-12">
-                            <div class="meta pull-left">
-                                <div class="page"><img class="xibo-logo" src="{{ baseUrl }}theme/default/img/xibologo.png"></div>
-                            </div>
-                            <div class="user pull-right">
-                                <button type="button"  class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse-1">
-                                    <span class="sr-only">Toggle navigation</span>
-                                    <span class="icon-bar"></span>
-                                    <span class="icon-bar"></span>
-                                    <span class="icon-bar"></span>
-                                </button>
-                                <div class="item dropdown">
-                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                                        <img src="{{ baseUrl }}theme/default/img/avatar.jpg" />
-                                    </a>
-                                    <ul class="dropdown-menu dropdown-menu-right">
-                                        <li class="dropdown-header"><?php echo Theme::GetUsername(); ?><br/>
-                                            <a id="XiboClock" class="XiboFormButton" href="index.php?p=clock&q=ShowTimeInfo" title="<?php echo Theme::Translate('Click to show more time information'); ?>"><?php echo Theme::GetClock(); ?></a>
-                                        </li>
-                                        <li class="divider"></li>
-                                        <li><a class="XiboFormButton" href="<?php echo Theme::urlFor('userChangePassword'); ?>" title="<?php echo Theme::Translate('Change Password') ?>"><?php echo Theme::Translate('Change Password') ?></a></li>
-                                        <li><a href="<?php echo Theme::urlFor('welcomeWizard'); ?>"><?php echo Theme::Translate('Reshow welcome'); ?></a></li>
-                                        <li><a class="XiboHelpButton" href="<?php echo Theme::GetPageHelpLink(); ?>"><?php echo Theme::Translate('Help'); ?></a></li>
-                                        <li class="divider"></li>
-                                        <li><a title="Logout" href="<?php echo Theme::urlFor('logout'); ?>"><?php echo Theme::Translate("Logout"); ?></a></li>
-                                    </ul>
-                                </div>
-                            </div>
-                            {% if notifications|length > 0 %}
-                            <div class="user pull-right">
-                                <div class="item dropdown">
-                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                                        <i class="fa fa-exclamation-circle"></i>
-                                    </a>
-                                    <ul class="dropdown-menu dropdown-menu-right">
-                                        <li class="dropdown-header">{% trans "Notifications" %}<br/>
-
-                                        </li>
-                                        <li class="divider"></li>
-                                        {% for notification in notifications %}
-                                        <li><div>{{ notification }}</div></li>
-                                        {% endfor %}
-                                    </ul>
-                                </div>
-                            </div>
-                            {% endif %}
+        <div id="content-wrapper">
+            <div class="page-content">
+                <div class="row header">
+                    <div class="col-sm-12">
+                        <div class="meta pull-left">
+                            <div class="page"><img class="xibo-logo" src="{{ baseUrl }}theme/default/img/xibologo.png"></div>
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-sm-12">
+                        <div class="user pull-right">
+                            <button type="button"  class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse-1">
+                                <span class="sr-only">Toggle navigation</span>
+                                <span class="icon-bar"></span>
+                                <span class="icon-bar"></span>
+                                <span class="icon-bar"></span>
+                            </button>
+                            <div class="item dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                    <img src="{{ baseUrl }}theme/default/img/avatar.jpg" />
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-right">
+                                    <li class="dropdown-header"><?php echo Theme::GetUsername(); ?><br/>
+                                        <a id="XiboClock" class="XiboFormButton" href="index.php?p=clock&q=ShowTimeInfo" title="{% trans "Click to show more time information" %}"><?php echo Theme::GetClock(); ?></a>
+                                    </li>
+                                    <li class="divider"></li>
+                                    <li><a class="XiboFormButton" href="{{ urlFor("userChangePassword") }}" title="{% trans "Change Password" %}">{% trans "Change Password" %}</a></li>
+                                    <li><a href="{{ urlFor("welcomeWizard") }}">{% trans "Reshow welcome" %}</a></li>
+                                    <li><a class="XiboHelpButton" href="<?php echo Theme::GetPageHelpLink(); ?>">{% trans "Help" %}</a></li>
+                                    <li class="divider"></li>
+                                    <li><a title="Logout" href="<?php echo Theme::urlFor('logout'); ?>">{% trans "Logout" %}</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        {% if notifications|length > 0 %}
+                        <div class="user pull-right">
+                            <div class="item dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                    <i class="fa fa-exclamation-circle"></i>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-right">
+                                    <li class="dropdown-header">{% trans "Notifications" %}<br/>
 
+                                    </li>
+                                    <li class="divider"></li>
+                                    {% for notification in notifications %}
+                                    <li><div>{{ notification }}</div></li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        {% block actionMenu %}{% endblock %}
+                        {% block pageContent %}{% endblock %}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        {% block pageFooter %}{% endblock %}
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 {% endblock %}

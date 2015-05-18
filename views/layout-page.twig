@@ -1,1 +1,97 @@
 {% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block actionMenu %}
+    <ul class="nav nav-pills pull-right">
+        <li><a title="{% trans "Open the Filter Form" %}" href="#" onclick="ToggleFilterView('Filter')">{% trans "Filter" %}</a></li>
+        <li><a class="XiboFormButton" title="{% trans "Add a new Layout and jump to the layout designer." %}" href="{{ urlFor("layoutAddForm") }}">{% trans "Add Layout" %}</a></li>
+        <li><a class="XiboFormButton" title="{% trans "Import a Layout from a ZIP file." %}" href="index.php?p=layout&q=ImportForm">{% trans "Import" %}</a></li>
+    </ul>
+{% endblock %}
+
+
+{% block pageContent %}
+    <div class="widget">
+        <div class="widget-title">{% trans "Layouts" %}</div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}">
+                <div class="XiboFilter">
+                    <div class="FilterDiv" id="Filter">
+                        <form class="form-inline">
+                            {{ inline.text("filter_layout", "Name", defaults.layout) }}
+                            {{ inline.text("filter_tags", "Tags", defaults.tags) }}
+
+                            {{ inline.dropdown("filter_userid", "single", "Owner", defaults.owner, users, "userid", "username") }}
+
+                            {% set values = [{id: 1, value: "Yes"}, {id: 0, value: "No"}] %}
+                            {{ inline.dropdown("filter_retired", "single", "Retired", defaults.retired, values, "id", "value") }}
+
+                            {% set values = [{id: 1, value: "All"}, {id: 2, value: "Only Used"}, {id: 3, value: "Only Unused"}] %}
+                            {{ inline.dropdown("filterLayoutStatusId", "single", "Show", defaults.filterLayoutStatusId, values, "id", "value") }}
+
+                            {% set values = [{id: 1, value: "All"}, {id: 2, value: "1st line"}, {id: 3, value: "None"}] %}
+                            {{ inline.dropdown("showDescriptionId", "single", "Description", defaults.showDescriptionId, values, "id", "value") }}
+
+                            {{ inline.checkbox("showTags", "Show Tags", defaults.showTags) }}
+                            {{ inline.checkbox("showThumbnail", "Show Thumbnails", defaults.showThumbnail) }}
+                            {{ inline.checkbox("XiboFilterPinned", "Keep Open", defaults.filterPinned) }}
+
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData">
+                    <table id="layouts" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>{% trans "ID" %}</th>
+                                <th>{% trans "Name" %}</th>
+                                <th>{% trans "Description" %}</th>
+                                <th>{% trans "Thumbnail" %}</th>
+                                <th>{% trans "Owner" %}</th>
+                                <th>{% trans "Permissions" %}</th>
+                                <th>{% trans "Status" %}</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        var table = $("#layouts").DataTable({
+            serverSide: true,
+            processing: true,
+            searchDelay: 3000,
+            "order": [[ 1, "asc"]],
+            ajax: "{{ urlFor("layoutSearch") }}",
+            "columns": [
+                { "data": "layoutid" },
+                { "data": "layout" },
+                { "data": "description" },
+                { "data": "thumbnail" },
+                { "data": "owner" },
+                { "data": "permissions" },
+                { "data": "status" },
+                {
+                    "orderable": false,
+                    "data": function(data, type, row, meta) {
+                        if (type != "display")
+                            return "";
+
+                        return "Buttons";
+                    }
+                }
+            ],
+            search: {
+                search: "{{ search }}"
+            }
+        });
+    </script>
+{% endblock %}

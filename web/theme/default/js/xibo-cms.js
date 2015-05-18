@@ -140,19 +140,6 @@ function XiboInitialise(scope) {
                 $('.XiboFilter', this).children(':first').hide();
             }
         }
-        
-        // For each one setup the filter form bindings
-        $('.XiboFilter form :input', this).change(function(){
-            XiboGridRender(gridId);
-        });
-
-        $('.XiboFilter form', this).submit(function(){
-            // We dont actually want the form to be submittable (just in case)
-            return false;
-        });
-
-        // Render
-        XiboGridRender(gridId);
     });
 
     // Search for any Buttons / Links on the page that are used to load forms

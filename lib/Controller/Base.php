@@ -24,6 +24,7 @@ namespace Xibo\Controller;
 use Slim\Slim;
 use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Helper\Log;
+use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 
 /**
@@ -169,6 +170,20 @@ class Base
         $state = $this->getState();
         $data = $state->getData();
 
+        Log::debug('Template: %s', $state->template);
+        $grid = ($state->template == 'grid');
+
+        if ($grid) {
+            $count = count($data);
+
+            $data = [
+                'draw' => intval(Sanitize::getInt('draw')),
+                'recordsTotal' => $count,
+                'recordsFiltered' => $count,
+                'data' => $data
+            ];
+        }
+
         if ($this->isApi()) {
             // API
             if (!is_array($data))
@@ -178,49 +193,73 @@ class Base
         }
         else if ($this->app->request->isAjax()) {
             // WEB Ajax
-            if ($state->template != '') {
-                $state->html = $app->view()->getInstance()->render($state->template . '.twig', $state->getData());
-            }
+            $app->response()->header('Content-Type', 'application/json');
 
-            echo $state->asJson();
+            if ($grid) {
+                // Grid output
+                echo json_encode($data);
+            }
+            else {
+                // Standard output handler
+                if ($state->template != '') {
+                    $state->html = $app->view()->getInstance()->render($state->template . '.twig', $state->getData());
+                }
+                echo $state->asJson();
+            }
         }
         else {
             // WEB Normal
             if (empty($state->template))
                 throw new ControllerNotImplemented(__('Template Missing'));
 
-            Log::debug('Rendering Template %s with data %s', $state->template, json_encode($state->getData()));
+            // Append the side bar content
+            $data['navigation'] = Theme::getConsolidatedMenu();
 
-            $this->app->render($state->template . '.twig', (is_array($data) ? $data : []));
+            $this->app->render($state->template . '.twig', $data);
         }
 
         $this->rendered = true;
     }
 
     /**
-     * Action Menu
-     * @return string
+     * Set the filter
+     * @return array
      */
-    public function actionMenu()
+    protected function gridRenderFilter()
     {
-        return '';
+        $app = $this->getApp();
+
+        // Handle filtering
+        $filter = [
+            'start' => Sanitize::getInt('start', 0),
+            'length' => Sanitize::getInt('length', 10)
+        ];
+
+        $search = $app->request->get('search', array());
+        if (is_array($search) && isset($search['value'])) {
+            $filter['search'] = $search['value'];
+        }
+        else if ($search != '') {
+            $filter['search'] = $search;
+        }
+
+        return $filter;
     }
 
     /**
-     * Side Bar Content
-     * @return string
+     * Set the sort order
+     * @return array
      */
-    public function sideBarContent()
+    protected function gridRenderSort()
     {
-        return '';
-    }
+        $app = $this->getApp();
 
-    /**
-     * Display the main page
-     * @return string
-     */
-    public function displayPage()
-    {
-        return '';
+        $columns = $app->request()->get('columns', array());
+
+        $order = array_map(function ($element) use ($columns) {
+            return (($columns[$element['column']]['name'] != '') ? $columns[$element['column']]['name'] : $columns[$element['column']]['data']) . (($element['dir'] == 'desc') ? ' DESC' : '');
+        }, $app->request()->get('order', array()));
+
+        return $order;
     }
 }

@@ -370,12 +370,27 @@ class Theme
                 $item['link'] = $item['args'];
             }
 
-            $item['li'] = '<li class="' . $item['class'] . (($item['selected']) ? ' active' : '') . '"><a href="' . $item['link'] . '" class="' . $item['class'] . (($item['selected']) ? ' active' : '') . '">' . $item['title'] . '</a></li>';
-
             $array[] = $item;
         }
 
         return $array;
+    }
+
+    /**
+     * Get a consolidated menu for the side bar
+     * @return array
+     */
+    public static function getConsolidatedMenu()
+    {
+        $menus = [];
+        $menus['top'] = Theme::GetMenu('Top Nav');
+        $menus['design'] = Theme::GetMenu('Design Menu');
+        $menus['library'] = Theme::GetMenu('Library Menu');
+        $menus['display'] = Theme::GetMenu('Display Menu');
+        $menus['admin'] = Theme::GetMenu('Administration Menu');
+        $menus['advanced'] = Theme::GetMenu('Advanced Menu');
+
+        return $menus;
     }
 
     /**

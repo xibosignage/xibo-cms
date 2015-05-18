@@ -33,10 +33,7 @@ $app->get('/clock', function() use ($app) {
 //
 // Layouts
 //
-$app->get('/layout', function() use ($app) {
-    $controller = new \Xibo\Controller\Layout($app);
-    $controller->render('LayoutGrid');
-})->setName('layoutSearch');
+$app->get('/layout', '\Xibo\Controller\Layout:LayoutGrid')->setName('layoutSearch');
 
 $app->get('/layout/:id', function($id) use ($app) {
     $controller = new \Xibo\Controller\Layout($app);

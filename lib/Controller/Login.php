@@ -19,14 +19,11 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
-use Kit;
 use Xibo\Exception\AccessDeniedException;
-use Xibo\Exception\FormExpiredException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\UserFactory;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
-use Xibo\Helper\Theme;
 
 class Login extends Base
 {
@@ -101,7 +98,7 @@ class Login extends Base
      */
     public function userWelcome()
     {
-        $this->getState()->html .= Theme::RenderReturn('new_user_welcome');
+        $this->getState()->template = 'user-welcome-page';
     }
 
     /**
@@ -125,17 +122,5 @@ class Login extends Base
         $response->setData(['version' => VERSION]);
         $response->setFormProperties(__('About'));
         $response->AddButton(__('Close'), 'XiboDialogClose()');
-    }
-
-    /**
-     * Exchange tokens
-     */
-    function ExchangeGridTokenForFormToken()
-    {
-        // Check our grid token against the one provided.
-        if (!Kit::CheckToken('gridToken'))
-            throw new FormExpiredException();
-
-        $this->getState()->html = \Kit::Token('token', false);
     }
 }

@@ -51,7 +51,7 @@ class Layout extends Base
             $filterLayoutStatusId = Session::Get('layout', 'filterLayoutStatusId');
             $showDescriptionId = Session::Get('layout', 'showDescriptionId');
             $showThumbnail = Session::Get('layout', 'showThumbnail');
-            $showTags = Session::Get('content', 'showTags');
+            $showTags = Session::Get('layout', 'showTags');
             $pinned = 1;
 
         } else {
@@ -67,84 +67,29 @@ class Layout extends Base
             $showTags = 0;
         }
 
-        $id = uniqid();
-        Theme::Set('header_text', __('Layouts'));
-        Theme::Set('id', $id);
-        Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
-        Theme::Set('pager', ApplicationState::Pager($id));
-        Theme::Set('form_action', $this->urlFor('layoutSearch'));
-
-        $formFields = array();
-        $formFields[] = Form::AddText('filter_layout', __('Name'), $layout, NULL, 'l');
-        $formFields[] = Form::AddText('filter_tags', __('Tags'), $tags, NULL, 't');
-
         // Users we have permission to see
         $users = $this->getUser()->userList();
         $users = array_map(function($element) { return array('userid' => $element->userId, 'username' => $element->userName); }, $users);
         array_unshift($users, array('userid' => '', 'username' => 'All'));
 
-        $formFields[] = Form::AddCombo(
-            'filter_userid',
-            __('Owner'),
-            $owner,
-            $users,
-            'userid',
-            'username',
-            NULL,
-            'r');
-        $formFields[] = Form::AddCombo(
-            'filter_retired',
-            __('Retired'),
-            $retired,
-            array(array('retiredid' => 1, 'retired' => 'Yes'), array('retiredid' => 0, 'retired' => 'No')),
-            'retiredid',
-            'retired',
-            NULL,
-            'r');
-        $formFields[] = Form::AddCombo(
-            'filterLayoutStatusId',
-            __('Show'),
-            $filterLayoutStatusId,
-            array(
-                array('filterLayoutStatusId' => 1, 'filterLayoutStatus' => __('All')),
-                array('filterLayoutStatusId' => 2, 'filterLayoutStatus' => __('Only Used')),
-                array('filterLayoutStatusId' => 3, 'filterLayoutStatus' => __('Only Unused'))
-            ),
-            'filterLayoutStatusId',
-            'filterLayoutStatus',
-            NULL,
-            's');
-        $formFields[] = Form::AddCombo(
-            'showDescriptionId',
-            __('Description'),
-            $showDescriptionId,
-            array(
-                array('showDescriptionId' => 1, 'showDescription' => __('All')),
-                array('showDescriptionId' => 2, 'showDescription' => __('1st line')),
-                array('showDescriptionId' => 3, 'showDescription' => __('None'))
-            ),
-            'showDescriptionId',
-            'showDescription',
-            NULL,
-            'd');
-
-        $formFields[] = Form::AddCheckbox('showTags', __('Show Tags'),
-            $showTags, NULL,
-            't');
-
-        $formFields[] = Form::AddCheckbox('showThumbnail', __('Show Thumbnails'),
-            $showThumbnail, NULL,
-            'i');
-
-        $formFields[] = Form::AddCheckbox('XiboFilterPinned', __('Keep Open'),
-            $pinned, NULL,
-            'k');
-
-        Theme::Set('form_fields', $formFields);
+        $data = [
+            'users' => $users,
+            'defaults' => [
+                'layout' => $layout,
+                'tags' => $tags,
+                'owner' => $owner,
+                'retired' => $retired,
+                'filterLayoutStatusId' => $filterLayoutStatusId,
+                'showDescriptionId' => $showDescriptionId,
+                'showTags' => $showTags,
+                'showThumbnail' => $showThumbnail,
+                'filterPinned' => $pinned
+            ]
+        ];
 
         // Call to render the template
         $this->getState()->template = 'layout-page';
-        $this->getState()->html .= Theme::RenderReturn('grid_render');
+        $this->getState()->setData($data);
     }
 
     /**
@@ -176,36 +121,6 @@ class Layout extends Base
 
         // Call the render the template
         $this->getState()->html .= Theme::RenderReturn('layout_designer');
-    }
-
-    function actionMenu()
-    {
-        if ($this->app->router()->getCurrentRoute()->getName() == 'layoutDesigner')
-            return array();
-
-        return array(
-            array('title' => __('Filter'),
-                'class' => '',
-                'selected' => false,
-                'link' => '#',
-                'help' => __('Open the filter form'),
-                'onclick' => 'ToggleFilterView(\'Filter\')'
-            ),
-            array('title' => __('Add Layout'),
-                'class' => 'XiboFormButton',
-                'selected' => false,
-                'link' => $this->urlFor('layoutAddForm'),
-                'help' => __('Add a new Layout and jump to the layout designer.'),
-                'onclick' => ''
-            ),
-            array('title' => __('Import'),
-                'class' => 'XiboFormButton',
-                'selected' => false,
-                'link' => 'index.php?p=layout&q=ImportForm',
-                'help' => __('Import a Layout from a ZIP file.'),
-                'onclick' => ''
-            )
-        );
     }
 
     /**
@@ -395,59 +310,48 @@ class Layout extends Base
      */
     function LayoutGrid()
     {
+        $this->getState()->template = 'grid';
+
         // Filter by Name
         $name = Sanitize::getString('filter_layout');
-        \Xibo\Helper\Session::Set('layout', 'filter_layout', $name);
+        Session::Set('layout', 'filter_layout', $name);
 
         // User ID
         $filter_userid = Sanitize::getInt('filter_userid');
-        \Xibo\Helper\Session::Set('layout', 'filter_userid', $filter_userid);
+        Session::Set('layout', 'filter_userid', $filter_userid);
 
         // Show retired
         $filter_retired = Sanitize::getInt('filter_retired');
-        \Xibo\Helper\Session::Set('layout', 'filter_retired', $filter_retired);
+        Session::Set('layout', 'filter_retired', $filter_retired);
 
         // Show filterLayoutStatusId
         $filterLayoutStatusId = Sanitize::getInt('filterLayoutStatusId');
-        \Xibo\Helper\Session::Set('layout', 'filterLayoutStatusId', $filterLayoutStatusId);
+        Session::Set('layout', 'filterLayoutStatusId', $filterLayoutStatusId);
 
         // Show showDescriptionId
         $showDescriptionId = Sanitize::getInt('showDescriptionId');
-        \Xibo\Helper\Session::Set('layout', 'showDescriptionId', $showDescriptionId);
+        Session::Set('layout', 'showDescriptionId', $showDescriptionId);
 
         // Show filter_showThumbnail
         $showTags = Sanitize::getCheckbox('showTags');
-        \Xibo\Helper\Session::Set('layout', 'showTags', $showTags);
+        Session::Set('layout', 'showTags', $showTags);
 
         // Show filter_showThumbnail
         $showThumbnail = Sanitize::getCheckbox('showThumbnail');
-        \Xibo\Helper\Session::Set('layout', 'showThumbnail', $showThumbnail);
+        Session::Set('layout', 'showThumbnail', $showThumbnail);
 
         // Tags list
         $filter_tags = \Kit::GetParam("filter_tags", _POST, _STRING);
-        \Xibo\Helper\Session::Set('layout', 'filter_tags', $filter_tags);
+        Session::Set('layout', 'filter_tags', $filter_tags);
 
         // Pinned option?
-        \Xibo\Helper\Session::Set('layout', 'LayoutFilter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        Session::Set('layout', 'LayoutFilter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 
         // Get all layouts
         $layouts = $this->getUser()->LayoutList(NULL, array('layout' => $name, 'userId' => $filter_userid, 'retired' => $filter_retired, 'tags' => $filter_tags, 'filterLayoutStatusId' => $filterLayoutStatusId, 'showTags' => $showTags));
 
         if (!is_array($layouts))
             trigger_error(__('Unable to get layouts for user'), E_USER_ERROR);
-
-        $cols = array(
-            array('name' => 'layoutid', 'title' => __('ID')),
-            array('name' => 'tags', 'title' => __('Tag'), 'hidden' => ($showTags == 0), 'colClass' => 'group-word'),
-            array('name' => 'layout', 'title' => __('Name')),
-            array('name' => 'description', 'title' => __('Description'), 'hidden' => ($showDescriptionId == 1 || $showDescriptionId == 3)),
-            array('name' => 'descriptionWithMarkdown', 'title' => __('Description'), 'hidden' => ($showDescriptionId == 2 || $showDescriptionId == 3)),
-            array('name' => 'thumbnail', 'title' => __('Thumbnail'), 'hidden' => ($showThumbnail == 0)),
-            array('name' => 'owner', 'title' => __('Owner')),
-            array('name' => 'permissions', 'title' => __('Permissions')),
-            array('name' => 'status', 'title' => __('Status'), 'icons' => true, 'iconDescription' => 'statusDescription')
-        );
-        Theme::Set('table_cols', $cols);
 
         $rows = array();
 
@@ -601,15 +505,7 @@ class Layout extends Base
         }
 
         // Store the table rows
-        Theme::Set('table_rows', $rows);
         $this->getState()->setData($rows);
-        Theme::Set('gridId', \Kit::GetParam('gridId', _REQUEST, _STRING));
-
-        // Initialise the theme and capture the output
-        $output = Theme::RenderReturn('table_render');
-
-        $this->getState()->SetGridResponse($output);
-        $this->getState()->initialSortColumn = 3;
     }
 
     /**

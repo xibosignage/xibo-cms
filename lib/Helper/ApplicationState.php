@@ -312,6 +312,9 @@ class ApplicationState
      */
     public function getData()
     {
+        if (!is_array($this->data))
+            $this->data = [];
+
         return $this->data;
     }
 }
