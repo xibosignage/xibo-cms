@@ -171,7 +171,7 @@ class Template extends Base
                 );
             }
 
-            $row['buttons'][] = array('linkType' => 'divider');
+            $row['buttons'][] = ['divider' => true];
 
             // Export Button
             $row['buttons'][] = array(

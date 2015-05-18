@@ -5,5 +5,5 @@ settings.php
 .vagrant/
 .idea/
 library/
-vendor/
+cache/
 modules/preview/fonts.css

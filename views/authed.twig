@@ -110,3 +110,36 @@
         </div>
     </div>
 {% endblock %}
+
+{% block javaScriptTemplates %}
+
+    {% raw %}
+    <script type="text/x-handlebars-template" id="buttons-template">
+        <div class="btn-group pull-right">
+            <button class="btn dropdown-toggle" data-toggle="dropdown">
+                <span class="fa fa-caret-down"></span>
+            </button>
+            <ul class="dropdown-menu">
+                {{#each buttons}}
+                    {{#if divider}}
+                    <li class="divider"></li>
+                    {{else}}
+                        {{#if external}}
+                        <li class="{{ id }}"><a tabindex="-1" target="{{ linkType }}" href="{{ url }}">{{ text }}</a></li>
+                        {{/if}}
+
+                        {{#unless external}}
+                            <li {{#each dataAttributes}}
+                                data-{{ name }}="{{ value }}"
+                                {{/each}}
+                                class="{{ class }} {{ id }}" href="{{ url }}"><a tabindex="-1" href="#">{{ text }}</a>
+                            </li>
+                        {{/unless}}
+                    {{/if}}
+                {{/each}}
+            </ul>
+        </div>
+    </script>
+    {% endraw %}
+
+{% endblock %}

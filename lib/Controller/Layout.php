@@ -348,7 +348,13 @@ class Layout extends Base
         Session::Set('layout', 'LayoutFilter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 
         // Get all layouts
-        $layouts = $this->getUser()->LayoutList(NULL, array('layout' => $name, 'userId' => $filter_userid, 'retired' => $filter_retired, 'tags' => $filter_tags, 'filterLayoutStatusId' => $filterLayoutStatusId, 'showTags' => $showTags));
+        $layouts = $this->getUser()->LayoutList($this->gridRenderSort(), array(
+            'layout' => $name,
+            'userId' => $filter_userid,
+            'retired' => $filter_retired,
+            'tags' => $filter_tags,
+            'filterLayoutStatusId' => $filterLayoutStatusId,
+            'showTags' => $showTags));
 
         if (!is_array($layouts))
             trigger_error(__('Unable to get layouts for user'), E_USER_ERROR);
@@ -431,7 +437,7 @@ class Layout extends Base
                 'text' => __('Schedule Now')
             );
 
-            $row['buttons'][] = array('linkType' => 'divider');
+            $row['buttons'][] = ['divider' => true];
 
             // Only proceed if we have edit permissions
             if ($this->getUser()->checkEditable($layout)) {
@@ -479,7 +485,7 @@ class Layout extends Base
                     );
                 }
 
-                $row['buttons'][] = array('linkType' => 'divider');
+                $row['buttons'][] = ['divider' => true];
 
                 // Export Button
                 $row['buttons'][] = array(

@@ -521,7 +521,7 @@ class Display extends Base
             }
 
             if ($row['edit'] == 1 || $row['del'] == 1) {
-                $row['buttons'][] = array('linkType' => 'divider');
+                $row['buttons'][] = ['divider' => true];
             }
 
             // Schedule Now
@@ -562,7 +562,7 @@ class Display extends Base
                     )
                 );
 
-                $row['buttons'][] = array('linkType' => 'divider');
+                $row['buttons'][] = ['divider' => true];
             }
 
             // Media Inventory
@@ -581,7 +581,7 @@ class Display extends Base
                     'text' => __('Recent Log')
                 );
 
-                $row['buttons'][] = array('linkType' => 'divider');
+                $row['buttons'][] = ['divider' => true];
             }
 
             if ($row['modifypermissions'] == 1) {
@@ -607,7 +607,7 @@ class Display extends Base
                     'text' => __('Version Information')
                 );
 
-                $row['buttons'][] = array('linkType' => 'divider');
+                $row['buttons'][] = ['divider' => true];
             }
 
             if ($row['edit'] == 1) {

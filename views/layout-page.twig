@@ -65,6 +65,7 @@
 
 {% block javaScript %}
     <script type="text/javascript">
+        var buttonsTemplate = Handlebars.compile($("#buttons-template").html());
         var table = $("#layouts").DataTable({
             serverSide: true,
             processing: true,
@@ -85,7 +86,7 @@
                         if (type != "display")
                             return "";
 
-                        return "Buttons";
+                        return buttonsTemplate({buttons: data.buttons});
                     }
                 }
             ],

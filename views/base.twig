@@ -73,6 +73,7 @@
         <script src="{{ baseUrl }}theme/default/js/xibo-preview-timeline.js"></script>
         <script src="{{ baseUrl }}theme/default/js/xibo-calendar.js"></script>
         <script src="{{ baseUrl }}theme/default/js/xibo-datasets.js"></script>
+        <script src="{{ baseUrl }}theme/default/libraries/handlebars/handlebars-v3.0.0.js"></script>
 
         <script type="text/javascript">
             var translations = {{ translate.translations|raw }};
@@ -93,6 +94,7 @@
             });
         </script>
 
+        {% block javaScriptTemplates %}{% endblock %}
         {% block javaScript %}{% endblock %}
     </body>
 </html>
