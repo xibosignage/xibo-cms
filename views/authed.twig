@@ -132,7 +132,7 @@
                             <li {{#each dataAttributes}}
                                 data-{{ name }}="{{ value }}"
                                 {{/each}}
-                                class="{{ class }} {{ id }}" href="{{ url }}"><a tabindex="-1" href="#">{{ text }}</a>
+                                class="{{#if class}}{{ class }}{{else}}XiboFormButton{{/if}} {{ id }}" href="{{ url }}"><a tabindex="-1" href="#">{{ text }}</a>
                             </li>
                         {{/unless}}
                     {{/if}}

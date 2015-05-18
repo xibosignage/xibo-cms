@@ -94,5 +94,10 @@
                 search: "{{ search }}"
             }
         });
+
+        table.on('draw', function(e, settings) {
+            // Bind any buttons
+            XiboInitialise("#layouts");
+        });
     </script>
 {% endblock %}
