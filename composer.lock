@@ -576,12 +576,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/dasgarner/simplepie.git",
-                "reference": "be1a517d6829e8f8c149c67750ab47763c814f27"
+                "reference": "7d84c622ebab0325b0aec82258a7cadd31d2dbe8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/dasgarner/simplepie/zipball/be1a517d6829e8f8c149c67750ab47763c814f27",
-                "reference": "be1a517d6829e8f8c149c67750ab47763c814f27",
+                "url": "https://api.github.com/repos/dasgarner/simplepie/zipball/7d84c622ebab0325b0aec82258a7cadd31d2dbe8",
+                "reference": "7d84c622ebab0325b0aec82258a7cadd31d2dbe8",
                 "shasum": ""
             },
             "require": {
@@ -624,7 +624,7 @@
             "support": {
                 "source": "https://github.com/dasgarner/simplepie/tree/master"
             },
-            "time": "2015-03-31 10:53:19"
+            "time": "2015-05-18 09:37:12"
         },
         {
             "name": "slim/slim",

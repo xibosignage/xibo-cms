@@ -24,6 +24,7 @@ namespace Xibo\Middleware;
 
 
 use Slim\Middleware;
+use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
 
 class Actions extends Middleware
@@ -41,6 +42,7 @@ class Actions extends Middleware
 
         // Process notifications
         if ($this->app->user->userTypeId == 1 && file_exists('install.php')) {
+            Log::info('Install.php exists and shouldnt');
             Theme::Set('notifications', array(__('There is a problem with this installation. "install.php" should be deleted.')));
         }
 

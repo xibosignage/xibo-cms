@@ -5,7 +5,8 @@
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="shortcut icon" href="{{ theme.favIcon }}" />
+        <meta name="token" content="{{ csrfToken }}"/>
+        <link rel="shortcut icon" href="{{ baseUrl }}theme/default/img/favicon.ico" />
 
         <link href="{{ baseUrl }}theme/default/libraries/bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
         <link href="{{ baseUrl }}theme/default/libraries/bootstrap/css/bootstrap-theme.min.css" rel="stylesheet" media="screen">
@@ -26,6 +27,8 @@
         <link href="{{ baseUrl }}theme/default/css/xibo.css" rel="stylesheet" media="screen">
         <link href="{{ baseUrl }}theme/default/css/override.css" rel="stylesheet" media="screen">
         <!-- Copyright 2006-2015 Daniel Garner. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
+
+        {% block headContent %}{% endblock %}
     </head>
     <body>
         {% block content %}{% endblock %}
@@ -82,10 +85,17 @@
             var clockUrl = "{{ urlFor("clock") }}";
             var calendarLanguage = "{{ translate.calendarLanguage }}";
             var pingUrl = "{{ urlFor("ping") }}";
+
+            $(function() {
+                var csrf_token = $('meta[name="token"]').attr('content');
+                $.ajaxSetup({
+                    headers: {
+                        'X-XSRF-TOKEN': csrf_token
+                    }
+                });
+            });
         </script>
 
-        {% block javaScript %}
-
-        {% endblock %}
+        {% block javaScript %}{% endblock %}
     </body>
 </html>

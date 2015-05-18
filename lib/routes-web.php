@@ -64,14 +64,7 @@ $app->get('/', function () use ($app) {
 })->setName('home');
 
 // Login Form
-$app->get('/login', function () use ($app) {
-
-    // Login form
-    $controller = new \Xibo\Controller\Login($app);
-    $controller->setNotAutomaticFullPage();
-    $controller->render('loginForm');
-
-})->setName('login');
+$app->get('/login', '\Xibo\Controller\Login:loginForm')->name('login');
 
 // Login Request
 $app->post('/login', function () use ($app) {

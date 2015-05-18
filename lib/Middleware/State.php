@@ -90,17 +90,23 @@ class State extends Middleware
             Theme::SetTranslation('failure', Theme::Translate('Failure'));
             Theme::SetTranslation('enterText', Theme::Translate('Enter text...'));
 
+            $settings = [];
+            foreach (Config::GetAll() as $setting) {
+                $settings[$setting['setting']] = $setting['value'];
+            }
+
             // Configure some things in the theme
             $app->view()->appendData(array(
                 'baseUrl' => rtrim(str_replace('index.php', '', $app->request()->getRootUri()), '/') . '/',
                 'route' => $app->router()->getCurrentRoute(),
                 'theme' => Theme::GetConfig(),
-                'settings' => Config::GetAll(),
+                'settings' => $settings,
                 'translate' => [
                     'translations' => ((Theme::Get('translations') == '') ? '{}' : Theme::Get('translations')),
                     'jsLocale' => Translate::GetJsLocale(),
                     'calendarLanguage' => ((strlen(Translate::GetJsLocale() <= 2)) ? Translate::GetJsLocale() . '-' . strtoupper(Translate::GetJsLocale()) : Translate::GetJsLocale())
-                ]
+                ],
+                'notifications' => Theme::Get('notifications')
             ));
 
             Log::debug('called %s', $this->app->router->getCurrentRoute()->getPattern());

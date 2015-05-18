@@ -35,14 +35,9 @@ class Login extends Base
      */
     public function loginForm()
     {
-        Theme::Set('form_action', $this->urlFor('login'));
-        Theme::Set('form_meta', '<input type="hidden" name="priorPage" value="' . $this->getFlash('priorRoute') . '" />');
-        Theme::Set('about_url', $this->urlFor('about'));
-        Theme::Set('source_url', Theme::SourceLink());
-
-        // Message (either from the URL or the session)
-        Theme::Set('login_message', $this->getFlash('login_message'));
-        $this->getState()->html .= Theme::RenderReturn('login_page');
+        // Template
+        $this->getState()->template = 'login';
+        $this->getState()->setData(['version' => VERSION]);
     }
 
     /**

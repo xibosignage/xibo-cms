@@ -23,6 +23,7 @@
 namespace Xibo\Controller;
 use Slim\Slim;
 use Xibo\Exception\ControllerNotImplemented;
+use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
 
 /**
@@ -166,29 +167,31 @@ class Base
 
         $app = $this->getApp();
         $state = $this->getState();
+        $data = $state->getData();
 
         if ($this->isApi()) {
-            $data = $state->getData();
-
+            // API
             if (!is_array($data))
                 throw new ControllerNotImplemented();
 
             $this->app->render(200, $data);
         }
         else if ($this->app->request->isAjax()) {
-
+            // WEB Ajax
             if ($state->template != '') {
                 $state->html = $app->view()->getInstance()->render($state->template . '.twig', $state->getData());
             }
 
-            // AJAX web app
             echo $state->asJson();
         }
         else {
+            // WEB Normal
             if (empty($state->template))
                 throw new ControllerNotImplemented(__('Template Missing'));
 
-            $this->app->render($state->template . '.twig', []);
+            Log::debug('Rendering Template %s with data %s', $state->template, json_encode($state->getData()));
+
+            $this->app->render($state->template . '.twig', (is_array($data) ? $data : []));
         }
 
         $this->rendered = true;
