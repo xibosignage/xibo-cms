@@ -4,8 +4,8 @@
     {% trans title %}
     {% endset %}
     <div class="form-group {{ groupClass }}">
-        <label class="col-sm-2 control-label">{{ title }}</label>
-        <div class="col-sm-10">
+        <label class="control-label">{{ title }}</label>
+        <div class="">
             <p class="form-control-static">{{ value }}</p>
             <span class="help-block">{{ helpText }}</span>
         </div>
@@ -41,7 +41,7 @@
     {% trans title %}
     {% endset %}
     <div class="form-group {{ groupClass }}">
-        <div class="col-sm-offset-2 col-sm-10">
+        <div class="col-sm-offset-2 ">
             {% if type == "link" %}
                 <a class="btn btn-default" href="{{ link }}">{{ title }}</a>
             {% else %}
@@ -56,8 +56,8 @@
     {% trans title %}
     {% endset %}
     <div class="form-group {{ groupClass }}">
-        <label class="col-sm-2 control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
-        <div class="col-sm-10">
+        <label class="control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
+        <div class="">
             <input class="form-control" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" {{ validation }} />
             <span class="help-block">{{ helpText }}</span>
         </div>
@@ -69,8 +69,8 @@
     {% trans title %}
     {% endset %}
     <div class="form-group {{ groupClass }}">
-        <label class="col-sm-2 control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
-        <div class="col-sm-10">
+        <label class="control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
+        <div class="">
             <input class="form-control" name="{{ name }}" type="number" id="{{ name }}" value="{{ value }}" {{ validation }} />
             <span class="help-block">{{ helpText }}</span>
         </div>
@@ -82,8 +82,8 @@
     {% trans title %}
     {% endset %}
     <div class="form-group {{ groupClass }}">
-        <label class="col-sm-2 control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
-        <div class="col-sm-10">
+        <label class="control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
+        <div class="">
             <input class="form-control" name="{{ name }}" type="email" id="{{ name }}" value="{{ value }}" {{ validation }} />
             <span class="help-block">{{ helpText }}</span>
         </div>
@@ -95,22 +95,10 @@
     {% trans title %}
     {% endset %}
     <div class="form-group {{ groupClass }}">
-        <label class="col-sm-2 control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
-        <div class="col-sm-10">
+        <label class="control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
+        <div class="">
             <input class="form-control" name="{{ name }}" type="password" id="{{ name }}" value="{{ value }}" {{ validation }} />
             <span class="help-block">{{ helpText }}</span>
-        </div>
-    </div>
-{% endmacro %}
-
-{% macro textarea(name, title, value, helpText, groupClass, validation, rows) %}
-    {% set title %}
-    {% trans title %}
-    {% endset %}
-    <div class="form-group {{ groupClass }}">
-        <div class="col-sm-12">
-            <span class="help-block">{{ helpText }}</span>
-            <textarea class="form-control" name="{{ name }}" id="{{ name }}" rows="{{ rows }}" {{ validation }}>{{ value }}</textarea>
         </div>
     </div>
 {% endmacro %}
@@ -120,7 +108,7 @@
     {% trans title %}
     {% endset %}
     <div class="form-group {{ groupClass }}">
-        <div class="col-sm-offset-2 col-sm-10">
+        <div class="">
             <div class="checkbox">
                 <label for="{{ name }}" title="{{ helpText }}" accesskey="{{ accessKey }}">
                     <input type="checkbox" id="{{ name }}" name="{{ name }}" {% if value == 1 %}checked{% endif %}>
@@ -137,7 +125,7 @@
     {% trans title %}
     {% endset %}
     <div class="form-group {{ groupClass }}">
-        <div class="col-sm-offset-2 col-sm-10">
+        <div class="col-sm-offset-2 ">
             <div class="radio">
                 <label for="{{ name }}" title="{{ helpText }}" accesskey="{{ accessKey }}">
                     <input type="radio" id="{{ id }}" name="{{ name }}" value="{{ setValue }}" {% if value == setValue %}checked{% endif %}>
@@ -154,8 +142,8 @@
     {% trans title %}
     {% endset %}
     <div class="form-group {{ groupClass }}">
-        <label class="col-sm-2 control-label" for="{{ name }}" title="{{ helpText }}" accesskey="{{ accessKey }}">{{ title }}</label>
-        <div class="col-sm-10">
+        <label class="control-label" for="{{ name }}" title="{{ helpText }}" accesskey="{{ accessKey }}">{{ title }}</label>
+        <div class="">
             <select class="form-control" {% if type == "dropdownmulti" %}multiple{% endif %} name="{{ name }}" id="{{ name }}" {{ callBack }}
             {% if dataAttributes|length > 0 %}
             {% for attritube in dataAttributes %}
@@ -226,8 +214,8 @@
     {% trans title %}
     {% endset %}
     <div class="form-group {{ groupClass }}">
-        <label class="col-sm-2 control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
-        <div class="col-sm-10">
+        <label class="control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
+        <div class="">
             <input class="form-control datePicker" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" {{ validation }} readonly/>
             <span class="help-block">{{ helpText }}</span>
         </div>
@@ -239,8 +227,8 @@
     {% trans title %}
     {% endset %}
     <div class="form-group {{ groupClass }}">
-        <label class="col-sm-2 control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
-        <div class="col-sm-10">
+        <label class="control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
+        <div class="">
             <input class="form-control timePicker" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" {{ validation }} readonly/>
             <span class="help-block">{{ helpText }}</span>
         </div>

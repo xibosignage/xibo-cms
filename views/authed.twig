@@ -140,6 +140,20 @@
             </ul>
         </div>
     </script>
+
+    <script type="text/x-handlebars-template" id="multiselect-button-template">
+        <div class="btn-group">
+            <button class="btn dropdown-toggle" data-toggle="dropdown">
+                <span class="fa fa-caret-down"></span>
+                {{ withSelected }}
+            </button>
+            <ul class="dropdown-menu">
+                {{#each buttons}}
+                <li class="XiboMultiSelectFormButton" data-button-id="{{ id }}" data-grid-id="{{ gridId }}"><a tabindex="-1" href="#">{{ text }}</a></li>
+                {{/each}}
+            </ul>
+        </div>
+    </script>
     {% endraw %}
 
 {% endblock %}

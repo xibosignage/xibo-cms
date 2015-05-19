@@ -348,7 +348,8 @@ class Layout extends Base
             'retired' => $filter_retired,
             'tags' => $filter_tags,
             'filterLayoutStatusId' => $filterLayoutStatusId,
-            'showTags' => $showTags));
+            'showTags' => $showTags)
+        );
 
         if (!is_array($layouts))
             trigger_error(__('Unable to get layouts for user'), E_USER_ERROR);
@@ -458,6 +459,8 @@ class Layout extends Base
                     'multi-select' => true,
                     'dataAttributes' => array(
                         array('name' => 'multiselectlink', 'value' => 'index.php?p=layout&q=Retire'),
+                        array('name' => 'id', 'value' => 'layout_button_retire'),
+                        array('name' => 'text', 'value' => __('Retire')),
                         array('name' => 'rowtitle', 'value' => $row['layout']),
                         array('name' => 'layoutid', 'value' => $layout->layoutId)
                     )
@@ -473,6 +476,8 @@ class Layout extends Base
                         'multi-select' => true,
                         'dataAttributes' => array(
                             array('name' => 'multiselectlink', 'value' => 'index.php?p=layout&q=delete'),
+                            array('name' => 'id', 'value' => 'layout_button_delete'),
+                            array('name' => 'text', 'value' => __('Delete')),
                             array('name' => 'rowtitle', 'value' => $row['layout']),
                             array('name' => 'layoutid', 'value' => $layout->layoutId)
                         )

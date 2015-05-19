@@ -65,10 +65,8 @@
 
 {% block javaScript %}
     <script type="text/javascript">
-        var buttonsTemplate = Handlebars.compile($("#buttons-template").html());
         var table = $("#layouts").DataTable({
             serverSide: true,
-            processing: true,
             searchDelay: 3000,
             "order": [[ 1, "asc"]],
             ajax: "{{ urlFor("layoutSearch") }}",
@@ -97,22 +95,12 @@
                 },
                 {
                     "orderable": false,
-                    "data": function(data, type, row, meta) {
-                        if (type != "display")
-                            return "";
-
-                        return buttonsTemplate({buttons: data.buttons});
-                    }
+                    "data": dataTableButtonsColumn
                 }
-            ],
-            search: {
-                search: "{{ search }}"
-            }
+            ]
         });
 
-        table.on('draw', function(e, settings) {
-            // Bind any buttons
-            XiboInitialise("#layouts");
-        });
+        table.on('draw', dataTableDraw);
+        table.on('processing.dt', dataTableProcessing);
     </script>
 {% endblock %}

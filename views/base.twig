@@ -78,6 +78,7 @@
         <script type="text/javascript">
             var translations = {{ translations|raw }};
             // Translations we want always available
+            translations.withselected = "{% trans "With Selected" %}";
             translations.multiselect = "{% trans "Multiple Items Selected" %}";
             translations.multiselectNoItemsMessage = "{% trans "Sorry, no items have been selected." %}";
             translations.multiselectMessage = "{% trans "Caution, you have selected %1 items. Clicking save will run the %2 transaction on all these items." %}";
