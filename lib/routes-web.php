@@ -93,184 +93,106 @@ $app->post('/login', function () use ($app) {
 });
 
 // Logout Request
-$app->get('/logout', function () use ($app) {
-    $controller = new \Xibo\Controller\Login($app);
-    $controller->logout();
-    $app->redirectTo('login');
-})->setName('logout');
-
-// Token Exchange
-$app->post('/ExchangeGridTokenForFormToken', function () use ($app) {
-    $controller = new \Xibo\Controller\Login($app);
-    $controller->ExchangeGridTokenForFormToken();
-    $controller->render();
-});
+$app->get('/logout', '\Xibo\Controller\Login:logout')->name('logout');
 
 // Ping pong route
-$app->get('/login/ping', function () use ($app) {
-    $app->session->refreshExpiry = false;
-    $controller = new \Xibo\Controller\Login($app);
-    $controller->PingPong();
-    $controller->render();
-})->setName('ping');
+$app->get('/login/ping', '\Xibo\Controller\Login:PingPong')->name('ping');
 
 //
 // upgrade
 //
-$app->get('/update', function () use ($app) {
-    $controller = new \Xibo\Controller\Upgrade($app);
-    $controller->displayPage();
-    $controller->render();
-})->name('upgradeView');
+$app->get('/update', '\Xibo\Controller\Upgrade:displayPage')->name('upgradeView');
 
 //
 // schedule
 //
-$app->get('/schedule/view', function () use ($app) {
-    $controller = new \Xibo\Controller\Schedule($app);
-    $controller->displayPage();
-})->name('scheduleView');
+$app->get('/schedule/view', '\Xibo\Controller\Schedule:displayPage')->name('scheduleView');
+$app->get('/schedule/form/now/:id', '\Xibo\Controller\Schedule:scheduleNowForm')->name('scheduleNowForm');
 
 //
 // layouts
 //
-$app->get('/layout/view', function () use ($app) {
-    // This is a full page
-    $controller = new \Xibo\Controller\Layout($app);
-    $controller->displayPage();
-    $controller->render();
-})->name('layoutView');
-
-$app->get('/layout/designer/:id', function ($id) use ($app) {
-    // This is a full page
-    $controller = new \Xibo\Controller\Layout($app);
-    $controller->displayDesigner($id);
-})->name('layoutDesigner');
-
-$app->get('/layout/status/:id', function($id) use ($app) {
-    $controller = new \Xibo\Controller\Layout($app);
-    $controller->LayoutStatus();
-})->setName('layoutStatus');
+$app->get('/layout/view', '\Xibo\Controller\Layout:displayPage')->name('layoutView');
+$app->get('/layout/designer/:id', '\Xibo\Controller\Layout:displayDesigner')->name('layoutDesigner');
+$app->get('/layout/status/:id', '\Xibo\Controller\Layout:LayoutStatus')->setName('layoutStatus');
+$app->get('/layout/preview/:id', '\Xibo\Controller\Preview:render')->name('layoutPreview');
+$app->get('/layout/export/:id', '\Xibo\Controller\Layout:export')->name('layoutExport');
 
 // Layout forms
+$app->get('/layout/form/add', '\Xibo\Controller\Layout:addForm')->name('layoutAddForm');
+$app->get('/layout/form/edit/:id', '\Xibo\Controller\Layout:editForm')->name('layoutEditForm');
+$app->get('/layout/form/copy/:id', '\Xibo\Controller\Layout:copyForm')->name('layoutCopyForm');
 $app->get('/layout/form/delete/:id', '\Xibo\Controller\Layout:deleteForm')->name('layoutDeleteForm');
 $app->get('/layout/form/retire/:id', '\Xibo\Controller\Layout:retireForm')->name('layoutRetireForm');
-
-// Layout actions
-$app->put('/layout/retire/:id', '\Xibo\Controller\Layout:retire')->name('layoutRetire');
-$app->delete('/layout/:id', '\Xibo\Controller\Layout:delete')->name('layoutDelete');
 
 //
 // content
 //
-$app->get('/content/view', function () use ($app) {
-    $controller = new \Xibo\Controller\Library($app);
-    $controller->displayPage();
-})->name('contentView');
+$app->get('/content/view', '\Xibo\Controller\Library:displayPage')->name('contentView');
 
 //
 // display
 //
-$app->get('/display/view', function () use ($app) {
-    $controller = new \Xibo\Controller\Display($app);
-    $controller->displayPage();
-})->name('displayView');
+$app->get('/display/view', '\Xibo\Controller\Display:displayPage')->name('displayView');
 
 //
 // user
 //
-$app->get('/user/view', function () use ($app) {
-    $controller = new \Xibo\Controller\User($app);
-    $controller->displayPage();
-})->name('userView');
-
-$app->get('/user/welcome', function () use ($app) {
-    $controller = new \Xibo\Controller\Login($app);
-    $controller->userWelcome();
-})->setName('welcomeWizard');
-
-// Change Password
-$app->get('/user/password/view', function () use ($app) {
-
-})->setName('userChangePassword');
+$app->get('/user/view', '\Xibo\Controller\User:displayPage')->name('userView');
+$app->get('/user/welcome', '\Xibo\Controller\Login:userWelcome')->name('welcomeWizard');
+$app->get('/user/password/view', '\Xibo\Controller\User:changePassword')->name('userChangePassword');
+$app->get('/user/form/:entity/:id', '\Xibo\Controller\User:permissionsForm')->name('permissionsForm');
 
 //
 // log
 //
-$app->get('/log/view', function () use ($app) {
-    $controller = new \Xibo\Controller\Log($app);
-    $controller->displayPage();
-    $controller->render();
-})->name('logView');
-
-$app->get('/log/delete', function () use ($app) {
-    $controller = new \Xibo\Controller\Log($app);
-    $controller->TruncateForm();
-})->name('logTruncateForm');
+$app->get('/log/view', '\Xibo\Controller\Log:displayPage')->name('logView');
+$app->get('/log/delete', '\Xibo\Controller\Log:TruncateForm')->name('logTruncateForm');
 
 //
 // campaign
 //
-$app->get('/campaign/view', function () use ($app) {
-    $controller = new \Xibo\Controller\Campaign($app);
-    $controller->displayPage();
-})->name('campaignView');
+$app->get('/campaign/view', '\Xibo\Controller\Campaign:displayPage')->name('campaignView');
+$app->get('/campaign/form/add', '\Xibo\Controller\Layout:addForm')->name('campaignAddForm');
+$app->get('/campaign/form/edit/:id', '\Xibo\Controller\Layout:editForm')->name('campaignEditForm');
+$app->get('/campaign/form/copy/:id', '\Xibo\Controller\Layout:copyForm')->name('campaignCopyForm');
+$app->get('/campaign/form/delete/:id', '\Xibo\Controller\Layout:deleteForm')->name('campaignDeleteForm');
+$app->get('/campaign/form/retire/:id', '\Xibo\Controller\Layout:retireForm')->name('campaignRetireForm');
 
 //
 // template
 //
-$app->get('/template/view', function () use ($app) {
-    $controller = new \Xibo\Controller\Template($app);
-    $controller->displayPage();
-})->name('templateView');
+$app->get('/template/view', '\Xibo\Controller\Template:displayPage')->name('templateView');
 
 //
 // resolution
 //
-$app->get('/resolution/view', function () use ($app) {
-    $controller = new \Xibo\Controller\Resolution($app);
-    $controller->displayPage();
-})->name('resolutionView');
+$app->get('/resolution/view', '\Xibo\Controller\Resolution:displayPage')->name('resolutionView');
 
 //
 // dataset
 //
-$app->get('/dataset/view', function () use ($app) {
-    $controller = new \Xibo\Controller\DataSet($app);
-    $controller->displayPage();
-})->name('datasetView');
+$app->get('/dataset/view', '\Xibo\Controller\DataSet:displayPage')->name('datasetView');
 
 //
 // displaygroup
 //
-$app->get('/displaygroup/view', function () use ($app) {
-    $controller = new \Xibo\Controller\DisplayGroup($app);
-    $controller->displayPage();
-})->name('displaygroupView');
+$app->get('/displaygroup/view', '\Xibo\Controller\DisplayGroup:displayPage')->name('displaygroupView');
 
 //
 // displayprofile
 //
-$app->get('/displayprofile/view', function () use ($app) {
-    $controller = new \Xibo\Controller\DisplayProfile($app);
-    $controller->displayPage();
-})->name('displayprofileView');
+$app->get('/displayprofile/view', '\Xibo\Controller\DisplayGroup:displayPage')->name('displayprofileView');
 
 //
 // group
 //
-$app->get('/group/view', function () use ($app) {
-    $controller = new \Xibo\Controller\UserGroup($app);
-    $controller->displayPage();
-})->name('groupView');
+$app->get('/group/view', '\Xibo\Controller\UserGroup:displayPage')->name('groupView');
 
 //
 // admin
 //
-$app->get('/admin/view', function () use ($app) {
-    $controller = new \Xibo\Controller\Settings($app);
-    $controller->displayPage();
-})->name('adminView');
+$app->get('/admin/view', '\Xibo\Controller\Settings:displayPage')->name('adminView');
 
 //
 // oauth
@@ -282,62 +204,34 @@ $app->get('/oauth/view', function () use ($app) {
 //
 // module
 //
-$app->get('/module/view', function () use ($app) {
-    $controller = new \Xibo\Controller\Module($app);
-    $controller->displayPage();
-})->name('moduleView');
+$app->get('/module/view', '\Xibo\Controller\Module:displayPage')->name('moduleView');
 
 //
 // transition
 //
-$app->get('/transition/view', function () use ($app) {
-    $controller = new \Xibo\Controller\Transition($app);
-    $controller->displayPage();
-})->name('transitionView');
+$app->get('/transition/view', '\Xibo\Controller\Transition:displayPage')->name('transitionView');
 
 //
 // sessions
 //
-$app->get('/sessions/view', function () use ($app) {
-    $controller = new \Xibo\Controller\Sessions($app);
-    $controller->displayPage();
-})->name('sessionsView');
+$app->get('/sessions/view', '\Xibo\Controller\Sessions:displayPage')->name('sessionsView');
 
 //
 // fault
 //
-$app->get('/fault/view', function () use ($app) {
-    $controller = new \Xibo\Controller\Fault($app);
-    $controller->displayPage();
-})->name('faultView');
+$app->get('/fault/view', '\Xibo\Controller\Fault:displayPage')->name('faultView');
 
 //
 // license
 //
-$app->get('/license/view', function () use ($app) {
-    $controller = new \Xibo\Controller\Login($app);
-    $controller->render('About');
-})->name('licenseView');
+$app->get('/license/view', '\Xibo\Controller\Login:About')->name('licenseView');
 
 //
 // help
 //
-$app->get('/help/view', function () use ($app) {
-    $controller = new \Xibo\Controller\Help($app);
-    $controller->displayPage();
-})->name('helpView');
-//
-
-//
-$app->get('/layout/add', function () use ($app) {
-    $controller = new \Xibo\Controller\Layout($app);
-    $controller->AddForm();
-})->setName('layoutAddForm');
+$app->get('/help/view', '\Xibo\Controller\Help:displayPage')->name('helpView');
 
 //
 // Stats
 //
-$app->get('/stats', function () use ($app) {
-    $controller = new \Xibo\Controller\Stats($app);
-    $controller->displayPage();
-})->name('statsView');
+$app->get('/stats', '\Xibo\Controller\Stats:displayPage')->name('statsView');

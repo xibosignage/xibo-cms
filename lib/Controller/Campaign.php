@@ -30,50 +30,18 @@ class Campaign extends Base
 {
     public function displayPage()
     {
-        // Configure the theme
-        $id = uniqid();
-        Theme::Set('id', $id);
-        Theme::Set('form_action', $this->urlFor('campaignSearch'));
-        Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
-        Theme::Set('pager', ApplicationState::Pager($id));
-
-        // Call to render the template
-        Theme::Set('header_text', __('Campaigns'));
-        Theme::Set('form_fields', array());
-        $this->getState()->html .= Theme::RenderReturn('grid_render');
-    }
-
-    function actionMenu()
-    {
-
-        return array(
-            array('title' => __('Add Campaign'),
-                'class' => 'XiboFormButton',
-                'selected' => false,
-                'link' => 'index.php?p=campaign&q=AddForm',
-                'help' => __('Add a new Campaign'),
-                'onclick' => ''
-            )
-        );
+        $this->getState()->template = 'campaign-page';
     }
 
     /**
      * Returns a Grid of Campaigns
      */
-    public function Grid()
+    public function grid()
     {
         $user = $this->getUser();
         $response = $this->getState();
 
         $campaigns = $user->CampaignList();
-
-        $cols = array(
-            array('name' => 'campaign', 'title' => __('Name')),
-            array('name' => 'numlayouts', 'title' => __('# Layouts'))
-        );
-        Theme::Set('table_cols', $cols);
-
-        $rows = array();
 
         foreach ($campaigns as $campaign) {
             /* @var \Xibo\Entity\Campaign $campaign */
@@ -81,63 +49,53 @@ class Campaign extends Base
             if ($campaign->isLayout)
                 continue;
 
-            $row = array();
-            $row['campaignid'] = $campaign->campaignId;
-            $row['campaign'] = $campaign->campaign;
-            $row['numlayouts'] = $campaign->numberLayouts;
+            $campaign->buttons = [];
 
             // Schedule Now
-            $row['buttons'][] = array(
+            $campaign->buttons[] = array(
                 'id' => 'campaign_button_schedulenow',
-                'url' => 'index.php?p=schedule&q=ScheduleNowForm&CampaignID=' . $row['campaignid'],
+                'url' => 'index.php?p=schedule&q=ScheduleNowForm&CampaignID=' . $campaign['campaignid'],
                 'text' => __('Schedule Now')
             );
 
             // Buttons based on permissions
             if ($this->getUser()->checkEditable($campaign)) {
                 // Assign Layouts
-                $row['buttons'][] = array(
+                $campaign->buttons[] = array(
                     'id' => 'campaign_button_layouts',
-                    'url' => 'index.php?p=campaign&q=LayoutAssignForm&CampaignID=' . $row['campaignid'] . '&Campaign=' . $row['campaign'],
+                    'url' => 'index.php?p=campaign&q=LayoutAssignForm&CampaignID=' . $campaign['campaignid'] . '&Campaign=' . $campaign->campaign,
                     'text' => __('Layouts')
                 );
 
                 // Edit the Campaign
-                $row['buttons'][] = array(
+                $campaign->buttons[] = array(
                     'id' => 'campaign_button_edit',
-                    'url' => 'index.php?p=campaign&q=EditForm&CampaignID=' . $row['campaignid'],
+                    'url' => 'index.php?p=campaign&q=EditForm&CampaignID=' . $campaign['campaignid'],
                     'text' => __('Edit')
                 );
             }
 
             if ($this->getUser()->checkDeleteable($campaign)) {
                 // Delete Campaign
-                $row['buttons'][] = array(
+                $campaign->buttons[] = array(
                     'id' => 'campaign_button_delete',
-                    'url' => 'index.php?p=campaign&q=DeleteForm&CampaignID=' . $row['campaignid'],
+                    'url' => 'index.php?p=campaign&q=DeleteForm&CampaignID=' . $campaign['campaignid'],
                     'text' => __('Delete')
                 );
             }
 
             if ($this->getUser()->checkPermissionsModifyable($campaign)) {
                 // Permissions for Campaign
-                $row['buttons'][] = array(
+                $campaign->buttons[] = array(
                     'id' => 'campaign_button_delete',
-                    'url' => 'index.php?p=user&q=permissionsForm&entity=Campaign&objectId=' . $row['campaignid'],
+                    'url' => 'index.php?p=user&q=permissionsForm&entity=Campaign&objectId=' . $campaign['campaignid'],
                     'text' => __('Permissions')
                 );
             }
-
-            // Assign this to the table row
-            $rows[] = $row;
         }
 
-        Theme::Set('table_rows', $rows);
-
-        $output = Theme::RenderReturn('table_render');
-
-        $response->SetGridResponse($output);
-
+        $this->getState()->template = 'grid';
+        $this->getState()->setData($campaigns);
     }
 
     /**

@@ -43,12 +43,13 @@ class Clock extends Base
     /**
      * Gets the Time
      */
-    function GetClock()
+    function clock()
     {
         $output = Date::GetClock();
+        $this->getApp()->session->refreshExpiry = false;
 
         $this->getState()->setData(array('time' => $output));
-        $this->getState()->SetFormRequestResponse($output, __('Date / Time Information'), '480px', '240px');
+        $this->getState()->html = $output;
         $this->getState()->clockUpdate = true;
         $this->getState()->success = false;
     }

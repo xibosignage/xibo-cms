@@ -91,6 +91,7 @@ class Login extends Base
 
         $session = $this->getSession();
         $session->setIsExpired(1);
+        $this->getApp()->redirectTo('login');
     }
 
     /**
@@ -106,8 +107,8 @@ class Login extends Base
      */
     public function PingPong()
     {
-        $response = $this->getState();
-        $response->success = true;
+        $this->getApp()->session->refreshExpiry = false;
+        $this->getState()->success = true;
     }
 
     /**

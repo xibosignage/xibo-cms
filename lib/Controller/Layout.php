@@ -172,10 +172,6 @@ class Layout extends Base
      */
     function modify()
     {
-
-
-         
-
         $layout = LayoutFactory::loadById(Kit::GetParam('layoutid', _POST, _INT));
 
         // Make sure we have permission
@@ -243,21 +239,15 @@ class Layout extends Base
         if (!$this->getUser()->checkEditable($layout))
             throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
 
-        Theme::Set('form_id', 'RetireForm');
-        Theme::Set('form_meta', '<input type="hidden" name="layoutId" value="' . $layoutId . '">');
+        $data = [
+            'layout' => $layout,
+            'help' => [
+                'delete' => Help::Link('Layout', 'Retire')
+            ]
+        ];
 
-        // Retire the layout
-        Theme::Set('form_action', 'index.php?p=layout&q=Retire');
-        Theme::Set('form_fields', array(Form::AddMessage(__('Are you sure you want to retire this layout ?'))));
-
-        $form = Theme::RenderReturn('form_render');
-
-         $this->getState()->SetFormRequestResponse($form, sprintf(__('Retire %s'), $layout->layout), '300px', '200px');
-         $this->getState()->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Layout', 'Retire') . '")');
-         $this->getState()->AddButton(__('Delete'), 'XiboSwapDialog("index.php?p=layout&q=DeleteLayoutForm&layoutid=' . $layoutId . '")');
-         $this->getState()->AddButton(__('No'), 'XiboDialogClose()');
-         $this->getState()->AddButton(__('Yes'), '$("#RetireForm").submit()');
-
+        $this->getState()->template = 'layout-form-retire';
+        $this->getState()->setData($data);
     }
 
     /**
@@ -266,43 +256,33 @@ class Layout extends Base
     function delete()
     {
         $layoutId = Sanitize::getInt('layoutId');
-
         $layout = LayoutFactory::loadById($layoutId);
 
         if (!$this->getUser()->checkDeleteable($layout))
-            trigger_error(__('You do not have permissions to delete this layout'), E_USER_ERROR);
+            throw new AccessDeniedException(__('You do not have permissions to delete this layout'));
 
         $layout->delete();
-
-        $this->getState()->SetFormSubmitResponse(__('The Layout has been Deleted'));
     }
 
     /**
      * Retires a layout
      */
-    function Retire()
+    function retire()
     {
+        $layoutId = Sanitize::getInt('layoutId');
+        $layout = LayoutFactory::loadById($layoutId);
 
+        if (!$this->getUser()->checkEditable($layout))
+            throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
 
-         
-        $layoutId = \Kit::GetParam('layoutid', _POST, _INT, 0);
-
-        if (!$this->auth->edit)
-            trigger_error(__('You do not have permission to retire this layout'), E_USER_ERROR);
-
-        $layoutObject = new Layout();
-
-        if (!$layoutObject->Retire($layoutId))
-            trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);
-
-         $this->getState()->SetFormSubmitResponse(__('The Layout has been Retired'));
-
+        $layout->retired = 1;
+        $layout->save();
     }
 
     /**
      * Shows the Layout Grid
      */
-    function LayoutGrid()
+    function grid()
     {
         $this->getState()->template = 'grid';
 
@@ -351,117 +331,101 @@ class Layout extends Base
             'showTags' => $showTags)
         );
 
-        if (!is_array($layouts))
-            trigger_error(__('Unable to get layouts for user'), E_USER_ERROR);
-
-        $rows = array();
-
         foreach ($layouts as $layout) {
             /* @var \Xibo\Entity\Layout $layout */
-            // Construct an object containing all the layouts, and pass to the theme
-            $row = array();
 
-            $row['layoutid'] = $layout->layoutId;
-            $row['layout'] = $layout->layout;
-            $row['description'] = $layout->description;
-            $row['tags'] = $layout->tags;
-            $row['owner'] = $layout->owner;
-            $row['permissions'] = $layout->groupsWithPermissions;
+            $layout->thumbnail = '';
 
-            $row['thumbnail'] = '';
-
-            if ($showThumbnail == 1 && $layout->backgroundImageId != 0)
-                $row['thumbnail'] = '<a class="img-replace" data-toggle="lightbox" data-type="image" data-img-src="index.php?p=content&q=getFile&mediaid=' . $layout->backgroundImageId . '&width=100&height=100&dynamic=true&thumb=true" href="index.php?p=content&q=getFile&mediaid=' . $layout->backgroundImageId . '"><i class="fa fa-file-image-o"></i></a>';
+            if ($layout->backgroundImageId != 0)
+                $layout->thumbnail = '<a class="img-replace" data-toggle="lightbox" data-type="image" data-img-src="index.php?p=content&q=getFile&mediaid=' . $layout->backgroundImageId . '&width=100&height=100&dynamic=true&thumb=true" href="index.php?p=content&q=getFile&mediaid=' . $layout->backgroundImageId . '"><i class="fa fa-file-image-o"></i></a>';
 
             // Fix up the description
             if ($showDescriptionId == 1) {
                 // Parse down for description
-                $row['descriptionWithMarkdown'] = Parsedown::instance()->text($row['description']);
+                $layout->descriptionWithMarkdown = Parsedown::instance()->text($layout->description);
             } else if ($showDescriptionId == 2) {
-                $row['description'] = strtok($row['description'], "\n");
+                $layout->description = strtok($layout->description, "\n");
             }
 
             switch ($layout->status) {
 
                 case 1:
-                    $row['status'] = 1;
-                    $row['statusDescription'] = __('This Layout is ready to play');
+                    $layout->status = 1;
+                    $layout->statusDescription = __('This Layout is ready to play');
                     break;
 
                 case 2:
-                    $row['status'] = 2;
-                    $row['statusDescription'] = __('There are items on this Layout that can only be assessed by the Display');
+                    $layout->status = 2;
+                    $layout->statusDescription = __('There are items on this Layout that can only be assessed by the Display');
                     break;
 
                 case 3:
-                    $row['status'] = 0;
-                    $row['statusDescription'] = __('This Layout is invalid and should not be scheduled');
+                    $layout->status = 0;
+                    $layout->statusDescription = __('This Layout is invalid and should not be scheduled');
                     break;
 
                 default:
-                    $row['status'] = 0;
-                    $row['statusDescription'] = __('The Status of this Layout is not known');
+                    $layout->status = 0;
+                    $layout->statusDescription = __('The Status of this Layout is not known');
             }
-
-
-            $row['layout_form_edit_url'] = 'index.php?p=layout&q=displayForm&layoutid=' . $layout->layoutId;
 
             // Add some buttons for this row
             if ($this->getUser()->checkEditable($layout)) {
                 // Design Button
-                $row['buttons'][] = array(
+                $layout->buttons[] = array(
                     'id' => 'layout_button_design',
                     'linkType' => '_self', 'external' => true,
-                    'url' => $this->app->urlFor('layoutUpdate', array('id' => $layout->layoutId)),
+                    'url' => $this->urlFor('layoutUpdate', array('id' => $layout->layoutId)),
                     'text' => __('Design')
                 );
             }
 
             // Preview
-            $row['buttons'][] = array(
+            $layout->buttons[] = array(
                 'id' => 'layout_button_preview',
-                'linkType' => '_blank', 'external' => true,
-                'url' => 'index.php?p=preview&q=render&ajax=true&layoutid=' . $layout->layoutId,
+                'linkType' => '_blank',
+                'external' => true,
+                'url' => $this->urlFor('layoutPreview', ['id' => $layout->layoutId]),
                 'text' => __('Preview Layout')
             );
 
             // Schedule Now
-            $row['buttons'][] = array(
+            $layout->buttons[] = array(
                 'id' => 'layout_button_schedulenow',
-                'url' => 'index.php?p=schedule&q=ScheduleNowForm&CampaignID=' . $layout->campaignId,
+                'url' => $this->urlFor('scheduleNowForm', ['id' => $layout->campaignId]),
                 'text' => __('Schedule Now')
             );
 
-            $row['buttons'][] = ['divider' => true];
+            $layout->buttons[] = ['divider' => true];
 
             // Only proceed if we have edit permissions
             if ($this->getUser()->checkEditable($layout)) {
 
                 // Edit Button
-                $row['buttons'][] = array(
+                $layout->buttons[] = array(
                     'id' => 'layout_button_edit',
-                    'url' => 'index.php?p=layout&q=EditForm&layoutid=' . $layout->layoutId,
+                    'url' => $this->urlFor('layoutEditForm', ['id' => $layout->layoutId]),
                     'text' => __('Edit')
                 );
 
                 // Copy Button
-                $row['buttons'][] = array(
+                $layout->buttons[] = array(
                     'id' => 'layout_button_copy',
-                    'url' => 'index.php?p=layout&q=CopyForm&layoutid=' . $layout->layoutId . '&oldlayout=' . urlencode($layout->layout),
+                    'url' => $this->urlFor('layoutCopyForm', ['id' => $layout->layoutId]) . '?oldlayout=' . urlencode($layout->layout),
                     'text' => __('Copy')
                 );
 
                 // Retire Button
-                $row['buttons'][] = array(
+                $layout->buttons[] = array(
                     'id' => 'layout_button_retire',
-                    'url' => 'index.php?p=layout&q=RetireForm&layoutId=' . $layout->layoutId,
+                    'url' => $this->urlFor('layoutRetireForm', ['id' => $layout->layoutId]),
                     'text' => __('Retire'),
                     'multi-select' => true,
                     'dataAttributes' => array(
                         array('name' => 'multiselectlink', 'value' => 'index.php?p=layout&q=Retire'),
                         array('name' => 'id', 'value' => 'layout_button_retire'),
                         array('name' => 'text', 'value' => __('Retire')),
-                        array('name' => 'rowtitle', 'value' => $row['layout']),
+                        array('name' => 'rowtitle', 'value' => $layout->layout),
                         array('name' => 'layoutid', 'value' => $layout->layoutId)
                     )
                 );
@@ -469,7 +433,7 @@ class Layout extends Base
                 // Extra buttons if have delete permissions
                 if ($this->getUser()->checkDeleteable($layout)) {
                     // Delete Button
-                    $row['buttons'][] = array(
+                    $layout->buttons[] = array(
                         'id' => 'layout_button_delete',
                         'url' => $this->urlFor('layoutDeleteForm', ['id' => $layout->layoutId]),
                         'text' => __('Delete'),
@@ -478,39 +442,36 @@ class Layout extends Base
                             array('name' => 'multiselectlink', 'value' => 'index.php?p=layout&q=delete'),
                             array('name' => 'id', 'value' => 'layout_button_delete'),
                             array('name' => 'text', 'value' => __('Delete')),
-                            array('name' => 'rowtitle', 'value' => $row['layout']),
+                            array('name' => 'rowtitle', 'value' => $layout->layout),
                             array('name' => 'layoutid', 'value' => $layout->layoutId)
                         )
                     );
                 }
 
-                $row['buttons'][] = ['divider' => true];
+                $layout->buttons[] = ['divider' => true];
 
                 // Export Button
-                $row['buttons'][] = array(
+                $layout->buttons[] = array(
                     'id' => 'layout_button_export',
                     'linkType' => '_self', 'external' => true,
-                    'url' => 'index.php?p=layout&q=Export&layoutid=' . $layout->layoutId,
+                    'url' => $this->urlFor('layoutExport', ['id' => $layout->layoutId]),
                     'text' => __('Export')
                 );
 
                 // Extra buttons if we have modify permissions
                 if ($this->getUser()->checkPermissionsModifyable($layout)) {
                     // Permissions button
-                    $row['buttons'][] = array(
+                    $layout->buttons[] = array(
                         'id' => 'layout_button_permissions',
-                        'url' => 'index.php?p=user&q=permissionsForm&entity=Campaign&objectId=' . $layout->campaignId,
+                        'url' => $this->urlFor('permissionsForm', ['entity' => 'Campaign', 'id' => $layout->campaignId]),
                         'text' => __('Permissions')
                     );
                 }
             }
-
-            // Add the row
-            $rows[] = $row;
         }
 
         // Store the table rows
-        $this->getState()->setData($rows);
+        $this->getState()->setData($layouts);
     }
 
     /**
@@ -518,62 +479,7 @@ class Layout extends Base
      */
     function AddForm()
     {
-        Theme::Set('form_id', 'LayoutForm');
-
-        // Two tabs
-        $tabs = array();
-        $tabs[] = Form::AddTab('general', __('General'));
-        $tabs[] = Form::AddTab('description', __('Description'));
-
-        Theme::Set('form_tabs', $tabs);
-
-        $formFields = array();
-        $formFields['general'][] = Form::AddText('layout', __('Name'), (isset($layout['layout']) ? $layout['layout'] : NULL), __('The Name of the Layout - (1 - 50 characters)'), 'n', 'required');
-        $formFields['general'][] = Form::AddText('tags', __('Tags'), (isset($layout['tags']) ? $layout['tags'] : NULL), __('Tags for this layout - used when searching for it. Comma delimited. (1 - 250 characters)'), 't', 'maxlength="250"');
-
-        $formFields['description'][] = Form::AddMultiText('description', __('Description'), (isset($layout['description']) ? $layout['description'] : NULL),
-            __('An optional description of the Layout. (1 - 250 characters)'), 'd', 5, 'maxlength="250"');
-
-        // We are adding
-        Theme::Set('form_action', $this->urlFor('layoutAdd'));
-
-        $templates = $this->getUser()->TemplateList();
-        $templates = array_map(function($element) { return array('layoutid' => $element->layoutId, 'layout' => $element->layout); }, $templates);
-        array_unshift($templates, array('layoutid' => '0', 'layout' => 'None'));
-
-        $formFields['general'][] = Form::AddCombo(
-            'templateid',
-            __('Template'),
-            NULL,
-            $templates,
-            'layoutid',
-            'layout',
-            __('Optionally choose a template you have saved before.'),
-            't');
-
-        $formFields['general'][] = Form::AddCombo(
-            'resolutionid',
-            __('Resolution'),
-            NULL,
-            $this->getUser()->ResolutionList(),
-            'resolutionId',
-            'resolution',
-            __('Choose the resolution this Layout should be designed for.'),
-            'r',
-            'resolution-group');
-
-         $this->getState()->AddFieldAction('templateid', 'change', 0, array('.resolution-group' => array('display' => 'block')));
-         $this->getState()->AddFieldAction('templateid', 'change', 0, array('.resolution-group' => array('display' => 'none')), "not");
-
-        Theme::Set('form_fields_general', $formFields['general']);
-        Theme::Set('form_fields_description', $formFields['description']);
-
-
-         $this->getState()->SetFormRequestResponse(null, __('Add Layout'), '350px', '275px');
-         $this->getState()->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Layout', 'Add') . '")');
-         $this->getState()->AddButton(__('Cancel'), 'XiboDialogClose()');
-         $this->getState()->AddButton(__('Save'), '$("#LayoutForm").submit()');
-
+        $this->getState()->template = 'layout-form-add';
     }
 
     /**

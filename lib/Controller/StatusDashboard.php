@@ -25,17 +25,20 @@ use Xibo\Helper\Config;
 use Xibo\Helper\Date;
 use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
+use Xibo\Storage\PDOConnect;
 
 class StatusDashboard extends Base
 {
     function displayPage()
     {
+        $data = [];
+
         // Set up some suffixes
         $suffixes = array('bytes', 'k', 'M', 'G', 'T');
 
         // Get some data for a bandwidth chart
         try {
-            $dbh = \Xibo\Storage\PDOConnect::init();
+            $dbh = PDOConnect::init();
 
             $sth = $dbh->prepare('SELECT FROM_UNIXTIME(month) AS month, IFNULL(SUM(Size), 0) AS size FROM `bandwidth` WHERE month > :month GROUP BY FROM_UNIXTIME(month) ORDER BY MIN(month);');
             $sth->execute(array('month' => time() - (86400 * 365)));
@@ -56,7 +59,7 @@ class StatusDashboard extends Base
             if ($xmdsLimit > 0) {
                 // Convert to appropriate size (xmds limit is in KB)
                 $xmdsLimit = ($xmdsLimit * 1024) / (pow(1024, $base));
-                Theme::Set('xmdsLimit', $xmdsLimit . ' ' . $suffixes[$base]);
+                $data['xmdsLimit'] = $xmdsLimit . ' ' . $suffixes[$base];
             }
 
             $output = array();
@@ -81,9 +84,9 @@ class StatusDashboard extends Base
             }
 
             // Set the data
-            Theme::Set('xmdsLimitSet', ($xmdsLimit > 0));
-            Theme::Set('bandwidthSuffix', $suffixes[$base]);
-            Theme::Set('bandwidthWidget', json_encode($output));
+            $data['xmdsLimitSet'] = ($xmdsLimit > 0);
+            $data['bandwidthSuffix'] = $suffixes[$base];
+            $data['bandwidthWidget'] = json_encode($output);
 
             // We would also like a library usage pie chart!
             $libraryLimit = Config::GetSetting('LIBRARY_SIZE_LIMIT_KB');
@@ -136,11 +139,11 @@ class StatusDashboard extends Base
                 );
             }
 
-            Theme::Set('libraryLimitSet', $libraryLimit);
-            Theme::Set('libraryLimit', (round((double)$libraryLimit / (pow(1024, $base)), 2)) . ' ' . $suffixes[$base]);
-            Theme::Set('librarySize', \Kit::formatBytes($totalSize, 1));
-            Theme::Set('librarySuffix', $suffixes[$base]);
-            Theme::Set('libraryWidget', json_encode($output));
+            $data['libraryLimitSet'] = $libraryLimit;
+            $data['libraryLimit'] = (round((double)$libraryLimit / (pow(1024, $base)), 2)) . ' ' . $suffixes[$base];
+            $data['librarySize'] = \Kit::formatBytes($totalSize, 1);
+            $data['librarySuffix'] = $suffixes[$base];
+            $data['libraryWidget'] = json_encode($output);
 
             // Also a display widget
             $sort_order = array('display');
@@ -161,19 +164,19 @@ class StatusDashboard extends Base
                 }
             }
 
-            Theme::Set('display-widget-rows', $rows);
+            $data['display-widget-rows']= $rows;
 
             // Get a count of users
             $sth = $dbh->prepare('SELECT IFNULL(COUNT(*), 0) AS count_users FROM `user`');
             $sth->execute();
 
-            Theme::Set('countUsers', $sth->fetchColumn(0));
+            $data['countUsers'] = $sth->fetchColumn(0);
 
             // Get a count of active layouts
             $sth = $dbh->prepare('SELECT IFNULL(COUNT(*), 0) AS count_scheduled FROM `schedule_detail` WHERE :now BETWEEN FromDT AND ToDT');
             $sth->execute(array('now' => time()));
 
-            Theme::Set('nowShowing', $sth->fetchColumn(0));
+            $data['nowShowing'] = $sth->fetchColumn(0);
 
             // Latest news
             if (Config::GetSetting('DASHBOARD_LATEST_NEWS_ENABLED') == 1) {
@@ -203,10 +206,10 @@ class StatusDashboard extends Base
                     }
                 }
 
-                Theme::Set('latestNews', $latestNews);
+                $data['latestNews'] = $latestNews;
             }
             else {
-                Theme::Set('latestNews', array(array('title' => __('Latest news not enabled.'), 'description' => '', 'link' => '')));
+                $data['latestNews'] = array(array('title' => __('Latest news not enabled.'), 'description' => '', 'link' => ''));
             }
         }
         catch (Exception $e) {
@@ -214,13 +217,14 @@ class StatusDashboard extends Base
             Log::error($e->getMessage());
 
             // Show the error in place of the bandwidth chart
-            Theme::Set('widget-error', 'Unable to get widget details');
+            $data['widget-error'] = 'Unable to get widget details';
         }
 
         // Do we have an embedded widget?
-        Theme::Set('embedded-widget', html_entity_decode(Config::GetSetting('EMBEDDED_STATUS_WIDGET')));
+        $data['embedded-widget'] = html_entity_decode(Config::GetSetting('EMBEDDED_STATUS_WIDGET'));
 
         // Render the Theme and output
-        $this->getState()->html .= Theme::RenderReturn('status_dashboard');
+        $this->getState()->template = 'dashboard-status-page';
+        $this->getState()->setData($data);
     }
 }

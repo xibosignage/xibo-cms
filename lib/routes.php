@@ -23,51 +23,27 @@ defined('XIBO') or die('Sorry, you are not allowed to directly access this page.
 // About Page
 $app->get('/about', '\Xibo\Controller\Login:About')->name('about');
 
-$app->get('/clock', function() use ($app) {
-    $app->session->refreshExpiry = false;
-    $controller = new \Xibo\Controller\Clock($app);
-    $controller->GetClock();
-    $controller->render();
-})->setName('clock');
+$app->get('/clock', '\Xibo\Controller\Clock:clock')->setName('clock');
 
 //
 // Layouts
 //
-$app->get('/layout', '\Xibo\Controller\Layout:LayoutGrid')->setName('layoutSearch');
-
-$app->get('/layout/:id', function($id) use ($app) {
-    $controller = new \Xibo\Controller\Layout($app);
-    $controller->EditForm();
-    $controller->render();
-})->setName('layoutGet');
-
-$app->put('/layout', function() use ($app) {
-    $controller = new \Xibo\Controller\Layout($app);
-    $controller->add();
-})->setName('layoutAdd');
-
-$app->post('/layout/:id', function($id) use ($app) {
-    // Update the Layout
-})->setName('layoutUpdate');
+$app->get('/layout', '\Xibo\Controller\Layout:grid')->setName('layoutSearch');
+$app->post('/layout', '\Xibo\Controller\Layout:add')->setName('layoutAdd');
+$app->put('/layout/:id', '\Xibo\Controller\Layout:modify')->setName('layoutUpdate');
+$app->delete('/layout/:id', '\Xibo\Controller\Layout:delete')->setName('layoutDelete');
+$app->put('/layout/retire/:id', '\Xibo\Controller\Layout:retire')->setName('layoutRetire');
 
 //
 // Campaign
 //
-$app->get('/campaign', function() use ($app) {
-
-})->name('campaignSearch');
+$app->get('/campaign', '\Xibo\Controller\Campaign:grid')->setName('campaignSearch');
+$app->post('/campaign', '\Xibo\Controller\Campaign:add')->setName('campaignAdd');
+$app->put('/campaign/:id', '\Xibo\Controller\Campaign:modify')->setName('campaignUpdate');
+$app->delete('/campaign/:id', '\Xibo\Controller\Campaign:delete')->setName('campaignDelete');
 
 //
 // Log
 //
-$app->get('/log', function () use ($app) {
-    $controller = new \Xibo\Controller\Log($app);
-    $controller->Grid();
-    $controller->render();
-})->name('logSearch');
-
-$app->delete('/log', function () use ($app) {
-    $controller = new \Xibo\Controller\Log($app);
-    $controller->Truncate();
-    $controller->render();
-})->name('logTruncate');
+$app->get('/log', '\Xibo\Controller\Log:grid')->name('logSearch');
+$app->delete('/log', '\Xibo\Controller\Log:truncate')->name('logTruncate');
