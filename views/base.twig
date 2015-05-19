@@ -76,7 +76,18 @@
         <script src="{{ baseUrl }}theme/default/libraries/handlebars/handlebars-v3.0.0.js"></script>
 
         <script type="text/javascript">
-            var translations = {{ translate.translations|raw }};
+            var translations = {{ translations|raw }};
+            // Translations we want always available
+            translations.multiselect = "{% trans "Multiple Items Selected" %}";
+            translations.multiselectNoItemsMessage = "{% trans "Sorry, no items have been selected." %}";
+            translations.multiselectMessage = "{% trans "Caution, you have selected %1 items. Clicking save will run the %2 transaction on all these items." %}";
+            translations.save = "{% trans "Save" %}";
+            translations.cancel = "{% trans "Cancel" %}";
+            translations.close = "{% trans "Close" %}";
+            translations.success = "{% trans "Success" %}";
+            translations.failure = "{% trans "Failure" %}";
+            translations.enterText = "{% trans "Enter text..." %}";
+
             var language = "{{ translate.jsLocale }}";
             var dateFormat = "{{ settings.DATE_FORMAT }}";
             var calendarType = "{{ settings.CALENDAR_TYPE }}";

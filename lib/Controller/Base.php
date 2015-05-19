@@ -200,13 +200,39 @@ class Base
                 $view = $app->view()->getInstance()->render($state->template . '.twig', $data);
 
                 Log::debug('View: ' . $view);
-                $view = json_decode($view, true);
+                if (!$view = json_decode($view, true))
+                    throw new ControllerNotImplemented(__('Problem with Form Template'));
+
                 $state->html = $view['html'];
-                $state->dialogTitle = $view['title'];
-                $state->buttons = $view['buttons'];
+                $state->dialogTitle = trim($view['title']);
+
+                // Process the buttons
+                // Expect each button on a new line
+                if ($view['buttons'] == '') {
+                    $state->buttons = [];
+                } else {
+                    // Convert to an array
+                    $buttons = explode(PHP_EOL, $view['buttons']);
+
+                    foreach ($buttons as $button) {
+                        if ($button == '')
+                            continue;
+
+                        $button = explode(',', trim($button));
+
+                        for ($i = 0; $i < count($button); $i++) {
+                            $state->buttons[trim($button[$i])] = trim($button[$i+1]);
+                            $i++;
+                        }
+
+                        foreach ($button as $key => $value) {
+
+                        }
+                    }
+                }
             }
 
-            echo $state->asJson();
+            echo ($grid) ? json_encode($data) : $state->asJson();
         }
         else {
             // WEB Normal

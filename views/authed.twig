@@ -28,7 +28,7 @@
 
                         {% if menu %}
                             {% for subItem in menu %}
-                                <li class="sidebar-list {{ subItem.class }} {% if subItem.selected %}active{% endif %}"><a href="{{ subItem.link }}" class="{{ subItem.class }} {% if subItem.selected %}active{% endif %}">{{ subItem.title }}</a></li>
+                                <li class="sidebar-list {{ subItem.class }} {% if subItem.selected %}active{% endif %}"><a href="{{ urlFor(subItem.link) }}" class="{{ subItem.class }} {% if subItem.selected %}active{% endif %}">{{ subItem.title }}</a></li>
                             {% endfor %}
                         {% endif %}
                     {% endfor %}

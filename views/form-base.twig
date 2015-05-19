@@ -1,5 +1,5 @@
 {
     "title": {% filter json_encode|raw %}{% block formTitle %}{% endblock %}{% endfilter %},
     "html": {% filter json_encode|raw %}{% block formHtml %}{% endblock %}{% endfilter %},
-    "buttons": {% block formButtons %}{% endblock %}
+    "buttons": {% filter json_encode|raw %}{% block formButtons %}{% endblock %}{% endfilter %}
 }

@@ -41,10 +41,16 @@ class Actions extends Middleware
         }
 
         // Process notifications
-        if ($this->app->user->userTypeId == 1 && file_exists('install.php')) {
-            Log::info('Install.php exists and shouldnt');
-            Theme::Set('notifications', array(__('There is a problem with this installation. "install.php" should be deleted.')));
-        }
+        $app = $this->app;
+
+        // Attach a hook to log the route
+        $app->hook('slim.before.dispatch', function() use ($app) {
+            if ($app->user->userTypeId == 1 && file_exists('install.php')) {
+                Log::info('Install.php exists and shouldnt');
+
+                $app->view()->appendData(['notifications' => [__('There is a problem with this installation. "install.php" should be deleted.')]]);
+            }
+        });
 
         $this->next->call();
     }

@@ -25,6 +25,7 @@ use Kit;
 use Media;
 use Parsedown;
 use Xibo\Entity\Campaign;
+use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Config;
@@ -115,9 +116,13 @@ class Layout extends Base
         Theme::Set('layouts', $this->getUser()->LayoutList());
 
         // Set up any JavaScript translations
-        Theme::SetTranslation('save_position_button', __('Save Position'));
-        Theme::SetTranslation('revert_position_button', __('Undo'));
-        Theme::SetTranslation('savePositionsFirst', Theme::Translate('Please save the pending position changes first by clicking "Save Positions" or cancel by clicking "Undo".'));
+        $this->getApp()->view()->appendData([
+            'translations' => [
+                'save_position_button' => __('Save Position'),
+                'revert_position_button' => __('Undo'),
+                'savePositionsFirst' => __('Please save the pending position changes first by clicking "Save Positions" or cancel by clicking "Undo".')
+            ]
+        ]);
 
         // Call the render the template
         $this->getState()->html .= Theme::RenderReturn('layout_designer');
@@ -206,45 +211,37 @@ class Layout extends Base
 
     /**
      * Delete Layout Form
+     * @param int $layoutId
      */
-    function DeleteLayoutForm()
+    function deleteForm($layoutId)
     {
-        $layoutId = Sanitize::getInt('layoutId');
-        $layout = LayoutFactory::loadById($layoutId);
+        $layout = LayoutFactory::getById($layoutId);
 
         if (!$this->getUser()->checkDeleteable($layout))
-            trigger_error(__('You do not have permissions to delete this layout'), E_USER_ERROR);
+            throw new AccessDeniedException(__('You do not have permissions to delete this layout'));
 
-        Theme::Set('form_id', 'LayoutDeleteForm');
-        Theme::Set('form_action', 'index.php?p=layout&q=delete');
-        Theme::Set('form_meta', '<input type="hidden" name="layoutId" value="' . $layoutId . '">');
-        Theme::Set('form_fields', array(
-            Form::AddMessage(__('Are you sure you want to delete this layout?')),
-            Form::AddMessage(__('All media will be unassigned and any layout specific media such as text/rss will be lost. The layout will be removed from all Schedules.')),
-        ));
+        $data = [
+            'layout' => $layout,
+            'help' => [
+                'delete' => Help::Link('Layout', 'Delete')
+            ]
+        ];
 
-        $form = Theme::RenderReturn('form_render');
-
-        $this->getState()->SetFormRequestResponse($form, sprintf(__('Delete %s'), $layout->layout), '300px', '200px');
-        $this->getState()->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Layout', 'Delete') . '")');
-        $this->getState()->AddButton(__('Retire'), 'XiboSwapDialog("index.php?p=layout&q=RetireForm&layoutid=' . $layoutId . '")');
-        $this->getState()->AddButton(__('No'), 'XiboDialogClose()');
-        $this->getState()->AddButton(__('Yes'), '$("#LayoutDeleteForm").submit()');
+        $this->getState()->template = 'layout-form-delete';
+        $this->getState()->setData($data);
     }
 
     /**
      * Retire Layout Form
+     * @param int $layoutId
      */
-    public function RetireForm()
+    public function retireForm($layoutId)
     {
-         
-
-        $layoutId = Sanitize::getInt('layoutId');
-        $layout = LayoutFactory::loadById(Kit::GetParam('layoutid', _POST, _INT));
+        $layout = LayoutFactory::getById($layoutId);
 
         // Make sure we have permission
         if (!$this->getUser()->checkEditable($layout))
-            trigger_error(__('You do not have permissions to edit this layout'), E_USER_ERROR);
+            throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
 
         Theme::Set('form_id', 'RetireForm');
         Theme::Set('form_meta', '<input type="hidden" name="layoutId" value="' . $layoutId . '">');
@@ -471,7 +468,7 @@ class Layout extends Base
                     // Delete Button
                     $row['buttons'][] = array(
                         'id' => 'layout_button_delete',
-                        'url' => 'index.php?p=layout&q=DeleteLayoutForm&layoutId=' . $layout->layoutId,
+                        'url' => $this->urlFor('layoutDeleteForm', ['id' => $layout->layoutId]),
                         'text' => __('Delete'),
                         'multi-select' => true,
                         'dataAttributes' => array(

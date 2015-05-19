@@ -57,7 +57,7 @@ $app->get('/', function () use ($app) {
     }
 
     if ($controller == null)
-        throw new \Psr\Log\InvalidArgumentException(__('Homepage not set correctly'));
+        throw new InvalidArgumentException(__('Homepage not set correctly'));
 
     $controller->render();
 
@@ -151,6 +151,14 @@ $app->get('/layout/status/:id', function($id) use ($app) {
     $controller = new \Xibo\Controller\Layout($app);
     $controller->LayoutStatus();
 })->setName('layoutStatus');
+
+// Layout forms
+$app->get('/layout/form/delete/:id', '\Xibo\Controller\Layout:deleteForm')->name('layoutDeleteForm');
+$app->get('/layout/form/retire/:id', '\Xibo\Controller\Layout:retireForm')->name('layoutRetireForm');
+
+// Layout actions
+$app->put('/layout/retire/:id', '\Xibo\Controller\Layout:retire')->name('layoutRetire');
+$app->delete('/layout/:id', '\Xibo\Controller\Layout:delete')->name('layoutDelete');
 
 //
 // content

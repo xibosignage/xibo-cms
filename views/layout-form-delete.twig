@@ -1,0 +1,25 @@
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% set layout = layout.layout %}
+    {% trans %}Delete {{ layout }}{% endtrans %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Yes" %}, $("#LayoutDeleteForm").submit()
+    {% trans "No" %}, XiboDialogClose()
+    {% trans "Retire" %}, XiboSwapDialog("{{ urlFor("layoutRetireForm", {id: layout.layoutId}) }}")
+    {% trans "Help" %}, XiboHelpRender("{{ help.delete }}")
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="LayoutDeleteForm" class="form-horizontal" method="post" action="{{ urlFor("layoutDelete", {id: layout.layoutId}) }}">
+                {{ forms.message("Are you sure you want to delete this layout?") }}
+                {{ forms.message("All media will be unassigned and any layout specific media such as text/rss will be lost. The layout will be removed from all Schedules.") }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

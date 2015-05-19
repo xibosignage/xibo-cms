@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2013 Daniel Garner
+ * Copyright (C) 2006-2015 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -19,8 +19,6 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Helper;
-use Kit;
-
 
 class ApplicationState
 {
@@ -32,20 +30,7 @@ class ApplicationState
     public $buttons;
     public $fieldActions;
 
-    public $sortable;
-    public $sortingDiv;
-    public $paging;
-    public $pageSize;
-    public $pageNumber;
-    public $initialSortColumn;
-    public $initialSortOrder;
-
-    public $dialogSize;
-    public $dialogWidth;
-    public $dialogHeight;
     public $dialogTitle;
-    public $dialogClass;
-
     public $keepOpen;
     public $hideMessage;
     public $loadForm;
@@ -55,7 +40,6 @@ class ApplicationState
     public $focusInFirstInput;
     public $appendHiddenSubmit;
     public $modal;
-    public $nextToken;
 
     public $login;
     public $clockUpdate;
@@ -75,13 +59,7 @@ class ApplicationState
         $this->uniqueReference = '';
         $this->buttons = '';
         $this->fieldActions = '';
-        $this->pageSize = 10;
-        $this->pageNumber = 0;
-        $this->initialSortColumn = 1;
-        $this->initialSortOrder = 1;
-        $this->modal = false;
         $this->extra = array();
-        $this->dialogClass = '';
     }
 
     /**
@@ -91,113 +69,6 @@ class ApplicationState
     {
         $this->login = true;
         $this->success = false;
-    }
-
-    function decode_response($success, $message)
-    {
-        //return code to all AJAX forms
-        if ($success) {
-            $code = 0;
-        } else {
-            $code = 1;
-        }
-        $this->response($code, $message);
-    }
-
-    function response($code, $html = "")
-    {
-        //output the code and exit
-        echo "$code|$html";
-        exit;
-    }
-
-    /**
-     * Set form properties
-     * @param string $title
-     * @param string $callBack
-     */
-    public function setFormProperties($title, $callBack = '')
-    {
-        $this->dialogTitle = $title;
-        $this->callBack = $callBack;
-    }
-
-    /**
-     * Sets the error message for the response
-     * @return
-     * @param $message String
-     */
-    public function SetError($message)
-    {
-        $this->success = false;
-        $this->message = $message;
-
-        return;
-    }
-
-    /**
-     * Sets the Default response options for a form request
-     * @param $form string
-     * @param $title string
-     * @param $width string[optional]
-     * @param $height string[optional]
-     * @param $callBack string[optional]
-     */
-    public function SetFormRequestResponse($form, $title, $width = '', $height = '', $callBack = '')
-    {
-        if ($form == NULL)
-            $form = Theme::RenderReturn('form_render');
-
-        $this->html = $form;
-        $this->dialogTitle = $title;
-        $this->callBack = $callBack;
-
-        if ($width != '' && $height != '') {
-            $this->dialogSize = true;
-            $this->dialogWidth = $width;
-            $this->dialogHeight = $height;
-        }
-    }
-
-    /**
-     * Sets the Default response for a grid
-     * @param $table string
-     * @param $sortingDiv string[optional]
-     */
-    public function SetGridResponse($table, $sortingDiv = 'table')
-    {
-        $this->html = $table;
-        $this->success = true;
-        $this->sortable = true;
-        $this->sortingDiv = $sortingDiv;
-        $this->paging = true;
-    }
-
-    /**
-     * Sets the Default response options for a form submit
-     * @return
-     * @param $message String
-     * @param $refresh Boolean[optional]
-     * @param $refreshLocation String[optional]
-     */
-    public function SetFormSubmitResponse($message, $refresh = false, $refreshLocation = '')
-    {
-        $this->success = true;
-        $this->message = $message;
-        $this->refresh = $refresh;
-        $this->refreshLocation = $refreshLocation;
-        $this->nextToken = \Kit::Token();
-        return;
-    }
-
-    /**
-     * Adds a button to the form
-     * @param string $name
-     * @param string $function
-     */
-    public function AddButton($name, $function)
-    {
-        $this->buttons[$name] = $function;
     }
 
     /**
@@ -220,17 +91,6 @@ class ApplicationState
     }
 
     /**
-     * Responds with an Error
-     * @param <string> $message
-     * @param <bool> $keepOpen
-     */
-    public function Error($message, $keepOpen = false)
-    {
-        $this->SetError($message);
-        $this->keepOpen = $keepOpen;
-    }
-
-    /**
      * Response JSON
      * @return string JSON String
      */
@@ -250,25 +110,8 @@ class ApplicationState
         $response['message'] = $this->message;
         $response['clockUpdate'] = $this->clockUpdate;
 
-        // Grids
-        $response['sortable'] = $this->sortable;
-        $response['sortingDiv'] = $this->sortingDiv;
-        $response['paging'] = $this->paging;
-        $response['pageSize'] = $this->pageSize;
-        $response['pageNumber'] = $this->pageNumber;
-        $response['initialSortColumn'] = $this->initialSortColumn - 1;
-        $response['initialSortOrder'] = $this->initialSortOrder - 1;
-
         // Dialogs
-        $response['dialogSize'] = $this->dialogSize;
-        $response['dialogWidth'] = $this->dialogWidth;
-        $response['dialogHeight'] = $this->dialogHeight;
         $response['dialogTitle'] = $this->dialogTitle;
-        $response['dialogClass'] = $this->dialogClass;
-
-        // Tweak the width and height
-        $response['dialogWidth'] = (int)str_replace('px', '', $response['dialogWidth']);
-        $response['dialogHeight'] = (int)str_replace('px', '', $response['dialogHeight']);
 
         // Form Submits
         $response['keepOpen'] = $this->keepOpen;
@@ -278,8 +121,6 @@ class ApplicationState
         $response['refresh'] = $this->refresh;
         $response['refreshLocation'] = $this->refreshLocation;
         $response['focusInFirstInput'] = $this->focusInFirstInput;
-        $response['modal'] = $this->modal;
-        $response['nextToken'] = $this->nextToken;
 
         // Login
         $response['login'] = $this->login;
@@ -288,13 +129,6 @@ class ApplicationState
         $response['extra'] = $this->extra;
 
         return json_encode($response);
-    }
-
-    public static function Pager($id, $type = 'grid_pager')
-    {
-        Theme::Set('pager_id', 'XiboPager_' . $id);
-
-        return Theme::RenderReturn($type);
     }
 
     /**

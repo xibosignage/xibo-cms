@@ -44,9 +44,6 @@ class WebAuthentication extends Middleware
         $app->user = new \Xibo\Entity\User();
 
         // Initialise a theme
-        Theme::Set('root', $app->request->getRootUri());
-        Theme::Set('rootPath', str_replace('/index.php', '', $app->request->getRootUri()));
-
         $redirectToLogin = function () use ($app) {
             Log::debug('Request to redirect to login. Ajax = %d', $app->request->isAjax());
             if ($app->request->isAjax()) {
@@ -82,9 +79,6 @@ class WebAuthentication extends Middleware
                     $user->routeAuthentication($resource);
 
                     $app->user = $user;
-
-                    // Set the username in the theme
-                    Theme::Set('thisUserName', $user->userName);
 
                     // We are authenticated
                     // Handle if we are an upgrade

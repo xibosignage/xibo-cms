@@ -38,7 +38,6 @@ class Theme
 
     private $name = '';
     private $pageName = '';
-    private $vars = null;
     private $config = null;
 
     public function __construct($theme = NULL)
@@ -80,255 +79,11 @@ class Theme
     }
 
     /**
-     * Render Item
-     * @param string $item Item to Render
-     * @throws Exception if the requested item doesn't exist
+     * Get Theme Specific Settings
+     * @param null $settingName
+     * @param null $default
+     * @return null
      */
-    private static function Render($item)
-    {
-        $theme = Theme::GetInstance();
-
-        // See if we have the requested file in the theme folder
-        if (file_exists('theme/' . $theme->name . '/html/' . $item . '.php')) {
-            include('theme/' . $theme->name . '/html/' . $item . '.php');
-        } // Check the module theme folder
-        else if (file_exists('modules/theme/' . $item . '.php')) {
-            include('modules/theme/' . $item . '.php');
-        } // If not, then use the default folder
-        else if (file_exists('theme/default/html/' . $item . '.php')) {
-            include('theme/default/html/' . $item . '.php');
-        } else
-            throw new Exception(__('The requested theme item does not exist. [%s, %s]', array($item, $theme->name)));
-    }
-
-    /**
-     * Render Item but return the value as a string
-     * @param string $item Item to Render
-     * @return string
-     * @throws \ErrorException
-     */
-    public static function RenderReturn($item)
-    {
-        try {
-            Log::debug('Rendering %s', $item);
-            ob_start();
-
-            Theme::Render($item);
-
-            $output = ob_get_contents();
-
-            ob_end_clean();
-            Log::debug('Rendered %s', $item);
-            return $output;
-        }
-        catch (\ErrorException $e) {
-            Log::critical('Unable to render template. ' . $e->getMessage());
-            ob_end_clean();
-            throw $e;
-        }
-    }
-
-    /**
-     * Get an image from the Theme
-     * @param string $item The image filename
-     * @param string $class The class to apply [optional]
-     * @return string
-     */
-    public static function Image($item, $class = '')
-    {
-
-        $theme = Theme::GetInstance();
-
-        // See if we have the requested file in the theme folder
-        if (file_exists('theme/' . $theme->name . '/img/' . $item)) {
-            return '<img ' . (($class != '') ? 'class="' . $class . '"' : '') . ' src="theme/' . $theme->name . '/img/' . $item . '" />';
-        } // If not, then use the default folder
-        elseif (file_exists('theme/default/img/' . $item)) {
-            return '<img ' . (($class != '') ? 'class="' . $class . '"' : '') . ' src="theme/default/img/' . $item . '" />';
-        } else
-            return '';
-    }
-
-    /**
-     * Get an image URL
-     * @param [string] $item the image
-     * @return string
-     */
-    public static function ImageUrl($item)
-    {
-
-        $theme = Theme::GetInstance();
-
-        // See if we have the requested file in the theme folder
-        if (file_exists('theme/' . $theme->name . '/img/' . $item)) {
-            return Theme::Get('rootPath') . '/theme/' . $theme->name . '/img/' . $item;
-        } // If not, then use the default folder
-        elseif (file_exists('theme/default/img/' . $item)) {
-            return Theme::Get('rootPath') . '/theme/default/img/' . $item;
-        } else
-            return '';
-    }
-
-    /**
-     * Get Item Path
-     * @param string $item The Item required
-     * @return string
-     */
-    public static function ItemPath($item)
-    {
-
-        $theme = Theme::GetInstance();
-
-        // See if we have the requested file in the theme folder
-        if (file_exists('theme/' . $theme->name . '/' . $item)) {
-            return Theme::Get('rootPath') . '/theme/' . $theme->name . '/' . $item;
-        } // If not, then use the default folder
-        elseif (file_exists('theme/default/' . $item)) {
-            return Theme::Get('rootPath') . '/theme/default/' . $item;
-        } else
-            return '';
-    }
-
-    /**
-     * Get Item Path
-     * @param string $item The Item required
-     * @return string
-     */
-    public static function Script($item)
-    {
-        $theme = Theme::GetInstance();
-
-        // See if we have the requested file in the theme folder
-        if (file_exists('theme/' . $theme->name . '/' . $item)) {
-            return '<script src="' . Theme::Get('rootPath') . '/theme/' . $theme->name . '/' . $item . '"></script>';
-        } // If not, then use the default folder
-        elseif (file_exists('theme/default/' . $item)) {
-            return '<script src="' . Theme::Get('rootPath') . '/theme/default/' . $item . '"></script>';
-        } else
-            return '';
-    }
-
-    /**
-     * Get the root path for a given path
-     * @param $path
-     * @return string
-     * @throws Exception if the theme is not initialised
-     */
-    public static function rootPath($path)
-    {
-        return Theme::Get('rootPath') . '/' . $path;
-    }
-
-    /**
-     * Translate a string into the user language
-     * @param string $string The String to Translate
-     * @return string
-     */
-    public static function Translate($string)
-    {
-        return call_user_func_array('__', func_get_args());
-    }
-
-    public static function Set($key, $value)
-    {
-        $theme = Theme::GetInstance();
-
-        $theme->vars[$key] = $value;
-    }
-
-    public static function Get($key)
-    {
-        $theme = Theme::GetInstance();
-
-        if (!isset($theme->vars[$key]))
-            $return = null;
-        else
-            $return = $theme->vars[$key];
-
-        if ($key == 'form_meta') {
-            // Append a token to the end
-            $return = $return . '<input type="hidden" name="' . Theme::Get('csrfKey') . '" value="' . Theme::Get('csrfToken') . '">';
-        }
-        return $return;
-    }
-
-    public static function SetTranslation($key, $value)
-    {
-        // Get existing translations
-        $translations = Theme::Get('translations');
-
-        if ($translations == '') {
-            $translations = array();
-        } else {
-            $translations = json_decode($translations, true);
-        }
-
-        $translations[$key] = $value;
-
-        Theme::Set('translations', json_encode($translations));
-    }
-
-    public static function Prepare($string)
-    {
-        return htmlspecialchars($string);
-    }
-
-    public static function SetPagename($pageName)
-    {
-        Theme::GetInstance()->pageName = $pageName;
-    }
-
-    public static function GetPagename()
-    {
-        return Theme::GetInstance()->pageName;
-    }
-
-    public static function GetUsername()
-    {
-        return Theme::Get('thisUserName');
-    }
-
-    public static function GetUserHomeLink()
-    {
-        return Theme::urlFor('home');
-    }
-
-    public static function GetPageHelpLink()
-    {
-        return Help::Link();
-    }
-
-    public static function GetClock()
-    {
-        return Theme::GetInstance()->dateManager->GetClock();
-    }
-
-    public static function ApplicationName()
-    {
-        return Theme::GetInstance()->config['app_name'];
-    }
-
-    public static function ThemeName()
-    {
-        return Theme::GetInstance()->config['theme_name'];
-    }
-
-    public static function SourceLink()
-    {
-        return (isset(Theme::GetInstance()->config['cms_source_url']) ? Theme::GetInstance()->config['cms_source_url'] : 'https://github.com/xibosignage/xibo/');
-    }
-
-    public static function ThemeFolder()
-    {
-        return Theme::GetInstance()->name;
-    }
-
-    public static function urlFor($route)
-    {
-        $app = Slim::getInstance();
-        return $app->urlFor($route);
-    }
-
     public static function GetConfig($settingName = null, $default = null)
     {
         $theme = Theme::GetInstance();
@@ -365,7 +120,7 @@ class Theme
             $item['selected'] = ($item['page'] == $theme->pageName);
 
             if ($item['external'] == 0) {
-                $item['link'] = Theme::urlFor($item['page'] . 'View');
+                $item['link'] = $item['page'] . 'View';
             } else {
                 $item['link'] = $item['args'];
             }
@@ -392,32 +147,4 @@ class Theme
 
         return $menus;
     }
-
-    /**
-     * Generate a select list
-     * @param string Select list name
-     * @param array Array of Values
-     * @param string Key for item id
-     * @param string Key for item name
-     * @param string ID value for selected item
-     * @param string Extra attributes to put on the list
-     * @param string Key for item class
-     * @return string
-     */
-    public static function SelectList($listName, $listValues, $idColumn, $nameColumn, $selectedId = null, $callBack = '', $classColumn = '', $styleColumn = '')
-    {
-        $list = '<select class="form-control" name="' . $listName . '" id="' . $listName . '"' . $callBack . '>';
-
-        foreach ($listValues as $listItem) {
-            $class = ($classColumn == '') ? '' : 'class="' . $listItem[$classColumn] . '"';
-            $style = ($styleColumn == '') ? '' : 'style="' . $listItem[$styleColumn] . '"';
-            $list .= '<option ' . $style . ' ' . $class . ' value="' . $listItem[$idColumn] . '" ' . (($listItem[$idColumn] == $selectedId) ? 'selected' : '') . '>' . $listItem[$nameColumn] . '</option>';
-        }
-
-        $list .= '</select>';
-
-        return $list;
-    }
 }
-
-?>
