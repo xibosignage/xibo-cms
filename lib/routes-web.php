@@ -129,7 +129,7 @@ $app->get('/layout/form/import', '\Xibo\Controller\Layout:retireForm')->name('la
 //
 // library
 //
-$app->get('/library/view', '\Xibo\Controller\Library:displayPage')->name('contentView');
+$app->get('/library/view', '\Xibo\Controller\Library:displayPage')->name('libraryView');
 $app->get('/library/form/add', '\Xibo\Controller\Library:fileUploadForm')->name('libraryAddForm');
 $app->get('/library/form/tidy', '\Xibo\Controller\Library:tidyLibraryForm')->name('libraryTidyForm');
 
@@ -143,14 +143,16 @@ $app->get('/display/view', '\Xibo\Controller\Display:displayPage')->name('displa
 //
 $app->get('/user/view', '\Xibo\Controller\User:displayPage')->name('userView');
 $app->get('/user/welcome', '\Xibo\Controller\Login:userWelcome')->name('welcomeWizard');
+$app->get('/user/apps', '\Xibo\Controller\User:myApplications')->name('userMyApplications');
 $app->get('/user/password/view', '\Xibo\Controller\User:changePassword')->name('userChangePassword');
 $app->get('/user/form/:entity/:id', '\Xibo\Controller\User:permissionsForm')->name('permissionsForm');
+$app->get('/user/form/add', '\Xibo\Controller\User:addForm')->name('userAddForm');
 
 //
 // log
 //
 $app->get('/log/view', '\Xibo\Controller\Log:displayPage')->name('logView');
-$app->get('/log/delete', '\Xibo\Controller\Log:TruncateForm')->name('logTruncateForm');
+$app->get('/log/delete', '\Xibo\Controller\Log:truncateForm')->name('logTruncateForm');
 
 //
 // campaign
@@ -177,6 +179,7 @@ $app->get('/resolution/form/add', '\Xibo\Controller\Resolution:addForm')->name('
 // dataset
 //
 $app->get('/dataset/view', '\Xibo\Controller\DataSet:displayPage')->name('datasetView');
+$app->get('/dataset/form/add', '\Xibo\Controller\DataSet:addForm')->name('dataSetAddForm');
 
 //
 // displaygroup

@@ -1,0 +1,100 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block actionMenu %}
+    <ul class="nav nav-pills pull-right">
+        <li><a title="{% trans "Open the Filter Form" %}" href="#" onclick="ToggleFilterView('Filter')">{% trans "Filter" %}</a></li>
+        <li><a class="XiboFormButton" title="{% trans "Truncate the Log" %}" href="{{ urlFor("logTruncateForm") }}">{% trans "Truncate" %}</a></li>
+        <li><a id="refreshLog" title="{% trans "Refresh the Log" %}" href="#">{% trans "Refresh" %}</a></li>
+    </ul>
+{% endblock %}
+
+
+{% block pageContent %}
+    <div class="widget">
+        <div class="widget-title">{% trans "Logs" %}</div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}">
+                <div class="XiboFilter">
+                    <div class="FilterDiv" id="Filter">
+                        <ul class="nav nav-tabs" role="tablist">
+                            <li class="active"><a href="#general" role="tab" data-toggle="tab">{% trans "General" %}</a></li>
+                            <li><a href="#advanced" role="tab" data-toggle="tab">{% trans "Advanced" %}</a></li>
+                        </ul>
+                        <form class="form-inline">
+                            <div class="tab-content">
+                                <div class="tab-pane active" id="general">
+                                    {{ inline.dropdown("filter_type", "single", "Type", defaults.type, options.type, "id", "value") }}
+                                    {{ inline.dropdown("filter_intervalTypeId", "single", "Interval", defaults.intervalType, options.intervalType, "id", "value") }}
+                                    {{ inline.number("filter_seconds", "Duration back", defaults.seconds) }}
+
+                                    {{ inline.checkbox("XiboFilterPinned", "Keep Open", defaults.filterPinned) }}
+                                </div>
+                                <div class="tab-pane" id="advanced">
+                                    {{ inline.date("filter_fromdt", "From Date", defaults.fromDt) }}
+                                    {{ inline.number("filter_page", "Page", defaults.page) }}
+                                    {{ inline.number("filter_function", "Function", defaults.function) }}
+                                    {{ inline.dropdown("filter_display", "single", "Display", defaults.display, options.displays, "displayId", "display") }}
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData">
+                    <table id="logs" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>{% trans "ID" %}</th>
+                                <th>{% trans "Date" %}</th>
+                                <th>{% trans "Level" %}</th>
+                                <th>{% trans "Display" %}</th>
+                                <th>{% trans "Page" %}</th>
+                                <th>{% trans "Function" %}</th>
+                                <th>{% trans "Message" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+
+        var table = $("#logs").DataTable({
+            serverSide: true,
+            searchDelay: 3000,
+            "order": [[ 1, "asc"]],
+            ajax: "{{ urlFor("logSearch") }}",
+            "columns": [
+                { "data": "logid" },
+                { "data": "logdate" },
+                { "data": "type" },
+                { "data": "display" },
+                { "data": "page" },
+                { "data": "function" },
+                { "data": "message" }
+            ]
+        });
+
+        table.on('draw', dataTableDraw);
+        table.on('processing.dt', dataTableProcessing);
+
+        $("#refreshLog").click(function() {
+            table.ajax.reload();
+        });
+    </script>
+{% endblock %}

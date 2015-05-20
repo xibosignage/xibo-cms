@@ -29,18 +29,13 @@ use Xibo\Helper\Help;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Session;
 use Xibo\Helper\Theme;
+use Xibo\Storage\PDOConnect;
 
 
 class Log extends Base
 {
     public function displayPage()
     {
-        // Configure the theme
-        Theme::Set('id', 'LogGridForRefresh');
-        Theme::Set('form_action', $this->urlFor('logSearch'));
-        Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
-        Theme::Set('pager', ApplicationState::Pager('LogGridForRefresh'));
-
         // Construct Filter Form
         if (\Kit::IsFilterPinned('log', 'Filter')) {
             $filter_pinned = 1;
@@ -62,100 +57,42 @@ class Log extends Base
             $filter_intervalTypeId = 1;
         }
 
-        // Two tabs
-        $tabs = array();
-        $tabs[] = Form::AddTab('general', __('General'));
-        $tabs[] = Form::AddTab('advanced', __('Advanced'));
-
-        $formFields = array();
-        $formFields['general'][] = Form::AddCombo(
-            'filter_type',
-            __('Type'),
-            $filter_type,
-            array(array('typeid' => 0, 'type' => 'All'), array('typeid' => 2, 'type' => 'Audit'), array('typeid' => 1, 'type' => 'Error')),
-            'typeid',
-            'type',
-            NULL,
-            't');
-
-        $formFields['general'][] = Form::AddCombo(
-            'filter_intervalTypeId',
-            __('Interval'),
-            $filter_intervalTypeId,
-            array(array('intervalTypeid' => 1, 'intervalType' => __('Seconds')),
-                array('intervalTypeid' => 60, 'intervalType' => __('Minutes')),
-                array('intervalTypeid' => 3600, 'intervalType' => __('Hours'))),
-            'intervalTypeid',
-            'intervalType',
-            NULL,
-            'i');
-
-        $formFields['general'][] = Form::AddText('filter_seconds', __('Duration back'), $filter_seconds, NULL, 's');
-
-        $formFields['general'][] = Form::AddCheckbox('XiboFilterPinned', __('Keep Open'),
-            $filter_pinned, NULL,
-            'k');
-
-        // Advanced Tab
-        $formFields['advanced'][] = Form::AddDatePicker('filter_fromdt', __('From Date'), $filter_fromdt, NULL, 't');
-        $formFields['advanced'][] = Form::AddText('filter_page', __('Page'), $filter_page, NULL, 'p');
-        $formFields['advanced'][] = Form::AddText('filter_function', __('Function'), $filter_function, NULL, 'f');
-
         // Display
         $displays = $this->getUser()->DisplayList();
-        $displays = array_map(function($element) { return array('displayid' => $element->displayId, 'display' => $element->display); }, $displays);
-        array_unshift($displays, array('displayid' => 0, 'display' => 'All'));
+        array_unshift($displays, array('displayId' => 0, 'display' => 'All'));
 
-        $formFields['advanced'][] = Form::AddCombo(
-            'filter_display',
-            __('Display'),
-            $filter_display,
-            $displays,
-            'displayid',
-            'display',
-            NULL,
-            't');
+        $data = [
+            'defaults' => [
+                'filterPinned' => $filter_pinned,
+                'type' => $filter_type,
+                'page' => $filter_page,
+                'function' => $filter_function,
+                'display' => $filter_display,
+                'fromDt' => $filter_fromdt,
+                'seconds' => $filter_seconds,
+                'intervalType' => $filter_intervalTypeId
+            ],
+            'options' => [
+                'intervalType' => array(
+                    array('id' => 1, 'value' => __('Seconds')),
+                    array('id' => 60, 'value' => __('Minutes')),
+                    array('id' => 3600, 'value' => __('Hours'))
+                ),
+                'type' => array(
+                    array('id' => 0, 'value' => __('All')),
+                    array('id' => 2, 'value' => __('Audit')),
+                    array('id' => 1, 'value' => __('Error'))
+                ),
+                'displays' => $displays
+            ]
+        ];
 
-        // Call to render the template
-        Theme::Set('header_text', __('Logs'));
-        Theme::Set('form_tabs', $tabs);
-        Theme::Set('form_fields_general', $formFields['general']);
-        Theme::Set('form_fields_advanced', $formFields['advanced']);
-        $this->getState()->html .= Theme::RenderReturn('grid_render');
+        $this->getState()->template = 'log-page';
+        $this->getState()->setData($data);
     }
 
-    function actionMenu()
+    function grid()
     {
-
-        return array(
-            array('title' => __('Truncate'),
-                'class' => 'XiboFormButton',
-                'selected' => false,
-                'link' => $this->urlFor('logTruncateForm'),
-                'help' => __('Truncate the Log'),
-                'onclick' => ''
-            ),
-            array('title' => __('Refresh'),
-                'class' => '',
-                'selected' => false,
-                'link' => '#',
-                'help' => __('Truncate the Log'),
-                'onclick' => 'XiboGridRender(\'LogGridForRefresh\')'
-            ),
-            array('title' => __('Filter'),
-                'class' => '',
-                'selected' => false,
-                'link' => '#',
-                'help' => __('Open the filter form'),
-                'onclick' => 'ToggleFilterView(\'Filter\')'
-            )
-        );
-    }
-
-    function Grid()
-    {
-        $response = $this->getState();
-
         $type = \Kit::GetParam('filter_type', _REQUEST, _INT, 0);
         $function = Sanitize::getString('filter_function');
         $page = Sanitize::getString('filter_page');
@@ -164,14 +101,14 @@ class Log extends Base
         $seconds = \Kit::GetParam('filter_seconds', _POST, _INT, 120);
         $filter_intervalTypeId = \Kit::GetParam('filter_intervalTypeId', _POST, _INT, 1);
 
-        \Xibo\Helper\Session::Set('log', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
-        \Xibo\Helper\Session::Set('log', 'filter_type', $type);
-        \Xibo\Helper\Session::Set('log', 'filter_function', $function);
-        \Xibo\Helper\Session::Set('log', 'filter_page', $page);
-        \Xibo\Helper\Session::Set('log', 'filter_fromdt', $fromdt);
-        \Xibo\Helper\Session::Set('log', 'filter_display', $displayid);
-        \Xibo\Helper\Session::Set('log', 'filter_seconds', $seconds);
-        \Xibo\Helper\Session::Set('log', 'filter_intervalTypeId', $filter_intervalTypeId);
+        Session::Set('log', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        Session::Set('log', 'filter_type', $type);
+        Session::Set('log', 'filter_function', $function);
+        Session::Set('log', 'filter_page', $page);
+        Session::Set('log', 'filter_fromdt', $fromdt);
+        Session::Set('log', 'filter_display', $displayid);
+        Session::Set('log', 'filter_seconds', $seconds);
+        Session::Set('log', 'filter_intervalTypeId', $filter_intervalTypeId);
 
         //get the dates and times
         if ($fromdt == '') {
@@ -219,20 +156,13 @@ class Log extends Base
 
         $sql .= " ORDER BY logid ";
 
-        $cols = array(
-            array('name' => 'logid', 'title' => __('ID')),
-            array('name' => 'logdate', 'title' => __('Date')),
-            array('name' => 'type', 'title' => __('Level')),
-            array('name' => 'display', 'title' => __('Display')),
-            array('name' => 'page', 'title' => __('Page')),
-            array('name' => 'function', 'title' => __('Function')),
-            array('name' => 'message', 'title' => __('Message'))
-        );
-        Theme::Set('table_cols', $cols);
+        if (Sanitize::getInt('start') !== null && Sanitize::getInt('length') !== null) {
+            $sql .= 'LIMIT ' . intval(Sanitize::getInt('start')) . ', ' . Sanitize::getInt('length', 10);
+        }
 
         $rows = array();
 
-        foreach (\Xibo\Storage\PDOConnect::select($sql, $params) as $row) {
+        foreach (PDOConnect::select($sql, $params) as $row) {
 
             $row['logid'] = Sanitize::int($row['logid']);
             $row['logdate'] = Date::getLocalDate(strtotime(Sanitize::string($row['logdate'])), 'y-m-d h:i:s');
@@ -245,14 +175,8 @@ class Log extends Base
             $rows[] = $row;
         }
 
-        Theme::Set('table_rows', $rows);
-
-        $output = Theme::RenderReturn('table_render');
-
-        $response->initialSortOrder = 2;
-        $response->initialSortColumn = 1;
-        $response->pageSize = 20;
-        $response->SetGridResponse($output);
+        $this->getState()->template = 'grid';
+        $this->getState()->setData($rows);
     }
 
     function LastHundredForDisplay()

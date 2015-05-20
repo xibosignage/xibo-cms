@@ -23,28 +23,20 @@ namespace Xibo\Controller;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
+use Xibo\Helper\Sanitize;
+use Xibo\Helper\Session;
 use Xibo\Helper\Theme;
-
-
-include_once('lib/data/usergroup.data.class.php');
+use Xibo\Storage\PDOConnect;
 
 class User extends Base
 {
 
     /**
      * Controls which pages are to be displayed
-     * @return
      */
     function displayPage()
     {
         // Configure the theme
-        $id = uniqid();
-        Theme::Set('id', $id);
-        Theme::Set('displaygroup_form_add_url', 'index.php?p=displaygroup&q=AddForm');
-        Theme::Set('form_meta', '<input type="hidden" name="p" value="user"><input type="hidden" name="q" value="UserGrid">');
-        Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
-        Theme::Set('pager', ApplicationState::Pager($id));
-
         if (\Kit::IsFilterPinned('user_admin', 'Filter')) {
             $filter_pinned = 1;
             $filter_username = Session::Get('user_admin', 'filter_username');
@@ -55,79 +47,41 @@ class User extends Base
             $filter_usertypeid = NULL;
         }
 
-        $formFields = array();
-        $formFields[] = Form::AddText('filter_username', __('Name'), $filter_username, NULL, 'n');
+        $usertypes = PDOConnect::select("SELECT userTypeId, userType FROM usertype ORDER BY usertype", []);
+        array_unshift($usertypes, array('userTypeId' => 0, 'userType' => 'All'));
 
-        $usertypes = $this->db->GetArray("SELECT usertypeID, usertype FROM usertype ORDER BY usertype");
-        array_unshift($usertypes, array('usertypeID' => 0, 'usertype' => 'All'));
-        $formFields[] = Form::AddCombo(
-            'filter_usertypeid',
-            __('User Type'),
-            $filter_usertypeid,
-            $usertypes,
-            'usertypeID',
-            'usertype',
-            NULL,
-            't');
+        $data = [
+            'defaults' => [
+                'filterPinned' => $filter_pinned,
+                'userName' => $filter_username,
+                'userType' => $filter_usertypeid
+            ],
+            'options' => [
+                'userTypes' => $usertypes
+            ]
+        ];
 
-        $formFields[] = Form::AddCheckbox('XiboFilterPinned', __('Keep Open'),
-            $filter_pinned, NULL,
-            'k');
-
-        // Call to render the template
-        Theme::Set('header_text', __('Users'));
-        Theme::Set('form_fields', $formFields);
-        $this->getState()->html .= Theme::RenderReturn('grid_render');
-    }
-
-    function actionMenu()
-    {
-
-        return array(
-            array('title' => __('Add User'),
-                'class' => 'XiboFormButton',
-                'selected' => false,
-                'link' => 'index.php?p=user&q=DisplayForm',
-                'help' => __('Add a new User'),
-                'onclick' => ''
-            ),
-            array('title' => __('My Applications'),
-                'class' => 'XiboFormButton',
-                'selected' => false,
-                'link' => 'index.php?p=user&q=MyApplications',
-                'help' => __('View my authenticated applications'),
-                'onclick' => ''
-            ),
-            array('title' => __('Filter'),
-                'class' => '',
-                'selected' => false,
-                'link' => '#',
-                'help' => __('Open the filter form'),
-                'onclick' => 'ToggleFilterView(\'Filter\')'
-            )
-        );
+        $this->getState()->template = 'user-page';
+        $this->getState()->setData($data);
     }
 
     /**
      * Prints the user information in a table based on a check box selection
      *
      */
-    function UserGrid()
+    function grid()
     {
-        $db =& $this->db;
-        $user =& $this->user;
-        $response = new ApplicationState();
         // Capture the filter options
         // User ID
-        $filter_username = \Xibo\Helper\Sanitize::getString('filter_username');
-        \Xibo\Helper\Session::Set('user_admin', 'filter_username', $filter_username);
+        $filter_username = Sanitize::getString('filter_username');
+        Session::Set('user_admin', 'filter_username', $filter_username);
 
         // User Type ID
-        $filter_usertypeid = \Xibo\Helper\Sanitize::getInt('filter_usertypeid');
-        \Xibo\Helper\Session::Set('user_admin', 'filter_usertypeid', $filter_usertypeid);
+        $filter_usertypeid = Sanitize::getInt('filter_usertypeid');
+        Session::Set('user_admin', 'filter_usertypeid', $filter_usertypeid);
 
         // Pinned option?
-        \Xibo\Helper\Session::Set('user_admin', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        Session::Set('user_admin', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 
         // Filter our users?
         $filterBy = array();
@@ -141,94 +95,74 @@ class User extends Base
             $filterBy['userName'] = $filter_username;
 
         // Load results into an array
-        $users = $user->userList(array('userName'), $filterBy);
+        $users = $this->getUser()->userList(array('userName'), $filterBy);
 
-        if (!is_array($users))
-            trigger_error(__('Error getting list of users'), E_USER_ERROR);
-
-        $cols = array(
-            array('name' => 'username', 'title' => __('Name')),
-            array('name' => 'homepage', 'title' => __('Homepage')),
-            array('name' => 'email', 'title' => __('Email')),
-            array('name' => 'retired', 'title' => __('Retired?'), 'icons' => true)
-        );
-        Theme::Set('table_cols', $cols);
-
-        $rows = array();
-
-        foreach ($users as $row) {
-
-            $row['groupid'] = $user->getGroupFromID($row['userid'], true);
+        foreach ($users as $user) {
+            /* @var \Xibo\Entity\User $user */
 
             // Super admins have some buttons
-            if ($user->userTypeId == 1) {
+            if ($this->getUser()->userTypeId == 1) {
 
                 // Edit
-                $row['buttons'][] = array(
+                $user->buttons[] = array(
                     'id' => 'user_button_edit',
-                    'url' => 'index.php?p=user&q=DisplayForm&userID=' . $row['userid'],
+                    'url' => 'index.php?p=user&q=DisplayForm&userID=' . $user->userId,
                     'text' => __('Edit')
                 );
 
                 // Delete
-                $row['buttons'][] = array(
+                $user->buttons[] = array(
                     'id' => 'user_button_delete',
-                    'url' => 'index.php?p=user&q=DeleteForm&userID=' . $row['userid'],
+                    'url' => 'index.php?p=user&q=DeleteForm&userID=' . $user->userId,
                     'text' => __('Delete')
                 );
 
                 // Page Security
-                $row['buttons'][] = array(
+                $user->buttons[] = array(
                     'id' => 'user_button_page_security',
-                    'url' => 'index.php?p=group&q=PageSecurityForm&groupid=' . $row['groupid'],
+                    'url' => 'index.php?p=group&q=PageSecurityForm&groupid=' . $user->groupId,
                     'text' => __('Page Security')
                 );
 
                 // Menu Security
-                $row['buttons'][] = array(
+                $user->buttons[] = array(
                     'id' => 'user_button_menu_security',
-                    'url' => 'index.php?p=group&q=MenuItemSecurityForm&groupid=' . $row['groupid'],
+                    'url' => 'index.php?p=group&q=MenuItemSecurityForm&groupid=' . $user->groupId,
                     'text' => __('Menu Security')
                 );
 
                 // Applications
-                $row['buttons'][] = array(
+                $user->buttons[] = array(
                     'id' => 'user_button_applications',
-                    'url' => 'index.php?p=oauth&q=UserTokens&userID=' . $row['userid'],
+                    'url' => 'index.php?p=oauth&q=UserTokens&userID=' . $user->userId,
                     'text' => __('Applications')
                 );
 
                 // Set Home Page
-                $row['buttons'][] = array(
+                $user->buttons[] = array(
                     'id' => 'user_button_homepage',
-                    'url' => 'index.php?p=user&q=SetUserHomePageForm&userid=' . $row['userid'],
+                    'url' => 'index.php?p=user&q=SetUserHomePageForm&userid=' . $user->userId,
                     'text' => __('Set Homepage')
                 );
 
                 // Set Password
-                $row['buttons'][] = array(
+                $user->buttons[] = array(
                     'id' => 'user_button_delete',
-                    'url' => 'index.php?p=user&q=SetPasswordForm&userid=' . $row['userid'],
+                    'url' => 'index.php?p=user&q=SetPasswordForm&userid=' . $user->userId,
                     'text' => __('Set Password')
                 );
 
                 // User Quota
-                $row['buttons'][] = array(
+                $user->buttons[] = array(
                     'id' => 'usergroup_button_quota',
-                    'url' => 'index.php?p=group&q=quotaForm&groupid=' . $row['groupid'],
+                    'url' => 'index.php?p=group&q=quotaForm&groupid=' . $user->groupId,
                     'text' => __('Set User Quota')
                 );
             }
-
-            $rows[] = $row;
         }
 
-        Theme::Set('table_rows', $rows);
-
-        $table = Theme::RenderReturn('table_render');
-
-        $response->SetGridResponse($table);
-
+        $this->getState()->template = 'grid';
+        $this->getState()->setData($users);
     }
 
     /**
@@ -243,12 +177,12 @@ class User extends Base
         $response = $this->getState();
 
         $user = new Userdata();
-        $user->userName = \Xibo\Helper\Sanitize::getString('edit_username');
-        $password = \Xibo\Helper\Sanitize::getString('edit_password');
-        $user->email = \Xibo\Helper\Sanitize::getString('email');
+        $user->userName = Sanitize::getString('edit_username');
+        $password = Sanitize::getString('edit_password');
+        $user->email = Sanitize::getString('email');
         $user->userTypeId = \Kit::GetParam('usertypeid', _POST, _INT, 3);
-        $user->homePage = \Xibo\Helper\Sanitize::getString('homepage');
-        $initialGroupId = \Xibo\Helper\Sanitize::getInt('groupid');
+        $user->homePage = Sanitize::getString('homepage');
+        $initialGroupId = Sanitize::getInt('groupid');
 
         // Add the user
         if (!$user->add($password, $initialGroupId))
@@ -275,14 +209,14 @@ class User extends Base
             $user = $entries[0]['object'];
 
         // Create our user object
-        $user->userName = \Xibo\Helper\Sanitize::getString('edit_username');
-        $user->email = \Xibo\Helper\Sanitize::getString('email');
+        $user->userName = Sanitize::getString('edit_username');
+        $user->email = Sanitize::getString('email');
         $user->homePage = \Kit::GetParam('homepage', _POST, _STRING, 'dashboard');
-        $user->retired = \Xibo\Helper\Sanitize::getCheckbox('retired');
+        $user->retired = Sanitize::getCheckbox('retired');
 
         // Super Admins can change the user type
         if ($this->getUser()->userTypeId == 1)
-            $user->userTypeId = \Xibo\Helper\Sanitize::getInt('usertypeid');
+            $user->userTypeId = Sanitize::getInt('usertypeid');
 
         if (!$user->edit())
             trigger_error($user->GetErrorMessage(), E_USER_ERROR);
@@ -348,7 +282,7 @@ class User extends Base
         $user = $this->getUser();
         $response = $this->getState();
 
-        $userId = \Xibo\Helper\Sanitize::getInt('userID');
+        $userId = Sanitize::getInt('userID');
 
         // Set some information about the form
         Theme::Set('form_id', 'UserForm');
@@ -371,10 +305,10 @@ class User extends Base
 
             // Store some information for later use
             $username = \Kit::ValidateParam($aRow['username'], _USERNAME);
-            $usertypeid = \Xibo\Helper\Sanitize::int($aRow['usertypeid']);
-            $email = \Xibo\Helper\Sanitize::string($aRow['email']);
-            $homepage = \Xibo\Helper\Sanitize::string($aRow['homepage']);
-            $retired = \Xibo\Helper\Sanitize::int($aRow['retired']);
+            $usertypeid = Sanitize::int($aRow['usertypeid']);
+            $email = Sanitize::string($aRow['email']);
+            $homepage = Sanitize::string($aRow['homepage']);
+            $retired = Sanitize::int($aRow['retired']);
 
             $retiredFormField = Form::AddCheckbox('retired', __('Retired?'),
                 $retired, __('Is this user retired?'),
@@ -483,7 +417,7 @@ class User extends Base
         $user = $this->getUser();
         $response = $this->getState();
 
-        $userid = \Xibo\Helper\Sanitize::getInt('userID');
+        $userid = Sanitize::getInt('userID');
 
         // Set some information about the form
         Theme::Set('form_id', 'UserDeleteForm');
@@ -514,7 +448,7 @@ class User extends Base
     {
 
         $response = $this->getState();
-        $userid = \Xibo\Helper\Sanitize::getInt('userid');
+        $userid = Sanitize::getInt('userid');
 
         // Set some information about the form
         Theme::Set('form_id', 'SetUserHomePageForm');
@@ -616,7 +550,7 @@ class User extends Base
         $msgNewPassword = __('New Password');
         $msgRetype = __('Retype New Password');
 
-        $userId = \Xibo\Helper\Sanitize::getInt('userid');
+        $userId = Sanitize::getInt('userid');
 
         // Set some information about the form
         Theme::Set('form_id', 'ChangePasswordForm');
@@ -650,9 +584,9 @@ class User extends Base
 
         $response = $this->getState();
 
-        $oldPassword = \Xibo\Helper\Sanitize::getString('oldPassword');
-        $newPassword = \Xibo\Helper\Sanitize::getString('newPassword');
-        $retypeNewPassword = \Xibo\Helper\Sanitize::getString('retypeNewPassword');
+        $oldPassword = Sanitize::getString('oldPassword');
+        $newPassword = Sanitize::getString('newPassword');
+        $retypeNewPassword = Sanitize::getString('retypeNewPassword');
 
 
         $userData = new Userdata($db);
@@ -673,7 +607,7 @@ class User extends Base
         $user =& $this->user;
         $response = new ApplicationState();
 
-        $userId = \Xibo\Helper\Sanitize::getInt('userid');
+        $userId = Sanitize::getInt('userid');
 
         // Set some information about the form
         Theme::Set('form_id', 'SetPasswordForm');
@@ -705,10 +639,10 @@ class User extends Base
 
         $response = $this->getState();
 
-        $newPassword = \Xibo\Helper\Sanitize::getString('newPassword');
-        $retypeNewPassword = \Xibo\Helper\Sanitize::getString('retypeNewPassword');
+        $newPassword = Sanitize::getString('newPassword');
+        $retypeNewPassword = Sanitize::getString('retypeNewPassword');
 
-        $userId = \Xibo\Helper\Sanitize::getInt('UserId');
+        $userId = Sanitize::getInt('UserId');
 
         // Check we are an admin
         if ($this->getUser()->userTypeId != 1)
@@ -731,7 +665,7 @@ class User extends Base
     {
         $response = $this->getState();
 
-        $entity = \Xibo\Helper\Sanitize::getString('entity');
+        $entity = Sanitize::getString('entity');
         if ($entity == '')
             throw new InvalidArgumentException(__('Permissions form requested without an entity'));
 
@@ -742,7 +676,7 @@ class User extends Base
             throw new InvalidArgumentException(__('Permissions form requested with an invalid entity'));
 
         // Get the object
-        $objectId = \Xibo\Helper\Sanitize::getInt('objectId');
+        $objectId = Sanitize::getInt('objectId');
         if ($objectId == 0)
             throw new InvalidArgumentException(__('Permissions form requested without an object'));
 
@@ -810,7 +744,7 @@ class User extends Base
         $response = $this->getState();
 
 
-        $entity = \Xibo\Helper\Sanitize::getString('entity');
+        $entity = Sanitize::getString('entity');
         if ($entity == '')
             throw new InvalidArgumentException(__('Permissions form requested without an entity'));
 
@@ -821,7 +755,7 @@ class User extends Base
             throw new InvalidArgumentException(__('Permissions form requested with an invalid entity'));
 
         // Get the object
-        $objectId = \Xibo\Helper\Sanitize::getInt('objectId');
+        $objectId = Sanitize::getInt('objectId');
         if ($objectId == 0)
             throw new InvalidArgumentException(__('Permissions form requested without an object'));
 
@@ -860,7 +794,7 @@ class User extends Base
             }
         }
 
-        $cascade = \Xibo\Helper\Sanitize::getCheckbox('cascade');
+        $cascade = Sanitize::getCheckbox('cascade');
 
         if ($cascade) {
             Log::debug('Permissions to push down: ' . var_export($newPermissions, true));

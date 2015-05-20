@@ -78,8 +78,10 @@ class UserFactory
             $sortOrder = array('username');
 
         $params = array();
-        $SQL  = 'SELECT userId, userName, userTypeId, loggedIn, email, homePage, lastAccessed, newUserWizard, retired, CSPRNG, UserPassword ';
+        $SQL  = 'SELECT `user`.userId, userName, userTypeId, loggedIn, email, homePage, lastAccessed, newUserWizard, retired, CSPRNG, UserPassword, group.groupId, group.group ';
         $SQL .= '  FROM `user` ';
+        $SQL .= '   INNER JOIN lkusergroup ON lkusergroup.userId = user.userId ';
+        $SQL .= '   INNER JOIN `group` ON group.groupId = lkusergroup.groupId AND isUserSpecific = 1 ';
         $SQL .= ' WHERE 1 = 1 ';
 
         // User Id Provided?
@@ -133,6 +135,9 @@ class UserFactory
 
             // Set the user credentials (set privately)
             $user->setPassword(Sanitize::string($row['UserPassword']), Sanitize::int($row['CSPRNG']));
+
+            $user->groupId = Sanitize::int($row['groupId']);
+            $user->group = Sanitize::string($row['group']);
 
             $entries[] = $user;
         }

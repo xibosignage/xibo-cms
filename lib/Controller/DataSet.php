@@ -35,146 +35,102 @@ class DataSet extends Base
 {
     public function displayPage()
     {
-        $subpage = \Kit::GetParam('sp', _GET, _WORD, '');
+        $this->getState()->template = 'dataset-page';
+    }
 
-        // Configure the theme
-        $id = uniqid();
+    public function displayDataEntry()
+    {
+        Theme::Set('id', 'DataEntryGrid');
+        $dataSetId = \Xibo\Helper\Sanitize::getInt('datasetid');
+        $dataSet = \Xibo\Helper\Sanitize::getString('dataset');
 
-        // Different pages for data entry and admin
-        if ($subpage == 'DataEntry') {
-            Theme::Set('id', 'DataEntryGrid');
-            $dataSetId = \Xibo\Helper\Sanitize::getInt('datasetid');
-            $dataSet = \Xibo\Helper\Sanitize::getString('dataset');
+        Theme::Set('form_meta', '<input type="hidden" name="p" value="dataset"><input type="hidden" name="q" value="DataSetDataForm"><input type="hidden" name="datasetid" value="' . $dataSetId . '"><input type="hidden" name="dataset" value="' . $dataSet . '">');
 
-            Theme::Set('form_meta', '<input type="hidden" name="p" value="dataset"><input type="hidden" name="q" value="DataSetDataForm"><input type="hidden" name="datasetid" value="' . $dataSetId . '"><input type="hidden" name="dataset" value="' . $dataSet . '">');
-
-            // Call to render the template
-            Theme::Set('header_text', $dataSet);
-            Theme::Set('form_fields', array());
-            $this->getState()->html .= Theme::RenderReturn('grid_render');
-        } else {
-            $id = uniqid();
-            Theme::Set('id', $id);
-            Theme::Set('form_meta', '<input type="hidden" name="p" value="dataset"><input type="hidden" name="q" value="DataSetGrid">');
-            Theme::Set('pager', ApplicationState::Pager($id));
-
-            // Call to render the template
-            Theme::Set('header_text', __('DataSets'));
-            Theme::Set('form_fields', array());
-            $this->getState()->html .= Theme::RenderReturn('grid_render');
-        }
+        // Call to render the template
+        Theme::Set('header_text', $dataSet);
+        Theme::Set('form_fields', array());
+        $this->getState()->html .= Theme::RenderReturn('grid_render');
+        $this->getState()->template = 'dataset-dataentry-page';
     }
 
     function actionMenu()
     {
-
-        if (\Kit::GetParam('sp', _GET, _WORD, 'view') == 'view') {
-            return array(
-                array('title' => __('Add DataSet'),
-                    'class' => 'XiboFormButton',
-                    'selected' => false,
-                    'link' => 'index.php?p=dataset&q=AddDataSetForm',
-                    'help' => __('Add a new DataSet'),
-                    'onclick' => ''
-                )
-            );
-        } else if (\Kit::GetParam('sp', _GET, _WORD, 'view') == 'DataEntry') {
-            return array(
-                array('title' => __('More Rows'),
-                    'class' => '',
-                    'selected' => false,
-                    'link' => '#',
-                    'help' => __('Add more rows to the end of this DataSet'),
-                    'onclick' => 'XiboGridRender(\'DataEntryGrid\')'
-                )
-            );
-        } else
-            return NULL;
+        return array(
+            array('title' => __('More Rows'),
+                'class' => '',
+                'selected' => false,
+                'link' => '#',
+                'help' => __('Add more rows to the end of this DataSet'),
+                'onclick' => 'XiboGridRender(\'DataEntryGrid\')'
+            )
+        );
     }
 
-    public function DataSetGrid()
+    public function grid()
     {
-
         $user = $this->getUser();
-        $response = $this->getState();
 
-        $cols = array(
-            array('name' => 'dataset', 'title' => __('Name')),
-            array('name' => 'description', 'title' => __('Description')),
-            array('name' => 'owner', 'title' => __('Owner')),
-            array('name' => 'groups', 'title' => __('Permissions'))
-        );
-        Theme::Set('table_cols', $cols);
+        $dataSets = $this->getUser()->DataSetList();
 
-        $rows = array();
-
-        foreach ($this->getUser()->DataSetList() as $dataSet) {
+        foreach ($dataSets as $dataSet) {
+            /* @var \Xibo\Entity\DataSet $dataSet */
             // Add some additional info
-            $dataSet['owner'] = $user->getNameFromID($dataSet['ownerid']);
-            $dataSet['groups'] = $this->GroupsForDataSet($dataSet['datasetid']);
-            $dataSet['buttons'] = array();
+            $dataSet->groups = $this->GroupsForDataSet($dataSet->dataSetId);
+            $dataSet->buttons = array();
 
-            if ($dataSet['edit']) {
+            if ($user->checkEditable($dataSet)) {
 
                 // View Data
-                $dataSet['buttons'][] = array(
+                $dataSet->buttons[] = array(
                     'id' => 'dataset_button_viewdata',
                     'class' => 'XiboRedirectButton',
-                    'url' => 'index.php?p=dataset&sp=DataEntry&datasetid=' . $dataSet['datasetid'] . '&dataset=' . $dataSet['dataset'],
+                    'url' => 'index.php?p=dataset&sp=DataEntry&datasetid=' . $dataSet->dataSetId . '&dataset=' . $dataSet->dataSet,
                     'text' => __('View Data')
                 );
 
                 // View Columns
-                $dataSet['buttons'][] = array(
+                $dataSet->buttons[] = array(
                     'id' => 'dataset_button_viewcolumns',
-                    'url' => 'index.php?p=dataset&q=DataSetColumnsForm&datasetid=' . $dataSet['datasetid'] . '&dataset=' . $dataSet['dataset'],
+                    'url' => 'index.php?p=dataset&q=DataSetColumnsForm&datasetid=' . $dataSet->dataSetId . '&dataset=' . $dataSet->dataSet,
                     'text' => __('View Columns')
                 );
 
                 // Edit DataSet
-                $dataSet['buttons'][] = array(
+                $dataSet->buttons[] = array(
                     'id' => 'dataset_button_edit',
-                    'url' => 'index.php?p=dataset&q=EditDataSetForm&datasetid=' . $dataSet['datasetid'] . '&dataset=' . $dataSet['dataset'],
+                    'url' => 'index.php?p=dataset&q=EditDataSetForm&datasetid=' . $dataSet->dataSetId . '&dataset=' . $dataSet->dataSet,
                     'text' => __('Edit')
                 );
 
                 // Edit DataSet
-                $dataSet['buttons'][] = array(
+                $dataSet->buttons[] = array(
                     'id' => 'dataset_button_import',
-                    'url' => 'index.php?p=dataset&q=ImportCsvForm&datasetid=' . $dataSet['datasetid'] . '&dataset=' . $dataSet['dataset'],
+                    'url' => 'index.php?p=dataset&q=ImportCsvForm&datasetid=' . $dataSet->dataSetId . '&dataset=' . $dataSet->dataSet,
                     'text' => __('Import CSV')
                 );
             }
 
-            if ($dataSet['del']) {
-
+            if ($user->checkDeleteable($dataSet)) {
                 // Delete DataSet
-                $dataSet['buttons'][] = array(
+                $dataSet->buttons[] = array(
                     'id' => 'dataset_button_delete',
-                    'url' => 'index.php?p=dataset&q=DeleteDataSetForm&datasetid=' . $dataSet['datasetid'] . '&dataset=' . $dataSet['dataset'],
+                    'url' => 'index.php?p=dataset&q=DeleteDataSetForm&datasetid=' . $dataSet->dataSetId . '&dataset=' . $dataSet->dataSet,
                     'text' => __('Delete')
                 );
             }
 
-            if ($dataSet['modifyPermissions']) {
-
+            if ($user->checkPermissionsModifyable($dataSet)) {
                 // Edit Permissions
-                $dataSet['buttons'][] = array(
+                $dataSet->buttons[] = array(
                     'id' => 'dataset_button_delete',
-                    'url' => 'index.php?p=dataset&q=PermissionsForm&datasetid=' . $dataSet['datasetid'] . '&dataset=' . $dataSet['dataset'],
+                    'url' => 'index.php?p=dataset&q=PermissionsForm&datasetid=' . $dataSet->dataSetId . '&dataset=' . $dataSet->dataSet,
                     'text' => __('Permissions')
                 );
             }
-
-            $rows[] = $dataSet;
         }
 
-        Theme::Set('table_rows', $rows);
-
-        $output = Theme::RenderReturn('table_render');
-
-        $response->SetGridResponse($output);
-
+        $this->getState()->template = 'grid';
+        $this->getState()->setData($dataSets);
     }
 
     public function AddDataSetForm()

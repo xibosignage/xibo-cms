@@ -93,7 +93,8 @@ class State extends Middleware
                 'settings' => $settings,
                 'translate' => [
                     'jsLocale' => Translate::GetJsLocale(),
-                    'calendarLanguage' => ((strlen(Translate::GetJsLocale() <= 2)) ? Translate::GetJsLocale() . '-' . strtoupper(Translate::GetJsLocale()) : Translate::GetJsLocale())
+                    'jsShortLocale' => ((strlen(Translate::GetJsLocale()) > 2) ? substr(Translate::GetJsLocale(), 0, 2) : Translate::GetJsLocale()),
+                    'calendarLanguage' => ((strlen(Translate::GetJsLocale()) <= 2) ? Translate::GetJsLocale() . '-' . strtoupper(Translate::GetJsLocale()) : Translate::GetJsLocale())
                 ],
                 'translations' => '{}'
             ));

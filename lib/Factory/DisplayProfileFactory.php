@@ -24,9 +24,9 @@ class DisplayProfileFactory
      */
     public static function query($sortOrder = null, $filterBy = null)
     {
-        try {
-            $dbh = PDOConnect::init();
+        $profiles = array();
 
+        try {
             $params = array();
             $SQL = 'SELECT displayProfileId, name, type, config, isDefault, userId FROM displayprofile ';
 
@@ -39,11 +39,6 @@ class DisplayProfileFactory
             // Sorting?
             if (is_array($sortOrder))
                 $SQL .= 'ORDER BY ' . implode(',', $sortOrder);
-
-            $sth = $dbh->prepare($SQL);
-            $sth->execute($params);
-
-            $profiles = array();
 
             Log::sql($SQL, $params);
 

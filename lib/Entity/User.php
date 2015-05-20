@@ -22,6 +22,7 @@ namespace Xibo\Entity;
 
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\DisplayProfileFactory;
@@ -59,6 +60,10 @@ class User
 
     private $CSPRNG;
     private $password;
+
+    // Readonly properties
+    public $groupId;
+    public $group;
 
     /**
      * Cached Permissions
@@ -580,45 +585,27 @@ class User
 
     /**
      * Returns an array of layouts that this user has access to
+     * @param array $sortOrder
+     * @param array $filterBy
+     * @return array[DataSet]
      */
-    public function DataSetList()
+    public function DataSetList($sortOrder = array('dataSet'), $filterBy = array())
     {
-        $SQL = "";
-        $SQL .= "SELECT DataSetID, ";
-        $SQL .= "       DataSet, ";
-        $SQL .= "       Description, ";
-        $SQL .= "       UserID ";
-        $SQL .= "  FROM dataset ";
-        $SQL .= " ORDER BY DataSet ";
+        $dataSets = DataSetFactory::query($sortOrder, $filterBy);
 
-        //Log::debug(sprintf('Retreiving list of layouts for %s with SQL: %s', $this->userName, $SQL));
+        if ($this->userTypeId == 1)
+            return $dataSets;
 
-        if (!$result = $this->db->query($SQL)) {
-            trigger_error($this->db->error());
-            return false;
-        }
+        foreach ($dataSets as $key => $dataSet) {
+            /* @var \Xibo\Entity\DataSet $dataSet */
 
-        $dataSets = array();
+            // Check to see if we are the owner
+            if ($dataSet->getOwnerId() == $this->userId)
+                continue;
 
-        while ($row = $this->db->get_assoc_row($result)) {
-            $dataSetItem = array();
-
-            // Validate each param and add it to the array.
-            $dataSetItem['datasetid'] = \Xibo\Helper\Sanitize::int($row['DataSetID']);
-            $dataSetItem['dataset'] = \Xibo\Helper\Sanitize::string($row['DataSet']);
-            $dataSetItem['description'] = \Xibo\Helper\Sanitize::string($row['Description']);
-            $dataSetItem['ownerid'] = \Xibo\Helper\Sanitize::int($row['UserID']);
-
-            $auth = $this->DataSetAuth($dataSetItem['datasetid'], true);
-
-            if ($auth->view) {
-                $dataSetItem['view'] = (int)$auth->view;
-                $dataSetItem['edit'] = (int)$auth->edit;
-                $dataSetItem['del'] = (int)$auth->del;
-                $dataSetItem['modifyPermissions'] = (int)$auth->modifyPermissions;
-
-                $dataSets[] = $dataSetItem;
-            }
+            // Check we are viewable
+            if (!$this->checkViewable($dataSet))
+                unset($dataSets[$key]);
         }
 
         return $dataSets;
@@ -801,11 +788,12 @@ class User
 
     public function userList($sortOrder = array('username'), $filterBy = array())
     {
-        // Normal users can only see themselves
         if ($this->userTypeId == 3) {
+            // Normal users can only see themselves
             $filterBy['userId'] = $this->userId;
-        } // Group admins can only see users from their groups.
+        }
         else if ($this->userTypeId == 2) {
+            // Group admins can only see users from their groups.
             $groups = $this->GetUserGroups($this->userId, true);
             $filterBy['groupIds'] = (isset($filterBy['groupIds'])) ? array_merge($filterBy['groupIds'], $groups) : $groups;
         }

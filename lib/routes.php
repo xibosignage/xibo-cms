@@ -73,6 +73,11 @@ $app->get('/displaygroup', '\Xibo\Controller\DisplayGroup:grid')->name('displayG
 $app->get('/displayprofile', '\Xibo\Controller\DisplayProfile:grid')->name('displayProfileSearch');
 
 //
+// DataSet
+//
+$app->get('/dataset', '\Xibo\Controller\DataSet:grid')->name('dataSetSearch');
+
+//
 // Statistics
 //
 $app->get('/stats', '\Xibo\Controller\Stats:grid')->name('statsSearch');
@@ -84,3 +89,8 @@ $app->get('/stats/data/availability', '\Xibo\Controller\Stats:availabilityData')
 //
 $app->get('/log', '\Xibo\Controller\Log:grid')->name('logSearch');
 $app->delete('/log', '\Xibo\Controller\Log:truncate')->name('logTruncate');
+
+//
+// User
+//
+$app->get('/user', '\Xibo\Controller\User:grid')->name('userSearch');

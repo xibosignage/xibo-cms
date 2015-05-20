@@ -170,7 +170,6 @@ class Base
         $state = $this->getState();
         $data = $state->getData();
 
-        Log::debug('Template: %s', $state->template);
         $grid = ($state->template == 'grid');
 
         if ($grid) {
