@@ -230,6 +230,11 @@ class ModuleFactory
                 $params['enabled'] = \Xibo\Helper\Sanitize::int('enabled', $filterBy);
             }
 
+            if (\Xibo\Helper\Sanitize::int('regionSpecific', -1, $filterBy) != -1) {
+                $SQL .= " AND regionSpecific = :regionSpecific ";
+                $params['regionSpecific'] = \Xibo\Helper\Sanitize::int('regionSpecific', $filterBy);
+            }
+
             // Sorting?
             if (is_array($sortOrder))
                 $SQL .= 'ORDER BY ' . implode(',', $sortOrder);

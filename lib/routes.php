@@ -23,24 +23,61 @@ defined('XIBO') or die('Sorry, you are not allowed to directly access this page.
 // About Page
 $app->get('/about', '\Xibo\Controller\Login:About')->name('about');
 
-$app->get('/clock', '\Xibo\Controller\Clock:clock')->setName('clock');
+$app->get('/clock', '\Xibo\Controller\Clock:clock')->name('clock');
 
 //
 // Layouts
 //
-$app->get('/layout', '\Xibo\Controller\Layout:grid')->setName('layoutSearch');
-$app->post('/layout', '\Xibo\Controller\Layout:add')->setName('layoutAdd');
-$app->put('/layout/:id', '\Xibo\Controller\Layout:modify')->setName('layoutUpdate');
-$app->delete('/layout/:id', '\Xibo\Controller\Layout:delete')->setName('layoutDelete');
-$app->put('/layout/retire/:id', '\Xibo\Controller\Layout:retire')->setName('layoutRetire');
+$app->get('/layout', '\Xibo\Controller\Layout:grid')->name('layoutSearch');
+$app->post('/layout', '\Xibo\Controller\Layout:add')->name('layoutAdd');
+$app->put('/layout/:id', '\Xibo\Controller\Layout:modify')->name('layoutUpdate');
+$app->delete('/layout/:id', '\Xibo\Controller\Layout:delete')->name('layoutDelete');
+$app->put('/layout/retire/:id', '\Xibo\Controller\Layout:retire')->name('layoutRetire');
 
 //
 // Campaign
 //
-$app->get('/campaign', '\Xibo\Controller\Campaign:grid')->setName('campaignSearch');
-$app->post('/campaign', '\Xibo\Controller\Campaign:add')->setName('campaignAdd');
-$app->put('/campaign/:id', '\Xibo\Controller\Campaign:modify')->setName('campaignUpdate');
-$app->delete('/campaign/:id', '\Xibo\Controller\Campaign:delete')->setName('campaignDelete');
+$app->get('/campaign', '\Xibo\Controller\Campaign:grid')->name('campaignSearch');
+$app->post('/campaign', '\Xibo\Controller\Campaign:add')->name('campaignAdd');
+$app->put('/campaign/:id', '\Xibo\Controller\Campaign:modify')->name('campaignUpdate');
+$app->delete('/campaign/:id', '\Xibo\Controller\Campaign:delete')->name('campaignDelete');
+
+//
+// Template
+//
+$app->get('/template', '\Xibo\Controller\Template:grid')->name('templateSearch');
+
+//
+// Resolutions
+//
+$app->get('/resolution', '\Xibo\Controller\Resolution:grid')->name('resolutionSearch');
+
+//
+// Library
+//
+$app->get('/library', '\Xibo\Controller\Library:grid')->name('librarySearch');
+
+//
+// Displays
+//
+$app->get('/display', '\Xibo\Controller\Display:grid')->name('displaySearch');
+
+//
+// Display Group
+//
+$app->get('/displaygroup', '\Xibo\Controller\DisplayGroup:grid')->name('displayGroupSearch');
+
+//
+// Display Profile
+//
+$app->get('/displayprofile', '\Xibo\Controller\DisplayProfile:grid')->name('displayProfileSearch');
+
+//
+// Statistics
+//
+$app->get('/stats', '\Xibo\Controller\Stats:grid')->name('statsSearch');
+$app->get('/stats/data/bandwidth', '\Xibo\Controller\Stats:bandwidthData')->name('statsBandwidthData');
+$app->get('/stats/data/availability', '\Xibo\Controller\Stats:availabilityData')->name('statsAvailabilityData');
 
 //
 // Log

@@ -109,11 +109,11 @@ class AuditLog extends Base
         $filterFromDt = Kit::GetParam('filterFromDt', _REQUEST, _STRING);
         $filterToDt = Kit::GetParam('filterToDt', _REQUEST, _STRING);
 
-        setSession('auditlog', 'Filter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
-        setSession('auditlog', 'filterFromDt', $filterFromDt);
-        setSession('auditlog', 'filterToDt', $filterToDt);
-        setSession('auditlog', 'filterUser', $filterUser);
-        setSession('auditlog', 'filterEntity', $filterEntity);
+        Session::Set('auditlog', 'Filter', Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        Session::Set('auditlog', 'filterFromDt', $filterFromDt);
+        Session::Set('auditlog', 'filterToDt', $filterToDt);
+        Session::Set('auditlog', 'filterUser', $filterUser);
+        Session::Set('auditlog', 'filterEntity', $filterEntity);
 
         $search = [];
 

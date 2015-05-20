@@ -22,7 +22,9 @@ namespace Xibo\Controller;
 
 use Xibo\Helper\Date;
 use Xibo\Helper\Log;
+use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
+use Xibo\Storage\PDOConnect;
 
 
 class Stats extends Base
@@ -32,131 +34,37 @@ class Stats extends Base
      */
     function displayPage()
     {
-        // Render a Bandwidth Widget
-        $id = \Kit::uniqueId();
-        Theme::Set('id', $id);
-        Theme::Set('form_meta', '<input type="hidden" name="p" value="stats"><input type="hidden" name="q" value="BandwidthGrid">');
-
-        $formFields = array();
-        $formFields[] = Form::AddDatePicker('fromdt', __('From Date'), Date::getLocalDate(time() - (86400 * 35), 'Y-m-d'), NULL, 'f');
-        $formFields[] = Form::AddDatePicker('todt', __('To Date'), Date::getLocalDate(null, 'Y-m-d'), NULL, 't');
-
         // List of Displays this user has permission for
-        $displays = $this->getUser()->DisplayGroupList(1);
-        array_unshift($displays, array('displayid' => 0, 'displaygroup' => 'All'));
-        $formFields[] = Form::AddCombo(
-            'displayid',
-            __('Display'),
-            NULL,
-            $displays,
-            'displayid',
-            'displaygroup',
-            NULL,
-            'd');
-
-        Theme::Set('header_text', __('Bandwidth'));
-        Theme::Set('form_fields', $formFields);
-        $this->getState()->html .= Theme::RenderReturn('grid_render');
-
-        // Render an Availability Widget
-        $id = \Kit::uniqueId();
-        Theme::Set('id', $id);
-        Theme::Set('form_meta', '<input type="hidden" name="p" value="stats"><input type="hidden" name="q" value="AvailabilityGrid">');
-
-        $formFields = array();
-        $formFields[] = Form::AddDatePicker('fromdt', __('From Date'), Date::getLocalDate(time() - (86400 * 35), 'Y-m-d'), NULL, 'f');
-        $formFields[] = Form::AddDatePicker('todt', __('To Date'), Date::getLocalDate(null, 'Y-m-d'), NULL, 't');
-
-        // List of Displays this user has permission for
-        $displays = $this->getUser()->DisplayGroupList(1);
-        array_unshift($displays, array('displayid' => 0, 'displaygroup' => 'All'));
-        $formFields[] = Form::AddCombo(
-            'displayid',
-            __('Display'),
-            NULL,
-            $displays,
-            'displayid',
-            'displaygroup',
-            NULL,
-            'd');
-
-        Theme::Set('header_text', __('Availability'));
-        Theme::Set('form_fields', $formFields);
-        $this->getState()->html .= Theme::RenderReturn('grid_render');
-
-
-        // Proof of Play stats widget
-        $id = \Kit::uniqueId();
-        Theme::Set('id', $id);
-        Theme::Set('form_meta', '<input type="hidden" name="p" value="stats"><input type="hidden" name="q" value="StatsGrid">');
-
-        $formFields = array();
-        $formFields[] = Form::AddDatePicker('fromdt', __('From Date'), Date::getLocalDate(time() - 86400, 'Y-m-d'), NULL, 'f');
-        $formFields[] = Form::AddDatePicker('todt', __('To Date'), Date::getLocalDate(null, 'Y-m-d'), NULL, 't');
-
-        // List of Displays this user has permission for
-        $displays = $this->getUser()->DisplayGroupList(1);
-        array_unshift($displays, array('displayid' => 0, 'displaygroup' => 'All'));
-        $formFields[] = Form::AddCombo(
-            'displayid',
-            __('Display'),
-            NULL,
-            $displays,
-            'displayid',
-            'displaygroup',
-            NULL,
-            'd');
+        $displays = $this->getUser()->DisplayList();
+        array_unshift($displays, array('displayId' => 0, 'display' => 'All'));
 
         // List of Media this user has permission for
         $media = $this->getUser()->MediaList();
-        array_unshift($media, array('mediaid' => 0, 'media' => 'All'));
-        $formFields[] = Form::AddCombo(
-            'mediaid',
-            __('Media'),
-            NULL,
-            $media,
-            'mediaid',
-            'media',
-            NULL,
-            'm');
+        array_unshift($media, array('mediaId' => 0, 'media' => 'All'));
 
-        // Call to render the template
-        Theme::Set('header_text', __('Statistics'));
-        Theme::Set('form_fields', $formFields);
-        $this->getState()->html .= Theme::RenderReturn('grid_render');
-    }
+        $data = [
+            'displays' => $displays,
+            'media' => $media,
+            'defaults' => [
+                'fromDate' => Date::getLocalDate(time() - (86400 * 35), 'Y-m-d'),
+                'fromDateOneDay' => Date::getLocalDate(time() - 86400, 'Y-m-d'),
+                'toDate' => Date::getLocalDate(null, 'Y-m-d')
+            ]
+        ];
 
-    public function actionMenu()
-    {
-
-        $menu = array();
-
-        // Always show export
-        $menu[] = array(
-            'title' => __('Export'),
-            'class' => 'XiboFormButton',
-            'selected' => false,
-            'link' => 'index.php?p=stats&q=OutputCsvForm',
-            'help' => __('Export raw data to CSV'),
-            'onclick' => ''
-        );
-
-        return $menu;
+        $this->getState()->template = 'statistics-page';
+        $this->getState()->setData($data);
     }
 
     /**
      * Shows the stats grid
      */
-    public function StatsGrid()
+    public function grid()
     {
-
-        $user = $this->getUser();
-        $response = $this->getState();
-
-        $fromDt = Date::getIsoDateFromString(Kit::GetParam('fromdt', _POST, _STRING));
-        $toDt = Date::getIsoDateFromString(Kit::GetParam('todt', _POST, _STRING));
-        $displayId = \Xibo\Helper\Sanitize::getInt('displayid');
-        $mediaId = \Xibo\Helper\Sanitize::getInt('mediaid');
+        $fromDt = Date::getTimestampFromString(Sanitize::getString('fromdt'));
+        $toDt = Date::getTimestampFromString(Sanitize::getString('todt'));
+        $displayId = Sanitize::getInt('displayid');
+        $mediaId = Sanitize::getInt('mediaid');
 
         // What if the fromdt and todt are exactly the same?
         // in this case assume an entire day from midnight on the fromdt to midnight on the todt (i.e. add a day to the todt)
@@ -218,10 +126,10 @@ class Stats extends Base
         $rows = array();
 
         while ($row = $db->get_assoc_row($results)) {
-            $row['Display'] = \Xibo\Helper\Sanitize::string($row['Display']);
-            $row['Layout'] = \Xibo\Helper\Sanitize::string($row['Layout']);
-            $row['NumberPlays'] = \Xibo\Helper\Sanitize::int($row['NumberPlays']);
-            $row['DurationSec'] = \Xibo\Helper\Sanitize::int($row['Duration']);
+            $row['Display'] = Sanitize::string($row['Display']);
+            $row['Layout'] = Sanitize::string($row['Layout']);
+            $row['NumberPlays'] = Sanitize::int($row['NumberPlays']);
+            $row['DurationSec'] = Sanitize::int($row['Duration']);
             $row['Duration'] = sec2hms(Kit::ValidateParam($row['Duration'], _INT));
             $row['MinStart'] = Date::getLocalDate(strtotime(Kit::ValidateParam($row['MinStart'], _STRING)));
             $row['MaxEnd'] = Date::getLocalDate(strtotime(Kit::ValidateParam($row['MaxEnd'], _STRING)));
@@ -269,10 +177,10 @@ class Stats extends Base
         $rows = array();
 
         while ($row = $db->get_assoc_row($results)) {
-            $row['Display'] = \Xibo\Helper\Sanitize::string($row['Display']);
-            $row['Media'] = \Xibo\Helper\Sanitize::string($row['Name']);
-            $row['NumberPlays'] = \Xibo\Helper\Sanitize::int($row['NumberPlays']);
-            $row['DurationSec'] = \Xibo\Helper\Sanitize::int($row['Duration']);
+            $row['Display'] = Sanitize::string($row['Display']);
+            $row['Media'] = Sanitize::string($row['Name']);
+            $row['NumberPlays'] = Sanitize::int($row['NumberPlays']);
+            $row['DurationSec'] = Sanitize::int($row['Duration']);
             $row['Duration'] = sec2hms(Kit::ValidateParam($row['Duration'], _INT));
             $row['MinStart'] = Date::getLocalDate(strtotime(Kit::ValidateParam($row['MinStart'], _STRING)));
             $row['MaxEnd'] = Date::getLocalDate(strtotime(Kit::ValidateParam($row['MaxEnd'], _STRING)));
@@ -322,11 +230,11 @@ class Stats extends Base
         $rows = array();
 
         while ($row = $db->get_assoc_row($results)) {
-            $row['Display'] = \Xibo\Helper\Sanitize::string($row['Display']);
-            $row['Layout'] = \Xibo\Helper\Sanitize::string($row['Layout']);
-            $row['Media'] = \Xibo\Helper\Sanitize::string($row['Name']);
-            $row['NumberPlays'] = \Xibo\Helper\Sanitize::int($row['NumberPlays']);
-            $row['DurationSec'] = \Xibo\Helper\Sanitize::int($row['Duration']);
+            $row['Display'] = Sanitize::string($row['Display']);
+            $row['Layout'] = Sanitize::string($row['Layout']);
+            $row['Media'] = Sanitize::string($row['Name']);
+            $row['NumberPlays'] = Sanitize::int($row['NumberPlays']);
+            $row['DurationSec'] = Sanitize::int($row['Duration']);
             $row['Duration'] = sec2hms(Kit::ValidateParam($row['Duration'], _INT));
             $row['MinStart'] = Date::getLocalDate(strtotime(Kit::ValidateParam($row['MinStart'], _STRING)));
             $row['MaxEnd'] = Date::getLocalDate(strtotime(Kit::ValidateParam($row['MaxEnd'], _STRING)));
@@ -343,11 +251,11 @@ class Stats extends Base
         $response->paging = false;
     }
 
-    public function AvailabilityGrid()
+    public function availabilityData()
     {
-        $fromDt = Date::getTimestampFromString(Kit::GetParam('fromdt', _POST, _STRING));
-        $toDt = Date::getTimestampFromString(Kit::GetParam('todt', _POST, _STRING));
-        $displayId = \Xibo\Helper\Sanitize::getInt('displayid');
+        $fromDt = Date::getTimestampFromString(Sanitize::getString('fromdt'));
+        $toDt = Date::getTimestampFromString(Sanitize::getString('todt'));
+        $displayId = Sanitize::getInt('displayid');
 
         // Get an array of display id this user has access to.
         $displays = $this->getUser()->DisplayList();
@@ -361,182 +269,157 @@ class Stats extends Base
             trigger_error(__('No displays with View permissions'), E_USER_ERROR);
 
         // Get some data for a bandwidth chart
-        try {
-            $dbh = \Xibo\Storage\PDOConnect::init();
+        $dbh = PDOConnect::init();
 
-            $params = array(
-                'type' => 'displaydown',
-                'start' => date('Y-m-d h:i:s', $fromDt),
-                'boundaryStart' => date('Y-m-d h:i:s', $fromDt),
-                'end' => date('Y-m-d h:i:s', $toDt),
-                'boundaryEnd' => date('Y-m-d h:i:s', $toDt)
+        $params = array(
+            'type' => 'displaydown',
+            'start' => date('Y-m-d h:i:s', $fromDt),
+            'boundaryStart' => date('Y-m-d h:i:s', $fromDt),
+            'end' => date('Y-m-d h:i:s', $toDt),
+            'boundaryEnd' => date('Y-m-d h:i:s', $toDt)
+        );
+
+        $SQL = '
+            SELECT display.display,
+                SUM(TIME_TO_SEC(TIMEDIFF(LEAST(end, :boundaryEnd), GREATEST(start, :boundaryStart)))) AS duration
+              FROM `stat`
+                INNER JOIN `display`
+                ON display.displayId = stat.displayId
+             WHERE start <= :end
+                AND end >= :start
+                AND type = :type
+                AND display.displayId IN (' . implode(',', $displayIds) . ') ';
+
+        if ($displayId != 0) {
+            $SQL .= ' AND display.displayId = :displayId ';
+            $params['displayId'] = $displayId;
+        }
+
+        $SQL .= '
+            GROUP BY display.display
+        ';
+
+        Log::sql($SQL, $params);
+
+        $sth = $dbh->prepare($SQL);
+
+        $sth->execute($params);
+
+        $output = array();
+
+        foreach ($sth->fetchAll() as $row) {
+
+            $output[] = array(
+                'label' => Sanitize::string($row['display']),
+                'value' => (Sanitize::double($row['duration']) / 60)
             );
+        }
 
-            $SQL = '
-                SELECT display.display,
-                    SUM(TIME_TO_SEC(TIMEDIFF(LEAST(end, :boundaryEnd), GREATEST(start, :boundaryStart)))) AS duration
-                  FROM `stat`
-                    INNER JOIN `display`
-                    ON display.displayId = stat.displayId
-                 WHERE start <= :end
-                    AND end >= :start
-                    AND type = :type
-                    AND display.displayId IN (' . implode(',', $displayIds) . ') ';
+        $this->getState()->extra = [
+            'data' => $output
+        ];
+    }
 
-            if ($displayId != 0) {
-                $SQL .= ' AND display.displayId = :displayId ';
-                $params['displayId'] = $displayId;
-            }
+    public function bandwidthData()
+    {
+        $fromDt = Date::getTimestampFromString(Sanitize::getString('fromdt'));
+        $toDt = Date::getTimestampFromString(Sanitize::getString('todt'));
 
+        // Get an array of display id this user has access to.
+        $displays = $this->getUser()->DisplayList();
+        $displayIds = array();
+
+        foreach ($displays as $display) {
+            $displayIds[] = $display->displayId;
+        }
+
+        if (count($displayIds) <= 0)
+            trigger_error(__('No displays with View permissions'), E_USER_ERROR);
+
+        // Get some data for a bandwidth chart
+        $dbh = PDOConnect::init();
+
+        $displayId = Sanitize::getInt('displayid');
+        $params = array(
+            'month' => $fromDt,
+            'month2' => $toDt
+        );
+
+        $SQL = 'SELECT display.display, IFNULL(SUM(Size), 0) AS size ';
+
+        if ($displayId != 0)
+            $SQL .= ', bandwidthtype.name AS type ';
+
+        $SQL .= ' FROM `bandwidth`
+                INNER JOIN `display`
+                ON display.displayid = bandwidth.displayid';
+
+        if ($displayId != 0)
             $SQL .= '
-                GROUP BY display.display
-            ';
+                    INNER JOIN bandwidthtype
+                    ON bandwidthtype.bandwidthtypeid = bandwidth.type
+                ';
 
-            Log::notice($SQL . '. Params = ' . var_export($params, true), get_class(), __FUNCTION__);
+        $SQL .= '  WHERE month > :month
+                AND month < :month2
+                AND display.displayId IN (' . implode(',', $displayIds) . ') ';
 
-            $sth = $dbh->prepare($SQL);
-
-            $sth->execute($params);
-
-            $output = array();
-
-            foreach ($sth->fetchAll() as $row) {
-
-                $output[] = array(
-                    'label' => \Xibo\Helper\Sanitize::string($row['display']),
-                    'value' => (\Xibo\Helper\Sanitize::double($row['duration']) / 60)
-                );
-            }
-
-            Theme::Set('availabilityWidget', json_encode($output));
-            $output = Theme::RenderReturn('stats_page_availability');
-
-            $response = $this->getState();
-            $response->SetGridResponse($output);
-
-        } catch (Exception $e) {
-
-            Log::error($e->getMessage());
-
-            // Show the error in place of the bandwidth chart
-            Theme::Set('widget-error', 'Unable to get widget details');
-        }
-    }
-
-    public function BandwidthGrid()
-    {
-
-        $fromDt = Date::getTimestampFromString(Kit::GetParam('fromdt', _POST, _STRING));
-        $toDt = Date::getTimestampFromString(Kit::GetParam('todt', _POST, _STRING));
-
-        // Get an array of display id this user has access to.
-        $displays = $this->getUser()->DisplayList();
-        $displayIds = array();
-
-        foreach ($displays as $display) {
-            $displayIds[] = $display['displayid'];
+        if ($displayId != 0) {
+            $SQL .= ' AND display.displayid = :displayid ';
+            $params['displayid'] = $displayId;
         }
 
-        if (count($displayIds) <= 0)
-            trigger_error(__('No displays with View permissions'), E_USER_ERROR);
+        $SQL .= 'GROUP BY display.display ';
 
-        // Get some data for a bandwidth chart
-        try {
-            $dbh = \Xibo\Storage\PDOConnect::init();
+        if ($displayId != 0)
+            $SQL .= ' , bandwidthtype.name ';
 
-            $displayId = \Xibo\Helper\Sanitize::getInt('displayid');
-            $params = array(
-                'month' => $fromDt,
-                'month2' => $toDt
-            );
+        $SQL .= 'ORDER BY display.display';
 
-            $SQL = 'SELECT display.display, IFNULL(SUM(Size), 0) AS size ';
+        //Log::debug($SQL . '. Params = ' . var_export($params, true), get_class(), __FUNCTION__);
 
-            if ($displayId != 0)
-                $SQL .= ', bandwidthtype.name AS type ';
+        $sth = $dbh->prepare($SQL);
 
-            $SQL .= ' FROM `bandwidth`
-                    INNER JOIN `display`
-                    ON display.displayid = bandwidth.displayid';
+        $sth->execute($params);
 
-            if ($displayId != 0)
-                $SQL .= '
-                        INNER JOIN bandwidthtype
-                        ON bandwidthtype.bandwidthtypeid = bandwidth.type
-                    ';
+        // Get the results
+        $results = $sth->fetchAll();
 
-            $SQL .= '  WHERE month > :month
-                    AND month < :month2
-                    AND display.displayId IN (' . implode(',', $displayIds) . ') ';
+        $maxSize = 0;
+        foreach ($results as $library) {
+            $maxSize = ($library['size'] > $maxSize) ? $library['size'] : $maxSize;
+        }
 
+        // Decide what our units are going to be, based on the size
+        $base = floor(log($maxSize) / log(1024));
+
+        $output = array();
+
+        foreach ($results as $row) {
+
+            // label depends whether we are filtered by display
             if ($displayId != 0) {
-                $SQL .= ' AND display.displayid = :displayid ';
-                $params['displayid'] = $displayId;
+                $label = $row['type'];
+            } else {
+                $label = $row['display'];
             }
 
-            $SQL .= 'GROUP BY display.display ';
-
-            if ($displayId != 0)
-                $SQL .= ' , bandwidthtype.name ';
-
-            $SQL .= 'ORDER BY display.display';
-
-            //Log::debug($SQL . '. Params = ' . var_export($params, true), get_class(), __FUNCTION__);
-
-            $sth = $dbh->prepare($SQL);
-
-            $sth->execute($params);
-
-            // Get the results
-            $results = $sth->fetchAll();
-
-            $maxSize = 0;
-            foreach ($results as $library) {
-                $maxSize = ($library['size'] > $maxSize) ? $library['size'] : $maxSize;
-            }
-
-            // Decide what our units are going to be, based on the size
-            $base = floor(log($maxSize) / log(1024));
-
-            $output = array();
-
-            foreach ($results as $row) {
-
-                // label depends whether we are filtered by display
-                if ($displayId != 0) {
-                    $label = $row['type'];
-                } else {
-                    $label = $row['display'];
-                }
-
-                $output[] = array(
-                    'label' => $label,
-                    'value' => round((double)$row['size'] / (pow(1024, $base)), 2)
-                );
-            }
-
-            // Set the data
-            Theme::Set('bandwidthWidget', json_encode($output));
-
-            // Set up some suffixes
-            $suffixes = array('bytes', 'k', 'M', 'G', 'T');
-            Theme::Set('bandwidthWidgetUnits', (isset($suffixes[$base]) ? $suffixes[$base] : ''));
-
-            $output = Theme::RenderReturn('stats_page_bandwidth');
-
-            $response = $this->getState();
-            $response->SetGridResponse($output);
-
-        } catch (Exception $e) {
-
-            Log::error($e->getMessage());
-
-            // Show the error in place of the bandwidth chart
-            Theme::Set('widget-error', 'Unable to get widget details');
+            $output[] = array(
+                'label' => $label,
+                'value' => round((double)$row['size'] / (pow(1024, $base)), 2)
+            );
         }
+
+        // Set up some suffixes
+        $suffixes = array('bytes', 'k', 'M', 'G', 'T');
+
+        $this->getState()->extra = [
+            'data' => $output,
+            'postUnits' => (isset($suffixes[$base]) ? $suffixes[$base] : '')
+        ];
     }
 
-    public function OutputCsvForm()
+    public function outputCsvForm()
     {
         $response = $this->getState();
 
@@ -582,7 +465,7 @@ class Stats extends Base
         // We are expecting some parameters
         $fromdt = Date::getIsoDateFromString(Kit::GetParam('fromdt', _POST, _STRING));
         $todt = Date::getIsoDateFromString(Kit::GetParam('todt', _POST, _STRING));
-        $displayID = \Xibo\Helper\Sanitize::getInt('displayid');
+        $displayID = Sanitize::getInt('displayid');
 
         if ($fromdt == $todt) {
             $todt = date("Y-m-d", strtotime($todt) + 86399);
@@ -636,13 +519,13 @@ class Stats extends Base
 
         while ($row = $db->get_assoc_row($result)) {
             // Read the columns
-            $type = \Xibo\Helper\Sanitize::string($row['Type']);
-            $fromdt = \Xibo\Helper\Sanitize::string($row['start']);
-            $todt = \Xibo\Helper\Sanitize::string($row['end']);
-            $layout = \Xibo\Helper\Sanitize::string($row['Layout']);
-            $display = \Xibo\Helper\Sanitize::string($row['Display']);
-            $media = \Xibo\Helper\Sanitize::string($row['MediaName']);
-            $tag = \Xibo\Helper\Sanitize::string($row['Tag']);
+            $type = Sanitize::string($row['Type']);
+            $fromdt = Sanitize::string($row['start']);
+            $todt = Sanitize::string($row['end']);
+            $layout = Sanitize::string($row['Layout']);
+            $display = Sanitize::string($row['Display']);
+            $media = Sanitize::string($row['MediaName']);
+            $tag = Sanitize::string($row['Tag']);
 
             $output .= "$type, $fromdt, $todt, $layout, $display, $media, $tag\n";
         }

@@ -2,38 +2,45 @@
 /*
  * Spring Signage Ltd - http://www.springsignage.com
  * Copyright (C) 2015 Spring Signage Ltd
- * (campaign-page.twig)
+ * (template-page.twig)
  */
-This is the template for the campaign page
+
 #}
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li><a class="XiboFormButton" title="{% trans "Add a new Campaign" %}" href="{{ urlFor("campaignAddForm") }}">{% trans "Add Campaign" %}</a></li>
+        <li><a title="{% trans "Open the Filter Form" %}" href="#" onclick="ToggleFilterView('Filter')">{% trans "Filter" %}</a></li>
+        <li><a class="XiboFormButton" title="{% trans "Import a Layout from a ZIP file." %}" href="{{ urlFor("layoutImportForm") }}">{% trans "Import" %}</a></li>
     </ul>
 {% endblock %}
 
 
 {% block pageContent %}
     <div class="widget">
-        <div class="widget-title">{% trans "Campaigns" %}</div>
+        <div class="widget-title">{% trans "Templates" %}</div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}">
                 <div class="XiboFilter">
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
+                            {{ inline.text("filter_name", "Name", defaults.name) }}
+                            {{ inline.text("filter_tags", "Tags", defaults.tags) }}
+                            {{ inline.checkbox("showThumbnail", "Show Thumbnails", defaults.showThumbnail) }}
                             {{ inline.checkbox("XiboFilterPinned", "Keep Open", defaults.filterPinned) }}
                         </form>
                     </div>
                 </div>
                 <div class="XiboData">
-                    <table id="campaigns" class="table table-striped">
+                    <table id="templates" class="table table-striped">
                         <thead>
                             <tr>
                                 <th>{% trans "Name" %}</th>
-                                <th>{% trans "# Layouts" %}</th>
+                                <th>{% trans "Owner" %}</th>
+                                <th>{% trans "Description" %}</th>
+                                <th>{% trans "Thumbnail" %}</th>
+                                <th>{% trans "Permissions" %}</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -49,14 +56,17 @@ This is the template for the campaign page
 
 {% block javaScript %}
     <script type="text/javascript">
-        var table = $("#campaigns").DataTable({
+        var table = $("#templates").DataTable({
             serverSide: true,
             searchDelay: 3000,
             "order": [[ 1, "asc"]],
-            ajax: "{{ urlFor("campaignSearch") }}",
+            ajax: "{{ urlFor("templateSearch") }}",
             "columns": [
-                { "data": "name" },
-                { "data": "numlayouts" },
+                { "data": "layout"},
+                { "data": "owner"},
+                { "data": "descriptionWithMarkup"},
+                { "data": "thumbnail"},
+                { "data": "permissions"},
                 {
                     "orderable": false,
                     "data": dataTableButtonsColumn

@@ -92,18 +92,6 @@ function XiboInitialise(scope) {
         return false;
     });
 
-    $(scope + " .selectAllCheckbox").click(function() {
-        // Are we checked?
-        if ($(this).is(":checked")) {
-            // Check all children
-            $("#" + scope + " .XiboData td input[type='checkbox']").prop("checked", true);
-        }
-        else {
-            // Un-check all children
-            $("#" + scope + " .XiboData td input[type='checkbox']").prop("checked", false);
-        }
-    });
-
     // Search for any Buttons that redirect to another page
     $(scope + " .XiboRedirectButton").click(function() {
 
@@ -321,6 +309,13 @@ function dataTableConfigureRefresh(gridId, table, refresh) {
             table.reload();
         }, (timeout * 1000))
     });
+}
+
+function dataTableAddColVis(table, filter) {
+    var colVis = new $.fn.dataTable.ColVis( table );
+
+    $(colVis.button()).insertAfter(filter);
+    $(".ColVis_MasterButton").addClass("btn");
 }
 
 /**

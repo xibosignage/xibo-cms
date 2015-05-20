@@ -25,6 +25,7 @@ use Kit;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Form;
 use Xibo\Helper\Help;
+use Xibo\Helper\Sanitize;
 use Xibo\Helper\Session;
 use Xibo\Helper\Theme;
 
@@ -36,13 +37,6 @@ class Resolution extends Base
      */
     function displayPage()
     {
-        // Configure the theme
-        $id = uniqid();
-        Theme::Set('id', $id);
-        Theme::Set('form_meta', '<input type="hidden" name="p" value="resolution"><input type="hidden" name="q" value="ResolutionGrid">');
-        Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
-        Theme::Set('pager', ApplicationState::Pager($id));
-
         if (\Kit::IsFilterPinned('resolution', 'ResolutionFilter')) {
             $pinned = 1;
             $enabled = Session::Get('resolution', 'filterEnabled');
@@ -51,104 +45,50 @@ class Resolution extends Base
             $pinned = 0;
         }
 
-        $formFields = array();
-        $formFields[] = Form::AddCombo(
-            'filterEnabled',
-            __('Enabled'),
-            $enabled,
-            array(array('enabledid' => 1, 'enabled' => 'Yes'), array('enabledid' => 0, 'enabled' => 'No')),
-            'enabledid',
-            'enabled',
-            NULL,
-            'e');
+        $data = [
+            'defaults' => [
+                'enabled' => $enabled,
+                'filterPinned' => $pinned
+            ]
+        ];
 
-        $formFields[] = Form::AddCheckbox('XiboFilterPinned', __('Keep Open'),
-            $pinned, NULL,
-            'k');
-
-        // Call to render the template
-        Theme::Set('header_text', __('Resolutions'));
-        Theme::Set('form_fields', $formFields);
-        $this->getState()->html .= Theme::RenderReturn('grid_render');
-    }
-
-    function actionMenu()
-    {
-
-        return array(
-            array('title' => __('Filter'),
-                'class' => '',
-                'selected' => false,
-                'link' => '#',
-                'help' => __('Open the filter form'),
-                'onclick' => 'ToggleFilterView(\'Filter\')'
-            ),
-            array('title' => __('Add Resolution'),
-                'class' => 'XiboFormButton',
-                'selected' => false,
-                'link' => 'index.php?p=resolution&q=AddForm',
-                'help' => __('Add a new resolution for use on layouts'),
-                'onclick' => ''
-            )
-        );
+        $this->getState()->template = 'resolution-page';
+        $this->getState()->setData($data);
     }
 
     /**
      * Resolution Grid
      */
-    function ResolutionGrid()
+    function grid()
     {
-        $user = $this->getUser();
-        $response = $this->getState();
+        Session::Set('resolution', 'ResolutionFilter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 
-        \Xibo\Helper\Session::Set('resolution', 'ResolutionFilter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
         // Show enabled
-        $filterEnabled = \Xibo\Helper\Sanitize::getInt('filterEnabled');
-        \Xibo\Helper\Session::Set('resolution', 'filterEnabled', $filterEnabled);
+        $filterEnabled = Sanitize::getInt('filterEnabled');
+        Session::Set('resolution', 'filterEnabled', $filterEnabled);
 
-        $resolutions = $user->ResolutionList(array('resolution'), array('enabled' => $filterEnabled));
-        $rows = array();
-
-        $cols = array(
-            array('name' => 'resolutionid', 'title' => __('ID')),
-            array('name' => 'resolution', 'title' => __('Resolution')),
-            array('name' => 'intended_width', 'title' => __('Width')),
-            array('name' => 'intended_height', 'title' => __('Height')),
-            array('name' => 'enabled', 'title' => __('Enabled?'), 'icons' => true)
-        );
-        Theme::Set('table_cols', $cols);
+        $resolutions = $this->getUser()->ResolutionList(array('resolution'), array('enabled' => $filterEnabled));
 
         foreach ($resolutions as $resolution) {
             /* @var \Xibo\Entity\Resolution $resolution */
-            $row = array();
-            $row['resolutionid'] = $resolution->resolutionId;
-            $row['resolution'] = $resolution->resolution;
-            $row['intended_width'] = $resolution->width;
-            $row['intended_height'] = $resolution->height;
-            $row['enabled'] = ($resolution->enabled) ? 1 : 0;
 
             // Edit Button
-            $row['buttons'][] = array(
+            $resolution->buttons[] = array(
                 'id' => 'resolution_button_edit',
-                'url' => 'index.php?p=resolution&q=EditForm&resolutionid=' . $row['resolutionid'],
+                'url' => 'index.php?p=resolution&q=EditForm&resolutionid=' . $resolution->resolutionId,
                 'text' => __('Edit')
             );
 
             // Delete Button
-            $row['buttons'][] = array(
+            $resolution->buttons[] = array(
                 'id' => 'resolution_button_delete',
-                'url' => 'index.php?p=resolution&q=DeleteForm&resolutionid=' . $row['resolutionid'],
+                'url' => 'index.php?p=resolution&q=DeleteForm&resolutionid=' . $resolution->resolutionId,
                 'text' => __('Delete')
             );
-
-            // Add to the rows objects
-            $rows[] = $row;
         }
 
-        Theme::Set('table_rows', $rows);
-
-        $response->SetGridResponse(Theme::RenderReturn('table_render'));
-
+        $this->getState()->template = 'grid';
+        $this->getState()->setData($resolutions);
     }
 
     /**
@@ -251,9 +191,9 @@ class Resolution extends Base
         $user =& $this->user;
         $response = $this->getState();
 
-        $resolution = \Xibo\Helper\Sanitize::getString('resolution');
-        $width = \Xibo\Helper\Sanitize::getInt('width');
-        $height = \Xibo\Helper\Sanitize::getInt('height');
+        $resolution = Sanitize::getString('resolution');
+        $width = Sanitize::getInt('width');
+        $height = Sanitize::getInt('height');
 
         // Add the resolution
         $resObject = new Resolution($db);
@@ -273,11 +213,11 @@ class Resolution extends Base
         $user =& $this->user;
         $response = $this->getState();
 
-        $resolutionID = \Xibo\Helper\Sanitize::getInt('resolutionid');
-        $resolution = \Xibo\Helper\Sanitize::getString('resolution');
-        $width = \Xibo\Helper\Sanitize::getInt('width');
-        $height = \Xibo\Helper\Sanitize::getInt('height');
-        $enabled = \Xibo\Helper\Sanitize::getCheckbox('enabled');
+        $resolutionID = Sanitize::getInt('resolutionid');
+        $resolution = Sanitize::getString('resolution');
+        $width = Sanitize::getInt('width');
+        $height = Sanitize::getInt('height');
+        $enabled = Sanitize::getCheckbox('enabled');
 
         // Edit the resolution
         $resObject = new Resolution($db);
@@ -297,7 +237,7 @@ class Resolution extends Base
         $user =& $this->user;
         $response = $this->getState();
 
-        $resolutionID = \Xibo\Helper\Sanitize::getInt('resolutionid');
+        $resolutionID = Sanitize::getInt('resolutionid');
 
         // Remove the resolution
         $resObject = new Resolution($db);

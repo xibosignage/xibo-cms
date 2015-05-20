@@ -31,26 +31,18 @@ use Xibo\Helper\Date;
 use Xibo\Helper\Form;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
+use Xibo\Helper\Sanitize;
 use Xibo\Helper\Session;
 use Xibo\Helper\Theme;
 
 
 class Display extends Base
 {
-
     /**
      * Include display page template page based on sub page selected
-     * @return
      */
     function displayPage()
     {
-        // Configure the theme
-        $id = uniqid();
-        Theme::Set('id', $id);
-        Theme::Set('form_meta', '<input type="hidden" name="p" value="display"><input type="hidden" name="q" value="DisplayGrid">');
-        Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
-        Theme::Set('pager', ApplicationState::Pager($id));
-
         // Default options
         if (\Kit::IsFilterPinned('display', 'DisplayFilter')) {
             $filter_pinned = 1;
@@ -70,64 +62,25 @@ class Display extends Base
             $filter_autoRefresh = 0;
         }
 
-        $formFields = array();
+        $data = [
+            'defaults' => [
+                'displayGroup' => $filter_displaygroup,
+                'display' => $filter_display,
+                'macAddress' => $filterMacAddress,
+                'showView' => $filter_showView,
+                'version' => $filterVersion,
+                'filterAutoRefresh' => $filter_autoRefresh,
+                'filterPinned' => $filter_pinned
+            ]
+        ];
 
-        $formFields[] = Form::AddCombo(
-            'filter_showView',
-            __('View'),
-            $filter_showView,
-            array(
-                array('key' => 0, 'value' => __('Default')),
-                array('key' => 4, 'value' => __('Default with Description')),
-                array('key' => 1, 'value' => __('Screen shot thumbnails')),
-                array('key' => 2, 'value' => __('Screen shot thumbnails when Logged In')),
-                array('key' => 3, 'value' => __('Extended Display Status'))
-            ),
-            'key',
-            'value',
-            NULL,
-            't');
-
-        $formFields[] = Form::AddText('filter_display', __('Name'), $filter_display, NULL, 'n');
-        $formFields[] = Form::AddText('filterMacAddress', __('Mac Address'), $filterMacAddress, NULL, 'm');
-
-        $displayGroups = $this->getUser()->DisplayGroupList(0);
+        $displayGroups = $this->getUser()->DisplayGroupList();
         array_unshift($displayGroups, array('displaygroupid' => '0', 'displaygroup' => 'All'));
-        $formFields[] = Form::AddCombo(
-            'filter_displaygroup',
-            __('Display Group'),
-            $filter_displaygroup,
-            $displayGroups,
-            'displaygroupid',
-            'displaygroup',
-            NULL,
-            'd');
-
-        $formFields[] = FormManager::AddNumber('filter_autoRefresh', __('Auto Refresh'), $filter_autoRefresh,
-            NULL, 'r');
-
-        $formFields[] = Form::AddCheckbox('XiboFilterPinned', __('Keep Open'),
-            $filter_pinned, NULL,
-            'k');
+        $data['displayGroup'] = $displayGroups;
 
         // Call to render the template
-        Theme::Set('header_text', __('Displays'));
-        Theme::Set('form_fields', $formFields);
-        $this->getState()->html .= Theme::RenderReturn('grid_render');
-    }
-
-    function actionMenu()
-    {
-
-        return array(
-            array('title' => __('Filter'),
-                'class' => '',
-                'selected' => false,
-                'link' => '#',
-                'help' => __('Open the filter form'),
-                'onclick' => 'ToggleFilterView(\'Filter\')'
-            )
-        );
+        $this->getState()->template = 'display-page';
+        $this->getState()->setData($data);
     }
 
     /**
@@ -141,7 +94,7 @@ class Display extends Base
         $response = $this->getState();
 
         $displayObject = new Display();
-        $displayObject->displayId = \Xibo\Helper\Sanitize::getInt('displayid');
+        $displayObject->displayId = Sanitize::getInt('displayid');
 
         $auth = $this->getUser()->DisplayGroupAuth($this->GetDisplayGroupId($displayObject->displayId), true);
         if (!$auth->edit)
@@ -151,22 +104,22 @@ class Display extends Base
             trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);
 
         // Update properties
-        $displayObject->display = \Xibo\Helper\Sanitize::getString('display');
-        $displayObject->description = \Xibo\Helper\Sanitize::getString('description');
-        $displayObject->isAuditing = \Xibo\Helper\Sanitize::getInt('auditing');
-        $displayObject->defaultLayoutId = \Xibo\Helper\Sanitize::getInt('defaultlayoutid');
-        $displayObject->licensed = \Xibo\Helper\Sanitize::getInt('licensed');
-        $displayObject->incSchedule = \Xibo\Helper\Sanitize::getInt('inc_schedule');
-        $displayObject->emailAlert = \Xibo\Helper\Sanitize::getInt('email_alert');
-        $displayObject->alertTimeout = \Xibo\Helper\Sanitize::getCheckbox('alert_timeout');
-        $displayObject->wakeOnLanEnabled = \Xibo\Helper\Sanitize::getCheckbox('wakeOnLanEnabled');
-        $displayObject->wakeOnLanTime = \Xibo\Helper\Sanitize::getString('wakeOnLanTime');
-        $displayObject->broadCastAddress = \Xibo\Helper\Sanitize::getString('broadCastAddress');
-        $displayObject->secureOn = \Xibo\Helper\Sanitize::getString('secureOn');
-        $displayObject->cidr = \Xibo\Helper\Sanitize::getString('cidr');
+        $displayObject->display = Sanitize::getString('display');
+        $displayObject->description = Sanitize::getString('description');
+        $displayObject->isAuditing = Sanitize::getInt('auditing');
+        $displayObject->defaultLayoutId = Sanitize::getInt('defaultlayoutid');
+        $displayObject->licensed = Sanitize::getInt('licensed');
+        $displayObject->incSchedule = Sanitize::getInt('inc_schedule');
+        $displayObject->emailAlert = Sanitize::getInt('email_alert');
+        $displayObject->alertTimeout = Sanitize::getCheckbox('alert_timeout');
+        $displayObject->wakeOnLanEnabled = Sanitize::getCheckbox('wakeOnLanEnabled');
+        $displayObject->wakeOnLanTime = Sanitize::getString('wakeOnLanTime');
+        $displayObject->broadCastAddress = Sanitize::getString('broadCastAddress');
+        $displayObject->secureOn = Sanitize::getString('secureOn');
+        $displayObject->cidr = Sanitize::getString('cidr');
         $displayObject->latitude = \Kit::GetParam('latitude', _POST, _DOUBLE);
         $displayObject->longitude = \Kit::GetParam('longitude', _POST, _DOUBLE);
-        $displayObject->displayProfileId = \Xibo\Helper\Sanitize::getInt('displayprofileid');
+        $displayObject->displayProfileId = Sanitize::getInt('displayprofileid');
 
         if (!$displayObject->Edit())
             trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);
@@ -184,7 +137,7 @@ class Display extends Base
 
         // Get the display Id
         $displayObject = new Display();
-        $displayObject->displayId = \Xibo\Helper\Sanitize::getInt('displayid');
+        $displayObject->displayId = Sanitize::getInt('displayid');
 
         $auth = $this->getUser()->DisplayGroupAuth($this->GetDisplayGroupId($displayObject->displayId), true);
         if (!$auth->edit)
@@ -372,264 +325,205 @@ class Display extends Base
 
     /**
      * Grid of Displays
-     * @return
      */
-    function DisplayGrid()
+    function grid()
     {
         // validate displays so we get a realistic view of the table
-        Display::ValidateDisplays();
+        //Display::ValidateDisplays();
 
-
-        $user =& $this->user;
-        $response = new ApplicationState();
+        $user = $this->getUser();
 
         // Filter by Name
-        $filter_display = \Xibo\Helper\Sanitize::getString('filter_display');
-        \Xibo\Helper\Session::Set('display', 'filter_display', $filter_display);
+        $filter_display = Sanitize::getString('filter_display');
+        Session::Set('display', 'filter_display', $filter_display);
 
         // Filter by Name
-        $filterMacAddress = \Xibo\Helper\Sanitize::getString('filterMacAddress');
-        \Xibo\Helper\Session::Set('display', 'filterMacAddress', $filterMacAddress);
+        $filterMacAddress = Sanitize::getString('filterMacAddress');
+        Session::Set('display', 'filterMacAddress', $filterMacAddress);
 
         // Display Group
-        $filter_displaygroupid = \Xibo\Helper\Sanitize::getInt('filter_displaygroup');
-        \Xibo\Helper\Session::Set('display', 'filter_displaygroup', $filter_displaygroupid);
+        $filter_displaygroupid = Sanitize::getInt('filter_displaygroup');
+        Session::Set('display', 'filter_displaygroup', $filter_displaygroupid);
 
         // Thumbnail?
-        $filter_showView = \Xibo\Helper\Sanitize::getInt('filter_showView');
-        \Xibo\Helper\Session::Set('display', 'filter_showView', $filter_showView);
+        $filter_showView = Sanitize::getInt('filter_showView');
+        Session::Set('display', 'filter_showView', $filter_showView);
 
-        $filterVersion = Kit::GetParam('filterVersion', _REQUEST, _STRING);
-        setSession('display', 'filterVersion', $filterVersion);
+        $filterVersion = Sanitize::getString('filterVersion');
+        Session::Set('display', 'filterVersion', $filterVersion);
 
         // filter_autoRefresh?
-        $filter_autoRefresh = \Kit::GetParam('filter_autoRefresh', _REQUEST, _INT, 0);
-        \Xibo\Helper\Session::Set('display', 'filter_autoRefresh', $filter_autoRefresh);
+        $filter_autoRefresh = Sanitize::getCheckbox('filter_autoRefresh', 0);
+        Session::Set('display', 'filter_autoRefresh', $filter_autoRefresh);
 
         // Pinned option?
-        \Xibo\Helper\Session::Set('display', 'DisplayFilter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        Session::Set('display', 'DisplayFilter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 
-        $displays = $user->DisplayList(array('displayid'), array('displaygroupid' => $filter_displaygroupid, 'display' => $filter_display, 'macAddress' => $filterMacAddress, 'clientVersion' => $filterVersion));
-
-        if (!is_array($displays)) {
-            trigger_error($db->error());
-            trigger_error(__('Unable to get list of displays'), E_USER_ERROR);
-        }
-
-        // Do we want to make a VNC link out of the display name?
-        $vncTemplate = Config::GetSetting('SHOW_DISPLAY_AS_VNCLINK');
-        $linkTarget = \Xibo\Helper\Sanitize::string(Config::GetSetting('SHOW_DISPLAY_AS_VNC_TGT'));
-
-        $cols = array(
-            array('name' => 'displayid', 'title' => __('ID')),
-            array('name' => 'displayWithLink', 'title' => __('Display')),
-            array('name' => 'status', 'title' => __('Status'), 'icons' => true, 'iconDescription' => 'statusDescription'),
-            array('name' => 'licensed', 'title' => __('License'), 'icons' => true),
-            array('name' => 'currentLayout', 'title' => __('Current Layout'), 'hidden' => ($filter_showView != 3)),
-            array('name' => 'storageAvailableSpaceFormatted', 'title' => __('Storage Available'), 'hidden' => ($filter_showView != 3)),
-            array('name' => 'storageTotalSpaceFormatted', 'title' => __('Storage Total'), 'hidden' => ($filter_showView != 3)),
-            array('name' => 'storagePercentage', 'title' => __('Storage Free %'), 'hidden' => ($filter_showView != 3)),
-                array('name' => 'description', 'title' => __('Description'), 'hidden' => ($filter_showView != 4)),
-                array('name' => 'layout', 'title' => __('Default Layout'), 'hidden' => ($filter_showView != 0)),
-            array('name' => 'inc_schedule', 'title' => __('Interleave Default'), 'icons' => true, 'hidden' => ($filter_showView == 1 || $filter_showView == 2)),
-            array('name' => 'email_alert', 'title' => __('Email Alert'), 'icons' => true, 'hidden' => ($filter_showView != 0)),
-            array('name' => 'loggedin', 'title' => __('Logged In'), 'icons' => true),
-            array('name' => 'lastaccessed', 'title' => __('Last Accessed')),
-                array('name' => 'clientVersionCombined', 'title' => __('Version'), 'hidden' => ($filter_showView != 3)),
-            array('name' => 'clientaddress', 'title' => __('IP Address'), 'hidden' => ($filter_showView == 1)),
-            array('name' => 'macaddress', 'title' => __('Mac Address'), 'hidden' => ($filter_showView == 1)),
-            array('name' => 'screenShotRequested', 'title' => __('Screen shot?'), 'icons' => true, 'hidden' => ($filter_showView != 1 && $filter_showView != 2)),
-            array('name' => 'thumbnail', 'title' => __('Thumbnail'), 'hidden' => ($filter_showView != 1 && $filter_showView != 2))
+        $displays = $user->DisplayList(array('displayid'), array(
+            'displaygroupid' => $filter_displaygroupid,
+            'display' => $filter_display,
+            'macAddress' => $filterMacAddress,
+            'clientVersion' => $filterVersion)
         );
 
-        Theme::Set('table_cols', $cols);
-        Theme::Set('rowClass', 'rowColor');
+        foreach ($displays as $display) {
 
-        $rows = array();
-
-        foreach ($displays as $row) {
-            // VNC Template as display name?
-            if ($vncTemplate != '' && $row['clientaddress'] != '') {
-                if ($linkTarget == '')
-                    $linkTarget = '_top';
-
-                $row['displayWithLink'] = sprintf('<a href="' . $vncTemplate . '" title="VNC to ' . $row['display'] . '" target="' . $linkTarget . '">' . Theme::Prepare($row['display']) . '</a>', $row['clientaddress']);
-            } else {
-                $row['displayWithLink'] = $row['display'];
-            }
+            /* @var \Xibo\Entity\Display $display */
 
             // Format last accessed
-            $row['lastaccessed'] = Date::getLocalDate($row['lastaccessed']);
-
-            // Create some login lights
-            $row['rowColor'] = ($row['mediainventorystatus'] == 1) ? 'success' : (($row['mediainventorystatus'] == 2) ? 'danger' : 'warning');
+            $display->lastAccessed = Date::getLocalDate($display->lastAccessed);
 
             // Set some text for the display status
-            switch ($row['mediainventorystatus']) {
+            switch ($display->mediaInventoryStatus) {
                 case 1:
-                    $row['statusDescription'] = __('Display is up to date');
+                    $display->statusDescription = __('Display is up to date');
                     break;
 
                 case 2:
-                    $row['statusDescription'] = __('Display is downloading new files');
+                    $display->statusDescription = __('Display is downloading new files');
                     break;
 
                 case 3:
-                    $row['statusDescription'] = __('Display is out of date but has not yet checked in with the server');
+                    $display->statusDescription = __('Display is out of date but has not yet checked in with the server');
                     break;
 
                 default:
-                    $row['statusDescription'] = __('Unknown Display Status');
+                    $display->statusDescription = __('Unknown Display Status');
             }
 
-            $row['status'] = ($row['mediainventorystatus'] == 1) ? 1 : (($row['mediainventorystatus'] == 2) ? 0 : -1);
+            $display->status = ($display->mediaInventoryStatus == 1) ? 1 : (($display->mediaInventoryStatus == 2) ? 0 : -1);
 
             // Thumbnail
-            $row['thumbnail'] = '';
+            $display->thumbnail = '';
             // If we aren't logged in, and we are showThumbnail == 2, then show a circle
-            if ($filter_showView == 2 && $row['loggedin'] == 0) {
-                $row['thumbnail'] = '<i class="fa fa-times-circle"></i>';
-            } else if ($filter_showView <> 0 && file_exists(Config::GetSetting('LIBRARY_LOCATION') . 'screenshots/' . $row['displayid'] . '_screenshot.jpg')) {
-                $row['thumbnail'] = '<a data-toggle="lightbox" data-type="image" href="index.php?p=display&q=ScreenShot&DisplayId=' . $row['displayid'] . '"><img class="display-screenshot" src="index.php?p=display&q=ScreenShot&DisplayId=' . $row['displayid'] . '&' . \Kit::uniqueId() . '" /></a>';
+            if (file_exists(Config::GetSetting('LIBRARY_LOCATION') . 'screenshots/' . $display->displayid . '_screenshot.jpg')) {
+                $display->thumbnail = 'index.php?p=display&q=ScreenShot&DisplayId=' . $display->displayid;
             }
 
-            // Version
-            $row['clientVersionCombined'] = $row['client_type'] . ' / ' . $row['client_version'];
-
             // Format the storage available / total space
-            $row['storageAvailableSpaceFormatted'] = \Kit::formatBytes($row['storageAvailableSpace']);
-            $row['storageTotalSpaceFormatted'] = \Kit::formatBytes($row['storageTotalSpace']);
-            $row['storagePercentage'] = ($row['storageTotalSpace'] == 0) ? 100 : round($row['storageAvailableSpace'] / $row['storageTotalSpace'] * 100.0, 2);
+            $display->storagePercentage = ($display->storageTotalSpace == 0) ? 100 : round($display->storageAvailableSpace / $display->storageTotalSpace * 100.0, 2);
 
             // Edit and Delete buttons first
-            if ($row['edit'] == 1) {
+            if ($this->getUser()->checkEditable($display)) {
                 // Edit
-                $row['buttons'][] = array(
+                $display->buttons[] = array(
                     'id' => 'display_button_edit',
-                    'url' => 'index.php?p=display&q=displayForm&displayid=' . $row['displayid'],
+                    'url' => 'index.php?p=display&q=displayForm&displayid=' . $display->displayid,
                     'text' => __('Edit')
                 );
             }
 
             // Delete
-            if ($row['del'] == 1) {
-                $row['buttons'][] = array(
+            if ($this->getUser()->checkDeleteable($display)) {
+                $display->buttons[] = array(
                     'id' => 'display_button_delete',
-                    'url' => 'index.php?p=display&q=DeleteForm&displayid=' . $row['displayid'],
+                    'url' => 'index.php?p=display&q=DeleteForm&displayid=' . $display->displayid,
                     'text' => __('Delete')
                 );
             }
 
-            if ($row['edit'] == 1 || $row['del'] == 1) {
-                $row['buttons'][] = ['divider' => true];
+            if ($this->getUser()->checkEditable($display) || $this->getUser()->checkDeleteable($display)) {
+                $display->buttons[] = ['divider' => true];
             }
 
             // Schedule Now
-            if ($row['edit'] == 1 || Config::GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes') {
-                $row['buttons'][] = array(
+            if ($this->getUser()->checkEditable($display) || Config::GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes') {
+                $display->buttons[] = array(
                     'id' => 'display_button_schedulenow',
-                    'url' => 'index.php?p=schedule&q=ScheduleNowForm&displayGroupId=' . $row['displaygroupid'],
+                    'url' => 'index.php?p=schedule&q=ScheduleNowForm&displayGroupId=' . $display->displaygroupid,
                     'text' => __('Schedule Now')
                 );
             }
 
-            if ($row['edit'] == 1) {
+            if ($this->getUser()->checkEditable($display)) {
 
                 // Default Layout
-                $row['buttons'][] = array(
+                $display->buttons[] = array(
                     'id' => 'display_button_defaultlayout',
-                    'url' => 'index.php?p=display&q=DefaultLayoutForm&DisplayId=' . $row['displayid'],
+                    'url' => 'index.php?p=display&q=DefaultLayoutForm&DisplayId=' . $display->displayid,
                     'text' => __('Default Layout')
                 );
 
                 // File Associations
-                $row['buttons'][] = array(
+                $display->buttons[] = array(
                     'id' => 'displaygroup_button_fileassociations',
-                    'url' => 'index.php?p=displaygroup&q=FileAssociations&DisplayGroupID=' . $row['displaygroupid'],
+                    'url' => 'index.php?p=displaygroup&q=FileAssociations&DisplayGroupID=' . $display->displaygroupid,
                     'text' => __('Assign Files')
                 );
 
                 // Screen Shot
-                $row['buttons'][] = array(
+                $display->buttons[] = array(
                     'id' => 'display_button_requestScreenShot',
-                    'url' => 'index.php?p=display&q=RequestScreenShotForm&displayId=' . $row['displayid'],
+                    'url' => 'index.php?p=display&q=RequestScreenShotForm&displayId=' . $display->displayid,
                     'text' => __('Request Screen Shot'),
                     'multi-select' => true,
                     'dataAttributes' => array(
                         array('name' => 'multiselectlink', 'value' => 'index.php?p=display&q=RequestScreenShot'),
-                        array('name' => 'rowtitle', 'value' => $row['display']),
-                        array('name' => 'displayId', 'value' => $row['displayid'])
+                        array('name' => 'rowtitle', 'value' => $display->display),
+                        array('name' => 'displayId', 'value' => $display->displayid)
                     )
                 );
 
-                $row['buttons'][] = ['divider' => true];
+                $display->buttons[] = ['divider' => true];
             }
 
             // Media Inventory
-            $row['buttons'][] = array(
+            $display->buttons[] = array(
                 'id' => 'display_button_mediainventory',
-                'url' => 'index.php?p=display&q=MediaInventory&DisplayId=' . $row['displayid'],
+                'url' => 'index.php?p=display&q=MediaInventory&DisplayId=' . $display->displayid,
                 'text' => __('Media Inventory')
             );
 
-            if ($row['edit'] == 1) {
+            if ($this->getUser()->checkEditable($display)) {
 
                 // Logs
-                $row['buttons'][] = array(
+                $display->buttons[] = array(
                     'id' => 'displaygroup_button_logs',
-                    'url' => 'index.php?p=log&q=LastHundredForDisplay&displayid=' . $row['displayid'],
+                    'url' => 'index.php?p=log&q=LastHundredForDisplay&displayid=' . $display->displayid,
                     'text' => __('Recent Log')
                 );
 
-                $row['buttons'][] = ['divider' => true];
+                $display->buttons[] = ['divider' => true];
             }
 
-            if ($row['modifypermissions'] == 1) {
+            if ($this->getUser()->checkPermissionsModifyable($display)) {
 
                 // Display Groups
-                $row['buttons'][] = array(
+                $display->buttons[] = array(
                     'id' => 'display_button_group_membership',
-                    'url' => 'index.php?p=display&q=MemberOfForm&DisplayID=' . $row['displayid'],
+                    'url' => 'index.php?p=display&q=MemberOfForm&DisplayID=' . $display->displayid,
                     'text' => __('Display Groups')
                 );
 
                 // Permissions
-                $row['buttons'][] = array(
+                $display->buttons[] = array(
                     'id' => 'display_button_group_membership',
-                    'url' => 'index.php?p=displaygroup&q=PermissionsForm&DisplayGroupID=' . $row['displaygroupid'],
+                    'url' => 'index.php?p=displaygroup&q=PermissionsForm&DisplayGroupID=' . $display->displaygroupid,
                     'text' => __('Permissions')
                 );
 
                 // Version Information
-                $row['buttons'][] = array(
+                $display->buttons[] = array(
                     'id' => 'display_button_version_instructions',
-                    'url' => 'index.php?p=displaygroup&q=VersionInstructionsForm&displaygroupid=' . $row['displaygroupid'] . '&displayid=' . $row['displayid'],
+                    'url' => 'index.php?p=displaygroup&q=VersionInstructionsForm&displaygroupid=' . $display->displaygroupid . '&displayid=' . $display->displayid,
                     'text' => __('Version Information')
                 );
 
-                $row['buttons'][] = ['divider' => true];
+                $display->buttons[] = ['divider' => true];
             }
 
-            if ($row['edit'] == 1) {
+            if ($this->getUser()->checkEditable($display)) {
                 // Wake On LAN
-                $row['buttons'][] = array(
+                $display->buttons[] = array(
                     'id' => 'display_button_wol',
-                    'url' => 'index.php?p=display&q=WakeOnLanForm&DisplayId=' . $row['displayid'],
+                    'url' => 'index.php?p=display&q=WakeOnLanForm&DisplayId=' . $display->displayid,
                     'text' => __('Wake on LAN')
                 );
             }
-
-            // Assign this to the table row
-            $rows[] = $row;
         }
 
-        Theme::Set('table_rows', $rows);
-
-        $output = Theme::RenderReturn('table_render');
-
-        $response->SetGridResponse($output);
-        $response->refresh = \Kit::GetParam('filter_autoRefresh', _REQUEST, _INT, 0);
-
+        $this->getState()->template = 'grid';
+        $this->getState()->setData($displays);
     }
 
     /**
@@ -640,7 +534,7 @@ class Display extends Base
 
         $user = $this->getUser();
         $response = $this->getState();
-        $displayid = \Xibo\Helper\Sanitize::getInt('displayid');
+        $displayid = Sanitize::getInt('displayid');
 
         // Auth
         $auth = $this->getUser()->DisplayGroupAuth($this->GetDisplayGroupId($displayid), true);
@@ -695,7 +589,7 @@ class Display extends Base
 
         $response = $this->getState();
 
-        $displayId = \Xibo\Helper\Sanitize::getInt('DisplayId');
+        $displayId = Sanitize::getInt('DisplayId');
 
         $auth = $this->getUser()->DisplayGroupAuth($this->GetDisplayGroupId($displayId), true);
         if (!$auth->edit)
@@ -741,8 +635,8 @@ class Display extends Base
         $response = $this->getState();
         $displayObject = new Display($db);
 
-        $displayId = \Xibo\Helper\Sanitize::getInt('DisplayId');
-        $defaultLayoutId = \Xibo\Helper\Sanitize::getInt('defaultlayoutid');
+        $displayId = Sanitize::getInt('DisplayId');
+        $defaultLayoutId = Sanitize::getInt('defaultlayoutid');
 
         $auth = $this->getUser()->DisplayGroupAuth($this->GetDisplayGroupId($displayId), true);
         if (!$auth->edit)
@@ -762,7 +656,7 @@ class Display extends Base
     {
 
         $response = $this->getState();
-        $displayId = \Xibo\Helper\Sanitize::getInt('DisplayId');
+        $displayId = Sanitize::getInt('DisplayId');
 
         $auth = $this->getUser()->DisplayGroupAuth($this->GetDisplayGroupId($displayId), true);
         if (!$auth->view)
@@ -846,7 +740,7 @@ class Display extends Base
     {
 
         $response = $this->getState();
-        $displayID = \Xibo\Helper\Sanitize::getInt('DisplayID');
+        $displayID = Sanitize::getInt('DisplayID');
 
         // Auth
         $auth = $this->getUser()->DisplayGroupAuth($this->GetDisplayGroupId($displayID), true);
@@ -929,7 +823,7 @@ class Display extends Base
 
         $displayGroupObject = new DisplayGroup($db);
 
-        $displayID = \Xibo\Helper\Sanitize::getInt('DisplayID');
+        $displayID = Sanitize::getInt('DisplayID');
         $displayGroups = \Kit::GetParam('DisplayGroupID', _POST, _ARRAY, array());
         $members = array();
 
@@ -948,7 +842,7 @@ class Display extends Base
 
         while ($row = $db->get_assoc_row($resultIn)) {
             // Test whether this ID is in the array or not
-            $displayGroupID = \Xibo\Helper\Sanitize::int($row['DisplayGroupID']);
+            $displayGroupID = Sanitize::int($row['DisplayGroupID']);
 
             if (!in_array($displayGroupID, $displayGroups)) {
                 // Its currently assigned but not in the $displays array
@@ -982,7 +876,7 @@ class Display extends Base
 
         $response = $this->getState();
 
-        $displayId = \Xibo\Helper\Sanitize::getInt('DisplayId');
+        $displayId = Sanitize::getInt('DisplayId');
 
         // Get the MAC Address
         $macAddress = $db->GetSingleValue(sprintf("SELECT MacAddress FROM `display` WHERE DisplayID = %d", $displayId), 'MacAddress', _STRING);
@@ -1014,7 +908,7 @@ class Display extends Base
         $response = $this->getState();
         $displayObject = new Display($db);
 
-        $displayId = \Xibo\Helper\Sanitize::getInt('DisplayId');
+        $displayId = Sanitize::getInt('DisplayId');
 
         if (!$displayObject->WakeOnLan($displayId))
             trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);
@@ -1025,7 +919,7 @@ class Display extends Base
 
     public function ScreenShot()
     {
-        $displayId = \Xibo\Helper\Sanitize::getInt('DisplayId');
+        $displayId = Sanitize::getInt('DisplayId');
 
         // Output an image if present, otherwise not found image.
         $file = 'screenshots/' . $displayId . '_screenshot.jpg';
@@ -1060,7 +954,7 @@ class Display extends Base
 
         $response = $this->getState();
 
-        $displayId = \Xibo\Helper\Sanitize::getInt('displayId');
+        $displayId = Sanitize::getInt('displayId');
 
         // Set some information about the form
         Theme::Set('form_id', 'RequestScreenShotForm');
@@ -1083,7 +977,7 @@ class Display extends Base
         $response = $this->getState();
         $displayObject = new Display($db);
 
-        $displayId = \Xibo\Helper\Sanitize::getInt('displayId');
+        $displayId = Sanitize::getInt('displayId');
 
         if (!$displayObject->RequestScreenShot($displayId))
             trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);

@@ -28,83 +28,41 @@ use Xibo\Helper\Help;
 use Xibo\Helper\Theme;
 
 
-// Companion classes
-
-
 class DisplayProfile extends Base
 {
     /**
      * Include display page template page based on sub page selected
-     * @return
      */
     function displayPage()
     {
-        // Configure the theme
-        $id = uniqid();
-        Theme::Set('id', $id);
-        Theme::Set('form_meta', '<input type="hidden" name="p" value="displayprofile"><input type="hidden" name="q" value="Grid">');
-        Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
-        Theme::Set('pager', ApplicationState::Pager($id));
-
-        // Call to render the template
-        Theme::Set('header_text', __('Display Setting Profiles'));
-        Theme::Set('form_fields', array());
-        $this->getState()->html .= Theme::RenderReturn('grid_render');
-    }
-
-    function actionMenu()
-    {
-
-        return array(
-            array('title' => __('Add Profile'),
-                'class' => 'XiboFormButton',
-                'selected' => false,
-                'link' => 'index.php?p=displayprofile&q=AddForm',
-                'help' => __('Add a new Display Settings Profile'),
-                'onclick' => ''
-            )
-        );
+        $this->getState()->template = 'displayprofile-page';
     }
 
     function Grid()
     {
+        $profiles = $this->getUser()->DisplayProfileList();
 
-        $cols = array(
-            array('name' => 'name', 'title' => __('Name')),
-            array('name' => 'type', 'title' => __('Type')),
-            array('name' => 'isdefault', 'title' => __('Default'), 'icons' => true)
-        );
-        Theme::Set('table_cols', $cols);
-
-        $rows = array();
-
-        foreach ($this->getUser()->DisplayProfileList() as $profile) {
+        foreach ($profiles as $profile) {
+            /* @var \Xibo\Entity\DisplayProfile $profile */
 
             // Default Layout
-            $profile['buttons'][] = array(
+            $profile->buttons[] = array(
                 'id' => 'displayprofile_button_edit',
-                'url' => 'index.php?p=displayprofile&q=EditForm&displayprofileid=' . $profile['displayprofileid'],
+                'url' => 'index.php?p=displayprofile&q=EditForm&displayprofileid=' . $profile->displayProfileId,
                 'text' => __('Edit')
             );
 
-            if ($profile['del'] == 1) {
-                $profile['buttons'][] = array(
+            if ($this->getUser()->checkDeleteable($profile)) {
+                $profile->buttons[] = array(
                     'id' => 'displayprofile_button_delete',
-                    'url' => 'index.php?p=displayprofile&q=DeleteForm&displayprofileid=' . $profile['displayprofileid'],
+                    'url' => 'index.php?p=displayprofile&q=DeleteForm&displayprofileid=' . $profile->displayProfileId,
                     'text' => __('Delete')
                 );
             }
-
-            $rows[] = $profile;
         }
 
-        Theme::Set('table_rows', $rows);
-
-        $output = Theme::RenderReturn('table_render');
-
-        $response = $this->getState();
-        $response->SetGridResponse($output);
-
+        $this->getState()->template = 'grid';
+        $this->getState()->setData($profiles);
     }
 
     function AddForm()

@@ -23,6 +23,8 @@ namespace Xibo\Entity;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DisplayFactory;
+use Xibo\Factory\DisplayGroupFactory;
+use Xibo\Factory\DisplayProfileFactory;
 use Xibo\Factory\MenuFactory;
 use Xibo\Factory\PageFactory;
 use Xibo\Factory\UserFactory;
@@ -623,75 +625,29 @@ class User
     }
 
     /**
-     * Authenticates the current user and returns an array of display groups this user is authenticated on
-     * @return
+     * List of Displays this user has access to view
+     * @param array $sortOrder
+     * @param array $filterBy
+     * @return array[Display]
      */
-    public function DisplayGroupList($isDisplaySpecific = 0, $name = '')
+    public function DisplayGroupList($sortOrder = array('displayGroupId'), $filterBy = array())
     {
+        // Get the Layouts
+        $displayGroups = DisplayGroupFactory::query($sortOrder, $filterBy);
 
-        $userid =& $this->userId;
+        if ($this->userTypeId == 1)
+            return $displayGroups;
 
-        $SQL = "SELECT displaygroup.DisplayGroupID, displaygroup.DisplayGroup, displaygroup.IsDisplaySpecific, displaygroup.Description ";
-        if ($isDisplaySpecific == 1)
-            $SQL .= " , lkdisplaydg.DisplayID ";
+        foreach ($displayGroups as $key => $group) {
+            /* @var \Xibo\Entity\DisplayGroup $group */
 
-        $SQL .= "  FROM displaygroup ";
+            // Check to see if we are the owner
+            if ($group->ownerId == $this->userId)
+                continue;
 
-        // If we are only interested in displays, then return the display
-        if ($isDisplaySpecific == 1) {
-            $SQL .= "   INNER JOIN lkdisplaydg ";
-            $SQL .= "   ON lkdisplaydg.DisplayGroupID = displaygroup.DisplayGroupID ";
-        }
-
-        $SQL .= " WHERE 1 = 1 ";
-
-        if ($name != '') {
-            // convert into a space delimited array
-            $names = explode(' ', $name);
-
-            foreach ($names as $searchName) {
-                // Not like, or like?
-                if (substr($searchName, 0, 1) == '-')
-                    $SQL .= " AND  (displaygroup.DisplayGroup NOT LIKE '%" . sprintf('%s', ltrim($db->escape_string($searchName), '-')) . "%') ";
-                else
-                    $SQL .= " AND  (displaygroup.DisplayGroup LIKE '%" . sprintf('%s', $db->escape_string($searchName)) . "%') ";
-            }
-        }
-
-        if ($isDisplaySpecific != -1)
-            $SQL .= sprintf(" AND displaygroup.IsDisplaySpecific = %d ", $isDisplaySpecific);
-
-        $SQL .= " ORDER BY displaygroup.DisplayGroup ";
-
-        Log::debug(sprintf('Retreiving list of displaygroups for %s with SQL: %s', $this->userName, $SQL));
-
-        if (!$result = $this->db->query($SQL)) {
-            trigger_error($this->db->error());
-            return false;
-        }
-
-        $displayGroups = array();
-
-        while ($row = $this->db->get_assoc_row($result)) {
-            $displayGroupItem = array();
-
-            // Validate each param and add it to the array.
-            $displayGroupItem['displaygroupid'] = \Xibo\Helper\Sanitize::int($row['DisplayGroupID']);
-            $displayGroupItem['displaygroup'] = \Xibo\Helper\Sanitize::string($row['DisplayGroup']);
-            $displayGroupItem['description'] = \Xibo\Helper\Sanitize::string($row['Description']);
-            $displayGroupItem['isdisplayspecific'] = \Xibo\Helper\Sanitize::string($row['IsDisplaySpecific']);
-            $displayGroupItem['displayid'] = (($isDisplaySpecific == 1) ? \Xibo\Helper\Sanitize::int($row['DisplayID']) : 0);
-
-            $auth = $this->DisplayGroupAuth($displayGroupItem['displaygroupid'], true);
-
-            if ($auth->view) {
-                $displayGroupItem['view'] = (int)$auth->view;
-                $displayGroupItem['edit'] = (int)$auth->edit;
-                $displayGroupItem['del'] = (int)$auth->del;
-                $displayGroupItem['modifypermissions'] = (int)$auth->modifyPermissions;
-
-                $displayGroups[] = $displayGroupItem;
-            }
+            // Check we are viewable
+            if (!$this->checkViewable($group))
+                unset($displayGroups[$key]);
         }
 
         return $displayGroups;
@@ -820,62 +776,27 @@ class User
     /**
      * List of Displays this user has access to view
      */
-    public function DisplayProfileList($sort_order = array('name'), $filter_by = array())
+    public function DisplayProfileList($sortOrder = array('name'), $filterBy = array())
     {
+        // Get the Layouts
+        $profiles = DisplayProfileFactory::query($sortOrder, $filterBy);
 
-        try {
-            $dbh = \Xibo\Storage\PDOConnect::init();
-
-            $params = array();
-            $SQL = 'SELECT displayprofileid, name, type, config, isdefault, userid FROM displayprofile ';
-
-            $type = \Kit::GetParam('type', $filter_by, _WORD);
-            if (!empty($type)) {
-                $SQL .= ' WHERE type = :type ';
-                $params['type'] = $type;
-            }
-
-            // Sorting?
-            if (is_array($sort_order))
-                $SQL .= 'ORDER BY ' . implode(',', $sort_order);
-
-            $sth = $dbh->prepare($SQL);
-            $sth->execute($params);
-
-            $profiles = array();
-
-            while ($row = $sth->fetch()) {
-                $displayItem = array();
-
-                // Validate each param and add it to the array.
-                $displayItem['displayprofileid'] = \Xibo\Helper\Sanitize::int($row['displayprofileid']);
-                $displayItem['name'] = \Xibo\Helper\Sanitize::string($row['name']);
-                $displayItem['type'] = \Xibo\Helper\Sanitize::string($row['type']);
-                $displayItem['config'] = \Xibo\Helper\Sanitize::string($row['config']);
-                $displayItem['isdefault'] = \Xibo\Helper\Sanitize::int($row['isdefault']);
-                $displayItem['userid'] = \Xibo\Helper\Sanitize::int($row['userid']);
-
-                $auth = new PermissionManager($this);
-
-                // If we are the owner, or a super admin then give full permissions
-                if ($this->userTypeId != 1 && $this->userId != $displayItem['userid'])
-                    continue;
-
-                $displayItem['view'] = 1;
-                $displayItem['edit'] = 1;
-                $displayItem['del'] = 1;
-                $displayItem['modifypermissions'] = 1;
-
-                $profiles[] = $displayItem;
-            }
-
+        if ($this->userTypeId == 1)
             return $profiles;
-        } catch (Exception $e) {
 
-            Debug::LogEntry('error', $e->getMessage(), get_class(), __FUNCTION__);
+        foreach ($profiles as $key => $profile) {
+            /* @var \Xibo\Entity\DisplayProfile $profile */
 
-            return false;
+            // Check to see if we are the owner
+            if ($profile->getOwnerId() == $this->userId)
+                continue;
+
+            // Check we are viewable
+            if (!$this->checkViewable($profile))
+                unset($profiles[$key]);
         }
+
+        return $profiles;
     }
 
     public function userList($sortOrder = array('username'), $filterBy = array())

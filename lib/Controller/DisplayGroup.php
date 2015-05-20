@@ -33,120 +33,78 @@ class DisplayGroup extends Base
      */
     public function displayPage()
     {
-        // Configure the theme
-        $id = uniqid();
-        Theme::Set('id', $id);
-        Theme::Set('form_meta', '<input type="hidden" name="p" value="displaygroup"><input type="hidden" name="q" value="Grid">');
-        Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
-        Theme::Set('pager', ApplicationState::Pager($id));
-
-        // Call to render the template
-        Theme::Set('header_text', __('Display Groups'));
-        Theme::Set('form_fields', array());
-        $this->getState()->html .= Theme::RenderReturn('grid_render');
-    }
-
-    function actionMenu()
-    {
-
-        return array(
-            array('title' => __('Add Display Group'),
-                'class' => 'XiboFormButton',
-                'selected' => false,
-                'link' => 'index.php?p=displaygroup&q=AddForm',
-                'help' => __('Add a new Display Group'),
-                'onclick' => ''
-            )
-        );
+        $this->getState()->template = 'displaygroup-page';
     }
 
     /**
      * Shows the Display groups
-     * @return
      */
-    public function Grid()
+    public function grid()
     {
-
-        $user = $this->getUser();
-        $response = new ApplicationState();
-
         $displayGroups = $this->getUser()->DisplayGroupList();
 
-        if (!is_array($displayGroups))
-            trigger_error(__('Cannot get list of display groups.'), E_USER_ERROR);
+        foreach ($displayGroups as $group) {
+            /* @var \Xibo\Entity\DisplayGroup $group */
 
-        $cols = array(
-            array('name' => 'displaygroup', 'title' => __('Name')),
-            array('name' => 'description', 'title' => __('Description'))
-        );
-        Theme::Set('table_cols', $cols);
-
-        $rows = array();
-
-        foreach ($displayGroups as $row) {
-            if ($row['isdisplayspecific'] != 0)
+            if ($group->isDisplaySpecific != 0)
                 continue;
 
-            if ($row['edit'] == 1) {
+            if ($this->getUser()->checkEditable($group)) {
                 // Show the edit button, members button
 
                 // Group Members
-                $row['buttons'][] = array(
+                $group->buttons[] = array(
                     'id' => 'displaygroup_button_group_members',
-                    'url' => 'index.php?p=displaygroup&q=MembersForm&DisplayGroupID=' . $row['displaygroupid'] . '&DisplayGroup=' . $row['displaygroup'],
+                    'url' => 'index.php?p=displaygroup&q=MembersForm&DisplayGroupID=' . $group->displayGroupId . '&DisplayGroup=' . $group->displayGroup,
                     'text' => __('Group Members')
                 );
 
                 // Edit
-                $row['buttons'][] = array(
+                $group->buttons[] = array(
                     'id' => 'displaygroup_button_edit',
-                    'url' => 'index.php?p=displaygroup&q=EditForm&DisplayGroupID=' . $row['displaygroupid'],
+                    'url' => 'index.php?p=displaygroup&q=EditForm&DisplayGroupID=' . $group->displayGroupId,
                     'text' => __('Edit')
                 );
 
                 // File Associations
-                $row['buttons'][] = array(
+                $group->buttons[] = array(
                     'id' => 'displaygroup_button_fileassociations',
-                    'url' => 'index.php?p=displaygroup&q=FileAssociations&DisplayGroupID=' . $row['displaygroupid'],
+                    'url' => 'index.php?p=displaygroup&q=FileAssociations&DisplayGroupID=' . $group->displayGroupId,
                     'text' => __('Assign Files')
                 );
             }
 
-            if ($row['del'] == 1) {
+            if ($this->getUser()->checkDeleteable($group)) {
                 // Show the delete button
-                $row['buttons'][] = array(
+                $group->buttons[] = array(
                     'id' => 'displaygroup_button_delete',
-                    'url' => 'index.php?p=displaygroup&q=DeleteForm&DisplayGroupID=' . $row['displaygroupid'],
+                    'url' => 'index.php?p=displaygroup&q=DeleteForm&DisplayGroupID=' . $group->displayGroupId,
                     'text' => __('Delete')
                 );
             }
 
-            if ($row['modifypermissions'] == 1) {
+            if ($this->getUser()->checkPermissionsModifyable($group)) {
                 // Show the modify permissions button
-                $row['buttons'][] = array(
+                $group->buttons[] = array(
                     'id' => 'displaygroup_button_permissions',
-                    'url' => 'index.php?p=displaygroup&q=PermissionsForm&DisplayGroupID=' . $row['displaygroupid'],
+                    'url' => 'index.php?p=displaygroup&q=PermissionsForm&DisplayGroupID=' . $group->displayGroupId,
                     'text' => __('Permissions')
                 );
 
                 // Version Information
-                $row['buttons'][] = array(
+                $group->buttons[] = array(
                     'id' => 'display_button_version_instructions',
-                    'url' => 'index.php?p=displaygroup&q=VersionInstructionsForm&displaygroupid=' . $row['displaygroupid'],
+                    'url' => 'index.php?p=displaygroup&q=VersionInstructionsForm&displaygroupid=' . $group->displayGroupId,
                     'text' => __('Version Information')
                 );
             }
 
             // Assign this to the table row
-            $rows[] = $row;
+            $rows[] = $group;
         }
 
-        Theme::Set('table_rows', $rows);
-
-        $output = Theme::RenderReturn('table_render');
-
-        $response->SetGridResponse($output);
-
+        $this->getState()->template = 'grid';
+        $this->getState()->setData($displayGroups);
     }
 
     /**

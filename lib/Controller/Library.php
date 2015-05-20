@@ -21,11 +21,13 @@
 namespace Xibo\Controller;
 
 use Xibo\Exception\LibraryFullException;
+use Xibo\Factory\ModuleFactory;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Config;
 use Xibo\Helper\Form;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
+use Xibo\Helper\Sanitize;
 use Xibo\Helper\Session;
 use Xibo\Helper\Theme;
 
@@ -37,8 +39,6 @@ class Library extends Base
      */
     function displayPage()
     {
-
-
         // Default options
         if (\Kit::IsFilterPinned('content', 'Filter')) {
             $filter_pinned = 1;
@@ -60,189 +60,85 @@ class Library extends Base
             $showTags = 0;
         }
 
-        $id = uniqid();
-        Theme::Set('id', $id);
-        Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
-        Theme::Set('pager', ApplicationState::Pager($id));
-        Theme::Set('form_meta', '<input type="hidden" name="p" value="content"><input type="hidden" name="q" value="LibraryGrid">');
-
-        $formFields = array();
-        $formFields[] = Form::AddText('filter_name', __('Name'), $filter_name, NULL, 'n');
+        $data = [
+            'defaults' => [
+                'name' => $filter_name,
+                'type' => $filter_type,
+                'retired' => $filter_retired,
+                'owner' => $filter_owner,
+                'durationInSeconds' => $filter_duration_in_seconds,
+                'showTags' => $showTags,
+                'showThumbnail' => $filter_showThumbnail,
+                'filterPinned' => $filter_pinned
+            ]
+        ];
 
         // Users we have permission to see
         $users = $this->getUser()->userList();
         array_unshift($users, array('userid' => '', 'username' => 'All'));
+        $data['users'] = $users;
 
-        $formFields[] = Form::AddCombo(
-            'filter_owner',
-            __('Owner'),
-            $filter_owner,
-            $users,
-            'userid',
-            'username',
-            NULL,
-            'o');
-
-        $types = $db->GetArray("SELECT Module AS moduleid, Name AS module FROM `module` WHERE RegionSpecific = 0 AND Enabled = 1 ORDER BY 2");
+        $types = ModuleFactory::query(['module'], ['regionSpecific' => 0, 'enabled' => 1]);
         array_unshift($types, array('moduleid' => '', 'module' => 'All'));
-        $formFields[] = Form::AddCombo(
-            'filter_type',
-            __('Type'),
-            $filter_type,
-            $types,
-            'moduleid',
-            'module',
-            NULL,
-            'y');
+        $data['modules'] = $types;
 
-        $formFields[] = Form::AddCombo(
-            'filter_retired',
-            __('Retired'),
-            $filter_retired,
-            array(array('retiredid' => 1, 'retired' => 'Yes'), array('retiredid' => 0, 'retired' => 'No')),
-            'retiredid',
-            'retired',
-            NULL,
-            'r');
-
-        $formFields[] = Form::AddCheckbox('filter_duration_in_seconds', __('Duration in Seconds'),
-            $filter_duration_in_seconds, NULL,
-            's');
-
-        $formFields[] = Form::AddCheckbox('showTags', __('Show Tags'),
-            $showTags, NULL,
-            't');
-
-        $formFields[] = Form::AddCheckbox('filter_showThumbnail', __('Show Thumbnails'),
-            $filter_showThumbnail, NULL,
-            't');
-
-        $formFields[] = Form::AddCheckbox('XiboFilterPinned', __('Keep Open'),
-            $filter_pinned, NULL,
-            'k');
-
-        // Call to render the template
-        Theme::Set('header_text', __('Library'));
-        Theme::Set('form_fields', $formFields);
-        $this->getState()->html .= Theme::RenderReturn('grid_render');
-    }
-
-    function actionMenu()
-    {
-
-        $menu = array();
-        $menu[] = array('title' => __('Filter'),
-            'class' => '',
-            'selected' => false,
-            'link' => '#',
-            'help' => __('Open the filter form'),
-            'onclick' => 'ToggleFilterView(\'Filter\')'
-        );
-
-        if (Config::GetSetting('SETTING_LIBRARY_TIDY_ENABLED') == 1) {
-            $menu[] = array('title' => __('Tidy Library'),
-                'class' => 'XiboFormButton',
-                'selected' => false,
-                'link' => 'index.php?p=content&q=tidyLibraryForm',
-                'help' => __('Run through the library and remove unused and unnecessary files'),
-                'onclick' => ''
-            );
-        }
-
-        $menu[] = array('title' => __('Add Media'),
-            'class' => 'XiboFormButton',
-            'selected' => false,
-            'link' => 'index.php?p=content&q=fileUploadForm',
-            'help' => __('Add a new media item to the library'),
-            'onclick' => ''
-        );
-
-        return $menu;
+        $this->getState()->template = 'library-page';
+        $this->getState()->setData($data);
     }
 
     /**
      * Prints out a Table of all media items
      */
-    function LibraryGrid()
+    function grid()
     {
         $user = $this->getUser();
-        $response = $this->getState();
 
         //Get the input params and store them
         $filter_type = \Kit::GetParam('filter_type', _REQUEST, _WORD);
-        $filter_name = \Xibo\Helper\Sanitize::getString('filter_name');
-        $filter_userid = \Xibo\Helper\Sanitize::getInt('filter_owner');
-        $filter_retired = \Xibo\Helper\Sanitize::getInt('filter_retired');
-        $filter_duration_in_seconds = \Xibo\Helper\Sanitize::getCheckbox('filter_showThumbnail');
-        $filter_showThumbnail = \Xibo\Helper\Sanitize::getCheckbox('filter_showThumbnail');
-        $showTags = \Xibo\Helper\Sanitize::getCheckbox('showTags');
+        $filter_name = Sanitize::getString('filter_name');
+        $filter_userid = Sanitize::getInt('filter_owner');
+        $filter_retired = Sanitize::getInt('filter_retired');
+        $filter_duration_in_seconds = Sanitize::getCheckbox('filter_showThumbnail');
+        $filter_showThumbnail = Sanitize::getCheckbox('filter_showThumbnail');
+        $showTags = Sanitize::getCheckbox('showTags');
 
-        \Xibo\Helper\Session::Set('content', 'filter_type', $filter_type);
-        \Xibo\Helper\Session::Set('content', 'filter_name', $filter_name);
-        \Xibo\Helper\Session::Set('content', 'filter_owner', $filter_userid);
-        \Xibo\Helper\Session::Set('content', 'filter_retired', $filter_retired);
-        \Xibo\Helper\Session::Set('content', 'filter_duration_in_seconds', $filter_duration_in_seconds);
-        \Xibo\Helper\Session::Set('content', 'filter_showThumbnail', $filter_showThumbnail);
-        \Xibo\Helper\Session::Set('content', 'showTags', $showTags);
-        \Xibo\Helper\Session::Set('content', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        Session::Set('content', 'filter_type', $filter_type);
+        Session::Set('content', 'filter_name', $filter_name);
+        Session::Set('content', 'filter_owner', $filter_userid);
+        Session::Set('content', 'filter_retired', $filter_retired);
+        Session::Set('content', 'filter_duration_in_seconds', $filter_duration_in_seconds);
+        Session::Set('content', 'filter_showThumbnail', $filter_showThumbnail);
+        Session::Set('content', 'showTags', $showTags);
+        Session::Set('content', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 
         // Construct the SQL
-        $mediaList = $user->MediaList(NULL, array('type' => $filter_type, 'name' => $filter_name, 'ownerid' => $filter_userid, 'retired' => $filter_retired, 'showTags' => $showTags));
-
-        $cols = array();
-        $cols[] = array('name' => 'mediaid', 'title' => __('ID'));
-        $cols[] = array('name' => 'tags', 'title' => __('Tag'), 'hidden' => ($showTags == 0), 'colClass' => 'group-word');
-        $cols[] = array('name' => 'media', 'title' => __('Name'));
-        $cols[] = array('name' => 'mediatype', 'title' => __('Type'));
-
-        if ($filter_showThumbnail == 1)
-            $cols[] = array('name' => 'thumbnail', 'title' => __('Thumbnail'));
-
-        $cols[] = array('name' => 'duration_text', 'title' => __('Duration'));
-        $cols[] = array('name' => 'size_text', 'title' => __('Size'), 'sorter' => 'filesize');
-        $cols[] = array('name' => 'owner', 'title' => __('Owner'));
-        $cols[] = array('name' => 'permissions', 'title' => __('Permissions'));
-        $cols[] = array('name' => 'revised', 'title' => __('Revised?'), 'icons' => true);
-        $cols[] = array('name' => 'filename', 'title' => __('File Name'));
-
-        Theme::Set('table_cols', $cols);
-
-        $rows = array();
+        $mediaList = $user->MediaList(NULL, array(
+            'type' => $filter_type,
+            'name' => $filter_name,
+            'ownerid' => $filter_userid,
+            'retired' => $filter_retired,
+            'showTags' => $showTags)
+        );
 
         // Add some additional row content
         foreach ($mediaList as $media) {
             /* @var \Xibo\Entity\Media $media */
-            $row = array();
-
-            $row['mediaid'] = $media->mediaId;
-            $row['media'] = $media->name;
-            $row['filename'] = $media->fileName;
-            $row['mediatype'] = $media->mediaType;
-            $row['duration'] = $media->duration;
-            $row['tags'] = $media->tags;
-
-            $row['duration_text'] = ($filter_duration_in_seconds == 1) ? $media->duration : sec2hms($media->duration);
-            $row['owner'] = $media->owner;
-            $row['permissions'] = $media->groupsWithPermissions;
-            $row['revised'] = ($media->parentId != 0) ? 1 : 0;
-
-            // Display a friendly file size
-            $row['size_text'] = \Kit::FormatBytes($media->fileSize);
+            $media->revised = ($media->parentId != 0) ? 1 : 0;
 
             // Thumbnail URL
-            $row['thumbnail'] = '';
+            $media->thumbnail = '';
 
-            if ($row['mediatype'] == 'image') {
-                $row['thumbnail'] = '<a class="img-replace" data-toggle="lightbox" data-type="image" data-img-src="index.php?p=content&q=getFile&mediaid=' . $media->mediaId . '&width=100&height=100&dynamic=true&thumb=true" href="index.php?p=content&q=getFile&mediaid=' . $media->mediaId . '"><i class="fa fa-file-image-o"></i></a>';
+            if ($media->mediaType == 'image') {
+                $media->thumbnail = '<a class="img-replace" data-toggle="lightbox" data-type="image" data-img-src="index.php?p=content&q=getFile&mediaid=' . $media->mediaId . '&width=100&height=100&dynamic=true&thumb=true" href="index.php?p=content&q=getFile&mediaid=' . $media->mediaId . '"><i class="fa fa-file-image-o"></i></a>';
             }
 
-            $row['buttons'] = array();
+            $media->buttons = array();
 
             // Buttons
             if ($user->checkEditable($media)) {
 
                 // Edit
-                $row['buttons'][] = array(
+                $media->buttons[] = array(
                     'id' => 'content_button_edit',
                     'url' => 'index.php?p=content&q=editForm&mediaid=' . $media->mediaId,
                     'text' => __('Edit')
@@ -251,7 +147,7 @@ class Library extends Base
 
             if ($user->checkDeleteable($media)) {
                 // Delete
-                $row['buttons'][] = array(
+                $media->buttons[] = array(
                     'id' => 'content_button_delete',
                     'url' => 'index.php?p=content&q=deleteForm&mediaid=' . $media->mediaId,
                     'text' => __('Delete')
@@ -259,9 +155,8 @@ class Library extends Base
             }
 
             if ($user->checkPermissionsModifyable($media)) {
-
                 // Permissions
-                $row['buttons'][] = array(
+                $media->buttons[] = array(
                     'id' => 'content_button_permissions',
                     'url' => 'index.php?p=user&q=permissionsForm&entity=Media&objectId=' . $media->mediaId,
                     'text' => __('Permissions')
@@ -269,24 +164,16 @@ class Library extends Base
             }
 
             // Download
-            $row['buttons'][] = array(
+            $media->buttons[] = array(
                 'id' => 'content_button_download',
                 'linkType' => '_self', 'external' => true,
                 'url' => 'index.php?p=content&q=getFile&download=1&downloadFromLibrary=1&mediaid=' . $media->mediaId,
                 'text' => __('Download')
             );
-
-            // Add to the collection
-            $rows[] = $row;
         }
 
-        Theme::Set('table_rows', $rows);
-
-        $output = Theme::RenderReturn('table_render');
-
-        $response->SetGridResponse($output);
-        $response->initialSortColumn = 2;
-
+        $this->getState()->template = 'grid';
+        $this->getState()->setData($mediaList);
     }
 
     /**
@@ -317,11 +204,11 @@ class Library extends Base
 
         // Do we come from the Background Image?
         $backgroundImage = \Kit::GetParam('backgroundImage', _GET, _BOOL, false);
-        $layoutId = \Xibo\Helper\Sanitize::getInt('layoutId');
+        $layoutId = Sanitize::getInt('layoutId');
 
         // Do we have a playlistId?
-        $playlistId = \Xibo\Helper\Sanitize::getInt('playlistId');
-        $regionId = \Xibo\Helper\Sanitize::getInt('regionId');
+        $playlistId = Sanitize::getInt('playlistId');
+        $regionId = Sanitize::getInt('regionId');
 
         // Save button is different depending on whether we came from the Layout Edit form or not.
         if ($backgroundImage) {
@@ -358,7 +245,7 @@ class Library extends Base
     public function getFile()
     {
         // Get the MediaId
-        $mediaId = \Xibo\Helper\Sanitize::getInt('mediaId');
+        $mediaId = Sanitize::getInt('mediaId');
 
         // Can this user view?
         $entries = $this->getUser()->MediaList(null, array('mediaId' => $mediaId));
@@ -367,8 +254,8 @@ class Library extends Base
         /* @var \Xibo\Entity\Media $media */
 
         if (count($entries) <= 0) {
-            $width = \Xibo\Helper\Sanitize::getInt('width');
-            $height = \Xibo\Helper\Sanitize::getInt('height');
+            $width = Sanitize::getInt('width');
+            $height = Sanitize::getInt('height');
 
             // dynamically create an image of the correct size - used for previews
             ResizeImage(Theme::ImageUrl('forms/filenotfound.gif'), '', $width, $height, true, 'browser');
@@ -599,8 +486,8 @@ class Library extends Base
         $output = Theme::RenderReturn('library_form_assign');
 
         // Input vars
-        $layoutId = \Xibo\Helper\Sanitize::getInt('layoutid');
-        $regionId = \Xibo\Helper\Sanitize::getString('regionid');
+        $layoutId = Sanitize::getInt('layoutid');
+        $regionId = Sanitize::getString('regionid');
 
         // Construct the Response
         $response->html = $output;
@@ -629,8 +516,8 @@ class Library extends Base
         $response = $this->getState();
 
         //Input vars
-        $mediatype = \Xibo\Helper\Sanitize::getString('filter_type');
-        $name = \Xibo\Helper\Sanitize::getString('filter_name');
+        $mediatype = Sanitize::getString('filter_type');
+        $name = Sanitize::getString('filter_name');
 
         // Get a list of media
         $mediaList = $user->MediaList(NULL, array('type' => $mediatype, 'name' => $name));

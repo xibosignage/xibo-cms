@@ -22,6 +22,8 @@ namespace Xibo\Controller;
 
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Help;
+use Xibo\Helper\Sanitize;
+use Xibo\Helper\Session;
 use Xibo\Helper\Theme;
 
 
@@ -32,7 +34,6 @@ class Template extends Base
      */
     function displayPage()
     {
-
         // Default options
         if (\Kit::IsFilterPinned('template', 'Filter')) {
             $pinned = 1;
@@ -46,107 +47,56 @@ class Template extends Base
             $showThumbnail = 1;
         }
 
-        $id = uniqid();
-        Theme::Set('header_text', __('Templates'));
-        Theme::Set('id', $id);
-        Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
-        Theme::Set('pager', ApplicationState::Pager($id));
-        Theme::Set('form_meta', '<input type="hidden" name="p" value="template"><input type="hidden" name="q" value="TemplateView">');
-
-        $formFields = array();
-        $formFields[] = Form::AddText('filter_name', __('Name'), $name, NULL, 'n');
-        $formFields[] = Form::AddText('filter_tags', __('Tags'), $tags, NULL, 't');
-        $formFields[] = Form::AddCheckbox('showThumbnail', __('Show Thumbnails'),
-            $showThumbnail, NULL,
-            't');
-        $formFields[] = Form::AddCheckbox('XiboFilterPinned', __('Keep Open'),
-            $pinned, NULL,
-            'k');
-
-        Theme::Set('form_fields', $formFields);
+        $data = [
+            'defaults' => [
+                'name' => $name,
+                'tags' => $tags,
+                'showThumbnail' => $showThumbnail,
+                'filterPinned' => $pinned
+            ]
+        ];
 
         // Call to render the template
-        $this->getState()->html .= Theme::RenderReturn('grid_render');
-    }
-
-    function actionMenu()
-    {
-        return array(
-            array('title' => __('Filter'),
-                'class' => '',
-                'selected' => false,
-                'link' => '#',
-                'help' => __('Open the filter form'),
-                'onclick' => 'ToggleFilterView(\'Filter\')'
-            ),
-            array('title' => __('Import'),
-                'class' => 'XiboFormButton',
-                'selected' => false,
-                'link' => 'index.php?p=layout&q=ImportForm&template=true',
-                'help' => __('Import a Layout from a ZIP file.'),
-                'onclick' => ''
-            )
-        );
+        $this->getState()->template = 'template-page';
+        $this->getState()->setData($data);
     }
 
     /**
      * Data grid
      */
-    function TemplateView()
+    function grid()
     {
         $response = $this->getState();
 
-        $filter_name = \Xibo\Helper\Sanitize::getString('filter_name');
-        $filter_tags = \Xibo\Helper\Sanitize::getString('filter_tags');
+        $filter_name = Sanitize::getString('filter_name');
+        $filter_tags = Sanitize::getString('filter_tags');
 
-        \Xibo\Helper\Session::Set('template', 'filter_name', $filter_name);
-        \Xibo\Helper\Session::Set('template', 'filter_tags', $filter_tags);
-        \Xibo\Helper\Session::Set('template', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        Session::Set('template', 'filter_name', $filter_name);
+        Session::Set('template', 'filter_tags', $filter_tags);
+        Session::Set('template', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
 
         // Show filter_showThumbnail
-        $showThumbnail = \Xibo\Helper\Sanitize::getCheckbox('showThumbnail');
-        \Xibo\Helper\Session::Set('layout', 'showThumbnail', $showThumbnail);
+        $showThumbnail = Sanitize::getCheckbox('showThumbnail');
+        Session::Set('layout', 'showThumbnail', $showThumbnail);
 
         $templates = $this->getUser()->TemplateList($filter_name, $filter_tags);
-
-        if (!is_array($templates)) {
-            trigger_error(__('Unable to get list of templates for this user'), E_USER_ERROR);
-        }
-
-        $cols = array(
-            array('name' => 'layout', 'title' => __('Name')),
-            array('name' => 'owner', 'title' => __('Owner')),
-            array('name' => 'descriptionWithMarkup', 'title' => __('Description')),
-            array('name' => 'thumbnail', 'title' => __('Thumbnail'), 'hidden' => ($showThumbnail == 0)),
-            array('name' => 'permissions', 'title' => __('Permissions'))
-        );
-        Theme::Set('table_cols', $cols);
-
-        $rows = array();
 
         foreach ($templates as $template) {
             /* @var \Xibo\Entity\Layout $template */
 
-            $row['layoutid'] = $template->layoutId;
-            $row['layout'] = $template->layout;
-            $row['owner'] = $template->owner;
-            $row['permissions'] = $template->groupsWithPermissions;
+            $template->thumbnail = '';
 
-            $row['thumbnail'] = '';
+            if ($template->backgroundImageId != 0)
+                $template->thumbnail = '<a class="img-replace" data-toggle="lightbox" data-type="image" data-img-src="index.php?p=content&q=getFile&mediaid=' . $template->backgroundImageId . '&width=100&height=100&dynamic=true&thumb=true" href="index.php?p=content&q=getFile&mediaid=' . $template->backgroundImageId . '"><i class="fa fa-file-image-o"></i></a>';
 
-            if ($showThumbnail == 1 && $template->backgroundImageId != 0)
-                $row['thumbnail'] = '<a class="img-replace" data-toggle="lightbox" data-type="image" data-img-src="index.php?p=content&q=getFile&mediaid=' . $template->backgroundImageId . '&width=100&height=100&dynamic=true&thumb=true" href="index.php?p=content&q=getFile&mediaid=' . $template->backgroundImageId . '"><i class="fa fa-file-image-o"></i></a>';
-
-
-            $row['buttons'] = array();
+            $template->buttons = array();
 
             // Parse down for description
-            $row['description'] = $template->description;
-            $row['descriptionWithMarkup'] = Parsedown::instance()->text($row['description']);
+            $template->descriptionWithMarkup = \Parsedown::instance()->text($template->description);
 
             if ($this->getUser()->checkEditable($template)) {
                 // Edit Button
-                $row['buttons'][] = array(
+                $template->buttons[] = array(
                     'id' => 'template_button_edit',
                     'url' => 'index.php?p=template&q=EditForm&modify=true&layoutid=' . $template->layoutId,
                     'text' => __('Edit')
@@ -155,7 +105,7 @@ class Template extends Base
 
             if ($this->getUser()->checkDeleteable($template)) {
                 // Delete Button
-                $row['buttons'][] = array(
+                $template->buttons[] = array(
                     'id' => 'layout_button_delete',
                     'url' => 'index.php?p=template&q=DeleteTemplateForm&layoutid=' . $template->layoutId,
                     'text' => __('Delete')
@@ -164,31 +114,26 @@ class Template extends Base
 
             if ($this->getUser()->checkPermissionsModifyable($template)) {
                 // Permissions Button
-                $row['buttons'][] = array(
+                $template->buttons[] = array(
                     'id' => 'layout_button_delete',
                     'url' => 'index.php?p=user&q=permissionsForm&entity=Campaign&objectId=' . $template->campaignId,
                     'text' => __('Permissions')
                 );
             }
 
-            $row['buttons'][] = ['divider' => true];
+            $template->buttons[] = ['divider' => true];
 
             // Export Button
-            $row['buttons'][] = array(
+            $template->buttons[] = array(
                 'id' => 'layout_button_export',
                 'linkType' => '_self', 'external' => true,
                 'url' => 'index.php?p=layout&q=Export&layoutid=' . $template->layoutId,
                 'text' => __('Export')
             );
-
-            // Add this row to the array
-            $rows[] = $row;
         }
 
-        Theme::Set('table_rows', $rows);
-
-        $response->SetGridResponse(Theme::RenderReturn('table_render'));
-
+        $this->getState()->template = 'grid';
+        $this->getState()->setData($templates);
     }
 
     /**

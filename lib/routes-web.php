@@ -124,11 +124,14 @@ $app->get('/layout/form/edit/:id', '\Xibo\Controller\Layout:editForm')->name('la
 $app->get('/layout/form/copy/:id', '\Xibo\Controller\Layout:copyForm')->name('layoutCopyForm');
 $app->get('/layout/form/delete/:id', '\Xibo\Controller\Layout:deleteForm')->name('layoutDeleteForm');
 $app->get('/layout/form/retire/:id', '\Xibo\Controller\Layout:retireForm')->name('layoutRetireForm');
+$app->get('/layout/form/import', '\Xibo\Controller\Layout:retireForm')->name('layoutImportForm');
 
 //
-// content
+// library
 //
-$app->get('/content/view', '\Xibo\Controller\Library:displayPage')->name('contentView');
+$app->get('/library/view', '\Xibo\Controller\Library:displayPage')->name('contentView');
+$app->get('/library/form/add', '\Xibo\Controller\Library:fileUploadForm')->name('libraryAddForm');
+$app->get('/library/form/tidy', '\Xibo\Controller\Library:tidyLibraryForm')->name('libraryTidyForm');
 
 //
 // display
@@ -153,11 +156,11 @@ $app->get('/log/delete', '\Xibo\Controller\Log:TruncateForm')->name('logTruncate
 // campaign
 //
 $app->get('/campaign/view', '\Xibo\Controller\Campaign:displayPage')->name('campaignView');
-$app->get('/campaign/form/add', '\Xibo\Controller\Layout:addForm')->name('campaignAddForm');
-$app->get('/campaign/form/edit/:id', '\Xibo\Controller\Layout:editForm')->name('campaignEditForm');
-$app->get('/campaign/form/copy/:id', '\Xibo\Controller\Layout:copyForm')->name('campaignCopyForm');
-$app->get('/campaign/form/delete/:id', '\Xibo\Controller\Layout:deleteForm')->name('campaignDeleteForm');
-$app->get('/campaign/form/retire/:id', '\Xibo\Controller\Layout:retireForm')->name('campaignRetireForm');
+$app->get('/campaign/form/add', '\Xibo\Controller\Campaign:addForm')->name('campaignAddForm');
+$app->get('/campaign/form/edit/:id', '\Xibo\Controller\Campaign:editForm')->name('campaignEditForm');
+$app->get('/campaign/form/copy/:id', '\Xibo\Controller\Campaign:copyForm')->name('campaignCopyForm');
+$app->get('/campaign/form/delete/:id', '\Xibo\Controller\Campaign:deleteForm')->name('campaignDeleteForm');
+$app->get('/campaign/form/retire/:id', '\Xibo\Controller\Campaign:retireForm')->name('campaignRetireForm');
 
 //
 // template
@@ -168,6 +171,7 @@ $app->get('/template/view', '\Xibo\Controller\Template:displayPage')->name('temp
 // resolution
 //
 $app->get('/resolution/view', '\Xibo\Controller\Resolution:displayPage')->name('resolutionView');
+$app->get('/resolution/form/add', '\Xibo\Controller\Resolution:addForm')->name('resolutionAddForm');
 
 //
 // dataset
@@ -178,11 +182,13 @@ $app->get('/dataset/view', '\Xibo\Controller\DataSet:displayPage')->name('datase
 // displaygroup
 //
 $app->get('/displaygroup/view', '\Xibo\Controller\DisplayGroup:displayPage')->name('displaygroupView');
+$app->get('/displaygroup/form/add', '\Xibo\Controller\DisplayGroup:addForm')->name('displayGroupAddForm');
 
 //
 // displayprofile
 //
-$app->get('/displayprofile/view', '\Xibo\Controller\DisplayGroup:displayPage')->name('displayprofileView');
+$app->get('/displayprofile/view', '\Xibo\Controller\DisplayProfile:displayPage')->name('displayprofileView');
+$app->get('/displayprofile/form/add', '\Xibo\Controller\DisplayProfile:addForm')->name('displayProfileAddForm');
 
 //
 // group
@@ -235,3 +241,4 @@ $app->get('/help/view', '\Xibo\Controller\Help:displayPage')->name('helpView');
 // Stats
 //
 $app->get('/stats', '\Xibo\Controller\Stats:displayPage')->name('statsView');
+$app->get('/stats/form/export', '\Xibo\Controller\Stats:exportForm')->name('statsExportForm');

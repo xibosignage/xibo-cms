@@ -1,0 +1,216 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block actionMenu %}
+    <ul class="nav nav-pills pull-right">
+        <li><a class="XiboFormButton" title="{% trans "Export raw data to CSV" %}" href="{{ urlFor("statsExportForm") }}">{% trans "Export" %}</a></li>
+    </ul>
+{% endblock %}
+
+
+{% block pageContent %}
+    <div class="widget">
+        <div class="widget-title">{% trans "Bandwidth" %}</div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}">
+                <div class="XiboFilter">
+                    <div class="FilterDiv" id="bandwidthFilter">
+                        <form class="form-inline">
+                            {{ inline.date("fromdt", "From Date", defaults.fromDate) }}
+                            {{ inline.date("todt", "To Date", defaults.toDate) }}
+                            {{ inline.dropdown("displayid", "single", "Display", "", displays, "displayId", "display") }}
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData">
+                    <div id="bandwidthChart" style="height: 230px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="widget">
+        <div class="widget-title">{% trans "Availability" %}</div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}">
+                <div class="XiboFilter">
+                    <div class="FilterDiv" id="availabilityFilter">
+                        <form class="form-inline">
+                            {{ inline.date("fromdt", "From Date", defaults.fromDate) }}
+                            {{ inline.date("todt", "To Date", defaults.toDate) }}
+                            {{ inline.dropdown("displayid", "single", "Display", "", displays, "displayId", "display") }}
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData">
+                    <div id="availabilityChart" style="height: 230px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="widget">
+        <div class="widget-title">{% trans "Proof of Play" %}</div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}">
+                <div class="XiboFilter">
+                    <div class="FilterDiv" id="Filter">
+                        <form class="form-inline">
+                            {{ inline.date("fromdt", "From Date", defaults.fromDateOneDay) }}
+                            {{ inline.date("todt", "To Date", defaults.toDate) }}
+                            {{ inline.dropdown("displayid", "single", "Display", "", displays, "displayId", "display") }}
+                            {{ inline.dropdown("mediaid", "single", "Media", "", media, "mediaId", "media") }}
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData">
+                    <table id="stats" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Display" %}</th>
+                                <th>{% trans "Layout" %}</th>
+                                <th>{% trans "Media" %}</th>
+                                <th>{% trans "Number of Plays" %}</th>
+                                <th>{% trans "Total Duration (s)" %}</th>
+                                <th>{% trans "Total Duration" %}</th>
+                                <th>{% trans "First Shown" %}</th>
+                                <th>{% trans "Last Shown" %}</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        var table = $("#stats").DataTable({
+            serverSide: true,
+            searchDelay: 3000,
+            "order": [[ 1, "asc"]],
+            ajax: "{{ urlFor("statsSearch") }}",
+            "columns": [
+                { "data": "Display" },
+                { "data": "Layout" },
+                { "data": "Media" },
+                { "data": "NumberPlays" },
+                { "data": "DurationSec" },
+                { "data": "Duration" },
+                { "data": "MinStart" },
+                { "data": "MaxEnd" },
+                {
+                    "orderable": false,
+                    "data": dataTableButtonsColumn
+                }
+            ]
+        });
+
+        table.on('draw', dataTableDraw);
+        table.on('processing.dt', dataTableProcessing);
+
+        var bandwidthChart;
+        var bandwidthChartOptions = {
+            element: 'bandwidthChart',
+            data: [],
+            xkey: 'label',
+            ykeys: ['value'],
+            labels: ['{% trans "Bandwidth" %}'],
+            stacked: false,
+            postUnits: ''
+        };
+
+        function setBandwidthChart() {
+            $.ajax({
+                type: "get",
+                url: "{{ urlFor("statsBandwidthData") }}",
+                cache: false,
+                dataType: "json",
+                data: $("#bandwidthFilter").find("form").serialize(),
+                success: function(response) {
+                    if (bandwidthChart == undefined) {
+                        // Create our chart
+                        bandwidthChartOptions.data = response.extra.data;
+                        bandwidthChartOptions.postUnits = response.extra.postUnits;
+                        bandwidthChart = Morris.Bar(bandwidthChartOptions);
+                    } else {
+                        bandwidthChart.setData(response.extra.data);
+                    }
+                }
+            });
+        }
+
+        $(document).ready(function() {
+            setBandwidthChart();
+
+            // Bind to form change
+            $("#bandwidthFilter input, #bandwidthFilter select").change(function() {
+                setBandwidthChart();
+            });
+        });
+
+        var availabilityChart;
+        var availabilityChartOptions = {
+            element: 'availabilityChart',
+            data: [],
+            xkey: 'label',
+            ykeys: ['value'],
+            labels: ['{% trans "Downtime" %}'],
+            stacked: false,
+            postUnits: 'min',
+            hoverCallback: function (index, options, content, row) {
+                var secs = row.value * 60;
+                secs = Math.round(secs);
+                var hours = Math.floor(secs / (60 * 60));
+
+                var divisor_for_minutes = secs % (60 * 60);
+                var minutes = Math.floor(divisor_for_minutes / 60);
+
+                var divisor_for_seconds = divisor_for_minutes % 60;
+                var seconds = Math.ceil(divisor_for_seconds);
+
+                return hours + ":" + minutes + ":" + seconds;
+            }
+        };
+
+        function setAvailabilityChart() {
+
+            $.ajax({
+                type: "get",
+                url: "{{ urlFor("statsAvailabilityData") }}",
+                cache: false,
+                dataType: "json",
+                data: $("#availabilityFilter").find("form").serialize(),
+                success: function(response) {
+                    if (availabilityChart == undefined) {
+                        // Create our chart
+                        availabilityChartOptions.data = response.extra;
+                        availabilityChart = Morris.Bar(availabilityChartOptions);
+                    } else {
+                        availabilityChart.setData(response.extra);
+                    }
+                }
+            });
+        }
+
+        $(document).ready(function() {
+            setAvailabilityChart();
+
+            // Bind to form change
+            $("#availabilityFilter input, #availabilityFilter select").change(function() {
+                setAvailabilityChart();
+            });
+        });
+    </script>
+{% endblock %}

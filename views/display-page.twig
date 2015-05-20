@@ -1,0 +1,180 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block actionMenu %}
+    <ul class="nav nav-pills pull-right">
+        <li><a title="{% trans "Open the Filter Form" %}" href="#" onclick="ToggleFilterView('Filter')">{% trans "Filter" %}</a></li>
+    </ul>
+{% endblock %}
+
+
+{% block pageContent %}
+    <div class="widget">
+        <div class="widget-title">{% trans "Displays" %}</div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}">
+                <div class="XiboFilter">
+                    <div class="FilterDiv" id="Filter">
+                        <form class="form-inline">
+
+                            {{ inline.text("filter_display", "Name", defaults.display) }}
+                            {{ inline.text("filterMacAddress", "Mac Address", defaults.macAddress) }}
+
+                            {{ inline.dropdown("filter_displaygroup", "single", "Display Group", defaults.displayGroup, values, "displayGroupId", "displayGroup") }}
+
+                            {{ inline.number("filter_autoRefresh", "Auto Refresh", defaults.filterAutoRefresh) }}
+
+                            {{ inline.checkbox("XiboFilterPinned", "Keep Open", defaults.filterPinned) }}
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData">
+                    <table id="displays" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>{% trans "ID" %}</th>
+                                <th>{% trans "Display" %}</th>
+                                <th>{% trans "Status" %}</th>
+                                <th>{% trans "Licence" %}</th>
+                                <th>{% trans "Current Layout" %}</th>
+                                <th>{% trans "Storage Available" %}</th>
+                                <th>{% trans "Storage Total" %}</th>
+                                <th>{% trans "Storage Free %" %}</th>
+                                <th>{% trans "Description" %}</th>
+                                <th>{% trans "Default Layout" %}</th>
+                                <th>{% trans "Interleave Default" %}</th>
+                                <th>{% trans "Email Alert" %}</th>
+                                <th>{% trans "Logged In" %}</th>
+                                <th>{% trans "Last Accessed" %}</th>
+                                <th>{% trans "Version" %}</th>
+                                <th>{% trans "IP Address" %}</th>
+                                <th>{% trans "Mac Address" %}</th>
+                                <th>{% trans "Screen shot?" %}</th>
+                                <th>{% trans "Thumbnail" %}</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        var table = $("#displays").DataTable({
+            serverSide: true,
+            searchDelay: 3000,
+            "order": [[ 1, "asc"]],
+            ajax: {
+                "url": "{{ urlFor("displaySearch") }}",
+                "data": function(d) {
+
+                }
+            },
+            "columns": [
+                { "data": "displayId" },
+                {
+                    "data": function(data, type) {
+                        if (type != "display")
+                            return data.display;
+
+                        if ("{{ settings.SHOW_DISPLAY_AS_VNCLINK }}" != "" && data.clientAddress != "") {
+                            return '<a href="{{ settings.SHOW_DISPLAY_AS_VNCLINK }}" title="{% trans "VNC to this Display" %}" target="' + data.clientAddress + '">' + data.display + '</a>';
+                        }
+                        else {
+                            return data.display;
+                        }
+                    }
+                },
+                {
+                    "data": function(data, type) {
+                        if (type != "display")
+                            return data.status;
+
+                        var icon = "";
+                        if (data.status == 1)
+                            icon = "glyphicon-ok";
+                        else if (data.status == 0)
+                            icon = "glyphicon-remove";
+                        else
+                            icon = "glyphicon-exclamation-sign";
+
+                        return "<span class='glyphicon " + icon + "' title='" + (data.statusDescription) + "'></span>";
+                    }
+                },
+                {
+                    "data": function(data, type) {
+                        if (type != "display")
+                            return data.licensed;
+
+                        var icon = "";
+                        if (data.licensed == 1)
+                            icon = "glyphicon-ok";
+                        else if (data.licensed == 0)
+                            icon = "glyphicon-remove";
+                        else
+                            icon = "glyphicon-exclamation-sign";
+
+                        return "<span class='glyphicon " + icon + "'></span>";
+                    }
+                },
+                { "data": "currentLayout" },
+                { "data": "storageAvailableSpace", "visible": false },
+                { "data": "storageTotalSpace", "visible": false },
+                { "data": "storagePercentage", "visible": false },
+                { "data": "description" , "visible": false},
+                { "data": "incSchedule" },
+                { "data": "emailAlert" },
+                { "data": "loggedIn" },
+                { "data": "lastAccessed" },
+                {
+                    "data": function(data, type) {
+                        if (type != "display")
+                            return data.clientVersion;
+
+                        return data.clientType + ' ' + data.clientVersion;
+                    },
+                    "visible": false
+                },
+                { "data": "clientAddress", "visible": false },
+                { "data": "macAddress" },
+                { "data": "screenShotRequested", "visible": false },
+                {
+                    "data": function(data, type) {
+                        if (type != "display")
+                            return data.thumbnail;
+
+                        if (data.thumbnail != "") {
+                            return '<a data-toggle="lightbox" data-type="image" href="' + data.thumbnail + '"><img class="display-screenshot" src="' + data.thumbnail + '" /></a>';
+                        }
+                        else {
+                            return data.display;
+                        }
+                    },
+                    "visible": false
+                },
+                {
+                    "orderable": false,
+                    "data": dataTableButtonsColumn
+                }
+            ]
+        });
+
+        table.on('draw', dataTableDraw);
+        table.on('processing.dt', dataTableProcessing);
+        dataTableAddColVis(table, '#displays_filter');
+    </script>
+{% endblock %}
