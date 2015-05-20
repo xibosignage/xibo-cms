@@ -1,0 +1,78 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block actionMenu %}
+    <ul class="nav nav-pills pull-right">
+        <li><a title="{% trans "Open the Filter Form" %}" href="#" onclick="ToggleFilterView('Filter')">{% trans "Filter" %}</a></li>
+        <li><a class="XiboFormButton" title="{% trans "Add an Application" %}" href="{{ urlFor("applicationAddForm") }}">{% trans "Add Application" %}</a></li>
+        <li><a class="XiboFormButton" title="{% trans "View a log of application activity" %}" href="{{ urlFor("applicationViewActivity") }}">{% trans "View Activity" %}</a></li>
+    </ul>
+{% endblock %}
+
+
+{% block pageContent %}
+    <div class="widget">
+        <div class="widget-title">{% trans "Applications" %}</div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}">
+                <div class="XiboFilter">
+                    <div class="FilterDiv" id="Filter">
+                        <form class="form-inline">
+                            {{ inline.checkbox("XiboFilterPinned", "Keep Open", defaults.filterPinned) }}
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData">
+                    <table id="applications" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Title" %}</th>
+                                <th>{% trans "Description" %}</th>
+                                <th>{% trans "Homepage" %}</th>
+                                <th>{% trans "Key" %}</th>
+                                <th>{% trans "Secret" %}</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        var table = $("#applications").DataTable({
+            serverSide: true,
+            searchDelay: 3000,
+            "order": [[ 1, "asc"]],
+            ajax: "{{ urlFor("applicationsSearch") }}",
+            "columns": [
+                { "data": "title" },
+                { "data": "description" },
+                { "data": "homepage" },
+                { "data": "key" },
+                { "data": "secret" },
+                {
+                    "orderable": false,
+                    "data": dataTableButtonsColumn
+                }
+            ]
+        });
+
+        table.on('draw', dataTableDraw);
+        table.on('processing.dt', dataTableProcessing);
+    </script>
+{% endblock %}

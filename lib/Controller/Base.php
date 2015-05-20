@@ -283,7 +283,7 @@ class Base
         $columns = $app->request()->get('columns', array());
 
         $order = array_map(function ($element) use ($columns) {
-            return (($columns[$element['column']]['name'] != '') ? $columns[$element['column']]['name'] : $columns[$element['column']]['data']) . (($element['dir'] == 'desc') ? ' DESC' : '');
+            return (($columns[$element['column']]['name'] != '') ? '`' . $columns[$element['column']]['name'] . '`' : '`' . $columns[$element['column']]['data']) . '`' . (($element['dir'] == 'desc') ? ' DESC' : '');
         }, $app->request()->get('order', array()));
 
         return $order;

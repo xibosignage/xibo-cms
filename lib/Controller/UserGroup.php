@@ -26,65 +26,23 @@ use JSON;
 use Kit;
 use PDO;
 use Xibo\Entity\User;
+use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Form;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
+use Xibo\Helper\Sanitize;
 use Xibo\Helper\Session;
 use Xibo\Helper\Theme;
 
 
 class UserGroup extends Base
 {
-    //general fields
-    private $groupid;
-    private $group = "";
-
-
-    //init
-    function replace(user $user)
-    {
-        $this->db =& $db;
-        $this->user =& $user;
-
-        $usertype = \Kit::GetParam('usertype', _SESSION, _INT, 0);
-        $this->groupid = \Kit::GetParam('groupid', _REQUEST, _INT, 0);
-
-        // Do we have a user group selected?
-        if ($this->groupid != 0) {
-            // If so then we will need to get some information about it
-            $SQL = <<<END
-			SELECT 	group.GroupID,
-					group.Group
-			FROM `group`
-			WHERE groupID = %d
-END;
-
-            $SQL = sprintf($SQL, $this->groupid);
-
-            if (!$results = $db->query($SQL)) {
-                trigger_error($db->error());
-                trigger_error(__("Can not get Group information."), E_USER_ERROR);
-            }
-
-            $aRow = $db->get_assoc_row($results);
-
-            $this->group = $aRow['Group'];
-        }
-    }
-
     /**
      * Display page logic
      */
     function displayPage()
     {
-        // Configure the theme
-        $id = uniqid();
-        Theme::Set('id', $id);
-        Theme::Set('form_meta', '<input type="hidden" name="p" value="group"><input type="hidden" name="q" value="Grid">');
-        Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
-        Theme::Set('pager', ApplicationState::Pager($id));
-
         // Default options
         if (\Kit::IsFilterPinned('usergroup', 'Filter')) {
             $filter_pinned = 1;
@@ -94,142 +52,82 @@ END;
             $filter_name = NULL;
         }
 
-        $formFields = array();
-        $formFields[] = Form::AddText('filter_name', __('Name'), $filter_name, NULL, 'n');
+        $data = [
+            'defaults' => [
+                'filterPinned' => $filter_pinned,
+                'name' => $filter_name
+            ]
+        ];
 
-        $formFields[] = Form::AddCheckbox('XiboFilterPinned', __('Keep Open'),
-            $filter_pinned, NULL,
-            'k');
-
-        // Call to render the template
-        Theme::Set('header_text', __('User Groups'));
-        Theme::Set('form_fields', $formFields);
-        $this->getState()->html .= Theme::RenderReturn('grid_render');
-    }
-
-    function actionMenu()
-    {
-
-        return array(
-            array('title' => __('Add User Group'),
-                'class' => 'XiboFormButton',
-                'selected' => false,
-                'link' => 'index.php?p=group&q=GroupForm',
-                'help' => __('Add a new User Group'),
-                'onclick' => ''
-            ),
-            array('title' => __('Filter'),
-                'class' => '',
-                'selected' => false,
-                'link' => '#',
-                'help' => __('Open the filter form'),
-                'onclick' => 'ToggleFilterView(\'Filter\')'
-            )
-        );
+        $this->getState()->template = 'usergroup-page';
+        $this->getState()->setData($data);
     }
 
     /**
      * Group Grid
-     * Called by AJAX
-     * @return
      */
-    function Grid()
+    function grid()
     {
-
         $user = $this->getUser();
 
-        $filter_name = \Xibo\Helper\Sanitize::getString('filter_name');
+        $filter_name = Sanitize::getString('filter_name');
 
-        \Xibo\Helper\Session::Set('usergroup', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
-        \Xibo\Helper\Session::Set('usergroup', 'filter_name', $filter_name);
+        Session::Set('usergroup', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        Session::Set('usergroup', 'filter_name', $filter_name);
 
-        $SQL = <<<END
-		SELECT 	group.group,
-				group.groupID
-		FROM `group`
-		WHERE IsUserSpecific = 0 AND IsEveryone = 0
-END;
+        $groups = UserGroupFactory::query($this->gridRenderSort(), ['group' => $filter_name]);
 
-        if ($filter_name != '')
-            $SQL .= sprintf(" AND group.group LIKE '%%%s%%' ", $db->escape_string($filter_name));
-
-        $SQL .= " ORDER BY group.group ";
-
-        //Log::debug($SQL);
-
-        if (!$results = $db->query($SQL)) {
-            trigger_error($db->error());
-            trigger_error(__("Can not get group information."), E_USER_ERROR);
-        }
-
-        $cols = array(
-            array('name' => 'usergroup', 'title' => __('User Group'))
-        );
-        Theme::Set('table_cols', $cols);
-
-        $rows = array();
-
-        while ($row = $db->get_assoc_row($results)) {
-            $groupid = \Xibo\Helper\Sanitize::int($row['groupID']);
-            $group = \Xibo\Helper\Sanitize::string($row['group']);
-
-            $row['usergroup'] = $group;
+        foreach ($groups as $group) {
+            /* @var \Xibo\Entity\UserGroup $group */
 
             // we only want to show certain buttons, depending on the user logged in
             if ($user->getUserTypeId() == 1) {
                 // Edit
-                $row['buttons'][] = array(
+                $group->buttons[] = array(
                     'id' => 'usergroup_button_edit',
-                    'url' => 'index.php?p=group&q=GroupForm&groupid=' . $groupid,
+                    'url' => 'index.php?p=group&q=GroupForm&groupid=' . $group->groupId,
                     'text' => __('Edit')
                 );
 
                 // Delete
-                $row['buttons'][] = array(
+                $group->buttons[] = array(
                     'id' => 'usergroup_button_delete',
-                    'url' => 'index.php?p=group&q=DeleteForm&groupid=' . $groupid,
+                    'url' => 'index.php?p=group&q=DeleteForm&groupid=' . $group->groupId,
                     'text' => __('Delete')
                 );
 
                 // Members
-                $row['buttons'][] = array(
+                $group->buttons[] = array(
                     'id' => 'usergroup_button_members',
-                    'url' => 'index.php?p=group&q=MembersForm&groupid=' . $groupid,
+                    'url' => 'index.php?p=group&q=MembersForm&groupid=' . $group->groupId,
                     'text' => __('Members')
                 );
 
                 // Page Security
-                $row['buttons'][] = array(
+                $group->buttons[] = array(
                     'id' => 'usergroup_button_page_security',
-                    'url' => 'index.php?p=group&q=PageSecurityForm&groupid=' . $groupid,
+                    'url' => 'index.php?p=group&q=PageSecurityForm&groupid=' . $group->groupId,
                     'text' => __('Page Security')
                 );
 
                 // Menu Security
-                $row['buttons'][] = array(
+                $group->buttons[] = array(
                     'id' => 'usergroup_button_menu_security',
-                    'url' => 'index.php?p=group&q=MenuItemSecurityForm&groupid=' . $groupid,
+                    'url' => 'index.php?p=group&q=MenuItemSecurityForm&groupid=' . $group->groupId,
                     'text' => __('Menu Security')
                 );
 
                 // User Quota
-                $row['buttons'][] = array(
+                $group->buttons[] = array(
                     'id' => 'usergroup_button_quota',
-                    'url' => 'index.php?p=group&q=quotaForm&groupid=' . $groupid,
+                    'url' => 'index.php?p=group&q=quotaForm&groupid=' . $group->groupId,
                     'text' => __('Set User Quota')
                 );
             }
-
-            $rows[] = $row;
         }
 
-        Theme::Set('table_rows', $rows);
-
-        $output = Theme::RenderReturn('table_render');
-
-        $response = $this->getState();
-        $response->SetGridResponse($output);
-
+        $this->getState()->template = 'grid';
+        $this->getState()->setData($groups);
     }
 
     /**
@@ -312,7 +210,7 @@ END;
     function PageSecurityFormGrid()
     {
         $db =& $this->db;
-        $groupId = \Xibo\Helper\Sanitize::getInt('groupid');
+        $groupId = Sanitize::getInt('groupid');
 
         Theme::Set('form_id', 'UserGroupForm');
         Theme::Set('form_meta', '<input type="hidden" name="groupid" value="' . $groupId . '">');
@@ -396,7 +294,7 @@ END;
             $sth->execute(array('groupId' => $groupId));
 
             if ($row = $sth->fetch(PDO::FETCH_ASSOC)) {
-                $group = \Xibo\Helper\Sanitize::string($row['group']);
+                $group = Sanitize::string($row['group']);
             }
         } catch (Exception $e) {
             Log::error($e->getMessage());
@@ -429,7 +327,7 @@ END;
 
         $response = $this->getState();
 
-        $group = \Xibo\Helper\Sanitize::getString('group');
+        $group = Sanitize::getString('group');
 
         $userGroupObject = new UserGroup($db);
 
@@ -448,8 +346,8 @@ END;
     {
 
 
-        $groupid = \Xibo\Helper\Sanitize::getInt('groupid');
-        $group = \Xibo\Helper\Sanitize::getString('group');
+        $groupid = Sanitize::getInt('groupid');
+        $group = Sanitize::getString('group');
 
         $userGroupObject = new UserGroup($db);
 
@@ -469,7 +367,7 @@ END;
     {
 
 
-        $groupid = \Xibo\Helper\Sanitize::getInt('groupid');
+        $groupid = Sanitize::getInt('groupid');
 
         $userGroupObject = new UserGroup($db);
 
@@ -488,7 +386,7 @@ END;
     function assign()
     {
         $db =& $this->db;
-        $groupid = \Xibo\Helper\Sanitize::getInt('groupid');
+        $groupid = Sanitize::getInt('groupid');
 
         $pageids = $_POST['pageids'];
 
@@ -497,7 +395,7 @@ END;
 
             // The page ID actually refers to the pagegroup ID - we have to look up all the page ID's for this
             // PageGroupID
-            $SQL = "SELECT pageID FROM pages WHERE pagegroupID = " . \Xibo\Helper\Sanitize::int($row[1]);
+            $SQL = "SELECT pageID FROM pages WHERE pagegroupID = " . Sanitize::int($row[1]);
 
             if (!$results = $db->query($SQL)) {
                 trigger_error($db->error());
@@ -582,9 +480,9 @@ END;
     function MenuItemSecurityGrid()
     {
 
-        $groupid = \Xibo\Helper\Sanitize::getInt('groupid');
+        $groupid = Sanitize::getInt('groupid');
 
-        $filter_menu = \Xibo\Helper\Sanitize::getString('filter_menu');
+        $filter_menu = Sanitize::getString('filter_menu');
 
         Theme::Set('form_id', 'UserGroupMenuForm');
         Theme::Set('form_meta', '<input type="hidden" name="groupid" value="' . $groupid . '">');
@@ -653,7 +551,7 @@ END;
     {
 
 
-        $groupid = \Xibo\Helper\Sanitize::getInt('groupid');
+        $groupid = Sanitize::getInt('groupid');
 
         $pageids = $_POST['pageids'];
 
@@ -696,7 +594,7 @@ END;
     {
 
         $response = $this->getState();
-        $groupID = \Xibo\Helper\Sanitize::getInt('groupid');
+        $groupID = Sanitize::getInt('groupid');
 
         // There needs to be two lists here.
 
@@ -751,7 +649,7 @@ END;
         $response = new ApplicationState();
         $groupObject = new UserGroup($db);
 
-        $groupId = \Xibo\Helper\Sanitize::getInt('GroupID');
+        $groupId = Sanitize::getInt('GroupID');
         $users = \Kit::GetParam('UserID', _POST, _ARRAY, array());
 
         // We will receive a list of users from the UI which are in the "assign column" at the time the form is

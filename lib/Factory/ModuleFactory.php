@@ -27,6 +27,7 @@ use Xibo\Entity\Module;
 use Xibo\Entity\Region;
 use Xibo\Entity\Widget;
 use Xibo\Exception\NotFoundException;
+use Xibo\Helper\Log;
 
 class ModuleFactory
 {
@@ -220,24 +221,26 @@ class ModuleFactory
                 $SQL .= ' AND ValidExtensions LIKE :extension ';
             }
 
-            if (\Xibo\Helper\Sanitize::int('assignable', -1, $filterBy) != -1) {
+            if (\Xibo\Helper\Sanitize::getInt('assignable', -1, $filterBy) != -1) {
                 $SQL .= " AND assignable = :assignable ";
-                $params['assignable'] = \Xibo\Helper\Sanitize::int('assignable', $filterBy);
+                $params['assignable'] = \Xibo\Helper\Sanitize::getInt('assignable', $filterBy);
             }
 
-            if (\Xibo\Helper\Sanitize::int('enabled', -1, $filterBy) != -1) {
+            if (\Xibo\Helper\Sanitize::getInt('enabled', -1, $filterBy) != -1) {
                 $SQL .= " AND enabled = :enabled ";
-                $params['enabled'] = \Xibo\Helper\Sanitize::int('enabled', $filterBy);
+                $params['enabled'] = \Xibo\Helper\Sanitize::getInt('enabled', $filterBy);
             }
 
-            if (\Xibo\Helper\Sanitize::int('regionSpecific', -1, $filterBy) != -1) {
+            if (\Xibo\Helper\Sanitize::getInt('regionSpecific', -1, $filterBy) != -1) {
                 $SQL .= " AND regionSpecific = :regionSpecific ";
-                $params['regionSpecific'] = \Xibo\Helper\Sanitize::int('regionSpecific', $filterBy);
+                $params['regionSpecific'] = \Xibo\Helper\Sanitize::getInt('regionSpecific', $filterBy);
             }
 
             // Sorting?
             if (is_array($sortOrder))
                 $SQL .= 'ORDER BY ' . implode(',', $sortOrder);
+
+            Log::sql($SQL, $params);
 
             $sth = $dbh->prepare($SQL);
             $sth->execute($params);

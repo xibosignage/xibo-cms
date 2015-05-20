@@ -1,0 +1,70 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block actionMenu %}
+    <ul class="nav nav-pills pull-right">
+        <li><a title="{% trans "Open the Filter Form" %}" href="#" onclick="ToggleFilterView('Filter')">{% trans "Filter" %}</a></li>
+        <li><a class="XiboFormButton" title="{% trans "Add a new User Group" %}" href="{{ urlFor("userGroupAddForm") }}">{% trans "Add User Group" %}</a></li>
+    </ul>
+{% endblock %}
+
+
+{% block pageContent %}
+    <div class="widget">
+        <div class="widget-title">{% trans "User Groups" %}</div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}">
+                <div class="XiboFilter">
+                    <div class="FilterDiv" id="Filter">
+                        <form class="form-inline">
+                            {{ inline.text("filter_name", "Name", defaults.name) }}
+                            {{ inline.checkbox("XiboFilterPinned", "Keep Open", defaults.filterPinned) }}
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData">
+                    <table id="userGroups" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>{% trans "User Group" %}</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        var table = $("#userGroups").DataTable({
+            serverSide: true,
+            searchDelay: 3000,
+            "order": [[ 0, "asc"]],
+            ajax: "{{ urlFor("groupSearch") }}",
+            "columns": [
+                { "data": "group" },
+                {
+                    "orderable": false,
+                    "data": dataTableButtonsColumn
+                }
+            ]
+        });
+
+        table.on('draw', dataTableDraw);
+        table.on('processing.dt', dataTableProcessing);
+    </script>
+{% endblock %}

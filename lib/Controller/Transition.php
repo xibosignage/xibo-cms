@@ -21,6 +21,7 @@
 namespace Xibo\Controller;
 
 use baseDAO;
+use Xibo\Factory\TransitionFactory;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Config;
 use Xibo\Helper\Form;
@@ -30,91 +31,35 @@ use Xibo\Helper\Theme;
 
 class Transition extends Base
 {
-    private $transition;
-
     /**
      * No display page functionaility
-     * @return
      */
     function displayPage()
     {
-        // Configure the theme
-        $id = uniqid();
-        Theme::Set('id', $id);
-        Theme::Set('form_meta', '<input type="hidden" name="p" value="transition"><input type="hidden" name="q" value="Grid">');
-        Theme::Set('pager', ApplicationState::Pager($id));
-
-        // Call to render the template
-        Theme::Set('header_text', __('Transitions'));
-        Theme::Set('form_fields', array());
-        $this->getState()->html .= Theme::RenderReturn('grid_render');
+        $this->getState()->template = 'transition-page';
     }
 
     public function Grid()
     {
-
-        $user = $this->getUser();
-        $response = $this->getState();
-
-        $SQL = '';
-        $SQL .= 'SELECT TransitionID, ';
-        $SQL .= '   Transition, ';
-        $SQL .= '   Code, ';
-        $SQL .= '   HasDuration, ';
-        $SQL .= '   HasDirection, ';
-        $SQL .= '   AvailableAsIn, ';
-        $SQL .= '   AvailableAsOut ';
-        $SQL .= '  FROM `transition` ';
-        $SQL .= ' ORDER BY Transition ';
-
-        if (!$transitions = $db->GetArray($SQL)) {
-            trigger_error($db->error());
-            trigger_error(__('Unable to get the list of transitions'), E_USER_ERROR);
-        }
-
-        $cols = array(
-            array('name' => 'name', 'title' => __('Name')),
-            array('name' => 'hasduration', 'title' => __('Has Duration'), 'icons' => true),
-            array('name' => 'hasdirection', 'title' => __('Has Direction'), 'icons' => true),
-            array('name' => 'enabledforin', 'title' => __('Enabled for In'), 'icons' => true),
-            array('name' => 'enabledforout', 'title' => __('Enabled for Out'), 'icons' => true)
-        );
-        Theme::Set('table_cols', $cols);
-
-        $rows = array();
+        $transitions = TransitionFactory::query();
 
         foreach ($transitions as $transition) {
-            $row = array();
-            $row['transitionid'] = \Xibo\Helper\Sanitize::int($transition['TransitionID']);
-            $row['name'] = \Xibo\Helper\Sanitize::string($transition['Transition']);
-            $row['hasduration'] = \Xibo\Helper\Sanitize::int($transition['HasDuration']);
-            $row['hasdirection'] = \Xibo\Helper\Sanitize::int($transition['HasDirection']);
-            $row['enabledforin'] = \Xibo\Helper\Sanitize::int($transition['AvailableAsIn']);
-            $row['enabledforout'] = \Xibo\Helper\Sanitize::int($transition['AvailableAsOut']);
-
-            // Initialise array of buttons, because we might not have any
-            $row['buttons'] = array();
+            /* @var \Xibo\Entity\Transition $transition */
 
             // If the module config is not locked, present some buttons
             if (Config::GetSetting('TRANSITION_CONFIG_LOCKED_CHECKB') != 'Checked') {
 
                 // Edit button
-                $row['buttons'][] = array(
+                $transition->buttons[] = array(
                     'id' => 'transition_button_edit',
-                    'url' => 'index.php?p=transition&q=EditForm&TransitionID=' . $row['transitionid'],
+                    'url' => 'index.php?p=transition&q=EditForm&TransitionID=' . $transition->transitionId,
                     'text' => __('Edit')
                 );
             }
-
-            $rows[] = $row;
         }
 
-        Theme::Set('table_rows', $rows);
-
-        $output = Theme::RenderReturn('table_render');
-
-        $response->SetGridResponse($output);
-
+        $this->getState()->template = 'grid';
+        $this->getState()->setData($transitions);
     }
 
     public function EditForm()

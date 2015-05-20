@@ -1,0 +1,69 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block pageContent %}
+    <div class="widget">
+        <div class="widget-title">{% trans "Transitions" %}</div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}">
+                <div class="XiboFilter">
+                    <div class="FilterDiv" id="Filter">
+                        <form class="form-inline">
+                            {{ inline.checkbox("XiboFilterPinned", "Keep Open", defaults.filterPinned) }}
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData">
+                    <table id="transitions" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Name" %}</th>
+                                <th>{% trans "Has Duration" %}</th>
+                                <th>{% trans "Has Direction" %}</th>
+                                <th>{% trans "Enabled for In" %}</th>
+                                <th>{% trans "Enabled for Out" %}</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        var table = $("#transitions").DataTable({
+            serverSide: true,
+            searchDelay: 3000,
+            "order": [[ 0, "asc"]],
+            ajax: "{{ urlFor("transitionSearch") }}",
+            "columns": [
+                { "data": "transition" },
+                { "data": "hasDuration" },
+                { "data": "hasDirection" },
+                { "data": "availableAsIn" },
+                { "data": "availableAsOut" },
+                {
+                    "orderable": false,
+                    "data": dataTableButtonsColumn
+                }
+            ]
+        });
+
+        table.on('draw', dataTableDraw);
+        table.on('processing.dt', dataTableProcessing);
+    </script>
+{% endblock %}

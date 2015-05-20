@@ -20,6 +20,7 @@
  */
 namespace Xibo\Controller;
 
+use Xibo\Factory\ModuleFactory;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Config;
 use Xibo\Helper\Help;
@@ -30,35 +31,19 @@ use Xibo\Storage\PDOConnect;
 
 class Module extends Base
 {
-
-    function actionMenu()
-    {
-        return array(
-            array('title' => __('Verify All'),
-                'class' => 'XiboFormButton',
-                'selected' => false,
-                'link' => 'index.php?p=module&q=VerifyForm',
-                'help' => __('Verify all modules have been installed correctly.'),
-                'onclick' => ''
-            )
-        );
-    }
-
     /**
      * Display the module page
      */
     function displayPage()
     {
-        // Configure the theme
-        $id = uniqid();
-        Theme::Set('id', $id);
-        Theme::Set('form_meta', '<input type="hidden" name="p" value="module"><input type="hidden" name="q" value="Grid">');
-        Theme::Set('pager', ApplicationState::Pager($id));
+        $data = [];
 
         // Do we have any modules to install?!
         if (Config::GetSetting('MODULE_CONFIG_LOCKED_CHECKB') != 'Checked') {
             // Get a list of matching files in the modules folder
             $files = glob('modules/*.module.php');
+
+            $installed = [];
 
             // Get a list of all currently installed modules
             try {
@@ -81,16 +66,12 @@ class Module extends Base
             $to_install = array_diff($files, $installed);
 
             if (count($to_install) > 0) {
-                Theme::Set('module_install_url', 'index.php?p=module&q=Install&module=');
-                Theme::Set('to_install', $to_install);
-                Theme::Set('prepend', Theme::RenderReturn('module_page_install_modules'));
+                $data['modulesToInstall'] = $to_install;
             }
         }
 
-        // Call to render the template
-        Theme::Set('header_text', __('Modules'));
-        Theme::Set('form_fields', array());
-        $this->getState()->html .= Theme::RenderReturn('grid_render');
+        $this->getState()->template = 'module-page';
+        $this->getState()->setData($data);
     }
 
     /**
@@ -98,87 +79,33 @@ class Module extends Base
      */
     public function Grid()
     {
-
-        $user = $this->getUser();
-        $response = $this->getState();
-
-        $SQL = '';
-        $SQL .= 'SELECT ModuleID, ';
-        $SQL .= '   Name, ';
-        $SQL .= '   Enabled, ';
-        $SQL .= '   Description, ';
-        $SQL .= '   RegionSpecific, ';
-        $SQL .= '   ValidExtensions, ';
-        $SQL .= '   ImageUri, ';
-        $SQL .= '   PreviewEnabled, ';
-        $SQL .= '   assignable, ';
-        $SQL .= '   settings ';
-        $SQL .= '  FROM `module` ';
-        $SQL .= ' ORDER BY Name ';
-
-        if (!$modules = $db->GetArray($SQL)) {
-            trigger_error($db->error());
-            trigger_error(__('Unable to get the list of modules'), E_USER_ERROR);
-        }
-
-        $cols = array(
-            array('name' => 'name', 'title' => __('Name')),
-            array('name' => 'description', 'title' => __('Description')),
-            array('name' => 'isregionspecific', 'title' => __('Library Media'), 'icons' => true),
-            array('name' => 'validextensions', 'title' => __('Valid Extensions')),
-            array('name' => 'imageuri', 'title' => __('Image Uri')),
-            array('name' => 'preview_enabled', 'title' => __('Preview Enabled'), 'icons' => true),
-            array('name' => 'assignable', 'title' => __('Assignable'), 'icons' => true, 'helpText' => __('Can this module be assigned to a Layout?')),
-            array('name' => 'enabled', 'title' => __('Enabled'), 'icons' => true)
-        );
-        Theme::Set('table_cols', $cols);
-
-        $rows = array();
+        $modules = ModuleFactory::query();
 
         foreach ($modules as $module) {
-            $row = array();
-            $row['moduleid'] = \Xibo\Helper\Sanitize::int($module['ModuleID']);
-            $row['name'] = \Xibo\Helper\Sanitize::string($module['Name']);
-            $row['description'] = \Xibo\Helper\Sanitize::string($module['Description']);
-            $row['isregionspecific'] = (\Xibo\Helper\Sanitize::int($module['RegionSpecific']) == 0) ? 1 : 0;
-            $row['validextensions'] = \Xibo\Helper\Sanitize::string($module['ValidExtensions']);
-            $row['imageuri'] = \Xibo\Helper\Sanitize::string($module['ImageUri']);
-            $row['enabled'] = \Xibo\Helper\Sanitize::int($module['Enabled']);
-            $row['preview_enabled'] = \Xibo\Helper\Sanitize::int($module['PreviewEnabled']);
-            $row['assignable'] = \Xibo\Helper\Sanitize::int($module['assignable']);
-            $row['settings'] = json_decode(Kit::ValidateParam($module['settings'], _HTMLSTRING), true);
-
-            // Initialise array of buttons, because we might not have any
-            $row['buttons'] = array();
+            /* @var \Xibo\Entity\Module $module */
 
             // If the module config is not locked, present some buttons
             if (Config::GetSetting('MODULE_CONFIG_LOCKED_CHECKB') != 'Checked') {
 
                 // Edit button
-                $row['buttons'][] = array(
+                $module->buttons[] = array(
                     'id' => 'module_button_edit',
-                    'url' => 'index.php?p=module&q=EditForm&ModuleID=' . $row['moduleid'],
+                    'url' => 'index.php?p=module&q=EditForm&ModuleID=' . $module->moduleId,
                     'text' => __('Edit')
                 );
             }
 
             // Are there any buttons we need to provide as part of the module?
-            if (isset($row['settings']['buttons'])) {
-                foreach ($row['settings']['buttons'] as $button) {
+            if (isset($module->settings['buttons'])) {
+                foreach ($module->settings['buttons'] as $button) {
                     $button['text'] = __($button['text']);
-                    $row['buttons'][] = $button;
+                    $module->buttons[] = $button;
                 }
             }
-
-            $rows[] = $row;
         }
 
-        Theme::Set('table_rows', $rows);
-
-        $output = Theme::RenderReturn('table_render');
-
-        $response->SetGridResponse($output);
-
+        $this->getState()->template = 'grid';
+        $this->getState()->setData($modules);
     }
 
     /**

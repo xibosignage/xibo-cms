@@ -197,6 +197,7 @@ $app->get('/displayprofile/form/add', '\Xibo\Controller\DisplayProfile:addForm')
 // group
 //
 $app->get('/group/view', '\Xibo\Controller\UserGroup:displayPage')->name('groupView');
+$app->get('/group/form/add', '\Xibo\Controller\UserGroup:addForm')->name('userGroupAddForm');
 
 //
 // admin
@@ -206,14 +207,16 @@ $app->get('/admin/view', '\Xibo\Controller\Settings:displayPage')->name('adminVi
 //
 // oauth
 //
-$app->get('/oauth/view', function () use ($app) {
-
-})->name('oauthView');
+$app->get('/applications/view', '\Xibo\Controller\Applications:displayPage')->name('applicationsView');
+$app->get('/applications/data/activity', '\Xibo\Controller\Applications:viewActivity')->name('applicationViewActivity');
+$app->get('/applications/form/add', '\Xibo\Controller\Applications:addForm')->name('applicationAddForm');
 
 //
 // module
 //
 $app->get('/module/view', '\Xibo\Controller\Module:displayPage')->name('moduleView');
+$app->get('/module/install/:id', '\Xibo\Controller\Module:install')->name('moduleInstall');
+$app->get('/module/form/verify', '\Xibo\Controller\Module:verifyForm')->name('moduleVerifyForm');
 
 //
 // transition

@@ -94,3 +94,23 @@ $app->delete('/log', '\Xibo\Controller\Log:truncate')->name('logTruncate');
 // User
 //
 $app->get('/user', '\Xibo\Controller\User:grid')->name('userSearch');
+
+//
+// User Group
+//
+$app->get('/group', '\Xibo\Controller\UserGroup:grid')->name('groupSearch');
+
+//
+// Applications
+//
+$app->get('/applications', '\Xibo\Controller\Applications:grid')->name('applicationsSearch');
+
+//
+// Modules
+//
+$app->get('/module', '\Xibo\Controller\Module:grid')->name('moduleSearch');
+
+//
+// Transition
+//
+$app->get('/transition', '\Xibo\Controller\Transition:grid')->name('transitionSearch');
