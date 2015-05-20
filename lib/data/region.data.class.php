@@ -599,6 +599,9 @@ class Region extends Data
     
             if ($height <= 0)
                 return $this->SetError(__('Height must be greater than 0'));
+
+            if ($zindex != null && $zindex <= 0)
+                return $this->SetError(__('Layer must be greater than 0'));
             
             //Load the XML for this layout
             $xml = new DOMDocument("1.0");

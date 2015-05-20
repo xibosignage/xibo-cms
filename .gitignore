@@ -4,3 +4,4 @@ settings.php
 .idea/
 library/
 vendor/
+modules/preview/fonts.css

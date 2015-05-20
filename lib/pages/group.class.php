@@ -135,7 +135,8 @@ END;
 	
 		$SQL = <<<END
 		SELECT 	group.group,
-				group.groupID
+				group.groupID,
+				group.libraryQuota
 		FROM `group`
 		WHERE IsUserSpecific = 0 AND IsEveryone = 0
 END;
@@ -154,7 +155,8 @@ END;
 		}
 
 		$cols = array(
-                array('name' => 'usergroup', 'title' => __('User Group'))
+                array('name' => 'usergroup', 'title' => __('User Group')),
+                array('name' => 'libraryQuotaText', 'title' => __('Library Quota'))
             );
         Theme::Set('table_cols', $cols);
 
@@ -162,12 +164,14 @@ END;
 
 		while ($row = $db->get_assoc_row($results)) 
 		{
-			$groupid	= Kit::ValidateParam($row['groupID'], _INT);
-			$group 		= Kit::ValidateParam($row['group'], _STRING);
+			$groupid = Kit::ValidateParam($row['groupID'], _INT);
+			$group = Kit::ValidateParam($row['group'], _STRING);
 
-			$row['usergroup'] = $group;
+            $row['usergroup'] = $group;
+            $row['libraryQuota'] = Kit::ValidateParam($row['libraryQuota'], _INT);
+            $row['libraryQuotaText'] = ($row['libraryQuota'] == 0) ? '' : Kit::formatBytes($row['libraryQuota'] * 1024);
 
-			// we only want to show certain buttons, depending on the user logged in
+            // we only want to show certain buttons, depending on the user logged in
 			if ($user->GetUserTypeID() == 1) 
 			{
 				// Edit
@@ -203,6 +207,13 @@ END;
 	                    'id' => 'usergroup_button_menu_security',
 	                    'url' => 'index.php?p=group&q=MenuItemSecurityForm&groupid=' . $groupid,
 	                    'text' => __('Menu Security')
+	                );
+
+				// User Quota
+	            $row['buttons'][] = array(
+	                    'id' => 'usergroup_button_quota',
+	                    'url' => 'index.php?p=group&q=quotaForm&groupid=' . $groupid,
+	                    'text' => __('Set User Quota')
 	                );
 			}
 
@@ -788,30 +799,45 @@ END;
 		// Convert to an array of ID's for convenience
 		$allUserIds = array_map(function ($array) { return $array['userid']; }, $allUsers);
 
-		// Users in group
-		$usersAssigned = $this->user->userList(null, array('groupIds' => array($groupId)));
+        // Users in group
+		$usersAssigned = UserData::entries(null, array('groupIds' => array($groupId)));
 
-        foreach ($usersAssigned as $row) {
+        Debug::Audit('All userIds we want to assign: ' . var_export($users, true));
+        Debug::Audit('All userIds we have access to: ' . var_export($allUserIds, true));
+
+        foreach ($usersAssigned as $user) {
+            /* @var Userdata $user */
 			// Did this session have permission to do anything to this user?
 			// If not, move on
-			if (!in_array($row['userid'], $allUserIds))
+			if (!in_array($user->userId, $allUserIds))
 				continue;
 
+            Debug::Audit('Logged in user has permission to make changes to this assigned user ' . $user->userId);
+
             // Is this user in the provided list of users?
-			if (in_array($row['userid'], $users)) {
+			if (in_array($user->userId, $users)) {
                 // This user is already assigned, so we remove it from the $users array
-				unset($users[$row['userid']]);
+                Debug::Audit('This user is already assigned ' . $user->userId);
+
+                if (($key = array_search($user->userId, $users)) !== false) {
+                    unset($users[$key]);
+                }
             }
             else
             {
+                Debug::Audit('This user is assigned, but not in the list of assignments ' . $user->userId);
+
 				// It isn't therefore needs to be removed
-				if (!$groupObject->Unlink($groupId, $row['userid']))
+				if (!$groupObject->Unlink($groupId, $user->userId))
 					trigger_error($groupObject->GetErrorMessage(), E_USER_ERROR);
             }
         }
 
+        Debug::Audit('All userIds we want to assign after sorting: ' . var_export($users, true));
+
 		// Add any users that are still missing after tha assignment process
-        foreach($users as $userId) {
+        foreach ($users as $userId) {
+            Debug::Audit('User was missing, linking them: ' . $userId);
             // Add any that are missing
 			if (!$groupObject->Link($groupId, $userId))
 			{
@@ -822,5 +848,47 @@ END;
         $response->SetFormSubmitResponse(__('Group membership set'), false);
         $response->Respond();
 	}
+
+    public function quotaForm()
+    {
+        $response = new ResponseManager();
+        $groupId = Kit::GetParam('groupId', _GET, _INT);
+
+        // Look up the existing quota
+        $libraryQuota = UserGroup::getLibraryQuota($groupId);
+
+        $formFields = array();
+        $formFields[] = FormManager::AddNumber('libraryQuota', __('Library Quota'), $libraryQuota, __('The quota in Kb that should be applied. Enter 0 for no quota.'), 'q', 'required');
+        Theme::Set('form_fields', $formFields);
+
+        // Set some information about the form
+        Theme::Set('form_id', 'GroupQuotaForm');
+        Theme::Set('form_action', 'index.php?p=group&q=quota');
+        Theme::Set('form_meta', '<input type="hidden" name="groupId" value="' . $groupId . '" />');
+
+        $response->SetFormRequestResponse(Theme::RenderReturn('form_render'), __('Edit Library Quota'), '350px', '150px');
+        $response->AddButton(__('Help'), 'XiboHelpRender("' . HelpManager::Link('Group', 'Edit') . '")');
+        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
+        $response->AddButton(__('Save'), '$("#GroupQuotaForm").submit()');
+        $response->Respond();
+    }
+
+    public function quota()
+    {
+        $response = new ResponseManager();
+
+        $groupId = Kit::GetParam('groupId', _POST, _INT);
+        $libraryQuota = Kit::GetParam('libraryQuota', _POST, _INT);
+
+        try {
+            UserGroup::updateLibraryQuota($groupId, $libraryQuota);
+        }
+        catch (Exception $e) {
+            Debug::Error($e->getMessage());
+            trigger_error(__('Problem setting quota'), E_USER_ERROR);
+        }
+
+        $response->SetFormSubmitResponse(__('Quota has been updated'), false);
+        $response->Respond();
+    }
 }
-?>

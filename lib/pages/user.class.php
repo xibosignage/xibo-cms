@@ -164,6 +164,7 @@ class userDAO extends baseDAO {
                 array('name' => 'username', 'title' => __('Name')),
                 array('name' => 'homepage', 'title' => __('Homepage')),
                 array('name' => 'email', 'title' => __('Email')),
+                array('name' => 'libraryQuotaText', 'title' => __('Library Quota')),
                 array('name' => 'retired', 'title' => __('Retired?'), 'icons' => true)
             );
         Theme::Set('table_cols', $cols);
@@ -172,7 +173,7 @@ class userDAO extends baseDAO {
 
         foreach ($users as $row) {
 
-            $row['groupid'] = $user->getGroupFromID($row['userid'], true);
+            $row['libraryQuotaText'] = ($row['object']->libraryQuota == 0) ? '' : Kit::formatBytes($row['object']->libraryQuota * 1024);
 
             // Super admins have some buttons
             if ($user->usertypeid == 1) {
@@ -194,14 +195,14 @@ class userDAO extends baseDAO {
                 // Page Security
                 $row['buttons'][] = array(
                         'id' => 'user_button_page_security',
-                        'url' => 'index.php?p=group&q=PageSecurityForm&groupid=' . $row['groupid'],
+                        'url' => 'index.php?p=group&q=PageSecurityForm&groupid=' . $row['object']->groupId,
                         'text' => __('Page Security')
                     );
 
                 // Menu Security
                 $row['buttons'][] = array(
                         'id' => 'user_button_menu_security',
-                        'url' => 'index.php?p=group&q=MenuItemSecurityForm&groupid=' . $row['groupid'],
+                        'url' => 'index.php?p=group&q=MenuItemSecurityForm&groupid=' . $row['object']->groupId,
                         'text' => __('Menu Security')
                     );
 
@@ -225,6 +226,13 @@ class userDAO extends baseDAO {
                         'url' => 'index.php?p=user&q=SetPasswordForm&userid=' . $row['userid'],
                         'text' => __('Set Password')
                     );
+
+                // User Quota
+                $row['buttons'][] = array(
+                    'id' => 'usergroup_button_quota',
+                    'url' => 'index.php?p=group&q=quotaForm&groupid=' . $row['object']->groupId,
+                    'text' => __('Set User Quota')
+                );
             }
 
             $rows[] = $row;
