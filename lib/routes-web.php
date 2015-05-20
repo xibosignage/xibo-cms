@@ -236,7 +236,7 @@ $app->get('/fault/view', '\Xibo\Controller\Fault:displayPage')->name('faultView'
 //
 // license
 //
-$app->get('/license/view', '\Xibo\Controller\Login:About')->name('licenseView');
+$app->get('/license/view', '\Xibo\Controller\Login:about')->name('licenseView');
 
 //
 // help

@@ -114,12 +114,17 @@ class Login extends Base
     /**
      * Shows information about Xibo
      */
-    function About()
+    function about()
     {
         $response = $this->getState();
 
-        // Render the Theme and output
-        $response->template = 'about-text';
+        if ($this->getApp()->request()->isAjax()) {
+            $response->template = 'about-text';
+        }
+        else {
+            $response->template = 'about-page';
+        }
+
         $response->setData(['version' => VERSION]);
     }
 }

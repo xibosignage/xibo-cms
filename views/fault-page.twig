@@ -19,7 +19,7 @@
                     {% if environmentFault %}
                         <p class="alert alert-danger">{% trans "There is a critical error listed below that you should resolve first." %}</p>
                     {% elseif environmentWarning %}
-                    <p class="alert alert-warning">{% trans "There is a warning listed below that you should resolve first." %}</p>
+                        <p class="alert alert-warning">{% trans "There is a warning listed below that you should resolve first." %}</p>
                     {% endif %}
 
                     <p>{% trans "Before reporting a fault it would be appreciated if you follow the below steps." %}</p>
@@ -88,7 +88,7 @@
                     </div>
 
                     <div class="ReportFault">
-                        <h2>Further Action</h2>
+                        <h2>{% trans "Further Action" %}</h2>
                         <p>
                             {% trans "We will do our best to use the information collected above to solve your issue." %}"
                             {% trans "However sometimes this will not be enough and you will be asked to put your CMS into \"Test\" mode." %}
@@ -124,10 +124,4 @@
             </div>
         </div>
     </div>
-{% endblock %}
-
-{% block javaScript %}
-    <script type="text/javascript">
-
-    </script>
 {% endblock %}
