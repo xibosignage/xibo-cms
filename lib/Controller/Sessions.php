@@ -20,10 +20,13 @@
  */
 namespace Xibo\Controller;
 
+use Xibo\Factory\SessionFactory;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Date;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
+use Xibo\Helper\Sanitize;
+use Xibo\Helper\Session;
 use Xibo\Helper\Theme;
 
 
@@ -32,15 +35,6 @@ class Sessions extends Base
 
     function displayPage()
     {
-
-
-        // Configure the theme
-        $id = uniqid();
-        Theme::Set('id', $id);
-        Theme::Set('form_meta', '<input type="hidden" name="p" value="sessions"><input type="hidden" name="q" value="Grid">');
-        Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
-        Theme::Set('pager', ApplicationState::Pager($id));
-
         // Construct Filter Form
         if (\Kit::IsFilterPinned('sessions', 'Filter')) {
             $filter_pinned = 1;
@@ -52,118 +46,49 @@ class Sessions extends Base
             $filter_fromdt = NULL;
         }
 
-        $formFields = array();
-        $formFields[] = Form::AddDatePicker('filter_fromdt', __('From Date'), $filter_fromdt, NULL, 't');
+        $data = [
+            'defaults' => [
+                'fromDate' => $filter_fromdt,
+                'type' => $filter_type,
+                'filterPinned' => $filter_pinned
+            ],
+            'options' => [
+                'type' => array(
+                    array('id' => '0', 'value' => 'All'),
+                    array('id' => 'active', 'value' => 'Active'),
+                    array('id' => 'guest', 'value' => 'Guest'),
+                    array('id' => 'expired', 'value' => 'Expired'))
+            ]
+        ];
 
-        $formFields[] = Form::AddCombo(
-            'filter_type',
-            __('Type'),
-            $filter_type,
-            array(array('typeid' => '0', 'type' => 'All'), array('typeid' => 'active', 'type' => 'Active'), array('typeid' => 'guest', 'type' => 'Guest'), array('typeid' => 'expired', 'type' => 'Expired')),
-            'typeid',
-            'type',
-            NULL,
-            'd');
-
-        $formFields[] = Form::AddCheckbox('XiboFilterPinned', __('Keep Open'),
-            $filter_pinned, NULL,
-            'k');
-
-        // Call to render the template
-        Theme::Set('header_text', __('Sessions'));
-        Theme::Set('form_fields', $formFields);
-        $this->getState()->html .= Theme::RenderReturn('grid_render');
+        $this->getState()->template = 'sessions-page';
+        $this->getState()->setData($data);
     }
 
-    function actionMenu()
+    function grid()
     {
-
-        return array(
-            array('title' => __('Filter'),
-                'class' => '',
-                'selected' => false,
-                'link' => '#',
-                'help' => __('Open the filter form'),
-                'onclick' => 'ToggleFilterView(\'Filter\')'
-            )
-        );
-    }
-
-    function Grid()
-    {
-
-        $response = $this->getState();
-
         $type = \Kit::GetParam('filter_type', _POST, _WORD);
-        $fromDt = \Xibo\Helper\Sanitize::getString('filter_fromdt');
+        $fromDt = Sanitize::getString('filter_fromdt');
 
-        \Xibo\Helper\Session::Set('sessions', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
-        \Xibo\Helper\Session::Set('sessions', 'filter_type', $type);
-        \Xibo\Helper\Session::Set('sessions', 'filter_fromdt', $fromDt);
+        Session::Set('sessions', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        Session::Set('sessions', 'filter_type', $type);
+        Session::Set('sessions', 'filter_fromdt', $fromDt);
 
-        $SQL = "SELECT session.userID, user.UserName,  IsExpired, LastPage,  session.LastAccessed,  RemoteAddr,  UserAgent ";
-        $SQL .= "FROM `session` LEFT OUTER JOIN user ON user.userID = session.userID ";
-        $SQL .= "WHERE 1 = 1 ";
+        $sessions = SessionFactory::query($this->gridRenderSort(), ['type' => $type, 'fromDt' => $fromDt]);
 
-        if ($fromDt != '')
-            // From Date is the Calendar Formatted DateTime in ISO format
-            $SQL .= sprintf(" AND session.LastAccessed < '%s' ", Date::getMidnightSystemDate(Date::getTimestampFromString($fromDt)));
-
-        if ($type == "active")
-            $SQL .= " AND IsExpired = 0 ";
-
-        if ($type == "expired")
-            $SQL .= " AND IsExpired = 1 ";
-
-        if ($type == "guest")
-            $SQL .= " AND session.userID IS NULL ";
-
-        // Load results into an array
-        $log = $db->GetArray($SQL);
-
-        Log::notice($SQL);
-
-        if (!is_array($log)) {
-            trigger_error($db->error());
-            trigger_error(__('Error getting the log'), E_USER_ERROR);
-        }
-
-        $cols = array(
-            array('name' => 'lastaccessed', 'title' => __('Last Accessed')),
-            array('name' => 'isexpired', 'title' => __('Active'), 'icons' => true),
-            array('name' => 'username', 'title' => __('User Name')),
-            array('name' => 'lastpage', 'title' => __('Last Page')),
-            array('name' => 'ip', 'title' => __('IP Address')),
-            array('name' => 'browser', 'title' => __('Browser'))
-        );
-        Theme::Set('table_cols', $cols);
-
-        $rows = array();
-
-        foreach ($log as $row) {
-
-            $row['userid'] = \Xibo\Helper\Sanitize::int($row['userID']);
-            $row['username'] = \Xibo\Helper\Sanitize::string($row['UserName']);
-            $row['isexpired'] = (\Xibo\Helper\Sanitize::int($row['IsExpired']) == 1) ? 0 : 1;
-            $row['lastpage'] = \Xibo\Helper\Sanitize::string($row['LastPage']);
-            $row['lastaccessed'] = Date::getLocalDate(strtotime(Kit::ValidateParam($row['LastAccessed'], _STRING)));
-            $row['ip'] = \Xibo\Helper\Sanitize::string($row['RemoteAddr']);
-            $row['browser'] = \Xibo\Helper\Sanitize::string($row['UserAgent']);
+        foreach ($sessions as $row) {
+            /* @var \Xibo\Entity\Session $row */
 
             // Edit
-            $row['buttons'][] = array(
+            $row->buttons[] = array(
                 'id' => 'sessions_button_logout',
-                'url' => 'index.php?p=sessions&q=ConfirmLogout&userid=' . $row['userid'],
+                'url' => 'index.php?p=sessions&q=ConfirmLogout&userid=' . $row->userId,
                 'text' => __('Logout')
             );
-
-            $rows[] = $row;
         }
 
-        Theme::Set('table_rows', $rows);
-
-        $response->SetGridResponse(Theme::RenderReturn('table_render'));
-
+        $this->getState()->template = 'grid';
+        $this->getState()->setData($sessions);
     }
 
     function ConfirmLogout()
@@ -171,7 +96,7 @@ class Sessions extends Base
 
         $response = $this->getState();
 
-        $userid = \Xibo\Helper\Sanitize::getInt('userid');
+        $userid = Sanitize::getInt('userid');
 
         // Set some information about the form
         Theme::Set('form_id', 'SessionsLogoutForm');
@@ -197,7 +122,7 @@ class Sessions extends Base
 
         //ajax request handler
         $response = $this->getState();
-        $userID = \Xibo\Helper\Sanitize::getInt('userid');
+        $userID = Sanitize::getInt('userid');
 
         $SQL = sprintf("UPDATE session SET IsExpired = 1 WHERE userID = %d", $userID);
 

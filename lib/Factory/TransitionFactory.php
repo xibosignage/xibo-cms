@@ -19,7 +19,7 @@ class TransitionFactory
     /**
      * @param array $sortOrder
      * @param array $filterBy
-     * @return array[DisplayProfile]
+     * @return array[Transition]
      * @throws NotFoundException
      */
     public static function query($sortOrder = null, $filterBy = null)

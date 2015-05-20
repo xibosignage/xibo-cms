@@ -29,16 +29,15 @@ class Fault extends Base
 
     function displayPage()
     {
-
-        $user = $this->getUser();
         $config = new Config();
+        $data = [
+            'environmentCheck' => $config->CheckEnvironment(),
+            'environmentFault' => $config->envFault,
+            'environmentWarning' => $config->envWarning
+        ];
 
-        // Configure the theme
-        Theme::Set('environment_check', $config->CheckEnvironment());
-        Theme::Set('collect_data_url', 'index.php?p=fault&q=CollectData');
-
-        // Render the Theme and output
-        $this->getState()->html .= Theme::RenderReturn('fault_page');
+        $this->getState()->template = 'fault-page';
+        $this->getState()->setData($data);
     }
 
     function CollectData()

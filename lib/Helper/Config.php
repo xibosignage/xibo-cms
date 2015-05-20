@@ -29,9 +29,9 @@ class Config
     public static $VERSION_REQUIRED = '5.3.3';
 
     private $extensions;
-    private $envTested;
-    private $envFault;
-    private $envWarning;
+    public $envTested;
+    public $envFault;
+    public $envWarning;
 
     public function __construct()
     {
@@ -185,13 +185,6 @@ class Config
      */
     public function CheckEnvironment()
     {
-        $cols = array(
-            array('name' => 'item', 'title' => __('Item')),
-            array('name' => 'status', 'title' => __('Status'), 'icons' => true),
-            array('name' => 'advice', 'title' => __('Advice'))
-        );
-        Theme::Set('table_cols', $cols);
-
         $rows = array();
 
         // Check for PHP version
@@ -514,8 +507,7 @@ class Config
 
         $this->envTested = true;
 
-        Theme::Set('table_rows', $rows);
-        return Theme::RenderReturn('table_render');
+        return $rows;
     }
 
     /**

@@ -114,3 +114,8 @@ $app->get('/module', '\Xibo\Controller\Module:grid')->name('moduleSearch');
 // Transition
 //
 $app->get('/transition', '\Xibo\Controller\Transition:grid')->name('transitionSearch');
+
+//
+// Sessions
+//
+$app->get('/sessions', '\Xibo\Controller\Sessions:grid')->name('sessionsSearch');
