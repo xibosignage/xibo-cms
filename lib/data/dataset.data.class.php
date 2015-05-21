@@ -341,6 +341,7 @@ class DataSet extends Data
             $headings = array();
             $allowedOrderCols = array();
             $filter = str_replace($blackList, '', $filter);
+            $filter = str_replace('[DisplayId]', $displayId, $filter);
             
             $columns = explode(',', $columnIds);
     
