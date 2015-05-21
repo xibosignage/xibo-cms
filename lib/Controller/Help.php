@@ -20,6 +20,7 @@
  */
 namespace Xibo\Controller;
 use baseDAO;
+use Xibo\Factory\HelpFactory;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Form;
 use Xibo\Helper\Theme;
@@ -27,113 +28,49 @@ use Xibo\Helper\Theme;
 
 class Help extends Base
 {
-    private $helpLink;
-
     /**
-     * No display page functionaility
-     * @return
+     * Help Page
      */
     function displayPage()
     {
-        // Configure the theme
-        $id = uniqid();
-        Theme::Set('id', $id);
-        Theme::Set('form_meta', '<input type="hidden" name="p" value="help"><input type="hidden" name="q" value="Grid">');
-        Theme::Set('pager', ApplicationState::Pager($id));
-
-        // Call to render the template
-        Theme::Set('header_text', __('Help Links'));
-        Theme::Set('form_fields', array());
-        $this->getState()->html .= Theme::RenderReturn('grid_render');
+        $this->getState()->template = 'help-page';
     }
 
-    function actionMenu()
+    public function grid()
     {
+        $helpLinks = HelpFactory::query($this->gridRenderSort(), $this->gridRenderFilter());
 
-        return array(
-            array('title' => __('Add Help Link'),
-                'class' => 'XiboFormButton',
-                'selected' => false,
-                'link' => 'index.php?p=help&q=AddForm',
-                'help' => __('Add a new Help page'),
-                'onclick' => ''
-            )
-        );
-    }
-
-    public function Grid()
-    {
-
-        $user = $this->getUser();
-        $response = $this->getState();
-
-        //display the display table
-        $SQL = <<<SQL
-        SELECT HelpID, Topic, Category, Link
-          FROM `help`
-        ORDER BY Topic, Category
-SQL;
-
-        // Load results into an array
-        $helplinks = $db->GetArray($SQL);
-
-        if (!is_array($helplinks)) {
-            trigger_error($db->error());
-            trigger_error(__('Error getting list of helplinks'), E_USER_ERROR);
-        }
-
-        $cols = array(
-            array('name' => 'topic', 'title' => __('Topic')),
-            array('name' => 'category', 'title' => __('Category')),
-            array('name' => 'link', 'title' => __('Link'))
-        );
-        Theme::Set('table_cols', $cols);
-
-        $rows = array();
-
-        foreach ($helplinks as $row) {
-
-            $row['helpid'] = \Xibo\Helper\Sanitize::int($row['HelpID']);
-            $row['topic'] = \Xibo\Helper\Sanitize::string($row['Topic']);
-            $row['category'] = \Xibo\Helper\Sanitize::string($row['Category']);
-            $row['link'] = \Xibo\Helper\Sanitize::string($row['Link']);
-
-            $row['buttons'] = array();
+        foreach ($helpLinks as $row) {
+            /* @var \Xibo\Entity\Help $row */
 
             // we only want to show certain buttons, depending on the user logged in
-            if ($user->usertypeid == 1) {
+            if ($this->getUser()->userTypeId == 1) {
 
                 // Edit
-                $row['buttons'][] = array(
+                $row->buttons[] = array(
                     'id' => 'help_button_edit',
-                    'url' => 'index.php?p=help&q=EditForm&HelpID=' . $row['helpid'],
+                    'url' => 'index.php?p=help&q=EditForm&HelpID=' . $row->helpId,
                     'text' => __('Edit')
                 );
 
                 // Delete
-                $row['buttons'][] = array(
+                $row->buttons[] = array(
                     'id' => 'help_button_delete',
-                    'url' => 'index.php?p=help&q=DeleteForm&HelpID=' . $row['helpid'],
+                    'url' => 'index.php?p=help&q=DeleteForm&HelpID=' . $row->helpId,
                     'text' => __('Delete')
                 );
 
                 // Test
-                $row['buttons'][] = array(
+                $row->buttons[] = array(
                     'id' => 'help_button_test',
-                    'url' => Help::Link($row['topic'], $row['category']),
+                    'url' => \Xibo\Helper\Help::Link($row->topic, $row->category),
                     'text' => __('Test')
                 );
             }
-
-            $rows[] = $row;
         }
 
-        Theme::Set('table_rows', $rows);
-
-        $output = Theme::RenderReturn('table_render');
-
-        $response->SetGridResponse($output);
-
+        $this->getState()->template = 'grid';
+        $this->getState()->setData($helpLinks);
     }
 
     public function AddForm()

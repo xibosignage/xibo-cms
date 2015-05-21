@@ -26,6 +26,11 @@ $app->get('/about', '\Xibo\Controller\Login:About')->name('about');
 $app->get('/clock', '\Xibo\Controller\Clock:clock')->name('clock');
 
 //
+// Schedule
+//
+$app->get('/schedule/data/events', '\Xibo\Controller\Schedule:eventData')->name('scheduleCalendarData');
+
+//
 // Layouts
 //
 $app->get('/layout', '\Xibo\Controller\Layout:grid')->name('layoutSearch');
@@ -119,3 +124,13 @@ $app->get('/transition', '\Xibo\Controller\Transition:grid')->name('transitionSe
 // Sessions
 //
 $app->get('/sessions', '\Xibo\Controller\Sessions:grid')->name('sessionsSearch');
+
+//
+// Help
+//
+$app->get('/help', '\Xibo\Controller\Help:grid')->name('helpSearch');
+
+//
+// Settings
+//
+$app->put('/admin', '\Xibo\Controller\Settings:update')->name('settingsUpdate');

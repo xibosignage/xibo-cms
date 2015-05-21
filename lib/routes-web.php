@@ -108,6 +108,7 @@ $app->get('/update', '\Xibo\Controller\Upgrade:displayPage')->name('upgradeView'
 //
 $app->get('/schedule/view', '\Xibo\Controller\Schedule:displayPage')->name('scheduleView');
 $app->get('/schedule/form/now/:id', '\Xibo\Controller\Schedule:scheduleNowForm')->name('scheduleNowForm');
+$app->get('/schedule/form/add', '\Xibo\Controller\Schedule:addForm')->name('scheduleAddForm');
 
 //
 // layouts
@@ -203,6 +204,9 @@ $app->get('/group/form/add', '\Xibo\Controller\UserGroup:addForm')->name('userGr
 // admin
 //
 $app->get('/admin/view', '\Xibo\Controller\Settings:displayPage')->name('adminView');
+$app->get('/admin/form/export', '\Xibo\Controller\Settings:exportForm')->name('settingsExportForm');
+$app->get('/admin/form/import', '\Xibo\Controller\Settings:importForm')->name('settingsImportForm');
+$app->get('/admin/form/tidy', '\Xibo\Controller\Settings:tidyLibraryForm')->name('settingsLibraryTidyForm');
 
 //
 // oauth
@@ -242,6 +246,7 @@ $app->get('/license/view', '\Xibo\Controller\Login:about')->name('licenseView');
 // help
 //
 $app->get('/help/view', '\Xibo\Controller\Help:displayPage')->name('helpView');
+$app->get('/help/form/add', '\Xibo\Controller\Help:addForm')->name('helpAddForm');
 
 //
 // Stats

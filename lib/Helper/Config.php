@@ -108,14 +108,14 @@ class Config
             $SQL = 'SELECT * FROM setting WHERE 1 = 1 ';
             $params = array();
 
-            if (\Kit::GetParam('userChange', $filter_by, _INT, -1) != -1) {
+            if (Sanitize::getInt('userChange', $filter_by) != null) {
                 $SQL .= ' AND userChange = :userChange ';
-                $params['userChange'] = Sanitize::getInt('userChange');
+                $params['userChange'] = Sanitize::getInt('userChange', $filter_by);
             }
 
-            if (\Kit::GetParam('userSee', $filter_by, _INT, -1) != -1) {
+            if (Sanitize::getInt('userSee', $filter_by) != null) {
                 $SQL .= ' AND userSee = :userSee ';
-                $params['userSee'] = Sanitize::getInt('userSee');
+                $params['userSee'] = Sanitize::getInt('userSee', $filter_by);
             }
 
             // Sorting?

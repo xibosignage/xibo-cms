@@ -33,21 +33,13 @@ use Xibo\Helper\Theme;
 
 class Settings extends Base
 {
-
     function displayPage()
     {
-
-        // Set some information about the form
-        Theme::Set('form_id', 'SettingsForm');
-        Theme::Set('form_action', 'index.php?p=admin&q=Edit');
-
-        $libraryLimit = Config::GetSetting('LIBRARY_SIZE_LIMIT_KB');
-
         // Get all of the settings in an array
         $settings = Config::GetAll(NULL, array('userSee' => 1));
 
         $currentCategory = '';
-        $catagories = array();
+        $categories = array();
         $formFields = array();
 
         // Go through each setting, validate it and add it to the array
@@ -55,7 +47,7 @@ class Settings extends Base
 
             if ($currentCategory != $setting['cat']) {
                 $currentCategory = $setting['cat'];
-                $catagories[] = array('tabId' => $setting['cat'], 'tabName' => ucfirst($setting['cat']));
+                $categories[] = array('tabId' => $setting['cat'], 'tabName' => ucfirst($setting['cat']));
             }
 
             // Are there any options
@@ -95,69 +87,14 @@ class Settings extends Base
             );
         }
 
-        Theme::Set('cats', $catagories);
-        Theme::Set('form_fields', $formFields);
-
-        // Provide some bandwidth and library information to the theme.
-        // Library Size in Bytes
-        $fileSize = $this->db->GetSingleValue('SELECT IFNULL(SUM(FileSize), 0) AS SumSize FROM media', 'SumSize', _INT);
-        $limitPcnt = ($libraryLimit > 0) ? (($fileSize / ($libraryLimit * 1024)) * 100) : '';
-
-        Theme::Set('library_info', $this->FormatByteSize($fileSize) . (($libraryLimit > 0) ? sprintf(__(' / %d %% of %s'), $limitPcnt, $this->FormatByteSize($libraryLimit * 1024)) : ''));
-
-        // Monthly bandwidth - optionally tested against limits
-        $xmdsLimit = Config::GetSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB');
-        $startOfMonth = strtotime(date('m') . '/01/' . date('Y') . ' 00:00:00');
-
-        $sql = sprintf('SELECT IFNULL(SUM(Size), 0) AS BandwidthUsage FROM `bandwidth` WHERE Month > %d AND Month < %d', $startOfMonth, $startOfMonth + (86400 * 2));
-        $bandwidthUsage = $this->db->GetSingleValue($sql, 'BandwidthUsage', _INT);
-        $usagePcnt = ($xmdsLimit > 0) ? (((double)$bandwidthUsage / ($xmdsLimit * 1024)) * 100) : '';
-
-        Theme::Set('bandwidth_info', $this->FormatByteSize($bandwidthUsage) . (($xmdsLimit > 0) ? sprintf(__(' / %d %% of %s'), $usagePcnt, $this->FormatByteSize($xmdsLimit * 1024)) : ''));
-
+        $data = [
+            'categories' => $categories,
+            'fields' => $formFields
+        ];
 
         // Render the Theme and output
-        $this->getState()->html .= Theme::RenderReturn('settings_page');
-    }
-
-    function actionMenu()
-    {
-
-        $menu = array();
-
-        if (Config::GetSetting('SETTING_IMPORT_ENABLED') == 1) {
-            $menu[] = array(
-                'title' => __('Import'),
-                'class' => 'XiboFormButton',
-                'selected' => false,
-                'link' => 'index.php?p=admin&q=RestoreForm',
-                'help' => __('Import a database'),
-                'onclick' => ''
-            );
-        }
-
-        // Always show export
-        $menu[] = array(
-            'title' => __('Export'),
-            'class' => 'XiboFormButton',
-            'selected' => false,
-            'link' => 'index.php?p=admin&q=BackupForm',
-            'help' => __('Export a database'),
-            'onclick' => ''
-        );
-
-        if (Config::GetSetting('SETTING_LIBRARY_TIDY_ENABLED') == 1) {
-            $menu[] = array(
-                'title' => __('Tidy Library'),
-                'class' => 'XiboFormButton',
-                'selected' => false,
-                'link' => 'index.php?p=admin&q=TidyLibraryForm',
-                'help' => __('Run through the library and remove unused and unnecessary files'),
-                'onclick' => ''
-            );
-        }
-
-        return $menu;
+        $this->getState()->template = 'settings-page';
+        $this->getState()->setData($data);
     }
 
     function Edit()

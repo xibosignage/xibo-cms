@@ -331,11 +331,9 @@ class Session
     public static function set($key, $secondKey, $value = null)
     {
         if ($value === null) {
-            Log::debug('Storing %s in session with value %s', $key, $secondKey);
             $_SESSION[$key] = $secondKey;
             return $secondKey;
         } else {
-            Log::debug('Storing %s|%s in session with value %s', $key, $secondKey, $value);
             $_SESSION[$key] = array($secondKey => $value);
             return $value;
         }

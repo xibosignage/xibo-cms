@@ -487,10 +487,7 @@ var requestTab = function(tabName, url) {
 };
 
 var settingsUpdated = function(response) {
-    if (response.success) {
-        $("#SettingsForm input[name='token']").val($(response.nextToken).val());
-    }
-    else {
+    if (!response.success) {
         SystemMessage((response.message == "") ? translation.failure : response.message, true);
     }
 };

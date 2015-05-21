@@ -1,6 +1,6 @@
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2009-2013 Daniel Garner
+ * Copyright (C) 2009-2015 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -50,10 +50,16 @@ $(document).ready(function() {
         });
     });
 
+    // Make the select list nicer
+    $('#DisplayList').selectpicker();
+
+    // Get some options for the calendar
+    var calendarOptions = $("#CalendarContainer").data();
+
     var options = {
         events_source: function () { return []; },
         view: 'month',
-        tmpl_path: "theme/default/libraries/calendar/tmpls/",
+        tmpl_path: calendarOptions.templatePath,
         tmpl_cache: true,
         onAfterEventsLoad: function(events) {
             if(!events) {
@@ -92,16 +98,13 @@ $(document).ready(function() {
 
     // Calendar is initialised without any event_source (that is changed when the selector is used)
     if (($('#Calendar').length > 0)) {
-        options.type = calendarType;
+        options.type = calendarOptions.calendarType;
         calendar = $('#Calendar').calendar(options);
 
         // Set up our display selector control
         $('#DisplayList').on('change', function(){
             setTimeout(CallGenerateCalendar(), 1000);
         });
-
-        // Make the select list nicer
-        $('#DisplayList').selectpicker();
 
         // Generate the calendar now we have a list set up
         CallGenerateCalendar();
@@ -112,13 +115,14 @@ $(document).ready(function() {
  * Generates the Calendar
  */
 function CallGenerateCalendar() {
-    
-    var url = 'index.php?p=schedule&q=GenerateCalendar&ajax=true';
+
+    var calendarOptions = $("#CalendarContainer").data();
+    var url = calendarOptions.eventSource;
 
     // Append display groups
     var displayGroups = $('#DisplayList').serialize();
     if (displayGroups != '') 
-        url += '&' + displayGroups;
+        url += '?' + displayGroups;
 
     // Override the calendar URL
     calendar.setOptions({events_source: url, time_start: '00:00', time_end: '00:00'});

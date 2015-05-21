@@ -23,7 +23,7 @@
                         {% if menu %}
                             <li class="sidebar-title"><a>{{ item.title }}</a></li>
                         {% else %}
-                            <li class="sidebar-list {{ item.class }} {% if item.selected %}active{% endif %}"><a href="{{ item.link }}" class="{{ item.class }} {% if item.selected %}active{% endif %}">{{ item.title }}</a></li>
+                            <li class="sidebar-list {{ item.class }} {% if item.selected %}active{% endif %}"><a href="{{ urlFor(item.link) }}" class="{{ item.class }} {% if item.selected %}active{% endif %}">{{ item.title }}</a></li>
                         {% endif %}
 
                         {% if menu %}

@@ -22,6 +22,7 @@ namespace Xibo\Controller;
 use baseDAO;
 use Exception;
 use Kit;
+use Xibo\Entity\DisplayGroup;
 use Xibo\Helper\Config;
 use Xibo\Helper\Date;
 use Xibo\Helper\Form;
@@ -33,41 +34,40 @@ use Xibo\Helper\Theme;
 
 class Schedule extends Base
 {
-
     function displayPage()
     {
-        Theme::Set('event_add_url', 'index.php?p=schedule&q=AddEventForm');
-
         // We need to provide a list of displays
         $displayGroupIds = \Kit::GetParam('displayGroupIds', _SESSION, _ARRAY);
         $groups = array();
         $displays = array();
 
-        foreach ($this->getUser()->DisplayGroupList(-1 /*IsDisplaySpecific*/) as $display) {
+        foreach ($this->getUser()->DisplayGroupList(['displayGroup']) as $display) {
+            /* @var DisplayGroup $display */
 
-            $display['checked_text'] = (in_array($display['displaygroupid'], $displayGroupIds)) ? ' selected' : '';
+            $display->selected = (in_array($display->displayGroupId, $displayGroupIds));
 
-            if ($display['isdisplayspecific'] == 1) {
+            if ($display->isDisplaySpecific == 1) {
                 $displays[] = $display;
             } else {
                 $groups[] = $display;
             }
         }
 
-        Theme::Set('id', 'DisplayList');
-        Theme::Set('allSelected', in_array(-1, $displayGroupIds));
-        Theme::Set('groups', $groups);
-        Theme::Set('displays', $displays);
-        Theme::Set('calendarType', Config::GetSetting('CALENDAR_TYPE'));
+        $data = [
+            'allSelected' => in_array(-1, $displayGroupIds),
+            'groups' => $groups,
+            'displays' => $displays
+        ];
 
         // Render the Theme and output
-        $this->getState()->html .= Theme::RenderReturn('schedule_page');
+        $this->getState()->template = 'schedule-page';
+        $this->getState()->setData($data);
     }
 
     /**
      * Generates the calendar that we draw events on
      */
-    function GenerateCalendar()
+    function eventData()
     {
         $displayGroupIds = \Kit::GetParam('DisplayGroupIDs', _GET, _ARRAY);
         $start = \Kit::GetParam('from', _REQUEST, _INT) / 1000;
