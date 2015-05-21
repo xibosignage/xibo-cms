@@ -937,6 +937,9 @@ class Twitter extends Module
                             if ($photoUrl != '') {
                                 $file = $media->addModuleFileFromUrl($photoUrl, 'twitter_photo_' . $tweet->user->id . '_' . $tweet->entities->media[0]->id_str, $expires);
                                 $replace = ($isPreview) ? '<img src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $file['mediaId'] . '" />' : '<img src="' . $file['storedAs'] . '" />';
+
+                                // Tag this layout with this file
+                                $layout->AddLk($this->layoutid, 'module', $file['mediaId']);
                             }
                         }
 
