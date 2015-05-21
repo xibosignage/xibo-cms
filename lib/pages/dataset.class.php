@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2011-2013 Daniel Garner
+ * Copyright (C) 2011-2015 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -116,28 +116,28 @@ class datasetDAO extends baseDAO
                 $dataSet['buttons'][] = array(
                         'id' => 'dataset_button_viewdata',
                         'class' => 'XiboRedirectButton',
-                        'url' => 'index.php?p=dataset&sp=DataEntry&datasetid=' . $dataSet['datasetid'] . '&dataset=' . $dataSet['dataset'],
+                        'url' => 'index.php?p=dataset&sp=DataEntry&datasetid=' . $dataSet['datasetid'] . '&dataset=' . urlencode($dataSet['dataset']),
                         'text' => __('View Data')
                     );
 
                 // View Columns
                 $dataSet['buttons'][] = array(
                         'id' => 'dataset_button_viewcolumns',
-                        'url' => 'index.php?p=dataset&q=DataSetColumnsForm&datasetid=' . $dataSet['datasetid'] . '&dataset=' . $dataSet['dataset'],
+                        'url' => 'index.php?p=dataset&q=DataSetColumnsForm&datasetid=' . $dataSet['datasetid'] . '&dataset=' . urlencode($dataSet['dataset']),
                         'text' => __('View Columns')
                     );
 
                 // Edit DataSet
                 $dataSet['buttons'][] = array(
                         'id' => 'dataset_button_edit',
-                        'url' => 'index.php?p=dataset&q=EditDataSetForm&datasetid=' . $dataSet['datasetid'] . '&dataset=' . $dataSet['dataset'],
+                        'url' => 'index.php?p=dataset&q=EditDataSetForm&datasetid=' . $dataSet['datasetid'] . '&dataset=' . urlencode($dataSet['dataset']),
                         'text' => __('Edit')
                     );
 
                 // Edit DataSet
                 $dataSet['buttons'][] = array(
                         'id' => 'dataset_button_import',
-                        'url' => 'index.php?p=dataset&q=ImportCsvForm&datasetid=' . $dataSet['datasetid'] . '&dataset=' . $dataSet['dataset'],
+                        'url' => 'index.php?p=dataset&q=ImportCsvForm&datasetid=' . $dataSet['datasetid'] . '&dataset=' . urlencode($dataSet['dataset']),
                         'text' => __('Import CSV')
                     );            
             }
@@ -147,7 +147,7 @@ class datasetDAO extends baseDAO
                 // Delete DataSet
                 $dataSet['buttons'][] = array(
                         'id' => 'dataset_button_delete',
-                        'url' => 'index.php?p=dataset&q=DeleteDataSetForm&datasetid=' . $dataSet['datasetid'] . '&dataset=' . $dataSet['dataset'],
+                        'url' => 'index.php?p=dataset&q=DeleteDataSetForm&datasetid=' . $dataSet['datasetid'] . '&dataset=' . urlencode($dataSet['dataset']),
                         'text' => __('Delete')
                     ); 
             }
@@ -157,7 +157,7 @@ class datasetDAO extends baseDAO
                 // Edit Permissions
                 $dataSet['buttons'][] = array(
                         'id' => 'dataset_button_delete',
-                        'url' => 'index.php?p=dataset&q=PermissionsForm&datasetid=' . $dataSet['datasetid'] . '&dataset=' . $dataSet['dataset'],
+                        'url' => 'index.php?p=dataset&q=PermissionsForm&datasetid=' . $dataSet['datasetid'] . '&dataset=' . urlencode($dataSet['dataset']),
                         'text' => __('Permissions')
                     ); 
             }
