@@ -27,11 +27,9 @@ class errorDAO extends baseDAO {
 		$db 	=& $this->db;
 		$user 	=& $this->user;
 		$error	= Kit::GetParam('ErrorMessage', _SESSION, _HTMLSTRING, __('Unknown Error'));
+		Theme::Set('ErrorMessage',$error);
 		
-		echo __('There has been an application error.');
-		echo $error;
-		
-		exit;
+		Theme::Render('error');
 	}
 }
 
