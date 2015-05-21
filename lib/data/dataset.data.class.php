@@ -370,7 +370,10 @@ class DataSet extends Data
                 // Is this column a formula column or a value column?
                 if ($col['DataSetColumnTypeID'] == 2) {
                     // Formula
-                    $heading['Heading'] = str_replace('[DisplayGeoLocation]', $displayGeoLocation, $formula) . ' AS \'' . $heading['Heading'] . '\'';
+                    $formula = str_replace('[DisplayGeoLocation]', $displayGeoLocation, $formula);
+                    $formula = str_replace('[DisplayId]', $displayId, $formula);
+
+                    $heading['Heading'] = $formula . ' AS \'' . $heading['Heading'] . '\'';
                 }
                 else {
                     // Value
