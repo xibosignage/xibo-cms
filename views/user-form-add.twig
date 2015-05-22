@@ -23,7 +23,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="userAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("user") }}">
+            <form id="userAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("userAdd") }}">
                 {{ forms.text("userName", "User Name", "", "The Login Name of the user.", "", "required maxlength='50'") }}
                 {{ forms.password("password", "Password", "", "The Password for this user.", "", "required") }}
                 {{ forms.password("email", "Email", "", "The Email Address for this user.") }}

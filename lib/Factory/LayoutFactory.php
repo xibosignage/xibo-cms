@@ -165,6 +165,18 @@ class LayoutFactory
     }
 
     /**
+     * Get by OwnerId
+     * @param int $ownerId
+     * @return array[Layout]
+     * @throws NotFoundException
+     */
+    public static function getByOwnerId($ownerId)
+    {
+        //TODO add filtering
+        return LayoutFactory::query(null, array('ownerId' => $ownerId, 'excludeTemplates' => 0, 'retired' => -1));
+    }
+
+    /**
      * Load a layout by its XLF
      * @param string $layoutXlf
      * @return Layout

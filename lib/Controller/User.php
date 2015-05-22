@@ -20,7 +20,9 @@
  */
 namespace Xibo\Controller;
 
+use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\PageFactory;
+use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\UserTypeFactory;
 use Xibo\Helper\ApplicationState;
@@ -108,14 +110,14 @@ class User extends Base
                 // Edit
                 $user->buttons[] = array(
                     'id' => 'user_button_edit',
-                    'url' => 'index.php?p=user&q=DisplayForm&userID=' . $user->userId,
+                    'url' => $this->getApp()->urlFor('userEditForm', ['id' => $user->userId]),
                     'text' => __('Edit')
                 );
 
                 // Delete
                 $user->buttons[] = array(
                     'id' => 'user_button_delete',
-                    'url' => 'index.php?p=user&q=DeleteForm&userID=' . $user->userId,
+                    'url' => $this->getApp()->urlFor('userDeleteForm', ['id' => $user->userId]),
                     'text' => __('Delete')
                 );
 
@@ -138,13 +140,6 @@ class User extends Base
                     'id' => 'user_button_applications',
                     'url' => 'index.php?p=oauth&q=UserTokens&userID=' . $user->userId,
                     'text' => __('Applications')
-                );
-
-                // Set Home Page
-                $user->buttons[] = array(
-                    'id' => 'user_button_homepage',
-                    'url' => 'index.php?p=user&q=SetUserHomePageForm&userid=' . $user->userId,
-                    'text' => __('Set Homepage')
                 );
 
                 // Set Password
@@ -170,7 +165,7 @@ class User extends Base
     /**
      * Adds a user
      */
-    function add()
+    public function add()
     {
         // Build a user entity and save it
         $user = new \Xibo\Entity\User();
@@ -193,36 +188,48 @@ class User extends Base
     }
 
     /**
-     * Modify a user
+     * Edits a user
+     * @param int $userId
      */
-    function EditUser()
+    public function edit($userId)
     {
-        $response = $this->getState();
+        $user = UserFactory::getById($userId);
 
+        if (!$this->getUser()->checkEditable($user))
+            throw new AccessDeniedException();
 
-        // Do we have permission?
-        $entries = $this->getUser()->userList(null, array('userId' => \Kit::GetParam('userid', _POST, _INT)));
-
-        if (count($entries) == 0)
-            trigger_error(__('You do not have permission to edit this user'), E_USER_ERROR);
-        else
-            $user = $entries[0]['object'];
-
-        // Create our user object
-        $user->userName = Sanitize::getString('edit_username');
+        // Build a user entity and save it
+        $user->userName = Sanitize::getString('userName');
         $user->email = Sanitize::getString('email');
-        $user->homePage = \Kit::GetParam('homepage', _POST, _STRING, 'dashboard');
+        $user->userTypeId = Sanitize::getInt('userTypeId');
+        $user->homePage = Sanitize::getString('homePageId');
         $user->retired = Sanitize::getCheckbox('retired');
 
-        // Super Admins can change the user type
-        if ($this->getUser()->userTypeId == 1)
-            $user->userTypeId = Sanitize::getInt('usertypeid');
+        // Save the user
+        $user->save();
 
-        if (!$user->edit())
-            trigger_error($user->GetErrorMessage(), E_USER_ERROR);
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Edited %s'), $user->userName),
+            'id' => $user->userId,
+            'data' => [$user]
+        ]);
+    }
 
-        $response->SetFormSubmitResponse('User Saved.');
+    public function delete($userId)
+    {
+        $user = UserFactory::loadById($userId);
 
+        if (!$this->getUser()->checkDeleteable($user))
+            throw new AccessDeniedException();
+
+        if (Sanitize::getCheckbox('deleteAllItems') == 0) {
+            // Check to see if we have any child data that would prevent us from deleting
+        }
+        else {
+            // Just delete
+            $user->delete();
+        }
     }
 
     /**
@@ -291,240 +298,49 @@ class User extends Base
     }
 
     /**
-     * Displays the User form (from Ajax)
-     * @return
+     * User Edit Form
+     * @param $userId
+     * @throws \Xibo\Exception\NotFoundException
      */
-    function DisplayForm()
+    public function editForm($userId)
     {
+        $user = UserFactory::getById($userId);
 
-        $user = $this->getUser();
-        $response = $this->getState();
+        if (!$this->getUser()->checkEditable($user))
+            throw new AccessDeniedException();
 
-        $userId = Sanitize::getInt('userID');
-
-        // Set some information about the form
-        Theme::Set('form_id', 'UserForm');
-
-        // Are we an edit?
-        if ($userId != 0) {
-
-            $form_title = 'Edit Form';
-            $form_help_link = Help::Link('User', 'Edit');
-            Theme::Set('form_action', 'index.php?p=user&q=EditUser');
-            Theme::Set('form_meta', '<input type="hidden" name="userid" value="' . $userId . '" />');
-
-            // We are editing a user
-            $entries = $this->getUser()->userList(null, array('userId' => $userId));
-
-            if (count($entries) == 0)
-                trigger_error(__('You do not have permission to edit this user.'), E_USER_ERROR);
-            else
-                $aRow = $entries[0];
-
-            // Store some information for later use
-            $username = \Kit::ValidateParam($aRow['username'], _USERNAME);
-            $usertypeid = Sanitize::int($aRow['usertypeid']);
-            $email = Sanitize::string($aRow['email']);
-            $homepage = Sanitize::string($aRow['homepage']);
-            $retired = Sanitize::int($aRow['retired']);
-
-            $retiredFormField = Form::AddCheckbox('retired', __('Retired?'),
-                $retired, __('Is this user retired?'),
-                'r');
-        } else {
-
-            $form_title = 'Add Form';
-            $form_help_link = Help::Link('User', 'Add');
-            Theme::Set('form_action', 'index.php?p=user&q=AddUser');
-
-            // We are adding a new user
-            $usertype = Config::GetSetting('defaultUsertype');
-
-            $SQL = sprintf("SELECT usertypeid FROM usertype WHERE usertype = '%s'", $db->escape_string($usertype));
-
-            if (!$usertypeid = $db->GetSingleValue($SQL, 'usertypeid', _INT)) {
-                trigger_error($db->error());
-                trigger_error("Can not get Usertype information", E_USER_ERROR);
-            }
-
-            // Defaults
-            $username = NULL;
-            $password = NULL;
-            $email = NULL;
-            $homepage = NULL;
-            $retired = NULL;
-
-            // List of values for the initial user group
-            $userGroupField = Form::AddCombo(
-                'groupid',
-                __('Initial User Group'),
-                NULL,
-                $db->GetArray('SELECT GroupID, `Group` FROM `group` WHERE IsUserSpecific = 0 AND IsEveryone = 0 ORDER BY 2'),
-                'GroupID',
-                'Group',
-                __('What is the initial user group for this user?'),
-                'g');
-
-            $passwordField = Form::AddPassword('edit_password', __('Password'), $password,
-                __('The Password for this user.'), 'p', 'required');
-        }
-
-        // Render the return and output
-        $formFields = array();
-        $formFields[] = Form::AddText('edit_username', __('User Name'), $username,
-            __('The Login Name of the user.'), 'n', 'required maxlength="50"');
-
-        $formFields[] = Form::AddText('email', __('Email'), $email,
-            __('The Email Address for this user.'), 'e', NULL);
-
-        $formFields[] = Form::AddCombo(
-            'homepage',
-            __('Homepage'),
-            $homepage,
-            array(
-                array("homepageid" => "dashboard", 'homepage' => 'Icon Dashboard'),
-                array("homepageid" => "mediamanager", 'homepage' => 'Media Dashboard'),
-                array("homepageid" => "statusdashboard", 'homepage' => 'Status Dashboard')
-            ),
-            'homepageid',
-            'homepage',
-            __('Homepage for this user. This is the page they will be taken to when they login.'),
-            'h');
-
-        // Only allow the selection of a usertype if we are a super admin
-        $SQL = 'SELECT usertypeid, usertype FROM usertype';
-        if ($user->usertypeid != 1)
-            $SQL .= ' WHERE UserTypeID = 3';
-
-        $formFields[] = Form::AddCombo(
-            'usertypeid',
-            __('User Type'),
-            $usertypeid,
-            $db->GetArray($SQL),
-            'usertypeid',
-            'usertype',
-            __('What is this users type?'),
-            't', NULL, ($user->usertypeid == 1));
-
-        // Add the user group field if set
-        if (isset($passwordField) && is_array($passwordField))
-            $formFields[] = $passwordField;
-
-        if (isset($userGroupField) && is_array($userGroupField))
-            $formFields[] = $userGroupField;
-
-        if (isset($retiredFormField) && is_array($retiredFormField))
-            $formFields[] = $retiredFormField;
-
-        Theme::Set('form_fields', $formFields);
-
-        $response->SetFormRequestResponse(NULL, $form_title, '550px', '320px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . $form_help_link . '")');
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Save'), '$("#UserForm").submit()');
-
+        $this->getState()->template = 'user-form-edit';
+        $this->getState()->setData([
+            'user' => $user,
+            'options' => [
+                'homepage' => PageFactory::query(),
+                'userTypes' => UserTypeFactory::query()
+            ],
+            'help' => [
+                'edit' => Help::Link('User', 'Edit')
+            ]
+        ]);
     }
 
     /**
-     * Delete User form
-     * @return
+     * User Delete Form
+     * @param $userId
+     * @throws \Xibo\Exception\NotFoundException
      */
-    function DeleteForm()
+    public function deleteForm($userId)
     {
+        $user = UserFactory::getById($userId);
 
-        $user = $this->getUser();
-        $response = $this->getState();
+        if (!$this->getUser()->checkDeleteable($user))
+            throw new AccessDeniedException();
 
-        $userid = Sanitize::getInt('userID');
-
-        // Set some information about the form
-        Theme::Set('form_id', 'UserDeleteForm');
-        Theme::Set('form_action', 'index.php?p=user&q=DeleteUser');
-        Theme::Set('form_meta', '<input type="hidden" name="userid" value="' . $userid . '" />');
-
-        $formFields = array(Form::AddMessage(__('Are you sure you want to delete? You may not be able to delete this user if they have associated content. You can retire users by using the Edit Button.')));
-        $formFields[] = Form::AddCheckbox('deleteAllItems',
-            __('Delete all items owned by this User?'),
-            0,
-            __('Check to delete all items owned by this user, including Layouts, Media, Schedules, etc.'),
-            'd');
-
-        Theme::Set('form_fields', $formFields);
-
-        $response->SetFormRequestResponse(NULL, __('Delete this User?'), '430px', '200px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('User', 'Delete') . '")');
-        $response->AddButton(__('No'), 'XiboDialogClose()');
-        $response->AddButton(__('Yes'), '$("#UserDeleteForm").submit()');
-
-    }
-
-    /**
-     * Sets the users home page
-     * @return
-     */
-    function SetUserHomepageForm()
-    {
-
-        $response = $this->getState();
-        $userid = Sanitize::getInt('userid');
-
-        // Set some information about the form
-        Theme::Set('form_id', 'SetUserHomePageForm');
-        Theme::Set('form_action', 'index.php?p=user&q=SetUserHomepage');
-        Theme::Set('form_meta', '<input type="hidden" name="userid" value="' . $userid . '" />');
-
-        // Render the return and output
-        $formFields = array();
-
-        $formFields[] = Form::AddCombo(
-            'homepage',
-            __('Homepage'),
-            $this->getUser()->GetHomePage($userid),
-            array(
-                array("homepageid" => "dashboard", 'homepage' => 'Icon Dashboard'),
-                array("homepageid" => "mediamanager", 'homepage' => 'Media Dashboard'),
-                array("homepageid" => "statusdashboard", 'homepage' => 'Status Dashboard')
-            ),
-            'homepageid',
-            'homepage',
-            __('The users Homepage. This should not be changed until you want to reset their homepage.'),
-            'h');
-
-        Theme::Set('form_fields', $formFields);
-
-        $response->SetFormRequestResponse(NULL, __('Set the homepage for this user'), '350px', '150px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('User', 'SetHomepage') . '")');
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Save'), '$("#SetUserHomePageForm").submit()');
-
-    }
-
-    /**
-     * Sets the users homepage
-     * @return
-     */
-    function SetUserHomepage()
-    {
-
-
-        $response = $this->getState();
-
-        if (!$this->getUser()->userTypeId == 1)
-            trigger_error(__('You do not have permission to change this users homepage'));
-
-        $userid = \Kit::GetParam('userid', _POST, _INT, 0);
-        $homepage = \Kit::GetParam('homepage', _POST, _WORD);
-
-        $SQL = sprintf("UPDATE user SET homepage = '%s' WHERE userID = %d", $homepage, $userid);
-
-        if (!$db->query($SQL)) {
-            trigger_error($db->error());
-            $response->SetError(__('Unknown error setting this users homepage'));
-
-        }
-
-        $response->SetFormSubmitResponse(__('Homepage has been set'));
-
+        $this->getState()->template = 'user-form-delete';
+        $this->getState()->setData([
+            'user' => $user,
+            'help' => [
+                'delete' => Help::Link('User', 'Delete')
+            ]
+        ]);
     }
 
     /**

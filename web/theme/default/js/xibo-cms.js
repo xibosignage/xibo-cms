@@ -286,6 +286,21 @@ function dataTableButtonsColumn(data, type, row, meta) {
     return buttonsTemplate({buttons: data.buttons});
 }
 
+function dataTableTickCrossColumn(data, type, row) {
+    if (type != "display")
+        return data.status;
+
+    var icon = "";
+    if (data == 1)
+        icon = "glyphicon-ok";
+    else if (data == 0)
+        icon = "glyphicon-remove";
+    else
+        icon = "glyphicon-exclamation-sign";
+
+    return "<span class='glyphicon " + icon + "'></span>";
+}
+
 /**
  * DataTable Refresher
  * @param gridId

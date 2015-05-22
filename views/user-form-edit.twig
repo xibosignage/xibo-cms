@@ -1,0 +1,35 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Edit User" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Save" %}, $("#userEditForm").submit()
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Help" %}, XiboHelpRender("{{ help.edit }}")
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="userEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("userEdit", {id: user.userId}) }}">
+                {{ forms.text("userName", "User Name", user.userName, "The Login Name of the user.", "", "required maxlength='50'") }}
+                {{ forms.password("email", "Email", user.email, "The Email Address for this user.") }}
+                {{ forms.dropdown("homePageId", "single", "Homepage", user.homePageId, options.homepage, "pageId", "page", "Homepage for this user. This is the page they will be taken to when they login.") }}
+                {{ forms.dropdown("userTypeId", "single", "User Type", user.userTypeId, options.userTypes, "userTypeId", "userType", "What is this users type?") }}
+                {{ forms.checkbox("retired", "Retired?", user.retired, "Is this user retired?") }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

@@ -78,7 +78,7 @@ class WebAuthentication extends Middleware
                 // Need to check
                 if ($user->hasIdentity() && $app->session->isExpired == 0) {
                     // Replace our user with a fully loaded one
-                    $user = UserFactory::getById($user->userId);
+                    $user = UserFactory::loadById($user->userId);
                     // Do they have permission?
                     $user->routeAuthentication($resource);
 

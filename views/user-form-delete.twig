@@ -1,0 +1,32 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Delete" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Yes" %}, $("#userDeleteForm").submit()
+    {% trans "No" %}, XiboDialogClose()
+    {% trans "Help" %}, XiboHelpRender("{{ help.delete }}")
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="userDeleteForm" class="XiboForm form-horizontal" method="delete" action="{{ urlFor("userDelete", {id: user.userId}) }}">
+                {{ forms.message("Are you sure you want to delete? You may not be able to delete this user if they have associated content. You can retire users by using the Edit Button.") }}
+                {{ forms.checkbox("deleteAllItems", "Delete all items owned by this User?", 0, "Check to delete all items owned by this user, including Layouts, Media, Schedules, etc.") }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

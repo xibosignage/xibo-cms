@@ -25,6 +25,7 @@ class UserGroup
 
     public function __construct()
     {
+        $this->hash = null;
         $this->users = [];
         $this->isEveryone = 0;
     }
@@ -32,6 +33,14 @@ class UserGroup
     public function __toString()
     {
         return sprintf('ID = %d, Group = %s, IsUserSpecific = %d', $this->groupId, $this->group, $this->isUserSpecific);
+    }
+
+    /**
+     * Generate a unique hash for this User Group
+     */
+    private function hash()
+    {
+        return md5(json_encode($this));
     }
 
     public function getId()
@@ -84,6 +93,16 @@ class UserGroup
     }
 
     /**
+     * Load this User Group
+     */
+    public function load()
+    {
+
+        // Set the hash
+        $this->hash = $this->hash();
+    }
+
+    /**
      * Save the group
      * @param bool $validate
      */
@@ -94,7 +113,7 @@ class UserGroup
 
         if ($this->groupId == null || $this->groupId == 0)
             $this->add();
-        else
+        else if ($this->hash() != $this->hash)
             $this->edit();
 
         $this->linkUsers();

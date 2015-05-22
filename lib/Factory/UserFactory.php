@@ -48,6 +48,26 @@ class UserFactory
     }
 
     /**
+     * Load User by ID
+     * @param int $userId
+     * @return User
+     * @throws NotFoundException if the user cannot be found
+     */
+    public static function loadById($userId)
+    {
+        $users = UserFactory::query(null, array('userId' => $userId));
+
+        if (count($users) <= 0)
+            throw new NotFoundException(__('User not found'));
+
+        $user = $users[0];
+        /* @var User $user */
+        $user->load();
+
+        return $user;
+    }
+
+    /**
      * Get User by Name
      * @param string $userName
      * @return User
@@ -110,7 +130,7 @@ class UserFactory
         }
 
         // Retired users?
-        if (Sanitize::getInt('retired', $filterBy) != -1) {
+        if (Sanitize::getInt('retired', $filterBy) != null) {
             $SQL .= " AND user.retired = :retired ";
             $params['retired'] = Sanitize::getInt('retired', $filterBy);
         }

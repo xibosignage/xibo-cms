@@ -154,8 +154,10 @@ $app->get('/user/view', '\Xibo\Controller\User:displayPage')->name('userView');
 $app->get('/user/welcome', '\Xibo\Controller\Login:userWelcome')->name('welcomeWizard');
 $app->get('/user/apps', '\Xibo\Controller\User:myApplications')->name('userMyApplications');
 $app->get('/user/password/view', '\Xibo\Controller\User:changePassword')->name('userChangePassword');
-$app->get('/user/form/:entity/:id', '\Xibo\Controller\User:permissionsForm')->name('permissionsForm');
 $app->get('/user/form/add', '\Xibo\Controller\User:addForm')->name('userAddForm');
+$app->get('/user/form/edit/:id', '\Xibo\Controller\User:editForm')->name('userEditForm');
+$app->get('/user/form/delete/:id', '\Xibo\Controller\User:deleteForm')->name('userDeleteForm');
+$app->get('/user/form/permissions/:entity/:id', '\Xibo\Controller\User:permissionsForm')->name('permissionsForm');
 
 //
 // log

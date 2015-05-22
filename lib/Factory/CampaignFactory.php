@@ -50,6 +50,17 @@ class CampaignFactory
     }
 
     /**
+     * Get Campaign by Owner Id
+     * @param int $ownerId
+     * @return array[Campaign]
+     */
+    public static function getByOwnerId($ownerId)
+    {
+        //TODO add filtering
+        return CampaignFactory::query(null, array('ownerId' => $ownerId));
+    }
+
+    /**
      * Query Campaigns
      * @param array $sortOrder
      * @param array $filterBy

@@ -22,13 +22,18 @@ namespace Xibo\Entity;
 
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\DisplayProfileFactory;
+use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\MediaFactory;
 use Xibo\Factory\MenuFactory;
 use Xibo\Factory\PageFactory;
+use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\UserFactory;
+use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
@@ -49,6 +54,7 @@ define("HASH_PBKDF2_INDEX", 3);
 
 class User
 {
+    private $hash;
     public $userId;
     public $userName;
     public $userTypeId;
@@ -66,11 +72,34 @@ class User
     public $groupId;
     public $group;
 
+    // Groups assigned to
+    public $groups;
+
+    // Things Users can own
+    public $campaigns;
+    public $layouts;
+    public $media;
+    public $events;
+
     /**
      * Cached Permissions
      * @var array[Permission]
      */
     private $permissionCache = array();
+
+    /**
+     * Constructor
+     * Set default values
+     */
+    public function __construct()
+    {
+        $this->groups = [];
+    }
+
+    private function hash()
+    {
+        return md5(json_encode($this));
+    }
 
     public function getOwnerId()
     {
@@ -96,13 +125,18 @@ class User
     /**
      * Set a new password
      * @param string $password
+     * @param string[Optional] $oldPassword
      */
-    public function setNewPassword($password)
+    public function setNewPassword($password, $oldPassword = null)
     {
+        if ($oldPassword != null) {
+            $this->checkPassword($oldPassword);
+        }
+
         $this->testPasswordAgainstPolicy($password);
 
-        $this->password = md5($password);
-        $this->CSPRNG = 0;
+        $this->password = $this->create_hash($password);
+        $this->CSPRNG = 1;
     }
 
     /**
@@ -167,6 +201,25 @@ class User
     }
 
     /**
+     * Load this User
+     * @param bool $all Load everything this user owns
+     */
+    public function load($all = false)
+    {
+        $this->groups = UserGroupFactory::getByUserId($this->userId);
+
+        if ($all) {
+            $this->campaigns = CampaignFactory::getByOwnerId($this->userId);
+            $this->layouts = LayoutFactory::getbyOwnerId($this->userId);
+            $this->media = MediaFactory::getByOwnerId($this->userId);
+            $this->events = ScheduleFactory::getByOwnerId($this->userId);
+        }
+
+        // Set the hash
+        $this->hash = $this->hash();
+    }
+
+    /**
      * Validate
      */
     public function validate()
@@ -199,7 +252,7 @@ class User
 
         if ($this->userId == 0)
             $this->add();
-        else
+        else if ($this->hash() != $this->hash)
             $this->update();
     }
 
@@ -208,7 +261,34 @@ class User
      */
     public function delete()
     {
-        // TODO: Delete user
+        // We must ensure everything is loaded before we delete
+        if ($this->hash == null)
+            $this->load();
+
+        // Delete everything
+        foreach ($this->groups as $layout) {
+            /* @var UserGroup $layout */
+            $layout->delete();
+        }
+
+        foreach ($this->layouts as $layout) {
+            /* @var Layout $layout */
+            $layout->delete();
+        }
+
+        foreach ($this->campaigns as $event) {
+            /* @var Campaign $event */
+            $event->delete();
+        }
+
+        foreach ($this->events as $event) {
+            /* @var Schedule $event */
+            $event->delete();
+        }
+
+        // Delete user specific entities
+        PDOConnect::update('DELETE FROM `session` WHERE userId = :userId', ['userId' => $this->userId]);
+        PDOConnect::update('DELETE FROM `user` WHERE userId = :userId', ['userId' => $this->userId]);
     }
 
     /**
@@ -267,6 +347,11 @@ class User
         );
 
         PDOConnect::update($sql, $params);
+
+        // Update the group
+        $group = UserGroupFactory::getById($this->groupId);
+        $group->group = $this->userName;
+        $group->save();
     }
 
     /**
@@ -479,9 +564,9 @@ class User
         $results = \Xibo\Storage\PDOConnect::select('SELECT UserID FROM file WHERE FileID = :fileId', array('fileId' => $fileId));
 
         if (count($results) <= 0)
-            throw new \Xibo\Exception\NotFoundException('File not found');
+            throw new NotFoundException('File not found');
 
-        $userId = \Xibo\Helper\Sanitize::int($results[0]['UserID']);
+        $userId = Sanitize::int($results[0]['UserID']);
 
         return ($userId == $this->userId);
     }
@@ -684,7 +769,7 @@ class User
             /* @var \Xibo\Entity\DisplayGroup $group */
 
             // Check to see if we are the owner
-            if ($group->ownerId == $this->userId)
+            if ($group->getOwnerId() == $this->userId)
                 continue;
 
             // Check we are viewable
@@ -800,13 +885,13 @@ class User
         foreach ($rows as $transition) {
             $transitionItem = array();
 
-            $transitionItem['transitionid'] = \Xibo\Helper\Sanitize::int($transition['TransitionID']);
-            $transitionItem['transition'] = \Xibo\Helper\Sanitize::string($transition['Transition']);
+            $transitionItem['transitionid'] = Sanitize::int($transition['TransitionID']);
+            $transitionItem['transition'] = Sanitize::string($transition['Transition']);
             $transitionItem['code'] = \Kit::ValidateParam($transition['Code'], _WORD);
-            $transitionItem['hasduration'] = \Xibo\Helper\Sanitize::int($transition['HasDuration']);
-            $transitionItem['hasdirection'] = \Xibo\Helper\Sanitize::int($transition['HasDirection']);
-            $transitionItem['enabledforin'] = \Xibo\Helper\Sanitize::int($transition['AvailableAsIn']);
-            $transitionItem['enabledforout'] = \Xibo\Helper\Sanitize::int($transition['AvailableAsOut']);
+            $transitionItem['hasduration'] = Sanitize::int($transition['HasDuration']);
+            $transitionItem['hasdirection'] = Sanitize::int($transition['HasDirection']);
+            $transitionItem['enabledforin'] = Sanitize::int($transition['AvailableAsIn']);
+            $transitionItem['enabledforout'] = Sanitize::int($transition['AvailableAsOut']);
             $transitionItem['class'] = (($transitionItem['hasduration'] == 1) ? 'hasDuration' : '') . ' ' . (($transitionItem['hasdirection'] == 1) ? 'hasDirection' : '');
 
             $transitions[] = $transitionItem;
@@ -849,8 +934,7 @@ class User
         }
         else if ($this->userTypeId == 2) {
             // Group admins can only see users from their groups.
-            $groups = $this->GetUserGroups($this->userId, true);
-            $filterBy['groupIds'] = (isset($filterBy['groupIds'])) ? array_merge($filterBy['groupIds'], $groups) : $groups;
+            $filterBy['groupIds'] = (isset($filterBy['groupIds'])) ? array_merge($filterBy['groupIds'], $this->groups) : $this->groups;
         }
 
         $users = UserFactory::query($sortOrder, $filterBy);
@@ -875,14 +959,14 @@ class User
 
     public function GetPref($key, $default = NULL)
     {
-        $storedValue = \Xibo\Helper\Session::Get($key);
+        $storedValue = Session::Get($key);
 
         return ($storedValue == NULL) ? $default : $storedValue;
     }
 
     public function SetPref($key, $value)
     {
-        \Xibo\Helper\Session::Set($key, $value);
+        Session::Set($key, $value);
     }
 
     /*

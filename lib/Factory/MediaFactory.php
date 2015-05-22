@@ -44,6 +44,18 @@ class MediaFactory
         return $media[0];
     }
 
+    /**
+     * Get by Owner Id
+     * @param int $ownerId
+     * @return array[Media]
+     * @throws NotFoundException
+     */
+    public static function getByOwnerId($ownerId)
+    {
+        //TODO add filtering
+        return MediaFactory::query(null, array('ownerId' => $ownerId));
+    }
+
     public static function query($sortOrder = null, $filterBy = null)
     {
         $entries = array();
