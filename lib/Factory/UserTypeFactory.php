@@ -2,37 +2,34 @@
 /*
  * Spring Signage Ltd - http://www.springsignage.com
  * Copyright (C) 2015 Spring Signage Ltd
- * (UserGroupFactory.php)
+ * (UserTypeFactory.php)
  */
 
 
 namespace Xibo\Factory;
 
 
-use Xibo\Entity\UserGroup;
+use Xibo\Entity\UserType;
 use Xibo\Exception\NotFoundException;
 use Xibo\Helper\Log;
 use Xibo\Storage\PDOConnect;
 
-class UserGroupFactory
+class UserTypeFactory
 {
     /**
      * @param array $sortOrder
      * @param array $filterBy
-     * @return array[DisplayProfile]
+     * @return array[Transition]
      * @throws NotFoundException
      */
-    public static function query($sortOrder = null, $filterBy = null)
+    public static function query($sortOrder = ['userType'], $filterBy = null)
     {
         $entries = array();
         $params = array();
 
         try {
             $sql = '
-            SELECT 	`group`.group,
-				`group`.groupId
-              FROM `group`
-             WHERE IsUserSpecific = 0 AND IsEveryone = 0
+            SELECT userTypeId, userType FROM `usertype`
             ';
 
             // Sorting?
@@ -42,7 +39,7 @@ class UserGroupFactory
             Log::sql($sql, $params);
 
             foreach (PDOConnect::select($sql, $params) as $row) {
-                $entries[] = (new UserGroup())->hydrate($row);
+                $entries[] = (new UserType())->hydrate($row);
             }
 
             return $entries;

@@ -53,51 +53,51 @@ $(document).ready(function() {
     // Make the select list nicer
     $('#DisplayList').selectpicker();
 
-    // Get some options for the calendar
-    var calendarOptions = $("#CalendarContainer").data();
-
-    var options = {
-        events_source: function () { return []; },
-        view: 'month',
-        tmpl_path: calendarOptions.templatePath,
-        tmpl_cache: true,
-        onAfterEventsLoad: function(events) {
-            if(!events) {
-                return;
-            }
-        },
-        onAfterViewLoad: function(view) {
-            if (typeof this.getTitle === "function")
-                $('h1.page-header').text(this.getTitle());
-
-            $('.btn-group button').removeClass('active');
-            $('button[data-calendar-view="' + view + '"]').addClass('active');
-
-            // Hook up any pop-overs (for small events)
-            $('[data-toggle="popover"]').popover({
-                trigger: "click",
-                html: true,
-                placement: "bottom",
-                content: function() {
-                    return $(this).html();
-                }
-            })
-            .on('shown.bs.popover', function() {
-                var source = $(this);
-                var popover = source.attr("aria-describedby");
-
-                $("#" + popover + " a").click(function(e) {
-                    e.preventDefault();
-                    XiboFormRender($(this).attr('href'));
-                    source.popover("hide");
-                });
-            });
-        },
-        language: calendarLanguage
-    };
-
     // Calendar is initialised without any event_source (that is changed when the selector is used)
     if (($('#Calendar').length > 0)) {
+        // Get some options for the calendar
+        var calendarOptions = $("#CalendarContainer").data();
+
+        var options = {
+            events_source: function () { return []; },
+            view: 'month',
+            tmpl_path: calendarOptions.templatePath,
+            tmpl_cache: true,
+            onAfterEventsLoad: function(events) {
+                if(!events) {
+                    return;
+                }
+            },
+            onAfterViewLoad: function(view) {
+                if (typeof this.getTitle === "function")
+                    $('h1.page-header').text(this.getTitle());
+
+                $('.btn-group button').removeClass('active');
+                $('button[data-calendar-view="' + view + '"]').addClass('active');
+
+                // Hook up any pop-overs (for small events)
+                $('[data-toggle="popover"]').popover({
+                    trigger: "click",
+                    html: true,
+                    placement: "bottom",
+                    content: function() {
+                        return $(this).html();
+                    }
+                })
+                .on('shown.bs.popover', function() {
+                    var source = $(this);
+                    var popover = source.attr("aria-describedby");
+
+                    $("#" + popover + " a").click(function(e) {
+                        e.preventDefault();
+                        XiboFormRender($(this).attr('href'));
+                        source.popover("hide");
+                    });
+                });
+            },
+            language: calendarLanguage
+        };
+
         options.type = calendarOptions.calendarType;
         calendar = $('#Calendar').calendar(options);
 

@@ -46,6 +46,7 @@ class ApplicationState
 
     public $uniqueReference;
 
+    private $id;
     private $data;
     public $extra;
 
@@ -126,7 +127,9 @@ class ApplicationState
         $response['login'] = $this->login;
 
         // Extra
+        $response['id'] = intval($this->id);
         $response['extra'] = $this->extra;
+        $response['data'] = $this->data;
 
         return json_encode($response);
     }
@@ -150,5 +153,23 @@ class ApplicationState
             $this->data = [];
 
         return $this->data;
+    }
+
+    /**
+     * Hydrate with properties
+     *
+     * @param array $properties
+     *
+     * @return self
+     */
+    public function hydrate(array $properties)
+    {
+        foreach ($properties as $prop => $val) {
+            if (property_exists($this, $prop)) {
+                $this->{$prop} = $val;
+            }
+        }
+
+        return $this;
     }
 }

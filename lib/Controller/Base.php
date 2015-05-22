@@ -207,7 +207,7 @@ class Base
 
                 // Process the buttons
                 // Expect each button on a new line
-                if ($view['buttons'] == '') {
+                if (trim($view['buttons']) == '') {
                     $state->buttons = [];
                 } else {
                     // Convert to an array

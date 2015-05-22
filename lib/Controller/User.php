@@ -20,6 +20,9 @@
  */
 namespace Xibo\Controller;
 
+use Xibo\Factory\PageFactory;
+use Xibo\Factory\UserGroupFactory;
+use Xibo\Factory\UserTypeFactory;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
@@ -30,7 +33,6 @@ use Xibo\Storage\PDOConnect;
 
 class User extends Base
 {
-
     /**
      * Controls which pages are to be displayed
      */
@@ -47,8 +49,8 @@ class User extends Base
             $filter_usertypeid = NULL;
         }
 
-        $usertypes = PDOConnect::select("SELECT userTypeId, userType FROM usertype ORDER BY usertype", []);
-        array_unshift($usertypes, array('userTypeId' => 0, 'userType' => 'All'));
+        $userTypes = PDOConnect::select("SELECT userTypeId, userType FROM usertype ORDER BY usertype", []);
+        array_unshift($userTypes, array('userTypeId' => 0, 'userType' => 'All'));
 
         $data = [
             'defaults' => [
@@ -57,7 +59,7 @@ class User extends Base
                 'userType' => $filter_usertypeid
             ],
             'options' => [
-                'userTypes' => $usertypes
+                'userTypes' => $userTypes
             ]
         ];
 
@@ -167,29 +169,27 @@ class User extends Base
 
     /**
      * Adds a user
-     *
-     * @return unknown
      */
-    function AddUser()
+    function add()
     {
-
-
-        $response = $this->getState();
-
-        $user = new Userdata();
-        $user->userName = Sanitize::getString('edit_username');
-        $password = Sanitize::getString('edit_password');
+        // Build a user entity and save it
+        $user = new \Xibo\Entity\User();
+        $user->userName = Sanitize::getString('userName');
         $user->email = Sanitize::getString('email');
-        $user->userTypeId = \Kit::GetParam('usertypeid', _POST, _INT, 3);
-        $user->homePage = Sanitize::getString('homepage');
-        $initialGroupId = Sanitize::getInt('groupid');
+        $user->userTypeId = Sanitize::getInt('userTypeId');
+        $user->homePage = Sanitize::getString('homePageId');
+        $user->groupId = Sanitize::getInt('groupId');
+        $user->setNewPassword(Sanitize::getString('password'));
 
-        // Add the user
-        if (!$user->add($password, $initialGroupId))
-            trigger_error($user->GetErrorMessage(), E_USER_ERROR);
+        // Save the user
+        $user->save();
 
-        $response->SetFormSubmitResponse('User Saved.');
-
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Added %s'), $user->userName),
+            'id' => $user->userId,
+            'data' => [$user]
+        ]);
     }
 
     /**
@@ -270,6 +270,24 @@ class User extends Base
 
         $response->SetFormSubmitResponse(__('User Deleted.'));
 
+    }
+
+    /**
+     * User Add Form
+     */
+    public function addForm()
+    {
+        $this->getState()->template = 'user-form-add';
+        $this->getState()->setData([
+            'options' => [
+                'homepage' => PageFactory::query(),
+                'groups' => UserGroupFactory::query(),
+                'userTypes' => UserTypeFactory::query()
+            ],
+            'help' => [
+                'add' => Help::Link('User', 'Add')
+            ]
+        ]);
     }
 
     /**

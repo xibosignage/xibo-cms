@@ -825,14 +825,7 @@ function XiboSubmitResponse(response, form) {
             }
         }
         else {
-            // We should refresh the grids (this is a global refresh)
-            $(" .XiboGrid").each(function(){
-
-                var gridId = $(this).attr("id");
-
-                // Render
-                XiboGridRender(gridId);
-            });
+            XiboRefreshAllGrids();
         }
     }
     else {
@@ -960,12 +953,9 @@ function XiboSwapDialog(formUrl) {
 
 function XiboRefreshAllGrids() {
     // We should refresh the grids (this is a global refresh)
-    $(" .XiboGrid").each(function(){
-
-        var gridId = $(this).attr("id");
-
+    $(" .XiboGrid table").each(function() {
         // Render
-        XiboGridRender(gridId);
+        $(this).DataTable().ajax.reload();
     });
 }
 

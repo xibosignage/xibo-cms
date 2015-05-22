@@ -25,6 +25,7 @@ namespace Xibo\Middleware;
 
 use Slim\Middleware;
 use Xibo\Factory\UserFactory;
+use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
 
@@ -47,9 +48,12 @@ class WebAuthentication extends Middleware
         $redirectToLogin = function () use ($app) {
             Log::debug('Request to redirect to login. Ajax = %d', $app->request->isAjax());
             if ($app->request->isAjax()) {
+                $state = $app->state;
+                /* @var ApplicationState $state */
                 // Return a JSON response which tells the App to redirect to the login page
-                $app->state->Login();
-                $app->render('response', array('response' => $app->state));
+                $app->response()->header('Content-Type', 'application/json');
+                $state->Login();
+                echo $state->asJson();
                 $app->stop();
             }
             else {
@@ -111,7 +115,7 @@ class WebAuthentication extends Middleware
 
             if (!$app->public && $user->hasIdentity()) {
                 $user->lastAccessed = date("Y-m-d H:i:s");
-                $user->save();
+                $user->save(false);
             }
         };
 

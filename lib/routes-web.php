@@ -79,7 +79,15 @@ $app->post('/login', function () use ($app) {
 
         \Xibo\Helper\Log::info('%s user logged in.', $app->user->userName);
 
-        $app->redirect($app->request->getRootUri() . (($priorRoute == '' || stripos($priorRoute, 'login')) ? '' : $priorRoute));
+        try {
+            $redirect = $app->urlFor(($priorRoute == '' || stripos($priorRoute, 'login')) ? 'home' : $priorRoute);
+        }
+        catch (RuntimeException $e) {
+            $redirect = $app->urlFor('home');
+        }
+
+        \Xibo\Helper\Log::debug('Redirect to %s', $redirect);
+        $app->redirect($redirect);
     }
     catch (\Xibo\Exception\AccessDeniedException $e) {
         \Xibo\Helper\Log::warning($e->getMessage());

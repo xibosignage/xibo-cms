@@ -33,6 +33,7 @@ use Xibo\Helper\Config;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
+use Respect\Validation\Validator as v;
 
 // These constants may be changed without breaking existing hashes.
 define("PBKDF2_HASH_ALGORITHM", "sha256");
@@ -61,7 +62,7 @@ class User
     private $CSPRNG;
     private $password;
 
-    // Readonly properties
+    // Users own group
     public $groupId;
     public $group;
 
@@ -90,6 +91,18 @@ class User
     {
         $this->password = $password;
         $this->CSPRNG = $salted;
+    }
+
+    /**
+     * Set a new password
+     * @param string $password
+     */
+    public function setNewPassword($password)
+    {
+        $this->testPasswordAgainstPolicy($password);
+
+        $this->password = md5($password);
+        $this->CSPRNG = 0;
     }
 
     /**
@@ -154,10 +167,36 @@ class User
     }
 
     /**
-     * Save User
+     * Validate
      */
-    public function save()
+    public function validate()
     {
+        if (!v::alnum('_')->length(1, 50)->validate($this->userName))
+            throw new \InvalidArgumentException(__('User name must be between 1 and 50 characters.'));
+
+        if (!v::string()->notEmpty()->validate($this->password))
+            throw new \InvalidArgumentException(__('Please enter a Password.'));
+
+        try {
+            $user = UserFactory::getByName($this->userName);
+
+            if ($this->userId == null || $this->userId != $user->userId)
+                throw new \InvalidArgumentException(__('There is already a user with this name. Please choose another.'));
+        }
+        catch (NotFoundException $e) {
+
+        }
+    }
+
+    /**
+     * Save User
+     * @param bool $validate
+     */
+    public function save($validate = true)
+    {
+        if ($validate)
+            $this->validate();
+
         if ($this->userId == 0)
             $this->add();
         else
@@ -177,7 +216,23 @@ class User
      */
     private function add()
     {
+        $sql = 'INSERT INTO `user` (UserName, UserPassword, usertypeid, email, homepage)
+                     VALUES (:userName, :password, :userTypeId, :email, :homePage)';
 
+        // Get the ID of the record we just inserted
+        $this->userId = PDOConnect::insert($sql, [
+            'userName' => $this->userName,
+            'password' => $this->password,
+            'userTypeId' => $this->userTypeId,
+            'email' => $this->email,
+            'homePage' => $this->homePage
+        ]);
+
+        // Add the user group
+        $group = new UserGroup();
+        $group->group = $this->userName;
+        $group->setOwner($this->userId);
+        $group->save();
     }
 
     /**
@@ -859,6 +914,25 @@ class User
             $diff |= ord($a[$i]) ^ ord($b[$i]);
         }
         return $diff === 0;
+    }
+
+    /**
+     * Tests the supplied password against the password policy
+     * @param string $password
+     */
+    public function testPasswordAgainstPolicy($password)
+    {
+        // Check password complexity
+        $policy = Config::GetSetting('USER_PASSWORD_POLICY');
+
+        if ($policy != '')
+        {
+            $policyError = Config::GetSetting('USER_PASSWORD_ERROR');
+            $policyError = ($policyError == '') ? __('Your password does not meet the required complexity') : $policyError;
+
+            if(!preg_match($policy, $password, $matches))
+                throw new \InvalidArgumentException($policyError);
+        }
     }
 
     /*

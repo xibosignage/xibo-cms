@@ -49,7 +49,7 @@ class PageFactory
         return $pages[0];
     }
 
-    public static function query($sortOrder, $filterBy)
+    public static function query($sortOrder = ['name'], $filterBy = [])
     {
         $entries = array();
         $params = array();
@@ -60,12 +60,16 @@ class PageFactory
             $sql .= ' AND `name` = :name';
         }
 
+        // Sorting?
+        if (is_array($sortOrder))
+            $sql .= 'ORDER BY ' . implode(',', $sortOrder);
+
         Log::sql($sql, $params);
 
         foreach (PDOConnect::select($sql, $params) as $row) {
             $page = new Page();
             $page->pageId = $row['pageId'];
-            $page->page = Sanitize::getString($row['name']);
+            $page->page = Sanitize::string($row['name']);
 
             $entries[] = $page;
         }

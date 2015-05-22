@@ -99,6 +99,7 @@ $app->delete('/log', '\Xibo\Controller\Log:truncate')->name('logTruncate');
 // User
 //
 $app->get('/user', '\Xibo\Controller\User:grid')->name('userSearch');
+$app->post('/user', '\Xibo\Controller\User:add')->name('user');
 
 //
 // User Group

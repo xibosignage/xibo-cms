@@ -17,6 +17,7 @@
     "gettext/gettext": "~3.3",
     "slim/views": "0.1.*",
     "twig/twig": "~1.18",
-    "twig/extensions": "~1.2"
+    "twig/extensions": "~1.2",
+    "respect/validation": "0.9.*"
   }
 }

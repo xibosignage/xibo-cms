@@ -63,15 +63,15 @@
                                     <img src="{{ baseUrl }}theme/default/img/avatar.jpg" />
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-right">
-                                    <li class="dropdown-header"><?php echo Theme::GetUsername(); ?><br/>
-                                        <a id="XiboClock" class="XiboFormButton" href="index.php?p=clock&q=ShowTimeInfo" title="{% trans "Click to show more time information" %}"><?php echo Theme::GetClock(); ?></a>
+                                    <li class="dropdown-header">{{ user.userName }}<br/>
+                                        <div id="XiboClock">{{ clock }}</div>
                                     </li>
                                     <li class="divider"></li>
                                     <li><a class="XiboFormButton" href="{{ urlFor("userChangePassword") }}" title="{% trans "Change Password" %}">{% trans "Change Password" %}</a></li>
                                     <li><a href="{{ urlFor("welcomeWizard") }}">{% trans "Reshow welcome" %}</a></li>
-                                    <li><a class="XiboHelpButton" href="<?php echo Theme::GetPageHelpLink(); ?>">{% trans "Help" %}</a></li>
+                                    <li><a class="XiboHelpButton" href="{{ help.page }}">{% trans "Help" %}</a></li>
                                     <li class="divider"></li>
-                                    <li><a title="Logout" href="<?php echo Theme::urlFor('logout'); ?>">{% trans "Logout" %}</a></li>
+                                    <li><a title="Logout" href="{{ urlFor("logout") }}">{% trans "Logout" %}</a></li>
                                 </ul>
                             </div>
                         </div>
