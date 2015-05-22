@@ -19,5 +19,5 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.provision "shell", inline: $script
   config.vm.provision "shell", inline: $ip, run: "always"
   config.vm.network :private_network, type: "dhcp"
-  config.vm.synced_folder "./", "/var/www/html"
+  config.vm.synced_folder "./", "/var/www"
 end
