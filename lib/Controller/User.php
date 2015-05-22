@@ -135,25 +135,11 @@ class User extends Base
                     'text' => __('Menu Security')
                 );
 
-                // Applications
-                $user->buttons[] = array(
-                    'id' => 'user_button_applications',
-                    'url' => 'index.php?p=oauth&q=UserTokens&userID=' . $user->userId,
-                    'text' => __('Applications')
-                );
-
                 // Set Password
                 $user->buttons[] = array(
                     'id' => 'user_button_delete',
                     'url' => 'index.php?p=user&q=SetPasswordForm&userid=' . $user->userId,
                     'text' => __('Set Password')
-                );
-
-                // User Quota
-                $user->buttons[] = array(
-                    'id' => 'usergroup_button_quota',
-                    'url' => 'index.php?p=group&q=quotaForm&groupid=' . $user->groupId,
-                    'text' => __('Set User Quota')
                 );
             }
         }
@@ -173,6 +159,7 @@ class User extends Base
         $user->email = Sanitize::getString('email');
         $user->userTypeId = Sanitize::getInt('userTypeId');
         $user->homePage = Sanitize::getString('homePageId');
+        $user->libraryQuota = Sanitize::getInt('libraryQuota');
         $user->groupId = Sanitize::getInt('groupId');
         $user->setNewPassword(Sanitize::getString('password'));
 
@@ -203,6 +190,7 @@ class User extends Base
         $user->email = Sanitize::getString('email');
         $user->userTypeId = Sanitize::getInt('userTypeId');
         $user->homePage = Sanitize::getString('homePageId');
+        $user->libraryQuota = Sanitize::getInt('libraryQuota');
         $user->retired = Sanitize::getCheckbox('retired');
 
         // Save the user
@@ -216,6 +204,11 @@ class User extends Base
         ]);
     }
 
+    /**
+     * Delete User
+     * @param int $userId
+     * @throws \Xibo\Exception\NotFoundException
+     */
     public function delete($userId)
     {
         $user = UserFactory::loadById($userId);
@@ -223,60 +216,21 @@ class User extends Base
         if (!$this->getUser()->checkDeleteable($user))
             throw new AccessDeniedException();
 
-        if (Sanitize::getCheckbox('deleteAllItems') == 0) {
+        // Child objects?
+        $children = $user->countChildren();
+
+        if (Sanitize::getCheckbox('deleteAllItems') == 0 && $children > 0) {
             // Check to see if we have any child data that would prevent us from deleting
-        }
-        else {
-            // Just delete
-            $user->delete();
-        }
-    }
-
-    /**
-     * Deletes a user
-     */
-    function DeleteUser()
-    {
-
-
-        $response = $this->getState();
-        $deleteAllItems = (\Kit::GetParam('deleteAllItems', _POST, _CHECKBOX) == 1);
-
-        $userId = \Kit::GetParam('userid', _POST, _INT, 0);
-        $groupId = $this->getUser()->getGroupFromID($userId, true);
-
-        $user = new Userdata();
-        $user->userId = $userId;
-
-        $userGroup = new UserGroup();
-
-        if (!$deleteAllItems) {
-            // Can we delete this user? Don't even try if we cant.
-            $children = $user->getChildTypes();
-
-            if (count($children) > 0)
-                trigger_error(sprintf(__('Cannot delete user, they own %s'), implode(', ', $children)), E_USER_ERROR);
-
-            // Can we delete this group?
-            $children = $userGroup->getChildTypes($groupId);
-
-            if (count($children) > 0)
-                trigger_error(sprintf(__('Cannot delete user, they own %s'), implode(', ', $children)), E_USER_ERROR);
+            throw new \InvalidArgumentException(sprintf(__('This user cannot be deleted as it has %d child items'), $children));
         }
 
-        // Delete all items has been selected, so call delete on the group, then the user
-        $userGroup->UnlinkAllGroups($userId);
+        $user->delete();
 
-        // Delete the user specific group
-        if (!$userGroup->Delete($groupId))
-            trigger_error($userGroup->GetErrorMessage(), E_USER_ERROR);
-
-        // Delete the user
-        if (!$user->Delete())
-            trigger_error($user->GetErrorMessage(), E_USER_ERROR);
-
-        $response->SetFormSubmitResponse(__('User Deleted.'));
-
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Deleted %s'), $user->userName),
+            'id' => $user->userId
+        ]);
     }
 
     /**
@@ -501,25 +455,25 @@ class User extends Base
 
         $entity = Sanitize::getString('entity');
         if ($entity == '')
-            throw new InvalidArgumentException(__('Permissions form requested without an entity'));
+            throw new \InvalidArgumentException(__('Permissions form requested without an entity'));
 
         // Check to see that we can resolve the entity
         $entity = 'Xibo\\Factory\\' . $entity . 'Factory';
 
         if (!class_exists($entity) || !method_exists($entity, 'getById'))
-            throw new InvalidArgumentException(__('Permissions form requested with an invalid entity'));
+            throw new \InvalidArgumentException(__('Permissions form requested with an invalid entity'));
 
         // Get the object
         $objectId = Sanitize::getInt('objectId');
         if ($objectId == 0)
-            throw new InvalidArgumentException(__('Permissions form requested without an object'));
+            throw new \InvalidArgumentException(__('Permissions form requested without an object'));
 
         // Load our object
         $object = $entity::getById($objectId);
 
         // Does this user have permission to edit the permissions?!
         if (!$this->getUser()->checkPermissionsModifyable($object))
-            throw new Exception(__('You do not have permission to edit these permissions.'));
+            throw new AccessDeniedException(__('You do not have permission to edit these permissions.'));
 
         // Set some information about the form
         Theme::Set('form_id', 'PermissionsForm');

@@ -98,7 +98,7 @@ class UserFactory
             $sortOrder = array('username');
 
         $params = array();
-        $SQL  = 'SELECT `user`.userId, userName, userTypeId, loggedIn, email, homePage, lastAccessed, newUserWizard, retired, CSPRNG, UserPassword, group.groupId, group.group ';
+        $SQL  = 'SELECT `user`.userId, userName, userTypeId, loggedIn, email, homePage, lastAccessed, newUserWizard, retired, CSPRNG, UserPassword AS password, group.groupId, group.group, group.libraryQuota ';
         $SQL .= '  FROM `user` ';
         $SQL .= '   INNER JOIN lkusergroup ON lkusergroup.userId = user.userId ';
         $SQL .= '   INNER JOIN `group` ON group.groupId = lkusergroup.groupId AND isUserSpecific = 1 ';
@@ -142,24 +142,7 @@ class UserFactory
         Log::sql($SQL, $params);
 
         foreach (PDOConnect::select($SQL, $params) as $row) {
-            $user = new User();
-            $user->userId = Sanitize::int($row['userId']);
-            $user->userName = Sanitize::string($row['userName']);
-            $user->userTypeId = Sanitize::int($row['userTypeId']);
-            $user->loggedIn = Sanitize::int($row['loggedIn']);
-            $user->email = Sanitize::string($row['email']);
-            $user->homePage = Sanitize::string($row['homePage']);
-            $user->lastAccessed = Sanitize::int($row['lastAccessed']);
-            $user->newUserWizard = Sanitize::int($row['newUserWizard']);
-            $user->retired = Sanitize::int($row['retired']);
-
-            // Set the user credentials (set privately)
-            $user->setPassword(Sanitize::string($row['UserPassword']), Sanitize::int($row['CSPRNG']));
-
-            $user->groupId = Sanitize::int($row['groupId']);
-            $user->group = Sanitize::string($row['group']);
-
-            $entries[] = $user;
+            $entries[] = (new User())->hydrate($row);
         }
 
         return $entries;

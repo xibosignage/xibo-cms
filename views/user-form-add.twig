@@ -29,6 +29,7 @@
                 {{ forms.password("email", "Email", "", "The Email Address for this user.") }}
                 {{ forms.dropdown("homePageId", "single", "Homepage", "", options.homepage, "pageId", "page", "Homepage for this user. This is the page they will be taken to when they login.") }}
                 {{ forms.dropdown("userTypeId", "single", "User Type", "", options.userTypes, "userTypeId", "userType", "What is this users type?") }}
+                {{ forms.number("libraryQuota", "Library Quota", "", "The quota in Kb that should be applied. Enter 0 for no quota.") }}
                 {{ forms.dropdown("groupId", "single", "Initial User Group", "", options.groups, "groupId", "group", "What is the initial user group for this user?") }}
             </form>
         </div>

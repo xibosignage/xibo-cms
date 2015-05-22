@@ -28,6 +28,7 @@
                 {{ forms.password("email", "Email", user.email, "The Email Address for this user.") }}
                 {{ forms.dropdown("homePageId", "single", "Homepage", user.homePageId, options.homepage, "pageId", "page", "Homepage for this user. This is the page they will be taken to when they login.") }}
                 {{ forms.dropdown("userTypeId", "single", "User Type", user.userTypeId, options.userTypes, "userTypeId", "userType", "What is this users type?") }}
+                {{ forms.number("libraryQuota", "Library Quota", user.libraryQuota, "The quota in Kb that should be applied. Enter 0 for no quota.") }}
                 {{ forms.checkbox("retired", "Retired?", user.retired, "Is this user retired?") }}
             </form>
         </div>

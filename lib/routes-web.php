@@ -263,3 +263,8 @@ $app->get('/help/form/add', '\Xibo\Controller\Help:addForm')->name('helpAddForm'
 //
 $app->get('/stats', '\Xibo\Controller\Stats:displayPage')->name('statsView');
 $app->get('/stats/form/export', '\Xibo\Controller\Stats:exportForm')->name('statsExportForm');
+
+//
+// Audit Log
+//
+$app->get('/audit', '\Xibo\Controller\AuditLog:displayPage')->name('auditlogView');

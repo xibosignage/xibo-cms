@@ -25,6 +25,7 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Permission;
 use Xibo\Exception\NotFoundException;
+use Xibo\Helper\Log;
 use Xibo\Storage\PDOConnect;
 
 class PermissionFactory

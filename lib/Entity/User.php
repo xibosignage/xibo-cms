@@ -21,6 +21,7 @@
 namespace Xibo\Entity;
 
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\LibraryFullException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DataSetFactory;
@@ -54,7 +55,7 @@ define("HASH_PBKDF2_INDEX", 3);
 
 class User
 {
-    private $hash;
+    use EntityTrait;
     public $userId;
     public $userName;
     public $userTypeId;
@@ -71,6 +72,7 @@ class User
     // Users own group
     public $groupId;
     public $group;
+    public $libraryQuota;
 
     // Groups assigned to
     public $groups;
@@ -109,17 +111,6 @@ class User
     public function getId()
     {
         return $this->userId;
-    }
-
-    /**
-     * Set the password
-     * @param string $password
-     * @param int $salted
-     */
-    public function setPassword($password, $salted)
-    {
-        $this->password = $password;
-        $this->CSPRNG = $salted;
     }
 
     /**
@@ -220,6 +211,18 @@ class User
     }
 
     /**
+     * Does this User have any children
+     * @return int
+     */
+    public function countChildren()
+    {
+        if ($this->hash == null)
+            $this->load();
+
+        return count($this->layouts) + count($this->campaigns) + count($this->events);
+    }
+
+    /**
      * Validate
      */
     public function validate()
@@ -229,6 +232,9 @@ class User
 
         if (!v::string()->notEmpty()->validate($this->password))
             throw new \InvalidArgumentException(__('Please enter a Password.'));
+
+        if (!v::int()->validate($this->libraryQuota))
+            throw new \InvalidArgumentException(__('Library Quota must be a whole number.'));
 
         try {
             $user = UserFactory::getByName($this->userName);
@@ -263,12 +269,12 @@ class User
     {
         // We must ensure everything is loaded before we delete
         if ($this->hash == null)
-            $this->load();
+            $this->load(true);
 
         // Delete everything
-        foreach ($this->groups as $layout) {
-            /* @var UserGroup $layout */
-            $layout->delete();
+        foreach ($this->groups as $group) {
+            /* @var UserGroup $group */
+            $group->delete();
         }
 
         foreach ($this->layouts as $layout) {
@@ -311,6 +317,7 @@ class User
         // Add the user group
         $group = new UserGroup();
         $group->group = $this->userName;
+        $group->libraryQuota = $this->libraryQuota;
         $group->setOwner($this->userId);
         $group->save();
     }
@@ -351,6 +358,7 @@ class User
         // Update the group
         $group = UserGroupFactory::getById($this->groupId);
         $group->group = $this->userName;
+        $group->libraryQuota = $this->libraryQuota;
         $group->save();
     }
 
@@ -967,6 +975,67 @@ class User
     public function SetPref($key, $value)
     {
         Session::Set($key, $value);
+    }
+
+    /**
+     * Is this users library quota full
+     * @return bool true if the quota is full otherwise false
+     * @throws LibraryFullException when the library is full or cannot be determined
+     */
+    public function isQuotaFullByUser()
+    {
+        $dbh = PDOConnect::init();
+        $groupId = 0;
+        $userQuota = 0;
+
+        // Get the maximum quota of this users groups and their own quota
+        $quotaSth = $dbh->prepare('
+            SELECT group.groupId, IFNULL(group.libraryQuota, 0) AS libraryQuota
+              FROM `group`
+                INNER JOIN `lkusergroup`
+                ON group.groupId = lkusergroup.groupId
+             WHERE lkusergroup.userId = :userId
+            ORDER BY `group`.isUserSpecific DESC, IFNULL(group.libraryQuota, 0) DESC
+        ');
+
+        $quotaSth->execute(['userId' => $this->userId]);
+
+        // Loop over until we have a quota
+        $rows = $quotaSth->fetchAll(\PDO::FETCH_ASSOC);
+
+        if (count($rows) <= 0) {
+            throw new LibraryFullException('Problem calculating this users library quota.');
+        }
+
+        foreach ($rows as $row) {
+
+            if ($row['libraryQuota'] > 0) {
+                $groupId = $row['groupId'];
+                $userQuota = $row['libraryQuota'];
+                break;
+            }
+        }
+
+        if ($userQuota <= 0)
+            return true;
+
+        // If there is a quota, then test it against the current library position for this user.
+        //   use the groupId that generated the quota in order to calculate the usage
+        $sth = $dbh->prepare('
+          SELECT IFNULL(SUM(FileSize), 0) AS SumSize
+            FROM `media`
+              INNER JOIN `lkusergroup`
+              ON lkusergroup.userId = media.userId
+           WHERE lkusergroup.groupId = :groupId
+          ');
+        $sth->execute(['groupId' => $groupId]);
+
+        if (!$row = $sth->fetch())
+            throw new LibraryFullException("Error Processing Request", 1);
+
+        $fileSize = Sanitize::int($row['SumSize']);
+
+        return (($fileSize / 1024) <= $userQuota);
     }
 
     /*

@@ -9,6 +9,7 @@
 namespace Xibo\Entity;
 
 
+use Xibo\Factory\PermissionFactory;
 use Xibo\Storage\PDOConnect;
 use Respect\Validation\Validator as v;
 
@@ -20,7 +21,9 @@ class UserGroup
     public $group;
     public $isUserSpecific;
     public $isEveryone;
+    public $libraryQuota;
 
+    // Users
     private $users;
 
     public function __construct()
@@ -97,7 +100,6 @@ class UserGroup
      */
     public function load()
     {
-
         // Set the hash
         $this->hash = $this->hash();
     }
@@ -119,10 +121,20 @@ class UserGroup
         $this->linkUsers();
     }
 
+    /**
+     * Delete this Group
+     */
     public function delete()
     {
-        //TODO: delete
+        // We must ensure everything is loaded before we delete
+        if ($this->hash == null)
+            $this->load();
+
+        // Unlink users
         $this->unlinkUsers();
+
+        PDOConnect::update('DELETE FROM `permission` WHERE groupId = :groupId', ['groupId' => $this->groupId]);
+        PDOConnect::update('DELETE FROM `group` WHERE groupId = :groupId', ['groupId' => $this->groupId]);
     }
 
     /**
@@ -130,9 +142,10 @@ class UserGroup
      */
     private function add()
     {
-        $this->groupId = PDOConnect::insert('INSERT INTO `group` (`group`, IsUserSpecific) VALUES (:group, :isUserSpecific)', [
+        $this->groupId = PDOConnect::insert('INSERT INTO `group` (`group`, IsUserSpecific, libraryQuota) VALUES (:group, :isUserSpecific, :libraryQuota)', [
             'group' => $this->group,
-            'isUserSpecific' => $this->isUserSpecific
+            'isUserSpecific' => $this->isUserSpecific,
+            'libraryQuota' => $this->libraryQuota
         ]);
     }
 
@@ -141,9 +154,10 @@ class UserGroup
      */
     private function edit()
     {
-        PDOConnect::update('UPDATE `group` SET `group` = :group WHERE groupId = :groupId', [
+        PDOConnect::update('UPDATE `group` SET `group` = :group, libraryQuota = :libraryQuota WHERE groupId = :groupId', [
             'groupId' => $this->groupId,
-            'group' => $this->group
+            'group' => $this->group,
+            'libraryQuota' => $this->libraryQuota
         ]);
     }
 
