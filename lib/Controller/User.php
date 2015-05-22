@@ -211,7 +211,7 @@ class User extends Base
      */
     public function delete($userId)
     {
-        $user = UserFactory::loadById($userId);
+        $user = UserFactory::getById($userId);
 
         if (!$this->getUser()->checkDeleteable($user))
             throw new AccessDeniedException();
@@ -219,7 +219,7 @@ class User extends Base
         // Child objects?
         $children = $user->countChildren();
 
-        if (Sanitize::getCheckbox('deleteAllItems') == 0 && $children > 0) {
+        if (Sanitize::getCheckbox('deleteAllItems') != 1 && $children > 0) {
             // Check to see if we have any child data that would prevent us from deleting
             throw new \InvalidArgumentException(sprintf(__('This user cannot be deleted as it has %d child items'), $children));
         }

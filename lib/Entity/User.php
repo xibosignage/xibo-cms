@@ -95,7 +95,12 @@ class User
      */
     public function __construct()
     {
+        $this->hash = null;
         $this->groups = [];
+        $this->layouts = [];
+        $this->media = [];
+        $this->events = [];
+        $this->campaigns = [];
     }
 
     private function hash()
@@ -197,6 +202,8 @@ class User
      */
     public function load($all = false)
     {
+        Log::debug('Loading %d. All Objects = %d', $this->userId, $all);
+
         $this->groups = UserGroupFactory::getByUserId($this->userId);
 
         if ($all) {
@@ -216,10 +223,12 @@ class User
      */
     public function countChildren()
     {
-        if ($this->hash == null)
-            $this->load();
+        $this->load(true);
 
-        return count($this->layouts) + count($this->campaigns) + count($this->events);
+        $count = count($this->campaigns) + count($this->layouts) + count($this->campaigns) + count($this->events);
+        Log::debug('Counted Children on %d, there are %d', $this->userId, $count);
+
+        return $count;
     }
 
     /**
@@ -267,6 +276,8 @@ class User
      */
     public function delete()
     {
+        Log::debug('Deleting %d', $this->userId);
+
         // We must ensure everything is loaded before we delete
         if ($this->hash == null)
             $this->load(true);

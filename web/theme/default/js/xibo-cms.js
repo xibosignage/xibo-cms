@@ -288,7 +288,7 @@ function dataTableButtonsColumn(data, type, row, meta) {
 
 function dataTableTickCrossColumn(data, type, row) {
     if (type != "display")
-        return data.status;
+        return data;
 
     var icon = "";
     if (data == 1)

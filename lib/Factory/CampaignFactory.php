@@ -88,6 +88,12 @@ class CampaignFactory
             $params['campaignId'] = Sanitize::getString('campaignId', 0, $filterBy);
         }
 
+        if (Sanitize::getString('ownerId', 0, $filterBy) != 0) {
+            // Join Campaign back onto it again
+            $sql .= " AND `campaign`.userId = :ownerId ";
+            $params['ownerId'] = Sanitize::getString('ownerId', 0, $filterBy);
+        }
+
         if (Sanitize::getString('name', $filterBy) != '') {
             // convert into a space delimited array
             $names = explode(' ', Sanitize::getString('name', $filterBy));
