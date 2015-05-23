@@ -26,21 +26,6 @@ use Xibo\Helper\Date;
 class Clock extends Base
 {
     /**
-     * Shows the Time Information
-     */
-    function ShowTimeInfo()
-    {
-        $output = '<ul>';
-        $output .= '<li>' . __('Local Time') . ': ' . Date::getClock() . '</li>';
-        $output .= '<li>' . __('System Time') . ': ' . Date::getSystemClock() . '</li>';
-        $output .= '<li>' . __('Local Date') . ': ' . Date::getLocalDate() . '</li>';
-        $output .= '<li>' . __('System Date') . ': ' . Date::getSystemDate() . '</li>';
-        $output .= '</ul>';
-
-        $this->getState()->SetFormRequestResponse($output, __('Date / Time Information'), '480px', '240px');
-    }
-
-    /**
      * Gets the Time
      */
     function clock()

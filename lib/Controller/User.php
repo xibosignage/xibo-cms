@@ -134,13 +134,6 @@ class User extends Base
                     'url' => 'index.php?p=group&q=MenuItemSecurityForm&groupid=' . $user->groupId,
                     'text' => __('Menu Security')
                 );
-
-                // Set Password
-                $user->buttons[] = array(
-                    'id' => 'user_button_delete',
-                    'url' => 'index.php?p=user&q=SetPasswordForm&userid=' . $user->userId,
-                    'text' => __('Set Password')
-                );
             }
         }
 
@@ -192,6 +185,18 @@ class User extends Base
         $user->homePage = Sanitize::getString('homePageId');
         $user->libraryQuota = Sanitize::getInt('libraryQuota');
         $user->retired = Sanitize::getCheckbox('retired');
+
+        // If we are a super admin
+        if ($this->getUser()->userTypeId == 1) {
+            $newPassword = Sanitize::getString('newPassword');
+            $retypeNewPassword = Sanitize::getString('retypeNewPassword');
+
+            if ($newPassword != $retypeNewPassword)
+                throw new \InvalidArgumentException(__('Passwords do not match'));
+
+            // Set the new password
+            $user->setNewPassword($newPassword);
+        }
 
         // Save the user
         $user->save();
@@ -298,152 +303,41 @@ class User extends Base
     }
 
     /**
-     * Shows the Authorised applications this user has
-     */
-    public function MyApplications()
-    {
-        $db =& $this->db;
-        $user =& $this->user;
-        $response = new ApplicationState();
-
-        $store = OAuthStore::instance();
-
-        try {
-            $list = $store->listConsumerTokens($this->getUser()->userId);
-        } catch (OAuthException $e) {
-            trigger_error($e->getMessage());
-            trigger_error(__('Error listing Log.'), E_USER_ERROR);
-        }
-
-        Theme::Set('table_rows', $list);
-
-        $output = Theme::RenderReturn('user_form_my_applications');
-
-        $response->SetFormRequestResponse($output, __('My Applications'), '650', '450');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('User', 'Applications') . '")');
-        $response->AddButton(__('Close'), 'XiboDialogClose()');
-
-    }
-
-    /**
      * Change my password form
      */
-    public function ChangePasswordForm()
+    public function changePasswordForm()
     {
-        $db =& $this->db;
-        $user =& $this->user;
-        $response = new ApplicationState();
-
-        $msgOldPassword = __('Old Password');
-        $msgNewPassword = __('New Password');
-        $msgRetype = __('Retype New Password');
-
-        $userId = Sanitize::getInt('userid');
-
-        // Set some information about the form
-        Theme::Set('form_id', 'ChangePasswordForm');
-        Theme::Set('form_action', 'index.php?p=user&q=ChangePassword');
-
-        $formFields = array();
-        $formFields[] = Form::AddPassword('oldPassword', __('Current Password'), NULL,
-            __('Please enter your current password'), 'p', 'required');
-
-        $formFields[] = Form::AddPassword('newPassword', __('New Password'), NULL,
-            __('Please enter your new password'), 'n', 'required');
-
-        $formFields[] = Form::AddPassword('retypeNewPassword', __('Retype New Password'), NULL,
-            __('Please repeat the new Password.'), 'r', 'required');
-
-        Theme::Set('form_fields', $formFields);
-
-        $response->SetFormRequestResponse(NULL, __('Change Password'), '450', '300');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('User', 'ChangePassword') . '")');
-        $response->AddButton(__('Close'), 'XiboDialogClose()');
-        $response->AddButton(__('Save'), '$("#ChangePasswordForm").submit()');
-
+        $this->getState()->template = 'user-form-change-password';
+        $this->getState()->setData([
+            'help' => [
+                'changePassword' => Help::Link('User', 'ChangePassword')
+            ]
+        ]);
     }
 
     /**
      * Change my Password
      */
-    public function ChangePassword()
+    public function changePassword()
     {
-
-
-        $response = $this->getState();
-
-        $oldPassword = Sanitize::getString('oldPassword');
+        // Save the user
+        $user = $this->getUser();
+        $oldPassword = Sanitize::getString('password');
         $newPassword = Sanitize::getString('newPassword');
         $retypeNewPassword = Sanitize::getString('retypeNewPassword');
 
+        if ($newPassword != $retypeNewPassword)
+            throw new \InvalidArgumentException(__('Passwords do not match'));
 
-        $userData = new Userdata($db);
+        $user->setNewPassword($newPassword, $oldPassword);
+        $user->save();
 
-        if (!$userData->ChangePassword($this->getUser()->userId, $oldPassword, $newPassword, $retypeNewPassword))
-            trigger_error($userData->GetErrorMessage(), E_USER_ERROR);
-
-        $response->SetFormSubmitResponse(__('Password Changed'));
-
-    }
-
-    /**
-     * Change my password form
-     */
-    public function SetPasswordForm()
-    {
-        $db =& $this->db;
-        $user =& $this->user;
-        $response = new ApplicationState();
-
-        $userId = Sanitize::getInt('userid');
-
-        // Set some information about the form
-        Theme::Set('form_id', 'SetPasswordForm');
-        Theme::Set('form_action', 'index.php?p=user&q=SetPassword');
-        Theme::Set('form_meta', '<input type="hidden" name="UserId" value="' . $userId . '" />');
-
-        $formFields = array();
-        $formFields[] = Form::AddPassword('newPassword', __('New Password'), NULL,
-            __('The new Password for this user.'), 'p', 'required');
-
-        $formFields[] = Form::AddPassword('retypeNewPassword', __('Retype New Password'), NULL,
-            __('Repeat the new Password for this user.'), 'r', 'required');
-
-        Theme::Set('form_fields', $formFields);
-
-        $response->SetFormRequestResponse(NULL, __('Set Password'), '450', '300');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('User', 'SetPassword') . '")');
-        $response->AddButton(__('Close'), 'XiboDialogClose()');
-        $response->AddButton(__('Save'), '$("#SetPasswordForm").submit()');
-
-    }
-
-    /**
-     * Set a users password
-     */
-    public function SetPassword()
-    {
-
-
-        $response = $this->getState();
-
-        $newPassword = Sanitize::getString('newPassword');
-        $retypeNewPassword = Sanitize::getString('retypeNewPassword');
-
-        $userId = Sanitize::getInt('UserId');
-
-        // Check we are an admin
-        if ($this->getUser()->userTypeId != 1)
-            trigger_error(__('Trying to change the password for another user denied'), E_USER_ERROR);
-
-
-        $userData = new Userdata($db);
-
-        if (!$userData->ChangePassword($userId, null, $newPassword, $retypeNewPassword, true))
-            trigger_error($userData->GetErrorMessage(), E_USER_ERROR);
-
-        $response->SetFormSubmitResponse(__('Password Changed'));
-
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Edited %s'), $user->userName),
+            'id' => $user->userId,
+            'data' => [$user]
+        ]);
     }
 
     /**

@@ -98,11 +98,29 @@ class UserFactory
             $sortOrder = array('username');
 
         $params = array();
-        $SQL  = 'SELECT `user`.userId, userName, userTypeId, loggedIn, email, homePage, lastAccessed, newUserWizard, retired, CSPRNG, UserPassword AS password, group.groupId, group.group, group.libraryQuota ';
-        $SQL .= '  FROM `user` ';
-        $SQL .= '   INNER JOIN lkusergroup ON lkusergroup.userId = user.userId ';
-        $SQL .= '   INNER JOIN `group` ON group.groupId = lkusergroup.groupId AND isUserSpecific = 1 ';
-        $SQL .= ' WHERE 1 = 1 ';
+        $SQL  = '
+            SELECT `user`.userId,
+                userName,
+                userTypeId,
+                loggedIn,
+                email,
+                homePage,
+                lastAccessed,
+                newUserWizard,
+                retired,
+                CSPRNG,
+                UserPassword AS password,
+                group.groupId,
+                group.group,
+                IFNULL(group.libraryQuota, 0) AS libraryQuota
+              FROM `user`
+                INNER JOIN lkusergroup
+                ON lkusergroup.userId = user.userId
+                INNER JOIN `group`
+                ON group.groupId = lkusergroup.groupId
+                  AND isUserSpecific = 1
+             WHERE 1 = 1
+         ';
 
         // User Id Provided?
         if (Sanitize::getInt('userId', $filterBy) != 0) {

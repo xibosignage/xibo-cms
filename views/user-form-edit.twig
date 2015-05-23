@@ -25,7 +25,12 @@
         <div class="col-md-12">
             <form id="userEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("user.edit", {id: user.userId}) }}">
                 {{ forms.text("userName", "User Name", user.userName, "The Login Name of the user.", "", "required maxlength='50'") }}
-                {{ forms.password("email", "Email", user.email, "The Email Address for this user.") }}
+                {{ forms.email("email", "Email", user.email, "The Email Address for this user.") }}
+                {% if currentUser.userTypeId == 1 %}
+                    {# This is an admin user and can therefore change the users password #}
+                    {{ forms.password("newPassword", "New Password", "", "The new Password for this user.") }}
+                    {{ forms.password("retypeNewPassword", "Retype New Password", "", "Repeat the new Password for this user.") }}
+                {% endif %}
                 {{ forms.dropdown("homePageId", "single", "Homepage", user.homePageId, options.homepage, "pageId", "page", "Homepage for this user. This is the page they will be taken to when they login.") }}
                 {{ forms.dropdown("userTypeId", "single", "User Type", user.userTypeId, options.userTypes, "userTypeId", "userType", "What is this users type?") }}
                 {{ forms.number("libraryQuota", "Library Quota", user.libraryQuota, "The quota in Kb that should be applied. Enter 0 for no quota.") }}

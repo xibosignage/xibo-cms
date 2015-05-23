@@ -26,7 +26,7 @@
             <form id="userAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("user.add") }}">
                 {{ forms.text("userName", "User Name", "", "The Login Name of the user.", "", "required maxlength='50'") }}
                 {{ forms.password("password", "Password", "", "The Password for this user.", "", "required") }}
-                {{ forms.password("email", "Email", "", "The Email Address for this user.") }}
+                {{ forms.email("email", "Email", "", "The Email Address for this user.") }}
                 {{ forms.dropdown("homePageId", "single", "Homepage", "", options.homepage, "pageId", "page", "Homepage for this user. This is the page they will be taken to when they login.") }}
                 {{ forms.dropdown("userTypeId", "single", "User Type", "", options.userTypes, "userTypeId", "userType", "What is this users type?") }}
                 {{ forms.number("libraryQuota", "Library Quota", "", "The quota in Kb that should be applied. Enter 0 for no quota.") }}

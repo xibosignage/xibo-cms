@@ -23,6 +23,7 @@
 namespace Xibo\Controller;
 use Slim\Slim;
 use Xibo\Exception\ControllerNotImplemented;
+use Xibo\Helper\Date;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
@@ -196,9 +197,9 @@ class Base
 
             // Standard output handler
             if ($state->template != '' && $state->template != 'grid') {
+                $data['currentUser'] = $this->getUser();
                 $view = $app->view()->getInstance()->render($state->template . '.twig', $data);
 
-                Log::debug('View: ' . $view);
                 if (!$view = json_decode($view, true))
                     throw new ControllerNotImplemented(__('Problem with Form Template'));
 
@@ -240,6 +241,8 @@ class Base
 
             // Append the side bar content
             $data['navigation'] = Theme::getConsolidatedMenu();
+            $data['clock'] = Date::GetClock();
+            $data['currentUser'] = $this->getUser();
 
             $this->app->render($state->template . '.twig', $data);
         }
