@@ -334,7 +334,7 @@ class User extends Base
 
         // Return
         $this->getState()->hydrate([
-            'message' => sprintf(__('Edited %s'), $user->userName),
+            'message' => __('Password Changed'),
             'id' => $user->userId,
             'data' => [$user]
         ]);

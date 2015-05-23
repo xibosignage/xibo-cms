@@ -245,6 +245,9 @@ class User
         if (!v::int()->validate($this->libraryQuota))
             throw new \InvalidArgumentException(__('Library Quota must be a whole number.'));
 
+        if (!empty($this->email) && !v::email()->validate($this->email))
+            throw new \InvalidArgumentException(__('Please enter a valid email address or leave it empty.'));
+
         try {
             $user = UserFactory::getByName($this->userName);
 
