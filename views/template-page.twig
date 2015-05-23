@@ -12,7 +12,7 @@
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
         <li><a title="{% trans "Open the Filter Form" %}" href="#" onclick="ToggleFilterView('Filter')">{% trans "Filter" %}</a></li>
-        <li><a class="XiboFormButton" title="{% trans "Import a Layout from a ZIP file." %}" href="{{ urlFor("layoutImportForm") }}">{% trans "Import" %}</a></li>
+        <li><a class="XiboFormButton" title="{% trans "Import a Layout from a ZIP file." %}" href="{{ urlFor("layout.import.form") }}">{% trans "Import" %}</a></li>
     </ul>
 {% endblock %}
 
@@ -60,7 +60,7 @@
             serverSide: true,
             searchDelay: 3000,
             "order": [[ 1, "asc"]],
-            ajax: "{{ urlFor("templateSearch") }}",
+            ajax: "{{ urlFor("template.search") }}",
             "columns": [
                 { "data": "layout"},
                 { "data": "owner"},

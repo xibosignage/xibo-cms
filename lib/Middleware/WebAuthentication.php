@@ -79,6 +79,7 @@ class WebAuthentication extends Middleware
                 if ($user->hasIdentity() && $app->session->isExpired == 0) {
                     // Replace our user with a fully loaded one
                     $user = UserFactory::loadById($user->userId);
+
                     // Do they have permission?
                     $user->routeAuthentication($resource);
 
@@ -89,12 +90,13 @@ class WebAuthentication extends Middleware
                     // Does the version in the DB match the version of the code?
                     // If not then we need to run an upgrade.
                     if (DBVERSION != WEBSITE_VERSION && $resource != '/upgrade') {
-                        $app->redirectTo('upgradeView');
+                        $app->redirectTo('upgrade.view');
                     }
                 }
                 else {
                     // Store the current route so we can come back to it after login
                     $app->flash('priorRoute', $resource);
+                    $app->flash('priorRouteParams', urlencode($app->request()->get()));
 
                     $redirectToLogin();
                 }

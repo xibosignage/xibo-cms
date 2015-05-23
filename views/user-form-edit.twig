@@ -23,7 +23,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="userEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("userEdit", {id: user.userId}) }}">
+            <form id="userEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("user.edit", {id: user.userId}) }}">
                 {{ forms.text("userName", "User Name", user.userName, "The Login Name of the user.", "", "required maxlength='50'") }}
                 {{ forms.password("email", "Email", user.email, "The Email Address for this user.") }}
                 {{ forms.dropdown("homePageId", "single", "Homepage", user.homePageId, options.homepage, "pageId", "page", "Homepage for this user. This is the page they will be taken to when they login.") }}

@@ -375,7 +375,7 @@ class Layout extends Base
                 $layout->buttons[] = array(
                     'id' => 'layout_button_design',
                     'linkType' => '_self', 'external' => true,
-                    'url' => $this->urlFor('layoutUpdate', array('id' => $layout->layoutId)),
+                    'url' => $this->urlFor('layout.update', array('id' => $layout->layoutId)),
                     'text' => __('Design')
                 );
             }
@@ -385,14 +385,14 @@ class Layout extends Base
                 'id' => 'layout_button_preview',
                 'linkType' => '_blank',
                 'external' => true,
-                'url' => $this->urlFor('layoutPreview', ['id' => $layout->layoutId]),
+                'url' => $this->urlFor('layout.preview', ['id' => $layout->layoutId]),
                 'text' => __('Preview Layout')
             );
 
             // Schedule Now
             $layout->buttons[] = array(
                 'id' => 'layout_button_schedulenow',
-                'url' => $this->urlFor('scheduleNowForm', ['id' => $layout->campaignId]),
+                'url' => $this->urlFor('schedule.now.form', ['id' => $layout->campaignId]),
                 'text' => __('Schedule Now')
             );
 
@@ -404,21 +404,21 @@ class Layout extends Base
                 // Edit Button
                 $layout->buttons[] = array(
                     'id' => 'layout_button_edit',
-                    'url' => $this->urlFor('layoutEditForm', ['id' => $layout->layoutId]),
+                    'url' => $this->urlFor('layout.edit.form', ['id' => $layout->layoutId]),
                     'text' => __('Edit')
                 );
 
                 // Copy Button
                 $layout->buttons[] = array(
                     'id' => 'layout_button_copy',
-                    'url' => $this->urlFor('layoutCopyForm', ['id' => $layout->layoutId]) . '?oldlayout=' . urlencode($layout->layout),
+                    'url' => $this->urlFor('layout.copy.form', ['id' => $layout->layoutId]) . '?oldlayout=' . urlencode($layout->layout),
                     'text' => __('Copy')
                 );
 
                 // Retire Button
                 $layout->buttons[] = array(
                     'id' => 'layout_button_retire',
-                    'url' => $this->urlFor('layoutRetireForm', ['id' => $layout->layoutId]),
+                    'url' => $this->urlFor('layout.retire.form', ['id' => $layout->layoutId]),
                     'text' => __('Retire'),
                     'multi-select' => true,
                     'dataAttributes' => array(
@@ -435,7 +435,7 @@ class Layout extends Base
                     // Delete Button
                     $layout->buttons[] = array(
                         'id' => 'layout_button_delete',
-                        'url' => $this->urlFor('layoutDeleteForm', ['id' => $layout->layoutId]),
+                        'url' => $this->urlFor('layout.delete.form', ['id' => $layout->layoutId]),
                         'text' => __('Delete'),
                         'multi-select' => true,
                         'dataAttributes' => array(
@@ -454,7 +454,7 @@ class Layout extends Base
                 $layout->buttons[] = array(
                     'id' => 'layout_button_export',
                     'linkType' => '_self', 'external' => true,
-                    'url' => $this->urlFor('layoutExport', ['id' => $layout->layoutId]),
+                    'url' => $this->urlFor('layout.export', ['id' => $layout->layoutId]),
                     'text' => __('Export')
                 );
 
@@ -463,7 +463,7 @@ class Layout extends Base
                     // Permissions button
                     $layout->buttons[] = array(
                         'id' => 'layout_button_permissions',
-                        'url' => $this->urlFor('permissionsForm', ['entity' => 'Campaign', 'id' => $layout->campaignId]),
+                        'url' => $this->urlFor('user.permissions.form', ['entity' => 'Campaign', 'id' => $layout->campaignId]),
                         'text' => __('Permissions')
                     );
                 }

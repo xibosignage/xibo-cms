@@ -12,9 +12,9 @@
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
         <li><a title="{% trans "Open the Filter Form" %}" href="#" onclick="ToggleFilterView('Filter')">{% trans "Filter" %}</a></li>
-        <li><a class="XiboFormButton" title="{% trans "Add a new media item to the library" %}" href="{{ urlFor("libraryAddForm") }}">{% trans "Add Media" %}</a></li>
+        <li><a class="XiboFormButton" title="{% trans "Add a new media item to the library" %}" href="{{ urlFor("library.add.form") }}">{% trans "Add Media" %}</a></li>
         {% if settings.SETTING_LIBRARY_TIDY_ENABLED == 1 %}
-            <li><a class="XiboFormButton" title="{% trans "Run through the library and remove unused and unnecessary files" %}" href="{{ urlFor("libraryTidyForm") }}">{% trans "Tidy Library" %}</a></li>
+            <li><a class="XiboFormButton" title="{% trans "Run through the library and remove unused and unnecessary files" %}" href="{{ urlFor("library.tidy.form") }}">{% trans "Tidy Library" %}</a></li>
         {% endif %}
     </ul>
 {% endblock %}
@@ -79,7 +79,7 @@
             serverSide: true,
             searchDelay: 3000,
             "order": [[ 1, "asc"]],
-            ajax: "{{ urlFor("librarySearch") }}",
+            ajax: "{{ urlFor("library.search") }}",
             "columns": [
                 { "data": "mediaId"},
                 { "data": "name"},

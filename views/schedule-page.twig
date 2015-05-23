@@ -24,7 +24,7 @@
                 <button type="button" class="btn btn-primary" data-calendar-nav="next">{% trans "Next" %} <span class="glyphicon glyphicon-forward"></span></button>
             </div>
             <div class="btn-group pull-right xibo-calendar-controls">
-                <button class="btn btn-success XiboFormButton" href="{{ urlFor("scheduleAddForm") }}">
+                <button class="btn btn-success XiboFormButton" href="{{ urlFor("schedule.add.form") }}">
                     {% trans "Add Event" %}
                 </button>
             </div>
@@ -47,7 +47,7 @@
         </div>
     </div>
     <div class="row">
-        <div id="CalendarContainer" data-event-source="{{ urlFor("scheduleCalendarData") }}" data-calendar-type="{{ settings.CALENDAR_TYPE }}" data-template-path="{{ baseUrl }}theme/default/libraries/calendar/tmpls/" class="col-sm-12">
+        <div id="CalendarContainer" data-event-source="{{ urlFor("schedule.calendar.data") }}" data-calendar-type="{{ settings.CALENDAR_TYPE }}" data-template-path="{{ baseUrl }}theme/default/libraries/calendar/tmpls/" class="col-sm-12">
             <div id="Calendar"></div>
         </div>
     </div>

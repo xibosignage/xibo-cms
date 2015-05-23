@@ -12,7 +12,7 @@
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
         <li><a title="{% trans "Open the Filter Form" %}" href="#" onclick="ToggleFilterView('Filter')">{% trans "Filter" %}</a></li>
-        <li><a class="XiboFormButton" title="{% trans "Truncate the Log" %}" href="{{ urlFor("logTruncateForm") }}">{% trans "Truncate" %}</a></li>
+        <li><a class="XiboFormButton" title="{% trans "Truncate the Log" %}" href="{{ urlFor("log.truncate.form") }}">{% trans "Truncate" %}</a></li>
         <li><a id="refreshLog" title="{% trans "Refresh the Log" %}" href="#">{% trans "Refresh" %}</a></li>
     </ul>
 {% endblock %}
@@ -78,7 +78,7 @@
             serverSide: true,
             searchDelay: 3000,
             "order": [[ 1, "asc"]],
-            ajax: "{{ urlFor("logSearch") }}",
+            ajax: "{{ urlFor("log.search") }}",
             "columns": [
                 { "data": "logid" },
                 { "data": "logdate" },

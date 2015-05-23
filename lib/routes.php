@@ -28,112 +28,112 @@ $app->get('/clock', '\Xibo\Controller\Clock:clock')->name('clock');
 //
 // Schedule
 //
-$app->get('/schedule/data/events', '\Xibo\Controller\Schedule:eventData')->name('scheduleCalendarData');
+$app->get('/schedule/data/events', '\Xibo\Controller\Schedule:eventData')->name('schedule.calendar.data');
 
 //
 // Layouts
 //
-$app->get('/layout', '\Xibo\Controller\Layout:grid')->name('layoutSearch');
-$app->post('/layout', '\Xibo\Controller\Layout:add')->name('layoutAdd');
-$app->put('/layout/:id', '\Xibo\Controller\Layout:modify')->name('layoutUpdate');
-$app->delete('/layout/:id', '\Xibo\Controller\Layout:delete')->name('layoutDelete');
-$app->put('/layout/retire/:id', '\Xibo\Controller\Layout:retire')->name('layoutRetire');
+$app->get('/layout', '\Xibo\Controller\Layout:grid')->name('layout.search');
+$app->post('/layout', '\Xibo\Controller\Layout:add')->name('layout.add');
+$app->put('/layout/:id', '\Xibo\Controller\Layout:modify')->name('layout.update');
+$app->delete('/layout/:id', '\Xibo\Controller\Layout:delete')->name('layout.delete');
+$app->put('/layout/retire/:id', '\Xibo\Controller\Layout:retire')->name('layout.retire');
 
 //
 // Campaign
 //
-$app->get('/campaign', '\Xibo\Controller\Campaign:grid')->name('campaignSearch');
-$app->post('/campaign', '\Xibo\Controller\Campaign:add')->name('campaignAdd');
-$app->put('/campaign/:id', '\Xibo\Controller\Campaign:modify')->name('campaignUpdate');
-$app->delete('/campaign/:id', '\Xibo\Controller\Campaign:delete')->name('campaignDelete');
+$app->get('/campaign', '\Xibo\Controller\Campaign:grid')->name('campaign.search');
+$app->post('/campaign', '\Xibo\Controller\Campaign:add')->name('campaign.add');
+$app->put('/campaign/:id', '\Xibo\Controller\Campaign:modify')->name('campaign.update');
+$app->delete('/campaign/:id', '\Xibo\Controller\Campaign:delete')->name('campaign.delete');
 
 //
 // Template
 //
-$app->get('/template', '\Xibo\Controller\Template:grid')->name('templateSearch');
+$app->get('/template', '\Xibo\Controller\Template:grid')->name('template.search');
 
 //
 // Resolutions
 //
-$app->get('/resolution', '\Xibo\Controller\Resolution:grid')->name('resolutionSearch');
+$app->get('/resolution', '\Xibo\Controller\Resolution:grid')->name('resolution.search');
 
 //
 // Library
 //
-$app->get('/library', '\Xibo\Controller\Library:grid')->name('librarySearch');
+$app->get('/library', '\Xibo\Controller\Library:grid')->name('library.search');
 
 //
 // Displays
 //
-$app->get('/display', '\Xibo\Controller\Display:grid')->name('displaySearch');
+$app->get('/display', '\Xibo\Controller\Display:grid')->name('display.search');
 
 //
 // Display Group
 //
-$app->get('/displaygroup', '\Xibo\Controller\DisplayGroup:grid')->name('displayGroupSearch');
+$app->get('/displaygroup', '\Xibo\Controller\DisplayGroup:grid')->name('displayGroup.search');
 
 //
 // Display Profile
 //
-$app->get('/displayprofile', '\Xibo\Controller\DisplayProfile:grid')->name('displayProfileSearch');
+$app->get('/displayprofile', '\Xibo\Controller\DisplayProfile:grid')->name('displayProfile.search');
 
 //
 // DataSet
 //
-$app->get('/dataset', '\Xibo\Controller\DataSet:grid')->name('dataSetSearch');
+$app->get('/dataset', '\Xibo\Controller\DataSet:grid')->name('dataSet.search');
 
 //
 // Statistics
 //
-$app->get('/stats', '\Xibo\Controller\Stats:grid')->name('statsSearch');
-$app->get('/stats/data/bandwidth', '\Xibo\Controller\Stats:bandwidthData')->name('statsBandwidthData');
-$app->get('/stats/data/availability', '\Xibo\Controller\Stats:availabilityData')->name('statsAvailabilityData');
+$app->get('/stats', '\Xibo\Controller\Stats:grid')->name('stats.search');
+$app->get('/stats/data/bandwidth', '\Xibo\Controller\Stats:bandwidthData')->name('stats.bandwidth.data');
+$app->get('/stats/data/availability', '\Xibo\Controller\Stats:availabilityData')->name('stats.availability.data');
 
 //
 // Log
 //
-$app->get('/log', '\Xibo\Controller\Log:grid')->name('logSearch');
-$app->delete('/log', '\Xibo\Controller\Log:truncate')->name('logTruncate');
+$app->get('/log', '\Xibo\Controller\Log:grid')->name('log.search');
+$app->delete('/log', '\Xibo\Controller\Log:truncate')->name('log.truncate');
 
 //
 // User
 //
-$app->get('/user', '\Xibo\Controller\User:grid')->name('userSearch');
-$app->post('/user', '\Xibo\Controller\User:add')->name('userAdd');
-$app->put('/user/:id', '\Xibo\Controller\User:edit')->name('userEdit');
-$app->delete('/user/:id', '\Xibo\Controller\User:delete')->name('userDelete');
+$app->get('/user', '\Xibo\Controller\User:grid')->name('user.search');
+$app->post('/user', '\Xibo\Controller\User:add')->name('user.add');
+$app->put('/user/:id', '\Xibo\Controller\User:edit')->name('user.edit');
+$app->delete('/user/:id', '\Xibo\Controller\User:delete')->name('user.delete');
 
 //
 // User Group
 //
-$app->get('/group', '\Xibo\Controller\UserGroup:grid')->name('groupSearch');
+$app->get('/group', '\Xibo\Controller\UserGroup:grid')->name('group.search');
 
 //
 // Applications
 //
-$app->get('/applications', '\Xibo\Controller\Applications:grid')->name('applicationsSearch');
+$app->get('/applications', '\Xibo\Controller\Applications:grid')->name('application.search');
 
 //
 // Modules
 //
-$app->get('/module', '\Xibo\Controller\Module:grid')->name('moduleSearch');
+$app->get('/module', '\Xibo\Controller\Module:grid')->name('module.search');
 
 //
 // Transition
 //
-$app->get('/transition', '\Xibo\Controller\Transition:grid')->name('transitionSearch');
+$app->get('/transition', '\Xibo\Controller\Transition:grid')->name('transition.search');
 
 //
 // Sessions
 //
-$app->get('/sessions', '\Xibo\Controller\Sessions:grid')->name('sessionsSearch');
+$app->get('/sessions', '\Xibo\Controller\Sessions:grid')->name('sessions.search');
 
 //
 // Help
 //
-$app->get('/help', '\Xibo\Controller\Help:grid')->name('helpSearch');
+$app->get('/help', '\Xibo\Controller\Help:grid')->name('help.search');
 
 //
 // Settings
 //
-$app->put('/admin', '\Xibo\Controller\Settings:update')->name('settingsUpdate');
+$app->put('/admin', '\Xibo\Controller\Settings:update')->name('settings.update');

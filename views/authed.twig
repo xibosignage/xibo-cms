@@ -67,8 +67,8 @@
                                         <div id="XiboClock">{{ clock }}</div>
                                     </li>
                                     <li class="divider"></li>
-                                    <li><a class="XiboFormButton" href="{{ urlFor("userChangePassword") }}" title="{% trans "Change Password" %}">{% trans "Change Password" %}</a></li>
-                                    <li><a href="{{ urlFor("welcomeWizard") }}">{% trans "Reshow welcome" %}</a></li>
+                                    <li><a class="XiboFormButton" href="{{ urlFor("user.change.password.form") }}" title="{% trans "Change Password" %}">{% trans "Change Password" %}</a></li>
+                                    <li><a href="{{ urlFor("welcome.wizard") }}">{% trans "Reshow welcome" %}</a></li>
                                     <li><a class="XiboHelpButton" href="{{ help.page }}">{% trans "Help" %}</a></li>
                                     <li class="divider"></li>
                                     <li><a title="Logout" href="{{ urlFor("logout") }}">{% trans "Logout" %}</a></li>

@@ -11,7 +11,7 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li><a class="XiboFormButton" title="{% trans "Add a new Help page" %}" href="{{ urlFor("helpAddForm") }}">{% trans "Add Help Link" %}</a></li>
+        <li><a class="XiboFormButton" title="{% trans "Add a new Help page" %}" href="{{ urlFor("help.add.form") }}">{% trans "Add Help Link" %}</a></li>
     </ul>
 {% endblock %}
 
@@ -54,7 +54,7 @@
             serverSide: true,
             searchDelay: 3000,
             "order": [[ 1, "asc"]],
-            ajax: "{{ urlFor("helpSearch") }}",
+            ajax: "{{ urlFor("help.search") }}",
             "columns": [
                 { "data": "topic"},
                 { "data": "category"},

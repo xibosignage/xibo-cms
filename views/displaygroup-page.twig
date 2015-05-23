@@ -11,7 +11,7 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li><a class="XiboFormButton" title="{% trans "Add a new Display Group" %}" href="{{ urlFor("displayGroupAddForm") }}">{% trans "Add Display Group" %}</a></li>
+        <li><a class="XiboFormButton" title="{% trans "Add a new Display Group" %}" href="{{ urlFor("displayGroup.add.form") }}">{% trans "Add Display Group" %}</a></li>
     </ul>
 {% endblock %}
 
@@ -53,7 +53,7 @@
             serverSide: true,
             searchDelay: 3000,
             "order": [[ 1, "asc"]],
-            ajax: "{{ urlFor("displayGroupSearch") }}",
+            ajax: "{{ urlFor("displayGroup.search") }}",
             "columns": [
                 { "data": "displayGroup" },
                 { "data": "description" },

@@ -12,7 +12,7 @@
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
         <li><a title="{% trans "Open the Filter Form" %}" href="#" onclick="ToggleFilterView('Filter')">{% trans "Filter" %}</a></li>
-        <li><a class="XiboFormButton" title="{% trans "Add a new resolution for use on layouts" %}" href="{{ urlFor("resolutionAddForm") }}">{% trans "Add Resolution" %}</a></li>
+        <li><a class="XiboFormButton" title="{% trans "Add a new resolution for use on layouts" %}" href="{{ urlFor("resolution.add.form") }}">{% trans "Add Resolution" %}</a></li>
     </ul>
 {% endblock %}
 
@@ -59,7 +59,7 @@
             serverSide: true,
             searchDelay: 3000,
             "order": [[ 1, "asc"]],
-            ajax: "{{ urlFor("resolutionSearch") }}",
+            ajax: "{{ urlFor("resolution.search") }}",
             "columns": [
                 { "data": "resolutionId" },
                 { "data": "resolution" },

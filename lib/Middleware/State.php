@@ -88,7 +88,7 @@ class State extends Middleware
             // Configure some things in the theme
             $app->view()->appendData(array(
                 'baseUrl' => rtrim(str_replace('index.php', '', $app->request()->getRootUri()), '/') . '/',
-                'route' => $app->router()->getCurrentRoute(),
+                'route' => $app->router()->getCurrentRoute()->getName(),
                 'theme' => Theme::GetConfig(),
                 'settings' => $settings,
                 'translate' => [

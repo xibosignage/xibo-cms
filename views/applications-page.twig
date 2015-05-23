@@ -12,8 +12,8 @@
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
         <li><a title="{% trans "Open the Filter Form" %}" href="#" onclick="ToggleFilterView('Filter')">{% trans "Filter" %}</a></li>
-        <li><a class="XiboFormButton" title="{% trans "Add an Application" %}" href="{{ urlFor("applicationAddForm") }}">{% trans "Add Application" %}</a></li>
-        <li><a class="XiboFormButton" title="{% trans "View a log of application activity" %}" href="{{ urlFor("applicationViewActivity") }}">{% trans "View Activity" %}</a></li>
+        <li><a class="XiboFormButton" title="{% trans "Add an Application" %}" href="{{ urlFor("application.add.form") }}">{% trans "Add Application" %}</a></li>
+        <li><a class="XiboFormButton" title="{% trans "View a log of application activity" %}" href="{{ urlFor("application.view.activity") }}">{% trans "View Activity" %}</a></li>
     </ul>
 {% endblock %}
 
@@ -58,7 +58,7 @@
             serverSide: true,
             searchDelay: 3000,
             "order": [[ 1, "asc"]],
-            ajax: "{{ urlFor("applicationsSearch") }}",
+            ajax: "{{ urlFor("application.search") }}",
             "columns": [
                 { "data": "title" },
                 { "data": "description" },

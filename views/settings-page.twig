@@ -12,13 +12,13 @@
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
         {% if settings.SETTING_IMPORT_ENABLED %}
-            <li><a class="XiboFormButton" title="{% trans "Import a database" %}" href="{{ urlFor("settingsImportForm") }}">{% trans "Import" %}</a></li>
+            <li><a class="XiboFormButton" title="{% trans "Import a database" %}" href="{{ urlFor("settings.import.form") }}">{% trans "Import" %}</a></li>
         {% endif %}
 
-        <li><a class="XiboFormButton" title="{% trans "Export database" %}" href="{{ urlFor("settingsExportForm") }}">{% trans "Export" %}</a></li>
+        <li><a class="XiboFormButton" title="{% trans "Export database" %}" href="{{ urlFor("settings.export.form") }}">{% trans "Export" %}</a></li>
 
         {% if settings.SETTING_LIBRARY_TIDY_ENABLED %}
-            <li><a class="XiboFormButton" title="{% trans "Run through the library and remove unused and unnecessary files" %}" href="{{ urlFor("settingsLibraryTidyForm") }}">{% trans "Tidy Library" %}</a></li>
+            <li><a class="XiboFormButton" title="{% trans "Run through the library and remove unused and unnecessary files" %}" href="{{ urlFor("settings.libraryTidy.form") }}">{% trans "Tidy Library" %}</a></li>
         {% endif %}
     </ul>
 {% endblock %}
@@ -37,7 +37,7 @@
                             {% set first = false %}
                         {% endfor %}
                     </ul>
-                    <form id="SettingsForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("settingsUpdate") }}">
+                    <form id="SettingsForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("settings.update") }}">
                         <div class="tab-content">
                             {% for field in fields %}
                                 {% if currentCat != field.cat %}

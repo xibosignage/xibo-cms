@@ -11,7 +11,7 @@ This is the template for the campaign page
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li><a class="XiboFormButton" title="{% trans "Add a new Campaign" %}" href="{{ urlFor("campaignAddForm") }}">{% trans "Add Campaign" %}</a></li>
+        <li><a class="XiboFormButton" title="{% trans "Add a new Campaign" %}" href="{{ urlFor("campaign.add.form") }}">{% trans "Add Campaign" %}</a></li>
     </ul>
 {% endblock %}
 
@@ -53,7 +53,7 @@ This is the template for the campaign page
             serverSide: true,
             searchDelay: 3000,
             "order": [[ 1, "asc"]],
-            ajax: "{{ urlFor("campaignSearch") }}",
+            ajax: "{{ urlFor("campaign.search") }}",
             "columns": [
                 { "data": "name" },
                 { "data": "numlayouts" },

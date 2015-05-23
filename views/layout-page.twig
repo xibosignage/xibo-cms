@@ -4,7 +4,7 @@
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
         <li><a title="{% trans "Open the Filter Form" %}" href="#" onclick="ToggleFilterView('Filter')">{% trans "Filter" %}</a></li>
-        <li><a class="XiboFormButton" title="{% trans "Add a new Layout and jump to the layout designer." %}" href="{{ urlFor("layoutAddForm") }}">{% trans "Add Layout" %}</a></li>
+        <li><a class="XiboFormButton" title="{% trans "Add a new Layout and jump to the layout designer." %}" href="{{ urlFor("layout.add.form") }}">{% trans "Add Layout" %}</a></li>
         <li><a class="XiboFormButton" title="{% trans "Import a Layout from a ZIP file." %}" href="index.php?p=layout&q=ImportForm">{% trans "Import" %}</a></li>
     </ul>
 {% endblock %}
@@ -69,7 +69,7 @@
             serverSide: true,
             searchDelay: 3000,
             "order": [[ 1, "asc"]],
-            ajax: "{{ urlFor("layoutSearch") }}",
+            ajax: "{{ urlFor("layout.search") }}",
             "columns": [
                 { "data": "layoutId" },
                 { "data": "layout" },

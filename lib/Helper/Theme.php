@@ -120,7 +120,7 @@ class Theme
             $item['selected'] = ($item['page'] == $theme->pageName);
 
             if ($item['external'] == 0) {
-                $item['link'] = $item['page'] . 'View';
+                $item['link'] = $item['page'] . '.view';
             } else {
                 $item['link'] = $item['args'];
             }

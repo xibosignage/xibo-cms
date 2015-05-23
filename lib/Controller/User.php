@@ -110,14 +110,14 @@ class User extends Base
                 // Edit
                 $user->buttons[] = array(
                     'id' => 'user_button_edit',
-                    'url' => $this->getApp()->urlFor('userEditForm', ['id' => $user->userId]),
+                    'url' => $this->getApp()->urlFor('user.edit.form', ['id' => $user->userId]),
                     'text' => __('Edit')
                 );
 
                 // Delete
                 $user->buttons[] = array(
                     'id' => 'user_button_delete',
-                    'url' => $this->getApp()->urlFor('userDeleteForm', ['id' => $user->userId]),
+                    'url' => $this->getApp()->urlFor('user.delete.form', ['id' => $user->userId]),
                     'text' => __('Delete')
                 );
 

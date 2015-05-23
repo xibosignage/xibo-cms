@@ -11,7 +11,7 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li><a class="XiboFormButton" title="{% trans "Export raw data to CSV" %}" href="{{ urlFor("statsExportForm") }}">{% trans "Export" %}</a></li>
+        <li><a class="XiboFormButton" title="{% trans "Export raw data to CSV" %}" href="{{ urlFor("stats.export.form") }}">{% trans "Export" %}</a></li>
     </ul>
 {% endblock %}
 
@@ -100,7 +100,7 @@
             serverSide: true,
             searchDelay: 3000,
             "order": [[ 1, "asc"]],
-            ajax: "{{ urlFor("statsSearch") }}",
+            ajax: "{{ urlFor("stats.search") }}",
             "columns": [
                 { "data": "Display" },
                 { "data": "Layout" },
@@ -134,7 +134,7 @@
         function setBandwidthChart() {
             $.ajax({
                 type: "get",
-                url: "{{ urlFor("statsBandwidthData") }}",
+                url: "{{ urlFor("stats.bandwidth.data") }}",
                 cache: false,
                 dataType: "json",
                 data: $("#bandwidthFilter").find("form").serialize(),
@@ -188,7 +188,7 @@
 
             $.ajax({
                 type: "get",
-                url: "{{ urlFor("statsAvailabilityData") }}",
+                url: "{{ urlFor("stats.availability.data") }}",
                 cache: false,
                 dataType: "json",
                 data: $("#availabilityFilter").find("form").serialize(),

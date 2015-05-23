@@ -11,7 +11,7 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li><a class="XiboFormButton" title="{% trans "Add a new DataSet" %}" href="{{ urlFor("dataSetAddForm") }}">{% trans "Add DataSet" %}</a></li>
+        <li><a class="XiboFormButton" title="{% trans "Add a new DataSet" %}" href="{{ urlFor("dataSet.add.form") }}">{% trans "Add DataSet" %}</a></li>
     </ul>
 {% endblock %}
 
@@ -55,7 +55,7 @@
             serverSide: true,
             searchDelay: 3000,
             "order": [[ 1, "asc"]],
-            ajax: "{{ urlFor("dataSetSearch") }}",
+            ajax: "{{ urlFor("dataSet.search") }}",
             "columns": [
                 { "data": "name" },
                 { "data": "description" },
