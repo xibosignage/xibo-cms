@@ -72,7 +72,7 @@ class UserGroup extends Base
 
         $filter_name = Sanitize::getString('filter_name');
 
-        Session::Set('usergroup', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        Session::Set('usergroup', 'Filter', Sanitize::getCheckbox('XiboFilterPinned'));
         Session::Set('usergroup', 'filter_name', $filter_name);
 
         $groups = UserGroupFactory::query($this->gridRenderSort(), ['group' => $filter_name]);

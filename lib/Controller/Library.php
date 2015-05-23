@@ -109,7 +109,7 @@ class Library extends Base
         Session::Set('content', 'filter_duration_in_seconds', $filter_duration_in_seconds);
         Session::Set('content', 'filter_showThumbnail', $filter_showThumbnail);
         Session::Set('content', 'showTags', $showTags);
-        Session::Set('content', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        Session::Set('content', 'Filter', Sanitize::getCheckbox('XiboFilterPinned'));
 
         // Construct the SQL
         $mediaList = $user->MediaList(NULL, array(

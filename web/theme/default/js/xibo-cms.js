@@ -80,6 +80,11 @@ function XiboInitialise(scope) {
                 $('.XiboFilter', this).children(':first').hide();
             }
         }
+
+        // Bind the filter form
+        $(this).find(".XiboFilter form input, .XiboFilter form select").change(function() {
+            $(this).closest(".XiboGrid").find("table").DataTable().ajax.reload();
+        });
     });
 
     // Search for any Buttons / Links on the page that are used to load forms

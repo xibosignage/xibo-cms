@@ -14,6 +14,7 @@ use Xibo\Helper\ObjectVars;
 trait EntityTrait
 {
     private $hash;
+    public $buttons;
 
     /**
      * Hydrate an entity with properties

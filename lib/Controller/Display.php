@@ -357,7 +357,7 @@ class Display extends Base
         Session::Set('display', 'filter_autoRefresh', $filter_autoRefresh);
 
         // Pinned option?
-        Session::Set('display', 'DisplayFilter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        Session::Set('display', 'DisplayFilter', Sanitize::getCheckbox('XiboFilterPinned'));
 
         $displays = $user->DisplayList(array('displayid'), array(
             'displaygroupid' => $filter_displaygroupid,

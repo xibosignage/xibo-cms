@@ -248,13 +248,16 @@ class Base
         }
 
         $this->rendered = true;
+
+        //Log::debug('Updating Session Data.' . json_encode($_SESSION, JSON_PRETTY_PRINT));
     }
 
     /**
      * Set the filter
+     * @param array[Optional] $extraFilter
      * @return array
      */
-    protected function gridRenderFilter()
+    protected function gridRenderFilter($extraFilter = [])
     {
         $app = $this->getApp();
 
@@ -271,6 +274,9 @@ class Base
         else if ($search != '') {
             $filter['search'] = $search;
         }
+
+        // Merge with any extra filter items that have been provided
+        $filter = array_merge($extraFilter, $filter);
 
         return $filter;
     }

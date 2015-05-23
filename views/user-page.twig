@@ -26,9 +26,9 @@
                 <div class="XiboFilter">
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
-                            {{ inline.text("filter_username", "Name", defaults.userName) }}
-                            {{ inline.dropdown("filter_usertypeid", "single", "User Type", defaults.userType, options.userTypes, "userTypeId", "userType") }}
-                            {{ inline.checkbox("XiboFilterPinned", "Keep Open", defaults.filterPinned) }}
+                            {{ inline.text("userName", "Name", defaults.userName) }}
+                            {{ inline.dropdown("userTypeId", "single", "User Type", defaults.userType, options.userTypes, "userTypeId", "userType") }}
+                            {{ inline.checkbox("XiboFilterPinned", "Remember", defaults.filterPinned) }}
                         </form>
                     </div>
                 </div>
@@ -59,8 +59,14 @@
         var table = $("#users").DataTable({
             serverSide: true,
             searchDelay: 3000,
-            "order": [[ 1, "asc"]],
-            ajax: "{{ urlFor("user.search") }}",
+            "order": [[ 0, "asc"]],
+            "filter": false,
+            ajax: {
+                url: "{{ urlFor("user.search") }}",
+                "data": function(d) {
+                    $.extend(d, $("#users").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                }
+            },
             "columns": [
                 { "data": "userName" },
                 { "data": "homePage" },

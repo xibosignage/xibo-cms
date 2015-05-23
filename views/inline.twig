@@ -103,19 +103,13 @@
     </div>
 {% endmacro %}
 
-{% macro checkbox(name, title, value, helpText, groupClass, accessKey) %}
-    {% set title %}
-    {% trans title %}
-    {% endset %}
+{% macro checkbox(name, title, value, groupClass, accessKey) %}
+    {% set title %}{% trans title %}{% endset %}
     <div class="form-group {{ groupClass }}">
         <div class="">
             <div class="checkbox">
-                <label for="{{ name }}" title="{{ helpText }}" accesskey="{{ accessKey }}">
-                    <input type="checkbox" id="{{ name }}" name="{{ name }}" {% if value == 1 %}checked{% endif %}>
-                    {{ title }}
-                </label>
+                <input title="{{ title }}" class="form-control" type="checkbox" id="{{ name }}" name="{{ name }}" {% if value == 1 %}checked{% endif %}>
             </div>
-            <span class="help-block">{{ helpText }}</span>
         </div>
     </div>
 {% endmacro %}

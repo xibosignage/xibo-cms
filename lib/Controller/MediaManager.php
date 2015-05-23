@@ -114,7 +114,7 @@ class MediaManager extends Base
         \Xibo\Helper\Session::Set('mediamanager', 'filter_region_name', $filterRegion);
         \Xibo\Helper\Session::Set('mediamanager', 'filter_media_name', $filterMediaName);
         \Xibo\Helper\Session::Set('mediamanager', 'filter_type', $filterMediaType);
-        \Xibo\Helper\Session::Set('mediamanager', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        \Xibo\Helper\Session::Set('mediamanager', 'Filter', Sanitize::getCheckbox('XiboFilterPinned'));
 
         // Lookup the module name
         if ($filterMediaType != 0) {

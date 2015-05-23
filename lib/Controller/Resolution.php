@@ -61,7 +61,7 @@ class Resolution extends Base
      */
     function grid()
     {
-        Session::Set('resolution', 'ResolutionFilter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        Session::Set('resolution', 'ResolutionFilter', Sanitize::getCheckbox('XiboFilterPinned'));
 
         // Show enabled
         $filterEnabled = Sanitize::getInt('filterEnabled');

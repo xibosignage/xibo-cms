@@ -25,7 +25,6 @@ use Xibo\Factory\PageFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\UserTypeFactory;
-use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
@@ -41,14 +40,14 @@ class User extends Base
     function displayPage()
     {
         // Configure the theme
-        if (\Kit::IsFilterPinned('user_admin', 'Filter')) {
-            $filter_pinned = 1;
-            $filter_username = Session::Get('user_admin', 'filter_username');
-            $filter_usertypeid = Session::Get('user_admin', 'filter_usertypeid');
+        if (Session::Get('user_admin', 'Filter') == 1) {
+            $pinned = 1;
+            $userName = Session::Get('user_admin', 'userName');
+            $userTypeId = Session::Get('user_admin', 'userTypeId');
         } else {
-            $filter_pinned = 0;
-            $filter_username = NULL;
-            $filter_usertypeid = NULL;
+            $pinned = 0;
+            $userName = NULL;
+            $userTypeId = NULL;
         }
 
         $userTypes = PDOConnect::select("SELECT userTypeId, userType FROM usertype ORDER BY usertype", []);
@@ -56,9 +55,9 @@ class User extends Base
 
         $data = [
             'defaults' => [
-                'filterPinned' => $filter_pinned,
-                'userName' => $filter_username,
-                'userType' => $filter_usertypeid
+                'filterPinned' => $pinned,
+                'userName' => $userName,
+                'userType' => $userTypeId
             ],
             'options' => [
                 'userTypes' => $userTypes
@@ -76,30 +75,16 @@ class User extends Base
     function grid()
     {
         // Capture the filter options
-        // User ID
-        $filter_username = Sanitize::getString('filter_username');
-        Session::Set('user_admin', 'filter_username', $filter_username);
-
-        // User Type ID
-        $filter_usertypeid = Sanitize::getInt('filter_usertypeid');
-        Session::Set('user_admin', 'filter_usertypeid', $filter_usertypeid);
-
-        // Pinned option?
-        Session::Set('user_admin', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        Session::Set('user_admin', 'Filter', Sanitize::getCheckbox('XiboFilterPinned', 0));
 
         // Filter our users?
-        $filterBy = array();
-
-        // Filter on User Type
-        if ($filter_usertypeid != 0)
-            $filterBy['userTypeId'] = $filter_usertypeid;
-
-        // Filter on User Name
-        if ($filter_username != '')
-            $filterBy['userName'] = $filter_username;
+        $filterBy = [
+            'userTypeId' => Session::Set('user_admin', 'userTypeId', Sanitize::getInt('userTypeId')),
+            'userName' => Session::Set('user_admin', 'userName', Sanitize::getString('userName'))
+        ];
 
         // Load results into an array
-        $users = $this->getUser()->userList(array('userName'), $filterBy);
+        $users = $this->getUser()->userList($this->gridRenderSort(), $this->gridRenderFilter($filterBy));
 
         foreach ($users as $user) {
             /* @var \Xibo\Entity\User $user */

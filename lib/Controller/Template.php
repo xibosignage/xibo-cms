@@ -73,7 +73,7 @@ class Template extends Base
 
         Session::Set('template', 'filter_name', $filter_name);
         Session::Set('template', 'filter_tags', $filter_tags);
-        Session::Set('template', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        Session::Set('template', 'Filter', Sanitize::getCheckbox('XiboFilterPinned'));
 
         // Show filter_showThumbnail
         $showThumbnail = Sanitize::getCheckbox('showThumbnail');

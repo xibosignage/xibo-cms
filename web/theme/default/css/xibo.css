@@ -351,3 +351,7 @@ table.arrayViewer {
 table.dataTable tbody tr.selected > td {
     background-color: #a6b3cd;
 }
+
+.XiboFilter {
+    float: right;
+}

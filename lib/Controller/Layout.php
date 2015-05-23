@@ -319,7 +319,7 @@ class Layout extends Base
         Session::Set('layout', 'filter_tags', $filter_tags);
 
         // Pinned option?
-        Session::Set('layout', 'LayoutFilter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        Session::Set('layout', 'LayoutFilter', Sanitize::getCheckbox('XiboFilterPinned'));
 
         // Get all layouts
         $layouts = $this->getUser()->LayoutList($this->gridRenderSort(), array(

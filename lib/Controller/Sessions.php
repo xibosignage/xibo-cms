@@ -70,7 +70,7 @@ class Sessions extends Base
         $type = \Kit::GetParam('filter_type', _POST, _WORD);
         $fromDt = Sanitize::getString('filter_fromdt');
 
-        Session::Set('sessions', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        Session::Set('sessions', 'Filter', Sanitize::getCheckbox('XiboFilterPinned'));
         Session::Set('sessions', 'filter_type', $type);
         Session::Set('sessions', 'filter_fromdt', $fromDt);
 

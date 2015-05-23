@@ -20,6 +20,8 @@
  */
 namespace Xibo\Helper;
 
+use Xibo\Storage\PDOConnect;
+
 class Session
 {
     private $max_lifetime;
@@ -69,8 +71,8 @@ class Session
 
     function read($key)
     {
-        $userAgent = substr(\Xibo\Helper\Sanitize::string($_SERVER['HTTP_USER_AGENT']), 0, 253);
-        $remoteAddr = \Xibo\Helper\Sanitize::string($_SERVER['REMOTE_ADDR']);
+        $userAgent = substr(Sanitize::string($_SERVER['HTTP_USER_AGENT']), 0, 253);
+        $remoteAddr = Sanitize::string($_SERVER['REMOTE_ADDR']);
         $securityToken = \Kit::GetParam('SecurityToken', _POST, _STRING, null);
 
         $this->key = $key;
@@ -79,7 +81,7 @@ class Session
         $this->gc($this->max_lifetime);
 
         try {
-            $dbh = \Xibo\Storage\PDOConnect::init();
+            $dbh = PDOConnect::init();
 
             // Get this session
             $sth = $dbh->prepare('SELECT session_data, isexpired, securitytoken, useragent FROM session WHERE session_id = :session_id');
@@ -94,7 +96,7 @@ class Session
                 $usth = $dbh->prepare('DELETE FROM session WHERE session_id = :session_id');
                 $usth->execute(array('session_id' => $key));
 
-                throw new Exception('Different UserAgent');
+                throw new \Exception('Different UserAgent');
             }
 
             // We have the Key and the Remote Address.
@@ -133,10 +135,10 @@ class Session
         $lastaccessed = date("Y-m-d H:i:s");
 
         $userAgent = substr(Sanitize::getString('HTTP_USER_AGENT', 'No user agent', $_SERVER), 0, 253);
-        $remoteAddr = \Xibo\Helper\Sanitize::getString('REMOTE_ADDR');
+        $remoteAddr = Sanitize::getString('REMOTE_ADDR');
 
         try {
-            $dbh = \Xibo\Storage\PDOConnect::init();
+            $dbh = PDOConnect::init();
 
             $sth = $dbh->prepare('SELECT session_id FROM session WHERE session_id = :session_id');
             $sth->execute(array('session_id' => $key));
@@ -164,7 +166,7 @@ class Session
             } else {
                 // Punch a very small hole in the authentication system
                 // we do not want to update the expiry time of a session if it is the Clock Timer going off
-                $autoRefresh = (isset($_REQUEST['autoRefresh']) && \Xibo\Helper\Sanitize::bool($_REQUEST['autoRefresh']));
+                $autoRefresh = (isset($_REQUEST['autoRefresh']) && Sanitize::bool($_REQUEST['autoRefresh']));
 
                 if (!$this->refreshExpiry || $autoRefresh) {
 
@@ -209,11 +211,11 @@ class Session
     function destroy($key)
     {
         try {
-            $dbh = \Xibo\Storage\PDOConnect::init();
+            $dbh = PDOConnect::init();
 
             $sth = $dbh->prepare('UPDATE session SET IsExpired = 1 WHERE session_id = :session_id');
             $sth->execute(array('session_id', $key));
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             Log::error($e->getMessage());
         }
 
@@ -223,7 +225,7 @@ class Session
     function gc($max_lifetime)
     {
         try {
-            $dbh = \Xibo\Storage\PDOConnect::init();
+            $dbh = PDOConnect::init();
 
             // Delete sessions older than 10 times the max lifetime
             $sth = $dbh->prepare('DELETE FROM `session` WHERE IsExpired = 1 AND session_expiration < :expiration');
@@ -232,7 +234,7 @@ class Session
             // Update expired sessions as expired
             $sth = $dbh->prepare('UPDATE `session` SET IsExpired = 1 WHERE session_expiration < :expiration');
             $sth->execute(array('expiration' => time()));
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             Log::error($e->getMessage());
         }
     }
@@ -242,12 +244,12 @@ class Session
         $_SESSION['userid'] = $userid;
 
         try {
-            $dbh = \Xibo\Storage\PDOConnect::init();
+            $dbh = PDOConnect::init();
 
             // Delete sessions older than 10 times the max lifetime
             $sth = $dbh->prepare('UPDATE `session` SET userid = :userid WHERE session_id = :session_id');
             $sth->execute(array('session_id' => $key, 'userid' => $userid));
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             Log::error($e->getMessage());
             return false;
         }
@@ -267,12 +269,12 @@ class Session
         $this->key = $new_sess_id;
 
         try {
-            $dbh = \Xibo\Storage\PDOConnect::init();
+            $dbh = PDOConnect::init();
 
             // Delete sessions older than 10 times the max lifetime
             $sth = $dbh->prepare('UPDATE session SET session_id = :new_session_id WHERE session_id = :session_id');
             $sth->execute(array('session_id' => $oldSessionID, 'new_session_id' => $new_sess_id));
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             Log::error($e->getMessage());
             return false;
         }
@@ -283,12 +285,12 @@ class Session
         $_SESSION['pagename'] = $lastpage;
 
         try {
-            $dbh = \Xibo\Storage\PDOConnect::init();
+            $dbh = PDOConnect::init();
 
             // Delete sessions older than 10 times the max lifetime
             $sth = $dbh->prepare('UPDATE session SET lastpage = :lastpage WHERE session_id = :session_id');
             $sth->execute(array('session_id' => $key, 'lastpage' => $lastpage));
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             Log::error($e->getMessage());
             return false;
         }
@@ -299,12 +301,12 @@ class Session
         $this->isExpired = $isExpired;
 
         try {
-            $dbh = \Xibo\Storage\PDOConnect::init();
+            $dbh = PDOConnect::init();
 
             // Delete sessions older than 10 times the max lifetime
             $sth = $dbh->prepare('UPDATE session SET isexpired = :isexpired WHERE session_id = :session_id');
             $sth->execute(array('session_id' => $this->key, 'isexpired' => $isExpired));
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             Log::error($e->getMessage());
             return false;
         }
@@ -315,26 +317,38 @@ class Session
         try {
             // TODO: Remove global variable
             global $session;
-            $dbh = \Xibo\Storage\PDOConnect::init();
+            $dbh = PDOConnect::init();
 
             // Delete sessions older than 10 times the max lifetime
             $sth = $dbh->prepare('UPDATE session SET securitytoken = :securitytoken WHERE session_id = :session_id');
             $sth->execute(array('session_id' => $session->key, 'securitytoken' => $token));
 
             return true;
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             Log::error($e->getMessage());
             return false;
         }
     }
 
+    /**
+     * Store a variable in the session
+     * @param string $key
+     * @param mixed $secondKey
+     * @param mixed|null $value
+     * @return mixed
+     */
     public static function set($key, $secondKey, $value = null)
     {
         if ($value === null) {
             $_SESSION[$key] = $secondKey;
             return $secondKey;
         } else {
-            $_SESSION[$key] = array($secondKey => $value);
+            if (isset($_SESSION[$key])) {
+                $_SESSION[$key][$secondKey] = $value;
+            }
+            else {
+                $_SESSION[$key] = [$secondKey => $value];
+            }
             return $value;
         }
     }

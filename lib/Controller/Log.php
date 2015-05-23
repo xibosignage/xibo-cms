@@ -101,7 +101,7 @@ class Log extends Base
         $seconds = \Kit::GetParam('filter_seconds', _POST, _INT, 120);
         $filter_intervalTypeId = \Kit::GetParam('filter_intervalTypeId', _POST, _INT, 1);
 
-        Session::Set('log', 'Filter', \Kit::GetParam('XiboFilterPinned', _REQUEST, _CHECKBOX, 'off'));
+        Session::Set('log', 'Filter', Sanitize::getCheckbox('XiboFilterPinned'));
         Session::Set('log', 'filter_type', $type);
         Session::Set('log', 'filter_function', $function);
         Session::Set('log', 'filter_page', $page);
