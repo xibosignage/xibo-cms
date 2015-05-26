@@ -32,6 +32,22 @@ use Xibo\Storage\PDOConnect;
 class PageFactory
 {
     /**
+     * Get by ID
+     * @param int $pageId
+     * @return Page
+     * @throws NotFoundException if the page cannot be resolved from the provided route
+     */
+    public static function getById($pageId)
+    {
+        $pages = PageFactory::query(null, array('pageId' => $pageId));
+
+        if (count($pages) <= 0)
+            throw new NotFoundException('Unknown Route');
+
+        return $pages[0];
+    }
+
+    /**
      * Get by Route
      * @param $route
      * @return Page
@@ -58,6 +74,10 @@ class PageFactory
         if (Sanitize::getString('name', $filterBy) != '') {
             $params['name'] = Sanitize::getString('name', $filterBy);
             $sql .= ' AND `name` = :name';
+        }
+        if (Sanitize::getInt('pageId', $filterBy) != null) {
+            $params['pageId'] = Sanitize::getString('pageId', $filterBy);
+            $sql .= ' AND `pageId` = :pageId';
         }
 
         // Sorting?

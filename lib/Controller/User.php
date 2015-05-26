@@ -22,6 +22,7 @@ namespace Xibo\Controller;
 
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\PageFactory;
+use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\UserTypeFactory;
@@ -109,7 +110,7 @@ class User extends Base
                 // Page Security
                 $user->buttons[] = array(
                     'id' => 'user_button_page_security',
-                    'url' => 'index.php?p=group&q=PageSecurityForm&groupid=' . $user->groupId,
+                    'url' => $this->urlFor('user.permissions.form', ['entity' => 'Page', 'id' => $user->groupId]),
                     'text' => __('Page Security')
                 );
 
@@ -330,15 +331,17 @@ class User extends Base
     }
 
     /**
-     * Show the Permissions for this Campaign
+     * Permissions for this user and the provided entity
+     * @param $entity
+     * @param $objectId
+     * @throws \Xibo\Exception\NotFoundException
      */
-    public function permissionsForm()
+    public function permissionsForm($entity, $objectId)
     {
-        $response = $this->getState();
-
-        $entity = Sanitize::getString('entity');
         if ($entity == '')
             throw new \InvalidArgumentException(__('Permissions form requested without an entity'));
+
+        $requestEntity = $entity;
 
         // Check to see that we can resolve the entity
         $entity = 'Xibo\\Factory\\' . $entity . 'Factory';
@@ -347,7 +350,6 @@ class User extends Base
             throw new \InvalidArgumentException(__('Permissions form requested with an invalid entity'));
 
         // Get the object
-        $objectId = Sanitize::getInt('objectId');
         if ($objectId == 0)
             throw new \InvalidArgumentException(__('Permissions form requested without an object'));
 
@@ -357,11 +359,6 @@ class User extends Base
         // Does this user have permission to edit the permissions?!
         if (!$this->getUser()->checkPermissionsModifyable($object))
             throw new AccessDeniedException(__('You do not have permission to edit these permissions.'));
-
-        // Set some information about the form
-        Theme::Set('form_id', 'PermissionsForm');
-        Theme::Set('form_action', 'index.php?p=user&q=permissions');
-        Theme::Set('form_meta', '<input type="hidden" name="objectId" value="' . $objectId . '" /><input type="hidden" name="entity" value="' . \Kit::GetParam('entity', _GET, _STRING) . '" />');
 
         // List of all Groups with a view / edit / delete check box
         $permissions = \Xibo\Factory\PermissionFactory::getAllByObjectId(get_class($object), $objectId);
@@ -388,22 +385,17 @@ class User extends Base
             $checkboxes[] = $checkbox;
         }
 
-        $formFields = array();
-        $formFields[] = Form::AddPermissions('groupids[]', $checkboxes);
-        $formFields[] = Form::AddCheckbox('cascade',
-            __('Cascade permissions to all items underneath this one.'), 0,
-            __('For example, if this is a Layout then update the permissions on all Regions, Playlists and Widgets.'),
-            'r');
+        $data = [
+            'entity' => $requestEntity,
+            'objectId' => $objectId,
+            'permissions' => $checkboxes,
+            'help' => [
+                'permissions' => Help::Link('Campaign', 'Permissions')
+            ]
+        ];
 
-        Theme::Set('form_fields', $formFields);
-
-        $form = Theme::RenderReturn('form_render');
-
-        $response->SetFormRequestResponse($form, __('Permissions'), '350px', '500px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Campaign', 'Permissions') . '")');
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Save'), '$("#PermissionsForm").submit()');
-
+        $this->getState()->template = 'user-permissions-form';
+        $this->getState()->setData($data);
     }
 
     /**
@@ -417,28 +409,28 @@ class User extends Base
 
         $entity = Sanitize::getString('entity');
         if ($entity == '')
-            throw new InvalidArgumentException(__('Permissions form requested without an entity'));
+            throw new \InvalidArgumentException(__('Permissions form requested without an entity'));
 
         // Check to see that we can resolve the entity
         $entity = 'Xibo\\Factory\\' . $entity . 'Factory';
 
         if (!class_exists($entity) || !method_exists($entity, 'getById'))
-            throw new InvalidArgumentException(__('Permissions form requested with an invalid entity'));
+            throw new \InvalidArgumentException(__('Permissions form requested with an invalid entity'));
 
         // Get the object
         $objectId = Sanitize::getInt('objectId');
         if ($objectId == 0)
-            throw new InvalidArgumentException(__('Permissions form requested without an object'));
+            throw new \InvalidArgumentException(__('Permissions form requested without an object'));
 
         // Load our object
         $object = $entity::getById($objectId);
 
         // Does this user have permission to edit the permissions?!
         if (!$this->getUser()->checkPermissionsModifyable($object))
-            throw new Exception(__('You do not have permission to edit these permissions.'));
+            throw new AccessDeniedException(__('You do not have permission to edit these permissions.'));
 
         // Get all current permissions
-        $permissions = \Xibo\Factory\PermissionFactory::getAllByObjectId(get_class($object), $objectId);
+        $permissions = PermissionFactory::getAllByObjectId(get_class($object), $objectId);
 
         // Get the provided permissions
         $groupIds = \Kit::GetParam('groupids', _POST, _ARRAY);

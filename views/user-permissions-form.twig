@@ -1,0 +1,36 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Permissions" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Save" %}, $("#PermissionsForm").submit()
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Help" %}, XiboHelpRender("{{ help.permissions }}")
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="PermissionsForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("user.permissions", {entity: entity, id: objectId}) }}">
+
+                {{ forms.permissions("groupids[]", permissions) }}
+
+                {% set title %}{% trans %}Cascade permissions to all items underneath this one.{% endtrans %}{% endset %}
+                {% set helpText %}{% trans %}For example, if this is a Layout then update the permissions on all Regions, Playlists and Widgets.{% endtrans %}{% endset %}
+                {{ forms.checkbox(cascade, title, 0, helpText) }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

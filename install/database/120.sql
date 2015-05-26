@@ -23,6 +23,8 @@ CREATE TABLE IF NOT EXISTS `permissionentity` (
   `entity` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+ALTER TABLE `permissionentity` ADD PRIMARY KEY(`entityId`);
+
 
 /* Take existing permissions and pull them into the permissions table */
 INSERT INTO `permission` (`groupId`, `entityId`, `objectId`, `objectIdString`, `view`, `edit`, `delete`)
