@@ -108,6 +108,9 @@ $app->delete('/user/:id', '\Xibo\Controller\User:delete')->name('user.delete');
 // User Group
 //
 $app->get('/group', '\Xibo\Controller\UserGroup:grid')->name('group.search');
+$app->post('/group', '\Xibo\Controller\UserGroup:add')->name('group.add');
+$app->put('/group/:id', '\Xibo\Controller\UserGroup:edit')->name('group.edit');
+$app->delete('/group/:id', '\Xibo\Controller\UserGroup:delete')->name('group.delete');
 
 //
 // Applications

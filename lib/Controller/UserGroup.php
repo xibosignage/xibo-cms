@@ -26,6 +26,7 @@ use JSON;
 use Kit;
 use PDO;
 use Xibo\Entity\User;
+use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Form;
@@ -44,9 +45,9 @@ class UserGroup extends Base
     function displayPage()
     {
         // Default options
-        if (\Kit::IsFilterPinned('usergroup', 'Filter')) {
+        if (Session::Get(get_class(), 'Filter') == 1) {
             $filter_pinned = 1;
-            $filter_name = Session::Get('usergroup', 'filter_name');
+            $filter_name = Session::Get(get_class(), 'filter_name');
         } else {
             $filter_pinned = 0;
             $filter_name = NULL;
@@ -70,12 +71,13 @@ class UserGroup extends Base
     {
         $user = $this->getUser();
 
-        $filter_name = Sanitize::getString('filter_name');
+        Session::Set(get_class(), 'Filter', Sanitize::getCheckbox('XiboFilterPinned', 0));
 
-        Session::Set('usergroup', 'Filter', Sanitize::getCheckbox('XiboFilterPinned'));
-        Session::Set('usergroup', 'filter_name', $filter_name);
+        $filterBy = [
+            'group' => Session::Set(get_class(), 'filter_name', Sanitize::getString('filter_name'))
+        ];
 
-        $groups = UserGroupFactory::query($this->gridRenderSort(), ['group' => $filter_name]);
+        $groups = UserGroupFactory::query($this->gridRenderSort(), $this->gridRenderFilter($filterBy));
 
         foreach ($groups as $group) {
             /* @var \Xibo\Entity\UserGroup $group */
@@ -85,14 +87,14 @@ class UserGroup extends Base
                 // Edit
                 $group->buttons[] = array(
                     'id' => 'usergroup_button_edit',
-                    'url' => 'index.php?p=group&q=GroupForm&groupid=' . $group->groupId,
+                    'url' => $this->urlFor('group.edit.form', ['id' => $group->groupId]),
                     'text' => __('Edit')
                 );
 
                 // Delete
                 $group->buttons[] = array(
                     'id' => 'usergroup_button_delete',
-                    'url' => 'index.php?p=group&q=DeleteForm&groupid=' . $group->groupId,
+                    'url' => $this->urlFor('group.delete.form', ['id' => $group->groupId]),
                     'text' => __('Delete')
                 );
 
@@ -116,13 +118,6 @@ class UserGroup extends Base
                     'url' => 'index.php?p=group&q=MenuItemSecurityForm&groupid=' . $group->groupId,
                     'text' => __('Menu Security')
                 );
-
-                // User Quota
-                $group->buttons[] = array(
-                    'id' => 'usergroup_button_quota',
-                    'url' => 'index.php?p=group&q=quotaForm&groupid=' . $group->groupId,
-                    'text' => __('Set User Quota')
-                );
             }
         }
 
@@ -131,46 +126,36 @@ class UserGroup extends Base
     }
 
     /**
-     * Add / Edit Group Form
-     * @return
+     * Form to Add a Group
      */
-    function GroupForm()
+    function addForm()
     {
+        $this->getState()->template = 'usergroup-form-add';
+        $this->getState()->setData([
+            'help' => [
+                'add' => Help::Link('UserGroup', 'Add')
+            ]
+        ]);
+    }
 
-        $user = $this->getUser();
-        $response = $this->getState();
+    /**
+     * Form to Add a Group
+     * @param int $groupId
+     */
+    function editForm($groupId)
+    {
+        $group = UserGroupFactory::getById($groupId);
 
-        Theme::Set('form_id', 'UserGroupForm');
+        if (!$this->getUser()->checkEditable($group))
+            throw new AccessDeniedException();
 
-        // alter the action variable depending on which form we are after
-        if ($this->groupid == "") {
-            Theme::Set('form_action', 'index.php?p=group&q=Add');
-
-            $form_name = 'Add User Group';
-            $form_help_link = Help::Link('UserGroup', 'Add');
-        } else {
-            Theme::Set('form_action', 'index.php?p=group&q=Edit');
-            Theme::Set('form_meta', '<input type="hidden" name="groupid" value="' . $this->groupid . '">');
-            Theme::Set('group', $this->group);
-
-            $form_name = 'Edit User Group';
-            $form_help_link = Help::Link('UserGroup', 'Edit');
-        }
-
-        $formFields = array();
-        $formFields[] = Form::AddText('group', __('Name'), $this->group,
-            __('The Name for this User Group'), 'n', 'maxlength="50" required');
-
-        Theme::Set('form_fields', $formFields);
-
-        // Construct the Response
-        $response->SetFormRequestResponse(NULL, $form_name, '400', '180');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . $form_help_link . '")');
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Save'), '$("#UserGroupForm").submit()');
-
-
-        return true;
+        $this->getState()->template = 'usergroup-form-edit';
+        $this->getState()->setData([
+            'group' => $group,
+            'help' => [
+                'add' => Help::Link('UserGroup', 'Edit')
+            ]
+        ]);
     }
 
     /**
@@ -280,103 +265,90 @@ END;
 
     /**
      * Shows the Delete Group Form
+     * @param int $groupId
+     * @throws \Xibo\Exception\NotFoundException
      */
-    function DeleteForm()
+    function deleteForm($groupId)
     {
-        $groupId = $this->groupid;
-        $response = $this->getState();
+        $group = UserGroupFactory::getById($groupId);
 
-        // Get the group name
-        $group = __('Unknown');
-        try {
-            $dbh = \Xibo\Storage\PDOConnect::init();
-            $sth = $dbh->prepare('SELECT `group` FROM `group` WHERE groupId = :groupId');
-            $sth->execute(array('groupId' => $groupId));
+        if (!$this->getUser()->checkDeleteable($group))
+            throw new AccessDeniedException();
 
-            if ($row = $sth->fetch(PDO::FETCH_ASSOC)) {
-                $group = Sanitize::string($row['group']);
-            }
-        } catch (Exception $e) {
-            Log::error($e->getMessage());
-        }
-
-        // Set some information about the form
-        Theme::Set('form_id', 'UserGroupDeleteForm');
-        Theme::Set('form_action', 'index.php?p=group&q=Delete');
-        Theme::Set('form_meta', '<input type="hidden" name="groupid" value="' . $groupId . '">');
-
-        Theme::Set('form_fields', array(Form::AddMessage(sprintf(__('Are you sure you want to delete %s?'), $group))));
-
-        // Construct the Response
-        $response->SetFormRequestResponse(NULL, sprintf(__('Delete %s'), $group), '400', '180');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('UserGroup', 'Delete') . '")');
-        $response->AddButton(__('No'), 'XiboDialogClose()');
-        $response->AddButton(__('Yes'), '$("#UserGroupDeleteForm").submit()');
-
-
-        return true;
+        $this->getState()->template = 'usergroup-form-delete';
+        $this->getState()->setData([
+            'group' => $group,
+            'help' => [
+                'delete' => Help::Link('UserGroup', 'Delete')
+            ]
+        ]);
     }
 
     /**
      * Adds a group
-     * @return
      */
-    function Add()
+    function add()
     {
+        // Build a user entity and save it
+        $group = new \Xibo\Entity\UserGroup();
+        $group->group = Sanitize::getString('group');
+        $group->libraryQuota = Sanitize::getInt('libraryQuota');
 
+        // Save
+        $group->save();
 
-        $response = $this->getState();
-
-        $group = Sanitize::getString('group');
-
-        $userGroupObject = new UserGroup($db);
-
-        if (!$userGroupObject->Add($group, 0))
-            trigger_error($userGroupObject->GetErrorMessage(), E_USER_ERROR);
-
-        $response->SetFormSubmitResponse(__('User Group Added'), false);
-
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Added %s'), $group->group),
+            'id' => $group->groupId,
+            'data' => [$group]
+        ]);
     }
 
     /**
      * Edits the Group Information
-     * @return
+     * @param int $groupId
      */
-    function Edit()
+    function edit($groupId)
     {
+        $group = UserGroupFactory::getById($groupId);
 
+        if (!$this->getUser()->checkEditable($group))
+            throw new AccessDeniedException();
 
-        $groupid = Sanitize::getInt('groupid');
-        $group = Sanitize::getString('group');
+        $group->group = Sanitize::getString('group');
+        $group->libraryQuota = Sanitize::getInt('libraryQuota');
 
-        $userGroupObject = new UserGroup($db);
+        // Save
+        $group->save();
 
-        if (!$userGroupObject->Edit($groupid, $group))
-            trigger_error($userGroupObject->GetErrorMessage(), E_USER_ERROR);
-
-        $response = $this->getState();
-        $response->SetFormSubmitResponse(__('User Group Edited'), false);
-
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Edited %s'), $group->group),
+            'id' => $group->groupId,
+            'data' => [$group]
+        ]);
     }
 
     /**
      * Deletes a Group
-     * @return
+     * @param int $groupId
+     * @throws \Xibo\Exception\NotFoundException
      */
-    function Delete()
+    function delete($groupId)
     {
+        $group = UserGroupFactory::getById($groupId);
 
+        if (!$this->getUser()->checkDeleteable($group))
+            throw new AccessDeniedException();
 
-        $groupid = Sanitize::getInt('groupid');
+        $group->delete();
 
-        $userGroupObject = new UserGroup($db);
-
-        if (!$userGroupObject->Delete($groupid))
-            trigger_error($userGroupObject->GetErrorMessage(), E_USER_ERROR);
-
-        $response = $this->getState();
-        $response->SetFormSubmitResponse(__('User Group Deleted'), false);
-
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Deleted %s'), $group->group),
+            'id' => $group->groupId
+        ]);
     }
 
     /**

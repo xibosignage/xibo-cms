@@ -1,0 +1,32 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Add User Group" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Save" %}, $("#userGroupAddForm").submit()
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Help" %}, XiboHelpRender("{{ help.add }}")
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="userGroupAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("group.add") }}">
+                {{ forms.text("group", "Name", "", "The Name for this User Group", "", "required maxlength='50'") }}
+                {{ forms.number("libraryQuota", "Library Quota", "", "The quota in Kb that should be applied. Enter 0 for no quota.") }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

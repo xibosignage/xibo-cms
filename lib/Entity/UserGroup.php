@@ -9,7 +9,9 @@
 namespace Xibo\Entity;
 
 
+use Xibo\Exception\NotFoundException;
 use Xibo\Factory\PermissionFactory;
+use Xibo\Factory\UserGroupFactory;
 use Xibo\Storage\PDOConnect;
 use Respect\Validation\Validator as v;
 
@@ -31,6 +33,7 @@ class UserGroup
         $this->hash = null;
         $this->users = [];
         $this->isEveryone = 0;
+        $this->isUserSpecific = 0;
     }
 
     public function __toString()
@@ -93,6 +96,19 @@ class UserGroup
     {
         if (!v::string()->length(1, 50)->validate($this->group))
             throw new \InvalidArgumentException(__('User Group Name cannot be empty.') . $this);
+
+        if (!v::int()->validate($this->libraryQuota))
+            throw new \InvalidArgumentException(__('Library Quota must be a whole number.'));
+
+        try {
+            $group = UserGroupFactory::getByName($this->group);
+
+            if ($this->groupId == null || $this->groupId != $group->groupId)
+                throw new \InvalidArgumentException(__('There is already a group with this name. Please choose another.'));
+        }
+        catch (NotFoundException $e) {
+
+        }
     }
 
     /**

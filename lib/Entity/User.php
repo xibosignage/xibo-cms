@@ -108,7 +108,7 @@ class User
 
     public function __toString()
     {
-        return sprintf('User %s. userId: %d, homePageId: %d, email = %s', $this->userName, $this->userId, $this->homePageId, $this->email);
+        return sprintf('User %s. userId: %d, UserTypeId: %d, homePageId: %d, email = %s', $this->userName, $this->userId, $this->userTypeId, $this->homePageId, $this->email);
     }
 
     private function hash()
@@ -178,8 +178,10 @@ class User
             $pbkdf2 = base64_decode($params[HASH_PBKDF2_INDEX]);
 
             // Check to see if the hash created from the provided password is the same as the hash we have stored already
-            if (!$this->slow_equals($pbkdf2, $this->pbkdf2($params[HASH_ALGORITHM_INDEX], $password, $params[HASH_SALT_INDEX], (int)$params[HASH_ITERATION_INDEX], strlen($pbkdf2), true)))
+            if (!$this->slow_equals($pbkdf2, $this->pbkdf2($params[HASH_ALGORITHM_INDEX], $password, $params[HASH_SALT_INDEX], (int)$params[HASH_ITERATION_INDEX], strlen($pbkdf2), true))) {
+                Log::debug('Password failed Hash Check.');
                 throw new AccessDeniedException();
+            }
         }
 
         Log::debug('Password checked out OK');

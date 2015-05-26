@@ -177,11 +177,14 @@ class User extends Base
             $newPassword = Sanitize::getString('newPassword');
             $retypeNewPassword = Sanitize::getString('retypeNewPassword');
 
-            if ($newPassword != $retypeNewPassword)
-                throw new \InvalidArgumentException(__('Passwords do not match'));
+            if ($newPassword != null && $newPassword != '') {
+                // Make sure they are the same
+                if ($newPassword != $retypeNewPassword)
+                    throw new \InvalidArgumentException(__('Passwords do not match'));
 
-            // Set the new password
-            $user->setNewPassword($newPassword);
+                // Set the new password
+                $user->setNewPassword($newPassword);
+            }
         }
 
         // Save the user

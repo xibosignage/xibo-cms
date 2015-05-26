@@ -52,6 +52,8 @@ class Login extends Base
         try {
             $user = UserFactory::getByName($username);
 
+            // Log::debug($user);
+
             // Check password
             $user->checkPassword($password);
 
@@ -73,6 +75,7 @@ class Login extends Base
             $session->set_user(session_id(), $user->userId, 'user');
         }
         catch (NotFoundException $e) {
+            Log::debug('User not found');
             throw new AccessDeniedException();
         }
     }

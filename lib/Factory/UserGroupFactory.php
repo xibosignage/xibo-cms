@@ -34,6 +34,22 @@ class UserGroupFactory
     }
 
     /**
+     * Get by Group Name
+     * @param string $group
+     * @return UserGroup
+     * @throws NotFoundException
+     */
+    public static function getByName($group)
+    {
+        $groups = UserGroupFactory::query(null, ['group' => $group, 'isUserSpecific' => 0]);
+
+        if (count($groups) <= 0)
+            throw new NotFoundException(__('Group not found'));
+
+        return $groups[0];
+    }
+
+    /**
      * Get by User Id
      * @param int $userId
      * @return array[UserGroup]
@@ -60,15 +76,22 @@ class UserGroupFactory
             SELECT 	`group`.group,
 				`group`.groupId,
 				`group`.isUserSpecific,
-				`group`.isEveryone
+				`group`.isEveryone,
+				`group`.libraryQuota
               FROM `group`
-             WHERE 1=1
+             WHERE 1 = 1
             ';
 
             // Filter by Group Id
             if (Sanitize::getInt('groupId', $filterBy) != null) {
                 $sql .= ' AND `group`.groupId = :groupId ';
                 $params['groupId'] = Sanitize::getInt('groupId', $filterBy);
+            }
+
+            // Filter by Group Name
+            if (Sanitize::getString('group', $filterBy) != null) {
+                $sql .= ' AND `group`.group = :group ';
+                $params['group'] = Sanitize::getString('group', $filterBy);
             }
 
             // Filter by User Id

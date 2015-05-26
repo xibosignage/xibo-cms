@@ -1,8 +1,5 @@
 
 {% macro disabled(name, title, value, helpText, groupClass) %}
-    {% set title %}
-        {% trans title %}
-    {% endset %}
     <div class="form-group {{ groupClass }}">
         <label class="col-sm-2 control-label">{{ title }}</label>
         <div class="col-sm-10">
@@ -17,18 +14,12 @@
 {% endmacro %}
 
 {% macro raw(text, groupClass) %}
-    {% set text %}
-        {% trans text %}
-    {% endset %}
     <div class="col-sm-12 {{ groupClass }}">
         {{ text }}
     </div>
 {% endmacro %}
 
 {% macro message(message, groupClass) %}
-    {% set message %}
-        {% trans message %}
-    {% endset %}
     <div class="row">
         <div class="col-sm-12 {{ groupClass }}">
             <p>{{ message }}</p>
@@ -37,9 +28,6 @@
 {% endmacro %}
 
 {% macro button(title, type, link, groupClass) %}
-    {% set title %}
-        {% trans title %}
-    {% endset %}
     <div class="form-group {{ groupClass }}">
         <div class="col-sm-offset-2 col-sm-10">
             {% if type == "link" %}
@@ -52,9 +40,6 @@
 {% endmacro %}
 
 {% macro text(name, title, value, helpText, groupClass, validation, accessKey) %}
-    {% set title %}
-        {% trans title %}
-    {% endset %}
     <div class="form-group {{ groupClass }}">
         <label class="col-sm-2 control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
         <div class="col-sm-10">
@@ -65,9 +50,6 @@
 {% endmacro %}
 
 {% macro number(name, title, value, helpText, groupClass, validation, accessKey) %}
-    {% set title %}
-        {% trans title %}
-    {% endset %}
     <div class="form-group {{ groupClass }}">
         <label class="col-sm-2 control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
         <div class="col-sm-10">
@@ -78,9 +60,6 @@
 {% endmacro %}
 
 {% macro email(name, title, value, helpText, groupClass, validation, accessKey) %}
-    {% set title %}
-        {% trans title %}
-    {% endset %}
     <div class="form-group {{ groupClass }}">
         <label class="col-sm-2 control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
         <div class="col-sm-10">
@@ -91,9 +70,6 @@
 {% endmacro %}
 
 {% macro password(name, title, value, helpText, groupClass, validation, accessKey) %}
-    {% set title %}
-        {% trans title %}
-    {% endset %}
     <div class="form-group {{ groupClass }}">
         <label class="col-sm-2 control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
         <div class="col-sm-10">
@@ -104,9 +80,6 @@
 {% endmacro %}
 
 {% macro textarea(name, title, value, helpText, groupClass, validation, rows) %}
-    {% set title %}
-        {% trans title %}
-    {% endset %}
     <div class="form-group {{ groupClass }}">
         <div class="col-sm-12">
             <span class="help-block">{{ helpText }}</span>
@@ -116,9 +89,6 @@
 {% endmacro %}
 
 {% macro checkbox(name, title, value, helpText, groupClass, accessKey) %}
-    {% set title %}
-        {% trans title %}
-    {% endset %}
     <div class="form-group {{ groupClass }}">
         <div class="col-sm-offset-2 col-sm-10">
             <div class="checkbox">
@@ -133,9 +103,6 @@
 {% endmacro %}
 
 {% macro radio(name, id, title, value, helpText, groupClass, accessKey, setValue) %}
-    {% set title %}
-        {% trans title %}
-    {% endset %}
     <div class="form-group {{ groupClass }}">
         <div class="col-sm-offset-2 col-sm-10">
             <div class="radio">
@@ -150,9 +117,6 @@
 {% endmacro %}
 
 {% macro dropdown(name, type, title, value, options, optionId, optionValue, helpText, groupClass, validation, accessKey, callBack, dataAttributes, optionGroups) %}
-    {% set title %}
-        {% trans title %}
-    {% endset %}
     <div class="form-group {{ groupClass }}">
         <label class="col-sm-2 control-label" for="{{ name }}" title="{{ helpText }}" accesskey="{{ accessKey }}">{{ title }}</label>
         <div class="col-sm-10">
@@ -200,9 +164,6 @@
 {% endmacro %}
 
 {% macro permissions(name, options) %}
-    {% set title %}
-        {% trans title %}
-    {% endset %}
     <table class="table table-bordered">
         <tr>
             <th>{% trans "Group" %}</th>
@@ -222,9 +183,6 @@
 {% endmacro %}
 
 {% macro date(name, title, value, helpText, groupClass, validation, accessKey) %}
-    {% set title %}
-        {% trans title %}
-    {% endset %}
     <div class="form-group {{ groupClass }}">
         <label class="col-sm-2 control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
         <div class="col-sm-10">
@@ -235,9 +193,6 @@
 {% endmacro %}
 
 {% macro time(name, title, value, helpText, groupClass, validation, accessKey) %}
-    {% set title %}
-        {% trans title %}
-    {% endset %}
     <div class="form-group {{ groupClass }}">
         <label class="col-sm-2 control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
         <div class="col-sm-10">

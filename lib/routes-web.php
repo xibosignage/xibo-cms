@@ -195,7 +195,9 @@ $app->get('/displayprofile/form/add', '\Xibo\Controller\DisplayProfile:addForm')
 // group
 //
 $app->get('/group/view', '\Xibo\Controller\UserGroup:displayPage')->name('group.view');
-$app->get('/group/form/add', '\Xibo\Controller\UserGroup:addForm')->name('userGroup.add.form');
+$app->get('/group/form/add', '\Xibo\Controller\UserGroup:addForm')->name('group.add.form');
+$app->get('/group/form/edit/:id', '\Xibo\Controller\UserGroup:editForm')->name('group.edit.form');
+$app->get('/group/form/delete/:id', '\Xibo\Controller\UserGroup:deleteForm')->name('group.delete.form');
 
 //
 // admin
