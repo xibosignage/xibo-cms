@@ -98,8 +98,6 @@ class State extends Middleware
                 ],
                 'translations' => '{}'
             ));
-
-            Log::debug('called %s', $this->app->router->getCurrentRoute()->getPattern());
         });
 
         // Attach a hook to be called after the route has been dispatched

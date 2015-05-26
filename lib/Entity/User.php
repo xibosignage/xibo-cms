@@ -61,7 +61,7 @@ class User
     public $userTypeId;
     public $loggedIn;
     public $email;
-    public $homePage;
+    public $homePageId;
     public $lastAccessed;
     public $newUserWizard;
     public $retired;
@@ -83,6 +83,9 @@ class User
     public $media;
     public $events;
 
+    // Readonly information
+    public $homePage;
+
     /**
      * Cached Permissions
      * @var array[Permission]
@@ -101,6 +104,11 @@ class User
         $this->media = [];
         $this->events = [];
         $this->campaigns = [];
+    }
+
+    public function __toString()
+    {
+        return sprintf('User %s. userId: %d, homePageId: %d, email = %s', $this->userName, $this->userId, $this->homePageId, $this->email);
     }
 
     private function hash()
@@ -268,6 +276,8 @@ class User
         if ($validate)
             $this->validate();
 
+        Log::debug('Saving user. %s', $this);
+
         if ($this->userId == 0)
             $this->add();
         else if ($this->hash() != $this->hash)
@@ -316,8 +326,8 @@ class User
      */
     private function add()
     {
-        $sql = 'INSERT INTO `user` (UserName, UserPassword, usertypeid, email, homepage)
-                     VALUES (:userName, :password, :userTypeId, :email, :homePage)';
+        $sql = 'INSERT INTO `user` (UserName, UserPassword, usertypeid, email, homePageId)
+                     VALUES (:userName, :password, :userTypeId, :email, :homePageId)';
 
         // Get the ID of the record we just inserted
         $this->userId = PDOConnect::insert($sql, [
@@ -325,7 +335,7 @@ class User
             'password' => $this->password,
             'userTypeId' => $this->userTypeId,
             'email' => $this->email,
-            'homePage' => $this->homePage
+            'homePageId' => $this->homePageId
         ]);
 
         // Add the user group
@@ -341,8 +351,10 @@ class User
      */
     private function update()
     {
+        Log::debug('Update user. %d. homePageId', $this->userId);
+
         $sql = 'UPDATE `user` SET UserName = :userName,
-                  HomePage = :homePage,
+                  homePageId = :homePageId,
                   Email = :email,
                   Retired = :retired,
                   userTypeId = :userTypeId,
@@ -357,7 +369,7 @@ class User
             'userName' => $this->userName,
             'userTypeId' => $this->userTypeId,
             'email' => $this->email,
-            'homePage' => $this->homePage,
+            'homePageId' => $this->homePageId,
             'retired' => $this->retired,
             'lastAccessed' => $this->lastAccessed,
             'loggedIn' => $this->loggedIn,
@@ -374,6 +386,17 @@ class User
         $group->group = $this->userName;
         $group->libraryQuota = $this->libraryQuota;
         $group->save();
+    }
+
+    /**
+     * Update the Last Accessed date
+     */
+    public function touch()
+    {
+        PDOConnect::update('UPDATE `user` SET lastAccessed = :time WHERE userId = :userId', [
+            'userId' => $this->userId,
+            'time' => date("Y-m-d H:i:s")
+        ]);
     }
 
     /**

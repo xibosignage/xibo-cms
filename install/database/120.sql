@@ -1,3 +1,5 @@
+/* TODO: we need to go through these updates and make sure structure & data.sql are correct */
+
 ALTER TABLE  `layout` ADD  `width` DECIMAL NOT NULL ,
 ADD  `height` DECIMAL NOT NULL ,
 ADD  `backgroundColor` VARCHAR( 25 ) NULL ,
@@ -54,6 +56,10 @@ ALTER TABLE  `log` CHANGE  `type`  `type` VARCHAR( 254 ) CHARACTER SET utf8 COLL
 
 UPDATE  `pages` SET  `name` =  'library' WHERE  `pages`.`name` = 'content';
 UPDATE  `pages` SET  `name` =  'applications' WHERE  `pages`.`name` = 'oauth';
+
+/* Update the home page to be a homePageId */
+UPDATE `user` SET homepage = IFNULL((SELECT pageId FROM `pages` WHERE pages.name = `user`.homepage), 1);
+ALTER TABLE  `user` CHANGE  `homepage`  `homePageId` INT NOT NULL DEFAULT  '1' COMMENT  'The users homepage';
 
 UPDATE `version` SET `app_ver` = '1.8.0-alpha', `XmdsVersion` = 4, `XlfVersion` = 2;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';

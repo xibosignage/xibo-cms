@@ -104,7 +104,8 @@ class UserFactory
                 userTypeId,
                 loggedIn,
                 email,
-                homePage,
+                `user`.homePageId,
+                pages.name AS homePage,
                 lastAccessed,
                 newUserWizard,
                 retired,
@@ -119,6 +120,8 @@ class UserFactory
                 INNER JOIN `group`
                 ON group.groupId = lkusergroup.groupId
                   AND isUserSpecific = 1
+                INNER JOIN `pages`
+                ON pages.pageId = `user`.homePageId
              WHERE 1 = 1
          ';
 

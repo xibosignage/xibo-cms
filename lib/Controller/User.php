@@ -136,7 +136,7 @@ class User extends Base
         $user->userName = Sanitize::getString('userName');
         $user->email = Sanitize::getString('email');
         $user->userTypeId = Sanitize::getInt('userTypeId');
-        $user->homePage = Sanitize::getString('homePageId');
+        $user->homePageId = Sanitize::getInt('homePageId');
         $user->libraryQuota = Sanitize::getInt('libraryQuota');
         $user->groupId = Sanitize::getInt('groupId');
         $user->setNewPassword(Sanitize::getString('password'));
@@ -164,10 +164,11 @@ class User extends Base
             throw new AccessDeniedException();
 
         // Build a user entity and save it
+        $user->load();
         $user->userName = Sanitize::getString('userName');
         $user->email = Sanitize::getString('email');
         $user->userTypeId = Sanitize::getInt('userTypeId');
-        $user->homePage = Sanitize::getString('homePageId');
+        $user->homePageId = Sanitize::getInt('homePageId');
         $user->libraryQuota = Sanitize::getInt('libraryQuota');
         $user->retired = Sanitize::getCheckbox('retired');
 

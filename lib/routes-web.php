@@ -34,26 +34,8 @@ $app->get('/', function () use ($app) {
         $user->newUserWizard = 1;
     }
     else {
-        \Xibo\Helper\Log::debug('Showing the homepage: %s', $user->homePage);
-        switch ($user->homePage) {
-
-            case 'xmediamanager':
-
-                break;
-
-            case 'statusdashboard':
-                $controller = new \Xibo\Controller\StatusDashboard($app);
-                $controller->displayPage();
-                break;
-
-            case 'xdashboard':
-
-                break;
-
-            default:
-                $controller = new \Xibo\Controller\Layout($app);
-                $controller->displayPage();
-        }
+        \Xibo\Helper\Log::debug('Showing the homepage: %s', $user->homePageId);
+        $app->redirectTo($user->homePage . '.view');
     }
 
     if ($controller == null)
@@ -62,6 +44,11 @@ $app->get('/', function () use ($app) {
     $controller->render();
 
 })->setName('home');
+
+// Dashboards
+$app->get('/dashboard/status', '\Xibo\Controller\StatusDashboard:displayPage')->name('statusdashboard.view');
+$app->get('/dashboard/icon', '\Xibo\Controller\Dashboard:displayPage')->name('dashboard.view');
+$app->get('/dashboard/media', '\Xibo\Controller\MediaManager:displayPage')->name('mediamanager.view');
 
 // Login Form
 $app->get('/login', '\Xibo\Controller\Login:loginForm')->name('login');

@@ -96,7 +96,7 @@ class WebAuthentication extends Middleware
                 else {
                     // Store the current route so we can come back to it after login
                     $app->flash('priorRoute', $resource);
-                    $app->flash('priorRouteParams', urlencode($app->request()->get()));
+                    $app->flash('priorRouteParams', $app->environment['slim.request.query_hash']);
 
                     $redirectToLogin();
                 }
@@ -116,8 +116,7 @@ class WebAuthentication extends Middleware
             /* @var \Xibo\Entity\User $user */
 
             if (!$app->public && $user->hasIdentity()) {
-                $user->lastAccessed = date("Y-m-d H:i:s");
-                $user->save(false);
+                $user->touch();
             }
         };
 

@@ -130,7 +130,6 @@ class Session
 
     function write($key, $val)
     {
-        Log::debug('Writing Session. Refresh Expiry = %d', $this->refreshExpiry);
         $newExp = time() + $this->max_lifetime;
         $lastaccessed = date("Y-m-d H:i:s");
 
