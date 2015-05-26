@@ -593,6 +593,22 @@ $CLIENT_CONFIG = array(
                         'enabled' => true,
                         'groupClass' => NULL
                     ),
+                    array(
+                        'name' => 'webViewPluginState',
+                        'tabId' => 'advanced',
+                        'title' => __('WebView Plugin State'),
+                        'type' => _STRING,
+                        'fieldType' => 'dropdown',
+                        'options' => array(
+                            array('id' => 'OFF', 'value' => __('Off')),
+                            array('id' => 'DEMAND', 'value' => __('On Demand')),
+                            array('id' => 'ON', 'value' => __('On'))
+                        ),
+                        'default' => 'DEMAND',
+                        'helpText' => __('What plugin state should be used when starting a web view.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    )
                 )
             )
     );
