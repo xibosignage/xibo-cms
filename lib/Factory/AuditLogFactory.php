@@ -40,7 +40,7 @@ class AuditLogFactory
     public static function query($sortOrder = null, $filterBy = null)
     {
         $entries = array();
-        $params = [];
+        $params = array();
 
         $select = ' SELECT logId, logDate, user.userName, message, objectAfter, entity, entityId, auditlog.userId ';
         $body = 'FROM `auditlog` LEFT OUTER JOIN user ON user.userId = auditlog.userId WHERE 1 = 1 ';

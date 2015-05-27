@@ -878,7 +878,7 @@ class Layout extends Data
     
             Debug::LogEntry('audit', 'About to loop through media nodes', 'layout', 'Copy');
 
-            $copiesMade = [];
+            $copiesMade = array();
             
             // On each media node, take the existing LKID and MediaID and create a new LK record in the database
             $sth = $dbh->prepare('SELECT StoredAs FROM media WHERE MediaID = :mediaid');
