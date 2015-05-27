@@ -298,7 +298,7 @@ class Campaign extends Data {
 
         // Get some details about the campaign
         $select = $dbh->prepare('SELECT campaignId, campaign, userId, isLayoutSpecific FROM `campaign` WHERE campaignId = :campaignId');
-        $select->execute(['campaignId' => $campaignId]);
+        $select->execute(array('campaignId' => $campaignId));
 
         if (!$row = $select->fetch(PDO::FETCH_ASSOC))
             throw new Exception('Unable to find Campaign/Layout');
@@ -314,7 +314,7 @@ class Campaign extends Data {
 
         // Should we also update the layout?
         if ($row['isLayoutSpecific'] == 1) {
-            $layouts = Layout::Entries(null, ['layoutSpecificCampaignId' => $campaignId]);
+            $layouts = Layout::Entries(null, array('layoutSpecificCampaignId' => $campaignId));
 
             if (count($layouts) <= 0)
                 throw new Exception('Unable to find Layout');
