@@ -859,6 +859,10 @@ END;
                 trigger_error(sprintf(__('Your library is full. Library Limit: %s K'), $libraryLimit), E_USER_ERROR);
         }
 
+        // Check this user doesn't have a quota
+        if (!UserGroup::isQuotaFullByUser($user->userid))
+            $this->ThrowError(__('You have exceeded your library quota.'));
+
         // Would like to get the regions width / height
         $layoutid = $this->layoutid;
         $regionid = $this->regionid;
@@ -1179,7 +1183,7 @@ END;
             if ($name == '')
                 $name = $fileName;
 
-            if (!$new_mediaid = $mediaObject->FileRevise($mediaid, $tmpName, $fileName)) {
+            if (!$new_mediaid = $mediaObject->FileRevise($mediaid, $tmpName, $fileName, $userid)) {
                 $this->response->SetError($mediaObject->GetErrorMessage());
                 $this->response->keepOpen = true;
                 return $this->response;
@@ -1248,7 +1252,8 @@ END;
 
         // Do we need to delete the old media item?
         if ($tmpName != '' && Kit::GetParam('deleteOldVersion', _POST, _CHECKBOX) == 1) {
-            if (!$mediaObject->Delete($mediaid))
+            // We pass in the newMediaId as the second parameter so that we can correctly link a prior revision if one exists.
+            if (!$mediaObject->Delete($mediaid, $this->mediaid))
                 $this->response->message .= ' ' . __('Failed to remove old media');
         }
         

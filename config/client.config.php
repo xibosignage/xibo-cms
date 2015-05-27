@@ -534,7 +534,18 @@ $CLIENT_CONFIG = array(
                         'type' => _CHECKBOX,
                         'fieldType' => 'checkbox',
                         'default' => 0,
-                        'helpText' => __('When enabled the client will send the current layout to the CMS each time it changes. Warning: This is bandwidth intensive and should be disabled unless on a LAN.'),
+                        'helpText' => __('Expire Modified Layouts immediately on change. This means a layout can be cut during playback if it receives an update from the CMS'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'screenShotIntent',
+                        'tabId' => 'advanced',
+                        'title' => __('Action for Screen Shot Intent'),
+                        'type' => _STRING,
+                        'fieldType' => 'text',
+                        'default' => '',
+                        'helpText' => __('The Intent Action to use for requesting a screen shot. Leave empty to natively create an image from the player screen content.'),
                         'enabled' => true,
                         'groupClass' => NULL
                     ),
@@ -582,6 +593,22 @@ $CLIENT_CONFIG = array(
                         'enabled' => true,
                         'groupClass' => NULL
                     ),
+                    array(
+                        'name' => 'webViewPluginState',
+                        'tabId' => 'advanced',
+                        'title' => __('WebView Plugin State'),
+                        'type' => _STRING,
+                        'fieldType' => 'dropdown',
+                        'options' => array(
+                            array('id' => 'OFF', 'value' => __('Off')),
+                            array('id' => 'DEMAND', 'value' => __('On Demand')),
+                            array('id' => 'ON', 'value' => __('On'))
+                        ),
+                        'default' => 'DEMAND',
+                        'helpText' => __('What plugin state should be used when starting a web view.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    )
                 )
             )
     );

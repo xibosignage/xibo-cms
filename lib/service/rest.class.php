@@ -403,7 +403,7 @@ class Rest
      * Edit a media file in the library
      */
     public function LibraryMediaEdit()
-    {      
+    {
         if (!$this->user->PageAuth('content'))
             return $this->Error(1, 'Access Denied');
 
@@ -488,13 +488,13 @@ class Rest
         $mediaId        = $this->GetParam('mediaId', _INT);
         $fileId         = $this->GetParam('fileId', _INT);
         $fileName       = $this->GetParam('fileName', _FILENAME);
-        
+
         // Check permissions
         if (!$this->user->FileAuth($fileId))
             return $this->Error(1, 'Access Denied');
 
         // Add the media.
-        if (!$mediaId = $media->FileRevise($mediaId, $fileId, $fileName))
+        if (!$mediaId = $media->FileRevise($mediaId, $fileId, $fileName, $this->user->userid))
             return $this->Error($media->GetErrorNumber(), $media->GetErrorMessage());
 
         // Return the mediaId.
@@ -532,7 +532,7 @@ class Rest
             return $this->Error(1, 'Access Denied');
 
         Kit::ClassLoader('layout');
-        
+
         $layout         = $this->GetParam('layout', _STRING);
         $description    = $this->GetParam('description', _STRING);
         $tags           = $this->GetParam('tags', _STRING);
@@ -569,10 +569,10 @@ class Rest
 
         return $this->Error(1000, 'Not implemented');
     }
-    
+
     /**
      * Copy Layout
-     * @return <XiboAPIResponse> 
+     * @return <XiboAPIResponse>
      */
     public function LayoutCopy()
     {
@@ -581,13 +581,24 @@ class Rest
 
         Kit::ClassLoader('Layout');
 
-        $layout     = new Layout();
-        $layoutId   = $this->GetParam('layoutId', _INT);
+        $layout      = new Layout();
+        $layoutId    = $this->GetParam('layoutId', _INT);
+        $name        = $this->GetParam('layout', _STRING);
+        $description = $this->GetParam('description', _STRING);
+        $copyMedia   = $this->GetParam('copyMedia', _INT);
 
         if (!$this->user->LayoutAuth($layoutId))
             return $this->Error(1, 'Access Denied');
 
-        return $this->Error(1000, 'Not implemented');
+        // Copy this layout
+        $layoutObject = new Layout();
+
+        if(!$id = $layoutObject->Copy($layoutId, $name, $description, $this->user->userid, $copyMedia))
+            return $this->Error($layoutObject->GetErrorNumber(), $layoutObject->GetErrorMessage());
+
+        Debug::LogEntry('audit', 'Copied layout with id' . $id);
+
+        return $this->Respond($this->ReturnId('layout', $id));
     }
 
     /**
@@ -712,7 +723,7 @@ class Rest
             $mediaItem['permissions_del'] = (int)$auth->del;
             $mediaItem['permissions_update_permissions'] = (int)$auth->modifyPermissions;
 
-            $regionsWithPermissions[] = $region;                
+            $regionsWithPermissions[] = $region;
         }
 
         return $this->Respond($this->NodeListFromArray($regionsWithPermissions, 'region'));
@@ -783,7 +794,7 @@ class Rest
         // Edit the region
         if (!$regionId = $region->EditRegion($layoutId, $regionId, $width, $height, $top, $left, $name = ''))
             return $this->Error($region->GetErrorNumber(), $region->GetErrorMessage());
-        
+
         return $this->Respond($this->ReturnId('success', true));
     }
 
@@ -817,7 +828,7 @@ class Rest
         // Edit the region
         if (!$regionId = $region->DeleteRegion($layoutId, $regionId))
             return $this->Error($region->GetErrorNumber(), $region->GetErrorMessage());
-        
+
         return $this->Respond($this->ReturnId('success', true));
     }
 
@@ -1038,7 +1049,7 @@ class Rest
             return $this->Error(1, 'Access Denied');
 
         // TODO: Validate the media list in some way (make sure there are the correct number of items)
-        
+
 
         // Hand off to the region object to do the actual reorder
         if (!$region->ReorderTimeline($layoutId, $regionId, $mediaList))
@@ -1297,7 +1308,7 @@ class Rest
         $dataSetId = $this->GetParam('dataSetId', _INT);
 
         $auth = $this->user->DataSetAuth($dataSetId, true);
-        if (!$auth->delete)
+        if (!$auth->del)
             return $this->Error(1, 'Access Denied');
 
         Kit::ClassLoader('dataset');
@@ -1512,7 +1523,7 @@ class Rest
         $dataSetId = $this->GetParam('dataSetId', _INT);
 
         $auth = $this->user->DataSetAuth($dataSetId, true);
-        if (!$auth->delete)
+        if (!$auth->del)
             return $this->Error(1, 'Access Denied');
 
         // Parameters
@@ -1648,7 +1659,7 @@ class Rest
 
         // Check that the columns match the columns for this dataset
         $dataSetColumnObject = new DataSetColumn();
-        
+
         // Make an array with the datasetcolumnid as the key
         $columns = array();
         foreach ($dataSetColumnObject->GetColumns($dataSetId) as $col) {

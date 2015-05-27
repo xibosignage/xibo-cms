@@ -97,5 +97,24 @@ class Data
 		$this->SetError($errNo, $errMessage);
 		throw new Exception(sprintf('Data Class: Error Number [%d] Error Message [%s]', $errNo, $errMessage));
 	}
-} 
-?>
+
+
+    /**
+     * Json Serialize
+     * @return array
+     */
+    public function jsonSerialize()
+    {
+        $exclude = (property_exists($this, 'jsonExclude')) ? $this->jsonExclude : [];
+        $exclude[] = 'jsonExclude';
+
+        $properties = \Xibo\Helper\ObjectVars::getObjectVars($this);
+        $json = [];
+        foreach ($properties as $key => $value) {
+            if (!in_array($key, $exclude)) {
+                $json[$key] = $value;
+            }
+        }
+        return $json;
+    }
+}

@@ -248,6 +248,10 @@ class Twitter extends Module
         // Date format
         $formFields['advanced'][] = FormManager::AddText('dateFormat', __('Date Format'), 'd M',
             __('The format to apply to all dates returned by the ticker. In PHP date format: http://uk3.php.net/manual/en/function.date.php'), 'f');
+
+        $formFields['advanced'][] = FormManager::AddNumber('updateInterval', __('Update Interval (mins)'), 60,
+            __('Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60.'),
+            'n', 'required');
         
         // Template - for standard stuff
         $formFields['template'][] = FormManager::AddCombo('templateId', __('Template'), $this->GetOption('templateId', 'tweet-only'), 
@@ -359,6 +363,7 @@ class Twitter extends Module
         $this->SetRaw('<template><![CDATA[' . Kit::GetParam('ta_text', _POST, _HTMLSTRING) . ']]></template><styleSheet><![CDATA[' . Kit::GetParam('ta_css', _POST, _HTMLSTRING) . ']]></styleSheet>');
         $this->SetOption('overrideTemplate', Kit::GetParam('overrideTemplate', _POST, _CHECKBOX));
         $this->SetOption('templateId', Kit::GetParam('templateId', _POST, _WORD));
+        $this->SetOption('updateInterval', Kit::GetParam('updateInterval', _POST, _INT, 60));
 
         // Should have built the media object entirely by this time
         // This saves the Media Object to the Region
@@ -476,8 +481,12 @@ class Twitter extends Module
         $formFields['advanced'][] = FormManager::AddCheckbox('removeUrls', __('Remove URLs?'), $this->GetOption('removeUrls', 1), 
             __('Should URLs be removed from the Tweet Text. Most URLs do not compliment digital signage.'), 'u');
 
+        $formFields['advanced'][] = FormManager::AddNumber('updateInterval', __('Update Interval (mins)'), $this->GetOption('updateInterval', 60),
+            __('Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60.'),
+            'n', 'required');
+
         // Encode up the template
-        if ($this->user->usertypeid == 1)
+        if (Config::GetSetting('SERVER_MODE') == 'Test' && $this->user->usertypeid == 1)
             $formFields['advanced'][] = FormManager::AddMessage('<pre>' . htmlentities(json_encode(array('id' => 'ID', 'value' => 'TITLE', 'template' => $this->GetRawNode('template'), 'css' => $this->GetRawNode('styleSheet')))) . '</pre>');
 
         // Template - for standard stuff
@@ -591,6 +600,7 @@ class Twitter extends Module
         $this->SetOption('removeUrls', Kit::GetParam('removeUrls', _POST, _CHECKBOX));
         $this->SetOption('overrideTemplate', Kit::GetParam('overrideTemplate', _POST, _CHECKBOX));
         $this->SetOption('templateId', Kit::GetParam('templateId', _POST, _WORD));
+        $this->SetOption('updateInterval', Kit::GetParam('updateInterval', _POST, _INT, 60));
 
         // Text Template
         $this->SetRaw('<template><![CDATA[' . Kit::GetParam('ta_text', _POST, _HTMLSTRING) . ']]></template><styleSheet><![CDATA[' . Kit::GetParam('ta_css', _POST, _HTMLSTRING) . ']]></styleSheet>');
@@ -927,6 +937,9 @@ class Twitter extends Module
                             if ($photoUrl != '') {
                                 $file = $media->addModuleFileFromUrl($photoUrl, 'twitter_photo_' . $tweet->user->id . '_' . $tweet->entities->media[0]->id_str, $expires);
                                 $replace = ($isPreview) ? '<img src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $file['mediaId'] . '" />' : '<img src="' . $file['storedAs'] . '" />';
+
+                                // Tag this layout with this file
+                                $layout->AddLk($this->layoutid, 'module', $file['mediaId']);
                             }
                         }
 

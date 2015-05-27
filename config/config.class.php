@@ -511,6 +511,7 @@ Debug::Audit($host . ' in ' . $proxyException . '. Pos = ' . stripos($host, $pro
 		}
 		else
 		{
+            $status = 2;
 			$this->envWarning = true;
 		}
 
@@ -526,6 +527,7 @@ Debug::Audit($host . ' in ' . $proxyException . '. Pos = ' . stripos($host, $pro
 			$status = 1;
 		}
 		else {
+            $status = 0;
             $this->envFault = true;
 		}
 

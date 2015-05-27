@@ -54,7 +54,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
           <div class="collapse navbar-collapse" id="navbar-collapse-1">
             <div id="sidebar-wrapper">
                 <?php
-                if (Theme::Get('sidebar_html' != NULL)) {
+                if (Theme::Get('sidebar_html') != NULL) {
                     echo Theme::Get('sidebar_html');
                 }
                 ?>
