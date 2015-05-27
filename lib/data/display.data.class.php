@@ -64,7 +64,7 @@ class Display extends Data {
     public $displayGroupId;
     private $_config;
 
-    protected $jsonExclude = ['mediaInventoryXml'];
+    protected $jsonExclude = array('mediaInventoryXml');
     
     public function Load() {
         try {

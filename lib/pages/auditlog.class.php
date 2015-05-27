@@ -50,7 +50,7 @@ class auditlogDAO extends baseDAO {
         }
 
         // Fields
-        $formFields = [];
+        $formFields = array();
         $formFields[] = FormManager::AddDatePicker('filterFromDt', __('From Date'), $filterFromDt, NULL, 'f');
         $formFields[] = FormManager::AddDatePicker('filterToDt', __('To Date'), $filterToDt, NULL, 't');
 
@@ -110,7 +110,7 @@ class auditlogDAO extends baseDAO {
         setSession('auditlog', 'filterUser', $filterUser);
         setSession('auditlog', 'filterEntity', $filterEntity);
 
-        $search = [];
+        $search = array();
 
 		// Get the dates and times
 		if ($filterFromDt == '') {
@@ -129,14 +129,14 @@ class auditlogDAO extends baseDAO {
             $toTimestamp->setTime(0, 0, 0);
 		}
 
-        $search[] = ['fromTimeStamp', $fromTimestamp->format('U')];
-        $search[] = ['toTimeStamp', $toTimestamp->format('U')];
+        $search[] = array('fromTimeStamp', $fromTimestamp->format('U'));
+        $search[] = array('toTimeStamp', $toTimestamp->format('U'));
 
         if ($filterUser != '')
-            $search[] = ['userName', $filterUser];
+            $search[] = array('userName', $filterUser);
 
         if ($filterEntity != '')
-            $search[] = ['entity', $filterEntity];
+            $search[] = array('entity', $filterEntity);
 
         // Build the search string
         $search = implode(' ', array_map(function ($element) {
@@ -211,10 +211,10 @@ class auditlogDAO extends baseDAO {
         $toTimestamp = DateTime::createFromFormat('Y-m-d', $filterToDt);
         $toTimestamp->setTime(0, 0, 0);
 
-        $search = [
+        $search = array(
             ['fromTimeStamp', $fromTimestamp->format('U')],
             ['toTimeStamp', $toTimestamp->format('U')]
-        ];
+        );
 
         // Build the search string
         $search = implode(' ', array_map(function ($element) {

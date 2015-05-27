@@ -105,11 +105,11 @@ class Data
      */
     public function jsonSerialize()
     {
-        $exclude = (property_exists($this, 'jsonExclude')) ? $this->jsonExclude : [];
+        $exclude = (property_exists($this, 'jsonExclude')) ? $this->jsonExclude : array();
         $exclude[] = 'jsonExclude';
 
         $properties = \Xibo\Helper\ObjectVars::getObjectVars($this);
-        $json = [];
+        $json = array();
         foreach ($properties as $key => $value) {
             if (!in_array($key, $exclude)) {
                 $json[$key] = $value;
