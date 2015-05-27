@@ -246,7 +246,7 @@ class Schedule extends Data
                     'eventid' => $eventID
                 ));
 
-            \Xibo\Helper\Log::audit('Schedule', $eventID, 'Schedule Event Deleted', ['eventId' => $eventID]);
+            \Xibo\Helper\Log::audit('Schedule', $eventID, 'Schedule Event Deleted', array('eventId' => $eventID));
             
             return true;  
         }

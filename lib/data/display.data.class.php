@@ -392,7 +392,7 @@ class Display extends Data {
                     'displayid' => $displayID
                 ));
 
-            \Xibo\Helper\Log::audit('Display', $displayID, 'Display Deleted', ['displayId' => $displayID]);
+            \Xibo\Helper\Log::audit('Display', $displayID, 'Display Deleted', array('displayId' => $displayID));
 
             return true;
         }
