@@ -469,7 +469,7 @@ class UserGroup extends Data
             ORDER BY `group`.isUserSpecific DESC, IFNULL(group.libraryQuota, 0) DESC
         ');
 
-        $quotaSth->execute(['userId' => $userId]);
+        $quotaSth->execute(array('userId' => $userId));
 
         // Loop over until we have a quota
         $rows = $quotaSth->fetchAll(PDO::FETCH_ASSOC);
@@ -499,7 +499,7 @@ class UserGroup extends Data
               ON lkusergroup.userId = media.userId
            WHERE lkusergroup.groupId = :groupId
           ');
-        $sth->execute(['groupId' => $groupId]);
+        $sth->execute(array('groupId' => $groupId));
 
         if (!$row = $sth->fetch())
             throw new Exception("Error Processing Request", 1);
@@ -526,7 +526,7 @@ class UserGroup extends Data
              WHERE group.groupId = :groupId
         ');
 
-        $quotaSth->execute(['groupId' => $groupId]);
+        $quotaSth->execute(array('groupId' => $groupId));
 
         if (!$row = $quotaSth->fetch()) {
             throw new Exception('Problem getting this users library quota.');
@@ -549,6 +549,6 @@ class UserGroup extends Data
              WHERE groupId = :groupId
         ');
 
-        $sth->execute(['libraryQuota' => $libraryQuota, 'groupId' => $groupId]);
+        $sth->execute(array('libraryQuota' => $libraryQuota, 'groupId' => $groupId));
     }
 }
