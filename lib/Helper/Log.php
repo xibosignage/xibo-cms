@@ -50,13 +50,13 @@ class Log
         if (!is_string($object))
             $object = json_encode($object);
 
-        self::$_auditLogStatement->execute([
+        self::$_auditLogStatement->execute(array(
             'logDate' => time(),
             'userId' => \Kit::GetParam('userid', _SESSION, _INT, 0),
             'entity' => $entity,
             'message' => $message,
             'entityId' => $entityId,
             'objectAfter' => $object
-        ]);
+        ));
     }
 }

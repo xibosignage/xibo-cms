@@ -273,7 +273,7 @@ else
                             break;
 
                         echo sprintf(__('Disabling %s'), $display['display']) . '<br/>' . PHP_EOL;
-                        $update->execute(['displayId' => $display['displayId']]);
+                        $update->execute(array('displayId' => $display['displayId']));
 
                         $difference--;
                     }
