@@ -114,7 +114,8 @@ class auditlogDAO extends baseDAO {
 
 		// Get the dates and times
 		if ($filterFromDt == '') {
-			$fromTimestamp = (new DateTime())->sub(new DateInterval("P1D"));
+            $fromTimestamp = new DateTime();
+			$fromTimestamp = $fromTimestamp->sub(new DateInterval("P1D"));
 		}
 		else {
             $fromTimestamp = DateTime::createFromFormat('Y-m-d', $filterFromDt);
@@ -122,7 +123,7 @@ class auditlogDAO extends baseDAO {
 		}
 
 		if ($filterToDt == '') {
-			$toTimestamp = (new DateTime());
+			$toTimestamp = new DateTime();
 		}
 		else {
             $toTimestamp = DateTime::createFromFormat('Y-m-d', $filterToDt);
@@ -153,7 +154,7 @@ class auditlogDAO extends baseDAO {
         );
         Theme::Set('table_cols', $cols);
 
-        $rows = \Xibo\Factory\AuditLogFactory::query('logId', ['search' => $search]);
+        $rows = \Xibo\Factory\AuditLogFactory::query('logId', array('search' => $search));
 
         // Do some post processing
         foreach ($rows as $row) {
@@ -212,8 +213,8 @@ class auditlogDAO extends baseDAO {
         $toTimestamp->setTime(0, 0, 0);
 
         $search = array(
-            ['fromTimeStamp', $fromTimestamp->format('U')],
-            ['toTimeStamp', $toTimestamp->format('U')]
+            array('fromTimeStamp', $fromTimestamp->format('U')),
+            array('toTimeStamp', $toTimestamp->format('U'))
         );
 
         // Build the search string
@@ -221,7 +222,7 @@ class auditlogDAO extends baseDAO {
             return implode('|', $element);
         }, $search));
 
-        $rows = \Xibo\Factory\AuditLogFactory::query('logId', ['search' => $search]);
+        $rows = \Xibo\Factory\AuditLogFactory::query('logId', array('search' => $search));
 
         // We want to output a load of stuff to the browser as a text file.
         header('Content-Type: text/csv');
@@ -230,12 +231,12 @@ class auditlogDAO extends baseDAO {
         header('Accept-Ranges: bytes');
 
         $out = fopen('php://output', 'w');
-        fputcsv($out, ['ID', 'Date', 'User', 'Entity', 'Message', 'Object']);
+        fputcsv($out, array('ID', 'Date', 'User', 'Entity', 'Message', 'Object'));
 
         // Do some post processing
         foreach ($rows as $row) {
             /* @var \Xibo\Entity\AuditLog $row */
-            fputcsv($out, [$row->logId, DateManager::getLocalDate($row->logDate), $row->userName, $row->entity, $row->message, $row->objectAfter]);
+            fputcsv($out, array($row->logId, DateManager::getLocalDate($row->logDate), $row->userName, $row->entity, $row->message, $row->objectAfter));
         }
 
         fclose($out);
