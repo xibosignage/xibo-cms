@@ -391,10 +391,10 @@ class campaignDAO extends baseDAO
             'r');
 
         $users = $user->userList(array('userName'));
-        $users[] = [
+        $users[] = array(
             'userid' => -1,
             'username' => ''
-        ];
+        );
 
         $formFields[] = FormManager::AddCombo('ownerId', __('Owner'), -1, $users, 'userid', 'username',
             __('Change the Owner of this item. Leave empty to keep the current owner.'), 'o');
