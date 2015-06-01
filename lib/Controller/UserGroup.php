@@ -103,7 +103,7 @@ class UserGroup extends Base
                 // Members
                 $group->buttons[] = array(
                     'id' => 'usergroup_button_members',
-                    'url' => 'index.php?p=group&q=MembersForm&groupid=' . $group->groupId,
+                    'url' => $this->urlFor('group.members.form', ['id' => $group->groupId]),
                     'text' => __('Members')
                 );
 
@@ -246,100 +246,6 @@ class UserGroup extends Base
             'message' => sprintf(__('Deleted %s'), $group->group),
             'id' => $group->groupId
         ]);
-    }
-
-    /**
-     * Assigns and unassigns pages from groups
-     * @return JSON object
-     */
-    function assign()
-    {
-        $db =& $this->db;
-        $groupid = Sanitize::getInt('groupid');
-
-        $pageids = $_POST['pageids'];
-
-        foreach ($pageids as $pagegroupid) {
-            $row = explode(",", $pagegroupid);
-
-            // The page ID actually refers to the pagegroup ID - we have to look up all the page ID's for this
-            // PageGroupID
-            $SQL = "SELECT pageID FROM pages WHERE pagegroupID = " . Sanitize::int($row[1]);
-
-            if (!$results = $db->query($SQL)) {
-                trigger_error($db->error());
-                Kit::Redirect(array('success' => false, 'message' => __('Can\'t assign this page to this group') . ' [error getting pages]'));
-            }
-
-            while ($page_row = $db->get_row($results)) {
-                $pageid = $page_row[0];
-
-                if ($row[0] == "0") {
-                    //it isnt assigned and we should assign it
-                    $SQL = "INSERT INTO lkpagegroup (groupID, pageID) VALUES ($groupid, $pageid)";
-
-                    if (!$db->query($SQL)) {
-                        trigger_error($db->error());
-                        Kit::Redirect(array('success' => false, 'message' => __('Can\'t assign this page to this group')));
-                    }
-                } else {
-                    //it is already assigned and we should remove it
-                    $SQL = "DELETE FROM lkpagegroup WHERE groupid = $groupid AND pageID = $pageid";
-
-                    if (!$db->query($SQL)) {
-                        trigger_error($db->error());
-                        Kit::Redirect(array('success' => false, 'message' => __('Can\'t remove this page from this group')));
-                    }
-                }
-            }
-        }
-
-        $response = $this->getState();
-        $response->SetFormSubmitResponse(__('User Group Page Security Edited'));
-        $response->keepOpen = true;
-
-    }
-
-    /**
-     * Security for Menu Items
-     * @return
-     */
-    function MenuItemSecurityForm()
-    {
-
-        $user = $this->getUser();
-
-        $id = uniqid();
-        Theme::Set('id', $id);
-        Theme::Set('header_text', __('Select your Menu Assignments'));
-        Theme::Set('pager', ApplicationState::Pager($id));
-        Theme::Set('form_meta', '<input type="hidden" name="p" value="group"><input type="hidden" name="q" value="MenuItemSecurityGrid"><input type="hidden" name="groupid" value="' . $this->groupid . '">');
-
-        $formFields = array();
-        $formFields[] = Form::AddCombo(
-            'filter_menu',
-            __('Menu'),
-            null,
-            $db->GetArray("SELECT MenuID, Menu FROM menu"),
-            'MenuID',
-            'Menu',
-            NULL,
-            'r');
-
-        Theme::Set('form_fields', $formFields);
-
-        // Call to render the template
-        $xiboGrid = Theme::RenderReturn('grid_render');
-
-        // Construct the Response
-        $response = $this->getState();
-        $response->SetFormRequestResponse($xiboGrid, __('Menu Item Security'), '500', '380');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('User', 'MenuSecurity') . '")');
-        $response->AddButton(__('Close'), 'XiboDialogClose()');
-        $response->AddButton(__('Assign / Unassign'), '$("#UserGroupMenuForm").submit()');
-
-
-        return true;
     }
 
     /**
@@ -509,183 +415,70 @@ class UserGroup extends Base
     }
 
     /**
-     * Assign Menu Item Security Grid
-     * @return
-     */
-    function MenuItemSecurityGrid()
-    {
-
-        $groupid = Sanitize::getInt('groupid');
-
-        $filter_menu = Sanitize::getString('filter_menu');
-
-        Theme::Set('form_id', 'UserGroupMenuForm');
-        Theme::Set('form_meta', '<input type="hidden" name="groupid" value="' . $groupid . '">');
-        Theme::Set('form_action', 'index.php?p=group&q=MenuItemSecurityAssign');
-
-        $SQL = <<<END
-		SELECT 	menu.Menu,
-				menuitem.Text,
-				menuitem.MenuItemID,
-				CASE WHEN menuitems_assigned.MenuItemID IS NULL
-					THEN 0
-		        	ELSE 1
-		        END AS AssignedID
-		FROM	menuitem
-		INNER JOIN menu
-		ON		menu.MenuID = menuitem.MenuID
-		LEFT OUTER JOIN
-				(SELECT DISTINCT lkmenuitemgroup.MenuItemID
-				 FROM	lkmenuitemgroup
-				 WHERE  GroupID = $groupid
-				) menuitems_assigned
-		ON menuitem.MenuItemID = menuitems_assigned.MenuItemID
-		WHERE menuitem.MenuID = %d
-END;
-
-        $SQL = sprintf($SQL, $filter_menu);
-
-        if (!$results = $db->query($SQL)) {
-            trigger_error($db->error());
-            trigger_error(__('Cannot get the menu items for this Group.'), E_USER_ERROR);
-        }
-
-        if ($db->num_rows($results) == 0) {
-            trigger_error(__('Cannot get the menu items for this Group.'), E_USER_ERROR);
-        }
-
-        // while loop
-        $rows = array();
-
-        while ($row = $db->get_assoc_row($results)) {
-            $row['name'] = $row['Text'];
-            $row['pageid'] = $row['MenuItemID'];
-            $row['assigned'] = (($row['AssignedID'] == 1) ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove');
-            $row['assignedid'] = $row['AssignedID'];
-            $row['checkbox_value'] = $row['AssignedID'] . ',' . $row['MenuItemID'];
-            $row['checkbox_ticked'] = '';
-
-            $rows[] = $row;
-        }
-
-        Theme::Set('table_rows', $rows);
-
-        $output = Theme::RenderReturn('usergroup_form_menusecurity_grid');
-
-        $response = $this->getState();
-        $response->SetGridResponse($output);
-        $response->initialSortColumn = 2;
-
-    }
-
-    /**
-     * Menu Item Security Assignment to Groups
-     * @return
-     */
-    function MenuItemSecurityAssign()
-    {
-
-
-        $groupid = Sanitize::getInt('groupid');
-
-        $pageids = $_POST['pageids'];
-
-        foreach ($pageids as $menuItemId) {
-            $row = explode(",", $menuItemId);
-
-            $menuItemId = $row[1];
-
-            // If the ID is 0 then this menu item is not currently assigned
-            if ($row[0] == "0") {
-                //it isnt assigned and we should assign it
-                $SQL = sprintf("INSERT INTO lkmenuitemgroup (GroupID, MenuItemID) VALUES (%d, %d)", $groupid, $menuItemId);
-
-                if (!$db->query($SQL)) {
-                    trigger_error($db->error());
-                    Kit::Redirect(array('success' => false, 'message' => __('Can\'t assign this menu item to this group')));
-                }
-            } else {
-                //it is already assigned and we should remove it
-                $SQL = sprintf("DELETE FROM lkmenuitemgroup WHERE groupid = %d AND MenuItemID = %d", $groupid, $menuItemId);
-
-                if (!$db->query($SQL)) {
-                    trigger_error($db->error());
-                    Kit::Redirect(array('success' => false, 'message' => __('Can\'t remove this menu item from this group')));
-                }
-            }
-        }
-
-        // Response
-        $response = $this->getState();
-        $response->SetFormSubmitResponse(__('User Group Menu Security Edited'));
-        $response->keepOpen = true;
-
-    }
-
-    /**
      * Shows the Members of a Group
+     * @param int $groupId
      */
-    public function MembersForm()
+    public function membersForm($groupId)
     {
+        $group = UserGroupFactory::getById($groupId);
 
-        $response = $this->getState();
-        $groupID = Sanitize::getInt('groupid');
-
-        // There needs to be two lists here.
-
-        // Set some information about the form
-        Theme::Set('users_assigned_id', 'usersIn');
-        Theme::Set('users_available_id', 'usersOut');
-        Theme::Set('users_assigned_url', 'index.php?p=group&q=SetMembers&GroupID=' . $groupID);
+        if (!$this->getUser()->checkEditable($group))
+            throw new AccessDeniedException();
 
         // Users in group
-        $usersAssigned = $this->getUser()->userList(null, array('groupIds' => array($groupID)));
-
-        Theme::Set('users_assigned', $usersAssigned);
+        $usersAssigned = $this->getUser()->userList(null, array('groupIds' => array($groupId)));
 
         // Users not in group
-        if (!$allUsers = $this->getUser()->userList())
-            trigger_error(__('Error getting all users'), E_USER_ERROR);
+        $allUsers = $this->getUser()->userList();
 
         // The available users are all users except users already in assigned users
-        $usersAvailable = array();
+        $checkboxes = array();
 
         foreach ($allUsers as $user) {
+            /* @var User $user */
             // Check to see if it exists in $usersAssigned
             $exists = false;
             foreach ($usersAssigned as $userAssigned) {
-                if ($userAssigned['userid'] == $user['userid']) {
+                /* @var User $userAssigned */
+                if ($userAssigned->userId == $user->userId) {
                     $exists = true;
                     break;
                 }
             }
 
-            if (!$exists)
-                $usersAvailable[] = $user;
+            // Store this checkbox
+            $checkbox = array(
+                'id' => $user->userId,
+                'name' => $user->userName,
+                'value_checked' => (($exists) ? 'checked' : '')
+            );
+
+            $checkboxes[] = $checkbox;
         }
 
-        Theme::Set('users_available', $usersAvailable);
-
-        $form = Theme::RenderReturn('usergroup_form_user_assign');
-
-        $response->SetFormRequestResponse($form, __('Manage Membership'), '400', '375', 'ManageMembersCallBack');
-        $response->AddButton(__('Help'), "XiboHelpRender('" . Help::Link('UserGroup', 'Members') . "')");
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Save'), 'MembersSubmit()');
-
+        $this->getState()->template = 'usergroup-form-members';
+        $this->getState()->setData([
+            'group' => $group,
+            'checkboxes' => $checkboxes,
+            'help' =>  Help::Link('UserGroup', 'Members')
+        ]);
     }
 
     /**
      * Sets the Members of a group
+     * @param int $groupId
      */
-    public function SetMembers()
+    public function members($groupId)
     {
-        $db =& $this->db;
-        $response = new ApplicationState();
-        $groupObject = new UserGroup($db);
+        $group = UserGroupFactory::getById($groupId);
 
-        $groupId = Sanitize::getInt('GroupID');
-        $users = \Kit::GetParam('UserID', _POST, _ARRAY, array());
+        if (!$this->getUser()->checkEditable($group))
+            throw new AccessDeniedException();
+
+        // Load the groups details
+        $group->load();
+
+        $users = $this->getApp()->request()->params('userId');
 
         // We will receive a list of users from the UI which are in the "assign column" at the time the form is
         // submitted.
@@ -694,43 +487,45 @@ END;
         // We want to add any users that are in that list (but aren't already assigned)
 
         // All users that this session has access to
-        if (!$allUsers = $this->getUser()->userList())
-            trigger_error(__('Error getting all users'), E_USER_ERROR);
+        $allUsers = $this->getUser()->userList();
 
         // Convert to an array of ID's for convenience
-        $allUserIds = array_map(function ($array) {
-            return $array['userid'];
+        $allUserIds = array_map(function ($user) {
+            return $user->userId;
         }, $allUsers);
 
         // Users in group
         $usersAssigned = $this->getUser()->userList(null, array('groupIds' => array($groupId)));
 
         foreach ($usersAssigned as $row) {
+            /* @var User $row */
             // Did this session have permission to do anything to this user?
             // If not, move on
-            if (!in_array($row['userid'], $allUserIds))
+            if (!in_array($row->userId, $allUserIds))
                 continue;
 
             // Is this user in the provided list of users?
-            if (in_array($row['userid'], $users)) {
+            if (in_array($row->userId, $users)) {
                 // This user is already assigned, so we remove it from the $users array
-                unset($users[$row['userid']]);
+                unset($users[$row->userId]);
             } else {
                 // It isn't therefore needs to be removed
-                if (!$groupObject->Unlink($groupId, $row['userid']))
-                    trigger_error($groupObject->GetErrorMessage(), E_USER_ERROR);
+                $group->unassignUser($row->userId);
             }
         }
 
         // Add any users that are still missing after tha assignment process
         foreach ($users as $userId) {
             // Add any that are missing
-            if (!$groupObject->Link($groupId, $userId)) {
-                trigger_error($groupObject->GetErrorMessage(), E_USER_ERROR);
-            }
+            $group->assignUser($userId);
         }
 
-        $response->SetFormSubmitResponse(__('Group membership set'), false);
+        $group->save(false);
 
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Membership set for %s'), $group->group),
+            'id' => $group->groupId
+        ]);
     }
 }

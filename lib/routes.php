@@ -112,6 +112,7 @@ $app->get('/group', '\Xibo\Controller\UserGroup:grid')->name('group.search');
 $app->post('/group', '\Xibo\Controller\UserGroup:add')->name('group.add');
 $app->put('/group/:id', '\Xibo\Controller\UserGroup:edit')->name('group.edit');
 $app->delete('/group/:id', '\Xibo\Controller\UserGroup:delete')->name('group.delete');
+$app->post('/group/members/:id', '\Xibo\Controller\UserGroup:members')->name('group.members');
 $app->post('/group/acl/:entity/:id', '\Xibo\Controller\UserGroup:acl')->name('group.acl');
 
 //
