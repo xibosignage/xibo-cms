@@ -50,6 +50,14 @@ INSERT INTO `permission` (`groupId`, `entityId`, `objectId`, `objectIdString`, `
   FROM `lkmediagroup`;
 
 DROP TABLE `lkmediagroup`;
+
+INSERT INTO `permission` (`groupId`, `entityId`, `objectId`, `view`, `edit`, `delete`)
+  SELECT groupId, 1, pageId, 1, 0, 0
+  FROM `lkpagegroup`;
+
+DROP TABLE `lkpagegroup`;
+
+
 /* End permissions swap */
 
 DROP TABLE `lklayoutmedia`;

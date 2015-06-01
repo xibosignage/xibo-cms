@@ -25,8 +25,10 @@ use Exception;
 use JSON;
 use Kit;
 use PDO;
+use Xibo\Entity\Permission;
 use Xibo\Entity\User;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Form;
@@ -156,111 +158,6 @@ class UserGroup extends Base
                 'add' => Help::Link('UserGroup', 'Edit')
             ]
         ]);
-    }
-
-    /**
-     * Assign Page Security Filter form (will trigger grid)
-     * @return boolean
-     */
-    function PageSecurityForm()
-    {
-        $response = new ApplicationState();
-
-        $id = uniqid();
-        Theme::Set('id', $id);
-        Theme::Set('header_text', __('Please select your Page Security Assignments'));
-        Theme::Set('pager', ApplicationState::Pager($id));
-        Theme::Set('form_meta', '<input type="hidden" name="p" value="group"><input type="hidden" name="q" value="PageSecurityFormGrid"><input type="hidden" name="groupid" value="' . $this->groupid . '">');
-
-        $formFields = array();
-        $formFields[] = Form::AddText('filter_name', __('Name'), NULL, NULL, 'n');
-        Theme::Set('form_fields', $formFields);
-
-        // Call to render the template
-        $xiboGrid = Theme::RenderReturn('grid_render');
-
-        // Construct the Response
-        $response->SetFormRequestResponse($xiboGrid, __('Page Security'), '500', '380');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('User', 'PageSecurity') . '")');
-        $response->AddButton(__('Close'), 'XiboDialogClose()');
-        $response->AddButton(__('Assign / Unassign'), '$("#UserGroupForm").submit()');
-
-
-        return true;
-    }
-
-    /**
-     * Assign Page Security Grid
-     */
-    function PageSecurityFormGrid()
-    {
-        $db =& $this->db;
-        $groupId = Sanitize::getInt('groupid');
-
-        Theme::Set('form_id', 'UserGroupForm');
-        Theme::Set('form_meta', '<input type="hidden" name="groupid" value="' . $groupId . '">');
-        Theme::Set('form_action', 'index.php?p=group&q=assign');
-
-        $params = array();
-
-        $SQL = <<<END
-		SELECT 	pagegroup.pagegroup,
-				pagegroup.pagegroupID,
-				CASE WHEN pages_assigned.pagegroupID IS NULL
-					THEN 0
-		        	ELSE 1
-		        END AS AssignedID
-		FROM	pagegroup
-		LEFT OUTER JOIN
-				(SELECT DISTINCT pages.pagegroupID
-				 FROM	lkpagegroup
-				 INNER JOIN pages ON lkpagegroup.pageID = pages.pageID
-				 WHERE  groupID = :groupId
-				) pages_assigned
-		ON pagegroup.pagegroupID = pages_assigned.pagegroupID
-END;
-        $params['groupId'] = $groupId;
-
-        // Filter by Name?
-        if (\Kit::GetParam('filter_name', _POST, _STRING) != '') {
-            $SQL .= ' WHERE pagegroup.pagegroup LIKE :name ';
-            $params['name'] = '%' . \Kit::GetParam('filter_name', _POST, _STRING) . '%';
-        }
-
-        try {
-            $dbh = \Xibo\Storage\PDOConnect::init();
-
-            $sth = $dbh->prepare($SQL);
-            $sth->execute($params);
-
-            $results = $sth->fetchAll();
-
-            // while loop
-            $rows = array();
-
-            foreach ($results as $row) {
-                $row['name'] = $row['pagegroup'];
-                $row['pageid'] = $row['pagegroupID'];
-                $row['assigned'] = (($row['AssignedID'] == 1) ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove');
-                $row['assignedid'] = $row['AssignedID'];
-                $row['checkbox_value'] = $row['AssignedID'] . ',' . $row['pagegroupID'];
-                $row['checkbox_ticked'] = '';
-
-                $rows[] = $row;
-            }
-
-            Theme::Set('table_rows', $rows);
-
-            $output = Theme::RenderReturn('usergroup_form_pagesecurity_grid');
-
-            $response = $this->getState();
-            $response->SetGridResponse($output);
-            $response->initialSortColumn = 2;
-
-        } catch (Exception $e) {
-            Log::error($e);
-            trigger_error(__('Unable to process request'), E_USER_ERROR);
-        }
     }
 
     /**
@@ -443,6 +340,172 @@ END;
 
 
         return true;
+    }
+
+    /**
+     * ACL Form for the provided Entity and GroupId
+     * @param string $entity
+     * @param int $groupId
+     */
+    public function aclForm($entity, $groupId)
+    {
+        // Check permissions to this function
+        if ($this->getUser()->userTypeId != 1)
+            throw new AccessDeniedException();
+
+        // Show a form with a list of entities, checked or unchecked based on the current assignment
+        if ($entity == '')
+            throw new \InvalidArgumentException(__('ACL form requested without an entity'));
+
+        $requestEntity = $entity;
+
+        // Check to see that we can resolve the entity
+        $entity = 'Xibo\Factory\\' . $entity . 'Factory';
+
+        if (!class_exists($entity) || !method_exists($entity, 'getById'))
+            throw new \InvalidArgumentException(__('ACL form requested with an invalid entity'));
+
+        // Use the factory to get all the entities
+        $entities = $entity::query();
+
+        // Load the Group we are working on
+        // Get the object
+        if ($groupId == 0)
+            throw new \InvalidArgumentException(__('ACL form requested without a User Group'));
+
+        $group = UserGroupFactory::getById($groupId);
+
+        // Get all permissions for this user and this object
+        $permissions = PermissionFactory::getByGroupId($requestEntity, $groupId);
+
+        Log::debug('Entity: %s, GroupId: %d. ' . var_export($permissions, true), $requestEntity, $groupId);
+
+        $checkboxes = array();
+
+        foreach ($entities as $entity) {
+            // Check to see if this entity is set or not
+            $entityId = $entity->getId();
+            $viewChecked = 0;
+
+            foreach ($permissions as $permission) {
+                /* @var Permission $permission */
+                if ($permission->objectId == $entityId && $permission->view == 1) {
+                    $viewChecked = 1;
+                    break;
+                }
+            }
+
+            // Store this checkbox
+            $checkbox = array(
+                'id' => $entityId,
+                'name' => $entity->getName(),
+                'value_view' => $entityId . '_view',
+                'value_view_checked' => (($viewChecked == 1) ? 'checked' : '')
+            );
+
+            $checkboxes[] = $checkbox;
+        }
+
+        $data = [
+            'entity' => $requestEntity,
+            'title' => sprintf(__('ACL for %s'), $group->group),
+            'groupId' => $groupId,
+            'group' => $group->group,
+            'permissions' => $checkboxes,
+            'help' => Help::Link('User', 'Acl')
+        ];
+
+        $this->getState()->template = 'usergroup-form-acl';
+        $this->getState()->setData($data);
+    }
+
+    /**
+     * ACL update
+     * @param string $entity
+     * @param int $groupId
+     */
+    public function acl($entity, $groupId)
+    {
+        // Check permissions to this function
+        if ($this->getUser()->userTypeId != 1)
+            throw new AccessDeniedException();
+
+        if ($entity == '')
+            throw new \InvalidArgumentException(__('ACL form requested without an entity'));
+
+        $requestEntity = $entity;
+
+        // Check to see that we can resolve the entity
+        $entity = 'Xibo\\Factory\\' . $entity . 'Factory';
+
+        if (!class_exists($entity) || !method_exists($entity, 'getById'))
+            throw new \InvalidArgumentException(__('ACL form requested with an invalid entity'));
+
+        // Load the Group we are working on
+        // Get the object
+        if ($groupId == 0)
+            throw new \InvalidArgumentException(__('ACL form requested without a User Group'));
+
+        $group = UserGroupFactory::getById($groupId);
+
+        // Use the factory to get all the entities
+        $entities = $entity::query();
+
+        // Get all permissions for this user and this object
+        $permissions = PermissionFactory::getByGroupId($requestEntity, $groupId);
+        $objectIds = $this->getApp()->request()->params('objectId');
+
+        if (!is_array($objectIds))
+            throw new \InvalidArgumentException(__('Missing New ACL'));
+
+        $newAcl = array();
+        array_map(function ($string) use (&$newAcl) {
+            $array = explode('_', $string);
+            return $newAcl[$array[0]][$array[1]] = 1;
+        }, $objectIds);
+
+        Log::debug(var_export($newAcl, true));
+
+        foreach ($entities as $entity) {
+            // Check to see if this entity is set or not
+            $objectId = $entity->getId();
+            $permission = null;
+            $view = (array_key_exists($objectId, $newAcl));
+
+            // Is the permission currently assigned?
+            foreach ($permissions as $row) {
+                /* @var \Xibo\Entity\Permission $row */
+                if ($row->objectId == $objectId) {
+                    $permission = $row;
+                    break;
+                }
+            }
+
+            if ($permission == null) {
+                if ($view) {
+                    // Not currently assigned and needs to be
+                    $permission = PermissionFactory::create($groupId, $requestEntity, $objectId, 1, 0, 0);
+                    $permission->save();
+                }
+            }
+            else {
+                Log::debug('Permission Exists for %s, and has been set to %d.', $entity->getName(), $view);
+                // Currently assigned
+                if ($view) {
+                    $permission->view = 1;
+                    $permission->save();
+                }
+                else {
+                    $permission->delete();
+                }
+            }
+        }
+
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('ACL set for %s'), $group->group),
+            'id' => $group->groupId
+        ]);
     }
 
     /**
@@ -669,44 +732,5 @@ END;
 
         $response->SetFormSubmitResponse(__('Group membership set'), false);
 
-    }
-
-    public function quotaForm()
-    {
-        $groupId = Kit::GetParam('groupId', _GET, _INT);
-        // Look up the existing quota
-        $libraryQuota = UserGroup::getLibraryQuota($groupId);
-        $formFields = array();
-        $formFields[] = Form::AddNumber('libraryQuota', __('Library Quota'), $libraryQuota, __('The quota in Kb that should be applied. Enter 0 for no quota.'), 'q', 'required');
-
-        Theme::Set('form_fields', $formFields);
-
-        // Set some information about the form
-        Theme::Set('form_id', 'GroupQuotaForm');
-        Theme::Set('form_action', 'index.php?p=group&q=quota');
-        Theme::Set('form_meta', '<input type="hidden" name="groupId" value="' . $groupId . '" />');
-
-        $response = $this->getState();
-        $response->SetFormRequestResponse(Theme::RenderReturn('form_render'), __('Edit Library Quota'), '350px', '150px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Group', 'Edit') . '")');
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Save'), '$("#GroupQuotaForm").submit()');
-    }
-
-    public function quota()
-    {
-        $groupId = Kit::GetParam('groupId', _POST, _INT);
-        $libraryQuota = Kit::GetParam('libraryQuota', _POST, _INT);
-
-        try {
-            \UserGroup::updateLibraryQuota($groupId, $libraryQuota);
-        }
-        catch (Exception $e) {
-            Log::error($e);
-            trigger_error(__('Problem setting quota'), E_USER_ERROR);
-        }
-
-        $response = $this->getState();
-        $response->SetFormSubmitResponse(__('Quota has been updated'), false);
     }
 }

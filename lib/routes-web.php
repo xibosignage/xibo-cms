@@ -198,6 +198,7 @@ $app->get('/group/view', '\Xibo\Controller\UserGroup:displayPage')->name('group.
 $app->get('/group/form/add', '\Xibo\Controller\UserGroup:addForm')->name('group.add.form');
 $app->get('/group/form/edit/:id', '\Xibo\Controller\UserGroup:editForm')->name('group.edit.form');
 $app->get('/group/form/delete/:id', '\Xibo\Controller\UserGroup:deleteForm')->name('group.delete.form');
+$app->get('/group/form/acl/:entity/:id', '\Xibo\Controller\UserGroup:aclForm')->name('group.acl.form');
 
 //
 // admin

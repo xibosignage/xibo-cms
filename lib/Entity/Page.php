@@ -37,4 +37,9 @@ class Page
     {
         return $this->pageId;
     }
+
+    public function getName()
+    {
+        return $this->page;
+    }
 }

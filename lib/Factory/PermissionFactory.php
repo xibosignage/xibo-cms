@@ -31,6 +31,32 @@ use Xibo\Storage\PDOConnect;
 class PermissionFactory
 {
     /**
+     * Create a new Permission
+     * @param int $groupId
+     * @param string $entity
+     * @param int $objectId
+     * @param int $view
+     * @param int $edit
+     * @param int $delete
+     * @return Permission
+     */
+    public static function create($groupId, $entity, $objectId, $view, $edit, $delete)
+    {
+        // Lookup the entityId
+        $entity = PDOConnect::select('SELECT entityId FROM permissionentity WHERE entity = :entity', ['entity' => 'Xibo\Entity\\' . $entity]);
+
+        $permission = new Permission();
+        $permission->groupId = $groupId;
+        $permission->entityId = $entity[0]['entityId'];
+        $permission->objectId = $objectId;
+        $permission->view  =$view;
+        $permission->edit = $edit;
+        $permission->delete = $delete;
+
+        return $permission;
+    }
+
+    /**
      * Get Permissions by Entity ObjectId
      * @param string $entity
      * @param int $objectId
@@ -125,6 +151,47 @@ ORDER BY joinedGroup.IsEveryone DESC, joinedGroup.IsUserSpecific, joinedGroup.`G
             $permission->entityId = $entityId;
             $permission->isUser = $row['isuserspecific'];
             $permission->group = \Xibo\Helper\Sanitize::string($row['group']);
+
+            $permissions[] = $permission;
+        }
+
+        return $permissions;
+    }
+
+    /**
+     * Gets all permissions for a user group
+     * @param string $entity
+     * @param int $groupId
+     * @return array[Permission]
+     */
+    public static function getByGroupId($entity, $groupId)
+    {
+        $permissions = array();
+
+        $sql = '
+            SELECT `permission`.`permissionId`, `permission`.`groupId`, `permission`.`objectId`, `permission`.`view`, `permission`.`edit`, `permission`.`delete`, permissionentity.entityId
+              FROM `permission`
+                INNER JOIN `permissionentity`
+                ON `permissionentity`.entityId = permission.entityId
+                INNER JOIN `group`
+                ON `group`.groupId = `permission`.groupId
+             WHERE entity = :entity
+                AND `permission`.`groupId` = :groupId
+        ';
+        $params = array('entity' => 'Xibo\Entity\\' . $entity, 'groupId' => $groupId);
+
+        Log::sql($sql, $params);
+
+        foreach (PDOConnect::select($sql, $params) as $row) {
+            $permission = new Permission();
+            $permission->permissionId = $row['permissionId'];
+            $permission->groupId = $row['groupId'];
+            $permission->view = $row['view'];
+            $permission->edit = $row['edit'];
+            $permission->delete = $row['delete'];
+            $permission->objectId = $row['objectId'];
+            $permission->entity = $entity;
+            $permission->entityId = $row['entityId'];
 
             $permissions[] = $permission;
         }
