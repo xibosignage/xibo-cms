@@ -110,14 +110,14 @@ class UserGroup extends Base
                 // Page Security
                 $group->buttons[] = array(
                     'id' => 'usergroup_button_page_security',
-                    'url' => 'index.php?p=group&q=PageSecurityForm&groupid=' . $group->groupId,
+                    'url' => $this->urlFor('group.acl.form', ['entity' => 'Page', 'id' => $group->groupId]),
                     'text' => __('Page Security')
                 );
 
                 // Menu Security
                 $group->buttons[] = array(
                     'id' => 'usergroup_button_menu_security',
-                    'url' => 'index.php?p=group&q=MenuItemSecurityForm&groupid=' . $group->groupId,
+                    'url' => $this->urlFor('group.acl.form', ['entity' => 'Menu', 'id' => $group->groupId]),
                     'text' => __('Menu Security')
                 );
             }

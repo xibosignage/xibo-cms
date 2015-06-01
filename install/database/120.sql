@@ -57,6 +57,12 @@ INSERT INTO `permission` (`groupId`, `entityId`, `objectId`, `view`, `edit`, `de
 
 DROP TABLE `lkpagegroup`;
 
+INSERT INTO `permission` (`groupId`, `entityId`, `objectId`, `view`, `edit`, `delete`)
+  SELECT groupId, 2, menuItemId, 1, 0, 0
+  FROM `lkmenuitemgroup`;
+
+DROP TABLE `lkmenuitemgroup`;
+
 
 /* End permissions swap */
 

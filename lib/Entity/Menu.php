@@ -25,6 +25,8 @@ namespace Xibo\Entity;
 
 class Menu
 {
+    use EntityTrait;
+    public $menuItemId;
     public $menuId;
     public $page;
     public $args;
@@ -33,13 +35,20 @@ class Menu
     public $img;
     public $external;
 
+    public $menu;
+
     public function getId()
     {
-        return $this->menuId;
+        return $this->menuItemId;
     }
 
     public function getOwnerId()
     {
         return 1;
+    }
+
+    public function getName()
+    {
+        return sprintf('%s -> %s', $this->menu, $this->title);
     }
 }
