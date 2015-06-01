@@ -22,6 +22,7 @@ namespace Xibo\Controller;
 
 use Exception;
 use Kit;
+use Xibo\Exception\AccessDeniedException;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Date;
 use Xibo\Helper\Form;
@@ -234,42 +235,33 @@ class Log extends Base
         }
     }
 
-    public function TruncateForm()
+    /**
+     * Truncate Log Form
+     */
+    public function truncateForm()
     {
-        $response = $this->getState();
-
         if ($this->getUser()->userTypeId != 1)
-            trigger_error(__('Only Administrator Users can truncate the log'), E_USER_ERROR);
+            throw new AccessDeniedException(__('Only Administrator Users can truncate the log'));
 
-        // Set some information about the form
-        Theme::Set('form_id', 'TruncateForm');
-        Theme::Set('form_action', $this->urlFor('logTruncate'));
-
-        Theme::Set('form_fields', array(Form::AddMessage(__('Are you sure you want to truncate?'))));
-
-        $response->SetFormRequestResponse(NULL, __('Truncate Log'), '430px', '200px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Log', 'Truncate') . '")');
-        $response->AddButton(__('No'), 'XiboDialogClose()');
-        $response->AddButton(__('Yes'), '$("#TruncateForm").submit()');
-
+        $this->getState()->template = 'log-form-truncate';
+        $this->getState()->setData([
+            'help' => Help::Link('Log', 'Truncate')
+        ]);
     }
 
     /**
      * Truncate the Log
      */
-    public function Truncate()
+    public function truncate()
     {
-
-
         if ($this->getUser()->userTypeId != 1)
-            trigger_error(__('Only Administrator Users can truncate the log'), E_USER_ERROR);
+            throw new AccessDeniedException(__('Only Administrator Users can truncate the log'));
 
         PDOConnect::update('TRUNCATE TABLE log', array());
 
-        $response = $this->getState();
-        $response->SetFormSubmitResponse('Log Truncated');
-
+        // Return
+        $this->getState()->hydrate([
+            'message' => __('Log Truncated')
+        ]);
     }
 }
-
-?>
