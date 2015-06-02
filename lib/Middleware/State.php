@@ -35,6 +35,8 @@ class State extends Middleware
 {
     public function call()
     {
+        $app = $this->app;
+
         // Setup the translations for gettext
         Translate::InitLocale();
 
@@ -51,8 +53,9 @@ class State extends Middleware
 
         // Do we need SSL/STS?
         // Deal with HTTPS/STS config
-        if (\Kit::isSSL()) {
-            \Kit::IssueStsHeaderIfNecessary();
+        if ($app->request()->getScheme() == 'https') {
+            if (Config::GetSetting('ISSUE_STS', 0) == 1)
+                $app->response()->header('strict-transport-security', 'max-age=' . Config::GetSetting('STS_TTL', 600));
         }
         else {
             if (Config::GetSetting('FORCE_HTTPS', 0) == 1) {

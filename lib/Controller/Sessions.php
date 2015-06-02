@@ -36,10 +36,10 @@ class Sessions extends Base
     function displayPage()
     {
         // Construct Filter Form
-        if (\Kit::IsFilterPinned('sessions', 'Filter')) {
+        if (Session::Get(get_class(), 'Filter') == 1) {
             $filter_pinned = 1;
-            $filter_type = Session::Get('sessions', 'filter_type');
-            $filter_fromdt = Session::Get('sessions', 'filter_fromdt');
+            $filter_type = Session::Get(get_class(), 'filter_type');
+            $filter_fromdt = Session::Get(get_class(), 'filter_fromdt');
         } else {
             $filter_pinned = 0;
             $filter_type = '0';
