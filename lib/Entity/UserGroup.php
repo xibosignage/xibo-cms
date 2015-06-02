@@ -9,11 +9,10 @@
 namespace Xibo\Entity;
 
 
+use Respect\Validation\Validator as v;
 use Xibo\Exception\NotFoundException;
-use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Storage\PDOConnect;
-use Respect\Validation\Validator as v;
 
 class UserGroup
 {
@@ -116,6 +115,9 @@ class UserGroup
      */
     public function load()
     {
+        //TODO
+        //$this->users = UserFactory::getByGroupId
+
         // Set the hash
         $this->hash = $this->hash();
     }
@@ -151,6 +153,11 @@ class UserGroup
 
         PDOConnect::update('DELETE FROM `permission` WHERE groupId = :groupId', ['groupId' => $this->groupId]);
         PDOConnect::update('DELETE FROM `group` WHERE groupId = :groupId', ['groupId' => $this->groupId]);
+    }
+
+    public function removeAssignments()
+    {
+        $this->unlinkUsers();
     }
 
     /**
@@ -197,6 +204,8 @@ class UserGroup
      */
     private function unlinkUsers()
     {
-        PDOConnect::update('DELETE FROM `lkusergroup` WHERE groupId = :groupId', ['groupId' => $this->groupId]);
+        foreach ($this->users as $userId) {
+            PDOConnect::update('DELETE FROM `lkusergroup` WHERE groupId = :groupId AND userId = :userId', ['groupId' => $this->groupId, 'userId' => $userId]);
+        }
     }
 }

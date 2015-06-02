@@ -36,7 +36,14 @@ class DisplayGroupFactory
      */
     public static function getByDisplayId($displayId)
     {
-        return DisplayGroupFactory::query(null, ['displayId' => $displayId, 'isDisplaySpecific' => -1]);
+        $displayGroups = DisplayGroupFactory::query(null, ['displayId' => $displayId, 'isDisplaySpecific' => -1]);
+
+        foreach ($displayGroups as $displayGroup) {
+            /* @var DisplayGroup $displayGroup */
+            $displayGroup->assignDisplay($displayId);
+        }
+
+        return $displayGroups;
     }
 
     /**

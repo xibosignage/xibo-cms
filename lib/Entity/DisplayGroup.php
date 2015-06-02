@@ -9,6 +9,8 @@
 namespace Xibo\Entity;
 
 
+use Xibo\Storage\PDOConnect;
+
 class DisplayGroup
 {
     public $displayGroupId;
@@ -59,12 +61,26 @@ class DisplayGroup
 
     public function save()
     {
+        if ($this->displayGroupId == null || $this->displayGroupId == 0)
+            $this->add();
+        else
+            $this->edit();
 
+        // Link displays assigned
+        $this->linkDisplays();
     }
 
     public function delete()
     {
 
+    }
+
+    /**
+     * Remove any assignments
+     */
+    public function removeAssignments()
+    {
+        $this->unlinkDisplays();
     }
 
     private function add()
@@ -75,5 +91,25 @@ class DisplayGroup
     private function edit()
     {
 
+    }
+
+    private function linkDisplays()
+    {
+        foreach ($this->displays as $displayId) {
+            PDOConnect::update('INSERT INTO lkdisplaydg (DisplayGroupID, DisplayID) VALUES (:displayGroupId, :displayId)', [
+                'displayGroupId' => $this->displayGroupId,
+                'displayId' => $displayId
+            ]);
+        }
+    }
+
+    private function unlinkDisplays()
+    {
+        foreach ($this->displays as $displayId) {
+            PDOConnect::update('DELETE FROM lkdisplaydg WHERE DisplayGroupID = :displayGroupId AND DisplayID = :displayId', [
+                'displayGroupId' => $this->displayGroupId,
+                'displayId' => $displayId
+            ]);
+        }
     }
 }

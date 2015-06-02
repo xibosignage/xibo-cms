@@ -25,6 +25,7 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Media;
 use Xibo\Exception\NotFoundException;
+use Xibo\Helper\Sanitize;
 
 class MediaFactory
 {
@@ -108,9 +109,9 @@ class MediaFactory
             $sql .= "AND media.type <> 'module'";
         }
 
-        if (\Kit::GetParam('name', $filterBy, _STRING) != '') {
+        if (Sanitize::getString('name', $filterBy) != '') {
             // convert into a space delimited array
-            $names = explode(' ', \Kit::GetParam('name', $filterBy, _STRING));
+            $names = explode(' ', Sanitize::getString('name', $filterBy));
             $i = 0;
             foreach($names as $searchName) {
                 $i++;
@@ -131,14 +132,14 @@ class MediaFactory
             $params['mediaId'] = \Xibo\Helper\Sanitize::int('mediaId', $filterBy);
         }
 
-        if (\Kit::GetParam('type', $filterBy, _STRING) != '') {
+        if (Sanitize::getString('type', $filterBy) != '') {
             $sql .= 'AND media.type = :type';
-            $params['type'] = \Kit::GetParam('type', $filterBy, _STRING);
+            $params['type'] = Sanitize::getString('type', $filterBy);
         }
 
-        if (\Kit::GetParam('storedAs', $filterBy, _STRING) != '') {
+        if (Sanitize::getString('storedAs', $filterBy) != '') {
             $sql .= 'AND media.storedAs = :storedAs';
-            $params['storedAs'] = \Kit::GetParam('storedAs', $filterBy, _STRING);
+            $params['storedAs'] = Sanitize::getString('storedAs', $filterBy);
         }
 
         if (\Xibo\Helper\Sanitize::int('ownerId', $filterBy) != 0) {
@@ -168,7 +169,7 @@ class MediaFactory
             $media = new Media();
             $media->mediaId = \Xibo\Helper\Sanitize::int($row['mediaID']);
             $media->name = \Xibo\Helper\Sanitize::string($row['name']);
-            $media->mediaType = \Kit::ValidateParam($row['type'], _WORD);
+            $media->mediaType = Sanitize::getString($row['type']);
             $media->duration = \Xibo\Helper\Sanitize::double($row['duration']);
             $media->ownerId = \Xibo\Helper\Sanitize::int($row['userID']);
             $media->fileSize = \Xibo\Helper\Sanitize::int($row['FileSize']);

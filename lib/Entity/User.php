@@ -297,25 +297,29 @@ class User
         if ($this->hash == null)
             $this->load(true);
 
-        // Delete everything
+        // Remove the user specific group
         $group = UserGroupFactory::getById($this->groupId);
         $group->delete();
 
+        // Remove any assignments to groups
         foreach ($this->groups as $group) {
             /* @var UserGroup $group */
-            $group->unassignUser($this->userId);
+            $group->removeAssignments();
         }
 
+        // Delete any layouts
         foreach ($this->layouts as $layout) {
             /* @var Layout $layout */
             $layout->delete();
         }
 
+        // Delete any Campaigns
         foreach ($this->campaigns as $event) {
             /* @var Campaign $event */
             $event->delete();
         }
 
+        // Delete any scheduled events
         foreach ($this->events as $event) {
             /* @var Schedule $event */
             $event->delete();

@@ -90,11 +90,17 @@ class Display
         return 1;
     }
 
+    /**
+     * Set the Media Status to Incomplete
+     */
     public function setMediaIncomplete()
     {
         $this->mediaInventoryStatus = 3;
     }
 
+    /**
+     * Validate the Object as it stands
+     */
     public function validate()
     {
         if (!v::string()->notEmpty()->validate($this->display))
@@ -138,11 +144,19 @@ class Display
         }
     }
 
+    /**
+     * Load
+     */
     public function load()
     {
+        // Load this displays group membership
         $this->displayGroups = DisplayGroupFactory::getByDisplayId($this->displayId);
     }
 
+    /**
+     * Save
+     * @param bool $validate
+     */
     public function save($validate = true)
     {
         if ($validate)
@@ -156,13 +170,18 @@ class Display
         Log::audit('Display', $this->displayId, 'Display Saved', $this->jsonSerialize());
     }
 
+    /**
+     * Delete
+     * @throws \Xibo\Exception\NotFoundException
+     */
     public function delete()
     {
         $this->load();
 
+        // Remove our display from any groups it is assigned to
         foreach ($this->displayGroups as $displayGroup) {
             /* @var DisplayGroup $displayGroup */
-            $displayGroup->unassignDisplay($this->displayId);
+            $displayGroup->removeAssignments();
         }
 
         // Delete our display specific group
@@ -282,6 +301,12 @@ class Display
         return $this->setConfig();
     }
 
+    /**
+     * Get a particular setting
+     * @param string $key
+     * @param mixed $default
+     * @return mixed
+     */
     public function getSetting($key, $default)
     {
         $this->setConfig();
@@ -299,6 +324,7 @@ class Display
     }
 
     /**
+     * Set the config array
      * @return array
      */
     private function setConfig()
