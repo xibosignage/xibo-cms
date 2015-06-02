@@ -129,6 +129,7 @@ $app->get('/module', '\Xibo\Controller\Module:grid')->name('module.search');
 // Transition
 //
 $app->get('/transition', '\Xibo\Controller\Transition:grid')->name('transition.search');
+$app->put('/transition/:id', '\Xibo\Controller\Transition:edit')->name('transition.edit');
 
 //
 // Sessions

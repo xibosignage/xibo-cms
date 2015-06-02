@@ -1,0 +1,37 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+$formFields[] = Form::AddCheckbox('EnabledForIn', __('Available for In Transitions?'),
+            \Xibo\Helper\Sanitize::int($row['AvailableAsIn']), __('Can this transition be used for media start?'),
+            'i');
+
+        $formFields[] = Form::AddCheckbox('EnabledForOut', __('Available for Out Transitions?'),
+            \Xibo\Helper\Sanitize::int($row['AvailableAsOut']), __('Can this transition be used for media end?'),
+            'o');
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Edit Transition" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Save" %}, $("#<<id>>").submit()
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="<<id>>" class="XiboForm form-horizontal" method="post" action="{{ urlFor("transition.edit", {id: transition.transitionId}) }}">
+
+            </form>
+        </div>
+    </div>
+{% endblock %}

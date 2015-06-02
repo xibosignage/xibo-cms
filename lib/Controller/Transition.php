@@ -21,11 +21,13 @@
 namespace Xibo\Controller;
 
 use baseDAO;
+use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Config;
 use Xibo\Helper\Form;
 use Xibo\Helper\Help;
+use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 
 
@@ -39,9 +41,9 @@ class Transition extends Base
         $this->getState()->template = 'transition-page';
     }
 
-    public function Grid()
+    public function grid()
     {
-        $transitions = TransitionFactory::query();
+        $transitions = TransitionFactory::query($this->gridRenderSort(), $this->gridRenderFilter());
 
         foreach ($transitions as $transition) {
             /* @var \Xibo\Entity\Transition $transition */
@@ -52,7 +54,7 @@ class Transition extends Base
                 // Edit button
                 $transition->buttons[] = array(
                     'id' => 'transition_button_edit',
-                    'url' => 'index.php?p=transition&q=EditForm&TransitionID=' . $transition->transitionId,
+                    'url' => $this->urlFor('transition.edit.form', ['id' => $transition->transitionId]),
                     'text' => __('Edit')
                 );
             }
@@ -62,93 +64,43 @@ class Transition extends Base
         $this->getState()->setData($transitions);
     }
 
-    public function EditForm()
+    /**
+     * Transition Edit Form
+     * @param int $transitionId
+     * @throws \Xibo\Exception\NotFoundException
+     */
+    public function editForm($transitionId)
     {
-
-        $user = $this->getUser();
-        $response = $this->getState();
-        $helpManager = new Help($db, $user);
-
-        // Can we edit?
         if (Config::GetSetting('TRANSITION_CONFIG_LOCKED_CHECKB') == 'Checked')
-            trigger_error(__('Transition Config Locked'), E_USER_ERROR);
+            throw new AccessDeniedException(__('Transition Config Locked'));
 
-        $transitionId = \Xibo\Helper\Sanitize::getInt('TransitionID');
+        $transition = TransitionFactory::getById($transitionId);
 
-        // Pull the currently known info from the DB
-        $SQL = '';
-        $SQL .= 'SELECT Transition, ';
-        $SQL .= '   AvailableAsIn, ';
-        $SQL .= '   AvailableAsOut ';
-        $SQL .= '  FROM `transition` ';
-        $SQL .= ' WHERE TransitionID = %d ';
-
-        $SQL = sprintf($SQL, $transitionId);
-
-        if (!$row = $db->GetSingleRow($SQL)) {
-            trigger_error($db->error());
-            trigger_error(__('Error getting Transition'));
-        }
-
-        $name = \Xibo\Helper\Sanitize::string($row['Transition']);
-
-        // Set some information about the form
-        Theme::Set('form_id', 'TransitionEditForm');
-        Theme::Set('form_action', 'index.php?p=transition&q=Edit');
-        Theme::Set('form_meta', '<input type="hidden" name="TransitionID" value="' . $transitionId . '" />');
-
-        $formFields = array();
-
-        $formFields[] = Form::AddCheckbox('EnabledForIn', __('Available for In Transitions?'),
-            \Xibo\Helper\Sanitize::int($row['AvailableAsIn']), __('Can this transition be used for media start?'),
-            'i');
-
-        $formFields[] = Form::AddCheckbox('EnabledForOut', __('Available for Out Transitions?'),
-            \Xibo\Helper\Sanitize::int($row['AvailableAsOut']), __('Can this transition be used for media end?'),
-            'o');
-
-        Theme::Set('form_fields', $formFields);
-
-        $response->SetFormRequestResponse(NULL, sprintf(__('Edit %s'), $name), '350px', '325px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Transition', 'Edit') . '")');
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Save'), '$("#TransitionEditForm").submit()');
-
+        $this->getState()->template = 'transition-form-edit';
+        $this->getState()->setData([
+            'transition' => $transition,
+            'help' => Help::Link('Transition', 'Edit')
+        ]);
     }
 
     /**
      * Edit Transition
+     * @param int $transitionId
      */
-    public function Edit()
+    public function edit($transitionId)
     {
-
-
-        $response = $this->getState();
-
-        // Can we edit?
         if (Config::GetSetting('TRANSITION_CONFIG_LOCKED_CHECKB') == 'Checked')
-            trigger_error(__('Transition Config Locked'), E_USER_ERROR);
+            throw new AccessDeniedException(__('Transition Config Locked'));
 
-        $transitionId = \Xibo\Helper\Sanitize::getInt('TransitionID');
-        $enabledForIn = \Xibo\Helper\Sanitize::getCheckbox('EnabledForIn');
-        $enabledForOut = \Xibo\Helper\Sanitize::getCheckbox('EnabledForOut');
+        $transition = TransitionFactory::getById($transitionId);
+        $transition->availableAsIn = Sanitize::getCheckbox('availableAsIn');
+        $transition->availableAsOut = Sanitize::getCheckbox('availableAsOut');
+        $transition->save();
 
-        // Validation
-        if ($transitionId == 0 || $transitionId == '')
-            trigger_error(__('Transition ID is missing'), E_USER_ERROR);
-
-        // Deal with the Edit
-        $SQL = "UPDATE `transition` SET AvailableAsIn = %d, AvailableAsOut = %d WHERE TransitionID = %d";
-        $SQL = sprintf($SQL, $enabledForIn, $enabledForOut, $transitionId);
-
-        if (!$db->query($SQL)) {
-            trigger_error($db->error());
-            trigger_error(__('Unable to update transition'), E_USER_ERROR);
-        }
-
-        $response->SetFormSubmitResponse(__('Transition Edited'), false);
-
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Edited %s'), $transition->transition),
+            'id' => $transition->transitionId,
+            'data' => [$transition]
+        ]);
     }
 }
-
-?>

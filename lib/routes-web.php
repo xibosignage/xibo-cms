@@ -227,6 +227,7 @@ $app->get('/module/form/verify', '\Xibo\Controller\Module:verifyForm')->name('mo
 // transition
 //
 $app->get('/transition/view', '\Xibo\Controller\Transition:displayPage')->name('transition.view');
+$app->get('/transition/form/edit/:id', '\Xibo\Controller\Transition:editForm')->name('transition.edit.form');
 
 //
 // sessions

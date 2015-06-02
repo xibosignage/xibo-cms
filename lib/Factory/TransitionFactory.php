@@ -12,10 +12,26 @@ namespace Xibo\Factory;
 use Xibo\Entity\Transition;
 use Xibo\Exception\NotFoundException;
 use Xibo\Helper\Log;
+use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
 class TransitionFactory
 {
+    /**
+     * @param int $transitionId
+     * @return Transition
+     * @throws NotFoundException
+     */
+    public static function getById($transitionId)
+    {
+        $transitions = TransitionFactory::query(null, ['transitionId' => $transitionId]);
+
+        if (count($transitions) <= 0)
+            throw new NotFoundException();
+
+        return $transitions[0];
+    }
+
     /**
      * @param array $sortOrder
      * @param array $filterBy
@@ -29,15 +45,21 @@ class TransitionFactory
 
         try {
             $sql = '
-            SELECT transitionID,
+            SELECT transitionId,
                   transition,
                   `code`,
                   hasDuration,
                   hasDirection,
                   availableAsIn,
                   availableAsOut
-             FROM `transition`
+              FROM `transition`
+             WHERE 1 = 1
             ';
+
+            if (Sanitize::getInt('transitionId', $filterBy) != null) {
+                $sql .= ' AND transition.transitionId = :transitionId ';
+                $params['transitionId'] = Sanitize::getInt('transitionId', $filterBy);
+            }
 
             // Sorting?
             if (is_array($sortOrder))
