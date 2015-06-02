@@ -20,6 +20,7 @@
  */
 namespace Xibo\Controller;
 
+use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\SessionFactory;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Date;
@@ -28,6 +29,7 @@ use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Session;
 use Xibo\Helper\Theme;
+use Xibo\Storage\PDOConnect;
 
 
 class Sessions extends Base
@@ -67,14 +69,14 @@ class Sessions extends Base
 
     function grid()
     {
-        $type = \Kit::GetParam('filter_type', _POST, _WORD);
+        $type = Sanitize::getString('filter_type');
         $fromDt = Sanitize::getString('filter_fromdt');
 
         Session::Set('sessions', 'Filter', Sanitize::getCheckbox('XiboFilterPinned'));
         Session::Set('sessions', 'filter_type', $type);
         Session::Set('sessions', 'filter_fromdt', $fromDt);
 
-        $sessions = SessionFactory::query($this->gridRenderSort(), ['type' => $type, 'fromDt' => $fromDt]);
+        $sessions = SessionFactory::query($this->gridRenderSort(), $this->gridRenderFilter(['type' => $type, 'fromDt' => $fromDt]));
 
         foreach ($sessions as $row) {
             /* @var \Xibo\Entity\Session $row */
@@ -82,7 +84,7 @@ class Sessions extends Base
             // Edit
             $row->buttons[] = array(
                 'id' => 'sessions_button_logout',
-                'url' => 'index.php?p=sessions&q=ConfirmLogout&userid=' . $row->userId,
+                'url' => $this->urlFor('sessions.confirm.logout.form', ['id' => $row->userId]),
                 'text' => __('Logout')
             );
         }
@@ -91,49 +93,36 @@ class Sessions extends Base
         $this->getState()->setData($sessions);
     }
 
-    function ConfirmLogout()
+    /**
+     * Confirm Logout Form
+     * @param int $userId
+     */
+    function confirmLogoutForm($userId)
     {
+        if ($this->getUser()->userTypeId != 1)
+            throw new AccessDeniedException();
 
-        $response = $this->getState();
-
-        $userid = Sanitize::getInt('userid');
-
-        // Set some information about the form
-        Theme::Set('form_id', 'SessionsLogoutForm');
-        Theme::Set('form_action', 'index.php?p=sessions&q=LogoutUser');
-        Theme::Set('form_meta', '<input type="hidden" name="userid" value="' . $userid . '" />');
-
-        Theme::Set('form_fields', array(Form::AddMessage(__('Are you sure you want to logout this user?'))));
-
-        $response->SetFormRequestResponse(NULL, __('Logout User'), '430px', '200px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Sessions', 'Logout') . '")');
-        $response->AddButton(__('No'), 'XiboDialogClose()');
-        $response->AddButton(__('Yes'), '$("#SessionsLogoutForm").submit()');
-
+        $this->getState()->template = 'sessions-form-confirm-logout';
+        $this->getState()->setData([
+            'userId' => $userId,
+            'help' => Help::Link('Sessions', 'Logout')
+        ]);
     }
 
     /**
-     * Logs out a user
-     * @return
+     * Logout
+     * @param int $userId
      */
-    function LogoutUser()
+    function logout($userId)
     {
+        if ($this->getUser()->userTypeId != 1)
+            throw new AccessDeniedException();
 
+        PDOConnect::update('UPDATE `session` SET IsExpired = 1 WHERE userID = :userId ', ['userId' => $userId]);
 
-        //ajax request handler
-        $response = $this->getState();
-        $userID = Sanitize::getInt('userid');
-
-        $SQL = sprintf("UPDATE session SET IsExpired = 1 WHERE userID = %d", $userID);
-
-        if (!$db->query($SQL)) {
-            trigger_error($db->error());
-            trigger_error(__("Unable to log out this user"), E_USER_ERROR);
-        }
-
-        $response->SetFormSubmitResponse(__('User Logged Out.'));
-
+        // Return
+        $this->getState()->hydrate([
+            'message' => __('User Logged Out.')
+        ]);
     }
 }
-
-?>

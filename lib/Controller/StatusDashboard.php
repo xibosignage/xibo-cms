@@ -21,6 +21,7 @@
 namespace Xibo\Controller;
 use Exception;
 use SimplePie;
+use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\Config;
 use Xibo\Helper\Date;
 use Xibo\Helper\Log;
@@ -141,7 +142,7 @@ class StatusDashboard extends Base
 
             $data['libraryLimitSet'] = $libraryLimit;
             $data['libraryLimit'] = (round((double)$libraryLimit / (pow(1024, $base)), 2)) . ' ' . $suffixes[$base];
-            $data['librarySize'] = \Kit::formatBytes($totalSize, 1);
+            $data['librarySize'] = ByteFormatter::format($totalSize, 1);
             $data['librarySuffix'] = $suffixes[$base];
             $data['libraryWidget'] = json_encode($output);
 

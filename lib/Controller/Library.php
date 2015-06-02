@@ -23,6 +23,7 @@ namespace Xibo\Controller;
 use Xibo\Exception\LibraryFullException;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Helper\ApplicationState;
+use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\Config;
 use Xibo\Helper\Form;
 use Xibo\Helper\Help;
@@ -669,7 +670,7 @@ HTML;
         // Work out how many files there are
         $media = Media::entriesUnusedForUser($this->getUser()->userId);
 
-        $formFields[] = Form::AddMessage(sprintf(__('There is %s of data stored in %d files . Are you sure you want to proceed?', \Kit::formatBytes(array_sum(array_map(function ($element) {
+        $formFields[] = Form::AddMessage(sprintf(__('There is %s of data stored in %d files . Are you sure you want to proceed?', ByteFormatter::format(array_sum(array_map(function ($element) {
             return $element['fileSize'];
         }, $media))), count($media))));
 

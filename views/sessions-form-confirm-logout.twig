@@ -1,0 +1,31 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+Theme::Set('form_fields', array(Form::AddMessage(__('Are you sure you want to logout this user?'))));
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Logout User" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Save" %}, $("#<<id>>").submit()
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="<<id>>" class="XiboForm form-horizontal" method="post" action="{{ urlFor("sessions.confirm.logout", {id: userId}) }}">
+
+            </form>
+        </div>
+    </div>
+{% endblock %}

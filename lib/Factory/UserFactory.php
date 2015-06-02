@@ -144,7 +144,7 @@ class UserFactory
         }
 
         // Groups Provided
-        $groups = \Kit::GetParam('groupIds', $filterBy, _ARRAY_INT);
+        $groups = Sanitize::getParam('groupIds', $filterBy);
 
         if (count($groups) > 0) {
             $SQL .= " AND user.userId IN (SELECT userId FROM `lkusergroup` WHERE groupid IN (" . implode($groups, ',') . ")) ";

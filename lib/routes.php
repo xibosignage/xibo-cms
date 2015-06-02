@@ -135,6 +135,7 @@ $app->put('/transition/:id', '\Xibo\Controller\Transition:edit')->name('transiti
 // Sessions
 //
 $app->get('/sessions', '\Xibo\Controller\Sessions:grid')->name('sessions.search');
+$app->delete('/sessions/logout/:id', '\Xibo\Controller\Sessions:logout')->name('sessions.confirm.logout');
 
 //
 // Help

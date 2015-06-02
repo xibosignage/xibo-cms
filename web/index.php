@@ -28,7 +28,6 @@ require '../lib/autoload.php';
 require '../vendor/autoload.php';
 
 // Classes we need to deprecate, namespace or put in composer
-require '../lib/app/kit.class.php';
 require '../lib/data/data.class.php';
 // END
 
