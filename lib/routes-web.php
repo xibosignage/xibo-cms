@@ -250,6 +250,8 @@ $app->get('/license/view', '\Xibo\Controller\Login:about')->name('license.view')
 //
 $app->get('/help/view', '\Xibo\Controller\Help:displayPage')->name('help.view');
 $app->get('/help/form/add', '\Xibo\Controller\Help:addForm')->name('help.add.form');
+$app->get('/help/form/edit/:id', '\Xibo\Controller\Help:editForm')->name('help.edit.form');
+$app->get('/help/form/delete/:id', '\Xibo\Controller\Help:deleteForm')->name('help.delete.form');
 
 //
 // Stats

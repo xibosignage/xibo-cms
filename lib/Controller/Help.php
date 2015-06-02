@@ -20,9 +20,11 @@
  */
 namespace Xibo\Controller;
 use baseDAO;
+use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\HelpFactory;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Form;
+use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 
 
@@ -49,21 +51,21 @@ class Help extends Base
                 // Edit
                 $row->buttons[] = array(
                     'id' => 'help_button_edit',
-                    'url' => 'index.php?p=help&q=EditForm&HelpID=' . $row->helpId,
+                    'url' => $this->urlFor('help.edit.form', ['id' => $row->helpId]),
                     'text' => __('Edit')
                 );
 
                 // Delete
                 $row->buttons[] = array(
                     'id' => 'help_button_delete',
-                    'url' => 'index.php?p=help&q=DeleteForm&HelpID=' . $row->helpId,
+                    'url' => $this->urlFor('help.delete.form', ['id' => $row->helpId]),
                     'text' => __('Delete')
                 );
 
                 // Test
                 $row->buttons[] = array(
                     'id' => 'help_button_test',
-                    'url' => \Xibo\Helper\Help::Link($row->topic, $row->category),
+                    'url' => Help::Link($row->topic, $row->category),
                     'text' => __('Test')
                 );
             }
@@ -73,164 +75,114 @@ class Help extends Base
         $this->getState()->setData($helpLinks);
     }
 
-    public function AddForm()
+    /**
+     * Add Form
+     */
+    public function addForm()
     {
-        $response = $this->getState();
+        if ($this->getUser()->userTypeId != 1)
+            throw new AccessDeniedException();
 
-        // Set some information about the form
-        Theme::Set('form_id', 'HelpAddForm');
-        Theme::Set('form_action', 'index.php?p=help&q=Add');
-
-        $formFields = array();
-        $formFields[] = Form::AddText('Topic', __('Topic'), NULL,
-            __('The Topic for this Help Link'), 't', 'maxlength="254" required');
-
-        $formFields[] = Form::AddText('Category', __('Category'), NULL,
-            __('The Category for this Help Link'), 'c', 'maxlength="254" required');
-
-        $formFields[] = Form::AddText('Link', __('Link'), NULL,
-            __('The Link to open for this help topic and category'), 'c', 'maxlength="254" required');
-
-        Theme::Set('form_fields', $formFields);
-
-        $response->SetFormRequestResponse(NULL, __('Add Help Link'), '350px', '325px');
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Save'), '$("#HelpAddForm").submit()');
-
+        $this->getState()->template = 'help-form-add';
     }
 
     /**
      * Help Edit form
+     * @param int $helpId
      */
-    public function EditForm()
+    public function editForm($helpId)
     {
+        if ($this->getUser()->userTypeId != 1)
+            throw new AccessDeniedException();
 
-        $user = $this->getUser();
-        $response = $this->getState();
+        $help = HelpFactory::getById($helpId);
 
-        $helpId = \Xibo\Helper\Sanitize::getInt('HelpID');
-
-        // Pull the currently known info from the DB
-        $SQL = "SELECT HelpID, Topic, Category, Link FROM `help` WHERE HelpID = %d ";
-        $SQL = sprintf($SQL, $helpId);
-
-        if (!$row = $db->GetSingleRow($SQL)) {
-            trigger_error($db->error());
-            trigger_error(__('Error getting Help Link'));
-        }
-
-        // Set some information about the form
-        Theme::Set('form_id', 'HelpEditForm');
-        Theme::Set('form_action', 'index.php?p=help&q=Edit');
-        Theme::Set('form_meta', '<input type="hidden" name="HelpID" value="' . $helpId . '" />');
-
-        $formFields = array();
-        $formFields[] = Form::AddText('Topic', __('Topic'), \Xibo\Helper\Sanitize::string($row['Topic']),
-            __('The Topic for this Help Link'), 't', 'maxlength="254" required');
-
-        $formFields[] = Form::AddText('Category', __('Category'), \Xibo\Helper\Sanitize::string($row['Category']),
-            __('The Category for this Help Link'), 'c', 'maxlength="254" required');
-
-        $formFields[] = Form::AddText('Link', __('Link'), \Xibo\Helper\Sanitize::string($row['Link']),
-            __('The Link to open for this help topic and category'), 'c', 'maxlength="254" required');
-
-        Theme::Set('form_fields', $formFields);
-
-        $response->SetFormRequestResponse(NULL, __('Edit Help Link'), '350px', '325px');
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Save'), '$("#HelpEditForm").submit()');
-
+        $this->getState()->template = 'help-form-edit';
+        $this->getState()->setData([
+            'help' => $help
+        ]);
     }
 
     /**
      * Delete Help Link Form
+     * @param int $helpId
      */
-    public function DeleteForm()
+    public function deleteForm($helpId)
     {
+        if ($this->getUser()->userTypeId != 1)
+            throw new AccessDeniedException();
 
-        $response = $this->getState();
-        $helpId = \Xibo\Helper\Sanitize::getInt('HelpID');
+        $help = HelpFactory::getById($helpId);
 
-        // Set some information about the form
-        Theme::Set('form_id', 'HelpDeleteForm');
-        Theme::Set('form_action', 'index.php?p=help&q=Delete');
-        Theme::Set('form_meta', '<input type="hidden" name="HelpID" value="' . $helpId . '" />');
-
-        Theme::Set('form_fields', array(Form::AddMessage(__('Are you sure you want to delete?'))));
-
-        $response->SetFormRequestResponse(NULL, __('Delete Help Link'), '350px', '175px');
-        $response->AddButton(__('No'), 'XiboDialogClose()');
-        $response->AddButton(__('Yes'), '$("#HelpDeleteForm").submit()');
-
+        $this->getState()->template = 'help-form-delete';
+        $this->getState()->setData([
+            'help' => $help
+        ]);
     }
 
     /**
      * Adds a help link
      */
-    public function Add()
+    public function add()
     {
+        if ($this->getUser()->userTypeId != 1)
+            throw new AccessDeniedException();
 
+        $help = new \Xibo\Entity\Help();
+        $help->topic = Sanitize::getString('topic');
+        $help->category = Sanitize::getString('category');
+        $help->link = Sanitize::getString('link');
 
-        $response = $this->getState();
+        $help->save();
 
-        $topic = \Xibo\Helper\Sanitize::getString('Topic');
-        $category = \Xibo\Helper\Sanitize::getString('Category');
-        $link = \Xibo\Helper\Sanitize::getString('Link');
-
-        // Deal with the Edit
-
-        $helpObject = new Help($db);
-
-        if (!$helpObject->Add($topic, $category, $link))
-            trigger_error($helpObject->GetErrorMessage(), E_USER_ERROR);
-
-        $response->SetFormSubmitResponse(__('Help Link Added'), false);
-
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Added %s'), $help->topic),
+            'id' => $help->helpId,
+            'data' => [$help]
+        ]);
     }
 
     /**
      * Edits a help link
+     * @param int $helpId
      */
-    public function Edit()
+    public function edit($helpId)
     {
+        if ($this->getUser()->userTypeId != 1)
+            throw new AccessDeniedException();
 
+        $help = HelpFactory::getById($helpId);
+        $help->topic = Sanitize::getString('topic');
+        $help->category = Sanitize::getString('category');
+        $help->link = Sanitize::getString('link');
 
-        $response = $this->getState();
+        $help->save();
 
-        $helpId = \Xibo\Helper\Sanitize::getInt('HelpID');
-        $topic = \Xibo\Helper\Sanitize::getString('Topic');
-        $category = \Xibo\Helper\Sanitize::getString('Category');
-        $link = \Xibo\Helper\Sanitize::getString('Link');
-
-        // Deal with the Edit
-
-        $helpObject = new Help($db);
-
-        if (!$helpObject->Edit($helpId, $topic, $category, $link))
-            trigger_error($helpObject->GetErrorMessage(), E_USER_ERROR);
-
-        $response->SetFormSubmitResponse(__('Help Link Edited'), false);
-
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Edited %s'), $help->topic),
+            'id' => $help->helpId,
+            'data' => [$help]
+        ]);
     }
 
-    public function Delete()
+    /**
+     * Delete
+     * @param int $helpId
+     * @throws \Xibo\Exception\NotFoundException
+     */
+    public function delete($helpId)
     {
+        if ($this->getUser()->userTypeId != 1)
+            throw new AccessDeniedException();
 
+        $help = HelpFactory::getById($helpId);
+        $help->delete();
 
-        $response = $this->getState();
-
-        $helpId = \Xibo\Helper\Sanitize::getInt('HelpID');
-
-        // Deal with the Edit
-
-        $helpObject = new Help($db);
-
-        if (!$helpObject->Delete($helpId))
-            trigger_error($helpObject->GetErrorMessage(), E_USER_ERROR);
-
-        $response->SetFormSubmitResponse(__('Help Link Deleted'), false);
-
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Deleted %s'), $help->topic)
+        ]);
     }
 }
-
-?>

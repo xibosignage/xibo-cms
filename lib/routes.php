@@ -141,6 +141,9 @@ $app->delete('/sessions/logout/:id', '\Xibo\Controller\Sessions:logout')->name('
 // Help
 //
 $app->get('/help', '\Xibo\Controller\Help:grid')->name('help.search');
+$app->post('/help/add', '\Xibo\Controller\Help:add')->name('help.add');
+$app->put('/help/edit/:id', '\Xibo\Controller\Help:edit')->name('help.edit');
+$app->delete('/help/delete/:id', '\Xibo\Controller\Help:delete')->name('help.delete');
 
 //
 // Settings

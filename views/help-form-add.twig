@@ -1,0 +1,38 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+$formFields[] = Form::AddText('Topic', __('Topic'), NULL,
+            __('The Topic for this Help Link'), 't', 'maxlength="254" required');
+
+        $formFields[] = Form::AddText('Category', __('Category'), NULL,
+            __('The Category for this Help Link'), 'c', 'maxlength="254" required');
+
+        $formFields[] = Form::AddText('Link', __('Link'), NULL,
+            __('The Link to open for this help topic and category'), 'c', 'maxlength="254" required');
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Add Help Link" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Save" %}, $("#<<id>>").submit()
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="<<id>>" class="XiboForm form-horizontal" method="post" action="{{ urlFor("help.add") }}">
+
+            </form>
+        </div>
+    </div>
+{% endblock %}
