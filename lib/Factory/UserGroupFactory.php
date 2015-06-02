@@ -57,7 +57,7 @@ class UserGroupFactory
      */
     public static function getByUserId($userId)
     {
-        return UserGroupFactory::query(null, ['userId' => $userId, 'isUserSpecific' => -1]);
+        return UserGroupFactory::query(null, ['userId' => $userId, 'isUserSpecific' => 0]);
     }
 
     /**

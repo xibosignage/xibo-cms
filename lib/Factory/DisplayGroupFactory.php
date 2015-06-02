@@ -9,8 +9,36 @@
 namespace Xibo\Factory;
 
 
+use Xibo\Entity\DisplayGroup;
+use Xibo\Exception\NotFoundException;
+use Xibo\Helper\Sanitize;
+
 class DisplayGroupFactory
 {
+    /**
+     * @param int $displayGroupId
+     * @return DisplayGroup
+     * @throws NotFoundException
+     */
+    public static function getById($displayGroupId)
+    {
+        $groups = DisplayGroupFactory::query(null, ['displayGroupId' => $displayGroupId]);
+
+        if (count($groups) <= 0)
+            throw new NotFoundException();
+
+        return $groups[0];
+    }
+
+    /**
+     * @param int $displayId
+     * @return array[DisplayGroup]
+     */
+    public static function getByDisplayId($displayId)
+    {
+        return DisplayGroupFactory::query(null, ['displayId' => $displayId, 'isDisplaySpecific' => -1]);
+    }
+
     /**
      * @param array $sortOrder
      * @param array $filterBy
@@ -18,19 +46,26 @@ class DisplayGroupFactory
      */
     public static function query($sortOrder = null, $filterBy = null)
     {
-        $SQL = "SELECT displaygroup.DisplayGroupID, displaygroup.DisplayGroup, displaygroup.IsDisplaySpecific, displaygroup.Description ";
-        //if ($isDisplaySpecific == 1)
-            $SQL .= " , lkdisplaydg.DisplayID ";
+        $params = [];
 
-        $SQL .= "  FROM displaygroup ";
+        $sql = "SELECT displaygroup.DisplayGroupID, displaygroup.DisplayGroup, displaygroup.IsDisplaySpecific, displaygroup.Description ";
+        //if ($isDisplaySpecific == 1)
+            $sql .= " , lkdisplaydg.DisplayID ";
+
+        $sql .= "  FROM displaygroup ";
 
         // If we are only interested in displays, then return the display
         //if ($isDisplaySpecific == 1) {
-            $SQL .= "   INNER JOIN lkdisplaydg ";
-            $SQL .= "   ON lkdisplaydg.DisplayGroupID = displaygroup.DisplayGroupID ";
+            $sql .= "   INNER JOIN lkdisplaydg ";
+            $sql .= "   ON lkdisplaydg.DisplayGroupID = displaygroup.DisplayGroupID ";
         //}
 
-        $SQL .= " WHERE 1 = 1 ";
+        $sql .= " WHERE 1 = 1 ";
+
+        if (Sanitize::getInt('displayGroupId', $filterBy) != null) {
+            $sql .= ' AND displaygroup.displayGroupId = :displayGroupId ';
+            $params['displayGroupId'] = Sanitize::getInt('displayGroupId', $filterBy);
+        }
 
         /*if ($name != '') {
             // convert into a space delimited array
@@ -48,7 +83,7 @@ class DisplayGroupFactory
         //if ($isDisplaySpecific != -1)
         //    $SQL .= sprintf(" AND displaygroup.IsDisplaySpecific = %d ", $isDisplaySpecific);
 
-        $SQL .= " ORDER BY displaygroup.DisplayGroup ";
+        $sql .= " ORDER BY displaygroup.DisplayGroup ";
 
         return [];
     }

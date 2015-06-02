@@ -20,6 +20,7 @@
  */
 namespace Xibo\Entity;
 
+use Respect\Validation\Validator as v;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\LibraryFullException;
 use Xibo\Exception\NotFoundException;
@@ -39,7 +40,6 @@ use Xibo\Helper\Config;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
-use Respect\Validation\Validator as v;
 
 // These constants may be changed without breaking existing hashes.
 define("PBKDF2_HASH_ALGORITHM", "sha256");
@@ -298,9 +298,12 @@ class User
             $this->load(true);
 
         // Delete everything
+        $group = UserGroupFactory::getById($this->groupId);
+        $group->delete();
+
         foreach ($this->groups as $group) {
             /* @var UserGroup $group */
-            $group->delete();
+            $group->unassignUser($this->userId);
         }
 
         foreach ($this->layouts as $layout) {

@@ -22,13 +22,28 @@
 
 namespace Xibo\Factory;
 
-
 use Xibo\Entity\Display;
+use Xibo\Exception\NotFoundException;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
 class DisplayFactory
 {
+    /**
+     * @param int $displayId
+     * @return Display
+     * @throws NotFoundException
+     */
+    public static function getById($displayId)
+    {
+        $displays = DisplayFactory::query(null, ['displayId' => $displayId]);
+
+        if (count($displays) <= 0)
+            throw new NotFoundException();
+
+        return $displays[0];
+    }
+
     /**
      * @param array $sortOrder
      * @param array $filterBy
@@ -39,7 +54,44 @@ class DisplayFactory
         $entries = array();
         $params = array();
         $SQL = '
-              SELECT display.*, displaygroup.displaygroupid, displaygroup.description, X(display.GeoLocation) AS Latitude, Y(display.GeoLocation) AS Longitude
+              SELECT display.displayId,
+                  display.display,
+                  display.defaultLayoutId,
+                  display.license,
+                  display.licensed,
+                  display.licensed AS currentlyLicenced,
+                  display.loggedIn,
+                  display.lastAccessed,
+                  display.inc_schedule AS incSchedule,
+                  display.email_alert AS emailAlert,
+                  display.alert_timeout AS alertTimeout,
+                  display.clientAddress,
+                  display.mediaInventoryStatus,
+                  display.mediaInventoryXml,
+                  display.macAddress,
+                  display.macAddress AS currentMacAddress,
+                  display.lastChanged,
+                  display.numberOfMacAddressChanges,
+                  display.lastWakeOnLanCommandSent,
+                  display.wakeOnLan AS wakeOnLanEnabled,
+                  display.wakeOnLanTime,
+                  display.broadCastAddress,
+                  display.secureOn,
+                  display.cidr,
+                  X(display.GeoLocation) AS latitude,
+                  Y(display.GeoLocation) AS longitude,
+                  display.version_instructions AS versionInstructions,
+                  display.client_type AS clientType,
+                  display.client_version AS clientVersion,
+                  display.client_code AS clientCode,
+                  display.displayProfileId,
+                  display.currentLayoutId,
+                  currentLayout.layout AS currentLayout,
+                  display.screenShotRequested,
+                  display.storageAvailableSpace,
+                  display.storageTotalSpace,
+                  displaygroup.displayGroupId,
+                  displaygroup.description
                 FROM `display`
                     INNER JOIN `lkdisplaydg`
                     ON lkdisplaydg.displayid = display.displayId
@@ -53,7 +105,7 @@ class DisplayFactory
                WHERE 1 = 1
             ';
 
-        if (Sanitize::getInt('displaygroupid', $filterBy) != 0) {
+        if (Sanitize::getInt('displayGroupId', $filterBy) != 0) {
             // Restrict to a specific display group
             $SQL .= ' AND displaygroup.displaygroupid = :displayGroupId ';
             $params['displayGroupId'] = Sanitize::getInt('displayGroupId', $filterBy);
@@ -63,7 +115,7 @@ class DisplayFactory
         }
 
         // Filter by Display ID?
-        if (Sanitize::getInt('displayid', $filterBy) != 0) {
+        if (Sanitize::getInt('displayId', $filterBy) != 0) {
             $SQL .= ' AND display.displayid = :displayId ';
             $params['displayId'] = Sanitize::getInt('displayId', $filterBy);
         }
@@ -110,45 +162,7 @@ class DisplayFactory
             $SQL .= 'ORDER BY ' . implode(',', $sortOrder);
 
         foreach (PDOConnect::select($SQL, $params) as $row) {
-            $display = new Display();
-            $display->isAuditing = Sanitize::int($row['isAuditing']);
-            $display->display = Sanitize::string($row['display']);
-            $display->description = Sanitize::string($row['description']);
-            $display->defaultLayoutId = Sanitize::int($row['defaultlayoutid']);
-            $display->license = Sanitize::string($row['license']);
-            $display->licensed = Sanitize::int($row['licensed']);
-            $display->loggedIn = Sanitize::int($row['loggedin']);
-            $display->lastAccessed = Sanitize::int($row['lastaccessed']);
-            $display->incSchedule = Sanitize::int($row['inc_schedule']);
-            $display->emailAlert = Sanitize::int($row['email_alert']);
-            $display->alertTimeout = Sanitize::int($row['alert_timeout']);
-            $display->clientAddress = Sanitize::string($row['ClientAddress']);
-            $display->mediaInventoryStatus = Sanitize::int($row['MediaInventoryStatus']);
-            $display->mediaInventoryXml = Sanitize::htmlString($row['MediaInventoryXml']);
-            $display->macAddress = Sanitize::string($row['MacAddress']);
-            $display->lastChanged = Sanitize::int($row['LastChanged']);
-            $display->numberOfMacAddressChanges = Sanitize::int($row['NumberOfMacAddressChanges']);
-            $display->lastWakeOnLanCommandSent = Sanitize::int($row['LastWakeOnLanCommandSent']);
-            $display->wakeOnLanEnabled = Sanitize::int($row['WakeOnLan']);
-            $display->wakeOnLanTime = Sanitize::string($row['WakeOnLanTime']);
-            $display->broadCastAddress = Sanitize::string($row['BroadCastAddress']);
-            $display->secureOn = Sanitize::string($row['SecureOn']);
-            $display->cidr = Sanitize::string($row['Cidr']);
-            $display->latitude = Sanitize::double($row['Latitude']);
-            $display->longitude = Sanitize::double($row['Longitude']);
-            $display->versionInstructions = Sanitize::string($row['version_instructions']);
-            $display->clientType = Sanitize::string($row['client_type']);
-            $display->clientVersion = Sanitize::string($row['client_version']);
-            $display->clientCode = Sanitize::int($row['client_code']);
-            $display->displayProfileId = Sanitize::int($row['displayprofileid']);
-            $display->currentLayoutId = Sanitize::int($row['currentLayoutId']);
-            $display->screenShotRequested = Sanitize::int($row['screenShotRequested']);
-            $display->storageAvailableSpace = Sanitize::int($row['storageAvailableSpace']);
-            $display->storageTotalSpace = Sanitize::int($row['storageTotalSpace']);
-
-            $display->displayGroupId = Sanitize::int($row['displaygroupid']);
-
-            $entries[] = $display;
+            $entries[] = (new Display())->hydrate($row);
         }
 
         return $entries;

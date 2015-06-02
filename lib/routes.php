@@ -66,6 +66,7 @@ $app->get('/library', '\Xibo\Controller\Library:grid')->name('library.search');
 // Displays
 //
 $app->get('/display', '\Xibo\Controller\Display:grid')->name('display.search');
+$app->put('/display/:id', '\Xibo\Controller\Display:edit')->name('display.edit');
 
 //
 // Display Group

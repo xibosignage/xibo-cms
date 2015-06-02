@@ -25,7 +25,8 @@ use DisplayGroup;
 use DOMDocument;
 use DOMXPath;
 use finfo;
-use Xibo\Helper\ApplicationState;
+use Xibo\Exception\AccessDeniedException;
+use Xibo\Factory\DisplayFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Date;
 use Xibo\Helper\Form;
@@ -44,7 +45,7 @@ class Display extends Base
     function displayPage()
     {
         // Default options
-        if (\Kit::IsFilterPinned('display', 'DisplayFilter')) {
+        if (Session::Get(get_class(), 'Filter') == 1) {
             $filter_pinned = 1;
             $filter_displaygroup = Session::Get('display', 'filter_displaygroup');
             $filter_display = Session::Get('display', 'filter_display');
@@ -84,246 +85,6 @@ class Display extends Base
     }
 
     /**
-     * Modifies the selected display record
-     * @return
-     */
-    function modify()
-    {
-
-
-        $response = $this->getState();
-
-        $displayObject = new Display();
-        $displayObject->displayId = Sanitize::getInt('displayid');
-
-        $auth = $this->getUser()->DisplayGroupAuth($this->GetDisplayGroupId($displayObject->displayId), true);
-        if (!$auth->edit)
-            trigger_error(__('You do not have permission to edit this display'), E_USER_ERROR);
-
-        if (!$displayObject->Load())
-            trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);
-
-        // Update properties
-        $displayObject->display = Sanitize::getString('display');
-        $displayObject->description = Sanitize::getString('description');
-        $displayObject->isAuditing = Sanitize::getInt('auditing');
-        $displayObject->defaultLayoutId = Sanitize::getInt('defaultlayoutid');
-        $displayObject->licensed = Sanitize::getInt('licensed');
-        $displayObject->incSchedule = Sanitize::getInt('inc_schedule');
-        $displayObject->emailAlert = Sanitize::getInt('email_alert');
-        $displayObject->alertTimeout = Sanitize::getCheckbox('alert_timeout');
-        $displayObject->wakeOnLanEnabled = Sanitize::getCheckbox('wakeOnLanEnabled');
-        $displayObject->wakeOnLanTime = Sanitize::getString('wakeOnLanTime');
-        $displayObject->broadCastAddress = Sanitize::getString('broadCastAddress');
-        $displayObject->secureOn = Sanitize::getString('secureOn');
-        $displayObject->cidr = Sanitize::getString('cidr');
-        $displayObject->latitude = \Kit::GetParam('latitude', _POST, _DOUBLE);
-        $displayObject->longitude = \Kit::GetParam('longitude', _POST, _DOUBLE);
-        $displayObject->displayProfileId = Sanitize::getInt('displayprofileid');
-
-        if (!$displayObject->Edit())
-            trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);
-
-        $response->SetFormSubmitResponse(__('Display Saved.'));
-
-    }
-
-    /**
-     * Modify Display form
-     */
-    function displayForm()
-    {
-        $response = $this->getState();
-
-        // Get the display Id
-        $displayObject = new Display();
-        $displayObject->displayId = Sanitize::getInt('displayid');
-
-        $auth = $this->getUser()->DisplayGroupAuth($this->GetDisplayGroupId($displayObject->displayId), true);
-        if (!$auth->edit)
-            trigger_error(__('You do not have permission to edit this display'), E_USER_ERROR);
-
-        // Load this display
-        if (!$displayObject->Load())
-            trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);
-
-        // Set some information about the form
-        Theme::Set('form_id', 'DisplayEditForm');
-        Theme::Set('form_action', 'index.php?p=display&q=modify');
-        Theme::Set('form_meta', '<input type="hidden" name="displayid" value="' . $displayObject->displayId . '" />');
-
-        // Column 1
-        $formFields = array();
-        $formFields[] = Form::AddText('display', __('Display'), $displayObject->display,
-            __('The Name of the Display - (1 - 50 characters).'), 'd', 'required');
-
-        $formFields[] = Form::AddText('hardwareKey', __('Display\'s Hardware Key'), $displayObject->license,
-            __('A unique identifier for this display.'), 'h', 'required', NULL, false);
-
-        $formFields[] = Form::AddText('description', __('Description'), $displayObject->description,
-            __('A description - (1 - 254 characters).'), 'p', 'maxlength="50"');
-
-        $formFields[] = Form::AddCombo(
-            'licensed',
-            __('Licence Display?'),
-            $displayObject->licensed,
-            array(array('licensedid' => '1', 'licensed' => 'Yes'), array('licensedid' => '0', 'licensed' => 'No')),
-            'licensedid',
-            'licensed',
-            __('Use one of the available licenses for this display?'),
-            'l');
-
-        $formFields[] = Form::AddCombo(
-            'defaultlayoutid',
-            __('Default Layout'),
-            $displayObject->defaultLayoutId,
-            $this->getUser()->LayoutList(),
-            'layoutid',
-            'layout',
-            __('The Default Layout to Display where there is no other content.'),
-            't');
-
-        Theme::Set('form_fields_general', $formFields);
-
-        // Maintenance
-        $formFields = array();
-        $formFields[] = Form::AddCombo(
-            'email_alert',
-            __('Email Alerts'),
-            $displayObject->emailAlert,
-            array(array('id' => '1', 'value' => 'Yes'), array('id' => '0', 'value' => 'No')),
-            'id',
-            'value',
-            __('Do you want to be notified by email if there is a problem with this display?'),
-            'a');
-
-        $formFields[] = Form::AddCheckbox('alert_timeout', __('Use the Global Timeout?'), $displayObject->alertTimeout,
-            __('Should this display be tested against the global time out or the client collection interval?'),
-            'o');
-
-        Theme::Set('form_fields_maintenance', $formFields);
-
-        // Location
-        $formFields = array();
-
-        $formFields[] = Form::AddNumber('latitude', __('Latitude'), $displayObject->latitude,
-            __('The Latitude of this display'), 'g');
-
-        $formFields[] = Form::AddNumber('longitude', __('Longitude'), $displayObject->longitude,
-            __('The Longitude of this Display'), 'g');
-
-        Theme::Set('form_fields_location', $formFields);
-
-        // Wake on LAN
-        $formFields = array();
-
-        $formFields[] = Form::AddCheckbox('wakeOnLanEnabled', __('Enable Wake on LAN'),
-            $displayObject->wakeOnLanEnabled, __('Wake on Lan requires the correct network configuration to route the magic packet to the display PC'),
-            'w');
-
-        $formFields[] = Form::AddText('broadCastAddress', __('BroadCast Address'), (($displayObject->broadCastAddress == '') ? $displayObject->clientAddress : $displayObject->broadCastAddress),
-            __('The IP address of the remote host\'s broadcast address (or gateway)'), 'b');
-
-        $formFields[] = Form::AddText('secureOn', __('Wake on LAN SecureOn'), $displayObject->secureOn,
-            __('Enter a hexadecimal password of a SecureOn enabled Network Interface Card (NIC) of the remote host. Enter a value in this pattern: \'xx-xx-xx-xx-xx-xx\'. Leave the following field empty, if SecureOn is not used (for example, because the NIC of the remote host does not support SecureOn).'), 's');
-
-        $formFields[] = Form::AddText('wakeOnLanTime', __('Wake on LAN Time'), $displayObject->wakeOnLanTime,
-            __('The time this display should receive the WOL command, using the 24hr clock - e.g. 19:00. Maintenance must be enabled.'), 't');
-
-        $formFields[] = Form::AddText('cidr', __('Wake on LAN CIDR'), $displayObject->cidr,
-            __('Enter a number within the range of 0 to 32 in the following field. Leave the following field empty, if no subnet mask should be used (CIDR = 0). If the remote host\'s broadcast address is unknown: Enter the host name or IP address of the remote host in Broad Cast Address and enter the CIDR subnet mask of the remote host in this field.'), 'c');
-
-        Theme::Set('form_fields_wol', $formFields);
-
-        // Advanced
-        $formFields = array();
-
-        $displayProfileList = $this->getUser()->DisplayProfileList(NULL, array('type' => $displayObject->clientType));
-        array_unshift($displayProfileList, array('displayprofileid' => 0, 'name' => ''));
-
-        $formFields[] = Form::AddCombo(
-            'displayprofileid',
-            __('Settings Profile?'),
-            $displayObject->displayProfileId,
-            $displayProfileList,
-            'displayprofileid',
-            'name',
-            __('What display profile should this display use?'),
-            'p');
-
-        $formFields[] = Form::AddCombo(
-            'inc_schedule',
-            __('Interleave Default'),
-            $displayObject->incSchedule,
-            array(array('id' => '1', 'value' => 'Yes'), array('id' => '0', 'value' => 'No')),
-            'id',
-            'value',
-            __('Whether to always put the default layout into the cycle.'),
-            'i');
-
-        $formFields[] = Form::AddCombo(
-            'auditing',
-            __('Auditing'),
-            $displayObject->isAuditing,
-            array(array('id' => '1', 'value' => 'Yes'), array('id' => '0', 'value' => 'No')),
-            'id',
-            'value',
-            __('Collect auditing from this client. Should only be used if there is a problem with the display.'),
-            'a');
-
-        // Show the resolved settings for this display.
-        $formFields[] = Form::AddMessage(__('The settings for this display are shown below. They are taken from the active Display Profile for this Display, which can be changed in Display Settings. If you have altered the Settings Profile above, you will need to save and re-show the form.'));
-
-        // Build a table for the settings to be shown in
-        $cols = array(
-            array('name' => 'title', 'title' => __('Setting')),
-            array('name' => 'valueString', 'title' => __('Value'))
-        );
-
-        // Get the settings from the profile
-        $profile = $displayObject->getSettingsProfile();
-
-        // Go through each one, and see if it is a drop down
-        for ($i = 0; $i < count($profile); $i++) {
-            // Always update the value string with the source value
-            $profile[$i]['valueString'] = $profile[$i]['value'];
-
-            // Overwrite the value string when we are dealing with dropdowns
-            if ($profile[$i]['fieldType'] == 'dropdown') {
-                // Update our value
-                foreach ($profile[$i]['options'] as $option) {
-                    if ($option['id'] == $profile[$i]['value'])
-                        $profile[$i]['valueString'] = $option['value'];
-                }
-            } else if ($profile[$i]['fieldType'] == 'timePicker') {
-                $profile[$i]['valueString'] = Date::getSystemDate($profile[$i]['value'] / 1000, 'H:i');
-            }
-        }
-
-        Theme::Set('table_cols', $cols);
-        Theme::Set('table_rows', $profile);
-        $formFields[] = Form::AddRaw(Theme::RenderReturn('table_render'));
-
-        Theme::Set('form_fields_advanced', $formFields);
-
-        // Two tabs
-        $tabs = array();
-        $tabs[] = Form::AddTab('general', __('General'));
-        $tabs[] = Form::AddTab('location', __('Location'));
-        $tabs[] = Form::AddTab('maintenance', __('Maintenance'));
-        $tabs[] = Form::AddTab('wol', __('Wake on LAN'));
-        $tabs[] = Form::AddTab('advanced', __('Advanced'));
-
-        Theme::Set('form_tabs', $tabs);
-
-        $response->SetFormRequestResponse(NULL, __('Edit a Display'), '650px', '350px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Display', 'Edit') . '")');
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Save'), '$("#DisplayEditForm").submit()');
-
-    }
-
-    /**
      * Grid of Displays
      */
     function grid()
@@ -359,11 +120,11 @@ class Display extends Base
         // Pinned option?
         Session::Set('display', 'DisplayFilter', Sanitize::getCheckbox('XiboFilterPinned'));
 
-        $displays = $user->DisplayList(array('displayid'), array(
+        $displays = $user->DisplayList($this->gridRenderSort(), $this->gridRenderFilter(array(
             'displaygroupid' => $filter_displaygroupid,
             'display' => $filter_display,
             'macAddress' => $filterMacAddress,
-            'clientVersion' => $filterVersion)
+            'clientVersion' => $filterVersion))
         );
 
         foreach ($displays as $display) {
@@ -396,8 +157,8 @@ class Display extends Base
             // Thumbnail
             $display->thumbnail = '';
             // If we aren't logged in, and we are showThumbnail == 2, then show a circle
-            if (file_exists(Config::GetSetting('LIBRARY_LOCATION') . 'screenshots/' . $display->displayid . '_screenshot.jpg')) {
-                $display->thumbnail = 'index.php?p=display&q=ScreenShot&DisplayId=' . $display->displayid;
+            if (file_exists(Config::GetSetting('LIBRARY_LOCATION') . 'screenshots/' . $display->displayId . '_screenshot.jpg')) {
+                $display->thumbnail = 'index.php?p=display&q=ScreenShot&DisplayId=' . $display->displayId;
             }
 
             // Format the storage available / total space
@@ -408,7 +169,7 @@ class Display extends Base
                 // Edit
                 $display->buttons[] = array(
                     'id' => 'display_button_edit',
-                    'url' => 'index.php?p=display&q=displayForm&displayid=' . $display->displayid,
+                    'url' => $this->urlFor('display.edit.form', ['id' => $display->displayId]),
                     'text' => __('Edit')
                 );
             }
@@ -417,7 +178,7 @@ class Display extends Base
             if ($this->getUser()->checkDeleteable($display)) {
                 $display->buttons[] = array(
                     'id' => 'display_button_delete',
-                    'url' => 'index.php?p=display&q=DeleteForm&displayid=' . $display->displayid,
+                    'url' => $this->urlFor('display.delete.form', ['id' => $display->displayId]),
                     'text' => __('Delete')
                 );
             }
@@ -430,37 +191,30 @@ class Display extends Base
             if ($this->getUser()->checkEditable($display) || Config::GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes') {
                 $display->buttons[] = array(
                     'id' => 'display_button_schedulenow',
-                    'url' => 'index.php?p=schedule&q=ScheduleNowForm&displayGroupId=' . $display->displaygroupid,
+                    'url' => $this->urlFor('schedule.now.form', ['id' => $display->displayGroupId]),
                     'text' => __('Schedule Now')
                 );
             }
 
             if ($this->getUser()->checkEditable($display)) {
 
-                // Default Layout
-                $display->buttons[] = array(
-                    'id' => 'display_button_defaultlayout',
-                    'url' => 'index.php?p=display&q=DefaultLayoutForm&DisplayId=' . $display->displayid,
-                    'text' => __('Default Layout')
-                );
-
                 // File Associations
                 $display->buttons[] = array(
                     'id' => 'displaygroup_button_fileassociations',
-                    'url' => 'index.php?p=displaygroup&q=FileAssociations&DisplayGroupID=' . $display->displaygroupid,
+                    'url' => 'index.php?p=displaygroup&q=FileAssociations&DisplayGroupID=' . $display->displayGroupId,
                     'text' => __('Assign Files')
                 );
 
                 // Screen Shot
                 $display->buttons[] = array(
                     'id' => 'display_button_requestScreenShot',
-                    'url' => 'index.php?p=display&q=RequestScreenShotForm&displayId=' . $display->displayid,
+                    'url' => $this->urlFor('display.screenshot.form', ['id' => $display->displayId]),
                     'text' => __('Request Screen Shot'),
                     'multi-select' => true,
                     'dataAttributes' => array(
-                        array('name' => 'multiselectlink', 'value' => 'index.php?p=display&q=RequestScreenShot'),
+                        array('name' => 'multiselectlink', 'value' => $this->urlFor('display.screenshot.form')),
                         array('name' => 'rowtitle', 'value' => $display->display),
-                        array('name' => 'displayId', 'value' => $display->displayid)
+                        array('name' => 'displayId', 'value' => $display->displayId)
                     )
                 );
 
@@ -470,7 +224,7 @@ class Display extends Base
             // Media Inventory
             $display->buttons[] = array(
                 'id' => 'display_button_mediainventory',
-                'url' => 'index.php?p=display&q=MediaInventory&DisplayId=' . $display->displayid,
+                'url' => 'index.php?p=display&q=MediaInventory&DisplayId=' . $display->displayId,
                 'text' => __('Media Inventory')
             );
 
@@ -479,7 +233,7 @@ class Display extends Base
                 // Logs
                 $display->buttons[] = array(
                     'id' => 'displaygroup_button_logs',
-                    'url' => 'index.php?p=log&q=LastHundredForDisplay&displayid=' . $display->displayid,
+                    'url' => 'index.php?p=log&q=LastHundredForDisplay&displayid=' . $display->displayId,
                     'text' => __('Recent Log')
                 );
 
@@ -491,21 +245,21 @@ class Display extends Base
                 // Display Groups
                 $display->buttons[] = array(
                     'id' => 'display_button_group_membership',
-                    'url' => 'index.php?p=display&q=MemberOfForm&DisplayID=' . $display->displayid,
+                    'url' => 'index.php?p=display&q=MemberOfForm&DisplayID=' . $display->displayId,
                     'text' => __('Display Groups')
                 );
 
                 // Permissions
                 $display->buttons[] = array(
                     'id' => 'display_button_group_membership',
-                    'url' => 'index.php?p=displaygroup&q=PermissionsForm&DisplayGroupID=' . $display->displaygroupid,
+                    'url' => 'index.php?p=displaygroup&q=PermissionsForm&DisplayGroupID=' . $display->displayGroupId,
                     'text' => __('Permissions')
                 );
 
                 // Version Information
                 $display->buttons[] = array(
                     'id' => 'display_button_version_instructions',
-                    'url' => 'index.php?p=displaygroup&q=VersionInstructionsForm&displaygroupid=' . $display->displaygroupid . '&displayid=' . $display->displayid,
+                    'url' => 'index.php?p=displaygroup&q=VersionInstructionsForm&displaygroupid=' . $display->displayGroupId . '&displayid=' . $display->displayId,
                     'text' => __('Version Information')
                 );
 
@@ -516,7 +270,7 @@ class Display extends Base
                 // Wake On LAN
                 $display->buttons[] = array(
                     'id' => 'display_button_wol',
-                    'url' => 'index.php?p=display&q=WakeOnLanForm&DisplayId=' . $display->displayid,
+                    'url' => $this->urlFor('display.wol.form', ['id' => $display->displayId]),
                     'text' => __('Wake on LAN')
                 );
             }
@@ -527,11 +281,49 @@ class Display extends Base
     }
 
     /**
+     * Edit Display Form
+     * @param int $displayId
+     */
+    function editForm($displayId)
+    {
+        $display = DisplayFactory::getById($displayId);
+
+        if (!$this->getUser()->checkEditable($display))
+            throw new AccessDeniedException();
+
+        // Get the settings from the profile
+        $profile = $display->getSettings();
+
+        // Go through each one, and see if it is a drop down
+        for ($i = 0; $i < count($profile); $i++) {
+            // Always update the value string with the source value
+            $profile[$i]['valueString'] = $profile[$i]['value'];
+
+            // Overwrite the value string when we are dealing with dropdowns
+            if ($profile[$i]['fieldType'] == 'dropdown') {
+                // Update our value
+                foreach ($profile[$i]['options'] as $option) {
+                    if ($option['id'] == $profile[$i]['value'])
+                        $profile[$i]['valueString'] = $option['value'];
+                }
+            } else if ($profile[$i]['fieldType'] == 'timePicker') {
+                $profile[$i]['valueString'] = Date::getSystemDate($profile[$i]['value'] / 1000, 'H:i');
+            }
+        }
+
+        $this->getState()->template = 'display-form-edit';
+        $this->getState()->setData([
+            'display' => $display,
+            'settings' => $profile,
+            'help' => Help::Link('Display', 'Edit')
+        ]);
+    }
+
+    /**
      * Delete form
      */
-    function DeleteForm()
+    function deleteForm()
     {
-
         $user = $this->getUser();
         $response = $this->getState();
         $displayid = Sanitize::getInt('displayid');
@@ -552,6 +344,45 @@ class Display extends Base
         $response->AddButton(__('No'), 'XiboDialogClose()');
         $response->AddButton(__('Yes'), '$("#DisplayDeleteForm").submit()');
 
+    }
+
+    /**
+     * Display Edit
+     * @param int $displayId
+     */
+    function edit($displayId)
+    {
+        $display = DisplayFactory::getById($displayId);
+
+        if (!$this->getUser()->checkEditable($display))
+            throw new AccessDeniedException();
+
+        // Update properties
+        $display->display = Sanitize::getString('display');
+        $display->description = Sanitize::getString('description');
+        $display->isAuditing = Sanitize::getInt('isAuditing');
+        $display->defaultLayoutId = Sanitize::getInt('defaultLayoutId');
+        $display->licensed = Sanitize::getInt('licensed');
+        $display->incSchedule = Sanitize::getInt('incSchedule');
+        $display->emailAlert = Sanitize::getInt('emailAlert');
+        $display->alertTimeout = Sanitize::getCheckbox('alertTimeout');
+        $display->wakeOnLanEnabled = Sanitize::getCheckbox('wakeOnLanEnabled');
+        $display->wakeOnLanTime = Sanitize::getString('wakeOnLanTime');
+        $display->broadCastAddress = Sanitize::getString('broadCastAddress');
+        $display->secureOn = Sanitize::getString('secureOn');
+        $display->cidr = Sanitize::getString('cidr');
+        $display->latitude = Sanitize::getDouble('latitude');
+        $display->longitude = Sanitize::getDouble('longitude');
+        $display->displayProfileId = Sanitize::getInt('displayProfileId');
+
+        $display->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Edited %s'), $display->display),
+            'id' => $display->displayId,
+            'data' => [$display]
+        ]);
     }
 
     /**
@@ -985,6 +816,462 @@ class Display extends Base
         $response->SetFormSubmitResponse(__('Request Sent.'));
 
     }
-}
 
-?>
+    public function validateDisplays()
+    {
+        $statObject = new Stat();
+
+        // Get a list of all displays and there last accessed / alert time out value
+        $sth = $dbh->prepare('SELECT displayid, display, lastaccessed, alert_timeout, client_type, displayprofileid, email_alert, loggedin FROM display');
+        $sthUpdate = $dbh->prepare('UPDATE display SET loggedin = 0 WHERE displayid = :displayid');
+
+        $sth->execute(array());
+
+        // Get the global time out (overrides the alert time out on the display if 0)
+        $globalTimeout = Config::GetSetting('MAINTENANCE_ALERT_TOUT') * 60;
+
+        $displays = $sth->fetchAll();
+
+        foreach ($displays as $row) {
+            $displayid = \Xibo\Helper\Sanitize::int($row['displayid']);
+            $lastAccessed = \Xibo\Helper\Sanitize::int($row['lastaccessed']);
+            $alertTimeout = \Xibo\Helper\Sanitize::int($row['alert_timeout']);
+            $clientType = \Kit::ValidateParam($row['client_type'], _WORD);
+            $loggedIn = \Xibo\Helper\Sanitize::int($row['loggedin']);
+
+            // Get the config object
+            if ($alertTimeout == 0 && $clientType != '') {
+                $displayProfileId = (empty($row['displayprofileid']) ? 0 : \Xibo\Helper\Sanitize::int($row['displayprofileid']));
+
+                $display = new Display();
+                $display->displayId = $displayid;
+                $display->displayProfileId = $displayProfileId;
+                $display->clientType = $clientType;
+                $timeoutToTestAgainst = $display->GetSetting('collectInterval', $globalTimeout);
+            }
+            else {
+                $timeoutToTestAgainst = $globalTimeout;
+            }
+
+            // Store the time out to test against
+            $row['timeout'] = $timeoutToTestAgainst;
+            $timeOut = $lastAccessed + $timeoutToTestAgainst;
+
+            // If the last time we accessed is less than now minus the time out
+            if ($timeOut < time()) {
+                Log::debug('Timed out display. Last Accessed: ' . date('Y-m-d h:i:s', $lastAccessed) . '. Time out: ' . date('Y-m-d h:i:s', $timeOut));
+
+                // If this is the first switch (i.e. the row was logged in before)
+                if ($loggedIn == 1) {
+
+                    // Update the display and set it as logged out
+                    $sthUpdate->execute(array('displayid' => $displayid));
+
+                    // Log the down event
+                    $statObject->displayDown($displayid, $lastAccessed);
+                }
+
+                // Store this row
+                $timedOutDisplays[] = $row;
+            }
+        }
+
+        return $timedOutDisplays;
+    }
+
+    /**
+     * Wake this display using a WOL command
+     * @param <int> $displayId
+     * @return <bool>
+     */
+    public function WakeOnLan($displayId)
+    {
+        Log::notice('IN', get_class(), __FUNCTION__);
+
+        try {
+            $dbh = \Xibo\Storage\PDOConnect::init();
+
+            // Get the Client Address and the Mac Address
+            $sth = $dbh->prepare('SELECT MacAddress, BroadCastAddress, SecureOn, Cidr FROM `display` WHERE DisplayID = :displayid');
+            $sth->execute(array(
+                'displayid' => $displayId
+            ));
+
+            if (!$row = $sth->fetch())
+                $this->ThrowError(25013, __('Unable to get the Mac or Client Address'));
+
+            // Check they are populated
+            if ($row['MacAddress'] == '' || $row['BroadCastAddress'] == '')
+                $this->SetError(25014, __('This display has no mac address recorded against it yet. Make sure the display is running.'));
+
+            Log::notice('About to send WOL packet to ' . $row['BroadCastAddress'] . ' with Mac Address ' . $row['MacAddress'], 'display', 'WakeOnLan');
+
+            if (!$this->TransmitWakeOnLan($row['MacAddress'], $row['SecureOn'], $row['BroadCastAddress'], $row['Cidr'], "9"))
+                throw new Exception('Error in TransmitWakeOnLan');
+
+            // If we succeeded then update this display with the last WOL time
+            $sth = $dbh->prepare('UPDATE `display` SET LastWakeOnLanCommandSent = :lastaccessed WHERE DisplayID = :displayid');
+            $sth->execute(array(
+                'displayid' => $displayId,
+                'lastaccessed' => time()
+            ));
+
+            return true;
+        }
+        catch (Exception $e) {
+            Log::error($e->getMessage());
+
+            if (!$this->IsError())
+                $this->SetError(25012, __('Unknown Error.'));
+
+            return false;
+        }
+    }
+
+    /**
+     * Get a list of users that have permission for the provided display
+     * @param  int $displayId The Display
+     * @param  string $authLevel The Auth Level (view|edit|delete)
+     * @return array Users Array
+     */
+    public static function getUsers($displayId, $authLevel = 'view')
+    {
+        try {
+            $dbh = \Xibo\Storage\PDOConnect::init();
+
+            $sth = $dbh->prepare('
+                    SELECT DISTINCT user.userId, user.userName, user.email
+                      FROM `user`
+                        INNER JOIN `lkusergroup`
+                        ON lkusergroup.userId = user.userId
+                        INNER JOIN `group`
+                        ON group.groupId = lkusergroup.groupId
+                        INNER JOIN `lkdisplaygroupgroup`
+                        ON lkdisplaygroupgroup.groupId = group.groupId
+                        INNER JOIN `displaygroup`
+                        ON displaygroup.displayGroupId = lkdisplaygroupgroup.displayGroupId
+                        INNER JOIN `lkdisplaydg`
+                        ON lkdisplaydg.displayGroupId = lkdisplaygroupgroup.displayGroupId
+                     WHERE lkdisplaydg.displayId = :displayId
+                ');
+
+            $sth->execute(array(
+                'displayId' => $displayId
+            ));
+
+            // Return this list of users
+            return $sth->fetchAll();
+        }
+        catch (Exception $e) {
+            Log::error($e->getMessage(), get_class(), __FUNCTION__);
+            return false;
+        }
+    }
+
+    /**
+     * Wake On Lan Script
+     *  // Version: 2
+     *  // Author of this application:
+     *  //  DS508_customer (http://www.synology.com/enu/forum/memberlist.php?mode=viewprofile&u=12636)
+     *  //  Please inform the author of any suggestions on (the functionality, graphical design, ... of) this application.
+     *  //  More info: http://wolviaphp.sourceforge.net
+     *  // License: GPLv2.0
+     *
+     * Modified for use with the Xibo project by Dan Garner.
+     */
+    function TransmitWakeOnLan($mac_address, $secureon, $addr, $cidr, $port) {
+        Log::notice('IN', get_class(), __FUNCTION__);
+
+        // Prepare magic packet: part 1/3 (defined constant)
+        $buf = "";
+
+        // the defined constant as represented in hexadecimal: FF FF FF FF FF FF (i.e., 6 bytes of hexadecimal FF)
+        for ($a=0; $a<6; $a++) $buf .= chr(255);
+
+        // Check whether $mac_address is valid
+        $mac_address = strtoupper($mac_address);
+        $mac_address = str_replace(":", "-", $mac_address);
+
+        if ((!preg_match("/([A-F0-9]{2}[-]){5}([0-9A-F]){2}/",$mac_address)) || (strlen($mac_address) != 17))
+        {
+            return $this->SetError(25015, __('Pattern of MAC-address is not "xx-xx-xx-xx-xx-xx" (x = digit or letter)'));
+        }
+        else
+        {
+            // Prepare magic packet: part 2/3 (16 times MAC-address)
+            // Split MAC-address into an array of (six) bytes
+            $addr_byte = explode('-', $mac_address);
+            $hw_addr = "";
+
+            // Convert MAC-address from bytes to hexadecimal to decimal
+            for ($a=0; $a<6; $a++) $hw_addr .= chr(hexdec($addr_byte[$a]));
+
+            $hw_addr_string = "";
+
+            for ($a=0; $a<16; $a++) $hw_addr_string .= $hw_addr;
+            $buf .= $hw_addr_string;
+        }
+
+        if ($secureon != "")
+        {
+            // Check whether $secureon is valid
+            $secureon = strtoupper($secureon);
+            $secureon = str_replace(":", "-", $secureon);
+
+            if ((!preg_match("/([A-F0-9]{2}[-]){5}([0-9A-F]){2}/", $secureon)) || (strlen($secureon) != 17))
+            {
+                return $this->SetError(25015, __('Pattern of SecureOn-password is not "xx-xx-xx-xx-xx-xx" (x = digit or CAPITAL letter)'));
+            }
+            else
+            {
+                // Prepare magic packet: part 3/3 (Secureon password)
+                // Split MAC-address into an array of (six) bytes
+                $addr_byte = explode('-', $secureon);
+                $hw_addr = "";
+
+                // Convert MAC address from hexadecimal to decimal
+                for ($a=0; $a<6; $a++) $hw_addr .= chr(hexdec($addr_byte[$a]));
+                $buf .= $hw_addr;
+            }
+        }
+
+        // Fill $addr with client's IP address, if $addr is empty
+        if ($addr == "")
+            return $this->SetError(25000, __('No IP Address Specified'));
+
+        // Resolve broadcast address
+        if (filter_var ($addr, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) // same as (but easier than):  preg_match("/\b(([01]?\d?\d|2[0-4]\d|25[0-5])\.){3}([01]?\d?\d|2[0-4]\d|25[0-5])\b/",$addr)
+        {
+            // $addr has an IP-adres format
+        }
+        else
+        {
+            return $this->SetError(25000, __('IP Address Incorrectly Formed'));
+        }
+
+        // If $cidr is set, replace $addr for its broadcast address
+        if ($cidr != "")
+        {
+            // Check whether $cidr is valid
+            if ((!ctype_digit($cidr)) || ($cidr < 0) || ($cidr > 32))
+            {
+                return $this->SetError(25015, __('CIDR subnet mask is not a number within the range of 0 till 32.'));
+            }
+
+            // Convert $cidr from one decimal to one inverted binary array
+            $inverted_binary_cidr = "";
+
+            // Build $inverted_binary_cidr by $cidr * zeros (this is the mask)
+            for ($a=0; $a<$cidr; $a++) $inverted_binary_cidr .= "0";
+
+            // Invert the mask (by postfixing ones to $inverted_binary_cidr untill 32 bits are filled/ complete)
+            $inverted_binary_cidr = $inverted_binary_cidr.substr("11111111111111111111111111111111", 0, 32 - strlen($inverted_binary_cidr));
+
+            // Convert $inverted_binary_cidr to an array of bits
+            $inverted_binary_cidr_array = str_split($inverted_binary_cidr);
+
+            // Convert IP address from four decimals to one binary array
+            // Split IP address into an array of (four) decimals
+            $addr_byte = explode('.', $addr);
+            $binary_addr = "";
+
+            for ($a=0; $a<4; $a++)
+            {
+                // Prefix zeros
+                $pre = substr("00000000",0,8-strlen(decbin($addr_byte[$a])));
+
+                // Postfix binary decimal
+                $post = decbin($addr_byte[$a]);
+                $binary_addr .= $pre.$post;
+            }
+
+            // Convert $binary_addr to an array of bits
+            $binary_addr_array = str_split($binary_addr);
+
+            // Perform a bitwise OR operation on arrays ($binary_addr_array & $inverted_binary_cidr_array)
+            $binary_broadcast_addr_array="";
+
+            // binary array of 32 bit variables ('|' = logical operator 'or')
+            for ($a=0; $a<32; $a++) $binary_broadcast_addr_array[$a] = ($binary_addr_array[$a] | $inverted_binary_cidr_array[$a]);
+
+            // build binary address of four bundles of 8 bits (= 1 byte)
+            $binary_broadcast_addr = chunk_split(implode("", $binary_broadcast_addr_array), 8, ".");
+
+            // chop off last dot ('.')
+            $binary_broadcast_addr = substr($binary_broadcast_addr,0,strlen($binary_broadcast_addr)-1);
+
+            // binary array of 4 byte variables
+            $binary_broadcast_addr_array = explode(".", $binary_broadcast_addr);
+            $broadcast_addr_array = "";
+
+            // decimal array of 4 byte variables
+            for ($a=0; $a<4; $a++) $broadcast_addr_array[$a] = bindec($binary_broadcast_addr_array[$a]);
+
+            // broadcast address
+            $addr = implode(".", $broadcast_addr_array);
+        }
+
+        // Check whether $port is valid
+        if ((!ctype_digit($port)) || ($port < 0) || ($port > 65536))
+            return $this->SetError(25000, __('Port is not a number within the range of 0 till 65536. Port Provided: ' . $port));
+
+        // Check whether UDP is supported
+        if (!array_search('udp', stream_get_transports()))
+            return $this->SetError(25000, __('No magic packet can been sent, since UDP is unsupported (not a registered socket transport)'));
+
+        // Ready to send the packet
+        if (function_exists('fsockopen'))
+        {
+            // Try fsockopen function - To do: handle error 'Permission denied'
+            $socket = fsockopen("udp://" . $addr, $port, $errno, $errstr);
+
+            if ($socket)
+            {
+                $socket_data = fwrite($socket, $buf);
+
+                if ($socket_data)
+                {
+                    $function = "fwrite";
+                    $sent_fsockopen = "A magic packet of ".$socket_data." bytes has been sent via UDP to IP address: ".$addr.":".$port.", using the '".$function."()' function.";
+                    $content = bin2hex($buf);
+
+                    $sent_fsockopen = $sent_fsockopen."Contents of magic packet:".strlen($content)." ".$content;
+                    fclose($socket);
+
+                    unset($socket);
+
+                    Log::notice($sent_fsockopen, 'display', 'WakeOnLan');
+                    return true;
+                }
+                else
+                {
+                    unset($socket);
+
+                    return $this->SetError(25015, __('Using "fwrite()" failed, due to error: ' . $errstr.  ' ("' . $errno . '")'));
+                }
+            }
+            else
+            {
+                unset($socket);
+
+                Log::notice(__('Using fsockopen() failed, due to denied permission'));
+            }
+        }
+
+        // Try socket_create function
+        if (function_exists('socket_create'))
+        {
+            // create socket based on IPv4, datagram and UDP
+            $socket = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
+
+            if ($socket)
+            {
+                // to enable manipulation of options at the socket level (you may have to change this to 1)
+                $level = SOL_SOCKET;
+
+                // to enable permission to transmit broadcast datagrams on the socket (you may have to change this to 6)
+                $optname = SO_BROADCAST;
+
+                $optval = true;
+                $opt_returnvalue = socket_set_option($socket, $level, $optname, $optval);
+
+                if ($opt_returnvalue < 0)
+                {
+                    return $this->SetError(25015, __('Using "socket_set_option()" failed, due to error: ' . socket_strerror($opt_returnvalue)));
+                }
+
+                $flags = 0;
+
+                // To do: handle error 'Operation not permitted'
+                $socket_data = socket_sendto($socket, $buf, strlen($buf), $flags, $addr, $port);
+
+                if ($socket_data)
+                {
+                    $function = "socket_sendto";
+                    $socket_create = "A magic packet of ". $socket_data . " bytes has been sent via UDP to IP address: ".$addr.":".$port.", using the '".$function."()' function.<br>";
+
+                    $content = bin2hex($buf);
+                    $socket_create = $socket_create . "Contents of magic packet:" . strlen($content) ." " . $content;
+
+                    socket_close($socket);
+                    unset($socket);
+
+                    Log::notice($socket_create, 'display', 'WakeOnLan');
+                    return true;
+                }
+                else
+                {
+                    $error = __('Using "socket_sendto()" failed, due to error: ' . socket_strerror(socket_last_error($socket)) . ' (' . socket_last_error($socket) . ')');
+                    socket_close($socket);
+                    unset($socket);
+
+                    return $this->SetError(25015, $error);
+                }
+            }
+            else
+            {
+                return $this->SetError(25015, __('Using "socket_sendto()" failed, due to error: ' . socket_strerror(socket_last_error($socket)) . ' (' . socket_last_error($socket) . ')'));
+            }
+        }
+        else
+        {
+            return $this->SetError(25015, __('Wake On Lan Failed as there are no functions available to transmit it'));
+        }
+    }
+
+    /**
+     * Notify displays of this campaign change
+     * @param <type> $layoutId
+     */
+    public function NotifyDisplays($campaignId)
+    {
+        Log::notice(sprintf('Checking for Displays to refresh on Layout %d', $campaignId), 'display', 'NotifyDisplays');
+
+        try {
+            $dbh = \Xibo\Storage\PDOConnect::init();
+
+            $currentdate = time();
+            $rfLookahead = \Xibo\Helper\Sanitize::int(Config::GetSetting('REQUIRED_FILES_LOOKAHEAD'));
+            $rfLookahead = $currentdate + $rfLookahead;
+
+            // Which displays does a change to this layout effect?
+            $SQL  = " SELECT DISTINCT display.DisplayID ";
+            $SQL .= "   FROM schedule ";
+            $SQL .= "   INNER JOIN schedule_detail ";
+            $SQL .= "   ON schedule_detail.eventid = schedule.eventid ";
+            $SQL .= "   INNER JOIN lkdisplaydg ";
+            $SQL .= "   ON lkdisplaydg.DisplayGroupID = schedule_detail.DisplayGroupID ";
+            $SQL .= "   INNER JOIN display ";
+            $SQL .= "   ON lkdisplaydg.DisplayID = display.displayID ";
+            $SQL .= " WHERE schedule.CampaignID = :campaignid ";
+            $SQL .= " AND schedule_detail.FromDT < :fromdt AND schedule_detail.ToDT > :todt ";
+            $SQL .= " UNION ";
+            $SQL .= " SELECT DISTINCT display.DisplayID ";
+            $SQL .= "   FROM display ";
+            $SQL .= "       INNER JOIN lkcampaignlayout ";
+            $SQL .= "       ON lkcampaignlayout.LayoutID = display.DefaultLayoutID ";
+            $SQL .= " WHERE lkcampaignlayout.CampaignID = :campaignid";
+
+            $sth = $dbh->prepare($SQL);
+            $sth->execute(array(
+                'campaignid' => $campaignId,
+                'fromdt' => $rfLookahead,
+                'todt' => $currentdate - 3600
+            ));
+
+            while ($row = $sth->fetch()) {
+                // Notify each display in turn
+                $displayId = \Xibo\Helper\Sanitize::int($row['DisplayID']);
+                $this->FlagIncomplete($displayId);
+            }
+        }
+        catch (Exception $e) {
+            Log::error($e->getMessage());
+
+            if (!$this->IsError())
+                $this->SetError(25004, 'Unable to Flag Display as incomplete');
+
+            return false;
+        }
+    }
+}

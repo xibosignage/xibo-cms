@@ -113,8 +113,7 @@ $app->get('/layout/designer/:id', '\Xibo\Controller\Layout:displayDesigner')->na
 $app->get('/layout/status/:id', '\Xibo\Controller\Layout:LayoutStatus')->setName('layout.status');
 $app->get('/layout/preview/:id', '\Xibo\Controller\Preview:render')->name('layout.preview');
 $app->get('/layout/export/:id', '\Xibo\Controller\Layout:export')->name('layout.export');
-
-// Layout forms
+// forms
 $app->get('/layout/form/add', '\Xibo\Controller\Layout:addForm')->name('layout.add.form');
 $app->get('/layout/form/edit/:id', '\Xibo\Controller\Layout:editForm')->name('layout.edit.form');
 $app->get('/layout/form/copy/:id', '\Xibo\Controller\Layout:copyForm')->name('layout.copy.form');
@@ -133,6 +132,10 @@ $app->get('/library/form/tidy', '\Xibo\Controller\Library:tidyLibraryForm')->nam
 // display
 //
 $app->get('/display/view', '\Xibo\Controller\Display:displayPage')->name('display.view');
+$app->get('/display/form/edit/:id', '\Xibo\Controller\Display:editForm')->name('display.edit.form');
+$app->get('/display/form/delete/:id', '\Xibo\Controller\Display:deleteForm')->name('display.delete.form');
+$app->get('/display/form/screenshot/:id', '\Xibo\Controller\Display:screenshotForm')->name('display.screenshot.form');
+$app->get('/display/form/wol/:id', '\Xibo\Controller\Display:wolForm')->name('display.wol.form');
 
 //
 // user
