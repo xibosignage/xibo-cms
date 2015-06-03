@@ -23,6 +23,7 @@ use DOMDocument;
 use DOMXPath;
 use finfo;
 use Xibo\Entity\DisplayGroup;
+use Xibo\Entity\Stat;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -84,12 +85,56 @@ class Display extends Base
     }
 
     /**
+     * Display Management Page for an Individual Display
+     * @param int $displayId
+     * @throws \Xibo\Exception\NotFoundException
+     */
+    function displayManage($displayId)
+    {
+        $display = DisplayFactory::getById($displayId);
+
+        if (!$this->getUser()->checkViewable($display))
+            throw new AccessDeniedException();
+
+        // Load the XML into a DOMDocument
+        $document = new DOMDocument("1.0");
+
+        if (!$document->loadXML($display->mediaInventoryXml))
+            throw new \InvalidArgumentException(__('Invalid Media Inventory'));
+
+        // Need to parse the XML and return a set of rows
+        $xpath = new DOMXPath($document);
+        $fileNodes = $xpath->query("//file");
+
+        $rows = array();
+
+        foreach ($fileNodes as $node) {
+            /* @var \DOMElement $node */
+            $row = array();
+            $row['type'] = $node->getAttribute('type');
+            $row['id'] = $node->getAttribute('id');
+            $row['complete'] = ($node->getAttribute('complete') == 0) ? __('No') : __('Yes');
+            $row['lastChecked'] = $node->getAttribute('lastChecked');
+            $row['md5'] = $node->getAttribute('md5');
+
+            $rows[] = $row;
+        }
+
+        // Call to render the template
+        $this->getState()->template = 'display-page-manage';
+        $this->getState()->setData([
+            'inventory' => $rows,
+            'display' => $display
+        ]);
+    }
+
+    /**
      * Grid of Displays
      */
     function grid()
     {
         // validate displays so we get a realistic view of the table
-        //Display::ValidateDisplays();
+        $this->validateDisplays();
 
         $user = $this->getUser();
 
@@ -165,6 +210,17 @@ class Display extends Base
 
             // Edit and Delete buttons first
             if ($this->getUser()->checkEditable($display)) {
+
+                // Manage
+                $display->buttons[] = array(
+                    'id' => 'display_button_manage',
+                    'url' => $this->urlFor('display.manage', ['id' => $display->displayId]),
+                    'text' => __('Manage'),
+                    'external' => true
+                );
+
+                $display->buttons[] = ['divider' => true];
+
                 // Edit
                 $display->buttons[] = array(
                     'id' => 'display_button_edit',
@@ -200,7 +256,7 @@ class Display extends Base
                 // File Associations
                 $display->buttons[] = array(
                     'id' => 'displaygroup_button_fileassociations',
-                    'url' => 'index.php?p=displaygroup&q=FileAssociations&DisplayGroupID=' . $display->displayGroupId,
+                    'url' => $this->urlFor('displayGroup.media.form', ['id' => $display->displayGroupId]),
                     'text' => __('Assign Files')
                 );
 
@@ -220,25 +276,6 @@ class Display extends Base
                 $display->buttons[] = ['divider' => true];
             }
 
-            // Media Inventory
-            $display->buttons[] = array(
-                'id' => 'display_button_mediainventory',
-                'url' => 'index.php?p=display&q=MediaInventory&DisplayId=' . $display->displayId,
-                'text' => __('Media Inventory')
-            );
-
-            if ($this->getUser()->checkEditable($display)) {
-
-                // Logs
-                $display->buttons[] = array(
-                    'id' => 'displaygroup_button_logs',
-                    'url' => 'index.php?p=log&q=LastHundredForDisplay&displayid=' . $display->displayId,
-                    'text' => __('Recent Log')
-                );
-
-                $display->buttons[] = ['divider' => true];
-            }
-
             if ($this->getUser()->checkPermissionsModifyable($display)) {
 
                 // Display Groups
@@ -251,14 +288,14 @@ class Display extends Base
                 // Permissions
                 $display->buttons[] = array(
                     'id' => 'display_button_group_permissions',
-                    'url' => 'index.php?p=displaygroup&q=PermissionsForm&DisplayGroupID=' . $display->displayGroupId,
+                    'url' => $this->urlFor('user.permissions.form', ['entity' => 'DisplayGroup', 'id' => $display->displayGroupId]),
                     'text' => __('Permissions')
                 );
 
                 // Version Information
                 $display->buttons[] = array(
                     'id' => 'display_button_version_instructions',
-                    'url' => 'index.php?p=displaygroup&q=VersionInstructionsForm&displaygroupid=' . $display->displayGroupId . '&displayid=' . $display->displayId,
+                    'url' => $this->urlFor('displayGroup.version.form', ['id' => $display->displayGroupId]),
                     'text' => __('Version Information')
                 );
 
@@ -396,70 +433,6 @@ class Display extends Base
             'id' => $display->displayId,
             'data' => [$display]
         ]);
-    }
-
-    /**
-     * Shows the inventory XML for the display
-     */
-    public function MediaInventory()
-    {
-        $response = $this->getState();
-        $displayId = Sanitize::getInt('DisplayId');
-
-        $auth = $this->getUser()->DisplayGroupAuth($this->GetDisplayGroupId($displayId), true);
-        if (!$auth->view)
-            trigger_error(__('You do not have permission to view this display'), E_USER_ERROR);
-
-        if ($displayId == 0)
-            trigger_error(__('No DisplayId Given'));
-
-        // Get the media inventory xml for this display
-        $SQL = "SELECT IFNULL(MediaInventoryXml, '<xml></xml>') AS MediaInventoryXml FROM display WHERE DisplayId = %d";
-        $SQL = sprintf($SQL, $displayId);
-
-        if (!$mediaInventoryXml = $db->GetSingleValue($SQL, 'MediaInventoryXml', _HTMLSTRING)) {
-            trigger_error($db->error());
-            trigger_error(__('Unable to get the Inventory for this Display'), E_USER_ERROR);
-        }
-
-        // Load the XML into a DOMDocument
-        $document = new DOMDocument("1.0");
-
-        if (!$document->loadXML($mediaInventoryXml))
-            trigger_error(__('Invalid Media Inventory'), E_USER_ERROR);
-
-        $cols = array(
-            array('name' => 'id', 'title' => __('ID')),
-            array('name' => 'type', 'title' => __('Type')),
-            array('name' => 'complete', 'title' => __('Complete')),
-            array('name' => 'last_checked', 'title' => __('Last Checked'))
-        );
-        Theme::Set('table_cols', $cols);
-
-        // Need to parse the XML and return a set of rows
-        $xpath = new DOMXPath($document);
-        $fileNodes = $xpath->query("//file");
-
-        $rows = array();
-
-        foreach ($fileNodes as $node) {
-            $row = array();
-            $row['type'] = $node->getAttribute('type');
-            $row['id'] = $node->getAttribute('id');
-            $row['complete'] = ($node->getAttribute('complete') == 0) ? __('No') : __('Yes');
-            $row['last_checked'] = $node->getAttribute('lastChecked');
-            $row['md5'] = $node->getAttribute('md5');
-
-            $rows[] = $row;
-        }
-
-        // Store the table rows
-        Theme::Set('table_rows', $rows);
-
-        $response->SetFormRequestResponse(Theme::RenderReturn('table_render'), __('Media Inventory'), '550px', '350px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Display', 'MediaInventory') . '")');
-        $response->AddButton(__('Close'), 'XiboDialogClose()');
-
     }
 
     /**
@@ -706,7 +679,7 @@ class Display extends Base
      */
     public function NotifyDisplays($campaignId)
     {
-        Log::notice(sprintf('Checking for Displays to refresh on Layout %d', $campaignId), 'display', 'NotifyDisplays');
+        Log::debug(sprintf('Checking for Displays to refresh on Layout %d', $campaignId), 'display', 'NotifyDisplays');
 
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
@@ -758,38 +731,20 @@ class Display extends Base
 
     /**
      * Validate the display list
-     * @return array
+     * @return array[Display]
      */
     public function validateDisplays()
     {
-        $statObject = new Stat();
-
-        // Get a list of all displays and there last accessed / alert time out value
-        $sth = $dbh->prepare('SELECT displayid, display, lastaccessed, alert_timeout, client_type, displayprofileid, email_alert, loggedin FROM display');
-        $sthUpdate = $dbh->prepare('UPDATE display SET loggedin = 0 WHERE displayid = :displayid');
-
-        $sth->execute(array());
+        $timedOutDisplays = [];
 
         // Get the global time out (overrides the alert time out on the display if 0)
         $globalTimeout = Config::GetSetting('MAINTENANCE_ALERT_TOUT') * 60;
 
-        $displays = $sth->fetchAll();
+        foreach (DisplayFactory::query() as $display) {
+            /* @var \Xibo\Entity\Display $display */
 
-        foreach ($displays as $row) {
-            $displayid = \Xibo\Helper\Sanitize::int($row['displayid']);
-            $lastAccessed = \Xibo\Helper\Sanitize::int($row['lastaccessed']);
-            $alertTimeout = \Xibo\Helper\Sanitize::int($row['alert_timeout']);
-            $clientType = \Kit::ValidateParam($row['client_type'], _WORD);
-            $loggedIn = \Xibo\Helper\Sanitize::int($row['loggedin']);
-
-            // Get the config object
-            if ($alertTimeout == 0 && $clientType != '') {
-                $displayProfileId = (empty($row['displayprofileid']) ? 0 : \Xibo\Helper\Sanitize::int($row['displayprofileid']));
-
-                $display = new Display();
-                $display->displayId = $displayid;
-                $display->displayProfileId = $displayProfileId;
-                $display->clientType = $clientType;
+            // Should we test against the collection interval or the preset alert timeout?
+            if ($display->alertTimeout == 0 && $display->clientType != '') {
                 $timeoutToTestAgainst = $display->GetSetting('collectInterval', $globalTimeout);
             }
             else {
@@ -797,25 +752,28 @@ class Display extends Base
             }
 
             // Store the time out to test against
-            $row['timeout'] = $timeoutToTestAgainst;
-            $timeOut = $lastAccessed + $timeoutToTestAgainst;
+            $timeOut = $display->lastAccessed + $timeoutToTestAgainst;
 
             // If the last time we accessed is less than now minus the time out
             if ($timeOut < time()) {
-                Log::debug('Timed out display. Last Accessed: ' . date('Y-m-d h:i:s', $lastAccessed) . '. Time out: ' . date('Y-m-d h:i:s', $timeOut));
+                Log::debug('Timed out display. Last Accessed: ' . date('Y-m-d h:i:s', $display->lastAccessed) . '. Time out: ' . date('Y-m-d h:i:s', $timeOut));
 
                 // If this is the first switch (i.e. the row was logged in before)
-                if ($loggedIn == 1) {
+                if ($display->loggedIn == 1) {
 
                     // Update the display and set it as logged out
-                    $sthUpdate->execute(array('displayid' => $displayid));
+                    $display->loggedIn = 0;
+                    $display->save(false);
 
                     // Log the down event
-                    $statObject->displayDown($displayid, $lastAccessed);
+                    $stat = new Stat();
+                    $stat->displayId = $display->displayId;
+                    $stat->fromDt = $display->lastAccessed;
+                    $stat->save();
                 }
 
                 // Store this row
-                $timedOutDisplays[] = $row;
+                $timedOutDisplays[] = $display;
             }
         }
 

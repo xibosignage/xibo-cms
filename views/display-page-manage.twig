@@ -1,0 +1,45 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+
+{% block pageContent %}
+    <h1>{{ display.display }}</h1>
+    <div class="widget">
+        <div class="widget-title">{% trans "Media Inventory" %}</div>
+        <div class="widget-body">
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th>{% trans "ID" %}</th>
+                    <th>{% trans "Type" %}</th>
+                    <th>{% trans "Complete" %}</th>
+                    <th>{% trans "Last Checked" %}</th>
+                </tr>
+                </thead>
+                <tbody>
+                    {% for item in inventory %}
+                        <tr>
+                            <td>{{ item.id }}</td>
+                            <td>{{ item.type }}</td>
+                            <td>{{ item.complete }}</td>
+                            <td>{{ item.lastChecked}}</td>
+                            <td>{{ item.md5}}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+
+{% endblock %}

@@ -18,6 +18,7 @@ use Xibo\Storage\PDOConnect;
 
 class DisplayGroup
 {
+    use EntityTrait;
     public $displayGroupId;
     public $displayGroup;
     public $description;

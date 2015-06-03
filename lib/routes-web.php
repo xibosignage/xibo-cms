@@ -132,6 +132,7 @@ $app->get('/library/form/tidy', '\Xibo\Controller\Library:tidyLibraryForm')->nam
 // display
 //
 $app->get('/display/view', '\Xibo\Controller\Display:displayPage')->name('display.view');
+$app->get('/display/manage/:id', '\Xibo\Controller\Display:displayManage')->name('display.manage');
 $app->get('/display/form/edit/:id', '\Xibo\Controller\Display:editForm')->name('display.edit.form');
 $app->get('/display/form/delete/:id', '\Xibo\Controller\Display:deleteForm')->name('display.delete.form');
 $app->get('/display/form/membership/:id', '\Xibo\Controller\Display:membershipForm')->name('display.membership.form');
@@ -188,6 +189,8 @@ $app->get('/dataset/form/add', '\Xibo\Controller\DataSet:addForm')->name('dataSe
 //
 $app->get('/displaygroup/view', '\Xibo\Controller\DisplayGroup:displayPage')->name('displaygroup.view');
 $app->get('/displaygroup/form/add', '\Xibo\Controller\DisplayGroup:addForm')->name('displayGroup.add.form');
+$app->get('/displaygroup/form/media/:id', '\Xibo\Controller\DisplayGroup:mediaForm')->name('displayGroup.media.form');
+$app->get('/displaygroup/form/version/:id', '\Xibo\Controller\DisplayGroup:versionForm')->name('displayGroup.version.form');
 
 //
 // displayprofile

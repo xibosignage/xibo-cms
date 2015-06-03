@@ -12,6 +12,7 @@ namespace Xibo\Factory;
 use Xibo\Entity\DisplayGroup;
 use Xibo\Exception\NotFoundException;
 use Xibo\Helper\Sanitize;
+use Xibo\Storage\PDOConnect;
 
 class DisplayGroupFactory
 {
@@ -53,25 +54,23 @@ class DisplayGroupFactory
      */
     public static function query($sortOrder = null, $filterBy = null)
     {
+        $entries = [];
         $params = [];
 
-        $sql = "SELECT displaygroup.DisplayGroupID, displaygroup.DisplayGroup, displaygroup.IsDisplaySpecific, displaygroup.Description ";
-        //if ($isDisplaySpecific == 1)
-            $sql .= " , lkdisplaydg.DisplayID ";
-
-        $sql .= "  FROM displaygroup ";
-
-        // If we are only interested in displays, then return the display
-        //if ($isDisplaySpecific == 1) {
-            $sql .= "   INNER JOIN lkdisplaydg ";
-            $sql .= "   ON lkdisplaydg.DisplayGroupID = displaygroup.DisplayGroupID ";
-        //}
-
-        $sql .= " WHERE 1 = 1 ";
+        $sql = '
+            SELECT displaygroup.DisplayGroupID, displaygroup.DisplayGroup, displaygroup.IsDisplaySpecific, displaygroup.Description
+              FROM `displaygroup`
+             WHERE 1 = 1
+        ';
 
         if (Sanitize::getInt('displayGroupId', $filterBy) != null) {
             $sql .= ' AND displaygroup.displayGroupId = :displayGroupId ';
             $params['displayGroupId'] = Sanitize::getInt('displayGroupId', $filterBy);
+        }
+
+        if (Sanitize::getInt('isDisplaySpecific', -1, $filterBy) != -1) {
+            $sql .= ' AND displaygroup.isDisplaySpecific = :isDisplaySpecific ';
+            $params['isDisplaySpecific'] = Sanitize::getInt('isDisplaySpecific', -1, $filterBy);
         }
 
         /*if ($name != '') {
@@ -90,8 +89,15 @@ class DisplayGroupFactory
         //if ($isDisplaySpecific != -1)
         //    $SQL .= sprintf(" AND displaygroup.IsDisplaySpecific = %d ", $isDisplaySpecific);
 
-        $sql .= " ORDER BY displaygroup.DisplayGroup ";
+        // Sorting?
+        if (is_array($sortOrder))
+            $sql .= 'ORDER BY ' . implode(',', $sortOrder);
 
-        return [];
+
+        foreach (PDOConnect::select($sql, $params) as $row) {
+            $entries[] = (new DisplayGroup())->hydrate($row);
+        }
+
+        return $entries;
     }
 }
