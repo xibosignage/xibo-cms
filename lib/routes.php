@@ -67,6 +67,9 @@ $app->get('/library', '\Xibo\Controller\Library:grid')->name('library.search');
 //
 $app->get('/display', '\Xibo\Controller\Display:grid')->name('display.search');
 $app->put('/display/:id', '\Xibo\Controller\Display:edit')->name('display.edit');
+$app->delete('/display/:id', '\Xibo\Controller\Display:delete')->name('display.delete');
+$app->get('/display/wol/:id', '\Xibo\Controller\Display:wakeOnLan')->name('display.wol');
+$app->put('/display/requestscreenshot/:id', '\Xibo\Controller\Display:requestScreenShot')->name('display.requestscreenshot');
 
 //
 // Display Group

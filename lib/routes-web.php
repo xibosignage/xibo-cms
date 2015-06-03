@@ -134,8 +134,9 @@ $app->get('/library/form/tidy', '\Xibo\Controller\Library:tidyLibraryForm')->nam
 $app->get('/display/view', '\Xibo\Controller\Display:displayPage')->name('display.view');
 $app->get('/display/form/edit/:id', '\Xibo\Controller\Display:editForm')->name('display.edit.form');
 $app->get('/display/form/delete/:id', '\Xibo\Controller\Display:deleteForm')->name('display.delete.form');
-$app->get('/display/form/screenshot/:id', '\Xibo\Controller\Display:screenshotForm')->name('display.screenshot.form');
-$app->get('/display/form/wol/:id', '\Xibo\Controller\Display:wolForm')->name('display.wol.form');
+$app->get('/display/form/membership/:id', '\Xibo\Controller\Display:membershipForm')->name('display.membership.form');
+$app->get('/display/form/screenshot/:id', '\Xibo\Controller\Display:requestScreenShotForm')->name('display.screenshot.form');
+$app->get('/display/form/wol/:id', '\Xibo\Controller\Display:wakeOnLanForm')->name('display.wol.form');
 
 //
 // user

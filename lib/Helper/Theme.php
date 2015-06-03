@@ -25,7 +25,6 @@ use ID;
 use Key;
 use MenuManager;
 use Select;
-use Slim\Slim;
 use Xibo\Entity\Menu;
 use Xibo\Factory\MenuFactory;
 
@@ -146,5 +145,20 @@ class Theme
         $menus['advanced'] = Theme::GetMenu('Advanced Menu');
 
         return $menus;
+    }
+
+    /**
+     * Get theme URI
+     * @param $uri
+     * @return string
+     */
+    public static function uri($uri)
+    {
+        if (file_exists('theme' . DIRECTORY_SEPARATOR . self::GetInstance()->name . DIRECTORY_SEPARATOR . $uri)) {
+            return 'theme' . DIRECTORY_SEPARATOR . self::GetInstance()->name . DIRECTORY_SEPARATOR . $uri;
+        }
+        else {
+            return 'theme' . DIRECTORY_SEPARATOR . 'default' . DIRECTORY_SEPARATOR . $uri;
+        }
     }
 }
