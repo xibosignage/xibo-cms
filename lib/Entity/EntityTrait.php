@@ -13,8 +13,8 @@ use Xibo\Helper\ObjectVars;
 
 trait EntityTrait
 {
-    private $hash;
-    public $buttons;
+    private $hash = null;
+    public $buttons = [];
 
     /**
      * Hydrate an entity with properties

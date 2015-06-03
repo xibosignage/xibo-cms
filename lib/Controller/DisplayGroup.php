@@ -736,6 +736,22 @@ class DisplayGroup extends Base
         if (!$displayGroup->AssociateFiles($this->user, $displayGroupId, $mediaList))
             trigger_error($displayGroup->GetErrorMessage(), E_USER_ERROR);
 
+        // Loop through all the media
+        foreach ($mediaList as $mediaId)
+        {
+            $mediaId = \Xibo\Helper\Sanitize::int($mediaId);
+
+            // Check we have permissions to use this media (we will use this to copy the media later)
+            $mediaAuth = $user->MediaAuth($mediaId, true);
+
+            if (!$mediaAuth->view)
+                $this->ThrowError(__('You have selected media that you no longer have permission to use. Please reload the form.'));
+
+            // Create the link
+            if (!$link->Link($displayGroupId, $mediaId))
+                $this->ThrowError(__('Unable to make this assignment'));
+        }
+
         // Success
         $response->SetFormSubmitResponse(sprintf(__('%d Media Items Assigned'), count($mediaList)));
 

@@ -728,26 +728,6 @@ class Display extends Base
 
     }
 
-    /**
-     * Wake on LAN
-     */
-    public function WakeOnLan()
-    {
-
-
-
-        $response = $this->getState();
-        $displayObject = new Display($db);
-
-        $displayId = Sanitize::getInt('DisplayId');
-
-        if (!$displayObject->WakeOnLan($displayId))
-            trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);
-
-        $response->SetFormSubmitResponse(__('Wake on Lan command sent.'));
-
-    }
-
     public function ScreenShot()
     {
         $displayId = Sanitize::getInt('DisplayId');

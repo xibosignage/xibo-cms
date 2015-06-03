@@ -45,6 +45,16 @@ class DisplayFactory
     }
 
     /**
+     * @param int $displayGroupId
+     * @return array[Display]
+     * @throws NotFoundException
+     */
+    public static function getByDisplayGroupId($displayGroupId)
+    {
+        return DisplayFactory::query(null, ['displayGroupId' => $displayGroupId]);
+    }
+
+    /**
      * @param array $sortOrder
      * @param array $filterBy
      * @return array[Display]

@@ -20,20 +20,12 @@ class UserGroup
 
     public $groupId;
     public $group;
-    public $isUserSpecific;
-    public $isEveryone;
+    public $isUserSpecific = 0;
+    public $isEveryone = 0;
     public $libraryQuota;
 
     // Users
-    private $users;
-
-    public function __construct()
-    {
-        $this->hash = null;
-        $this->users = [];
-        $this->isEveryone = 0;
-        $this->isUserSpecific = 0;
-    }
+    private $userIds = [];
 
     public function __toString()
     {
@@ -75,8 +67,8 @@ class UserGroup
      */
     public function assignUser($userId)
     {
-        if (!in_array($userId, $this->users))
-            $this->users[] = $userId;
+        if (!in_array($userId, $this->userIds))
+            $this->userIds[] = $userId;
     }
 
     /**
@@ -85,7 +77,7 @@ class UserGroup
      */
     public function unassignUser($userId)
     {
-        unset($this->users[$userId]);
+        unset($this->userIds[$userId]);
     }
 
     /**
@@ -116,7 +108,7 @@ class UserGroup
     public function load()
     {
         //TODO
-        //$this->users = UserFactory::getByGroupId
+        //$this->userIds = UserFactory::getByGroupId
 
         // Set the hash
         $this->hash = $this->hash();
@@ -191,7 +183,7 @@ class UserGroup
     {
         $insert = PDOConnect::init()->prepare('INSERT INTO `lkusergroup` (groupId, userId) VALUES (:groupId, :userId)');
 
-        foreach ($this->users as $userId) {
+        foreach ($this->userIds as $userId) {
             $insert->execute([
                 'groupId' =>$this->groupId,
                 'userId' => $userId
@@ -204,7 +196,7 @@ class UserGroup
      */
     private function unlinkUsers()
     {
-        foreach ($this->users as $userId) {
+        foreach ($this->userIds as $userId) {
             PDOConnect::update('DELETE FROM `lkusergroup` WHERE groupId = :groupId AND userId = :userId', ['groupId' => $this->groupId, 'userId' => $userId]);
         }
     }

@@ -113,6 +113,8 @@ SELECT `permissionId`, `groupId`, `view`, `edit`, `delete`, permissionentity.ent
 
         $permissions = array();
 
+        // SQL gets all Groups/User Specific Groups for non-retired users
+        // then it joins them to the permission table for the object specified
         $sql = '
 SELECT `permissionId`, joinedGroup.`groupId`, `view`, `edit`, `delete`, joinedGroup.isuserspecific, joinedGroup.group
   FROM (

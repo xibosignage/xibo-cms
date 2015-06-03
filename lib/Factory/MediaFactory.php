@@ -57,6 +57,16 @@ class MediaFactory
         return MediaFactory::query(null, array('ownerId' => $ownerId));
     }
 
+    /**
+     * Get by Display Group Id
+     * @param int $displayGroupId
+     * @return array[Media]
+     */
+    public static function getByDisplayGroupId($displayGroupId)
+    {
+        return MediaFactory::query(null, array('displayGroupId' => $displayGroupId));
+    }
+
     public static function query($sortOrder = null, $filterBy = null)
     {
         $entries = array();
