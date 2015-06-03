@@ -8,8 +8,10 @@
 
 namespace Xibo\Entity;
 
+use Respect\Validation\Validator as v;
 use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
+use Xibo\Storage\PDOConnect;
 
 class DisplayProfile
 {
@@ -20,7 +22,8 @@ class DisplayProfile
     public $config;
     public $isDefault;
     public $userId;
-    private $fileConfig;
+    public $configDefault;
+    public $configTabs;
 
     public function getId()
     {
@@ -34,23 +37,25 @@ class DisplayProfile
 
     public function load()
     {
-        $this->config = json_decode($this->config);
+        $this->config = json_decode($this->config, true);
         Log::debug('Config loaded [%d]: %s', count($this->config), json_encode($this->config, JSON_PRETTY_PRINT));
 
-        $this->fileConfig = $this->loadFromFile();
-        $this->fileConfig = $this->fileConfig[$this->type]['settings'];
+        $this->configDefault = $this->loadFromFile();
+        $this->configTabs = $this->configDefault[$this->type]['tabs'];
+        $this->configDefault = $this->configDefault[$this->type]['settings'];
 
         // Just populate the values with the defaults if the values aren't set already
-        for ($i = 0; $i < count($this->fileConfig); $i++) {
-            $this->fileConfig[$i]['value'] = isset($this->fileConfig[$i]['value']) ? $this->fileConfig[$i]['value'] : $this->fileConfig[$i]['default'];
+        for ($i = 0; $i < count($this->configDefault); $i++) {
+            $this->configDefault[$i]['value'] = isset($this->configDefault[$i]['value']) ? $this->configDefault[$i]['value'] : $this->configDefault[$i]['default'];
         }
 
         // Override the defaults
-        for ($i = 0; $i < count($this->fileConfig); $i++) {
+        for ($i = 0; $i < count($this->configDefault); $i++) {
             // Does this setting exist in our store?
             for ($j = 0; $j < count($this->config); $j++) {
                 if ($this->config[$j]['name'] == $this->config[$i]['name']) {
                     $this->config[$i]['value'] = $this->config[$j]['value'];
+                    $this->configDefault[$i]['value'] = $this->config[$j]['value'];
                     break;
                 }
             }
@@ -58,11 +63,80 @@ class DisplayProfile
     }
 
     /**
+     * Validate
+     */
+    public function validate()
+    {
+        if (!v::string()->notEmpty()->validate($this->name))
+            throw new \InvalidArgumentException(__('Missing name'));
+
+        if (!v::string()->notEmpty()->validate($this->type))
+            throw new \InvalidArgumentException(__('Missing type'));
+
+        // Check there is only 1 default (including this one)
+        $count = PDOConnect::select('SELECT COUNT(*) AS cnt FROM `displayprofile` WHERE type = :type AND isdefault = 1 AND displayprofileid <> :displayProfileId', [
+            'type' => $this->type,
+            'displayProfileId' => $this->displayProfileId
+        ]);
+
+        if ($count[0]['cnt'] + $this->isDefault > 1)
+            throw new \InvalidArgumentException(__('Only 1 default per display type is allowed.'));
+    }
+
+    /**
+     * Save
+     * @param bool $validate
+     */
+    public function save($validate = true)
+    {
+        if ($validate)
+            $this->validate();
+
+        if ($this->displayProfileId == null || $this->displayProfileId == 0)
+            $this->add();
+        else
+            $this->edit();
+    }
+
+    public function delete()
+    {
+        PDOConnect::update('DELETE FROM `displayprofile` WHERE displayprofileid = :displayProfileId', ['displayProfileId' => $this->displayProfileId]);
+    }
+
+    private function add()
+    {
+        $this->displayProfileId = PDOConnect::insert('
+            INSERT INTO `displayprofile` (`name`, type, config, isdefault, userid)
+              VALUES (:name, :type, :config, :isDefault, :userId)
+        ', [
+            'name' => $this->name,
+            'type' => $this->type,
+            'config' => ($this->config == '') ? '[]' : json_encode($this->config),
+            'isdefault' => $this->isDefault,
+            'userid' => $this->userId
+        ]);
+    }
+
+    private function edit()
+    {
+        PDOConnect::update('
+          UPDATE `displayprofile`
+            SET `name` = :name, type = :type, config = :config, isdefault = :isDefault
+           WHERE displayprofileid = :displayProfileId', [
+            'name' => $this->name,
+            'type' => $this->type,
+            'config' => ($this->config == '') ? '[]' : json_encode($this->config),
+            'isDefault' => $this->isDefault,
+            'displayProfileId' => $this->displayProfileId
+        ]);
+    }
+
+    /**
      * @return array
      */
     public function getConfig()
     {
-        return $this->fileConfig;
+        return $this->configDefault;
     }
 
     /**
@@ -181,17 +255,6 @@ class DisplayProfile
                         'groupClass' => NULL
                     ),
                     array(
-                        'name' => 'ShowInTaskbar',
-                        'tabId' => 'advanced',
-                        'title' => __('Show the icon in the task bar?'),
-                        'type' => 'checkbox',
-                        'fieldType' => 'checkbox',
-                        'default' => 1,
-                        'helpText' => __('Should the application icon be shown in the task bar?'),
-                        'enabled' => true,
-                        'groupClass' => NULL
-                    ),
-                    array(
                         'name' => 'ClientInfomationCtrlKey',
                         'tabId' => 'trouble',
                         'title' => __('CTRL Key required to access Client Information Screen?'),
@@ -210,6 +273,45 @@ class DisplayProfile
                         'fieldType' => 'text',
                         'default' => 'I',
                         'helpText' => __('Which key should activate the client information screen? A single character.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'LogLevel',
+                        'tabId' => 'trouble',
+                        'title' => __('Log Level'),
+                        'type' => 'string',
+                        'fieldType' => 'dropdown',
+                        'options' => array(
+                            array('id' => 'audit', 'value' => 'Audit'),
+                            array('id' => 'info', 'value' => 'Information'),
+                            array('id' => 'error', 'value' => 'Error'),
+                            array('id' => 'off', 'value' => 'Off')
+                        ),
+                        'default' => 'error',
+                        'helpText' => __('The position of the cursor when the client starts up.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'LogToDiskLocation',
+                        'tabId' => 'trouble',
+                        'title' => __('Log file path name.'),
+                        'type' => 'string',
+                        'fieldType' => 'text',
+                        'default' => '',
+                        'helpText' => __('Create a log file on disk in this location. Please enter a fully qualified path.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'ShowInTaskbar',
+                        'tabId' => 'advanced',
+                        'title' => __('Show the icon in the task bar?'),
+                        'type' => 'checkbox',
+                        'fieldType' => 'checkbox',
+                        'default' => 1,
+                        'helpText' => __('Should the application icon be shown in the task bar?'),
                         'enabled' => true,
                         'groupClass' => NULL
                     ),
@@ -283,34 +385,6 @@ class DisplayProfile
                         'fieldType' => 'checkbox',
                         'default' => 1,
                         'helpText' => __('Expire Modified Layouts immediately on change. This means a layout can be cut during playback if it receives an update from the CMS'),
-                        'enabled' => true,
-                        'groupClass' => NULL
-                    ),
-                    array(
-                        'name' => 'LogLevel',
-                        'tabId' => 'trouble',
-                        'title' => __('Log Level'),
-                        'type' => 'string',
-                        'fieldType' => 'dropdown',
-                        'options' => array(
-                            array('id' => 'audit', 'value' => 'Audit'),
-                            array('id' => 'info', 'value' => 'Information'),
-                            array('id' => 'error', 'value' => 'Error'),
-                            array('id' => 'off', 'value' => 'Off')
-                        ),
-                        'default' => 'error',
-                        'helpText' => __('The position of the cursor when the client starts up.'),
-                        'enabled' => true,
-                        'groupClass' => NULL
-                    ),
-                    array(
-                        'name' => 'LogToDiskLocation',
-                        'tabId' => 'trouble',
-                        'title' => __('Log file path name.'),
-                        'type' => 'string',
-                        'fieldType' => 'text',
-                        'default' => '',
-                        'helpText' => __('Create a log file on disk in this location. Please enter a fully qualified path.'),
                         'enabled' => true,
                         'groupClass' => NULL
                     ),
@@ -435,6 +509,28 @@ class DisplayProfile
                         'groupClass' => NULL
                     ),
                     array(
+                        'name' => 'downloadStartWindow',
+                        'tabId' => 'general',
+                        'title' => __('Download Window Start Time'),
+                        'type' => 'string',
+                        'fieldType' => 'timePicker',
+                        'default' => 0,
+                        'helpText' => __('The start of the time window to connect to the CMS and download updates.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'downloadEndWindow',
+                        'tabId' => 'general',
+                        'title' => __('Download Window End Time'),
+                        'type' => 'string',
+                        'fieldType' => 'timePicker',
+                        'default' => 0,
+                        'helpText' => __('The end of the time window to connect to the CMS and download updates.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
                         'name' => 'orientation',
                         'tabId' => 'location',
                         'title' => __('Orientation'),
@@ -448,6 +544,39 @@ class DisplayProfile
                         ),
                         'default' => 0,
                         'helpText' => __('Set the orientation of the device (portrait mode will only work if supported by the hardware) Application Restart Required.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'screenDimensions',
+                        'tabId' => 'location',
+                        'title' => __('Screen Dimensions'),
+                        'type' => 'string',
+                        'fieldType' => 'text',
+                        'default' => '',
+                        'helpText' => __('Override the screen dimensions (left,top,width,height). Requires restart. Care should be taken to ensure these are within the actual screen size.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'blacklistVideo',
+                        'tabId' => 'trouble',
+                        'title' => __('Blacklist Videos?'),
+                        'type' => 'checkbox',
+                        'fieldType' => 'checkbox',
+                        'default' => 1,
+                        'helpText' => __('Should Videos we fail to play be blacklisted and no longer attempted?'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'storeHtmlOnInternal',
+                        'tabId' => 'trouble',
+                        'title' => __('Store HTML resources on the Internal Storage?'),
+                        'type' => 'checkbox',
+                        'fieldType' => 'checkbox',
+                        'default' => 0,
+                        'helpText' => __('Store all HTML resources on the Internal Storage? Should be selected if the device cannot display text, ticker, dataset media.'),
                         'enabled' => true,
                         'groupClass' => NULL
                     ),
@@ -490,17 +619,6 @@ class DisplayProfile
                         'groupClass' => NULL
                     ),
                     array(
-                        'name' => 'screenDimensions',
-                        'tabId' => 'location',
-                        'title' => __('Screen Dimensions'),
-                        'type' => 'string',
-                        'fieldType' => 'text',
-                        'default' => '',
-                        'helpText' => __('Override the screen dimensions (left,top,width,height). Requires restart. Care should be taken to ensure these are within the actual screen size.'),
-                        'enabled' => true,
-                        'groupClass' => NULL
-                    ),
-                    array(
                         'name' => 'autoRestart',
                         'tabId' => 'advanced',
                         'title' => __('Automatic Restart'),
@@ -520,28 +638,6 @@ class DisplayProfile
                         'default' => 60,
                         'helpText' => __('The number of seconds to wait before starting the application after the device has started. Minimum 10.'),
                         'validation' => 'numeric',
-                        'enabled' => true,
-                        'groupClass' => NULL
-                    ),
-                    array(
-                        'name' => 'blacklistVideo',
-                        'tabId' => 'trouble',
-                        'title' => __('Blacklist Videos?'),
-                        'type' => 'checkbox',
-                        'fieldType' => 'checkbox',
-                        'default' => 1,
-                        'helpText' => __('Should Videos we fail to play be blacklisted and no longer attempted?'),
-                        'enabled' => true,
-                        'groupClass' => NULL
-                    ),
-                    array(
-                        'name' => 'storeHtmlOnInternal',
-                        'tabId' => 'trouble',
-                        'title' => __('Store HTML resources on the Internal Storage?'),
-                        'type' => 'checkbox',
-                        'fieldType' => 'checkbox',
-                        'default' => 0,
-                        'helpText' => __('Store all HTML resources on the Internal Storage? Should be selected if the device cannot display text, ticker, dataset media.'),
                         'enabled' => true,
                         'groupClass' => NULL
                     ),
@@ -608,28 +704,6 @@ class DisplayProfile
                         'fieldType' => 'timePicker',
                         'default' => 0,
                         'helpText' => __('The end of the time window to install application updates.'),
-                        'enabled' => true,
-                        'groupClass' => NULL
-                    ),
-                    array(
-                        'name' => 'downloadStartWindow',
-                        'tabId' => 'general',
-                        'title' => __('Download Window Start Time'),
-                        'type' => 'string',
-                        'fieldType' => 'timePicker',
-                        'default' => 0,
-                        'helpText' => __('The start of the time window to connect to the CMS and download updates.'),
-                        'enabled' => true,
-                        'groupClass' => NULL
-                    ),
-                    array(
-                        'name' => 'downloadEndWindow',
-                        'tabId' => 'general',
-                        'title' => __('Download Window End Time'),
-                        'type' => 'string',
-                        'fieldType' => 'timePicker',
-                        'default' => 0,
-                        'helpText' => __('The end of the time window to connect to the CMS and download updates.'),
                         'enabled' => true,
                         'groupClass' => NULL
                     ),
