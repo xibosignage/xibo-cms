@@ -23,7 +23,6 @@ namespace Xibo\Controller;
 use Exception;
 use Kit;
 use Xibo\Exception\AccessDeniedException;
-use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Date;
 use Xibo\Helper\Form;
 use Xibo\Helper\Help;
@@ -38,7 +37,7 @@ class Log extends Base
     public function displayPage()
     {
         // Construct Filter Form
-        if (\Kit::IsFilterPinned('log', 'Filter')) {
+        if (Session::Get(get_class(), 'Filter') == 1) {
             $filter_pinned = 1;
             $filter_type = Session::Get('log', 'filter_type');
             $filter_page = Session::Get('log', 'filter_page');

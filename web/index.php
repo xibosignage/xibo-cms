@@ -21,6 +21,8 @@
 use Xibo\Helper\Config;
 
 DEFINE('XIBO', true);
+DEFINE('RELATIVE_URL_BASE', '../');
+
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
@@ -35,7 +37,7 @@ if (!file_exists('settings.php'))
     die('Not configured');
 
 // Load the config
-Config::Load();
+Config::Load('settings.php');
 
 // Create a logger
 $logger = new \Flynsarmy\SlimMonolog\Log\MonologWriter(array(

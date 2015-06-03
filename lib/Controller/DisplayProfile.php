@@ -19,12 +19,9 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
-use baseDAO;
-use Kit;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\DisplayProfileFactory;
 use Xibo\Helper\Date;
-use Xibo\Helper\Form;
 use Xibo\Helper\Help;
 use Xibo\Helper\Sanitize;
 
@@ -205,7 +202,7 @@ class DisplayProfile extends Base
         if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $displayProfile->userId)
             throw new AccessDeniedException(__('You do not have permission to edit this profile'));
 
-        $this->getState()->template = 'displayprofile-form-add';
+        $this->getState()->template = 'displayprofile-form-delete';
         $this->getState()->setData([
             'displayProfile' => $displayProfile,
             'help' => Help::Link('DisplayProfile', 'Delete')

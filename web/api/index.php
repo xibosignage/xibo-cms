@@ -22,23 +22,33 @@
 use Xibo\Helper\Config;
 
 DEFINE('XIBO', true);
-require '../lib/autoload.php';
-require '../vendor/autoload.php';
+DEFINE('RELATIVE_URL_BASE', '../../');
 
-// Classes we need to deprecate
-require '../lib/app/kit.class.php';
-require '../config/config.class.php';
-require '../lib/app/translationengine.class.php';
-require '../lib/app/session.class.php';
-// END
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
-if (!file_exists('settings.php'))
+require '../../lib/autoload.php';
+require '../../vendor/autoload.php';
+
+if (!file_exists('../settings.php'))
     die('Not configured');
 
-Config::Load();
+Config::Load('../settings.php');
+
+// Create a logger
+$logger = new \Flynsarmy\SlimMonolog\Log\MonologWriter(array(
+    'handlers' => array(
+        new \Xibo\Helper\DatabaseLogHandler()
+    ),
+    'processors' => array(
+        new \Xibo\Helper\RouteProcessor()
+    )
+));
 
 $app = new \Slim\Slim(array(
-    'debug' => true
+    'debug' => true,
+    'mode' => Config::GetSetting('SERVER_MODE'),
+    'log.writer' => $logger
 ));
 $app->setName('api');
 $app->add(new \Xibo\Middleware\Storage());
@@ -67,7 +77,7 @@ $app->add(new JsonApiMiddleware());
 $app->user = \Xibo\Factory\UserFactory::getById(1);
 
 // All routes
-require '../lib/routes.php';
+require '../../lib/routes.php';
 
 // Run app
 $app->run();

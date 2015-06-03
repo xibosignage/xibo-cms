@@ -22,15 +22,15 @@ class DisplayGroup
     public $displayGroupId;
     public $displayGroup;
     public $description;
-    public $isDisplaySpecific;
+    public $isDisplaySpecific = 0;
 
     // Child Items the Display Group is linked to
-    private $displayIds;
-    private $mediaIds;
+    private $displayIds = [];
+    private $mediaIds = [];
 
     // Child Items the Display Group is linked from
-    private $permissions;
-    private $events;
+    private $permissions = [];
+    private $events = [];
 
     public function getId()
     {
@@ -130,7 +130,7 @@ class DisplayGroup
         if (!v::string()->notEmpty()->validate($this->displayGroup))
             throw new \InvalidArgumentException(__('Please enter a display group name'));
 
-        if (!v::string()->length(0, 254)->validate($this->displayGroup))
+        if (!v::string()->length(0, 254)->validate($this->description))
             throw new \InvalidArgumentException(__('Description can not be longer than 254 characters'));
 
         if ($this->isDisplaySpecific == 0) {

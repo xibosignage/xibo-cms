@@ -49,17 +49,17 @@ class Theme
         $globalTheme = ($theme == NULL) ? Config::GetSetting('GLOBAL_THEME_NAME', 'default') : $theme;
 
         // Is this theme valid?
-        if (!is_dir('theme/' . $globalTheme))
+        if (!is_dir(RELATIVE_URL_BASE . 'web/theme/' . $globalTheme))
             throw new Exception(__('The theme "%s" does not exist', $globalTheme));
 
         // Store the theme name for later
         $this->name = $globalTheme;
 
         // Get config
-        if (!file_exists('theme/' . $this->name . '/config.php'))
+        if (!file_exists(RELATIVE_URL_BASE . 'web/theme/' . $this->name . '/config.php'))
             throw new Exception(__('The theme "%s" config file does not exist', $globalTheme));
 
-        require('theme/' . $this->name . '/config.php');
+        require(RELATIVE_URL_BASE . 'web/theme/' . $this->name . '/config.php');
         $this->config = $config;
         $this->config['themeCode'] = $this->name;
 

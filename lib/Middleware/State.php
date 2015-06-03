@@ -26,7 +26,6 @@ namespace Xibo\Middleware;
 use Slim\Middleware;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Config;
-use Xibo\Helper\Log;
 use Xibo\Helper\Session;
 use Xibo\Helper\Theme;
 use Xibo\Helper\Translate;
@@ -89,18 +88,20 @@ class State extends Middleware
             }
 
             // Configure some things in the theme
-            $app->view()->appendData(array(
-                'baseUrl' => rtrim(str_replace('index.php', '', $app->request()->getRootUri()), '/') . '/',
-                'route' => $app->router()->getCurrentRoute()->getName(),
-                'theme' => Theme::GetConfig(),
-                'settings' => $settings,
-                'translate' => [
-                    'jsLocale' => Translate::GetJsLocale(),
-                    'jsShortLocale' => ((strlen(Translate::GetJsLocale()) > 2) ? substr(Translate::GetJsLocale(), 0, 2) : Translate::GetJsLocale()),
-                    'calendarLanguage' => ((strlen(Translate::GetJsLocale()) <= 2) ? Translate::GetJsLocale() . '-' . strtoupper(Translate::GetJsLocale()) : Translate::GetJsLocale())
-                ],
-                'translations' => '{}'
-            ));
+            if ($app->getName() == 'web') {
+                $app->view()->appendData(array(
+                    'baseUrl' => rtrim(str_replace('index.php', '', $app->request()->getRootUri()), '/') . '/',
+                    'route' => $app->router()->getCurrentRoute()->getName(),
+                    'theme' => Theme::GetConfig(),
+                    'settings' => $settings,
+                    'translate' => [
+                        'jsLocale' => Translate::GetJsLocale(),
+                        'jsShortLocale' => ((strlen(Translate::GetJsLocale()) > 2) ? substr(Translate::GetJsLocale(), 0, 2) : Translate::GetJsLocale()),
+                        'calendarLanguage' => ((strlen(Translate::GetJsLocale()) <= 2) ? Translate::GetJsLocale() . '-' . strtoupper(Translate::GetJsLocale()) : Translate::GetJsLocale())
+                    ],
+                    'translations' => '{}'
+                ));
+            }
         });
 
         // Attach a hook to be called after the route has been dispatched

@@ -20,9 +20,14 @@
  */
 namespace Xibo\Controller;
 
+use Xibo\Entity\Permission;
+use Xibo\Exception\AccessDeniedException;
+use Xibo\Factory\DisplayGroupFactory;
+use Xibo\Factory\PermissionFactory;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
+use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 
 
@@ -46,30 +51,27 @@ class DisplayGroup extends Base
         foreach ($displayGroups as $group) {
             /* @var \Xibo\Entity\DisplayGroup $group */
 
-            if ($group->isDisplaySpecific != 0)
-                continue;
-
             if ($this->getUser()->checkEditable($group)) {
                 // Show the edit button, members button
 
                 // Group Members
                 $group->buttons[] = array(
                     'id' => 'displaygroup_button_group_members',
-                    'url' => 'index.php?p=displaygroup&q=MembersForm&DisplayGroupID=' . $group->displayGroupId . '&DisplayGroup=' . $group->displayGroup,
+                    'url' => $this->urlFor('displayGroup.members.form', ['id' => $group->displayGroupId]),
                     'text' => __('Group Members')
                 );
 
                 // Edit
                 $group->buttons[] = array(
                     'id' => 'displaygroup_button_edit',
-                    'url' => 'index.php?p=displaygroup&q=EditForm&DisplayGroupID=' . $group->displayGroupId,
+                    'url' => $this->urlFor('displayGroup.edit.form', ['id' => $group->displayGroupId]),
                     'text' => __('Edit')
                 );
 
                 // File Associations
                 $group->buttons[] = array(
                     'id' => 'displaygroup_button_fileassociations',
-                    'url' => 'index.php?p=displaygroup&q=FileAssociations&DisplayGroupID=' . $group->displayGroupId,
+                    'url' => $this->urlFor('displayGroup.media.form', ['id' => $group->displayGroupId]),
                     'text' => __('Assign Files')
                 );
             }
@@ -78,7 +80,7 @@ class DisplayGroup extends Base
                 // Show the delete button
                 $group->buttons[] = array(
                     'id' => 'displaygroup_button_delete',
-                    'url' => 'index.php?p=displaygroup&q=DeleteForm&DisplayGroupID=' . $group->displayGroupId,
+                    'url' => $this->urlFor('displayGroup.delete.form', ['id' => $group->displayGroupId]),
                     'text' => __('Delete')
                 );
             }
@@ -87,14 +89,14 @@ class DisplayGroup extends Base
                 // Show the modify permissions button
                 $group->buttons[] = array(
                     'id' => 'displaygroup_button_permissions',
-                    'url' => 'index.php?p=displaygroup&q=PermissionsForm&DisplayGroupID=' . $group->displayGroupId,
+                    'url' => $this->urlFor('user.permissions.form', ['entity' => 'DisplayGroup', 'id' => $group->displayGroupId]),
                     'text' => __('Permissions')
                 );
 
                 // Version Information
                 $group->buttons[] = array(
                     'id' => 'display_button_version_instructions',
-                    'url' => 'index.php?p=displaygroup&q=VersionInstructionsForm&displaygroupid=' . $group->displayGroupId,
+                    'url' => $this->urlFor('displayGroup.version.form', ['id' => $group->displayGroupId]),
                     'text' => __('Version Information')
                 );
             }
@@ -110,106 +112,48 @@ class DisplayGroup extends Base
     /**
      * Shows an add form for a display group
      */
-    public function AddForm()
+    public function addForm()
     {
-
-        $user = $this->getUser();
-        $response = $this->getState();
-
-        Theme::Set('form_id', 'DisplayGroupAddForm');
-        Theme::Set('form_action', 'index.php?p=displaygroup&q=Add');
-
-        $formFields[] = Form::AddText('group', __('Name'), NULL,
-            __('The Name for this Group'), 'n', 'required');
-
-        $formFields[] = Form::AddText('desc', __('Description'), NULL,
-            __('A short description of this Group'), 'd', 'maxlength="254"');
-
-        Theme::Set('form_fields', $formFields);
-
-        $response->SetFormRequestResponse(NULL, __('Add Display Group'), '350px', '275px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('DisplayGroup', 'Add') . '")');
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Save'), '$("#DisplayGroupAddForm").submit()');
-
+        $this->getState()->template = 'displaygroup-form-add';
+        $this->getState()->setData([
+            'help' => Help::Link('DisplayGroup', 'Add')
+        ]);
     }
 
     /**
      * Shows an edit form for a display group
+     * @param int $displayGroupId
      */
-    public function EditForm()
+    public function editForm($displayGroupId)
     {
+        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
 
-        $user =& $this->user;
-        $response = new ApplicationState();
-        $helpManager = new Help($db, $user);
+        if (!$this->getUser()->checkEditable($displayGroup))
+            throw new AccessDeniedException();
 
-        $displayGroupID = \Xibo\Helper\Sanitize::getInt('DisplayGroupID');
-
-        // Auth
-        $auth = $this->getUser()->DisplayGroupAuth($displayGroupID, true);
-        if (!$auth->edit)
-            trigger_error(__('You do not have permission to edit this display group'), E_USER_ERROR);
-
-        // Pull the currently known info from the DB
-        $SQL = "SELECT DisplayGroupID, DisplayGroup, Description FROM displaygroup WHERE DisplayGroupID = %d AND IsDisplaySpecific = 0";
-        $SQL = sprintf($SQL, $displayGroupID);
-
-        if (!$row = $db->GetSingleRow($SQL)) {
-            trigger_error($db->error());
-            trigger_error(__('Error getting Display Group'), E_USER_ERROR);
-        }
-
-        // Pull out these columns
-        if (count($row) <= 0)
-            trigger_error(__('No display group found.'), E_USER_ERROR);
-
-        // Set some information about the form
-        Theme::Set('form_id', 'DisplayGroupEditForm');
-        Theme::Set('form_action', 'index.php?p=displaygroup&q=Edit');
-        Theme::Set('form_meta', '<input type="hidden" name="DisplayGroupID" value="' . $displayGroupID . '" />');
-
-        $formFields[] = Form::AddText('group', __('Name'), \Xibo\Helper\Sanitize::string($row['DisplayGroup']),
-            __('The Name for this Group'), 'n', 'required');
-
-        $formFields[] = Form::AddText('desc', __('Description'), \Xibo\Helper\Sanitize::string($row['Description']),
-            __('A short description of this Group'), 'd', 'maxlength="254"');
-
-        Theme::Set('form_fields', $formFields);
-
-        $response->SetFormRequestResponse(NULL, __('Edit Display Group'), '350px', '275px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('DisplayGroup', 'Edit') . '")');
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Save'), '$("#DisplayGroupEditForm").submit()');
-
+        $this->getState()->template = 'displaygroup-form-edit';
+        $this->getState()->setData([
+            'displayGroup' => $displayGroup,
+            'help' => Help::Link('DisplayGroup', 'Edit')
+        ]);
     }
 
     /**
      * Shows the Delete Group Form
+     * @param int $displayGroupId
      */
-    function DeleteForm()
+    function deleteForm($displayGroupId)
     {
+        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
 
-        $response = new ApplicationState();
-        $displayGroupID = \Xibo\Helper\Sanitize::getInt('DisplayGroupID');
+        if (!$this->getUser()->checkDeleteable($displayGroup))
+            throw new AccessDeniedException();
 
-        // Auth
-        $auth = $this->getUser()->DisplayGroupAuth($displayGroupID, true);
-        if (!$auth->del)
-            trigger_error(__('You do not have permission to edit this display group'), E_USER_ERROR);
-
-        // Set some information about the form
-        Theme::Set('form_id', 'DisplayGroupDeleteForm');
-        Theme::Set('form_action', 'index.php?p=displaygroup&q=Delete');
-        Theme::Set('form_meta', '<input type="hidden" name="DisplayGroupID" value="' . $displayGroupID . '" />');
-
-        Theme::Set('form_fields', array(Form::AddMessage(__('Are you sure you want to delete this display? This cannot be undone.'))));
-
-        $response->SetFormRequestResponse(NULL, __('Delete Display Group'), '350px', '175px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('DisplayGroup', 'Delete') . '")');
-        $response->AddButton(__('No'), 'XiboDialogClose()');
-        $response->AddButton(__('Yes'), '$("#DisplayGroupDeleteForm").submit()');
-
+        $this->getState()->template = 'displaygroup-form-delete';
+        $this->getState()->setData([
+            'displayGroup' => $displayGroup,
+            'help' => Help::Link('DisplayGroup', 'Delete')
+        ]);
     }
 
     /**
@@ -291,92 +235,70 @@ class DisplayGroup extends Base
 
     /**
      * Adds a Display Group
-     * @return
      */
-    public function Add()
+    public function add()
     {
-
-
-
-        $response = $this->getState();
-
-        $displayGroup = \Xibo\Helper\Sanitize::getString('group');
-        $description = \Xibo\Helper\Sanitize::getString('desc');
-
-        $displayGroupObject = new DisplayGroup($db);
-
-        if (!$displayGroupId = $displayGroupObject->Add($displayGroup, 0, $description)) {
-            trigger_error($displayGroupObject->GetErrorMessage(), E_USER_ERROR);
-        }
+        $displayGroup = new \Xibo\Entity\DisplayGroup();
+        $displayGroup->displayGroup = Sanitize::getString('displayGroup');
+        $displayGroup->description = Sanitize::getString('description');
+        $displayGroup->save();
 
         // Add full permissions for this user to this group
-        $security = new DisplayGroupSecurity($db);
+        /* @var Permission $permission */
+        $permission = PermissionFactory::getByObjectId(get_class($displayGroup), $displayGroup->displayGroupId);
+        $permission->view = 0;
+        $permission->edit = 0;
+        $permission->delete = 0;
+        $permission->save();
 
-        if (!$security->Link($displayGroupId, $this->getUser()->getGroupFromID($this->getUser()->userId, true), 1, 1, 1))
-            trigger_error(__('Unable to set permissions'));
-
-        $response->SetFormSubmitResponse(__('Display Group Added'), false);
-
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Added %s'), $displayGroup->displayGroup),
+            'id' => $displayGroup->displayGroupId,
+            'data' => [$displayGroup]
+        ]);
     }
 
     /**
      * Edits a Display Group
-     * @return
+     * @param int $displayGroupId
      */
-    public function Edit()
+    public function edit($displayGroupId)
     {
+        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
 
+        if (!$this->getUser()->checkEditable($displayGroup))
+            throw new AccessDeniedException();
 
+        $displayGroup->displayGroup = Sanitize::getString('displayGroup');
+        $displayGroup->description = Sanitize::getString('description');
+        $displayGroup->save();
 
-        $response = new ApplicationState();
-
-        $displayGroupID = \Xibo\Helper\Sanitize::getInt('DisplayGroupID');
-        $displayGroup = \Xibo\Helper\Sanitize::getString('group');
-        $description = \Xibo\Helper\Sanitize::getString('desc');
-
-        // Auth
-        $auth = $this->getUser()->DisplayGroupAuth($displayGroupID, true);
-        if (!$auth->edit)
-            trigger_error(__('You do not have permission to edit this display group'), E_USER_ERROR);
-
-        // Deal with the Edit
-        $displayGroupObject = new DisplayGroup($db);
-
-        if (!$displayGroupObject->Edit($displayGroupID, $displayGroup, $description)) {
-            trigger_error($displayGroupObject->GetErrorMessage(), E_USER_ERROR);
-        }
-
-        $response->SetFormSubmitResponse(__('Display Group Edited'), false);
-
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Edited %s'), $displayGroup->displayGroup),
+            'id' => $displayGroup->displayGroupId,
+            'data' => [$displayGroup]
+        ]);
     }
 
     /**
      * Deletes a Group
-     * @return
+     * @param int $displayGroupId
      */
-    function Delete()
+    function delete($displayGroupId)
     {
+        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
 
+        if (!$this->getUser()->checkDeleteable($displayGroup))
+            throw new AccessDeniedException();
 
+        $displayGroup->delete();
 
-        $response = new ApplicationState();
-
-        $displayGroupID = \Xibo\Helper\Sanitize::getInt('DisplayGroupID');
-
-        // Auth
-        $auth = $this->getUser()->DisplayGroupAuth($displayGroupID, true);
-        if (!$auth->del)
-            trigger_error(__('You do not have permission to edit this display group'), E_USER_ERROR);
-
-        // Deal with the Delete
-        $displayGroupObject = new DisplayGroup($db);
-
-        if (!$displayGroupObject->Delete($displayGroupID)) {
-            trigger_error($displayGroupObject->GetErrorMessage(), E_USER_ERROR);
-        }
-
-        $response->SetFormSubmitResponse(__('Display Group Deleted'), false);
-
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Deleted %s'), $displayGroup->displayGroup)
+        ]);
     }
 
     /**
@@ -436,149 +358,6 @@ class DisplayGroup extends Base
         }
 
         $response->SetFormSubmitResponse(__('Group membership set'), false);
-
-    }
-
-    /**
-     * Show the Permissions for this Display Group
-     */
-    public function PermissionsForm()
-    {
-
-        $user = $this->getUser();
-        $response = $this->getState();
-        $helpManager = new Help($db, $user);
-
-        $displayGroupId = \Xibo\Helper\Sanitize::getInt('DisplayGroupID');
-
-        $auth = $this->getUser()->DisplayGroupAuth($displayGroupId, true);
-
-        if (!$auth->modifyPermissions)
-            trigger_error(__('You do not have permissions to edit this display group'), E_USER_ERROR);
-
-        // Set some information about the form
-        Theme::Set('form_id', 'DisplayGroupPermissionsForm');
-        Theme::Set('form_action', 'index.php?p=displaygroup&q=Permissions');
-        Theme::Set('form_meta', '<input type="hidden" name="displayGroupId" value="' . $displayGroupId . '" />');
-
-        // List of all Groups with a view / edit / delete check box
-        $permissions = new UserGroup();
-        if (!$result = $permissions->GetPermissionsForObject('lkdisplaygroupgroup', 'DisplayGroupID', $displayGroupId))
-            trigger_error($permissions->GetErrorMessage(), E_USER_ERROR);
-
-        if (count($result) <= 0)
-            trigger_error(__('Unable to get permissions for this Display Group'), E_USER_ERROR);
-
-        $checkboxes = array();
-
-        foreach ($result as $row) {
-            $groupId = $row['groupid'];
-            $rowClass = ($row['isuserspecific'] == 0) ? 'strong_text' : '';
-
-            $checkbox = array(
-                'id' => $groupId,
-                'name' => \Xibo\Helper\Sanitize::string($row['group']),
-                'class' => $rowClass,
-                'value_view' => $groupId . '_view',
-                'value_view_checked' => (($row['view'] == 1) ? 'checked' : ''),
-                'value_edit' => $groupId . '_edit',
-                'value_edit_checked' => (($row['edit'] == 1) ? 'checked' : ''),
-                'value_del' => $groupId . '_del',
-                'value_del_checked' => (($row['del'] == 1) ? 'checked' : ''),
-            );
-
-            $checkboxes[] = $checkbox;
-        }
-
-        $formFields = array();
-        $formFields[] = Form::AddPermissions('groupids[]', $checkboxes);
-
-        Theme::Set('form_fields', $formFields);
-
-        $response->SetFormRequestResponse(NULL, __('Permissions'), '350px', '500px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('DisplayGroup', 'Permissions') . '")');
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Save'), '$("#DisplayGroupPermissionsForm").submit()');
-
-    }
-
-    /**
-     * Add/Modify Permissions
-     */
-    public function Permissions()
-    {
-
-
-
-        $user = $this->getUser();
-        $response = $this->getState();
-
-        $displayGroupId = \Xibo\Helper\Sanitize::getInt('displayGroupId');
-        $groupIds = \Kit::GetParam('groupids', _POST, _ARRAY);
-
-        $auth = $this->getUser()->DisplayGroupAuth($displayGroupId, true);
-
-        if (!$auth->modifyPermissions)
-            trigger_error(__('You do not have permissions to edit this display group'), E_USER_ERROR);
-
-        // Unlink all
-        $security = new DisplayGroupSecurity($db);
-        if (!$security->UnlinkAll($displayGroupId))
-            trigger_error(__('Unable to set permissions'));
-
-        // Some assignments for the loop
-        $lastGroupId = 0;
-        $first = true;
-        $view = 0;
-        $edit = 0;
-        $del = 0;
-
-        // List of groupIds with view, edit and del assignments
-        foreach ($groupIds as $groupPermission) {
-            $groupPermission = explode('_', $groupPermission);
-            $groupId = $groupPermission[0];
-
-            if ($first) {
-                // First time through
-                $first = false;
-                $lastGroupId = $groupId;
-            }
-
-            if ($groupId != $lastGroupId) {
-                // The groupId has changed, so we need to write the current settings to the db.
-                // Link new permissions
-                if (!$security->Link($displayGroupId, $lastGroupId, $view, $edit, $del))
-                    trigger_error(__('Unable to set permissions'));
-
-                // Reset
-                $lastGroupId = $groupId;
-                $view = 0;
-                $edit = 0;
-                $del = 0;
-            }
-
-            switch ($groupPermission[1]) {
-                case 'view':
-                    $view = 1;
-                    break;
-
-                case 'edit':
-                    $edit = 1;
-                    break;
-
-                case 'del':
-                    $del = 1;
-                    break;
-            }
-        }
-
-        // Need to do the last one
-        if (!$first) {
-            if (!$security->Link($displayGroupId, $lastGroupId, $view, $edit, $del))
-                trigger_error(__('Unable to set permissions'));
-        }
-
-        $response->SetFormSubmitResponse(__('Permissions Changed'));
 
     }
 

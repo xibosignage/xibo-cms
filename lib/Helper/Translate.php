@@ -36,7 +36,7 @@ class Translate
      */
     public static function InitLocale($language = NULL)
     {
-        $localeDir = '../locale';
+        $localeDir = RELATIVE_URL_BASE . 'locale';
         $default = ($language == NULL) ? Config::GetSetting('DEFAULT_LANGUAGE') : $language;
 
         // Build an array of supported languages

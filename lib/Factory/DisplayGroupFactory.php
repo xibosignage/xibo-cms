@@ -23,7 +23,7 @@ class DisplayGroupFactory
      */
     public static function getById($displayGroupId)
     {
-        $groups = DisplayGroupFactory::query(null, ['displayGroupId' => $displayGroupId]);
+        $groups = DisplayGroupFactory::query(null, ['displayGroupId' => $displayGroupId, 'isDisplaySpecific' => -1]);
 
         if (count($groups) <= 0)
             throw new NotFoundException();
@@ -68,9 +68,9 @@ class DisplayGroupFactory
             $params['displayGroupId'] = Sanitize::getInt('displayGroupId', $filterBy);
         }
 
-        if (Sanitize::getInt('isDisplaySpecific', -1, $filterBy) != -1) {
+        if (Sanitize::getInt('isDisplaySpecific', 0, $filterBy) != -1) {
             $sql .= ' AND displaygroup.isDisplaySpecific = :isDisplaySpecific ';
-            $params['isDisplaySpecific'] = Sanitize::getInt('isDisplaySpecific', -1, $filterBy);
+            $params['isDisplaySpecific'] = Sanitize::getInt('isDisplaySpecific', 0, $filterBy);
         }
 
         /*if ($name != '') {
