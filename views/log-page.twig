@@ -77,11 +77,11 @@
         var table = $("#logs").DataTable({
             serverSide: true,
             searchDelay: 3000,
-            "order": [[ 1, "asc"]],
+            "order": [[ 0, "desc"]],
             ajax: "{{ urlFor("log.search") }}",
             "columns": [
-                { "data": "logid" },
-                { "data": "logdate" },
+                { "data": "logId" },
+                { "data": "logDate" },
                 { "data": "type" },
                 { "data": "display" },
                 { "data": "page" },

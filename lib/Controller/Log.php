@@ -23,6 +23,7 @@ namespace Xibo\Controller;
 use Exception;
 use Kit;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Factory\LogFactory;
 use Xibo\Helper\Date;
 use Xibo\Helper\Form;
 use Xibo\Helper\Help;
@@ -93,13 +94,13 @@ class Log extends Base
 
     function grid()
     {
-        $type = \Kit::GetParam('filter_type', _REQUEST, _INT, 0);
+        $type = Sanitize::getInt('filter_type', 0);
         $function = Sanitize::getString('filter_function');
         $page = Sanitize::getString('filter_page');
         $fromdt = Sanitize::getString('filter_fromdt');
         $displayid = Sanitize::getInt('filter_display');
-        $seconds = \Kit::GetParam('filter_seconds', _POST, _INT, 120);
-        $filter_intervalTypeId = \Kit::GetParam('filter_intervalTypeId', _POST, _INT, 1);
+        $seconds = Sanitize::getInt('filter_seconds', 120);
+        $filter_intervalTypeId = Sanitize::getInt('filter_intervalTypeId', 1);
 
         Session::Set('log', 'Filter', Sanitize::getCheckbox('XiboFilterPinned'));
         Session::Set('log', 'filter_type', $type);
@@ -110,7 +111,7 @@ class Log extends Base
         Session::Set('log', 'filter_seconds', $seconds);
         Session::Set('log', 'filter_intervalTypeId', $filter_intervalTypeId);
 
-        //get the dates and times
+        // get the dates and times
         if ($fromdt == '') {
             $starttime_timestamp = time();
         } else {
@@ -118,65 +119,19 @@ class Log extends Base
             $starttime_timestamp = strtotime($start_date[1] . "/" . $start_date[0] . "/" . $start_date[2] . ' ' . date("H", time()) . ":" . date("i", time()) . ':59');
         }
 
-        $todt = date("Y-m-d H:i:s", $starttime_timestamp);
-        $fromdt = date("Y-m-d H:i:s", $starttime_timestamp - ($seconds * $filter_intervalTypeId));
-
-        $params = array(
-            'fromDt' => $fromdt,
-            'toDt' => $todt
-        );
-
-        $sql = '
-          SELECT logid, logdate, page, function, message, display.display, type
-            FROM `log`
-              LEFT OUTER JOIN display
-              ON display.displayid = log.displayid
-           WHERE  logdate > :fromDt AND logdate <= :toDt
-        ';
-
-        if ($type != 0) {
-            $sql .= "AND type = :type ";
-            $params['type'] = ($type == 1) ? 'error' : 'audit';
-        }
-
-        if ($page != "") {
-            $sql .= "AND page = :page ";
-            $params['page'] = $page;
-        }
-
-        if ($function != "") {
-            $sql .= "AND function = :function ";
-            $params['function'] = $function;
-        }
-
-        if ($displayid != 0) {
-            $sql .= "AND display.displayID = :displayId ";
-            $params['displayId'] = $displayid;
-        }
-
-        $sql .= " ORDER BY logid ";
-
-        if (Sanitize::getInt('start') !== null && Sanitize::getInt('length') !== null) {
-            $sql .= 'LIMIT ' . intval(Sanitize::getInt('start')) . ', ' . Sanitize::getInt('length', 10);
-        }
-
-        $rows = array();
-
-        foreach (PDOConnect::select($sql, $params) as $row) {
-
-            $row['logid'] = Sanitize::int($row['logid']);
-            $row['logdate'] = Date::getLocalDate(strtotime(Sanitize::string($row['logdate'])), 'y-m-d h:i:s');
-            $row['type'] = Sanitize::string($row['type']);
-            $row['display'] = (Sanitize::string($row['display']) == '') ? __('CMS') : Sanitize::string($row['display']);
-            $row['page'] = Sanitize::string($row['page']);
-            $row['function'] = Sanitize::string($row['function']);
-            $row['message'] = nl2br(htmlspecialchars($row['message']));
-
-            $rows[] = $row;
-        }
+        $logs = LogFactory::query($this->gridRenderSort(), $this->gridRenderFilter([
+            'fromDt' => $starttime_timestamp - ($seconds * $filter_intervalTypeId),
+            'toDt' => $starttime_timestamp,
+            'type' => $type,
+            'page' => $page,
+            'function' => $function,
+            'displayId' => $displayid,
+            'excludeLog' => 1
+        ]));
 
         $this->getState()->template = 'grid';
-        $this->getState()->setData($rows);
+        $this->getState()->recordsTotal = LogFactory::countLast();
+        $this->getState()->setData($logs);
     }
 
     function LastHundredForDisplay()

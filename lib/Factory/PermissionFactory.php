@@ -43,11 +43,14 @@ class PermissionFactory
     public static function create($groupId, $entity, $objectId, $view, $edit, $delete)
     {
         // Lookup the entityId
-        $entity = PDOConnect::select('SELECT entityId FROM permissionentity WHERE entity = :entity', ['entity' => 'Xibo\Entity\\' . $entity]);
+        $results = PDOConnect::select('SELECT entityId FROM permissionentity WHERE entity = :entity', ['entity' => 'Xibo\Entity\\' . $entity]);
+
+        if (count($results) <= 0)
+            throw new \InvalidArgumentException('Entity not found: ' . $entity);
 
         $permission = new Permission();
         $permission->groupId = $groupId;
-        $permission->entityId = $entity[0]['entityId'];
+        $permission->entityId = $results[0]['entityId'];
         $permission->objectId = $objectId;
         $permission->view  =$view;
         $permission->edit = $edit;

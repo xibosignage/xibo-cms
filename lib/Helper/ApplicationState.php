@@ -46,9 +46,11 @@ class ApplicationState
 
     public $uniqueReference;
 
-    private $id;
+    public $id;
     private $data;
     public $extra;
+    public $recordsTotal;
+    public $recordsFiltered;
 
     public function __construct()
     {

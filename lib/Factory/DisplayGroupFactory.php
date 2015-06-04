@@ -11,6 +11,7 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\DisplayGroup;
 use Xibo\Exception\NotFoundException;
+use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
@@ -58,7 +59,7 @@ class DisplayGroupFactory
         $params = [];
 
         $sql = '
-            SELECT displaygroup.DisplayGroupID, displaygroup.DisplayGroup, displaygroup.IsDisplaySpecific, displaygroup.Description
+            SELECT displaygroup.displayGroupId, displaygroup.displayGroup, displaygroup.isDisplaySpecific, displaygroup.description
               FROM `displaygroup`
              WHERE 1 = 1
         ';
@@ -93,6 +94,7 @@ class DisplayGroupFactory
         if (is_array($sortOrder))
             $sql .= 'ORDER BY ' . implode(',', $sortOrder);
 
+        Log::sql($sql, $params);
 
         foreach (PDOConnect::select($sql, $params) as $row) {
             $entries[] = (new DisplayGroup())->hydrate($row);

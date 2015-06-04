@@ -137,7 +137,7 @@ class DisplayGroup
             // Check the name
             $result = PDOConnect::select('SELECT DisplayGroup FROM displaygroup WHERE DisplayGroup = :displayGroup AND IsDisplaySpecific = 0 AND displayGroupId <> :displayGroupId', [
                 'displayGroup' => $this->displayGroup,
-                'displayGroupId' => $this->displayGroupId
+                'displayGroupId' => (($this->displayGroupId == null) ? 0 : $this->displayGroupId)
             ]);
 
             if (count($result) > 0)

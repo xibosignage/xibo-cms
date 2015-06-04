@@ -245,10 +245,7 @@ class DisplayGroup extends Base
 
         // Add full permissions for this user to this group
         /* @var Permission $permission */
-        $permission = PermissionFactory::getByObjectId(get_class($displayGroup), $displayGroup->displayGroupId);
-        $permission->view = 0;
-        $permission->edit = 0;
-        $permission->delete = 0;
+        $permission = PermissionFactory::create($this->getUser()->groupId, 'DisplayGroup', $displayGroup->displayGroupId, 0, 0, 0);
         $permission->save();
 
         // Return
