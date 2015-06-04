@@ -78,7 +78,12 @@
             serverSide: true,
             searchDelay: 3000,
             "order": [[ 0, "desc"]],
-            ajax: "{{ urlFor("log.search") }}",
+            ajax: {
+                url: "{{ urlFor("log.search") }}",
+                "data": function(d) {
+                    $.extend(d, $("#logs").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                }
+            },
             "columns": [
                 { "data": "logId" },
                 { "data": "logDate" },

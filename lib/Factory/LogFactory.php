@@ -57,7 +57,7 @@ class LogFactory
             $params['toDt'] = date("Y-m-d H:i:s", Sanitize::getInt('toDt', $filterBy));
         }
 
-        if (Sanitize::getInt('type', $filterBy) != null) {
+        if (Sanitize::getInt('type', $filterBy) != 0) {
             $body .= ' AND type <= :type ';
             $params['type'] = (Sanitize::getInt('type', $filterBy) == 1 ? 'error' : 'audit');
         }
@@ -72,13 +72,13 @@ class LogFactory
             $params['function'] = Sanitize::getInt('function', $filterBy);
         }
 
-        if (Sanitize::getInt('displayId', $filterBy) != null) {
+        if (Sanitize::getInt('displayId', $filterBy) != 0) {
             $body .= ' AND log.displayId <= :displayId ';
             $params['displayId'] = Sanitize::getInt('displayId', $filterBy);
         }
 
         if (Sanitize::getCheckbox('excludeLog', $filterBy) == 1) {
-            $body .= ' AND log.page <> \'/log\' ';
+            $body .= ' AND log.page NOT LIKE \'/log%\' ';
         }
 
         // Sorting?
