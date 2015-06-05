@@ -25,6 +25,9 @@ CREATE TABLE IF NOT EXISTS `permissionentity` (
 
 ALTER TABLE `permissionentity` ADD PRIMARY KEY(`entityId`);
 
+ALTER TABLE  `lkusergroup` ADD UNIQUE (  `GroupID` ,  `UserID` ) ;
+ALTER TABLE  `lkdisplaydg` ADD UNIQUE (  `DisplayGroupID` ,  `DisplayId` ) ;
+
 
 /* Take existing permissions and pull them into the permissions table */
 INSERT INTO `permission` (`groupId`, `entityId`, `objectId`, `objectIdString`, `view`, `edit`, `delete`)

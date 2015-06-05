@@ -131,6 +131,23 @@ class Sanitize
      * @param mixed[Optional] $source
      * @return array[mixed]|null
      */
+    public static function getStringArray($param, $default = null, $source = null)
+    {
+        $array = Sanitize::getParam($param, $default, $source);
+
+        if ($array == null)
+            return [];
+
+        return $array;
+    }
+
+    /**
+     * Get an array of ints
+     * @param string $param
+     * @param mixed[Optional] $default
+     * @param mixed[Optional] $source
+     * @return array[mixed]|null
+     */
     public static function getIntArray($param, $default = null, $source = null)
     {
         $array = Sanitize::getParam($param, $default, $source);

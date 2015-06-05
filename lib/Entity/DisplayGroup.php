@@ -245,18 +245,17 @@ class DisplayGroup
 
         $params = ['displayGroupId' => $this->displayGroupId];
 
-        $sql = 'DELETE FROM lkdisplaydg WHERE DisplayGroupID = :displayGroupId AND DisplayID NOT IN (';
+        $sql = 'DELETE FROM lkdisplaydg WHERE DisplayGroupID = :displayGroupId AND DisplayID NOT IN (0';
 
         $i = 0;
         foreach ($this->displayIds as $displayId) {
             $i++;
-            $sql .= ':displayId' . $i;
+            $sql .= ',:displayId' . $i;
             $params['displayId' . $i] = $displayId;
         }
 
         $sql .= ')';
 
-        Log::sql($sql, $params);
         PDOConnect::update($sql, $params);
     }
 
@@ -272,11 +271,23 @@ class DisplayGroup
 
     private function unlinkMedia()
     {
+        // Unlink any media that is NOT in the collection
+        if (count($this->mediaIds) <= 0)
+            $this->mediaIds = [0];
+
+        $params = ['displayGroupId' => $this->displayGroupId];
+
+        $sql = 'DELETE FROM lkmediadisplaygroup WHERE DisplayGroupID = :displayGroupId AND mediaId NOT IN (0';
+
+        $i = 0;
         foreach ($this->mediaIds as $mediaId) {
-            PDOConnect::update('DELETE FROM `lkmediadisplaygroup` WHERE displaygroupid = :displayGroupId AND mediaId = :mediaId', [
-                'displayGroupId' => $this->displayGroupId,
-                'mediaId' => $mediaId
-            ]);
+            $i++;
+            $sql .= ',:mediaId' . $i;
+            $params['mediaId' . $i] = $mediaId;
         }
+
+        $sql .= ')';
+
+        PDOConnect::update($sql, $params);
     }
 }

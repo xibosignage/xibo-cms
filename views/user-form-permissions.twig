@@ -25,7 +25,7 @@
         <div class="col-md-12">
             <form id="PermissionsForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("user.permissions", {entity: entity, id: objectId}) }}">
 
-                {{ forms.permissions("groupids[]", permissions) }}
+                {{ forms.permissions("groupIds[]", permissions) }}
 
                 {% set title %}{% trans %}Cascade permissions to all items underneath this one.{% endtrans %}{% endset %}
                 {% set helpText %}{% trans %}For example, if this is a Layout then update the permissions on all Regions, Playlists and Widgets.{% endtrans %}{% endset %}

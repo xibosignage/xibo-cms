@@ -77,7 +77,7 @@ class UserGroup
      */
     public function unassignUser($userId)
     {
-        unset($this->userIds[$userId]);
+        $this->userIds = array_diff($this->userIds, [$userId]);
     }
 
     /**
@@ -129,6 +129,7 @@ class UserGroup
             $this->edit();
 
         $this->linkUsers();
+        $this->unlinkUsers();
     }
 
     /**
@@ -181,7 +182,7 @@ class UserGroup
      */
     private function linkUsers()
     {
-        $insert = PDOConnect::init()->prepare('INSERT INTO `lkusergroup` (groupId, userId) VALUES (:groupId, :userId)');
+        $insert = PDOConnect::init()->prepare('INSERT INTO `lkusergroup` (groupId, userId) VALUES (:groupId, :userId) ON DUPLICATE KEY UPDATE groupId = groupId');
 
         foreach ($this->userIds as $userId) {
             $insert->execute([
@@ -196,8 +197,22 @@ class UserGroup
      */
     private function unlinkUsers()
     {
+        if (count($this->userIds) <= 0)
+            $this->userIds = [0];
+
+        $params = ['groupId' => $this->groupId];
+
+        $sql = 'DELETE FROM `lkusergroup` WHERE groupId = :groupId AND userId NOT IN (0';
+
+        $i = 0;
         foreach ($this->userIds as $userId) {
-            PDOConnect::update('DELETE FROM `lkusergroup` WHERE groupId = :groupId AND userId = :userId', ['groupId' => $this->groupId, 'userId' => $userId]);
+            $i++;
+            $sql .= ',:userId' . $i;
+            $params['userId' . $i] = $userId;
         }
+
+        $sql .= ')';
+
+        PDOConnect::update($sql, $params);
     }
 }

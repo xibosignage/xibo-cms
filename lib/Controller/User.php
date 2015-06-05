@@ -30,7 +30,6 @@ use Xibo\Helper\Help;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Session;
-use Xibo\Helper\Theme;
 use Xibo\Storage\PDOConnect;
 
 class User extends Base
@@ -400,16 +399,13 @@ class User extends Base
 
     /**
      * Set Permissions to users for the provided entity
-     *
+     * @param string $entity
+     * @param int $objectId
      */
-    public function permissions()
+    public function permissions($entity, $objectId)
     {
-        $response = $this->getState();
-
-
-        $entity = Sanitize::getString('entity');
         if ($entity == '')
-            throw new \InvalidArgumentException(__('Permissions form requested without an entity'));
+            throw new \InvalidArgumentException(__('Permissions requested without an entity'));
 
         // Check to see that we can resolve the entity
         $entity = 'Xibo\\Factory\\' . $entity . 'Factory';
@@ -418,7 +414,6 @@ class User extends Base
             throw new \InvalidArgumentException(__('Permissions form requested with an invalid entity'));
 
         // Get the object
-        $objectId = Sanitize::getInt('objectId');
         if ($objectId == 0)
             throw new \InvalidArgumentException(__('Permissions form requested without an object'));
 
@@ -433,14 +428,14 @@ class User extends Base
         $permissions = PermissionFactory::getAllByObjectId(get_class($object), $objectId);
 
         // Get the provided permissions
-        $groupIds = \Kit::GetParam('groupids', _POST, _ARRAY);
+        $groupIds = Sanitize::getStringArray('groupIds');
         $newPermissions = array();
         array_map(function ($string) use (&$newPermissions) {
             $array = explode('_', $string);
             return $newPermissions[$array[0]][$array[1]] = 1;
         }, $groupIds);
 
-        Log::debug(var_export($newPermissions, true));
+        Log::debug('New Permissions: %s', var_export($newPermissions, true));
 
         // List of groupIds with view, edit and del assignments
         foreach ($permissions as $row) {
@@ -465,7 +460,9 @@ class User extends Base
             // TODO: Cascade permissions
         }
 
-        $response->SetFormSubmitResponse(__('Permissions Changed'));
-
+        // Return
+        $this->getState()->hydrate([
+            'message' => __('Permissions Updated')
+        ]);
     }
 }
