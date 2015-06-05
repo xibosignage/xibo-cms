@@ -181,7 +181,8 @@ class Display
         // Remove our display from any groups it is assigned to
         foreach ($this->displayGroups as $displayGroup) {
             /* @var DisplayGroup $displayGroup */
-            $displayGroup->removeAssignments();
+            $displayGroup->unassignDisplay($this->displayId);
+            $displayGroup->save(false);
         }
 
         // Delete our display specific group

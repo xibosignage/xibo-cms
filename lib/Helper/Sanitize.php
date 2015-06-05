@@ -136,7 +136,7 @@ class Sanitize
         $array = Sanitize::getParam($param, $default, $source);
 
         if ($array == null)
-            return null;
+            return [];
 
         return array_map('intval', $array);
     }

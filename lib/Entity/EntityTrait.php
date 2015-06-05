@@ -27,7 +27,7 @@ trait EntityTrait
     {
         foreach ($properties as $prop => $val) {
             if (property_exists($this, $prop)) {
-                $this->{$prop} = $val;
+                $this->{$prop} = (stripos(strrev($prop), 'dI') === 0) ? intval($val) : $val;
             }
         }
 

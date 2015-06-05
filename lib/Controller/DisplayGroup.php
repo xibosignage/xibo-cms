@@ -293,13 +293,7 @@ class DisplayGroup extends Base
         // Load the groups details
         $displayGroup->load();
 
-        $displays = Sanitize::getIntArray('displayId', []);
-
-        // We will receive a list of users from the UI which are in the "assign column" at the time the form is
-        // submitted.
-        // We want to go through and unlink any users that are NOT in that list, but that the current user has access
-        // to edit.
-        // We want to add any users that are in that list (but aren't already assigned)
+        $displays = Sanitize::getIntArray('displayId');
 
         // All users that this session has access to
         $allDisplays = DisplayFactory::query();

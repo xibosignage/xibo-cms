@@ -81,9 +81,7 @@ class DisplayGroup
      */
     public function unassignDisplay($displayId)
     {
-        unset($this->displayIds[$displayId]);
-
-        Log::debug('Un-assigning %d. Remaining %s', $displayId, implode(',', $this->displayIds));
+        $this->displayIds = array_diff($this->displayIds, [$displayId]);
     }
 
     /**
@@ -102,7 +100,7 @@ class DisplayGroup
      */
     public function unassignMedia($mediaId)
     {
-        unset($this->mediaIds[$mediaId]);
+        $this->mediaIds = array_diff($this->mediaIds, [$mediaId]);
     }
 
     /**
