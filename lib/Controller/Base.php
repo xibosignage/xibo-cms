@@ -189,11 +189,15 @@ class Base
             if (!is_array($data))
                 throw new ControllerNotImplemented();
 
-            $this->app->render(200, [
-                'message' => $state->message,
-                'id' => $state->id,
-                'data' => $data
-            ]);
+            if (!$grid) {
+                $data = [
+                    'message' => $state->message,
+                    'id' => $state->id,
+                    'data' => $data
+                ];
+            }
+
+            $this->app->render(200, $data);
         }
         else if ($this->app->request->isAjax()) {
             // WEB Ajax

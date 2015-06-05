@@ -77,6 +77,7 @@ $app->put('/display/requestscreenshot/:id', '\Xibo\Controller\Display:requestScr
 $app->get('/displaygroup', '\Xibo\Controller\DisplayGroup:grid')->name('displayGroup.search');
 $app->post('/displaygroup', '\Xibo\Controller\DisplayGroup:add')->name('displayGroup.add');
 $app->put('/displaygroup/:id', '\Xibo\Controller\DisplayGroup:edit')->name('displayGroup.edit');
+$app->post('/displaygroup/members/:id', '\Xibo\Controller\DisplayGroup:members')->name('displayGroup.members');
 
 //
 // Display Profile

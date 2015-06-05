@@ -36,12 +36,7 @@ class ScheduleFactory
      */
     public static function getByDisplayGroupId($displayGroupId)
     {
-        $events = ScheduleFactory::query(null, ['displayGroupId' => $displayGroupId]);
-
-        if (count($events) <= 0)
-            throw new NotFoundException();
-
-        return $events;
+        return ScheduleFactory::query(null, ['displayGroupId' => $displayGroupId]);
     }
 
     /**

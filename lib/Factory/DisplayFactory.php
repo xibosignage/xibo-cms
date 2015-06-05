@@ -107,7 +107,6 @@ class DisplayFactory
                     ON lkdisplaydg.displayid = display.displayId
                     INNER JOIN `displaygroup`
                     ON displaygroup.displaygroupid = lkdisplaydg.displaygroupid
-                        AND isdisplayspecific = 1
                     LEFT OUTER JOIN layout 
                     ON layout.layoutid = display.defaultlayoutid
                     LEFT OUTER JOIN layout currentLayout 

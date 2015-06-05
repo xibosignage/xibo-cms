@@ -20,8 +20,10 @@
  */
 namespace Xibo\Controller;
 
+use Xibo\Entity\Display;
 use Xibo\Entity\Permission;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Helper\ApplicationState;
@@ -51,6 +53,9 @@ class DisplayGroup extends Base
         foreach ($displayGroups as $group) {
             /* @var \Xibo\Entity\DisplayGroup $group */
 
+            if ($this->isApi())
+                continue;
+
             if ($this->getUser()->checkEditable($group)) {
                 // Show the edit button, members button
 
@@ -67,13 +72,6 @@ class DisplayGroup extends Base
                     'url' => $this->urlFor('displayGroup.edit.form', ['id' => $group->displayGroupId]),
                     'text' => __('Edit')
                 );
-
-                // File Associations
-                $group->buttons[] = array(
-                    'id' => 'displaygroup_button_fileassociations',
-                    'url' => $this->urlFor('displayGroup.media.form', ['id' => $group->displayGroupId]),
-                    'text' => __('Assign Files')
-                );
             }
 
             if ($this->getUser()->checkDeleteable($group)) {
@@ -82,6 +80,17 @@ class DisplayGroup extends Base
                     'id' => 'displaygroup_button_delete',
                     'url' => $this->urlFor('displayGroup.delete.form', ['id' => $group->displayGroupId]),
                     'text' => __('Delete')
+                );
+            }
+
+            $group->buttons[] = ['divider' => true];
+
+            if ($this->getUser()->checkEditable($group)) {
+                // File Associations
+                $group->buttons[] = array(
+                    'id' => 'displaygroup_button_fileassociations',
+                    'url' => $this->urlFor('displayGroup.media.form', ['id' => $group->displayGroupId]),
+                    'text' => __('Assign Files')
                 );
             }
 
@@ -100,9 +109,6 @@ class DisplayGroup extends Base
                     'text' => __('Version Information')
                 );
             }
-
-            // Assign this to the table row
-            $rows[] = $group;
         }
 
         $this->getState()->template = 'grid';
@@ -158,79 +164,53 @@ class DisplayGroup extends Base
 
     /**
      * Display Group Members form
+     * @param int $displayGroupId
      */
-    public function MembersForm()
+    public function membersForm($displayGroupId)
     {
+        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
 
-        $response = new ApplicationState();
-        $displayGroupID = \Xibo\Helper\Sanitize::getInt('DisplayGroupID');
+        if (!$this->getUser()->checkEditable($displayGroup))
+            throw new AccessDeniedException();
 
-        // There needs to be two lists here.
-        // One of which is the Displays currently assigned to this group
-        // The other is a list of displays that are available to be assigned (i.e. the opposite of the first list)
-
-        // Set some information about the form
-        Theme::Set('displays_assigned_id', 'displaysIn');
-        Theme::Set('displays_available_id', 'displaysOut');
-        Theme::Set('displays_assigned_url', 'index.php?p=displaygroup&q=SetMembers&DisplayGroupID=' . $displayGroupID);
-
-        // Displays in group
-        $SQL = "";
-        $SQL .= "SELECT display.DisplayID, ";
-        $SQL .= "       display.Display, ";
-        $SQL .= "       CONCAT('DisplayID_', display.DisplayID) AS list_id ";
-        $SQL .= "FROM   display ";
-        $SQL .= "       INNER JOIN lkdisplaydg ";
-        $SQL .= "       ON     lkdisplaydg.DisplayID = display.DisplayID ";
-        $SQL .= sprintf("WHERE  lkdisplaydg.DisplayGroupID   = %d", $displayGroupID);
-        $SQL .= " ORDER BY display.Display ";
-
-        $displays_assigned = $this->getUser()->DisplayList(array('display'), array('displaygroupid' => $displayGroupID), 'edit');
-
-        if (!is_array($displays_assigned))
-            trigger_error(__('Error getting Displays'), E_USER_ERROR);
-
-        // Build a new available array, based on the view permissions.
-        $displaysAssigned = array();
-
-        foreach ($displays_assigned as $display) {
-
-            // Go through each and set the appropriate fields
-            $displaysAssigned[] = array(
-                'Display' => $display['display'],
-                'list_id' => 'DisplayID_' . $display['displayid']
-            );
-        }
-
-        Theme::Set('displays_assigned', $displaysAssigned);
+        // Displays in Group
+        $displaysAssigned = DisplayFactory::getByDisplayGroupId($displayGroup->displayGroupId);
 
         // All Displays
-        $displays = $this->getUser()->DisplayList(array('display'), array('exclude_displaygroupid' => $displayGroupID), 'edit');
+        $allDisplays = DisplayFactory::query();
 
-        if (!is_array($displays))
-            trigger_error(__('Error getting Displays'), E_USER_ERROR);
+        // The available users are all users except users already in assigned users
+        $checkboxes = array();
 
-        // Build a new available array, based on the view permissions.
-        $displaysAvailable = array();
+        foreach ($allDisplays as $display) {
+            /* @var Display $display */
+            // Check to see if it exists in $usersAssigned
+            $exists = false;
+            foreach ($displaysAssigned as $displayAssigned) {
+                /* @var Display $displayAssigned */
+                if ($displayAssigned->displayId == $display->displayId) {
+                    $exists = true;
+                    break;
+                }
+            }
 
-        foreach ($displays as $display) {
-            // Go through each and set the appropriate fields
-            $displaysAvailable[] = array(
-                'Display' => $display['display'],
-                'list_id' => 'DisplayID_' . $display['displayid']
+            // Store this checkbox
+            $checkbox = array(
+                'id' => $display->displayId,
+                'name' => $display->display,
+                'value_checked' => (($exists) ? 'checked' : '')
             );
+
+            $checkboxes[] = $checkbox;
         }
 
-        Theme::Set('displays_available', $displaysAvailable);
 
-
-        $form = Theme::RenderReturn('displaygroup_form_display_assign');
-
-        $response->SetFormRequestResponse($form, __('Manage Membership'), '400', '375', 'DisplayGroupManageMembersCallBack');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('DisplayGroup', 'Members') . '")');
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Save'), 'DisplayGroupMembersSubmit()');
-
+        $this->getState()->template = 'displaygroup-form-members';
+        $this->getState()->setData([
+            'displayGroup' => $displayGroup,
+            'checkboxes' => $checkboxes,
+            'help' => Help::Link('DisplayGroup', 'Delete')
+        ]);
     }
 
     /**
@@ -300,62 +280,67 @@ class DisplayGroup extends Base
 
     /**
      * Sets the Members of a group
-     * @return
+     * @param int $displayGroupId
      */
-    public function SetMembers()
+    public function members($displayGroupId)
     {
+        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
 
-        $response = new ApplicationState();
-        $displayGroupObject = new DisplayGroup($db);
+        if (!$this->getUser()->checkEditable($displayGroup))
+            throw new AccessDeniedException();
 
-        $displayGroupID = \Xibo\Helper\Sanitize::getInt('DisplayGroupID');
-        $displays = \Kit::GetParam('DisplayID', _POST, _ARRAY, array());
-        $members = array();
+        // Load the groups details
+        $displayGroup->load();
 
-        // Auth
-        $auth = $this->getUser()->DisplayGroupAuth($displayGroupID, true);
-        if (!$auth->del)
-            trigger_error(__('You do not have permission to edit this display group'), E_USER_ERROR);
+        $displays = $this->getApp()->request()->params('displayId');
 
-        // Get a list of current members
-        $SQL = "";
-        $SQL .= "SELECT display.DisplayID ";
-        $SQL .= "FROM   display ";
-        $SQL .= "       INNER JOIN lkdisplaydg ";
-        $SQL .= "       ON     lkdisplaydg.DisplayID = display.DisplayID ";
-        $SQL .= sprintf("WHERE  lkdisplaydg.DisplayGroupID   = %d", $displayGroupID);
+        // We will receive a list of users from the UI which are in the "assign column" at the time the form is
+        // submitted.
+        // We want to go through and unlink any users that are NOT in that list, but that the current user has access
+        // to edit.
+        // We want to add any users that are in that list (but aren't already assigned)
 
-        if (!$resultIn = $db->query($SQL)) {
-            trigger_error($db->error());
-            trigger_error(__('Error getting Displays'), E_USER_ERROR);
-        }
+        // All users that this session has access to
+        $allDisplays = DisplayFactory::query();
 
-        while ($row = $db->get_assoc_row($resultIn)) {
-            // Test whether this ID is in the array or not
-            $displayID = \Xibo\Helper\Sanitize::int($row['DisplayID']);
+        // Convert to an array of ID's for convenience
+        $allDisplayIds = array_map(function ($display) {
+            return $display->displayId;
+        }, $allDisplays);
 
-            if (!in_array($displayID, $displays)) {
-                // Its currently assigned but not in the $displays array
-                //  so we unassign
-                if (!$displayGroupObject->Unlink($displayGroupID, $displayID)) {
-                    trigger_error($displayGroupObject->GetErrorMessage(), E_USER_ERROR);
-                }
+        // Users in group
+        $displaysAssigned = DisplayFactory::getByDisplayGroupId($displayGroupId);
+
+        foreach ($displaysAssigned as $row) {
+            /* @var Display $row */
+            // Did this session have permission to do anything to this user?
+            // If not, move on
+            if (!in_array($row->displayId, $allDisplayIds))
+                continue;
+
+            // Is this user in the provided list of users?
+            if (in_array($row->displayId, $displays)) {
+                // This user is already assigned, so we remove it from the $users array
+                unset($displays[$row->displayId]);
             } else {
-                $members[] = $displayID;
+                // It isn't therefore needs to be removed
+                $displayGroup->unassignDisplay($row->displayId);
             }
         }
 
-        foreach ($displays as $displayID) {
+        // Add any users that are still missing after tha assignment process
+        foreach ($displays as $displayId) {
             // Add any that are missing
-            if (!in_array($displayID, $members)) {
-                if (!$displayGroupObject->Link($displayGroupID, $displayID)) {
-                    trigger_error($displayGroupObject->GetErrorMessage(), E_USER_ERROR);
-                }
-            }
+            $displayGroup->assignDisplay($displayId);
         }
 
-        $response->SetFormSubmitResponse(__('Group membership set'), false);
+        $displayGroup->save(false);
 
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Membership set for %s'), $displayGroup->displayGroup),
+            'id' => $displayGroup->displayGroupId
+        ]);
     }
 
     public function FileAssociations()
