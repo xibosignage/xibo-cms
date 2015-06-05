@@ -25,6 +25,7 @@ use Xibo\Entity\Permission;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
+use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Help;
@@ -292,7 +293,7 @@ class DisplayGroup extends Base
         // Load the groups details
         $displayGroup->load();
 
-        $displays = $this->getApp()->request()->params('displayId');
+        $displays = Sanitize::getIntArray('displayId', []);
 
         // We will receive a list of users from the UI which are in the "assign column" at the time the form is
         // submitted.
@@ -518,97 +519,63 @@ class DisplayGroup extends Base
 
     }
 
-    public function VersionInstructionsForm()
+    /**
+     * Version Form
+     * @param int $displayGroupId
+     */
+    public function versionForm($displayGroupId)
     {
-        $response = $this->getState();
+        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
 
-        $displayGroupId = \Xibo\Helper\Sanitize::getInt('displaygroupid');
-        $displayId = \Xibo\Helper\Sanitize::getInt('displayid');
-        Theme::Set('installer_file_id', 0);
+        if (!$this->getUser()->checkEditable($displayGroup))
+            throw new AccessDeniedException();
 
         // List of effected displays
-        $rows = array();
+        $displays = DisplayFactory::getByDisplayGroupId($displayGroupId);
 
-        if ($displayId != 0) {
-            // Get some version information about this display.
-            if (!$displays = $this->getUser()->DisplayList(array('display'), array('displayid' => $displayId)))
-                trigger_error(__('Unknown Display'), E_USER_ERROR);
-        } else {
-            // Get a list of displays with their version information?
-            if (!$displays = $this->getUser()->DisplayList(array('display'), array('displaygroupid' => $displayGroupId)))
-                trigger_error(__('No displays in this group'), E_USER_ERROR);
-        }
+        // Possible media files to assign
+        $media = MediaFactory::query(['name'], ['type' => 'genericfile']);
 
-        foreach ($displays as $display) {
-            $rows[] = array(
-                'display' => Theme::Prepare($display['display']),
-                'client_type' => Theme::Prepare($display['client_type']),
-                'client_version' => Theme::Prepare($display['client_version']),
-                'client_code' => Theme::Prepare($display['client_code'])
-            );
-        }
-
-        // Store this for use in the theme
-        Theme::Set('displays', $displays);
-
-        // Present a list of possible files to choose from (generic file module)
-        $mediaList = $this->getUser()->MediaList(NULL, array('type' => 'genericfile'));
-        array_unshift($mediaList, array('mediaid' => 0, 'media' => ''));
-        Theme::Set('media_field_list', $mediaList);
-
-        // Set some information about the form
-        Theme::Set('form_id', 'VersionInstructions');
-        Theme::Set('form_action', 'index.php?p=displaygroup&q=VersionInstructions');
-        Theme::Set('form_meta', '<input type="hidden" name="displaygroupid" value="' . $displayGroupId . '">');
-
-        $form = Theme::RenderReturn('display_form_version_instructions');
-
-        $response->SetFormRequestResponse($form, __('Set Instructions for Upgrading this client'), '300px', '250px');
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Save'), '$("#VersionInstructions").submit()');
-
+        $this->getState()->template = 'displaygroup-form-version';
+        $this->getState()->setData([
+            'displayGroup' => $displayGroup,
+            'displays' => $displays,
+            'media' => $media,
+            'help' => Help::Link('DisplayGroup', 'Version')
+        ]);
     }
 
-    public function VersionInstructions()
+    /**
+     * Version Update
+     * @param int $displayGroupId
+     */
+    public function version($displayGroupId)
     {
-        $response = $this->getState();
+        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
 
+        if (!$this->getUser()->checkEditable($displayGroup))
+            throw new AccessDeniedException();
 
-        $displayGroupId = \Xibo\Helper\Sanitize::getInt('displaygroupid');
-        $mediaId = \Xibo\Helper\Sanitize::getInt('mediaid');
+        $media = MediaFactory::getById(Sanitize::getInt('mediaId'));
 
-        // Make sure we have permission to do this to this display
-        $auth = $this->getUser()->DisplayGroupAuth($displayGroupId, true);
-        if (!$auth->edit)
-            trigger_error(__('You do not have permission to edit this display group'), E_USER_ERROR);
+        if (!$this->getUser()->checkViewable($media))
+            throw new AccessDeniedException();
 
-        // Make sure we have permission to use this file
-        $mediaAuth = $this->getUser()->MediaAuth($mediaId, true);
+        // Assign the media file
+        $displayGroup->assignMedia($media->mediaId);
 
-        if (!$mediaAuth->view)
-            trigger_error(__('You have selected media that you no longer have permission to use. Please reload the form.'), E_USER_ERROR);
-
-        // Make sure this file is assigned to this display group
-        $link = new LkMediaDisplayGroup($this->db);
-        if (!$link->Link($displayGroupId, $mediaId))
-            trigger_error($display->GetErrorMessage(), E_USER_ERROR);
-
-        // Get the "StoredAs" for this media item
-        $media = new Media($this->db);
-        $storedAs = $media->GetStoredAs($mediaId);
-
-        // Get a list of displays for this group
-        $displays = $this->getUser()->DisplayList(array('displayid'), array('displaygroupid' => $displayGroupId));
-
-        foreach ($displays as $display) {
-            // Update the Display with the new instructions
-            $displayObject = new Display($this->db);
-            if (!$displayObject->SetVersionInstructions($display['displayid'], $mediaId, $storedAs))
-                trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);
+        // Update each display in the group with the new version
+        foreach (DisplayFactory::getByDisplayGroupId($displayGroupId) as $display) {
+            /* @var Display $display */
+            $display->versionInstructions = json_encode(['id' => $media->mediaId, 'file' => $media->storedAs]);
+            $display->save(false);
         }
 
-        $response->SetFormSubmitResponse(__('Version Instructions Set'));
-
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Version set for %s'), $displayGroup->displayGroup),
+            'id' => $displayGroup->displayGroupId
+        ]);
     }
 }
 

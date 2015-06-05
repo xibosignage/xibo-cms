@@ -189,8 +189,8 @@ $app->get('/dataset/form/add', '\Xibo\Controller\DataSet:addForm')->name('dataSe
 //
 $app->get('/displaygroup/view', '\Xibo\Controller\DisplayGroup:displayPage')->name('displaygroup.view');
 $app->get('/displaygroup/form/add', '\Xibo\Controller\DisplayGroup:addForm')->name('displayGroup.add.form');
-$app->get('/displaygroup/form/edit', '\Xibo\Controller\DisplayGroup:editForm')->name('displayGroup.edit.form');
-$app->get('/displaygroup/form/delete', '\Xibo\Controller\DisplayGroup:deleteForm')->name('displayGroup.delete.form');
+$app->get('/displaygroup/form/edit/:id', '\Xibo\Controller\DisplayGroup:editForm')->name('displayGroup.edit.form');
+$app->get('/displaygroup/form/delete/:id', '\Xibo\Controller\DisplayGroup:deleteForm')->name('displayGroup.delete.form');
 $app->get('/displaygroup/form/members/:id', '\Xibo\Controller\DisplayGroup:membersForm')->name('displayGroup.members.form');
 $app->get('/displaygroup/form/media/:id', '\Xibo\Controller\DisplayGroup:mediaForm')->name('displayGroup.media.form');
 $app->get('/displaygroup/form/version/:id', '\Xibo\Controller\DisplayGroup:versionForm')->name('displayGroup.version.form');

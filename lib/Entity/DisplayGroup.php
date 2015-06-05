@@ -14,6 +14,7 @@ use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\ScheduleFactory;
+use Xibo\Helper\Log;
 use Xibo\Storage\PDOConnect;
 
 class DisplayGroup
@@ -81,6 +82,8 @@ class DisplayGroup
     public function unassignDisplay($displayId)
     {
         unset($this->displayIds[$displayId]);
+
+        Log::debug('Un-assigning %d. Remaining %s', $displayId, implode(',', $this->displayIds));
     }
 
     /**
@@ -159,11 +162,15 @@ class DisplayGroup
         else
             $this->edit();
 
-        // Link displays assigned
-        $this->linkDisplays();
+        Log::debug('Manage links to Display Group');
 
-        // Link media assigned
+        // Handle any changes in the displays linked
+        $this->linkDisplays();
+        $this->unlinkDisplays();
+
+        // Handle any changes in the media linked
         $this->linkMedia();
+        $this->unlinkMedia();
     }
 
     /**
@@ -185,8 +192,8 @@ class DisplayGroup
             $event->delete();
         }
 
-        // Delete display assignments
-        $this->unlinkDisplays();
+        // Delete assignments
+        $this->removeAssignments();
 
         // Delete the Group itself
         PDOConnect::update('DELETE FROM `displaygroup` WHERE DisplayGroupID = :displayGroupId', ['displayGroupId' => $this->displayGroupId]);
@@ -225,7 +232,7 @@ class DisplayGroup
     private function linkDisplays()
     {
         foreach ($this->displayIds as $displayId) {
-            PDOConnect::update('INSERT INTO lkdisplaydg (DisplayGroupID, DisplayID) VALUES (:displayGroupId, :displayId)', [
+            PDOConnect::update('INSERT INTO lkdisplaydg (DisplayGroupID, DisplayID) VALUES (:displayGroupId, :displayId) ON DUPLICATE KEY UPDATE DisplayID = DisplayID', [
                 'displayGroupId' => $this->displayGroupId,
                 'displayId' => $displayId
             ]);
@@ -234,18 +241,31 @@ class DisplayGroup
 
     private function unlinkDisplays()
     {
+        // Unlink any displays that are NOT in the collection
+        if (count($this->displayIds) <= 0)
+            $this->displayIds = [0];
+
+        $params = ['displayGroupId' => $this->displayGroupId];
+
+        $sql = 'DELETE FROM lkdisplaydg WHERE DisplayGroupID = :displayGroupId AND DisplayID NOT IN (';
+
+        $i = 0;
         foreach ($this->displayIds as $displayId) {
-            PDOConnect::update('DELETE FROM lkdisplaydg WHERE DisplayGroupID = :displayGroupId AND DisplayID = :displayId', [
-                'displayGroupId' => $this->displayGroupId,
-                'displayId' => $displayId
-            ]);
+            $i++;
+            $sql .= ':displayId' . $i;
+            $params['displayId' . $i] = $displayId;
         }
+
+        $sql .= ')';
+
+        Log::sql($sql, $params);
+        PDOConnect::update($sql, $params);
     }
 
     private function linkMedia()
     {
         foreach ($this->mediaIds as $mediaId) {
-            PDOConnect::update('INSERT INTO `lkmediadisplaygroup` (mediaid, displaygroupid) VALUES (:mediaId, :displayGroupId)', [
+            PDOConnect::update('INSERT INTO `lkmediadisplaygroup` (mediaid, displaygroupid) VALUES (:mediaId, :displayGroupId) ON DUPLICATE KEY UPDATE mediaid = mediaid', [
                 'displayGroupId' => $this->displayGroupId,
                 'mediaId' => $mediaId
             ]);
