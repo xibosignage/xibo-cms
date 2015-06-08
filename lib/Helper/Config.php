@@ -49,9 +49,9 @@ class Config
     /**
      * Loads the settings from file.
      */
-    static function Load()
+    static function Load($settings)
     {
-        include("settings.php");
+        include ($settings);
 
         Config::Version();
     }

@@ -27,7 +27,7 @@ use Slim\Slim;
 
 class Sanitize
 {
-    private static function parse($param, $default, $source)
+    public static function getParam($param, $default, $source = null)
     {
         if (is_array($default)) {
             return isset($default[$param]) ? $default[$param] : null;
@@ -52,7 +52,7 @@ class Sanitize
 
     public static function getInt($param, $default = null, $source = null)
     {
-        return Sanitize::int(Sanitize::parse($param, $default, $source));
+        return Sanitize::int(Sanitize::getParam($param, $default, $source));
     }
 
     public static function int($param)
@@ -65,7 +65,7 @@ class Sanitize
 
     public static function getDouble($param, $default = null, $source = null)
     {
-        return Sanitize::double(Sanitize::parse($param, $default, $source));
+        return Sanitize::double(Sanitize::getParam($param, $default, $source));
     }
 
     public static function double($param)
@@ -78,7 +78,7 @@ class Sanitize
 
     public static function getString($param, $default = null, $source = null)
     {
-        return Sanitize::string(Sanitize::parse($param, $default, $source));
+        return Sanitize::string(Sanitize::getParam($param, $default, $source));
     }
 
     public static function string($param)
@@ -88,7 +88,7 @@ class Sanitize
 
     public static function getUserName($param, $default = null, $source = null)
     {
-        $param = filter_var(Sanitize::parse($param, $default, $source), FILTER_SANITIZE_STRING);
+        $param = filter_var(Sanitize::getParam($param, $default, $source), FILTER_SANITIZE_STRING);
         $param = (string) preg_replace( '/[\x00-\x1F\x7F<>"\'%&]/', '', $param);
         return strtolower($param);
     }
@@ -100,7 +100,7 @@ class Sanitize
 
     public static function getCheckbox($param, $default = null, $source = null)
     {
-        $checkbox = Sanitize::parse($param, $default, $source);
+        $checkbox = Sanitize::getParam($param, $default, $source);
         return ($checkbox === 'on' || $checkbox === 1 || $checkbox === 'true') ? 1 : 0;
     }
 
@@ -122,5 +122,39 @@ class Sanitize
         }, $return);
 
         return (string) $return;
+    }
+
+    /**
+     * Get an array of ints
+     * @param string $param
+     * @param mixed[Optional] $default
+     * @param mixed[Optional] $source
+     * @return array[mixed]|null
+     */
+    public static function getStringArray($param, $default = null, $source = null)
+    {
+        $array = Sanitize::getParam($param, $default, $source);
+
+        if ($array == null)
+            return [];
+
+        return $array;
+    }
+
+    /**
+     * Get an array of ints
+     * @param string $param
+     * @param mixed[Optional] $default
+     * @param mixed[Optional] $source
+     * @return array[mixed]|null
+     */
+    public static function getIntArray($param, $default = null, $source = null)
+    {
+        $array = Sanitize::getParam($param, $default, $source);
+
+        if ($array == null)
+            return [];
+
+        return array_map('intval', $array);
     }
 }

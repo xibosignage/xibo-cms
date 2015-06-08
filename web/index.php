@@ -21,6 +21,8 @@
 use Xibo\Helper\Config;
 
 DEFINE('XIBO', true);
+DEFINE('RELATIVE_URL_BASE', '../');
+
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
@@ -28,7 +30,6 @@ require '../lib/autoload.php';
 require '../vendor/autoload.php';
 
 // Classes we need to deprecate, namespace or put in composer
-require '../lib/app/kit.class.php';
 require '../lib/data/data.class.php';
 // END
 
@@ -36,7 +37,7 @@ if (!file_exists('settings.php'))
     die('Not configured');
 
 // Load the config
-Config::Load();
+Config::Load('settings.php');
 
 // Create a logger
 $logger = new \Flynsarmy\SlimMonolog\Log\MonologWriter(array(

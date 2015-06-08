@@ -25,8 +25,10 @@ use Exception;
 use JSON;
 use Kit;
 use PDO;
+use Xibo\Entity\Permission;
 use Xibo\Entity\User;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Form;
@@ -101,21 +103,21 @@ class UserGroup extends Base
                 // Members
                 $group->buttons[] = array(
                     'id' => 'usergroup_button_members',
-                    'url' => 'index.php?p=group&q=MembersForm&groupid=' . $group->groupId,
+                    'url' => $this->urlFor('group.members.form', ['id' => $group->groupId]),
                     'text' => __('Members')
                 );
 
                 // Page Security
                 $group->buttons[] = array(
                     'id' => 'usergroup_button_page_security',
-                    'url' => 'index.php?p=group&q=PageSecurityForm&groupid=' . $group->groupId,
+                    'url' => $this->urlFor('group.acl.form', ['entity' => 'Page', 'id' => $group->groupId]),
                     'text' => __('Page Security')
                 );
 
                 // Menu Security
                 $group->buttons[] = array(
                     'id' => 'usergroup_button_menu_security',
-                    'url' => 'index.php?p=group&q=MenuItemSecurityForm&groupid=' . $group->groupId,
+                    'url' => $this->urlFor('group.acl.form', ['entity' => 'Menu', 'id' => $group->groupId]),
                     'text' => __('Menu Security')
                 );
             }
@@ -156,111 +158,6 @@ class UserGroup extends Base
                 'add' => Help::Link('UserGroup', 'Edit')
             ]
         ]);
-    }
-
-    /**
-     * Assign Page Security Filter form (will trigger grid)
-     * @return boolean
-     */
-    function PageSecurityForm()
-    {
-        $response = new ApplicationState();
-
-        $id = uniqid();
-        Theme::Set('id', $id);
-        Theme::Set('header_text', __('Please select your Page Security Assignments'));
-        Theme::Set('pager', ApplicationState::Pager($id));
-        Theme::Set('form_meta', '<input type="hidden" name="p" value="group"><input type="hidden" name="q" value="PageSecurityFormGrid"><input type="hidden" name="groupid" value="' . $this->groupid . '">');
-
-        $formFields = array();
-        $formFields[] = Form::AddText('filter_name', __('Name'), NULL, NULL, 'n');
-        Theme::Set('form_fields', $formFields);
-
-        // Call to render the template
-        $xiboGrid = Theme::RenderReturn('grid_render');
-
-        // Construct the Response
-        $response->SetFormRequestResponse($xiboGrid, __('Page Security'), '500', '380');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('User', 'PageSecurity') . '")');
-        $response->AddButton(__('Close'), 'XiboDialogClose()');
-        $response->AddButton(__('Assign / Unassign'), '$("#UserGroupForm").submit()');
-
-
-        return true;
-    }
-
-    /**
-     * Assign Page Security Grid
-     */
-    function PageSecurityFormGrid()
-    {
-        $db =& $this->db;
-        $groupId = Sanitize::getInt('groupid');
-
-        Theme::Set('form_id', 'UserGroupForm');
-        Theme::Set('form_meta', '<input type="hidden" name="groupid" value="' . $groupId . '">');
-        Theme::Set('form_action', 'index.php?p=group&q=assign');
-
-        $params = array();
-
-        $SQL = <<<END
-		SELECT 	pagegroup.pagegroup,
-				pagegroup.pagegroupID,
-				CASE WHEN pages_assigned.pagegroupID IS NULL
-					THEN 0
-		        	ELSE 1
-		        END AS AssignedID
-		FROM	pagegroup
-		LEFT OUTER JOIN
-				(SELECT DISTINCT pages.pagegroupID
-				 FROM	lkpagegroup
-				 INNER JOIN pages ON lkpagegroup.pageID = pages.pageID
-				 WHERE  groupID = :groupId
-				) pages_assigned
-		ON pagegroup.pagegroupID = pages_assigned.pagegroupID
-END;
-        $params['groupId'] = $groupId;
-
-        // Filter by Name?
-        if (\Kit::GetParam('filter_name', _POST, _STRING) != '') {
-            $SQL .= ' WHERE pagegroup.pagegroup LIKE :name ';
-            $params['name'] = '%' . \Kit::GetParam('filter_name', _POST, _STRING) . '%';
-        }
-
-        try {
-            $dbh = \Xibo\Storage\PDOConnect::init();
-
-            $sth = $dbh->prepare($SQL);
-            $sth->execute($params);
-
-            $results = $sth->fetchAll();
-
-            // while loop
-            $rows = array();
-
-            foreach ($results as $row) {
-                $row['name'] = $row['pagegroup'];
-                $row['pageid'] = $row['pagegroupID'];
-                $row['assigned'] = (($row['AssignedID'] == 1) ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove');
-                $row['assignedid'] = $row['AssignedID'];
-                $row['checkbox_value'] = $row['AssignedID'] . ',' . $row['pagegroupID'];
-                $row['checkbox_ticked'] = '';
-
-                $rows[] = $row;
-            }
-
-            Theme::Set('table_rows', $rows);
-
-            $output = Theme::RenderReturn('usergroup_form_pagesecurity_grid');
-
-            $response = $this->getState();
-            $response->SetGridResponse($output);
-            $response->initialSortColumn = 2;
-
-        } catch (Exception $e) {
-            Log::error($e);
-            trigger_error(__('Unable to process request'), E_USER_ERROR);
-        }
     }
 
     /**
@@ -352,277 +249,236 @@ END;
     }
 
     /**
-     * Assigns and unassigns pages from groups
-     * @return JSON object
+     * ACL Form for the provided Entity and GroupId
+     * @param string $entity
+     * @param int $groupId
      */
-    function assign()
+    public function aclForm($entity, $groupId)
     {
-        $db =& $this->db;
-        $groupid = Sanitize::getInt('groupid');
+        // Check permissions to this function
+        if ($this->getUser()->userTypeId != 1)
+            throw new AccessDeniedException();
 
-        $pageids = $_POST['pageids'];
+        // Show a form with a list of entities, checked or unchecked based on the current assignment
+        if ($entity == '')
+            throw new \InvalidArgumentException(__('ACL form requested without an entity'));
 
-        foreach ($pageids as $pagegroupid) {
-            $row = explode(",", $pagegroupid);
+        $requestEntity = $entity;
 
-            // The page ID actually refers to the pagegroup ID - we have to look up all the page ID's for this
-            // PageGroupID
-            $SQL = "SELECT pageID FROM pages WHERE pagegroupID = " . Sanitize::int($row[1]);
+        // Check to see that we can resolve the entity
+        $entity = 'Xibo\Factory\\' . $entity . 'Factory';
 
-            if (!$results = $db->query($SQL)) {
-                trigger_error($db->error());
-                Kit::Redirect(array('success' => false, 'message' => __('Can\'t assign this page to this group') . ' [error getting pages]'));
+        if (!class_exists($entity) || !method_exists($entity, 'getById'))
+            throw new \InvalidArgumentException(__('ACL form requested with an invalid entity'));
+
+        // Use the factory to get all the entities
+        $entities = $entity::query();
+
+        // Load the Group we are working on
+        // Get the object
+        if ($groupId == 0)
+            throw new \InvalidArgumentException(__('ACL form requested without a User Group'));
+
+        $group = UserGroupFactory::getById($groupId);
+
+        // Get all permissions for this user and this object
+        $permissions = PermissionFactory::getByGroupId($requestEntity, $groupId);
+
+        Log::debug('Entity: %s, GroupId: %d. ' . var_export($permissions, true), $requestEntity, $groupId);
+
+        $checkboxes = array();
+
+        foreach ($entities as $entity) {
+            // Check to see if this entity is set or not
+            $entityId = $entity->getId();
+            $viewChecked = 0;
+
+            foreach ($permissions as $permission) {
+                /* @var Permission $permission */
+                if ($permission->objectId == $entityId && $permission->view == 1) {
+                    $viewChecked = 1;
+                    break;
+                }
             }
 
-            while ($page_row = $db->get_row($results)) {
-                $pageid = $page_row[0];
+            // Store this checkbox
+            $checkbox = array(
+                'id' => $entityId,
+                'name' => $entity->getName(),
+                'value_view' => $entityId . '_view',
+                'value_view_checked' => (($viewChecked == 1) ? 'checked' : '')
+            );
 
-                if ($row[0] == "0") {
-                    //it isnt assigned and we should assign it
-                    $SQL = "INSERT INTO lkpagegroup (groupID, pageID) VALUES ($groupid, $pageid)";
+            $checkboxes[] = $checkbox;
+        }
 
-                    if (!$db->query($SQL)) {
-                        trigger_error($db->error());
-                        Kit::Redirect(array('success' => false, 'message' => __('Can\'t assign this page to this group')));
-                    }
-                } else {
-                    //it is already assigned and we should remove it
-                    $SQL = "DELETE FROM lkpagegroup WHERE groupid = $groupid AND pageID = $pageid";
+        $data = [
+            'entity' => $requestEntity,
+            'title' => sprintf(__('ACL for %s'), $group->group),
+            'groupId' => $groupId,
+            'group' => $group->group,
+            'permissions' => $checkboxes,
+            'help' => Help::Link('User', 'Acl')
+        ];
 
-                    if (!$db->query($SQL)) {
-                        trigger_error($db->error());
-                        Kit::Redirect(array('success' => false, 'message' => __('Can\'t remove this page from this group')));
-                    }
+        $this->getState()->template = 'usergroup-form-acl';
+        $this->getState()->setData($data);
+    }
+
+    /**
+     * ACL update
+     * @param string $entity
+     * @param int $groupId
+     */
+    public function acl($entity, $groupId)
+    {
+        // Check permissions to this function
+        if ($this->getUser()->userTypeId != 1)
+            throw new AccessDeniedException();
+
+        if ($entity == '')
+            throw new \InvalidArgumentException(__('ACL form requested without an entity'));
+
+        $requestEntity = $entity;
+
+        // Check to see that we can resolve the entity
+        $entity = 'Xibo\\Factory\\' . $entity . 'Factory';
+
+        if (!class_exists($entity) || !method_exists($entity, 'getById'))
+            throw new \InvalidArgumentException(__('ACL form requested with an invalid entity'));
+
+        // Load the Group we are working on
+        // Get the object
+        if ($groupId == 0)
+            throw new \InvalidArgumentException(__('ACL form requested without a User Group'));
+
+        $group = UserGroupFactory::getById($groupId);
+
+        // Use the factory to get all the entities
+        $entities = $entity::query();
+
+        // Get all permissions for this user and this object
+        $permissions = PermissionFactory::getByGroupId($requestEntity, $groupId);
+        $objectIds = $this->getApp()->request()->params('objectId');
+
+        if (!is_array($objectIds))
+            throw new \InvalidArgumentException(__('Missing New ACL'));
+
+        $newAcl = array();
+        array_map(function ($string) use (&$newAcl) {
+            $array = explode('_', $string);
+            return $newAcl[$array[0]][$array[1]] = 1;
+        }, $objectIds);
+
+        Log::debug(var_export($newAcl, true));
+
+        foreach ($entities as $entity) {
+            // Check to see if this entity is set or not
+            $objectId = $entity->getId();
+            $permission = null;
+            $view = (array_key_exists($objectId, $newAcl));
+
+            // Is the permission currently assigned?
+            foreach ($permissions as $row) {
+                /* @var \Xibo\Entity\Permission $row */
+                if ($row->objectId == $objectId) {
+                    $permission = $row;
+                    break;
+                }
+            }
+
+            if ($permission == null) {
+                if ($view) {
+                    // Not currently assigned and needs to be
+                    $permission = PermissionFactory::create($groupId, $requestEntity, $objectId, 1, 0, 0);
+                    $permission->save();
+                }
+            }
+            else {
+                Log::debug('Permission Exists for %s, and has been set to %d.', $entity->getName(), $view);
+                // Currently assigned
+                if ($view) {
+                    $permission->view = 1;
+                    $permission->save();
+                }
+                else {
+                    $permission->delete();
                 }
             }
         }
 
-        $response = $this->getState();
-        $response->SetFormSubmitResponse(__('User Group Page Security Edited'));
-        $response->keepOpen = true;
-
-    }
-
-    /**
-     * Security for Menu Items
-     * @return
-     */
-    function MenuItemSecurityForm()
-    {
-
-        $user = $this->getUser();
-
-        $id = uniqid();
-        Theme::Set('id', $id);
-        Theme::Set('header_text', __('Select your Menu Assignments'));
-        Theme::Set('pager', ApplicationState::Pager($id));
-        Theme::Set('form_meta', '<input type="hidden" name="p" value="group"><input type="hidden" name="q" value="MenuItemSecurityGrid"><input type="hidden" name="groupid" value="' . $this->groupid . '">');
-
-        $formFields = array();
-        $formFields[] = Form::AddCombo(
-            'filter_menu',
-            __('Menu'),
-            null,
-            $db->GetArray("SELECT MenuID, Menu FROM menu"),
-            'MenuID',
-            'Menu',
-            NULL,
-            'r');
-
-        Theme::Set('form_fields', $formFields);
-
-        // Call to render the template
-        $xiboGrid = Theme::RenderReturn('grid_render');
-
-        // Construct the Response
-        $response = $this->getState();
-        $response->SetFormRequestResponse($xiboGrid, __('Menu Item Security'), '500', '380');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('User', 'MenuSecurity') . '")');
-        $response->AddButton(__('Close'), 'XiboDialogClose()');
-        $response->AddButton(__('Assign / Unassign'), '$("#UserGroupMenuForm").submit()');
-
-
-        return true;
-    }
-
-    /**
-     * Assign Menu Item Security Grid
-     * @return
-     */
-    function MenuItemSecurityGrid()
-    {
-
-        $groupid = Sanitize::getInt('groupid');
-
-        $filter_menu = Sanitize::getString('filter_menu');
-
-        Theme::Set('form_id', 'UserGroupMenuForm');
-        Theme::Set('form_meta', '<input type="hidden" name="groupid" value="' . $groupid . '">');
-        Theme::Set('form_action', 'index.php?p=group&q=MenuItemSecurityAssign');
-
-        $SQL = <<<END
-		SELECT 	menu.Menu,
-				menuitem.Text,
-				menuitem.MenuItemID,
-				CASE WHEN menuitems_assigned.MenuItemID IS NULL
-					THEN 0
-		        	ELSE 1
-		        END AS AssignedID
-		FROM	menuitem
-		INNER JOIN menu
-		ON		menu.MenuID = menuitem.MenuID
-		LEFT OUTER JOIN
-				(SELECT DISTINCT lkmenuitemgroup.MenuItemID
-				 FROM	lkmenuitemgroup
-				 WHERE  GroupID = $groupid
-				) menuitems_assigned
-		ON menuitem.MenuItemID = menuitems_assigned.MenuItemID
-		WHERE menuitem.MenuID = %d
-END;
-
-        $SQL = sprintf($SQL, $filter_menu);
-
-        if (!$results = $db->query($SQL)) {
-            trigger_error($db->error());
-            trigger_error(__('Cannot get the menu items for this Group.'), E_USER_ERROR);
-        }
-
-        if ($db->num_rows($results) == 0) {
-            trigger_error(__('Cannot get the menu items for this Group.'), E_USER_ERROR);
-        }
-
-        // while loop
-        $rows = array();
-
-        while ($row = $db->get_assoc_row($results)) {
-            $row['name'] = $row['Text'];
-            $row['pageid'] = $row['MenuItemID'];
-            $row['assigned'] = (($row['AssignedID'] == 1) ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove');
-            $row['assignedid'] = $row['AssignedID'];
-            $row['checkbox_value'] = $row['AssignedID'] . ',' . $row['MenuItemID'];
-            $row['checkbox_ticked'] = '';
-
-            $rows[] = $row;
-        }
-
-        Theme::Set('table_rows', $rows);
-
-        $output = Theme::RenderReturn('usergroup_form_menusecurity_grid');
-
-        $response = $this->getState();
-        $response->SetGridResponse($output);
-        $response->initialSortColumn = 2;
-
-    }
-
-    /**
-     * Menu Item Security Assignment to Groups
-     * @return
-     */
-    function MenuItemSecurityAssign()
-    {
-
-
-        $groupid = Sanitize::getInt('groupid');
-
-        $pageids = $_POST['pageids'];
-
-        foreach ($pageids as $menuItemId) {
-            $row = explode(",", $menuItemId);
-
-            $menuItemId = $row[1];
-
-            // If the ID is 0 then this menu item is not currently assigned
-            if ($row[0] == "0") {
-                //it isnt assigned and we should assign it
-                $SQL = sprintf("INSERT INTO lkmenuitemgroup (GroupID, MenuItemID) VALUES (%d, %d)", $groupid, $menuItemId);
-
-                if (!$db->query($SQL)) {
-                    trigger_error($db->error());
-                    Kit::Redirect(array('success' => false, 'message' => __('Can\'t assign this menu item to this group')));
-                }
-            } else {
-                //it is already assigned and we should remove it
-                $SQL = sprintf("DELETE FROM lkmenuitemgroup WHERE groupid = %d AND MenuItemID = %d", $groupid, $menuItemId);
-
-                if (!$db->query($SQL)) {
-                    trigger_error($db->error());
-                    Kit::Redirect(array('success' => false, 'message' => __('Can\'t remove this menu item from this group')));
-                }
-            }
-        }
-
-        // Response
-        $response = $this->getState();
-        $response->SetFormSubmitResponse(__('User Group Menu Security Edited'));
-        $response->keepOpen = true;
-
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('ACL set for %s'), $group->group),
+            'id' => $group->groupId
+        ]);
     }
 
     /**
      * Shows the Members of a Group
+     * @param int $groupId
      */
-    public function MembersForm()
+    public function membersForm($groupId)
     {
+        $group = UserGroupFactory::getById($groupId);
 
-        $response = $this->getState();
-        $groupID = Sanitize::getInt('groupid');
-
-        // There needs to be two lists here.
-
-        // Set some information about the form
-        Theme::Set('users_assigned_id', 'usersIn');
-        Theme::Set('users_available_id', 'usersOut');
-        Theme::Set('users_assigned_url', 'index.php?p=group&q=SetMembers&GroupID=' . $groupID);
+        if (!$this->getUser()->checkEditable($group))
+            throw new AccessDeniedException();
 
         // Users in group
-        $usersAssigned = $this->getUser()->userList(null, array('groupIds' => array($groupID)));
-
-        Theme::Set('users_assigned', $usersAssigned);
+        $usersAssigned = $this->getUser()->userList(null, array('groupIds' => array($groupId)));
 
         // Users not in group
-        if (!$allUsers = $this->getUser()->userList())
-            trigger_error(__('Error getting all users'), E_USER_ERROR);
+        $allUsers = $this->getUser()->userList();
 
         // The available users are all users except users already in assigned users
-        $usersAvailable = array();
+        $checkboxes = array();
 
         foreach ($allUsers as $user) {
+            /* @var User $user */
             // Check to see if it exists in $usersAssigned
             $exists = false;
             foreach ($usersAssigned as $userAssigned) {
-                if ($userAssigned['userid'] == $user['userid']) {
+                /* @var User $userAssigned */
+                if ($userAssigned->userId == $user->userId) {
                     $exists = true;
                     break;
                 }
             }
 
-            if (!$exists)
-                $usersAvailable[] = $user;
+            // Store this checkbox
+            $checkbox = array(
+                'id' => $user->userId,
+                'name' => $user->userName,
+                'value_checked' => (($exists) ? 'checked' : '')
+            );
+
+            $checkboxes[] = $checkbox;
         }
 
-        Theme::Set('users_available', $usersAvailable);
-
-        $form = Theme::RenderReturn('usergroup_form_user_assign');
-
-        $response->SetFormRequestResponse($form, __('Manage Membership'), '400', '375', 'ManageMembersCallBack');
-        $response->AddButton(__('Help'), "XiboHelpRender('" . Help::Link('UserGroup', 'Members') . "')");
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Save'), 'MembersSubmit()');
-
+        $this->getState()->template = 'usergroup-form-members';
+        $this->getState()->setData([
+            'group' => $group,
+            'checkboxes' => $checkboxes,
+            'help' =>  Help::Link('UserGroup', 'Members')
+        ]);
     }
 
     /**
      * Sets the Members of a group
+     * @param int $groupId
      */
-    public function SetMembers()
+    public function members($groupId)
     {
-        $db =& $this->db;
-        $response = new ApplicationState();
-        $groupObject = new UserGroup($db);
+        $group = UserGroupFactory::getById($groupId);
 
-        $groupId = Sanitize::getInt('GroupID');
-        $users = \Kit::GetParam('UserID', _POST, _ARRAY, array());
+        if (!$this->getUser()->checkEditable($group))
+            throw new AccessDeniedException();
+
+        // Load the groups details
+        $group->load();
+
+        $users = $this->getApp()->request()->params('userId');
 
         // We will receive a list of users from the UI which are in the "assign column" at the time the form is
         // submitted.
@@ -631,82 +487,45 @@ END;
         // We want to add any users that are in that list (but aren't already assigned)
 
         // All users that this session has access to
-        if (!$allUsers = $this->getUser()->userList())
-            trigger_error(__('Error getting all users'), E_USER_ERROR);
+        $allUsers = $this->getUser()->userList();
 
         // Convert to an array of ID's for convenience
-        $allUserIds = array_map(function ($array) {
-            return $array['userid'];
+        $allUserIds = array_map(function ($user) {
+            return $user->userId;
         }, $allUsers);
 
         // Users in group
         $usersAssigned = $this->getUser()->userList(null, array('groupIds' => array($groupId)));
 
         foreach ($usersAssigned as $row) {
+            /* @var User $row */
             // Did this session have permission to do anything to this user?
             // If not, move on
-            if (!in_array($row['userid'], $allUserIds))
+            if (!in_array($row->userId, $allUserIds))
                 continue;
 
             // Is this user in the provided list of users?
-            if (in_array($row['userid'], $users)) {
+            if (in_array($row->userId, $users)) {
                 // This user is already assigned, so we remove it from the $users array
-                unset($users[$row['userid']]);
+                unset($users[$row->userId]);
             } else {
                 // It isn't therefore needs to be removed
-                if (!$groupObject->Unlink($groupId, $row['userid']))
-                    trigger_error($groupObject->GetErrorMessage(), E_USER_ERROR);
+                $group->unassignUser($row->userId);
             }
         }
 
         // Add any users that are still missing after tha assignment process
         foreach ($users as $userId) {
             // Add any that are missing
-            if (!$groupObject->Link($groupId, $userId)) {
-                trigger_error($groupObject->GetErrorMessage(), E_USER_ERROR);
-            }
+            $group->assignUser($userId);
         }
 
-        $response->SetFormSubmitResponse(__('Group membership set'), false);
+        $group->save(false);
 
-    }
-
-    public function quotaForm()
-    {
-        $groupId = Kit::GetParam('groupId', _GET, _INT);
-        // Look up the existing quota
-        $libraryQuota = UserGroup::getLibraryQuota($groupId);
-        $formFields = array();
-        $formFields[] = Form::AddNumber('libraryQuota', __('Library Quota'), $libraryQuota, __('The quota in Kb that should be applied. Enter 0 for no quota.'), 'q', 'required');
-
-        Theme::Set('form_fields', $formFields);
-
-        // Set some information about the form
-        Theme::Set('form_id', 'GroupQuotaForm');
-        Theme::Set('form_action', 'index.php?p=group&q=quota');
-        Theme::Set('form_meta', '<input type="hidden" name="groupId" value="' . $groupId . '" />');
-
-        $response = $this->getState();
-        $response->SetFormRequestResponse(Theme::RenderReturn('form_render'), __('Edit Library Quota'), '350px', '150px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Group', 'Edit') . '")');
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Save'), '$("#GroupQuotaForm").submit()');
-    }
-
-    public function quota()
-    {
-        $groupId = Kit::GetParam('groupId', _POST, _INT);
-        $libraryQuota = Kit::GetParam('libraryQuota', _POST, _INT);
-
-        try {
-            \UserGroup::updateLibraryQuota($groupId, $libraryQuota);
-        }
-        catch (Exception $e) {
-            Log::error($e);
-            trigger_error(__('Problem setting quota'), E_USER_ERROR);
-        }
-
-        $response = $this->getState();
-        $response->SetFormSubmitResponse(__('Quota has been updated'), false);
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Membership set for %s'), $group->group),
+            'id' => $group->groupId
+        ]);
     }
 }

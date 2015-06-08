@@ -113,35 +113,6 @@ var DataSetViewSubmit = function() {
     form.attr('action', form.attr('action') + "&ajax=true&" + $("#columnsIn").sortable('serialize')).submit();
 };
 
-function ManageMembersCallBack(dialog)
-{
-    $("#usersIn, #usersOut").sortable({
-            connectWith: '.connectedSortable',
-            dropOnEmpty: true
-    }).disableSelection();
-
-    $(".li-sortable", dialog).dblclick(switchLists);
-}
-
-function MembersSubmit() {
-    // Serialise the form and then submit it via Ajax.
-    var href = $("#usersIn").attr('href') + "&ajax=true";
-
-    // Get the two lists
-    serializedData = $("#usersIn").sortable('serialize');
-
-    $.ajax({
-            type: "post",
-            url: href,
-            cache: false,
-            dataType: "json",
-            data: serializedData,
-            success: XiboSubmitResponse
-    });
-
-    return;
-}
-
 /**
  * Layout Assignment Form Callback
  */

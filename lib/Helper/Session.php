@@ -73,7 +73,7 @@ class Session
     {
         $userAgent = substr(Sanitize::string($_SERVER['HTTP_USER_AGENT']), 0, 253);
         $remoteAddr = Sanitize::string($_SERVER['REMOTE_ADDR']);
-        $securityToken = \Kit::GetParam('SecurityToken', _POST, _STRING, null);
+        $securityToken = Sanitize::getString('SecurityToken');
 
         $this->key = $key;
         $newExp = time() + $this->max_lifetime;

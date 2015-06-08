@@ -77,11 +77,16 @@
         var table = $("#logs").DataTable({
             serverSide: true,
             searchDelay: 3000,
-            "order": [[ 1, "asc"]],
-            ajax: "{{ urlFor("log.search") }}",
+            "order": [[ 0, "desc"]],
+            ajax: {
+                url: "{{ urlFor("log.search") }}",
+                "data": function(d) {
+                    $.extend(d, $("#logs").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                }
+            },
             "columns": [
-                { "data": "logid" },
-                { "data": "logdate" },
+                { "data": "logId" },
+                { "data": "logDate" },
                 { "data": "type" },
                 { "data": "display" },
                 { "data": "page" },

@@ -66,16 +66,27 @@ $app->get('/library', '\Xibo\Controller\Library:grid')->name('library.search');
 // Displays
 //
 $app->get('/display', '\Xibo\Controller\Display:grid')->name('display.search');
+$app->put('/display/:id', '\Xibo\Controller\Display:edit')->name('display.edit');
+$app->delete('/display/:id', '\Xibo\Controller\Display:delete')->name('display.delete');
+$app->get('/display/wol/:id', '\Xibo\Controller\Display:wakeOnLan')->name('display.wol');
+$app->put('/display/requestscreenshot/:id', '\Xibo\Controller\Display:requestScreenShot')->name('display.requestscreenshot');
 
 //
 // Display Group
 //
 $app->get('/displaygroup', '\Xibo\Controller\DisplayGroup:grid')->name('displayGroup.search');
+$app->post('/displaygroup', '\Xibo\Controller\DisplayGroup:add')->name('displayGroup.add');
+$app->put('/displaygroup/:id', '\Xibo\Controller\DisplayGroup:edit')->name('displayGroup.edit');
+$app->post('/displaygroup/members/:id', '\Xibo\Controller\DisplayGroup:members')->name('displayGroup.members');
+$app->post('/displaygroup/version/:id', '\Xibo\Controller\DisplayGroup:version')->name('displayGroup.version');
 
 //
 // Display Profile
 //
 $app->get('/displayprofile', '\Xibo\Controller\DisplayProfile:grid')->name('displayProfile.search');
+$app->post('/displayprofile', '\Xibo\Controller\DisplayProfile:add')->name('displayProfile.add');
+$app->put('/displayprofile/:id', '\Xibo\Controller\DisplayProfile:edit')->name('displayProfile.edit');
+$app->delete('/displayprofile/:id', '\Xibo\Controller\DisplayProfile:delete')->name('displayProfile.delete');
 
 //
 // DataSet
@@ -112,6 +123,8 @@ $app->get('/group', '\Xibo\Controller\UserGroup:grid')->name('group.search');
 $app->post('/group', '\Xibo\Controller\UserGroup:add')->name('group.add');
 $app->put('/group/:id', '\Xibo\Controller\UserGroup:edit')->name('group.edit');
 $app->delete('/group/:id', '\Xibo\Controller\UserGroup:delete')->name('group.delete');
+$app->post('/group/members/:id', '\Xibo\Controller\UserGroup:members')->name('group.members');
+$app->post('/group/acl/:entity/:id', '\Xibo\Controller\UserGroup:acl')->name('group.acl');
 
 //
 // Applications
@@ -127,16 +140,21 @@ $app->get('/module', '\Xibo\Controller\Module:grid')->name('module.search');
 // Transition
 //
 $app->get('/transition', '\Xibo\Controller\Transition:grid')->name('transition.search');
+$app->put('/transition/:id', '\Xibo\Controller\Transition:edit')->name('transition.edit');
 
 //
 // Sessions
 //
 $app->get('/sessions', '\Xibo\Controller\Sessions:grid')->name('sessions.search');
+$app->delete('/sessions/logout/:id', '\Xibo\Controller\Sessions:logout')->name('sessions.confirm.logout');
 
 //
 // Help
 //
 $app->get('/help', '\Xibo\Controller\Help:grid')->name('help.search');
+$app->post('/help/add', '\Xibo\Controller\Help:add')->name('help.add');
+$app->put('/help/edit/:id', '\Xibo\Controller\Help:edit')->name('help.edit');
+$app->delete('/help/delete/:id', '\Xibo\Controller\Help:delete')->name('help.delete');
 
 //
 // Settings

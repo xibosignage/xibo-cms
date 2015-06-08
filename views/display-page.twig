@@ -77,7 +77,7 @@
         var table = $("#displays").DataTable({
             serverSide: true,
             searchDelay: 3000,
-            "order": [[ 1, "asc"]],
+            "order": [[ 0, "asc"]],
             ajax: {
                 "url": "{{ urlFor("display.search") }}",
                 "data": function(d) {

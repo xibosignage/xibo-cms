@@ -9,6 +9,8 @@
 namespace Xibo\Entity;
 
 
+use Xibo\Storage\PDOConnect;
+
 class Transition
 {
     use EntityTrait;
@@ -29,5 +31,19 @@ class Transition
     public function getOwnerId()
     {
         return 1;
+    }
+
+    public function save()
+    {
+        if ($this->transitionId == null || $this->transitionId == 0)
+            throw new \InvalidArgumentException();
+
+        PDOConnect::update('
+            UPDATE `transition` SET AvailableAsIn = :availableAsIn, AvailableAsOut = :availableAsOut WHERE transitionID = :transitionId
+        ', [
+            'availableAsIn' => $this->availableAsIn,
+            'availableAsOut' => $this->availableAsOut,
+            'transitionId' => $this->transitionId
+        ]);
     }
 }

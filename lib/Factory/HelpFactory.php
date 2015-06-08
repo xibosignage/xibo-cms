@@ -10,6 +10,7 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\Help;
+use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
@@ -17,6 +18,21 @@ use Xibo\Storage\PDOConnect;
 
 class HelpFactory
 {
+    /**
+     * @param int $helpId
+     * @return Help
+     * @throws NotFoundException
+     */
+    public static function getById($helpId)
+    {
+        $help = HelpFactory::query(null, ['helpId' => $helpId]);
+
+        if (count($help) <= 0)
+            throw new NotFoundException();
+
+        return $help[0];
+    }
+
     /**
      * @param array $sortOrder
      * @param array $filterBy
@@ -32,7 +48,13 @@ class HelpFactory
             $sql = '
             SELECT `helpId`, `topic`, `category`, `link`
               FROM `help`
+             WHERE 1 = 1
             ';
+
+            if (Sanitize::getInt('helpId', $filterBy) != null) {
+                $sql .= ' AND help.helpId = :helpId ';
+                $params['helpId'] = Sanitize::getInt('helpId', $filterBy);
+            }
 
             // Sorting?
             if (is_array($sortOrder))

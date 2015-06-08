@@ -25,6 +25,9 @@ CREATE TABLE IF NOT EXISTS `permissionentity` (
 
 ALTER TABLE `permissionentity` ADD PRIMARY KEY(`entityId`);
 
+ALTER TABLE  `lkusergroup` ADD UNIQUE (  `GroupID` ,  `UserID` ) ;
+ALTER TABLE  `lkdisplaydg` ADD UNIQUE (  `DisplayGroupID` ,  `DisplayId` ) ;
+
 
 /* Take existing permissions and pull them into the permissions table */
 INSERT INTO `permission` (`groupId`, `entityId`, `objectId`, `objectIdString`, `view`, `edit`, `delete`)
@@ -50,6 +53,20 @@ INSERT INTO `permission` (`groupId`, `entityId`, `objectId`, `objectIdString`, `
   FROM `lkmediagroup`;
 
 DROP TABLE `lkmediagroup`;
+
+INSERT INTO `permission` (`groupId`, `entityId`, `objectId`, `view`, `edit`, `delete`)
+  SELECT groupId, 1, pageId, 1, 0, 0
+  FROM `lkpagegroup`;
+
+DROP TABLE `lkpagegroup`;
+
+INSERT INTO `permission` (`groupId`, `entityId`, `objectId`, `view`, `edit`, `delete`)
+  SELECT groupId, 2, menuItemId, 1, 0, 0
+  FROM `lkmenuitemgroup`;
+
+DROP TABLE `lkmenuitemgroup`;
+
+
 /* End permissions swap */
 
 DROP TABLE `lklayoutmedia`;

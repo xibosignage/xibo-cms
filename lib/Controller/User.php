@@ -30,7 +30,6 @@ use Xibo\Helper\Help;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Session;
-use Xibo\Helper\Theme;
 use Xibo\Storage\PDOConnect;
 
 class User extends Base
@@ -110,14 +109,14 @@ class User extends Base
                 // Page Security
                 $user->buttons[] = array(
                     'id' => 'user_button_page_security',
-                    'url' => $this->urlFor('user.permissions.form', ['entity' => 'Page', 'id' => $user->groupId]),
+                    'url' => $this->urlFor('group.acl.form', ['entity' => 'Page', 'id' => $user->groupId]),
                     'text' => __('Page Security')
                 );
 
                 // Menu Security
                 $user->buttons[] = array(
                     'id' => 'user_button_menu_security',
-                    'url' => 'index.php?p=group&q=MenuItemSecurityForm&groupid=' . $user->groupId,
+                    'url' => $this->urlFor('group.acl.form', ['entity' => 'Menu', 'id' => $user->groupId]),
                     'text' => __('Menu Security')
                 );
             }
@@ -331,7 +330,7 @@ class User extends Base
     }
 
     /**
-     * Permissions for this user and the provided entity
+     * Permissions to users for the provided entity
      * @param $entity
      * @param $objectId
      * @throws \Xibo\Exception\NotFoundException
@@ -361,7 +360,7 @@ class User extends Base
             throw new AccessDeniedException(__('You do not have permission to edit these permissions.'));
 
         // List of all Groups with a view / edit / delete check box
-        $permissions = \Xibo\Factory\PermissionFactory::getAllByObjectId(get_class($object), $objectId);
+        $permissions = PermissionFactory::getAllByObjectId(get_class($object), $objectId);
 
         $checkboxes = array();
 
@@ -394,22 +393,19 @@ class User extends Base
             ]
         ];
 
-        $this->getState()->template = 'user-permissions-form';
+        $this->getState()->template = 'user-form-permissions';
         $this->getState()->setData($data);
     }
 
     /**
-     * Permissions form
-     * Can be called from anywhere, must provide an entity name to set the permissions against.
+     * Set Permissions to users for the provided entity
+     * @param string $entity
+     * @param int $objectId
      */
-    public function permissions()
+    public function permissions($entity, $objectId)
     {
-        $response = $this->getState();
-
-
-        $entity = Sanitize::getString('entity');
         if ($entity == '')
-            throw new \InvalidArgumentException(__('Permissions form requested without an entity'));
+            throw new \InvalidArgumentException(__('Permissions requested without an entity'));
 
         // Check to see that we can resolve the entity
         $entity = 'Xibo\\Factory\\' . $entity . 'Factory';
@@ -418,7 +414,6 @@ class User extends Base
             throw new \InvalidArgumentException(__('Permissions form requested with an invalid entity'));
 
         // Get the object
-        $objectId = Sanitize::getInt('objectId');
         if ($objectId == 0)
             throw new \InvalidArgumentException(__('Permissions form requested without an object'));
 
@@ -433,14 +428,14 @@ class User extends Base
         $permissions = PermissionFactory::getAllByObjectId(get_class($object), $objectId);
 
         // Get the provided permissions
-        $groupIds = \Kit::GetParam('groupids', _POST, _ARRAY);
+        $groupIds = Sanitize::getStringArray('groupIds');
         $newPermissions = array();
         array_map(function ($string) use (&$newPermissions) {
             $array = explode('_', $string);
             return $newPermissions[$array[0]][$array[1]] = 1;
         }, $groupIds);
 
-        Log::debug(var_export($newPermissions, true));
+        Log::debug('New Permissions: %s', var_export($newPermissions, true));
 
         // List of groupIds with view, edit and del assignments
         foreach ($permissions as $row) {
@@ -465,7 +460,9 @@ class User extends Base
             // TODO: Cascade permissions
         }
 
-        $response->SetFormSubmitResponse(__('Permissions Changed'));
-
+        // Return
+        $this->getState()->hydrate([
+            'message' => __('Permissions Updated')
+        ]);
     }
 }

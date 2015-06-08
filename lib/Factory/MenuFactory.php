@@ -24,46 +24,64 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\Menu;
+use Xibo\Helper\Log;
+use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
 class MenuFactory
 {
-    public static function getByMenu($menu)
+    public static function getById($menuItemId)
     {
-        return MenuFactory::query($menu);
+        $menuItem = MenuFactory::query(null, ['menuItemId' => $menuItemId]);
+
+        return $menuItem[0];
     }
 
-    public static function query($menu)
+    public static function getByMenu($menu)
+    {
+        return MenuFactory::query('sequence', ['menu' => $menu]);
+    }
+
+    public static function query($sortOrder = null, $filterBy = null)
     {
         $entries = array();
+        $params = array();
 
         $SQL = "";
-        $SQL .= "SELECT DISTINCT pages.name, ";
-        $SQL .= "         menuitem.Args , ";
-        $SQL .= "         menuitem.Text , ";
-        $SQL .= "         menuitem.Class, ";
-        $SQL .= "         menuitem.Img, ";
-        $SQL .= "         menuitem.External, ";
-        $SQL .= "         menuitem.menuItemId ";
+        $SQL .= "SELECT DISTINCT pages.name AS page, ";
+        $SQL .= "         menuitem.args , ";
+        $SQL .= "         menuitem.text AS title, ";
+        $SQL .= "         menuitem.class, ";
+        $SQL .= "         menuitem.img, ";
+        $SQL .= "         menuitem.external, ";
+        $SQL .= "         menuitem.menuItemId, ";
+        $SQL .= "         menuitem.menuId, ";
+        $SQL .= "         menu.menu ";
         $SQL .= "FROM     menuitem ";
         $SQL .= "         INNER JOIN menu ";
         $SQL .= "         ON       menuitem.MenuID = menu.MenuID ";
         $SQL .= "         INNER JOIN pages ";
         $SQL .= "         ON       pages.pageID = menuitem.PageID ";
-        $SQL .= "WHERE    menu.Menu = :menu ";
-        $SQL .= " ORDER BY menuitem.Sequence";
+        $SQL .= "WHERE  1=1 ";
 
-        foreach (PDOConnect::select($SQL, array('menu' => $menu)) as $row) {
-            $menu = new Menu();
-            $menu->menuId = $row['menuItemId'];
-            $menu->page = $row['name'];
-            $menu->args = $row['Args'];
-            $menu->title = $row['Text'];
-            $menu->class = $row['Class'];
-            $menu->img = $row['Img'];
-            $menu->external = $row['External'];
+        if (Sanitize::getString('menu', $filterBy) != null) {
+            $SQL .= ' AND menu.Menu = :menu ';
+            $params['menu'] = Sanitize::getString('menu', $filterBy);
+        }
 
-            $entries[] = $menu;
+        if (Sanitize::getInt('menuItemId', $filterBy) != null) {
+            $SQL .= ' AND menuItem.menuItemId = :menuItemId ';
+            $params['menuItemId'] = Sanitize::getInt('menuItemId', $filterBy);
+        }
+
+        // Sorting?
+        if (is_array($sortOrder))
+            $SQL .= 'ORDER BY ' . implode(',', $sortOrder);
+
+        Log::sql($SQL, $params);
+
+        foreach (PDOConnect::select($SQL, $params) as $row) {
+            $entries[] = (new Menu())->hydrate($row);
         }
 
         return $entries;

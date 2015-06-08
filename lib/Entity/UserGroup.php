@@ -9,11 +9,10 @@
 namespace Xibo\Entity;
 
 
+use Respect\Validation\Validator as v;
 use Xibo\Exception\NotFoundException;
-use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Storage\PDOConnect;
-use Respect\Validation\Validator as v;
 
 class UserGroup
 {
@@ -21,20 +20,12 @@ class UserGroup
 
     public $groupId;
     public $group;
-    public $isUserSpecific;
-    public $isEveryone;
+    public $isUserSpecific = 0;
+    public $isEveryone = 0;
     public $libraryQuota;
 
     // Users
-    private $users;
-
-    public function __construct()
-    {
-        $this->hash = null;
-        $this->users = [];
-        $this->isEveryone = 0;
-        $this->isUserSpecific = 0;
-    }
+    private $userIds = [];
 
     public function __toString()
     {
@@ -76,8 +67,8 @@ class UserGroup
      */
     public function assignUser($userId)
     {
-        if (!in_array($userId, $this->users))
-            $this->users[] = $userId;
+        if (!in_array($userId, $this->userIds))
+            $this->userIds[] = $userId;
     }
 
     /**
@@ -86,7 +77,7 @@ class UserGroup
      */
     public function unassignUser($userId)
     {
-        unset($this->users[$userId]);
+        $this->userIds = array_diff($this->userIds, [$userId]);
     }
 
     /**
@@ -116,6 +107,9 @@ class UserGroup
      */
     public function load()
     {
+        //TODO
+        //$this->userIds = UserFactory::getByGroupId
+
         // Set the hash
         $this->hash = $this->hash();
     }
@@ -135,6 +129,7 @@ class UserGroup
             $this->edit();
 
         $this->linkUsers();
+        $this->unlinkUsers();
     }
 
     /**
@@ -151,6 +146,11 @@ class UserGroup
 
         PDOConnect::update('DELETE FROM `permission` WHERE groupId = :groupId', ['groupId' => $this->groupId]);
         PDOConnect::update('DELETE FROM `group` WHERE groupId = :groupId', ['groupId' => $this->groupId]);
+    }
+
+    public function removeAssignments()
+    {
+        $this->unlinkUsers();
     }
 
     /**
@@ -182,9 +182,9 @@ class UserGroup
      */
     private function linkUsers()
     {
-        $insert = PDOConnect::init()->prepare('INSERT INTO `lkusergroup` (groupId, userId) VALUES (:groupId, :userId)');
+        $insert = PDOConnect::init()->prepare('INSERT INTO `lkusergroup` (groupId, userId) VALUES (:groupId, :userId) ON DUPLICATE KEY UPDATE groupId = groupId');
 
-        foreach ($this->users as $userId) {
+        foreach ($this->userIds as $userId) {
             $insert->execute([
                 'groupId' =>$this->groupId,
                 'userId' => $userId
@@ -197,6 +197,22 @@ class UserGroup
      */
     private function unlinkUsers()
     {
-        PDOConnect::update('DELETE FROM `lkusergroup` WHERE groupId = :groupId', ['groupId' => $this->groupId]);
+        if (count($this->userIds) <= 0)
+            $this->userIds = [0];
+
+        $params = ['groupId' => $this->groupId];
+
+        $sql = 'DELETE FROM `lkusergroup` WHERE groupId = :groupId AND userId NOT IN (0';
+
+        $i = 0;
+        foreach ($this->userIds as $userId) {
+            $i++;
+            $sql .= ',:userId' . $i;
+            $params['userId' . $i] = $userId;
+        }
+
+        $sql .= ')';
+
+        PDOConnect::update($sql, $params);
     }
 }

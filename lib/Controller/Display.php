@@ -19,21 +19,22 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
-use baseDAO;
-use database;
-use DisplayGroup;
 use DOMDocument;
 use DOMXPath;
 use finfo;
-use Xibo\Helper\ApplicationState;
+use Xibo\Entity\DisplayGroup;
+use Xibo\Entity\Stat;
+use Xibo\Exception\AccessDeniedException;
+use Xibo\Factory\DisplayFactory;
+use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Date;
-use Xibo\Helper\Form;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Session;
 use Xibo\Helper\Theme;
+use Xibo\Helper\WakeOnLan;
 
 
 class Display extends Base
@@ -44,7 +45,7 @@ class Display extends Base
     function displayPage()
     {
         // Default options
-        if (\Kit::IsFilterPinned('display', 'DisplayFilter')) {
+        if (Session::Get(get_class(), 'Filter') == 1) {
             $filter_pinned = 1;
             $filter_displaygroup = Session::Get('display', 'filter_displaygroup');
             $filter_display = Session::Get('display', 'filter_display');
@@ -84,243 +85,47 @@ class Display extends Base
     }
 
     /**
-     * Modifies the selected display record
-     * @return
+     * Display Management Page for an Individual Display
+     * @param int $displayId
+     * @throws \Xibo\Exception\NotFoundException
      */
-    function modify()
+    function displayManage($displayId)
     {
+        $display = DisplayFactory::getById($displayId);
 
+        if (!$this->getUser()->checkViewable($display))
+            throw new AccessDeniedException();
 
-        $response = $this->getState();
+        // Load the XML into a DOMDocument
+        $document = new DOMDocument("1.0");
 
-        $displayObject = new Display();
-        $displayObject->displayId = Sanitize::getInt('displayid');
+        if (!$document->loadXML($display->mediaInventoryXml))
+            throw new \InvalidArgumentException(__('Invalid Media Inventory'));
 
-        $auth = $this->getUser()->DisplayGroupAuth($this->GetDisplayGroupId($displayObject->displayId), true);
-        if (!$auth->edit)
-            trigger_error(__('You do not have permission to edit this display'), E_USER_ERROR);
+        // Need to parse the XML and return a set of rows
+        $xpath = new DOMXPath($document);
+        $fileNodes = $xpath->query("//file");
 
-        if (!$displayObject->Load())
-            trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);
+        $rows = array();
 
-        // Update properties
-        $displayObject->display = Sanitize::getString('display');
-        $displayObject->description = Sanitize::getString('description');
-        $displayObject->isAuditing = Sanitize::getInt('auditing');
-        $displayObject->defaultLayoutId = Sanitize::getInt('defaultlayoutid');
-        $displayObject->licensed = Sanitize::getInt('licensed');
-        $displayObject->incSchedule = Sanitize::getInt('inc_schedule');
-        $displayObject->emailAlert = Sanitize::getInt('email_alert');
-        $displayObject->alertTimeout = Sanitize::getCheckbox('alert_timeout');
-        $displayObject->wakeOnLanEnabled = Sanitize::getCheckbox('wakeOnLanEnabled');
-        $displayObject->wakeOnLanTime = Sanitize::getString('wakeOnLanTime');
-        $displayObject->broadCastAddress = Sanitize::getString('broadCastAddress');
-        $displayObject->secureOn = Sanitize::getString('secureOn');
-        $displayObject->cidr = Sanitize::getString('cidr');
-        $displayObject->latitude = \Kit::GetParam('latitude', _POST, _DOUBLE);
-        $displayObject->longitude = \Kit::GetParam('longitude', _POST, _DOUBLE);
-        $displayObject->displayProfileId = Sanitize::getInt('displayprofileid');
+        foreach ($fileNodes as $node) {
+            /* @var \DOMElement $node */
+            $row = array();
+            $row['type'] = $node->getAttribute('type');
+            $row['id'] = $node->getAttribute('id');
+            $row['complete'] = ($node->getAttribute('complete') == 0) ? __('No') : __('Yes');
+            $row['lastChecked'] = $node->getAttribute('lastChecked');
+            $row['md5'] = $node->getAttribute('md5');
 
-        if (!$displayObject->Edit())
-            trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);
-
-        $response->SetFormSubmitResponse(__('Display Saved.'));
-
-    }
-
-    /**
-     * Modify Display form
-     */
-    function displayForm()
-    {
-        $response = $this->getState();
-
-        // Get the display Id
-        $displayObject = new Display();
-        $displayObject->displayId = Sanitize::getInt('displayid');
-
-        $auth = $this->getUser()->DisplayGroupAuth($this->GetDisplayGroupId($displayObject->displayId), true);
-        if (!$auth->edit)
-            trigger_error(__('You do not have permission to edit this display'), E_USER_ERROR);
-
-        // Load this display
-        if (!$displayObject->Load())
-            trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);
-
-        // Set some information about the form
-        Theme::Set('form_id', 'DisplayEditForm');
-        Theme::Set('form_action', 'index.php?p=display&q=modify');
-        Theme::Set('form_meta', '<input type="hidden" name="displayid" value="' . $displayObject->displayId . '" />');
-
-        // Column 1
-        $formFields = array();
-        $formFields[] = Form::AddText('display', __('Display'), $displayObject->display,
-            __('The Name of the Display - (1 - 50 characters).'), 'd', 'required');
-
-        $formFields[] = Form::AddText('hardwareKey', __('Display\'s Hardware Key'), $displayObject->license,
-            __('A unique identifier for this display.'), 'h', 'required', NULL, false);
-
-        $formFields[] = Form::AddText('description', __('Description'), $displayObject->description,
-            __('A description - (1 - 254 characters).'), 'p', 'maxlength="50"');
-
-        $formFields[] = Form::AddCombo(
-            'licensed',
-            __('Licence Display?'),
-            $displayObject->licensed,
-            array(array('licensedid' => '1', 'licensed' => 'Yes'), array('licensedid' => '0', 'licensed' => 'No')),
-            'licensedid',
-            'licensed',
-            __('Use one of the available licenses for this display?'),
-            'l');
-
-        $formFields[] = Form::AddCombo(
-            'defaultlayoutid',
-            __('Default Layout'),
-            $displayObject->defaultLayoutId,
-            $this->getUser()->LayoutList(),
-            'layoutid',
-            'layout',
-            __('The Default Layout to Display where there is no other content.'),
-            't');
-
-        Theme::Set('form_fields_general', $formFields);
-
-        // Maintenance
-        $formFields = array();
-        $formFields[] = Form::AddCombo(
-            'email_alert',
-            __('Email Alerts'),
-            $displayObject->emailAlert,
-            array(array('id' => '1', 'value' => 'Yes'), array('id' => '0', 'value' => 'No')),
-            'id',
-            'value',
-            __('Do you want to be notified by email if there is a problem with this display?'),
-            'a');
-
-        $formFields[] = Form::AddCheckbox('alert_timeout', __('Use the Global Timeout?'), $displayObject->alertTimeout,
-            __('Should this display be tested against the global time out or the client collection interval?'),
-            'o');
-
-        Theme::Set('form_fields_maintenance', $formFields);
-
-        // Location
-        $formFields = array();
-
-        $formFields[] = Form::AddNumber('latitude', __('Latitude'), $displayObject->latitude,
-            __('The Latitude of this display'), 'g');
-
-        $formFields[] = Form::AddNumber('longitude', __('Longitude'), $displayObject->longitude,
-            __('The Longitude of this Display'), 'g');
-
-        Theme::Set('form_fields_location', $formFields);
-
-        // Wake on LAN
-        $formFields = array();
-
-        $formFields[] = Form::AddCheckbox('wakeOnLanEnabled', __('Enable Wake on LAN'),
-            $displayObject->wakeOnLanEnabled, __('Wake on Lan requires the correct network configuration to route the magic packet to the display PC'),
-            'w');
-
-        $formFields[] = Form::AddText('broadCastAddress', __('BroadCast Address'), (($displayObject->broadCastAddress == '') ? $displayObject->clientAddress : $displayObject->broadCastAddress),
-            __('The IP address of the remote host\'s broadcast address (or gateway)'), 'b');
-
-        $formFields[] = Form::AddText('secureOn', __('Wake on LAN SecureOn'), $displayObject->secureOn,
-            __('Enter a hexadecimal password of a SecureOn enabled Network Interface Card (NIC) of the remote host. Enter a value in this pattern: \'xx-xx-xx-xx-xx-xx\'. Leave the following field empty, if SecureOn is not used (for example, because the NIC of the remote host does not support SecureOn).'), 's');
-
-        $formFields[] = Form::AddText('wakeOnLanTime', __('Wake on LAN Time'), $displayObject->wakeOnLanTime,
-            __('The time this display should receive the WOL command, using the 24hr clock - e.g. 19:00. Maintenance must be enabled.'), 't');
-
-        $formFields[] = Form::AddText('cidr', __('Wake on LAN CIDR'), $displayObject->cidr,
-            __('Enter a number within the range of 0 to 32 in the following field. Leave the following field empty, if no subnet mask should be used (CIDR = 0). If the remote host\'s broadcast address is unknown: Enter the host name or IP address of the remote host in Broad Cast Address and enter the CIDR subnet mask of the remote host in this field.'), 'c');
-
-        Theme::Set('form_fields_wol', $formFields);
-
-        // Advanced
-        $formFields = array();
-
-        $displayProfileList = $this->getUser()->DisplayProfileList(NULL, array('type' => $displayObject->clientType));
-        array_unshift($displayProfileList, array('displayprofileid' => 0, 'name' => ''));
-
-        $formFields[] = Form::AddCombo(
-            'displayprofileid',
-            __('Settings Profile?'),
-            $displayObject->displayProfileId,
-            $displayProfileList,
-            'displayprofileid',
-            'name',
-            __('What display profile should this display use?'),
-            'p');
-
-        $formFields[] = Form::AddCombo(
-            'inc_schedule',
-            __('Interleave Default'),
-            $displayObject->incSchedule,
-            array(array('id' => '1', 'value' => 'Yes'), array('id' => '0', 'value' => 'No')),
-            'id',
-            'value',
-            __('Whether to always put the default layout into the cycle.'),
-            'i');
-
-        $formFields[] = Form::AddCombo(
-            'auditing',
-            __('Auditing'),
-            $displayObject->isAuditing,
-            array(array('id' => '1', 'value' => 'Yes'), array('id' => '0', 'value' => 'No')),
-            'id',
-            'value',
-            __('Collect auditing from this client. Should only be used if there is a problem with the display.'),
-            'a');
-
-        // Show the resolved settings for this display.
-        $formFields[] = Form::AddMessage(__('The settings for this display are shown below. They are taken from the active Display Profile for this Display, which can be changed in Display Settings. If you have altered the Settings Profile above, you will need to save and re-show the form.'));
-
-        // Build a table for the settings to be shown in
-        $cols = array(
-            array('name' => 'title', 'title' => __('Setting')),
-            array('name' => 'valueString', 'title' => __('Value'))
-        );
-
-        // Get the settings from the profile
-        $profile = $displayObject->getSettingsProfile();
-
-        // Go through each one, and see if it is a drop down
-        for ($i = 0; $i < count($profile); $i++) {
-            // Always update the value string with the source value
-            $profile[$i]['valueString'] = $profile[$i]['value'];
-
-            // Overwrite the value string when we are dealing with dropdowns
-            if ($profile[$i]['fieldType'] == 'dropdown') {
-                // Update our value
-                foreach ($profile[$i]['options'] as $option) {
-                    if ($option['id'] == $profile[$i]['value'])
-                        $profile[$i]['valueString'] = $option['value'];
-                }
-            } else if ($profile[$i]['fieldType'] == 'timePicker') {
-                $profile[$i]['valueString'] = Date::getSystemDate($profile[$i]['value'] / 1000, 'H:i');
-            }
+            $rows[] = $row;
         }
 
-        Theme::Set('table_cols', $cols);
-        Theme::Set('table_rows', $profile);
-        $formFields[] = Form::AddRaw(Theme::RenderReturn('table_render'));
-
-        Theme::Set('form_fields_advanced', $formFields);
-
-        // Two tabs
-        $tabs = array();
-        $tabs[] = Form::AddTab('general', __('General'));
-        $tabs[] = Form::AddTab('location', __('Location'));
-        $tabs[] = Form::AddTab('maintenance', __('Maintenance'));
-        $tabs[] = Form::AddTab('wol', __('Wake on LAN'));
-        $tabs[] = Form::AddTab('advanced', __('Advanced'));
-
-        Theme::Set('form_tabs', $tabs);
-
-        $response->SetFormRequestResponse(NULL, __('Edit a Display'), '650px', '350px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Display', 'Edit') . '")');
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Save'), '$("#DisplayEditForm").submit()');
-
+        // Call to render the template
+        $this->getState()->template = 'display-page-manage';
+        $this->getState()->setData([
+            'inventory' => $rows,
+            'display' => $display
+        ]);
     }
 
     /**
@@ -329,7 +134,7 @@ class Display extends Base
     function grid()
     {
         // validate displays so we get a realistic view of the table
-        //Display::ValidateDisplays();
+        $this->validateDisplays();
 
         $user = $this->getUser();
 
@@ -359,11 +164,11 @@ class Display extends Base
         // Pinned option?
         Session::Set('display', 'DisplayFilter', Sanitize::getCheckbox('XiboFilterPinned'));
 
-        $displays = $user->DisplayList(array('displayid'), array(
+        $displays = $user->DisplayList($this->gridRenderSort(), $this->gridRenderFilter(array(
             'displaygroupid' => $filter_displaygroupid,
             'display' => $filter_display,
             'macAddress' => $filterMacAddress,
-            'clientVersion' => $filterVersion)
+            'clientVersion' => $filterVersion))
         );
 
         foreach ($displays as $display) {
@@ -396,8 +201,8 @@ class Display extends Base
             // Thumbnail
             $display->thumbnail = '';
             // If we aren't logged in, and we are showThumbnail == 2, then show a circle
-            if (file_exists(Config::GetSetting('LIBRARY_LOCATION') . 'screenshots/' . $display->displayid . '_screenshot.jpg')) {
-                $display->thumbnail = 'index.php?p=display&q=ScreenShot&DisplayId=' . $display->displayid;
+            if (file_exists(Config::GetSetting('LIBRARY_LOCATION') . 'screenshots/' . $display->displayId . '_screenshot.jpg')) {
+                $display->thumbnail = 'index.php?p=display&q=ScreenShot&DisplayId=' . $display->displayId;
             }
 
             // Format the storage available / total space
@@ -405,10 +210,21 @@ class Display extends Base
 
             // Edit and Delete buttons first
             if ($this->getUser()->checkEditable($display)) {
+
+                // Manage
+                $display->buttons[] = array(
+                    'id' => 'display_button_manage',
+                    'url' => $this->urlFor('display.manage', ['id' => $display->displayId]),
+                    'text' => __('Manage'),
+                    'external' => true
+                );
+
+                $display->buttons[] = ['divider' => true];
+
                 // Edit
                 $display->buttons[] = array(
                     'id' => 'display_button_edit',
-                    'url' => 'index.php?p=display&q=displayForm&displayid=' . $display->displayid,
+                    'url' => $this->urlFor('display.edit.form', ['id' => $display->displayId]),
                     'text' => __('Edit')
                 );
             }
@@ -417,7 +233,7 @@ class Display extends Base
             if ($this->getUser()->checkDeleteable($display)) {
                 $display->buttons[] = array(
                     'id' => 'display_button_delete',
-                    'url' => 'index.php?p=display&q=DeleteForm&displayid=' . $display->displayid,
+                    'url' => $this->urlFor('display.delete.form', ['id' => $display->displayId]),
                     'text' => __('Delete')
                 );
             }
@@ -430,57 +246,31 @@ class Display extends Base
             if ($this->getUser()->checkEditable($display) || Config::GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes') {
                 $display->buttons[] = array(
                     'id' => 'display_button_schedulenow',
-                    'url' => 'index.php?p=schedule&q=ScheduleNowForm&displayGroupId=' . $display->displaygroupid,
+                    'url' => $this->urlFor('schedule.now.form', ['id' => $display->displayGroupId]),
                     'text' => __('Schedule Now')
                 );
             }
 
             if ($this->getUser()->checkEditable($display)) {
 
-                // Default Layout
-                $display->buttons[] = array(
-                    'id' => 'display_button_defaultlayout',
-                    'url' => 'index.php?p=display&q=DefaultLayoutForm&DisplayId=' . $display->displayid,
-                    'text' => __('Default Layout')
-                );
-
                 // File Associations
                 $display->buttons[] = array(
                     'id' => 'displaygroup_button_fileassociations',
-                    'url' => 'index.php?p=displaygroup&q=FileAssociations&DisplayGroupID=' . $display->displaygroupid,
+                    'url' => $this->urlFor('displayGroup.media.form', ['id' => $display->displayGroupId]),
                     'text' => __('Assign Files')
                 );
 
                 // Screen Shot
                 $display->buttons[] = array(
                     'id' => 'display_button_requestScreenShot',
-                    'url' => 'index.php?p=display&q=RequestScreenShotForm&displayId=' . $display->displayid,
+                    'url' => $this->urlFor('display.screenshot.form', ['id' => $display->displayId]),
                     'text' => __('Request Screen Shot'),
                     'multi-select' => true,
                     'dataAttributes' => array(
-                        array('name' => 'multiselectlink', 'value' => 'index.php?p=display&q=RequestScreenShot'),
+                        array('name' => 'multiselectlink', 'value' => $this->urlFor('display.screenshot.form')),
                         array('name' => 'rowtitle', 'value' => $display->display),
-                        array('name' => 'displayId', 'value' => $display->displayid)
+                        array('name' => 'displayId', 'value' => $display->displayId)
                     )
-                );
-
-                $display->buttons[] = ['divider' => true];
-            }
-
-            // Media Inventory
-            $display->buttons[] = array(
-                'id' => 'display_button_mediainventory',
-                'url' => 'index.php?p=display&q=MediaInventory&DisplayId=' . $display->displayid,
-                'text' => __('Media Inventory')
-            );
-
-            if ($this->getUser()->checkEditable($display)) {
-
-                // Logs
-                $display->buttons[] = array(
-                    'id' => 'displaygroup_button_logs',
-                    'url' => 'index.php?p=log&q=LastHundredForDisplay&displayid=' . $display->displayid,
-                    'text' => __('Recent Log')
                 );
 
                 $display->buttons[] = ['divider' => true];
@@ -491,21 +281,21 @@ class Display extends Base
                 // Display Groups
                 $display->buttons[] = array(
                     'id' => 'display_button_group_membership',
-                    'url' => 'index.php?p=display&q=MemberOfForm&DisplayID=' . $display->displayid,
+                    'url' => $this->urlFor('display.membership.form', ['id' => $display->displayId]),
                     'text' => __('Display Groups')
                 );
 
                 // Permissions
                 $display->buttons[] = array(
-                    'id' => 'display_button_group_membership',
-                    'url' => 'index.php?p=displaygroup&q=PermissionsForm&DisplayGroupID=' . $display->displaygroupid,
+                    'id' => 'display_button_group_permissions',
+                    'url' => $this->urlFor('user.permissions.form', ['entity' => 'DisplayGroup', 'id' => $display->displayGroupId]),
                     'text' => __('Permissions')
                 );
 
                 // Version Information
                 $display->buttons[] = array(
                     'id' => 'display_button_version_instructions',
-                    'url' => 'index.php?p=displaygroup&q=VersionInstructionsForm&displaygroupid=' . $display->displaygroupid . '&displayid=' . $display->displayid,
+                    'url' => $this->urlFor('displayGroup.version.form', ['id' => $display->displayGroupId]),
                     'text' => __('Version Information')
                 );
 
@@ -516,7 +306,7 @@ class Display extends Base
                 // Wake On LAN
                 $display->buttons[] = array(
                     'id' => 'display_button_wol',
-                    'url' => 'index.php?p=display&q=WakeOnLanForm&DisplayId=' . $display->displayid,
+                    'url' => $this->urlFor('display.wol.form', ['id' => $display->displayId]),
                     'text' => __('Wake on LAN')
                 );
             }
@@ -527,400 +317,246 @@ class Display extends Base
     }
 
     /**
-     * Delete form
+     * Edit Display Form
+     * @param int $displayId
      */
-    function DeleteForm()
+    function editForm($displayId)
     {
+        $display = DisplayFactory::getById($displayId);
 
-        $user = $this->getUser();
-        $response = $this->getState();
-        $displayid = Sanitize::getInt('displayid');
+        if (!$this->getUser()->checkEditable($display))
+            throw new AccessDeniedException();
 
-        // Auth
-        $auth = $this->getUser()->DisplayGroupAuth($this->GetDisplayGroupId($displayid), true);
-        if (!$auth->del)
-            trigger_error(__('You do not have permission to edit this display'), E_USER_ERROR);
+        // Get the settings from the profile
+        $profile = $display->getSettings();
 
-        Theme::Set('form_id', 'DisplayDeleteForm');
-        Theme::Set('form_action', 'index.php?p=display&q=Delete');
-        Theme::Set('form_meta', '<input type="hidden" name="displayid" value="' . $displayid . '">');
+        // Go through each one, and see if it is a drop down
+        for ($i = 0; $i < count($profile); $i++) {
+            // Always update the value string with the source value
+            $profile[$i]['valueString'] = $profile[$i]['value'];
 
-        Theme::Set('form_fields', array(Form::AddMessage(__('Are you sure you want to delete this display? This cannot be undone.'))));
+            // Overwrite the value string when we are dealing with dropdowns
+            if ($profile[$i]['fieldType'] == 'dropdown') {
+                // Update our value
+                foreach ($profile[$i]['options'] as $option) {
+                    if ($option['id'] == $profile[$i]['value'])
+                        $profile[$i]['valueString'] = $option['value'];
+                }
+            } else if ($profile[$i]['fieldType'] == 'timePicker') {
+                $profile[$i]['valueString'] = Date::getSystemDate($profile[$i]['value'] / 1000, 'H:i');
+            }
+        }
 
-        $response->SetFormRequestResponse(NULL, __('Delete this Display?'), '350px', '210');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Display', 'Delete') . '")');
-        $response->AddButton(__('No'), 'XiboDialogClose()');
-        $response->AddButton(__('Yes'), '$("#DisplayDeleteForm").submit()');
+        $this->getState()->template = 'display-form-edit';
+        $this->getState()->setData([
+            'display' => $display,
+            'layouts' => $this->getUser()->LayoutList(),
+            'profiles' => $this->getUser()->DisplayProfileList(NULL, array('type' => $display->clientType)),
+            'settings' => $profile,
+            'help' => Help::Link('Display', 'Edit')
+        ]);
+    }
 
+    /**
+     * Delete form
+     * @param int $displayId
+     */
+    function deleteForm($displayId)
+    {
+        $display = DisplayFactory::getById($displayId);
+
+        if (!$this->getUser()->checkDeleteable($display))
+            throw new AccessDeniedException();
+
+        $this->getState()->template = 'display-form-delete';
+        $this->getState()->setData([
+            'display' => $display,
+            'help' => Help::Link('Display', 'Delete')
+        ]);
+    }
+
+    /**
+     * Display Edit
+     * @param int $displayId
+     */
+    function edit($displayId)
+    {
+        $display = DisplayFactory::getById($displayId);
+
+        if (!$this->getUser()->checkEditable($display))
+            throw new AccessDeniedException();
+
+        // Update properties
+        $display->display = Sanitize::getString('display');
+        $display->description = Sanitize::getString('description');
+        $display->isAuditing = Sanitize::getInt('isAuditing');
+        $display->defaultLayoutId = Sanitize::getInt('defaultLayoutId');
+        $display->licensed = Sanitize::getInt('licensed');
+        $display->incSchedule = Sanitize::getInt('incSchedule');
+        $display->emailAlert = Sanitize::getInt('emailAlert');
+        $display->alertTimeout = Sanitize::getCheckbox('alertTimeout');
+        $display->wakeOnLanEnabled = Sanitize::getCheckbox('wakeOnLanEnabled');
+        $display->wakeOnLanTime = Sanitize::getString('wakeOnLanTime');
+        $display->broadCastAddress = Sanitize::getString('broadCastAddress');
+        $display->secureOn = Sanitize::getString('secureOn');
+        $display->cidr = Sanitize::getString('cidr');
+        $display->latitude = Sanitize::getDouble('latitude');
+        $display->longitude = Sanitize::getDouble('longitude');
+        $display->displayProfileId = Sanitize::getInt('displayProfileId');
+
+        $display->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Edited %s'), $display->display),
+            'id' => $display->displayId,
+            'data' => [$display]
+        ]);
     }
 
     /**
      * Delete a display
+     * @param int $displayId
      */
-    function Delete()
+    function delete($displayId)
     {
+        $display = DisplayFactory::getById($displayId);
 
+        if (!$this->getUser()->checkDeleteable($display))
+            throw new AccessDeniedException();
 
+        $display->delete();
 
-        $response = $this->getState();
-        $displayid = \Kit::GetParam('displayid', _POST, _INT, 0);
-
-        $auth = $this->getUser()->DisplayGroupAuth($this->GetDisplayGroupId($displayid), true);
-        if (!$auth->del)
-            trigger_error(__('You do not have permission to edit this display'), E_USER_ERROR);
-
-        if ($displayid == 0)
-            trigger_error(__("No Display selected for Deletion."));
-
-        $displayObject = new Display($db);
-
-        if (!$displayObject->Delete($displayid))
-            trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);
-
-        $response->SetFormSubmitResponse(__("The Display has been Deleted"));
-
-    }
-
-    /**
-     * Form for editing the default layout of a display
-     */
-    public function DefaultLayoutForm()
-    {
-
-        $response = $this->getState();
-
-        $displayId = Sanitize::getInt('DisplayId');
-
-        $auth = $this->getUser()->DisplayGroupAuth($this->GetDisplayGroupId($displayId), true);
-        if (!$auth->edit)
-            trigger_error(__('You do not have permission to edit this display'), E_USER_ERROR);
-
-        if (!$defaultLayoutId = $this->db->GetSingleValue(sprintf("SELECT defaultlayoutid FROM display WHERE displayid = %d", $displayId), 'defaultlayoutid', _INT)) {
-            trigger_error($db->error());
-            trigger_error(__('Unable to get the default layout'), E_USER_ERROR);
-        }
-
-        Theme::Set('form_id', 'DefaultLayoutForm');
-        Theme::Set('form_action', 'index.php?p=display&q=DefaultLayout');
-        Theme::Set('form_meta', '<input type="hidden" name="DisplayId" value="' . $displayId . '">');
-
-        $formFields = array();
-        $formFields[] = Form::AddCombo(
-            'defaultlayoutid',
-            __('Default Layout'),
-            $defaultLayoutId,
-            $this->getUser()->LayoutList(),
-            'layoutid',
-            'layout',
-            __('The Default Layout will be shown there are no other scheduled Layouts. It is usually a full screen logo or holding image.'),
-            'd');
-
-        Theme::Set('form_fields', $formFields);
-
-        $response->SetFormRequestResponse(NULL, __('Edit Default Layout'), '300px', '150px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Display', 'DefaultLayout') . '")');
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Save'), '$("#DefaultLayoutForm").submit()');
-
-    }
-
-    /**
-     * Edit the default layout for a display
-     */
-    public function DefaultLayout()
-    {
-
-
-
-        $response = $this->getState();
-        $displayObject = new Display($db);
-
-        $displayId = Sanitize::getInt('DisplayId');
-        $defaultLayoutId = Sanitize::getInt('defaultlayoutid');
-
-        $auth = $this->getUser()->DisplayGroupAuth($this->GetDisplayGroupId($displayId), true);
-        if (!$auth->edit)
-            trigger_error(__('You do not have permission to edit this display'), E_USER_ERROR);
-
-        if (!$displayObject->EditDefaultLayout($displayId, $defaultLayoutId))
-            trigger_error(__('Cannot Edit this Display'), E_USER_ERROR);
-
-        $response->SetFormSubmitResponse(__('Display Saved.'));
-
-    }
-
-    /**
-     * Shows the inventory XML for the display
-     */
-    public function MediaInventory()
-    {
-
-        $response = $this->getState();
-        $displayId = Sanitize::getInt('DisplayId');
-
-        $auth = $this->getUser()->DisplayGroupAuth($this->GetDisplayGroupId($displayId), true);
-        if (!$auth->view)
-            trigger_error(__('You do not have permission to view this display'), E_USER_ERROR);
-
-        if ($displayId == 0)
-            trigger_error(__('No DisplayId Given'));
-
-        // Get the media inventory xml for this display
-        $SQL = "SELECT IFNULL(MediaInventoryXml, '<xml></xml>') AS MediaInventoryXml FROM display WHERE DisplayId = %d";
-        $SQL = sprintf($SQL, $displayId);
-
-        if (!$mediaInventoryXml = $db->GetSingleValue($SQL, 'MediaInventoryXml', _HTMLSTRING)) {
-            trigger_error($db->error());
-            trigger_error(__('Unable to get the Inventory for this Display'), E_USER_ERROR);
-        }
-
-        // Load the XML into a DOMDocument
-        $document = new DOMDocument("1.0");
-
-        if (!$document->loadXML($mediaInventoryXml))
-            trigger_error(__('Invalid Media Inventory'), E_USER_ERROR);
-
-        $cols = array(
-            array('name' => 'id', 'title' => __('ID')),
-            array('name' => 'type', 'title' => __('Type')),
-            array('name' => 'complete', 'title' => __('Complete')),
-            array('name' => 'last_checked', 'title' => __('Last Checked'))
-        );
-        Theme::Set('table_cols', $cols);
-
-        // Need to parse the XML and return a set of rows
-        $xpath = new DOMXPath($document);
-        $fileNodes = $xpath->query("//file");
-
-        $rows = array();
-
-        foreach ($fileNodes as $node) {
-            $row = array();
-            $row['type'] = $node->getAttribute('type');
-            $row['id'] = $node->getAttribute('id');
-            $row['complete'] = ($node->getAttribute('complete') == 0) ? __('No') : __('Yes');
-            $row['last_checked'] = $node->getAttribute('lastChecked');
-            $row['md5'] = $node->getAttribute('md5');
-
-            $rows[] = $row;
-        }
-
-        // Store the table rows
-        Theme::Set('table_rows', $rows);
-
-        $response->SetFormRequestResponse(Theme::RenderReturn('table_render'), __('Media Inventory'), '550px', '350px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Display', 'MediaInventory') . '")');
-        $response->AddButton(__('Close'), 'XiboDialogClose()');
-
-    }
-
-    /**
-     * Get DisplayGroupID
-     * @param <type> $displayId
-     */
-    private function GetDisplayGroupId($displayId)
-    {
-        $sql = "SELECT displaygroup.DisplayGroupID ";
-        $sql .= "  FROM `displaygroup` ";
-        $sql .= "   INNER JOIN `lkdisplaydg` ON lkdisplaydg.DisplayGroupID = displaygroup.DisplayGroupID ";
-        $sql .= " WHERE displaygroup.IsDisplaySpecific = 1 AND lkdisplaydg.DisplayID = %d";
-
-        if (!$id = $this->db->GetSingleValue(sprintf($sql, $displayId), 'DisplayGroupID', _INT)) {
-            trigger_error($this->db->error());
-            trigger_error(__('Unable to determine permissions'), E_USER_ERROR);
-        }
-
-        return $id;
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Deleted %s'), $display->display),
+            'id' => $display->displayId,
+            'data' => [$display]
+        ]);
     }
 
     /**
      * Member of Display Groups Form
+     * @param int $displayId
      */
-    public function MemberOfForm()
+    public function membershipForm($displayId)
     {
+        $display = DisplayFactory::getById($displayId);
 
-        $response = $this->getState();
-        $displayID = Sanitize::getInt('DisplayID');
+        if (!$this->getUser()->checkPermissionsModifyable($display))
+            throw new AccessDeniedException();
 
-        // Auth
-        $auth = $this->getUser()->DisplayGroupAuth($this->GetDisplayGroupId($displayID), true);
-        if (!$auth->modifyPermissions)
-            trigger_error(__('You do not have permission to change Display Groups on this display'), E_USER_ERROR);
+        // Groups we are assigned to
+        $groupsAssigned = DisplayGroupFactory::getByDisplayId($display->displayId);
 
-        // There needs to be two lists here.
-        //  - DisplayGroups this Display is already assigned to
-        //  - DisplayGroups this Display could be assigned to
+        // All Groups
+        $allGroups = DisplayGroupFactory::query(['displayGroup']);
 
-        // Set some information about the form
-        Theme::Set('displaygroups_assigned_id', 'displaysIn');
-        Theme::Set('displaygroups_available_id', 'displaysOut');
-        Theme::Set('displaygroups_assigned_url', 'index.php?p=display&q=SetMemberOf&DisplayID=' . $displayID);
+        // The available users are all users except users already in assigned users
+        $checkboxes = array();
 
-        // Display Groups Assigned
-        $SQL = "";
-        $SQL .= "SELECT displaygroup.DisplayGroupID, ";
-        $SQL .= "       displaygroup.DisplayGroup, ";
-        $SQL .= "       CONCAT('DisplayGroupID_', displaygroup.DisplayGroupID) AS list_id ";
-        $SQL .= "FROM   displaygroup ";
-        $SQL .= "   INNER JOIN lkdisplaydg ON lkdisplaydg.DisplayGroupID = displaygroup.DisplayGroupID ";
-        $SQL .= sprintf("WHERE  lkdisplaydg.DisplayID   = %d ", $displayID);
-        $SQL .= " AND displaygroup.IsDisplaySpecific = 0 ";
-        $SQL .= " ORDER BY displaygroup.DisplayGroup ";
+        foreach ($allGroups as $group) {
+            /* @var DisplayGroup $group */
+            // Check to see if it exists in $usersAssigned
+            $exists = false;
+            foreach ($groupsAssigned as $groupAssigned) {
+                /* @var DisplayGroup $groupAssigned */
+                if ($groupAssigned->displayGroupId == $group->displayGroupId) {
+                    $exists = true;
+                    break;
+                }
+            }
 
-        $displaygroupsAssigned = $db->GetArray($SQL);
+            // Store this checkbox
+            $checkbox = array(
+                'id' => $group->displayGroupId,
+                'name' => $group->displayGroup,
+                'value_checked' => (($exists) ? 'checked' : '')
+            );
 
-        if (!is_array($displaygroupsAssigned)) {
-            trigger_error($db->error());
-            trigger_error(__('Error getting Display Groups'), E_USER_ERROR);
+            $checkboxes[] = $checkbox;
         }
 
-        Theme::Set('displaygroups_assigned', $displaygroupsAssigned);
-
-        // Display Groups not assigned
-        $SQL = "";
-        $SQL .= "SELECT displaygroup.DisplayGroupID, ";
-        $SQL .= "       displaygroup.DisplayGroup, ";
-        $SQL .= "       CONCAT('DisplayGroupID_', displaygroup.DisplayGroupID) AS list_id ";
-        $SQL .= "  FROM displaygroup ";
-        $SQL .= " WHERE displaygroup.IsDisplaySpecific = 0 ";
-        $SQL .= " AND displaygroup.DisplayGroupID NOT IN ";
-        $SQL .= "       (SELECT lkdisplaydg.DisplayGroupID ";
-        $SQL .= "          FROM lkdisplaydg ";
-        $SQL .= sprintf(" WHERE  lkdisplaydg.DisplayID   = %d ", $displayID);
-        $SQL .= "       )";
-        $SQL .= " ORDER BY displaygroup.DisplayGroup ";
-
-        Log::notice($SQL);
-
-        $displaygroups_available = $db->GetArray($SQL);
-
-        if (!is_array($displaygroups_available)) {
-            trigger_error($db->error());
-            trigger_error(__('Error getting Display Groups'), E_USER_ERROR);
-        }
-
-        Theme::Set('displaygroups_available', $displaygroups_available);
-
-        // Render the theme
-        $form = Theme::RenderReturn('display_form_group_assign');
-
-        $response->SetFormRequestResponse($form, __('Manage Membership'), '400', '375', 'DisplayGroupManageMembersCallBack');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('DisplayGroup', 'Members') . '")');
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Save'), 'DisplayGroupMembersSubmit()');
-
+        $this->getState()->template = 'display-form-membership';
+        $this->getState()->setData([
+            'display' => $display,
+            'checkboxes' => $checkboxes,
+            'help' =>  Help::Link('Display', 'Members')
+        ]);
     }
 
     /**
      * Sets the Members of a group
-     * @return
+     * @param int $displayId
      */
-    public function SetMemberOf()
+    public function membership($displayId)
     {
+        $display = DisplayFactory::getById($displayId);
 
-        $response = $this->getState();
+        if (!$this->getUser()->checkPermissionsModifyable($display))
+            throw new AccessDeniedException();
 
+        // Load the groups details
+        $display->load();
 
-        $displayGroupObject = new DisplayGroup($db);
+        $displayGroups = $this->getApp()->request()->params('displayGroupId');
 
-        $displayID = Sanitize::getInt('DisplayID');
-        $displayGroups = \Kit::GetParam('DisplayGroupID', _POST, _ARRAY, array());
-        $members = array();
+        // We will receive a list of displayGroups from the UI which are in the "assign column" at the time the form is
+        // submitted.
+        // We want to go through and unlink any displayGroups that are NOT in that list, but that the current user has access
+        // to edit.
+        // We want to add any displayGroups that are in that list (but aren't already assigned)
 
-        // Get a list of current members
-        $SQL = "";
-        $SQL .= "SELECT displaygroup.DisplayGroupID ";
-        $SQL .= "FROM   displaygroup ";
-        $SQL .= "   INNER JOIN lkdisplaydg ON lkdisplaydg.DisplayGroupID = displaygroup.DisplayGroupID ";
-        $SQL .= sprintf("WHERE  lkdisplaydg.DisplayID   = %d ", $displayID);
-        $SQL .= " AND displaygroup.IsDisplaySpecific = 0 ";
+        // All users that this session has access to
+        $allGroups = DisplayGroupFactory::query(['displayGroup']);
 
-        if (!$resultIn = $db->query($SQL)) {
-            trigger_error($db->error());
-            trigger_error(__('Error getting Display Groups'), E_USER_ERROR);
-        }
+        // Convert to an array of ID's for convenience
+        $allGroupIds = array_map(function ($group) {
+            return $group->displayGroupId;
+        }, $allGroups);
 
-        while ($row = $db->get_assoc_row($resultIn)) {
-            // Test whether this ID is in the array or not
-            $displayGroupID = Sanitize::int($row['DisplayGroupID']);
+        // Groups assigned to Display
+        $groupsAssigned = DisplayGroupFactory::getByDisplayId($display->displayId);
 
-            if (!in_array($displayGroupID, $displayGroups)) {
-                // Its currently assigned but not in the $displays array
-                //  so we unassign
-                if (!$displayGroupObject->Unlink($displayGroupID, $displayID)) {
-                    trigger_error($displayGroupObject->GetErrorMessage(), E_USER_ERROR);
-                }
+        foreach ($groupsAssigned as $row) {
+            /* @var DisplayGroup $row */
+            // Did this session have permission to do anything to this displayGroup?
+            // If not, move on
+            if (!in_array($row->displayGroupId, $allGroupIds))
+                continue;
+
+            // Is this displayGroup in the provided list of displayGroups?
+            if (in_array($row->displayGroupId, $displayGroups)) {
+                // This displayGroup is already assigned, so we remove it from the $displayGroups array
+                unset($displayGroups[$row->displayGroupId]);
             } else {
-                $members[] = $displayGroupID;
+                // It isn't therefore needs to be removed
+                $row->unassignDisplay($display->displayId);
+                $row->save(false);
             }
         }
 
-        foreach ($displayGroups as $displayGroupID) {
+        // Add any displayGroups that are still missing after that assignment process
+        foreach ($displayGroups as $displayGroupId) {
             // Add any that are missing
-            if (!in_array($displayGroupID, $members)) {
-                if (!$displayGroupObject->Link($displayGroupID, $displayID)) {
-                    trigger_error($displayGroupObject->GetErrorMessage(), E_USER_ERROR);
-                }
-            }
+            $group = DisplayGroupFactory::getById($displayGroupId);
+            $group->assignDisplay($display->displayId);
+            $group->save(false);
         }
 
-        $response->SetFormSubmitResponse(__('Group membership set'), false);
-
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Membership set for %s'), $display->display),
+            'id' => $display->displayId
+        ]);
     }
 
     /**
-     * Form for wake on Lan
+     * Output a screen shot
+     * @param int $displayId
      */
-    public function WakeOnLanForm()
+    public function screenShot($displayId)
     {
-
-        $response = $this->getState();
-
-        $displayId = Sanitize::getInt('DisplayId');
-
-        // Get the MAC Address
-        $macAddress = $db->GetSingleValue(sprintf("SELECT MacAddress FROM `display` WHERE DisplayID = %d", $displayId), 'MacAddress', _STRING);
-
-        if (!$macAddress || $macAddress == '')
-            trigger_error(__('This display has no mac address recorded against it yet. Make sure the display is running.'), E_USER_ERROR);
-
-        // Set some information about the form
-        Theme::Set('form_id', 'WakeOnLanForm');
-        Theme::Set('form_action', 'index.php?p=display&q=WakeOnLan');
-        Theme::Set('form_meta', '<input type="hidden" name="DisplayId" value="' . $displayId . '"><input type="hidden" name="MacAddress" value="' . $macAddress . '">');
-
-        Theme::Set('form_fields', array(Form::AddMessage(__('Are you sure you want to send a Wake On Lan message to this display?'))));
-
-        $response->SetFormRequestResponse(NULL, __('Wake On Lan'), '300px', '250px');
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Send'), '$("#WakeOnLanForm").submit()');
-
-    }
-
-    /**
-     * Wake on LAN
-     */
-    public function WakeOnLan()
-    {
-
-
-
-        $response = $this->getState();
-        $displayObject = new Display($db);
-
-        $displayId = Sanitize::getInt('DisplayId');
-
-        if (!$displayObject->WakeOnLan($displayId))
-            trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);
-
-        $response->SetFormSubmitResponse(__('Wake on Lan command sent.'));
-
-    }
-
-    public function ScreenShot()
-    {
-        $displayId = Sanitize::getInt('DisplayId');
-
         // Output an image if present, otherwise not found image.
         $file = 'screenshots/' . $displayId . '_screenshot.jpg';
 
@@ -929,7 +565,7 @@ class Display extends Base
         $fileName = $library . $file;
 
         if (!file_exists($fileName)) {
-            $fileName = Theme::ImageUrl('forms/filenotfound.gif');
+            $fileName = Theme::uri('forms/filenotfound.gif');
         }
 
         $size = filesize($fileName);
@@ -938,7 +574,7 @@ class Display extends Base
         $mime = $fi->file($fileName);
         header("Content-Type: {$mime}");
 
-        //Output a header
+        // Output a header
         header('Cache-Control: no-cache, must-revalidate');
         header('Content-Length: ' . $size);
 
@@ -949,42 +585,198 @@ class Display extends Base
         readfile($fileName);
     }
 
-    public function RequestScreenShotForm()
+    /**
+     * Request ScreenShot form
+     * @param int $displayId
+     */
+    public function requestScreenShotForm($displayId)
     {
+        $display = DisplayFactory::getById($displayId);
 
-        $response = $this->getState();
+        if (!$this->getUser()->checkViewable($display))
+            throw new AccessDeniedException();
 
-        $displayId = Sanitize::getInt('displayId');
-
-        // Set some information about the form
-        Theme::Set('form_id', 'RequestScreenShotForm');
-        Theme::Set('form_action', 'index.php?p=display&q=RequestScreenShot');
-        Theme::Set('form_meta', '<input type="hidden" name="displayId" value="' . $displayId . '">');
-
-        Theme::Set('form_fields', array(Form::AddMessage(__('Are you sure you want to request a screen shot? The next time the client connects to the CMS the screen shot will be sent.'))));
-
-        $response->SetFormRequestResponse(NULL, __('Request Screen Shot'), '300px', '250px');
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Request'), '$("#RequestScreenShotForm").submit()');
-
+        $this->getState()->template = 'display-form-request-screenshot';
+        $this->getState()->setData([
+            'display' => $display,
+            'help' =>  Help::Link('Display', 'ScreenShot')
+        ]);
     }
 
-    public function RequestScreenShot()
+    /**
+     * Request ScreenShot
+     * @param int $displayId
+     */
+    public function requestScreenShot($displayId)
     {
+        $display = DisplayFactory::getById($displayId);
 
+        if (!$this->getUser()->checkViewable($display))
+            throw new AccessDeniedException();
 
+        $display->screenShotRequested = 1;
+        $display->save(false);
 
-        $response = $this->getState();
-        $displayObject = new Display($db);
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Request sent for %s'), $display->display),
+            'id' => $display->displayId
+        ]);
+    }
 
-        $displayId = Sanitize::getInt('displayId');
+    /**
+     * Form for wake on Lan
+     * @param int $displayId
+     */
+    public function wakeOnLanForm($displayId)
+    {
+        $display = DisplayFactory::getById($displayId);
 
-        if (!$displayObject->RequestScreenShot($displayId))
-            trigger_error($displayObject->GetErrorMessage(), E_USER_ERROR);
+        if (!$this->getUser()->checkViewable($display))
+            throw new AccessDeniedException();
 
-        $response->SetFormSubmitResponse(__('Request Sent.'));
+        if ($display->macAddress == '')
+            throw new \InvalidArgumentException(__('This display has no mac address recorded against it yet. Make sure the display is running.'));
 
+        $this->getState()->template = 'display-form-wakeonlan';
+        $this->getState()->setData([
+            'display' => $display,
+            'help' =>  Help::Link('Display', 'WakeOnLan')
+        ]);
+    }
+
+    /**
+     * Wake this display using a WOL command
+     * @param int $displayId
+     */
+    public function wakeOnLan($displayId)
+    {
+        $display = DisplayFactory::getById($displayId);
+
+        if (!$this->getUser()->checkViewable($display))
+            throw new AccessDeniedException();
+
+        if ($display->macAddress == '' || $display->broadCastAddress == '')
+            throw new \InvalidArgumentException(__('This display has no mac address recorded against it yet. Make sure the display is running.'));
+
+        Log::notice('About to send WOL packet to ' . $display->broadCastAddress . ' with Mac Address ' . $display->macAddress);
+
+        WakeOnLan::TransmitWakeOnLan($display->macAddress, $display->secureOn, $display->broadCastAddress, $display->cidr, '9');
+
+        $display->lastWakeOnLanCommandSent = time();
+        $display->save(false);
+
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Wake on Lan sent for %s'), $display->display),
+            'id' => $display->displayId
+        ]);
+    }
+
+    /**
+     * Notify displays of this campaign change
+     * @param <type> $layoutId
+     */
+    public function NotifyDisplays($campaignId)
+    {
+        Log::debug(sprintf('Checking for Displays to refresh on Layout %d', $campaignId), 'display', 'NotifyDisplays');
+
+        try {
+            $dbh = \Xibo\Storage\PDOConnect::init();
+
+            $currentdate = time();
+            $rfLookahead = \Xibo\Helper\Sanitize::int(Config::GetSetting('REQUIRED_FILES_LOOKAHEAD'));
+            $rfLookahead = $currentdate + $rfLookahead;
+
+            // Which displays does a change to this layout effect?
+            $SQL  = " SELECT DISTINCT display.DisplayID ";
+            $SQL .= "   FROM schedule ";
+            $SQL .= "   INNER JOIN schedule_detail ";
+            $SQL .= "   ON schedule_detail.eventid = schedule.eventid ";
+            $SQL .= "   INNER JOIN lkdisplaydg ";
+            $SQL .= "   ON lkdisplaydg.DisplayGroupID = schedule_detail.DisplayGroupID ";
+            $SQL .= "   INNER JOIN display ";
+            $SQL .= "   ON lkdisplaydg.DisplayID = display.displayID ";
+            $SQL .= " WHERE schedule.CampaignID = :campaignid ";
+            $SQL .= " AND schedule_detail.FromDT < :fromdt AND schedule_detail.ToDT > :todt ";
+            $SQL .= " UNION ";
+            $SQL .= " SELECT DISTINCT display.DisplayID ";
+            $SQL .= "   FROM display ";
+            $SQL .= "       INNER JOIN lkcampaignlayout ";
+            $SQL .= "       ON lkcampaignlayout.LayoutID = display.DefaultLayoutID ";
+            $SQL .= " WHERE lkcampaignlayout.CampaignID = :campaignid";
+
+            $sth = $dbh->prepare($SQL);
+            $sth->execute(array(
+                'campaignid' => $campaignId,
+                'fromdt' => $rfLookahead,
+                'todt' => $currentdate - 3600
+            ));
+
+            while ($row = $sth->fetch()) {
+                // Notify each display in turn
+                $displayId = \Xibo\Helper\Sanitize::int($row['DisplayID']);
+                $this->FlagIncomplete($displayId);
+            }
+        }
+        catch (Exception $e) {
+            Log::error($e->getMessage());
+
+            if (!$this->IsError())
+                $this->SetError(25004, 'Unable to Flag Display as incomplete');
+
+            return false;
+        }
+    }
+
+    /**
+     * Validate the display list
+     * @return array[Display]
+     */
+    public function validateDisplays()
+    {
+        $timedOutDisplays = [];
+
+        // Get the global time out (overrides the alert time out on the display if 0)
+        $globalTimeout = Config::GetSetting('MAINTENANCE_ALERT_TOUT') * 60;
+
+        foreach (DisplayFactory::query() as $display) {
+            /* @var \Xibo\Entity\Display $display */
+
+            // Should we test against the collection interval or the preset alert timeout?
+            if ($display->alertTimeout == 0 && $display->clientType != '') {
+                $timeoutToTestAgainst = $display->GetSetting('collectInterval', $globalTimeout);
+            }
+            else {
+                $timeoutToTestAgainst = $globalTimeout;
+            }
+
+            // Store the time out to test against
+            $timeOut = $display->lastAccessed + $timeoutToTestAgainst;
+
+            // If the last time we accessed is less than now minus the time out
+            if ($timeOut < time()) {
+                Log::debug('Timed out display. Last Accessed: ' . date('Y-m-d h:i:s', $display->lastAccessed) . '. Time out: ' . date('Y-m-d h:i:s', $timeOut));
+
+                // If this is the first switch (i.e. the row was logged in before)
+                if ($display->loggedIn == 1) {
+
+                    // Update the display and set it as logged out
+                    $display->loggedIn = 0;
+                    $display->save(false);
+
+                    // Log the down event
+                    $stat = new Stat();
+                    $stat->displayId = $display->displayId;
+                    $stat->fromDt = $display->lastAccessed;
+                    $stat->save();
+                }
+
+                // Store this row
+                $timedOutDisplays[] = $display;
+            }
+        }
+
+        return $timedOutDisplays;
     }
 }
-
-?>

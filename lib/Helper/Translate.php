@@ -36,14 +36,14 @@ class Translate
      */
     public static function InitLocale($language = NULL)
     {
-        $localeDir = '../locale';
+        $localeDir = RELATIVE_URL_BASE . 'locale';
         $default = ($language == NULL) ? Config::GetSetting('DEFAULT_LANGUAGE') : $language;
 
         // Build an array of supported languages
         $supportedLanguages = scandir($localeDir);
 
         // Try to get the local firstly from _REQUEST (post then get)
-        $requestedLanguage = \Kit::GetParam('lang', _REQUEST, _WORD, '');
+        $requestedLanguage = Sanitize::getString('lang');
         $foundLanguage = '';
 
         if ($requestedLanguage != '') {

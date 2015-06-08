@@ -174,9 +174,9 @@
         {% for item in options %}
         <tr>
             <td>{{ item.name }}</td>
-            <td><input type="checkbox" name="{{ item.name }}" value="{{ item.value_view }}" {{ item.value_view_checked }}></td>
-            <td><input type="checkbox" name="{{ item.name }}" value="{{ item.value_edit }}" {{ item.value_edit_checked }}></td>
-            <td><input type="checkbox" name="{{ item.name }}" value="{{ item.value_del }}" {{ item.value_del_checked }}></td>
+            <td><input type="checkbox" name="{{ name }}" value="{{ item.value_view }}" {{ item.value_view_checked }}></td>
+            <td><input type="checkbox" name="{{ name }}" value="{{ item.value_edit }}" {{ item.value_edit_checked }}></td>
+            <td><input type="checkbox" name="{{ name }}" value="{{ item.value_del }}" {{ item.value_del_checked }}></td>
         </tr>
         {% endfor %}
     </table>

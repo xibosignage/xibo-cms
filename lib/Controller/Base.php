@@ -24,7 +24,6 @@ namespace Xibo\Controller;
 use Slim\Slim;
 use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Helper\Date;
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 
@@ -174,12 +173,13 @@ class Base
         $grid = ($state->template == 'grid');
 
         if ($grid) {
-            $count = count($data);
+            $recordsTotal = ($state->recordsTotal == null) ? count($data) : $state->recordsTotal;
+            $recordsFiltered = ($state->recordsFiltered == null) ? $recordsTotal : $state->recordsFiltered;
 
             $data = [
                 'draw' => intval(Sanitize::getInt('draw')),
-                'recordsTotal' => $count,
-                'recordsFiltered' => $count,
+                'recordsTotal' => $recordsTotal,
+                'recordsFiltered' => $recordsFiltered,
                 'data' => $data
             ];
         }
@@ -188,6 +188,14 @@ class Base
             // API
             if (!is_array($data))
                 throw new ControllerNotImplemented();
+
+            if (!$grid) {
+                $data = [
+                    'message' => $state->message,
+                    'id' => $state->id,
+                    'data' => $data
+                ];
+            }
 
             $this->app->render(200, $data);
         }

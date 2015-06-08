@@ -39,7 +39,7 @@ class Log
      */
     public static function audit($entity, $entityId, $message, $object)
     {
-        \Log::Audit(sprintf('Audit Trail message recorded for %s with id %d. Message: %s', $entity, $entityId, $message));
+        Log::debug(sprintf('Audit Trail message recorded for %s with id %d. Message: %s', $entity, $entityId, $message));
 
         if (self::$_auditLogStatement == null) {
             $dbh = PDOConnect::newConnection();
@@ -53,9 +53,11 @@ class Log
         if (!is_string($object))
             $object = json_encode($object);
 
+        $app = Slim::getInstance();
+
         self::$_auditLogStatement->execute([
             'logDate' => time(),
-            'userId' => \Kit::GetParam('userid', _SESSION, _INT, 0),
+            'userId' => $app->user->userId,
             'entity' => $entity,
             'message' => $message,
             'entityId' => $entityId,

@@ -113,8 +113,7 @@ $app->get('/layout/designer/:id', '\Xibo\Controller\Layout:displayDesigner')->na
 $app->get('/layout/status/:id', '\Xibo\Controller\Layout:LayoutStatus')->setName('layout.status');
 $app->get('/layout/preview/:id', '\Xibo\Controller\Preview:render')->name('layout.preview');
 $app->get('/layout/export/:id', '\Xibo\Controller\Layout:export')->name('layout.export');
-
-// Layout forms
+// forms
 $app->get('/layout/form/add', '\Xibo\Controller\Layout:addForm')->name('layout.add.form');
 $app->get('/layout/form/edit/:id', '\Xibo\Controller\Layout:editForm')->name('layout.edit.form');
 $app->get('/layout/form/copy/:id', '\Xibo\Controller\Layout:copyForm')->name('layout.copy.form');
@@ -133,6 +132,12 @@ $app->get('/library/form/tidy', '\Xibo\Controller\Library:tidyLibraryForm')->nam
 // display
 //
 $app->get('/display/view', '\Xibo\Controller\Display:displayPage')->name('display.view');
+$app->get('/display/manage/:id', '\Xibo\Controller\Display:displayManage')->name('display.manage');
+$app->get('/display/form/edit/:id', '\Xibo\Controller\Display:editForm')->name('display.edit.form');
+$app->get('/display/form/delete/:id', '\Xibo\Controller\Display:deleteForm')->name('display.delete.form');
+$app->get('/display/form/membership/:id', '\Xibo\Controller\Display:membershipForm')->name('display.membership.form');
+$app->get('/display/form/screenshot/:id', '\Xibo\Controller\Display:requestScreenShotForm')->name('display.screenshot.form');
+$app->get('/display/form/wol/:id', '\Xibo\Controller\Display:wakeOnLanForm')->name('display.wol.form');
 
 //
 // user
@@ -184,12 +189,19 @@ $app->get('/dataset/form/add', '\Xibo\Controller\DataSet:addForm')->name('dataSe
 //
 $app->get('/displaygroup/view', '\Xibo\Controller\DisplayGroup:displayPage')->name('displaygroup.view');
 $app->get('/displaygroup/form/add', '\Xibo\Controller\DisplayGroup:addForm')->name('displayGroup.add.form');
+$app->get('/displaygroup/form/edit/:id', '\Xibo\Controller\DisplayGroup:editForm')->name('displayGroup.edit.form');
+$app->get('/displaygroup/form/delete/:id', '\Xibo\Controller\DisplayGroup:deleteForm')->name('displayGroup.delete.form');
+$app->get('/displaygroup/form/members/:id', '\Xibo\Controller\DisplayGroup:membersForm')->name('displayGroup.members.form');
+$app->get('/displaygroup/form/media/:id', '\Xibo\Controller\DisplayGroup:mediaForm')->name('displayGroup.media.form');
+$app->get('/displaygroup/form/version/:id', '\Xibo\Controller\DisplayGroup:versionForm')->name('displayGroup.version.form');
 
 //
 // displayprofile
 //
 $app->get('/displayprofile/view', '\Xibo\Controller\DisplayProfile:displayPage')->name('displayprofile.view');
 $app->get('/displayprofile/form/add', '\Xibo\Controller\DisplayProfile:addForm')->name('displayProfile.add.form');
+$app->get('/displayprofile/form/edit/:id', '\Xibo\Controller\DisplayProfile:editForm')->name('displayProfile.edit.form');
+$app->get('/displayprofile/form/delete/:id', '\Xibo\Controller\DisplayProfile:deleteForm')->name('displayProfile.delete.form');
 
 //
 // group
@@ -198,6 +210,8 @@ $app->get('/group/view', '\Xibo\Controller\UserGroup:displayPage')->name('group.
 $app->get('/group/form/add', '\Xibo\Controller\UserGroup:addForm')->name('group.add.form');
 $app->get('/group/form/edit/:id', '\Xibo\Controller\UserGroup:editForm')->name('group.edit.form');
 $app->get('/group/form/delete/:id', '\Xibo\Controller\UserGroup:deleteForm')->name('group.delete.form');
+$app->get('/group/form/acl/:entity/:id', '\Xibo\Controller\UserGroup:aclForm')->name('group.acl.form');
+$app->get('/group/form/members/:id', '\Xibo\Controller\UserGroup:membersForm')->name('group.members.form');
 
 //
 // admin
@@ -225,11 +239,13 @@ $app->get('/module/form/verify', '\Xibo\Controller\Module:verifyForm')->name('mo
 // transition
 //
 $app->get('/transition/view', '\Xibo\Controller\Transition:displayPage')->name('transition.view');
+$app->get('/transition/form/edit/:id', '\Xibo\Controller\Transition:editForm')->name('transition.edit.form');
 
 //
 // sessions
 //
 $app->get('/sessions/view', '\Xibo\Controller\Sessions:displayPage')->name('sessions.view');
+$app->get('/sessions/form/logout', '\Xibo\Controller\Sessions:confirmLogoutForm')->name('sessions.confirm.logout.form');
 
 //
 // fault
@@ -246,6 +262,8 @@ $app->get('/license/view', '\Xibo\Controller\Login:about')->name('license.view')
 //
 $app->get('/help/view', '\Xibo\Controller\Help:displayPage')->name('help.view');
 $app->get('/help/form/add', '\Xibo\Controller\Help:addForm')->name('help.add.form');
+$app->get('/help/form/edit/:id', '\Xibo\Controller\Help:editForm')->name('help.edit.form');
+$app->get('/help/form/delete/:id', '\Xibo\Controller\Help:deleteForm')->name('help.delete.form');
 
 //
 // Stats
