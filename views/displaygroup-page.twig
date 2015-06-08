@@ -53,6 +53,7 @@
             serverSide: true,
             searchDelay: 3000,
             "order": [[ 1, "asc"]],
+            "filter": false,
             ajax: "{{ urlFor("displayGroup.search") }}",
             "columns": [
                 { "data": "displayGroup" },
@@ -66,5 +67,27 @@
 
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
+
+        // Callback for the media form
+        function mediaFormCallBack() {
+            var mediaTable = $("#mediaAssignments").DataTable({
+                serverSide: true,
+                searchDelay: 3000,
+                "order": [[ 1, "asc"]],
+                "filter": false,
+                ajax: "{{ urlFor("library.search") }}",
+                "columns": [
+                    { "data": "medaiId" },
+                    { "data": "name" },
+                    {
+                        "orderable": false,
+                        "data": dataTableButtonsColumn
+                    }
+                ]
+            });
+
+            mediaTable.on('draw', dataTableDraw);
+            mediaTable.on('processing.dt', dataTableProcessing);
+        }
     </script>
 {% endblock %}

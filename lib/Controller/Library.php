@@ -41,7 +41,7 @@ class Library extends Base
     function displayPage()
     {
         // Default options
-        if (\Kit::IsFilterPinned('content', 'Filter')) {
+        if (Session::Get(get_class(), 'Filter') == 1) {
             $filter_pinned = 1;
             $filter_name = Session::Get('content', 'filter_name');
             $filter_type = Session::Get('content', 'filter_type');
@@ -95,7 +95,7 @@ class Library extends Base
         $user = $this->getUser();
 
         //Get the input params and store them
-        $filter_type = \Kit::GetParam('filter_type', _REQUEST, _WORD);
+        $filter_type = Sanitize::getString('filter_type');
         $filter_name = Sanitize::getString('filter_name');
         $filter_userid = Sanitize::getInt('filter_owner');
         $filter_retired = Sanitize::getInt('filter_retired');

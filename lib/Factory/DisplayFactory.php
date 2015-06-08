@@ -67,6 +67,7 @@ class DisplayFactory
               SELECT display.displayId,
                   display.display,
                   display.defaultLayoutId,
+                  layout.layout AS defaultLayout,
                   display.license,
                   display.licensed,
                   display.licensed AS currentlyLicenced,

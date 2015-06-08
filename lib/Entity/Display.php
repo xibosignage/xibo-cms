@@ -75,6 +75,7 @@ class Display
 
     public $displayGroupId;
     public $currentLayout;
+    public $defaultLayout;
 
     public $displayGroups = [];
 

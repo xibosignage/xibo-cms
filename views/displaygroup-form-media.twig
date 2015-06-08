@@ -1,0 +1,63 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+{% import "inline.twig" as inline %}
+
+{% block formTitle %}
+    {% trans "Associate an item from the Library" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Save" %}, $("#<<id>>").submit()
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+{% endblock %}
+
+{% block callBack %}mediaFormCallBack{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <div id="FileAssociationsAssign" class="well">
+                <div>
+                    <ul id="FileAssociationsSortable">
+                        {% for item in media %}
+                        <li id="MediaID_{{ item.mediaId }}" class="li-sortable">{{ item.name }}<span class="glyphicon glyphicon-minus-sign"></span></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="XiboGrid" id="{{ random() }}">
+                <div>
+                    {{ inline.dropdown("filter_type", "single", "Type", "", modules, "moduleId", "name") }}
+                </div>
+                <div class="XiboData">
+                    <table id="mediaAssignments" class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th>{% trans "Name" %}</th>
+                            <th>{% trans "Type" %}</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

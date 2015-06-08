@@ -25,7 +25,9 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Media;
 use Xibo\Exception\NotFoundException;
+use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
+use Xibo\Storage\PDOConnect;
 
 class MediaFactory
 {
@@ -85,7 +87,7 @@ class MediaFactory
         $sql .= "   media.expires, ";
         $sql .= "   IFNULL((SELECT parentmedia.mediaid FROM media parentmedia WHERE parentmedia.editedmediaid = media.mediaid),0) AS ParentID, ";
 
-        if (\Xibo\Helper\Sanitize::int('showTags', $filterBy) == 1)
+        if (Sanitize::getInt('showTags', $filterBy) == 1)
             $sql .= " tag.tag AS tags, ";
         else
             $sql .= " (SELECT GROUP_CONCAT(DISTINCT tag) FROM tag INNER JOIN lktagmedia ON lktagmedia.tagId = tag.tagId WHERE lktagmedia.mediaId = media.mediaID GROUP BY lktagmedia.mediaId) AS tags, ";
@@ -108,14 +110,24 @@ class MediaFactory
         $sql .= "   ON parentmedia.MediaID = media.MediaID ";
         $sql .= "   INNER JOIN `user` ON `user`.userId = `media`.userId ";
 
-        if (\Xibo\Helper\Sanitize::int('showTags', $filterBy) == 1) {
+        if (Sanitize::getInt('showTags', $filterBy) == 1) {
             $sql .= " LEFT OUTER JOIN lktagmedia ON lktagmedia.mediaId = media.mediaId ";
             $sql .= " LEFT OUTER JOIN tag ON tag.tagId = lktagmedia.tagId";
         }
 
+        if (Sanitize::getInt('displayGroupId', $filterBy) != null) {
+            $sql .= '
+                INNER JOIN `lkmediadisplaygroup`
+                ON lkmediadisplaygroup.mediaid = media.mediaid
+                    AND lkmediadisplaygroup.displayGroupId = :displayGroupId
+            ';
+
+            $params['displayGroupId'] = Sanitize::getInt('displayGroupId', $filterBy);
+        }
+
         $sql .= " WHERE media.isEdited = 0 ";
 
-        if (\Xibo\Helper\Sanitize::int('allModules', $filterBy) == 0) {
+        if (Sanitize::getInt('allModules', $filterBy) == 0) {
             $sql .= "AND media.type <> 'module'";
         }
 
@@ -137,9 +149,9 @@ class MediaFactory
             }
         }
 
-        if (\Xibo\Helper\Sanitize::int('mediaId', -1, $filterBy) != -1) {
+        if (Sanitize::getInt('mediaId', -1, $filterBy) != -1) {
             $sql .= " AND media.mediaId = :mediaId ";
-            $params['mediaId'] = \Xibo\Helper\Sanitize::int('mediaId', $filterBy);
+            $params['mediaId'] = Sanitize::getInt('mediaId', $filterBy);
         }
 
         if (Sanitize::getString('type', $filterBy) != '') {
@@ -152,46 +164,46 @@ class MediaFactory
             $params['storedAs'] = Sanitize::getString('storedAs', $filterBy);
         }
 
-        if (\Xibo\Helper\Sanitize::int('ownerId', $filterBy) != 0) {
+        if (Sanitize::getInt('ownerId', $filterBy) != 0) {
             $sql .= " AND media.userid = :ownerId ";
-            $params['ownerId'] = \Xibo\Helper\Sanitize::int('ownerid', $filterBy);
+            $params['ownerId'] = Sanitize::getInt('ownerid', $filterBy);
         }
 
-        if (\Xibo\Helper\Sanitize::int('retired', -1, $filterBy) == 1)
+        if (Sanitize::getInt('retired', -1, $filterBy) == 1)
             $sql .= " AND media.retired = 1 ";
 
-        if (\Xibo\Helper\Sanitize::int('retired', -1, $filterBy) == 0)
+        if (Sanitize::getInt('retired', -1, $filterBy) == 0)
             $sql .= " AND media.retired = 0 ";
 
         // Expired files?
-        if (\Xibo\Helper\Sanitize::int('expires', $filterBy) != 0) {
+        if (Sanitize::getInt('expires', $filterBy) != 0) {
             $sql .= ' AND media.expires < :expires AND IFNULL(media.expires, 0) <> 0 ';
-            $params['expires'] = \Xibo\Helper\Sanitize::int('expires', $filterBy);
+            $params['expires'] = Sanitize::getInt('expires', $filterBy);
         }
 
         // Sorting?
         if (is_array($sortOrder))
             $sql .= 'ORDER BY ' . implode(',', $sortOrder);
 
-        \Xibo\Helper\Log::sql($sql, $params);
+        Log::sql($sql, $params);
 
-        foreach (\Xibo\Storage\PDOConnect::select($sql, $params) as $row) {
+        foreach (PDOConnect::select($sql, $params) as $row) {
             $media = new Media();
-            $media->mediaId = \Xibo\Helper\Sanitize::int($row['mediaID']);
-            $media->name = \Xibo\Helper\Sanitize::string($row['name']);
+            $media->mediaId = Sanitize::int($row['mediaID']);
+            $media->name = Sanitize::string($row['name']);
             $media->mediaType = Sanitize::getString($row['type']);
-            $media->duration = \Xibo\Helper\Sanitize::double($row['duration']);
-            $media->ownerId = \Xibo\Helper\Sanitize::int($row['userID']);
-            $media->fileSize = \Xibo\Helper\Sanitize::int($row['FileSize']);
-            $media->parentId = \Xibo\Helper\Sanitize::int($row['ParentID']);
-            $media->fileName = \Xibo\Helper\Sanitize::string($row['originalFileName']);
-            $media->tags = \Xibo\Helper\Sanitize::string($row['tags']);
-            $media->storedAs = \Xibo\Helper\Sanitize::string($row['storedAs']);
-            $media->valid = \Xibo\Helper\Sanitize::int($row['valid']);
-            $media->moduleSystemFile = \Xibo\Helper\Sanitize::int($row['moduleSystemFile']);
-            $media->expires = \Xibo\Helper\Sanitize::int($row['expires']);
-            $media->owner = \Xibo\Helper\Sanitize::string($row['owner']);
-            $media->groupsWithPermissions = \Xibo\Helper\Sanitize::string($row['groupsWithPermissions']);
+            $media->duration = Sanitize::double($row['duration']);
+            $media->ownerId = Sanitize::int($row['userID']);
+            $media->fileSize = Sanitize::int($row['FileSize']);
+            $media->parentId = Sanitize::int($row['ParentID']);
+            $media->fileName = Sanitize::string($row['originalFileName']);
+            $media->tags = Sanitize::string($row['tags']);
+            $media->storedAs = Sanitize::string($row['storedAs']);
+            $media->valid = Sanitize::int($row['valid']);
+            $media->moduleSystemFile = Sanitize::int($row['moduleSystemFile']);
+            $media->expires = Sanitize::int($row['expires']);
+            $media->owner = Sanitize::string($row['owner']);
+            $media->groupsWithPermissions = Sanitize::string($row['groupsWithPermissions']);
 
             $entries[] = $media;
         }

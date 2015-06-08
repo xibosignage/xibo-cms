@@ -79,6 +79,7 @@ $app->post('/displaygroup', '\Xibo\Controller\DisplayGroup:add')->name('displayG
 $app->put('/displaygroup/:id', '\Xibo\Controller\DisplayGroup:edit')->name('displayGroup.edit');
 $app->post('/displaygroup/members/:id', '\Xibo\Controller\DisplayGroup:members')->name('displayGroup.members');
 $app->post('/displaygroup/version/:id', '\Xibo\Controller\DisplayGroup:version')->name('displayGroup.version');
+$app->post('/displaygroup/media/:id', '\Xibo\Controller\DisplayGroup:media')->name('displayGroup.media');
 
 //
 // Display Profile

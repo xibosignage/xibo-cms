@@ -213,6 +213,7 @@ class Base
 
                 $state->html = $view['html'];
                 $state->dialogTitle = trim($view['title']);
+                $state->callBack = $view['callBack'];
 
                 // Process the buttons
                 // Expect each button on a new line

@@ -28,6 +28,7 @@ use Xibo\Entity\Region;
 use Xibo\Entity\Widget;
 use Xibo\Exception\NotFoundException;
 use Xibo\Helper\Log;
+use Xibo\Helper\Sanitize;
 
 class ModuleFactory
 {
@@ -201,39 +202,39 @@ class ModuleFactory
             $SQL .= '  FROM `module` ';
             $SQL .= ' WHERE 1 = 1 ';
 
-            if (\Xibo\Helper\Sanitize::int('id', 0, $filterBy) != 0) {
-                $params['id'] = \Xibo\Helper\Sanitize::int('id', $filterBy);
+            if (Sanitize::getInt('id', 0, $filterBy) != 0) {
+                $params['id'] = Sanitize::getInt('id', $filterBy);
                 $SQL .= ' AND ModuleID = :id ';
             }
 
-            if (\Kit::GetParam('name', $filterBy, _STRING) != '') {
-                $params['name'] = \Kit::GetParam('name', $filterBy, _STRING);
+            if (Sanitize::getString('name', $filterBy) != '') {
+                $params['name'] = Sanitize::getString('name', $filterBy);
                 $SQL .= ' AND name = :name ';
             }
 
-            if (\Kit::GetParam('type', $filterBy, _STRING) != '') {
-                $params['type'] = \Kit::GetParam('type', $filterBy, _STRING);
+            if (Sanitize::getString('type', $filterBy) != '') {
+                $params['type'] = Sanitize::getString('type', $filterBy);
                 $SQL .= ' AND module = :type ';
             }
 
-            if (\Kit::GetParam('extension', $filterBy, _STRING) != '') {
-                $params['extension'] = '%' . \Kit::GetParam('extension', $filterBy, _STRING) . '%';
+            if (Sanitize::getString('extension', $filterBy) != '') {
+                $params['extension'] = '%' . Sanitize::getString('extension', $filterBy) . '%';
                 $SQL .= ' AND ValidExtensions LIKE :extension ';
             }
 
-            if (\Xibo\Helper\Sanitize::getInt('assignable', -1, $filterBy) != -1) {
+            if (Sanitize::getInt('assignable', -1, $filterBy) != -1) {
                 $SQL .= " AND assignable = :assignable ";
-                $params['assignable'] = \Xibo\Helper\Sanitize::getInt('assignable', $filterBy);
+                $params['assignable'] = Sanitize::getInt('assignable', $filterBy);
             }
 
-            if (\Xibo\Helper\Sanitize::getInt('enabled', -1, $filterBy) != -1) {
+            if (Sanitize::getInt('enabled', -1, $filterBy) != -1) {
                 $SQL .= " AND enabled = :enabled ";
-                $params['enabled'] = \Xibo\Helper\Sanitize::getInt('enabled', $filterBy);
+                $params['enabled'] = Sanitize::getInt('enabled', $filterBy);
             }
 
-            if (\Xibo\Helper\Sanitize::getInt('regionSpecific', -1, $filterBy) != -1) {
+            if (Sanitize::getInt('regionSpecific', -1, $filterBy) != -1) {
                 $SQL .= " AND regionSpecific = :regionSpecific ";
-                $params['regionSpecific'] = \Xibo\Helper\Sanitize::getInt('regionSpecific', $filterBy);
+                $params['regionSpecific'] = Sanitize::getInt('regionSpecific', $filterBy);
             }
 
             // Sorting?
@@ -247,20 +248,20 @@ class ModuleFactory
 
             foreach ($sth->fetchAll(\PDO::FETCH_ASSOC) as $row) {
                 $module = new Module();
-                $module->moduleId = \Xibo\Helper\Sanitize::int($row['ModuleID']);
-                $module->name = \Xibo\Helper\Sanitize::string($row['Name']);
-                $module->description = \Xibo\Helper\Sanitize::string($row['Description']);
-                $module->validExtensions = \Xibo\Helper\Sanitize::string($row['ValidExtensions']);
-                $module->imageUri = \Xibo\Helper\Sanitize::string($row['ImageUri']);
-                $module->renderAs = \Xibo\Helper\Sanitize::string($row['render_as']);
-                $module->type = strtolower(\Kit::ValidateParam($row['Module'], _WORD));
-                $module->enabled = \Xibo\Helper\Sanitize::int($row['Enabled']);
-                $module->regionSpecific = \Xibo\Helper\Sanitize::int($row['RegionSpecific']);
-                $module->previewEnabled = \Xibo\Helper\Sanitize::int($row['PreviewEnabled']);
-                $module->assignable = \Xibo\Helper\Sanitize::int($row['assignable']);
-                $module->schemaVersion = \Xibo\Helper\Sanitize::int($row['SchemaVersion']);
+                $module->moduleId = Sanitize::int($row['ModuleID']);
+                $module->name = Sanitize::string($row['Name']);
+                $module->description = Sanitize::string($row['Description']);
+                $module->validExtensions = Sanitize::string($row['ValidExtensions']);
+                $module->imageUri = Sanitize::string($row['ImageUri']);
+                $module->renderAs = Sanitize::string($row['render_as']);
+                $module->type = strtolower(Sanitize::getString($row['Module']));
+                $module->enabled = Sanitize::int($row['Enabled']);
+                $module->regionSpecific = Sanitize::int($row['RegionSpecific']);
+                $module->previewEnabled = Sanitize::int($row['PreviewEnabled']);
+                $module->assignable = Sanitize::int($row['assignable']);
+                $module->schemaVersion = Sanitize::int($row['SchemaVersion']);
 
-                $settings = \Xibo\Helper\Sanitize::string($row['settings']);
+                $settings = Sanitize::string($row['settings']);
                 $module->settings = ($settings == '') ? array() : json_decode($settings, true);
 
                 $entries[] = $module;
@@ -270,7 +271,7 @@ class ModuleFactory
         }
         catch (\Exception $e) {
 
-            \Xibo\Helper\Log::error($e->getMessage());
+            Log::error($e->getMessage());
 
             return array();
         }
