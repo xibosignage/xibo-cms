@@ -61,6 +61,7 @@ $app->get('/resolution', '\Xibo\Controller\Resolution:grid')->name('resolution.s
 // Library
 //
 $app->get('/library', '\Xibo\Controller\Library:grid')->name('library.search');
+$app->post('/library', '\Xibo\Controller\Library:add')->name('library.add');
 
 //
 // Displays

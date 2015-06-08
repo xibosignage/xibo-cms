@@ -1,15 +1,16 @@
 <?php
 
-use Xibo\Helper\Log;
+namespace Xibo\Helper;
 
-require_once('3rdparty/jquery-file-upload/UploadHandler.php');
+use Exception;
+use Media;
 
-class XiboUploadHandler extends UploadHandler
+class XiboBlueImpUploadHandler extends BlueImpUploadHandler
 {
-	protected function handle_form_data($file, $index)
+    protected function handle_form_data($file, $index)
     {
         // Handle form data, e.g. $_REQUEST['description'][$index]
-        
+
         // Link the file to the module
         $name = $_REQUEST['name'][$index];
 
@@ -55,8 +56,7 @@ class XiboUploadHandler extends UploadHandler
                 // Save the playlist
                 $playlist->save();
             }
-        }
-        catch (Exception $e) {
+        } catch (Exception $e) {
             $file->error = $e->getMessage();
             exit();
         }

@@ -1025,7 +1025,6 @@ class User
 
     /**
      * Is this users library quota full
-     * @return bool true if the quota is full otherwise false
      * @throws LibraryFullException when the library is full or cannot be determined
      */
     public function isQuotaFullByUser()
@@ -1081,7 +1080,8 @@ class User
 
         $fileSize = Sanitize::int($row['SumSize']);
 
-        return (($fileSize / 1024) <= $userQuota);
+        if (($fileSize / 1024) <= $userQuota)
+            throw new LibraryFullException(__('You have exceeded your library quota'));
     }
 
     /*

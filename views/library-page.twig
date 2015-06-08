@@ -12,7 +12,7 @@
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
         <li><a title="{% trans "Open the Filter Form" %}" href="#" onclick="ToggleFilterView('Filter')">{% trans "Filter" %}</a></li>
-        <li><a class="XiboFormButton" title="{% trans "Add a new media item to the library" %}" href="{{ urlFor("library.add.form") }}">{% trans "Add Media" %}</a></li>
+        <li><a href="#" id="libraryUploadForm" title="{% trans "Add a new media item to the library" %}">{% trans "Add Media" %}</a></li>
         {% if settings.SETTING_LIBRARY_TIDY_ENABLED == 1 %}
             <li><a class="XiboFormButton" title="{% trans "Run through the library and remove unused and unnecessary files" %}" href="{{ urlFor("library.tidy.form") }}">{% trans "Tidy Library" %}</a></li>
         {% endif %}
@@ -100,5 +100,36 @@
 
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
+
+        $("#libraryUploadForm").click(function() {
+
+            var template = Handlebars.compile($("#template-file-upload").html());
+
+            // Handle bars and open a dialog
+            bootbox.dialog({
+                message: template({
+                    trans: {
+                        addFiles: "{% trans "Add files" %}",
+                        startUpload: "{% trans "Start upload" %}",
+                        cancelUpload: "{% trans "Cancel upload" %}"
+                    },
+                    upload: {
+                        maxSize: {{ libraryUpload.maxSize }},
+                        maxSizeMessage: "{{ libraryUpload.maxSizeMessage  }}",
+                        validExt: "{{ libraryUpload.validExt }}"
+                    }
+                }),
+                title: "{% trans "Upload media" %}",
+                buttons: {
+                    main: {
+                        label: "{% trans "Done" %}",
+                        className: "btn-primary",
+                        callback: function() {
+                            XiboDialogClose();
+                        }
+                    }
+                }
+            });
+        });
     </script>
 {% endblock %}

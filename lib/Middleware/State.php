@@ -24,7 +24,9 @@ namespace Xibo\Middleware;
 
 
 use Slim\Middleware;
+use Xibo\Factory\ModuleFactory;
 use Xibo\Helper\ApplicationState;
+use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\Config;
 use Xibo\Helper\Session;
 use Xibo\Helper\Theme;
@@ -99,7 +101,12 @@ class State extends Middleware
                         'jsShortLocale' => ((strlen(Translate::GetJsLocale()) > 2) ? substr(Translate::GetJsLocale(), 0, 2) : Translate::GetJsLocale()),
                         'calendarLanguage' => ((strlen(Translate::GetJsLocale()) <= 2) ? Translate::GetJsLocale() . '-' . strtoupper(Translate::GetJsLocale()) : Translate::GetJsLocale())
                     ],
-                    'translations' => '{}'
+                    'translations' => '{}',
+                    'libraryUpload' => [
+                        'maxSize' => ByteFormatter::toBytes(Config::getMaxUploadSize()),
+                        'maxSizeMessage' => sprintf(__('This form accepts files up to a maximum size of %s'), Config::getMaxUploadSize()),
+                        'validExt' => implode('|', ModuleFactory::getValidExtensions())
+                    ]
                 ));
             }
         });

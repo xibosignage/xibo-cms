@@ -20,7 +20,6 @@
  */
 namespace Xibo\Controller;
 
-use Xibo\Exception\LibraryFullException;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\ByteFormatter;
@@ -31,6 +30,8 @@ use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Session;
 use Xibo\Helper\Theme;
+use Xibo\Helper\XiboBlueImpUploadHandler;
+use Xibo\Storage\PDOConnect;
 
 
 class Library extends Base
@@ -175,69 +176,6 @@ class Library extends Base
 
         $this->getState()->template = 'grid';
         $this->getState()->setData($mediaList);
-    }
-
-    /**
-     * File Uploader
-     * Presents a form which can be used to upload file based media
-     */
-    function fileUploadForm()
-    {
-        $response = $this->getState();
-
-        // Check we have room in the library
-        $libraryLimit = Config::GetSetting('LIBRARY_SIZE_LIMIT_KB');
-
-        if ($libraryLimit > 0) {
-            $fileSize = File::libraryUsage();
-
-            if (($fileSize / 1024) > $libraryLimit)
-                trigger_error(sprintf(__('Your library is full. Library Limit: %s K'), $libraryLimit), E_USER_ERROR);
-        }
-
-        // Check this user doesn't have a quota
-        if (!\UserGroup::isQuotaFullByUser($this->getUser()->userId))
-            throw new LibraryFullException(__('You have exceeded your library quota'));
-
-        // Set the Session / Security information
-        $sessionId = session_id();
-        $securityToken = \Kit::Token('fileUploadToken', false);
-
-        // Do we come from the Background Image?
-        $backgroundImage = \Kit::GetParam('backgroundImage', _GET, _BOOL, false);
-        $layoutId = Sanitize::getInt('layoutId');
-
-        // Do we have a playlistId?
-        $playlistId = Sanitize::getInt('playlistId');
-        $regionId = Sanitize::getInt('regionId');
-
-        // Save button is different depending on whether we came from the Layout Edit form or not.
-        if ($backgroundImage) {
-            $response->AddButton(__('Close'), 'XiboSwapDialog("index.php?p=layout&q=EditForm&modify=true&layoutid=' . $layoutId . '")');
-
-            // Background override url is used on the theme to add a button next to each uploaded file (if in background override)
-            Theme::Set('background_override_url', "index.php?p=layout&q=EditForm&modify=true&layoutid=$layoutId&backgroundOveride=");
-        } else if ($playlistId != 0) {
-            $response->AddButton(__('Finish'), 'XiboSwapDialog("index.php?p=timeline&q=Timeline&modify=true&layoutid=' . $layoutId . '&regionId=' . $regionId . '")');
-        } else {
-            $response->AddButton(__('Close'), 'XiboDialogClose(); XiboRefreshAllGrids();');
-        }
-
-        // Setup the theme
-        Theme::Set('form_upload_id', 'fileupload');
-        Theme::Set('form_action', 'index.php?p=content&q=JqueryFileUpload');
-        Theme::Set('form_meta', '<input type="hidden" id="PHPSESSID" value="' . $sessionId . '" /><input type="hidden" id="SecurityToken" value="' . $securityToken . '" /><input type="hidden" name="playlistId" value="' . $playlistId . '" />');
-        Theme::Set('form_valid_ext', '/(\.|\/)' . implode('|', \Xibo\Factory\ModuleFactory::getValidExtensions()) . '$/i');
-        Theme::Set('form_max_size', \Kit::ReturnBytes(Config::getMaxUploadSize()));
-        Theme::Set('form_max_size_message', sprintf(__('This form accepts files up to a maximum size of %s'), Config::getMaxUploadSize()));
-
-        $form = Theme::RenderReturn('library_form_media_add');
-
-        $response->html = $form;
-        $response->dialogTitle = __('Upload media');
-        $response->callBack = 'MediaFormInitUpload';
-        $response->dialogClass = 'modal-big';
-
     }
 
     /**
@@ -615,48 +553,52 @@ HTML;
     }
 
     /**
-     * End point for jQuery file uploader
+     * Add a file to the library
+     *  expects to be fed by the blueimp file upload handler
+     * @throws \Exception
      */
-    public function JqueryFileUpload()
+    public function add()
     {
-
-        require_once('3rdparty/jquery-file-upload/XiboUploadHandler.php');
-
         $libraryFolder = Config::GetSetting('LIBRARY_LOCATION');
+
         // Make sure the library exists
         $fileObject = new File();
         $fileObject->EnsureLibraryExists();
 
         // Get Valid Extensions
-        $validExt = \Xibo\Factory\ModuleFactory::getValidExtensions();
+        $validExt = ModuleFactory::getValidExtensions();
 
         $options = array(
             'userId' => $this->getUser()->userId,
-            'playlistId' => \Kit::GetParam('playlistId', _REQUEST, _INT),
+            'playlistId' => Sanitize::getInt('playlistId'),
             'upload_dir' => $libraryFolder . 'temp/',
             'download_via_php' => true,
-            'script_url' => \Kit::GetXiboRoot() . '?p=content&q=JqueryFileUpload',
-            'upload_url' => \Kit::GetXiboRoot() . '?p=content&q=JqueryFileUpload',
+            'script_url' => $this->urlFor('library.add'),
+            'upload_url' => $this->urlFor('library.add'),
             'image_versions' => array(),
             'accept_file_types' => '/\.' . implode('|', $validExt) . '$/i'
         );
 
         // Hand off to the Upload Handler provided by jquery-file-upload
         try {
-            $dbh = \Xibo\Storage\PDOConnect::init();
-            new XiboUploadHandler($options);
+            $dbh = PDOConnect::init();
+            new XiboBlueImpUploadHandler($options);
 
             // Must commit if in a transaction
             if ($dbh->inTransaction())
                 $dbh->commit();
-        } catch (Exception $e) {
+
+        } catch (\Exception $e) {
             // We must not issue an error, the file upload return should have the error object already
         }
 
         // Must prevent from continuing (framework will try to issue a response)
-        exit;
+        $this->app->halt(200);
     }
 
+    /**
+     * Tidy Library
+     */
     public function tidyLibraryForm()
     {
         $response = $this->getState();
