@@ -88,6 +88,7 @@
                 { "data": "thumbnail"},
                 { "data": "duration"},
                 { "data": "fileSize"},
+                { "data": "owner"},
                 { "data": "groupsWithPermissions"},
                 { "data": "revised"},
                 { "data": "fileName"},
@@ -125,10 +126,53 @@
                         label: "{% trans "Done" %}",
                         className: "btn-primary",
                         callback: function() {
+                            table.ajax.reload();
                             XiboDialogClose();
                         }
                     }
                 }
+            }).on('shown.bs.modal', function() {
+                // Configure the upload form
+                var url = "{{ urlFor("library.add") }}";
+                var form = $(this).find("form");
+
+                // Initialize the jQuery File Upload widget:
+                form.fileupload({
+                    url: url,
+                    disableImageResize: false
+                });
+
+                // Upload server status check for browsers with CORS support:
+                if ($.support.cors) {
+                    $.ajax({
+                        url: url,
+                        type: 'HEAD'
+                    }).fail(function () {
+                        $('<span class="alert alert-error"/>')
+                                .text('Upload server currently unavailable - ' + new Date())
+                                .appendTo(form);
+                    });
+                }
+
+                // Enable iframe cross-domain access via redirect option:
+                form.fileupload(
+                        'option',
+                        'redirect',
+                        window.location.href.replace(
+                                /\/[^\/]*$/,
+                                '/cors/result.html?%s'
+                        )
+                );
+
+                form.bind('fileuploadsubmit', function (e, data) {
+                    var inputs = data.context.find(':input');
+                    if (inputs.filter('[required][value=""]').first().focus().length) {
+                        return false;
+                    }
+                    data.formData = inputs.serializeArray().concat(form.serializeArray());
+
+                    inputs.filter("input").prop("disabled", true);
+                });
             });
         });
     </script>

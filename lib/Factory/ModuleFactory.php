@@ -254,7 +254,7 @@ class ModuleFactory
                 $module->validExtensions = Sanitize::string($row['ValidExtensions']);
                 $module->imageUri = Sanitize::string($row['ImageUri']);
                 $module->renderAs = Sanitize::string($row['render_as']);
-                $module->type = strtolower(Sanitize::getString($row['Module']));
+                $module->type = strtolower(Sanitize::string($row['Module']));
                 $module->enabled = Sanitize::int($row['Enabled']);
                 $module->regionSpecific = Sanitize::int($row['RegionSpecific']);
                 $module->previewEnabled = Sanitize::int($row['PreviewEnabled']);

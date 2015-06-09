@@ -32,6 +32,51 @@ use Xibo\Storage\PDOConnect;
 class MediaFactory
 {
     /**
+     * Create New Media
+     * @param string $name
+     * @param string $fileName
+     * @param string $type
+     * @param int $ownerId
+     * @param int $duration
+     * @return Media
+     */
+    public static function create($name, $fileName, $type, $ownerId, $duration = 0)
+    {
+        $media = new Media();
+        $media->name = $name;
+        $media->fileName = $fileName;
+        $media->mediaType = $type;
+        $media->ownerId = $ownerId;
+        $media->duration = $duration;
+
+        return $media;
+    }
+
+    /**
+     * Create System Media File
+     * @param $name
+     * @param $file
+     * @return Media
+     */
+    public static function createModuleFile($name, $file)
+    {
+        try {
+            $media = MediaFactory::getByName($name);
+            $media->newFile = $file;
+        }
+        catch (NotFoundException $e) {
+            $media = new Media();
+            $media->name = $name;
+            $media->fileName = $file;
+        }
+
+        $media->mediaType = 'module';
+        $media->storedAs = $name;
+
+        return $media;
+    }
+
+    /**
      * Get by Media Id
      * @param int $mediaId
      * @return Media
@@ -48,6 +93,22 @@ class MediaFactory
     }
 
     /**
+     * Get by Media Name
+     * @param string $name
+     * @return Media
+     * @throws NotFoundException
+     */
+    public static function getByName($name)
+    {
+        $media = MediaFactory::query(null, array('name' => $name));
+
+        if (count($media) <= 0)
+            throw new NotFoundException(__('Cannot find media'));
+
+        return $media[0];
+    }
+
+    /**
      * Get by Owner Id
      * @param int $ownerId
      * @return array[Media]
@@ -55,8 +116,17 @@ class MediaFactory
      */
     public static function getByOwnerId($ownerId)
     {
-        //TODO add filtering
         return MediaFactory::query(null, array('ownerId' => $ownerId));
+    }
+
+    /**
+     * Get by Type
+     * @param string $type
+     * @return array[Media]
+     */
+    public static function getByMediaType($type)
+    {
+        return MediaFactory::query(null, array('type' => $type));
     }
 
     /**
@@ -75,17 +145,20 @@ class MediaFactory
 
         $params = array();
         $sql  = '';
-        $sql .= "SELECT  media.mediaID, ";
+        $sql .= "SELECT  media.mediaId, ";
         $sql .= "   media.name, ";
-        $sql .= "   media.type, ";
+        $sql .= "   media.type AS mediaType, ";
         $sql .= "   media.duration, ";
-        $sql .= "   media.userID, ";
-        $sql .= "   media.FileSize, ";
+        $sql .= "   media.userId AS ownerId, ";
+        $sql .= "   media.fileSize, ";
         $sql .= "   media.storedAs, ";
         $sql .= "   media.valid, ";
         $sql .= "   media.moduleSystemFile, ";
         $sql .= "   media.expires, ";
-        $sql .= "   IFNULL((SELECT parentmedia.mediaid FROM media parentmedia WHERE parentmedia.editedmediaid = media.mediaid),0) AS ParentID, ";
+        $sql .= "   media.md5, ";
+        $sql .= "   media.retired, ";
+        $sql .= "   media.isEdited, ";
+        $sql .= "   IFNULL((SELECT parentmedia.mediaid FROM media parentmedia WHERE parentmedia.editedmediaid = media.mediaid),0) AS parentId, ";
 
         if (Sanitize::getInt('showTags', $filterBy) == 1)
             $sql .= " tag.tag AS tags, ";
@@ -185,27 +258,15 @@ class MediaFactory
         if (is_array($sortOrder))
             $sql .= 'ORDER BY ' . implode(',', $sortOrder);
 
-        Log::sql($sql, $params);
+        // Paging
+        if (Sanitize::getInt('start') !== null && Sanitize::getInt('length') !== null) {
+            $limit = ' LIMIT ' . intval(Sanitize::getInt('start')) . ', ' . Sanitize::getInt('length', 10);
+        }
 
-        foreach (PDOConnect::select($sql, $params) as $row) {
-            $media = new Media();
-            $media->mediaId = Sanitize::int($row['mediaID']);
-            $media->name = Sanitize::string($row['name']);
-            $media->mediaType = Sanitize::getString($row['type']);
-            $media->duration = Sanitize::double($row['duration']);
-            $media->ownerId = Sanitize::int($row['userID']);
-            $media->fileSize = Sanitize::int($row['FileSize']);
-            $media->parentId = Sanitize::int($row['ParentID']);
-            $media->fileName = Sanitize::string($row['originalFileName']);
-            $media->tags = Sanitize::string($row['tags']);
-            $media->storedAs = Sanitize::string($row['storedAs']);
-            $media->valid = Sanitize::int($row['valid']);
-            $media->moduleSystemFile = Sanitize::int($row['moduleSystemFile']);
-            $media->expires = Sanitize::int($row['expires']);
-            $media->owner = Sanitize::string($row['owner']);
-            $media->groupsWithPermissions = Sanitize::string($row['groupsWithPermissions']);
+        Log::sql($sql . $limit, $params);
 
-            $entries[] = $media;
+        foreach (PDOConnect::select($sql . $limit, $params) as $row) {
+            $entries[] = (new Media())->hydrate($row);
         }
 
         return $entries;

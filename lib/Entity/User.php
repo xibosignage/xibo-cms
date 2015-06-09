@@ -325,6 +325,12 @@ class User
             $event->delete();
         }
 
+        // Delete any media
+        foreach ($this->media as $media) {
+            /* @var Media $media */
+            $media->delete();
+        }
+
         // Delete user specific entities
         PDOConnect::update('DELETE FROM `session` WHERE userId = :userId', ['userId' => $this->userId]);
         PDOConnect::update('DELETE FROM `user` WHERE userId = :userId', ['userId' => $this->userId]);

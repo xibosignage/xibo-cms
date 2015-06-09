@@ -20,15 +20,14 @@
  */
 namespace Xibo\Controller;
 use baseDAO;
-use Xibo\Helper\Config;
-use Xibo\Helper\Form;
 use Maintenance;
 use Setting;
 use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Config;
+use Xibo\Helper\Form;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
-
 
 
 class Settings extends Base
@@ -54,7 +53,7 @@ class Settings extends Base
             $options = NULL;
             if (!empty($setting['options'])) {
                 // Change to an id=>value array
-                foreach (explode('|', \Kit::ValidateParam($setting['options'], _HTMLSTRING)) as $tempOption)
+                foreach (explode('|', $setting['options']) as $tempOption)
                     $options[] = array('id' => $tempOption, 'value' => $tempOption);
             }
 
@@ -62,7 +61,7 @@ class Settings extends Base
             if ($setting['type'] == 'checkbox' && isset($setting['value']))
                 $validated = $setting['value'];
             else if (isset($setting['value']))
-                $validated = \Kit::ValidateParam($setting['value'], $setting['type']);
+                $validated = $setting['value'];
             else
                 $validated = $setting['default'];
 

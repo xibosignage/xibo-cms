@@ -23,6 +23,8 @@
 namespace Xibo\Entity;
 
 
+use Xibo\Storage\PDOConnect;
+
 class Tag
 {
     public $tagId;
@@ -33,7 +35,7 @@ class Tag
 
     public function __construct()
     {
-        $this->layoutIds = array();
+        $this->mediaIds = array();
         $this->mediaIds = array();
     }
 
@@ -53,6 +55,15 @@ class Tag
     }
 
     /**
+     * Unassign Layout
+     * @param int $layoutId
+     */
+    public function unassignLayout($layoutId)
+    {
+        $this->layoutIds = array_diff($this->layoutIds, [$layoutId]);
+    }
+
+    /**
      * Assign Media
      * @param int $mediaId
      */
@@ -60,6 +71,15 @@ class Tag
     {
         if (!in_array($mediaId, $this->mediaIds))
             $this->mediaIds[] = $mediaId;
+    }
+
+    /**
+     * Unassign Media
+     * @param int $mediaId
+     */
+    public function unassignMedia($mediaId)
+    {
+        $this->mediaIds = array_diff($this->mediaIds, [$mediaId]);
     }
 
     /**
@@ -74,6 +94,7 @@ class Tag
         // Manage the links to layouts and media
         $this->linkLayouts();
         $this->linkMedia();
+        $this->removeAssignments();
     }
 
     /**
@@ -112,12 +133,24 @@ class Tag
      */
     private function unlinkLayouts()
     {
+        // Unlink any layouts that are NOT in the collection
+        if (count($this->layoutIds) <= 0)
+            $this->layoutIds = [0];
+
+        $params = ['tagId' => $this->tagId];
+
+        $sql = 'DELETE FROM `lktaglayout` WHERE tagId = :tagId AND layoutId NOT IN (0';
+
+        $i = 0;
         foreach ($this->layoutIds as $layoutId) {
-            \Xibo\Storage\PDOConnect::update('DELETE FROM `lktaglayout` WHERE tagId = :tagId AND layoutId =  :layoutId ', array(
-                'tagId' => $this->tagId,
-                'layoutId' => $layoutId
-            ));
+            $i++;
+            $sql .= ',:layoutId' . $i;
+            $params['layoutId' . $i] = $layoutId;
         }
+
+        $sql .= ')';
+
+        PDOConnect::update($sql, $params);
     }
 
     /**
@@ -138,11 +171,23 @@ class Tag
      */
     private function unlinkMedia()
     {
+        // Unlink any layouts that are NOT in the collection
+        if (count($this->mediaIds) <= 0)
+            $this->mediaIds = [0];
+
+        $params = ['tagId' => $this->tagId];
+
+        $sql = 'DELETE FROM `lktagmedia` WHERE tagId = :tagId AND mediaId NOT IN (0';
+
+        $i = 0;
         foreach ($this->mediaIds as $mediaId) {
-            \Xibo\Storage\PDOConnect::update('DELETE FROM `lktagmedia` WHERE tagId = :tagId AND mediaId = :mediaId', array(
-                'tagId' => $this->tagId,
-                'mediaId' => $mediaId
-            ));
+            $i++;
+            $sql .= ',:mediaId' . $i;
+            $params['mediaId' . $i] = $mediaId;
         }
+
+        $sql .= ')';
+
+        PDOConnect::update($sql, $params);
     }
 }

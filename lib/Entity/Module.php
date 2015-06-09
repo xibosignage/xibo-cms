@@ -41,6 +41,11 @@ class Module
     public $settings;
     public $schemaVersion;
 
+    public function __toString()
+    {
+        return sprintf('%s - %s', $this->type, $this->name);
+    }
+
     public function save()
     {
         $dbh = \Xibo\Storage\PDOConnect::init();
