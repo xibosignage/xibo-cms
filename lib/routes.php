@@ -65,6 +65,7 @@ $app->get('/library', '\Xibo\Controller\Library:grid')->name('library.search');
 $app->post('/library', '\Xibo\Controller\Library:add')->name('library.add');
 $app->put('/library/:id', '\Xibo\Controller\Library:edit')->name('library.edit');
 $app->get('/library/download/:id', '\Xibo\Controller\Library:download')->name('library.download');
+$app->delete('/library/tidy/', '\Xibo\Controller\Library:tidy')->name('library.tidy');
 
 //
 // Displays

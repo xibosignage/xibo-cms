@@ -21,6 +21,7 @@
 namespace Xibo\Controller;
 
 use Xibo\Entity\Media;
+use Xibo\Entity\Module;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\LibraryFullException;
@@ -529,54 +530,55 @@ class Library extends Base
     /**
      * Tidy Library
      */
-    public function tidyLibraryForm()
+    public function tidyForm()
     {
-        $response = $this->getState();
-
-        Theme::Set('form_id', 'TidyLibraryForm');
-        Theme::Set('form_action', 'index.php?p=content&q=tidyLibrary');
-
-        $formFields = array();
-        $formFields[] = Form::AddMessage(__('Tidying your Library will delete any media that is not currently in use.'));
+        if (Config::GetSetting('SETTING_LIBRARY_TIDY_ENABLED') != 1)
+            throw new ConfigurationException(__('Sorry this function is disabled.'));
 
         // Work out how many files there are
-        $media = Media::entriesUnusedForUser($this->getUser()->userId);
+        $media = MediaFactory::query(null, ['unusedOnly' => 1, 'ownerId' => $this->getUser()->userId]);
 
-        $formFields[] = Form::AddMessage(sprintf(__('There is %s of data stored in %d files . Are you sure you want to proceed?', ByteFormatter::format(array_sum(array_map(function ($element) {
+        $size = ByteFormatter::format(array_sum(array_map(function ($element) {
             return $element['fileSize'];
-        }, $media))), count($media))));
+        }, $media)));
 
-        Theme::Set('form_fields', $formFields);
-
-        $response->SetFormRequestResponse(NULL, __('Tidy Library'), '350px', '275px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Content', 'TidyLibrary') . '")');
-        $response->AddButton(__('No'), 'XiboDialogClose()');
-        $response->AddButton(__('Yes'), '$("#TidyLibraryForm").submit()');
-
+        $this->getState()->template = 'library-form-tidy';
+        $this->getState()->setData([
+            'size' => $size,
+            'quantity' => count($media),
+            'help' => Help::Link('Content', 'TidyLibrary')
+        ]);
     }
 
     /**
      * Tidies up the library
      */
-    public function tidyLibrary()
+    public function tidy()
     {
         if (Config::GetSetting('SETTING_LIBRARY_TIDY_ENABLED') != 1)
             throw new ConfigurationException(__('Sorry this function is disabled.'));
 
         // Get a list of media that is not in use (for this user)
+        $media = MediaFactory::query(null, ['unusedOnly' => 1, 'ownerId' => $this->getUser()->userId]);
 
+        $i = 0;
+        foreach ($media as $item) {
+            /* @var Media $item */
+            $i++;
+            $item->load();
+            $item->delete();
+        }
 
-        $media = new Media();
-        if (!$media->deleteUnusedForUser($this->getUser()->userId))
-            trigger_error($media->GetErrorMessage(), E_USER_ERROR);
-
-        $response->SetFormSubmitResponse(__('Library Tidy Complete'));
-
+        // Return
+        $this->getState()->hydrate([
+            'message' => __('Library Tidy Complete'),
+            'countDeleted' => $i
+        ]);
     }
 
     /**
      * Make sure the library exists
-     * @throws ConfigurationException when the library is not writeable
+     * @throws ConfigurationException when the library is not writable
      */
     public static function ensureLibraryExists()
     {
@@ -603,52 +605,6 @@ class Library extends Base
     public static function getLibraryCacheUri()
     {
         return Config::GetSetting('LIBRARY_LOCATION') . '/cache';
-    }
-
-    /**
-     * Download a file
-     * @param string $url
-     * @param string $savePath
-     */
-    public static function downloadFile($url, $savePath)
-    {
-        // Use CURL to download a file
-        // Open the file handle
-        $fileHandle = fopen($savePath, 'w+');
-
-        // Configure CURL with the file handle
-        $httpOptions = array(
-            CURLOPT_TIMEOUT => 50,
-            CURLOPT_SSL_VERIFYPEER => true,
-            CURLOPT_USERAGENT => 'Xibo Digital Signage',
-            CURLOPT_HEADER => false,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_URL => $url,
-            CURLOPT_FILE => $fileHandle
-        );
-
-        // Proxy support
-        if (Config::GetSetting('PROXY_HOST') != '' && !Config::isProxyException($url)) {
-            $httpOptions[CURLOPT_PROXY] = Config::GetSetting('PROXY_HOST');
-            $httpOptions[CURLOPT_PROXYPORT] = Config::GetSetting('PROXY_PORT');
-
-            if (Config::GetSetting('PROXY_AUTH') != '')
-                $httpOptions[CURLOPT_PROXYUSERPWD] = Config::GetSetting('PROXY_AUTH');
-        }
-
-        $curl = curl_init();
-
-        // Set our options
-        curl_setopt_array($curl, $httpOptions);
-
-        // Exec saves the file
-        curl_exec($curl);
-
-        // Close the curl connection
-        curl_close($curl);
-
-        // Close the file handle
-        fclose($fileHandle);
     }
 
     /**
@@ -738,105 +694,16 @@ class Library extends Base
     }
 
     /**
-     * Adds module files from a folder.
-     * The entire folder will be added as module files
-     * @param string  $folder The path to the folder to add.
-     * @param boolean $force  Whether or not each individual module should be force updated if it exists already
-     */
-    public function addModuleFileFromFolder($folder, $force = false)
-    {
-        if (!is_dir($folder))
-            return $this->SetError(__('Not a folder'));
-
-        foreach (array_diff(scandir($folder), array('..', '.')) as $file) {
-
-            //Debug::Audit('Found file: ' . $file);
-
-            $this->addModuleFile($folder . DIRECTORY_SEPARATOR . $file, 0, true, $force);
-        }
-    }
-
-    /**
-     * Adds a module file from a URL
-     */
-    public function addModuleFileFromUrl($url, $name, $expires, $moduleSystemFile = false, $force = false)
-    {
-        // See if we already have it
-        // It doesn't matter that we might have already done this, its cached.
-        $media = $this->moduleFileExists($name);
-
-        //Debug::Audit('Module File: ' . var_export($media, true));
-
-        if ($media === false || $force) {
-            Log::debug('Adding: ' . $url . ' with Name: ' . $name . '. Expiry: ' . date('Y-m-d h:i:s', $expires));
-
-            $fileName = Config::GetSetting('LIBRARY_LOCATION') . 'temp' . DIRECTORY_SEPARATOR . $name;
-
-            // Put in a temporary folder
-            File::downloadFile($url, $fileName);
-
-            // Add the media file to the library
-            $media = $this->addModuleFile($fileName, $expires, $moduleSystemFile, true);
-
-            // Tidy temp
-            unlink($fileName);
-        }
-
-        return $media;
-    }
-
-    /**
-     * Remove a module file
-     * @param  int $mediaId  The MediaID of the module to remove
-     * @param  string $storedAs The Location of the File as it is stored
-     * @return boolean True or False
-     */
-    public function removeModuleFile($mediaId, $storedAs)
-    {
-        try {
-            $dbh = \Xibo\Storage\PDOConnect::init();
-
-            Log::debug('Removing: ' . $storedAs . ' ID:' . $mediaId);
-
-            // Delete the links
-            $sth = $dbh->prepare('DELETE FROM lklayoutmedia WHERE mediaId = :mediaId AND regionId = :regionId');
-            $sth->execute(array(
-                'mediaId' => $mediaId,
-                'regionId' => 'module'
-            ));
-
-            // Delete the media
-            $sth = $dbh->prepare('DELETE FROM media WHERE mediaId = :mediaId');
-            $sth->execute(array(
-                'mediaId' => $mediaId
-            ));
-
-            // Delete the file itself (and any thumbs, etc)
-            return $this->DeleteMediaFile($storedAs);
-        }
-        catch (Exception $e) {
-
-            Log::error($e->getMessage());
-
-            if (!$this->IsError())
-                $this->SetError(1, __('Unknown Error'));
-
-            return false;
-        }
-    }
-
-    /**
      * Installs all files related to the enabled modules
      */
     public static function installAllModuleFiles()
     {
-        $media = new Media();
-
         // Do this for all enabled modules
-        foreach ($media->ModuleList() as $module) {
+        foreach (ModuleFactory::query() as $module) {
+            /* @var Module $module */
 
             // Install Files for this module
-            $moduleObject = ModuleFactory::create($module['module']);
+            $moduleObject = ModuleFactory::create($module->name);
             $moduleObject->InstallFiles();
         }
     }
@@ -844,71 +711,14 @@ class Library extends Base
     /**
      * Removes all expired media files
      */
-    public static function removeExpiredFiles()
+    public function removeExpiredFiles()
     {
-        $media = new Media();
-
         // Get a list of all expired files and delete them
-        foreach (\Xibo\Factory\MediaFactory::query(null, array('expires' => time(), 'allModules' => 1)) as $entry) {
+        foreach (MediaFactory::query(null, array('expires' => time(), 'allModules' => 1)) as $entry) {
             /* @var \Xibo\Entity\Media $entry */
             // If the media type is a module, then pretend its a generic file
-            if ($entry->mediaType == 'module') {
-                // Find and remove any links to layouts.
-                $media->removeModuleFile($entry->mediaId, $entry->storedAs);
-            }
-            else {
-                // Create a module for it and issue a delete
-                include_once('modules/' . $entry->type . '.module.php');
-                $moduleObject = new $entry->type(new database(), new User());
-
-                // Remove it from all assigned layout
-                $moduleObject->UnassignFromAll($entry->mediaId);
-
-                // Delete it
-                $media->Delete($entry->mediaId);
-            }
+            $entry->load();
+            $entry->delete();
         }
-    }
-
-    /**
-     * Get unused media entries
-     * @param int $userId
-     * @return array
-     * @throws Exception
-     */
-    public static function entriesUnusedForUser($userId)
-    {
-        $media = array();
-
-        try {
-            $dbh = \Xibo\Storage\PDOConnect::init();
-            $sth = $dbh->prepare('SELECT media.mediaId, media.storedAs, media.type, media.isedited, media.fileSize,
-                    SUM(CASE WHEN IFNULL(lklayoutmedia.lklayoutmediaid, 0) = 0 THEN 0 ELSE 1 END) AS UsedInLayoutCount,
-                    SUM(CASE WHEN IFNULL(lkmediadisplaygroup.id, 0) = 0 THEN 0 ELSE 1 END) AS UsedInDisplayCount
-                  FROM `media`
-                    LEFT OUTER JOIN `lklayoutmedia`
-                    ON lklayoutmedia.mediaid = media.mediaid
-                    LEFT OUTER JOIN `lkmediadisplaygroup`
-                    ON lkmediadisplaygroup.mediaid = media.mediaid
-                 WHERE media.userId = :userId
-                  AND media.type <> \'module\' AND media.type <> \'font\'
-                GROUP BY media.mediaid, media.storedAs, media.type, media.isedited');
-
-            $sth->execute(array('userId' => $userId));
-
-            foreach ($sth->fetchAll(PDO::FETCH_ASSOC) as $row) {
-                // Check to make sure it is not used
-                if ($row['UsedInLayoutCount'] > 0 || $row['UsedInDisplayCount'] > 0)
-                    continue;
-
-                $media[] = $row;
-            }
-        }
-        catch (Exception $e) {
-            Log::error($e->getMessage());
-            throw new Exception(__('Cannot get entries'));
-        }
-
-        return $media;
     }
 }

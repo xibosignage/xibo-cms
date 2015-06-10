@@ -62,16 +62,39 @@ class MediaFactory
     {
         try {
             $media = MediaFactory::getByName($name);
-            $media->newFile = $file;
         }
         catch (NotFoundException $e) {
             $media = new Media();
             $media->name = $name;
-            $media->fileName = $file;
         }
 
+        $media->fileName = $file;
         $media->mediaType = 'module';
+        $media->expires = 0;
         $media->storedAs = $name;
+
+        return $media;
+    }
+
+    /**
+     * Create module files from folder
+     * @param string $folder The path to the folder to add.
+     * @return array[Media]
+     */
+    public static function createModuleFileFromFolder($folder)
+    {
+        $media = [];
+
+        if (!is_dir($folder))
+            throw new \InvalidArgumentException(__('Not a folder'));
+
+        foreach (array_diff(scandir($folder), array('..', '.')) as $file) {
+
+            $file = MediaFactory::createModuleFile($file, $folder . DIRECTORY_SEPARATOR . $file);
+            $file->moduleSystemFile = true;
+
+            $media[] = $file;
+        }
 
         return $media;
     }
@@ -202,6 +225,16 @@ class MediaFactory
 
         if (Sanitize::getInt('allModules', $filterBy) == 0) {
             $sql .= "AND media.type <> 'module'";
+        }
+
+        // Unused only?
+        if (Sanitize::getInt('unusedOnly', $filterBy) != null) {
+            $sql .= '
+                AND media.mediaId NOT IN (SELECT mediaId FROM `lkwidgetmedia`)
+                AND media.mediaId NOT IN (SELECT mediaId FROM `lkmediadisplaygroup`)
+                AND media.type <> \'module\'
+                AND media.type <> \'font\'
+            ';
         }
 
         if (Sanitize::getString('name', $filterBy) != '') {

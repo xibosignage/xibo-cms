@@ -60,8 +60,8 @@ class Media
     public $groupsWithPermissions;
 
     // New file revision
-    public $newFile;
     public $force;
+    public $isRemote;
 
     public function getId()
     {
@@ -110,6 +110,12 @@ class Media
         if ($validate && $this->mediaType != 'module')
             $this->validate();
 
+        // If we are a remote media item, we want to download the newFile and save it to a temporary location
+        if ($this->isRemote) {
+            $this->download();
+        }
+
+        // Add or edit
         if ($this->mediaId == null || $this->mediaId == 0) {
             $this->add();
 
@@ -192,6 +198,12 @@ class Media
 
     private function edit()
     {
+        // Do we need to pull a new update?
+        // Is the file either expired or is force set
+        if ($this->force || $this->expires < time()) {
+            $this->saveFile();
+        }
+
         PDOConnect::update('
           UPDATE `media`
             SET `name` = :name, duration = :duration, retired = :retired, md5 = :md5, filesize = :fileSize, expires = :expires, moduleSystemFile = :moduleSystemFile
@@ -206,10 +218,6 @@ class Media
             'moduleSystemFile' => $this->moduleSystemFile,
             'mediaId' => $this->mediaId
         ]);
-
-        if ($this->newFile != '') {
-            $this->saveFile();
-        }
     }
 
     private function saveFile()
@@ -256,5 +264,29 @@ class Media
 
         if (file_exists($libraryLocation . 'bg_' . $this->storedAs))
             unlink($libraryLocation . 'bg_' . $this->storedAs);
+    }
+
+    private function download()
+    {
+        if (!$this->isRemote || $this->fileName == '')
+            throw new \InvalidArgumentException(__('Not in a suitable state to download'));
+
+        // Proxy
+        $options = [];
+        if (Config::GetSetting('PROXY_HOST') != '' && !Config::isProxyException($this->fileName)) {
+            $options[] = Config::GetSetting('PROXY_HOST') . ':' . Config::GetSetting('PROXY_PORT');
+
+            if (Config::GetSetting('PROXY_AUTH') != '') {
+                $auth = explode(':', Config::GetSetting('PROXY_AUTH'));
+                $options[] = $auth[0];
+                $options[] = $auth[1];
+            }
+        }
+
+        // Download the file and save it. Fill in the "storedAs" with the temporary file name and then continue
+        $response = \Requests::get($this->fileName, [], $options);
+
+        $this->storedAs = Config::GetSetting('LIBRARY_LOCATION') . 'temp' . DIRECTORY_SEPARATOR . $this->name;
+        file_put_contents($this->storedAs, $response->body);
     }
 }

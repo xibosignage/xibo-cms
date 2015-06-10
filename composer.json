@@ -19,6 +19,7 @@
     "twig/twig": "~1.18",
     "twig/extensions": "~1.2",
     "respect/validation": "0.9.*",
-    "intervention/imagecache": "~2.3"
+    "intervention/imagecache": "~2.3",
+    "rmccue/requests": "^1.6"
   }
 }

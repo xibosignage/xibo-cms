@@ -126,7 +126,7 @@ $app->get('/layout/form/import', '\Xibo\Controller\Layout:retireForm')->name('la
 //
 $app->get('/library/view', '\Xibo\Controller\Library:displayPage')->name('library.view');
 $app->get('/library/form/edit/:id', '\Xibo\Controller\Library:editForm')->name('library.edit.form');
-$app->get('/library/form/tidy', '\Xibo\Controller\Library:tidyLibraryForm')->name('library.tidy.form');
+$app->get('/library/form/tidy', '\Xibo\Controller\Library:tidyForm')->name('library.tidy.form');
 
 //
 // display
