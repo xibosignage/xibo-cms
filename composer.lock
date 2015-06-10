@@ -4,8 +4,131 @@
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "768b5ba5c7991e6178c354ab787cd242",
+    "hash": "838c6156deea54b75227a9100590bdd8",
     "packages": [
+        {
+            "name": "danielstjules/stringy",
+            "version": "1.9.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/danielstjules/Stringy.git",
+                "reference": "3cf18e9e424a6dedc38b7eb7ef580edb0929461b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/danielstjules/Stringy/zipball/3cf18e9e424a6dedc38b7eb7ef580edb0929461b",
+                "reference": "3cf18e9e424a6dedc38b7eb7ef580edb0929461b",
+                "shasum": ""
+            },
+            "require": {
+                "ext-mbstring": "*",
+                "php": ">=5.3.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "~4.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Stringy\\": "src/"
+                },
+                "files": [
+                    "src/Create.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Daniel St. Jules",
+                    "email": "danielst.jules@gmail.com",
+                    "homepage": "http://www.danielstjules.com"
+                }
+            ],
+            "description": "A string manipulation library with multibyte support",
+            "homepage": "https://github.com/danielstjules/Stringy",
+            "keywords": [
+                "UTF",
+                "helpers",
+                "manipulation",
+                "methods",
+                "multibyte",
+                "string",
+                "utf-8",
+                "utility",
+                "utils"
+            ],
+            "time": "2015-02-10 06:19:18"
+        },
+        {
+            "name": "doctrine/inflector",
+            "version": "v1.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/doctrine/inflector.git",
+                "reference": "0bcb2e79d8571787f18b7eb036ed3d004908e604"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/doctrine/inflector/zipball/0bcb2e79d8571787f18b7eb036ed3d004908e604",
+                "reference": "0bcb2e79d8571787f18b7eb036ed3d004908e604",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.2"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "4.*"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.0.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-0": {
+                    "Doctrine\\Common\\Inflector\\": "lib/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Roman Borschel",
+                    "email": "roman@code-factory.org"
+                },
+                {
+                    "name": "Benjamin Eberlei",
+                    "email": "kontakt@beberlei.de"
+                },
+                {
+                    "name": "Guilherme Blanco",
+                    "email": "guilhermeblanco@gmail.com"
+                },
+                {
+                    "name": "Jonathan Wage",
+                    "email": "jonwage@gmail.com"
+                },
+                {
+                    "name": "Johannes Schmitt",
+                    "email": "schmittjoh@gmail.com"
+                }
+            ],
+            "description": "Common String Manipulations with regard to casing and singular/plural rules.",
+            "homepage": "http://www.doctrine-project.org",
+            "keywords": [
+                "inflection",
+                "pluralize",
+                "singularize",
+                "string"
+            ],
+            "time": "2014-12-20 21:24:13"
+        },
         {
             "name": "entomb/slim-json-api",
             "version": "1.1.0",
@@ -295,6 +418,368 @@
             "time": "2015-03-27 11:32:41"
         },
         {
+            "name": "illuminate/cache",
+            "version": "v5.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/illuminate/cache.git",
+                "reference": "e91fbed68b5adf3d53453b1f12af8e73aa38be54"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/illuminate/cache/zipball/e91fbed68b5adf3d53453b1f12af8e73aa38be54",
+                "reference": "e91fbed68b5adf3d53453b1f12af8e73aa38be54",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/contracts": "5.1.*",
+                "illuminate/support": "5.1.*",
+                "nesbot/carbon": "~1.19",
+                "php": ">=5.5.9"
+            },
+            "suggest": {
+                "illuminate/database": "Required to use the database cache driver (5.1.*).",
+                "illuminate/filesystem": "Required to use the file cache driver (5.1.*).",
+                "illuminate/redis": "Required to use the redis cache driver (5.1.*)."
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "5.1-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Illuminate\\Cache\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Taylor Otwell",
+                    "email": "taylorotwell@gmail.com"
+                }
+            ],
+            "description": "The Illuminate Cache package.",
+            "homepage": "http://laravel.com",
+            "time": "2015-06-01 15:39:11"
+        },
+        {
+            "name": "illuminate/contracts",
+            "version": "v5.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/illuminate/contracts.git",
+                "reference": "6e18848e5d332d802aa8bfa60b95e022023973f1"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/illuminate/contracts/zipball/6e18848e5d332d802aa8bfa60b95e022023973f1",
+                "reference": "6e18848e5d332d802aa8bfa60b95e022023973f1",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.5.9"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "5.1-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Illuminate\\Contracts\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Taylor Otwell",
+                    "email": "taylorotwell@gmail.com"
+                }
+            ],
+            "description": "The Illuminate Contracts package.",
+            "homepage": "http://laravel.com",
+            "time": "2015-06-08 18:13:21"
+        },
+        {
+            "name": "illuminate/filesystem",
+            "version": "v5.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/illuminate/filesystem.git",
+                "reference": "aaf040662af1bbd95c243465aabc7a64fae4c5fa"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/illuminate/filesystem/zipball/aaf040662af1bbd95c243465aabc7a64fae4c5fa",
+                "reference": "aaf040662af1bbd95c243465aabc7a64fae4c5fa",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/contracts": "5.1.*",
+                "illuminate/support": "5.1.*",
+                "php": ">=5.5.9",
+                "symfony/finder": "2.7.*"
+            },
+            "suggest": {
+                "league/flysystem": "Required to use the Flysystem local and FTP drivers (~1.0).",
+                "league/flysystem-aws-s3-v3": "Required to use the Flysystem S3 driver (~1.0).",
+                "league/flysystem-rackspace": "Required to use the Flysystem Rackspace driver (~1.0)."
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "5.1-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Illuminate\\Filesystem\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Taylor Otwell",
+                    "email": "taylorotwell@gmail.com"
+                }
+            ],
+            "description": "The Illuminate Filesystem package.",
+            "homepage": "http://laravel.com",
+            "time": "2015-06-02 18:26:39"
+        },
+        {
+            "name": "illuminate/support",
+            "version": "v5.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/illuminate/support.git",
+                "reference": "6102ad040e125921de1290ed0184b87d3d55c9ac"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/illuminate/support/zipball/6102ad040e125921de1290ed0184b87d3d55c9ac",
+                "reference": "6102ad040e125921de1290ed0184b87d3d55c9ac",
+                "shasum": ""
+            },
+            "require": {
+                "danielstjules/stringy": "~1.8",
+                "doctrine/inflector": "~1.0",
+                "ext-mbstring": "*",
+                "illuminate/contracts": "5.1.*",
+                "php": ">=5.5.9"
+            },
+            "suggest": {
+                "jeremeamia/superclosure": "Required to be able to serialize closures (~2.0).",
+                "symfony/var-dumper": "Required to use the dd function (2.7.*)."
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "5.1-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Illuminate\\Support\\": ""
+                },
+                "files": [
+                    "helpers.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Taylor Otwell",
+                    "email": "taylorotwell@gmail.com"
+                }
+            ],
+            "description": "The Illuminate Support package.",
+            "homepage": "http://laravel.com",
+            "time": "2015-06-08 19:12:16"
+        },
+        {
+            "name": "intervention/image",
+            "version": "2.2.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Intervention/image.git",
+                "reference": "79f0a35da7d4f75bb85d9c04513dd5929e21f75e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Intervention/image/zipball/79f0a35da7d4f75bb85d9c04513dd5929e21f75e",
+                "reference": "79f0a35da7d4f75bb85d9c04513dd5929e21f75e",
+                "shasum": ""
+            },
+            "require": {
+                "ext-fileinfo": "*",
+                "php": ">=5.3.0"
+            },
+            "require-dev": {
+                "mockery/mockery": "~0.9.2",
+                "phpunit/phpunit": "3.*"
+            },
+            "suggest": {
+                "ext-gd": "to use GD library based image processing.",
+                "ext-imagick": "to use Imagick based image processing.",
+                "intervention/imagecache": "Caching extension for the Intervention Image library"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Intervention\\Image\\": "src/Intervention/Image"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Oliver Vogel",
+                    "email": "oliver@olivervogel.net",
+                    "homepage": "http://olivervogel.net/"
+                }
+            ],
+            "description": "Image handling and manipulation library with support for Laravel integration",
+            "homepage": "http://image.intervention.io/",
+            "keywords": [
+                "gd",
+                "image",
+                "imagick",
+                "laravel",
+                "thumbnail",
+                "watermark"
+            ],
+            "time": "2015-05-09 16:06:30"
+        },
+        {
+            "name": "intervention/imagecache",
+            "version": "2.3.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Intervention/imagecache.git",
+                "reference": "27d2ee028672c13bedf896b4ca456b7c89d84086"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Intervention/imagecache/zipball/27d2ee028672c13bedf896b4ca456b7c89d84086",
+                "reference": "27d2ee028672c13bedf896b4ca456b7c89d84086",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/cache": "~4|~5",
+                "illuminate/filesystem": "~4|~5",
+                "intervention/image": "dev-master|~2,>=2.2.0",
+                "jeremeamia/superclosure": "~1|~2",
+                "php": ">=5.3.0"
+            },
+            "require-dev": {
+                "mockery/mockery": "~0.9.2",
+                "phpunit/phpunit": "3.*"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Intervention\\Image\\": "src/Intervention/Image"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Oliver Vogel",
+                    "email": "oliver@olivervogel.net",
+                    "homepage": "http://olivervogel.net/"
+                }
+            ],
+            "description": "Caching extension for the Intervention Image Class",
+            "homepage": "http://image.intervention.io",
+            "keywords": [
+                "cache",
+                "gd",
+                "image",
+                "imagick",
+                "laravel"
+            ],
+            "time": "2015-05-24 11:53:20"
+        },
+        {
+            "name": "jeremeamia/SuperClosure",
+            "version": "2.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/jeremeamia/super_closure.git",
+                "reference": "b712f39c671e5ead60c7ebfe662545456aade833"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/jeremeamia/super_closure/zipball/b712f39c671e5ead60c7ebfe662545456aade833",
+                "reference": "b712f39c671e5ead60c7ebfe662545456aade833",
+                "shasum": ""
+            },
+            "require": {
+                "nikic/php-parser": "~1.0",
+                "php": ">=5.4"
+            },
+            "require-dev": {
+                "codeclimate/php-test-reporter": "~0.1.2",
+                "phpunit/phpunit": "~4.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "2.1-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "SuperClosure\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Jeremy Lindblom",
+                    "email": "jeremeamia@gmail.com",
+                    "homepage": "https://github.com/jeremeamia",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Serialize Closure objects, including their context and binding",
+            "homepage": "https://github.com/jeremeamia/super_closure",
+            "keywords": [
+                "closure",
+                "function",
+                "lambda",
+                "parser",
+                "serializable",
+                "serialize",
+                "tokenizer"
+            ],
+            "time": "2015-03-11 20:06:43"
+        },
+        {
             "name": "league/event",
             "version": "2.1.1",
             "source": {
@@ -480,6 +965,98 @@
                 "psr-3"
             ],
             "time": "2015-03-09 09:58:04"
+        },
+        {
+            "name": "nesbot/carbon",
+            "version": "1.19.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/briannesbitt/Carbon.git",
+                "reference": "68868e0b02d2d803d0052a59d4e5003cccf87320"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/briannesbitt/Carbon/zipball/68868e0b02d2d803d0052a59d4e5003cccf87320",
+                "reference": "68868e0b02d2d803d0052a59d4e5003cccf87320",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.0",
+                "symfony/translation": "~2.6"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "~4.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "Carbon": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Brian Nesbitt",
+                    "email": "brian@nesbot.com",
+                    "homepage": "http://nesbot.com"
+                }
+            ],
+            "description": "A simple API extension for DateTime.",
+            "homepage": "http://carbon.nesbot.com",
+            "keywords": [
+                "date",
+                "datetime",
+                "time"
+            ],
+            "time": "2015-05-09 03:23:44"
+        },
+        {
+            "name": "nikic/php-parser",
+            "version": "v1.3.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/nikic/PHP-Parser.git",
+                "reference": "dff239267fd1befa1cd40430c9ed12591aa720ca"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/dff239267fd1befa1cd40430c9ed12591aa720ca",
+                "reference": "dff239267fd1befa1cd40430c9ed12591aa720ca",
+                "shasum": ""
+            },
+            "require": {
+                "ext-tokenizer": "*",
+                "php": ">=5.3"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.3-dev"
+                }
+            },
+            "autoload": {
+                "files": [
+                    "lib/bootstrap.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "authors": [
+                {
+                    "name": "Nikita Popov"
+                }
+            ],
+            "description": "A PHP parser written in PHP",
+            "keywords": [
+                "parser",
+                "php"
+            ],
+            "time": "2015-05-02 15:40:40"
         },
         {
             "name": "psr/log",
@@ -788,6 +1365,55 @@
             "time": "2014-12-09 23:48:51"
         },
         {
+            "name": "symfony/finder",
+            "version": "v2.7.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/Finder.git",
+                "reference": "ccb8ed8339cf24824f2ef35dacec30d92ff44368"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/Finder/zipball/ccb8ed8339cf24824f2ef35dacec30d92ff44368",
+                "reference": "ccb8ed8339cf24824f2ef35dacec30d92ff44368",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.9"
+            },
+            "require-dev": {
+                "symfony/phpunit-bridge": "~2.7"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "2.7-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Symfony\\Component\\Finder\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Fabien Potencier",
+                    "email": "fabien@symfony.com"
+                },
+                {
+                    "name": "Symfony Community",
+                    "homepage": "https://symfony.com/contributors"
+                }
+            ],
+            "description": "Symfony Finder Component",
+            "homepage": "https://symfony.com",
+            "time": "2015-05-15 14:02:48"
+        },
+        {
             "name": "symfony/http-foundation",
             "version": "v2.6.7",
             "target-dir": "Symfony/Component/HttpFoundation",
@@ -840,6 +1466,67 @@
             "description": "Symfony HttpFoundation Component",
             "homepage": "https://symfony.com",
             "time": "2015-05-02 15:18:45"
+        },
+        {
+            "name": "symfony/translation",
+            "version": "v2.7.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/Translation.git",
+                "reference": "cc1907bbeacfcc703c031b67545400d6e7d1eb79"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/Translation/zipball/cc1907bbeacfcc703c031b67545400d6e7d1eb79",
+                "reference": "cc1907bbeacfcc703c031b67545400d6e7d1eb79",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.9"
+            },
+            "conflict": {
+                "symfony/config": "<2.7"
+            },
+            "require-dev": {
+                "psr/log": "~1.0",
+                "symfony/config": "~2.7",
+                "symfony/intl": "~2.3",
+                "symfony/phpunit-bridge": "~2.7",
+                "symfony/yaml": "~2.2"
+            },
+            "suggest": {
+                "psr/log": "To use logging capability in translator",
+                "symfony/config": "",
+                "symfony/yaml": ""
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "2.7-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Symfony\\Component\\Translation\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Fabien Potencier",
+                    "email": "fabien@symfony.com"
+                },
+                {
+                    "name": "Symfony Community",
+                    "homepage": "https://symfony.com/contributors"
+                }
+            ],
+            "description": "Symfony Translation Component",
+            "homepage": "https://symfony.com",
+            "time": "2015-05-29 14:44:44"
         },
         {
             "name": "twig/extensions",

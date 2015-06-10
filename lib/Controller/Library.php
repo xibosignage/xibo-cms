@@ -137,7 +137,7 @@ class Library extends Base
 
             if ($media->mediaType == 'image') {
                 $download = $this->urlFor('library.download', ['id' => $media->mediaId]) . '?preview=1';
-                $media->thumbnail = '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' . $download . '"><img src="' . $download . '&width=100&height=100" /></i></a>';
+                $media->thumbnail = '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' . $download . '"><img src="' . $download . '&width=100&height=56" /></i></a>';
             }
 
             $media->buttons = array();
@@ -174,7 +174,7 @@ class Library extends Base
             $media->buttons[] = array(
                 'id' => 'content_button_download',
                 'linkType' => '_self', 'external' => true,
-                'url' => 'index.php?p=content&q=getFile&download=1&downloadFromLibrary=1&mediaid=' . $media->mediaId,
+                'url' => $this->urlFor('library.download', ['id' => $media->mediaId]) . '?attachment=' . $media->fileName,
                 'text' => __('Download')
             );
         }
@@ -673,180 +673,11 @@ class Library extends Base
         if (!$this->getUser()->checkViewable($media))
             throw new AccessDeniedException();
 
-        // Get the name with library
-        $libraryLocation = Config::GetSetting('LIBRARY_LOCATION');
-        $libraryPath = $libraryLocation . $media->storedAs;
-        $attachmentName = Sanitize::getString('attachmentName', $media->storedAs);
-
-        $preview = Sanitize::getInt('preview', 0);
-
-        // Serve the file from the library
-        if ($media->mediaType == 'image' && $preview == 1) {
-            $width = Sanitize::getInt('width');
-            $height = Sanitize::getInt('height');
-
-            if ($width != 0 || $height != 0) {
-                // Create a thumbnail and change the file we serve
-                $thumbPath = sprintf('tn_%dx%d_%s', $width, $height, $media->storedAs);
-
-                // Create the thumbnail here
-                if (!file_exists($thumbPath)) {
-
-                }
-
-                // Set the file to serve to be the thumbnail
-                $libraryPath = $thumbPath;
-            }
-        }
-        else {
-            // Serve the file directly.
-
-        }
-
-        if (count($entries) <= 0) {
-
-
-            // dynamically create an image of the correct size - used for previews
-            ResizeImage(Theme::ImageUrl('forms/filenotfound.gif'), '', $width, $height, true, 'browser');
-            exit();
-        }
-
-        $size = filesize($libraryPath);
-
-        if ($preview == 0) {
-            header('Content-Type: application/octet-stream');
-            header("Content-Transfer-Encoding: Binary");
-            header("Content-disposition: attachment; filename=\"" . $attachmentName . "\"");
-        } else {
-            $fi = new \finfo(FILEINFO_MIME_TYPE);
-            $mime = $fi->file($libraryPath);
-            header("Content-Type: {$mime}");
-        }
-
-        //Output a header
-        header('Pragma: public');
-        header('Cache-Control: max-age=86400');
-        header('Expires: ' . gmdate('D, d M Y H:i:s \G\M\T', time() + 86400));
-        header('Content-Length: ' . $size);
-
-        // Send via Apache X-Sendfile header?
-        if (Config::GetSetting('SENDFILE_MODE') == 'Apache') {
-            header("X-Sendfile: $libraryPath");
-        }
-        // Send via Nginx X-Accel-Redirect?
-        else if (Config::GetSetting('SENDFILE_MODE') == 'Nginx') {
-            header("X-Accel-Redirect: /download/" . $attachmentName);
-        }
-
-        // Return the file with PHP
-        // Disable any buffering to prevent OOM errors.
-        @ob_end_clean();
-        readfile($libraryPath);
+        // Make a media module
+        $widget = ModuleFactory::createWithMedia($media);
+        $widget->GetResource();
 
         $this->setNoOutput(true);
-    }
-
-    /**
-     * Return file based media items to the browser for Download/Preview
-     * @param string $fileName
-     * @param string $downloadFilename
-     */
-    public static function ReturnFile($fileName = '', $downloadFilename = '')
-    {
-        // Check we have a file name
-        if ($fileName == '')
-            throw new \InvalidArgumentException(__('Filename not provided'));
-
-        // What has been requested
-        $proportional = \Kit::GetParam('proportional', _GET, _BOOL, true);
-        $thumb = \Kit::GetParam('thumb', _GET, _BOOL, false);
-        $dynamic = isset($_REQUEST['dynamic']);
-        $width = \Kit::GetParam('width', _REQUEST, _INT, 80);
-        $height = \Kit::GetParam('height', _REQUEST, _INT, 80);
-        $download = \Kit::GetParam('download', _REQUEST, _BOOLEAN, false);
-        $downloadFromLibrary = \Kit::GetParam('downloadFromLibrary', _REQUEST, _BOOLEAN, false);
-
-        if ($downloadFromLibrary && $downloadFilename == '') {
-            throw new \InvalidArgumentException(__('Download Filename not provided'));
-        }
-
-        // Get the name with library
-        $libraryLocation = Config::GetSetting('LIBRARY_LOCATION');
-        $libraryPath = $libraryLocation . $fileName;
-
-        // Are we requesting a thumbnail - if so then cache it for later use
-        if ($thumb) {
-            $thumbPath = $libraryLocation . sprintf('tn_%dx%d_%s', $width, $height, $fileName);
-
-            // If the thumbnail doesn't exist then create one
-            if (!file_exists($thumbPath)) {
-                Log::notice('File doesn\'t exist, creating a thumbnail for ' . $fileName);
-
-                if (!$info = getimagesize($libraryPath))
-                    die($libraryPath . ' is not an image');
-
-                // Save the thumbnail
-                ResizeImage($libraryPath, $thumbPath, $width, $height, $proportional, 'file');
-            }
-
-            // From now onwards operate on the thumbnail
-            $libraryPath = $thumbPath;
-        }
-
-        if ($dynamic || $thumb) {
-
-            // Get the info for this new temporary file
-            if (!$info = getimagesize($libraryPath)) {
-                echo $libraryPath . ' is not an image';
-                exit;
-            }
-
-            if ($dynamic && !$thumb && $info[2]) {
-                $width = \Xibo\Helper\Sanitize::getInt('width');
-                $height = \Xibo\Helper\Sanitize::getInt('height');
-
-                // dynamically create an image of the correct size - used for previews
-                ResizeImage($libraryPath, '', $width, $height, $proportional, 'browser');
-
-                exit;
-            }
-        }
-
-        $size = filesize($libraryPath);
-
-        if ($download) {
-            header('Content-Type: application/octet-stream');
-            header("Content-Transfer-Encoding: Binary");
-            header("Content-disposition: attachment; filename=\"" . (($downloadFromLibrary) ? $downloadFilename : basename($fileName)) . "\"");
-        } else {
-            $fi = new finfo(FILEINFO_MIME_TYPE);
-            $mime = $fi->file($libraryPath);
-            header("Content-Type: {$mime}");
-        }
-
-        //Output a header
-        header('Pragma: public');
-        header('Cache-Control: max-age=86400');
-        header('Expires: ' . gmdate('D, d M Y H:i:s \G\M\T', time() + 86400));
-        header('Content-Length: ' . $size);
-
-        // Send via Apache X-Sendfile header?
-        if (Config::GetSetting('SENDFILE_MODE') == 'Apache') {
-            header("X-Sendfile: $libraryPath");
-            exit();
-        }
-
-        // Send via Nginx X-Accel-Redirect?
-        if (Config::GetSetting('SENDFILE_MODE') == 'Nginx') {
-            header("X-Accel-Redirect: /download/" . basename($fileName));
-            exit();
-        }
-
-        // Return the file with PHP
-        // Disable any buffering to prevent OOM errors.
-        @ob_end_clean();
-        readfile($libraryPath);
-        exit();
     }
 
     /**

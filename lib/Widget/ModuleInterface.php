@@ -19,8 +19,8 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+namespace Xibo\Widget;
 
-namespace Widget;
 interface ModuleInterface
 {
     // Some Default Add/Edit/Delete functionality each module should have

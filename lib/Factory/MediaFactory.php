@@ -177,7 +177,7 @@ class MediaFactory
                             ) AS groupsWithPermissions, ";
         $params['entity'] = 'Xibo\\Entity\\Media';
 
-        $sql .= "   media.originalFileName ";
+        $sql .= "   media.originalFileName AS fileName ";
         $sql .= " FROM media ";
         $sql .= "   LEFT OUTER JOIN media parentmedia ";
         $sql .= "   ON parentmedia.MediaID = media.MediaID ";

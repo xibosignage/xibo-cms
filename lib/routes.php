@@ -63,7 +63,7 @@ $app->get('/resolution', '\Xibo\Controller\Resolution:grid')->name('resolution.s
 $app->get('/library', '\Xibo\Controller\Library:grid')->name('library.search');
 $app->post('/library', '\Xibo\Controller\Library:add')->name('library.add');
 $app->put('/library/:id', '\Xibo\Controller\Library:edit')->name('library.edit');
-$app->put('/library/download/:id', '\Xibo\Controller\Library:download')->name('library.download');
+$app->get('/library/download/:id', '\Xibo\Controller\Library:download')->name('library.download');
 
 //
 // Displays

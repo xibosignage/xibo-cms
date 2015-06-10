@@ -18,14 +18,16 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-namespace Widget;
+namespace Xibo\Widget;
 
-use Xibo\Controller\File;
 use Xibo\Entity\User;
+use Xibo\Exception\ControllerNotImplemented;
+use Xibo\Factory\MediaFactory;
 use Xibo\Helper\ApplicationState;
-use Xibo\Helper\Form;
+use Xibo\Helper\Config;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
+use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 
 
@@ -121,11 +123,7 @@ abstract class Module implements ModuleInterface
     protected final function saveSettings()
     {
         // Save
-        try {
-            $this->module->save();
-        } catch (Exception $e) {
-            trigger_error(__('Cannot Save Settings'), E_USER_ERROR);
-        }
+        $this->module->save();
     }
 
     /**
@@ -510,11 +508,11 @@ abstract class Module implements ModuleInterface
     /**
      * Default Get Resource
      * @param int $displayId
-     * @return bool
+     * @throws ControllerNotImplemented
      */
     public function GetResource($displayId = 0)
     {
-        return false;
+        throw new ControllerNotImplemented();
     }
 
     /**
@@ -894,10 +892,39 @@ abstract class Module implements ModuleInterface
     /**
      * Return File
      */
-    protected function ReturnFile()
+    protected function download()
     {
+        $media = MediaFactory::getById($this->getMediaId());
+
         // This widget is expected to output a file - usually this is for file based media
-        $media = new Media();
-        File::ReturnFile($media->GetStoredAs($this->getMediaId()));
+        // Get the name with library
+        $libraryLocation = Config::GetSetting('LIBRARY_LOCATION');
+        $libraryPath = $libraryLocation . $media->storedAs;
+        $attachmentName = Sanitize::getString('attachment', $media->storedAs);
+
+        $size = filesize($libraryPath);
+
+        header('Content-Type: application/octet-stream');
+        header("Content-Transfer-Encoding: Binary");
+        header("Content-disposition: attachment; filename=\"" . $attachmentName . "\"");
+
+        //Output a header
+        header('Pragma: public');
+        header('Cache-Control: max-age=86400');
+        header('Expires: ' . gmdate('D, d M Y H:i:s \G\M\T', time() + 86400));
+        header('Content-Length: ' . $size);
+
+        // Send via Apache X-Sendfile header?
+        if (Config::GetSetting('SENDFILE_MODE') == 'Apache') {
+            header("X-Sendfile: $libraryPath");
+        }
+        // Send via Nginx X-Accel-Redirect?
+        else if (Config::GetSetting('SENDFILE_MODE') == 'Nginx') {
+            header("X-Accel-Redirect: /download/" . $attachmentName);
+        }
+        else {
+            // Return the file with PHP
+            readfile($libraryPath);
+        }
     }
 }

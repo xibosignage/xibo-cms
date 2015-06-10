@@ -79,7 +79,7 @@ class video extends Module
      */
     public function GetResource($displayId = 0)
     {
-        $this->ReturnFile();
+        $this->download();
         exit();
     }
 

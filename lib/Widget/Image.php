@@ -18,15 +18,21 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-use Widget\Module;
-use Xibo\Helper\Form;
+namespace Xibo\Widget;
 
-class image extends Module
+use Intervention\Image\ImageManagerStatic as Img;
+use Xibo\Factory\MediaFactory;
+use Xibo\Helper\Config;
+use Xibo\Helper\Log;
+use Xibo\Helper\Sanitize;
+
+class Image extends Module
 {
     /**
      * Return the Edit Form as HTML
      */
-    public function EditForm() {
+    public function EditForm()
+    {
 
         $response = $this->getState();
 
@@ -34,34 +40,34 @@ class image extends Module
         $formFields = array();
 
         $formFields[] = Form::AddCombo(
-                    'scaleTypeId',
-                    __('Scale Type'),
-                    $this->GetOption('scaleType'),
-                    array(array('scaleTypeId' => 'center', 'scaleType' => __('Center')), array('scaleTypeId' => 'stretch', 'scaleType' => __('Stretch'))),
-                    'scaleTypeId',
-                    'scaleType',
-                    __('How should this image be scaled?'),
-                    's');
+            'scaleTypeId',
+            __('Scale Type'),
+            $this->GetOption('scaleType'),
+            array(array('scaleTypeId' => 'center', 'scaleType' => __('Center')), array('scaleTypeId' => 'stretch', 'scaleType' => __('Stretch'))),
+            'scaleTypeId',
+            'scaleType',
+            __('How should this image be scaled?'),
+            's');
 
         $formFields[] = Form::AddCombo(
-                    'alignId',
-                    __('Align'),
-                    $this->GetOption('align', 'center'),
-                    array(array('alignId' => 'left', 'align' => __('Left')), array('alignId' => 'center', 'align' => __('Centre')), array('alignId' => 'right', 'align' => __('Right'))),
-                    'alignId',
-                    'align',
-                    __('How should this image be aligned?'),
-                    'a', 'align-fields');
+            'alignId',
+            __('Align'),
+            $this->GetOption('align', 'center'),
+            array(array('alignId' => 'left', 'align' => __('Left')), array('alignId' => 'center', 'align' => __('Centre')), array('alignId' => 'right', 'align' => __('Right'))),
+            'alignId',
+            'align',
+            __('How should this image be aligned?'),
+            'a', 'align-fields');
 
         $formFields[] = Form::AddCombo(
-                    'valignId',
-                    __('Vertical Align'),
-                    $this->GetOption('valign', 'middle'),
-                    array(array('valignId' => 'top', 'valign' => __('Top')), array('valignId' => 'middle', 'valign' => __('Middle')), array('valignId' => 'bottom', 'valign' => __('Bottom'))),
-                    'valignId',
-                    'valign',
-                    __('How should this image be vertically aligned?'),
-                    'v', 'align-fields');
+            'valignId',
+            __('Vertical Align'),
+            $this->GetOption('valign', 'middle'),
+            array(array('valignId' => 'top', 'valign' => __('Top')), array('valignId' => 'middle', 'valign' => __('Middle')), array('valignId' => 'bottom', 'valign' => __('Bottom'))),
+            'valignId',
+            'valign',
+            __('How should this image be vertically aligned?'),
+            'v', 'align-fields');
 
         // Set some field dependencies
         $response->AddFieldAction('scaleTypeId', 'init', 'center', array('.align-fields' => array('display' => 'block')));
@@ -98,11 +104,11 @@ class image extends Module
     {
         if ($this->module->previewEnabled == 0)
             return parent::Preview($width, $height);
-        
+
         $proportional = ($this->GetOption('scaleType') == 'stretch') ? 'false' : 'true';
         $align = $this->GetOption('align', 'center');
         $valign = $this->GetOption('valign', 'middle');
- 
+
         $html = '<div style="display:table; width:100%%; height: %dpx">
             <div style="text-align:%s; display: table-cell; vertical-align: %s;">
                 <img src="index.php?p=content&q=getFile&mediaid=%d&width=%d&height=%d&dynamic=true&proportional=%s" />
@@ -120,8 +126,50 @@ class image extends Module
      */
     public function GetResource($displayId = 0)
     {
-        $this->ReturnFile();
-        exit();
+        Log::debug('GetResource for %d', $this->getMediaId());
+
+        $media = MediaFactory::getById($this->getMediaId());
+        $libraryLocation = Config::GetSetting('LIBRARY_LOCATION');
+        $filePath = $libraryLocation . $media->storedAs;
+
+        // Preview or download?
+        if (Sanitize::getInt('preview', 0) == 1) {
+
+            // Preview (we output the file to the browser with image headers
+            Img::configure(array('driver' => 'gd'));
+
+            // Output a thumbnail?
+            $width = Sanitize::getInt('width');
+            $height = Sanitize::getInt('height');
+
+            Log::debug('Preview Requested with Width and Height %d x %d', $width, $height);
+
+            if ($width != 0 || $height != 0) {
+                // Save a thumbnail and output it
+                $thumbPath = $libraryLocation . sprintf('tn_%dx%d_%s', $width, $height, $media->storedAs);
+
+                // Create the thumbnail here
+                if (!file_exists($thumbPath)) {
+                    $img = Img::make($filePath)->fit($width, $height)->save($thumbPath);
+                } else {
+                    $img = Img::make($thumbPath);
+                }
+            }
+            else {
+                // Load the whole image
+                Log::debug('Loading %s', $filePath);
+                $img = Img::make($filePath);
+            }
+
+            Log::debug('Outputting Image Response');
+
+            // Output the file
+            echo $img->response();
+        }
+        else {
+            // Download the file
+            $this->download();
+        }
     }
 
     /**

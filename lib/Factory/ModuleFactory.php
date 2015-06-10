@@ -23,6 +23,7 @@
 namespace Xibo\Factory;
 
 
+use Xibo\Entity\Media;
 use Xibo\Entity\Module;
 use Xibo\Entity\Region;
 use Xibo\Entity\Widget;
@@ -35,7 +36,7 @@ class ModuleFactory
     /**
      * Create a Module
      * @param string $type
-     * @return \Widget\Module
+     * @return \Xibo\Widget\Module
      * @throws NotFoundException
      */
     public static function create($type)
@@ -51,8 +52,41 @@ class ModuleFactory
         $type = $module->type;
 
         $type = new $type();
-        /* @var \Widget\Module $type */
+        /* @var \Xibo\Widget\Module $type */
         $type->setModule($module);
+
+        return $type;
+    }
+
+    /**
+     * Create a Module with a Media Record
+     * @param Media $media
+     * @return \Xibo\Widget\Module
+     * @throws NotFoundException
+     */
+    public static function createWithMedia($media)
+    {
+        $modules = ModuleFactory::query(null, array('type' => $media->mediaType));
+
+        if (count($modules) <= 0)
+            throw new NotFoundException(sprintf(__('Unknown type %s'), $media->mediaType));
+
+        // Create a widget
+        $widget = new Widget();
+        $widget->assignMedia($media->mediaId);
+
+        // Create a module
+        $module = $modules[0];
+
+        // TODO: move this into the module itself (i.e. all modules have a namespace)
+        $type = 'Xibo\Widget\\' . ucfirst($module->type);
+
+        Log::debug('Creating module with type %s', $type);
+        $type = new $type();
+
+        /* @var \Xibo\Widget\Module $type */
+        $type->setModule($module);
+        $type->setWidget($widget);
 
         return $type;
     }
@@ -64,7 +98,7 @@ class ModuleFactory
      * @param int $ownerId
      * @param int $playlistId
      * @param int $regionId
-     * @return \Widget\Module
+     * @return \Xibo\Widget\Module
      * @throws NotFoundException
      */
     public static function createForWidget($type, $widgetId = 0, $ownerId = 0, $playlistId = 0, $regionId = 0)
@@ -102,7 +136,7 @@ class ModuleFactory
      * Create a Module using a Widget
      * @param Widget $widget
      * @param Region $region
-     * @return \Widget\Module
+     * @return \Xibo\Widget\Module
      */
     public static function createWithWidget($widget, $region)
     {

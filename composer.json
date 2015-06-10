@@ -18,6 +18,7 @@
     "slim/views": "0.1.*",
     "twig/twig": "~1.18",
     "twig/extensions": "~1.2",
-    "respect/validation": "0.9.*"
+    "respect/validation": "0.9.*",
+    "intervention/imagecache": "~2.3"
   }
 }
