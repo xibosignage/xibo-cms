@@ -20,6 +20,7 @@
  */
 namespace Xibo\Widget;
 
+use Slim\Slim;
 use Xibo\Entity\User;
 use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Factory\MediaFactory;
@@ -33,6 +34,11 @@ use Xibo\Helper\Theme;
 
 abstract class Module implements ModuleInterface
 {
+    /**
+     * @var Slim
+     */
+    protected $app;
+
     /**
      * @var \Xibo\Entity\Module $module
      */
@@ -62,6 +68,23 @@ abstract class Module implements ModuleInterface
      * @var int $codeSchemaVersion The Schema Version of this code
      */
     protected $codeSchemaVersion = -1;
+
+    /**
+     * Create the controller
+     */
+    public function __construct()
+    {
+        $this->app = Slim::getInstance();
+    }
+
+    /**
+     * Get the App
+     * @return Slim
+     */
+    protected function getApp()
+    {
+        return $this->app;
+    }
 
     /**
      * Set the Widget
@@ -904,14 +927,12 @@ abstract class Module implements ModuleInterface
 
         $size = filesize($libraryPath);
 
+        // Issue some headers
+        $this->getApp()->etag($media->md5);
+        $this->getApp()->expires('+1 week');
         header('Content-Type: application/octet-stream');
-        header("Content-Transfer-Encoding: Binary");
-        header("Content-disposition: attachment; filename=\"" . $attachmentName . "\"");
-
-        //Output a header
-        header('Pragma: public');
-        header('Cache-Control: max-age=86400');
-        header('Expires: ' . gmdate('D, d M Y H:i:s \G\M\T', time() + 86400));
+        header('Content-Transfer-Encoding: Binary');
+        header('Content-disposition: attachment; filename="' . $attachmentName . '"');
         header('Content-Length: ' . $size);
 
         // Send via Apache X-Sendfile header?

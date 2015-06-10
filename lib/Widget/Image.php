@@ -148,6 +148,8 @@ class Image extends Module
                 // Save a thumbnail and output it
                 $thumbPath = $libraryLocation . sprintf('tn_%dx%d_%s', $width, $height, $media->storedAs);
 
+                $eTag = md5($media->md5 . $thumbPath);
+
                 // Create the thumbnail here
                 if (!file_exists($thumbPath)) {
                     $img = Img::make($filePath)->fit($width, $height)->save($thumbPath);
@@ -158,12 +160,15 @@ class Image extends Module
             else {
                 // Load the whole image
                 Log::debug('Loading %s', $filePath);
+                $eTag = $media->md5;
                 $img = Img::make($filePath);
             }
 
             Log::debug('Outputting Image Response');
 
             // Output the file
+            $this->getApp()->etag($eTag);
+            $this->getApp()->expires('+1 week');
             echo $img->response();
         }
         else {
