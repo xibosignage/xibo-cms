@@ -18,11 +18,16 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+namespace Xibo\Widget;
+use Exception;
+use InvalidArgumentException;
+use Kit;
+use Media;
 use Widget\Module;
 use Xibo\Helper\Form;
 use Xibo\Helper\Theme;
 
-class webpage extends Module
+class WebPage extends Module
 {
     /**
      * Install Files
@@ -34,7 +39,7 @@ class webpage extends Module
         $media->addModuleFile('modules/preview/xibo-layout-scaler.js');;
         $media->addModuleFile('modules/preview/xibo-webpage-render.js');;
     }
-    
+
     /**
      * Return the Add Form
      */
@@ -46,7 +51,7 @@ class webpage extends Module
         $this->configureForm('AddMedia');
 
         $formFields = array();
-         
+
         $formFields[] = Form::AddText('uri', __('Link'), NULL,
             __('The Location (URL) of the webpage'), 'l', 'required');
 
@@ -57,17 +62,17 @@ class webpage extends Module
             __('The duration in seconds this item should be displayed'), 'd', 'required');
 
         $formFields[] = Form::AddCombo(
-            'modeid', 
-            __('Options'), 
+            'modeid',
+            __('Options'),
             NULL,
             array(
-                    array('modeid' => '1', 'mode' => __('Open Natively')), 
-                    array('modeid' => '2', 'mode' => __('Manual Position')),
-                    array('modeid' => '3', 'mode' => __('Best Fit'))
-                ),
+                array('modeid' => '1', 'mode' => __('Open Natively')),
+                array('modeid' => '2', 'mode' => __('Manual Position')),
+                array('modeid' => '3', 'mode' => __('Best Fit'))
+            ),
             'modeid',
             'mode',
-            __('How should this web page be embedded?'), 
+            __('How should this web page be embedded?'),
             'm');
 
         $formFields[] = Form::AddNumber('pageWidth', __('Page Width'), NULL,
@@ -86,22 +91,22 @@ class webpage extends Module
             __('The Percentage to Scale this Webpage (0 - 100)'), 's', NULL, 'webpage-offsets');
 
         $formFields[] = Form::AddCheckbox('transparency', __('Background transparent?'),
-            NULL, __('Should the HTML be shown with a transparent background. Not currently available on the Windows Display Client.'), 
+            NULL, __('Should the HTML be shown with a transparent background. Not currently available on the Windows Display Client.'),
             't');
 
         // Field dependencies
         $modeFieldDepencies_1 = array(
-                '.webpage-widths' => array('display' => 'none'),
-                '.webpage-offsets' => array('display' => 'none'),
-            );
+            '.webpage-widths' => array('display' => 'none'),
+            '.webpage-offsets' => array('display' => 'none'),
+        );
         $modeFieldDepencies_2 = array(
-                '.webpage-widths' => array('display' => 'block'),
-                '.webpage-offsets' => array('display' => 'block'),
-            );
+            '.webpage-widths' => array('display' => 'block'),
+            '.webpage-offsets' => array('display' => 'block'),
+        );
         $modeFieldDepencies_3 = array(
-                '.webpage-widths' => array('display' => 'block'),
-                '.webpage-offsets' => array('display' => 'none'),
-            );
+            '.webpage-widths' => array('display' => 'block'),
+            '.webpage-offsets' => array('display' => 'none'),
+        );
 
         $response->AddFieldAction('modeid', 'init', 1, $modeFieldDepencies_1);
         $response->AddFieldAction('modeid', 'change', 1, $modeFieldDepencies_1);
@@ -118,10 +123,10 @@ class webpage extends Module
 
         return $response;
     }
-    
+
     /**
      * Return the Edit Form as HTML
-     * @return 
+     * @return
      */
     public function EditForm()
     {
@@ -135,7 +140,7 @@ class webpage extends Module
         $this->configureForm('EditMedia');
 
         $formFields = array();
-        
+
         $formFields[] = Form::AddText('uri', __('Link'), urldecode($this->GetOption('uri')),
             __('The Location (URL) of the webpage'), 'l', 'required');
 
@@ -146,17 +151,17 @@ class webpage extends Module
             __('The duration in seconds this item should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
 
         $formFields[] = Form::AddCombo(
-            'modeid', 
-            __('Options'), 
+            'modeid',
+            __('Options'),
             $this->GetOption('modeid'),
             array(
-                    array('modeid' => '1', 'mode' => __('Open Natively')), 
-                    array('modeid' => '2', 'mode' => __('Manual Position')),
-                    array('modeid' => '3', 'mode' => __('Best Fit'))
-                ),
+                array('modeid' => '1', 'mode' => __('Open Natively')),
+                array('modeid' => '2', 'mode' => __('Manual Position')),
+                array('modeid' => '3', 'mode' => __('Best Fit'))
+            ),
             'modeid',
             'mode',
-            __('How should this web page be embedded?'), 
+            __('How should this web page be embedded?'),
             'm');
 
         $formFields[] = Form::AddNumber('pageWidth', __('Page Width'), $this->GetOption('pageWidth'),
@@ -173,24 +178,24 @@ class webpage extends Module
 
         $formFields[] = Form::AddNumber('scaling', __('Scale Percentage'), $this->GetOption('scaling'),
             __('The Percentage to Scale this Webpage (0 - 100)'), 's', NULL, 'webpage-offsets');
-           
+
         $formFields[] = Form::AddCheckbox('transparency', __('Background transparent?'),
-            $this->GetOption('transparency'), __('Should the HTML be shown with a transparent background. Not currently available on the Windows Display Client.'), 
+            $this->GetOption('transparency'), __('Should the HTML be shown with a transparent background. Not currently available on the Windows Display Client.'),
             't');
 
         // Field dependencies
         $modeFieldDepencies_1 = array(
-                '.webpage-widths' => array('display' => 'none'),
-                '.webpage-offsets' => array('display' => 'none'),
-            );
+            '.webpage-widths' => array('display' => 'none'),
+            '.webpage-offsets' => array('display' => 'none'),
+        );
         $modeFieldDepencies_2 = array(
-                '.webpage-widths' => array('display' => 'block'),
-                '.webpage-offsets' => array('display' => 'block'),
-            );
+            '.webpage-widths' => array('display' => 'block'),
+            '.webpage-offsets' => array('display' => 'block'),
+        );
         $modeFieldDepencies_3 = array(
-                '.webpage-widths' => array('display' => 'block'),
-                '.webpage-offsets' => array('display' => 'none'),
-            );
+            '.webpage-widths' => array('display' => 'block'),
+            '.webpage-offsets' => array('display' => 'none'),
+        );
 
         $response->AddFieldAction('modeid', 'init', 1, $modeFieldDepencies_1);
         $response->AddFieldAction('modeid', 'change', 1, $modeFieldDepencies_1);
@@ -208,7 +213,7 @@ class webpage extends Module
         return $response;
         $this->response->AddButton(__('Apply'), 'XiboDialogApply("#ModuleForm")');
     }
-    
+
     /**
      * Add Media to the Database
      */
@@ -223,15 +228,15 @@ class webpage extends Module
         $transparency = \Kit::GetParam('transparency', _POST, _CHECKBOX, 'off');
         $offsetLeft = \Xibo\Helper\Sanitize::getInt('offsetLeft');
         $offsetTop = \Xibo\Helper\Sanitize::getInt('offsetTop');
-	$name = \Xibo\Helper\Sanitize::getString('name');
-        
+        $name = \Xibo\Helper\Sanitize::getString('name');
+
         // Validate the URL?
         if ($uri == "" || $uri == "http://")
             throw new InvalidArgumentException(__('Please enter a Link'));
-        
+
         if ($duration == 0)
             throw new InvalidArgumentException(__('You must enter a duration.'));
-        
+
         // Any Options
         $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration()));
         $this->SetOption('xmds', true);
@@ -243,7 +248,7 @@ class webpage extends Module
         $this->SetOption('pageWidth', \Kit::GetParam('pageWidth', _POST, _INT));
         $this->SetOption('pageHeight', \Kit::GetParam('pageHeight', _POST, _INT));
         $this->SetOption('modeid', \Kit::GetParam('modeid', _POST, _INT));
-	$this->SetOption('name', $name);
+        $this->SetOption('name', $name);
 
         // Save the widget
         $this->saveWidget();
@@ -254,10 +259,10 @@ class webpage extends Module
 
         return $response;
     }
-    
+
     /**
      * Edit Media in the Database
-     * @return 
+     * @return
      */
     public function EditMedia()
     {
@@ -272,7 +277,7 @@ class webpage extends Module
         $transparency = \Kit::GetParam('transparency', _POST, _CHECKBOX, 'off');
         $offsetLeft = \Xibo\Helper\Sanitize::getInt('offsetLeft');
         $offsetTop = \Xibo\Helper\Sanitize::getInt('offsetTop');
-	$name = \Xibo\Helper\Sanitize::getString('name');
+        $name = \Xibo\Helper\Sanitize::getString('name');
 
         // Validate the URL?
         if ($uri == "" || $uri == "http://")
@@ -289,7 +294,7 @@ class webpage extends Module
         $this->SetOption('pageWidth', \Kit::GetParam('pageWidth', _POST, _INT));
         $this->SetOption('pageHeight', \Kit::GetParam('pageHeight', _POST, _INT));
         $this->SetOption('modeid', \Kit::GetParam('modeid', _POST, _INT));
-	$this->SetOption('name', $name);
+        $this->SetOption('name', $name);
 
         // Save the widget
         $this->saveWidget();
@@ -297,7 +302,7 @@ class webpage extends Module
         // Load an edit form
         $response->loadForm = true;
         $response->loadFormUri = $this->getTimelineLink();
-            $this->response->callBack = 'refreshPreview("' . $this->regionid . '")';
+        $this->response->callBack = 'refreshPreview("' . $this->regionid . '")';
 
         return $response;
     }
@@ -327,7 +332,7 @@ class webpage extends Module
     {
         // Load in the template
         $template = file_get_contents('modules/preview/HtmlTemplate.html');
-        
+
         // Replace the View Port Width?
         if (isset($_GET['preview']))
             $template = str_replace('[[ViewPortWidth]]', $this->region->width, $template);
@@ -345,18 +350,18 @@ class webpage extends Module
         $iframeHeight = $this->GetOption('pageHeight');
 
         $options = array(
-                'modeId' => $this->GetOption('modeid'),
-                'originalWidth' => intval($this->region->width),
-                'originalHeight' => intval($this->region->height),
-                'iframeWidth' => intval(($iframeWidth == '' || $iframeWidth == 0) ? $this->region->width : $iframeWidth),
-                'iframeHeight' => intval(($iframeHeight == '' || $iframeHeight == 0) ? $this->region->height : $iframeHeight),
-                'previewWidth' => intval($width),
-                'previewHeight' => intval($height),
-                'offsetTop' => intval($this->GetOption('offsetTop', 0)),
-                'offsetLeft' => intval($this->GetOption('offsetLeft', 0)),
-                'scale' => ($this->GetOption('scaling', 100) / 100),
-                'scaleOverride' => \Kit::GetParam('scale_override', _GET, _DOUBLE, 0)
-            );
+            'modeId' => $this->GetOption('modeid'),
+            'originalWidth' => intval($this->region->width),
+            'originalHeight' => intval($this->region->height),
+            'iframeWidth' => intval(($iframeWidth == '' || $iframeWidth == 0) ? $this->region->width : $iframeWidth),
+            'iframeHeight' => intval(($iframeHeight == '' || $iframeHeight == 0) ? $this->region->height : $iframeHeight),
+            'previewWidth' => intval($width),
+            'previewHeight' => intval($height),
+            'offsetTop' => intval($this->GetOption('offsetTop', 0)),
+            'offsetLeft' => intval($this->GetOption('offsetLeft', 0)),
+            'scale' => ($this->GetOption('scaling', 100) / 100),
+            'scaleOverride' => \Kit::GetParam('scale_override', _GET, _DOUBLE, 0)
+        );
 
         // Head Content
         $headContent = '<style>#iframe { border:0; }</style>';
@@ -364,13 +369,13 @@ class webpage extends Module
 
         // Body content
         $output = '<iframe id="iframe" scrolling="no" frameborder="0" src="' . $url . '"></iframe>';
-        
+
         // Replace the Body Content with our generated text
         $template = str_replace('<!--[[[BODYCONTENT]]]-->', $output, $template);
 
         // After body content
         $isPreview = (\Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
-        $after_body  = '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
+        $after_body = '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
         $after_body .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-layout-scaler.js"></script>';
         $after_body .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-webpage-render.js"></script>';
         $after_body .= '<script>
@@ -387,7 +392,8 @@ class webpage extends Module
         return $template;
     }
 
-    public function GetName() {
+    public function GetName()
+    {
         return $this->GetOption('name');
     }
 
@@ -397,4 +403,5 @@ class webpage extends Module
         return 2;
     }
 }
+
 ?>

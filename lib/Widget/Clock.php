@@ -19,13 +19,13 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-use Widget\Module;
+namespace Xibo\Widget;
+
 use Xibo\Helper\ApplicationState;
-use Xibo\Helper\Form;
 use Xibo\Helper\Help;
 use Xibo\Helper\Theme;
 
-class clock extends Module
+class Clock extends Module
 {
     public $codeSchemaVersion = 1;
 
@@ -48,23 +48,23 @@ class clock extends Module
 
         // Configure form
         $this->configureForm('AddMedia');
-    
+
         $formFields = array();
 
         // Offer a choice of clock type
         $formFields[] = Form::AddCombo(
-                    'clockTypeId', 
-                    __('Clock Type'), 
-                    NULL,
-                    array(
-                        array('clockTypeId' => '1', 'clockType' => 'Analogue'),
-                        array('clockTypeId' => '2', 'clockType' => 'Digital'),
-                        array('clockTypeId' => '3', 'clockType' => 'Flip Clock')
-                    ),
-                    'clockTypeId',
-                    'clockType',
-                    __('Please select the type of clock to display.'), 
-                    'c');
+            'clockTypeId',
+            __('Clock Type'),
+            NULL,
+            array(
+                array('clockTypeId' => '1', 'clockType' => 'Analogue'),
+                array('clockTypeId' => '2', 'clockType' => 'Digital'),
+                array('clockTypeId' => '3', 'clockType' => 'Flip Clock')
+            ),
+            'clockTypeId',
+            'clockType',
+            __('Please select the type of clock to display.'),
+            'c');
 
         $formFields[] = Form::AddNumber('duration', __('Duration'), NULL,
             __('The duration in seconds this item should be displayed.'), 'd', 'required');
@@ -74,18 +74,18 @@ class clock extends Module
 
         // Offer a choice of theme
         $formFields[] = Form::AddCombo(
-                    'themeid', 
-                    __('Theme'), 
-                    NULL,
-                    array(array('themeid' => '1', 'theme' => 'Light'), array('themeid' => '2', 'theme' => 'Dark')),
-                    'themeid',
-                    'theme',
-                    __('Please select a theme for the clock.'), 
-                    't',
-                    'analogue-control-group');
+            'themeid',
+            __('Theme'),
+            NULL,
+            array(array('themeid' => '1', 'theme' => 'Light'), array('themeid' => '2', 'theme' => 'Dark')),
+            'themeid',
+            'theme',
+            __('Please select a theme for the clock.'),
+            't',
+            'analogue-control-group');
 
         $formFields[] = Form::AddMessage(sprintf(__('Enter a format for the Digital Clock below. e.g. [HH:mm] or [DD/MM/YYYY]. See the <a href="%s" target="_blank">format guide</a> for more information.'), Help::Link('Widget', 'ClockFormat')), 'digital-control-group');
-        
+
         $formFields[] = Form::AddMultiText('ta_text', NULL, '[HH:mm]',
             __('Enter a format for the clock'), 'f', 10, '', 'digital-control-group');
 
@@ -125,7 +125,7 @@ class clock extends Module
         // Load form
         $response->loadForm = true;
         $response->loadFormUri = $this->getTimelineLink();
-        
+
         return $response;
     }
 
@@ -148,18 +148,18 @@ class clock extends Module
 
         // Offer a choice of clock type
         $formFields[] = Form::AddCombo(
-                    'clockTypeId', 
-                    __('Clock Type'), 
-                    $this->GetOption('clockTypeId'),
-                    array(
-                        array('clockTypeId' => '1', 'clockType' => 'Analogue'),
-                        array('clockTypeId' => '2', 'clockType' => 'Digital'),
-                        array('clockTypeId' => '3', 'clockType' => 'Flip Clock')
-                    ),
-                    'clockTypeId',
-                    'clockType',
-                    __('Please select the type of clock to display.'), 
-                    'c');
+            'clockTypeId',
+            __('Clock Type'),
+            $this->GetOption('clockTypeId'),
+            array(
+                array('clockTypeId' => '1', 'clockType' => 'Analogue'),
+                array('clockTypeId' => '2', 'clockType' => 'Digital'),
+                array('clockTypeId' => '3', 'clockType' => 'Flip Clock')
+            ),
+            'clockTypeId',
+            'clockType',
+            __('Please select the type of clock to display.'),
+            'c');
 
         $formFields[] = Form::AddNumber('duration', __('Duration'), $this->getDuration(),
             __('The duration in seconds this item should be displayed'), 'd', 'required');
@@ -170,18 +170,18 @@ class clock extends Module
 
         // Offer a choice of theme
         $formFields[] = Form::AddCombo(
-                    'themeid', 
-                    __('Theme'), 
-                    $this->GetOption('theme'),
-                    array(array('themeid' => '1', 'theme' => 'Light'), array('themeid' => '2', 'theme' => 'Dark')),
-                    'themeid',
-                    'theme',
-                    __('Please select a theme for the clock.'), 
-                    't',
-                    'analogue-control-group');
+            'themeid',
+            __('Theme'),
+            $this->GetOption('theme'),
+            array(array('themeid' => '1', 'theme' => 'Light'), array('themeid' => '2', 'theme' => 'Dark')),
+            'themeid',
+            'theme',
+            __('Please select a theme for the clock.'),
+            't',
+            'analogue-control-group');
 
         $formFields[] = Form::AddMessage(sprintf(__('Enter a format for the Digital Clock below. e.g. [HH:mm] or [DD/MM/YYYY]. See the <a href="%s" target="_blank">format guide</a> for more information.'), Help::Link('Widget', 'ClockFormat')), 'digital-control-group');
-        
+
         $formFields[] = Form::AddMultiText('ta_text', NULL, $this->getRawNode('format', null),
             __('Enter a format for the clock'), 'f', 10, '', 'digital-control-group');
 
@@ -223,8 +223,8 @@ class clock extends Module
         // Load an edit form
         $response->loadForm = true;
         $response->loadFormUri = $this->getTimelineLink();
-            $this->response->callBack = 'refreshPreview("' . $this->regionid . '")';
-        
+        $this->response->callBack = 'refreshPreview("' . $this->regionid . '")';
+
         return $response;
     }
 
@@ -234,26 +234,26 @@ class clock extends Module
     private function SetFieldDependencies(&$response)
     {
         $clockTypeId_1 = array(
-                '.analogue-control-group' => array('display' => 'block'),
-                '.digital-control-group' => array('display' => 'none'),
-                '.flip-control-group' => array('display' => 'none'),
-                '.offset-control-group' => array('display' => 'block')
-            );
+            '.analogue-control-group' => array('display' => 'block'),
+            '.digital-control-group' => array('display' => 'none'),
+            '.flip-control-group' => array('display' => 'none'),
+            '.offset-control-group' => array('display' => 'block')
+        );
 
         $clockTypeId_2 = array(
-                '.analogue-control-group' => array('display' => 'none'),
-                '.digital-control-group' => array('display' => 'block'),
-                '.flip-control-group' => array('display' => 'none'),
-                '.offset-control-group' => array('display' => 'block')
-            );
+            '.analogue-control-group' => array('display' => 'none'),
+            '.digital-control-group' => array('display' => 'block'),
+            '.flip-control-group' => array('display' => 'none'),
+            '.offset-control-group' => array('display' => 'block')
+        );
 
         $clockTypeId_3 = array(
-                '.analogue-control-group' => array('display' => 'none'),
-                '.digital-control-group' => array('display' => 'none'),
-                '.flip-control-group' => array('display' => 'block'),
-                '.offset-control-group' => array('display' => 'none')
-            );
-            
+            '.analogue-control-group' => array('display' => 'none'),
+            '.digital-control-group' => array('display' => 'none'),
+            '.flip-control-group' => array('display' => 'block'),
+            '.offset-control-group' => array('display' => 'none')
+        );
+
         $response->AddFieldAction('clockTypeId', 'init', 1, $clockTypeId_1);
         $response->AddFieldAction('clockTypeId', 'change', 1, $clockTypeId_1);
         $response->AddFieldAction('clockTypeId', 'init', 2, $clockTypeId_2);
@@ -278,22 +278,22 @@ class clock extends Module
             case 1:
                 // Analogue
                 $template = file_get_contents('modules/theme/HtmlTemplateForClock.html');
-                
+
                 // Render our clock face
                 $theme = ($this->GetOption('theme') == 1 ? 'light' : 'dark');
                 $theme_face = ($this->GetOption('theme') == 1 ? 'clock_bg_modern_light.png' : 'clock_bg_modern_dark.png');
-                 
+
                 $template = str_replace('<!--[[[CLOCK_FACE]]]-->', base64_encode(file_get_contents('modules/theme/' . $theme_face)), $template);
-                
+
                 // Light or dark?
                 $template = str_replace('<!--[[[CLOCK_THEME]]]-->', $theme, $template);
                 $template = str_replace('<!--[[[OFFSET]]]-->', $this->GetOption('offset', 0), $template);
 
                 // After body content
                 $isPreview = (\Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
-                $javaScriptContent  = '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
+                $javaScriptContent = '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
                 $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'moment.js"></script>';
-                
+
                 // Replace the After body Content
                 $template = str_replace('<!--[[[JAVASCRIPTCONTENT]]]-->', $javaScriptContent, $template);
                 break;
@@ -310,7 +310,7 @@ class clock extends Module
                 $matches = '';
                 preg_match_all('/\[.*?\]/', $format, $matches);
 
-                foreach($matches[0] as $subs) {
+                foreach ($matches[0] as $subs) {
                     $format = str_replace($subs, '<span class="clock" format="' . str_replace('[', '', str_replace(']', '', $subs)) . '"></span>', $format);
                 }
 
@@ -319,15 +319,15 @@ class clock extends Module
 
                 // After body content
                 $options = array(
-                        'previewWidth' => \Kit::GetParam('width', _GET, _DOUBLE, 0),
-                        'previewHeight' => \Kit::GetParam('height', _GET, _DOUBLE, 0),
-                        'originalWidth' => $this->region->width,
-                        'originalHeight' => $this->region->height,
-                        'scaleOverride' => \Kit::GetParam('scale_override', _GET, _DOUBLE, 0)
-                    );
+                    'previewWidth' => \Kit::GetParam('width', _GET, _DOUBLE, 0),
+                    'previewHeight' => \Kit::GetParam('height', _GET, _DOUBLE, 0),
+                    'originalWidth' => $this->region->width,
+                    'originalHeight' => $this->region->height,
+                    'scaleOverride' => \Kit::GetParam('scale_override', _GET, _DOUBLE, 0)
+                );
 
                 $isPreview = (\Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
-                $javaScriptContent  = '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
+                $javaScriptContent = '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
                 $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'moment.js"></script>';
                 $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-layout-scaler.js"></script>';
                 $javaScriptContent .= '<script type="text/javascript">
@@ -336,7 +336,8 @@ class clock extends Module
 
     function updateClock() {
         $(".clock").each(function() {
-            $(this).html(moment().add(' . {$this->GetOption('offset', 0)} . ', "m").format($(this).attr("format")));
+            $(this).html(moment().add(' . {
+                $this->GetOption('offset', 0)} . ', "m").format($(this).attr("format")));
         });
     }
 
@@ -350,11 +351,11 @@ class clock extends Module
 END;
 
                 // Replace the After body Content
-                $template = str_replace('<!--[[[JAVASCRIPTCONTENT]]]-->', $javaScriptContent, $template);
+                $template = str_replace(' < !--[[[JAVASCRIPTCONTENT]]]-->', $javaScriptContent, $template);
 
                 // Add our fonts.css file
-                $headContent = '<link href="' . (($isPreview) ? 'modules/preview/' : '') . 'fonts.css" rel="stylesheet" media="screen">';
-                $headContent .= '<style type="text/css">' . file_get_contents(Theme::ItemPath('css/client.css')) . '</style>';
+                $headContent = '<link href = "' . (($isPreview) ? 'modules/preview/' : '') . 'fonts.css" rel = "stylesheet" media = "screen" > ';
+                $headContent .= '<style type = "text/css" > ' . file_get_contents(Theme::ItemPath('css / client . css')) . ' </style > ';
 
                 $template = str_replace('<!--[[[HEADCONTENT]]]-->', $headContent, $template);
 
@@ -362,16 +363,16 @@ END;
 
             case 3:
                 // Flip Clock
-                $template = file_get_contents('modules/theme/HtmlTemplateForFlipClock.html');
+                $template = file_get_contents('modules / theme / HtmlTemplateForFlipClock . html');
 
                 // Head Content (CSS for flip clock)
-                $template = str_replace('<!--[[[HEADCONTENT]]]-->', '<style type="text/css">' . file_get_contents('modules/preview/vendor/flipclock.css') . '</style>', $template);
+                $template = str_replace(' < !--[[[HEADCONTENT]]]-->', '<style type = "text/css" > ' . file_get_contents('modules / preview / vendor / flipclock . css') . ' </style > ', $template);
                 $template = str_replace('<!--[[[OFFSET]]]-->', $this->GetOption('offset', 0), $template);
 
                 // After body content
                 $isPreview = (\Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
-                $javaScriptContent  = '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
-                $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'flipclock.min.js"></script>';
+                $javaScriptContent  = ' < script type = "text/javascript" src = "' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js" ></script > ';
+                $javaScriptContent .= '<script type = "text/javascript" src = "' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'flipclock.min.js" ></script > ';
 
                 // Replace the After body Content
                 $template = str_replace('<!--[[[JAVASCRIPTCONTENT]]]-->', $javaScriptContent, $template);
@@ -381,7 +382,7 @@ END;
 
         // If we are a preview, then pass in the width and height
         $template = str_replace('<!--[[[PREVIEW_WIDTH]]]-->', \Kit::GetParam('width', _GET, _DOUBLE, 0), $template);
-        $template = str_replace('<!--[[[PREVIEW_HEIGHT]]]-->', \Kit::GetParam('height', _GET, _DOUBLE, 0), $template);
+        $template = str_replace(' < !--[[[PREVIEW_HEIGHT]]]-->', \Kit::GetParam('height', _GET, _DOUBLE, 0), $template);
 
         // Replace the View Port Width?
         if (isset($_GET['preview']))

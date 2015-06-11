@@ -18,13 +18,17 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+namespace Xibo\Widget;
+
+use Exception;
+use InvalidArgumentException;
 use Widget\Module;
 use Xibo\Helper\Form;
 use Xibo\Helper\Theme;
 
-class shellcommand extends Module
+class ShellCommand extends Module
 {
-	/**
+    /**
      * Return the Add Form as HTML
      */
     public function AddForm()
@@ -33,12 +37,12 @@ class shellcommand extends Module
 
         // Configure form
         $this->configureForm('AddMedia');
-        
+
         $formFields = array();
-        
+
         $formFields[] = Form::AddText('windowsCommand', __('Windows Command'), NULL,
             __('Enter a Windows Command Line compatible command'), 'w');
-        
+
         $formFields[] = Form::AddText('linuxCommand', __('Android / Linux Command'), NULL,
             __('Enter an Android / Linux Command Line compatible command'), 'l');
 
@@ -50,7 +54,7 @@ class shellcommand extends Module
 
         return $response;
     }
-	
+
     /**
      * Return the Edit Form as HTML
      */
@@ -66,22 +70,22 @@ class shellcommand extends Module
         $this->configureForm('EditMedia');
 
         $formFields = array();
-        
+
         $formFields[] = Form::AddText('windowsCommand', __('Windows Command'), htmlentities(urldecode($this->GetOption('windowsCommand'))),
             __('Enter a Windows Command Line compatible command'), 'w');
-        
+
         $formFields[] = Form::AddText('linuxCommand', __('Android / Linux Command'), htmlentities(urldecode($this->GetOption('linuxCommand'))),
             __('Enter an Android / Linux Command Line compatible command'), 'l');
 
         Theme::Set('form_fields', $formFields);
-        
+
         $response->html = Theme::RenderReturn('form_render');
         $this->configureFormButtons($response);
         $response->dialogTitle = __('Edit Shell Command');
 
         return $response;
     }
-	
+
     /**
      * Add Media to the Database
      */
@@ -149,8 +153,8 @@ class shellcommand extends Module
     public function Preview($width, $height, $scaleOverride = 0)
     {
         if ($this->module->previewEnabled == 0)
-            return parent::Preview ($width, $height);
-        
+            return parent::Preview($width, $height);
+
         $msgWindows = __('Windows Command');
         $msgLinux = __('Linux Command');
 
@@ -163,7 +167,7 @@ class shellcommand extends Module
 
     public function HoverPreview()
     {
-        return $this->Preview(0,0);
+        return $this->Preview(0, 0);
     }
 
     public function IsValid()
@@ -172,4 +176,5 @@ class shellcommand extends Module
         return 2;
     }
 }
+
 ?>

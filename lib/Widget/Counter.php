@@ -18,12 +18,17 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+namespace Xibo\Widget;
+
+use Exception;
+use InvalidArgumentException;
+use Kit;
 use Widget\Module;
 use Xibo\Helper\Form;
 use Xibo\Helper\Theme;
 
-class counter extends Module
-{	
+class Counter extends Module
+{
     /**
      * Return the Add Form as HTML
      */
@@ -41,7 +46,7 @@ class counter extends Module
             __('The duration in seconds this counter should be displayed'), 'd', 'required');
 
         $formFields[] = Form::AddCheckbox('popupNotification', __('Pop-up Notification?'),
-            NULL, __('Popup a notification when the counter changes?'), 
+            NULL, __('Popup a notification when the counter changes?'),
             'n');
 
         $formFields[] = Form::AddMultiText('ta_text', NULL, NULL,
@@ -125,7 +130,7 @@ class counter extends Module
         // Load form
         $response->loadForm = true;
         $response->loadFormUri = $this->getTimelineLink();
-        
+
         return $response;
     }
 
@@ -193,8 +198,9 @@ class counter extends Module
 END;
         return $return;
     }
-    
-    public function IsValid() {
+
+    public function IsValid()
+    {
         // Client dependant
         return 2;
     }

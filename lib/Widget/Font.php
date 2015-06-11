@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2015 Daniel Garner
+ * Copyright (C) 2014-15 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -18,10 +18,24 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+namespace Xibo\Widget;
+
 use Widget\Module;
 
-class flash extends Module
+class Font extends Module
 {
+    /*
+     * Installs any files specific to this module
+     */
+    public function InstallFiles()
+    {
+        $fontsCss = 'modules/preview/fonts.css';
+
+        if (!file_exists($fontsCss)) {
+            touch($fontsCss);
+        }
+    }
+
     /**
      * Preview code for a module
      * @param int $width
@@ -35,28 +49,6 @@ class flash extends Module
         return $this->previewIcon();
     }
 
-    public function Preview($width, $height, $scaleOverride = 0)
-    {
-        if ($this->previewEnabled == 0)
-            return $this->Preview($width, $height, $scaleOverride);
-
-        $url = 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=GetResource&raw=true&preview=true&scale_override=' . $scaleOverride . '&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&mediaid=' . $this->mediaid . '&lkid=' . $this->lkid . '&width=' . $width . '&height=' . $height;
-
-        return '<object width="' . $width . '" height="' . $height . '">
-            <param name="movie" value="' . $url . '"></param>
-            <param name="allowFullScreen" value="false"></param>
-            <param name="allowscriptaccess" value="always"></param>
-            <param name="wmode" value="transaprent"></param>
-            <embed src="' . $url . '"
-                   type="application/x-shockwave-flash"
-                   allowscriptaccess="always"
-                   allowfullscreen="true"
-                   width="' . $width . '" height="' . $height . '"
-                   wmode="transparent">
-            </embed>
-        </object>';
-    }
-    
     /**
      * Get Resource
      * @param int $displayId
@@ -64,7 +56,7 @@ class flash extends Module
      */
     public function GetResource($displayId = 0)
     {
-        $this->download();
+        $this->ReturnFile();
         exit();
     }
 

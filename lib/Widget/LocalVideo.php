@@ -18,11 +18,16 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+namespace Xibo\Widget;
+
+use Exception;
+use InvalidArgumentException;
+use Kit;
 use Widget\Module;
 use Xibo\Helper\Form;
 use Xibo\Helper\Theme;
 
-class localvideo extends Module
+class LocalVideo extends Module
 {
     /**
      * Return the Add Form as HTML
@@ -35,7 +40,7 @@ class localvideo extends Module
         $this->configureForm('AddMedia');
 
         $formFields = array();
-        
+
         $formFields[] = Form::AddText('uri', __('Video Path'), NULL,
             __('A local file path or URL to the video. This can be a RTSP stream.'), 'p', 'required');
 
@@ -50,7 +55,7 @@ class localvideo extends Module
 
         return $response;
     }
-	
+
     /**
      * Return the Edit Form as HTML
      */
@@ -66,7 +71,7 @@ class localvideo extends Module
         $this->configureForm('EditMedia');
 
         $formFields = array();
-        
+
         $formFields[] = Form::AddText('uri', __('Video Path'), urldecode($this->GetOption('uri')),
             __('A local file path or URL to the video. This can be a RTSP stream.'), 'p', 'required');
 
@@ -81,7 +86,7 @@ class localvideo extends Module
 
         return $response;
     }
-	
+
     /**
      * Add Media to the Database
      */
@@ -113,7 +118,7 @@ class localvideo extends Module
 
         return $response;
     }
-	
+
     /**
      * Edit Media in the Database
      */
@@ -144,7 +149,7 @@ class localvideo extends Module
 
         return $response;
     }
-    
+
     public function IsValid()
     {
         // Client dependant

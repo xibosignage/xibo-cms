@@ -18,10 +18,12 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+namespace Xibo\Widget;
+
 use Widget\Module;
 use Xibo\Helper\Form;
 
-class video extends Module
+class Video extends Module
 {
     /**
      * Return the Edit Form as HTML

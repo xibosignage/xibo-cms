@@ -19,6 +19,8 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+namespace Xibo\Widget;
+
 use Widget\Module;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Cache;
@@ -42,18 +44,17 @@ class Twitter extends Module
         // This function should update the `module` table with information about your module.
         // The current version of the module in the database can be obtained in $this->schemaVersion
         // The current version of this code can be obtained in $this->codeSchemaVersion
-        
-        // $settings will be made available to all instances of your module in $this->module->settings. These are global settings to your module, 
+
+        // $settings will be made available to all instances of your module in $this->module->settings. These are global settings to your module,
         // not instance specific (i.e. not settings specific to the layout you are adding the module to).
         // $settings will be collected from the Administration -> Modules CMS page.
-        // 
+        //
         // Layout specific settings should be managed with $this->SetOption in your add / edit forms.
-        
+
         if ($this->module->schemaVersion <= 1) {
             // Install
             $this->InstallModule('Twitter', 'Twitter Search Module', 'forms/library.gif', 1, 1, array());
-        }
-        else {
+        } else {
             // Update
             // Call "$this->UpdateModule($name, $description, $imageUri, $previewEnabled, $assignable, $settings)" with the updated items
         }
@@ -78,7 +79,7 @@ class Twitter extends Module
         $media->addModuleFile('modules/theme/twitter/emoji.png');
     }
 
-    /** 
+    /**
      * Loads templates for this module
      */
     public function loadTemplates()
@@ -104,11 +105,11 @@ class Twitter extends Module
         // API Secret
         $formFields[] = Form::AddText('apiSecret', __('API Secret'), $this->GetSetting('apiSecret'),
             __('Enter your API Secret from Twitter.'), 's', 'required');
-        
+
         // Cache Period
         $formFields[] = Form::AddText('cachePeriod', __('Cache Period'), $this->GetSetting('cachePeriod', 300),
             __('Enter the number of seconds you would like to cache twitter search results.'), 'c', 'required');
-        
+
         // Cache Period Images
         $formFields[] = Form::AddText('cachePeriodImages', __('Cache Period for Images'), $this->GetSetting('cachePeriodImages', 24),
             __('Enter the number of hours you would like to cache twitter images.'), 'i', 'required');
@@ -117,7 +118,7 @@ class Twitter extends Module
         if (!extension_loaded('curl')) {
             $formFields[] = Form::AddMessage(__('The php-curl extension is required for the Twitter Module and it does not appear to be enabled on this CMS. Please enable it before using this module.'), 'alert alert-danger');
         }
-        
+
         return $formFields;
     }
 
@@ -146,7 +147,7 @@ class Twitter extends Module
         // Return an array of the processed settings.
         return $this->module->settings;
     }
-    
+
     /**
      * Return the Add Form
      */
@@ -181,12 +182,12 @@ class Twitter extends Module
         // Type
         $formFields['general'][] = Form::AddCombo('resultType', __('Type'), 'mixed',
             array(
-                array('typeid' => 'mixed', 'type' => __('Mixed')), 
+                array('typeid' => 'mixed', 'type' => __('Mixed')),
                 array('typeid' => 'recent', 'type' => __('Recent')),
                 array('typeid' => 'popular', 'type' => __('Popular')),
             ),
             'typeid',
-            'type', 
+            'type',
             __('Recent shows only the most recent tweets, Popular the most popular and Mixed includes both popular and recent results.'), 't', 'required');
 
         // Distance
@@ -199,29 +200,29 @@ class Twitter extends Module
 
         // Common fields
         $formFields['effect'][] = Form::AddCombo(
-                'effect', 
-                __('Effect'), 
-                $this->GetOption('effect'),
-                array(
-                    array('effectid' => 'none', 'effect' => __('None')), 
-                    array('effectid' => 'fade', 'effect' => __('Fade')),
-                    array('effectid' => 'fadeout', 'effect' => __('Fade Out')),
-                    array('effectid' => 'scrollHorz', 'effect' => __('Scroll Horizontal')),
-                    array('effectid' => 'scrollVert', 'effect' => __('Scroll Vertical')),
-                    array('effectid' => 'flipHorz', 'effect' => __('Flip Horizontal')),
-                    array('effectid' => 'flipVert', 'effect' => __('Flip Vertical')),
-                    array('effectid' => 'shuffle', 'effect' => __('Shuffle')),
-                    array('effectid' => 'tileSlide', 'effect' => __('Tile Slide')),
-                    array('effectid' => 'tileBlind', 'effect' => __('Tile Blinds')),
-                    array('effectid' => 'marqueeLeft', 'effect' => __('Marquee Left')),
-                    array('effectid' => 'marqueeRight', 'effect' => __('Marquee Right')),
-                    array('effectid' => 'marqueeUp', 'effect' => __('Marquee Up')),
-                    array('effectid' => 'marqueeDown', 'effect' => __('Marquee Down')),
-                ),
-                'effectid',
-                'effect',
-                __('Please select the effect that will be used to transition between items. If all items should be output, select None. Marquee effects are CPU intensive and may not be suitable for lower power displays.'), 
-                'e');
+            'effect',
+            __('Effect'),
+            $this->GetOption('effect'),
+            array(
+                array('effectid' => 'none', 'effect' => __('None')),
+                array('effectid' => 'fade', 'effect' => __('Fade')),
+                array('effectid' => 'fadeout', 'effect' => __('Fade Out')),
+                array('effectid' => 'scrollHorz', 'effect' => __('Scroll Horizontal')),
+                array('effectid' => 'scrollVert', 'effect' => __('Scroll Vertical')),
+                array('effectid' => 'flipHorz', 'effect' => __('Flip Horizontal')),
+                array('effectid' => 'flipVert', 'effect' => __('Flip Vertical')),
+                array('effectid' => 'shuffle', 'effect' => __('Shuffle')),
+                array('effectid' => 'tileSlide', 'effect' => __('Tile Slide')),
+                array('effectid' => 'tileBlind', 'effect' => __('Tile Blinds')),
+                array('effectid' => 'marqueeLeft', 'effect' => __('Marquee Left')),
+                array('effectid' => 'marqueeRight', 'effect' => __('Marquee Right')),
+                array('effectid' => 'marqueeUp', 'effect' => __('Marquee Up')),
+                array('effectid' => 'marqueeDown', 'effect' => __('Marquee Down')),
+            ),
+            'effectid',
+            'effect',
+            __('Please select the effect that will be used to transition between items. If all items should be output, select None. Marquee effects are CPU intensive and may not be suitable for lower power displays.'),
+            'e');
 
         $formFields['effect'][] = Form::AddNumber('speed', __('Speed'), NULL,
             __('The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1).'), 's', NULL, 'effect-controls');
@@ -241,45 +242,45 @@ class Twitter extends Module
         $formFields['advanced'][] = FormManager::AddNumber('updateInterval', __('Update Interval (mins)'), 60,
             __('Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60.'),
             'n', 'required');
-        
+
         // Template - for standard stuff
         $formFields['template'][] = Form::AddCombo('templateId', __('Template'), $this->GetOption('templateId', 'tweet-only'),
-            $this->module->settings['templates'], 
-            'id', 
-            'value', 
+            $this->module->settings['templates'],
+            'id',
+            'value',
             __('Select the template you would like to apply. This can be overridden using the check box below.'), 't', 'template-selector-control');
 
         // Add a field for whether to override the template or not.
         // Default to 1 so that it will work correctly with old items (that didn't have a template selected at all)
         $formFields['template'][] = Form::AddCheckbox('overrideTemplate', __('Override the template?'), $this->GetOption('overrideTemplate', 0),
-        __('Tick if you would like to override the template.'), 'o');
-        
+            __('Tick if you would like to override the template.'), 'o');
+
         // Add a text template
         $formFields['template'][] = Form::AddMultiText('ta_text', NULL, null,
             __('Enter the template. Please note that the background colour has automatically coloured to your layout background colour.'), 't', 10, NULL, 'template-override-controls');
-        
+
         // Field for the style sheet (optional)
         $formFields['template'][] = Form::AddMultiText('ta_css', NULL, null,
             __('Optional Stylesheet'), 's', 10, NULL, 'template-override-controls');
 
         // Add some field dependencies
         // When the override template check box is ticked, we want to expose the advanced controls and we want to hide the template selector
-        $response->AddFieldAction('overrideTemplate', 'init', false, 
+        $response->AddFieldAction('overrideTemplate', 'init', false,
             array(
                 '.template-override-controls' => array('display' => 'none'),
                 '.template-selector-control' => array('display' => 'block')
             ), 'is:checked');
-        $response->AddFieldAction('overrideTemplate', 'change', false, 
+        $response->AddFieldAction('overrideTemplate', 'change', false,
             array(
                 '.template-override-controls' => array('display' => 'none'),
                 '.template-selector-control' => array('display' => 'block')
             ), 'is:checked');
-        $response->AddFieldAction('overrideTemplate', 'init', true, 
+        $response->AddFieldAction('overrideTemplate', 'init', true,
             array(
                 '.template-override-controls' => array('display' => 'block'),
                 '.template-selector-control' => array('display' => 'none')
             ), 'is:checked');
-        $response->AddFieldAction('overrideTemplate', 'change', true, 
+        $response->AddFieldAction('overrideTemplate', 'change', true,
             array(
                 '.template-override-controls' => array('display' => 'block'),
                 '.template-selector-control' => array('display' => 'none')
@@ -385,12 +386,12 @@ class Twitter extends Module
         // Type
         $formFields['general'][] = Form::AddCombo('resultType', __('Type'), $this->GetOption('resultType'),
             array(
-                array('typeid' => 'mixed', 'type' => __('Mixed')), 
+                array('typeid' => 'mixed', 'type' => __('Mixed')),
                 array('typeid' => 'recent', 'type' => __('Recent')),
                 array('typeid' => 'popular', 'type' => __('Popular')),
             ),
             'typeid',
-            'type', 
+            'type',
             __('Recent shows only the most recent tweets, Popular the most popular and Mixed includes both popular and recent results.'), 't', 'required');
 
         // Distance
@@ -403,29 +404,29 @@ class Twitter extends Module
 
         // Common fields
         $formFields['effect'][] = Form::AddCombo(
-                'effect', 
-                __('Effect'), 
-                $this->GetOption('effect'),
-                array(
-                    array('effectid' => 'none', 'effect' => __('None')), 
-                    array('effectid' => 'fade', 'effect' => __('Fade')),
-                    array('effectid' => 'fadeout', 'effect' => __('Fade Out')),
-                    array('effectid' => 'scrollHorz', 'effect' => __('Scroll Horizontal')),
-                    array('effectid' => 'scrollVert', 'effect' => __('Scroll Vertical')),
-                    array('effectid' => 'flipHorz', 'effect' => __('Flip Horizontal')),
-                    array('effectid' => 'flipVert', 'effect' => __('Flip Vertical')),
-                    array('effectid' => 'shuffle', 'effect' => __('Shuffle')),
-                    array('effectid' => 'tileSlide', 'effect' => __('Tile Slide')),
-                    array('effectid' => 'tileBlind', 'effect' => __('Tile Blinds')),
-                    array('effectid' => 'marqueeLeft', 'effect' => __('Marquee Left')),
-                    array('effectid' => 'marqueeRight', 'effect' => __('Marquee Right')),
-                    array('effectid' => 'marqueeUp', 'effect' => __('Marquee Up')),
-                    array('effectid' => 'marqueeDown', 'effect' => __('Marquee Down')),
-                ),
-                'effectid',
-                'effect',
-                __('Please select the effect that will be used to transition between items. If all items should be output, select None. Marquee effects are CPU intensive and may not be suitable for lower power displays.'), 
-                'e');
+            'effect',
+            __('Effect'),
+            $this->GetOption('effect'),
+            array(
+                array('effectid' => 'none', 'effect' => __('None')),
+                array('effectid' => 'fade', 'effect' => __('Fade')),
+                array('effectid' => 'fadeout', 'effect' => __('Fade Out')),
+                array('effectid' => 'scrollHorz', 'effect' => __('Scroll Horizontal')),
+                array('effectid' => 'scrollVert', 'effect' => __('Scroll Vertical')),
+                array('effectid' => 'flipHorz', 'effect' => __('Flip Horizontal')),
+                array('effectid' => 'flipVert', 'effect' => __('Flip Vertical')),
+                array('effectid' => 'shuffle', 'effect' => __('Shuffle')),
+                array('effectid' => 'tileSlide', 'effect' => __('Tile Slide')),
+                array('effectid' => 'tileBlind', 'effect' => __('Tile Blinds')),
+                array('effectid' => 'marqueeLeft', 'effect' => __('Marquee Left')),
+                array('effectid' => 'marqueeRight', 'effect' => __('Marquee Right')),
+                array('effectid' => 'marqueeUp', 'effect' => __('Marquee Up')),
+                array('effectid' => 'marqueeDown', 'effect' => __('Marquee Down')),
+            ),
+            'effectid',
+            'effect',
+            __('Please select the effect that will be used to transition between items. If all items should be output, select None. Marquee effects are CPU intensive and may not be suitable for lower power displays.'),
+            'e');
 
         $formFields['effect'][] = Form::AddNumber('speed', __('Speed'), $this->GetOption('speed'),
             __('The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1).'), 's', NULL, 'effect-controls');
@@ -454,42 +455,42 @@ class Twitter extends Module
 
         // Template - for standard stuff
         $formFields['template'][] = Form::AddCombo('templateId', __('Template'), $this->GetOption('templateId', 'tweet-only'),
-            $this->module->settings['templates'], 
-            'id', 
-            'value', 
+            $this->module->settings['templates'],
+            'id',
+            'value',
             __('Select the template you would like to apply. This can be overridden using the check box below.'), 't', 'template-selector-control');
 
         // Add a field for whether to override the template or not.
         // Default to 1 so that it will work correctly with old items (that didn't have a template selected at all)
         $formFields['template'][] = Form::AddCheckbox('overrideTemplate', __('Override the template?'), $this->GetOption('overrideTemplate', 0),
-        __('Tick if you would like to override the template.'), 'o');
-        
+            __('Tick if you would like to override the template.'), 'o');
+
         // Add a text template
         $formFields['template'][] = Form::AddMultiText('ta_text', NULL, $this->getRawNode('template', null),
             __('Enter the template. Please note that the background colour has automatically coloured to your layout background colour.'), 't', 10, NULL, 'template-override-controls');
-        
+
         // Field for the style sheet (optional)
         $formFields['template'][] = Form::AddMultiText('ta_css', NULL, $this->getRawNode('styleSheet', null),
             __('Optional Stylesheet'), 's', 10, NULL, 'template-override-controls');
 
         // Add some field dependencies
         // When the override template check box is ticked, we want to expose the advanced controls and we want to hide the template selector
-        $response->AddFieldAction('overrideTemplate', 'init', false, 
+        $response->AddFieldAction('overrideTemplate', 'init', false,
             array(
                 '.template-override-controls' => array('display' => 'none'),
                 '.template-selector-control' => array('display' => 'block')
             ), 'is:checked');
-        $response->AddFieldAction('overrideTemplate', 'change', false, 
+        $response->AddFieldAction('overrideTemplate', 'change', false,
             array(
                 '.template-override-controls' => array('display' => 'none'),
                 '.template-selector-control' => array('display' => 'block')
             ), 'is:checked');
-        $response->AddFieldAction('overrideTemplate', 'init', true, 
+        $response->AddFieldAction('overrideTemplate', 'init', true,
             array(
                 '.template-override-controls' => array('display' => 'block'),
                 '.template-selector-control' => array('display' => 'none')
             ), 'is:checked');
-        $response->AddFieldAction('overrideTemplate', 'change', true, 
+        $response->AddFieldAction('overrideTemplate', 'change', true,
             array(
                 '.template-override-controls' => array('display' => 'block'),
                 '.template-selector-control' => array('display' => 'none')
@@ -579,7 +580,8 @@ class Twitter extends Module
         $response->AddFieldAction('effect', 'change', 'none', array('.effect-controls' => array('display' => 'block'), '.background-color-group' => array('display' => 'block')), 'not');
     }
 
-    protected function getToken() {
+    protected function getToken()
+    {
 
         // Prepare the URL
         $url = 'https://api.twitter.com/oauth2/token';
@@ -601,11 +603,11 @@ class Twitter extends Module
             CURLOPT_TIMEOUT => 20,
             CURLOPT_SSL_VERIFYPEER => true,
             CURLOPT_HTTPHEADER => array(
-                    'POST /oauth2/token HTTP/1.1',
-                    'Authorization: Basic ' . $key, 
-                    'Content-Type: application/x-www-form-urlencoded;charset=UTF-8',
-                    'Content-Length: 29'
-                ),
+                'POST /oauth2/token HTTP/1.1',
+                'Authorization: Basic ' . $key,
+                'Content-Type: application/x-www-form-urlencoded;charset=UTF-8',
+                'Content-Length: 29'
+            ),
             CURLOPT_USERAGENT => 'Xibo Twitter Module',
             CURLOPT_HEADER => false,
             CURLINFO_HEADER_OUT => true,
@@ -673,9 +675,9 @@ class Twitter extends Module
     {
         // Construct the URL to call
         $url = 'https://api.twitter.com/1.1/search/tweets.json';
-        $queryString = '?q=' . urlencode(trim($term)) . 
-            '&result_type=' . $resultType . 
-            '&count=' . $count . 
+        $queryString = '?q=' . urlencode(trim($term)) .
+            '&result_type=' . $resultType .
+            '&count=' . $count .
             '&include_entities=true';
 
         if ($geoCode != '')
@@ -685,10 +687,10 @@ class Twitter extends Module
             CURLOPT_TIMEOUT => 20,
             CURLOPT_SSL_VERIFYPEER => true,
             CURLOPT_HTTPHEADER => array(
-                    'GET /1.1/search/tweets.json' . $queryString . 'HTTP/1.1',
-                    'Host: api.twitter.com',
-                    'Authorization: Bearer ' . $token
-                ),
+                'GET /1.1/search/tweets.json' . $queryString . 'HTTP/1.1',
+                'Host: api.twitter.com',
+                'Authorization: Bearer ' . $token
+            ),
             CURLOPT_USERAGENT => 'Xibo Twitter Module',
             CURLOPT_HEADER => false,
             CURLINFO_HEADER_OUT => true,
@@ -718,8 +720,7 @@ class Twitter extends Module
             // Unable to connect
             Log::error('Unable to reach twitter api.');
             return false;
-        }
-        else if ($outHeaders['http_code'] != 200) {
+        } else if ($outHeaders['http_code'] != 200) {
             Log::error('Twitter API returned ' . $outHeaders['http_code'] . ' status. Unable to proceed. Headers = ' . var_export($outHeaders, true));
 
             // See if we can parse the error.
@@ -756,8 +757,7 @@ class Twitter extends Module
 
                 $defaultLat = $display->latitude;
                 $defaultLong = $display->longitude;
-            }
-            else {
+            } else {
                 $defaultLat = Config::GetSetting('DEFAULT_LAT');
                 $defaultLong = Config::GetSetting('DEFAULT_LONG');
             }
@@ -768,7 +768,7 @@ class Twitter extends Module
 
         // Connect to twitter and get the twitter feed.
         $key = md5($this->GetOption('searchTerm') . $this->GetOption('resultType') . $this->GetOption('tweetCount', 15) . $geoCode);
-        
+
         if (!Cache::has($key) || Cache::get($key) == '') {
 
             Log::debug('Querying API for ' . $this->GetOption('searchTerm'));
@@ -783,8 +783,7 @@ class Twitter extends Module
 
             // Cache it
             Cache::put($key, $data, $this->GetSetting('cachePeriod'));
-        }
-        else {
+        } else {
             Log::debug('Served from Cache');
             $data = Cache::get($key);
         }
@@ -807,7 +806,7 @@ class Twitter extends Module
 
         // Expiry time for any media that is downloaded
         $expires = time() + ($this->GetSetting('cachePeriodImages') * 60 * 60);
-        
+
         // Remove URL setting
         $removeUrls = $this->GetOption('removeUrls', 1);
 
@@ -907,7 +906,7 @@ class Twitter extends Module
             // Substitute the replacement we have found (it might be '')
             $return[] = $rowString;
         }
-        
+
         // Return the data array
         return $return;
     }
@@ -935,7 +934,7 @@ class Twitter extends Module
 
         // Information from the Module
         $duration = $this->getDuration();
-        
+
         // Generate a JSON string of substituted items.
         $items = $this->getTwitterFeed($displayId, $isPreview);
 
@@ -963,7 +962,7 @@ class Twitter extends Module
         $template = str_replace('<!--[[[CONTROLMETA]]]-->', $controlMeta, $template);
 
         // Replace the head content
-        $headContent  = '';
+        $headContent = '';
 
         // Add the CSS if it isn't empty
         $css = $this->getRawNode('styleSheet', null);
@@ -985,7 +984,7 @@ class Twitter extends Module
         $template = str_replace('<!--[[[HEADCONTENT]]]-->', $headContent, $template);
 
         // Add some scripts to the JavaScript Content
-        $javaScriptContent  = '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
+        $javaScriptContent = '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
 
         // Need the cycle plugin?
         if ($this->GetSetting('effect') != 'none') {
@@ -995,7 +994,7 @@ class Twitter extends Module
         // Need the marquee plugin?
         if (stripos($this->GetSetting('effect'), 'marquee'))
             $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery.marquee.min.js"></script>';
-        
+
         $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-layout-scaler.js"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-text-render.js"></script>';
 
@@ -1015,8 +1014,9 @@ class Twitter extends Module
 
         return $template;
     }
-    
-    public function IsValid() {
+
+    public function IsValid()
+    {
         // Using the information you have in your module calculate whether it is valid or not.
         // 0 = Invalid
         // 1 = Valid

@@ -18,16 +18,19 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+namespace Xibo\Widget;
+
 use Widget\Module;
 use Xibo\Helper\Form;
 use Xibo\Helper\Theme;
 
-class text extends Module
+class Text extends Module
 {
     /**
      * Install Files
      */
-    public function InstallFiles() {
+    public function InstallFiles()
+    {
         $media = new Media();
         $media->addModuleFile('modules/preview/vendor/jquery-1.11.1.min.js');
         $media->addModuleFile('modules/preview/vendor/moment.js');
@@ -35,7 +38,7 @@ class text extends Module
         $media->addModuleFile('modules/preview/xibo-layout-scaler.js');
         $media->addModuleFile('modules/preview/xibo-text-render.js');
     }
-    
+
     /**
      * Return the Add Form
      */
@@ -45,7 +48,7 @@ class text extends Module
 
         // Configure form
         $this->configureForm('AddMedia');
-        
+
         // Two tabs
         $tabs = array();
         $tabs[] = Form::AddTab('general', __('General'), array(array('name' => 'enlarge', 'value' => true)));
@@ -54,34 +57,34 @@ class text extends Module
         Theme::Set('form_tabs', $tabs);
 
         $formFields = array();
-	
-	$formFields['options'][] = Form::AddText('name', __('Name'), NULL,
+
+        $formFields['options'][] = Form::AddText('name', __('Name'), NULL,
             __('An optional name for this media'), 'n');
 
         $formFields['options'][] = Form::AddCombo(
-                'effect', 
-                __('Effect'), 
-                $this->GetOption('effect'),
-                array(
-                    array('effectid' => 'none', 'effect' => __('None')), 
-                    array('effectid' => 'fade', 'effect' => __('Fade')),
-                    array('effectid' => 'fadeout', 'effect' => __('Fade Out')),
-                    array('effectid' => 'scrollHorz', 'effect' => __('Scroll Horizontal')),
-                    array('effectid' => 'scrollVert', 'effect' => __('Scroll Vertical')),
-                    array('effectid' => 'flipHorz', 'effect' => __('Flip Horizontal')),
-                    array('effectid' => 'flipVert', 'effect' => __('Flip Vertical')),
-                    array('effectid' => 'shuffle', 'effect' => __('Shuffle')),
-                    array('effectid' => 'tileSlide', 'effect' => __('Tile Slide')),
-                    array('effectid' => 'tileBlind', 'effect' => __('Tile Blinds')),
-                    array('effectid' => 'marqueeLeft', 'effect' => __('Marquee Left')),
-                    array('effectid' => 'marqueeRight', 'effect' => __('Marquee Right')),
-                    array('effectid' => 'marqueeUp', 'effect' => __('Marquee Up')),
-                    array('effectid' => 'marqueeDown', 'effect' => __('Marquee Down')),
-                ),
-                'effectid',
-                'effect',
-                __('Please select the effect that will be used. Some effects will transition between paragraphs in the text. Marquee effects are CPU intensive and may not be suitable for lower power displays.'), 
-                'e');
+            'effect',
+            __('Effect'),
+            $this->GetOption('effect'),
+            array(
+                array('effectid' => 'none', 'effect' => __('None')),
+                array('effectid' => 'fade', 'effect' => __('Fade')),
+                array('effectid' => 'fadeout', 'effect' => __('Fade Out')),
+                array('effectid' => 'scrollHorz', 'effect' => __('Scroll Horizontal')),
+                array('effectid' => 'scrollVert', 'effect' => __('Scroll Vertical')),
+                array('effectid' => 'flipHorz', 'effect' => __('Flip Horizontal')),
+                array('effectid' => 'flipVert', 'effect' => __('Flip Vertical')),
+                array('effectid' => 'shuffle', 'effect' => __('Shuffle')),
+                array('effectid' => 'tileSlide', 'effect' => __('Tile Slide')),
+                array('effectid' => 'tileBlind', 'effect' => __('Tile Blinds')),
+                array('effectid' => 'marqueeLeft', 'effect' => __('Marquee Left')),
+                array('effectid' => 'marqueeRight', 'effect' => __('Marquee Right')),
+                array('effectid' => 'marqueeUp', 'effect' => __('Marquee Up')),
+                array('effectid' => 'marqueeDown', 'effect' => __('Marquee Down')),
+            ),
+            'effectid',
+            'effect',
+            __('Please select the effect that will be used. Some effects will transition between paragraphs in the text. Marquee effects are CPU intensive and may not be suitable for lower power displays.'),
+            'e');
 
         $formFields['options'][] = Form::AddNumber('speed', __('Speed'), NULL,
             __('The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1).'), 's', NULL, 'effect-controls');
@@ -95,11 +98,11 @@ class text extends Module
 
         // Handle the substitutions as RAW items
         $subs = array(
-                array('Substitute' => 'Clock'),
-                array('Substitute' => 'Clock|HH:mm'),
-                array('Substitute' => 'Date'),
-                array('Substitute' => 'Clock|DD/MM/YYYY')
-            );
+            array('Substitute' => 'Clock'),
+            array('Substitute' => 'Clock|HH:mm'),
+            array('Substitute' => 'Date'),
+            array('Substitute' => 'Clock|DD/MM/YYYY')
+        );
         Theme::Set('substitutions', $subs);
         $formFields['general'][] = Form::AddRaw(Theme::RenderReturn('media_form_text_edit'));
 
@@ -152,34 +155,34 @@ class text extends Module
         $oldDirection = $this->GetOption('direction', 'none');
         if ($oldDirection != 'none')
             $oldDirection = 'marquee' . ucfirst($oldDirection);
-	
-	$formFields['options'][] = Form::AddText('name', __('Name'), $this->GetOption('name'),
-	    __('An optional name for this media'), 'n');
+
+        $formFields['options'][] = Form::AddText('name', __('Name'), $this->GetOption('name'),
+            __('An optional name for this media'), 'n');
 
         $formFields['options'][] = Form::AddCombo(
-                'effect', 
-                __('Effect'), 
-                $this->GetOption('effect', $oldDirection),
-                array(
-                    array('effectid' => 'none', 'effect' => __('None')), 
-                    array('effectid' => 'fade', 'effect' => __('Fade')),
-                    array('effectid' => 'fadeout', 'effect' => __('Fade Out')),
-                    array('effectid' => 'scrollHorz', 'effect' => __('Scroll Horizontal')),
-                    array('effectid' => 'scrollVert', 'effect' => __('Scroll Vertical')),
-                    array('effectid' => 'flipHorz', 'effect' => __('Flip Horizontal')),
-                    array('effectid' => 'flipVert', 'effect' => __('Flip Vertical')),
-                    array('effectid' => 'shuffle', 'effect' => __('Shuffle')),
-                    array('effectid' => 'tileSlide', 'effect' => __('Tile Slide')),
-                    array('effectid' => 'tileBlind', 'effect' => __('Tile Blinds')),
-                    array('effectid' => 'marqueeLeft', 'effect' => __('Marquee Left')),
-                    array('effectid' => 'marqueeRight', 'effect' => __('Marquee Right')),
-                    array('effectid' => 'marqueeUp', 'effect' => __('Marquee Up')),
-                    array('effectid' => 'marqueeDown', 'effect' => __('Marquee Down')),
-                ),
-                'effectid',
-                'effect',
-                __('Please select the effect that will be used to transition between items. If all items should be output, select None. Marquee effects are CPU intensive and may not be suitable for lower power displays.'), 
-                'e');
+            'effect',
+            __('Effect'),
+            $this->GetOption('effect', $oldDirection),
+            array(
+                array('effectid' => 'none', 'effect' => __('None')),
+                array('effectid' => 'fade', 'effect' => __('Fade')),
+                array('effectid' => 'fadeout', 'effect' => __('Fade Out')),
+                array('effectid' => 'scrollHorz', 'effect' => __('Scroll Horizontal')),
+                array('effectid' => 'scrollVert', 'effect' => __('Scroll Vertical')),
+                array('effectid' => 'flipHorz', 'effect' => __('Flip Horizontal')),
+                array('effectid' => 'flipVert', 'effect' => __('Flip Vertical')),
+                array('effectid' => 'shuffle', 'effect' => __('Shuffle')),
+                array('effectid' => 'tileSlide', 'effect' => __('Tile Slide')),
+                array('effectid' => 'tileBlind', 'effect' => __('Tile Blinds')),
+                array('effectid' => 'marqueeLeft', 'effect' => __('Marquee Left')),
+                array('effectid' => 'marqueeRight', 'effect' => __('Marquee Right')),
+                array('effectid' => 'marqueeUp', 'effect' => __('Marquee Up')),
+                array('effectid' => 'marqueeDown', 'effect' => __('Marquee Down')),
+            ),
+            'effectid',
+            'effect',
+            __('Please select the effect that will be used to transition between items. If all items should be output, select None. Marquee effects are CPU intensive and may not be suitable for lower power displays.'),
+            'e');
 
         $formFields['options'][] = Form::AddNumber('speed', __('Speed'), $this->GetOption('speed'),
             __('The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1).'), 's', NULL, 'effect-controls');
@@ -193,11 +196,11 @@ class text extends Module
 
         // Handle the substitutions as RAW items
         $subs = array(
-                array('Substitute' => 'Clock'),
-                array('Substitute' => 'Clock|HH:mm'),
-                array('Substitute' => 'Date'),
-                array('Substitute' => 'Clock|DD/MM/YYYY')
-            );
+            array('Substitute' => 'Clock'),
+            array('Substitute' => 'Clock|HH:mm'),
+            array('Substitute' => 'Date'),
+            array('Substitute' => 'Clock|DD/MM/YYYY')
+        );
         Theme::Set('substitutions', $subs);
 
         $textNode = $this->getRawNode('text', null);
@@ -236,7 +239,7 @@ class text extends Module
         // Other properties
         $duration = \Kit::GetParam('duration', _POST, _INT, 0, false);
         $text = \Kit::GetParam('ta_text', _POST, _HTMLSTRING);
-	$name 	      = \Xibo\Helper\Sanitize::getString('name');
+        $name = \Xibo\Helper\Sanitize::getString('name');
 
         // Validation
         if ($text == '')
@@ -323,7 +326,7 @@ class text extends Module
 
         // Handle older layouts that have a direction node but no effect node
         $oldDirection = $this->GetOption('direction', 'none');
-        
+
         if ($oldDirection != 'none')
             $oldDirection = 'marquee' . ucfirst($oldDirection);
 
@@ -369,39 +372,39 @@ class text extends Module
             $matches = '';
             preg_match_all('/\[.*?\]/', $text, $matches);
 
-            foreach($matches[0] as $subs) {
+            foreach ($matches[0] as $subs) {
                 $text = str_replace($subs, '<span class="clock" format="' . str_replace('[', '', str_replace(']', '', $subs)) . '"></span>', $text);
             }
         }
 
         // Generate a JSON string of substituted items.
         $items[] = $text;
-        
+
         // Replace the head content
         $isPreview = (\Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
-        $javaScriptContent  = '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
+        $javaScriptContent = '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
 
         // Need the marquee plugin?
         if (stripos($effect, 'marquee') !== false)
             $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery.marquee.min.js"></script>';
-        
+
         // Need the cycle plugin?
         if ($effect != 'none')
             $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-cycle-2.1.6.min.js"></script>';
-                
+
         $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-layout-scaler.js"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-text-render.js"></script>';
 
         // Do we need to include moment?
         if ($clock)
             $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'moment.js"></script>';
- 
+
         $javaScriptContent .= '<script type="text/javascript">';
         $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
         $javaScriptContent .= '   var items = ' . json_encode($items) . ';';
         $javaScriptContent .= '   $(document).ready(function() { ';
         $javaScriptContent .= '       $("#content").xiboTextRender(options, items); $("body").xiboLayoutScaler(options);';
-        
+
         if ($clock)
             $javaScriptContent .= ' updateClock(); setInterval(updateClock, 1000); ';
 
@@ -423,7 +426,7 @@ class text extends Module
         $template = str_replace('<!--[[[JAVASCRIPTCONTENT]]]-->', $javaScriptContent, $template);
 
         // Add our fonts.css file
-        $headContent  = '<link href="' . (($isPreview) ? 'modules/preview/' : '') . 'fonts.css" rel="stylesheet" media="screen">';
+        $headContent = '<link href="' . (($isPreview) ? 'modules/preview/' : '') . 'fonts.css" rel="stylesheet" media="screen">';
         $headContent .= '<style type="text/css">' . file_get_contents(Theme::ItemPath('css/client.css')) . '</style>';
 
         $template = str_replace('<!--[[[HEADCONTENT]]]-->', $headContent, $template);
@@ -446,10 +449,11 @@ class text extends Module
         return $output;
     }
 
-    public function GetName() {
+    public function GetName()
+    {
         return $this->GetOption('name');
     }
-    
+
     public function IsValid()
     {
         // Text rendering will be valid

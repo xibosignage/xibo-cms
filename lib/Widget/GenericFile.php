@@ -18,9 +18,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+namespace Xibo\Widget;
+
 use Widget\Module;
 
-class genericfile extends Module
+class GenericFile extends Module
 {
     /**
      * Preview code for a module

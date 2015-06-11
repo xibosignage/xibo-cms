@@ -18,11 +18,16 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+namespace Xibo\Widget;
+
+use Exception;
+use Kit;
+use Media;
 use Widget\Module;
 use Xibo\Helper\Form;
 use Xibo\Helper\Theme;
 
-class embedded extends Module
+class Embedded extends Module
 {
     /**
      * Install Files
@@ -33,7 +38,7 @@ class embedded extends Module
         $media->addModuleFile('modules/preview/vendor/jquery-1.11.1.min.js');
         $media->addModuleFile('modules/preview/xibo-layout-scaler.js');
     }
-    
+
     /**
      * Return the Add Form as HTML
      */
@@ -44,7 +49,7 @@ class embedded extends Module
         $this->configureForm('AddMedia');
 
         $formFields = array();
-        
+
         $formFields[] = Form::AddText('name', __('Name'), NULL,
             __('An optional name for this media'), 'n');
 
@@ -52,11 +57,11 @@ class embedded extends Module
             __('The duration in seconds this item should be displayed'), 'd', 'required');
 
         $formFields[] = Form::AddCheckbox('transparency', __('Background transparent?'),
-            NULL, __('Should the HTML be shown with a transparent background. Not current available on the Windows Display Client.'), 
+            NULL, __('Should the HTML be shown with a transparent background. Not current available on the Windows Display Client.'),
             't');
 
         $formFields[] = Form::AddCheckbox('scaleContent', __('Scale Content?'),
-            $this->GetOption('scaleContent'), __('Should the embedded content be scaled along with the layout?'), 
+            $this->GetOption('scaleContent'), __('Should the embedded content be scaled along with the layout?'),
             's');
 
         $formFields[] = Form::AddMultiText('embedHtml', NULL, NULL,
@@ -87,7 +92,7 @@ function EmbedInit()
 
         return $response;
     }
-    
+
     /**
      * Return the Edit Form as HTML
      */
@@ -101,20 +106,20 @@ function EmbedInit()
 
         // Configure the form
         $this->configureForm('EditMedia');
-        
+
         $formFields = array();
         $formFields[] = Form::AddText('name', __('Name'), $this->GetOption('name'),
             __('An optional name for this media'), 'n');
-        
+
         $formFields[] = Form::AddNumber('duration', __('Duration'), $this->getDuration(),
             __('The duration in seconds this item should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
 
         $formFields[] = Form::AddCheckbox('transparency', __('Background transparent?'),
-            $this->GetOption('transparency'), __('Should the HTML be shown with a transparent background. Not current available on the Windows Display Client.'), 
+            $this->GetOption('transparency'), __('Should the HTML be shown with a transparent background. Not current available on the Windows Display Client.'),
             't');
 
         $formFields[] = Form::AddCheckbox('scaleContent', __('Scale Content?'),
-            $this->GetOption('scaleContent'), __('Should the embedded content be scaled along with the layout?'), 
+            $this->GetOption('scaleContent'), __('Should the embedded content be scaled along with the layout?'),
             's');
 
         $formFields[] = Form::AddMultiText('embedHtml', NULL, $this->getRawNode('embedHtml', null),
@@ -128,13 +133,13 @@ function EmbedInit()
 
         Theme::Set('form_fields', $formFields);
 
-        $response->html= Theme::RenderReturn('form_render');;
+        $response->html = Theme::RenderReturn('form_render');;
         $this->configureFormButtons($response);
         $this->response->AddButton(__('Apply'), 'XiboDialogApply("#ModuleForm")');
 
         return $response;
     }
-    
+
     /**
      * Add Media to the Database
      */
@@ -160,7 +165,7 @@ function EmbedInit()
 
         return $response;
     }
-    
+
     /**
      * Edit Media in the Database
      */
@@ -187,10 +192,10 @@ function EmbedInit()
 
         return $response;
     }
-    
+
     public function IsValid()
     {
-            $this->response->callBack = 'refreshPreview("' . $this->regionid . '")';
+        $this->response->callBack = 'refreshPreview("' . $this->regionid . '")';
         // Can't be sure because the client does the rendering
         return 2;
     }
@@ -291,7 +296,7 @@ function EmbedInit()
                 continue;
 
             // Check that this mediaId exists and get some information about it
-            $entry = \Xibo\Factory\MediaFactory::query(null,array('mediaId' => $mediaId));
+            $entry = \Xibo\Factory\MediaFactory::query(null, array('mediaId' => $mediaId));
 
             if (count($entry) <= 0)
                 continue;

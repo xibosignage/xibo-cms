@@ -18,6 +18,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+namespace Xibo\Widget;
+
 use Widget\Module;
 use Xibo\Controller\File;
 use Xibo\Helper\Date;
@@ -25,7 +27,7 @@ use Xibo\Helper\Form;
 use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
 
-class ticker extends Module
+class Ticker extends Module
 {
     /**
      * Install Files
@@ -41,7 +43,7 @@ class ticker extends Module
         $media->addModuleFile('modules/preview/xibo-text-render.js');
     }
 
-    /** 
+    /**
      * Loads templates for this module
      */
     public function loadTemplates()
@@ -54,7 +56,7 @@ class ticker extends Module
 
         Log::debug(count($this->module->settings['templates']));
     }
-    
+
     /**
      * Return the Add Form
      */
@@ -70,14 +72,14 @@ class ticker extends Module
 
         $formFields = array();
         $formFields[] = Form::AddCombo(
-                    'sourceid', 
-                    __('Source Type'), 
-                    NULL,
-                    array(array('sourceid' => '1', 'source' => __('Feed')), array('sourceid' => '2', 'source' => __('DataSet'))),
-                    'sourceid',
-                    'source',
-                    __('The source for this Ticker'), 
-                    's');
+            'sourceid',
+            __('Source Type'),
+            NULL,
+            array(array('sourceid' => '1', 'source' => __('Feed')), array('sourceid' => '2', 'source' => __('DataSet'))),
+            'sourceid',
+            'source',
+            __('The source for this Ticker'),
+            's');
 
         $formFields[] = Form::AddText('uri', __('Feed URL'), NULL,
             __('The Link for the RSS feed'), 'f', '', 'feed-fields');
@@ -87,14 +89,14 @@ class ticker extends Module
         Theme::Set('dataset_field_list', $datasets);
 
         $formFields[] = Form::AddCombo(
-                    'datasetid', 
-                    __('DataSet'), 
-                    NULL,
-                    $datasets,
-                    'datasetid',
-                    'dataset',
-                    __('Please select the DataSet to use as a source of data for this ticker.'), 
-                    'd', 'dataset-fields');
+            'datasetid',
+            __('DataSet'),
+            NULL,
+            $datasets,
+            'datasetid',
+            'dataset',
+            __('Please select the DataSet to use as a source of data for this ticker.'),
+            'd', 'dataset-fields');
 
         $formFields[] = Form::AddNumber('duration', __('Duration'), NULL,
             __('The duration in seconds this should be displayed'), 'd', 'required');
@@ -103,20 +105,20 @@ class ticker extends Module
 
         // Field dependencies
         $sourceFieldDepencies_1 = array(
-                '.feed-fields' => array('display' => 'block'),
-                '.dataset-fields' => array('display' => 'none'),
-            );
+            '.feed-fields' => array('display' => 'block'),
+            '.dataset-fields' => array('display' => 'none'),
+        );
 
         $sourceFieldDepencies_2 = array(
-                '.feed-fields' => array('display' => 'none'),
-                '.dataset-fields' => array('display' => 'block'),
-            );
+            '.feed-fields' => array('display' => 'none'),
+            '.dataset-fields' => array('display' => 'block'),
+        );
 
         $response->AddFieldAction('sourceid', 'init', 1, $sourceFieldDepencies_1);
         $response->AddFieldAction('sourceid', 'change', 1, $sourceFieldDepencies_1);
         $response->AddFieldAction('sourceid', 'init', 2, $sourceFieldDepencies_2);
         $response->AddFieldAction('sourceid', 'change', 2, $sourceFieldDepencies_2);
-                
+
         // Return
         $response->html = Theme::RenderReturn('form_render');
         $this->configureFormButtons($response);
@@ -124,7 +126,7 @@ class ticker extends Module
 
         return $response;
     }
-    
+
     /**
      * Return the Edit Form as HTML
      */
@@ -163,36 +165,36 @@ class ticker extends Module
 
         // Common fields
         $oldDirection = $this->GetOption('direction');
-        
+
         if ($oldDirection == 'single')
             $oldDirection = 'fade';
         else if ($oldDirection != 'none')
             $oldDirection = 'marquee' . ucfirst($oldDirection);
 
         $fieldFx = Form::AddCombo(
-                'effect', 
-                __('Effect'), 
-                $this->GetOption('effect', $oldDirection),
-                array(
-                    array('effectid' => 'none', 'effect' => __('None')), 
-                    array('effectid' => 'fade', 'effect' => __('Fade')),
-                    array('effectid' => 'fadeout', 'effect' => __('Fade Out')),
-                    array('effectid' => 'scrollHorz', 'effect' => __('Scroll Horizontal')),
-                    array('effectid' => 'scrollVert', 'effect' => __('Scroll Vertical')),
-                    array('effectid' => 'flipHorz', 'effect' => __('Flip Horizontal')),
-                    array('effectid' => 'flipVert', 'effect' => __('Flip Vertical')),
-                    array('effectid' => 'shuffle', 'effect' => __('Shuffle')),
-                    array('effectid' => 'tileSlide', 'effect' => __('Tile Slide')),
-                    array('effectid' => 'tileBlind', 'effect' => __('Tile Blinds')),
-                    array('effectid' => 'marqueeLeft', 'effect' => __('Marquee Left')),
-                    array('effectid' => 'marqueeRight', 'effect' => __('Marquee Right')),
-                    array('effectid' => 'marqueeUp', 'effect' => __('Marquee Up')),
-                    array('effectid' => 'marqueeDown', 'effect' => __('Marquee Down')),
-                ),
-                'effectid',
-                'effect',
-                __('Please select the effect that will be used to transition between items. If all items should be output, select None. Marquee effects are CPU intensive and may not be suitable for lower power displays.'), 
-                'e');
+            'effect',
+            __('Effect'),
+            $this->GetOption('effect', $oldDirection),
+            array(
+                array('effectid' => 'none', 'effect' => __('None')),
+                array('effectid' => 'fade', 'effect' => __('Fade')),
+                array('effectid' => 'fadeout', 'effect' => __('Fade Out')),
+                array('effectid' => 'scrollHorz', 'effect' => __('Scroll Horizontal')),
+                array('effectid' => 'scrollVert', 'effect' => __('Scroll Vertical')),
+                array('effectid' => 'flipHorz', 'effect' => __('Flip Horizontal')),
+                array('effectid' => 'flipVert', 'effect' => __('Flip Vertical')),
+                array('effectid' => 'shuffle', 'effect' => __('Shuffle')),
+                array('effectid' => 'tileSlide', 'effect' => __('Tile Slide')),
+                array('effectid' => 'tileBlind', 'effect' => __('Tile Blinds')),
+                array('effectid' => 'marqueeLeft', 'effect' => __('Marquee Left')),
+                array('effectid' => 'marqueeRight', 'effect' => __('Marquee Right')),
+                array('effectid' => 'marqueeUp', 'effect' => __('Marquee Up')),
+                array('effectid' => 'marqueeDown', 'effect' => __('Marquee Down')),
+            ),
+            'effectid',
+            'effect',
+            __('Please select the effect that will be used to transition between items. If all items should be output, select None. Marquee effects are CPU intensive and may not be suitable for lower power displays.'),
+            'e');
 
         $fieldScrollSpeed = Form::AddNumber('speed', __('Speed'), $this->GetOption('speed', $this->GetOption('scrollSpeed')),
             __('The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1).'), 's', NULL, 'effect-controls');
@@ -208,11 +210,11 @@ class ticker extends Module
             'n', 'required');
 
         $field_durationIsPerItem = Form::AddCheckbox('durationIsPerItem', __('Duration is per item'),
-            $this->GetOption('durationIsPerItem'), __('The duration specified is per item otherwise it is per feed.'), 
+            $this->GetOption('durationIsPerItem'), __('The duration specified is per item otherwise it is per feed.'),
             'i');
 
         $field_itemsSideBySide = Form::AddCheckbox('itemsSideBySide', __('Show items side by side?'),
-            $this->GetOption('itemsSideBySide'), __('Should items be shown side by side?'), 
+            $this->GetOption('itemsSideBySide'), __('Should items be shown side by side?'),
             's');
 
         // Data Set Source
@@ -245,8 +247,7 @@ class ticker extends Module
             Theme::Set('columns', \Xibo\Storage\PDOConnect::select(sprintf("SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetID = %d ", $dataSetId), array()));
 
             $formFields['template'][] = Form::AddRaw(Theme::RenderReturn('media_form_ticker_dataset_edit'));
-        }
-        else {
+        } else {
             // Extra Fields for the Ticker
             $formFields['general'][] = Form::AddText('uri', __('Feed URL'), urldecode($this->GetOption('uri')),
                 __('The Link for the RSS feed'), 'f');
@@ -258,20 +259,20 @@ class ticker extends Module
 
             // Add a field for RTL tickers
             $formFields['format'][] = Form::AddCombo(
-                    'textDirection', 
-                    __('Text direction'), 
-                    $this->GetOption('textDirection'),
-                    array(
-                        array('textdirectionid' => 'ltr', 'textdirection' => __('Left to Right (LTR)')),
-                        array('textdirectionid' => 'rtl', 'textdirection' => __('Right to Left (RTL)'))
-                    ),
-                    'textdirectionid',
-                    'textdirection',
-                    __('Which direction does the text in the feed use? (left to right or right to left)'), 
-                    'd');
+                'textDirection',
+                __('Text direction'),
+                $this->GetOption('textDirection'),
+                array(
+                    array('textdirectionid' => 'ltr', 'textdirection' => __('Left to Right (LTR)')),
+                    array('textdirectionid' => 'rtl', 'textdirection' => __('Right to Left (RTL)'))
+                ),
+                'textdirectionid',
+                'textdirection',
+                __('Which direction does the text in the feed use? (left to right or right to left)'),
+                'd');
 
             $formFields['advanced'][] = $fieldBackgroundColor;
-            
+
             $formFields['format'][] = Form::AddNumber('numItems', __('Number of Items'), $this->GetOption('numItems'),
                 __('The Number of RSS items you want to display'), 'o');
 
@@ -283,17 +284,17 @@ class ticker extends Module
             $formFields['advanced'][] = $field_updateInterval;
 
             $formFields['format'][] = Form::AddCombo(
-                    'takeItemsFrom', 
-                    __('Take items from the '), 
-                    $this->GetOption('takeItemsFrom'),
-                    array(
-                        array('takeitemsfromid' => 'start', 'takeitemsfrom' => __('Start of the Feed')),
-                        array('takeitemsfromid' => 'end', 'takeitemsfrom' => __('End of the Feed'))
-                    ),
-                    'takeitemsfromid',
-                    'takeitemsfrom',
-                    __('Take the items from the beginning or the end of the list'), 
-                    't');
+                'takeItemsFrom',
+                __('Take items from the '),
+                $this->GetOption('takeItemsFrom'),
+                array(
+                    array('takeitemsfromid' => 'start', 'takeitemsfrom' => __('Start of the Feed')),
+                    array('takeitemsfromid' => 'end', 'takeitemsfrom' => __('End of the Feed'))
+                ),
+                'takeitemsfromid',
+                'takeitemsfrom',
+                __('Take the items from the beginning or the end of the list'),
+                't');
 
             $formFields['format'][] = $field_durationIsPerItem;
             $formFields['advanced'][] = $field_itemsSideBySide;
@@ -302,16 +303,16 @@ class ticker extends Module
                 __('The format to apply to all dates returned by the ticker. In PHP date format: http://uk3.php.net/manual/en/function.date.php'), 'f');
 
             $subs = array(
-                    array('Substitute' => 'Name'),
-                    array('Substitute' => 'Title'),
-                    array('Substitute' => 'Description'),
-                    array('Substitute' => 'Date'),
-                    array('Substitute' => 'Content'),
-                    array('Substitute' => 'Copyright'),
-                    array('Substitute' => 'Link'),
-                    array('Substitute' => 'PermaLink'),
-                    array('Substitute' => 'Tag|Namespace')
-                );
+                array('Substitute' => 'Name'),
+                array('Substitute' => 'Title'),
+                array('Substitute' => 'Description'),
+                array('Substitute' => 'Date'),
+                array('Substitute' => 'Content'),
+                array('Substitute' => 'Copyright'),
+                array('Substitute' => 'Link'),
+                array('Substitute' => 'PermaLink'),
+                array('Substitute' => 'Tag|Namespace')
+            );
             Theme::Set('substitutions', $subs);
 
             $formFieldSubs = Form::AddRaw(Theme::RenderReturn('media_form_ticker_edit'));
@@ -342,39 +343,39 @@ class ticker extends Module
 
             // Append the templates to the response
             $response->extra = $this->module->settings['templates'];
-            
+
             $formFields['template'][] = $formFieldSubs;
 
             // Add a field for whether to override the template or not.
             // Default to 1 so that it will work correctly with old items (that didn't have a template selected at all)
             $formFields['template'][] = Form::AddCheckbox('overrideTemplate', __('Override the template?'), $this->GetOption('overrideTemplate', 1),
-            __('Tick if you would like to override the template.'), 'o');
+                __('Tick if you would like to override the template.'), 'o');
 
             // Template - for standard stuff
             $formFields['template'][] = Form::AddCombo('templateId', __('Template'), $this->GetOption('templateId', 'title-only'),
                 $this->module->settings['templates'],
-                'id', 
-                'value', 
+                'id',
+                'value',
                 __('Select the template you would like to apply. This can be overridden using the check box below.'), 't', 'template-selector-control');
 
             // Add some field dependencies
             // When the override template check box is ticked, we want to expose the advanced controls and we want to hide the template selector
-            $response->AddFieldAction('overrideTemplate', 'init', false, 
+            $response->AddFieldAction('overrideTemplate', 'init', false,
                 array(
                     '.template-override-controls' => array('display' => 'none'),
                     '.template-selector-control' => array('display' => 'block')
                 ), 'is:checked');
-            $response->AddFieldAction('overrideTemplate', 'change', false, 
+            $response->AddFieldAction('overrideTemplate', 'change', false,
                 array(
                     '.template-override-controls' => array('display' => 'none'),
                     '.template-selector-control' => array('display' => 'block')
                 ), 'is:checked');
-            $response->AddFieldAction('overrideTemplate', 'init', true, 
+            $response->AddFieldAction('overrideTemplate', 'init', true,
                 array(
                     '.template-override-controls' => array('display' => 'block'),
                     '.template-selector-control' => array('display' => 'none')
                 ), 'is:checked');
-            $response->AddFieldAction('overrideTemplate', 'change', true, 
+            $response->AddFieldAction('overrideTemplate', 'change', true,
                 array(
                     '.template-override-controls' => array('display' => 'block'),
                     '.template-selector-control' => array('display' => 'none')
@@ -388,14 +389,14 @@ class ticker extends Module
 
         // Generate the Response
         $response->html = Theme::RenderReturn('form_render');
-        $response->callBack   = 'text_callback';
+        $response->callBack = 'text_callback';
         $this->configureFormButtons($response);
         $response->dialogTitle = __('Edit Ticker');
         $this->response->AddButton(__('Apply'), 'XiboDialogApply("#ModuleForm")');
 
         return $response;
     }
-    
+
     /**
      * Add Media to the Database
      */
@@ -408,21 +409,20 @@ class ticker extends Module
         $uri = \Kit::GetParam('uri', _POST, _URI);
         $dataSetId = \Kit::GetParam('datasetid', _POST, _INT, 0);
         $duration = \Kit::GetParam('duration', _POST, _INT, 0, false);
-        
+
         // Must have a duration
         if ($duration == 0)
             trigger_error(__('Please enter a duration'), E_USER_ERROR);
 
         if ($sourceId == 1) {
             // Feed
-            
+
             // Validate the URL
             if ($uri == "" || $uri == "http://")
                 trigger_error(__('Please enter a Link for this Ticker'), E_USER_ERROR);
-        }
-        else if ($sourceId == 2) {
+        } else if ($sourceId == 2) {
             // DataSet
-            
+
             // Validate Data Set Selected
             if ($dataSetId == 0)
                 trigger_error(__('Please select a DataSet'), E_USER_ERROR);
@@ -430,12 +430,11 @@ class ticker extends Module
             // Check we have permission to use this DataSetId
             if (!$this->getUser()->DataSetAuth($dataSetId))
                 trigger_error(__('You do not have permission to use that dataset'), E_USER_ERROR);
-        }
-        else {
+        } else {
             // Only supported two source types at the moment
             trigger_error(__('Unknown Source Type'));
         }
-        
+
         // Any Options
         $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration()));
         $this->SetOption('xmds', true);
@@ -458,10 +457,10 @@ class ticker extends Module
         // Load form
         $response->loadForm = true;
         $response->loadFormUri = 'index.php?p=module&q=Exec&mod=' . $this->getModuleType() . '&method=EditForm&regionId=' . $this->region->regionId . '&widgetId=' . $this->getWidgetId();
-        
+
         return $response;
     }
-    
+
     /**
      * Edit Media in the Database
      */
@@ -473,38 +472,37 @@ class ticker extends Module
             throw new Exception(__('You do not have permission to edit this widget.'));
 
         $sourceId = $this->GetOption('sourceId', 1);
-        
+
         // Other properties
-        $uri          = \Kit::GetParam('uri', _POST, _URI);
-		$name = \Xibo\Helper\Sanitize::getString('name');
-        $text         = \Kit::GetParam('ta_text', _POST, _HTMLSTRING);
+        $uri = \Kit::GetParam('uri', _POST, _URI);
+        $name = \Xibo\Helper\Sanitize::getString('name');
+        $text = \Kit::GetParam('ta_text', _POST, _HTMLSTRING);
         $css = \Kit::GetParam('ta_css', _POST, _HTMLSTRING);
         $updateInterval = \Kit::GetParam('updateInterval', _POST, _INT, 360);
-        $copyright    = \Xibo\Helper\Sanitize::getString('copyright');
+        $copyright = \Xibo\Helper\Sanitize::getString('copyright');
         $numItems = \Xibo\Helper\Sanitize::getString('numItems');
         $takeItemsFrom = \Xibo\Helper\Sanitize::getString('takeItemsFrom');
         $durationIsPerItem = \Xibo\Helper\Sanitize::getCheckbox('durationIsPerItem');
         $itemsSideBySide = \Xibo\Helper\Sanitize::getCheckbox('itemsSideBySide');
-        
+
         // DataSet Specific Options
         $itemsPerPage = \Xibo\Helper\Sanitize::getInt('itemsPerPage');
         $upperLimit = \Xibo\Helper\Sanitize::getInt('upperLimit');
         $lowerLimit = \Xibo\Helper\Sanitize::getInt('lowerLimit');
         $filter = \Kit::GetParam('filter', _POST, _STRINGSPECIAL);
         $ordering = \Xibo\Helper\Sanitize::getString('ordering');
-        
+
         // Validation
         if ($text == '')
             throw new InvalidArgumentException(__('Please enter some text'));
 
         if ($sourceId == 1) {
             // Feed
-            
+
             // Validate the URL
             if ($uri == "" || $uri == "http://")
                 trigger_error(__('Please enter a Link for this Ticker'), E_USER_ERROR);
-        }
-        else if ($sourceId == 2) {
+        } else if ($sourceId == 2) {
             // Make sure we havent entered a silly value in the filter
             if (strstr($filter, 'DESC'))
                 trigger_error(__('Cannot user ordering criteria in the Filter Clause'), E_USER_ERROR);
@@ -519,7 +517,7 @@ class ticker extends Module
             if ($upperLimit < $lowerLimit)
                 trigger_error(__('Upper limit must be higher than lower limit'), E_USER_ERROR);
         }
-        
+
         if ($numItems != '') {
             // Make sure we have a number in here
             if (!is_numeric($numItems))
@@ -528,11 +526,11 @@ class ticker extends Module
 
         if ($updateInterval < 0)
             trigger_error(__('Update Interval must be greater than or equal to 0'), E_USER_ERROR);
-        
+
         // Any Options
         $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration(), false));
         $this->SetOption('xmds', true);
-		$this->SetOption('name', $name);
+        $this->SetOption('name', $name);
         $this->SetOption('effect', \Kit::GetParam('effect', _POST, _STRING));
         $this->SetOption('copyright', $copyright);
         $this->SetOption('speed', \Kit::GetParam('speed', _POST, _INT));
@@ -555,7 +553,7 @@ class ticker extends Module
         $this->SetOption('textDirection', \Kit::GetParam('textDirection', _POST, _WORD));
         $this->SetOption('overrideTemplate', \Kit::GetParam('overrideTemplate', _POST, _CHECKBOX));
         $this->SetOption('templateId', \Kit::GetParam('templateId', _POST, _WORD));
-        
+
         // Text Template
         $this->setRawNode('template', $text);
         $this->setRawNode('css', $css);
@@ -566,14 +564,14 @@ class ticker extends Module
         // Load form
         $response->loadForm = true;
         $response->loadFormUri = $this->getTimelineLink();
-            $this->response->callBack = 'refreshPreview("' . $this->regionid . '")';
+        $this->response->callBack = 'refreshPreview("' . $this->regionid . '")';
 
         return $response;
     }
 
-	public function DeleteMedia()
+    public function DeleteMedia()
     {
-		// TODO: Links for datasets
+        // TODO: Links for datasets
 
         //$dataSet = new DataSet($this->db);
         //$dataSet->UnlinkLayout($this->GetOption('datasetid'), $this->layoutid, $this->regionid, $this->mediaid);
@@ -642,7 +640,7 @@ class ticker extends Module
 
         // Handle older layouts that have a direction node but no effect node
         $oldDirection = $this->GetOption('direction', 'none');
-        
+
         if ($oldDirection == 'single')
             $oldDirection = 'fade';
         else if ($oldDirection != 'none')
@@ -669,8 +667,7 @@ class ticker extends Module
         // Generate a JSON string of substituted items.
         if ($sourceId == 2) {
             $items = $this->GetDataSetItems($displayId, $isPreview, $text);
-        }
-        else {
+        } else {
             $items = $this->GetRssItems($isPreview, $text);
         }
 
@@ -691,7 +688,7 @@ class ticker extends Module
         $template = str_replace('<!--[[[CONTROLMETA]]]-->', '<!-- NUMITEMS=' . $pages . ' -->' . PHP_EOL . '<!-- DURATION=' . $totalDuration . ' -->', $template);
 
         // Replace the head content
-        $headContent  = '';
+        $headContent = '';
 
         if ($itemsSideBySide == 1) {
             $headContent .= '<style type="text/css">';
@@ -702,7 +699,7 @@ class ticker extends Module
         if ($this->GetOption('textDirection') == 'rtl') {
             $headContent .= '<style type="text/css">';
             $headContent .= ' #content { direction: rtl; }';
-            $headContent .= '</style>';   
+            $headContent .= '</style>';
         }
 
         if ($this->GetOption('backgroundColor') != '') {
@@ -724,16 +721,16 @@ class ticker extends Module
         $template = str_replace('<!--[[[HEADCONTENT]]]-->', $headContent, $template);
 
         // Add some scripts to the JavaScript Content
-        $javaScriptContent  = '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
+        $javaScriptContent = '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
 
         // Need the marquee plugin?
         if (stripos($effect, 'marquee') !== false)
             $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery.marquee.min.js"></script>';
-        
+
         // Need the cycle plugin?
         if ($effect != 'none')
             $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-cycle-2.1.6.min.js"></script>';
-        
+
         $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-layout-scaler.js"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-text-render.js"></script>';
 
@@ -768,7 +765,7 @@ class ticker extends Module
         preg_match_all('/\[.*?\]/', $text, $matches);
 
         Log::debug('Loading SimplePie to handle RSS parsing.' . urldecode($this->GetOption('uri')) . '. Will substitute items with ' . $text);
-        
+
         // Use SimplePie to get the feed
         include_once('3rdparty/simplepie/autoloader.php');
 
@@ -812,7 +809,7 @@ class ticker extends Module
 
             // Substitute for all matches in the template
             $rowString = $text;
-            
+
             // Substitute
             foreach ($matches[0] as $sub) {
                 $replace = '';
@@ -862,10 +859,9 @@ class ticker extends Module
 
                             $replace = ($isPreview) ? '<img src="index.php?p=index.php?p=content&q=getFile&mediaid=' . $file['mediaId'] . '" ' . $attributes . '/>' : '<img src="' . $file['storedAs'] . '" ' . $attributes . ' />';
                         }
-                    }
-                    else {
+                    } else {
                         $tags = $item->get_item_tags(str_replace(']', '', $namespace), str_replace('[', '', $tag));
-                        
+
                         Log::notice('Tags:' . var_export($tags, true));
 
                         // If we find some tags then do the business with them
@@ -876,9 +872,8 @@ class ticker extends Module
                                 $replace = (is_array($tags)) ? $tags[0]['data'] : '';
                         }
                     }
-                }
-                else {
-                    
+                } else {
+
                     // Use the pool of standard tags
                     switch ($sub) {
                         case '[Name]':
@@ -915,14 +910,14 @@ class ticker extends Module
                     }
                 }
 
-		if ($this->GetOption('stripTags') != '') {
-			require_once '3rdparty/htmlpurifier/library/HTMLPurifier.auto.php';
+                if ($this->GetOption('stripTags') != '') {
+                    require_once '3rdparty/htmlpurifier/library/HTMLPurifier.auto.php';
 
-			$config = HTMLPurifier_Config::createDefault();
-			$config->set('HTML.ForbiddenElements', array_merge($feed->strip_htmltags, explode(',', $this->GetOption('stripTags'))));
-			$purifier = new HTMLPurifier($config);
-			$replace = $purifier->purify($replace);
-		}
+                    $config = HTMLPurifier_Config::createDefault();
+                    $config->set('HTML.ForbiddenElements', array_merge($feed->strip_htmltags, explode(',', $this->GetOption('stripTags'))));
+                    $purifier = new HTMLPurifier($config);
+                    $replace = $purifier->purify($replace);
+                }
 
                 // Substitute the replacement we have found (it might be '')
                 $rowString = str_replace($sub, $replace, $rowString);
@@ -961,7 +956,7 @@ class ticker extends Module
         preg_match_all('/\[(.*?)\]/', $text, $matches);
 
         $columnIds = array();
-        
+
         foreach ($matches[1] as $match) {
             // Get the column id's we are interested in
             Log::notice('Matched column: ' . $match);
@@ -1008,7 +1003,7 @@ class ticker extends Module
 
                     $replace = ($isPreview) ? '<img src="index.php?index.php?p=content&q=getFile&mediaid=' . $file['mediaId'] . '" />' : '<img src="' . $file['storedAs'] . '" />';
                 }
-                
+
                 $rowString = str_replace('[' . $sub . ']', $replace, $rowString);
             }
 
@@ -1017,7 +1012,7 @@ class ticker extends Module
 
         return $items;
     }
-    
+
     public function IsValid()
     {
         // Can't be sure because the client does the rendering

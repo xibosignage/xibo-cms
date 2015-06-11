@@ -18,11 +18,18 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+namespace Xibo\Widget;
+
+use DataSet;
+use Exception;
+use InvalidArgumentException;
+use Kit;
+use Media;
 use Widget\Module;
 use Xibo\Helper\Form;
 use Xibo\Helper\Theme;
 
-class datasetview extends Module
+class DataSetView extends Module
 {
     /**
      * Install Modules Files
@@ -61,7 +68,7 @@ class datasetview extends Module
             __('The duration in seconds this counter should be displayed'), 'd', 'required');
 
         Theme::Set('form_fields', $formFields);
-        
+
         $response->SetFormRequestResponse(NULL, __('Add DataSet View'), '350px', '275px');
         $this->configureFormButtons($response);
 
@@ -99,14 +106,13 @@ class datasetview extends Module
             __('Please enter a SQL clause to filter this DataSet.'), 'f');
 
         $formFields[] = Form::AddCheckbox('showHeadings', __('Show the table headings?'),
-            $this->GetOption('showHeadings'), __('Should the Table headings be shown?'), 
+            $this->GetOption('showHeadings'), __('Should the Table headings be shown?'),
             'h');
 
         // Handle the columns
         $columns = $this->GetOption('columns');
 
-        if ($columns != '')
-        {
+        if ($columns != '') {
             // Query for more info about the selected and available columns
             $notColumns = \Xibo\Storage\PDOConnect::select(sprintf("SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetID = %d AND DataSetColumnID NOT IN (%s)", $this->GetOption('datasetid'), $columns), array());
 
@@ -114,16 +120,13 @@ class datasetview extends Module
             $columnIds = explode(',', $columns);
             $headings = array();
 
-            foreach($columnIds as $col)
-            {
+            foreach ($columnIds as $col) {
                 $heading = \Xibo\Storage\PDOConnect::select(sprintf('SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetColumnID = %d', $col), array());
                 $headings[] = $heading[0]['Heading'];
             }
 
             $columns = $headings;
-        }
-        else
-        {
+        } else {
             $columns = array();
             $notColumns = \Xibo\Storage\PDOConnect::select(sprintf("SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetID = %d ", $this->GetOption('datasetid')), array());
         }
@@ -132,12 +135,12 @@ class datasetview extends Module
         $columnsSelected = '<ul id="columnsIn" class="connectedSortable">';
         $columnsNotSelected = '<ul id="columnsOut" class="connectedSortable">';
 
-        foreach($columns as $col)
+        foreach ($columns as $col)
             $columnsSelected .= '<li id="DataSetColumnId_' . $col['DataSetColumnID'] . '" class="li-sortable">' . $col['Heading'] . '</li>';
 
         $columnsSelected .= '</ul>';
 
-        foreach($notColumns as $notCol)
+        foreach ($notColumns as $notCol)
             $columnsNotSelected .= '<li id="DataSetColumnId_' . $notCol['DataSetColumnID'] . '" class="li-sortable">' . $notCol['Heading'] . '</li>';
 
         $columnsNotSelected .= '</ul>';
@@ -149,7 +152,7 @@ class datasetview extends Module
         $formFields[] = Form::AddRaw(Theme::RenderReturn('media_form_datasetview_edit'));
 
         Theme::Set('form_fields_general', $formFields);
-        
+
         // Advanced Tab
         $formFields = array();
         $formFields[] = Form::AddNumber('lowerLimit', __('Lower Row Limit'), $this->GetOption('lowerLimit'),
@@ -343,7 +346,7 @@ class datasetview extends Module
         $template = str_replace('<!--[[[BODYCONTENT]]]-->', $this->DataSetTableHtml($displayId, $isPreview), $template);
 
         // Build some JS nodes
-        $javaScriptContent  = '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
+        $javaScriptContent = '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-cycle-2.1.6.min.js"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-layout-scaler.js"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-dataset-render.js"></script>';
@@ -435,7 +438,7 @@ END;
         // Set an expiry time for the media
         $media = new Media();
         $expires = time() + ($this->GetOption('updateInterval', 3600) * 60);
-            
+
         // Create a data set view object, to get the results.
         $dataSet = new DataSet();
         if (!$dataSetResults = $dataSet->DataSetResults($dataSetId, $columnIds, $filter, $ordering, $lowerLimit, $upperLimit, $displayId)) {
@@ -450,11 +453,10 @@ END;
             $totalPages = $totalRows / $rowsPerPage;
         else
             $totalPages = 1;
-        
+
         $table = '<div id="DataSetTableContainer" totalRows="' . $totalRows . '" totalPages="' . $totalPages . '">';
 
-        foreach($dataSetResults['Rows'] as $row)
-        {
+        foreach ($dataSetResults['Rows'] as $row) {
             if (($rowsPerPage > 0 && $rowCountThisPage >= $rowsPerPage) || $rowCount == 1) {
 
                 // Reset the row count on this page
@@ -468,12 +470,11 @@ END;
                 // Output the table header
                 $table .= '<table class="DataSetTable">';
 
-                if ($showHeadings == 1)
-                {
+                if ($showHeadings == 1) {
                     $table .= '<thead>';
                     $table .= ' <tr class="HeaderRow">';
 
-                    foreach($dataSetResults['Columns'] as $col)
+                    foreach ($dataSetResults['Columns'] as $col)
                         $table .= '<th class="DataSetColumnHeaderCell">' . $col['Text'] . '</th>';
 
                     $table .= ' </tr>';
@@ -486,7 +487,7 @@ END;
             $table .= '<tr class="DataSetRow DataSetRow' . (($rowCount % 2) ? 'Odd' : 'Even') . '" id="row_' . $rowCount . '">';
 
             // Output each cell for these results
-            for($i = 0; $i < count($dataSetResults['Columns']); $i++) {
+            for ($i = 0; $i < count($dataSetResults['Columns']); $i++) {
 
                 // Pull out the cell for this row / column
                 $replace = $row[$i];

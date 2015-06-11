@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2014-15 Daniel Garner
+ * Copyright (C) 2009-2015 Daniel Garner. 2006-2008 Daniel Garner and James Packer.
  *
  * This file is part of Xibo.
  *
@@ -18,21 +18,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+namespace Xibo\Widget;
+
 use Widget\Module;
-     * Installs any files specific to this module
-     */
-    public function InstallFiles()
-    {
-        $fontsCss = 'modules/preview/fonts.css';
 
-        if (!file_exists($fontsCss)) {
-            touch($fontsCss);
-        }
-    }
-
-    /**
-
-class font extends Module
+class PowerPoint extends Module
 {
     /**
      * Preview code for a module
@@ -43,8 +33,14 @@ class font extends Module
      */
     public function Preview($width, $height, $scaleOverride = 0)
     {
-        // Never previewed in the browser.
+        // PowerPoint cannot be previewed
         return $this->previewIcon();
+    }
+
+    public function IsValid()
+    {
+        // Client dependant
+        return 2;
     }
 
     /**
@@ -54,17 +50,7 @@ class font extends Module
      */
     public function GetResource($displayId = 0)
     {
-        $this->ReturnFile();
+        $this->download();
         exit();
-    }
-
-    /**
-     * Is this module valid
-     * @return int
-     */
-    public function IsValid()
-    {
-        // Yes
-        return 1;
     }
 }
