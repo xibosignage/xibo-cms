@@ -69,8 +69,7 @@ if (isset($_GET['file'])) {
         }
 
         // Log bandwidth
-        $bandwidth = new Bandwidth();
-        $bandwidth->Log($file['displayId'], 4, $file['size']);
+        \Xibo\Factory\BandwidthFactory::createAndSave(4, $file['displayId'], $file['size']);
     }
     exit;
 }

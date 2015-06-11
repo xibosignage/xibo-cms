@@ -18,21 +18,15 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-namespace Xmds;
-use Bandwidth;
-use Display;
-use DisplayProfile;
+namespace Xibo\Xmds;
 use DOMDocument;
 use DOMXPath;
 use Exception;
-use Layout;
-use ModuleFactory;
 use Nonce;
-use region;
 use SoapFault;
-use Stat;
-use Xibo\Controller\File;
+use Xibo\Entity\Bandwidth;
 use Xibo\Entity\User;
+use Xibo\Factory\BandwidthFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
@@ -1424,8 +1418,7 @@ class Soap4
      */
     private function LogBandwidth($displayId, $type, $sizeInBytes)
     {
-        $bandwidth = new Bandwidth();
-        $bandwidth->Log($displayId, $type, $sizeInBytes);
+        BandwidthFactory::createAndSave($type, $displayId, $sizeInBytes);
     }
 }
 

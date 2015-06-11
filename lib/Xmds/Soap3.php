@@ -18,10 +18,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-namespaceXmds;
+namespace Xibo\Xmds;
 use Layout;
 use ModuleFactory;
 use region;
+use Xibo\Entity\Bandwidth;
 use Xibo\Entity\User;
 use Xibo\Helper\Config;
 use Xibo\Helper\Log;
@@ -1194,8 +1195,7 @@ class Soap3
      */
     private function LogBandwidth($displayId, $type, $sizeInBytes)
     {
-        $bandwidth = new Bandwidth();
-        $bandwidth->Log($displayId, $type, $sizeInBytes);
+        BandwidthFactory::createAndSave($type, $displayId, $sizeInBytes);
     }
 }
 
