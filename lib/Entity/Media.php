@@ -25,9 +25,11 @@ namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
 use Xibo\Exception\ConfigurationException;
+use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\TagFactory;
+use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Log;
 use Xibo\Storage\PDOConnect;
@@ -43,7 +45,11 @@ class Media
     public $mediaType;
     public $storedAs;
     public $fileName;
+
+    // Thing we might be referred to
     public $tags = [];
+    private $widgets = [];
+    private $displayGroups = [];
     private $permissions = [];
 
     public $fileSize;
@@ -101,10 +107,26 @@ class Media
 
     public function load()
     {
+        // Tags
         $this->tags = TagFactory::loadByMediaId($this->mediaId);
-        $this->permissions = PermissionFactory::getByObjectId('Media', $this->mediaId);
+
+        // Are we loading for a delete? If so load the child models
+        if ($this->deleting) {
+            // Permissions
+            $this->permissions = PermissionFactory::getByObjectId('Media', $this->mediaId);
+
+            // Widgets
+            $this->widgets = WidgetFactory::getByMediaId($this->mediaId);
+
+            // Display Groups
+            $this->displayGroups = DisplayGroupFactory::getByMediaId($this->mediaId);
+        }
     }
 
+    /**
+     * Save this media
+     * @param bool $validate
+     */
     public function save($validate = true)
     {
         if ($validate && $this->mediaType != 'module')
@@ -135,7 +157,6 @@ class Media
         // Save the tags
         foreach ($this->tags as $tag) {
             /* @var Tag $tag */
-
             $tag->assignMedia($this->mediaId);
             $tag->save();
         }
@@ -143,6 +164,7 @@ class Media
 
     public function delete()
     {
+        $this->deleting = true;
         $this->load();
 
         foreach ($this->permissions as $permission) {
@@ -154,6 +176,18 @@ class Media
             /* @var Tag $tag */
             $tag->unassignMedia($this->mediaId);
             $tag->save();
+        }
+
+        foreach ($this->widgets as $widget) {
+            /* @var \Xibo\Entity\Widget $widget */
+            $widget->unassignMedia($this->mediaId);
+            $widget->save();
+        }
+
+        foreach ($this->displayGroups as $displayGroup) {
+            /* @var \Xibo\Entity\DisplayGroup $displayGroup */
+            $displayGroup->unassignMedia($this->mediaId);
+            $displayGroup->save(false);
         }
 
         PDOConnect::update('DELETE FROM media WHERE MediaID = :mediaId', ['mediaId' => $this->mediaId]);

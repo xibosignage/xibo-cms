@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2013 Daniel Garner
+ * Copyright (C) 2006-2015 Daniel Garner, Spring Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -157,7 +157,7 @@ class Library extends Base
                 // Delete
                 $media->buttons[] = array(
                     'id' => 'content_button_delete',
-                    'url' => 'index.php?p=content&q=deleteForm&mediaid=' . $media->mediaId,
+                    'url' => $this->urlFor('library.delete.form', ['id' => $media->mediaId]),
                     'text' => __('Delete')
                 );
             }
@@ -214,7 +214,6 @@ class Library extends Base
             throw new AccessDeniedException();
 
         // Delete
-        $media->load();
         $media->delete();
 
         // Return

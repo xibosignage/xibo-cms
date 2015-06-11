@@ -49,6 +49,16 @@ class DisplayGroupFactory
     }
 
     /**
+     * Get Display Groups by MediaId
+     * @param int $mediaId
+     * @return array[DisplayGroup]
+     */
+    public static function getByMediaId($mediaId)
+    {
+        return DisplayGroupFactory::query(null, ['mediaId' => $mediaId, 'isDisplaySpecific' => -1]);
+    }
+
+    /**
      * @param array $sortOrder
      * @param array $filterBy
      * @return array[DisplayGroup]
@@ -61,8 +71,18 @@ class DisplayGroupFactory
         $sql = '
             SELECT displaygroup.displayGroupId, displaygroup.displayGroup, displaygroup.isDisplaySpecific, displaygroup.description
               FROM `displaygroup`
-             WHERE 1 = 1
         ';
+
+        if (Sanitize::getInt('mediaId', $filterBy) != null) {
+            $sql .= '
+                INNER JOIN lkmediadisplaygroup
+                ON lkmediadisplaygroup.displayGroupId = displayGroup.displayGroupId
+                    AND lkmediadisplaygroup.mediaId = :mediaId
+            ';
+            $params['mediaId'] = Sanitize::getInt('mediaId', $filterBy);
+        }
+
+        $sql .= ' WHERE 1 = 1 ';
 
         if (Sanitize::getInt('displayGroupId', $filterBy) != null) {
             $sql .= ' AND displaygroup.displayGroupId = :displayGroupId ';

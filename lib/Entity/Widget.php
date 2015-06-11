@@ -29,7 +29,7 @@ use Xibo\Factory\WidgetOptionFactory;
 
 class Widget
 {
-    private $hash;
+    use EntityTrait;
     public $widgetId;
     public $playlistId;
     public $ownerId;
