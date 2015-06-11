@@ -9,12 +9,6 @@ $formFields[] = Form::AddCheckbox('replaceBackgroundImages', __('Replace backgro
     __('If the current image is used as a background, should the new image replace it?'),
     '', 'replacement-controls');
 
-if ($this->assignable) {
-    $formFields[] = Form::AddCheckbox('replaceInLayouts', __('Update this media in all layouts it is assigned to?'),
-        ((Config::GetSetting('LIBRARY_MEDIA_UPDATEINALL_CHECKB') == 'Checked') ? 1 : 0),
-        __('Note: It will only be replaced in layouts you have permission to edit.'),
-        'r');
-}
 
 $formFields[] = Form::AddCheckbox('deleteOldVersion', __('Delete the old version?'),
     ((Config::GetSetting('LIBRARY_MEDIA_UPDATEINALL_CHECKB') == 'Checked') ? 1 : 0),
@@ -54,6 +48,13 @@ $formFields[] = Form::AddCheckbox('deleteOldVersion', __('Delete the old version
                 {% set title %}{% trans "Retire this media?" %}{% endset %}
                 {% set helpText %}{% trans "Retired media remains on existing Layouts but is not available to assign to new Layouts." %}{% endset %}
                 {{ forms.checkbox("retired", title, media.retired, helpText) }}
+
+                {% set title %}{% trans "Update this media in all layouts it is assigned to?" %}{% endset %}
+                {% set helpText %}{% trans "Note: It will only be updated in layouts you have permission to edit." %}{% endset %}
+                {% if config.LIBRARY_MEDIA_UPDATEINALL_CHECKB == "Checked" %}
+                    {% set checked = 1 %}
+                {% endif %}
+                {{ forms.checkbox("updateInLayouts", title, checked, helpText) }}
             </form>
         </div>
     </div>

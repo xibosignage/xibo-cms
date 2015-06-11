@@ -22,20 +22,19 @@ namespace Xibo\Controller;
 
 use Xibo\Entity\Media;
 use Xibo\Entity\Module;
+use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\LibraryFullException;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\TagFactory;
-use Xibo\Helper\ApplicationState;
+use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\Config;
 use Xibo\Helper\Help;
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Session;
-use Xibo\Helper\Theme;
 use Xibo\Helper\XiboUploadHandler;
 use Xibo\Storage\PDOConnect;
 
@@ -223,202 +222,6 @@ class Library extends Base
     }
 
     /**
-     * Replace media in all layouts.
-     * @param <type> $oldMediaId
-     * @param <type> $newMediaId
-     */
-    private function ReplaceMediaInAllLayouts($replaceInLayouts, $replaceBackgroundImages, $oldMediaId, $newMediaId)
-    {
-        $count = 0;
-
-        Log::notice(sprintf('Replacing mediaid %s with mediaid %s in all layouts', $oldMediaId, $newMediaId), 'module', 'ReplaceMediaInAllLayouts');
-
-        try {
-            $dbh = \Xibo\Storage\PDOConnect::init();
-
-            // Some update statements to use
-            $sth = $dbh->prepare('SELECT lklayoutmediaid, regionid FROM lklayoutmedia WHERE mediaid = :media_id AND layoutid = :layout_id');
-            $sth_update = $dbh->prepare('UPDATE lklayoutmedia SET mediaid = :media_id WHERE lklayoutmediaid = :lklayoutmediaid');
-
-            // Loop through a list of layouts this user has access to
-            foreach ($this->getUser()->LayoutList() as $layout) {
-                $layoutId = $layout['layoutid'];
-
-                // Does this layout use the old media id?
-                $sth->execute(array(
-                    'media_id' => $oldMediaId,
-                    'layout_id' => $layoutId
-                ));
-
-                $results = $sth->fetchAll();
-
-                if (count($results) <= 0)
-                    continue;
-
-                Log::notice(sprintf('%d linked media items for layoutid %d', count($results), $layoutId), 'module', 'ReplaceMediaInAllLayouts');
-
-                // Create a region object for later use (new one each time)
-                $layout = new Layout();
-                $region = new region($this->db);
-
-                // Loop through each media link for this layout
-                foreach ($results as $row) {
-                    // Get the LKID of the link between this layout and this media.. could be more than one?
-                    $lkId = $row['lklayoutmediaid'];
-                    $regionId = $row['regionid'];
-
-                    if ($regionId == 'background') {
-
-                        Log::debug('Replacing background image');
-
-                        if (!$replaceBackgroundImages)
-                            continue;
-
-                        // Straight swap this background image node.
-                        if (!$layout->EditBackgroundImage($layoutId, $newMediaId))
-                            return false;
-                    } else {
-
-                        if (!$replaceInLayouts)
-                            continue;
-
-                        // Get the Type of this media
-                        if (!$type = $region->GetMediaNodeType($layoutId, '', '', $lkId))
-                            continue;
-
-                        // Create a new media node use it to swap the nodes over
-                        Log::notice('Creating new module with MediaID: ' . $newMediaId . ' LayoutID: ' . $layoutId . ' and RegionID: ' . $regionId, 'region', 'ReplaceMediaInAllLayouts');
-                        try {
-                            $module = ModuleFactory::createForMedia($type, $newMediaId, $this->db, $this->user);
-                        } catch (Exception $e) {
-                            Log::error($e->getMessage());
-                            return false;
-                        }
-
-                        // Sets the URI field
-                        if (!$module->SetRegionInformation($layoutId, $regionId))
-                            return false;
-
-                        // Get the media xml string to use in the swap.
-                        $mediaXmlString = $module->AsXml();
-
-                        // Swap the nodes
-                        if (!$region->SwapMedia($layoutId, $regionId, $lkId, $oldMediaId, $newMediaId, $mediaXmlString))
-                            return false;
-                    }
-
-                    // Update the LKID with the new media id
-                    $sth_update->execute(array(
-                        'media_id' => $newMediaId,
-                        'lklayoutmediaid' => $row['lklayoutmediaid']
-                    ));
-
-                    $count++;
-                }
-            }
-        } catch (Exception $e) {
-
-            Log::error($e->getMessage());
-
-            if (!$this->IsError())
-                $this->SetError(1, __('Unknown Error'));
-
-            return false;
-        }
-
-        Log::notice(sprintf('Replaced media in %d layouts', $count), 'module', 'ReplaceMediaInAllLayouts');
-    }
-
-    /**
-     * Displays the Library Assign form
-     * @return
-     */
-    function LibraryAssignForm()
-    {
-
-        $user = $this->getUser();
-        $response = $this->getState();
-
-        $id = uniqid();
-        Theme::Set('id', $id);
-        Theme::Set('form_meta', '<input type="hidden" name="p" value="content"><input type="hidden" name="q" value="LibraryAssignView">');
-        Theme::Set('pager', ApplicationState::Pager($id, 'grid_pager'));
-
-        // Module types filter
-        $modules = $this->getUser()->ModuleAuth(0, '', 1);
-        $types = array();
-
-        foreach ($modules as $module) {
-            $type['moduleid'] = $module['Module'];
-            $type['module'] = $module['Name'];
-
-            $types[] = $type;
-        }
-
-        array_unshift($types, array('moduleid' => '', 'module' => 'All'));
-        Theme::Set('module_field_list', $types);
-
-        // Call to render the template
-        $output = Theme::RenderReturn('library_form_assign');
-
-        // Input vars
-        $layoutId = Sanitize::getInt('layoutid');
-        $regionId = Sanitize::getString('regionid');
-
-        // Construct the Response
-        $response->html = $output;
-        $response->success = true;
-        $response->dialogSize = true;
-        $response->dialogClass = 'modal-big';
-        $response->dialogWidth = '780px';
-        $response->dialogHeight = '580px';
-        $response->dialogTitle = __('Assign an item from the Library');
-
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Library', 'Assign') . '")');
-        $response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutId . '&regionid=' . $regionId . '&q=RegionOptions")');
-        $response->AddButton(__('Assign'), 'LibraryAssignSubmit("' . $layoutId . '","' . $regionId . '")');
-
-
-    }
-
-    /**
-     * Show the library
-     * @return
-     */
-    function LibraryAssignView()
-    {
-
-        $user = $this->getUser();
-        $response = $this->getState();
-
-        //Input vars
-        $mediatype = Sanitize::getString('filter_type');
-        $name = Sanitize::getString('filter_name');
-
-        // Get a list of media
-        $mediaList = $user->MediaList(NULL, array('type' => $mediatype, 'name' => $name));
-
-        $rows = array();
-
-        // Add some extra information
-        foreach ($mediaList as $row) {
-
-            $row['duration_text'] = sec2hms($row['duration']);
-            $row['list_id'] = 'MediaID_' . $row['mediaid'];
-
-            $rows[] = $row;
-        }
-
-        Theme::Set('table_rows', $rows);
-
-        // Render the Theme
-        $response->SetGridResponse(Theme::RenderReturn('library_form_assign_list'));
-        $response->callBack = 'LibraryAssignCallback';
-        $response->pageSize = 5;
-
-    }
-
-    /**
      * Add a file to the library
      *  expects to be fed by the blueimp file upload handler
      * @throws \Exception
@@ -501,6 +304,16 @@ class Library extends Base
         $media->duration = Sanitize::getInt('duration');
         $media->retired = Sanitize::getCheckbox('retired');
         $media->tags = TagFactory::tagsFromString(Sanitize::getString('tags'));
+
+        // Should we update the media in all layouts?
+        if (Sanitize::getCheckbox('updateInLayouts') == 1) {
+            foreach (WidgetFactory::getByMediaId($media->mediaId) as $widget) {
+                /* @var Widget $widget */
+                $widget->duration = $media->duration;
+                $widget->save();
+            }
+        }
+
         $media->save();
 
         // Return

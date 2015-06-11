@@ -234,7 +234,7 @@ class Media
     {
         // Do we need to pull a new update?
         // Is the file either expired or is force set
-        if ($this->force || $this->expires < time()) {
+        if ($this->force || ($this->expires > 0 && $this->expires < time())) {
             $this->saveFile();
         }
 

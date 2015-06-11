@@ -205,6 +205,8 @@ class Widget
 
         // Manage the assigned media
         $this->linkMedia();
+
+        // TODO: Notify the Layout?
     }
 
     public function delete()
