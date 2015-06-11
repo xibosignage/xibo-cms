@@ -27,7 +27,6 @@ use Parsedown;
 use Xibo\Entity\Campaign;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\LayoutFactory;
-use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Config;
 use Xibo\Helper\Form;
 use Xibo\Helper\Help;
@@ -929,7 +928,7 @@ HTML;
 
         $layout = LayoutFactory::loadById(Kit::GetParam('layoutId', _GET, _INT));
 
-         $this->getState()->SetFormRequestResponse('<pre>' . json_format(json_encode($layout)) . '</pre>', 'Test', '350px', '200px');
+         $this->getState()->SetFormRequestResponse('<pre>' . json_encode($layout, JSON_PRETTY_PRINT) . '</pre>', 'Test', '350px', '200px');
          $this->getState()->dialogClass = 'modal-big';
 
     }

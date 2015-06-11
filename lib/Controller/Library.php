@@ -166,7 +166,7 @@ class Library extends Base
                 // Permissions
                 $media->buttons[] = array(
                     'id' => 'content_button_permissions',
-                    'url' => 'index.php?p=user&q=permissionsForm&entity=Media&objectId=' . $media->mediaId,
+                    'url' => $this->urlFor('user.permissions.form', ['entity' => 'Media', 'id' => $media->mediaId]),
                     'text' => __('Permissions')
                 );
             }
@@ -186,56 +186,41 @@ class Library extends Base
 
     /**
      * Media Delete Form
-     * @throws Exception
+     * @param int $mediaId
      */
-    public function deleteForm()
+    public function deleteForm($mediaId)
     {
-        $response = $this->getState();
+        $media = MediaFactory::getById($mediaId);
 
-        // Get the MediaId
-        $media = \Xibo\Factory\MediaFactory::getById(Kit::GetParam('mediaId', _GET, _INT));
-
-        // Can this user delete?
         if (!$this->getUser()->checkDeleteable($media))
-            throw new Exception(__('You do not have permission to delete this media.'));
+            throw new AccessDeniedException();
 
-        Theme::Set('form_id', 'MediaDeleteForm');
-        Theme::Set('form_action', 'index.php?p=content&q=delete');
-        Theme::Set('form_meta', '<input type="hidden" name="mediaId" value="' . $media->mediaId . '">');
-        $formFields = array(
-            Form::AddMessage(__('Are you sure you want to remove this Media?')),
-            Form::AddMessage(__('This action cannot be undone.')),
-        );
-
-        Theme::Set('form_fields', $formFields);
-        $form = Theme::RenderReturn('form_render');
-
-        $response->SetFormRequestResponse($form, __('Delete Media'), '300px', '200px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Media', 'Delete') . '")');
-        $response->AddButton(__('No'), 'XiboDialogClose()');
-        $response->AddButton(__('Yes'), '$("#MediaDeleteForm").submit()');
-
+        $this->getState()->template = 'library-form-delete';
+        $this->getState()->setData([
+            'media' => $media,
+            'help' => Help::Link('Library', 'Delete')
+        ]);
     }
 
     /**
      * Delete Media
+     * @param int $mediaId
      */
-    public function delete()
+    public function delete($mediaId)
     {
-        $response = $this->getState();
+        $media = MediaFactory::getById($mediaId);
 
-        // Get the MediaId
-        $media = \Xibo\Factory\MediaFactory::getById(Kit::GetParam('mediaId', _GET, _INT));
-
-        // Can this user delete?
         if (!$this->getUser()->checkDeleteable($media))
-            throw new Exception(__('You do not have permission to delete this media.'));
+            throw new AccessDeniedException();
 
         // Delete
+        $media->load();
         $media->delete();
 
-        $response->SetFormSubmitResponse(__('The Media has been Deleted'));
-
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Deleted %s'), $media->name)
+        ]);
     }
 
     /**
