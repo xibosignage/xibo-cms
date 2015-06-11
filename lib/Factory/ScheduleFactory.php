@@ -40,6 +40,17 @@ class ScheduleFactory
     }
 
     /**
+     * Get by Campaign ID
+     * @param int $campaignId
+     * @return array[Schedule]
+     * @throws NotFoundException
+     */
+    public static function getByCampaignId($campaignId)
+    {
+        return ScheduleFactory::query(null, ['campaignId' => $campaignId]);
+    }
+
+    /**
      * @param int $ownerId
      * @return array[Schedule]
      * @throws NotFoundException

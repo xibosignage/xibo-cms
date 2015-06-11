@@ -39,7 +39,7 @@ class MenuFactory
 
     public static function getByMenu($menu)
     {
-        return MenuFactory::query('sequence', ['menu' => $menu]);
+        return MenuFactory::query(['sequence'], ['menu' => $menu]);
     }
 
     public static function query($sortOrder = null, $filterBy = null)

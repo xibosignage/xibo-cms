@@ -20,15 +20,12 @@
  */
 namespace Xibo\Controller;
 
-use database;
-use Kit;
 use Media;
 use Parsedown;
 use Xibo\Entity\Campaign;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Helper\Config;
-use Xibo\Helper\Form;
 use Xibo\Helper\Help;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Session;
@@ -42,7 +39,7 @@ class Layout extends Base
     function displayPage()
     {
         // Default options
-        if (\Kit::IsFilterPinned('layout', 'LayoutFilter')) {
+        if (Session::Get('layout', 'Filter') == 1) {
 
             $layout = Session::Get('layout', 'filter_layout');
             $tags = Session::Get('layout', 'filter_tags');
@@ -152,7 +149,7 @@ class Layout extends Base
         // Add a Campaign
         $campaign = new Campaign();
         $campaign->campaign = $layout->layout;
-        $campaign->isLayout = 1;
+        $campaign->isLayoutSpecific = 1;
         $campaign->ownerId = $layout->getOwnerId();
         $campaign->assignLayout($layout->layoutId);
 
@@ -314,7 +311,7 @@ class Layout extends Base
         Session::Set('layout', 'showThumbnail', $showThumbnail);
 
         // Tags list
-        $filter_tags = \Kit::GetParam("filter_tags", _POST, _STRING);
+        $filter_tags = Sanitize::getString('filter_tags');
         Session::Set('layout', 'filter_tags', $filter_tags);
 
         // Pinned option?

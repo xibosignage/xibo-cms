@@ -44,7 +44,7 @@ $app->put('/layout/retire/:id', '\Xibo\Controller\Layout:retire')->name('layout.
 //
 $app->get('/campaign', '\Xibo\Controller\Campaign:grid')->name('campaign.search');
 $app->post('/campaign', '\Xibo\Controller\Campaign:add')->name('campaign.add');
-$app->put('/campaign/:id', '\Xibo\Controller\Campaign:modify')->name('campaign.update');
+$app->put('/campaign/:id', '\Xibo\Controller\Campaign:edit')->name('campaign.edit');
 $app->delete('/campaign/:id', '\Xibo\Controller\Campaign:delete')->name('campaign.delete');
 
 //

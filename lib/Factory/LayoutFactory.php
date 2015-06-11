@@ -177,6 +177,17 @@ class LayoutFactory
     }
 
     /**
+     * Get by CampaignId
+     * @param int $campaignId
+     * @return array[Layout]
+     * @throws NotFoundException
+     */
+    public static function getByCampaignId($campaignId)
+    {
+        return LayoutFactory::query(null, array('campaignId' => $campaignId, 'retired' => -1));
+    }
+
+    /**
      * Load a layout by its XLF
      * @param string $layoutXlf
      * @return Layout

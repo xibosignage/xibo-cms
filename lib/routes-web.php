@@ -102,7 +102,7 @@ $app->get('/update', '\Xibo\Controller\Upgrade:displayPage')->name('upgrade.view
 // schedule
 //
 $app->get('/schedule/view', '\Xibo\Controller\Schedule:displayPage')->name('schedule.view');
-$app->get('/schedule/form/now/:id', '\Xibo\Controller\Schedule:scheduleNowForm')->name('schedule.now.form');
+$app->get('/schedule/form/now/:from/:id', '\Xibo\Controller\Schedule:scheduleNowForm')->name('schedule.now.form');
 $app->get('/schedule/form/add', '\Xibo\Controller\Schedule:addForm')->name('schedule.add.form');
 
 //
@@ -167,6 +167,7 @@ $app->get('/campaign/form/edit/:id', '\Xibo\Controller\Campaign:editForm')->name
 $app->get('/campaign/form/copy/:id', '\Xibo\Controller\Campaign:copyForm')->name('campaign.copy.form');
 $app->get('/campaign/form/delete/:id', '\Xibo\Controller\Campaign:deleteForm')->name('campaign.delete.form');
 $app->get('/campaign/form/retire/:id', '\Xibo\Controller\Campaign:retireForm')->name('campaign.retire.form');
+$app->get('/campaign/form/layouts/:id', '\Xibo\Controller\Campaign:layoutsForm')->name('campaign.layouts.form');
 
 //
 // template

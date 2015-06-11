@@ -75,13 +75,13 @@ class User
     public $libraryQuota;
 
     // Groups assigned to
-    public $groups;
+    public $groups = [];
 
     // Things Users can own
-    public $campaigns;
-    public $layouts;
-    public $media;
-    public $events;
+    public $campaigns = [];
+    public $layouts = [];
+    public $media = [];
+    public $events = [];
 
     // Readonly information
     public $homePage;
@@ -91,20 +91,6 @@ class User
      * @var array[Permission]
      */
     private $permissionCache = array();
-
-    /**
-     * Constructor
-     * Set default values
-     */
-    public function __construct()
-    {
-        $this->hash = null;
-        $this->groups = [];
-        $this->layouts = [];
-        $this->media = [];
-        $this->events = [];
-        $this->campaigns = [];
-    }
 
     public function __toString()
     {

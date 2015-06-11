@@ -130,7 +130,7 @@ class CampaignFactory
             $campaign->campaignId = Sanitize::int($row['CampaignID']);
             $campaign->campaign = Sanitize::string($row['Campaign']);
             $campaign->numberLayouts = Sanitize::int($row['NumLayouts']);
-            $campaign->isLayout = (Sanitize::int($row['IsLayoutSpecific']) == 1);
+            $campaign->isLayoutSpecific = (Sanitize::int($row['IsLayoutSpecific']) == 1);
             $campaign->retired = Sanitize::int($row['Retired']);
             $campaign->ownerId = Sanitize::int($row['userId']);
 

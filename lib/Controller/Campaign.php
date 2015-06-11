@@ -20,9 +20,13 @@
  */
 namespace Xibo\Controller;
 
+use Xibo\Exception\AccessDeniedException;
+use Xibo\Factory\CampaignFactory;
+use Xibo\Factory\LayoutFactory;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
+use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 
 
@@ -39,14 +43,13 @@ class Campaign extends Base
     public function grid()
     {
         $user = $this->getUser();
-        $response = $this->getState();
 
         $campaigns = $user->CampaignList();
 
         foreach ($campaigns as $campaign) {
             /* @var \Xibo\Entity\Campaign $campaign */
 
-            if ($campaign->isLayout)
+            if ($campaign->isLayoutSpecific)
                 continue;
 
             $campaign->buttons = [];
@@ -54,7 +57,7 @@ class Campaign extends Base
             // Schedule Now
             $campaign->buttons[] = array(
                 'id' => 'campaign_button_schedulenow',
-                'url' => 'index.php?p=schedule&q=ScheduleNowForm&CampaignID=' . $campaign['campaignid'],
+                'url' => $this->urlFor('schedule.now.form', ['id' => $campaign->campaignId, 'from' => 'Campaign']),
                 'text' => __('Schedule Now')
             );
 
@@ -63,14 +66,14 @@ class Campaign extends Base
                 // Assign Layouts
                 $campaign->buttons[] = array(
                     'id' => 'campaign_button_layouts',
-                    'url' => 'index.php?p=campaign&q=LayoutAssignForm&CampaignID=' . $campaign['campaignid'] . '&Campaign=' . $campaign->campaign,
+                    'url' => $this->urlFor('campaign.layouts.form', ['id' => $campaign->campaignId]),
                     'text' => __('Layouts')
                 );
 
                 // Edit the Campaign
                 $campaign->buttons[] = array(
                     'id' => 'campaign_button_edit',
-                    'url' => 'index.php?p=campaign&q=EditForm&CampaignID=' . $campaign['campaignid'],
+                    'url' => $this->urlFor('campaign.edit.form', ['id' => $campaign->campaignId]),
                     'text' => __('Edit')
                 );
             }
@@ -79,7 +82,7 @@ class Campaign extends Base
                 // Delete Campaign
                 $campaign->buttons[] = array(
                     'id' => 'campaign_button_delete',
-                    'url' => 'index.php?p=campaign&q=DeleteForm&CampaignID=' . $campaign['campaignid'],
+                    'url' => $this->urlFor('campaign.delete.form', ['id' => $campaign->campaignId]),
                     'text' => __('Delete')
                 );
             }
@@ -88,7 +91,7 @@ class Campaign extends Base
                 // Permissions for Campaign
                 $campaign->buttons[] = array(
                     'id' => 'campaign_button_delete',
-                    'url' => 'index.php?p=user&q=permissionsForm&entity=Campaign&objectId=' . $campaign['campaignid'],
+                    'url' => $this->urlFor('user.permissions.form', ['entity' => 'Campaign', 'id' => $campaign->campaignId]),
                     'text' => __('Permissions')
                 );
             }
@@ -101,190 +104,126 @@ class Campaign extends Base
     /**
      * Campaign Add Form
      */
-    public function AddForm()
+    public function addForm()
     {
-
-        $user = $this->getUser();
-        $response = $this->getState();
-
-        Theme::Set('form_id', 'CampaignAddForm');
-        Theme::Set('form_action', 'index.php?p=campaign&q=Add');
-
-        $formFields = array();
-        $formFields[] = Form::AddText('Name', __('Name'), NULL, __('The Name for this Campaign'), 'n', 'required');
-        Theme::Set('form_fields', $formFields);
-
-        $response->SetFormRequestResponse(Theme::RenderReturn('form_render'), __('Add Campaign'), '350px', '150px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Campaign', 'Add') . '")');
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Save'), '$("#CampaignAddForm").submit()');
-
+        $this->getState()->template = 'campaign-form-add';
+        $this->getState()->setData([
+            'help' => Help::Link('Campaign', 'Add')
+        ]);
     }
 
     /**
      * Add a Campaign
      */
-    public function Add()
+    public function add()
     {
+        $campaign = new \Xibo\Entity\Campaign();
+        $campaign->ownerId = $this->getUser()->userId;
+        $campaign->campaign = Sanitize::getString('name');
+        $campaign->save();
 
-
-
-        $response = $this->getState();
-
-        $name = \Xibo\Helper\Sanitize::getString('Name');
-
-
-        $campaignObject = new Campaign($db);
-
-        if (!$campaignObject->Add($name, 0, $this->getUser()->userId))
-            trigger_error($campaignObject->GetErrorMessage(), E_USER_ERROR);
-
-        $response->SetFormSubmitResponse(__('Campaign Added'), false);
-
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Added %s'), $campaign->campaign),
+            'id' => $campaign->campaignId,
+            'data' => [$campaign]
+        ]);
     }
 
     /**
      * Campaign Edit Form
+     * @param int $campaignId
      */
-    public function EditForm()
+    public function editForm($campaignId)
     {
+        $campaign = CampaignFactory::getById($campaignId);
 
-        $user = $this->getUser();
-        $response = $this->getState();
+        if (!$this->getUser()->checkEditable($campaign))
+            throw new AccessDeniedException();
 
-        $campaignId = \Xibo\Helper\Sanitize::getInt('CampaignID');
-
-        // Authenticate this user
-        $auth = $this->getUser()->CampaignAuth($campaignId, true);
-        if (!$auth->edit)
-            trigger_error(__('You do not have permission to edit this campaign'), E_USER_ERROR);
-
-        // Pull the currently known info from the DB
-        $SQL = "SELECT CampaignID, Campaign, IsLayoutSpecific ";
-        $SQL .= "  FROM `campaign` ";
-        $SQL .= " WHERE CampaignID = %d ";
-
-        $SQL = sprintf($SQL, $campaignId);
-
-        if (!$row = $db->GetSingleRow($SQL)) {
-            trigger_error($db->error());
-            trigger_error(__('Error getting Campaign'));
-        }
-
-        $campaign = \Xibo\Helper\Sanitize::string($row['Campaign']);
-
-        $formFields = array();
-        $formFields[] = Form::AddText('Name', __('Name'), $campaign, __('The Name for this Campaign'), 'n', 'required');
-        Theme::Set('form_fields', $formFields);
-
-        // Set some information about the form
-        Theme::Set('form_id', 'CampaignEditForm');
-        Theme::Set('form_action', 'index.php?p=campaign&q=Edit');
-        Theme::Set('form_meta', '<input type="hidden" name="CampaignID" value="' . $campaignId . '" />');
-
-        $response->SetFormRequestResponse(Theme::RenderReturn('form_render'), __('Edit Campaign'), '350px', '150px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Campaign', 'Edit') . '")');
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Save'), '$("#CampaignEditForm").submit()');
-
+        $this->getState()->template = 'campaign-form-edit';
+        $this->getState()->setData([
+            'campaign' => $campaign,
+            'help' => Help::Link('Campaign', 'Edit')
+        ]);
     }
 
     /**
      * Edit a Campaign
+     * @param int $campaignId
      */
-    public function Edit()
+    public function edit($campaignId)
     {
+        $campaign = CampaignFactory::getById($campaignId);
 
+        if (!$this->getUser()->checkEditable($campaign))
+            throw new AccessDeniedException();
 
+        $campaign->campaign = Sanitize::getString('name');
+        $campaign->save();
 
-        $response = $this->getState();
-
-        $campaignId = \Xibo\Helper\Sanitize::getInt('CampaignID');
-        $name = \Xibo\Helper\Sanitize::getString('Name');
-
-        // Authenticate this user
-        $auth = $this->getUser()->CampaignAuth($campaignId, true);
-        if (!$auth->edit)
-            trigger_error(__('You do not have permission to edit this campaign'), E_USER_ERROR);
-
-        // Validation
-        if ($campaignId == 0 || $campaignId == '')
-            trigger_error(__('Campaign ID is missing'), E_USER_ERROR);
-
-        if ($name == '')
-            trigger_error(__('Name is a required field.'), E_USER_ERROR);
-
-
-        $campaignObject = new Campaign($db);
-
-        if (!$campaignObject->Edit($campaignId, $name))
-            trigger_error($campaignObject->GetErrorMessage(), E_USER_ERROR);
-
-        $response->SetFormSubmitResponse(__('Campaign Edited'), false);
-
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Edited %s'), $campaign->campaign),
+            'id' => $campaign->campaignId,
+            'data' => [$campaign]
+        ]);
     }
 
     /**
      * Shows the Delete Group Form
-     * @return
+     * @param int $campaignId
      */
-    function DeleteForm()
+    function deleteForm($campaignId)
     {
+        $campaign = CampaignFactory::getById($campaignId);
 
-        $user = $this->getUser();
-        $response = $this->getState();
-        $helpManager = new Help($db, $user);
+        if (!$this->getUser()->checkDeleteable($campaign))
+            throw new AccessDeniedException();
 
-        $campaignId = \Xibo\Helper\Sanitize::getInt('CampaignID');
-
-        // Authenticate this user
-        $auth = $this->getUser()->CampaignAuth($campaignId, true);
-        if (!$auth->del)
-            trigger_error(__('You do not have permission to delete this campaign'), E_USER_ERROR);
-
-        // Set some information about the form
-        Theme::Set('form_id', 'CampaignDeleteForm');
-        Theme::Set('form_action', 'index.php?p=campaign&q=Delete');
-        Theme::Set('form_meta', '<input type="hidden" name="CampaignID" value="' . $campaignId . '" />');
-
-        Theme::Set('form_fields', array(Form::AddMessage(__('Are you sure you want to delete?'))));
-
-        $response->SetFormRequestResponse(Theme::RenderReturn('form_render'), __('Delete Campaign'), '350px', '175px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Campaign', 'Delete') . '")');
-        $response->AddButton(__('No'), 'XiboDialogClose()');
-        $response->AddButton(__('Yes'), '$("#CampaignDeleteForm").submit()');
-
+        $this->getState()->template = 'campaign-form-delete';
+        $this->getState()->setData([
+            'campaign' => $campaign,
+            'help' => Help::Link('Campaign', 'Delete')
+        ]);
     }
 
     /**
      * Delete Campaign
+     * @param int $campaignId
      */
-    public function Delete()
+    public function delete($campaignId)
     {
+        $campaign = CampaignFactory::getById($campaignId);
 
+        if (!$this->getUser()->checkDeleteable($campaign))
+            throw new AccessDeniedException();
 
+        $campaign->delete();
 
-        $response = $this->getState();
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Deleted %s'), $campaign->campaign)
+        ]);
+    }
 
-        $campaignId = \Xibo\Helper\Sanitize::getInt('CampaignID');
+    /**
+     * Layouts form
+     * @param int $campaignId
+     */
+    public function layoutsForm($campaignId)
+    {
+        $campaign = CampaignFactory::getById($campaignId);
 
-        // Authenticate this user
-        $auth = $this->getUser()->CampaignAuth($campaignId, true);
-        if (!$auth->del)
-            trigger_error(__('You do not have permission to delete this campaign'), E_USER_ERROR);
+        if (!$this->getUser()->checkEditable($campaign))
+            throw new AccessDeniedException();
 
-        // Validation
-        if ($campaignId == 0 || $campaignId == '')
-            trigger_error(__('Campaign ID is missing'), E_USER_ERROR);
-
-
-        $campaignObject = new Campaign($db);
-
-        if (!$campaignObject->Delete($campaignId))
-            trigger_error($campaignObject->GetErrorMessage(), E_USER_ERROR);
-
-        $response->SetFormSubmitResponse(__('Campaign Deleted'), false);
-
+        $this->getState()->template = 'campaign-form-layouts';
+        $this->getState()->setData([
+            'campaign' => $campaign,
+            'layouts' => LayoutFactory::getByCampaignId($campaignId),
+            'help' => Help::Link('Campaign', 'Layouts')
+        ]);
     }
 
     /**

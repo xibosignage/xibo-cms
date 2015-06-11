@@ -23,21 +23,27 @@
 namespace Xibo\Entity;
 
 
+use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\PermissionFactory;
+use Xibo\Factory\ScheduleFactory;
 use Xibo\Storage\PDOConnect;
 
 class Campaign
 {
+    use EntityTrait;
     public $campaignId;
     public $ownerId;
 
     public $campaign;
 
-    public $isLayout;
+    public $isLayoutSpecific = 0;
     public $retired;
 
     public $numberLayouts;
 
-    public $layoutIds = array();
+    public $layoutIds = [];
+    private $permissions = [];
+    private $events = [];
 
     /**
      * Get the Id
@@ -57,6 +63,20 @@ class Campaign
         return $this->ownerId;
     }
 
+    public function load()
+    {
+        $this->permissions = PermissionFactory::getByObjectId('Campaign', $this->campaignId);
+
+        // Layouts
+        foreach (LayoutFactory::getByCampaignId($this->campaignId) as $layout) {
+            /* @var Layout $layout */
+            $this->layoutIds[] = $layout->layoutId;
+        }
+
+        // Events
+        $this->events = ScheduleFactory::getByCampaignId($this->campaignId);
+    }
+
     public function save()
     {
         if ($this->campaignId == null || $this->campaignId == 0)
@@ -69,9 +89,24 @@ class Campaign
 
     public function delete()
     {
+        $this->load();
 
-
+        // Remove all layouts
+        $this->layoutIds = [];
         $this->unlinkLayouts();
+
+        // Delete things this group can own
+        foreach ($this->permissions as $permission) {
+            /* @var Permission $permission */
+            $permission->delete();
+        }
+
+        foreach ($this->events as $event) {
+            /* @var Schedule $event */
+            $event->delete();
+        }
+
+        PDOConnect::update('DELETE FROM `campaign` WHERE CampaignID = :campaignId', ['campaignId' => $this->campaignId]);
     }
 
     /**
@@ -95,16 +130,19 @@ class Campaign
 
     private function add()
     {
-        $this->campaignId = PDOConnect::insert('INSERT INTO `campaign` (Campaign, IsLayoutSpecific, UserId) VALUES (:campaign, :islayoutspecific, :userid)', array(
+        $this->campaignId = PDOConnect::insert('INSERT INTO `campaign` (Campaign, IsLayoutSpecific, UserId) VALUES (:campaign, :isLayoutSpecific, :userId)', array(
             'campaign' => $this->campaign,
-            'islayoutspecific' => $this->isLayout,
-            'userid' => $this->ownerId
+            'isLayoutSpecific' => $this->isLayoutSpecific,
+            'userId' => $this->ownerId
         ));
     }
 
     private function update()
     {
-
+        PDOConnect::update('UPDATE `campaign` SET campaign = :campaign WHERE CampaignID = :campaignId', [
+            'campaignId' => $this->campaignId,
+            'campaign' => $this->campaign
+        ]);
     }
 
     /**
@@ -133,16 +171,23 @@ class Campaign
      */
     private function unlinkLayouts()
     {
-        $i = 0;
+        // Unlink any layouts that are NOT in the collection
+        if (count($this->layoutIds) <= 0)
+            $this->layoutIds = [0];
 
+        $params = ['campaignId' => $this->campaignId];
+
+        $sql = 'DELETE FROM `lkcampaignlayout` WHERE campaignId = :campaignId AND layoutId NOT IN (0';
+
+        $i = 0;
         foreach ($this->layoutIds as $layoutId) {
             $i++;
-
-            PDOConnect::update('DELETE FROM `lkcampaignlayout` WHERE CampaignID = :campaignid AND LayoutID = :layoutid AND DisplayOrder = :displayorder', array(
-                'campaignId' => $this->campaignId,
-                'displayOrder' => $i,
-                'layoutId' => $layoutId,
-            ));
+            $sql .= ',:layoutId' . $i;
+            $params['layoutId' . $i] = $layoutId;
         }
+
+        $sql .= ')';
+
+        PDOConnect::update($sql, $params);
     }
 }
