@@ -22,15 +22,21 @@
 
 namespace Xibo\Entity;
 
+use Respect\Validation\Validator as v;
+use Xibo\Storage\PDOConnect;
 
-class Resolution
+class Resolution implements \JsonSerializable
 {
+    use EntityTrait;
     public $resolutionId;
 
     public $resolution;
 
     public $width;
     public $height;
+
+    public $designerWidth;
+    public $designerHeight;
 
     public $version;
     public $enabled;
@@ -44,5 +50,75 @@ class Resolution
     {
         // No owner
         return 1;
+    }
+
+    public function validate()
+    {
+        if (!v::string()->notEmpty()->validate($this->resolution))
+            throw new \InvalidArgumentException(__('Please provide a name'));
+
+        if (!v::int()->notEmpty()->min(1)->validate($this->width))
+            throw new \InvalidArgumentException(__('Please provide a width'));
+
+        if (!v::int()->notEmpty()->min(1)->validate($this->height))
+            throw new \InvalidArgumentException(__('Please provide a height'));
+
+        // Set the designer width and height
+        $factor = min (800 / $this->width, 800 / $this->height);
+
+        $this->designerWidth = round($this->width * $factor);
+        $this->designerHeight = round($this->height * $factor);
+    }
+
+    public function save($validate = true)
+    {
+        if ($validate)
+            $this->validate();
+
+        if ($this->resolutionId == null || $this->resolutionId == 0)
+            $this->add();
+        else
+            $this->edit();
+    }
+
+    public function delete()
+    {
+        PDOConnect::update('DELETE FROM resolution WHERE resolutionID = :resolutionId', ['resolutionId' => $this->resolutionId]);
+    }
+
+    private function add()
+    {
+        $this->resolutionId = PDOConnect::insert('
+          INSERT INTO `resolution` (resolution, width, height, intended_width, intended_height, version)
+            VALUES (:resolution, :width, :height, :intended_width, :intended_height, :version)
+        ', [
+            'resolution' => $this->resolution,
+            'width' => $this->designerWidth,
+            'height' => $this->designerHeight,
+            'intended_width' => $this->width,
+            'intended_height' => $this->height,
+            'version' => 2
+        ]);
+    }
+
+    private function edit()
+    {
+        PDOConnect::update('
+          UPDATE resolution SET resolution = :resolution,
+                width = :width,
+                height = :height,
+                intended_width = :intended_width,
+                intended_height = :intended_height,
+                enabled = :enabled
+           WHERE resolutionID = :resolutionId
+        ', [
+            'resolutionId' => $this->resolutionId,
+            'resolution' => $this->resolution,
+            'width' => $this->designerWidth,
+            'height' => $this->designerHeight,
+            'intended_width' => $this->width,
+            'intended_height' => $this->height,
+            'enabled' => $this->enabled
+        ]);
     }
 }

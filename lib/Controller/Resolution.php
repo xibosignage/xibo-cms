@@ -22,12 +22,12 @@ namespace Xibo\Controller;
 
 use baseDAO;
 use Kit;
-use Xibo\Helper\ApplicationState;
+use Xibo\Exception\AccessDeniedException;
+use Xibo\Factory\ResolutionFactory;
 use Xibo\Helper\Form;
 use Xibo\Helper\Help;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Session;
-use Xibo\Helper\Theme;
 
 
 class Resolution extends Base
@@ -37,7 +37,7 @@ class Resolution extends Base
      */
     function displayPage()
     {
-        if (\Kit::IsFilterPinned('resolution', 'ResolutionFilter')) {
+        if (Session::Get('resolution', 'Filter') == 1) {
             $pinned = 1;
             $enabled = Session::Get('resolution', 'filterEnabled');
         } else {
@@ -67,10 +67,16 @@ class Resolution extends Base
         $filterEnabled = Sanitize::getInt('filterEnabled');
         Session::Set('resolution', 'filterEnabled', $filterEnabled);
 
-        $resolutions = $this->getUser()->ResolutionList(array('resolution'), array('enabled' => $filterEnabled));
+        $filter = array('enabled' => $filterEnabled);
+        $resolutions = ResolutionFactory::query($this->gridRenderSort(), $this->gridRenderFilter($filter));
 
         foreach ($resolutions as $resolution) {
             /* @var \Xibo\Entity\Resolution $resolution */
+
+            if ($this->isApi())
+                break;
+
+            $resolution->includeProperty('buttons');
 
             // Edit Button
             $resolution->buttons[] = array(
@@ -94,160 +100,110 @@ class Resolution extends Base
     /**
      * Resolution Add
      */
-    function AddForm()
+    function addForm()
     {
-        $response = $this->getState();
-
-        Theme::Set('form_id', 'AddForm');
-        Theme::Set('form_action', 'index.php?p=resolution&q=Add');
-
-        $formFields = array();
-        $formFields[] = Form::AddText('resolution', __('Resolution'), NULL,
-            __('A name for this Resolution'), 'r', 'required');
-
-        $formFields[] = Form::AddNumber('width', __('Width'), NULL,
-            __('The Width for this Resolution'), 'w', 'required');
-
-        $formFields[] = Form::AddNumber('height', __('Height'), NULL,
-            __('The Height for this Resolution'), 'h', 'required');
-
-        Theme::Set('form_fields', $formFields);
-
-        $response->SetFormRequestResponse(NULL, __('Add Resolution'), '350px', '250px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Resolution', 'Add') . '")');
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Save'), '$("#AddForm").submit()');
-
+        $this->getState()->template = 'resolution-form-add';
+        $this->getState()->setData([
+            'help' => Help::Link('Resolution', 'Add')
+        ]);
     }
 
     /**
      * Resolution Edit Form
+     * @param int $resolutionId
      */
-    function EditForm()
+    function editForm($resolutionId)
     {
-        $response = $this->getState();
-
-        $resolution = \Xibo\Factory\ResolutionFactory::getById(Kit::GetParam('resolutionid', _GET, _INT));
+        $resolution = ResolutionFactory::getById($resolutionId);
 
         if (!$this->getUser()->checkEditable($resolution))
-            trigger_error(__('Access Denied'));
+            throw new AccessDeniedException();
 
-        $formFields = array();
-        $formFields[] = Form::AddText('resolution', __('Resolution'), $resolution->resolution,
-            __('A name for this Resolution'), 'r', 'required');
-
-        $formFields[] = Form::AddNumber('width', __('Width'), $resolution->width,
-            __('The Width for this Resolution'), 'w', 'required');
-
-        $formFields[] = Form::AddNumber('height', __('Height'), $resolution->height,
-            __('The Height for this Resolution'), 'h', 'required');
-
-        $formFields[] = Form::AddCheckbox('enabled', __('Enable?'), $resolution->enabled,
-            __('Is the Resolution enabled for use?'), 'e');
-
-        Theme::Set('form_fields', $formFields);
-
-        Theme::Set('form_id', 'ResolutionForm');
-        Theme::Set('form_action', 'index.php?p=resolution&q=Edit');
-        Theme::Set('form_meta', '<input type="hidden" name="resolutionid" value="' . $resolution->resolutionId . '" >');
-
-        $response->SetFormRequestResponse(NULL, __('Edit Resolution'), '350px', '250px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Resolution', 'Add') . '")');
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Save'), '$("#ResolutionForm").submit()');
-
+        $this->getState()->template = 'resolution-form-edit';
+        $this->getState()->setData([
+            'resolution' => $resolution,
+            'help' => Help::Link('Resolution', 'Edit')
+        ]);
     }
 
     /**
      * Resolution Delete Form
+     * @param int $resolutionId
      */
-    function DeleteForm()
+    function deleteForm($resolutionId)
     {
-        $response = $this->getState();
+        $resolution = ResolutionFactory::getById($resolutionId);
 
-        $resolution = \Xibo\Factory\ResolutionFactory::getById(Kit::GetParam('resolutionid', _GET, _INT));
+        if (!$this->getUser()->checkEditable($resolution))
+            throw new AccessDeniedException();
+
+        $this->getState()->template = 'resolution-form-delete';
+        $this->getState()->setData([
+            'resolution' => $resolution,
+            'help' => Help::Link('Resolution', 'Delete')
+        ]);
+    }
+
+    /**
+     * Add Resolution
+     */
+    function add()
+    {
+        $resolution = new \Xibo\Entity\Resolution();
+        $resolution->resolution = Sanitize::getString('resolution');
+        $resolution->width = Sanitize::getInt('width');
+        $resolution->height = Sanitize::getInt('height');
+        $resolution->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Added %s'), $resolution->resolution),
+            'id' => $resolution->resolutionId,
+            'data' => [$resolution]
+        ]);
+    }
+
+    /**
+     * Edit Resolution
+     * @param int $resolutionId
+     */
+    function edit($resolutionId)
+    {
+        $resolution = ResolutionFactory::getById($resolutionId);
+
+        if (!$this->getUser()->checkEditable($resolution))
+            throw new AccessDeniedException();
+
+        $resolution->resolution = Sanitize::getString('resolution');
+        $resolution->width = Sanitize::getInt('width');
+        $resolution->height = Sanitize::getInt('height');
+        $resolution->enabled = Sanitize::getCheckbox('enabled');
+        $resolution->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Edited %s'), $resolution->resolution),
+            'id' => $resolution->resolutionId,
+            'data' => [$resolution]
+        ]);
+    }
+
+    /**
+     * Delete Resolution
+     * @param int $resolutionId
+     */
+    function delete($resolutionId)
+    {
+        $resolution = ResolutionFactory::getById($resolutionId);
 
         if (!$this->getUser()->checkDeleteable($resolution))
-            trigger_error(__('Access Denied'));
+            throw new AccessDeniedException();
 
-        // Set some information about the form
-        Theme::Set('form_id', 'DeleteForm');
-        Theme::Set('form_action', 'index.php?p=resolution&q=Delete');
-        Theme::Set('form_meta', '<input type="hidden" name="resolutionid" value="' . $resolution->resolutionId . '" />');
-        Theme::Set('form_fields', array(Form::AddMessage(__('Are you sure you want to delete?'))));
+        $resolution->delete();
 
-        $response->SetFormRequestResponse(Theme::RenderReturn('form_render'), __('Delete Resolution'), '250px', '150px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Resolution', 'Delete') . '")');
-        $response->AddButton(__('No'), 'XiboDialogClose()');
-        $response->AddButton(__('Yes'), '$("#DeleteForm").submit()');
-
-    }
-
-    function Add()
-    {
-
-
-        $db =& $this->db;
-        $user =& $this->user;
-        $response = $this->getState();
-
-        $resolution = Sanitize::getString('resolution');
-        $width = Sanitize::getInt('width');
-        $height = Sanitize::getInt('height');
-
-        // Add the resolution
-        $resObject = new Resolution($db);
-
-        if (!$resObject->Add($resolution, $width, $height))
-            trigger_error($resObject->GetErrorMessage(), E_USER_ERROR);
-
-        $response->SetFormSubmitResponse('New resolution added');
-
-    }
-
-    function Edit()
-    {
-
-
-        $db =& $this->db;
-        $user =& $this->user;
-        $response = $this->getState();
-
-        $resolutionID = Sanitize::getInt('resolutionid');
-        $resolution = Sanitize::getString('resolution');
-        $width = Sanitize::getInt('width');
-        $height = Sanitize::getInt('height');
-        $enabled = Sanitize::getCheckbox('enabled');
-
-        // Edit the resolution
-        $resObject = new Resolution($db);
-
-        if (!$resObject->Edit($resolutionID, $resolution, $width, $height, $enabled))
-            trigger_error($resObject->GetErrorMessage(), E_USER_ERROR);
-
-        $response->SetFormSubmitResponse('Resolution edited');
-
-    }
-
-    function Delete()
-    {
-
-
-        $db =& $this->db;
-        $user =& $this->user;
-        $response = $this->getState();
-
-        $resolutionID = Sanitize::getInt('resolutionid');
-
-        // Remove the resolution
-        $resObject = new Resolution($db);
-
-        if (!$resObject->Delete($resolutionID))
-            trigger_error($resObject->GetErrorMessage(), E_USER_ERROR);
-
-        $response->SetFormSubmitResponse('Resolution deleted');
-
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Deleted %s'), $resolution->resolution),
+        ]);
     }
 }
-
-?>

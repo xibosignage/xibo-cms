@@ -60,6 +60,9 @@ $app->get('/template', '\Xibo\Controller\Template:grid')->name('template.search'
 // Resolutions
 //
 $app->get('/resolution', '\Xibo\Controller\Resolution:grid')->name('resolution.search');
+$app->post('/resolution', '\Xibo\Controller\Resolution:add')->name('resolution.add');
+$app->put('/resolution/:id', '\Xibo\Controller\Resolution:edit')->name('resolution.edit');
+$app->delete('/resolution/:id', '\Xibo\Controller\Resolution:delete')->name('resolution.delete');
 
 //
 // Library
