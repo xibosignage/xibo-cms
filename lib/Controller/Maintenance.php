@@ -1,28 +1,15 @@
 <?php
 /*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2012 Daniel Garner
- *
- * This file is part of Xibo.
- *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (Maintenance.php)
  */
-use Xibo\Helper\Config;
-use Xibo\Helper\Log;
 
 
-class Maintenance extends Data
+namespace Xibo\Controller;
+
+
+class Maintenance extends Base
 {
     /**
      * Backup the Database
@@ -33,7 +20,7 @@ class Maintenance extends Data
         // Check we can run mysql
         if (!function_exists('exec'))
             return $this->SetError(__('Exec is not available.'));
-        
+
         // Global database variables to seed into exec
         global $dbhost;
         global $dbuser;
@@ -48,7 +35,7 @@ class Maintenance extends Data
         // Run mysqldump structure to a temporary file
         $command = 'mysqldump --opt --host=' . $dbhost . ' --user=' . $dbuser . ' --password=' . addslashes($dbpass) . ' ' . $dbname . ' --no-data > ' . escapeshellarg($fileNameStructure) . ' ';
         exec($command);
-        
+
         // Run mysqldump data to a temporary file
         $command = 'mysqldump --opt --host=' . $dbhost . ' --user=' . $dbuser . ' --password=' . addslashes($dbpass) . ' ' . $dbname . ' --ignore-table=' . $dbname . '.log --ignore-table=' . $dbname . '.oauth_log  > ' . escapeshellarg($fileNameData) . ' ';
         exec($command);
@@ -80,7 +67,7 @@ class Maintenance extends Data
         $size = filesize($zipFile);
 
         header('Content-Type: application/octet-stream');
-        header("Content-Transfer-Encoding: Binary"); 
+        header("Content-Transfer-Encoding: Binary");
         header("Content-disposition: attachment; filename=\"" . basename($zipFile) . "\"");
 
         //Output a header
@@ -88,13 +75,13 @@ class Maintenance extends Data
         header('Cache-Control: max-age=86400');
         header('Expires: '. gmdate('D, d M Y H:i:s \G\M\T', time() + 86400));
         header('Content-Length: ' . $size);
-        
+
         // Send via Apache X-Sendfile header?
         if (Config::GetSetting('SENDFILE_MODE') == 'Apache') {
             header("X-Sendfile: $zipFile");
             exit();
         }
-        
+
         // Return the file with PHP
         // Disable any buffering to prevent OOM errors.
         @ob_end_clean();
@@ -114,7 +101,7 @@ class Maintenance extends Data
         global $dbuser;
         global $dbpass;
         global $dbname;
-        
+
         // Push the file into msqldump
         exec('mysql --user=' . $dbuser . ' --password=' . $dbpass . ' ' . $dbname . ' < ' . escapeshellarg($fileName) . ' ');
 
@@ -149,7 +136,7 @@ class Maintenance extends Data
         // Run a query to get an array containing all of the media in the library
         try {
             $dbh = \Xibo\Storage\PDOConnect::init();
-        
+
             $sth = $dbh->prepare('
                 SELECT media.mediaid, media.storedAs, media.type, media.isedited,
                     SUM(CASE WHEN IFNULL(lklayoutmedia.lklayoutmediaid, 0) = 0 THEN 0 ELSE 1 END) AS UsedInLayoutCount,
@@ -169,7 +156,7 @@ class Maintenance extends Data
                 // Ignore any module files or fonts
                 if ($row['type'] == 'module' || $row['type'] == 'font')
                     continue;
-                
+
                 // Collect media revisions that aren't used
                 if ($tidyOldRevisions && $row['UsedInLayoutCount'] <= 0 && $row['UsedInDisplayCount'] <= 0 && $row['isedited'] > 0) {
                     $unusedRevisions[$row['storedAs']] = $row;
@@ -181,12 +168,12 @@ class Maintenance extends Data
             }
         }
         catch (Exception $e) {
-            
+
             Log::error($e->getMessage());
-        
+
             if (!$this->IsError())
                 $this->SetError(1, __('Unknown Error'));
-        
+
             return false;
         }
 
@@ -205,12 +192,12 @@ class Maintenance extends Data
             // Ignore thumbnails
             if (strstr($file, 'tn_') || strstr($file, 'bg_'))
                 continue;
-            
+
             // Is this file in the system anywhere?
             if (!array_key_exists($file, $media)) {
                 // Totally missing
                 Log::debug('Deleting file: ' . $file);
-                
+
                 // If not, delete it
                 $mediaObject->DeleteMediaFile($file);
             }
