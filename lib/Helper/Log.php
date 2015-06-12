@@ -67,11 +67,13 @@ class Log
 
     public static function sql($sql, $params)
     {
-        Log::debug('SQL = %s. Params = %s.', $sql, var_export($params, true));
+        $app = Slim::getInstance();
+        $app->log->debug(sprintf('SQL = %s. Params = %s.', $sql, var_export($params, true)));
     }
 
     public static function debug($object)
     {
+        // Get the calling class / function
         $app = Slim::getInstance();
         $app->log->debug(Log::prepare($object, func_get_args()));
     }

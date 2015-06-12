@@ -14,7 +14,9 @@ class Log
     use EntityTrait;
 
     public $logId;
+    public $runNo;
     public $logDate;
+    public $channel;
     public $page;
     public $function;
     public $message;

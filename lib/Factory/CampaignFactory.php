@@ -74,13 +74,20 @@ class CampaignFactory
         $campaigns = array();
         $params = array();
 
-        $sql  = "SELECT campaign.CampaignID, Campaign, IsLayoutSpecific, COUNT(lkcampaignlayout.LayoutID) AS NumLayouts, MIN(layout.retired) AS Retired, `campaign`.userId ";
-        $sql .= "  FROM `campaign` ";
-        $sql .= "   LEFT OUTER JOIN `lkcampaignlayout` ";
-        $sql .= "   ON lkcampaignlayout.CampaignID = campaign.CampaignID ";
-        $sql .= "   LEFT OUTER JOIN `layout` ";
-        $sql .= "   ON lkcampaignlayout.LayoutID = layout.LayoutID ";
-        $sql .= " WHERE 1 = 1 ";
+        $sql  = '
+          SELECT `campaign`.campaignId, `campaign`.campaign, `campaign`.isLayoutSpecific, `campaign`.userId AS ownerId,
+              (
+                SELECT COUNT(*)
+                  FROM lkcampaignlayout
+                 WHERE lkcampaignlayout.campaignId = `campaign`.campaignId
+              ) AS numberLayouts
+            FROM `campaign`
+              LEFT OUTER JOIN `lkcampaignlayout`
+              ON lkcampaignlayout.CampaignID = campaign.CampaignID
+              LEFT OUTER JOIN `layout`
+              ON lkcampaignlayout.LayoutID = layout.LayoutID
+           WHERE 1 = 1
+        ';
 
         if (Sanitize::getString('isLayoutSpecific', 0, $filterBy) != -1) {
             // Exclude layout specific campaigns
@@ -128,25 +135,10 @@ class CampaignFactory
 
         Log::sql($sql, $params);
 
+        $intProperties = ['numberLayouts'];
+
         foreach (PDOConnect::select($sql, $params) as $row) {
-
-            $campaign = new Campaign();
-
-            // Validate each param and add it to the array.
-            $campaign->campaignId = Sanitize::int($row['CampaignID']);
-            $campaign->campaign = Sanitize::string($row['Campaign']);
-            $campaign->numberLayouts = Sanitize::int($row['NumLayouts']);
-            $campaign->isLayoutSpecific = (Sanitize::int($row['IsLayoutSpecific']) == 1);
-            $campaign->retired = Sanitize::int($row['Retired']);
-            $campaign->ownerId = Sanitize::int($row['userId']);
-
-            // Filter out campaigns that have all retired layouts
-            if (Sanitize::int('retired', -1, $filterBy) != -1) {
-                if ($row['Retired'] != Sanitize::int('retired', $filterBy))
-                    continue;
-            }
-
-            $campaigns[] = $campaign;
+            $campaigns[] = (new Campaign())->hydrate($row, $intProperties);
         }
 
         return $campaigns;

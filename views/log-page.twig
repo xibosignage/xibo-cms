@@ -53,11 +53,13 @@
                         <thead>
                             <tr>
                                 <th>{% trans "ID" %}</th>
+                                <th>{% trans "Run" %}</th>
                                 <th>{% trans "Date" %}</th>
+                                <th>{% trans "Channel" %}</th>
+                                <th>{% trans "Function" %}</th>
                                 <th>{% trans "Level" %}</th>
                                 <th>{% trans "Display" %}</th>
                                 <th>{% trans "Page" %}</th>
-                                <th>{% trans "Function" %}</th>
                                 <th>{% trans "Message" %}</th>
                             </tr>
                         </thead>
@@ -76,6 +78,7 @@
 
         var table = $("#logs").DataTable({
             serverSide: true,
+            filter: false,
             searchDelay: 3000,
             "order": [[ 0, "desc"]],
             ajax: {
@@ -86,11 +89,13 @@
             },
             "columns": [
                 { "data": "logId" },
+                { "data": "runNo" },
                 { "data": "logDate" },
+                { "data": "channel" },
+                { "data": "function" },
                 { "data": "type" },
                 { "data": "display" },
                 { "data": "page" },
-                { "data": "function" },
                 { "data": "message" }
             ]
         });

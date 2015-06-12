@@ -25,15 +25,22 @@ namespace Xibo\Helper;
 
 use Slim\Slim;
 
-class RouteProcessor
+class LogProcessor
 {
     public function __invoke(array $record)
     {
         $record['extra']['method'] = Slim::getInstance()->request->getMethod();
 
-        $route = Slim::getInstance()->router()->getCurrentRoute();
+        $app = Slim::getInstance();
+
+        $record['extra']['runNo'] = $app->runNo;
+
+        $route = $app->router()->getCurrentRoute();
         if ($route != null)
             $record['extra']['route'] = $route->getPattern();
+
+        if ($app->user != null)
+            $record['extra']['userId'] = $app->user->userId;
 
         return $record;
     }

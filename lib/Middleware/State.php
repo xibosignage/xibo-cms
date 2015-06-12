@@ -70,16 +70,12 @@ class State extends Middleware
         if (strtolower($this->app->getMode()) == 'test') {
             $this->app->config('debug', true);
             $this->app->config('log.level', \Slim\Log::DEBUG);
-            error_reporting(E_ALL);
-            ini_set('display_errors', 1);
         }
         else {
             // TODO: Use the log levels defined in the config
             $this->app->config('log.level', \Slim\Log::ERROR);
             error_reporting(0);
         }
-
-        $app = $this->app;
 
         // Attach a hook to log the route
         $this->app->hook('slim.before.dispatch', function() use ($app) {

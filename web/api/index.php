@@ -24,8 +24,8 @@ use Xibo\Helper\Config;
 DEFINE('XIBO', true);
 DEFINE('RELATIVE_URL_BASE', '../../');
 
-error_reporting(0);
-ini_set('display_errors', 0);
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
 require '../../lib/autoload.php';
 require '../../vendor/autoload.php';
@@ -37,18 +37,21 @@ Config::Load('../settings.php');
 
 // Create a logger
 $logger = new \Flynsarmy\SlimMonolog\Log\MonologWriter(array(
+    'name' => 'API',
     'handlers' => array(
         new \Xibo\Helper\DatabaseLogHandler()
     ),
     'processors' => array(
-        new \Xibo\Helper\RouteProcessor()
+        new \Xibo\Helper\LogProcessor()
     )
 ));
 
 $app = new \Slim\Slim(array(
+    'mode' => Config::GetSetting('SERVER_MODE'),
     'log.writer' => $logger
 ));
 $app->setName('api');
+$app->runNo = \Xibo\Helper\Random::generateString(10);
 $app->add(new \Xibo\Middleware\Storage());
 $app->add(new \Xibo\Middleware\State());
 

@@ -26,9 +26,10 @@ use Respect\Validation\Validator as v;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\ScheduleFactory;
+use Xibo\Helper\Log;
 use Xibo\Storage\PDOConnect;
 
-class Campaign
+class Campaign implements \JsonSerializable
 {
     use EntityTrait;
     public $campaignId;
@@ -37,13 +38,17 @@ class Campaign
     public $campaign;
 
     public $isLayoutSpecific = 0;
-    public $retired;
 
     public $numberLayouts;
 
     private $layouts = [];
     private $permissions = [];
     private $events = [];
+
+    public function __toString()
+    {
+        return sprintf('CampaignId %d, Campaign %s, LayoutSpecific %d', $this->campaignId, $this->campaign, $this->isLayoutSpecific);
+    }
 
     /**
      * Get the Id
@@ -145,9 +150,15 @@ class Campaign
      */
     public function unassignLayouts($layout)
     {
+        Log::debug('Unassigning Layout %s from Campaign %s', $layout, $this);
+
         $this->load();
 
         $this->layouts = array_udiff($this->layouts, [$layout], function ($a, $b) {
+            /**
+             * @var Layout $a
+             * @var Layout $b
+             */
             return $a->getId() - $b->getId();
         });
     }

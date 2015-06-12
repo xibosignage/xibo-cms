@@ -79,7 +79,10 @@ class Display
 
     public $displayGroups = [];
 
-    protected $jsonExclude = ['mediaInventoryXml'];
+    public function __construct()
+    {
+        $this->excludeProperty('mediaInventoryXml');
+    }
 
     public function getId()
     {

@@ -46,8 +46,10 @@ $app->get('/campaign', '\Xibo\Controller\Campaign:grid')->name('campaign.search'
 $app->post('/campaign', '\Xibo\Controller\Campaign:add')->name('campaign.add');
 $app->put('/campaign/:id', '\Xibo\Controller\Campaign:edit')->name('campaign.edit');
 $app->delete('/campaign/:id', '\Xibo\Controller\Campaign:delete')->name('campaign.delete');
-$app->post('/campaign/layout/:id', '\Xibo\Controller\Campaign:assignLayout')->name('campaign.assign.layout');
-$app->delete('/campaign/layout/:id', '\Xibo\Controller\Campaign:unassignLayout')->name('campaign.unassign.layout');
+
+// We use POST requests so that we can support multiple records
+$app->post('/campaign/layout/assign/:id', '\Xibo\Controller\Campaign:assignLayout')->name('campaign.assign.layout');
+$app->post('/campaign/layout/unassign/:id', '\Xibo\Controller\Campaign:unassignLayout')->name('campaign.unassign.layout');
 
 //
 // Template
@@ -86,10 +88,11 @@ $app->get('/displaygroup', '\Xibo\Controller\DisplayGroup:grid')->name('displayG
 $app->post('/displaygroup', '\Xibo\Controller\DisplayGroup:add')->name('displayGroup.add');
 $app->put('/displaygroup/:id', '\Xibo\Controller\DisplayGroup:edit')->name('displayGroup.edit');
 $app->post('/displaygroup/version/:id', '\Xibo\Controller\DisplayGroup:version')->name('displayGroup.version');
-$app->post('/displaygroup/display/:id', '\Xibo\Controller\DisplayGroup:assignDisplay')->name('displayGroup.assign.display');
-$app->delete('/displaygroup/display/:id', '\Xibo\Controller\DisplayGroup:unassignDisplay')->name('displayGroup.unassign.display');
-$app->post('/displaygroup/media/:id', '\Xibo\Controller\DisplayGroup:assignMedia')->name('displayGroup.assign.media');
-$app->delete('/displaygroup/media/:id', '\Xibo\Controller\DisplayGroup:unassignMedia')->name('displayGroup.unassign.media');
+
+$app->post('/displaygroup/display/assign/:id', '\Xibo\Controller\DisplayGroup:assignDisplay')->name('displayGroup.assign.display');
+$app->post('/displaygroup/display/unassign/:id', '\Xibo\Controller\DisplayGroup:unassignDisplay')->name('displayGroup.unassign.display');
+$app->post('/displaygroup/media/assign/:id', '\Xibo\Controller\DisplayGroup:assignMedia')->name('displayGroup.assign.media');
+$app->post('/displaygroup/media/unassign/:id', '\Xibo\Controller\DisplayGroup:unassignMedia')->name('displayGroup.unassign.media');
 
 //
 // Display Profile
@@ -134,7 +137,10 @@ $app->get('/group', '\Xibo\Controller\UserGroup:grid')->name('group.search');
 $app->post('/group', '\Xibo\Controller\UserGroup:add')->name('group.add');
 $app->put('/group/:id', '\Xibo\Controller\UserGroup:edit')->name('group.edit');
 $app->delete('/group/:id', '\Xibo\Controller\UserGroup:delete')->name('group.delete');
-$app->post('/group/members/:id', '\Xibo\Controller\UserGroup:members')->name('group.members');
+
+$app->post('/group/members/assign/:id', '\Xibo\Controller\UserGroup:assignUser')->name('group.members.assign');
+$app->post('/group/members/unassign/:id', '\Xibo\Controller\UserGroup:unassignUser')->name('group.members.unassign');
+
 $app->post('/group/acl/:entity/:id', '\Xibo\Controller\UserGroup:acl')->name('group.acl');
 
 //

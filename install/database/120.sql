@@ -80,6 +80,20 @@ UPDATE  `pages` SET  `name` =  'applications' WHERE  `pages`.`name` = 'oauth';
 UPDATE `user` SET homepage = IFNULL((SELECT pageId FROM `pages` WHERE pages.name = `user`.homepage), 1);
 ALTER TABLE  `user` CHANGE  `homepage`  `homePageId` INT NOT NULL DEFAULT  '1' COMMENT  'The users homepage';
 
+
+ALTER TABLE `log`
+  DROP `scheduleID`,
+  DROP `layoutID`,
+  DROP `mediaID`;
+
+ALTER TABLE `log`
+  DROP `RequestUri`,
+  DROP `RemoteAddr`,
+  DROP `UserAgent`;
+
+ALTER TABLE  `log` ADD  `channel` VARCHAR( 5 ) NOT NULL AFTER  `logdate`;
+ALTER TABLE  `log` ADD  `runNo` VARCHAR( 10 ) NOT NULL AFTER  `logid`
+
 UPDATE `version` SET `app_ver` = '1.8.0-alpha', `XmdsVersion` = 4, `XlfVersion` = 2;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';
 UPDATE `version` SET `DBVersion` = '120';

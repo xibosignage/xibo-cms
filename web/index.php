@@ -41,12 +41,13 @@ Config::Load('settings.php');
 
 // Create a logger
 $logger = new \Flynsarmy\SlimMonolog\Log\MonologWriter(array(
+    'name' => 'WEB',
     'handlers' => array(
-        new \Monolog\Handler\ChromePHPHandler(),
+        new \Monolog\Handler\ChromePHPHandler(\Monolog\Logger::INFO),
         new \Xibo\Helper\DatabaseLogHandler()
     ),
     'processors' => array(
-        new \Xibo\Helper\RouteProcessor()
+        new \Xibo\Helper\LogProcessor()
     )
 ));
 
@@ -56,6 +57,7 @@ $app = new \Slim\Slim(array(
     'log.writer' => $logger
 ));
 $app->setName('web');
+$app->runNo = \Xibo\Helper\Random::generateString(10);
 
 // Twig templating
 $twig = new \Slim\Views\Twig();

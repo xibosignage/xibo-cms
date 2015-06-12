@@ -39,7 +39,12 @@ class Campaign extends Base
      */
     public function grid()
     {
-        $campaigns = CampaignFactory::query();
+        $filter = [
+            'campaignId' => Sanitize::getInt('campaignId'),
+            'name' => Sanitize::getString('name'),
+        ];
+
+        $campaigns = CampaignFactory::query($this->gridRenderSort(), $this->gridRenderFilter($filter));
 
         foreach ($campaigns as $campaign) {
             /* @var \Xibo\Entity\Campaign $campaign */
@@ -47,6 +52,7 @@ class Campaign extends Base
             if ($this->isApi())
                 break;
 
+            $campaign->includeProperty('buttons');
             $campaign->buttons = [];
 
             // Schedule Now
@@ -234,6 +240,9 @@ class Campaign extends Base
 
         $layouts = Sanitize::getIntArray('layoutIds');
 
+        if (count($layouts) <= 0)
+            throw new \InvalidArgumentException(__('Layouts not provided'));
+
         // Check our permissions to see each one
         foreach ($layouts as $layoutId) {
 
@@ -245,6 +254,8 @@ class Campaign extends Base
             // Assign it
             $campaign->assignLayout($layout);
         }
+
+        $campaign->save(false);
 
         // Return
         $this->getState()->hydrate([
@@ -265,11 +276,16 @@ class Campaign extends Base
 
         $layouts = Sanitize::getIntArray('layoutIds');
 
+        if (count($layouts) <= 0)
+            throw new \InvalidArgumentException(__('Layouts not provided'));
+
         // Check our permissions to see each one
         foreach ($layouts as $layoutId) {
             // Assign it
             $campaign->unassignLayouts(LayoutFactory::getById($layoutId));
         }
+
+        $campaign->save(false);
 
         // Return
         $this->getState()->hydrate([
