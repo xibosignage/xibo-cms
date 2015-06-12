@@ -39,15 +39,13 @@ class Campaign extends Base
      */
     public function grid()
     {
-        $user = $this->getUser();
-
-        $campaigns = $user->CampaignList();
+        $campaigns = CampaignFactory::query();
 
         foreach ($campaigns as $campaign) {
             /* @var \Xibo\Entity\Campaign $campaign */
 
-            if ($campaign->isLayoutSpecific)
-                continue;
+            if ($this->isApi())
+                break;
 
             $campaign->buttons = [];
 

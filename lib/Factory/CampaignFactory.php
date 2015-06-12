@@ -82,6 +82,12 @@ class CampaignFactory
         $sql .= "   ON lkcampaignlayout.LayoutID = layout.LayoutID ";
         $sql .= " WHERE 1 = 1 ";
 
+        if (Sanitize::getString('isLayoutSpecific', 0, $filterBy) != -1) {
+            // Exclude layout specific campaigns
+            $sql .= " AND `campaign`.isLayoutSpecific = :isLayoutSpecific ";
+            $params['isLayoutSpecific'] = Sanitize::getString('isLayoutSpecific', 0, $filterBy);
+        }
+
         if (Sanitize::getString('campaignId', 0, $filterBy) != 0) {
             // Join Campaign back onto it again
             $sql .= " AND `campaign`.campaignId = :campaignId ";

@@ -1,14 +1,14 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2009 Daniel Garner
+ * Copyright (C) 2015 Spring Signage Ltd
  *
- * This file is part of Xibo.
+ * This file (UserFactory.php) is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,33 +18,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-use Xibo\Helper\Log;
 
-
-class Setting extends Data
-{
-	public function Edit($setting, $value)
-	{
-		try {
-		    $dbh = \Xibo\Storage\PDOConnect::init();
-		
-		    $sth = $dbh->prepare('UPDATE setting SET value = :value WHERE setting = :setting');
-		    $sth->execute(array(
-		            'setting' => $setting,
-		            'value' => $value
-		        ));
-			
-			return true;  
-		}
-		catch (Exception $e) {
-		    
-		    Log::error($e->getMessage());
-		
-		    if (!$this->IsError())
-		        $this->SetError(25000, __('Update of settings failed'));
-		
-		    return false;
-		}
-	}
-}
-?>
+require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/TestCase.php';

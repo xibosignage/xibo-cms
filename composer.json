@@ -6,6 +6,7 @@
     }
   ],
   "require": {
+    "php": ">=5.4",
     "slim/slim": "~2.6",
     "erusev/parsedown": "~1.5",
     "league/oauth2-server": "~4.1",
@@ -21,5 +22,8 @@
     "respect/validation": "0.9.*",
     "intervention/imagecache": "~2.3",
     "rmccue/requests": "^1.6"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "~4.0"
   }
 }

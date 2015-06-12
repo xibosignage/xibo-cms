@@ -44,6 +44,7 @@ trait EntityTrait
     {
         $exclude = (property_exists($this, 'jsonExclude')) ? $this->jsonExclude : [];
         $exclude[] = 'jsonExclude';
+        $exclude[] = 'buttons';
 
         $properties = ObjectVars::getObjectVars($this);
         $json = [];

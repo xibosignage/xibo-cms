@@ -22,7 +22,7 @@
 
 namespace Xibo\Entity;
 
-
+use Respect\Validation\Validator as v;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\ScheduleFactory;
@@ -81,8 +81,17 @@ class Campaign
         $this->loaded = true;
     }
 
-    public function save()
+    public function validate()
     {
+        if (!v::string()->notEmpty()->validate($this->campaign))
+            throw new \InvalidArgumentException(__('Name cannot be empty'));
+    }
+
+    public function save($validate = true)
+    {
+        if ($validate)
+            $this->validate();
+
         if ($this->campaignId == null || $this->campaignId == 0)
             $this->add();
         else

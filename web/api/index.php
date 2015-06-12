@@ -24,8 +24,8 @@ use Xibo\Helper\Config;
 DEFINE('XIBO', true);
 DEFINE('RELATIVE_URL_BASE', '../../');
 
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+error_reporting(0);
+ini_set('display_errors', 0);
 
 require '../../lib/autoload.php';
 require '../../vendor/autoload.php';
@@ -46,8 +46,6 @@ $logger = new \Flynsarmy\SlimMonolog\Log\MonologWriter(array(
 ));
 
 $app = new \Slim\Slim(array(
-    'debug' => true,
-    'mode' => Config::GetSetting('SERVER_MODE'),
     'log.writer' => $logger
 ));
 $app->setName('api');
@@ -69,8 +67,8 @@ $server = new \League\OAuth2\Server\ResourceServer(
 
 $app->add(new \Xibo\Middleware\ApiAuthenticationOAuth($server));*/
 
-$app->view(new JsonApiView());
 $app->add(new JsonApiMiddleware());
+$app->view(new JsonApiView());
 
 // The current user
 // this should be injected by the ApiAuthenticationOAuth middleware

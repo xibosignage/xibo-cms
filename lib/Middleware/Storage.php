@@ -48,7 +48,7 @@ class Storage extends Middleware
         }
         catch (\Exception $e) {
 
-            Log::debug('Storage rollback because of %s', $e->getMessage());
+            Log::debug('Storage rollback because: %s', $e->getMessage());
 
             if (PDOConnect::init()->inTransaction())
                 PDOConnect::init()->rollBack();
