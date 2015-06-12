@@ -11,6 +11,7 @@ namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
 use Xibo\Exception\NotFoundException;
+use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Storage\PDOConnect;
 
@@ -25,7 +26,7 @@ class UserGroup
     public $libraryQuota;
 
     // Users
-    private $userIds = [];
+    private $users = [];
 
     public function __toString()
     {
@@ -52,32 +53,44 @@ class UserGroup
 
     /**
      * Set the Owner of this Group
-     * @param int $userId
+     * @param User $user
      */
-    public function setOwner($userId)
+    public function setOwner($user)
     {
+        $this->load();
+
         $this->isUserSpecific = 1;
         $this->isEveryone = 0;
-        $this->assignUser($userId);
+        $this->assignUser($user);
     }
 
     /**
      * Assign User
-     * @param int $userId
+     * @param User $user
      */
-    public function assignUser($userId)
+    public function assignUser($user)
     {
-        if (!in_array($userId, $this->userIds))
-            $this->userIds[] = $userId;
+        $this->load();
+
+        if (!in_array($user, $this->users))
+            $this->users[] = $user;
     }
 
     /**
      * Unassign User
-     * @param int $userId
+     * @param User $user
      */
-    public function unassignUser($userId)
+    public function unassignUser($user)
     {
-        $this->userIds = array_diff($this->userIds, [$userId]);
+        $this->load();
+
+        $this->users = array_udiff($this->users, [$user], function($a, $b) {
+            /**
+             * @var User $a
+             * @var User $b
+             */
+            return $a->getId() - $b->getId();
+        });
     }
 
     /**
@@ -107,8 +120,11 @@ class UserGroup
      */
     public function load()
     {
-        //TODO
-        //$this->userIds = UserFactory::getByGroupId
+        if ($this->loaded)
+            return;
+
+        // Load all assigned users
+        $this->users = UserFactory::getByGroupId($this->groupId);
 
         // Set the hash
         $this->hash = $this->hash();
@@ -184,10 +200,11 @@ class UserGroup
     {
         $insert = PDOConnect::init()->prepare('INSERT INTO `lkusergroup` (groupId, userId) VALUES (:groupId, :userId) ON DUPLICATE KEY UPDATE groupId = groupId');
 
-        foreach ($this->userIds as $userId) {
+        foreach ($this->users as $user) {
+            /* @var User $user */
             $insert->execute([
                 'groupId' =>$this->groupId,
-                'userId' => $userId
+                'userId' => $user->userId
             ]);
         }
     }
@@ -197,18 +214,16 @@ class UserGroup
      */
     private function unlinkUsers()
     {
-        if (count($this->userIds) <= 0)
-            $this->userIds = [0];
-
         $params = ['groupId' => $this->groupId];
 
         $sql = 'DELETE FROM `lkusergroup` WHERE groupId = :groupId AND userId NOT IN (0';
 
         $i = 0;
-        foreach ($this->userIds as $userId) {
+        foreach ($this->users as $user) {
+            /* @var User $user */
             $i++;
             $sql .= ',:userId' . $i;
-            $params['userId' . $i] = $userId;
+            $params['userId' . $i] = $user->userId;
         }
 
         $sql .= ')';

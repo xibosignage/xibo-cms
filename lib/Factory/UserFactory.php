@@ -84,6 +84,16 @@ class UserFactory
     }
 
     /**
+     * Get by groupId
+     * @param int $groupId
+     * @return array[User]
+     */
+    public static function getByGroupId($groupId)
+    {
+        return UserFactory::query(null, array('groupIds' => [$groupId]));
+    }
+
+    /**
      * Query for users
      * @param array[mixed] $sortOrder
      * @param array[mixed] $filterBy

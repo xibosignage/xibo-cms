@@ -47,6 +47,8 @@ class DisplayGroup
      */
     public function setOwner($display)
     {
+        $this->load();
+
         $this->isDisplaySpecific = 1;
         $this->assignDisplay($display);
     }
