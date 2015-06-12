@@ -88,8 +88,10 @@ class Campaign
         else
             $this->update();
 
-        // Manage assignments
-        $this->manageAssignments();
+        if ($this->loaded) {
+            // Manage assignments
+            $this->manageAssignments();
+        }
     }
 
     public function delete()

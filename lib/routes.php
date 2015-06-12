@@ -46,8 +46,8 @@ $app->get('/campaign', '\Xibo\Controller\Campaign:grid')->name('campaign.search'
 $app->post('/campaign', '\Xibo\Controller\Campaign:add')->name('campaign.add');
 $app->put('/campaign/:id', '\Xibo\Controller\Campaign:edit')->name('campaign.edit');
 $app->delete('/campaign/:id', '\Xibo\Controller\Campaign:delete')->name('campaign.delete');
-$app->post('/campaign/assign/layout/:id', '\Xibo\Controller\Campaign:assignLayout')->name('campaign.assign.layout');
-$app->delete('/campaign/unassign/layout/:id', '\Xibo\Controller\Campaign:unassignLayout')->name('campaign.unassign.layout');
+$app->post('/campaign/layout/:id', '\Xibo\Controller\Campaign:assignLayout')->name('campaign.assign.layout');
+$app->delete('/campaign/layout/:id', '\Xibo\Controller\Campaign:unassignLayout')->name('campaign.unassign.layout');
 
 //
 // Template
@@ -85,9 +85,11 @@ $app->put('/display/requestscreenshot/:id', '\Xibo\Controller\Display:requestScr
 $app->get('/displaygroup', '\Xibo\Controller\DisplayGroup:grid')->name('displayGroup.search');
 $app->post('/displaygroup', '\Xibo\Controller\DisplayGroup:add')->name('displayGroup.add');
 $app->put('/displaygroup/:id', '\Xibo\Controller\DisplayGroup:edit')->name('displayGroup.edit');
-$app->post('/displaygroup/members/:id', '\Xibo\Controller\DisplayGroup:members')->name('displayGroup.members');
 $app->post('/displaygroup/version/:id', '\Xibo\Controller\DisplayGroup:version')->name('displayGroup.version');
-$app->post('/displaygroup/media/:id', '\Xibo\Controller\DisplayGroup:media')->name('displayGroup.media');
+$app->post('/displaygroup/display/:id', '\Xibo\Controller\DisplayGroup:assignDisplay')->name('displayGroup.assign.display');
+$app->delete('/displaygroup/display/:id', '\Xibo\Controller\DisplayGroup:unassignDisplay')->name('displayGroup.unassign.display');
+$app->post('/displaygroup/media/:id', '\Xibo\Controller\DisplayGroup:assignMedia')->name('displayGroup.assign.media');
+$app->delete('/displaygroup/media/:id', '\Xibo\Controller\DisplayGroup:unassignMedia')->name('displayGroup.unassign.media');
 
 //
 // Display Profile

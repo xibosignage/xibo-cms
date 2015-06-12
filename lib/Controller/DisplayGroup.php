@@ -281,57 +281,55 @@ class DisplayGroup extends Base
      * Sets the Members of a group
      * @param int $displayGroupId
      */
-    public function members($displayGroupId)
+    public function assignDisplay($displayGroupId)
     {
         $displayGroup = DisplayGroupFactory::getById($displayGroupId);
 
         if (!$this->getUser()->checkEditable($displayGroup))
             throw new AccessDeniedException();
 
-        // Load the groups details
-        $displayGroup->load();
-
         $displays = Sanitize::getIntArray('displayId');
 
-        // All users that this session has access to
-        $allDisplays = DisplayFactory::query();
-
-        // Convert to an array of ID's for convenience
-        $allDisplayIds = array_map(function ($display) {
-            return $display->displayId;
-        }, $allDisplays);
-
-        // Users in group
-        $displaysAssigned = DisplayFactory::getByDisplayGroupId($displayGroupId);
-
-        foreach ($displaysAssigned as $row) {
-            /* @var Display $row */
-            // Did this session have permission to do anything to this user?
-            // If not, move on
-            if (!in_array($row->displayId, $allDisplayIds))
-                continue;
-
-            // Is this user in the provided list of users?
-            if (in_array($row->displayId, $displays)) {
-                // This user is already assigned, so we remove it from the $users array
-                unset($displays[$row->displayId]);
-            } else {
-                // It isn't therefore needs to be removed
-                $displayGroup->unassignDisplay($row->displayId);
-            }
-        }
-
-        // Add any users that are still missing after tha assignment process
         foreach ($displays as $displayId) {
-            // Add any that are missing
-            $displayGroup->assignDisplay($displayId);
+            $display = DisplayFactory::getById($displayId);
+
+            if (!$this->getUser()->checkViewable($displayId))
+                throw new AccessDeniedException(__('Access Denied to Display'));
+
+            $displayGroup->assignDisplay($display);
         }
 
         $displayGroup->save(false);
 
         // Return
         $this->getState()->hydrate([
-            'message' => sprintf(__('Membership set for %s'), $displayGroup->displayGroup),
+            'message' => sprintf(__('Displays assigned to %s'), $displayGroup->displayGroup),
+            'id' => $displayGroup->displayGroupId
+        ]);
+    }
+
+    /**
+     * Unassign displays from a Display Group
+     * @param int $displayGroupId
+     */
+    public function unassignDisplay($displayGroupId)
+    {
+        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
+
+        if (!$this->getUser()->checkEditable($displayGroup))
+            throw new AccessDeniedException();
+
+        $displays = Sanitize::getIntArray('displayId');
+
+        foreach ($displays as $displayId) {
+            $displayGroup->unassignDisplay(DisplayFactory::getById($displayId));
+        }
+
+        $displayGroup->save(false);
+
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Displays unassigned from %s'), $displayGroup->displayGroup),
             'id' => $displayGroup->displayGroupId
         ]);
     }
@@ -363,7 +361,7 @@ class DisplayGroup extends Base
      * Assign Media
      * @param int $displayGroupId
      */
-    public function media($displayGroupId)
+    public function assignMedia($displayGroupId)
     {
         $displayGroup = DisplayGroupFactory::getById($displayGroupId);
 
@@ -383,7 +381,7 @@ class DisplayGroup extends Base
             if (!$this->getUser()->checkViewable($media))
                 throw new AccessDeniedException(__('You have selected media that you no longer have permission to use. Please reload the form.'));
 
-            $displayGroup->assignMedia($mediaId);
+            $displayGroup->assignMedia($media);
         }
 
         $displayGroup->save(false);
@@ -391,6 +389,37 @@ class DisplayGroup extends Base
         // Return
         $this->getState()->hydrate([
             'message' => sprintf(__('Files assigned to %s'), $displayGroup->displayGroup),
+            'id' => $displayGroup->displayGroupId
+        ]);
+    }
+
+    /**
+     * Unassign Media
+     * @param int $displayGroupId
+     */
+    public function unassignMedia($displayGroupId)
+    {
+        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
+
+        if (!$this->getUser()->checkEditable($displayGroup))
+            throw new AccessDeniedException();
+
+        // Load the groups details
+        $displayGroup->load();
+
+        $mediaIds = Sanitize::getIntArray('mediaIds');
+
+        // Loop through all the media
+        foreach ($mediaIds as $mediaId) {
+
+            $displayGroup->unassignMedia(MediaFactory::getById($mediaId));
+        }
+
+        $displayGroup->save(false);
+
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Files unassigned from %s'), $displayGroup->displayGroup),
             'id' => $displayGroup->displayGroupId
         ]);
     }

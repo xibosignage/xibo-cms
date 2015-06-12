@@ -26,10 +26,8 @@ class DisplayGroup
     public $isDisplaySpecific = 0;
 
     // Child Items the Display Group is linked to
-    private $displayIds = [];
-    private $mediaIds = [];
-
-    // Child Items the Display Group is linked from
+    private $displays = [];
+    private $media = [];
     private $permissions = [];
     private $events = [];
 
@@ -45,12 +43,12 @@ class DisplayGroup
 
     /**
      * Set the Owner of this Group
-     * @param int $displayId
+     * @param Display $display
      */
-    public function setOwner($displayId)
+    public function setOwner($display)
     {
         $this->isDisplaySpecific = 1;
-        $this->assignDisplay($displayId);
+        $this->assignDisplay($display);
     }
 
     /**
@@ -67,40 +65,60 @@ class DisplayGroup
 
     /**
      * Assign Display
-     * @param int $displayId
+     * @param Display $display
      */
-    public function assignDisplay($displayId)
+    public function assignDisplay($display)
     {
-        if (!in_array($displayId, $this->displayIds))
-            $this->displayIds[] = $displayId;
+        $this->load();
+
+        if (!in_array($display, $this->displays))
+            $this->displays[] = $display;
     }
 
     /**
      * Unassign Display
-     * @param int $displayId
+     * @param Display $display
      */
-    public function unassignDisplay($displayId)
+    public function unassignDisplay($display)
     {
-        $this->displayIds = array_diff($this->displayIds, [$displayId]);
+        $this->load();
+
+        $this->displays = array_udiff($this->displays, [$display], function($a, $b) {
+            /**
+             * @var Display $a
+             * @var Display $b
+             */
+            return $a->getId() - $b->getId();
+        });
     }
 
     /**
      * Assign Media
-     * @param int $mediaId
+     * @param Media $media
      */
-    public function assignMedia($mediaId)
+    public function assignMedia($media)
     {
-        if (!in_array($mediaId, $this->mediaIds))
-            $this->mediaIds[] = $mediaId;
+        $this->load();
+
+        if (!in_array($media, $this->media))
+            $this->media[] = $media;
     }
 
     /**
      * Unassign Media
-     * @param int $mediaId
+     * @param Media $media
      */
-    public function unassignMedia($mediaId)
+    public function unassignMedia($media)
     {
-        $this->mediaIds = array_diff($this->mediaIds, [$mediaId]);
+        $this->load();
+
+        $this->media = array_udiff($this->media, [$media], function($a, $b) {
+            /**
+             * @var Media $a
+             * @var Media $b
+             */
+            return $a->getId() - $b->getId();
+        });
     }
 
     /**
@@ -108,17 +126,14 @@ class DisplayGroup
      */
     public function load()
     {
+        if ($this->loaded)
+            return;
+
         $this->permissions = PermissionFactory::getByObjectId('displaygroup', $this->displayGroupId);
 
-        foreach (DisplayFactory::getByDisplayGroupId($this->displayGroupId) as $display) {
-            /* @var Display $display */
-            $this->displayIds[] = $display->displayId;
-        }
+        $this->displays = DisplayFactory::getByDisplayGroupId($this->displayGroupId);
 
-        foreach (MediaFactory::getByDisplayGroupId($this->displayGroupId) as $media) {
-            /* @var Media $media */
-            $this->mediaIds[] = $media->mediaId;
-        }
+        $this->media = MediaFactory::getByDisplayGroupId($this->displayGroupId);
 
         $this->events = ScheduleFactory::getByDisplayGroupId($this->displayGroupId);
     }
@@ -162,13 +177,15 @@ class DisplayGroup
 
         Log::debug('Manage links to Display Group');
 
-        // Handle any changes in the displays linked
-        $this->linkDisplays();
-        $this->unlinkDisplays();
+        if ($this->loaded) {
+            // Handle any changes in the displays linked
+            $this->linkDisplays();
+            $this->unlinkDisplays();
 
-        // Handle any changes in the media linked
-        $this->linkMedia();
-        $this->unlinkMedia();
+            // Handle any changes in the media linked
+            $this->linkMedia();
+            $this->unlinkMedia();
+        }
     }
 
     /**
@@ -229,10 +246,11 @@ class DisplayGroup
 
     private function linkDisplays()
     {
-        foreach ($this->displayIds as $displayId) {
+        foreach ($this->displays as $display) {
+            /* @var Display $display */
             PDOConnect::update('INSERT INTO lkdisplaydg (DisplayGroupID, DisplayID) VALUES (:displayGroupId, :displayId) ON DUPLICATE KEY UPDATE DisplayID = DisplayID', [
                 'displayGroupId' => $this->displayGroupId,
-                'displayId' => $displayId
+                'displayId' => $display->displayId
             ]);
         }
     }
@@ -240,18 +258,16 @@ class DisplayGroup
     private function unlinkDisplays()
     {
         // Unlink any displays that are NOT in the collection
-        if (count($this->displayIds) <= 0)
-            $this->displayIds = [0];
-
         $params = ['displayGroupId' => $this->displayGroupId];
 
         $sql = 'DELETE FROM lkdisplaydg WHERE DisplayGroupID = :displayGroupId AND DisplayID NOT IN (0';
 
         $i = 0;
-        foreach ($this->displayIds as $displayId) {
+        foreach ($this->displays as $display) {
+            /* @var Display $display */
             $i++;
             $sql .= ',:displayId' . $i;
-            $params['displayId' . $i] = $displayId;
+            $params['displayId' . $i] = $display->displayId;
         }
 
         $sql .= ')';
@@ -261,10 +277,11 @@ class DisplayGroup
 
     private function linkMedia()
     {
-        foreach ($this->mediaIds as $mediaId) {
+        foreach ($this->media as $media) {
+            /* @var Media $media */
             PDOConnect::update('INSERT INTO `lkmediadisplaygroup` (mediaid, displaygroupid) VALUES (:mediaId, :displayGroupId) ON DUPLICATE KEY UPDATE mediaid = mediaid', [
                 'displayGroupId' => $this->displayGroupId,
-                'mediaId' => $mediaId
+                'mediaId' => $media->mediaId
             ]);
         }
     }
@@ -272,18 +289,16 @@ class DisplayGroup
     private function unlinkMedia()
     {
         // Unlink any media that is NOT in the collection
-        if (count($this->mediaIds) <= 0)
-            $this->mediaIds = [0];
-
         $params = ['displayGroupId' => $this->displayGroupId];
 
         $sql = 'DELETE FROM lkmediadisplaygroup WHERE DisplayGroupID = :displayGroupId AND mediaId NOT IN (0';
 
         $i = 0;
-        foreach ($this->mediaIds as $mediaId) {
+        foreach ($this->media as $media) {
+            /* @var Media $media */
             $i++;
             $sql .= ',:mediaId' . $i;
-            $params['mediaId' . $i] = $mediaId;
+            $params['mediaId' . $i] = $media->mediaId;
         }
 
         $sql .= ')';
