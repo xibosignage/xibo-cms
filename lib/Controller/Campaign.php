@@ -23,11 +23,8 @@ namespace Xibo\Controller;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\LayoutFactory;
-use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Help;
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
-use Xibo\Helper\Theme;
 
 
 class Campaign extends Base
@@ -227,153 +224,58 @@ class Campaign extends Base
     }
 
     /**
-     * Sets the Members of a group
+     * Assigns a layout to a Campaign
+     * @param int $campaignId
      */
-    public function SetMembers()
+    public function assignLayout($campaignId)
     {
-        // Check the token
-        if (!Kit::CheckToken('assign_token'))
-            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
+        $campaign = CampaignFactory::getById($campaignId);
 
-        $response = $this->getState();
-
-        $campaignObject = new Campaign();
-
-        $campaign = \Xibo\Factory\CampaignFactory::getById(Kit::GetParam('CampaignID', _REQUEST, _INT));
-        $layouts = \Kit::GetParam('LayoutID', _POST, _ARRAY, array());
-
-        // Authenticate this user
         if (!$this->getUser()->checkEditable($campaign))
-            trigger_error(__('You do not have permission to edit this campaign'), E_USER_ERROR);
+            throw new AccessDeniedException();
 
-        // Get all current members
-        $currentMembers = \Xibo\Factory\LayoutFactory::query(null, array('campaignId' => $campaign->campaignId));
+        $layouts = Sanitize::getIntArray('layoutIds');
 
-        // Flatten
-        $currentLayouts = array_map(function ($element) {
-            return $element->layoutId;
-        }, $currentMembers);
-
-        // Work out which ones are NEW
-        $newLayouts = array_diff($currentLayouts, $layouts);
-
-        // Check permissions to all new layouts that have been selected
-        foreach ($newLayouts as $layoutId) {
-            // Authenticate
-            if (!$this->getUser()->checkViewable(\Xibo\Factory\LayoutFactory::getById($layoutId)))
-                trigger_error(__('Your permissions to view a layout you are adding have been revoked. Please reload the Layouts form.'), E_USER_ERROR);
-        }
-
-        // Remove all current members
-        $campaignObject->UnlinkAll($campaign->campaignId);
-
-        // Add all new members
-        $displayOrder = 1;
-
+        // Check our permissions to see each one
         foreach ($layouts as $layoutId) {
-            // By this point everything should be authenticated
-            $campaignObject->Link($campaign->campaignId, $layoutId, $displayOrder);
-            $displayOrder++;
+
+            $layout = LayoutFactory::getById($layoutId);
+
+            if (!$this->getUser()->checkViewable($layout))
+                throw new AccessDeniedException(__('You do not have permission to assign the provided Layout'));
+
+            // Assign it
+            $campaign->assignLayout($layout);
         }
 
-        $response->SetFormSubmitResponse(__('Layouts Added to Campaign'), false);
-
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Assigned Layouts to %s'), $campaign->campaign)
+        ]);
     }
 
     /**
-     * Displays the Library Assign form
+     * Unassign a layout to a Campaign
+     * @param int $campaignId
      */
-    function LayoutAssignForm()
+    public function unassignLayout($campaignId)
     {
-        $response = $this->getState();
+        $campaign = CampaignFactory::getById($campaignId);
 
-        $campaign = \Xibo\Factory\CampaignFactory::getById(Kit::GetParam('CampaignID', _GET, _INT));
+        if (!$this->getUser()->checkEditable($campaign))
+            throw new AccessDeniedException();
 
-        $id = uniqid();
-        Theme::Set('id', $id);
-        Theme::Set('form_meta', '<input type="hidden" name="p" value="campaign"><input type="hidden" name="q" value="LayoutAssignView">');
-        Theme::Set('pager', ApplicationState::Pager($id, 'grid_pager'));
+        $layouts = Sanitize::getIntArray('layoutIds');
 
-        // Get the currently assigned layouts and put them in the "well"
-        $layoutsAssigned = \Xibo\Factory\LayoutFactory::query(array('lkcl.DisplayOrder'), array('campaignId' => $campaign->campaignId));
-
-        Log::notice(count($layoutsAssigned) . ' layouts assigned already');
-
-        $formFields = array();
-        $formFields[] = Form::AddText('filter_name', __('Name'), NULL, NULL, 'l');
-        $formFields[] = Form::AddText('filter_tags', __('Tags'), NULL, NULL, 't');
-        Theme::Set('form_fields', $formFields);
-
-        // Set the layouts assigned
-        Theme::Set('layouts_assigned', $layoutsAssigned);
-        Theme::Set('append', Theme::RenderReturn('campaign_form_layout_assign'));
-
-        // Call to render the template
-        Theme::Set('header_text', __('Choose Layouts'));
-        $output = Theme::RenderReturn('grid_render');
-
-        // Construct the Response
-        $response->html = $output;
-        $response->success = true;
-        $response->dialogSize = true;
-        $response->dialogWidth = '780px';
-        $response->dialogHeight = '580px';
-        $response->dialogTitle = __('Layouts on Campaign');
-
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Campaign', 'Layouts') . '")');
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Save'), 'LayoutsSubmit("' . $campaign->campaignId . '")');
-
-
-    }
-
-    /**
-     * Show the library
-     */
-    function LayoutAssignView()
-    {
-        $response = $this->getState();
-
-        // Input vars
-        $name = \Xibo\Helper\Sanitize::getString('filter_name');
-        $tags = \Xibo\Helper\Sanitize::getString('filter_tags');
-
-        // Get a list of media
-        $layoutList = $this->getUser()->LayoutList(NULL, array('layout' => $name, 'tags' => $tags));
-
-        $cols = array(
-            array('name' => 'layout', 'title' => __('Name'))
-        );
-        Theme::Set('table_cols', $cols);
-
-        $rows = array();
-
-        // Add some extra information
-        foreach ($layoutList as $layout) {
-            /* @var \Xibo\Entity\Layout $layout */
-
-            $row = array();
-            $row['layoutid'] = $layout->layoutId;
-            $row['layout'] = $layout->layout;
-
-            $row['list_id'] = 'LayoutID_' . $row['layoutid'];
-            $row['assign_icons'][] = array(
-                'assign_icons_class' => 'layout_assign_list_select'
-            );
-            $row['dataAttributes'] = array(
-                array('name' => 'rowid', 'value' => $row['list_id']),
-                array('name' => 'litext', 'value' => $row['layout'])
-            );
-
-            $rows[] = $row;
+        // Check our permissions to see each one
+        foreach ($layouts as $layoutId) {
+            // Assign it
+            $campaign->unassignLayouts(LayoutFactory::getById($layoutId));
         }
 
-        Theme::Set('table_rows', $rows);
-
-        // Render the Theme
-        $response->SetGridResponse(Theme::RenderReturn('table_render'));
-        $response->callBack = 'LayoutAssignCallback';
-        $response->pageSize = 5;
-
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Unassigned Layouts from %s'), $campaign->campaign)
+        ]);
     }
 }

@@ -14,6 +14,7 @@ use Xibo\Helper\ObjectVars;
 trait EntityTrait
 {
     private $hash = null;
+    private $loaded = false;
     private $deleting = false;
     public $buttons = [];
 

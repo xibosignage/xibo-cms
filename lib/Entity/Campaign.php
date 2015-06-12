@@ -41,7 +41,7 @@ class Campaign
 
     public $numberLayouts;
 
-    public $layoutIds = [];
+    private $layouts = [];
     private $permissions = [];
     private $events = [];
 
@@ -65,16 +65,20 @@ class Campaign
 
     public function load()
     {
+        // If we are already loaded, then don't do it again
+        if ($this->loaded)
+            return;
+
+        // Permissions
         $this->permissions = PermissionFactory::getByObjectId('Campaign', $this->campaignId);
 
         // Layouts
-        foreach (LayoutFactory::getByCampaignId($this->campaignId) as $layout) {
-            /* @var Layout $layout */
-            $this->layoutIds[] = $layout->layoutId;
-        }
+        $this->layouts = LayoutFactory::getByCampaignId($this->campaignId);
 
         // Events
         $this->events = ScheduleFactory::getByCampaignId($this->campaignId);
+
+        $this->loaded = true;
     }
 
     public function save()
@@ -84,48 +88,57 @@ class Campaign
         else
             $this->update();
 
-        $this->linkLayouts();
+        // Manage assignments
+        $this->manageAssignments();
     }
 
     public function delete()
     {
         $this->load();
 
-        // Remove all layouts
-        $this->layoutIds = [];
+        // Unassign all Layouts
+        $this->layouts = [];
         $this->unlinkLayouts();
 
-        // Delete things this group can own
+        // Delete all permissions
         foreach ($this->permissions as $permission) {
             /* @var Permission $permission */
             $permission->delete();
         }
 
+        // Delete all events
         foreach ($this->events as $event) {
             /* @var Schedule $event */
             $event->delete();
         }
 
+        // Delete the Actual Campaign
         PDOConnect::update('DELETE FROM `campaign` WHERE CampaignID = :campaignId', ['campaignId' => $this->campaignId]);
     }
 
     /**
      * Assign Layout
-     * @param int $layoutId
+     * @param Layout $layout
      */
-    public function assignLayout($layoutId)
+    public function assignLayout($layout)
     {
-        if (!in_array($layoutId, $this->layoutIds))
-            $this->layoutIds[] = $layoutId;
+        $this->load();
+
+        if (!in_array($layout, $this->layouts))
+            $this->layouts[] = $layout;
     }
 
     /**
      * Unassign Layout
-     * @param int $layoutId
+     * @param Layout $layout
      */
-    public function unassignLayouts($layoutId)
+    public function unassignLayouts($layout)
     {
-        unset($this->layoutIds[$layoutId]);
+        $this->load();
+
+        $this->layouts = array_udiff($this->layouts, [$layout], function ($a, $b) {
+            return $a->getId() - $b->getId();
+        });
     }
 
     private function add()
@@ -146,6 +159,15 @@ class Campaign
     }
 
     /**
+     * Manage the assignments
+     */
+    private function manageAssignments()
+    {
+        $this->linkLayouts();
+        $this->unlinkLayouts();
+    }
+
+    /**
      * Link Layout
      */
     private function linkLayouts()
@@ -154,14 +176,14 @@ class Campaign
         $sql = 'INSERT INTO `lkcampaignlayout` (CampaignID, LayoutID, DisplayOrder) VALUES (:campaignId, :layoutId, :displayOrder) ON DUPLICATE KEY UPDATE layoutId = :layoutId2';
 
         $i = 0;
-        foreach ($this->layoutIds as $layoutId) {
+        foreach ($this->layouts as $layout) {
             $i++;
 
             PDOConnect::insert($sql, array(
                 'campaignId' => $this->campaignId,
                 'displayOrder' => $i,
-                'layoutId' => $layoutId,
-                'layoutId2' => $layoutId
+                'layoutId' => $layout->layoutId,
+                'layoutId2' => $layout->layoutId
             ));
         }
     }
@@ -172,18 +194,15 @@ class Campaign
     private function unlinkLayouts()
     {
         // Unlink any layouts that are NOT in the collection
-        if (count($this->layoutIds) <= 0)
-            $this->layoutIds = [0];
-
         $params = ['campaignId' => $this->campaignId];
 
         $sql = 'DELETE FROM `lkcampaignlayout` WHERE campaignId = :campaignId AND layoutId NOT IN (0';
 
         $i = 0;
-        foreach ($this->layoutIds as $layoutId) {
+        foreach ($this->layouts as $layout) {
             $i++;
             $sql .= ',:layoutId' . $i;
-            $params['layoutId' . $i] = $layoutId;
+            $params['layoutId' . $i] = $layout->layoutId;
         }
 
         $sql .= ')';

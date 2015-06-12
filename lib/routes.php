@@ -46,6 +46,8 @@ $app->get('/campaign', '\Xibo\Controller\Campaign:grid')->name('campaign.search'
 $app->post('/campaign', '\Xibo\Controller\Campaign:add')->name('campaign.add');
 $app->put('/campaign/:id', '\Xibo\Controller\Campaign:edit')->name('campaign.edit');
 $app->delete('/campaign/:id', '\Xibo\Controller\Campaign:delete')->name('campaign.delete');
+$app->post('/campaign/assign/layout/:id', '\Xibo\Controller\Campaign:assignLayout')->name('campaign.assign.layout');
+$app->delete('/campaign/unassign/layout/:id', '\Xibo\Controller\Campaign:unassignLayout')->name('campaign.unassign.layout');
 
 //
 // Template
