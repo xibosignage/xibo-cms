@@ -74,6 +74,8 @@ class ResolutionFactory
               `resolution`.resolution,
               `resolution`.intended_width AS width,
               `resolution`.intended_height AS height,
+              `resolution`.width AS designerWidth,
+              `resolution`.height AS designerHeight,
               `resolution`.version,
               `resolution`.enabled
             FROM `resolution`
@@ -107,7 +109,7 @@ class ResolutionFactory
         Log::sql($sql, $params);
 
         foreach(PDOConnect::select($sql, $params) as $record) {
-            $entities[] = (new Resolution())->hydrate($record);
+            $entities[] = (new Resolution())->hydrate($record, ['width', 'height', 'version', 'enabled']);
         }
 
         return $entities;

@@ -64,10 +64,10 @@ class Resolution extends Base
         Session::Set('resolution', 'ResolutionFilter', Sanitize::getCheckbox('XiboFilterPinned'));
 
         // Show enabled
-        $filterEnabled = Sanitize::getInt('filterEnabled');
-        Session::Set('resolution', 'filterEnabled', $filterEnabled);
+        $filter = [
+            'enabled' => Session::Set('resolution', 'filterEnabled', Sanitize::getInt('filterEnabled', -1))
+        ];
 
-        $filter = array('enabled' => $filterEnabled);
         $resolutions = ResolutionFactory::query($this->gridRenderSort(), $this->gridRenderFilter($filter));
 
         foreach ($resolutions as $resolution) {

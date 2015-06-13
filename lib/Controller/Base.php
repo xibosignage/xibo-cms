@@ -298,7 +298,10 @@ class Base
     {
         $app = $this->getApp();
 
-        $columns = $app->request()->get('columns', array());
+        $columns = $app->request()->get('columns');
+
+        if ($columns == null || !is_array($columns))
+            return null;
 
         $order = array_map(function ($element) use ($columns) {
             return (($columns[$element['column']]['name'] != '') ? '`' . $columns[$element['column']]['name'] . '`' : '`' . $columns[$element['column']]['data']) . '`' . (($element['dir'] == 'desc') ? ' DESC' : '');

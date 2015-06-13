@@ -1,4 +1,31 @@
 {
+  "name": "xibosignage/xibo-cms",
+  "description": "Xibo Open Source Digital Signage",
+  "keywords": [
+    "xibo",
+    "digital signage",
+    "spring signage"
+  ],
+  "homepage": "http://xibo.org.uk",
+  "license": "AGPLv3 or later",
+  "authors": [
+    {
+      "name": "Daniel Garner",
+      "homepage": "https://github.com/dasgarner"
+    },
+    {
+      "name": "Alexander Harrington",
+      "homepage": "https://github.com/alexharrington"
+    },
+    {
+      "name": "Spring Signage Ltd",
+      "homepage": "http://springsignage.com"
+    },
+    {
+      "name": "Xibo Contributors",
+      "homepage": "https://github.com/xibosignage/xibo/tree/master/contributors"
+    }
+  ],
   "repositories": [
     {
       "type": "vcs",
@@ -25,5 +52,8 @@
   },
   "require-dev": {
     "phpunit/phpunit": "~4.0"
+  },
+  "autoload": {
+    "psr-4": { "Xibo\\" : "lib/" }
   }
 }
