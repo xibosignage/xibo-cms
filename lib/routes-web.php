@@ -104,6 +104,7 @@ $app->get('/update', '\Xibo\Controller\Upgrade:displayPage')->name('upgrade.view
 $app->get('/schedule/view', '\Xibo\Controller\Schedule:displayPage')->name('schedule.view');
 $app->get('/schedule/form/now/:from/:id', '\Xibo\Controller\Schedule:scheduleNowForm')->name('schedule.now.form');
 $app->get('/schedule/form/add', '\Xibo\Controller\Schedule:addForm')->name('schedule.add.form');
+$app->get('/schedule/form/edit/:id', '\Xibo\Controller\Schedule:editForm')->name('schedule.edit.form');
 
 //
 // layouts

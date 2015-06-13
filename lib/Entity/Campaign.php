@@ -148,7 +148,7 @@ class Campaign implements \JsonSerializable
      * Unassign Layout
      * @param Layout $layout
      */
-    public function unassignLayouts($layout)
+    public function unassignLayout($layout)
     {
         Log::debug('Unassigning Layout %s from Campaign %s', $layout, $this);
 

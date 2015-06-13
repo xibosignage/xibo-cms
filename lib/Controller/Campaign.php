@@ -282,7 +282,7 @@ class Campaign extends Base
         // Check our permissions to see each one
         foreach ($layouts as $layoutId) {
             // Assign it
-            $campaign->unassignLayouts(LayoutFactory::getById($layoutId));
+            $campaign->unassignLayout(LayoutFactory::getById($layoutId));
         }
 
         $campaign->save(false);

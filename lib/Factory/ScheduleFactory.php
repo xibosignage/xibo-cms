@@ -11,6 +11,9 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Schedule;
 use Xibo\Exception\NotFoundException;
+use Xibo\Helper\Log;
+use Xibo\Helper\Sanitize;
+use Xibo\Storage\PDOConnect;
 
 class ScheduleFactory
 {
@@ -72,6 +75,49 @@ class ScheduleFactory
      */
     public static function query($sortOrder = null, $filterBy = null)
     {
-        return [];
+        $entries = [];
+        $params = [];
+
+        $sql = '
+        SELECT `schedule`.eventId,
+            `schedule_detail`.fromDT,
+            `schedule_detail`.toDT,
+            `schedule`.is_priority AS isPriority,
+            `schedule`.recurrence_type AS recurrenceType,
+            campaign.campaignId,
+            campaign.campaign
+          FROM `schedule_detail`
+            INNER JOIN `schedule`
+            ON schedule_detail.EventID = `schedule`.EventID
+            INNER JOIN campaign
+            ON campaign.CampaignID = `schedule`.CampaignID
+          WHERE 1 = 1
+        ';
+
+        if (Sanitize::getInt('fromDt', $filterBy) != null) {
+            $sql .= ' AND schedule_detail.fromDt > :fromDt ';
+            $params['fromDt'] = Sanitize::getInt('fromDt', $filterBy);
+        }
+
+        if (Sanitize::getInt('toDt', $filterBy) != null) {
+            $sql .= ' AND schedule_detail.toDt <= :toDt ';
+            $params['toDt'] = Sanitize::getInt('toDt', $filterBy);
+        }
+
+        if (Sanitize::getIntArray('displayGroupIds', $filterBy) != null) {
+            $sql .= ' AND `schedule`.eventId IN (SELECT `lkscheduledisplaygroup`.eventId FROM `lkscheduledisplaygroup` WHERE displayGroupId IN (' . implode(',', Sanitize::getIntArray('displayGroupIds', $filterBy)) . ')) ';
+        }
+
+        // Sorting?
+        if (is_array($sortOrder))
+            $sql .= 'ORDER BY ' . implode(',', $sortOrder);
+
+        Log::sql($sql, $params);
+
+        foreach (PDOConnect::select($sql, $params) as $row) {
+            $entries[] = (new Schedule())->hydrate($row);
+        }
+
+        return $entries;
     }
 }

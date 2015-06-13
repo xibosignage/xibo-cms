@@ -29,6 +29,9 @@ $app->get('/clock', '\Xibo\Controller\Clock:clock')->name('clock');
 // Schedule
 //
 $app->get('/schedule/data/events', '\Xibo\Controller\Schedule:eventData')->name('schedule.calendar.data');
+$app->post('/schedule', '\Xibo\Controller\Schedule:add')->name('schedule.add');
+$app->put('/schedule/:id', '\Xibo\Controller\Schedule:edit')->name('schedule.edit');
+$app->delete('/schedule/:id', '\Xibo\Controller\Schedule:delete')->name('schedule.delete');
 
 //
 // Layouts

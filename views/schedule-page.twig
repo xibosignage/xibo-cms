@@ -33,12 +33,12 @@
                     <option value="-1" {{ allSelected }}>{% trans "All" %}</option>
                     <optgroup label="{% trans "Groups" %}">
                         {% for group in groups %}
-                        <option value="{{ group.displayGroupId }}" {% if group.checked %}checked{% endif %}>{{ group.displayGroupId }}</option>
+                        <option value="{{ group.displayGroupId }}" {% if group.checked %}checked{% endif %}>{{ group.displayGroup }}</option>
                         {% endfor %}
                     </optgroup>
                     <optgroup label="{% trans "Displays" %}">
                         {% for display in displays %}
-                        <option value="{{ display.displayGroupId }}" {% if display.checked %}checked{% endif %}>{{ display.displayGroupId }}</option>
+                        <option value="{{ display.displayGroupId }}" {% if display.checked %}checked{% endif %}>{{ display.displayGroup }}</option>
                         {% endfor %}
                     </optgroup>
                 </select>

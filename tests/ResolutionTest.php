@@ -28,6 +28,10 @@ class ResolutionTest extends TestCase
         $this->assertObjectHasAttribute('data', $object, $response->body);
     }
 
+    /**
+     * @group add
+     * @return int
+     */
     public function testAdd()
     {
         $name = \Xibo\Helper\Random::generateString(8, 'phpunit');

@@ -81,14 +81,14 @@ class Resolution extends Base
             // Edit Button
             $resolution->buttons[] = array(
                 'id' => 'resolution_button_edit',
-                'url' => 'index.php?p=resolution&q=EditForm&resolutionid=' . $resolution->resolutionId,
+                'url' => $this->urlFor('resolution.edit.form', ['id' => $resolution->resolutionId]),
                 'text' => __('Edit')
             );
 
             // Delete Button
             $resolution->buttons[] = array(
                 'id' => 'resolution_button_delete',
-                'url' => 'index.php?p=resolution&q=DeleteForm&resolutionid=' . $resolution->resolutionId,
+                'url' => $this->urlFor('resolution.delete.form', ['id' => $resolution->resolutionId]),
                 'text' => __('Delete')
             );
         }

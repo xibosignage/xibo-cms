@@ -92,7 +92,13 @@ ALTER TABLE `log`
   DROP `UserAgent`;
 
 ALTER TABLE  `log` ADD  `channel` VARCHAR( 5 ) NOT NULL AFTER  `logdate`;
-ALTER TABLE  `log` ADD  `runNo` VARCHAR( 10 ) NOT NULL AFTER  `logid`
+ALTER TABLE  `log` ADD  `runNo` VARCHAR( 10 ) NOT NULL AFTER  `logid`;
+
+CREATE TABLE IF NOT EXISTS `lkscheduledisplaygroup` (
+  `eventId` int(11) NOT NULL,
+  `displayGroupId` int(11) NOT NULL,
+  PRIMARY KEY (`eventId`,`displayGroupId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 UPDATE `version` SET `app_ver` = '1.8.0-alpha', `XmdsVersion` = 4, `XlfVersion` = 2;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';
