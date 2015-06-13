@@ -5,6 +5,7 @@
  * (CampaignTest.php)
  */
 
+namespace Xibo\Tests;
 
 class CampaignTest extends TestCase
 {
@@ -17,7 +18,7 @@ class CampaignTest extends TestCase
 
     public function testListAll()
     {
-        $response = Requests::get($this->url('/campaign'));
+        $response = \Requests::get($this->url('/campaign'));
 
         $this->assertSame(200, $response->status_code);
         $this->assertNotEmpty($response);
@@ -31,7 +32,7 @@ class CampaignTest extends TestCase
     {
         $name = \Xibo\Helper\Random::generateString(8, 'phpunit');
 
-        $response = Requests::post($this->url('/campaign'), [], [
+        $response = \Requests::post($this->url('/campaign'), [], [
             'name' => $name
         ]);
 
@@ -56,7 +57,7 @@ class CampaignTest extends TestCase
     {
         $name = \Xibo\Helper\Random::generateString(8, 'phpunit');
 
-        $response = Requests::put($this->url('/campaign/' . $campaignId), [], [
+        $response = \Requests::put($this->url('/campaign/' . $campaignId), [], [
             'name' => $name
         ]);
 
@@ -76,7 +77,7 @@ class CampaignTest extends TestCase
      */
     public function testDelete($campaignId)
     {
-        $response = Requests::delete($this->url('/campaign/' . $campaignId));
+        $response = \Requests::delete($this->url('/campaign/' . $campaignId));
 
         $this->assertSame(200, $response->status_code, $response->body);
     }
@@ -86,7 +87,7 @@ class CampaignTest extends TestCase
         // Make a campaign with a known name
         $name = \Xibo\Helper\Random::generateString(8, 'phpunit');
 
-        $response = Requests::post($this->url('/campaign'), [], [
+        $response = \Requests::post($this->url('/campaign'), [], [
             'name' => $name
         ]);
 
@@ -97,11 +98,11 @@ class CampaignTest extends TestCase
         $id = $object->id;
 
         // Call assign on the default layout
-        $response = Requests::post($this->url('/campaign/layout/assign/') . $id, [], ['layoutIds' => [8]]);
+        $response = \Requests::post($this->url('/campaign/layout/assign/') . $id, [], ['layoutIds' => [8]]);
         $this->assertSame(200, $response->status_code, $response->body);
 
         // Get this campaign and check it has 0 layouts
-        $response = Requests::get($this->url('/campaign') . '?campaignId=' . $id);
+        $response = \Requests::get($this->url('/campaign') . '?campaignId=' . $id);
         $this->assertSame(200, $response->status_code, $response->body);
 
         $object = json_decode($response->body);
@@ -120,12 +121,12 @@ class CampaignTest extends TestCase
     public function testUnassignLayout($campaignId)
     {
         // Call assign on the default layout
-        $response = Requests::post($this->url('/campaign/layout/unassign/') . $campaignId, [], ['layoutIds' => [8]]);
+        $response = \Requests::post($this->url('/campaign/layout/unassign/') . $campaignId, [], ['layoutIds' => [8]]);
 
         $this->assertSame(200, $response->status_code, $response->body);
 
         // Get this campaign and check it has 0 layouts
-        $response = Requests::get($this->url('/campaign') . '?campaignId=' . $campaignId);
+        $response = \Requests::get($this->url('/campaign') . '?campaignId=' . $campaignId);
         $this->assertSame(200, $response->status_code, $response->body);
 
         $object = json_decode($response->body);
@@ -138,7 +139,7 @@ class CampaignTest extends TestCase
     public function testDeleteAllTests()
     {
         // Get a list of all phpunit related campaigns
-        $response = Requests::get($this->url('/campaign') . '?name=phpunit');
+        $response = \Requests::get($this->url('/campaign') . '?name=phpunit');
         $this->assertSame(200, $response->status_code, $response->body);
 
         $object = json_decode($response->body);
@@ -150,7 +151,7 @@ class CampaignTest extends TestCase
             $this->assertStringStartsWith('phpunit', $campaign->campaign, 'Non-phpunit campaign found');
 
             // Issue a delete
-            $response = Requests::delete($this->url('/campaign/' . $campaign->campaignId));
+            $response = \Requests::delete($this->url('/campaign/' . $campaign->campaignId));
 
             $this->assertSame(200, $response->status_code, $response->body);
         }

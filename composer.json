@@ -55,5 +55,10 @@
   },
   "autoload": {
     "psr-4": { "Xibo\\" : "lib/" }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Xibo\\Tests\\": "tests/"
+    }
   }
 }

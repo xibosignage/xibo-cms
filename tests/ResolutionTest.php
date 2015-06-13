@@ -5,6 +5,7 @@
  * (ResolutionTest.php)
  */
 
+namespace Xibo\Tests;
 
 class ResolutionTest extends TestCase
 {
@@ -17,7 +18,7 @@ class ResolutionTest extends TestCase
 
     public function testListAll()
     {
-        $response = Requests::get($this->url('/resolution'));
+        $response = \Requests::get($this->url('/resolution'));
 
         $this->assertSame(200, $response->status_code);
         $this->assertNotEmpty($response->body);
@@ -31,7 +32,7 @@ class ResolutionTest extends TestCase
     {
         $name = \Xibo\Helper\Random::generateString(8, 'phpunit');
 
-        $response = Requests::post($this->url('/resolution'), [], [
+        $response = \Requests::post($this->url('/resolution'), [], [
             'resolution' => $name,
             'width' => 1920,
             'height' => 1080
@@ -58,7 +59,7 @@ class ResolutionTest extends TestCase
     {
         $name = \Xibo\Helper\Random::generateString(8, 'phpunit');
 
-        $response = Requests::put($this->url('/resolution/' . $resolutionId), [], [
+        $response = \Requests::put($this->url('/resolution/' . $resolutionId), [], [
             'resolution' => $name,
             'width' => 1920,
             'height' => 1080
@@ -80,7 +81,7 @@ class ResolutionTest extends TestCase
      */
     public function testDelete($resolutionId)
     {
-        $response = Requests::delete($this->url('/resolution/' . $resolutionId));
+        $response = \Requests::delete($this->url('/resolution/' . $resolutionId));
 
         $this->assertSame(200, $response->status_code, $response->body);
     }

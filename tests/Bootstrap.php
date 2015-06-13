@@ -19,6 +19,5 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-require_once __DIR__ . '/../lib/autoload.php';
 require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/TestCase.php';

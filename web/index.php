@@ -28,10 +28,6 @@ ini_set('display_errors', 1);
 
 require '../vendor/autoload.php';
 
-// Classes we need to deprecate, namespace or put in composer
-require '../lib/data/data.class.php';
-// END
-
 if (!file_exists('settings.php'))
     die('Not configured');
 
