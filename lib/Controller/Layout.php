@@ -25,6 +25,7 @@ use Parsedown;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\ResolutionFactory;
+use Xibo\Factory\TagFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Help;
 use Xibo\Helper\Sanitize;
@@ -92,28 +93,18 @@ class Layout extends Base
     /**
      * Display the Layout Designer
      * @param int $layoutId
-     * @throws \ErrorException if the theme file cannot be rendered
-     * @throws \Exception if the layout doesn't load correctly
      */
     public function displayDesigner($layoutId)
     {
         $layout = LayoutFactory::loadById($layoutId);
 
-        Theme::Set('layout_form_edit_url', 'index.php?p=layout&q=EditForm&designer=1&layoutid=' . $layoutId);
-        Theme::Set('layout_form_savetemplate_url', 'index.php?p=template&q=TemplateForm&layoutid=' . $layoutId);
-        Theme::Set('layout_form_addregion_url', 'index.php?p=timeline&q=AddRegion&layoutid=' . $layoutId);
-        Theme::Set('layout_form_preview_url', 'index.php?p=preview&q=render&ajax=true&layoutid=' . $layoutId);
-        Theme::Set('layout_form_schedulenow_url', 'index.php?p=schedule&q=ScheduleNowForm&CampaignID=' . $layout->campaignId);
-        Theme::Set('layout', $layout->layout);
-        Theme::Set('layout_designer_editor', $this->RenderDesigner($layout));
-
-        // Set up the theme variables for the Layout Jump List
-        Theme::Set('layoutId', $layoutId);
-        Theme::Set('layouts', $this->getUser()->LayoutList());
+        if (!$this->getUser()->checkEditable($layout))
+            throw new AccessDeniedException();
 
         // Set up any JavaScript translations
-        $this->getApp()->view()->appendData([
-            'translations' => [
+        $this->getState()->setData([
+            'layout' => $layout,
+            'translation' => [
                 'save_position_button' => __('Save Position'),
                 'revert_position_button' => __('Undo'),
                 'savePositionsFirst' => __('Please save the pending position changes first by clicking "Save Positions" or cancel by clicking "Undo".')
@@ -121,7 +112,7 @@ class Layout extends Base
         ]);
 
         // Call the render the template
-        $this->getState()->html .= Theme::RenderReturn('layout_designer');
+        $this->getState()->template = 'layout-designer-page';
     }
 
     /**
@@ -131,7 +122,7 @@ class Layout extends Base
     {
         $name = Sanitize::getString('name');
         $description = Sanitize::getString('description');
-        $tags = Sanitize::getString('tags');
+        $tags = TagFactory::tagsFromString(Sanitize::getString('tags'));
         $templateId = Sanitize::getInt('layoutId');
         $resolutionId = Sanitize::getInt('resolutionId');
 
@@ -157,26 +148,27 @@ class Layout extends Base
     }
 
     /**
-     * Modifies a layout record
+     * Edit Layout
+     * @param int $layoutId
      */
-    function modify()
+    function edit($layoutId)
     {
-        $layout = LayoutFactory::loadById(Kit::GetParam('layoutid', _POST, _INT));
+        $layout = LayoutFactory::loadById($layoutId);
 
         // Make sure we have permission
         if (!$this->getUser()->checkEditable($layout))
-            trigger_error(__('You do not have permissions to edit this layout'), E_USER_ERROR);
+            throw new AccessDeniedException();
 
-        $layout->layout = Sanitize::getString('layout');
+        $layout->layout = Sanitize::getString('name');
         $layout->description = Sanitize::getString('description');
-        $layout->tags = \Xibo\Factory\TagFactory::tagsFromString(Kit::GetParam('tags', _POST, _STRING));
-        $layout->retired = \Kit::GetParam('retired', _POST, _INT, 0);
+        $layout->tags = TagFactory::tagsFromString(Sanitize::getString('tags'));
+        $layout->retired = Sanitize::getCheckbox('retired');
         $layout->backgroundColor = Sanitize::getString('backgroundColor');
         $layout->backgroundImageId = Sanitize::getInt('backgroundImageId');
         $layout->backgroundzIndex = Sanitize::getInt('backgroundzIndex');
 
         // Resolution
-        $resolution = \Xibo\Factory\ResolutionFactory::getById(Kit::GetParam('resolutionId', _POST, _INT));
+        $resolution = ResolutionFactory::getById(Sanitize::getInt('resolutionId'));
         $layout->width = $resolution->width;
         $layout->height = $resolution->height;
 
@@ -186,12 +178,12 @@ class Layout extends Base
         // Save
         $layout->save();
 
-        if (\Kit::GetParam('designer', _POST, _INT) == 1) {
-             $this->getState()->SetFormSubmitResponse(__('Layout Background Changed'), true, sprintf('index.php?p=layout&layoutid=%d&modify=true', $layout->layoutId));
-        } else {
-             $this->getState()->SetFormSubmitResponse(__('Layout Details Changed.'));
-        }
-
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Edited %s'), $layout->layout),
+            'id' => $layout->layoutId,
+            'data' => [$layout]
+        ]);
     }
 
     /**
@@ -240,11 +232,11 @@ class Layout extends Base
     }
 
     /**
-     * Deletes a layout record from the DB
+     * Deletes a layout
+     * @param int $layoutId
      */
-    function delete()
+    function delete($layoutId)
     {
-        $layoutId = Sanitize::getInt('layoutId');
         $layout = LayoutFactory::loadById($layoutId);
 
         if (!$this->getUser()->checkDeleteable($layout))
@@ -255,10 +247,10 @@ class Layout extends Base
 
     /**
      * Retires a layout
+     * @param int $layoutId
      */
-    function retire()
+    function retire($layoutId)
     {
-        $layoutId = Sanitize::getInt('layoutId');
         $layout = LayoutFactory::loadById($layoutId);
 
         if (!$this->getUser()->checkEditable($layout))
@@ -326,6 +318,8 @@ class Layout extends Base
             if ($this->isApi())
                 break;
 
+            $layout->includeProperty('buttons');
+
             $layout->thumbnail = '';
 
             if ($layout->backgroundImageId != 0) {
@@ -369,7 +363,7 @@ class Layout extends Base
                 $layout->buttons[] = array(
                     'id' => 'layout_button_design',
                     'linkType' => '_self', 'external' => true,
-                    'url' => $this->urlFor('layout.update', array('id' => $layout->layoutId)),
+                    'url' => $this->urlFor('layout.designer', array('id' => $layout->layoutId)),
                     'text' => __('Design')
                 );
             }
@@ -483,18 +477,16 @@ class Layout extends Base
 
     /**
      * Edit form
+     * @param int $layoutId
      */
-    function EditForm()
+    function editForm($layoutId)
     {
-         
-        $layoutId = Sanitize::getInt('layoutid');
-
         // Get the layout
         $layout = LayoutFactory::getById($layoutId);
 
         // Check Permissions
         if (!$this->getUser()->checkEditable($layout))
-            trigger_error(__('You do not have permissions to edit this layout'), E_USER_ERROR);
+            throw new AccessDeniedException();
 
         // Generate the form
         Theme::Set('form_id', 'LayoutForm');

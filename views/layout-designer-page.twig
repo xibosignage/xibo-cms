@@ -1,0 +1,21 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+Theme::Set('layout_form_edit_url', 'index.php?p=layout&q=EditForm&designer=1&layoutid=' . $layoutId);
+Theme::Set('layout_form_savetemplate_url', 'index.php?p=template&q=TemplateForm&layoutid=' . $layoutId);
+Theme::Set('layout_form_addregion_url', 'index.php?p=timeline&q=AddRegion&layoutid=' . $layoutId);
+Theme::Set('layout_form_preview_url', 'index.php?p=preview&q=render&ajax=true&layoutid=' . $layoutId);
+Theme::Set('layout_form_schedulenow_url', 'index.php?p=schedule&q=ScheduleNowForm&CampaignID=' . $layout->campaignId);
+Theme::Set('layout', $layout->layout);
+Theme::Set('layout_designer_editor', $this->RenderDesigner($layout));
+#}
+
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block pageContent %}
+
+{% endblock %}

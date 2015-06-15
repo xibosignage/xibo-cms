@@ -38,7 +38,7 @@ $app->delete('/schedule/:id', '\Xibo\Controller\Schedule:delete')->name('schedul
 //
 $app->get('/layout', '\Xibo\Controller\Layout:grid')->name('layout.search');
 $app->post('/layout', '\Xibo\Controller\Layout:add')->name('layout.add');
-$app->put('/layout/:id', '\Xibo\Controller\Layout:modify')->name('layout.update');
+$app->put('/layout/:id', '\Xibo\Controller\Layout:edit')->name('layout.edit');
 $app->delete('/layout/:id', '\Xibo\Controller\Layout:delete')->name('layout.delete');
 $app->put('/layout/retire/:id', '\Xibo\Controller\Layout:retire')->name('layout.retire');
 
