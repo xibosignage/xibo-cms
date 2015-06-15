@@ -22,10 +22,8 @@ namespace Xibo\Controller;
 use baseDAO;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\HelpFactory;
-use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Form;
 use Xibo\Helper\Sanitize;
-use Xibo\Helper\Theme;
 
 
 class Help extends Base
@@ -65,7 +63,7 @@ class Help extends Base
                 // Test
                 $row->buttons[] = array(
                     'id' => 'help_button_test',
-                    'url' => Help::Link($row->topic, $row->category),
+                    'url' => \Xibo\Helper\Help::Link($row->topic, $row->category),
                     'text' => __('Test')
                 );
             }
