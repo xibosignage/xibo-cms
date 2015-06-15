@@ -246,7 +246,7 @@ class Display extends Base
             if ($this->getUser()->checkEditable($display) || Config::GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes') {
                 $display->buttons[] = array(
                     'id' => 'display_button_schedulenow',
-                    'url' => $this->urlFor('schedule.now.form', ['id' => $display->displayGroupId, 'from' => 'Display']),
+                    'url' => $this->urlFor('schedule.now.form', ['id' => $display->displayGroupId, 'from' => 'DisplayGroup']),
                     'text' => __('Schedule Now')
                 );
             }

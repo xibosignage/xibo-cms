@@ -22,6 +22,8 @@ namespace Xibo\Controller;
 use baseDAO;
 use Kit;
 use Xibo\Entity\DisplayGroup;
+use Xibo\Exception\AccessDeniedException;
+use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Helper\Config;
@@ -31,7 +33,6 @@ use Xibo\Helper\Help;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Session;
-use Xibo\Helper\Theme;
 
 
 class Schedule extends Base
@@ -102,7 +103,7 @@ class Schedule extends Base
             }));
 
             // Event Permissions
-            $editable = $this->IsEventEditable($row->displayGroups);
+            $editable = $this->isEventEditable($row->displayGroups);
 
             // Event Title
             $title = sprintf(__('%s scheduled on %s'), $row->campaign, $displayGroupList);
@@ -181,6 +182,7 @@ class Schedule extends Base
         $this->getState()->setData([
             'displays' => $displays,
             'displayGroups' => $groups,
+            'campaigns' => CampaignFactory::query(),
             'displayGroupIds' => Session::get('displayGroupIds'),
             'help' => Help::Link('Schedule', 'Add')
         ]);
@@ -192,391 +194,179 @@ class Schedule extends Base
     public function add()
     {
         $schedule = new \Xibo\Entity\Schedule();
+        $schedule->userId = $this->getUser()->userId;
+        $schedule->campaignId = Sanitize::getInt('campaignId');
+        $schedule->displayOrder = Sanitize::getInt('displayOrder');
+        $schedule->isPriority = Sanitize::getCheckbox('isPriority');
+        $schedule->recurrenceType = Sanitize::getString('recurrenceType');
+        $schedule->recurrenceDetail = Sanitize::getString('recurrenceDetail');
 
+        foreach (Sanitize::getIntArray('displayGroupIds') as $displayGroupId) {
+            $schedule->assignDisplayGroup($displayGroupId);
+        }
 
-        $campaignId = \Kit::GetParam('CampaignID', _POST, _INT, 0);
-        $fromDT = \Xibo\Helper\Sanitize::getString('starttime');
-        $toDT = \Xibo\Helper\Sanitize::getString('endtime');
-        $displayGroupIDs = \Kit::GetParam('DisplayGroupIDs', _POST, _ARRAY);
-        $isPriority = \Xibo\Helper\Sanitize::getCheckbox('is_priority');
+        // Handle the dates
+        $fromDt = Sanitize::getString('fromDt');
+        $toDt = Sanitize::getString('toDt');
+        $recurrenceRange = Sanitize::getString('recurrenceRange');
 
-        $repeatType = \Xibo\Helper\Sanitize::getString('rec_type');
-        $repeatInterval = \Xibo\Helper\Sanitize::getInt('rec_detail');
-        $repeatToDt = \Xibo\Helper\Sanitize::getString('rec_range');
-
-        $displayOrder = \Xibo\Helper\Sanitize::getInt('DisplayOrder');
-        $isNextButton = \Kit::GetParam('next', _GET, _BOOL, false);
-
-        Log::debug('Times received are: FromDt=' . $fromDT . '. ToDt=' . $toDT . '. RepeatToDt=' . $repeatToDt);
+        Log::debug('Times received are: FromDt=' . $fromDt . '. ToDt=' . $toDt . '. recurrenceRange=' . $recurrenceRange);
 
         // Convert our dates
-        $fromDT = Date::getTimestampFromString($fromDT);
-        $toDT = Date::getTimestampFromString($toDT);
+        $fromDt = Date::getTimestampFromString($fromDt);
+        $toDt = Date::getTimestampFromString($toDt);
 
-        if ($repeatToDt != '')
-            $repeatToDt = Date::getTimestampFromString($repeatToDt);
+        if ($recurrenceRange != '')
+            $recurrenceRange = Date::getTimestampFromString($recurrenceRange);
 
-        Log::debug('Converted Times received are: FromDt=' . $fromDT . '. ToDt=' . $toDT . '. RepeatToDt=' . $repeatToDt);
+        Log::debug('Converted Times received are: FromDt=' . $fromDt . '. ToDt=' . $toDt . '. recurrenceRange=' . $recurrenceRange);
 
-        // Validate layout
-        if ($campaignId == 0)
-            trigger_error(__("No layout selected"), E_USER_ERROR);
-
-        // check that at least one display has been selected
-        if ($displayGroupIDs == '')
-            trigger_error(__("No displays selected"), E_USER_ERROR);
-
-        // validate the dates
-        if ($toDT < $fromDT)
-            trigger_error(__('Can not have an end time earlier than your start time'), E_USER_ERROR);
-
-        if ($fromDT < (time() - 86400))
-            trigger_error(__("Your start time is in the past. Cannot schedule events in the past"), E_USER_ERROR);
-
-        // Check recurrence dT is in the future or empty
-        if ($repeatType != '' && ($repeatToDt != '' && ($repeatToDt < (time() - 86400))))
-            trigger_error(__("Your repeat until date is in the past. Cannot schedule events to repeat in to the past"), E_USER_ERROR);
+        $schedule->fromDt = $fromDt;
+        $schedule->toDt = $toDt;
+        $schedule->recurrenceRange = $recurrenceRange;
 
         // Ready to do the add
-        $scheduleObject = new Schedule($db);
-        if (!$scheduleObject->Add($displayGroupIDs, $fromDT, $toDT, $campaignId, $repeatType, $repeatInterval, $repeatToDt, $isPriority, $this->getUser()->userId, $displayOrder))
-            trigger_error($scheduleObject->GetErrorMessage(), E_USER_ERROR);
+        $schedule->save();
 
-        $response->SetFormSubmitResponse(__("The Event has been Added."));
-        $response->callBack = 'CallGenerateCalendar';
-        if ($isNextButton)
-            $response->keepOpen = true;
-
+        // Return
+        $this->getState()->hydrate([
+            'message' => __('Added Event'),
+            'id' => $schedule->eventId,
+            'data' => [$schedule]
+        ]);
     }
 
     /**
-     * Shows a form to add an event
-     *  will default to the current date if non is provided
-     * @return
+     * Shows a form to edit an event
+     * @param int $eventId
      */
-    function EditEventForm()
+    function editForm($eventId)
     {
+        $schedule = ScheduleFactory::getById($eventId);
+        $schedule->load();
 
-        $user = $this->getUser();
-        $response = $this->getState();
-
-        $eventID = \Kit::GetParam('EventID', _GET, _INT, 0);
-
-        if ($eventID == 0)
-            trigger_error(__('No event selected.'), E_USER_ERROR);
-
-        // Get the relevant details for this event
-        $SQL = "";
-        $SQL .= "SELECT schedule.FromDT, ";
-        $SQL .= "       schedule.ToDT,";
-        $SQL .= "       schedule.CampaignID, ";
-        $SQL .= "       schedule.userid, ";
-        $SQL .= "       schedule.is_priority, ";
-        $SQL .= "       schedule.DisplayGroupIDs, ";
-        $SQL .= "       schedule.recurrence_type, ";
-        $SQL .= "       schedule.recurrence_detail, ";
-        $SQL .= "       schedule.recurrence_range, ";
-        $SQL .= "       schedule.EventID, ";
-        $SQL .= "       schedule.DisplayOrder ";
-        $SQL .= "  FROM schedule ";
-        $SQL .= " WHERE 1=1 ";
-        $SQL .= sprintf("   AND schedule.EventID = %d", $eventID);
-
-        Log::notice($SQL);
-
-        if (!$result = $db->query($SQL)) {
-            trigger_error($db->error());
-            trigger_error(__('Error getting details for this event.'), E_USER_ERROR);
-        }
-
-        $row = $db->get_assoc_row($result);
-
-        $fromDT = \Xibo\Helper\Sanitize::int($row['FromDT']);
-        $toDT = \Xibo\Helper\Sanitize::int($row['ToDT']);
-        $displayGroupIds = explode(',', \Xibo\Helper\Sanitize::string($row['DisplayGroupIDs']));
-        $recType = \Xibo\Helper\Sanitize::string($row['recurrence_type']);
-        $recDetail = \Xibo\Helper\Sanitize::string($row['recurrence_detail']);
-        $recToDT = \Xibo\Helper\Sanitize::int($row['recurrence_range']);
-        $campaignId = \Xibo\Helper\Sanitize::string($row['CampaignID']);
-        $isPriority = \Xibo\Helper\Sanitize::int($row['is_priority']);
-        $displayOrder = \Xibo\Helper\Sanitize::int($row['DisplayOrder']);
-
-        // Check that we have permission to edit this event.
-        if (!$this->IsEventEditable($displayGroupIds))
-            trigger_error(__('You do not have permission to edit this event.'), E_USER_ERROR);
-
-        $token_id = uniqid();
-        $token_field = '<input type="hidden" name="token_id" value="' . $token_id . '" />';
-        $token = \Kit::Token($token_id);
-
-        Theme::Set('form_id', 'EditEventForm');
-        Theme::Set('form_action', 'index.php?p=schedule&q=EditEvent');
-        Theme::Set('form_meta', $token_field . $token . '<input type="hidden" id="EventID" name="EventID" value="' . $eventID . '" />');
-
-        // Two tabs
-        $tabs = array();
-        $tabs[] = Form::AddTab('general', __('General'));
-        $tabs[] = Form::AddTab('repeats', __('Repeats'));
-        Theme::Set('form_tabs', $tabs);
-
-        $formFields = array();
-
-        // List of Display Groups
-        $optionGroups = array(
-            array('id' => 'group', 'label' => __('Groups')),
-            array('id' => 'display', 'label' => __('Displays'))
-        );
+        if (!$this->isEventEditable($schedule->displayGroups))
+            throw new AccessDeniedException();
 
         $groups = array();
         $displays = array();
         $scheduleWithView = (Config::GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
 
-        foreach ($this->getUser()->DisplayGroupList(-1 /*IsDisplaySpecific*/) as $display) {
-
-            // Can schedule with view, but no view permissions
-            if ($scheduleWithView && $display['view'] != 1)
-                continue;
+        foreach (DisplayGroupFactory::query() as $displayGroup) {
+            /* @var DisplayGroup $displayGroup */
 
             // Can't schedule with view, but no edit permissions
-            if (!$scheduleWithView && $display['edit'] != 1)
+            if (!$scheduleWithView && !$this->getUser()->checkEditable($displayGroup))
                 continue;
 
-            $display['checked_text'] = (in_array($display['displaygroupid'], $displayGroupIds)) ? ' selected' : '';
-
-            if ($display['isdisplayspecific'] == 1) {
-                $displays[] = $display;
+            if ($displayGroup->isDisplaySpecific == 1) {
+                $displays[] = $displayGroup;
             } else {
-                $groups[] = $display;
+                $groups[] = $displayGroup;
             }
         }
 
-        $formFields['general'][] = Form::AddMultiCombo(
-            'DisplayGroupIDs[]',
-            __('Display'),
-            $displayGroupIds,
-            array('group' => $groups, 'display' => $displays),
-            'displaygroupid',
-            'displaygroup',
-            __('Please select one or more displays / groups for this event to be shown on.'),
-            'd', '', true, '', '', '', $optionGroups, array(array('name' => 'data-live-search', 'value' => "true"), array('name' => 'data-selected-text-format', 'value' => "count > 4")));
-
-        // Time controls
-        $formFields['general'][] = Form::AddText('starttimeControl', __('Start Time'), Date::getLocalDate($fromDT),
-            __('Select the start time for this event'), 's', 'required');
-
-        $formFields['general'][] = Form::AddText('endtimeControl', __('End Time'), Date::getLocalDate($toDT),
-            __('Select the end time for this event'), 'e', 'required');
-
-        // Add two hidden fields to always carry the ISO date
-        $formFields['general'][] = FormManager::AddHidden('starttime', DateManager::getLocalDate($fromDT, "Y-m-d H:i", false));
-        $formFields['general'][] = FormManager::AddHidden('endtime', DateManager::getLocalDate($toDT, "Y-m-d H:i", false));
-
-        // Generate a list of layouts.
-        $layouts = $user->CampaignList(NULL, false /* isRetired */, false /* show Empty */);
-
-        $optionGroups = array(
-            array('id' => 'campaign', 'label' => __('Campaigns')),
-            array('id' => 'layout', 'label' => __('Layouts'))
-        );
-
-        $layoutOptions = array();
-        $campaignOptions = array();
-
-        foreach ($layouts as $layout) {
-
-            if ($layout['islayoutspecific'] == 1) {
-                $layoutOptions[] = array(
-                    'id' => $layout['campaignid'],
-                    'value' => $layout['campaign']
-                );
-            } else {
-                $campaignOptions[] = array(
-                    'id' => $layout['campaignid'],
-                    'value' => $layout['campaign']
-                );
-            }
-        }
-
-        $formFields['general'][] = Form::AddCombo(
-            'CampaignID',
-            __('Layout / Campaign'),
-            $campaignId,
-            array('campaign' => $campaignOptions, 'layout' => $layoutOptions),
-            'id',
-            'value',
-            __('Please select a Layout or Campaign for this Event to show'),
-            'l', '', true, '', '', '', $optionGroups);
-
-        $formFields['general'][] = Form::AddNumber('DisplayOrder', __('Display Order'), $displayOrder,
-            __('Please select the order this event should appear in relation to others when there is more than one event scheduled'), 'o');
-
-        $formFields['general'][] = Form::AddCheckbox('is_priority', __('Priority'),
-            $isPriority, __('Sets whether or not this event has priority. If set the event will be show in preference to other events.'),
-            'p');
-
-        $formFields['repeats'][] = Form::AddCombo(
-            'rec_type',
-            __('Repeats'),
-            $recType,
-            array(
-                array('id' => '', 'name' => __('None')),
-                array('id' => 'Minute', 'name' => __('Per Minute')),
-                array('id' => 'Hour', 'name' => __('Hourly')),
-                array('id' => 'Day', 'name' => __('Daily')),
-                array('id' => 'Week', 'name' => __('Weekly')),
-                array('id' => 'Month', 'name' => __('Monthly')),
-                array('id' => 'Year', 'name' => __('Yearly'))
-            ),
-            'id',
-            'name',
-            __('What type of repeat is required?'),
-            'r');
-
-        $formFields['repeats'][] = Form::AddNumber('rec_detail', __('Repeat every'), $recDetail,
-            __('How often does this event repeat?'), 'o', '', 'repeat-control-group');
-
-        $formFields['repeats'][] = Form::AddText('rec_rangeControl', __('Until'), ((($recToDT == 0) ? '' : Date::getLocalDate($recToDT))),
-            __('When should this event stop repeating?'), 'u', '', 'repeat-control-group');
-
-        $formFields['repeats'][] = Form::AddHidden('rec_range', Date::getLocalDate($recToDT, "Y-m-d H:i"));
-
-        // Set some field dependencies
-        $response->AddFieldAction('rec_type', 'init', '', array('.repeat-control-group' => array('display' => 'none')));
-        $response->AddFieldAction('rec_type', 'init', '', array('.repeat-control-group' => array('display' => 'block')), "not");
-        $response->AddFieldAction('rec_type', 'change', '', array('.repeat-control-group' => array('display' => 'none')));
-        $response->AddFieldAction('rec_type', 'change', '', array('.repeat-control-group' => array('display' => 'block')), "not");
-
-        Theme::Set('form_fields_general', $formFields['general']);
-        Theme::Set('form_fields_repeats', $formFields['repeats']);
-
-        $response->SetFormRequestResponse(NULL, __('Edit Event'), '800px', '600px');
-        $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=Edit')");
-        $response->AddButton(__('Delete'), 'XiboFormRender("index.php?p=schedule&q=DeleteForm&EventID=' . $eventID . '")');
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Save'), '$("#EditEventForm").attr("action", $("#EditEventForm").attr("action") + "&next=0").submit()');
-        $response->callBack = 'setupScheduleForm';
-
+        $this->getState()->template = 'schedule-form-edit';
+        $this->getState()->setData([
+            'event' => $schedule,
+            'displays' => $displays,
+            'displayGroups' => $groups,
+            'campaigns' => CampaignFactory::query(),
+            'displayGroupIds' => Session::get('displayGroupIds'),
+            'help' => Help::Link('Schedule', 'Edit')
+        ]);
     }
-
 
     /**
      * Edits an event
-     * @return
+     * @param int $eventId
      */
-    public function EditEvent()
+    public function edit($eventId)
     {
-        // Check the token
-        if (!Kit::CheckToken(Kit::GetParam('token_id', _POST, _STRING)))
-            trigger_error(__('Sorry the form has expired. Please refresh.'), E_USER_ERROR);
+        $schedule = ScheduleFactory::getById($eventId);
+        $schedule->load();
 
+        if (!$this->isEventEditable($schedule->displayGroups))
+            throw new AccessDeniedException();
 
-        $user = $this->getUser();
-        $response = $this->getState();
+        $schedule->campaignId = Sanitize::getInt('campaignId');
+        $schedule->displayOrder = Sanitize::getInt('displayOrder');
+        $schedule->isPriority = Sanitize::getCheckbox('isPriority');
+        $schedule->recurrenceType = Sanitize::getString('recurrenceType');
+        $schedule->recurrenceDetail = Sanitize::getString('recurrenceDetail');
 
-        $eventId = \Kit::GetParam('EventID', _POST, _INT, 0);
-        $campaignId = \Kit::GetParam('CampaignID', _POST, _INT, 0);
-        $fromDT = \Xibo\Helper\Sanitize::getString('starttime');
-        $toDT = \Xibo\Helper\Sanitize::getString('endtime');
-        $displayGroupIDs = \Kit::GetParam('DisplayGroupIDs', _POST, _ARRAY);
-        $isPriority = \Xibo\Helper\Sanitize::getCheckbox('is_priority');
+        foreach (Sanitize::getIntArray('displayGroupIds') as $displayGroupId) {
+            $schedule->assignDisplayGroup($displayGroupId);
+        }
 
-        $repeatType = \Xibo\Helper\Sanitize::getString('rec_type');
-        $repeatInterval = \Xibo\Helper\Sanitize::getInt('rec_detail');
-        $repeatToDt = \Xibo\Helper\Sanitize::getString('rec_range');
+        // Handle the dates
+        $fromDt = Sanitize::getString('fromDt');
+        $toDt = Sanitize::getString('toDt');
+        $recurrenceRange = Sanitize::getString('recurrenceRange');
 
-        $displayOrder = \Xibo\Helper\Sanitize::getInt('DisplayOrder');
-        $isNextButton = \Kit::GetParam('next', _GET, _BOOL, false);
+        Log::debug('Times received are: FromDt=' . $fromDt . '. ToDt=' . $toDt . '. recurrenceRange=' . $recurrenceRange);
 
-        // Convert our ISO strings
-        $fromDT = Date::getTimestampFromString($fromDT);
-        $toDT = Date::getTimestampFromString($toDT);
+        // Convert our dates
+        $fromDt = Date::getTimestampFromString($fromDt);
+        $toDt = Date::getTimestampFromString($toDt);
 
-        if ($repeatToDt != '')
-            $repeatToDt = Date::getTimestampFromString($repeatToDt);
+        if ($recurrenceRange != '')
+            $recurrenceRange = Date::getTimestampFromString($recurrenceRange);
 
-        Log::debug('Times received are: FromDt=' . $fromDT . '. ToDt=' . $toDT . '. RepeatToDt=' . $repeatToDt);
+        Log::debug('Converted Times received are: FromDt=' . $fromDt . '. ToDt=' . $toDt . '. recurrenceRange=' . $recurrenceRange);
 
-        // Validate layout
-        if ($campaignId == 0)
-            trigger_error(__("No layout selected"), E_USER_ERROR);
+        $schedule->fromDt = $fromDt;
+        $schedule->toDt = $toDt;
+        $schedule->recurrenceRange = $recurrenceRange;
 
-        // check that at least one display has been selected
-        if ($displayGroupIDs == '')
-            trigger_error(__("No displays selected"), E_USER_ERROR);
+        // Ready to do the add
+        $schedule->save();
 
-        // validate the dates
-        if ($toDT < $fromDT)
-            trigger_error(__('Can not have an end time earlier than your start time'), E_USER_ERROR);
-
-        // Check recurrence dT is in the future or empty
-        if (($repeatToDt != '') && ($repeatToDt < (time() - 86400)))
-            trigger_error(__("Your repeat until date is in the past. Cannot schedule events to repeat in to the past"), E_USER_ERROR);
-
-
-        // Ready to do the edit
-        $scheduleObject = new Schedule($db);
-        if (!$scheduleObject->Edit($eventId, $displayGroupIDs, $fromDT, $toDT, $campaignId, $repeatType, $repeatInterval, $repeatToDt, $isPriority, $this->getUser()->userId, $displayOrder))
-            trigger_error($scheduleObject->GetErrorMessage(), E_USER_ERROR);
-
-        $response->SetFormSubmitResponse(__("The Event has been Modified."));
-        $response->callBack = 'CallGenerateCalendar';
-
+        // Return
+        $this->getState()->hydrate([
+            'message' => __('Edited Event'),
+            'id' => $schedule->eventId,
+            'data' => [$schedule]
+        ]);
     }
 
     /**
      * Shows the DeleteEvent form
-     * @return
+     * @param int $eventId
      */
-    function DeleteForm()
+    function deleteForm($eventId)
     {
+        $schedule = ScheduleFactory::getById($eventId);
+        $schedule->load();
 
-        $user = $this->getUser();
-        $response = $this->getState();
+        if (!$this->isEventEditable($schedule->displayGroups))
+            throw new AccessDeniedException();
 
-        $eventID = \Kit::GetParam('EventID', _GET, _INT, 0);
-
-        if ($eventID == 0)
-            trigger_error(__('No event selected.'), E_USER_ERROR);
-
-        Theme::Set('form_id', 'DeleteEventForm');
-        Theme::Set('form_action', 'index.php?p=schedule&q=DeleteEvent');
-        Theme::Set('form_meta', '<input type="hidden" name="EventID" value="' . $eventID . '" />');
-        Theme::Set('form_fields', array(Form::AddMessage(__('Are you sure you want to delete this event from <b>all</b> displays? If you only want to delete this item from certain displays, please deselect the displays in the edit dialogue and click Save.'))));
-
-        $response->SetFormRequestResponse(NULL, __('Delete Event.'), '480px', '240px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Schedule', 'Delete') . '")');
-        $response->AddButton(__('No'), 'XiboDialogClose()');
-        $response->AddButton(__('Yes'), '$("#DeleteEventForm").submit()');
-
+        $this->getState()->template = 'schedule-form-delete';
+        $this->getState()->setData([
+            'event' => $schedule,
+            'help' => Help::Link('Schedule', 'Delete')
+        ]);
     }
 
     /**
      * Deletes an Event from all displays
-     * @return
+     * @param int $eventId
      */
-    public function DeleteEvent()
+    public function delete($eventId)
     {
+        $schedule = ScheduleFactory::getById($eventId);
+        $schedule->load();
 
+        if (!$this->isEventEditable($schedule->displayGroups))
+            throw new AccessDeniedException();
 
-        $user = $this->getUser();
-        $response = $this->getState();
+        $schedule->delete();
 
-        $eventID = \Kit::GetParam('EventID', _POST, _INT, 0);
-
-        if ($eventID == 0)
-            trigger_error(__('No event selected.'), E_USER_ERROR);
-
-        // Create an object to use for the delete
-        $scheduleObject = new Schedule($db);
-
-        // Delete the entire schedule.
-        if (!$scheduleObject->Delete($eventID)) {
-            trigger_error($scheduleObject->GetErrorMessage(), E_USER_ERROR);
-        }
-
-        $response->SetFormSubmitResponse(__("The Event has been Deleted."));
-        $response->callBack = 'CallGenerateCalendar';
-
+        // Return
+        $this->getState()->hydrate([
+            'message' => __('Deleted Event')
+        ]);
     }
 
     /**
@@ -584,7 +374,7 @@ class Schedule extends Base
      * @param array[DisplayGroup] $displayGroups
      * @return bool
      */
-    private function IsEventEditable($displayGroups)
+    private function isEventEditable($displayGroups)
     {
         $scheduleWithView = (Config::GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
 
@@ -605,167 +395,40 @@ class Schedule extends Base
         return true;
     }
 
-    public function ScheduleNowForm()
+    /**
+     * Schedule Now Form
+     * @param string $from The object that called this form
+     * @param int $id The Id
+     */
+    public function scheduleNowForm($from, $id)
     {
-
-        $user = $this->getUser();
-        $response = $this->getState();
-
-        $date = time();
-
-        // We might have a layout id, or a display id
-        $campaignId = \Kit::GetParam('CampaignID', _GET, _INT, 0);
-        $displayGroupIds = \Kit::GetParam('displayGroupId', _GET, _ARRAY);
-
-        Theme::Set('form_id', 'ScheduleNowForm');
-        Theme::Set('form_action', 'index.php?p=schedule&q=ScheduleNow');
-
-        $formFields = array();
-
-        // Generate a list of layouts.
-        $layouts = $user->CampaignList(NULL, false /* isRetired */, false /* show Empty */);
-
-        $optionGroups = array(
-            array('id' => 'campaign', 'label' => __('Campaigns')),
-            array('id' => 'layout', 'label' => __('Layouts'))
-        );
-
-        $layoutOptions = array();
-        $campaignOptions = array();
-
-        foreach ($layouts as $layout) {
-
-            if ($layout['islayoutspecific'] == 1) {
-                $layoutOptions[] = array(
-                    'id' => $layout['campaignid'],
-                    'value' => $layout['campaign']
-                );
-            } else {
-                $campaignOptions[] = array(
-                    'id' => $layout['campaignid'],
-                    'value' => $layout['campaign']
-                );
-            }
-        }
-
-        $formFields[] = Form::AddCombo(
-            'CampaignID',
-            __('Layout'),
-            $campaignId,
-            array('campaign' => $campaignOptions, 'layout' => $layoutOptions),
-            'id',
-            'value',
-            __('Please select a Layout or Campaign for this Event to show'),
-            'l', '', true, '', '', '', $optionGroups);
-
-        $formFields[] = Form::AddText('hours', __('Hours'), NULL,
-            __('Hours this event should be scheduled for'), 'h', '');
-
-        $formFields[] = Form::AddText('minutes', __('Minutes'), NULL,
-            __('Minutes this event should be scheduled for'), 'h', '');
-
-        $formFields[] = Form::AddText('seconds', __('Seconds'), NULL,
-            __('Seconds this event should be scheduled for'), 'h', '');
-
-        // List of Display Groups
-        $optionGroups = array(
-            array('id' => 'group', 'label' => __('Groups')),
-            array('id' => 'display', 'label' => __('Displays'))
-        );
-
         $groups = array();
         $displays = array();
         $scheduleWithView = (Config::GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
 
-        foreach ($this->getUser()->DisplayGroupList(-1 /*IsDisplaySpecific*/) as $display) {
-
-            // Can schedule with view, but no view permissions
-            if ($scheduleWithView && $display['view'] != 1)
-                continue;
+        foreach (DisplayGroupFactory::query() as $displayGroup) {
+            /* @var DisplayGroup $displayGroup */
 
             // Can't schedule with view, but no edit permissions
-            if (!$scheduleWithView && $display['edit'] != 1)
+            if (!$scheduleWithView && !$this->getUser()->checkEditable($displayGroup))
                 continue;
 
-            $display['checked_text'] = (in_array($display['displaygroupid'], $displayGroupIds)) ? ' selected' : '';
-
-            if ($display['isdisplayspecific'] == 1) {
-                $displays[] = $display;
+            if ($displayGroup->isDisplaySpecific == 1) {
+                $displays[] = $displayGroup;
             } else {
-                $groups[] = $display;
+                $groups[] = $displayGroup;
             }
         }
 
-        $formFields[] = Form::AddMultiCombo(
-            'DisplayGroupIDs[]',
-            __('Display'),
-            $displayGroupIds,
-            array('group' => $groups, 'display' => $displays),
-            'displaygroupid',
-            'displaygroup',
-            __('Please select one or more displays / groups for this event to be shown on.'),
-            'd', '', true, '', '', '', $optionGroups, array(array('name' => 'data-live-search', 'value' => "true"), array('name' => 'data-selected-text-format', 'value' => "count > 4")));
-
-        $formFields[] = Form::AddNumber('DisplayOrder', __('Display Order'), 0,
-            __('Should this event have an order?'), 'o', '');
-
-        $formFields[] = Form::AddCheckbox('is_priority', __('Priority?'),
-            NULL, __('Sets whether or not this event has priority. If set the event will be show in preference to other events.'),
-            'p');
-
-        Theme::Set('form_fields', $formFields);
-
-        $response->SetFormRequestResponse(NULL, __('Schedule Now'), '700px', '400px');
-        $response->callBack = 'setupScheduleNowForm';
-        $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Schedule&Category=ScheduleNow')");
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Save'), '$("#ScheduleNowForm").submit()');
-
-    }
-
-    public function ScheduleNow()
-    {
-
-
-        $user = $this->getUser();
-        $response = $this->getState();
-
-        $campaignId = \Kit::GetParam('CampaignID', _POST, _INT, 0);
-        $displayGroupIds = \Kit::GetParam('DisplayGroupIDs', _POST, _ARRAY);
-        $isPriority = \Xibo\Helper\Sanitize::getCheckbox('is_priority');
-        $fromDt = time();
-
-        $hours = \Kit::GetParam('hours', _POST, _INT, 0);
-        $minutes = \Kit::GetParam('minutes', _POST, _INT, 0);
-        $seconds = \Kit::GetParam('seconds', _POST, _INT, 0);
-        $duration = ($hours * 3600) + ($minutes * 60) + $seconds;
-        $displayOrder = \Xibo\Helper\Sanitize::getInt('DisplayOrder');
-
-        // Validate
-        if ($campaignId == 0)
-            trigger_error(__('No layout selected'), E_USER_ERROR);
-
-        if ($duration == 0)
-            trigger_error(__('You must enter a duration'), E_USER_ERROR);
-
-        // check that at least one display has been selected
-        if ($displayGroupIds == '')
-            trigger_error(__('No displays selected'), E_USER_ERROR);
-
-        if ($fromDt < (time() - 86400))
-            trigger_error(__('Your start time is in the past. Cannot schedule events in the past'), E_USER_ERROR);
-
-        $toDt = $fromDt + $duration;
-
-        // Ready to do the add
-        $scheduleObject = new Schedule($db);
-
-        if (!$scheduleObject->Add($displayGroupIds, $fromDt, $toDt, $campaignId, '', '', '', $isPriority, $this->getUser()->userId, $displayOrder))
-            trigger_error($scheduleObject->GetErrorMessage(), E_USER_ERROR);
-
-        $response->SetFormSubmitResponse(__('The Event has been Scheduled'));
-
+        $this->getState()->template = 'schedule-form-now';
+        $this->getState()->setData([
+            'campaignId' => (($from == 'Campaign') ? $id : 0),
+            'displayGroupId' => (($from == 'DisplayGroup') ? $id : 0),
+            'displays' => $displays,
+            'displayGroups' => $groups,
+            'campaigns' => CampaignFactory::query(),
+            'displayGroupIds' => Session::get('displayGroupIds'),
+            'help' => Help::Link('Schedule', 'ScheduleNow')
+        ]);
     }
 }
-
-?>

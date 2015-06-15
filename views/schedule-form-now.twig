@@ -1,0 +1,120 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+// Generate a list of layouts.
+        $layouts = $user->CampaignList(NULL, false /* isRetired */, false /* show Empty */);
+
+        $optionGroups = array(
+            array('id' => 'campaign', 'label' => __('Campaigns')),
+            array('id' => 'layout', 'label' => __('Layouts'))
+        );
+
+        $layoutOptions = array();
+        $campaignOptions = array();
+
+        foreach ($layouts as $layout) {
+
+            if ($layout['islayoutspecific'] == 1) {
+                $layoutOptions[] = array(
+                    'id' => $layout['campaignid'],
+                    'value' => $layout['campaign']
+                );
+            } else {
+                $campaignOptions[] = array(
+                    'id' => $layout['campaignid'],
+                    'value' => $layout['campaign']
+                );
+            }
+        }
+
+        $formFields[] = Form::AddCombo(
+            'CampaignID',
+            __('Layout'),
+            $campaignId,
+            array('campaign' => $campaignOptions, 'layout' => $layoutOptions),
+            'id',
+            'value',
+            __('Please select a Layout or Campaign for this Event to show'),
+            'l', '', true, '', '', '', $optionGroups);
+
+        $formFields[] = Form::AddText('hours', __('Hours'), NULL,
+            __('Hours this event should be scheduled for'), 'h', '');
+
+        $formFields[] = Form::AddText('minutes', __('Minutes'), NULL,
+            __('Minutes this event should be scheduled for'), 'h', '');
+
+        $formFields[] = Form::AddText('seconds', __('Seconds'), NULL,
+            __('Seconds this event should be scheduled for'), 'h', '');
+
+        // List of Display Groups
+        $optionGroups = array(
+            array('id' => 'group', 'label' => __('Groups')),
+            array('id' => 'display', 'label' => __('Displays'))
+        );
+
+        $groups = array();
+        $displays = array();
+        $scheduleWithView = (Config::GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
+
+        foreach ($this->getUser()->DisplayGroupList(-1 /*IsDisplaySpecific*/) as $display) {
+
+            // Can schedule with view, but no view permissions
+            if ($scheduleWithView && $display['view'] != 1)
+                continue;
+
+            // Can't schedule with view, but no edit permissions
+            if (!$scheduleWithView && $display['edit'] != 1)
+                continue;
+
+            $display['checked_text'] = (in_array($display['displaygroupid'], $displayGroupIds)) ? ' selected' : '';
+
+            if ($display['isdisplayspecific'] == 1) {
+                $displays[] = $display;
+            } else {
+                $groups[] = $display;
+            }
+        }
+
+        $formFields[] = Form::AddMultiCombo(
+            'DisplayGroupIDs[]',
+            __('Display'),
+            $displayGroupIds,
+            array('group' => $groups, 'display' => $displays),
+            'displaygroupid',
+            'displaygroup',
+            __('Please select one or more displays / groups for this event to be shown on.'),
+            'd', '', true, '', '', '', $optionGroups, array(array('name' => 'data-live-search', 'value' => "true"), array('name' => 'data-selected-text-format', 'value' => "count > 4")));
+
+        $formFields[] = Form::AddNumber('DisplayOrder', __('Display Order'), 0,
+            __('Should this event have an order?'), 'o', '');
+
+        $formFields[] = Form::AddCheckbox('is_priority', __('Priority?'),
+            NULL, __('Sets whether or not this event has priority. If set the event will be show in preference to other events.'),
+            'p');
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Schedule Now" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Save" %}, $("#scheduleNowForm").submit()
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="scheduleNowForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("schedule.add") }}">
+
+            </form>
+        </div>
+    </div>
+{% endblock %}

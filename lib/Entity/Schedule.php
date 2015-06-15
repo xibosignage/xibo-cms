@@ -43,7 +43,7 @@ class Schedule
     public function load()
     {
         // If we are already loaded, then don't do it again
-        if ($this->loaded)
+        if ($this->loaded || $this->eventId == null || $this->eventId == 0)
             return;
 
         $this->displayGroups = DisplayGroupFactory::getByEventId($this->eventId);
@@ -88,6 +88,25 @@ class Schedule
     {
         if (count($this->displayGroups) <= 0)
             throw new \InvalidArgumentException(__('No display groups selected'));
+
+        // Validate layout
+        if ($campaignId == 0)
+            trigger_error(__("No layout selected"), E_USER_ERROR);
+
+        // check that at least one display has been selected
+        if ($displayGroupIDs == '')
+            trigger_error(__("No displays selected"), E_USER_ERROR);
+
+        // validate the dates
+        if ($toDT < $fromDT)
+            trigger_error(__('Can not have an end time earlier than your start time'), E_USER_ERROR);
+
+        if ($fromDT < (time() - 86400))
+            trigger_error(__("Your start time is in the past. Cannot schedule events in the past"), E_USER_ERROR);
+
+        // Check recurrence dT is in the future or empty
+        if ($repeatType != '' && ($repeatToDt != '' && ($repeatToDt < (time() - 86400))))
+            trigger_error(__("Your repeat until date is in the past. Cannot schedule events to repeat in to the past"), E_USER_ERROR);
     }
 
     /**

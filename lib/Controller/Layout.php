@@ -388,7 +388,7 @@ class Layout extends Base
             // Schedule Now
             $layout->buttons[] = array(
                 'id' => 'layout_button_schedulenow',
-                'url' => $this->urlFor('schedule.now.form', ['id' => $layout->campaignId]),
+                'url' => $this->urlFor('schedule.now.form', ['id' => $layout->campaignId, 'from' => 'Campaign']),
                 'text' => __('Schedule Now')
             );
 
