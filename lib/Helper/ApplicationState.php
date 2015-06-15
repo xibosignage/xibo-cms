@@ -82,7 +82,7 @@ class ApplicationState
      * @param string $actions The actions (field => action)
      * @param string $operation The Operation (optional)
      */
-    public function AddFieldAction($field, $action, $value, $actions, $operation = "equals")
+    public function addFieldAction($field, $action, $value, $actions, $operation = "equals")
     {
         $this->fieldActions[] = array(
             'field' => $field,

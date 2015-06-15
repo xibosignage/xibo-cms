@@ -218,7 +218,7 @@ class Display
 
         $displayGroup = new DisplayGroup();
         $displayGroup->displayGroup = $this->display;
-        $displayGroup->setOwner($this->displayId);
+        $displayGroup->setOwner($this);
         $displayGroup->save();
     }
 

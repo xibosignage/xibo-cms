@@ -22,9 +22,9 @@ namespace Xibo\Controller;
 
 use Media;
 use Parsedown;
-use Xibo\Entity\Campaign;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\ResolutionFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Help;
 use Xibo\Helper\Sanitize;
@@ -129,11 +129,11 @@ class Layout extends Base
      */
     function add()
     {
-        $name = Sanitize::getString('layout');
+        $name = Sanitize::getString('name');
         $description = Sanitize::getString('description');
         $tags = Sanitize::getString('tags');
-        $templateId = Sanitize::getInt('templateid');
-        $resolutionId = Sanitize::getInt('resolutionid');
+        $templateId = Sanitize::getInt('layoutId');
+        $resolutionId = Sanitize::getInt('resolutionId');
 
         if ($templateId != 0)
             $layout = LayoutFactory::createFromTemplate($templateId, $this->getUser()->userId, $name, $description, $tags);
@@ -146,21 +146,14 @@ class Layout extends Base
         // Save
         $layout->save();
 
-        // Add a Campaign
-        $campaign = new Campaign();
-        $campaign->campaign = $layout->layout;
-        $campaign->isLayoutSpecific = 1;
-        $campaign->ownerId = $layout->getOwnerId();
-        $campaign->assignLayout($layout->layoutId);
-
-        // Ready to save the Campaign
-        $campaign->save();
-
         // TODO: Set the default permissions on the regions
 
-        // Successful layout creation
-        $this->getState()->setData(array('layoutId' => $layout->getId()));
-        $this->getState()->SetFormSubmitResponse(__('Layout Details Changed.'), true, $this->urlFor('layoutDesigner', array('id', $layout->layoutId)));
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Added %s'), $layout->layout),
+            'id' => $layout->layoutId,
+            'data' => [$layout]
+        ]);
     }
 
     /**
@@ -318,22 +311,27 @@ class Layout extends Base
         Session::Set('layout', 'LayoutFilter', Sanitize::getCheckbox('XiboFilterPinned'));
 
         // Get all layouts
-        $layouts = $this->getUser()->LayoutList($this->gridRenderSort(), array(
+        $layouts = LayoutFactory::query($this->gridRenderSort(), $this->gridRenderFilter([
             'layout' => $name,
             'userId' => $filter_userid,
             'retired' => $filter_retired,
             'tags' => $filter_tags,
             'filterLayoutStatusId' => $filterLayoutStatusId,
-            'showTags' => $showTags)
-        );
+            'showTags' => $showTags
+        ]));
 
         foreach ($layouts as $layout) {
             /* @var \Xibo\Entity\Layout $layout */
 
+            if ($this->isApi())
+                break;
+
             $layout->thumbnail = '';
 
-            if ($layout->backgroundImageId != 0)
-                $layout->thumbnail = '<a class="img-replace" data-toggle="lightbox" data-type="image" data-img-src="index.php?p=content&q=getFile&mediaid=' . $layout->backgroundImageId . '&width=100&height=100&dynamic=true&thumb=true" href="index.php?p=content&q=getFile&mediaid=' . $layout->backgroundImageId . '"><i class="fa fa-file-image-o"></i></a>';
+            if ($layout->backgroundImageId != 0) {
+                $download = $this->urlFor('library.download', ['id' => $layout->backgroundImageId]) . '?preview=1';
+                $layout->thumbnail = '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' . $download . '"><img src="' . $download . '&width=100&height=56" /></i></a>';
+            }
 
             // Fix up the description
             if ($showDescriptionId == 1) {
@@ -473,9 +471,14 @@ class Layout extends Base
     /**
      * Displays an Add/Edit form
      */
-    function AddForm()
+    function addForm()
     {
         $this->getState()->template = 'layout-form-add';
+        $this->getState()->setData([
+            'layouts' => LayoutFactory::query(['layout'], ['excludeTemplates' => 0, 'tags' => 'template']),
+            'resolutions' => ResolutionFactory::query(['resolution']),
+            'help' => Help::Link('Layout', 'Add')
+        ]);
     }
 
     /**

@@ -27,9 +27,9 @@ use Xibo\Factory\RegionFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Helper\Log;
 
-class Layout
+class Layout implements \JsonSerializable
 {
-    private $hash;
+    use EntityTrait;
     public $layoutId;
     public $ownerId;
     public $campaignId;
@@ -307,6 +307,16 @@ class Layout
             'backgroundColor' => $this->backgroundColor,
             'backgroundzIndex' => $this->backgroundzIndex,
         ));
+
+        // Add a Campaign
+        $campaign = new Campaign();
+        $campaign->campaign = $this->layout;
+        $campaign->isLayoutSpecific = 1;
+        $campaign->ownerId = $this->getOwnerId();
+        $campaign->assignLayout($this);
+
+        // Ready to save the Campaign
+        $campaign->save();
     }
 
     /**

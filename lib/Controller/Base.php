@@ -24,6 +24,7 @@ namespace Xibo\Controller;
 use Slim\Slim;
 use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Helper\Date;
+use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 
@@ -237,6 +238,26 @@ class Base
                         foreach ($button as $key => $value) {
 
                         }
+                    }
+                }
+
+                // Process the fieldActions
+                // Expect each fieldAction on a new line
+                if (trim($view['fieldActions']) == '') {
+                    $state->fieldActions = [];
+                } else {
+                    // Convert to an array
+                    $fieldActions = explode(PHP_EOL, $view['fieldActions']);
+
+                    foreach ($fieldActions as $fieldAction) {
+                        if ($fieldAction == '')
+                            continue;
+
+                        $fieldAction = explode(',', trim($fieldAction));
+
+                        Log::notice('Field Actions: ' . $fieldAction[3]);
+
+                        $state->addFieldAction($fieldAction[0], $fieldAction[1], $fieldAction[2], json_decode($fieldAction[3], true), $fieldAction[4]);
                     }
                 }
             }
