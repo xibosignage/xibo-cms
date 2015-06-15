@@ -100,6 +100,10 @@ CREATE TABLE IF NOT EXISTS `lkscheduledisplaygroup` (
   PRIMARY KEY (`eventId`,`displayGroupId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+ALTER TABLE  `schedule_detail` DROP FOREIGN KEY  `schedule_detail_ibfk_8` ;
+ALTER TABLE `schedule_detail` DROP `DisplayGroupID`;
+ALTER TABLE `schedule` DROP `DisplayGroupIDs`;
+
 UPDATE `version` SET `app_ver` = '1.8.0-alpha', `XmdsVersion` = 4, `XlfVersion` = 2;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';
 UPDATE `version` SET `DBVersion` = '120';

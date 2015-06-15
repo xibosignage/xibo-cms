@@ -95,7 +95,7 @@ class DisplayGroupFactory
         if (Sanitize::getInt('eventId', $filterBy) != null) {
             $sql .= '
                 INNER JOIN `lkscheduledisplaygroup`
-                ON `lkscheduledisplaygroup`.displayGroupId = displayGroup.displayGroupId
+                ON `lkscheduledisplaygroup`.displayGroupId = `displaygroup`.displayGroupId
                     AND `lkscheduledisplaygroup`.eventId = :eventId
             ';
             $params['eventId'] = Sanitize::getInt('eventId', $filterBy);

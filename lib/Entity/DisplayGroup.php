@@ -17,7 +17,7 @@ use Xibo\Factory\ScheduleFactory;
 use Xibo\Helper\Log;
 use Xibo\Storage\PDOConnect;
 
-class DisplayGroup
+class DisplayGroup implements \JsonSerializable
 {
     use EntityTrait;
     public $displayGroupId;
@@ -148,7 +148,7 @@ class DisplayGroup
         if (!v::string()->notEmpty()->validate($this->displayGroup))
             throw new \InvalidArgumentException(__('Please enter a display group name'));
 
-        if (!v::string()->length(0, 254)->validate($this->description))
+        if (!v::string()->length(null, 254)->validate($this->description))
             throw new \InvalidArgumentException(__('Description can not be longer than 254 characters'));
 
         if ($this->isDisplaySpecific == 0) {

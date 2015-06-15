@@ -89,7 +89,7 @@ class Schedule extends Base
         $filter = [
             'fromDt' => $start,
             'toDt' => $end,
-            'displayGroupIds' => $displayGroupIds
+            'displayGroupIds' => array_diff($displayGroupIds, [-1])
         ];
 
         foreach (ScheduleFactory::query('schedule_detail.FromDT', $filter) as $row) {
@@ -98,9 +98,14 @@ class Schedule extends Base
             // Load the display groups
             $row->load();
 
-            $displayGroupList = implode(',', array_reduce($row->displayGroups, function($object) {
-                return $object->displayGroup;
-            }));
+            $displayGroupList = '';
+
+            if (count($row->displayGroups) >= 0) {
+                $array = array_map(function ($object) {
+                    return $object->displayGroup;
+                }, $row->displayGroups);
+                $displayGroupList = implode(', ', $array);
+            }
 
             // Event Permissions
             $editable = $this->isEventEditable($row->displayGroups);
@@ -123,13 +128,13 @@ class Schedule extends Base
                 $extra = 'multi-display';
             }
 
-            if ($row['recurrence_type'] != '') {
+            if ($row->recurrenceType != '') {
                 $class = 'event-special';
                 $extra = 'recurring';
             }
 
             // Priority event
-            if ($row['is_priority'] == 1) {
+            if ($row->isPriority == 1) {
                 $class = 'event-important';
                 $extra = 'priority';
             }
@@ -141,13 +146,14 @@ class Schedule extends Base
             }
 
             $events[] = array(
-                'id' => $row['EventID'],
+                'id' => $row->eventId,
                 'title' => $title,
                 'url' => $url,
                 'class' => 'XiboFormButton ' . $class,
                 'extra' => $extra,
-                'start' => $row['FromDT'] * 1000,
-                'end' => $row['ToDT'] * 1000
+                'start' => $row->fromDt * 1000,
+                'end' => $row->toDt * 1000,
+                'event' => $row
             );
         }
 
@@ -202,7 +208,7 @@ class Schedule extends Base
         $schedule->recurrenceDetail = Sanitize::getString('recurrenceDetail');
 
         foreach (Sanitize::getIntArray('displayGroupIds') as $displayGroupId) {
-            $schedule->assignDisplayGroup($displayGroupId);
+            $schedule->assignDisplayGroup(DisplayGroupFactory::getById($displayGroupId));
         }
 
         // Handle the dates
@@ -294,9 +300,10 @@ class Schedule extends Base
         $schedule->isPriority = Sanitize::getCheckbox('isPriority');
         $schedule->recurrenceType = Sanitize::getString('recurrenceType');
         $schedule->recurrenceDetail = Sanitize::getString('recurrenceDetail');
+        $schedule->displayGroups = [];
 
         foreach (Sanitize::getIntArray('displayGroupIds') as $displayGroupId) {
-            $schedule->assignDisplayGroup($displayGroupId);
+            $schedule->assignDisplayGroup(DisplayGroupFactory::getById($displayGroupId));
         }
 
         // Handle the dates

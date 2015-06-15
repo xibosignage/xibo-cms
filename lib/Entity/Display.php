@@ -294,7 +294,7 @@ class Display
         $displayGroup = DisplayGroupFactory::getById($this->displayGroupId);
         $displayGroup->displayGroup = $this->display;
         $displayGroup->description = $this->description;
-        $displayGroup->save();
+        $displayGroup->save(false);
     }
 
     /**

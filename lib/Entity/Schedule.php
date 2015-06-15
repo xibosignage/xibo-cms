@@ -8,11 +8,11 @@
 
 namespace Xibo\Entity;
 
-
+use Respect\Validation\Validator as v;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Storage\PDOConnect;
 
-class Schedule
+class Schedule implements \JsonSerializable
 {
     use EntityTrait;
     public $eventId;
@@ -90,23 +90,12 @@ class Schedule
             throw new \InvalidArgumentException(__('No display groups selected'));
 
         // Validate layout
-        if ($campaignId == 0)
-            trigger_error(__("No layout selected"), E_USER_ERROR);
-
-        // check that at least one display has been selected
-        if ($displayGroupIDs == '')
-            trigger_error(__("No displays selected"), E_USER_ERROR);
+        if (!v::int()->notEmpty()->validate($this->campaignId))
+            throw new \InvalidArgumentException(__('No layout selected'));
 
         // validate the dates
-        if ($toDT < $fromDT)
-            trigger_error(__('Can not have an end time earlier than your start time'), E_USER_ERROR);
-
-        if ($fromDT < (time() - 86400))
-            trigger_error(__("Your start time is in the past. Cannot schedule events in the past"), E_USER_ERROR);
-
-        // Check recurrence dT is in the future or empty
-        if ($repeatType != '' && ($repeatToDt != '' && ($repeatToDt < (time() - 86400))))
-            trigger_error(__("Your repeat until date is in the past. Cannot schedule events to repeat in to the past"), E_USER_ERROR);
+        if ($this->toDt < $this->fromDt)
+            throw new \InvalidArgumentException(__('Can not have an end time earlier than your start time'));
     }
 
     /**
@@ -118,8 +107,10 @@ class Schedule
         if ($validate)
             $this->validate();
 
-        if ($this->eventId == null || $this->eventId == 0)
+        if ($this->eventId == null || $this->eventId == 0) {
             $this->add();
+            $this->loaded = true;
+        }
         else
             $this->edit();
 
@@ -177,17 +168,17 @@ class Schedule
         PDOConnect::update('
           UPDATE `schedule` SET
             campaignId = :campaignId,
-            isPriority = :isPriority,
+            is_priority = :isPriority,
             userId = :userId,
             fromDt = :fromDt,
             toDt = :toDt,
+            displayOrder = :displayOrder,
             recurrence_type = :recurrenceType,
             recurrence_detail = :recurrenceDetail,
             recurrence_range = :recurrenceRange
           WHERE eventId = :eventId
         ', [
             'campaignId' => $this->campaignId,
-            'displayGroupIds' => $this->displayGroups,
             'userId' => $this->userId,
             'isPriority' => $this->isPriority,
             'fromDt' => $this->fromDt,

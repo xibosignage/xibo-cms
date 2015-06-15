@@ -80,8 +80,8 @@ class ScheduleFactory
 
         $sql = '
         SELECT `schedule`.eventId,
-            `schedule_detail`.fromDT,
-            `schedule_detail`.toDT,
+            `schedule_detail`.fromDt,
+            `schedule_detail`.toDt,
             `schedule`.is_priority AS isPriority,
             `schedule`.recurrence_type AS recurrenceType,
             campaign.campaignId,
@@ -115,7 +115,7 @@ class ScheduleFactory
         Log::sql($sql, $params);
 
         foreach (PDOConnect::select($sql, $params) as $row) {
-            $entries[] = (new Schedule())->hydrate($row);
+            $entries[] = (new Schedule())->hydrate($row, ['isPriority']);
         }
 
         return $entries;
