@@ -3,8 +3,11 @@
 namespace Xibo\Helper;
 
 use Exception;
+use Xibo\Entity\Permission;
+use Xibo\Entity\Widget;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
+use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\WidgetFactory;
 
@@ -34,7 +37,50 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
             // Add the Media
             $media = MediaFactory::create($name, $fileName, $module->type, $this->options['userId']);
-            $media->save();
+
+            // Old Media Id or not?
+            if ($this->options['oldMediaId'] != 0) {
+                // Load old media
+                $oldMedia = MediaFactory::getById($this->options['oldMediaId']);
+
+                // Set the old record to edited
+                $oldMedia->isEdited = 1;
+                $oldMedia->save(false);
+
+                // Reset the name
+                $media->name = $oldMedia->name;
+
+                // Save
+                $media->save();
+
+                foreach (PermissionFactory::getAllByObjectId('Media', $oldMedia->mediaId) as $permission) {
+                    /* @var Permission $permission */
+                    $permission = clone $permission;
+                    $permission->objectId = $media->mediaId;
+                    $permission->save();
+                }
+
+                // Do we want to replace this in all layouts?
+                if ($this->options['replaceInAllLayouts'] == 1) {
+                    foreach (WidgetFactory::getByMediaId($media->mediaId) as $widget) {
+                        /* @var Widget $widget */
+                        $widget->unassignMedia($oldMedia->mediaId);
+                        $widget->assignMedia($media->mediaId);
+                        $widget->save();
+                    }
+                }
+
+                // We either want to Link the old record to this one, or delete it
+                if ($this->options['replaceInAllLayouts'] == 1 && $this->options['deleteOldRevisions'] == 1) {
+                    $oldMedia->delete();
+                } else {
+                    $oldMedia->parentId = $media->mediaId;
+                    $oldMedia->save(false);
+                }
+            } else {
+                // Save
+                $media->save();
+            }
 
             // Get the storedAs valid for return
             $file->storedas = $media->storedAs;

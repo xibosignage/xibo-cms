@@ -240,6 +240,8 @@ class Library extends Base
             'userId' => $this->getUser()->userId,
             'controller' => $this,
             'oldMediaId' => Sanitize::getInt('oldMediaId'),
+            'replaceInAllLayouts' => Sanitize::getCheckbox('replaceInAllLayouts'),
+            'deleteOldRevisions' => Sanitize::getCheckbox('deleteOldRevisions'),
             'playlistId' => Sanitize::getInt('playlistId'),
             'upload_dir' => $libraryFolder . 'temp/',
             'download_via_php' => true,

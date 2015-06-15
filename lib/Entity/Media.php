@@ -68,6 +68,23 @@ class Media
     // New file revision
     public $force;
     public $isRemote;
+    public $cloned = false;
+
+    public function __clone()
+    {
+        // Clear the ID's and all widget/displayGroup assignments
+        $this->mediaId = null;
+        $this->widgets = [];
+        $this->displayGroups = [];
+
+        // We need to do something with the name
+        $this->name = sprintf(__('Copy of %s'), $this->name);
+
+        // Set so that when we add, we copy the existing file in the library
+        $this->fileName = $this->storedAs;
+        $this->storedAs = null;
+        $this->cloned = true;
+    }
 
     public function getId()
     {
@@ -92,8 +109,8 @@ class Media
         $checkSQL = 'SELECT `name` FROM `media` WHERE `name` = :name AND userid = :userId';
 
         if ($this->mediaId != 0) {
-            $checkSQL .= ' AND mediaid <> :mediaid  AND IsEdited = 0 ';
-            $params['mediaid'] = $this->mediaId;
+            $checkSQL .= ' AND mediaId <> :mediaId AND IsEdited = 0 ';
+            $params['mediaId'] = $this->mediaId;
         }
 
         $params['name'] = $this->name;
@@ -240,7 +257,15 @@ class Media
 
         PDOConnect::update('
           UPDATE `media`
-            SET `name` = :name, duration = :duration, retired = :retired, md5 = :md5, filesize = :fileSize, expires = :expires, moduleSystemFile = :moduleSystemFile
+              SET `name` = :name,
+                duration = :duration,
+                retired = :retired,
+                md5 = :md5,
+                filesize = :fileSize,
+                expires = :expires,
+                moduleSystemFile = :moduleSystemFile,
+                editedMediaId = :editedMediaId,
+                isEdited = :isEdited
            WHERE mediaId = :mediaId
         ', [
             'name' => $this->name,
@@ -250,6 +275,8 @@ class Media
             'md5' => $this->md5,
             'expires' => $this->expires,
             'moduleSystemFile' => $this->moduleSystemFile,
+            'editedMediaId' => $this->parentId,
+            'isEdited' => $this->isEdited,
             'mediaId' => $this->mediaId
         ]);
     }
@@ -266,9 +293,17 @@ class Media
         // If the storesAs is empty, then set it to be the moved file name
         if (empty($this->storedAs)) {
 
-            // Move the file into the library
-            if (!@rename($libraryFolder . 'temp/' . $this->fileName, $libraryFolder . $this->mediaId . '.' . $extension))
-                throw new ConfigurationException(__('Problem moving uploaded file into the Library Folder'));
+            // We could be a fresh file entirely, or we could be a clone
+            if ($this->cloned) {
+                // Copy the file into the library
+                if (!@copy($libraryFolder . $this->fileName, $libraryFolder . $this->mediaId . '.' . $extension))
+                    throw new ConfigurationException(__('Problem copying file in the Library Folder'));
+
+            } else {
+                // Move the file into the library
+                if (!@rename($libraryFolder . 'temp/' . $this->fileName, $libraryFolder . $this->mediaId . '.' . $extension))
+                    throw new ConfigurationException(__('Problem moving uploaded file into the Library Folder'));
+            }
 
             $this->storedAs = $this->mediaId . '.' . $extension;
             PDOConnect::update('UPDATE `media` SET storedAs = :storedAs WHERE mediaId = :mediaId', [
