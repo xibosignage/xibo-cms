@@ -45,6 +45,12 @@ class Playlist implements \JsonSerializable
     // Display Order when assigned to a Playlist
     public $displayOrder;
 
+    public function __construct()
+    {
+        // Exclude properties that will cause recursion
+        $this->excludeProperty('regions');
+    }
+
     public function __clone()
     {
         $this->hash = null;

@@ -29,7 +29,7 @@ use Xibo\Factory\RegionOptionFactory;
 use Xibo\Helper\Log;
 use Xibo\Storage\PDOConnect;
 
-class Region
+class Region implements \JsonSerializable
 {
     use EntityTrait;
     public $regionId;
@@ -49,6 +49,12 @@ class Region
 
     // Display Order when assigned to a Playlist
     public $displayOrder;
+
+    public function __construct()
+    {
+        // Exclude properties that will cause recursion
+        $this->excludeProperty('playlists');
+    }
 
     public function __clone()
     {

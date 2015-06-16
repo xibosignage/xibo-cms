@@ -199,6 +199,8 @@ class Layout implements \JsonSerializable
                 $tag->save();
             }
         }
+
+        Log::debug('Save finished for %s', $this);
     }
 
     /**
