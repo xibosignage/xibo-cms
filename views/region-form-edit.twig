@@ -1,0 +1,95 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+$formFields = array();
+$formFields[] = Form::AddText('name', __('Name'), $region->name,
+    __('Name of the Region'), 'n', 'maxlength="50"');
+
+$formFields[] = Form::AddNumber('top', __('Top'), $top,
+    __('Offset from the Top Corner'), 't');
+
+$formFields[] = Form::AddNumber('left', __('Left'), $left,
+    __('Offset from the Left Corner'), 'l');
+
+$formFields[] = Form::AddNumber('width', __('Width'), $width,
+    __('Width of the Region'), 'w');
+
+$formFields[] = Form::AddNumber('height', __('Height'), $height,
+    __('Height of the Region'), 'h');
+
+// Transitions
+        if (count($this->getUser()->TransitionAuth('out')) > 0) {
+            // Add none to the list
+            $transitions = $this->getUser()->TransitionAuth('out');
+            $transitions[] = array('code' => '', 'transition' => 'None', 'class' => '');
+
+            $formFields[] = Form::AddCombo(
+                'transitionType',
+                __('Exit Transition'),
+                $region->getOptionValue('transOut', ''),
+                $transitions,
+                'code',
+                'transition',
+                __('What transition should be applied when this region is finished?'),
+                't');
+
+            $formFields[] = Form::AddNumber('transitionDuration', __('Duration'), $region->getOptionValue('transOutDuration', 0),
+                __('The duration for this transition, in milliseconds.'), 'l', '', 'transition-group');
+
+            // Compass points for direction
+            $compassPoints = ;
+
+            $formFields[] = Form::AddCombo(
+                'transitionDirection',
+                __('Direction'),
+                $region->getOptionValue('transOutDirection', ''),
+                $compassPoints,
+                'id',
+                'name',
+                __('The direction for this transition. Only appropriate for transitions that move, such as Fly.'),
+                'd',
+                'transition-group transition-direction');
+
+            // Add some dependencies
+            $response->AddFieldAction('transitionType', 'init', '', array('.transition-group' => array('display' => 'none')));
+            $response->AddFieldAction('transitionType', 'init', '', array('.transition-group' => array('display' => 'block')), 'not');
+            $response->AddFieldAction('transitionType', 'change', '', array('.transition-group' => array('display' => 'none')));
+            $response->AddFieldAction('transitionType', 'change', '', array('.transition-group' => array('display' => 'block')), 'not');
+        }
+
+        $formFields[] = Form::AddCheckbox('loop', __('Loop?'),
+            $region->getOptionValue('loop', 0), __('If there is only one item in this region should it loop? Not currently available for Windows Players.'),
+            'l');
+
+        $formFields[] = Form::AddNumber('zindex', __('Layer'), ($zIndex == 0) ? NULL : $zIndex,
+            __('The layering order of this region (z-index). Advanced use only. '), 'z');
+
+        Theme::Set('form_fields', $formFields);
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Region Options" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Set Full Screen" %}, setFullScreenLayout()
+    {% trans "Save" %}, $("#regionEditForm").submit()
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="regionEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("region.edit", {id: region.regionId}) }}">
+
+            </form>
+        </div>
+    </div>
+{% endblock %}

@@ -42,6 +42,11 @@ $app->put('/layout/:id', '\Xibo\Controller\Layout:edit')->name('layout.edit');
 $app->delete('/layout/:id', '\Xibo\Controller\Layout:delete')->name('layout.delete');
 $app->put('/layout/retire/:id', '\Xibo\Controller\Layout:retire')->name('layout.retire');
 
+// Region
+$app->post('/region/:id', '\Xibo\Controller\Region:add')->name('region.add');
+$app->put('/region/:id', '\Xibo\Controller\Region:edit')->name('region.edit');
+$app->delete('/region/:id', '\Xibo\Controller\Region:delete')->name('region.delete');
+
 //
 // Campaign
 //

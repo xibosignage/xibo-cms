@@ -33,51 +33,72 @@ class TransitionFactory
     }
 
     /**
+     * Get enabled by type
+     * @param string $type
+     * @return array[Transition]
+     */
+    public static function getEnabledByType($type)
+    {
+        $filter = [];
+
+        if ($type == 'in') {
+            $filter['availableAsIn'] = 1;
+            $filter['availableAsOut'] = 0;
+        } else {
+            $filter['availableAsIn'] = 0;
+            $filter['availableAsOut'] = 1;
+        }
+
+        return TransitionFactory::query(null, $filter);
+    }
+
+    /**
      * @param array $sortOrder
      * @param array $filterBy
      * @return array[Transition]
-     * @throws NotFoundException
      */
     public static function query($sortOrder = null, $filterBy = null)
     {
         $entries = array();
         $params = array();
 
-        try {
-            $sql = '
-            SELECT transitionId,
-                  transition,
-                  `code`,
-                  hasDuration,
-                  hasDirection,
-                  availableAsIn,
-                  availableAsOut
-              FROM `transition`
-             WHERE 1 = 1
-            ';
+        $sql = '
+        SELECT transitionId,
+              transition,
+              `code`,
+              hasDuration,
+              hasDirection,
+              availableAsIn,
+              availableAsOut
+          FROM `transition`
+         WHERE 1 = 1
+        ';
 
-            if (Sanitize::getInt('transitionId', $filterBy) != null) {
-                $sql .= ' AND transition.transitionId = :transitionId ';
-                $params['transitionId'] = Sanitize::getInt('transitionId', $filterBy);
-            }
-
-            // Sorting?
-            if (is_array($sortOrder))
-                $sql .= 'ORDER BY ' . implode(',', $sortOrder);
-
-            Log::sql($sql, $params);
-
-            foreach (PDOConnect::select($sql, $params) as $row) {
-                $entries[] = (new Transition())->hydrate($row);
-            }
-
-            return $entries;
-
-        } catch (\Exception $e) {
-
-            Log::error($e);
-
-            throw new NotFoundException();
+        if (Sanitize::getInt('transitionId', $filterBy) != null) {
+            $sql .= ' AND transition.transitionId = :transitionId ';
+            $params['transitionId'] = Sanitize::getInt('transitionId', $filterBy);
         }
+
+        if (Sanitize::getInt('availableAsIn', $filterBy) != null) {
+            $sql .= ' AND transition.availableAsIn = :availableAsIn ';
+            $params['availableAsIn'] = Sanitize::getInt('availableAsIn', $filterBy);
+        }
+
+        if (Sanitize::getInt('availableAsOut', $filterBy) != null) {
+            $sql .= ' AND transition.availableAsOut = :availableAsOut ';
+            $params['availableAsOut'] = Sanitize::getInt('availableAsOut', $filterBy);
+        }
+
+        // Sorting?
+        if (is_array($sortOrder))
+            $sql .= 'ORDER BY ' . implode(',', $sortOrder);
+
+        Log::sql($sql, $params);
+
+        foreach (PDOConnect::select($sql, $params) as $row) {
+            $entries[] = (new Transition())->hydrate($row);
+        }
+
+        return $entries;
     }
 }

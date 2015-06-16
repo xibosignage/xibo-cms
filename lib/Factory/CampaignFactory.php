@@ -39,7 +39,7 @@ class CampaignFactory
      */
     public static function getById($campaignId)
     {
-        $campaigns = CampaignFactory::query(null, array('campaignId' => $campaignId));
+        $campaigns = CampaignFactory::query(null, array('campaignId' => $campaignId, 'isLayoutSpecific' => -1));
 
         if (count($campaigns) <= 0) {
             throw new NotFoundException(\__('Campaign not found'));

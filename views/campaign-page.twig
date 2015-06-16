@@ -54,7 +54,12 @@ This is the template for the campaign page
             "filter": false,
             searchDelay: 3000,
             "order": [[ 1, "asc"]],
-            ajax: "{{ urlFor("campaign.search") }}",
+            ajax: {
+                url: "{{ urlFor("campaign.search") }}",
+                "data": function(d) {
+                    $.extend(d, $("#campaigns").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                }
+            },
             "columns": [
                 { "data": "campaign" },
                 { "data": "numberLayouts" },

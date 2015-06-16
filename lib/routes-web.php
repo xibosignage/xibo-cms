@@ -112,7 +112,7 @@ $app->get('/schedule/form/now/:from/:id', '\Xibo\Controller\Schedule:scheduleNow
 //
 $app->get('/layout/view', '\Xibo\Controller\Layout:displayPage')->name('layout.view');
 $app->get('/layout/designer/:id', '\Xibo\Controller\Layout:displayDesigner')->name('layout.designer');
-$app->get('/layout/status/:id', '\Xibo\Controller\Layout:LayoutStatus')->setName('layout.status');
+$app->get('/layout/status/:id', '\Xibo\Controller\Layout:status')->setName('layout.status');
 $app->get('/layout/preview/:id', '\Xibo\Controller\Preview:render')->name('layout.preview');
 $app->get('/layout/export/:id', '\Xibo\Controller\Layout:export')->name('layout.export');
 // forms
@@ -122,6 +122,14 @@ $app->get('/layout/form/copy/:id', '\Xibo\Controller\Layout:copyForm')->name('la
 $app->get('/layout/form/delete/:id', '\Xibo\Controller\Layout:deleteForm')->name('layout.delete.form');
 $app->get('/layout/form/retire/:id', '\Xibo\Controller\Layout:retireForm')->name('layout.retire.form');
 $app->get('/layout/form/import', '\Xibo\Controller\Layout:retireForm')->name('layout.import.form');
+$app->get('/layout/form/upgrade/:id', '\Xibo\Controller\Layout:upgradeForm')->name('layout.upgrade.form');
+$app->get('/layout/form/template/:id', '\Xibo\Controller\Layout:templateForm')->name('layout.template.form');
+
+//
+// regions
+//
+$app->get('/region/form/edit/:id', '\Xibo\Controller\Region:editForm')->name('region.edit.form');
+$app->get('/region/form/delete/:id', '\Xibo\Controller\Region:deleteForm')->name('region.delete.form');
 
 //
 // library

@@ -21,11 +21,14 @@
 namespace Xibo\Entity;
 
 use Xibo\Exception\NotFoundException;
+use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\TagFactory;
+use Xibo\Helper\Date;
 use Xibo\Helper\Log;
+use Xibo\Storage\PDOConnect;
 
 class Layout implements \JsonSerializable
 {
@@ -325,16 +328,16 @@ class Layout implements \JsonSerializable
      */
     private function update()
     {
-        \Xibo\Helper\Log::debug('Editing Layout ' . $this->layout . '. Id = ' . $this->layoutId);
+        Log::debug('Editing Layout ' . $this->layout . '. Id = ' . $this->layoutId);
 
         $sql = '
         UPDATE layout SET layout = :layout, description = :description, modifiedDT = :modifieddt, retired = :retired, width = :width, height = :height, backgroundImageId = :backgroundImageId, backgroundColor = :backgroundColor, backgroundzIndex = :backgroundzIndex, xml = NULL
          WHERE layoutID = :layoutid
         ';
 
-        $time = \Xibo\Helper\Date::getSystemDate(null, 'Y-m-d h:i:s');
+        $time = Date::getSystemDate(null, 'Y-m-d h:i:s');
 
-        \Xibo\Storage\PDOConnect::update($sql, array(
+        PDOConnect::update($sql, array(
             'layoutid' => $this->layoutId,
             'layout' => $this->layout,
             'description' => $this->description,
@@ -348,7 +351,8 @@ class Layout implements \JsonSerializable
         ));
 
         // Update the Campaign
-        $campaign = new \Campaign();
-        $campaign->Edit($this->campaignId, $this->layout);
+        $campaign = CampaignFactory::getById($this->campaignId);
+        $campaign->campaign = $this->layout;
+        $campaign->save(false);
     }
 }

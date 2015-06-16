@@ -20,10 +20,10 @@
  */
 namespace Xibo\Controller;
 
-use Media;
 use Parsedown;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ResolutionFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Helper\Config;
@@ -102,17 +102,23 @@ class Layout extends Base
             throw new AccessDeniedException();
 
         // Set up any JavaScript translations
-        $this->getState()->setData([
+        $data = [
             'layout' => $layout,
-            'translation' => [
-                'save_position_button' => __('Save Position'),
-                'revert_position_button' => __('Undo'),
-                'savePositionsFirst' => __('Please save the pending position changes first by clicking "Save Positions" or cancel by clicking "Undo".')
-            ]
-        ]);
+            'layouts' => LayoutFactory::query(),
+            'zoom' => Sanitize::getDouble('zoom', 1)
+        ];
+
+        // Get the regions
+        foreach ($layout->regions as $region) {
+            /* @var \Xibo\Entity\Region $region */
+
+            $region->viewable = $this->getUser()->checkViewable($region);
+            $region->editable = ($layout->schemaVersion >= 2 && $this->getUser()->checkEditable($region));
+        }
 
         // Call the render the template
         $this->getState()->template = 'layout-designer-page';
+        $this->getState()->setData($data);
     }
 
     /**
@@ -328,11 +334,15 @@ class Layout extends Base
             }
 
             // Fix up the description
-            if ($showDescriptionId == 1) {
-                // Parse down for description
-                $layout->descriptionWithMarkdown = Parsedown::instance()->text($layout->description);
-            } else if ($showDescriptionId == 2) {
-                $layout->description = strtok($layout->description, "\n");
+            $layout->descriptionFormatted = $layout->description;
+
+            if ($layout->description != '') {
+                if ($showDescriptionId == 1) {
+                    // Parse down for description
+                    $layout->descriptionFormatted = Parsedown::instance()->text($layout->description);
+                } else if ($showDescriptionId == 2) {
+                    $layout->descriptionFormatted = strtok($layout->description, "\n");
+                }
             }
 
             switch ($layout->status) {
@@ -488,221 +498,17 @@ class Layout extends Base
         if (!$this->getUser()->checkEditable($layout))
             throw new AccessDeniedException();
 
-        // Generate the form
-        Theme::Set('form_id', 'LayoutForm');
-        Theme::Set('form_action', 'index.php?p=layout&q=modify');
-        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layoutId . '"><input type="hidden" name="designer" value="' . \Kit::GetParam('designer', _GET, _INT) . '">');
+        $resolution = ResolutionFactory::getByDimensions($layout->width, $layout->height);
 
-        // Two tabs
-        $tabs = array();
-        $tabs[] = Form::AddTab('general', __('General'));
-        $tabs[] = Form::AddTab('description', __('Description'));
-        $tabs[] = Form::AddTab('background', __('Background'));
-
-        Theme::Set('form_tabs', $tabs);
-
-        $formFields = array();
-        $formFields['general'][] = Form::AddText('layout', __('Name'), $layout->layout, __('The Name of the Layout - (1 - 50 characters)'), 'n', 'required');
-        $formFields['general'][] = Form::AddText('tags', __('Tags'), $layout->tags, __('Tags for this layout - used when searching for it. Comma delimited. (1 - 250 characters)'), 't', 'maxlength="250"');
-
-        $formFields['description'][] = Form::AddMultiText('description', __('Description'), $layout->description,
-            __('An optional description of the Layout. (1 - 250 characters)'), 'd', 5, 'maxlength="250"');
-
-        $formFields['general'][] = Form::AddCombo(
-            'retired',
-            __('Retired'),
-            $layout->retired,
-            array(array('retiredid' => '1', 'retired' => 'Yes'), array('retiredid' => '0', 'retired' => 'No')),
-            'retiredid',
-            'retired',
-            __('Retire this layout or not? It will no longer be visible in lists'),
-            'r');
-
-        Theme::Set('form_fields_general', $formFields['general']);
-        Theme::Set('form_fields_description', $formFields['description']);
-
-        // Background Tab
-        // Do we need to override the background with one passed in?
-        $backgroundImageId = \Kit::GetParam('backgroundOveride', _GET, _INT, $layout->backgroundImageId);
-
-        // Manipulate the images slightly
-        $thumbBgImage = ($backgroundImageId == 0) ? 'theme/default/img/forms/filenotfound.gif' : 'index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $backgroundImageId . '&width=200&height=200&dynamic';
-
-        // Get the ID of the current resolution
-        $resolution = \Xibo\Factory\ResolutionFactory::getByDimensions($layout->width, $layout->height);
-
-        // A list of web safe colours
-        $formFields['background'][] = Form::AddText('backgroundColor', __('Background Colour'), $layout->backgroundColor,
-            __('Use the colour picker to select the background colour'), 'c', 'required');
-
-        // A list of available backgrounds
-        $backgrounds = $this->getUser()->MediaList(NULL, array('type' => 'image'));
-        $backgrounds = array_map(function ($element) {
-            /* @var \Xibo\Entity\Media $element */
-            return array('mediaid' => $element->mediaId, 'media' => $element->name);
-        }, $backgrounds);
-        array_unshift($backgrounds, array('mediaid' => '0', 'media' => 'None'));
-
-        $formFields['background'][] = Form::AddCombo(
-            'backgroundImageId',
-            __('Background Image'),
-            $backgroundImageId,
-            $backgrounds,
-            'mediaid',
-            'media',
-            __('Pick the background image from the library'),
-            'b', '', true, 'onchange="background_button_callback()"');
-
-        $formFields['background'][] = Form::AddCombo(
-            'resolutionId',
-            __('Resolution'),
-            $resolution->resolutionId,
-            $this->getUser()->ResolutionList(NULL, array('withCurrent' => $resolution->resolutionId)),
-            'resolutionId',
-            'resolution',
-            __('Change the resolution'),
-            'r');
-
-        $formFields['background'][] = Form::AddNumber('backgroundzIndex', __('Layer'), $layout->backgroundzIndex,
-            __('The layering order of the background image (z-index). Advanced use only. '), 'z');
-
-        $formFields['background'][] = Form::AddRaw('<img id="bg_image_image" src="' . $thumbBgImage . '" alt="' . __('Background thumbnail') . '" />');
-
-        Theme::Set('form_fields_background', $formFields['background']);
-
-         $this->getState()->SetFormRequestResponse(null, __('Edit Layout'));
-         $this->getState()->callBack = 'backGroundFormSetup';
-         $this->getState()->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Layout', 'Edit') . '")');
-         $this->getState()->AddButton(__('Add Image'), 'XiboFormRender("index.php?p=module&q=Exec&mod=image&method=AddForm&backgroundImage=true&layoutid=' . $layout->layoutId . '")');
-         $this->getState()->AddButton(__('Cancel'), 'XiboDialogClose()');
-         $this->getState()->AddButton(__('Save'), '$("#LayoutForm").submit()');
-
-    }
-
-    /**
-     * Render the designer
-     * @param \Xibo\Entity\Layout $layout
-     * @return string
-     */
-    function RenderDesigner($layout)
-    {
-        // What zoom level are we at?
-        $zoom = Sanitize::getDouble('zoom', 1);
-
-        // Get the width and the height
-        $version = $layout->schemaVersion;
-        Theme::Set('layoutVersion', $version);
-        Theme::Set('layout', $layout->layout);
-
-        // Get the display width / height
-        // Version 1 layouts had the designer resolution in the XLF and therefore did not need anything scaling in the designer.
-        // Version 2+ layouts have the layout resolution in the XLF and therefore need to be scaled back by the designer.
-        if ($layout->width < $layout->height) {
-            // Portrait
-            $displayWidth = 800;
-            $designerScale = $displayWidth / $layout->width;
-        } else {
-            // Landscape
-            $displayHeight = 450;
-            $designerScale = $displayHeight / $layout->height;
-        }
-
-        // Version 2 layout can support zooming?
-        if ($version > 1) {
-            $designerScale = $designerScale * $zoom;
-
-            Theme::Set('layout_zoom_in_url', 'index.php?p=layout&modify=true&layoutid=' . $layout->layoutId . '&zoom=' . ($zoom - 0.3));
-            Theme::Set('layout_zoom_out_url', 'index.php?p=layout&modify=true&layoutid=' . $layout->layoutId . '&zoom=' . ($zoom + 0.3));
-        } else {
-            Theme::Set('layout_upgrade_url', 'index.php?p=layout&q=upgradeForm&layoutId=' . $layout->layoutId);
-        }
-
-        // Pass the designer scale to the theme (we use this to present an error message in the default theme, if the scale drops below 0.41)
-        Theme::Set('designerScale', $designerScale);
-
-        // Reset the designer width / height based on the zoom
-        $width = ($layout->width * $designerScale) . "px";
-        $height = ($layout->height * $designerScale) . "px";
-
-        // Background CSS
-        $backgroundCss = ($layout->backgroundImageId == 0) ? $layout->backgroundColor : 'url(\'index.php?p=content&q=getFile&mediaid=' . $layout->backgroundImageId . '&width=' . $width . '&height=' . $height . '&dynamic&proportional=0\') top center no-repeat; background-color:' . $layout->backgroundColor;
-
-        // Get all the regions and draw them on
-        $regionHtml = '';
-
-        //get the regions
-        foreach ($layout->regions as $region) {
-            /* @var \Xibo\Entity\Region $region */
-            // Get dimensions
-            $tipWidth = round($region->width, 0);
-            $tipHeight = round($region->height, 0);
-            $tipLeft = round($region->left, 0);
-            $tipTop = round($region->top, 0);
-
-            $regionWidth = ($region->width * $designerScale) . 'px';
-            $regionHeight = ($region->height * $designerScale) . 'px';
-            $regionLeft = ($region->left * $designerScale) . 'px';
-            $regionTop = ($region->top * $designerScale) . 'px';
-
-            $regionZindex = ($region->zIndex == 0) ? '' : 'zindex="' . $region->zIndex . '"';
-            $styleZindex = ($region->zIndex == 0) ? '' : 'z-index: ' . $region->zIndex . ';';
-
-            // Permissions
-            $regionAuth = $this->getUser()->getPermission($region);
-
-            $paddingTop = ($regionHeight / 2 - 16) . 'px';
-
-            $regionAuthTransparency = ($regionAuth->edit) ? '' : ' regionDisabled';
-            $regionDisabledClass = ($regionAuth->edit) ? 'region' : 'regionDis';
-            $regionPreviewClass = ($regionAuth->view) ? 'regionPreview' : '';
-
-            $regionTransparency = '<div class="regionTransparency ' . $regionAuthTransparency . '" style="width:100%; height:100%;"></div>';
-            $doubleClickLink = ($regionAuth->edit) ? "XiboFormRender($(this).attr('href'))" : '';
-
-            $regionHtml .= '<div id="region_' . $region->regionId . '" regionEnabled="' . $regionAuth->edit . '" regionid="' . $region->regionId . '"';
-            $regionHtml .= ' layoutid="' . $layout->layoutId . '" ' . $regionZindex . ' tip_scale="1" designer_scale="' . $designerScale . '"';
-            $regionHtml .= ' width="' . $regionWidth . '" height="' . $regionHeight . '" href="index.php?p=timeline&layoutid=' . $layout->layoutId . '&regionid=' . $region->regionId . '&q=Timeline"';
-            $regionHtml .= ' ondblclick="' . $doubleClickLink . '" class="' . $regionDisabledClass . ' ' . $regionPreviewClass . '" style="position:absolute; width:' . $regionWidth . '; height:' . $regionHeight . '; top: ';
-            $regionHtml .= $regionTop . '; left: ' . $regionLeft . '; ' . $styleZindex . '">' . $regionTransparency;
-
-            if ($regionAuth->edit) {
-
-                $regionHtml .= '<div class="btn-group regionInfo pull-right">';
-                $regionHtml .= '    <button class="btn dropdown-toggle" data-toggle="dropdown">';
-                $regionHtml .= '<span class="region-tip">' . $tipWidth . ' x ' . $tipHeight . ' (' . $tipLeft . ',' . $tipTop . ')' . '</span>';
-                $regionHtml .= '        <span class="caret"></span>';
-                $regionHtml .= '    </button>';
-                $regionHtml .= '    <ul class="dropdown-menu">';
-                $regionHtml .= '        <li><a class="XiboFormButton" href="index.php?p=timeline&q=Timeline&layoutid=' . $layout->layoutId . '&regionid=' . $region->regionId . '" title="' . __('Timeline') . '">' . __('Edit Timeline') . '</a></li>';
-                $regionHtml .= '        <li><a class="RegionOptionsMenuItem" href="#" title="' . __('Options') . '">' . __('Options') . '</a></li>';
-                $regionHtml .= '        <li><a class="XiboFormButton" href="index.php?p=timeline&q=DeleteRegionForm&layoutid=' . $layout->layoutId . '&regionid=' . $region->regionId . '" title="' . __('Delete') . '">' . __('Delete') . '</a></li>';
-                $regionHtml .= '        <li><a class="XiboFormButton" href="index.php?p=user&q=permissionsForm&entity=Region&objectId=' . $region->regionId . '" title="' . __('Permissions') . '">' . __('Permissions') . '</a></li>';
-                $regionHtml .= '    </ul>';
-                $regionHtml .= '</div>';
-
-            } else if ($regionAuth->view) {
-                $regionHtml .= '<div class="regionInfo">';
-                $regionHtml .= '<span class="region-tip">' . $tipWidth . ' x ' . $tipHeight . ' (' . $tipLeft . ',' . $tipTop . ')' . '</span>';
-                $regionHtml .= '</div>';
-            }
-
-            $regionHtml .= '    <div class="preview">';
-            $regionHtml .= '        <div class="previewContent"></div>';
-            $regionHtml .= '        <div class="previewNav label label-info"></div>';
-            $regionHtml .= '    </div>';
-            $regionHtml .= '</div>';
-        }
-
-        $statusUrl = $this->urlFor('layoutStatus', array('id' => $layout->layoutId));
-
-        //render the view pane
-        $surface = <<<HTML
-        <div id="layout" zoom="$zoom" tip_scale="1" designer_scale="$designerScale" class="layout" layoutid="{$layout->layoutId}" data-background-color="{$layout->backgroundColor}" data-status-url="{$statusUrl}" style="position:relative; width:$width; height:$height; background:$backgroundCss;">
-        $regionHtml
-        </div>
-HTML;
-
-        return $surface;
+        $this->getState()->template = 'layout-form-edit';
+        $this->getState()->setData([
+            'layout' => $layout,
+            'resolution' => $resolution,
+            'resolutions' => ResolutionFactory::query(['resolution'], ['withCurrent' => $resolution->resolutionId]),
+            'backgroundId' => Sanitize::getInt('backgroundOveride', $layout->backgroundImageId),
+            'backgrounds' => MediaFactory::query(null, ['type' => 'image']),
+            'help' => Help::Link('Layout', 'Edit')
+        ]);
     }
 
     /**

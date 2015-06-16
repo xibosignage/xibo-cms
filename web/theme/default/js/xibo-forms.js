@@ -419,13 +419,12 @@ var settingsUpdated = function(response) {
     }
 };
 
-var background_button_callback = function() {
-    //Want to attach an onchange event to the drop down for the bg-image
-    var id = $('#backgroundImageId').val();
-
-    $('#bg_image_image').attr("src", "index.php?p=content&q=getFile&mediaid=" + id + "&width=200&height=200&dynamic");
-};
-
 var backGroundFormSetup = function() {
     $('#backgroundColor').colorpicker({format: "hex"});
+    $('#backgroundImageId').change(function() {
+        //Want to attach an onchange event to the drop down for the bg-image
+        var id = $('#backgroundImageId').val();
+
+        $('#bg_image_image').attr("src", "index.php?p=content&q=getFile&mediaid=" + id + "&width=200&height=200&dynamic");
+    })
 };
