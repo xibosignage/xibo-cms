@@ -513,85 +513,73 @@ class Layout extends Base
 
     /**
      * Copy layout form
+     * @param int $layoutId
      */
-    public function CopyForm()
+    public function copyForm($layoutId)
     {
-         
-
-        $layoutId = Sanitize::getInt('layoutid');
-
         // Get the layout
         $layout = LayoutFactory::getById($layoutId);
 
         // Check Permissions
         if (!$this->getUser()->checkViewable($layout))
-            trigger_error(__('You do not have permissions to view this layout'), E_USER_ERROR);
+            throw new AccessDeniedException();
 
-        $copyMediaChecked = (Config::GetSetting('LAYOUT_COPY_MEDIA_CHECKB') == 'Checked') ? 1 : 0;
-
-        Theme::Set('form_id', 'LayoutCopyForm');
-        Theme::Set('form_action', 'index.php?p=layout&q=Copy');
-        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layout->layoutId . '">');
-
-        $formFields = array();
-        $formFields[] = Form::AddText('layout', __('Name'), $layout->layout . ' 2', __('The Name of the Layout - (1 - 50 characters)'), 'n', 'required');
-        $formFields[] = Form::AddText('description', __('Description'), $layout->description, __('An optional description of the Layout. (1 - 250 characters)'), 'd', 'maxlength="250"');
-        $formFields[] = Form::AddCheckbox('copyMediaFiles', __('Make new copies of all media on this layout?'), $copyMediaChecked,
-            __('This will duplicate all media that is currently assigned to the Layout being copied.'), 'c');
-
-        Theme::Set('form_fields', $formFields);
-
-        $form = Theme::RenderReturn('form_render');
-
-         $this->getState()->SetFormRequestResponse($form, sprintf(__('Copy %s'), $layout->layout), '350px', '275px');
-         $this->getState()->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Layout', 'Copy') . '")');
-         $this->getState()->AddButton(__('Cancel'), 'XiboDialogClose()');
-         $this->getState()->AddButton(__('Copy'), '$("#LayoutCopyForm").submit()');
-
+        $this->getState()->template = 'layout-form-copy';
+        $this->getState()->setData([
+            'layout' => $layout,
+            'help' => Help::Link('Layout', 'Copy')
+        ]);
     }
 
     /**
      * Copies a layout
+     * @param int $layoutId
      */
-    public function Copy()
+    public function copy($layoutId)
     {
+        // Get the layout
+        $layout = LayoutFactory::getById($layoutId);
 
-
-         
+        // Check Permissions
+        if (!$this->getUser()->checkViewable($layout))
+            throw new AccessDeniedException();
 
         // Load the layout for Copy
-        $layout = clone LayoutFactory::loadById(Kit::GetParam('layoutid', _POST, _INT));
+        $layout->load();
+        $layout = clone $layout;
 
-        $layout->layout = Sanitize::getString('layout');
+        $layout->layout = Sanitize::getString('name');
         $layout->description = Sanitize::getString('description');
 
         // Validate the new layout
         $layout->validate();
 
         // TODO: Copy the media on the layout and change the assignments.
-        if (\Kit::GetParam('copyMediaFiles', _POST, _CHECKBOX == 1)) {
+        if (Sanitize::getCheckbox('copyMediaFiles') == 1) {
 
         }
 
         // Save the new layout
         $layout->save();
 
-         $this->getState()->SetFormSubmitResponse(__('Layout Copied'));
-
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Copied as %s'), $layout->layout),
+            'id' => $layout->layoutId,
+            'data' => [$layout]
+        ]);
     }
 
-    public function LayoutStatus()
+    /**
+     * Layout Status
+     * @param int $layoutId
+     */
+    public function status($layoutId)
     {
+        // Get the layout
+        $layout = LayoutFactory::getById($layoutId);
 
-         
-        $layoutId = Sanitize::getInt('layoutId');
-
-
-        $layout = new Layout($db);
-
-        $status = "";
-
-        switch ($layout->IsValid($layoutId)) {
+        switch ($layout->status) {
 
             case 1:
                 $status = '<span title="' . __('This Layout is ready to play') . '" class="glyphicon glyphicon-ok-circle"></span>';
@@ -611,26 +599,48 @@ class Layout extends Base
 
         // Keep things tidy
         // Maintenance should also do this.
-        Media::removeExpiredFiles();
+        Library::removeExpiredFiles();
 
-         $this->getState()->html = $status;
-         $this->getState()->success = true;
-
+        $this->getState()->html = $status;
+        $this->getState()->success = true;
     }
 
-    public function Export()
+    /**
+     * @param int $layoutId
+     */
+    public function export($layoutId)
     {
+        $this->setNoOutput(true);
 
-        $layoutId = Sanitize::getInt('layoutid');
+        // Get the layout
+        $layout = LayoutFactory::getById($layoutId);
 
+        // Check Permissions
+        if (!$this->getUser()->checkViewable($layout))
+            throw new AccessDeniedException();
 
-        $layout = new Layout($this->db);
+        $fileName = Config::GetSetting('LIBRARY_LOCATION') . 'temp/export_' . $layout->layout . '.zip';
+        $layout->toZip($fileName);
 
-        if (!$layout->Export($layoutId)) {
-            trigger_error($layout->GetErrorMessage(), E_USER_ERROR);
+        header('Content-Type: application/octet-stream');
+        header("Content-Transfer-Encoding: Binary");
+        header("Content-disposition: attachment; filename=\"" . basename($fileName) . "\"");
+        header('Content-Length: ' . filesize($fileName));
+
+        // Send via Apache X-Sendfile header?
+        if (Config::GetSetting('SENDFILE_MODE') == 'Apache') {
+            header("X-Sendfile: $fileName");
+            exit();
+        }
+        // Send via Nginx X-Accel-Redirect?
+        if (Config::GetSetting('SENDFILE_MODE') == 'Nginx') {
+            header("X-Accel-Redirect: /download/temp/" . basename($fileName));
+            exit();
         }
 
-        exit;
+        // Return the file with PHP
+        // Disable any buffering to prevent OOM errors.
+        readfile($fileName);
     }
 
     public function ImportForm()
@@ -683,10 +693,6 @@ class Layout extends Base
 
     public function Import()
     {
-
-
-         
-
         // What are we importing?
         $template = \Kit::GetParam('template', _POST, _STRING, 'false');
         $template = ($template == 'true');
@@ -717,18 +723,6 @@ class Layout extends Base
         }
 
          $this->getState()->SetFormSubmitResponse(__('Layout Imported'));
-
-    }
-
-    public function ShowXlf()
-    {
-         
-
-        $layout = LayoutFactory::loadById(Kit::GetParam('layoutId', _GET, _INT));
-
-         $this->getState()->SetFormRequestResponse('<pre>' . json_encode($layout, JSON_PRETTY_PRINT) . '</pre>', 'Test', '350px', '200px');
-         $this->getState()->dialogClass = 'modal-big';
-
     }
 
     /**

@@ -24,38 +24,28 @@ namespace Xibo\Entity;
 
 
 use Xibo\Factory\PermissionFactory;
+use Xibo\Factory\RegionFactory;
 use Xibo\Factory\WidgetFactory;
+use Xibo\Storage\PDOConnect;
 
-class Playlist
+class Playlist implements \JsonSerializable
 {
-    private $hash;
+    use EntityTrait;
     public $playlistId;
     public $ownerId;
 
     public $name;
 
-    public $tags;
-    public $widgets;
-    public $permissions;
-
-    /**
-     * The regions that this Playlist belongs to
-     * @var array[int]
-     */
-    public $regionIds;
-
-    public function __construct()
-    {
-        $this->hash = null;
-        $this->widgets = array();
-        $this->tags = array();
-        $this->regionIds = array();
-    }
+    public $tags = [];
+    public $regions = [];
+    public $widgets = [];
+    public $permissions = [];
 
     public function __clone()
     {
         $this->hash = null;
         $this->playlistId = null;
+        $this->regions = [];
 
         $this->widgets = array_map(function ($object) { return clone $object; }, $this->widgets);
     }
@@ -104,12 +94,35 @@ class Playlist
 
     /**
      * Assign this Playlist to a Region
-     * @param int $regionId
+     * @param Region $region
+     * @param int $position
      */
-    public function assignRegion($regionId)
+    public function assignRegion($region, $position = null)
     {
-        if (!in_array($regionId, $this->regionIds))
-            $this->regionIds[] = $regionId;
+        $this->load();
+
+        $region->displayOrder = ($position == null) ? count($this->regions) : $position ;
+        $this->regions[] = $region;
+    }
+
+    /**
+     * Unassign a region
+     * @param $region
+     * @param int $position
+     */
+    public function unassignRegion($region, $position = null)
+    {
+        $this->load();
+
+        $this->regions = array_udiff($this->regions, [$region], function($a, $b) use ($position) {
+            /**
+             * @var Region $a
+             * @var Region $b
+             */
+            $idSum = $a->getId() - $b->getId();
+            $positionSum = ($position == null) ? 0 : $a->displayOrder - $b->displayOrder;
+            return $idSum + $positionSum;
+        });
     }
 
     /**
@@ -117,22 +130,30 @@ class Playlist
      */
     public function load()
     {
+        if ($this->loaded)
+            return;
+
         // Load permissions
         $this->permissions = PermissionFactory::getByObjectId(get_class(), $this->playlistId);
 
-        $this->widgets = WidgetFactory::getByPlaylistId($this->playlistId);
-
         // Load the widgets
-        foreach ($this->widgets as $widget) {
+        foreach (WidgetFactory::getByPlaylistId($this->playlistId) as $widget) {
             /* @var Widget $widget */
             $widget->load();
+            $this->widgets[] = $widget;
+        }
+
+        // Load the region assignments
+        foreach (RegionFactory::getByPlaylistId($this->playlistId) as $region) {
+            /* @var Region $region */
+            $this->regions[] = $region;
         }
 
         $this->hash = $this->hash();
     }
 
     /**
-     * Saves
+     * Save
      */
     public function save()
     {
@@ -150,7 +171,7 @@ class Playlist
         }
 
         // Manage the assignments to regions
-        $this->linkRegions();
+        $this->manageAssignments();
     }
 
     /**
@@ -162,7 +183,7 @@ class Playlist
         if ($this->hash == null)
             $this->load();
 
-        \Xibo\Helper\Log::debug('Deleting ' . $this);
+        Log::debug('Deleting ' . $this);
 
         // Delete Permissions
         foreach ($this->permissions as $permission) {
@@ -183,15 +204,15 @@ class Playlist
         $this->unlinkRegions();
 
         // Delete this playlist
-        \Xibo\Storage\PDOConnect::update('DELETE FROM `playlist` WHERE playlistId = :playlistId', array('playlistId' => $this->playlistId));
+        PDOConnect::update('DELETE FROM `playlist` WHERE playlistId = :playlistId', array('playlistId' => $this->playlistId));
     }
 
     private function add()
     {
-        \Xibo\Helper\Log::debug('Adding Playlist ' . $this->name);
+        Log::debug('Adding Playlist ' . $this->name);
 
         $sql = 'INSERT INTO `playlist` (`name`, `ownerId`) VALUES (:name, :ownerId)';
-        $this->playlistId = \Xibo\Storage\PDOConnect::insert($sql, array(
+        $this->playlistId = PDOConnect::insert($sql, array(
             'name' => $this->name,
             'ownerId' => $this->ownerId
         ));
@@ -199,13 +220,19 @@ class Playlist
 
     private function update()
     {
-        \Xibo\Helper\Log::debug('Updating Playlist ' . $this->name . '. Id = ' . $this->playlistId);
+        Log::debug('Updating Playlist ' . $this->name . '. Id = ' . $this->playlistId);
 
         $sql = 'UPDATE `playlist` SET `name` = :name WHERE `playlistId` = :playlistId';
-        \Xibo\Storage\PDOConnect::update($sql, array(
+        PDOConnect::update($sql, array(
             'playlistId' => $this->playlistId,
             'name' => $this->name
         ));
+    }
+
+    private function manageAssignments()
+    {
+        $this->linkRegions();
+        $this->unlinkRegions();
     }
 
     /**
@@ -213,14 +240,12 @@ class Playlist
      */
     private function linkRegions()
     {
-        $order = 0;
-        foreach ($this->regionIds as $regionId) {
-            $order++;
-            \Xibo\Storage\PDOConnect::insert('INSERT INTO `lkregionplaylist` (regionId, playlistId, displayOrder) VALUES (:regionId, :playlistId, :displayOrder) ON DUPLICATE KEY UPDATE regionId = :regionId2', array(
-                'regionId' => $regionId,
-                'regionId2' => $regionId,
+        foreach ($this->regions as $region) {
+            /* @var Region $region */
+            PDOConnect::insert('INSERT INTO `lkregionplaylist` (regionId, playlistId, displayOrder) VALUES (:regionId, :playlistId, :displayOrder) ON DUPLICATE KEY UPDATE regionId = regionId', array(
+                'regionId' => $region->regionId,
                 'playlistId' => $this->playlistId,
-                'displayOrder' => $order
+                'displayOrder' => $region->displayOrder
             ));
         }
     }
@@ -230,11 +255,33 @@ class Playlist
      */
     private function unlinkRegions()
     {
-        foreach ($this->regionIds as $regionId) {
-            \Xibo\Storage\PDOConnect::update('DELETE FROM `lkregionplaylist` WHERE regionId = :regionId AND playlistId = :playlistId', array(
+        foreach ($this->regions as $region) {
+            /* @var \Xibo\Entity\Region $region */
+            PDOConnect::update('DELETE FROM `lkregionplaylist` WHERE regionId = :regionId AND playlistId = :playlistId', array(
                 'regionId' => $regionId,
                 'playlistId' => $this->playlistId
             ));
         }
+
+        // Unlink any media that is NOT in the collection
+        $params = ['playlistId' => $this->playlistId];
+
+        $sql = '
+          DELETE FROM `lkregionplaylist` WHERE playlistId = :playlistId
+        ';
+
+        $i = 0;
+        foreach ($this->regions as $region) {
+            /* @var \Xibo\Entity\Region $region */
+
+            $sql .= ' AND ( ';
+
+            $i++;
+            $sql .= ' (regionId <> :regionId' . $i . ' AND displayOrder <> :displayOrder' . $i . '))';
+            $params['regionId' . $i] = $region->regionId;
+            $params['displayOrder' . $i] = $region->displayOrder;
+        }
+
+        PDOConnect::update($sql, $params);
     }
 }

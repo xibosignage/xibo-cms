@@ -43,7 +43,7 @@
 
                         {% set title %}{% trans "Retired" %}{% endset %}
                         {% set helpText %}{% trans "Retire this layout or not? It will no longer be visible in lists" %}{% endset %}
-                        {{ forms.checkbox("retired", title, layout.tags, helpText) }}
+                        {{ forms.checkbox("retired", title, layout.retired, helpText) }}
                     </div>
                     <div class="tab-pane" id="description">
                         {% set title %}{% trans "Description" %}{% endset %}
@@ -53,7 +53,7 @@
                     <div class="tab-pane" id="background">
                         {% set title %}{% trans "Background Colour" %}{% endset %}
                         {% set helpText %}{% trans "Use the colour picker to select the background colour" %}{% endset %}
-                        {{ forms.text("backgroundColor", title, layout.layout, helpText) }}
+                        {{ forms.text("backgroundColor", title, layout.backgroundColor, helpText) }}
 
                         {% set title %}{% trans "Background Image" %}{% endset %}
                         {% set helpText %}{% trans "Pick the background image from the library" %}{% endset %}

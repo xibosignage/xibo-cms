@@ -36,12 +36,7 @@ class PlaylistFactory
      */
     public static function getByRegionId($regionId)
     {
-        $playlists = PlaylistFactory::query(null, array('regionId' => $regionId));
-
-        if (count($playlists) <= 0)
-            throw new NotFoundException(__('Cannot find playlist'));
-
-        return $playlists;
+        return PlaylistFactory::query(null, array('regionId' => $regionId));
     }
 
     /**

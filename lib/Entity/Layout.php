@@ -52,25 +52,20 @@ class Layout implements \JsonSerializable
     public $height;
 
     // Child items
-    public $regions;
-    public $tags;
-    public $permissions;
+    public $regions = [];
+    public $tags = [];
+    public $permissions = [];
+    public $campaigns = [];
 
     // Read only properties
     public $owner;
     public $groupsWithPermissions;
 
-    public function __construct()
-    {
-        $this->hash = null;
-        $this->regions = array();
-        $this->tags = array();
-    }
-
     public function __clone()
     {
         // Clear the layout id
         $this->layoutId = null;
+        $this->campaignId = null;
         $this->hash = null;
 
         // Clone the regions
@@ -141,6 +136,9 @@ class Layout implements \JsonSerializable
      */
     public function load()
     {
+        if ($this->loaded)
+            return;
+
         Log::debug('Loading Layout ' . $this->layoutId);
 
         // Load permissions
@@ -156,8 +154,12 @@ class Layout implements \JsonSerializable
         // Load all tags
         $this->tags = TagFactory::loadByLayoutId($this->layoutId);
 
+        // Load Campaigns
+        $this->campaigns = CampaignFactory::getByLayoutId($this->layoutId);
+
         // Set the hash
         $this->hash = $this->hash();
+        $this->loaded = true;
     }
 
     /**
@@ -165,6 +167,8 @@ class Layout implements \JsonSerializable
      */
     public function save()
     {
+        Log::debug('Saving %s', $this);
+
         // New or existing layout
         if ($this->layoutId == null || $this->layoutId == 0) {
             $this->add();
@@ -183,11 +187,13 @@ class Layout implements \JsonSerializable
         }
 
         // Save the tags
-        foreach ($this->tags as $tag) {
-            /* @var Tag $tag */
+        if (is_array($this->tags)) {
+            foreach ($this->tags as $tag) {
+                /* @var Tag $tag */
 
-            $tag->assignLayout($this->layoutId);
-            $tag->save();
+                $tag->assignLayout($this->layoutId);
+                $tag->save();
+            }
         }
     }
 
@@ -197,11 +203,13 @@ class Layout implements \JsonSerializable
      */
     public function delete()
     {
+        Log::debug('Deleting %s', $this);
+
         // We must ensure everything is loaded before we delete
-        if ($this->hash == null)
+        if (!$this->loaded)
             $this->load();
 
-        \Xibo\Helper\Log::debug('Deleting ' . $this);
+        Log::debug('Deleting ' . $this);
 
         // Delete Permissions
         foreach ($this->permissions as $permission) {
@@ -212,30 +220,32 @@ class Layout implements \JsonSerializable
         // Unassign all Tags
         foreach ($this->tags as $tag) {
             /* @var Tag $tag */
-
-            $tag->assignLayout($this->layoutId);
-            $tag->removeAssignments();
+            $tag->unassignLayout($this->layoutId);
+            $tag->save();
         }
 
         // Delete Regions
         foreach ($this->regions as $region) {
             /* @var Region $region */
-
-            // Assert the Layout Id
-            $region->layoutId = $this->layoutId;
             $region->delete();
         }
 
-        // Delete Campaign
-        $campaign = new \Campaign();
-        if (!$campaign->Delete($this->campaignId))
-            throw new \Exception(__('Problem deleting Campaign'));
+        // Unassign from all Campaigns
+        foreach ($this->campaigns as $campaign) {
+            /* @var Campaign $campaign */
+            $campaign->unassignLayout($this->layoutId);
+            $campaign->save(false);
+        }
+
+        // Delete our own Campaign
+        $campaign = CampaignFactory::getById($this->campaignId);
+        $campaign->delete();
 
         // Remove the Layout from any display defaults
-        \Xibo\Storage\PDOConnect::update('UPDATE `display` SET defaultlayoutid = 4 WHERE defaultlayoutid = :layoutid', array('layoutid' => $this->layoutId));
+        PDOConnect::update('UPDATE `display` SET defaultlayoutid = 4 WHERE defaultlayoutid = :layoutId', array('layoutId' => $this->layoutId));
 
         // Remove the Layout (now it is orphaned it can be deleted safely)
-        \Xibo\Storage\PDOConnect::update('DELETE FROM layout WHERE layoutid = :layoutid', array('layoutid' => $this->layoutId));
+        PDOConnect::update('DELETE FROM `layout` WHERE layoutid = :layoutId', array('layoutId' => $this->layoutId));
     }
 
     /**
@@ -290,14 +300,14 @@ class Layout implements \JsonSerializable
      */
     private function add()
     {
-        \Xibo\Helper\Log::debug('Adding Layout ' . $this->layout);
+        Log::debug('Adding Layout ' . $this->layout);
 
         $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, status, width, height, schemaVersion, backgroundImageId, backgroundColor, backgroundzIndex)
                   VALUES (:layout, :description, :userid, :createddt, :modifieddt, :status, :width, :height, 3, :backgroundImageId, :backgroundColor, :backgroundzIndex)';
 
-        $time = \Xibo\Helper\Date::getSystemDate(null, 'Y-m-d h:i:s');
+        $time = Date::getSystemDate(null, 'Y-m-d h:i:s');
 
-        $this->layoutId = \Xibo\Storage\PDOConnect::insert($sql, array(
+        $this->layoutId = PDOConnect::insert($sql, array(
             'layout' => $this->layout,
             'description' => $this->description,
             'userid' => $this->ownerId,

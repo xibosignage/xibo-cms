@@ -57,6 +57,11 @@ class LogFactory
             $params['toDt'] = date("Y-m-d H:i:s", Sanitize::getInt('toDt', $filterBy));
         }
 
+        if (Sanitize::getString('runNo', $filterBy) != null) {
+            $body .= ' AND runNo = :runNo ';
+            $params['runNo'] = Sanitize::getString('runNo', $filterBy);
+        }
+
         if (Sanitize::getInt('type', $filterBy) != 0) {
             $body .= ' AND type <= :type ';
             $params['type'] = (Sanitize::getInt('type', $filterBy) == 1 ? 'error' : 'audit');

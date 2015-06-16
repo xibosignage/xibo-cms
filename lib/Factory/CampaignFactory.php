@@ -56,8 +56,17 @@ class CampaignFactory
      */
     public static function getByOwnerId($ownerId)
     {
-        //TODO add filtering
         return CampaignFactory::query(null, array('ownerId' => $ownerId));
+    }
+
+    /**
+     * Get Campaign by Layout
+     * @param int $layoutId
+     * @return array[Campaign]
+     */
+    public static function getByLayoutId($layoutId)
+    {
+        return CampaignFactory::query(null, array('layoutId' => $layoutId));
     }
 
     /**
@@ -105,6 +114,12 @@ class CampaignFactory
             // Join Campaign back onto it again
             $sql .= " AND `campaign`.userId = :ownerId ";
             $params['ownerId'] = Sanitize::getString('ownerId', 0, $filterBy);
+        }
+
+        if (Sanitize::getString('layoutId', 0, $filterBy) != 0) {
+            // Filter by Layout
+            $sql .= " AND `lkcampaignlayout`.layoutId = :layoutId ";
+            $params['layoutId'] = Sanitize::getString('layoutId', 0, $filterBy);
         }
 
         if (Sanitize::getString('name', $filterBy) != '') {

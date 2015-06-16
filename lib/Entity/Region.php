@@ -26,10 +26,12 @@ use Xibo\Exception\NotFoundException;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\RegionOptionFactory;
+use Xibo\Helper\Log;
+use Xibo\Storage\PDOConnect;
 
 class Region
 {
-    private $hash;
+    use EntityTrait;
     public $regionId;
     public $layoutId;
     public $ownerId;
@@ -41,17 +43,12 @@ class Region
     public $left;
     public $zIndex;
 
-    public $playlists;
-    public $regionOptions;
-    public $permissions;
+    public $playlists = [];
+    public $regionOptions = [];
+    public $permissions = [];
 
-    public function __construct()
-    {
-        $this->hash = null;
-        $this->playlists = array();
-        $this->regionOptions = array();
-        $this->permissions = array();
-    }
+    // Display Order when assigned to a Playlist
+    public $displayOrder;
 
     public function __clone()
     {
@@ -215,7 +212,7 @@ class Region
         if ($this->hash == null)
             $this->load();
 
-        \Xibo\Helper\Log::debug('Deleting ' . $this);
+        Log::debug('Deleting ' . $this);
 
         // Delete Permissions
         foreach ($this->permissions as $permission) {
@@ -231,7 +228,7 @@ class Region
             $playlist->assignRegion($this->regionId);
 
             // Save the playlist
-            $playlist->delete();
+            $playlist->save();
         }
 
         // Delete all region options
@@ -241,7 +238,7 @@ class Region
         }
 
         // Delete this region
-        \Xibo\Storage\PDOConnect::update('DELETE FROM `region` WHERE regionId = :regionId', array('regionId' => $this->regionId));
+        PDOConnect::update('DELETE FROM `region` WHERE regionId = :regionId', array('regionId' => $this->regionId));
     }
 
     // Add / Update
@@ -250,7 +247,7 @@ class Region
      */
     private function add()
     {
-        \Xibo\Helper\Log::debug('Adding region to LayoutId ' . $this->layoutId);
+        Log::debug('Adding region to LayoutId ' . $this->layoutId);
 
         $sql = 'INSERT INTO `region` (`layoutId`, `ownerId`, `name`, `width`, `height`, `top`, `left`, `zIndex`) VALUES (:layoutId, :ownerId, :name, :width, :height, :top, :left, :zIndex)';
 

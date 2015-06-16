@@ -510,7 +510,7 @@ class Library extends Base
     /**
      * Removes all expired media files
      */
-    public function removeExpiredFiles()
+    public static function removeExpiredFiles()
     {
         // Get a list of all expired files and delete them
         foreach (MediaFactory::query(null, array('expires' => time(), 'allModules' => 1)) as $entry) {
