@@ -71,7 +71,7 @@ class Campaign implements \JsonSerializable
     public function load()
     {
         // If we are already loaded, then don't do it again
-        if ($this->loaded)
+        if ($this->campaignId == null || $this->loaded)
             return;
 
         // Permissions
@@ -94,11 +94,15 @@ class Campaign implements \JsonSerializable
 
     public function save($validate = true)
     {
+        Log::debug('Saving %s', $this);
+
         if ($validate)
             $this->validate();
 
-        if ($this->campaignId == null || $this->campaignId == 0)
+        if ($this->campaignId == null || $this->campaignId == 0) {
             $this->add();
+            $this->loaded = true;
+        }
         else
             $this->update();
 
@@ -185,6 +189,7 @@ class Campaign implements \JsonSerializable
      */
     private function manageAssignments()
     {
+        Log::debug('Managing Assignments on %s', $this);
         $this->linkLayouts();
         $this->unlinkLayouts();
     }

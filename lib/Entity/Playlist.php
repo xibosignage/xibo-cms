@@ -26,6 +26,7 @@ namespace Xibo\Entity;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\WidgetFactory;
+use Xibo\Helper\Log;
 use Xibo\Storage\PDOConnect;
 
 class Playlist implements \JsonSerializable
@@ -40,6 +41,9 @@ class Playlist implements \JsonSerializable
     public $regions = [];
     public $widgets = [];
     public $permissions = [];
+
+    // Display Order when assigned to a Playlist
+    public $displayOrder;
 
     public function __clone()
     {
@@ -95,33 +99,29 @@ class Playlist implements \JsonSerializable
     /**
      * Assign this Playlist to a Region
      * @param Region $region
-     * @param int $position
      */
-    public function assignRegion($region, $position = null)
+    public function assignRegion($region)
     {
         $this->load();
 
-        $region->displayOrder = ($position == null) ? count($this->regions) : $position ;
+        $region->displayOrder = ($region->displayOrder == null || $region->displayOrder == 0) ? count($this->regions) : $region->displayOrder ;
         $this->regions[] = $region;
     }
 
     /**
      * Unassign a region
      * @param $region
-     * @param int $position
      */
-    public function unassignRegion($region, $position = null)
+    public function unassignRegion($region)
     {
         $this->load();
 
-        $this->regions = array_udiff($this->regions, [$region], function($a, $b) use ($position) {
+        $this->regions = array_udiff($this->regions, [$region], function($a, $b) {
             /**
              * @var Region $a
              * @var Region $b
              */
-            $idSum = $a->getId() - $b->getId();
-            $positionSum = ($position == null) ? 0 : $a->displayOrder - $b->displayOrder;
-            return $idSum + $positionSum;
+            return $a->getId() - $b->getId() + $a->displayOrder - $b->displayOrder;
         });
     }
 
@@ -130,7 +130,7 @@ class Playlist implements \JsonSerializable
      */
     public function load()
     {
-        if ($this->loaded)
+        if ($this->playlistId == null || $this->loaded)
             return;
 
         // Load permissions
@@ -255,14 +255,6 @@ class Playlist implements \JsonSerializable
      */
     private function unlinkRegions()
     {
-        foreach ($this->regions as $region) {
-            /* @var \Xibo\Entity\Region $region */
-            PDOConnect::update('DELETE FROM `lkregionplaylist` WHERE regionId = :regionId AND playlistId = :playlistId', array(
-                'regionId' => $regionId,
-                'playlistId' => $this->playlistId
-            ));
-        }
-
         // Unlink any media that is NOT in the collection
         $params = ['playlistId' => $this->playlistId];
 

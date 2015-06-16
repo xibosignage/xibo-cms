@@ -166,7 +166,7 @@ class Region
             $playlist->load();
 
             // Assign my regionId
-            $playlist->assignRegion($this->regionId);
+            $playlist->assignRegion($this);
         }
 
         // Get region options
@@ -190,7 +190,7 @@ class Region
             /* @var Playlist $playlist */
 
             // Make sure this region is assigned
-            $playlist->assignRegion($this->regionId);
+            $playlist->assignRegion($this, $playlist->displayOrder);
 
             // Save the playlist
             $playlist->save();
@@ -224,8 +224,8 @@ class Region
         foreach ($this->playlists as $playlist) {
             /* @var Playlist $playlist */
 
-            // Make sure this region is assigned
-            $playlist->assignRegion($this->regionId);
+            // Unassign this region
+            $playlist->unassignRegion($this);
 
             // Save the playlist
             $playlist->save();

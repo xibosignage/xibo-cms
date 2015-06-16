@@ -134,7 +134,7 @@ class RegionFactory
           SELECT `region`.regionId,
               `region`.layoutId,
               `region`.ownerId,
-              `region`name,
+              `region`.name,
               `region`.width,
               `region`.height,
               `region`.top,

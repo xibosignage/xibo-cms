@@ -28,6 +28,7 @@ use Xibo\Factory\ResolutionFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Help;
+use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Session;
 use Xibo\Helper\Theme;
@@ -128,14 +129,13 @@ class Layout extends Base
     {
         $name = Sanitize::getString('name');
         $description = Sanitize::getString('description');
-        $tags = TagFactory::tagsFromString(Sanitize::getString('tags'));
         $templateId = Sanitize::getInt('layoutId');
         $resolutionId = Sanitize::getInt('resolutionId');
 
         if ($templateId != 0)
-            $layout = LayoutFactory::createFromTemplate($templateId, $this->getUser()->userId, $name, $description, $tags);
+            $layout = LayoutFactory::createFromTemplate($templateId, $this->getUser()->userId, $name, $description, Sanitize::getString('tags'));
         else
-            $layout = LayoutFactory::createFromResolution($resolutionId, $this->getUser()->userId, $name, $description, $tags);
+            $layout = LayoutFactory::createFromResolution($resolutionId, $this->getUser()->userId, $name, $description, Sanitize::getString('tags'));
 
         // Validate
         $layout->validate();
@@ -143,6 +143,7 @@ class Layout extends Base
         // Save
         $layout->save();
 
+        Log::debug('Layout Added');
         // TODO: Set the default permissions on the regions
 
         // Return

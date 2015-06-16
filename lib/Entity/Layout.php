@@ -177,6 +177,8 @@ class Layout implements \JsonSerializable
             $this->update();
         }
 
+        Log::debug('Saving Regions on %s', $this);
+
         // Update the regions
         foreach ($this->regions as $region) {
             /* @var Region $region */
@@ -185,6 +187,8 @@ class Layout implements \JsonSerializable
             $region->layoutId = $this->layoutId;
             $region->save();
         }
+
+        Log::debug('Saving tags on %s', $this);
 
         // Save the tags
         if (is_array($this->tags)) {
