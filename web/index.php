@@ -66,7 +66,7 @@ $twig->parserExtensions = array(
 );
 
 // Configure the template folder
-$twig->twigTemplateDirs = ['../views'];
+$twig->twigTemplateDirs = ['../views', '../modules'];
 
 $app->view($twig);
 
