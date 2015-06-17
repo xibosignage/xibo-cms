@@ -29,7 +29,7 @@ class Clock extends Module
 {
     public $codeSchemaVersion = 1;
 
-    public function InstallFiles()
+    public function installFiles()
     {
         $media = new Media();
         $media->addModuleFile('modules/preview/vendor/jquery-1.11.1.min.js');

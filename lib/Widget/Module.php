@@ -24,11 +24,9 @@ use Slim\Slim;
 use Xibo\Entity\User;
 use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Factory\MediaFactory;
-use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Config;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
-use Xibo\Helper\Theme;
 
 
 abstract class Module implements ModuleInterface
@@ -257,121 +255,6 @@ abstract class Module implements ModuleInterface
     }
 
     /**
-     * Get the Form Meta for this Module
-     * @return string
-     */
-    final protected function getFormMeta()
-    {
-        return '
-            <input type="hidden" name="regionId" value="' . (($this->region == null) ? 0 : $this->region->regionId) . '">
-            <input type="hidden" id="widgetId" name="widgetId" value="' . $this->getWidgetId() . '">';
-    }
-
-    /**
-     * Configures the form
-     * @param string $functionToExecute
-     */
-    final protected function configureForm($functionToExecute)
-    {
-        Theme::Set('form_id', 'ModuleForm');
-        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->module->type . '&q=Exec&method=' . $functionToExecute);
-        Theme::Set('form_meta', $this->getFormMeta());
-    }
-
-    /**
-     * Configure form buttons
-     * @param ApplicationState &$response
-     */
-    final protected function configureFormButtons(&$response)
-    {
-        $response->dialogTitle = sprintf(__('Edit %s'), $this->module->name);
-
-        if ($this->region != null)
-            $response->AddButton(__('Cancel'), 'XiboSwapDialog("' . $this->getTimelineLink() . '")');
-        else
-            $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-
-        $response->AddButton(__('Save'), '$("#ModuleForm").submit()');
-    }
-
-    /**
-     * Get the URL for an edit form
-     * @return string
-     */
-    protected function getTimelineLink()
-    {
-        return 'index.php?p=timeline&regionId=' . (($this->region == null) ? 0 : $this->region->regionId) . '&q=RegionOptions';
-    }
-
-    /**
-     * Default Edit Form
-     */
-    public function EditForm()
-    {
-        $this->baseEditForm();
-    }
-
-    /**
-     * Basic Edit Form
-     * @param array $extraFormFields
-     * @param ApplicationState $response
-     */
-    public function baseEditForm($extraFormFields = null, $response = null)
-    {
-        if ($response == null)
-            $response = $this->getState();
-
-        $this->configureForm('EditMedia');
-
-        $formFields = array();
-
-        $formFields[] = Form::AddText('name', __('Name'), $this->getOption('name'),
-            __('The Name of this item - Leave blank to use the file name'), 'n');
-
-        $formFields[] = Form::AddNumber('duration', __('Duration'), $this->getDuration(),
-            __('The duration in seconds this item should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
-
-        // Add in any extra form fields we might have provided
-        if ($extraFormFields != NULL && is_array($extraFormFields)) {
-            foreach ($extraFormFields as $field) {
-                $formFields[] = $field;
-            }
-        }
-
-        Theme::Set('form_fields', $formFields);
-
-        // Generate the Response
-        $response->html = Theme::RenderReturn('form_render');
-        $this->configureFormButtons($response);
-
-    }
-
-    /**
-     * Default Edit Form
-     * @throws Exception
-     */
-    public function EditMedia()
-    {
-        $response = $this->getState();
-
-        // Can this user delete?
-        if (!$this->auth->edit)
-            throw new Exception(__('You do not have permission to edit this media.'));
-
-        $this->widget->duration = \Kit::GetParam('duration', _POST, _INT, $this->widget->duration);
-        $this->setOption('name', \Kit::GetParam('name', _POST, _STRING, $this->getOption('name')));
-
-        // Save the widget
-        $this->widget->save();
-
-        // Return
-        $response->SetFormSubmitResponse(__('The Widget has been Edited'));
-        $response->loadForm = true;
-        $response->loadFormUri = 'index.php?p=timeline&q=Timeline&regionid=' . \Xibo\Helper\Sanitize::getInt('regionId');
-
-    }
-
-    /**
      * Delete Widget
      */
     public function delete()
@@ -410,7 +293,7 @@ abstract class Module implements ModuleInterface
         if ($this->module->previewEnabled == 0)
             return $this->previewIcon();
 
-        return $this->PreviewAsClient($width, $height, $scaleOverride);
+        return $this->previewAsClient($width, $height, $scaleOverride);
     }
 
     /**
@@ -429,7 +312,7 @@ abstract class Module implements ModuleInterface
      * @param int [Optional] $scaleOverride
      * @return string
      */
-    public function PreviewAsClient($width, $height, $scaleOverride = 0)
+    public function previewAsClient($width, $height, $scaleOverride = 0)
     {
         $widthPx = $width . 'px';
         $heightPx = $height . 'px';
@@ -469,171 +352,12 @@ abstract class Module implements ModuleInterface
     }
 
     /**
-     * Form to Edit a transition
-     */
-    public function TransitionEditForm()
-    {
-        $response = $this->getState();
-
-        if (!$this->auth->edit) {
-            $response->SetError('You do not have permission to edit this media.');
-            $response->keepOpen = false;
-            return $response;
-        }
-
-        // Are we dealing with an IN or an OUT
-        $type = \Kit::GetParam('type', _REQUEST, _WORD);
-        $transition = '';
-        $duration = '';
-        $direction = '';
-
-        switch ($type) {
-            case 'in':
-                $transition = $this->getOption('transIn');
-                $duration = $this->getOption('transInDuration', 0);
-                $direction = $this->getOption('transInDirection');
-
-                break;
-
-            case 'out':
-                $transition = $this->getOption('transOut');
-                $duration = $this->getOption('transOutDuration', 0);
-                $direction = $this->getOption('transOutDirection');
-
-                break;
-
-            default:
-                trigger_error(_('Unknown transition type'), E_USER_ERROR);
-        }
-
-        // Add none to the list
-        $transitions = $this->user->TransitionAuth($type);
-        $transitions[] = array('code' => '', 'transition' => 'None', 'class' => '');
-
-        // Compass points for direction
-        $compassPoints = array(
-            array('id' => 'N', 'name' => __('North')),
-            array('id' => 'NE', 'name' => __('North East')),
-            array('id' => 'E', 'name' => __('East')),
-            array('id' => 'SE', 'name' => __('South East')),
-            array('id' => 'S', 'name' => __('South')),
-            array('id' => 'SW', 'name' => __('South West')),
-            array('id' => 'W', 'name' => __('West')),
-            array('id' => 'NW', 'name' => __('North West'))
-        );
-
-        Theme::Set('form_id', 'TransitionForm');
-        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->module->type . '&q=Exec&method=TransitionEdit');
-        Theme::Set('form_meta', '
-            <input type="hidden" name="type" value="' . $type . '">
-            <input type="hidden" name="widgetId" value="' . $this->getWidgetId() . '">
-            ');
-
-        $formFields[] = Form::AddCombo(
-            'transitionType',
-            __('Transition'),
-            $transition,
-            $transitions,
-            'code',
-            'transition',
-            __('What transition should be applied when this region is finished?'),
-            't');
-
-        $formFields[] = Form::AddNumber('transitionDuration', __('Duration'), $duration,
-            __('The duration for this transition, in milliseconds.'), 'l', '', 'transition-group');
-
-        $formFields[] = Form::AddCombo(
-            'transitionDirection',
-            __('Direction'),
-            $direction,
-            $compassPoints,
-            'id',
-            'name',
-            __('The direction for this transition. Only appropriate for transitions that move, such as Fly.'),
-            'd',
-            'transition-group transition-direction');
-
-        // Add some dependencies
-        $response->AddFieldAction('transitionType', 'init', '', array('.transition-group' => array('display' => 'none')));
-        $response->AddFieldAction('transitionType', 'init', '', array('.transition-group' => array('display' => 'block')), 'not');
-        $response->AddFieldAction('transitionType', 'change', '', array('.transition-group' => array('display' => 'none')));
-        $response->AddFieldAction('transitionType', 'change', '', array('.transition-group' => array('display' => 'block')), 'not');
-
-        // Decide where the cancel button will take us
-        if (\Kit::GetParam('designer', _REQUEST, _INT))
-            $response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&regionid=' . \Kit::GetParam('regionId', _REQUEST, _INT) . '&q=RegionOptions")');
-        else
-            $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-
-        // Always include the save button
-        $response->AddButton(__('Save'), '$("#TransitionForm").submit()');
-
-        // Output the form and dialog
-        Theme::Set('form_fields', $formFields);
-        $response->html = Theme::RenderReturn('form_render');
-        $response->dialogTitle = sprintf(__('Edit %s Transition for %s'), $type, $this->module->name);
-        $response->dialogSize = true;
-        $response->dialogWidth = '450px';
-        $response->dialogHeight = '280px';
-
-        return $response;
-    }
-
-    /**
-     * Edit a transition
-     */
-    public function TransitionEdit()
-    {
-        $response = $this->getState();
-
-        if (!$this->auth->edit)
-            throw new Exception(__('You do not have permission to edit this media.'));
-
-        // Get the transition type
-        $transitionType = \Kit::GetParam('transitionType', _POST, _WORD);
-        $duration = \Kit::GetParam('transitionDuration', _POST, _INT, 0);
-        $direction = \Kit::GetParam('transitionDirection', _POST, _WORD, '');
-        $type = \Kit::GetParam('type', _REQUEST, _WORD);
-
-        switch ($type) {
-            case 'in':
-                $this->setOption('transIn', $transitionType);
-                $this->setOption('transInDuration', $duration);
-                $this->setOption('transInDirection', $direction);
-
-                break;
-
-            case 'out':
-                $this->setOption('transOut', $transitionType);
-                $this->setOption('transOutDuration', $duration);
-                $this->setOption('transOutDirection', $direction);
-
-                break;
-
-            default:
-                trigger_error(_('Unknown transition type'), E_USER_ERROR);
-        }
-
-        // This saves the Media Object to the Region
-        $this->saveWidget();
-
-        if (\Kit::GetParam('designer', _REQUEST, _INT)) {
-            // We want to load a new form
-            $response->loadForm = true;
-            $response->loadFormUri = 'index.php?p=timeline&regionid=' . \Kit::GetParam('regionId', _REQUEST, _INT) . '&q=RegionOptions';
-        }
-
-        return $response;
-    }
-
-    /**
      * Get the the Transition for this media
      * @param string $type Either "in" or "out"
      * @return string
      */
     public function getTransition($type)
     {
-
         switch ($type) {
             case 'in':
                 $code = $this->getOption('transIn');
@@ -663,9 +387,8 @@ abstract class Module implements ModuleInterface
      */
     public function installOrUpdate()
     {
-
         if ($this->module->renderAs != 'native')
-            throw new Exception(__('Module must implement InstallOrUpgrade'));
+            throw new ControllerNotImplemented(__('Module must implement InstallOrUpgrade'));
 
         return true;
     }
@@ -673,7 +396,7 @@ abstract class Module implements ModuleInterface
     /**
      * Installs any files specific to this module
      */
-    public function InstallFiles()
+    public function installFiles()
     {
 
     }

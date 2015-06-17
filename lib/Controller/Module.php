@@ -23,11 +23,12 @@ namespace Xibo\Controller;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PlaylistFactory;
+use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\WidgetFactory;
-use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Config;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
+use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 use Xibo\Storage\PDOConnect;
 
@@ -217,7 +218,7 @@ class Module extends Base
         $module = ModuleFactory::create($type, $this->db, $this->user);
 
         // Install Files for this module
-        $module->InstallFiles();
+        $module->installFiles();
 
         try {
             // Get the settings (may throw an exception)
@@ -351,54 +352,6 @@ class Module extends Base
     }
 
     /**
-     * Execute a Module Action
-     */
-    public function Exec()
-    {
-        $requestedModule = \Kit::GetParam('mod', _REQUEST, _WORD);
-        $requestedMethod = \Kit::GetParam('method', _REQUEST, _WORD);
-
-        Log::debug('Module Exec for ' . $requestedModule . ' with method ' . $requestedMethod);
-
-        // Validate that GetResource calls have a region
-        if ($requestedMethod == 'GetResource' && \Kit::GetParam('regionId', _REQUEST, _INT) == 0)
-            die(__('Get Resource Call without a Region'));
-
-        // Create a new module to handle this request
-        $module = \Xibo\Factory\ModuleFactory::createForWidget(Kit::GetParam('mod', _REQUEST, _WORD), \Kit::GetParam('widgetId', _REQUEST, _INT), $this->getUser()->userId, \Kit::GetParam('playlistId', _REQUEST, _INT), \Kit::GetParam('regionId', _REQUEST, _INT));
-
-        // Authenticate access to this widget
-        if (!$this->getUser()->checkViewable($module->widget))
-            die(__('Access Denied'));
-
-        // Set the permissions for this module
-        $module->setPermission($this->getUser()->getPermission($module->widget));
-
-        // Set the user - it is used in forms to return other entities
-        $module->setUser($this->user);
-
-        // What module has been requested?
-        $response = null;
-        $method = \Kit::GetParam('method', _REQUEST, _WORD);
-        $raw = \Kit::GetParam('raw', _REQUEST, _WORD);
-
-        if (method_exists($module, $method)) {
-            $response = $module->$method();
-        } else {
-            // Set the error to display
-            trigger_error(__('This Module does not exist'), E_USER_ERROR);
-        }
-
-        if ($raw == 'true') {
-            echo $response;
-            exit();
-        } else {
-            /* @var ApplicationState $response */
-
-        }
-    }
-
-    /**
      * Add Widget Form
      * @param string $type
      * @param int $playlistId
@@ -529,13 +482,81 @@ class Module extends Base
         ]);
     }
 
+    /**
+     * Edit Widget Transition Form
+     * @param string $type
+     * @param int $widgetId
+     */
     public function editWidgetTransitionForm($type, $widgetId)
     {
+        $module = ModuleFactory::createWithWidget(WidgetFactory::loadByWidgetId($widgetId));
 
+        if (!$this->getUser()->checkEditable($module->widget))
+            throw new AccessDeniedException();
+
+        // Pass to view
+        $this->getState()->template = 'module-form-transition';
+        $this->getState()->setData([
+            'type' => $type,
+            'module' => $module,
+            'transitions' => [
+                'in' => TransitionFactory::getEnabledByType('in'),
+                'out' => TransitionFactory::getEnabledByType('out'),
+                'compassPoints' => array(
+                    array('id' => 'N', 'name' => __('North')),
+                    array('id' => 'NE', 'name' => __('North East')),
+                    array('id' => 'E', 'name' => __('East')),
+                    array('id' => 'SE', 'name' => __('South East')),
+                    array('id' => 'S', 'name' => __('South')),
+                    array('id' => 'SW', 'name' => __('South West')),
+                    array('id' => 'W', 'name' => __('West')),
+                    array('id' => 'NW', 'name' => __('North West'))
+                )
+            ],
+            'help' => Help::Link('Transition', 'Edit')
+        ]);
     }
 
+    /**
+     * Edit Widget Transition
+     * @param string $type
+     * @param int $widgetId
+     */
     public function editWidgetTransition($type, $widgetId)
     {
+        $widget = WidgetFactory::getById($widgetId);
 
+        if (!$this->getUser()->checkEditable($widget))
+            throw new AccessDeniedException();
+
+        $widget->load();
+
+        switch ($type) {
+            case 'in':
+                $widget->setOptionValue('transIn', 'attrib', Sanitize::getString('transitionType'));
+                $widget->setOptionValue('transInDuration', 'attrib', Sanitize::getInt('transitionDuration'));
+                $widget->setOptionValue('transInDirection', 'attrib', Sanitize::getString('transitionDirection'));
+
+                break;
+
+            case 'out':
+                $widget->setOptionValue('transOut', 'attrib', Sanitize::getString('transitionType'));
+                $widget->setOptionValue('transOutDuration', 'attrib', Sanitize::getInt('transitionDuration'));
+                $widget->setOptionValue('transOutDirection', 'attrib', Sanitize::getString('transitionDirection'));
+
+                break;
+
+            default:
+                throw new \InvalidArgumentException(__('Unknown transition type'));
+        }
+
+        $widget->save();
+
+        // Successful
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Edited Transition')),
+            'id' => $widget->widgetId,
+            'data' => [$widget]
+        ]);
     }
 }

@@ -503,7 +503,7 @@ class Library extends Base
 
             // Install Files for this module
             $moduleObject = ModuleFactory::create($module->name);
-            $moduleObject->InstallFiles();
+            $moduleObject->installFiles();
         }
     }
 
