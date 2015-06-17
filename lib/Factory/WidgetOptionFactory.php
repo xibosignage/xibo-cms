@@ -24,6 +24,8 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\WidgetOption;
+use Xibo\Helper\Sanitize;
+use Xibo\Storage\PDOConnect;
 
 class WidgetOptionFactory
 {
@@ -68,14 +70,10 @@ class WidgetOptionFactory
 
         $sql = 'SELECT * FROM `widgetoption` WHERE widgetId = :widgetId';
 
-        foreach (\Xibo\Storage\PDOConnect::select($sql, array('widgetId' => \Xibo\Helper\Sanitize::int('widgetId', $filterBy))) as $row) {
-            $widget = new WidgetOption();
-            $widget->widgetId = \Xibo\Helper\Sanitize::int($row['widgetId']);
-            $widget->type = \Kit::ValidateParam($row['type'], _WORD);
-            $widget->option = \Xibo\Helper\Sanitize::string($row['option']);
-            $widget->value = \Kit::ValidateParam($row['value'], _HTMLSTRING);
-
-            $entries[] = $widget;
+        foreach (PDOConnect::select($sql, [
+            'widgetId' => Sanitize::getInt('widgetId', $filterBy)
+        ]) as $row) {
+            $entries[] = (new WidgetOption())->hydrate($row);
         }
 
         return $entries;

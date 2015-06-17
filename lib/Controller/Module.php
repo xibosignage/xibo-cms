@@ -20,7 +20,10 @@
  */
 namespace Xibo\Controller;
 
+use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\ModuleFactory;
+use Xibo\Factory\PlaylistFactory;
+use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Config;
 use Xibo\Helper\Help;
@@ -77,7 +80,7 @@ class Module extends Base
     /**
      * A grid of modules
      */
-    public function Grid()
+    public function grid()
     {
         $modules = ModuleFactory::query();
 
@@ -171,7 +174,7 @@ class Module extends Base
         $module = \Xibo\Factory\ModuleFactory::create($type);
 
         // Merge in the fields from the settings
-        foreach ($module->ModuleSettingsForm() as $field)
+        foreach ($module->settingsForm() as $field)
             $formFields[] = $field;
 
         Theme::Set('form_fields', $formFields);
@@ -218,7 +221,7 @@ class Module extends Base
 
         try {
             // Get the settings (may throw an exception)
-            $settings = json_encode($module->ModuleSettings());
+            $settings = json_encode($module->settings());
 
             $dbh = \Xibo\Storage\PDOConnect::init();
 
@@ -333,7 +336,7 @@ class Module extends Base
         try {
             Log::notice('Validation passed, installing module.', 'module', 'Install');
             $moduleObject = ModuleFactory::create($type, $this->db, $this->user);
-            $moduleObject->InstallOrUpdate();
+            $moduleObject->installOrUpdate();
         } catch (Exception $e) {
             trigger_error(__('Unable to install module'), E_USER_ERROR);
         }
@@ -393,5 +396,146 @@ class Module extends Base
             /* @var ApplicationState $response */
 
         }
+    }
+
+    /**
+     * Add Widget Form
+     * @param string $type
+     * @param int $playlistId
+     */
+    public function addWidgetForm($type, $playlistId)
+    {
+        $playlist = PlaylistFactory::getById($playlistId);
+
+        if (!$this->getUser()->checkEditable($playlist))
+            throw new AccessDeniedException();
+
+        // Create a module to use
+        $module = ModuleFactory::createForWidget($type, null, $this->getUser()->userId, $playlistId);
+
+        // Pass to view
+        $this->getState()->template = 'module-form-' . $module->getModuleType() . '-add';
+        $this->getState()->setData([
+            'playlist' => $playlist,
+            'module' => $module
+        ]);
+    }
+
+    /**
+     * Add Widget
+     * @param string $type
+     * @param int $playlistId
+     */
+    public function addWidget($type, $playlistId)
+    {
+        $playlist = PlaylistFactory::getById($playlistId);
+
+        if (!$this->getUser()->checkEditable($playlist))
+            throw new AccessDeniedException();
+
+        // Create a module to use
+        $module = ModuleFactory::createForWidget($type, null, $this->getUser()->userId, $playlistId);
+
+        // Call module add
+        $module->add();
+
+        // Successful
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Added %s'), $module->getName()),
+            'id' => $module->widget->widgetId,
+            'data' => [$module]
+        ]);
+    }
+
+    /**
+     * Edit Widget Form
+     * @param int $widgetId
+     */
+    public function editWidgetForm($widgetId)
+    {
+        $module = ModuleFactory::createWithWidget(WidgetFactory::loadByWidgetId($widgetId));
+
+        if (!$this->getUser()->checkEditable($module->widget))
+            throw new AccessDeniedException();
+
+        // Pass to view
+        $this->getState()->template = 'module-form-' . $module->getModuleType() . '-edit';
+        $this->getState()->setData([
+            'module' => $module
+        ]);
+    }
+
+    /**
+     * Edit Widget
+     * @param int $widgetId
+     */
+    public function editWidget($widgetId)
+    {
+        $module = ModuleFactory::createWithWidget(WidgetFactory::loadByWidgetId($widgetId));
+
+        if (!$this->getUser()->checkEditable($module->widget))
+            throw new AccessDeniedException();
+
+        // Call Module Edit
+        $module->edit();
+
+        // Successful
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Edited %s'), $module->getName()),
+            'id' => $module->widget->widgetId,
+            'data' => [$module]
+        ]);
+    }
+
+    /**
+     * Delete Widget Form
+     * @param int $widgetId
+     */
+    public function deleteWidgetForm($widgetId)
+    {
+        $module = ModuleFactory::createWithWidget(WidgetFactory::loadByWidgetId($widgetId));
+
+        if (!$this->getUser()->checkDeleteable($module->widget))
+            throw new AccessDeniedException();
+
+        // Pass to view
+        $this->getState()->template = 'module-form-delete';
+        $this->getState()->setData([
+            'module' => $module,
+            'help' => Help::Link('Media', 'Delete')
+        ]);
+    }
+
+    /**
+     * Delete Widget
+     * @param int $widgetId
+     */
+    public function deleteWidget($widgetId)
+    {
+        $module = ModuleFactory::createWithWidget(WidgetFactory::loadByWidgetId($widgetId));
+
+        if (!$this->getUser()->checkDeleteable($module->widget))
+            throw new AccessDeniedException();
+
+        // Call Module Delete
+        $module->delete();
+
+        // Call Widget Delete
+        $module->widget->delete();
+
+        // Successful
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Deleted %s'), $module->getName())
+        ]);
+    }
+
+    public function editWidgetTransitionForm($type, $widgetId)
+    {
+
+    }
+
+    public function editWidgetTransition($type, $widgetId)
+    {
+
     }
 }

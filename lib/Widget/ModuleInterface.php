@@ -24,39 +24,35 @@ namespace Xibo\Widget;
 interface ModuleInterface
 {
     // Some Default Add/Edit/Delete functionality each module should have
-    public function EditForm();
-
-    public function DeleteForm();
-
-    public function EditMedia();
-
-    public function DeleteMedia();
+    public function add();
+    public function edit();
+    public function delete();
 
     // Return the name of the media as input by the user
-    public function GetName();
+    public function getName();
+    public function getSetting($setting, $default = NULL);
 
     /**
      * HTML Content to completely render this module.
      */
-    public function GetResource();
+    public function getResource();
+    public function preview($width, $height, $scaleOverride = 0);
 
     /**
      * Is the Module Valid
      * @return int (0 = No, 1 = Yes, 2 = Player Dependent
      */
-    public function IsValid();
+    public function isValid();
 
     /**
      * Install or Upgrade this module
      *    Expects $this->codeSchemaVersion to be set by the module.
      */
-    public function InstallOrUpdate();
+    public function installOrUpdate();
 
-    public function InstallModule($name, $description, $imageUri, $previewEnabled, $assignable, $settings);
+    public function installModule($name, $description, $imageUri, $previewEnabled, $assignable, $settings);
 
-    public function UpgradeModule($name, $description, $imageUri, $previewEnabled, $assignable, $settings);
+    public function upgradeModule($name, $description, $imageUri, $previewEnabled, $assignable, $settings);
 
-    public function ModuleSettingsForm();
-
-    public function ModuleSettings();
+    public function settings();
 }

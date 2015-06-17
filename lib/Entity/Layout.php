@@ -133,8 +133,9 @@ class Layout implements \JsonSerializable
 
     /**
      * Load this Layout
+     * @param bool $loadPlaylists
      */
-    public function load()
+    public function load($loadPlaylists = false)
     {
         if ($this->loaded)
             return;
@@ -146,9 +147,12 @@ class Layout implements \JsonSerializable
 
         // Load all regions
         $this->regions = RegionFactory::getByLayoutId($this->layoutId);
-        foreach ($this->regions as $region) {
-            /* @var Region $region */
-            $region->load();
+
+        if ($loadPlaylists) {
+            foreach ($this->regions as $region) {
+                /* @var Region $region */
+                $region->load();
+            }
         }
 
         // Load all tags
@@ -160,6 +164,8 @@ class Layout implements \JsonSerializable
         // Set the hash
         $this->hash = $this->hash();
         $this->loaded = true;
+
+        Log::debug('Loaded %s' . $this->layoutId);
     }
 
     /**

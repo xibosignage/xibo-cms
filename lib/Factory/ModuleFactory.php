@@ -25,7 +25,6 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Media;
 use Xibo\Entity\Module;
-use Xibo\Entity\Region;
 use Xibo\Entity\Widget;
 use Xibo\Exception\NotFoundException;
 use Xibo\Helper\Log;
@@ -49,7 +48,7 @@ class ModuleFactory
         // Create a module
         $module = $modules[0];
 
-        $type = $module->type;
+        $type = 'Xibo\Widget\\' . $module->type;
 
         $type = new $type();
         /* @var \Xibo\Widget\Module $type */
@@ -116,13 +115,14 @@ class ModuleFactory
         if ($widgetId == 0) {
             // If we don't have a widget we must have a playlist
             if ($playlistId == 0) {
-                //throw new \InvalidArgumentException(__('Playlist not provided'));
-                // TODO: Implement Playlists
-                $playlistId = PlaylistFactory::getByRegionId($regionId)[0]->playlistId;
+                throw new \InvalidArgumentException(__('Neither Playlist or Widget provided'));
             }
 
+            $playlist = PlaylistFactory::getById($playlistId);
+            $playlist->load(['playlistIncludeRegionAssignments' => false]);
+
             // Create a new widget to use
-            $module->setWidget(WidgetFactory::create($ownerId, $playlistId, $module->getModuleType(), 0));
+            $module->setWidget(WidgetFactory::create($ownerId, $playlistId, $module->getModuleType(), 0, count($playlist->widgets) + 1));
         }
         else {
             // Load the widget
@@ -135,14 +135,16 @@ class ModuleFactory
     /**
      * Create a Module using a Widget
      * @param Widget $widget
-     * @param Region $region
+     * @param Region[optional] $region
      * @return \Xibo\Widget\Module
      */
-    public static function createWithWidget($widget, $region)
+    public static function createWithWidget($widget, $region = null)
     {
         $module = ModuleFactory::create($widget->type);
         $module->setWidget($widget);
-        $module->setRegion($region);
+
+        if ($region != null)
+            $module->setRegion($region);
 
         return $module;
     }

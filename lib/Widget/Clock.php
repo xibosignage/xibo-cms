@@ -114,9 +114,9 @@ class Clock extends Module
 
         // You must also provide a duration (all media items must provide this field)
         $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration(), false));
-        $this->SetOption('theme', \Kit::GetParam('themeid', _POST, _INT, 0));
-        $this->SetOption('clockTypeId', \Kit::GetParam('clockTypeId', _POST, _INT, 1));
-        $this->SetOption('offset', \Kit::GetParam('offset', _POST, _INT, 0));
+        $this->setOption('theme', \Kit::GetParam('themeid', _POST, _INT, 0));
+        $this->setOption('clockTypeId', \Kit::GetParam('clockTypeId', _POST, _INT, 1));
+        $this->setOption('offset', \Kit::GetParam('offset', _POST, _INT, 0));
         $this->setRawNode('ta_text', \Kit::GetParam('ta_text', _POST, _HTMLSTRING));
 
         // Save the widget
@@ -150,7 +150,7 @@ class Clock extends Module
         $formFields[] = Form::AddCombo(
             'clockTypeId',
             __('Clock Type'),
-            $this->GetOption('clockTypeId'),
+            $this->getOption('clockTypeId'),
             array(
                 array('clockTypeId' => '1', 'clockType' => 'Analogue'),
                 array('clockTypeId' => '2', 'clockType' => 'Digital'),
@@ -165,14 +165,14 @@ class Clock extends Module
             __('The duration in seconds this item should be displayed'), 'd', 'required');
 
 
-        $formFields[] = Form::AddNumber('offset', __('Offset'), $this->GetOption('offset'),
+        $formFields[] = Form::AddNumber('offset', __('Offset'), $this->getOption('offset'),
             __('The offset in minutes that should be applied to the current time.'), 'o', NULL, 'offset-control-group');
 
         // Offer a choice of theme
         $formFields[] = Form::AddCombo(
             'themeid',
             __('Theme'),
-            $this->GetOption('theme'),
+            $this->getOption('theme'),
             array(array('themeid' => '1', 'theme' => 'Light'), array('themeid' => '2', 'theme' => 'Dark')),
             'themeid',
             'theme',
@@ -212,9 +212,9 @@ class Clock extends Module
 
         // You must also provide a duration (all media items must provide this field)
         $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration(), false));
-        $this->SetOption('theme', \Kit::GetParam('themeid', _POST, _INT, 0));
-        $this->SetOption('clockTypeId', \Kit::GetParam('clockTypeId', _POST, _INT, 1));
-        $this->SetOption('offset', \Kit::GetParam('offset', _POST, _INT, 0));
+        $this->setOption('theme', \Kit::GetParam('themeid', _POST, _INT, 0));
+        $this->setOption('clockTypeId', \Kit::GetParam('clockTypeId', _POST, _INT, 1));
+        $this->setOption('offset', \Kit::GetParam('offset', _POST, _INT, 0));
         $this->setRawNode('ta_text', \Kit::GetParam('ta_text', _POST, _HTMLSTRING));
 
         // Save the widget
@@ -268,26 +268,26 @@ class Clock extends Module
      * @param integer $displayId If this comes from a real client, this will be the display id.
      * @return mixed
      */
-    public function GetResource($displayId = 0)
+    public function getResource($displayId = 0)
     {
         $template = null;
 
         // Clock Type
-        switch ($this->GetOption('clockTypeId', 1)) {
+        switch ($this->getOption('clockTypeId', 1)) {
 
             case 1:
                 // Analogue
                 $template = file_get_contents('modules/theme/HtmlTemplateForClock.html');
 
                 // Render our clock face
-                $theme = ($this->GetOption('theme') == 1 ? 'light' : 'dark');
-                $theme_face = ($this->GetOption('theme') == 1 ? 'clock_bg_modern_light.png' : 'clock_bg_modern_dark.png');
+                $theme = ($this->getOption('theme') == 1 ? 'light' : 'dark');
+                $theme_face = ($this->getOption('theme') == 1 ? 'clock_bg_modern_light.png' : 'clock_bg_modern_dark.png');
 
                 $template = str_replace('<!--[[[CLOCK_FACE]]]-->', base64_encode(file_get_contents('modules/theme/' . $theme_face)), $template);
 
                 // Light or dark?
                 $template = str_replace('<!--[[[CLOCK_THEME]]]-->', $theme, $template);
-                $template = str_replace('<!--[[[OFFSET]]]-->', $this->GetOption('offset', 0), $template);
+                $template = str_replace('<!--[[[OFFSET]]]-->', $this->getOption('offset', 0), $template);
 
                 // After body content
                 $isPreview = (\Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
@@ -337,7 +337,7 @@ class Clock extends Module
     function updateClock() {
         $(".clock").each(function() {
             $(this).html(moment().add(' . {
-                $this->GetOption('offset', 0)} . ', "m").format($(this).attr("format")));
+                $this->getOption('offset', 0)} . ', "m").format($(this).attr("format")));
         });
     }
 

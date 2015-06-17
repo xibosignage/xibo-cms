@@ -53,7 +53,7 @@ class Region implements \JsonSerializable
     public function __construct()
     {
         // Exclude properties that will cause recursion
-        $this->excludeProperty('playlists');
+        //$this->excludeProperty('playlists');
     }
 
     public function __clone()
@@ -159,20 +159,27 @@ class Region implements \JsonSerializable
 
     /**
      * Load
+     * @param array $loadOptions
      */
-    public function load()
+    public function load($loadOptions = [])
     {
+        $options = array_merge(['regionIncludePlaylists' => true], $loadOptions);
+
+        Log::debug('Load Region with %s', json_encode($options));
+
         // Load permissions
         $this->permissions = PermissionFactory::getByObjectId(get_class(), $this->regionId);
 
         // Load all playlists
-        $this->playlists = PlaylistFactory::getByRegionId($this->regionId);
-        foreach ($this->playlists as $playlist) {
-            /* @var Playlist $playlist */
-            $playlist->load();
+        if ($options['regionIncludePlaylists']) {
+            $this->playlists = PlaylistFactory::getByRegionId($this->regionId);
+            foreach ($this->playlists as $playlist) {
+                /* @var Playlist $playlist */
+                $playlist->load($loadOptions);
 
-            // Assign my regionId
-            $playlist->assignRegion($this);
+                // Assign my regionId
+                $playlist->assignRegion($this);
+            }
         }
 
         // Get region options
@@ -186,6 +193,8 @@ class Region implements \JsonSerializable
      */
     public function save()
     {
+        Log::debug('Saving %s', $this);
+
         if ($this->regionId == null || $this->regionId == 0)
             $this->add();
         else if ($this->hash != $this->hash())
@@ -257,7 +266,7 @@ class Region implements \JsonSerializable
 
         $sql = 'INSERT INTO `region` (`layoutId`, `ownerId`, `name`, `width`, `height`, `top`, `left`, `zIndex`) VALUES (:layoutId, :ownerId, :name, :width, :height, :top, :left, :zIndex)';
 
-        $this->regionId = \Xibo\Storage\PDOConnect::insert($sql, array(
+        $this->regionId = PDOConnect::insert($sql, array(
             'layoutId' => $this->layoutId,
             'ownerId' => $this->ownerId,
             'name' => $this->name,
@@ -274,11 +283,11 @@ class Region implements \JsonSerializable
      */
     private function update()
     {
-        \Xibo\Helper\Log::debug('Editing region ' . $this->regionId . ' on LayoutId ' . $this->layoutId . ' zIndex ' . $this->zIndex);
+        Log::debug('Editing %s', $this);
 
         $sql = 'UPDATE `region` SET `ownerId` = :ownerId, `name` = :name, `width` = :width, `height` = :height, `top` = :top, `left` = :left, zIndex = :zIndex WHERE `regionId` = :regionId';
 
-        \Xibo\Storage\PDOConnect::update($sql, array(
+        PDOConnect::update($sql, array(
             'ownerId' => $this->ownerId,
             'name' => $this->name,
             'width' => $this->width,

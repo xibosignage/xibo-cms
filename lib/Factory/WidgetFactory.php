@@ -25,6 +25,7 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Widget;
 use Xibo\Exception\NotFoundException;
+use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
@@ -86,15 +87,17 @@ class WidgetFactory
      * @param int $playlistId
      * @param string $type
      * @param int $duration
+     * @param int $displayOrder
      * @return Widget
      */
-    public static function create($ownerId, $playlistId, $type, $duration)
+    public static function create($ownerId, $playlistId, $type, $duration, $displayOrder = 1)
     {
         $widget = new Widget();
         $widget->ownerId = $ownerId;
         $widget->playlistId = $playlistId;
         $widget->type = $type;
         $widget->duration = $duration;
+        $widget->displayOrder = 1;
 
         return $widget;
     }
@@ -117,33 +120,36 @@ class WidgetFactory
             FROM `widget`
         ';
 
-        if (Sanitize::int('mediaId', $filterBy) != null) {
+        if (Sanitize::getInt('mediaId', $filterBy) != null) {
             $sql .= '
                 INNER JOIN `lkwidgetmedia`
                 ON `lkwidgetmedia`.widgetId = widget.widgetId
                     AND `lkwidgetmedia`.mediaId = :mediaId
             ';
-            $params['mediaId'] = Sanitize::int('mediaId', $filterBy);
+            $params['mediaId'] = Sanitize::getInt('mediaId', $filterBy);
         }
 
         $sql .= ' WHERE 1 = 1 ';
 
-        if (Sanitize::int('playlistId', $filterBy) != null) {
+        if (Sanitize::getInt('playlistId', $filterBy) != null) {
             $sql .= ' AND playlistId = :playlistId';
-            $params['playlistId'] = Sanitize::int('playlistId', $filterBy);
+            $params['playlistId'] = Sanitize::getInt('playlistId', $filterBy);
         }
 
-        if (Sanitize::int('widgetId', $filterBy) != null) {
+        if (Sanitize::getInt('widgetId', $filterBy) != null) {
             $sql .= ' AND widgetId = :widgetId';
-            $params['widgetId'] = Sanitize::int('widgetId', $filterBy);
+            $params['widgetId'] = Sanitize::getInt('widgetId', $filterBy);
         }
 
         // Sorting?
         if (is_array($sortOrder))
             $sql .= ' ORDER BY ' . implode(',', $sortOrder);
 
+
+        Log::sql($sql, $params);
+
         foreach (PDOConnect::select($sql, $params) as $row) {
-            $entries[] = (new Widget())->hydrate($row);
+            $entries[] = (new Widget())->hydrate($row, ['duration']);
         }
 
         return $entries;

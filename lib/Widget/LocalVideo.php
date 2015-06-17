@@ -20,137 +20,56 @@
  */
 namespace Xibo\Widget;
 
-use Exception;
 use InvalidArgumentException;
-use Kit;
-use Widget\Module;
-use Xibo\Helper\Form;
-use Xibo\Helper\Theme;
+use Respect\Validation\Validator as v;
+use Xibo\Helper\Sanitize;
 
 class LocalVideo extends Module
 {
     /**
-     * Return the Add Form as HTML
+     * Validate
      */
-    public function AddForm()
+    public function validate()
     {
-        $response = $this->getState();
+        // Validate
+        if (!v::string()->notEmpty()->url()->validate($this->getOption('uri')))
+            throw new InvalidArgumentException(__('Please enter a full path name giving the location of this video on the client'));
 
-        // Configure form
-        $this->configureForm('AddMedia');
-
-        $formFields = array();
-
-        $formFields[] = Form::AddText('uri', __('Video Path'), NULL,
-            __('A local file path or URL to the video. This can be a RTSP stream.'), 'p', 'required');
-
-        $formFields[] = Form::AddNumber('duration', __('Duration'), NULL,
-            __('The duration in seconds this counter should be displayed'), 'd', 'required');
-
-        Theme::Set('form_fields', $formFields);
-
-        $response->html = Theme::RenderReturn('form_render');
-        $this->configureFormButtons($response);
-        $response->dialogTitle = __('Add Local Video');
-
-        return $response;
-    }
-
-    /**
-     * Return the Edit Form as HTML
-     */
-    public function EditForm()
-    {
-        $response = $this->getState();
-
-        // Edit calls are the same as add calls, except you will to check the user has permissions to do the edit
-        if (!$this->auth->edit)
-            throw new Exception(__('You do not have permission to edit this widget.'));
-
-        // Configure the form
-        $this->configureForm('EditMedia');
-
-        $formFields = array();
-
-        $formFields[] = Form::AddText('uri', __('Video Path'), urldecode($this->GetOption('uri')),
-            __('A local file path or URL to the video. This can be a RTSP stream.'), 'p', 'required');
-
-        $formFields[] = Form::AddNumber('duration', __('Duration'), $this->getDuration(),
-            __('The duration in seconds this counter should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
-
-        Theme::Set('form_fields', $formFields);
-
-        $response->html = Theme::RenderReturn('form_render');
-        $this->configureFormButtons($response);
-        $response->dialogTitle = __('Edit Local Video');
-
-        return $response;
+        if (!v::int()->min(1)->validate($this->getDuration()))
+            throw new InvalidArgumentException(__('You must enter a duration.'));
     }
 
     /**
      * Add Media to the Database
      */
-    public function AddMedia()
+    public function add()
     {
-        $response = $this->getState();
+        // Set some options
+        $this->setDuration(Sanitize::getInt('duration'));
+        $this->setOption('uri', Sanitize::getString('uri'));
 
-        // Properties
-        $uri = \Kit::GetParam('uri', _POST, _URI);
-        $duration = \Kit::GetParam('duration', _POST, _INT, 0, false);
-
-        // Validate
-        if ($uri == "")
-            throw new InvalidArgumentException(__('Please enter a full path name giving the location of this video on the client'));
-
-        if ($duration < 0)
-            throw new InvalidArgumentException(__('You must enter a duration.'));
-
-        // Any Options
-        $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration()));
-        $this->SetOption('uri', $uri);
+        $this->validate();
 
         // Save the widget
         $this->saveWidget();
-
-        // Load an edit form
-        $response->loadForm = true;
-        $response->loadFormUri = $this->getTimelineLink();
-
-        return $response;
     }
 
     /**
      * Edit Media in the Database
      */
-    public function EditMedia()
+    public function edit()
     {
-        $response = $this->getState();
+        // Set some options
+        $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
+        $this->setOption('uri', Sanitize::getString('uri'));
 
-        if (!$this->auth->edit)
-            throw new Exception(__('You do not have permission to edit this widget.'));
-
-        // Other properties
-        $uri = \Kit::GetParam('uri', _POST, _URI);
-
-        // Validate
-        if ($uri == "")
-            throw new InvalidArgumentException(__('Please enter a full path name giving the location of this video on the client'));
-
-        // Any Options
-        $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration(), false));
-        $this->SetOption('uri', $uri);
+        $this->validate();
 
         // Save the widget
         $this->saveWidget();
-
-        // Load an edit form
-        $response->loadForm = true;
-        $response->loadFormUri = $this->getTimelineLink();
-
-        return $response;
     }
 
-    public function IsValid()
+    public function isValid()
     {
         // Client dependant
         return 2;

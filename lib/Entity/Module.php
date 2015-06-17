@@ -25,6 +25,7 @@ namespace Xibo\Entity;
 
 class Module
 {
+    use EntityTrait;
     public $moduleId;
 
     public $name;

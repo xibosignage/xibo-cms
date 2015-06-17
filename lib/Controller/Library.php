@@ -430,7 +430,7 @@ class Library extends Base
 
         // Make a media module
         $widget = ModuleFactory::createWithMedia($media);
-        $widget->GetResource();
+        $widget->getResource();
 
         $this->setNoOutput(true);
     }

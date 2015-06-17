@@ -1,0 +1,37 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Edit Local Video" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Save" %}, $("#localVideoForm").submit()
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="localVideoForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
+                {% set title %}{% trans "Video Path" %}{% endset %}
+                {% set helpText %}{% trans "A local file path or URL to the video. This can be a RTSP stream." %}{% endset %}
+                {% set uri = module.getOption("uri") %}
+                {{ forms.text("uri", title, uri, helpText, "", "required") }}
+
+                {% set title %}{% trans "Duration" %}{% endset %}
+                {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
+                {{ forms.number("duration", title, module.getDuration(), helpText, "", "required") }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

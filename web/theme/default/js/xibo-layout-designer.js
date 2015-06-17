@@ -156,7 +156,7 @@ function savePositions() {
     $("#layout").each(function(){
 
         // Store the Layout ID
-        var layoutid = $(this).attr("layoutid");
+        var url = $(this).data().positionAllUrl;
 
         // Build an array of
         var regions = new Array();
@@ -180,8 +180,8 @@ function savePositions() {
         });
 
         $.ajax({
-                type: "post",
-                url: "index.php?p=timeline&q=RegionChange&layoutid="+layoutid+"&ajax=true",
+                type: "put",
+                url: url,
                 cache: false,
                 dataType: "json",
                 data: {regions : JSON.stringify(regions) },

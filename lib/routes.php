@@ -47,6 +47,8 @@ $app->put('/layout/retire/:id', '\Xibo\Controller\Layout:retire')->name('layout.
 $app->post('/region/:id', '\Xibo\Controller\Region:add')->name('region.add');
 $app->put('/region/:id', '\Xibo\Controller\Region:edit')->name('region.edit');
 $app->delete('/region/:id', '\Xibo\Controller\Region:delete')->name('region.delete');
+$app->put('/region/position/all/:id', '\Xibo\Controller\Region:positionAll')->name('region.position.all');
+$app->get('/region/:id', '\Xibo\Controller\Region:timeline')->name('region.timeline');
 
 //
 // Campaign
@@ -165,6 +167,10 @@ $app->get('/applications', '\Xibo\Controller\Applications:grid')->name('applicat
 //
 $app->get('/module', '\Xibo\Controller\Module:grid')->name('module.search');
 $app->get('/module/:type/:id', '\Xibo\Controller\Module:getResource')->name('module.getResource');
+$app->post('/module/:type/:id', '\Xibo\Controller\Module:addWidget')->name('module.widget.add');
+$app->put('/module/:id', '\Xibo\Controller\Module:editWidget')->name('module.widget.edit');
+$app->delete('/module/:id', '\Xibo\Controller\Module:deleteWidget')->name('module.widget.delete');
+$app->put('/module/transition/:type/:id', '\Xibo\Controller\Module:editWidgetTransition')->name('module.widget.transition.edit');
 
 //
 // Transition

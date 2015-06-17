@@ -104,6 +104,66 @@ ALTER TABLE  `schedule_detail` DROP FOREIGN KEY  `schedule_detail_ibfk_8` ;
 ALTER TABLE `schedule_detail` DROP `DisplayGroupID`;
 ALTER TABLE `schedule` DROP `DisplayGroupIDs`;
 
+
+CREATE TABLE IF NOT EXISTS `lkregionplaylist` (
+  `regionId` int(11) NOT NULL,
+  `playlistId` int(11) NOT NULL,
+  `displayOrder` int(11) NOT NULL,
+  PRIMARY KEY (`regionId`,`playlistId`,`displayOrder`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `lkwidgetmedia` (
+  `widgetId` int(11) NOT NULL,
+  `mediaId` int(11) NOT NULL,
+  PRIMARY KEY (`widgetId`,`mediaId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `playlist` (
+  `playlistId` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(254) DEFAULT NULL,
+  `ownerId` int(11) NOT NULL,
+  PRIMARY KEY (`playlistId`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=18 ;
+
+CREATE TABLE IF NOT EXISTS `region` (
+  `regionId` int(11) NOT NULL AUTO_INCREMENT,
+  `layoutId` int(11) NOT NULL,
+  `ownerId` int(11) NOT NULL,
+  `name` varchar(254) DEFAULT NULL,
+  `width` decimal(12,4) NOT NULL,
+  `height` decimal(12,4) NOT NULL,
+  `top` decimal(12,4) NOT NULL,
+  `left` decimal(12,4) NOT NULL,
+  `zIndex` smallint(6) NOT NULL,
+  PRIMARY KEY (`regionId`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=14 ;
+
+CREATE TABLE IF NOT EXISTS `regionoption` (
+  `regionId` int(11) NOT NULL,
+  `option` varchar(50) NOT NULL,
+  `value` text NOT NULL,
+  PRIMARY KEY (`regionId`,`option`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `widget` (
+  `widgetId` int(11) NOT NULL AUTO_INCREMENT,
+  `playlistId` int(11) NOT NULL,
+  `ownerId` int(11) NOT NULL,
+  `type` varchar(50) NOT NULL,
+  `duration` int(11) NOT NULL,
+  `displayOrder` int(11) NOT NULL,
+  PRIMARY KEY (`widgetId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `widgetoption` (
+  `widgetId` int(11) NOT NULL,
+  `type` varchar(50) NOT NULL,
+  `option` varchar(254) NOT NULL,
+  `value` text NOT NULL,
+  PRIMARY KEY (`widgetId`,`type`,`option`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
 UPDATE `version` SET `app_ver` = '1.8.0-alpha', `XmdsVersion` = 4, `XlfVersion` = 2;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';
 UPDATE `version` SET `DBVersion` = '120';

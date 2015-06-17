@@ -26,7 +26,6 @@ use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Factory\MediaFactory;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Config;
-use Xibo\Helper\Help;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
@@ -53,11 +52,6 @@ abstract class Module implements ModuleInterface
      * @var User $user
      */
     protected $user;
-
-    /**
-     * @var \Xibo\Entity\Permission $auth Widget Permissions
-     */
-    protected $auth;
 
     /**
      * @var \Xibo\Entity\Region $region The region this module is in
@@ -123,15 +117,6 @@ abstract class Module implements ModuleInterface
     }
 
     /**
-     * Set the permissions
-     * @param \Xibo\Entity\Permission $permission
-     */
-    final public function setPermission($permission)
-    {
-        $this->auth = $permission;
-    }
-
-    /**
      * Set the duration
      * @param int $duration
      */
@@ -154,7 +139,7 @@ abstract class Module implements ModuleInterface
      * @param string $name
      * @param string $value
      */
-    final protected function SetOption($name, $value)
+    final protected function setOption($name, $value)
     {
         $this->widget->setOptionValue($name, 'attrib', $value);
     }
@@ -165,7 +150,7 @@ abstract class Module implements ModuleInterface
      * @param mixed [Optional] $default
      * @return mixed
      */
-    final protected function GetOption($name, $default = null)
+    final public function getOption($name, $default = null)
     {
         return $this->widget->getOptionValue($name, $default);
     }
@@ -185,7 +170,7 @@ abstract class Module implements ModuleInterface
      * @param $default
      * @return mixed
      */
-    final protected function getRawNode($name, $default)
+    final public function getRawNode($name, $default)
     {
         return $this->widget->getOptionValue($name, $default);
     }
@@ -258,7 +243,7 @@ abstract class Module implements ModuleInterface
      * Get the duration
      * @return int
      */
-    final protected function getDuration()
+    final public function getDuration()
     {
         return $this->widget->duration;
     }
@@ -340,7 +325,7 @@ abstract class Module implements ModuleInterface
 
         $formFields = array();
 
-        $formFields[] = Form::AddText('name', __('Name'), $this->GetOption('name'),
+        $formFields[] = Form::AddText('name', __('Name'), $this->getOption('name'),
             __('The Name of this item - Leave blank to use the file name'), 'n');
 
         $formFields[] = Form::AddNumber('duration', __('Duration'), $this->getDuration(),
@@ -374,7 +359,7 @@ abstract class Module implements ModuleInterface
             throw new Exception(__('You do not have permission to edit this media.'));
 
         $this->widget->duration = \Kit::GetParam('duration', _POST, _INT, $this->widget->duration);
-        $this->SetOption('name', \Kit::GetParam('name', _POST, _STRING, $this->GetOption('name')));
+        $this->setOption('name', \Kit::GetParam('name', _POST, _STRING, $this->getOption('name')));
 
         // Save the widget
         $this->widget->save();
@@ -387,85 +372,30 @@ abstract class Module implements ModuleInterface
     }
 
     /**
-     * Delete Form
-     * All widgets are deleted in a generic way
-     */
-    public function DeleteForm()
-    {
-        $response = $this->getState();
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Media', 'Delete') . '")');
-
-        // Can this user delete?
-        if (!$this->auth->delete)
-            throw new Exception('You do not have permission to delete this media.');
-
-        Theme::Set('form_id', 'MediaDeleteForm');
-        Theme::Set('form_action', 'index.php?p=module&mod=' . $this->module->type . '&q=Exec&method=DeleteMedia');
-        Theme::Set('form_meta', '<input type="hidden" name="widgetId" value="' . $this->getWidgetId() . '"><input type="hidden" name"regionId" value="' . \Kit::GetParam('regionId', _POST, _INT) . '">');
-        $formFields = array(
-            Form::AddMessage(__('Are you sure you want to remove this widget?')),
-            Form::AddMessage(__('This action cannot be undone.')),
-        );
-
-        // If we have linked media items, should we also delete them?
-        if (count($this->widget->mediaIds) > 0) {
-            $formFields[] = Form::AddCheckbox('deleteMedia', __('Also delete from the Library?'), 0, __('This widget is linked to Media in the Library. Check this option to also delete that Media.'), 'd');
-        }
-
-        Theme::Set('form_fields', $formFields);
-        $form = Theme::RenderReturn('form_render');
-
-        $response->SetFormRequestResponse($form, __('Delete Widget'), '300px', '200px');
-        $response->AddButton(__('No'), 'XiboDialogClose()');
-        $response->AddButton(__('Yes'), '$("#MediaDeleteForm").submit()');
-
-    }
-
-    /**
      * Delete Widget
      */
-    public function DeleteMedia()
+    public function delete()
     {
-        $response = $this->getState();
-
-        // Can this user delete?
-        if (!$this->auth->delete)
-            throw new Exception(__('You do not have permission to delete this media.'));
-
-        // Delete associated media?
-        if (\Kit::GetParam('deleteMedia', _POST, _CHECKBOX) == 1) {
-            $media = new Media();
-            foreach ($this->widget->mediaIds as $mediaId) {
-                $media->Delete($mediaId);
-            }
-        }
-
-        // Delete the widget
-        $this->widget->delete();
-
-        // Return
-        $response->SetFormSubmitResponse(__('The Widget has been Deleted'));
-        $response->loadForm = true;
-        $response->loadFormUri = $this->getTimelineLink();
-
+        // By default this doesn't do anything
+        // Module specific delete functionality should go here in the super class
     }
 
     /**
      * Get Name
      * @return string
      */
-    public function GetName()
+    public function getName()
     {
         Log::debug('Media assigned: ' . count($this->widget->mediaIds));
 
         if (count($this->widget->mediaIds) > 0) {
-            $media = new Media();
-            $name = $media->getName($this->widget->mediaIds[0]);
+            $media = MediaFactory::getById($this->widget->mediaIds[0]);
+            $name = $media->name;
         } else {
             $name = $this->module->name;
         }
 
-        return $this->GetOption('name', $name);
+        return $this->getOption('name', $name);
     }
 
     /**
@@ -475,7 +405,7 @@ abstract class Module implements ModuleInterface
      * @param int [Optional] $scaleOverride
      * @return string
      */
-    public function Preview($width, $height, $scaleOverride = 0)
+    public function preview($width, $height, $scaleOverride = 0)
     {
         if ($this->module->previewEnabled == 0)
             return $this->previewIcon();
@@ -519,7 +449,7 @@ abstract class Module implements ModuleInterface
         $output .= '<div class="info">';
         $output .= '    <ul>';
         $output .= '    <li>' . __('Type') . ': ' . $this->module->name . '</li>';
-        $output .= '    <li>' . __('Name') . ': ' . $this->GetName() . '</li>';
+        $output .= '    <li>' . __('Name') . ': ' . $this->getName() . '</li>';
         $output .= '    <li>' . __('Duration') . ': ' . $this->widget->duration . ' ' . __('seconds') . '</li>';
         $output .= '    </ul>';
         $output .= '</div>';
@@ -533,7 +463,7 @@ abstract class Module implements ModuleInterface
      * @param int $displayId
      * @throws ControllerNotImplemented
      */
-    public function GetResource($displayId = 0)
+    public function getResource($displayId = 0)
     {
         throw new ControllerNotImplemented();
     }
@@ -559,16 +489,16 @@ abstract class Module implements ModuleInterface
 
         switch ($type) {
             case 'in':
-                $transition = $this->GetOption('transIn');
-                $duration = $this->GetOption('transInDuration', 0);
-                $direction = $this->GetOption('transInDirection');
+                $transition = $this->getOption('transIn');
+                $duration = $this->getOption('transInDuration', 0);
+                $direction = $this->getOption('transInDirection');
 
                 break;
 
             case 'out':
-                $transition = $this->GetOption('transOut');
-                $duration = $this->GetOption('transOutDuration', 0);
-                $direction = $this->GetOption('transOutDirection');
+                $transition = $this->getOption('transOut');
+                $duration = $this->getOption('transOutDuration', 0);
+                $direction = $this->getOption('transOutDirection');
 
                 break;
 
@@ -667,16 +597,16 @@ abstract class Module implements ModuleInterface
 
         switch ($type) {
             case 'in':
-                $this->SetOption('transIn', $transitionType);
-                $this->SetOption('transInDuration', $duration);
-                $this->SetOption('transInDirection', $direction);
+                $this->setOption('transIn', $transitionType);
+                $this->setOption('transInDuration', $duration);
+                $this->setOption('transInDirection', $direction);
 
                 break;
 
             case 'out':
-                $this->SetOption('transOut', $transitionType);
-                $this->SetOption('transOutDuration', $duration);
-                $this->SetOption('transOutDirection', $direction);
+                $this->setOption('transOut', $transitionType);
+                $this->setOption('transOutDuration', $duration);
+                $this->setOption('transOutDirection', $direction);
 
                 break;
 
@@ -701,16 +631,16 @@ abstract class Module implements ModuleInterface
      * @param string $type Either "in" or "out"
      * @return string
      */
-    public function GetTransition($type)
+    public function getTransition($type)
     {
 
         switch ($type) {
             case 'in':
-                $code = $this->GetOption('transIn');
+                $code = $this->getOption('transIn');
                 break;
 
             case 'out':
-                $code = $this->GetOption('transOut');
+                $code = $this->getOption('transOut');
                 break;
 
             default:
@@ -731,7 +661,7 @@ abstract class Module implements ModuleInterface
      * Default behaviour for install / upgrade
      * this should be overridden for new modules
      */
-    public function InstallOrUpdate()
+    public function installOrUpdate()
     {
 
         if ($this->module->renderAs != 'native')
@@ -748,7 +678,7 @@ abstract class Module implements ModuleInterface
 
     }
 
-    public function InstallModule($name, $description, $imageUri, $previewEnabled, $assignable, $settings)
+    public function installModule($name, $description, $imageUri, $previewEnabled, $assignable, $settings)
     {
 
         Log::notice('Request to install module with name: ' . $name, 'module', 'InstallModule');
@@ -802,7 +732,7 @@ abstract class Module implements ModuleInterface
         }
     }
 
-    public function UpgradeModule($name, $description, $imageUri, $previewEnabled, $assignable, $settings)
+    public function upgradeModule($name, $description, $imageUri, $previewEnabled, $assignable, $settings)
     {
 
         try {
@@ -852,7 +782,7 @@ abstract class Module implements ModuleInterface
     /**
      * Form for updating the module settings
      */
-    public function ModuleSettingsForm()
+    public function settingsForm()
     {
         return array();
     }
@@ -860,7 +790,7 @@ abstract class Module implements ModuleInterface
     /**
      * Process any module settings
      */
-    public function ModuleSettings()
+    public function settings()
     {
         return array();
     }
@@ -881,7 +811,7 @@ abstract class Module implements ModuleInterface
         $sth = $dbh->prepare('UPDATE `module` SET settings = :settings WHERE ModuleID = :module_id');
         $sth->execute(array(
             'settings' => json_encode($settings),
-            'module_id' => $this->module_id
+            'module_id' => $this->module->moduleId
         ));
     }
 
@@ -891,7 +821,7 @@ abstract class Module implements ModuleInterface
      * @param mixed $default
      * @return mixed
      */
-    public function GetSetting($setting, $default = NULL)
+    public function getSetting($setting, $default = NULL)
     {
         if (isset($this->module->settings[$setting]))
             return $this->module->settings[$setting];

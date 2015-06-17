@@ -128,8 +128,10 @@ $app->get('/layout/form/template/:id', '\Xibo\Controller\Layout:templateForm')->
 //
 // regions
 //
+$app->get('/region/preview/:id', '\Xibo\Controller\Region:preview')->name('region.preview');
 $app->get('/region/form/edit/:id', '\Xibo\Controller\Region:editForm')->name('region.edit.form');
 $app->get('/region/form/delete/:id', '\Xibo\Controller\Region:deleteForm')->name('region.delete.form');
+$app->get('/region/form/timeline/:id', '\Xibo\Controller\Region:timelineForm')->name('region.timeline.form');
 
 //
 // library
@@ -248,6 +250,11 @@ $app->get('/applications/form/add', '\Xibo\Controller\Applications:addForm')->na
 $app->get('/module/view', '\Xibo\Controller\Module:displayPage')->name('module.view');
 $app->get('/module/install/:id', '\Xibo\Controller\Module:install')->name('module.install');
 $app->get('/module/form/verify', '\Xibo\Controller\Module:verifyForm')->name('module.verify.form');
+// Module functions
+$app->get('/module/form/add/:type/:id', '\Xibo\Controller\Module:addWidgetForm')->name('module.widget.add.form');
+$app->get('/module/form/edit/:id', '\Xibo\Controller\Module:editWidgetForm')->name('module.widget.edit.form');
+$app->get('/module/form/delete/:id', '\Xibo\Controller\Module:deleteWidgetForm')->name('module.widget.delete.form');
+$app->get('/module/form/transition/edit/:type/:id', '\Xibo\Controller\Module:editWidgetTransitionForm')->name('module.widget.transition.edit.form');
 
 //
 // transition

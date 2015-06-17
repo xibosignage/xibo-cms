@@ -39,6 +39,7 @@ use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
+use Xibo\Helper\Session;
 use Xibo\Storage\PDOConnect;
 
 // These constants may be changed without breaking existing hashes.
@@ -1003,16 +1004,16 @@ class User
         return $users;
     }
 
-    public function GetPref($key, $default = NULL)
+    public function getPref($key, $default = NULL)
     {
-        $storedValue = Session::Get($key);
+        $storedValue = Session::get($key);
 
         return ($storedValue == NULL) ? $default : $storedValue;
     }
 
-    public function SetPref($key, $value)
+    public function setPref($key, $value)
     {
-        Session::Set($key, $value);
+        Session::set($key, $value);
     }
 
     /**

@@ -91,6 +91,7 @@
                  layoutid="{{ layout.layoutId }}"
                  data-background-color="{{ layout.backgroundColor }}"
                  data-status-url="{{ urlFor("layout.status", {id: layout.layoutId}) }}"
+                 data-position-all-url="{{ urlFor("region.position.all", {id: layout.layoutId}) }}"
                  style="position:relative; width:{{ width }}px; height:{{ height }}px; background:{{ backgroundCss }};">
 
                 {% for region in layout.regions %}
@@ -123,9 +124,10 @@
                             designer_scale="{{ designerScale }}"
                             width="{{ region.width }}"
                             height="{{ region.height }}"
-                            href="index.php?p=timeline&layoutid=' . $layout->layoutId . '&regionid=' . $region->regionId . '&q=Timeline"
-                            ondblclick="{% if region.editable %}XiboFormRender($(this).attr('href')){% endif %}"
+                            href="{{ urlFor("region.timeline.form", {id: region.regionId}) }}"
+                            {% if region.editable %}ondblclick="XiboFormRender($(this).attr('href'))"{% endif %}
                             class="{{ disabledCss }} {{ previewCss }}"
+                            data-preview-url="{{ urlFor("region.preview", {id: region.regionId}) }}"
                             style="position:absolute; width:{{ regionWidth }}px; height:{{ regionHeight }}px; top: {{ regionTop }}px; left:{{ regionLeft }}px; z-index: {{ region.zIndex }};">
                         <div class="regionTransparency {{ transparencyCss }}" style="width:100%; height:100%;"></div>
 
@@ -136,7 +138,7 @@
                                     <span class="caret"></span>
                                 </button>
                                 <ul class="dropdown-menu">
-                                    <li><a class="XiboFormButton" href="index.php?p=timeline&q=Timeline&layoutid=' . $layout->layoutId . '&regionid=' . $region->regionId . '">{% trans "Edit Timeline" %}</a></li>
+                                    <li><a class="XiboFormButton" href="{{ urlFor("region.timeline.form", {id: region.regionId}) }}">{% trans "Edit Timeline" %}</a></li>
                                     <li><a class="RegionOptionsMenuItem" href="{{ urlFor("region.edit.form", {id: region.regionId}) }}">{% trans "Options" %}</a></li>
                                     <li><a class="XiboFormButton" href="{{ urlFor("region.delete.form", {id: region.regionId}) }}">{% trans "Delete" %}</a></li>
                                     <li><a class="XiboFormButton" href="{{ urlFor("user.permissions.form", {entity: "Region", id: region.regionId}) }}">{% trans "Permissions" %}</a></li>

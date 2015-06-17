@@ -23,6 +23,7 @@
 namespace Xibo\Entity;
 
 
+use Xibo\Exception\NotFoundException;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\WidgetFactory;
@@ -103,6 +104,23 @@ class Playlist implements \JsonSerializable
     }
 
     /**
+     * Get Widget at Index
+     * @param int $index
+     * @return Widget
+     * @throws NotFoundException
+     */
+    public function getWidgetAt($index)
+    {
+        foreach ($this->widgets as $widget) {
+            /* @var Widget $widget */
+            if ($widget->displayOrder == $index)
+                return $widget;
+        }
+
+        throw new NotFoundException(sprintf(__('Widget not found at sequence %d'), $index));
+    }
+
+    /**
      * Assign this Playlist to a Region
      * @param Region $region
      */
@@ -133,11 +151,16 @@ class Playlist implements \JsonSerializable
 
     /**
      * Load
+     * @param array $loadOptions
      */
-    public function load()
+    public function load($loadOptions = [])
     {
         if ($this->playlistId == null || $this->loaded)
             return;
+
+        $options = array_merge(['playlistIncludeRegionAssignments' => true], $loadOptions);
+
+        Log::debug('Load Playlist with %s', json_encode($options));
 
         // Load permissions
         $this->permissions = PermissionFactory::getByObjectId(get_class(), $this->playlistId);
@@ -149,13 +172,16 @@ class Playlist implements \JsonSerializable
             $this->widgets[] = $widget;
         }
 
-        // Load the region assignments
-        foreach (RegionFactory::getByPlaylistId($this->playlistId) as $region) {
-            /* @var Region $region */
-            $this->regions[] = $region;
+        if ($options['playlistIncludeRegionAssignments']) {
+            // Load the region assignments
+            foreach (RegionFactory::getByPlaylistId($this->playlistId) as $region) {
+                /* @var Region $region */
+                $this->regions[] = $region;
+            }
         }
 
         $this->hash = $this->hash();
+        $this->loaded = true;
     }
 
     /**

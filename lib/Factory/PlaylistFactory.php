@@ -80,26 +80,26 @@ class PlaylistFactory
         $params = array();
         $sql = 'SELECT playlist.* ';
 
-        if (Sanitize::int('regionId', $filterBy) != null) {
+        if (Sanitize::getInt('regionId', $filterBy) != null) {
             $sql .= ' , lkregionplaylist.displayOrder ';
         }
 
         $sql .= '  FROM `playlist` ';
 
-        if (Sanitize::int('regionId', $filterBy) != null) {
+        if (Sanitize::getInt('regionId', $filterBy) != null) {
             $sql .= '
                 INNER JOIN `lkregionplaylist`
                 ON lkregionplaylist.playlistId = playlist.playlistId
                     AND lkregionplaylist.regionId = :regionId
             ';
-            $params['regionId'] = Sanitize::int('regionId', $filterBy);
+            $params['regionId'] = Sanitize::getInt('regionId', $filterBy);
         }
 
         $sql .= ' WHERE 1 = 1 ';
 
-        if (Sanitize::int('playlistId', $filterBy) != 0) {
+        if (Sanitize::getInt('playlistId', $filterBy) != 0) {
             $sql .= ' AND playlistId = :playlistId ';
-            $params['playlistId'] = Sanitize::int('playlistId', $filterBy);
+            $params['playlistId'] = Sanitize::getInt('playlistId', $filterBy);
         }
 
         Log::sql($sql, $params);

@@ -42,7 +42,7 @@ class Image extends Module
         $formFields[] = Form::AddCombo(
             'scaleTypeId',
             __('Scale Type'),
-            $this->GetOption('scaleType'),
+            $this->getOption('scaleType'),
             array(array('scaleTypeId' => 'center', 'scaleType' => __('Center')), array('scaleTypeId' => 'stretch', 'scaleType' => __('Stretch'))),
             'scaleTypeId',
             'scaleType',
@@ -52,7 +52,7 @@ class Image extends Module
         $formFields[] = Form::AddCombo(
             'alignId',
             __('Align'),
-            $this->GetOption('align', 'center'),
+            $this->getOption('align', 'center'),
             array(array('alignId' => 'left', 'align' => __('Left')), array('alignId' => 'center', 'align' => __('Centre')), array('alignId' => 'right', 'align' => __('Right'))),
             'alignId',
             'align',
@@ -62,7 +62,7 @@ class Image extends Module
         $formFields[] = Form::AddCombo(
             'valignId',
             __('Vertical Align'),
-            $this->GetOption('valign', 'middle'),
+            $this->getOption('valign', 'middle'),
             array(array('valignId' => 'top', 'valign' => __('Top')), array('valignId' => 'middle', 'valign' => __('Middle')), array('valignId' => 'bottom', 'valign' => __('Bottom'))),
             'valignId',
             'valign',
@@ -85,9 +85,9 @@ class Image extends Module
     public function EditMedia()
     {
         // Set the properties specific to Images
-        $this->SetOption('scaleType', \Kit::GetParam('scaleTypeId', _POST, _WORD, 'center'));
-        $this->SetOption('align', \Kit::GetParam('alignId', _POST, _WORD, 'center'));
-        $this->SetOption('valign', \Kit::GetParam('valignId', _POST, _WORD, 'middle'));
+        $this->setOption('scaleType', \Kit::GetParam('scaleTypeId', _POST, _WORD, 'center'));
+        $this->setOption('align', \Kit::GetParam('alignId', _POST, _WORD, 'center'));
+        $this->setOption('valign', \Kit::GetParam('valignId', _POST, _WORD, 'middle'));
 
         // Edit
         parent::EditMedia();
@@ -100,14 +100,14 @@ class Image extends Module
      * @param int $scaleOverride The Scale Override
      * @return string The Rendered Content
      */
-    public function Preview($width, $height, $scaleOverride = 0)
+    public function preview($width, $height, $scaleOverride = 0)
     {
         if ($this->module->previewEnabled == 0)
-            return parent::Preview($width, $height);
+            return parent::preview($width, $height);
 
-        $proportional = ($this->GetOption('scaleType') == 'stretch') ? 'false' : 'true';
-        $align = $this->GetOption('align', 'center');
-        $valign = $this->GetOption('valign', 'middle');
+        $proportional = ($this->getOption('scaleType') == 'stretch') ? 'false' : 'true';
+        $align = $this->getOption('align', 'center');
+        $valign = $this->getOption('valign', 'middle');
 
         $html = '<div style="display:table; width:100%%; height: %dpx">
             <div style="text-align:%s; display: table-cell; vertical-align: %s;">
@@ -124,7 +124,7 @@ class Image extends Module
      * @param int $displayId
      * @return mixed
      */
-    public function GetResource($displayId = 0)
+    public function getResource($displayId = 0)
     {
         Log::debug('GetResource for %d', $this->getMediaId());
 
@@ -181,7 +181,7 @@ class Image extends Module
      * Is this module valid
      * @return int
      */
-    public function IsValid()
+    public function isValid()
     {
         // Yes
         return 1;
