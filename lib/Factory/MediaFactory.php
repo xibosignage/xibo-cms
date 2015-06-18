@@ -58,8 +58,13 @@ class MediaFactory
      * @param $file
      * @return Media
      */
-    public static function createModuleFile($name, $file)
+    public static function createModuleFile($name, $file = '')
     {
+        if ($file == '') {
+            $file = $name;
+            $name = basename($file);
+        }
+
         try {
             $media = MediaFactory::getByName($name);
         }

@@ -21,9 +21,12 @@
  */
 namespace Xibo\Widget;
 
-use Xibo\Helper\ApplicationState;
+use Respect\Validation\Validator as v;
+use Xibo\Factory\MediaFactory;
 use Xibo\Helper\Help;
+use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
+use Xibo\Helper\Translate;
 
 class Clock extends Module
 {
@@ -31,102 +34,39 @@ class Clock extends Module
 
     public function installFiles()
     {
-        $media = new Media();
-        $media->addModuleFile('modules/preview/vendor/jquery-1.11.1.min.js');
-        $media->addModuleFile('modules/preview/vendor/jquery-cycle-2.1.6.min.js');
-        $media->addModuleFile('modules/preview/vendor/moment.js');
-        $media->addModuleFile('modules/preview/vendor/flipclock.min.js');
-        $media->addModuleFile('modules/preview/xibo-layout-scaler.js');
+        MediaFactory::createModuleFile('modules/preview/vendor/jquery-1.11.1.min.js')->save();
+        MediaFactory::createModuleFile('modules/preview/vendor/jquery-cycle-2.1.6.min.js')->save();
+        MediaFactory::createModuleFile('modules/preview/vendor/moment.js')->save();
+        MediaFactory::createModuleFile('modules/preview/vendor/flipclock.min.js')->save();
+        MediaFactory::createModuleFile('modules/preview/xibo-layout-scaler.js')->save();
     }
 
     /**
-     * Return the Add Form as HTML
+     * Validate
      */
-    public function AddForm()
+    public function validate()
     {
-        $response = $this->getState();
-
-        // Configure form
-        $this->configureForm('AddMedia');
-
-        $formFields = array();
-
-        // Offer a choice of clock type
-        $formFields[] = Form::AddCombo(
-            'clockTypeId',
-            __('Clock Type'),
-            NULL,
-            array(
-                array('clockTypeId' => '1', 'clockType' => 'Analogue'),
-                array('clockTypeId' => '2', 'clockType' => 'Digital'),
-                array('clockTypeId' => '3', 'clockType' => 'Flip Clock')
-            ),
-            'clockTypeId',
-            'clockType',
-            __('Please select the type of clock to display.'),
-            'c');
-
-        $formFields[] = Form::AddNumber('duration', __('Duration'), NULL,
-            __('The duration in seconds this item should be displayed.'), 'd', 'required');
-
-        $formFields[] = Form::AddNumber('offset', __('Offset'), NULL,
-            __('The offset in minutes that should be applied to the current time.'), 'o', NULL, 'offset-control-group');
-
-        // Offer a choice of theme
-        $formFields[] = Form::AddCombo(
-            'themeid',
-            __('Theme'),
-            NULL,
-            array(array('themeid' => '1', 'theme' => 'Light'), array('themeid' => '2', 'theme' => 'Dark')),
-            'themeid',
-            'theme',
-            __('Please select a theme for the clock.'),
-            't',
-            'analogue-control-group');
-
-        $formFields[] = Form::AddMessage(sprintf(__('Enter a format for the Digital Clock below. e.g. [HH:mm] or [DD/MM/YYYY]. See the <a href="%s" target="_blank">format guide</a> for more information.'), Help::Link('Widget', 'ClockFormat')), 'digital-control-group');
-
-        $formFields[] = Form::AddMultiText('ta_text', NULL, '[HH:mm]',
-            __('Enter a format for the clock'), 'f', 10, '', 'digital-control-group');
-
-        Theme::Set('form_fields', $formFields);
-
-        // Dependencies (some fields should be shown / hidden)
-        $this->SetFieldDependencies($response);
-
-        // Modules should be rendered using the theme engine.
-        $response->html = Theme::RenderReturn('form_render');
-
-        $this->configureFormButtons($response);
-        $response->dialogTitle = __('Add Clock');
-        $response->callBack = 'text_callback';
-
-        // The response must be returned.
-        return $response;
+        // Validate
+        if (!v::int()->min(1)->validate($this->getDuration()))
+            throw new \InvalidArgumentException(__('You must enter a duration.'));
     }
 
     /**
      * Add Media to the Database
      */
-    public function AddMedia()
+    public function add()
     {
-        $response = $this->getState();
-
         // You must also provide a duration (all media items must provide this field)
-        $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration(), false));
-        $this->setOption('theme', \Kit::GetParam('themeid', _POST, _INT, 0));
-        $this->setOption('clockTypeId', \Kit::GetParam('clockTypeId', _POST, _INT, 1));
-        $this->setOption('offset', \Kit::GetParam('offset', _POST, _INT, 0));
-        $this->setRawNode('ta_text', \Kit::GetParam('ta_text', _POST, _HTMLSTRING));
+        $this->setDuration(Sanitize::getInt('duration'));
+        $this->setOption('theme', Sanitize::getInt('themeId', 0));
+        $this->setOption('clockTypeId', Sanitize::getInt('clockTypeId', 1));
+        $this->setOption('offset', Sanitize::getInt('offset', 0));
+        $this->setRawNode('ta_text', Sanitize::getParam('ta_text', ''));
+
+        $this->validate();
 
         // Save the widget
         $this->saveWidget();
-
-        // Load form
-        $response->loadForm = true;
-        $response->loadFormUri = $this->getTimelineLink();
-
-        return $response;
     }
 
     /**
@@ -203,7 +143,7 @@ class Clock extends Module
     /**
      * Edit Media in the Database
      */
-    public function EditMedia()
+    public function edit()
     {
         $response = $this->getState();
 
@@ -226,40 +166,6 @@ class Clock extends Module
         $this->response->callBack = 'refreshPreview("' . $this->regionid . '")';
 
         return $response;
-    }
-
-    /**
-     * @param ApplicationState $response
-     */
-    private function SetFieldDependencies(&$response)
-    {
-        $clockTypeId_1 = array(
-            '.analogue-control-group' => array('display' => 'block'),
-            '.digital-control-group' => array('display' => 'none'),
-            '.flip-control-group' => array('display' => 'none'),
-            '.offset-control-group' => array('display' => 'block')
-        );
-
-        $clockTypeId_2 = array(
-            '.analogue-control-group' => array('display' => 'none'),
-            '.digital-control-group' => array('display' => 'block'),
-            '.flip-control-group' => array('display' => 'none'),
-            '.offset-control-group' => array('display' => 'block')
-        );
-
-        $clockTypeId_3 = array(
-            '.analogue-control-group' => array('display' => 'none'),
-            '.digital-control-group' => array('display' => 'none'),
-            '.flip-control-group' => array('display' => 'block'),
-            '.offset-control-group' => array('display' => 'none')
-        );
-
-        $response->AddFieldAction('clockTypeId', 'init', 1, $clockTypeId_1);
-        $response->AddFieldAction('clockTypeId', 'change', 1, $clockTypeId_1);
-        $response->AddFieldAction('clockTypeId', 'init', 2, $clockTypeId_2);
-        $response->AddFieldAction('clockTypeId', 'change', 2, $clockTypeId_2);
-        $response->AddFieldAction('clockTypeId', 'init', 3, $clockTypeId_3);
-        $response->AddFieldAction('clockTypeId', 'change', 3, $clockTypeId_3);
     }
 
     /**
@@ -331,24 +237,24 @@ class Clock extends Module
                 $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'moment.js"></script>';
                 $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-layout-scaler.js"></script>';
                 $javaScriptContent .= '<script type="text/javascript">
-                    var locale = "' . TranslationEngine::GetJsLocale() . '";
-                    var options = ' . json_encode($options) . ';
+                    var locale = ' . Translate::GetJsLocale() . '
+                    var options = ' . json_encode($options) . '
 
-    function updateClock() {
-        $(".clock").each(function() {
-            $(this).html(moment().add(' . {
-                $this->getOption('offset', 0)} . ', "m").format($(this).attr("format")));
-        });
-    }
+                    function updateClock() {
+                        $(".clock").each(function() {
+                            $(this).html(moment().add({' .
+                                $this->getOption('offset', 0) . '}, "m").format($(this).attr("format")));
+                        });
+                    }
 
-    $(document).ready(function() {
-                        moment.locale(locale);
-        updateClock();
-        setInterval(updateClock, 1000);
-        $("body").xiboLayoutScaler(options);
-    });
-</script>
-END;
+                    $(document).ready(function() {
+                                        moment.locale(locale);
+                        updateClock();
+                        setInterval(updateClock, 1000);
+                        $("body").xiboLayoutScaler(options);
+                    });
+                </script>';
+
 
                 // Replace the After body Content
                 $template = str_replace(' < !--[[[JAVASCRIPTCONTENT]]]-->', $javaScriptContent, $template);
@@ -396,7 +302,7 @@ END;
      * Is Valid
      * @return int
      */
-    public function IsValid()
+    public function isValid()
     {
         // Using the information you have in your module calculate whether it is valid or not.
         // 0 = Invalid

@@ -22,10 +22,39 @@
 {% endblock %}
 
 {% block formFieldActions %}
-    transitionType,init,"",[{".transition-group": [{"display": "none"}]}],equals
-    transitionType,init,"",[{".transition-group": [{"display": "block"}]}],not
-    transitionType,change,"",[{".transition-group": [{"display": "none"}]}],equals
-    transitionType,change,"",[{".transition-group": [{"display": "block"}]}],not
+    [{
+    "field": "transitionType",
+    "trigger": "init",
+    "value": 0,
+    "operation": "equals",
+    "actions": {
+    ".transition-group": { "display": "none" }
+    }
+    },{
+    "field": "transitionType",
+    "trigger": "init",
+    "value": 0,
+    "operation": "not",
+    "actions": {
+    ".transition-group": { "display": "block" }
+    }
+    },{
+    "field": "transitionType",
+    "trigger": "change",
+    "value": 0,
+    "operation": "equals",
+    "actions": {
+    ".transition-group": { "display": "none" }
+    }
+    },{
+    "field": "transitionType",
+    "trigger": "change",
+    "value": 0,
+    "operation": "not",
+    "actions": {
+    ".transition-group": { "display": "block" }
+    }
+    }]
 {% endblock %}
 
 {% block formHtml %}

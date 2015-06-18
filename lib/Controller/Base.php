@@ -247,18 +247,8 @@ class Base
                     $state->fieldActions = [];
                 } else {
                     // Convert to an array
-                    $fieldActions = explode(PHP_EOL, $view['fieldActions']);
-
-                    foreach ($fieldActions as $fieldAction) {
-                        if ($fieldAction == '')
-                            continue;
-
-                        $fieldAction = explode(',', trim($fieldAction));
-
-                        Log::notice('Field Actions: ' . $fieldAction[3]);
-
-                        $state->addFieldAction($fieldAction[0], $fieldAction[1], $fieldAction[2], json_decode($fieldAction[3], true), $fieldAction[4]);
-                    }
+                    Log::error($view['fieldActions']);
+                    $state->fieldActions = json_decode($view['fieldActions']);
                 }
             }
 

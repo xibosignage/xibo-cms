@@ -20,8 +20,23 @@
 {% endblock %}
 
 {% block formFieldActions %}
-    templateId,change,0,[{"resolution-group": [{"display": "block"}]}],equals
-    templateId,change,0,[{"resolution-group": [{"display": "none"}]}],not
+    [{
+    "field": "templateId",
+    "trigger": "change",
+    "value": 0,
+    "operation": "equals",
+    "actions": {
+        ".resolution-group": { "display": "block" }
+    }
+    },{
+    "field": "templateId",
+    "trigger": "change",
+    "value": 0,
+    "operation": "not",
+    "actions": {
+        ".resolution-group": { "display": "none" }
+    }
+    }]
 {% endblock %}
 
 {% block formHtml %}
