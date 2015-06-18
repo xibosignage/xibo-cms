@@ -326,7 +326,9 @@ abstract class Module implements ModuleInterface
         $widthPx = $width . 'px';
         $heightPx = $height . 'px';
 
-        return '<iframe scrolling="no" src="index.php?p=module&mod=' . $this->module->type . '&q=Exec&method=GetResource&raw=true&preview=true&scale_override=' . $scaleOverride . '&regionId=' . $this->region->regionId . '&widgetId=' . $this->getWidgetId() . '&width=' . $width . '&height=' . $height . '" width="' . $widthPx . '" height="' . $heightPx . '" style="border:0;"></iframe>';
+        $url = $this->getApp()->urlFor('module.getResource', ['regionId' => $this->region->regionId, 'id' => $this->getWidgetId()]);
+
+        return '<iframe scrolling="no" src="' . $url . '?raw=true&preview=true&scale_override=' . $scaleOverride . '&width=' . $width . '&height=' . $height . '" width="' . $widthPx . '" height="' . $heightPx . '" style="border:0;"></iframe>';
     }
 
     /**

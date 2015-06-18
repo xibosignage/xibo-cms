@@ -260,14 +260,11 @@ class Region extends Base
      */
     public function preview($regionId)
     {
-        $seqGiven = Sanitize::getInt('seq', 0);
-        $seq = Sanitize::getInt('seq', 0);
+        $seqGiven = Sanitize::getInt('seq', 1);
+        $seq = Sanitize::getInt('seq', 1);
         $width = Sanitize::getInt('width', 0);
         $height = Sanitize::getInt('height', 0);
         $scaleOverride = Sanitize::getInt('scale_override', 0);
-
-        // The sequence will not be zero based, so adjust it
-        $seq--;
 
         // Load our region
         try {
@@ -275,6 +272,9 @@ class Region extends Base
             $region->load();
 
             // Get the first playlist we can find
+            if (count($region->playlists) <= 0)
+                throw new NotFoundException(__('No playlists to preview'));
+
             // TODO: implement playlists
             $playlist = $region->playlists[0];
             /* @var \Xibo\Entity\Playlist $playlist */
@@ -295,10 +295,7 @@ class Region extends Base
             // Otherwise, output a preview
             $module = ModuleFactory::createWithWidget($widget, $region);
 
-            $return = '<div class="regionPreviewOverlay"></div>';
-            $return .= $module->preview($width, $height, $scaleOverride);
-
-            $this->getState()->html = $return;
+            $this->getState()->html = $module->preview($width, $height, $scaleOverride);
             $this->getState()->extra['type'] = $widget->type;
             $this->getState()->extra['duration'] = $widget->duration;
             $this->getState()->extra['number_items'] = count($playlist->widgets);
@@ -307,7 +304,7 @@ class Region extends Base
 
         } catch (NotFoundException $e) {
             // Log it
-            Log::error($e->getMessage());
+            Log::info($e->getMessage());
 
             // No media to preview
             $this->getState()->extra['text'] = __('Empty Region');

@@ -23,6 +23,7 @@ namespace Xibo\Controller;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PlaylistFactory;
+use Xibo\Factory\RegionFactory;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\Config;
@@ -442,5 +443,22 @@ class Module extends Base
             'id' => $widget->widgetId,
             'data' => [$widget]
         ]);
+    }
+
+    /**
+     * Get Resource
+     * @param $regionId
+     * @param $widgetId
+     * @throws \Xibo\Exception\NotFoundException
+     */
+    public function getResource($regionId, $widgetId)
+    {
+        $module = ModuleFactory::createWithWidget(WidgetFactory::loadByWidgetId($widgetId), RegionFactory::getById($regionId));
+
+        if (!$this->getUser()->checkViewable($module->widget))
+            throw new AccessDeniedException();
+
+        // Call module GetResource
+        $module->getResource();
     }
 }
