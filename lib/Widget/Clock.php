@@ -23,9 +23,7 @@ namespace Xibo\Widget;
 
 use Respect\Validation\Validator as v;
 use Xibo\Factory\MediaFactory;
-use Xibo\Helper\Help;
 use Xibo\Helper\Sanitize;
-use Xibo\Helper\Theme;
 use Xibo\Helper\Translate;
 
 class Clock extends Module
@@ -61,7 +59,7 @@ class Clock extends Module
         $this->setOption('theme', Sanitize::getInt('themeId', 0));
         $this->setOption('clockTypeId', Sanitize::getInt('clockTypeId', 1));
         $this->setOption('offset', Sanitize::getInt('offset', 0));
-        $this->setRawNode('ta_text', Sanitize::getParam('ta_text', ''));
+        $this->setRawNode('format', Sanitize::getParam('ta_text', ''));
 
         $this->validate();
 
@@ -70,102 +68,21 @@ class Clock extends Module
     }
 
     /**
-     * Return the Edit Form as HTML
-     */
-    public function EditForm()
-    {
-        $response = $this->getState();
-
-        // Edit calls are the same as add calls, except you will to check the user has permissions to do the edit
-        if (!$this->auth->edit)
-            throw new Exception(__('You do not have permission to edit this widget.'));
-
-        // Configure the form
-        $this->configureForm('EditMedia');
-
-        // Build the form
-        $formFields = array();
-
-        // Offer a choice of clock type
-        $formFields[] = Form::AddCombo(
-            'clockTypeId',
-            __('Clock Type'),
-            $this->getOption('clockTypeId'),
-            array(
-                array('clockTypeId' => '1', 'clockType' => 'Analogue'),
-                array('clockTypeId' => '2', 'clockType' => 'Digital'),
-                array('clockTypeId' => '3', 'clockType' => 'Flip Clock')
-            ),
-            'clockTypeId',
-            'clockType',
-            __('Please select the type of clock to display.'),
-            'c');
-
-        $formFields[] = Form::AddNumber('duration', __('Duration'), $this->getDuration(),
-            __('The duration in seconds this item should be displayed'), 'd', 'required');
-
-
-        $formFields[] = Form::AddNumber('offset', __('Offset'), $this->getOption('offset'),
-            __('The offset in minutes that should be applied to the current time.'), 'o', NULL, 'offset-control-group');
-
-        // Offer a choice of theme
-        $formFields[] = Form::AddCombo(
-            'themeid',
-            __('Theme'),
-            $this->getOption('theme'),
-            array(array('themeid' => '1', 'theme' => 'Light'), array('themeid' => '2', 'theme' => 'Dark')),
-            'themeid',
-            'theme',
-            __('Please select a theme for the clock.'),
-            't',
-            'analogue-control-group');
-
-        $formFields[] = Form::AddMessage(sprintf(__('Enter a format for the Digital Clock below. e.g. [HH:mm] or [DD/MM/YYYY]. See the <a href="%s" target="_blank">format guide</a> for more information.'), Help::Link('Widget', 'ClockFormat')), 'digital-control-group');
-
-        $formFields[] = Form::AddMultiText('ta_text', NULL, $this->getRawNode('format', null),
-            __('Enter a format for the clock'), 'f', 10, '', 'digital-control-group');
-
-        Theme::Set('form_fields', $formFields);
-
-        // Dependencies (some fields should be shown / hidden)
-        $this->SetFieldDependencies($response);
-
-        // Modules should be rendered using the theme engine.
-        $response->html = Theme::RenderReturn('form_render');
-
-        $this->configureFormButtons($response);
-        $response->dialogTitle = __('Edit Clock');
-        $response->callBack = 'text_callback';
-        return $response;
-        $this->response->AddButton(__('Apply'), 'XiboDialogApply("#ModuleForm")');
-    }
-
-    /**
      * Edit Media in the Database
      */
     public function edit()
     {
-        $response = $this->getState();
-
-        if (!$this->auth->edit)
-            throw new Exception(__('You do not have permission to edit this widget.'));
-
         // You must also provide a duration (all media items must provide this field)
-        $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration(), false));
-        $this->setOption('theme', \Kit::GetParam('themeid', _POST, _INT, 0));
-        $this->setOption('clockTypeId', \Kit::GetParam('clockTypeId', _POST, _INT, 1));
-        $this->setOption('offset', \Kit::GetParam('offset', _POST, _INT, 0));
-        $this->setRawNode('ta_text', \Kit::GetParam('ta_text', _POST, _HTMLSTRING));
+        $this->setDuration(Sanitize::getInt('duration'));
+        $this->setOption('theme', Sanitize::getInt('themeId', 0));
+        $this->setOption('clockTypeId', Sanitize::getInt('clockTypeId', 1));
+        $this->setOption('offset', Sanitize::getInt('offset', 0));
+        $this->setRawNode('format', Sanitize::getParam('ta_text', ''));
+
+        $this->validate();
 
         // Save the widget
         $this->saveWidget();
-
-        // Load an edit form
-        $response->loadForm = true;
-        $response->loadFormUri = $this->getTimelineLink();
-        $this->response->callBack = 'refreshPreview("' . $this->regionid . '")';
-
-        return $response;
     }
 
     /**
@@ -177,6 +94,8 @@ class Clock extends Module
     public function getResource($displayId = 0)
     {
         $template = null;
+        $data = [];
+        $isPreview = (Sanitize::getCheckbox('preview') == 1);
 
         // Clock Type
         switch ($this->getOption('clockTypeId', 1)) {
@@ -196,9 +115,8 @@ class Clock extends Module
                 $template = str_replace('<!--[[[OFFSET]]]-->', $this->getOption('offset', 0), $template);
 
                 // After body content
-                $isPreview = (\Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
-                $javaScriptContent = '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
-                $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'moment.js"></script>';
+                $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('jquery-1.11.1.min.js') . '"></script>';
+                $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('moment.js') . '"></script>';
 
                 // Replace the After body Content
                 $template = str_replace('<!--[[[JAVASCRIPTCONTENT]]]-->', $javaScriptContent, $template);
@@ -207,7 +125,7 @@ class Clock extends Module
             case 2:
                 // Digital
                 // Digital clock is essentially a cut down text module which always fits to the region
-                $template = file_get_contents('modules/preview/HtmlTemplate.html');
+                $template = 'get-resource';
 
                 // Extract the format from the raw node in the XLF
                 $format = $this->getRawNode('format', null);
@@ -221,29 +139,27 @@ class Clock extends Module
                 }
 
                 // Replace all the subs
-                $template = str_replace('<!--[[[BODYCONTENT]]]-->', $format, $template);
+                $data['body'] = $format;
 
                 // After body content
                 $options = array(
-                    'previewWidth' => \Kit::GetParam('width', _GET, _DOUBLE, 0),
-                    'previewHeight' => \Kit::GetParam('height', _GET, _DOUBLE, 0),
+                    'previewWidth' => Sanitize::getDouble('width', 0),
+                    'previewHeight' => Sanitize::getDouble('height', 0),
                     'originalWidth' => $this->region->width,
                     'originalHeight' => $this->region->height,
-                    'scaleOverride' => \Kit::GetParam('scale_override', _GET, _DOUBLE, 0)
+                    'scaleOverride' => Sanitize::getDouble('scale_override', 0)
                 );
 
-                $isPreview = (\Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
-                $javaScriptContent = '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
-                $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'moment.js"></script>';
-                $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-layout-scaler.js"></script>';
+                $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
+                $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/moment.js') . '"></script>';
+                $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
                 $javaScriptContent .= '<script type="text/javascript">
-                    var locale = ' . Translate::GetJsLocale() . '
-                    var options = ' . json_encode($options) . '
+                    var locale = "' . Translate::GetJsLocale() . '";
+                    var options = ' . json_encode($options) . ';
 
                     function updateClock() {
                         $(".clock").each(function() {
-                            $(this).html(moment().add({' .
-                                $this->getOption('offset', 0) . '}, "m").format($(this).attr("format")));
+                            $(this).html(moment().add(' . $this->getOption('offset', 0) . ', "m").format($(this).attr("format")));
                         });
                     }
 
@@ -255,15 +171,14 @@ class Clock extends Module
                     });
                 </script>';
 
-
                 // Replace the After body Content
-                $template = str_replace(' < !--[[[JAVASCRIPTCONTENT]]]-->', $javaScriptContent, $template);
+                $data['javaScript'] = $javaScriptContent;
 
                 // Add our fonts.css file
-                $headContent = '<link href = "' . (($isPreview) ? 'modules/preview/' : '') . 'fonts.css" rel = "stylesheet" media = "screen" > ';
-                $headContent .= '<style type = "text/css" > ' . file_get_contents(Theme::ItemPath('css / client . css')) . ' </style > ';
+                $headContent = '<link href = "' . $this->getResourceUrl('fonts.css') . '" rel = "stylesheet" media = "screen" > ';
+                $headContent .= '<style type = "text/css" > ' . file_get_contents('theme/default/css/client.css') . ' </style > ';
 
-                $template = str_replace('<!--[[[HEADCONTENT]]]-->', $headContent, $template);
+                $data['head'] = $headContent;
 
                 break;
 
@@ -287,15 +202,14 @@ class Clock extends Module
         }
 
         // If we are a preview, then pass in the width and height
-        $template = str_replace('<!--[[[PREVIEW_WIDTH]]]-->', \Kit::GetParam('width', _GET, _DOUBLE, 0), $template);
-        $template = str_replace(' < !--[[[PREVIEW_HEIGHT]]]-->', \Kit::GetParam('height', _GET, _DOUBLE, 0), $template);
+        $data['previewWidth'] = Sanitize::getDouble('width');
+        $data['previewHeight'] = Sanitize::getDouble('height');
 
         // Replace the View Port Width?
-        if (isset($_GET['preview']))
-            $template = str_replace('[[ViewPortWidth]]', $this->region->width, $template);
+        $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
 
         // Return that content.
-        return $template;
+        return $this->renderTemplate($data, $template);
     }
 
     /**

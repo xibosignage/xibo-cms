@@ -23,6 +23,7 @@ namespace Xibo\Widget;
 use Slim\Slim;
 use Xibo\Entity\User;
 use Xibo\Exception\ControllerNotImplemented;
+use Xibo\Exception\NotFoundException;
 use Xibo\Factory\MediaFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Log;
@@ -173,11 +174,11 @@ abstract class Module implements ModuleInterface
 
     /**
      * Get Raw Node Value
-     * @param $name
-     * @param $default
+     * @param string $name
+     * @param mixed $default
      * @return mixed
      */
-    final public function getRawNode($name, $default)
+    final public function getRawNode($name, $default = null)
     {
         return $this->widget->getOptionValue($name, $default);
     }
@@ -355,11 +356,39 @@ abstract class Module implements ModuleInterface
     /**
      * Default Get Resource
      * @param int $displayId
+     * @return mixed
      * @throws ControllerNotImplemented
      */
     public function getResource($displayId = 0)
     {
         throw new ControllerNotImplemented();
+    }
+
+    /**
+     * Get Resource Url
+     * @param $uri
+     * @return string
+     */
+    protected function getResourceUrl($uri)
+    {
+        $isPreview = (Sanitize::getCheckbox('preview') == 1);
+
+        if ($isPreview)
+            $uri = $this->getApp()->urlFor('home') . 'modules/' . $uri;
+
+        return $uri;
+    }
+
+    /**
+     * Render a template and return the results
+     * @param $data
+     * @param string $template
+     * @return mixed
+     */
+    protected function renderTemplate($data, $template = 'get-resource')
+    {
+        // Get the Twig Engine
+        return $this->getApp()->view()->getInstance()->render($template . '.twig', $data);
     }
 
     /**
@@ -528,26 +557,6 @@ abstract class Module implements ModuleInterface
     }
 
     /**
-     * Updates the settings on the module
-     * @param array $settings The Settings
-     * @throws InvalidArgumentException
-     */
-    public function UpdateModuleSettings($settings)
-    {
-        if (!is_array($settings))
-            throw new InvalidArgumentException(__('Module settings must be an array'));
-
-        // Update the settings on the module record.
-        $dbh = \Xibo\Storage\PDOConnect::init();
-
-        $sth = $dbh->prepare('UPDATE `module` SET settings = :settings WHERE ModuleID = :module_id');
-        $sth->execute(array(
-            'settings' => json_encode($settings),
-            'module_id' => $this->module->moduleId
-        ));
-    }
-
-    /**
      * Get Module Setting
      * @param string $setting
      * @param mixed $default
@@ -564,12 +573,12 @@ abstract class Module implements ModuleInterface
     /**
      * Get Media Id
      * @return int
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws NotFoundException
      */
     protected function getMediaId()
     {
         if (count($this->widget->mediaIds) <= 0)
-            throw new \Xibo\Exception\NotFoundException(__('No file to return'));
+            throw new NotFoundException(__('No file to return'));
 
         return $this->widget->mediaIds[0];
     }

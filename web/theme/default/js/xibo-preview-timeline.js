@@ -31,7 +31,10 @@ function Preview(regionElement)
 	this.previewContent = $('.previewContent', this.previewElement);
 
 	// Setup global control tracking
-	Preview.instances[this.regionId] = this;
+    // Declare regionId here so that it is available in the click functions
+    var regionId = this.regionId;
+
+	Preview.instances[regionId] = this;
 	
 	// Create the Nav Buttons
 	$('.previewNav', this.previewElement)
@@ -40,7 +43,7 @@ function Preview(regionElement)
 		.append("<div class='preview-media-information'></div>");
 
 	$('.prevSeq', $(this.previewElement)).click(function() {
-		var preview = Preview.instances[this.regionId];
+		var preview = Preview.instances[regionId];
 		var maxSeq 	= $('.preview-media-information', preview.previewElement).data("maxSeq");
 				
 		var currentSeq = preview.seq;
@@ -55,7 +58,7 @@ function Preview(regionElement)
 	});
 	
 	$('.nextSeq', $(this.previewElement)).click(function() {
-		var preview = Preview.instances[this.regionId];
+		var preview = Preview.instances[regionId];
 		var maxSeq 	= $('.preview-media-information', preview.previewElement).data("maxSeq");
 		
 		var currentSeq = preview.seq;
@@ -114,7 +117,7 @@ Preview.prototype.SetSequence = function(seq)
 		        }
 		        else {
 		            // Likely just an error that we want to report on
-		            $(previewContent).html(response.html);
+		            $(previewContent).html("<div class=\"regionPreviewOverlay\"></div>" + response.html);
 		        }
 			}
 			return false;

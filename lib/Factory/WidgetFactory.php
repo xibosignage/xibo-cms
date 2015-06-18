@@ -97,7 +97,7 @@ class WidgetFactory
         $widget->playlistId = $playlistId;
         $widget->type = $type;
         $widget->duration = $duration;
-        $widget->displayOrder = 1;
+        $widget->displayOrder = $displayOrder;
 
         return $widget;
     }

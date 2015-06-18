@@ -262,9 +262,9 @@ class Region extends Base
     {
         $seqGiven = Sanitize::getInt('seq', 1);
         $seq = Sanitize::getInt('seq', 1);
-        $width = Sanitize::getInt('width', 0);
-        $height = Sanitize::getInt('height', 0);
-        $scaleOverride = Sanitize::getInt('scale_override', 0);
+        $width = Sanitize::getDouble('width', 0);
+        $height = Sanitize::getDouble('height', 0);
+        $scaleOverride = Sanitize::getDouble('scale_override', 0);
 
         // Load our region
         try {
