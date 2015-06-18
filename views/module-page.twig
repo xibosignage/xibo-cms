@@ -71,6 +71,7 @@
     <script type="text/javascript">
         var table = $("#modules").DataTable({
             serverSide: true,
+            filter: false,
             searchDelay: 3000,
             "order": [[ 1, "asc"]],
             ajax: "{{ urlFor("module.search") }}",

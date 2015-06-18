@@ -167,6 +167,8 @@ $app->get('/applications', '\Xibo\Controller\Applications:grid')->name('applicat
 //
 $app->get('/module', '\Xibo\Controller\Module:grid')->name('module.search');
 $app->get('/module/:type/:id', '\Xibo\Controller\Module:getResource')->name('module.getResource');
+$app->put('/module/settings/:id', '\Xibo\Controller\Module:settings')->name('module.settings');
+$app->put('/module/verify', '\Xibo\Controller\Module:verify')->name('module.verify');
 $app->post('/module/:type/:id', '\Xibo\Controller\Module:addWidget')->name('module.widget.add');
 $app->put('/module/:id', '\Xibo\Controller\Module:editWidget')->name('module.widget.edit');
 $app->delete('/module/:id', '\Xibo\Controller\Module:deleteWidget')->name('module.widget.delete');

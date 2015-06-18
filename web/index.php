@@ -66,7 +66,7 @@ $twig->parserExtensions = array(
 );
 
 // Configure the template folder
-$twig->twigTemplateDirs = ['../views', '../modules'];
+$twig->twigTemplateDirs = array_merge(['../views'], \Xibo\Factory\ModuleFactory::getViewPaths());
 
 $app->view($twig);
 

@@ -22,6 +22,8 @@
 
 namespace Xibo\Entity;
 
+use Respect\Validation\Validator as v;
+use Xibo\Storage\PDOConnect;
 
 class Module
 {
@@ -41,15 +43,24 @@ class Module
     public $renderAs;
     public $settings;
     public $schemaVersion;
+    public $viewPath;
 
     public function __toString()
     {
         return sprintf('%s - %s', $this->type, $this->name);
     }
 
+    public function validate()
+    {
+        if (!v::string()->notEmpty()->validate($this->imageUri))
+            throw new \InvalidArgumentException(__('Image Uri is a required field.'));
+    }
+
     public function save()
     {
-        $dbh = \Xibo\Storage\PDOConnect::init();
+        $this->validate();
+
+        $dbh = PDOConnect::init();
 
         $sth = $dbh->prepare('UPDATE module SET settings = :settings WHERE moduleid = :moduleId');
 

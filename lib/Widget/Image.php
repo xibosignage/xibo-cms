@@ -79,18 +79,22 @@ class Image extends Module
         $this->baseEditForm($formFields, $response);
     }
 
+    public function add()
+    {
+        // Nothing to do for images
+    }
+
     /**
-     * Edit Media in the Database
+     * Edit Media
      */
-    public function EditMedia()
+    public function edit()
     {
         // Set the properties specific to Images
-        $this->setOption('scaleType', \Kit::GetParam('scaleTypeId', _POST, _WORD, 'center'));
-        $this->setOption('align', \Kit::GetParam('alignId', _POST, _WORD, 'center'));
-        $this->setOption('valign', \Kit::GetParam('valignId', _POST, _WORD, 'middle'));
-
-        // Edit
-        parent::EditMedia();
+        $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
+        $this->setOption('name', Sanitize::getString('name', $this->getOption('name')));
+        $this->setOption('scaleType', Sanitize::getString('scaleTypeId', 'center'));
+        $this->setOption('align', Sanitize::getString('alignId', 'center'));
+        $this->setOption('valign', Sanitize::getString('valignId', 'middle'));
     }
 
     /**

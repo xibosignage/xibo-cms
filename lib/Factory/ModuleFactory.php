@@ -56,6 +56,25 @@ class ModuleFactory
 
         return $type;
     }
+    /**
+     * Create a Module
+     * @param string $moduleId
+     * @return \Xibo\Widget\Module
+     * @throws NotFoundException
+     */
+    public static function createById($moduleId)
+    {
+        // Create a module
+        $module = ModuleFactory::getById($moduleId);
+
+        $moduleId = 'Xibo\Widget\\' . $module->type;
+
+        $moduleId = new $moduleId();
+        /* @var \Xibo\Widget\Module $moduleId */
+        $moduleId->setModule($module);
+
+        return $moduleId;
+    }
 
     /**
      * Create a Module with a Media Record
@@ -173,6 +192,22 @@ class ModuleFactory
     }
 
     /**
+     * Get module by Id
+     * @param int $moduleId
+     * @return Module
+     * @throws NotFoundException
+     */
+    public static function getById($moduleId)
+    {
+        $modules = ModuleFactory::query(null, array('moduleId' => $moduleId));
+
+        if (count($modules) <= 0)
+            throw new NotFoundException();
+
+        return $modules[0];
+    }
+
+    /**
      * Get module by extension
      * @param string $extension
      * @return Module
@@ -209,6 +244,23 @@ class ModuleFactory
         return $extensions;
     }
 
+    /**
+     * Get View Paths
+     * @return array[string]
+     */
+    public static function getViewPaths()
+    {
+        $modules = ModuleFactory::query();
+        $paths = array_map(function ($module) {
+            /* @var Module $module */
+            return $module->viewPath;
+        }, $modules);
+
+        $paths = array_unique($paths);
+
+        return $paths;
+    }
+
     public static function query($sortOrder = null, $filterBy = array())
     {
         if ($sortOrder == null)
@@ -221,26 +273,28 @@ class ModuleFactory
 
             $params = array();
 
-            $SQL = '';
-            $SQL .= 'SELECT ModuleID, ';
-            $SQL .= '   Module, ';
-            $SQL .= '   Name, ';
-            $SQL .= '   Enabled, ';
-            $SQL .= '   Description, ';
-            $SQL .= '   render_as, ';
-            $SQL .= '   settings, ';
-            $SQL .= '   RegionSpecific, ';
-            $SQL .= '   ValidExtensions, ';
-            $SQL .= '   ImageUri, ';
-            $SQL .= '   PreviewEnabled, ';
-            $SQL .= '   assignable, ';
-            $SQL .= '   SchemaVersion ';
-            $SQL .= '  FROM `module` ';
-            $SQL .= ' WHERE 1 = 1 ';
+            $SQL = '
+                SELECT ModuleID,
+                   Module,
+                   Name,
+                   Enabled,
+                   Description,
+                   render_as,
+                   settings,
+                   RegionSpecific,
+                   ValidExtensions,
+                   ImageUri,
+                   PreviewEnabled,
+                   assignable,
+                   SchemaVersion,
+                   viewPath
+                  FROM `module`
+                 WHERE 1 = 1
+            ';
 
-            if (Sanitize::getInt('id', 0, $filterBy) != 0) {
-                $params['id'] = Sanitize::getInt('id', $filterBy);
-                $SQL .= ' AND ModuleID = :id ';
+            if (Sanitize::getInt('moduleId', 0, $filterBy) != null) {
+                $params['moduleId'] = Sanitize::getInt('moduleId', $filterBy);
+                $SQL .= ' AND ModuleID = :moduleId ';
             }
 
             if (Sanitize::getString('name', $filterBy) != '') {
@@ -296,6 +350,7 @@ class ModuleFactory
                 $module->previewEnabled = Sanitize::int($row['PreviewEnabled']);
                 $module->assignable = Sanitize::int($row['assignable']);
                 $module->schemaVersion = Sanitize::int($row['SchemaVersion']);
+                $module->viewPath = Sanitize::string($row['viewPath']);
 
                 $settings = Sanitize::string($row['settings']);
                 $module->settings = ($settings == '') ? array() : json_decode($settings, true);

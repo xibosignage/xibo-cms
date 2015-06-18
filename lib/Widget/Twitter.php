@@ -21,7 +21,6 @@
  */
 namespace Xibo\Widget;
 
-use Widget\Module;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Cache;
 use Xibo\Helper\Config;
@@ -96,36 +95,15 @@ class Twitter extends Module
     /**
      * Form for updating the module settings
      */
-    public function ModuleSettingsForm()
+    public function settingsForm()
     {
-        // API Key
-        $formFields[] = Form::AddText('apiKey', __('API Key'), $this->GetSetting('apiKey'),
-            __('Enter your API Key from Twitter.'), 'a', 'required');
-
-        // API Secret
-        $formFields[] = Form::AddText('apiSecret', __('API Secret'), $this->GetSetting('apiSecret'),
-            __('Enter your API Secret from Twitter.'), 's', 'required');
-
-        // Cache Period
-        $formFields[] = Form::AddText('cachePeriod', __('Cache Period'), $this->GetSetting('cachePeriod', 300),
-            __('Enter the number of seconds you would like to cache twitter search results.'), 'c', 'required');
-
-        // Cache Period Images
-        $formFields[] = Form::AddText('cachePeriodImages', __('Cache Period for Images'), $this->GetSetting('cachePeriodImages', 24),
-            __('Enter the number of hours you would like to cache twitter images.'), 'i', 'required');
-
-        // Present an error message if we don't have the required extension enabled. Don't prevent further configuration.
-        if (!extension_loaded('curl')) {
-            $formFields[] = Form::AddMessage(__('The php-curl extension is required for the Twitter Module and it does not appear to be enabled on this CMS. Please enable it before using this module.'), 'alert alert-danger');
-        }
-
-        return $formFields;
+        return 'twitter-form-settings';
     }
 
     /**
      * Process any module settings
      */
-    public function ModuleSettings()
+    public function settings()
     {
         // Process any module settings you asked for.
         $apiKey = \Kit::GetParam('apiKey', _POST, _STRING, '');

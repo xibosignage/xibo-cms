@@ -97,6 +97,15 @@ abstract class Module implements ModuleInterface
     }
 
     /**
+     * Get the module
+     * @return \Xibo\Entity\Module
+     */
+    final public function getModule()
+    {
+        return $this->module;
+    }
+
+    /**
      * Set the regionId
      * @param \Xibo\Entity\Region $region
      */
@@ -389,8 +398,6 @@ abstract class Module implements ModuleInterface
     {
         if ($this->module->renderAs != 'native')
             throw new ControllerNotImplemented(__('Module must implement InstallOrUpgrade'));
-
-        return true;
     }
 
     /**
@@ -507,7 +514,7 @@ abstract class Module implements ModuleInterface
      */
     public function settingsForm()
     {
-        return array();
+        return null;
     }
 
     /**

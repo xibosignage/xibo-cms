@@ -29,7 +29,6 @@ use Xibo\Helper\Config;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
-use Xibo\Helper\Theme;
 use Xibo\Storage\PDOConnect;
 
 
@@ -51,12 +50,7 @@ class Module extends Base
 
             // Get a list of all currently installed modules
             try {
-                $dbh = PDOConnect::init();
-
-                $sth = $dbh->prepare("SELECT CONCAT('modules/', LOWER(Module), '.module.php') AS Module FROM `module`");
-                $sth->execute();
-
-                $rows = $sth->fetchAll();
+                $rows = PDOConnect::select("SELECT CONCAT('modules/', LOWER(Module), '.module.php') AS Module FROM `module`", []);
                 $installed = array();
 
                 foreach ($rows as $row)
@@ -83,10 +77,15 @@ class Module extends Base
      */
     public function grid()
     {
-        $modules = ModuleFactory::query();
+        $modules = ModuleFactory::query($this->gridRenderSort(), $this->gridRenderFilter());
 
         foreach ($modules as $module) {
             /* @var \Xibo\Entity\Module $module */
+
+            if ($this->isApi())
+                break;
+
+            $module->includeProperty('buttons');
 
             // If the module config is not locked, present some buttons
             if (Config::GetSetting('MODULE_CONFIG_LOCKED_CHECKB') != 'Checked') {
@@ -94,7 +93,7 @@ class Module extends Base
                 // Edit button
                 $module->buttons[] = array(
                     'id' => 'module_button_edit',
-                    'url' => 'index.php?p=module&q=EditForm&ModuleID=' . $module->moduleId,
+                    'url' => $this->urlFor('module.settings.form', ['id' => $module->moduleId]),
                     'text' => __('Edit')
                 );
             }
@@ -113,242 +112,127 @@ class Module extends Base
     }
 
     /**
-     * Edit Form
+     * Settings Form
+     * @param int $moduleId
      */
-    public function EditForm()
+    public function settingsForm($moduleId)
     {
-
-        $user = $this->getUser();
-        $response = $this->getState();
-        $helpManager = new Help($db, $user);
-
         // Can we edit?
         if (Config::GetSetting('MODULE_CONFIG_LOCKED_CHECKB') == 'Checked')
-            trigger_error(__('Module Config Locked'), E_USER_ERROR);
+            throw new \InvalidArgumentException(__('Module Config Locked'));
 
-        $moduleId = \Xibo\Helper\Sanitize::getInt('ModuleID');
+        if (!$this->getUser()->userTypeId == 1)
+            throw new AccessDeniedException();
 
-        // Pull the currently known info from the DB
-        $SQL = '';
-        $SQL .= 'SELECT ModuleID, ';
-        $SQL .= '   Module, ';
-        $SQL .= '   Name, ';
-        $SQL .= '   Enabled, ';
-        $SQL .= '   Description, ';
-        $SQL .= '   RegionSpecific, ';
-        $SQL .= '   ValidExtensions, ';
-        $SQL .= '   ImageUri, ';
-        $SQL .= '   PreviewEnabled ';
-        $SQL .= '  FROM `module` ';
-        $SQL .= ' WHERE ModuleID = %d ';
+        $module = ModuleFactory::createById($moduleId);
 
-        $SQL = sprintf($SQL, $moduleId);
+        $moduleFields = $module->settingsForm();
 
-        if (!$row = $db->GetSingleRow($SQL)) {
-            trigger_error($db->error());
-            trigger_error(__('Error getting Module'));
-        }
-
-        $type = \Kit::ValidateParam($row['Module'], _WORD);
-
-        // Set some information about the form
-        Theme::Set('form_id', 'ModuleEditForm');
-        Theme::Set('form_action', 'index.php?p=module&q=Edit');
-        Theme::Set('form_meta', '<input type="hidden" name="ModuleID" value="' . $moduleId . '" /><input type="hidden" name="type" value="' . $type . '" />');
-
-        $formFields = array();
-        $formFields[] = Form::AddText('ValidExtensions', __('Valid Extensions'), \Xibo\Helper\Sanitize::string($row['ValidExtensions']),
-            __('The Extensions allowed on files uploaded using this module. Comma Separated.'), 'e', '');
-
-        $formFields[] = Form::AddText('ImageUri', __('Image Uri'), \Xibo\Helper\Sanitize::string($row['ImageUri']),
-            __('The Image to display for this module. This should be a path relative to the root of the installation.'), 'i', '');
-
-        $formFields[] = Form::AddCheckbox('PreviewEnabled', __('Preview Enabled?'),
-            \Xibo\Helper\Sanitize::int($row['PreviewEnabled']), __('When PreviewEnabled users will be able to see a preview in the layout designer'),
-            'p');
-
-        $formFields[] = Form::AddCheckbox('Enabled', __('Enabled?'),
-            \Xibo\Helper\Sanitize::int($row['Enabled']), __('When Enabled users will be able to add media using this module'),
-            'b');
-
-        // Set any module specific form fields
-        $module = \Xibo\Factory\ModuleFactory::create($type);
-
-        // Merge in the fields from the settings
-        foreach ($module->settingsForm() as $field)
-            $formFields[] = $field;
-
-        Theme::Set('form_fields', $formFields);
-
-        $response->SetFormRequestResponse(NULL, __('Edit Module'), '350px', '325px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Module', 'Edit') . '")');
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Save'), '$("#ModuleEditForm").submit()');
-
+        // Pass to view
+        $this->getState()->template = ($moduleFields == null) ? 'module-form-settings' : $moduleFields;
+        $this->getState()->setData([
+            'module' => $module,
+            'help' => Help::Link('Module', 'Edit')
+        ]);
     }
 
-    public function Edit()
+    /**
+     * Settings
+     * @param int $moduleId
+     */
+    public function settings($moduleId)
     {
-
-
-        $response = $this->getState();
-
         // Can we edit?
         if (Config::GetSetting('MODULE_CONFIG_LOCKED_CHECKB') == 'Checked')
-            trigger_error(__('Module Config Locked'), E_USER_ERROR);
+            throw new \InvalidArgumentException(__('Module Config Locked'));
 
-        $moduleId = \Xibo\Helper\Sanitize::getInt('ModuleID');
-        $type = \Kit::GetParam('type', _POST, _WORD);
-        $validExtensions = \Kit::GetParam('ValidExtensions', _POST, _STRING, '');
-        $imageUri = \Xibo\Helper\Sanitize::getString('ImageUri');
-        $enabled = \Xibo\Helper\Sanitize::getCheckbox('Enabled');
-        $previewEnabled = \Xibo\Helper\Sanitize::getCheckbox('PreviewEnabled');
+        if (!$this->getUser()->userTypeId == 1)
+            throw new AccessDeniedException();
 
-        // Validation
-        if ($moduleId == 0 || $moduleId == '')
-            trigger_error(__('Module ID is missing'), E_USER_ERROR);
-
-        if ($type == '')
-            trigger_error(__('Type is missing'), E_USER_ERROR);
-
-        if ($imageUri == '')
-            trigger_error(__('Image Uri is a required field.'), E_USER_ERROR);
-
-        // Process any module specific form fields
-        $module = ModuleFactory::create($type, $this->db, $this->user);
+        $module = ModuleFactory::createById($moduleId);
+        $module->getModule()->validExtensions = Sanitize::getString('validExtensions');
+        $module->getModule()->imageUri = Sanitize::getString('imageUri');
+        $module->getModule()->enabled = Sanitize::getString('enabled');
+        $module->getModule()->previewEnabled = Sanitize::getString('previewEnabled');
 
         // Install Files for this module
         $module->installFiles();
 
-        try {
-            // Get the settings (may throw an exception)
-            $settings = json_encode($module->settings());
+        // Get the settings (may throw an exception)
+        $module->getModule()->settings = json_encode($module->settings());
 
-            $dbh = \Xibo\Storage\PDOConnect::init();
+        // Save
+        $module->getModule()->save();
 
-            $sth = $dbh->prepare('
-                UPDATE `module` SET ImageUri = :image_url, ValidExtensions = :valid_extensions,
-                    Enabled = :enabled, PreviewEnabled = :preview_enabled, settings = :settings
-                 WHERE ModuleID = :module_id');
-
-            $sth->execute(array(
-                'image_url' => $imageUri,
-                'valid_extensions' => $validExtensions,
-                'enabled' => $enabled,
-                'preview_enabled' => $previewEnabled,
-                'settings' => $settings,
-                'module_id' => $moduleId
-            ));
-
-            $response->SetFormSubmitResponse(__('Module Edited'), false);
-
-        } catch (Exception $e) {
-
-            Log::error($e->getMessage());
-
-            if (!$this->IsError())
-                $this->SetError(1, __('Unknown Error'));
-
-            trigger_error(__('Unable to update module'), E_USER_ERROR);
-        }
+        // Successful
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Edited %s'), $module->getModule()->name),
+            'id' => $module->getModule()->moduleId,
+            'data' => [$module]
+        ]);
     }
 
     /**
-     * Edit Form
+     * Verify
      */
-    public function VerifyForm()
+    public function verifyForm()
     {
-        $user = $this->getUser();
-        $response = $this->getState();
-        $helpManager = new Help(NULL, $user);
-
-        // Set some information about the form
-        Theme::Set('form_id', 'VerifyForm');
-        Theme::Set('form_action', 'index.php?p=module&q=Verify');
-
-        $formFields = array();
-        $formFields[] = Form::AddMessage(__('Verify all modules have been installed correctly by reinstalling any module related files'));
-
-        Theme::Set('form_fields', $formFields);
-
-        $response->SetFormRequestResponse(NULL, __('Verify'), '350px', '325px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Module', 'Edit') . '")');
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Verify'), '$("#VerifyForm").submit()');
-
+        // Pass to view
+        $this->getState()->template = 'module-form-verify';
+        $this->getState()->setData([
+            'help' => Help::Link('Module', 'Edit')
+        ]);
     }
 
-    public function Verify()
+    /**
+     * Verify Module
+     */
+    public function verify()
     {
+        // Set all files to valid = 0
+        PDOConnect::update('UPDATE `media` SET valid = 0 WHERE moduleSystemFile = 1', []);
 
+        // Install all files
+        Library::installAllModuleFiles();
 
-        $response = $this->getState();
-
-        try {
-            $dbh = \Xibo\Storage\PDOConnect::init();
-
-            $dbh->exec('UPDATE `media` SET valid = 0 WHERE moduleSystemFile = 1');
-        } catch (Exception $e) {
-
-            Log::error($e->getMessage());
-
-            if (!$this->IsError())
-                $this->SetError(1, __('Unknown Error'));
-
-            return false;
-        }
-
-        Media::installAllModuleFiles();
-
-        $response->SetFormSubmitResponse(__('Verified'), false);
-
+        // Successful
+        $this->getState()->hydrate([
+            'message' => __('Verified')
+        ]);
     }
 
-    public function Install()
+    /**
+     * Install Module
+     * @param string $fileName
+     */
+    public function install($fileName)
     {
-        // Module file name
-        $file = \Xibo\Helper\Sanitize::getString('module');
-
-        if ($file == '')
-            trigger_error(__('Unable to install module'), E_USER_ERROR);
-
-        Log::notice('Request to install Module: ' . $file, 'module', 'Install');
+        Log::notice('Request to install Module: ' . $fileName);
 
         // Check that the file exists
-        if (!file_exists($file))
-            trigger_error(__('File does not exist'), E_USER_ERROR);
+        if (!file_exists($fileName))
+            throw new \InvalidArgumentException(__('File does not exist'));
 
         // Make sure the file is in our list of expected module files
         $files = glob('modules/*.module.php');
 
-        if (!in_array($file, $files))
-            trigger_error(__('Not a module file'), E_USER_ERROR);
+        if (!in_array($fileName, $files))
+            throw new \InvalidArgumentException(__('Not a module file'));
 
         // Load the file
-        include_once($file);
-
-        $type = str_replace('modules/', '', $file);
+        $type = str_replace('modules/', '', $fileName);
         $type = str_replace('.module.php', '', $type);
 
-        // Load the module object inside the file
-        if (!class_exists($type))
-            trigger_error(__('Module file does not contain a class of the correct name'), E_USER_ERROR);
+        $module = ModuleFactory::create($type);
+        $module->installOrUpdate();
 
-        try {
-            Log::notice('Validation passed, installing module.', 'module', 'Install');
-            $moduleObject = ModuleFactory::create($type, $this->db, $this->user);
-            $moduleObject->installOrUpdate();
-        } catch (Exception $e) {
-            trigger_error(__('Unable to install module'), E_USER_ERROR);
-        }
-
-        Log::notice('Module Installed: ' . $file, 'module', 'Install');
+        Log::notice('Module Installed: ' . $module->getModuleType());
 
         // Excellent... capital... success
-        $response = $this->getState();
-        $response->refresh = true;
-        $response->refreshLocation = 'index.php?p=module';
-
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Installed %s'), $module->getModuleType()),
+            'data' => [$module]
+        ]);
     }
 
     /**
