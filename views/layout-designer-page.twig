@@ -177,7 +177,7 @@
 {% endblock %}
 
 {% block javaScript %}
-    <script src="{{ baseUrl }}theme/default/js/xibo-layout-designer.js"></script>
+    <script src="{{ theme.uri("js/xibo-layout-designer.js") }}"></script>
     <script type="text/javascript">
         var translation = {
             save_position_button: "{% trans "Save Position" %}",

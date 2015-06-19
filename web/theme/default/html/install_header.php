@@ -22,7 +22,7 @@ use Xibo\Helper\Theme;
 ?><!DOCTYPE html>
 <html lang="en">
 	<head>
-		<title><?php echo Theme::GetConfig('theme_title'); ?></title>
+		<title><?php echo Theme::getConfig('theme_title'); ?></title>
 		<meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -40,7 +40,7 @@ use Xibo\Helper\Theme;
 		<div class="navbar navbar-inverse navbar-fixed-top">
 			<div class="container">
 				<div class="navbar-header">
-					<a class="navbar-brand" href="#"><?php echo sprintf(Theme::Translate('%s Installation'), Theme::GetConfig('app_name')); ?></a>
+					<a class="navbar-brand" href="#"><?php echo sprintf(Theme::Translate('%s Installation'), Theme::getConfig('app_name')); ?></a>
 				</div>
 			</div>
 		</div>
@@ -48,9 +48,9 @@ use Xibo\Helper\Theme;
 		<?php if (Theme::Get('step') == 1) { ?>
     	<div class="jumbotron">
       		<div class="container">
-        		<h1><?php echo sprintf(Theme::Translate('Welcome to the %s Installation!'), Theme::GetConfig('app_name')); ?></h1>
-        		<p><?php echo sprintf(Theme::Translate('Thank you for choosing %s. This installation wizard will take you through setting up %s one step at a time. There are 6 steps in total, the first one is below.'), Theme::GetConfig('app_name'), Theme::GetConfig('app_name')); ?></p>
-        		<p><a class="btn btn-primary btn-lg" role="button" href="<?php echo Theme::GetConfig('cms_install_url'); ?>" target="_blank"><?php echo sprintf(Theme::Translate('Installation guide %s'), '&raquo;'); ?></a></p>
+        		<h1><?php echo sprintf(Theme::Translate('Welcome to the %s Installation!'), Theme::getConfig('app_name')); ?></h1>
+        		<p><?php echo sprintf(Theme::Translate('Thank you for choosing %s. This installation wizard will take you through setting up %s one step at a time. There are 6 steps in total, the first one is below.'), Theme::getConfig('app_name'), Theme::getConfig('app_name')); ?></p>
+        		<p><a class="btn btn-primary btn-lg" role="button" href="<?php echo Theme::getConfig('cms_install_url'); ?>" target="_blank"><?php echo sprintf(Theme::Translate('Installation guide %s'), '&raquo;'); ?></a></p>
       		</div>
     	</div>
     	<?php } ?>

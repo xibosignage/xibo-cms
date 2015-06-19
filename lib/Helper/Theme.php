@@ -25,6 +25,7 @@ use ID;
 use Key;
 use MenuManager;
 use Select;
+use Slim\Slim;
 use Xibo\Entity\Menu;
 use Xibo\Factory\MenuFactory;
 
@@ -69,7 +70,7 @@ class Theme
     /**
      * GetInstance of Theme
      */
-    private static function GetInstance()
+    public static function getInstance()
     {
         if (!isset(self::$instance))
             self::$instance = new Theme();
@@ -83,9 +84,9 @@ class Theme
      * @param null $default
      * @return null
      */
-    public static function GetConfig($settingName = null, $default = null)
+    public static function getConfig($settingName = null, $default = null)
     {
-        $theme = Theme::GetInstance();
+        $theme = Theme::getInstance();
 
         if ($settingName == null)
             return $theme->config;
@@ -101,9 +102,9 @@ class Theme
      * @param string $menu The Name of the Menu
      * @return array Array containing menu items (page, args, class, title, link, li)
      */
-    public static function GetMenu($menu)
+    public static function getMenu($menu)
     {
-        $theme = Theme::GetInstance();
+        $theme = Theme::getInstance();
         $array = array();
 
         foreach (MenuFactory::getByMenu($menu) as $menuItem) {
@@ -137,12 +138,12 @@ class Theme
     public static function getConsolidatedMenu()
     {
         $menus = [];
-        $menus['top'] = Theme::GetMenu('Top Nav');
-        $menus['design'] = Theme::GetMenu('Design Menu');
-        $menus['library'] = Theme::GetMenu('Library Menu');
-        $menus['display'] = Theme::GetMenu('Display Menu');
-        $menus['admin'] = Theme::GetMenu('Administration Menu');
-        $menus['advanced'] = Theme::GetMenu('Advanced Menu');
+        $menus['top'] = Theme::getMenu('Top Nav');
+        $menus['design'] = Theme::getMenu('Design Menu');
+        $menus['library'] = Theme::getMenu('Library Menu');
+        $menus['display'] = Theme::getMenu('Display Menu');
+        $menus['admin'] = Theme::getMenu('Administration Menu');
+        $menus['advanced'] = Theme::getMenu('Advanced Menu');
 
         return $menus;
     }
@@ -154,11 +155,13 @@ class Theme
      */
     public static function uri($uri)
     {
-        if (file_exists('theme' . DIRECTORY_SEPARATOR . self::GetInstance()->name . DIRECTORY_SEPARATOR . $uri)) {
-            return 'theme' . DIRECTORY_SEPARATOR . self::GetInstance()->name . DIRECTORY_SEPARATOR . $uri;
+        $app = Slim::getInstance();
+
+        if (file_exists('theme' . DIRECTORY_SEPARATOR . self::getInstance()->name . DIRECTORY_SEPARATOR . $uri)) {
+            return $app->urlFor('home') . 'theme' . DIRECTORY_SEPARATOR . self::getInstance()->name . DIRECTORY_SEPARATOR . $uri;
         }
         else {
-            return 'theme' . DIRECTORY_SEPARATOR . 'default' . DIRECTORY_SEPARATOR . $uri;
+            return $app->urlFor('home') . 'theme' . DIRECTORY_SEPARATOR . 'default' . DIRECTORY_SEPARATOR . $uri;
         }
     }
 }

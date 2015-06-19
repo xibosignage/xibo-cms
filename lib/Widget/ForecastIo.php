@@ -21,18 +21,18 @@
  */
 namespace Xibo\Widget;
 use Forecast\Forecast;
-use Widget\Module;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Cache;
 use Xibo\Helper\Config;
 use Xibo\Helper\Date;
-use Xibo\Helper\Form;
 use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
 use Xibo\Helper\Translate;
 
 class ForecastIo extends Module
 {
+    const API_ENDPOINT = 'https://api.forecast.io/forecast/';
+
     private $resourceFolder;
     private $codeSchemaVersion = 1;
 
@@ -602,14 +602,12 @@ class ForecastIo extends Module
             die(__('Incorrectly configured module'));
 
         // Query the API and Dump the Results.
-        $forecast = new Forecast($apiKey);
-
         $apiOptions = array('units' => $this->GetOption('units', 'auto'), 'lang' => $this->GetOption('lang', 'en'), 'exclude' => 'flags,minutely,hourly');
         $key = md5($defaultLat . $defaultLong . 'null' . implode('.', $apiOptions));
 
         if (!Cache::has($key)) {
             Log::notice('Getting Forecast from the API', $this->getModuleType(), __FUNCTION__);
-            if (!$data = $forecast->get($defaultLat, $defaultLong, null, $apiOptions)) {
+            if (!$data = $this->get($defaultLat, $defaultLong, null, $apiOptions)) {
                 return false;
             }
 
@@ -810,5 +808,76 @@ class ForecastIo extends Module
         // 1 = Valid
         // 2 = Unknown
         return 1;
+    }
+
+    private function request($latitude, $longitude, $time = null, $options = array())
+    {
+        $request_url = self::API_ENDPOINT
+            . '[APIKEY]'
+            . '/'
+            . $latitude
+            . ','
+            . $longitude
+            . ((is_null($time)) ? '' : ','. $time);
+
+        if (!empty($options)) {
+            $request_url .= '?'. http_build_query($options);
+        }
+
+        \Xibo\Helper\Log::debug('Calling API with: ' . $request_url);
+
+        $request_url = str_replace('[APIKEY]', $this->api_key, $request_url);
+
+        $httpOptions = array(
+            CURLOPT_TIMEOUT => 20,
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_USERAGENT => 'Xibo Digital Signage',
+            CURLOPT_HEADER => false,
+            CURLINFO_HEADER_OUT => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_URL => $request_url
+        );
+
+        // Proxy support
+        if (\Xibo\Helper\Config::GetSetting('PROXY_HOST') != '' && !\Xibo\Helper\Config::isProxyException($request_url)) {
+            $httpOptions[CURLOPT_PROXY] = \Xibo\Helper\Config::GetSetting('PROXY_HOST');
+            $httpOptions[CURLOPT_PROXYPORT] = \Xibo\Helper\Config::GetSetting('PROXY_PORT');
+
+            if (\Xibo\Helper\Config::GetSetting('PROXY_AUTH') != '')
+                $httpOptions[CURLOPT_PROXYUSERPWD] = \Xibo\Helper\Config::GetSetting('PROXY_AUTH');
+        }
+
+        $curl = curl_init();
+        curl_setopt_array($curl, $httpOptions);
+        $result = curl_exec($curl);
+
+        // Get the response headers
+        $outHeaders = curl_getinfo($curl);
+
+        if ($outHeaders['http_code'] == 0) {
+            // Unable to connect
+            \Xibo\Helper\Log::error('Unable to reach Forecast API. No Host Found (HTTP Code 0). Curl Error = ' . curl_error($curl));
+            return false;
+        }
+        else if ($outHeaders['http_code'] != 200) {
+            \Xibo\Helper\Log::error('ForecastIO API returned ' . $outHeaders['http_code'] . ' status. Unable to proceed. Headers = ' . var_export($outHeaders, true));
+
+            // See if we can parse the error.
+            $body = json_decode($result);
+
+            \Xibo\Helper\Log::error('ForecastIO Error: ' . ((isset($body->errors[0])) ? $body->errors[0]->message : 'Unknown Error'));
+
+            return false;
+        }
+
+        // Parse out header and body
+        $body = json_decode($result);
+
+        return $body;
+    }
+
+    public function get($latitude, $longitude, $time = null, $options = array())
+    {
+        return $this->request($latitude, $longitude, $time, $options);
     }
 }

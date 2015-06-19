@@ -88,9 +88,9 @@ class State extends Middleware
             // Configure some things in the theme
             if ($app->getName() == 'web') {
                 $app->view()->appendData(array(
-                    'baseUrl' => rtrim(str_replace('index.php', '', $app->request()->getRootUri()), '/') . '/',
+                    'baseUrl' => $app->urlFor('home'),
                     'route' => $app->router()->getCurrentRoute()->getName(),
-                    'theme' => Theme::GetConfig(),
+                    'theme' => Theme::getInstance(),
                     'settings' => $settings,
                     'translate' => [
                         'jsLocale' => Translate::GetJsLocale(),

@@ -48,7 +48,9 @@
     "twig/extensions": "~1.2",
     "respect/validation": "0.9.*",
     "intervention/imagecache": "~2.3",
-    "rmccue/requests": "^1.6"
+    "rmccue/requests": "^1.6",
+    "abraham/twitteroauth": "^0.5.3",
+    "emojione/emojione": "^1.4"
   },
   "require-dev": {
     "phpunit/phpunit": "~4.0"

@@ -68,7 +68,7 @@
                         {% set helpText %}{% trans "The layering order of the background image (z-index). Advanced use only." %}{% endset %}
                         {{ forms.text("backgroundzIndex", title, layout.backgroundzIndex, helpText) }}
 
-                        <img id="bg_image_image" src="{% if backgroundId == 0 %}{{ baseUrl }}theme/default/img/forms/filenotfound.gif{% else %}{{ urlFor("library.download", {id: backgroundId}) }}?preview=1&width=100&height=56{% endif %}" alt="{% trans "Background thumbnail" %}" />
+                        <img id="bg_image_image" src="{% if backgroundId == 0 %}{{ theme.uri("img/forms/filenotfound.gif") }}{% else %}{{ urlFor("library.download", {id: backgroundId}) }}?preview=1&width=100&height=56{% endif %}" alt="{% trans "Background thumbnail" %}" />
                     </div>
                 </div>
             </form>

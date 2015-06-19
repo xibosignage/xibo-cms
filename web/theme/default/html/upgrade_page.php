@@ -25,10 +25,10 @@ use Xibo\Helper\Theme;
 <?php if (Theme::Get('step') == 1) { ?>
 <div class="jumbotron">
         <div class="container">
-        <h1><?php echo Theme::Translate('Welcome to the %s Upgrade!', Theme::GetConfig('app_name')); ?></h1>
-        <p><?php echo sprintf(Theme::Translate('Thank you for upgrading %s. This upgrade wizard will take you through the %s upgrade process one step at a time. There are only 2 steps, the first one is below.'), Theme::GetConfig('app_name'), Theme::GetConfig('app_name')); ?></p>
+        <h1><?php echo Theme::Translate('Welcome to the %s Upgrade!', Theme::getConfig('app_name')); ?></h1>
+        <p><?php echo sprintf(Theme::Translate('Thank you for upgrading %s. This upgrade wizard will take you through the %s upgrade process one step at a time. There are only 2 steps, the first one is below.'), Theme::getConfig('app_name'), Theme::getConfig('app_name')); ?></p>
         <p><?php echo Theme::Translate('Please read through the release notes before you begin as they contain important information about this new release.'); ?></p>
-        <p><a class="btn btn-primary btn-lg" role="button" href="<?php echo Theme::GetConfig('cms_release_notes_url'); ?>" target="_blank"><?php echo sprintf(Theme::Translate('Release Notes %s'), '&raquo;'); ?></a></p>
+        <p><a class="btn btn-primary btn-lg" role="button" href="<?php echo Theme::getConfig('cms_release_notes_url'); ?>" target="_blank"><?php echo sprintf(Theme::Translate('Release Notes %s'), '&raquo;'); ?></a></p>
         </div>
 </div>
 <?php } else { ?>

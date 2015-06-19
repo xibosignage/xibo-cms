@@ -4,8 +4,62 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "11128a237279d3c3f5d1efa039247597",
+    "hash": "ec9e62ed9269d341bdcab52b0fce67a1",
     "packages": [
+        {
+            "name": "abraham/twitteroauth",
+            "version": "0.5.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/abraham/twitteroauth.git",
+                "reference": "c72c778c043220e29b81edbc0b521a5dd553e891"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/abraham/twitteroauth/zipball/c72c778c043220e29b81edbc0b521a5dd553e891",
+                "reference": "c72c778c043220e29b81edbc0b521a5dd553e891",
+                "shasum": ""
+            },
+            "require": {
+                "ext-curl": "*",
+                "php": ">=5.4.0"
+            },
+            "require-dev": {
+                "phpmd/phpmd": "2.*",
+                "phpunit/phpunit": "4.*",
+                "squizlabs/php_codesniffer": "2.*"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Abraham\\TwitterOAuth\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Abraham Williams",
+                    "email": "abraham@abrah.am",
+                    "homepage": "https://abrah.am",
+                    "role": "Developer"
+                }
+            ],
+            "description": "The most popular PHP library for use with the Twitter OAuth REST API.",
+            "homepage": "https://twitteroauth.com",
+            "keywords": [
+                "Twitter API",
+                "Twitter oAuth",
+                "api",
+                "oauth",
+                "rest",
+                "social",
+                "twitter"
+            ],
+            "time": "2015-03-31 15:39:00"
+        },
         {
             "name": "danielstjules/stringy",
             "version": "1.9.0",
@@ -130,6 +184,47 @@
             "time": "2014-12-20 21:24:13"
         },
         {
+            "name": "emojione/emojione",
+            "version": "v1.4.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Ranks/emojione.git",
+                "reference": "81373eda34614389dde82aa79ffa7f137b516423"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Ranks/emojione/zipball/81373eda34614389dde82aa79ffa7f137b516423",
+                "reference": "81373eda34614389dde82aa79ffa7f137b516423",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "~4.6"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Emojione\\": "lib/php/src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "description": "Emoji One is a complete set of emojis designed for the web. It includes libraries to easily convert unicode characters to shortnames (:smile:) and shortnames to our custom emoji images. PNG and SVG formats provided for the emoji images.",
+            "homepage": "http://www.emojione.com",
+            "keywords": [
+                "Emoji One",
+                "emoji",
+                "emojione",
+                "emojis",
+                "emoticons",
+                "smileys",
+                "smilies",
+                "unicode"
+            ],
+            "time": "2015-06-05 19:30:48"
+        },
+        {
             "name": "entomb/slim-json-api",
             "version": "1.1.0",
             "source": {
@@ -224,7 +319,7 @@
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ezyang/htmlpurifier/zipball/0d7328dbb282875f995026ba9f9a732bf0d6c669",
+                "url": "https://api.github.com/repos/ezyang/htmlpurifier/zipball/bfbf8a9da12131f41ae22b80ccf0e3ca288046a1",
                 "reference": "0d7328dbb282875f995026ba9f9a732bf0d6c669",
                 "shasum": ""
             },

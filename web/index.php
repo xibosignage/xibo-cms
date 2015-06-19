@@ -66,16 +66,17 @@ $twig->parserExtensions = array(
 );
 
 // Configure the template folder
-$twig->twigTemplateDirs = array_merge(['../views'], \Xibo\Factory\ModuleFactory::getViewPaths());
+$twig->twigTemplateDirs = array_merge(\Xibo\Factory\ModuleFactory::getViewPaths(), ['../views']);
 
 $app->view($twig);
 
-// Middleware
-$app->add(new \Xibo\Middleware\Storage());
-$app->add(new \Xibo\Middleware\State());
-$app->add(new \Xibo\Middleware\Actions());
-$app->add(new \Xibo\Middleware\CsrfGuard());
+// Middleware (onion, outside inwards and then out again - i.e. the last one is first and last)
 $app->add(new \Xibo\Middleware\WebAuthentication());
+$app->add(new \Xibo\Middleware\CsrfGuard());
+$app->add(new \Xibo\Middleware\Theme());
+$app->add(new \Xibo\Middleware\Actions());
+$app->add(new \Xibo\Middleware\State());
+$app->add(new \Xibo\Middleware\Storage());
 
 // All application routes
 require '../lib/routes-web.php';

@@ -191,7 +191,6 @@ class Clock extends Module
                 $template = str_replace('<!--[[[OFFSET]]]-->', $this->GetOption('offset', 0), $template);
 
                 // After body content
-                $isPreview = (\Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
                 $javaScriptContent  = ' < script type = "text/javascript" src = "' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js" ></script > ';
                 $javaScriptContent .= '<script type = "text/javascript" src = "' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'flipclock.min.js" ></script > ';
 

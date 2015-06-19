@@ -187,7 +187,7 @@ class StatusDashboard extends Base
                 // Use SimplePie to get the feed
                 $feed = new SimplePie();
                 $feed->set_cache_location(Library::getLibraryCacheUri());
-                $feed->set_feed_url(Theme::GetConfig('latest_news_url'));
+                $feed->set_feed_url(Theme::getConfig('latest_news_url'));
                 $feed->set_cache_duration(86400);
                 $feed->handle_content_type();
                 $feed->init();

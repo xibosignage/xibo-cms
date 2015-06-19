@@ -50,7 +50,7 @@ class Install
 
         $formFields = array();
         $formButtons = array();
-        $formFields[] = Form::AddMessage(sprintf(__("First we need to check if your server meets %s's requirements."), Theme::GetConfig('app_name')));
+        $formFields[] = Form::AddMessage(sprintf(__("First we need to check if your server meets %s's requirements."), Theme::getConfig('app_name')));
 
         $formFields[] = Form::AddRaw($environment);
 
@@ -92,7 +92,7 @@ class Install
         // New DB tab
         $formFields['new'][] = Form::AddHidden('step', 3);
 
-        $formFields['new'][] = Form::AddMessage(sprintf(__("%s needs to set-up a connection to your MySQL database."), Theme::GetConfig('app_name')));
+        $formFields['new'][] = Form::AddMessage(sprintf(__("%s needs to set-up a connection to your MySQL database."), Theme::getConfig('app_name')));
 
         $formFields['new'][] = Form::AddMessage(__('If you have not yet created an empty database and database user for Xibo to use, and know the user name / password of a MySQL administrator stay on this tab, otherwise click "Use Existing".'));
 
@@ -338,7 +338,7 @@ END;
 
         $formFields[] = Form::AddHidden('step', 5);
 
-        $formFields[] = Form::AddMessage(sprintf(__("%s needs an administrator user account to be the first user account that has access to the CMS. Please enter your chosen details below."), Theme::GetConfig('app_name')));
+        $formFields[] = Form::AddMessage(sprintf(__("%s needs an administrator user account to be the first user account that has access to the CMS. Please enter your chosen details below."), Theme::getConfig('app_name')));
 
         // User name and password
         $formFields[] = Form::AddText('admin_username', __('Admin Username'), NULL,
@@ -400,13 +400,13 @@ END;
         $formFields[] = Form::AddHidden('step', 7);
 
         $formFields[] = Form::AddText('library_location', __('Library Location'), NULL,
-            sprintf(__('%s needs somewhere to store the things you upload to be shown. Ideally, this should be somewhere outside the root of your web server - that is such that is not accessible by a web browser. Please input the full path to this folder. If the folder does not already exist, we will attempt to create it for you.'), Theme::GetConfig('app_name')), 'n');
+            sprintf(__('%s needs somewhere to store the things you upload to be shown. Ideally, this should be somewhere outside the root of your web server - that is such that is not accessible by a web browser. Please input the full path to this folder. If the folder does not already exist, we will attempt to create it for you.'), Theme::getConfig('app_name')), 'n');
 
         $formFields[] = Form::AddText('server_key', __('Server Key'), Install::gen_secret(6),
-            sprintf(__('%s needs you to choose a "key". This will be required each time you set-up a new client. It should be complicated, and hard to remember. It is visible in the CMS interface, so it need not be written down separately.'), Theme::GetConfig('app_name')), 'n');
+            sprintf(__('%s needs you to choose a "key". This will be required each time you set-up a new client. It should be complicated, and hard to remember. It is visible in the CMS interface, so it need not be written down separately.'), Theme::getConfig('app_name')), 'n');
 
         $formFields[] = Form::AddCheckbox('stats', __('Statistics'), 1,
-            sprintf(__('We\'d love to know you\'re running %s. If you\'re happy for us to collect anonymous statistics (version number, number of displays) then please leave the box ticked. Please un tick the box if your server does not have direct access to the internet.'), Theme::GetConfig('app_name')), 'n');
+            sprintf(__('We\'d love to know you\'re running %s. If you\'re happy for us to collect anonymous statistics (version number, number of displays) then please leave the box ticked. Please un tick the box if your server does not have direct access to the internet.'), Theme::getConfig('app_name')), 'n');
 
         // Put up an error message if one has been set (and then unset it)
         if ($this->errorMessage != '') {
@@ -503,7 +503,7 @@ END;
         Theme::Set('source_url', Theme::SourceLink());
 
         // Message (either from the URL or the session)
-        Theme::Set('login_message', sprintf(__("%s was successfully installed. Please log-in with the user details you chose earlier."), Theme::GetConfig('app_name')));
+        Theme::Set('login_message', sprintf(__("%s was successfully installed. Please log-in with the user details you chose earlier."), Theme::getConfig('app_name')));
 
         $this->getState()->html .= Theme::RenderReturn('login_page');
 
