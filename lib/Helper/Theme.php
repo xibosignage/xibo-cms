@@ -150,18 +150,19 @@ class Theme
 
     /**
      * Get theme URI
-     * @param $uri
+     * @param string $uri
+     * @param bool $local
      * @return string
      */
-    public static function uri($uri)
+    public static function uri($uri, $local = false)
     {
         $app = Slim::getInstance();
 
         if (file_exists('theme' . DIRECTORY_SEPARATOR . self::getInstance()->name . DIRECTORY_SEPARATOR . $uri)) {
-            return $app->urlFor('home') . 'theme' . DIRECTORY_SEPARATOR . self::getInstance()->name . DIRECTORY_SEPARATOR . $uri;
+            return ((!$local) ? $app->urlFor('home') : '') . 'theme' . DIRECTORY_SEPARATOR . self::getInstance()->name . DIRECTORY_SEPARATOR . $uri;
         }
         else {
-            return $app->urlFor('home') . 'theme' . DIRECTORY_SEPARATOR . 'default' . DIRECTORY_SEPARATOR . $uri;
+            return ((!$local) ? $app->urlFor('home') : '') . 'theme' . DIRECTORY_SEPARATOR . 'default' . DIRECTORY_SEPARATOR . $uri;
         }
     }
 }

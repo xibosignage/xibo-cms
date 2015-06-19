@@ -24,6 +24,7 @@ namespace Xibo\Widget;
 use Respect\Validation\Validator as v;
 use Xibo\Factory\MediaFactory;
 use Xibo\Helper\Sanitize;
+use Xibo\Helper\Theme;
 use Xibo\Helper\Translate;
 
 class Clock extends Module
@@ -32,11 +33,11 @@ class Clock extends Module
 
     public function installFiles()
     {
-        MediaFactory::createModuleFile('modules/preview/vendor/jquery-1.11.1.min.js')->save();
-        MediaFactory::createModuleFile('modules/preview/vendor/jquery-cycle-2.1.6.min.js')->save();
-        MediaFactory::createModuleFile('modules/preview/vendor/moment.js')->save();
-        MediaFactory::createModuleFile('modules/preview/vendor/flipclock.min.js')->save();
-        MediaFactory::createModuleFile('modules/preview/xibo-layout-scaler.js')->save();
+        MediaFactory::createModuleFile('modules/vendor/jquery-1.11.1.min.js')->save();
+        MediaFactory::createModuleFile('modules/vendor/jquery-cycle-2.1.6.min.js')->save();
+        MediaFactory::createModuleFile('modules/vendor/moment.js')->save();
+        MediaFactory::createModuleFile('modules/vendor/flipclock.min.js')->save();
+        MediaFactory::createModuleFile('modules/xibo-layout-scaler.js')->save();
     }
 
     /**
@@ -102,24 +103,24 @@ class Clock extends Module
 
             case 1:
                 // Analogue
-                $template = file_get_contents('modules/theme/HtmlTemplateForClock.html');
+                $template = 'clock-get-resource-analog';
 
                 // Render our clock face
                 $theme = ($this->getOption('theme') == 1 ? 'light' : 'dark');
                 $theme_face = ($this->getOption('theme') == 1 ? 'clock_bg_modern_light.png' : 'clock_bg_modern_dark.png');
 
-                $template = str_replace('<!--[[[CLOCK_FACE]]]-->', base64_encode(file_get_contents('modules/theme/' . $theme_face)), $template);
+                $data['clockFace'] = base64_encode(file_get_contents('modules/clock/' . $theme_face));
 
                 // Light or dark?
-                $template = str_replace('<!--[[[CLOCK_THEME]]]-->', $theme, $template);
-                $template = str_replace('<!--[[[OFFSET]]]-->', $this->getOption('offset', 0), $template);
+                $data['clockTheme'] = $theme;
+                $data['offset'] = $this->getOption('offset', 0);
 
                 // After body content
-                $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('jquery-1.11.1.min.js') . '"></script>';
-                $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('moment.js') . '"></script>';
+                $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
+                $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/moment.js') . '"></script>';
 
                 // Replace the After body Content
-                $template = str_replace('<!--[[[JAVASCRIPTCONTENT]]]-->', $javaScriptContent, $template);
+                $data['javaScript'] = $javaScriptContent;
                 break;
 
             case 2:
@@ -175,8 +176,8 @@ class Clock extends Module
                 $data['javaScript'] = $javaScriptContent;
 
                 // Add our fonts.css file
-                $headContent = '<link href = "' . $this->getResourceUrl('fonts.css') . '" rel = "stylesheet" media = "screen" > ';
-                $headContent .= '<style type = "text/css" > ' . file_get_contents('theme/default/css/client.css') . ' </style > ';
+                $headContent  = '<link href = "' . $this->getResourceUrl('fonts.css') . '" rel="stylesheet" media="screen">';
+                $headContent .= '<style type = "text/css" > ' . file_get_contents(Theme::uri('css/client.css', true)) . '</style>';
 
                 $data['head'] = $headContent;
 
@@ -184,18 +185,18 @@ class Clock extends Module
 
             case 3:
                 // Flip Clock
-                $template = file_get_contents('modules / theme / HtmlTemplateForFlipClock . html');
+                $template = 'clock-get-resource-flip';
 
                 // Head Content (CSS for flip clock)
-                $template = str_replace(' < !--[[[HEADCONTENT]]]-->', '<style type = "text/css" > ' . file_get_contents('modules / preview / vendor / flipclock . css') . ' </style > ', $template);
-                $template = str_replace('<!--[[[OFFSET]]]-->', $this->GetOption('offset', 0), $template);
+                $data['head'] = '<style type="text/css">' . file_get_contents('modules/vendor/flipclock.css') . ' </style>';
+                $data['offset'] = $this->GetOption('offset', 0);
 
                 // After body content
-                $javaScriptContent  = ' < script type = "text/javascript" src = "' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js" ></script > ';
-                $javaScriptContent .= '<script type = "text/javascript" src = "' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'flipclock.min.js" ></script > ';
+                $javaScriptContent  = '<script type = "text/javascript" src = "' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '" ></script > ';
+                $javaScriptContent .= '<script type = "text/javascript" src = "' . $this->getResourceUrl('vendor/flipclock.min.js') . '" ></script > ';
 
                 // Replace the After body Content
-                $template = str_replace('<!--[[[JAVASCRIPTCONTENT]]]-->', $javaScriptContent, $template);
+                $data['javaScript'] = $javaScriptContent;
 
                 break;
         }
