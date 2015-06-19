@@ -41,9 +41,9 @@ class Module
     public $previewEnabled;
     public $assignable;
     public $renderAs;
-    public $settings;
+    public $settings = [];
     public $schemaVersion;
-    public $viewPath;
+    public $viewPath = '../modules';
 
     public function __toString()
     {
@@ -70,9 +70,9 @@ class Module
     {
         $this->moduleId = PDOConnect::insert('
           INSERT INTO `module` (`Module`, `Name`, `Enabled`, `RegionSpecific`, `Description`,
-                `ImageUri`, `SchemaVersion`, `ValidExtensions`, `PreviewEnabled`, `assignable`, `render_as`, `settings`)
+                `ImageUri`, `SchemaVersion`, `ValidExtensions`, `PreviewEnabled`, `assignable`, `render_as`, `settings`, `viewPath`)
             VALUES (:module, :name, :enabled, :region_specific, :description,
-                :image_uri, :schema_version, :valid_extensions, :preview_enabled, :assignable, :render_as, :settings)
+                :image_uri, :schema_version, :valid_extensions, :preview_enabled, :assignable, :render_as, :settings, :viewPath)
         ', [
             'module' => $this->type,
             'name' => $this->name,
@@ -85,7 +85,8 @@ class Module
             'preview_enabled' => $this->previewEnabled,
             'assignable' => $this->assignable,
             'render_as' => $this->renderAs,
-            'settings' => json_encode($this->settings)
+            'settings' => json_encode($this->settings),
+            'viewPath' => $this->viewPath
         ]);
     }
 

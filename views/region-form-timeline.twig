@@ -21,6 +21,8 @@
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
 {% endblock %}
 
+{% block callBack %}loadTimeLineCallback{% endblock %}
+
 {% block formHtml %}
     {# TODO: We will need to design a playlist selector #}
     {% set playlist = region.playlists[0] %}
@@ -82,7 +84,7 @@
                                             <h3>{% trans %}{{ name }} ({{ duration }} seconds){% endtrans %}</h3>
                                         </div>
                                         <div class="timelineMediaPreview">
-
+                                            {{ widget.module.hoverPreview()|raw }}
                                         </div>
                                         <div class="timelineMediaOutTransition">
                                             <span>{{ widget.module.getTransition("out") }}</span>

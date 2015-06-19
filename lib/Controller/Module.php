@@ -160,7 +160,7 @@ class Module extends Base
         $module->installFiles();
 
         // Get the settings (may throw an exception)
-        $module->getModule()->settings = json_encode($module->settings());
+        $module->settings();
 
         // Save
         $module->getModule()->save();
@@ -169,7 +169,7 @@ class Module extends Base
         $this->getState()->hydrate([
             'message' => sprintf(__('Edited %s'), $module->getModule()->name),
             'id' => $module->getModule()->moduleId,
-            'data' => [$module]
+            'data' => [$module->getModule()]
         ]);
     }
 

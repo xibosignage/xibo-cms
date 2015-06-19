@@ -228,7 +228,9 @@ function refreshPreview(regionId) {
     preview.SetSequence(preview.seq);
 }
 
-var LoadTimeLineCallback = function() {
+var loadTimeLineCallback = function(dialog) {
+
+    dialog.addClass("modal-big");
 
     refreshPreview($('#timelineControl').attr('regionid'));
 

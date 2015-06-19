@@ -372,7 +372,7 @@ class ModuleFactory
                 $module->schemaVersion = Sanitize::int($row['SchemaVersion']);
                 $module->viewPath = Sanitize::string($row['viewPath']);
 
-                $settings = Sanitize::string($row['settings']);
+                $settings = $row['settings'];
                 $module->settings = ($settings == '') ? array() : json_decode($settings, true);
 
                 $entries[] = $module;

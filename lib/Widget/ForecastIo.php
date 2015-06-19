@@ -28,6 +28,7 @@ use Xibo\Helper\Cache;
 use Xibo\Helper\Config;
 use Xibo\Helper\Date;
 use Xibo\Helper\Log;
+use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 use Xibo\Helper\Translate;
 
@@ -82,18 +83,7 @@ class ForecastIo extends Module
      */
     public function settingsForm()
     {
-        // Output any form fields (formatted via a Theme file)
-        // These are appended to the bottom of the "Edit" form in Module Administration
-
-        // API Key
-        $formFields[] = Form::AddText('apiKey', __('API Key'), $this->GetSetting('apiKey'),
-            __('Enter your API Key from Forecast IO.'), 'a', 'required');
-
-        // Cache Period
-        $formFields[] = Form::AddText('cachePeriod', __('Cache Period'), $this->GetSetting('cachePeriod', 300),
-            __('Enter the number of seconds you would like to cache long/lat requests for. Forecast IO offers 1000 requests a day.'), 'c', 'required');
-
-        return $formFields;
+        return 'forecastio-form-settings';
     }
 
     /**
@@ -102,16 +92,13 @@ class ForecastIo extends Module
     public function settings()
     {
         // Process any module settings you asked for.
-        $apiKey = \Kit::GetParam('apiKey', _POST, _STRING, '');
+        $apiKey = Sanitize::getString('apiKey');
 
         if ($apiKey == '')
-            throw new InvalidArgumentException(__('Missing API Key'));
+            throw new \InvalidArgumentException(__('Missing API Key'));
 
         $this->module->settings['apiKey'] = $apiKey;
-        $this->module->settings['cachePeriod'] = \Kit::GetParam('cachePeriod', _POST, _INT, 300);
-
-        // Return an array of the processed settings.
-        return $this->module->settings;
+        $this->module->settings['cachePeriod'] = Sanitize::getInt('cachePeriod', 300);
     }
 
     /**

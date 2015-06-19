@@ -28,6 +28,7 @@ use Xibo\Factory\MediaFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
+use Xibo\Helper\Theme;
 
 
 abstract class Module implements ModuleInterface
@@ -336,11 +337,11 @@ abstract class Module implements ModuleInterface
      * Default code for the hover preview
      * @return string
      */
-    public function HoverPreview()
+    public function hoverPreview()
     {
         // Default Hover window contains a thumbnail, media type and duration
         $output = '<div class="well">';
-        $output .= '<div class="preview-module-image"><img alt="' . __($this->module->name) . ' thumbnail" src="theme/default/img/forms/' . $this->module->type . '.gif" /></div>';
+        $output .= '<div class="preview-module-image"><img alt="' . __($this->module->name) . ' thumbnail" src="' . Theme::uri('img/forms/' . $this->module->type . '.gif') . '" /></div>';
         $output .= '<div class="info">';
         $output .= '    <ul>';
         $output .= '    <li>' . __('Type') . ': ' . $this->module->name . '</li>';
@@ -480,7 +481,7 @@ abstract class Module implements ModuleInterface
      */
     public function settings()
     {
-        return array();
+
     }
 
     /**

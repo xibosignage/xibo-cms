@@ -372,9 +372,7 @@ function XiboFormRender(formUrl, data) {
             if (response.success) {
 
                 // Set the dialog HTML to be the response HTML
-                var message = response.html;
-
-                var dialogTitle = "Xibo";
+                var dialogTitle = "";
 
                 // Is there a title for the dialog?
                 if (response.dialogTitle != undefined && response.dialogTitle != "") {
@@ -390,10 +388,6 @@ function XiboFormRender(formUrl, data) {
                         title: dialogTitle,
                         animate: false
                     }).attr("id", id);
-
-                if (response.dialogClass != '') {
-                    dialog.addClass(response.dialogClass);
-                }
 
                 // Store the extra
                 dialog.data("extra", response.extra);
@@ -431,6 +425,8 @@ function XiboFormRender(formUrl, data) {
                                 }
                                 else
                                     eval(value);
+
+                                return false;
                             });
 
                             footer.append(extrabutton);
