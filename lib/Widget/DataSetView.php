@@ -27,6 +27,7 @@ use Kit;
 use Media;
 use Widget\Module;
 use Xibo\Helper\Form;
+use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 
 class DataSetView extends Module
@@ -331,17 +332,17 @@ class DataSetView extends Module
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
             'rowsPerPage' => $this->GetOption('rowsPerPage'),
-            'previewWidth' => \Kit::GetParam('width', _GET, _DOUBLE, 0),
-            'previewHeight' => \Kit::GetParam('height', _GET, _DOUBLE, 0),
-            'scaleOverride' => \Kit::GetParam('scale_override', _GET, _DOUBLE, 0)
+            'previewWidth' => Sanitize::getDouble('width', 0),
+            'previewHeight' => Sanitize::getDouble('height', 0),
+            'scaleOverride' => Sanitize::getDouble('scale_override', 0)
         );
 
         // Add our fonts.css file
-        $headContent = '<link href="' . (($isPreview) ? 'modules/preview/' : '') . 'fonts.css" rel="stylesheet" media="screen">';
-        $headContent .= '<style type="text/css">' . file_get_contents(Theme::ItemPath('css/client.css')) . '</style>';
+        $headContent = '<link href="' . $this->getResourceUrl('fonts.css') . ' rel="stylesheet" media="screen">';
+        $headContent .= '<style type="text/css">' . file_get_contents(Theme::uri('css/client.css', true)) . '</style>';
         $headContent .= '<style type="text/css">' . $styleSheet . '</style>';
 
-        $template = str_replace('<!--[[[HEADCONTENT]]]-->', $headContent, $template);
+        $data['head'] = $headContent;
 
         $template = str_replace('<!--[[[BODYCONTENT]]]-->', $this->DataSetTableHtml($displayId, $isPreview), $template);
 
@@ -359,7 +360,7 @@ class DataSetView extends Module
         $javaScriptContent .= '</script>';
 
         // Replace the Head Content with our generated javascript
-        $template = str_replace('<!--[[[JAVASCRIPTCONTENT]]]-->', $javaScriptContent, $template);
+        $data['javaScript'] = $javaScriptContent;
 
         return $template;
     }

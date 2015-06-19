@@ -741,10 +741,10 @@ class ForecastIo extends Module
 
         // Add our fonts.css file
         $isPreview = (\Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
-        $headContent .= '<link href="' . (($isPreview) ? 'modules/preview/' : '') . 'fonts.css" rel="stylesheet" media="screen">';
-        $headContent .= '<style type="text/css">' . file_get_contents(Theme::ItemPath('css/client.css')) . '</style>';
+        $headContent .= '<link href="' . $this->getResourceUrl('fonts.css') . ' rel="stylesheet" media="screen">';
+        $headContent .= '<style type="text/css">' . file_get_contents(Theme::uri('css/client.css', true)) . '</style>';
 
-        $template = str_replace('<!--[[[HEADCONTENT]]]-->', $headContent, $template);
+        $data['head'] = $headContent;
 
         // Make some body content
         $body = $this->getRawNode('currentTemplate', null);
@@ -771,15 +771,15 @@ class ForecastIo extends Module
 
         // JavaScript to control the size (override the original width and height so that the widget gets blown up )
         $options = array(
-            'previewWidth' => \Kit::GetParam('width', _GET, _DOUBLE, 0),
-            'previewHeight' => \Kit::GetParam('height', _GET, _DOUBLE, 0),
+            'previewWidth' => Sanitize::getDouble('width', 0),
+            'previewHeight' => Sanitize::getDouble('height', 0),
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
-            'scaleOverride' => \Kit::GetParam('scale_override', _GET, _DOUBLE, 0)
+            'scaleOverride' => Sanitize::getDouble('scale_override', 0)
         );
 
-        $javaScriptContent = '<script src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
-        $javaScriptContent .= '<script src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-layout-scaler.js"></script>';
+        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
         $javaScriptContent .= '<script>
 
             var options = ' . json_encode($options) . '
@@ -790,7 +790,7 @@ class ForecastIo extends Module
         </script>';
 
         // Replace the After body Content
-        $template = str_replace('<!--[[[JAVASCRIPTCONTENT]]]-->', $javaScriptContent, $template);
+        $data['javaScript'] = $javaScriptContent;
 
         // Return that content.
         return $template;

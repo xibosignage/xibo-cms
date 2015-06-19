@@ -20,11 +20,8 @@
  */
 namespace Xibo\Widget;
 
-use Exception;
-use Kit;
-use Media;
-use Widget\Module;
-use Xibo\Helper\Form;
+use Xibo\Factory\MediaFactory;
+use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 
 class Embedded extends Module
@@ -34,168 +31,47 @@ class Embedded extends Module
      */
     public function InstallFiles()
     {
-        $media = new Media();
-        $media->addModuleFile('modules/preview/vendor/jquery-1.11.1.min.js');
-        $media->addModuleFile('modules/preview/xibo-layout-scaler.js');
-    }
-
-    /**
-     * Return the Add Form as HTML
-     */
-    public function AddForm()
-    {
-        $response = $this->getState();
-        // Configure form
-        $this->configureForm('AddMedia');
-
-        $formFields = array();
-
-        $formFields[] = Form::AddText('name', __('Name'), NULL,
-            __('An optional name for this media'), 'n');
-
-        $formFields[] = Form::AddNumber('duration', __('Duration'), $this->getDuration(),
-            __('The duration in seconds this item should be displayed'), 'd', 'required');
-
-        $formFields[] = Form::AddCheckbox('transparency', __('Background transparent?'),
-            NULL, __('Should the HTML be shown with a transparent background. Not current available on the Windows Display Client.'),
-            't');
-
-        $formFields[] = Form::AddCheckbox('scaleContent', __('Scale Content?'),
-            $this->GetOption('scaleContent'), __('Should the embedded content be scaled along with the layout?'),
-            's');
-
-        $formFields[] = Form::AddMultiText('embedHtml', NULL, NULL,
-            __('HTML to Embed'), 'h', 10);
-
-        $formFields[] = Form::AddMultiText('embedStyle', NULL, '
-<style type="text/css">
-
-</style>',
-            __('Custom Style Sheets'), 'h', 10);
-
-
-        $formFields[] = Form::AddMultiText('embedScript', NULL, '
-<script type="text/javascript">
-function EmbedInit()
-{
-    // Init will be called when this page is loaded in the client.
-
-    return;
-}
-</script>',
-            __('HEAD content to Embed (including script tags)'), 'h', 10);
-
-        Theme::Set('form_fields', $formFields);
-
-        $response->html = Theme::RenderReturn('form_render');
-        $this->configureFormButtons($response);
-
-        return $response;
-    }
-
-    /**
-     * Return the Edit Form as HTML
-     */
-    public function EditForm()
-    {
-        $response = $this->getState();
-
-        // Edit calls are the same as add calls, except you will to check the user has permissions to do the edit
-        if (!$this->auth->edit)
-            throw new Exception(__('You do not have permission to edit this widget.'));
-
-        // Configure the form
-        $this->configureForm('EditMedia');
-
-        $formFields = array();
-        $formFields[] = Form::AddText('name', __('Name'), $this->GetOption('name'),
-            __('An optional name for this media'), 'n');
-
-        $formFields[] = Form::AddNumber('duration', __('Duration'), $this->getDuration(),
-            __('The duration in seconds this item should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
-
-        $formFields[] = Form::AddCheckbox('transparency', __('Background transparent?'),
-            $this->GetOption('transparency'), __('Should the HTML be shown with a transparent background. Not current available on the Windows Display Client.'),
-            't');
-
-        $formFields[] = Form::AddCheckbox('scaleContent', __('Scale Content?'),
-            $this->GetOption('scaleContent'), __('Should the embedded content be scaled along with the layout?'),
-            's');
-
-        $formFields[] = Form::AddMultiText('embedHtml', NULL, $this->getRawNode('embedHtml', null),
-            __('HTML to Embed'), 'h', 10);
-
-        $formFields[] = Form::AddMultiText('embedStyle', NULL, $this->getRawNode('embedStyle', null),
-            __('Custom Style Sheets'), 'h', 10);
-
-        $formFields[] = Form::AddMultiText('embedScript', NULL, $this->getRawNode('embedScript', null),
-            __('HEAD content to Embed (including script tags)'), 'h', 10);
-
-        Theme::Set('form_fields', $formFields);
-
-        $response->html = Theme::RenderReturn('form_render');;
-        $this->configureFormButtons($response);
-        $this->response->AddButton(__('Apply'), 'XiboDialogApply("#ModuleForm")');
-
-        return $response;
+        MediaFactory::createModuleFile('modules/preview/vendor/jquery-1.11.1.min.js')->save();
+        MediaFactory::createModuleFile('modules/preview/xibo-layout-scaler.js')->save();
     }
 
     /**
      * Add Media to the Database
      */
-    public function AddMedia()
+    public function add()
     {
-        $response = $this->getState();
-
         // Required Attributes
-        $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration(), false));
-        $this->SetOption('transparency', \Kit::GetParam('transparency', _POST, _CHECKBOX));
-        $this->SetOption('name', \Kit::GetParam('name', _POST, _STRING));
-        $this->SetOption('scaleContent', \Kit::GetParam('scaleContent', _POST, _CHECKBOX, 'off'));
-        $this->setRawNode('embedHtml', \Kit::GetParam('embedHtml', _POST, _HTMLSTRING));
-        $this->setRawNode('embedScript', \Kit::GetParam('embedScript', _POST, _HTMLSTRING));
-        $this->setRawNode('embedStyle', \Kit::GetParam('embedStyle', _POST, _HTMLSTRING));
+        $this->setDuration(Sanitize::getInt('duration'));
+        $this->SetOption('name', Sanitize::getString('name'));
+        $this->SetOption('transparency', Sanitize::getCheckbox('transparency'));
+        $this->SetOption('scaleContent', Sanitize::getCheckbox('scaleContent'));
+        $this->setRawNode('embedHtml', Sanitize::getParam('embedHtml', null));
+        $this->setRawNode('embedScript', Sanitize::getParam('embedScript', null));
+        $this->setRawNode('embedStyle', Sanitize::getParam('embedStyle', null));
 
         // Save the widget
         $this->saveWidget();
-
-        // Load form
-        $response->loadForm = true;
-        $response->loadFormUri = $this->getTimelineLink();
-
-        return $response;
     }
 
     /**
      * Edit Media in the Database
      */
-    public function EditMedia()
+    public function edit()
     {
-        $response = $this->getState();
-        if (!$this->auth->edit)
-            throw new Exception(__('You do not have permission to edit this widget.'));
-
-        $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration(), false));
-        $this->SetOption('transparency', \Kit::GetParam('transparency', _POST, _CHECKBOX));
-        $this->SetOption('name', \Kit::GetParam('name', _POST, _STRING));
-        $this->SetOption('scaleContent', \Kit::GetParam('scaleContent', _POST, _CHECKBOX, 'off'));
-        $this->setRawNode('embedHtml', \Kit::GetParam('embedHtml', _POST, _HTMLSTRING));
-        $this->setRawNode('embedScript', \Kit::GetParam('embedScript', _POST, _HTMLSTRING));
-        $this->setRawNode('embedStyle', \Kit::GetParam('embedStyle', _POST, _HTMLSTRING));
+        $this->setDuration(Sanitize::getInt('duration'));
+        $this->SetOption('name', Sanitize::getString('name'));
+        $this->SetOption('transparency', Sanitize::getCheckbox('transparency'));
+        $this->SetOption('scaleContent', Sanitize::getCheckbox('scaleContent'));
+        $this->setRawNode('embedHtml', Sanitize::getParam('embedHtml', null));
+        $this->setRawNode('embedScript', Sanitize::getParam('embedScript', null));
+        $this->setRawNode('embedStyle', Sanitize::getParam('embedStyle', null));
 
         // Save the widget
         $this->saveWidget();
-
-        // Load form
-        $response->loadForm = true;
-        $response->loadFormUri = $this->getTimelineLink();
-
-        return $response;
     }
 
-    public function IsValid()
+    public function isValid()
     {
-        $this->response->callBack = 'refreshPreview("' . $this->regionid . '")';
         // Can't be sure because the client does the rendering
         return 2;
     }
@@ -206,24 +82,21 @@ function EmbedInit()
      * @param integer $displayId If this comes from a real client, this will be the display id.
      * @return mixed
      */
-    public function GetResource($displayId = 0)
+    public function getResource($displayId = 0)
     {
         // Behave exactly like the client.
-        $isPreview = (\Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
-
-        // Load in the template
-        $template = file_get_contents('modules/preview/HtmlTemplate.html');
+        $data = [];
+        $isPreview = (Sanitize::getCheckbox('preview') == 1);
 
         // Replace the View Port Width?
-        if (isset($_GET['preview']))
-            $template = str_replace('[[ViewPortWidth]]', $this->region->width, $template);
+        $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
 
         // Embedded Html
         $html = $this->parseLibraryReferences($isPreview, $this->getRawNode('embedHtml', null));
 
         // Include some vendor items
-        $javaScriptContent = '<script src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
-        $javaScriptContent .= '<script src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-layout-scaler.js"></script>';
+        $javaScriptContent  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
 
         // Get the Script
         $javaScriptContent .= $this->parseLibraryReferences($isPreview, $this->getRawNode('embedScript', null));
@@ -235,11 +108,10 @@ function EmbedInit()
         $options = array(
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
-            'previewWidth' => \Kit::GetParam('width', _GET, _DOUBLE, 0),
-            'previewHeight' => \Kit::GetParam('height', _GET, _DOUBLE, 0),
-            'scaleOverride' => \Kit::GetParam('scale_override', _GET, _DOUBLE, 0)
+            'previewWidth' => Sanitize::getDouble('width', 0),
+            'previewHeight' => Sanitize::getDouble('height', 0),
+            'scaleOverride' => Sanitize::getDouble('scale_override', 0)
         );
-
 
         // Add an options variable with some useful information for scaling
         $javaScriptContent .= '<script type="text/javascript">';
@@ -257,22 +129,21 @@ function EmbedInit()
         }
 
         // Add our fonts.css file
-        $headContent = '<link href="' . (($isPreview) ? 'modules/preview/' : '') . 'fonts.css" rel="stylesheet" media="screen">';
-        $headContent .= '<style type="text/css">' . file_get_contents(Theme::ItemPath('css/client.css')) . '</style>';
+        $headContent = '<link href="' . $this->getResourceUrl('fonts.css') . ' rel="stylesheet" media="screen">';
+        $headContent .= '<style type="text/css">' . file_get_contents(Theme::uri('css/client.css', true)) . '</style>';
 
-
-        $template = str_replace('<!--[[[HEADCONTENT]]]-->', $headContent, $template);
+        $data['head'] = $headContent;
 
         // Replace the Style Sheet Content with our generated Style Sheet
-        $template = str_replace('<!--[[[STYLESHEETCONTENT]]]-->', $styleSheetContent, $template);
+        $data['styleSheet'] = $styleSheetContent;
 
         // Replace the Head Content with our generated java script
-        $template = str_replace('<!--[[[JAVASCRIPTCONTENT]]]-->', $javaScriptContent, $template);
+        $data['javaScript'] = $javaScriptContent;
 
         // Replace the Body Content with our generated text
-        $template = str_replace('<!--[[[BODYCONTENT]]]-->', $html, $template);
+        $data['body'] = $html;
 
-        return $template;
+        return $this->renderTemplate($data);
     }
 
     /**
@@ -296,13 +167,13 @@ function EmbedInit()
                 continue;
 
             // Check that this mediaId exists and get some information about it
-            $entry = \Xibo\Factory\MediaFactory::query(null, array('mediaId' => $mediaId));
+            $entry = MediaFactory::query(null, array('mediaId' => $mediaId));
 
             if (count($entry) <= 0)
                 continue;
 
             // We have a valid mediaId to substitute
-            $replace = ($isPreview) ? 'index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $entry[0]->mediaId : $entry[0]->storedAs;
+            $replace = ($isPreview) ? $this->getApp()->urlFor('library.download', ['id' => $entry[0]->mediaId]) . '?preview=1' . $entry[0]->mediaId : $entry[0]->storedAs;
 
             // Substitute the replacement we have found (it might be '')
             $parsedContent = str_replace($sub, $replace, $parsedContent);

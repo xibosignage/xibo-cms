@@ -360,12 +360,12 @@ class WebPage extends Module
             'offsetTop' => intval($this->GetOption('offsetTop', 0)),
             'offsetLeft' => intval($this->GetOption('offsetLeft', 0)),
             'scale' => ($this->GetOption('scaling', 100) / 100),
-            'scaleOverride' => \Kit::GetParam('scale_override', _GET, _DOUBLE, 0)
+            'scaleOverride' => Sanitize::getDouble('scale_override', 0)
         );
 
         // Head Content
         $headContent = '<style>#iframe { border:0; }</style>';
-        $template = str_replace('<!--[[[HEADCONTENT]]]-->', $headContent, $template);
+        $data['head'] = $headContent;
 
         // Body content
         $output = '<iframe id="iframe" scrolling="no" frameborder="0" src="' . $url . '"></iframe>';

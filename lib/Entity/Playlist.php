@@ -111,13 +111,14 @@ class Playlist implements \JsonSerializable
      */
     public function getWidgetAt($index)
     {
-        foreach ($this->widgets as $widget) {
-            /* @var Widget $widget */
-            if ($widget->displayOrder == $index)
-                return $widget;
+        if ($index <= count($this->widgets)) {
+            $zeroBased = $index - 1;
+            if (isset($this->widgets[$zeroBased])) {
+                return $this->widgets[$zeroBased];
+            }
         }
 
-        throw new NotFoundException(sprintf(__('Widget not found at sequence %d'), $index));
+        throw new NotFoundException(sprintf(__('Widget not found at index %d'), $index));
     }
 
     /**
@@ -194,11 +195,15 @@ class Playlist implements \JsonSerializable
         else if ($this->hash != $this->hash())
             $this->update();
 
+        $i = 0;
         foreach ($this->widgets as $widget) {
             /* @var Widget $widget */
+            $i++;
 
             // Assert the playlistId
             $widget->playlistId = $this->playlistId;
+            // Assert the displayOrder
+            $widget->displayOrder = $i;
             $widget->save();
         }
 

@@ -930,9 +930,9 @@ class Twitter extends Module
             'itemsPerPage' => 1,
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
-            'previewWidth' => \Kit::GetParam('width', _GET, _DOUBLE, 0),
-            'previewHeight' => \Kit::GetParam('height', _GET, _DOUBLE, 0),
-            'scaleOverride' => \Kit::GetParam('scale_override', _GET, _DOUBLE, 0)
+            'previewWidth' => Sanitize::getDouble('width', 0),
+            'previewHeight' => Sanitize::getDouble('height', 0),
+            'scaleOverride' => Sanitize::getDouble('scale_override', 0)
         );
 
         // Replace the control meta with our data from twitter
@@ -954,12 +954,12 @@ class Twitter extends Module
         }
 
         // Add our fonts.css file
-        $headContent .= '<link href="' . (($isPreview) ? 'modules/preview/' : '') . 'fonts.css" rel="stylesheet" media="screen">';
+        $headContent .= '<link href="' . $this->getResourceUrl('fonts.css') . ' rel="stylesheet" media="screen">';
         $headContent .= '<link href="' . (($isPreview) ? 'modules/theme/twitter/' : '') . 'emoji.css" rel="stylesheet" media="screen">';
-        $headContent .= '<style type="text/css">' . file_get_contents(Theme::ItemPath('css/client.css')) . '</style>';
+        $headContent .= '<style type="text/css">' . file_get_contents(Theme::uri('css/client.css', true)) . '</style>';
 
         // Replace the Head Content with our generated javascript
-        $template = str_replace('<!--[[[HEADCONTENT]]]-->', $headContent, $template);
+        $data['head'] = $headContent;
 
         // Add some scripts to the JavaScript Content
         $javaScriptContent = '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
@@ -985,7 +985,7 @@ class Twitter extends Module
         $javaScriptContent .= '</script>';
 
         // Replace the Head Content with our generated javascript
-        $template = str_replace('<!--[[[JAVASCRIPTCONTENT]]]-->', $javaScriptContent, $template);
+        $data['javaScript'] = $javaScriptContent;
 
         // Replace the Body Content with our generated text
         $template = str_replace('<!--[[[BODYCONTENT]]]-->', '', $template);
