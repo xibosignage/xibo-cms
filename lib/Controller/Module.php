@@ -45,27 +45,27 @@ class Module extends Base
         // Do we have any modules to install?!
         if (Config::GetSetting('MODULE_CONFIG_LOCKED_CHECKB') != 'Checked') {
             // Get a list of matching files in the modules folder
-            $files = glob('modules/*.module.php');
-
-            $installed = [];
+            $files = glob('../modules/*.json');
 
             // Get a list of all currently installed modules
-            try {
-                $rows = PDOConnect::select("SELECT CONCAT('modules/', LOWER(Module), '.module.php') AS Module FROM `module`", []);
-                $installed = array();
+            $installed = [];
+            $data['modulesToInstall'] = [];
 
-                foreach ($rows as $row)
-                    $installed[] = $row['Module'];
-
-            } catch (\Exception $e) {
-                trigger_error(__('Cannot get installed modules'), E_USER_ERROR);
+            foreach (ModuleFactory::query() as $row) {
+                /* @var \Xibo\Entity\Module $row */
+                $installed[] = $row->type;
             }
 
             // Compare the two
-            $to_install = array_diff($files, $installed);
+            foreach ($files as $file) {
+                // Check to see if the module has already been installed
+                $fileName = explode('.', basename($file));
 
-            if (count($to_install) > 0) {
-                $data['modulesToInstall'] = $to_install;
+                if (in_array($fileName[0], $installed))
+                    continue;
+
+                // If not, open it up and get some information about it
+                $data['modulesToInstall'][] = json_decode(file_get_contents($file));
             }
         }
 
@@ -203,28 +203,39 @@ class Module extends Base
     }
 
     /**
-     * Install Module
-     * @param string $fileName
+     * @param string $name
      */
-    public function install($fileName)
+    public function installForm($name)
     {
-        Log::notice('Request to install Module: ' . $fileName);
+        if (!file_exists('../modules/' . $name . '.json'))
+            throw new \InvalidArgumentException(__('Invalid module'));
 
-        // Check that the file exists
-        if (!file_exists($fileName))
-            throw new \InvalidArgumentException(__('File does not exist'));
+        // Use the name to get details about this module.
+        $module = json_decode(file_get_contents('../modules/' . $name . '.json'));
 
-        // Make sure the file is in our list of expected module files
-        $files = glob('modules/*.module.php');
+        $this->getState()->template = 'module-form-install';
+        $this->getState()->setData([
+            'module' => $module,
+            'help' => Help::Link('Module', 'Install')
+        ]);
+    }
 
-        if (!in_array($fileName, $files))
-            throw new \InvalidArgumentException(__('Not a module file'));
+    /**
+     * Install Module
+     * @param string $name
+     */
+    public function install($name)
+    {
+        Log::notice('Request to install Module: ' . $name);
 
-        // Load the file
-        $type = str_replace('modules/', '', $fileName);
-        $type = str_replace('.module.php', '', $type);
+        if (!file_exists('../modules/' . $name . '.json'))
+            throw new \InvalidArgumentException(__('Invalid module'));
 
-        $module = ModuleFactory::create($type);
+        // Use the name to get details about this module.
+        $moduleDetails = json_decode(file_get_contents('../modules/' . $name . '.json'));
+
+        // All modules should be capable of autoload
+        $module = ModuleFactory::createForInstall($moduleDetails->class);
         $module->installOrUpdate();
 
         Log::notice('Module Installed: ' . $module->getModuleType());

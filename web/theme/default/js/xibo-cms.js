@@ -654,6 +654,9 @@ function XiboMultiSelectFormRender(button) {
                                     SystemMessageInline(response.message, footer.closest(".modal"));
                                 }
                             }
+                        },
+                        error: function(responseText) {
+                            SystemMessage(responseText, false);
                         }
                     });
                 },
@@ -791,6 +794,9 @@ function XiboFormSubmit(form) {
         success: function(xhr, textStatus, error) {
             
             XiboSubmitResponse(xhr, form);
+        },
+        error: function(xhr, textStatus, errorThrown) {
+            SystemMessage(xhr.responseText, false);
         }
     });
 
@@ -812,6 +818,11 @@ function XiboSubmitResponse(response, form) {
         response.keepOpen = true;
         response.refresh = false;
     }
+
+    // Check the refresh flag
+    var refresh = $(form).data("refresh");
+    if (refresh != undefined && refresh)
+        response.refresh = true;
 
     // Remove the apply flag
     $(form).data("apply", false);
@@ -1007,7 +1018,7 @@ function LoginBox(message) {
 /**
  * Displays the system message
  * @param {String} messageText
- * @param {Bool} success
+ * @param {boolean} success
  */
 function SystemMessage(messageText, success) {
 

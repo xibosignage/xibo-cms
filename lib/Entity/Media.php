@@ -53,7 +53,7 @@ class Media
     private $permissions = [];
 
     public $fileSize;
-    public $duration;
+    public $duration = 0;
     public $valid;
     public $moduleSystemFile = false;
     public $expires = 0;
@@ -158,8 +158,8 @@ class Media
         if ($this->mediaId == null || $this->mediaId == 0) {
             $this->add();
 
-            if (Config::GetSetting('MEDIA_DEFAULT') == 'public') {
-                $permission = PermissionFactory::createForEveryone('Mesdia', $this->mediaId, 1, 0, 0);
+            if ($this->mediaType != 'module' && Config::GetSetting('MEDIA_DEFAULT') == 'public') {
+                $permission = PermissionFactory::createForEveryone('Media', $this->mediaId, 1, 0, 0);
                 $permission->save();
             }
         }
@@ -222,15 +222,9 @@ class Media
 
     private function add()
     {
-        $libraryFolder = Config::GetSetting('LIBRARY_LOCATION');
-
-        // Work out the MD5 and File Size
-        $this->md5 = md5_file($libraryFolder . 'temp/' . $this->fileName);
-        $this->fileSize = filesize($libraryFolder . 'temp/' . $this->fileName);
-
         $this->mediaId = PDOConnect::insert('
-            INSERT INTO media (name, type, duration, originalFilename, userID, retired, moduleSystemFile, FileSize, MD5, expires)
-              VALUES (:name, :type, :duration, :originalFileName, :userId, :retired, :moduleSystemFile, :fileSize, :md5, :expires)
+            INSERT INTO media (name, type, duration, originalFilename, userID, retired, moduleSystemFile, expires)
+              VALUES (:name, :type, :duration, :originalFileName, :userId, :retired, :moduleSystemFile, :expires)
         ', [
             'name' => $this->name,
             'type' => $this->mediaType,
@@ -239,12 +233,18 @@ class Media
             'userId' => $this->ownerId,
             'retired' => $this->retired,
             'moduleSystemFile' => (($this->moduleSystemFile) ? 1 : 0),
-            'fileSize' => $this->fileSize,
-            'md5' => $this->md5,
             'expires' => $this->expires
         ]);
 
         $this->saveFile();
+
+        // Update the MD5 and storedAs to suit
+        PDOConnect::update('UPDATE `media` SET md5 = :md5, fileSize = :fileSize, storedAs = :storedAs WHERE mediaId = :mediaId', [
+            'fileSize' => $this->fileSize,
+            'md5' => $this->md5,
+            'storedAs' => $this->storedAs,
+            'mediaId' => $this->mediaId
+        ]);
     }
 
     private function edit()
@@ -305,17 +305,20 @@ class Media
                     throw new ConfigurationException(__('Problem moving uploaded file into the Library Folder'));
             }
 
+            // Set the storedAs
             $this->storedAs = $this->mediaId . '.' . $extension;
-            PDOConnect::update('UPDATE `media` SET storedAs = :storedAs WHERE mediaId = :mediaId', [
-                'storedAs' => $this->storedAs,
-                'mediaId' => $this->mediaId
-            ]);
         }
         else {
             // We have pre-defined where we want this to be stored
-            if (!@copy($this->fileName, $libraryFolder . $this->storedAs))
+            if (!@copy($this->fileName, $libraryFolder . $this->storedAs)) {
+                Log::error('Cannot move %s to %s', $this->fileName, $libraryFolder . $this->storedAs);
                 throw new ConfigurationException(__('Problem moving provided file into the Library Folder'));
+            }
         }
+
+        // Work out the MD5
+        $this->md5 = md5_file($libraryFolder . $this->storedAs);
+        $this->fileSize = filesize($libraryFolder . $this->storedAs);
     }
 
     private function deleteFile()

@@ -58,8 +58,39 @@ class Module
 
     public function save()
     {
-        $this->validate();
+        if ($this->moduleId == null || $this->moduleId == 0)
+            $this->add();
+        else
+            $this->edit();
 
+        $this->validate();
+    }
+
+    private function add()
+    {
+        $this->moduleId = PDOConnect::insert('
+          INSERT INTO `module` (`Module`, `Name`, `Enabled`, `RegionSpecific`, `Description`,
+                `ImageUri`, `SchemaVersion`, `ValidExtensions`, `PreviewEnabled`, `assignable`, `render_as`, `settings`)
+            VALUES (:module, :name, :enabled, :region_specific, :description,
+                :image_uri, :schema_version, :valid_extensions, :preview_enabled, :assignable, :render_as, :settings)
+        ', [
+            'module' => $this->type,
+            'name' => $this->name,
+            'enabled' => $this->enabled,
+            'region_specific' => $this->regionSpecific,
+            'description' => $this->description,
+            'image_uri' => $this->imageUri,
+            'schema_version' => $this->schemaVersion,
+            'valid_extensions' => $this->validExtensions,
+            'preview_enabled' => $this->previewEnabled,
+            'assignable' => $this->assignable,
+            'render_as' => $this->renderAs,
+            'settings' => json_encode($this->settings)
+        ]);
+    }
+
+    private function edit()
+    {
         $dbh = PDOConnect::init();
 
         $sth = $dbh->prepare('UPDATE module SET settings = :settings WHERE moduleid = :moduleId');

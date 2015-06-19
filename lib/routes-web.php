@@ -248,7 +248,8 @@ $app->get('/applications/form/add', '\Xibo\Controller\Applications:addForm')->na
 // module
 //
 $app->get('/module/view', '\Xibo\Controller\Module:displayPage')->name('module.view');
-$app->get('/module/install/:id', '\Xibo\Controller\Module:install')->name('module.install');
+$app->post('/module/install/:name', '\Xibo\Controller\Module:install')->name('module.install');
+$app->get('/module/form/install/:name', '\Xibo\Controller\Module:installForm')->name('module.install.form');
 $app->get('/module/form/verify', '\Xibo\Controller\Module:verifyForm')->name('module.verify.form');
 $app->get('/module/form/settings/:id', '\Xibo\Controller\Module:settingsForm')->name('module.settings.form');
 // Module functions

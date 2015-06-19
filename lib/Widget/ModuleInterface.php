@@ -50,9 +50,7 @@ interface ModuleInterface
      */
     public function installOrUpdate();
 
-    public function installModule($name, $description, $imageUri, $previewEnabled, $assignable, $settings);
-
-    public function upgradeModule($name, $description, $imageUri, $previewEnabled, $assignable, $settings);
+    public function installModule();
 
     public function settings();
 }

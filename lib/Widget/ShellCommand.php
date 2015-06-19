@@ -20,137 +20,48 @@
  */
 namespace Xibo\Widget;
 
-use Exception;
 use InvalidArgumentException;
-use Widget\Module;
-use Xibo\Helper\Form;
-use Xibo\Helper\Theme;
+use Xibo\Helper\Sanitize;
 
 class ShellCommand extends Module
 {
-    /**
-     * Return the Add Form as HTML
-     */
-    public function AddForm()
+    public function validate()
     {
-        $response = $this->getState();
-
-        // Configure form
-        $this->configureForm('AddMedia');
-
-        $formFields = array();
-
-        $formFields[] = Form::AddText('windowsCommand', __('Windows Command'), NULL,
-            __('Enter a Windows Command Line compatible command'), 'w');
-
-        $formFields[] = Form::AddText('linuxCommand', __('Android / Linux Command'), NULL,
-            __('Enter an Android / Linux Command Line compatible command'), 'l');
-
-        Theme::Set('form_fields', $formFields);
-
-        $response->html = Theme::RenderReturn('form_render');
-        $this->configureFormButtons($response);
-        $response->dialogTitle = __('Add Shell Command');
-
-        return $response;
-    }
-
-    /**
-     * Return the Edit Form as HTML
-     */
-    public function EditForm()
-    {
-        $response = $this->getState();
-
-        // Edit calls are the same as add calls, except you will to check the user has permissions to do the edit
-        if (!$this->auth->edit)
-            throw new Exception(__('You do not have permission to edit this widget.'));
-
-        // Configure the form
-        $this->configureForm('EditMedia');
-
-        $formFields = array();
-
-        $formFields[] = Form::AddText('windowsCommand', __('Windows Command'), htmlentities(urldecode($this->GetOption('windowsCommand'))),
-            __('Enter a Windows Command Line compatible command'), 'w');
-
-        $formFields[] = Form::AddText('linuxCommand', __('Android / Linux Command'), htmlentities(urldecode($this->GetOption('linuxCommand'))),
-            __('Enter an Android / Linux Command Line compatible command'), 'l');
-
-        Theme::Set('form_fields', $formFields);
-
-        $response->html = Theme::RenderReturn('form_render');
-        $this->configureFormButtons($response);
-        $response->dialogTitle = __('Edit Shell Command');
-
-        return $response;
-    }
-
-    /**
-     * Add Media to the Database
-     */
-    public function AddMedia()
-    {
-        $response = $this->getState();
-
-        $windowsCommand = \Xibo\Helper\Sanitize::getString('windowsCommand');
-        $linuxCommand = \Xibo\Helper\Sanitize::getString('linuxCommand');
-
-        if ($windowsCommand == '' && $linuxCommand == '')
+        if ($this->getOption('windowsCommand') == '' && $this->getOption('linuxCommand') == '')
             throw new InvalidArgumentException(__('You must enter a command'));
+    }
 
+    /**
+     * Add Media
+     */
+    public function add()
+    {
         // Any Options (we need to encode shell commands, as they sit on the options rather than the raw
         $this->setDuration(1);
-        $this->SetOption('windowsCommand', urlencode($windowsCommand));
-        $this->SetOption('linuxCommand', urlencode($linuxCommand));
+        $this->SetOption('windowsCommand', urlencode(Sanitize::getString('windowsCommand')));
+        $this->SetOption('linuxCommand', urlencode(Sanitize::getString('linuxCommand')));
 
         // Save the widget
+        $this->validate();
         $this->saveWidget();
-
-        // Load form
-        $response->loadForm = true;
-        $response->loadFormUri = $this->getTimelineLink();
-
-        return $response;
     }
 
     /**
-     * Edit Media in the Database
-     * @return
+     * Edit Media
      */
-    public function EditMedia()
+    public function edit()
     {
-        $response = $this->getState();
-
-        // Edit calls are the same as add calls, except you will to check the user has permissions to do the edit
-        if (!$this->auth->edit)
-            throw new Exception(__('You do not have permission to edit this widget.'));
-
-        // Configure the form
-        $this->configureForm('EditMedia');
-
-        $windowsCommand = \Xibo\Helper\Sanitize::getString('windowsCommand');
-        $linuxCommand = \Xibo\Helper\Sanitize::getString('linuxCommand');
-
-        if ($windowsCommand == '' && $linuxCommand == '')
-            throw new InvalidArgumentException(__('You must enter a command'));
-
-        // Any Options
+        // Any Options (we need to encode shell commands, as they sit on the options rather than the raw
         $this->setDuration(1);
-        $this->SetOption('windowsCommand', urlencode($windowsCommand));
-        $this->SetOption('linuxCommand', urlencode($linuxCommand));
+        $this->SetOption('windowsCommand', urlencode(Sanitize::getString('windowsCommand')));
+        $this->SetOption('linuxCommand', urlencode(Sanitize::getString('linuxCommand')));
 
         // Save the widget
+        $this->validate();
         $this->saveWidget();
-
-        // Load an edit form
-        $response->loadForm = true;
-        $response->loadFormUri = $this->getTimelineLink();
-
-        return $response;
     }
 
-    public function Preview($width, $height, $scaleOverride = 0)
+    public function preview($width, $height, $scaleOverride = 0)
     {
         if ($this->module->previewEnabled == 0)
             return parent::Preview($width, $height);
@@ -165,16 +76,14 @@ class ShellCommand extends Module
         return $preview;
     }
 
-    public function HoverPreview()
+    public function hoverPreview()
     {
         return $this->Preview(0, 0);
     }
 
-    public function IsValid()
+    public function isValid()
     {
         // Client dependant
         return 2;
     }
 }
-
-?>

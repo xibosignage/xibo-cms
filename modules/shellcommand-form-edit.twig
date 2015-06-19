@@ -1,0 +1,35 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+$formFields[] = Form::AddText('windowsCommand', __('Windows Command'), NULL,
+            __('Enter a Windows Command Line compatible command'), 'w');
+
+        $formFields[] = Form::AddText('linuxCommand', __('Android / Linux Command'), NULL,
+            __('Enter an Android / Linux Command Line compatible command'), 'l');
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Add Shell Command" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Save" %}, $("#shellCommandAddForm").submit()
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="shellCommandAddForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
+
+            </form>
+        </div>
+    </div>
+{% endblock %}

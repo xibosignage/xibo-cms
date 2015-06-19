@@ -439,105 +439,32 @@ abstract class Module implements ModuleInterface
 
     }
 
-    public function installModule($name, $description, $imageUri, $previewEnabled, $assignable, $settings)
+    /**
+     * Validates and Installs a Module
+     * @throws \InvalidArgumentException
+     */
+    public function installModule()
     {
+        Log::notice('Request to install module with name: ' . $this->module->name, 'module', 'InstallModule');
 
-        Log::notice('Request to install module with name: ' . $name, 'module', 'InstallModule');
+        // Validate some things.
+        if ($this->module->type == '')
+            throw new \InvalidArgumentException(__('Module has not set the module type'));
 
-        try {
-            // Validate some things.
-            if ($this->type == '')
-                throw new Exception(__('Module has not set the module type'));
+        if ($this->module->name == '')
+            throw new \InvalidArgumentException(__('Module has not set the module name'));
 
-            if ($name == '')
-                throw new Exception(__('Module has not set the module name'));
+        if ($this->module->description == '')
+            throw new \InvalidArgumentException(__('Module has not set the description'));
 
-            if ($description == '')
-                throw new Exception(__('Module has not set the description'));
+        if (!is_numeric($this->module->previewEnabled))
+            throw new \InvalidArgumentException(__('Preview Enabled variable must be a number'));
 
-            if (!is_numeric($previewEnabled))
-                throw new Exception(__('Preview Enabled variable must be a number'));
+        if (!is_numeric($this->module->assignable))
+            throw new \InvalidArgumentException(__('Assignable variable must be a number'));
 
-            if (!is_numeric($assignable))
-                throw new Exception(__('Assignable variable must be a number'));
-
-            $dbh = \Xibo\Storage\PDOConnect::init();
-
-            $sth = $dbh->prepare('
-                    INSERT INTO `module` (`Module`, `Name`, `Enabled`, `RegionSpecific`, `Description`,
-                        `ImageUri`, `SchemaVersion`, `ValidExtensions`, `PreviewEnabled`, `assignable`, `render_as`, `settings`)
-                    VALUES (:module, :name, :enabled, :region_specific, :description,
-                        :image_uri, :schema_version, :valid_extensions, :preview_enabled, :assignable, :render_as, :settings);
-                ');
-
-            Log::notice('Executing SQL', 'module', 'InstallModule');
-
-            $sth->execute(array(
-                'module' => $this->module->type,
-                'name' => $name,
-                'enabled' => 1,
-                'region_specific' => 1,
-                'description' => $description,
-                'image_uri' => $imageUri,
-                'schema_version' => $this->codeSchemaVersion,
-                'valid_extensions' => '',
-                'preview_enabled' => $previewEnabled,
-                'assignable' => $assignable,
-                'render_as' => 'html',
-                'settings' => json_encode($settings)
-            ));
-        } catch (Exception $e) {
-            Log::error($e->getMessage());
-
-            throw new Exception(__('Unable to install module. Please check the Error Log'));
-        }
-    }
-
-    public function upgradeModule($name, $description, $imageUri, $previewEnabled, $assignable, $settings)
-    {
-
-        try {
-            // Validate some things.
-            if ($this->module->moduleId == '')
-                throw new Exception(__('This module does not exist - should you have called Install?'));
-
-            if ($name == '')
-                throw new Exception(__('Module has not set the module name'));
-
-            if ($description == '')
-                throw new Exception(__('Module has not set the description'));
-
-            if (!is_numeric($previewEnabled))
-                throw new Exception(__('Preview Enabled variable must be a number'));
-
-            if (!is_numeric($assignable))
-                throw new Exception(__('Assignable variable must be a number'));
-
-            $dbh = \Xibo\Storage\PDOConnect::init();
-
-            $sth = $dbh->prepare('
-                    UPDATE `module` SET `Name` = :name, `Description` = :description,
-                        `ImageUri` = :image_uri, `SchemaVersion` = :schema_version, `PreviewEnabled` = :preview_enabled,
-                        `assignable` = :assignable, `settings` = :settings
-                     WHERE ModuleID = :module_id
-                ');
-
-            $sth->execute(array(
-                'name' => $name,
-                'description' => $description,
-                'image_uri' => $imageUri,
-                'schema_version' => $this->codeSchemaVersion,
-                'preview_enabled' => $previewEnabled,
-                'assignable' => $assignable,
-                'settings' => $settings,
-                'module_id' => $this->module->moduleId
-            ));
-        } catch (Exception $e) {
-
-            Log::error($e->getMessage());
-
-            throw $e;
-        }
+        // Save the module
+        $this->module->save();
     }
 
     /**

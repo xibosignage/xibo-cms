@@ -20,7 +20,9 @@
  *
  */
 namespace Xibo\Widget;
-use Forecast\Forecast;
+
+use Xibo\Entity\Media;
+use Xibo\Factory\MediaFactory;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Cache;
 use Xibo\Helper\Config;
@@ -33,43 +35,52 @@ class ForecastIo extends Module
 {
     const API_ENDPOINT = 'https://api.forecast.io/forecast/';
 
-    private $resourceFolder;
-    private $codeSchemaVersion = 1;
+    private $resourceFolder = 'modules/forecastio';
+    protected $codeSchemaVersion = 1;
 
     /**
      * Install or Update this module
      */
-    public function InstallOrUpdate()
+    public function installOrUpdate()
     {
-        // This function should update the `module` table with information about your module.
-        // The current version of the module in the database can be obtained in $this->schemaVersion
-        // The current version of this code can be obtained in $this->codeSchemaVersion
-
-        // $settings will be made available to all instances of your module in $this->settings. These are global settings to your module,
-        // not instance specific (i.e. not settings specific to the layout you are adding the module to).
-        // $settings will be collected from the Administration -> Modules CMS page.
-        //
-        // Layout specific settings should be managed with $this->SetOption in your add / edit forms.
-
-        if ($this->module->schemaVersion <= 1) {
+        if ($this->module == null) {
             // Install
-            $this->InstallModule('Forecast IO', 'Weather forecasting from Forecast IO', 'forms/library.gif', 1, 1, array());
-        } else {
-            // Update
-            // Call "$this->UpdateModule($name, $description, $imageUri, $previewEnabled, $assignable, $settings)" with the updated items
+            $module = new \Xibo\Entity\Module();
+            $module->name = 'Forecast IO';
+            $module->type = 'forecastio';
+            $module->description = 'Weather forecasting from Forecast IO';
+            $module->imageUri = 'forms/library.gif';
+            $module->enabled = 1;
+            $module->previewEnabled = 1;
+            $module->assignable = 1;
+            $module->regionSpecific = 1;
+            $module->renderAs = 'html';
+            $module->schemaVersion = $this->codeSchemaVersion;
+            $module->settings = [];
+
+            $this->setModule($module);
+            $this->installModule();
         }
 
         // Check we are all installed
-        $this->InstallFiles();
+        $this->installFiles();
+    }
 
-        // After calling either Install or Update your code schema version will match the database schema version and this method will not be called
-        // again. This means that if you want to change those fields in an update to your module, you will need to increment your codeSchemaVersion.
+    public function installFiles()
+    {
+        MediaFactory::createModuleFile('modules/vendor/jquery-1.11.1.min.js')->save();
+        MediaFactory::createModuleFile('modules/xibo-layout-scaler.js')->save();
+
+        foreach (MediaFactory::createModuleFileFromFolder($this->resourceFolder) as $media) {
+            /* @var Media $media */
+            $media->save();
+        }
     }
 
     /**
      * Form for updating the module settings
      */
-    public function ModuleSettingsForm()
+    public function settingsForm()
     {
         // Output any form fields (formatted via a Theme file)
         // These are appended to the bottom of the "Edit" form in Module Administration
@@ -85,18 +96,10 @@ class ForecastIo extends Module
         return $formFields;
     }
 
-    public function InstallFiles()
-    {
-        $media = new Media();
-        $media->addModuleFile('modules/preview/vendor/jquery-1.11.1.min.js');
-        $media->addModuleFile('modules/preview/xibo-layout-scaler.js');
-        $media->addModuleFileFromFolder($this->resourceFolder);
-    }
-
     /**
      * Process any module settings
      */
-    public function ModuleSettings()
+    public function settings()
     {
         // Process any module settings you asked for.
         $apiKey = \Kit::GetParam('apiKey', _POST, _STRING, '');
@@ -117,7 +120,7 @@ class ForecastIo extends Module
     public function loadTemplates()
     {
         // Scan the folder for template files
-        foreach (glob('modules/theme/forecastio/*.template.json') as $template) {
+        foreach (glob('../modules/forecastio/*.template.json') as $template) {
             // Read the contents, json_decode and add to the array
             $this->module->settings['templates'][] = json_decode(file_get_contents($template), true);
         }
@@ -240,7 +243,7 @@ class ForecastIo extends Module
     /**
      * Add Media to the Database
      */
-    public function AddMedia()
+    public function add()
     {
         $response = $this->getState();
 
@@ -397,7 +400,7 @@ class ForecastIo extends Module
     /**
      * Edit Media in the Database
      */
-    public function EditMedia()
+    public function edit()
     {
         $response = $this->getState();
 

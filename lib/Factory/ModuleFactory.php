@@ -56,6 +56,21 @@ class ModuleFactory
 
         return $type;
     }
+
+    /**
+     * Create a Module
+     * @param string $class
+     * @return \Xibo\Widget\Module
+     * @throws NotFoundException
+     */
+    public static function createForInstall($class)
+    {
+        $type = new $class();
+        /* @var \Xibo\Widget\Module $type */
+
+        return $type;
+    }
+
     /**
      * Create a Module
      * @param string $moduleId
@@ -330,6 +345,11 @@ class ModuleFactory
             // Sorting?
             if (is_array($sortOrder))
                 $SQL .= 'ORDER BY ' . implode(',', $sortOrder);
+
+            // Paging
+            if (Sanitize::getInt('start') !== null && Sanitize::getInt('length') !== null) {
+                $SQL .= ' LIMIT ' . intval(Sanitize::getInt('start')) . ', ' . Sanitize::getInt('length', 10);
+            }
 
             Log::sql($SQL, $params);
 

@@ -77,6 +77,7 @@ class MediaFactory
         $media->mediaType = 'module';
         $media->expires = 0;
         $media->storedAs = $name;
+        $media->ownerId = 1;
 
         return $media;
     }
