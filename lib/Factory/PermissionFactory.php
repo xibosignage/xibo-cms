@@ -60,6 +60,34 @@ class PermissionFactory
     }
 
     /**
+     * Create a new Permission
+     * @param string $entity
+     * @param int $objectId
+     * @param int $view
+     * @param int $edit
+     * @param int $delete
+     * @return Permission
+     */
+    public static function createForEveryone($entity, $objectId, $view, $edit, $delete)
+    {
+        // Lookup the entityId
+        $results = PDOConnect::select('SELECT entityId FROM permissionentity WHERE entity = :entity', ['entity' => 'Xibo\Entity\\' . $entity]);
+
+        if (count($results) <= 0)
+            throw new \InvalidArgumentException('Entity not found: ' . $entity);
+
+        $permission = new Permission();
+        $permission->groupId = UserGroupFactory::getEveryone()->groupId;
+        $permission->entityId = $results[0]['entityId'];
+        $permission->objectId = $objectId;
+        $permission->view  =$view;
+        $permission->edit = $edit;
+        $permission->delete = $delete;
+
+        return $permission;
+    }
+
+    /**
      * Get Permissions by Entity ObjectId
      * @param string $entity
      * @param int $objectId

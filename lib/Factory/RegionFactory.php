@@ -81,6 +81,17 @@ class RegionFactory
     }
 
     /**
+     * Get the regions for a playlist
+     * @param int $playlistId
+     * @return array[\Xibo\Entity\Region]
+     */
+    public static function getByPlaylistId($playlistId)
+    {
+        // Get all regions for this layout
+        return RegionFactory::query(array(), array('playlistId' => $playlistId));
+    }
+
+    /**
      * Load a region
      * @param int $regionId
      * @return Region
@@ -119,7 +130,38 @@ class RegionFactory
         $entries = array();
 
         $params = array();
-        $sql = 'SELECT * FROM `region` WHERE 1 = 1 ';
+        $sql = '
+          SELECT `region`.regionId,
+              `region`.layoutId,
+              `region`.ownerId,
+              `region`.name,
+              `region`.width,
+              `region`.height,
+              `region`.top,
+              `region`.left,
+              `region`.zIndex
+        ';
+
+        if (Sanitize::getInt('playlistId', $filterBy) != null) {
+            $sql .= ', `lkregionplaylist`.displayOrder ';
+        }
+
+        $sql .= '
+            FROM `region`
+        ';
+
+        if (Sanitize::getInt('playlistId', $filterBy) != null) {
+            // Restrict to assigned playlists
+            $sql .= '
+                INNER JOIN `lkregionplaylist`
+                ON `lkregionplaylist`.regionId = `region`.regionId
+                    AND `lkregionplaylist`.playlistId = :playlistId
+            ';
+
+            $params['playlistId'] = Sanitize::getInt('playlistId', $filterBy);
+        }
+
+        $sql .= ' WHERE 1 = 1 ';
 
         if (Sanitize::getInt('regionId', $filterBy) != 0) {
             $sql .= ' AND regionId = :regionId ';
@@ -134,18 +176,7 @@ class RegionFactory
         Log::sql($sql, $params);
 
         foreach (PDOConnect::select($sql, $params) as $row) {
-            $region = new Region();
-            $region->layoutId = Sanitize::int($row['layoutId']);
-            $region->regionId = Sanitize::int($row['regionId']);
-            $region->ownerId = Sanitize::int($row['ownerId']);
-            $region->name = Sanitize::string($row['name']);
-            $region->width = Sanitize::double($row['width']);
-            $region->height = Sanitize::double($row['height']);
-            $region->top = Sanitize::double($row['top']);
-            $region->left = Sanitize::double($row['left']);
-            $region->zIndex = Sanitize::double($row['zIndex']);
-
-            $entries[] = $region;
+            $entries[] = (new Region())->hydrate($row, ['zIndex']);
         }
 
         return $entries;

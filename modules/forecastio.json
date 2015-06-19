@@ -1,0 +1,7 @@
+{
+  "title": "Forecast IO Weather Module",
+  "author": "Spring Signage Ltd",
+  "description": "A module for displaying weather information. Uses the Forecast API",
+  "name": "forecastio",
+  "class": "Xibo\\Widget\\ForecastIo"
+}

@@ -121,7 +121,7 @@ class PDOConnect
      * @param string $sql
      * @param array $params
      * @return int
-     * @throws PDOException
+     * @throws \PDOException
      */
     public static function insert($sql, $params)
     {
@@ -130,14 +130,14 @@ class PDOConnect
 
         $sth->execute($params);
 
-        return $dbh->lastInsertId();
+        return intval($dbh->lastInsertId());
     }
 
 	/**
 	 * Run Update SQL
 	 * @param string $sql
 	 * @param array $params
-	 * @throws PDOException
+	 * @throws \PDOException
 	 */
 	public static function update($sql, $params)
 	{
@@ -152,7 +152,7 @@ class PDOConnect
 	 * @param $sql
 	 * @param $params
 	 * @return array
-	 * @throws PDOException
+	 * @throws \PDOException
 	 */
 	public static function select($sql, $params)
 	{

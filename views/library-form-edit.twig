@@ -1,0 +1,61 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+$formFields[] = Form::AddCheckbox('replaceBackgroundImages', __('Replace background images?'),
+    0,
+    __('If the current image is used as a background, should the new image replace it?'),
+    '', 'replacement-controls');
+
+
+$formFields[] = Form::AddCheckbox('deleteOldVersion', __('Delete the old version?'),
+    ((Config::GetSetting('LIBRARY_MEDIA_UPDATEINALL_CHECKB') == 'Checked') ? 1 : 0),
+    __('Completely remove the old version of this media item if a new file is being uploaded.'),
+    '');
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Edit Media" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Save" %}, $("#mediaFormEdit").submit()
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="mediaFormEdit" class="XiboForm form-horizontal" method="put" action="{{ urlFor("library.edit", {"id": media.mediaId}) }}">
+                {% set title %}{% trans "Name" %}{% endset %}
+                {% set helpText %}{% trans "The Name of this item - Leave blank to use the file name" %}{% endset %}
+                {{ forms.text("name", title, media.name, helpText) }}
+
+                {% set title %}{% trans "Duration" %}{% endset %}
+                {% set helpText %}{% trans "The duration in seconds this item should be displayed" %}{% endset %}
+                {{ forms.number("duration", title, media.duration, helpText) }}
+
+                {% set title %}{% trans "Tags" %}{% endset %}
+                {% set helpText %}{% trans "Tag this media. Comma Separated." %}{% endset %}
+                {{ forms.text("tags", title, media.tags, helpText) }}
+
+                {% set title %}{% trans "Retire this media?" %}{% endset %}
+                {% set helpText %}{% trans "Retired media remains on existing Layouts but is not available to assign to new Layouts." %}{% endset %}
+                {{ forms.checkbox("retired", title, media.retired, helpText) }}
+
+                {% set title %}{% trans "Update this media in all layouts it is assigned to?" %}{% endset %}
+                {% set helpText %}{% trans "Note: It will only be updated in layouts you have permission to edit." %}{% endset %}
+                {% if config.LIBRARY_MEDIA_UPDATEINALL_CHECKB == "Checked" %}
+                    {% set checked = 1 %}
+                {% endif %}
+                {{ forms.checkbox("updateInLayouts", title, checked, helpText) }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

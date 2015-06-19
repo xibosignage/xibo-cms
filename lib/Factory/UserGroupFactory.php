@@ -50,6 +50,21 @@ class UserGroupFactory
     }
 
     /**
+     * Get Everyone Group
+     * @return UserGroup
+     * @throws NotFoundException
+     */
+    public static function getEveryone()
+    {
+        $groups = UserGroupFactory::query(null, ['isEveryone' => 1]);
+
+        if (count($groups) <= 0)
+            throw new NotFoundException(__('Group not found'));
+
+        return $groups[0];
+    }
+
+    /**
      * Get by User Id
      * @param int $userId
      * @return array[UserGroup]

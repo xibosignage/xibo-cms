@@ -1,0 +1,47 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% set name = layout.layout %}
+    {% trans %}Copy {{ name }}{% endtrans %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Save" %}, $("#layoutCopyForm").submit()
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="layoutCopyForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("layout.copy", {id: layout.layoutId}) }}")>
+                {% set title %}{% trans "Name" %}{% endset %}
+                {% set helpText %}{% trans "The Name of the Layout - (1 - 50 characters)" %}{% endset %}
+                {{ forms.text("name", title, layout.layout, helpText) }}
+
+                {% set title %}{% trans "Description" %}{% endset %}
+                {% set helpText %}{% trans "An optional description of the Layout. (1 - 250 characters)" %}{% endset %}
+                {{ forms.textarea("description", title, layout.description, helpText) }}
+
+                {% set title %}{% trans "Make new copies of all media on this layout?" %}{% endset %}
+                {% set helpText %}{% trans "This will duplicate all media that is currently assigned to the Layout being copied." %}{% endset %}
+                {% if config.LAYOUT_COPY_MEDIA_CHECKB == "Checked" %}
+                    {% set checked = 1 %}
+                {% else %}
+                    {% set checked = 0 %}
+                {% endif %}
+                {{ forms.checkbox("copyMediaFiles", title, checked, helpText) }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

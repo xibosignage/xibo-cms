@@ -18,21 +18,17 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-namespace Xmds;
-use Bandwidth;
-use Display;
-use DisplayProfile;
+namespace Xibo\Xmds;
 use DOMDocument;
 use DOMXPath;
 use Exception;
-use Layout;
-use ModuleFactory;
 use Nonce;
-use region;
 use SoapFault;
-use Stat;
-use Xibo\Controller\File;
+use Xibo\Entity\Bandwidth;
 use Xibo\Entity\User;
+use Xibo\Entity\XmdsNonce;
+use Xibo\Factory\BandwidthFactory;
+use Xibo\Factory\XmdsNonceFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
@@ -263,8 +259,7 @@ class Soap4
             Log::debug('hardwareKey = ' . $hardwareKey, $this->displayId);
 
         // Remove all Nonces for this display
-        $nonce = new Nonce();
-        $nonce->RemoveAllXmdsNonce($this->displayId);
+        XmdsNonce::removeAllForDisplay($this->displayId);
 
         // Build a new RF
         $requiredFilesXml = new DOMDocument("1.0");
@@ -390,7 +385,8 @@ class Soap4
                         Log::debug('MD5 for layoutId ' . $id . ' is: [' . $md5 . ']', $this->displayId);
 
                     // Add nonce
-                    $nonce->AddXmdsNonce('layout', $this->displayId, NULL, $fileSize, NULL, $id);
+                    $nonce = XmdsNonceFactory::createForLayout($this->displayId, $id, $fileSize);
+                    $nonce->save();
                     $pathsAdded[] = 'layout_' . $id;
                     
                 } else if ($recordType == 'media') {
@@ -410,7 +406,8 @@ class Soap4
                     }
 
                     // Add nonce
-                    $mediaNonce = $nonce->AddXmdsNonce('file', $this->displayId, $id, $fileSize, $path);
+                    $nonce = XmdsNonceFactory::createForMedia($this->displayId, $id, $fileSize, $path);
+                    $nonce->save();
                     $pathsAdded[] = 'media_' . $path;
                 } else {
                     continue;
@@ -461,7 +458,8 @@ class Soap4
 
                         $fileElements->appendChild($file);
 
-                        $nonce->AddXmdsNonce('resource', $this->displayId, NULL, NULL, NULL, $layoutId, $region['regionid'], $media['mediaid']);
+                        $nonce = XmdsNonceFactory::createForGetResource($this->displayId, $layoutId, $region['regionid'], $media['mediaid']);
+                        $nonce->save();
                     }
                 }
             }
@@ -547,13 +545,11 @@ class Soap4
         if ($this->isAuditing == 1)
             Log::debug('hardwareKey: ' . $hardwareKey . ', fileId: ' . $fileId . ', fileType: ' . $fileType . ', chunkOffset: ' . $chunkOffset . ', chunkSize: ' . $chunkSize, $this->displayId);
 
-        $nonce = new Nonce();
-
         if ($fileType == "layout") {
             $fileId = \Xibo\Helper\Sanitize::int($fileId);
 
             // Validate the nonce
-            if (!$nonce->AllowedFile('layout', $this->displayId, NULL, $fileId))
+            if (count(XmdsNonceFactory::getByDisplayAndLayout($this->displayId, $fileId)) <= 0)
                 throw new SoapFault('Receiver', 'Requested an invalid file.');
 
             try {
@@ -575,7 +571,7 @@ class Soap4
             }
         } else if ($fileType == "media") {
             // Validate the nonce
-            if (!$nonce->AllowedFile('file', $this->displayId, $fileId))
+            if (count(XmdsNonceFactory::getByDisplayAndMedia($this->displayId, $fileId)) <= 0)
                 throw new SoapFault('Receiver', 'Requested an invalid file.');
 
             try {
@@ -1119,7 +1115,8 @@ class Soap4
 
         // Validate the nonce
         $nonce = new Nonce();
-        if (!$nonce->AllowedFile('resource', $this->displayId, NULL, $layoutId, $regionId, $mediaId))
+
+        if (count(XmdsNonceFactory::getByDisplayAndResource($this->displayId, $layoutId, $regionId, $mediaId)) <= 0)
             throw new SoapFault('Receiver', 'Requested an invalid file.');
 
         // What type of module is this?
@@ -1424,8 +1421,7 @@ class Soap4
      */
     private function LogBandwidth($displayId, $type, $sizeInBytes)
     {
-        $bandwidth = new Bandwidth();
-        $bandwidth->Log($displayId, $type, $sizeInBytes);
+        BandwidthFactory::createAndSave($type, $displayId, $sizeInBytes);
     }
 }
 

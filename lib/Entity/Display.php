@@ -75,10 +75,14 @@ class Display
 
     public $displayGroupId;
     public $currentLayout;
+    public $defaultLayout;
 
     public $displayGroups = [];
 
-    protected $jsonExclude = ['mediaInventoryXml'];
+    public function __construct()
+    {
+        $this->excludeProperty('mediaInventoryXml');
+    }
 
     public function getId()
     {
@@ -214,7 +218,7 @@ class Display
 
         $displayGroup = new DisplayGroup();
         $displayGroup->displayGroup = $this->display;
-        $displayGroup->setOwner($this->displayId);
+        $displayGroup->setOwner($this);
         $displayGroup->save();
     }
 
@@ -290,7 +294,7 @@ class Display
         $displayGroup = DisplayGroupFactory::getById($this->displayGroupId);
         $displayGroup->displayGroup = $this->display;
         $displayGroup->description = $this->description;
-        $displayGroup->save();
+        $displayGroup->save(false);
     }
 
     /**

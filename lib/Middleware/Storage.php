@@ -24,6 +24,7 @@ namespace Xibo\Middleware;
 
 
 use Slim\Middleware;
+use Xibo\Helper\Log;
 use Xibo\Storage\PDOConnect;
 
 class Storage extends Middleware
@@ -31,13 +32,23 @@ class Storage extends Middleware
     public function call()
     {
         try {
+            $this->app->commit = true;
+
             PDOConnect::init()->beginTransaction();
 
             $this->next->call();
 
-            PDOConnect::init()->commit();
+            if ($this->app->commit) {
+                PDOConnect::init()->commit();
+            }
+            else {
+                if (PDOConnect::init()->inTransaction())
+                    PDOConnect::init()->rollBack();
+            }
         }
-        catch (\PDOException $e) {
+        catch (\Exception $e) {
+
+            Log::debug('Storage rollback because: %s', $e->getMessage());
 
             if (PDOConnect::init()->inTransaction())
                 PDOConnect::init()->rollBack();

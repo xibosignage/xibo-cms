@@ -26,10 +26,12 @@ use Xibo\Exception\NotFoundException;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\RegionOptionFactory;
+use Xibo\Helper\Log;
+use Xibo\Storage\PDOConnect;
 
-class Region
+class Region implements \JsonSerializable
 {
-    private $hash;
+    use EntityTrait;
     public $regionId;
     public $layoutId;
     public $ownerId;
@@ -41,16 +43,17 @@ class Region
     public $left;
     public $zIndex;
 
-    public $playlists;
-    public $regionOptions;
-    public $permissions;
+    public $playlists = [];
+    public $regionOptions = [];
+    public $permissions = [];
+
+    // Display Order when assigned to a Playlist
+    public $displayOrder;
 
     public function __construct()
     {
-        $this->hash = null;
-        $this->playlists = array();
-        $this->regionOptions = array();
-        $this->permissions = array();
+        // Exclude properties that will cause recursion
+        //$this->excludeProperty('playlists');
     }
 
     public function __clone()
@@ -156,20 +159,27 @@ class Region
 
     /**
      * Load
+     * @param array $loadOptions
      */
-    public function load()
+    public function load($loadOptions = [])
     {
+        $options = array_merge(['regionIncludePlaylists' => true], $loadOptions);
+
+        Log::debug('Load Region with %s', json_encode($options));
+
         // Load permissions
         $this->permissions = PermissionFactory::getByObjectId(get_class(), $this->regionId);
 
         // Load all playlists
-        $this->playlists = PlaylistFactory::getByRegionId($this->regionId);
-        foreach ($this->playlists as $playlist) {
-            /* @var Playlist $playlist */
-            $playlist->load();
+        if ($options['regionIncludePlaylists']) {
+            $this->playlists = PlaylistFactory::getByRegionId($this->regionId);
+            foreach ($this->playlists as $playlist) {
+                /* @var Playlist $playlist */
+                $playlist->load($loadOptions);
 
-            // Assign my regionId
-            $playlist->assignRegion($this->regionId);
+                // Assign my regionId
+                $playlist->assignRegion($this);
+            }
         }
 
         // Get region options
@@ -183,6 +193,8 @@ class Region
      */
     public function save()
     {
+        Log::debug('Saving %s', $this);
+
         if ($this->regionId == null || $this->regionId == 0)
             $this->add();
         else if ($this->hash != $this->hash())
@@ -193,7 +205,7 @@ class Region
             /* @var Playlist $playlist */
 
             // Make sure this region is assigned
-            $playlist->assignRegion($this->regionId);
+            $playlist->assignRegion($this, $playlist->displayOrder);
 
             // Save the playlist
             $playlist->save();
@@ -215,7 +227,7 @@ class Region
         if ($this->hash == null)
             $this->load();
 
-        \Xibo\Helper\Log::debug('Deleting ' . $this);
+        Log::debug('Deleting ' . $this);
 
         // Delete Permissions
         foreach ($this->permissions as $permission) {
@@ -227,11 +239,11 @@ class Region
         foreach ($this->playlists as $playlist) {
             /* @var Playlist $playlist */
 
-            // Make sure this region is assigned
-            $playlist->assignRegion($this->regionId);
+            // Unassign this region
+            $playlist->unassignRegion($this);
 
             // Save the playlist
-            $playlist->delete();
+            $playlist->save();
         }
 
         // Delete all region options
@@ -241,7 +253,7 @@ class Region
         }
 
         // Delete this region
-        \Xibo\Storage\PDOConnect::update('DELETE FROM `region` WHERE regionId = :regionId', array('regionId' => $this->regionId));
+        PDOConnect::update('DELETE FROM `region` WHERE regionId = :regionId', array('regionId' => $this->regionId));
     }
 
     // Add / Update
@@ -250,11 +262,11 @@ class Region
      */
     private function add()
     {
-        \Xibo\Helper\Log::debug('Adding region to LayoutId ' . $this->layoutId);
+        Log::debug('Adding region to LayoutId ' . $this->layoutId);
 
         $sql = 'INSERT INTO `region` (`layoutId`, `ownerId`, `name`, `width`, `height`, `top`, `left`, `zIndex`) VALUES (:layoutId, :ownerId, :name, :width, :height, :top, :left, :zIndex)';
 
-        $this->regionId = \Xibo\Storage\PDOConnect::insert($sql, array(
+        $this->regionId = PDOConnect::insert($sql, array(
             'layoutId' => $this->layoutId,
             'ownerId' => $this->ownerId,
             'name' => $this->name,
@@ -271,11 +283,11 @@ class Region
      */
     private function update()
     {
-        \Xibo\Helper\Log::debug('Editing region ' . $this->regionId . ' on LayoutId ' . $this->layoutId . ' zIndex ' . $this->zIndex);
+        Log::debug('Editing %s', $this);
 
         $sql = 'UPDATE `region` SET `ownerId` = :ownerId, `name` = :name, `width` = :width, `height` = :height, `top` = :top, `left` = :left, zIndex = :zIndex WHERE `regionId` = :regionId';
 
-        \Xibo\Storage\PDOConnect::update($sql, array(
+        PDOConnect::update($sql, array(
             'ownerId' => $this->ownerId,
             'name' => $this->name,
             'width' => $this->width,

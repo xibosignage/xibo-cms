@@ -47,13 +47,10 @@ if (isset($_GET['file'])) {
     }
 
     // Check nonce, output appropriate headers, log bandwidth and stop.
-    $nonce = new Nonce();
-    if (!$file = $nonce->Details(Kit::GetParam('file', _GET, _STRING))) {
-        Log::notice('HTTP GetFile request received but unable to find XMDS Nonce. Issuing 404', 'services');
-        // 404
-        header('HTTP/1.0 404 Not Found');
-    }
-    else {
+    try {
+        $file = \Xibo\Factory\XmdsNonceFactory::getByNonce($_REQUEST['file']);
+        $file->isValid();
+
         // Issue magic packet
         // Send via Apache X-Sendfile header?
         if ($sendFileMode == 'Apache') {
@@ -69,9 +66,18 @@ if (isset($_GET['file'])) {
         }
 
         // Log bandwidth
-        $bandwidth = new Bandwidth();
-        $bandwidth->Log($file['displayId'], 4, $file['size']);
+        \Xibo\Factory\BandwidthFactory::createAndSave(4, $file['displayId'], $file['size']);
     }
+    catch (\Exception $e) {
+        if ($e instanceof \Xibo\Exception\NotFoundException || $e instanceof \Xibo\Exception\FormExpiredException) {
+            Log::notice('HTTP GetFile request received but unable to find XMDS Nonce. Issuing 404', 'services');
+            // 404
+            header('HTTP/1.0 404 Not Found');
+        }
+        else
+            throw $e;
+    }
+
     exit;
 }
 

@@ -27,7 +27,6 @@ DEFINE('RELATIVE_URL_BASE', '../../');
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-require '../../lib/autoload.php';
 require '../../vendor/autoload.php';
 
 if (!file_exists('../settings.php'))
@@ -37,20 +36,21 @@ Config::Load('../settings.php');
 
 // Create a logger
 $logger = new \Flynsarmy\SlimMonolog\Log\MonologWriter(array(
+    'name' => 'API',
     'handlers' => array(
         new \Xibo\Helper\DatabaseLogHandler()
     ),
     'processors' => array(
-        new \Xibo\Helper\RouteProcessor()
+        new \Xibo\Helper\LogProcessor()
     )
 ));
 
 $app = new \Slim\Slim(array(
-    'debug' => true,
     'mode' => Config::GetSetting('SERVER_MODE'),
     'log.writer' => $logger
 ));
 $app->setName('api');
+$app->runNo = \Xibo\Helper\Random::generateString(10);
 $app->add(new \Xibo\Middleware\Storage());
 $app->add(new \Xibo\Middleware\State());
 
@@ -69,8 +69,8 @@ $server = new \League\OAuth2\Server\ResourceServer(
 
 $app->add(new \Xibo\Middleware\ApiAuthenticationOAuth($server));*/
 
-$app->view(new JsonApiView());
 $app->add(new JsonApiMiddleware());
+$app->view(new JsonApiView());
 
 // The current user
 // this should be injected by the ApiAuthenticationOAuth middleware

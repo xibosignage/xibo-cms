@@ -51,12 +51,18 @@ This is the template for the campaign page
     <script type="text/javascript">
         var table = $("#campaigns").DataTable({
             serverSide: true,
+            "filter": false,
             searchDelay: 3000,
             "order": [[ 1, "asc"]],
-            ajax: "{{ urlFor("campaign.search") }}",
+            ajax: {
+                url: "{{ urlFor("campaign.search") }}",
+                "data": function(d) {
+                    $.extend(d, $("#campaigns").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                }
+            },
             "columns": [
-                { "data": "name" },
-                { "data": "numlayouts" },
+                { "data": "campaign" },
+                { "data": "numberLayouts" },
                 {
                     "orderable": false,
                     "data": dataTableButtonsColumn
@@ -66,5 +72,23 @@ This is the template for the campaign page
 
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
+
+        // Callback for the media form
+        function layoutFormCallBack() {
+            var layoutTable = $("#layoutAssignments").DataTable({
+                serverSide: true,
+                searchDelay: 3000,
+                "order": [[ 1, "asc"]],
+                "filter": false,
+                ajax: "{{ urlFor("layout.search") }}",
+                "columns": [
+                    { "data": "layoutId" },
+                    { "data": "layout" }
+                ]
+            });
+
+            layoutTable.on('draw', dataTableDraw);
+            layoutTable.on('processing.dt', dataTableProcessing);
+        }
     </script>
 {% endblock %}

@@ -82,8 +82,10 @@ class ApplicationState
      * @param string $actions The actions (field => action)
      * @param string $operation The Operation (optional)
      */
-    public function AddFieldAction($field, $action, $value, $actions, $operation = "equals")
+    public function addFieldAction($field, $action, $value, $actions, $operation = "equals")
     {
+        Log::debug('Adding Field Action. %s, %s, %s, %s, %s', $field, $action, $value, var_export($actions, true), $operation);
+
         $this->fieldActions[] = array(
             'field' => $field,
             'trigger' => $action,

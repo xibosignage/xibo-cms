@@ -41,6 +41,11 @@ class Permission
 
     public $modifyPermissions;
 
+    public function __clone()
+    {
+        $this->permissionId = null;
+    }
+
     public function save()
     {
         if ($this->permissionId == null || $this->permissionId == 0)

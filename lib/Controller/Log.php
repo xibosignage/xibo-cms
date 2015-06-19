@@ -126,7 +126,8 @@ class Log extends Base
             'page' => $page,
             'function' => $function,
             'displayId' => $displayid,
-            'excludeLog' => 1
+            'excludeLog' => 1,
+            'runNo' => Sanitize::getString('runNo')
         ]));
 
         $this->getState()->template = 'grid';

@@ -38,7 +38,7 @@ class LogFactory
         $params = [];
         $order = ''; $limit = '';
 
-        $select = 'SELECT logId, logDate, page, function, message, display.display, type';
+        $select = 'SELECT logId, runNo, logDate, channel, page, function, message, display.display, type';
 
         $body = '
               FROM `log`
@@ -55,6 +55,11 @@ class LogFactory
         if (Sanitize::getInt('toDt', $filterBy) != null) {
             $body .= ' AND logdate <= :toDt ';
             $params['toDt'] = date("Y-m-d H:i:s", Sanitize::getInt('toDt', $filterBy));
+        }
+
+        if (Sanitize::getString('runNo', $filterBy) != null) {
+            $body .= ' AND runNo = :runNo ';
+            $params['runNo'] = Sanitize::getString('runNo', $filterBy);
         }
 
         if (Sanitize::getInt('type', $filterBy) != 0) {

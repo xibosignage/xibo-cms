@@ -27,7 +27,7 @@
                     {% for module in modulesToInstall %}
                     <div class="row">
                         <div class="col-md-12">
-                            <a href="{{ module }}">{{ module }}</a>
+                            <a class="XiboFormButton" href="{{ urlFor("module.install.form", {name: module.name}) }}">{{ module.title }} - {{ module.author }}</a><br />
                         </div>
                     </div>
                     {% endfor %}
@@ -71,6 +71,7 @@
     <script type="text/javascript">
         var table = $("#modules").DataTable({
             serverSide: true,
+            filter: false,
             searchDelay: 3000,
             "order": [[ 1, "asc"]],
             ajax: "{{ urlFor("module.search") }}",
@@ -92,5 +93,11 @@
 
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
+
+
+        function installModuleComplete()
+        {
+            $("#moduleInstallForm").data("refresh", true);
+        }
     </script>
 {% endblock %}

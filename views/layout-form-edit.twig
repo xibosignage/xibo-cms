@@ -1,0 +1,77 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Edit Layout" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Save" %}, $("#layoutEditForm").submit()
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+{% endblock %}
+
+{% block callBack %}backGroundFormSetup{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                <li><a href="#description" role="tab" data-toggle="tab"><span>{% trans "Description" %}</span></a></li>
+                <li><a href="#background" role="tab" data-toggle="tab"><span>{% trans "Background" %}</span></a></li>
+            </ul>
+            <form id="layoutEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("layout.edit", {id: layout.layoutId}) }}">
+                <div class="tab-content">
+                    <div class="tab-pane active" id="general">
+                        {% set title %}{% trans "Name" %}{% endset %}
+                        {% set helpText %}{% trans "The Name of the Layout - (1 - 50 characters)" %}{% endset %}
+                        {{ forms.text("name", title, layout.layout, helpText) }}
+
+                        {% set title %}{% trans "Tags" %}{% endset %}
+                        {% set helpText %}{% trans "Tags for this layout - used when searching for it. Comma delimited. (1 - 250 characters)" %}{% endset %}
+                        {{ forms.text("tags", title, layout.tags, helpText) }}
+
+                        {% set title %}{% trans "Retired" %}{% endset %}
+                        {% set helpText %}{% trans "Retire this layout or not? It will no longer be visible in lists" %}{% endset %}
+                        {{ forms.checkbox("retired", title, layout.retired, helpText) }}
+                    </div>
+                    <div class="tab-pane" id="description">
+                        {% set title %}{% trans "Description" %}{% endset %}
+                        {% set helpText %}{% trans "An optional description of the Layout. (1 - 250 characters)" %}{% endset %}
+                        {{ forms.textarea("description", title, layout.description, helpText) }}
+                    </div>
+                    <div class="tab-pane" id="background">
+                        {% set title %}{% trans "Background Colour" %}{% endset %}
+                        {% set helpText %}{% trans "Use the colour picker to select the background colour" %}{% endset %}
+                        {{ forms.text("backgroundColor", title, layout.backgroundColor, helpText) }}
+
+                        {% set title %}{% trans "Background Image" %}{% endset %}
+                        {% set helpText %}{% trans "Pick the background image from the library" %}{% endset %}
+                        {% set backgrounds = backgrounds|merge({mediaId: null, name: ""}) %}
+                        {{ forms.dropdown("backgroundImageId", "single", title, backgroundId, backgrounds, "mediaId", "name", helpText) }}
+
+                        {% set title %}{% trans "Resolution" %}{% endset %}
+                        {% set helpText %}{% trans "Change the resolution" %}{% endset %}
+                        {{ forms.dropdown("resolutionId", "single", title, resolution.resolutionId, resolutions, "resolutionId", "resolution", helpText, "resolution-group") }}
+
+                        {% set title %}{% trans "Layer" %}{% endset %}
+                        {% set helpText %}{% trans "The layering order of the background image (z-index). Advanced use only." %}{% endset %}
+                        {{ forms.text("backgroundzIndex", title, layout.backgroundzIndex, helpText) }}
+
+                        <img id="bg_image_image" src="{% if backgroundId == 0 %}{{ theme.uri("img/forms/filenotfound.gif") }}{% else %}{{ urlFor("library.download", {id: backgroundId}) }}?preview=1&width=100&height=56{% endif %}" alt="{% trans "Background thumbnail" %}" />
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,188 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+#}
+
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block pageContent %}
+    {#
+    Get the display width / height
+        Version 1 layouts had the designer resolution in the XLF and therefore did not need anything scaling in the designer.
+        Version 2+ layouts have the layout resolution in the XLF and therefore need to be scaled back by the designer.
+    #}
+    {% if layout.width < layout.height %}
+        {# Portrait #}
+        {% set displayWidth = 800 %}
+        {% set designerScale = 800 / layout.width %}
+    {% else %}
+        {# Landscape #}
+        {% set displayHeight = 450 %}
+        {% set designerScale = 450 / layout.height %}
+    {% endif %}
+
+    {# Version 2 layout can support zooming? #}
+    {% if layout.schemaVersion > 1 %}
+        {% set designerScale = designerScale * zoom %}
+    {% endif %}
+
+    {# Reset the designer width / height based on the zoom #}
+    {% set width = layout.width * designerScale %}
+    {% set height = layout.height * designerScale %}
+
+    {# Layout Background #}
+    {% if layout.backgroundImageId == 0 %}
+        {% set backgroundCss = layout.backgroundColor %}
+    {% else %}
+        {% set backgroundCss %}url('{{ urlFor("library.download", {id: layout.backgroundImageId}) }}?preview=1&width={{ width }}&height={{ height }}') top center no-repeat; background-color: {{ layout.backgroundColor }}{% endset %}
+    {% endif %}
+
+    <div class="pull-right">
+        <select id="layoutJumpList" data-live-search="true">
+            {% for item in layouts %}
+            <option value="{{ urlFor("layout.designer", {id: item.layoutId}) }}"{% if item.layoutId == layout.layoutId %} selected{% endif %}>{{ item.layout }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="row">
+        <div class="col-md-2">
+            <div class="btn-group">
+                <button class="btn dropdown-toggle" data-toggle="dropdown">
+                    {% trans "Options" %}
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="XiboAjaxSubmit" href="{{ urlFor("region.add", {id: layout.layoutId}) }}"><span>{% trans "Add Region" %}</span></a></li>
+                    <li><a class="XiboFormButton" href="{{ urlFor("layout.edit.form", {id: layout.layoutId}) }}" title="{% trans "Edit the Layout Properties" %}"><span>{% trans "Background Properties" %}</span></a></li>
+                    <li class="divider"></li>
+                    <li><a href="{{ urlFor("layout.preview", {id: layout.layoutId}) }}" target="_blank"><span>{% trans "Preview Layout" %}</span></a></li>
+                    <li><a class="XiboFormButton" href="{{ urlFor("schedule.now.form", {id: layout.layoutId, from: "Layout"}) }}"><span>{% trans "Schedule Now" %}</span></a></li>
+                    <li><a class="XiboFormButton" href="{{ urlFor("layout.template.form", {id: layout.layoutId}) }}"><span>{% trans "Save Template" %}</span></a></li>
+                    {% if layout.schemaVersion >= 2 %}
+                    <li class="divider"></li>
+                    <li><a href="{{ urlFor("layout.designer", {id: layout.layoutId}) }}?zoom={{ zoom - 0.3 }}"><span>{% trans "Shrink Designer" %}</span></a></li>
+                    <li><a href="{{ urlFor("layout.designer", {id: layout.layoutId}) }}?zoom={{ zoom + 0.3 }}"><span>{% trans "Enlarge Designer" %}</span></a></li>
+                    {% else %}
+                    <li class="divider"></li>
+                    <li><a class="XiboFormButton" href="{{ urlFor("layout.upgrade.form", {id: layout.layoutId}) }}"><span>{% trans "Upgrade Layout" %}</span></a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+        <div class="col-md-5">
+            <h4>{% trans "Layout Design" %} - {{ layout.layout }}</h4>
+        </div>
+        <div class="col-md-1 layout-status">
+        </div>
+        <div class="col-md-2 layout-meta">
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div id="layout"
+                 zoom="{{ zoom }}"
+                 tip_scale="1"
+                 designer_scale="{{ designerScale }}"
+                 class="layout"
+                 layoutid="{{ layout.layoutId }}"
+                 data-background-color="{{ layout.backgroundColor }}"
+                 data-status-url="{{ urlFor("layout.status", {id: layout.layoutId}) }}"
+                 data-position-all-url="{{ urlFor("region.position.all", {id: layout.layoutId}) }}"
+                 style="position:relative; width:{{ width }}px; height:{{ height }}px; background:{{ backgroundCss }};">
+
+                {% for region in layout.regions %}
+                    {% set regionWidth = region.width * designerScale %}
+                    {% set regionHeight = region.height * designerScale %}
+                    {% set regionLeft = region.left * designerScale %}
+                    {% set regionTop = region.top * designerScale %}
+
+                    {# Disabled / Enabled CSS #}
+                    {% if region.editable %}
+                        {% set disabledCss = "region" %}
+                        {% set trasparencyCss = "" %}
+                    {% else %}
+                        {% set disabledCss = "regionDis" %}
+                        {% set trasparencyCss = "regionDisabled" %}
+                    {% endif %}
+
+                    {% if region.viewable %}
+                        {% set previewCss = "regionPreview" %}
+                    {% else %}
+                        {% set previewCss = "" %}
+                    {% endif %}
+
+                    <div id="region_{{ region.regionId }}"
+                            regionEnabled="{{ region.editable }}"
+                            regionid="{{ region.regionId }}"
+                            layoutid="{{ layout.layoutId }}"
+                            zindex="{{ region.zIndex }}"
+                            tip_scale="1"
+                            designer_scale="{{ designerScale }}"
+                            width="{{ region.width }}"
+                            height="{{ region.height }}"
+                            href="{{ urlFor("region.timeline.form", {id: region.regionId}) }}"
+                            {% if region.editable %}ondblclick="XiboFormRender($(this).attr('href'))"{% endif %}
+                            class="{{ disabledCss }} {{ previewCss }}"
+                            data-preview-url="{{ urlFor("region.preview", {id: region.regionId}) }}"
+                            style="position:absolute; width:{{ regionWidth }}px; height:{{ regionHeight }}px; top: {{ regionTop }}px; left:{{ regionLeft }}px; z-index: {{ region.zIndex }};">
+                        <div class="regionTransparency {{ transparencyCss }}" style="width:100%; height:100%;"></div>
+
+                        {% if region.editable %}
+                            <div class="btn-group regionInfo pull-right">
+                                <button class="btn dropdown-toggle" data-toggle="dropdown">
+                                    <span class="region-tip">{{ region.width|round }} x {{ region.height|round }} ({{ region.left|round }},{{ region.top|round }})</span>
+                                    <span class="caret"></span>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="XiboFormButton" href="{{ urlFor("region.timeline.form", {id: region.regionId}) }}">{% trans "Edit Timeline" %}</a></li>
+                                    <li><a class="RegionOptionsMenuItem" href="{{ urlFor("region.edit.form", {id: region.regionId}) }}">{% trans "Options" %}</a></li>
+                                    <li><a class="XiboFormButton" href="{{ urlFor("region.delete.form", {id: region.regionId}) }}">{% trans "Delete" %}</a></li>
+                                    <li><a class="XiboFormButton" href="{{ urlFor("user.permissions.form", {entity: "Region", id: region.regionId}) }}">{% trans "Permissions" %}</a></li>
+                                </ul>
+                            </div>
+                        {% elseif region.viewable %}
+                            <div class="regionInfo">
+                                <span class="region-tip">{{ region.width|round }} x {{ region.height|round }} ({{ region.left|round }},{{ region.top|round }})</span>
+                            </div>
+                        {% endif %}
+                        <div class="preview">
+                            <div class="previewContent">
+
+                            </div>
+                            <div class="previewNav label label-info"></div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% if layout.schemaVersion < 2 %}
+    <div class="row">
+        <div class="col-md-offset-1 col-md-5">
+            <p class="alert alert-danger">{% trans "This is an old format layout, please consider upgrading using the options menu" %}</p>
+        </div>
+    </div>
+    {% endif %}
+    {% if designerScale < 0.41 %}
+        <div class="row">
+        <div class="col-md-offset-1 col-md-5">
+            <p class="alert alert-danger">{% trans "This Layout is very large, so we have disabled region drag and drop. You could enlarge the designer from the options menu or use Region Options to Manually Position your regions." %}</p>
+        </div>
+    </div>
+    {% endif %}
+{% endblock %}
+
+{% block javaScript %}
+    <script src="{{ theme.uri("js/xibo-layout-designer.js") }}"></script>
+    <script type="text/javascript">
+        var translation = {
+            save_position_button: "{% trans "Save Position" %}",
+            revert_position_button: "{% trans "Undo" %}",
+            savePositionsFirst: "{% trans "Please save the pending position changes first by clicking Save Positions or cancel by clicking Undo." %}"
+        }
+    </script>
+{% endblock %}

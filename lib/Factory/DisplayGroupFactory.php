@@ -49,6 +49,26 @@ class DisplayGroupFactory
     }
 
     /**
+     * Get Display Groups by MediaId
+     * @param int $mediaId
+     * @return array[DisplayGroup]
+     */
+    public static function getByMediaId($mediaId)
+    {
+        return DisplayGroupFactory::query(null, ['mediaId' => $mediaId, 'isDisplaySpecific' => -1]);
+    }
+
+    /**
+     * Get Display Groups by eventId
+     * @param int $eventId
+     * @return array[DisplayGroup]
+     */
+    public static function getByEventId($eventId)
+    {
+        return DisplayGroupFactory::query(null, ['eventId' => $eventId, 'isDisplaySpecific' => -1]);
+    }
+
+    /**
      * @param array $sortOrder
      * @param array $filterBy
      * @return array[DisplayGroup]
@@ -61,8 +81,27 @@ class DisplayGroupFactory
         $sql = '
             SELECT displaygroup.displayGroupId, displaygroup.displayGroup, displaygroup.isDisplaySpecific, displaygroup.description
               FROM `displaygroup`
-             WHERE 1 = 1
         ';
+
+        if (Sanitize::getInt('mediaId', $filterBy) != null) {
+            $sql .= '
+                INNER JOIN lkmediadisplaygroup
+                ON lkmediadisplaygroup.displayGroupId = displayGroup.displayGroupId
+                    AND lkmediadisplaygroup.mediaId = :mediaId
+            ';
+            $params['mediaId'] = Sanitize::getInt('mediaId', $filterBy);
+        }
+
+        if (Sanitize::getInt('eventId', $filterBy) != null) {
+            $sql .= '
+                INNER JOIN `lkscheduledisplaygroup`
+                ON `lkscheduledisplaygroup`.displayGroupId = `displaygroup`.displayGroupId
+                    AND `lkscheduledisplaygroup`.eventId = :eventId
+            ';
+            $params['eventId'] = Sanitize::getInt('eventId', $filterBy);
+        }
+
+        $sql .= ' WHERE 1 = 1 ';
 
         if (Sanitize::getInt('displayGroupId', $filterBy) != null) {
             $sql .= ' AND displaygroup.displayGroupId = :displayGroupId ';

@@ -29,7 +29,7 @@ use Xibo\Helper\Theme;
 
 ?>
 <div id="dashbuttons">
-	<?php foreach (Theme::GetMenu('Dashboard') as $item) { ?>
+	<?php foreach (Theme::getMenu('Dashboard') as $item) { ?>
 		<div class="dashicons">
 			<a id="<?php echo $item['class']; ?>" alt="<?php echo $item['title']; ?>" href="<?php echo $item['link']; ?>">
 			<?php echo Theme::Image($item['img'], 'dash_button'); ?>

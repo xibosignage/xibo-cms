@@ -25,6 +25,8 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Resolution;
 use Xibo\Exception\NotFoundException;
+use Xibo\Helper\Log;
+use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
 class ResolutionFactory
@@ -67,40 +69,47 @@ class ResolutionFactory
         $entities = array();
 
         $params = array();
-        $sql  = 'SELECT * FROM `resolution` WHERE 1 = 1 ';
+        $sql  = '
+          SELECT `resolution`.resolutionId,
+              `resolution`.resolution,
+              `resolution`.intended_width AS width,
+              `resolution`.intended_height AS height,
+              `resolution`.width AS designerWidth,
+              `resolution`.height AS designerHeight,
+              `resolution`.version,
+              `resolution`.enabled
+            FROM `resolution`
+           WHERE 1 = 1
+        ';
 
-        if (\Xibo\Helper\Sanitize::getInt('enabled', -1, $filterBy) != -1) {
+        if (Sanitize::getInt('enabled', -1, $filterBy) != -1) {
             $sql .= ' AND enabled = :enabled ';
-            $params['enabled'] = \Xibo\Helper\Sanitize::getInt('enabled', $filterBy);
+            $params['enabled'] = Sanitize::getInt('enabled', $filterBy);
         }
 
-        if (\Xibo\Helper\Sanitize::getInt('resolutionId', $filterBy) != 0) {
+        if (Sanitize::getInt('resolutionId', $filterBy) != null) {
             $sql .= ' AND resolutionId = :resolutionId';
-            $params['resolutionId'] = \Xibo\Helper\Sanitize::getInt('resolutionId', $filterBy);
+            $params['resolutionId'] = Sanitize::getInt('resolutionId', $filterBy);
         }
 
-        if (\Xibo\Helper\Sanitize::getInt('width', $filterBy) != 0) {
+        if (Sanitize::getInt('width', $filterBy) != null) {
             $sql .= ' AND intended_width = :width';
-            $params['width'] = \Xibo\Helper\Sanitize::getInt('width', $filterBy);
+            $params['width'] = Sanitize::getInt('width', $filterBy);
         }
 
-        if (\Xibo\Helper\Sanitize::getInt('height', $filterBy) != 0) {
+        if (Sanitize::getInt('height', $filterBy) != null) {
             $sql .= ' AND intended_height = :height';
-            $params['height'] = \Xibo\Helper\Sanitize::getInt('height', $filterBy);
+            $params['height'] = Sanitize::getInt('height', $filterBy);
         }
 
-        \Xibo\Helper\Log::sql($sql, $params);
+        // Sorting?
+        if (is_array($sortOrder))
+            $sql .= 'ORDER BY ' . implode(',', $sortOrder);
+
+        Log::sql($sql, $params);
 
         foreach(PDOConnect::select($sql, $params) as $record) {
-            $resolution = new Resolution();
-            $resolution->resolutionId = $record['resolutionID'];
-            $resolution->resolution = $record['resolution'];
-            $resolution->width = $record['intended_width'];
-            $resolution->height = $record['intended_height'];
-            $resolution->version = \Xibo\Helper\Sanitize::int($record['version']);
-            $resolution->enabled = \Xibo\Helper\Sanitize::int($record['enabled']);
-
-            $entities[] = $resolution;
+            $entities[] = (new Resolution())->hydrate($record, ['width', 'height', 'version', 'enabled']);
         }
 
         return $entities;

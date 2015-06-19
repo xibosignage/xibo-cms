@@ -102,15 +102,17 @@ $app->get('/update', '\Xibo\Controller\Upgrade:displayPage')->name('upgrade.view
 // schedule
 //
 $app->get('/schedule/view', '\Xibo\Controller\Schedule:displayPage')->name('schedule.view');
-$app->get('/schedule/form/now/:id', '\Xibo\Controller\Schedule:scheduleNowForm')->name('schedule.now.form');
 $app->get('/schedule/form/add', '\Xibo\Controller\Schedule:addForm')->name('schedule.add.form');
+$app->get('/schedule/form/edit/:id', '\Xibo\Controller\Schedule:editForm')->name('schedule.edit.form');
+$app->get('/schedule/form/delete/:id', '\Xibo\Controller\Schedule:deleteForm')->name('schedule.delete.form');
+$app->get('/schedule/form/now/:from/:id', '\Xibo\Controller\Schedule:scheduleNowForm')->name('schedule.now.form');
 
 //
 // layouts
 //
 $app->get('/layout/view', '\Xibo\Controller\Layout:displayPage')->name('layout.view');
 $app->get('/layout/designer/:id', '\Xibo\Controller\Layout:displayDesigner')->name('layout.designer');
-$app->get('/layout/status/:id', '\Xibo\Controller\Layout:LayoutStatus')->setName('layout.status');
+$app->get('/layout/status/:id', '\Xibo\Controller\Layout:status')->setName('layout.status');
 $app->get('/layout/preview/:id', '\Xibo\Controller\Preview:render')->name('layout.preview');
 $app->get('/layout/export/:id', '\Xibo\Controller\Layout:export')->name('layout.export');
 // forms
@@ -120,13 +122,24 @@ $app->get('/layout/form/copy/:id', '\Xibo\Controller\Layout:copyForm')->name('la
 $app->get('/layout/form/delete/:id', '\Xibo\Controller\Layout:deleteForm')->name('layout.delete.form');
 $app->get('/layout/form/retire/:id', '\Xibo\Controller\Layout:retireForm')->name('layout.retire.form');
 $app->get('/layout/form/import', '\Xibo\Controller\Layout:retireForm')->name('layout.import.form');
+$app->get('/layout/form/upgrade/:id', '\Xibo\Controller\Layout:upgradeForm')->name('layout.upgrade.form');
+$app->get('/layout/form/template/:id', '\Xibo\Controller\Layout:templateForm')->name('layout.template.form');
+
+//
+// regions
+//
+$app->get('/region/preview/:id', '\Xibo\Controller\Region:preview')->name('region.preview');
+$app->get('/region/form/edit/:id', '\Xibo\Controller\Region:editForm')->name('region.edit.form');
+$app->get('/region/form/delete/:id', '\Xibo\Controller\Region:deleteForm')->name('region.delete.form');
+$app->get('/region/form/timeline/:id', '\Xibo\Controller\Region:timelineForm')->name('region.timeline.form');
 
 //
 // library
 //
 $app->get('/library/view', '\Xibo\Controller\Library:displayPage')->name('library.view');
-$app->get('/library/form/add', '\Xibo\Controller\Library:fileUploadForm')->name('library.add.form');
-$app->get('/library/form/tidy', '\Xibo\Controller\Library:tidyLibraryForm')->name('library.tidy.form');
+$app->get('/library/form/edit/:id', '\Xibo\Controller\Library:editForm')->name('library.edit.form');
+$app->get('/library/form/delete/:id', '\Xibo\Controller\Library:deleteForm')->name('library.delete.form');
+$app->get('/library/form/tidy', '\Xibo\Controller\Library:tidyForm')->name('library.tidy.form');
 
 //
 // display
@@ -166,6 +179,7 @@ $app->get('/campaign/form/edit/:id', '\Xibo\Controller\Campaign:editForm')->name
 $app->get('/campaign/form/copy/:id', '\Xibo\Controller\Campaign:copyForm')->name('campaign.copy.form');
 $app->get('/campaign/form/delete/:id', '\Xibo\Controller\Campaign:deleteForm')->name('campaign.delete.form');
 $app->get('/campaign/form/retire/:id', '\Xibo\Controller\Campaign:retireForm')->name('campaign.retire.form');
+$app->get('/campaign/form/layouts/:id', '\Xibo\Controller\Campaign:layoutsForm')->name('campaign.layouts.form');
 
 //
 // template
@@ -177,6 +191,8 @@ $app->get('/template/view', '\Xibo\Controller\Template:displayPage')->name('temp
 //
 $app->get('/resolution/view', '\Xibo\Controller\Resolution:displayPage')->name('resolution.view');
 $app->get('/resolution/form/add', '\Xibo\Controller\Resolution:addForm')->name('resolution.add.form');
+$app->get('/resolution/form/edit', '\Xibo\Controller\Resolution:editForm')->name('resolution.edit.form');
+$app->get('/resolution/form/delete', '\Xibo\Controller\Resolution:deleteForm')->name('resolution.delete.form');
 
 //
 // dataset
@@ -232,8 +248,15 @@ $app->get('/applications/form/add', '\Xibo\Controller\Applications:addForm')->na
 // module
 //
 $app->get('/module/view', '\Xibo\Controller\Module:displayPage')->name('module.view');
-$app->get('/module/install/:id', '\Xibo\Controller\Module:install')->name('module.install');
+$app->post('/module/install/:name', '\Xibo\Controller\Module:install')->name('module.install');
+$app->get('/module/form/install/:name', '\Xibo\Controller\Module:installForm')->name('module.install.form');
 $app->get('/module/form/verify', '\Xibo\Controller\Module:verifyForm')->name('module.verify.form');
+$app->get('/module/form/settings/:id', '\Xibo\Controller\Module:settingsForm')->name('module.settings.form');
+// Module functions
+$app->get('/module/form/add/:type/:id', '\Xibo\Controller\Module:addWidgetForm')->name('module.widget.add.form');
+$app->get('/module/form/edit/:id', '\Xibo\Controller\Module:editWidgetForm')->name('module.widget.edit.form');
+$app->get('/module/form/delete/:id', '\Xibo\Controller\Module:deleteWidgetForm')->name('module.widget.delete.form');
+$app->get('/module/form/transition/edit/:type/:id', '\Xibo\Controller\Module:editWidgetTransitionForm')->name('module.widget.transition.edit.form');
 
 //
 // transition

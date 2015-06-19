@@ -1,4 +1,31 @@
 {
+  "name": "xibosignage/xibo-cms",
+  "description": "Xibo Open Source Digital Signage",
+  "keywords": [
+    "xibo",
+    "digital signage",
+    "spring signage"
+  ],
+  "homepage": "http://xibo.org.uk",
+  "license": "AGPLv3 or later",
+  "authors": [
+    {
+      "name": "Daniel Garner",
+      "homepage": "https://github.com/dasgarner"
+    },
+    {
+      "name": "Alexander Harrington",
+      "homepage": "https://github.com/alexharrington"
+    },
+    {
+      "name": "Spring Signage Ltd",
+      "homepage": "http://springsignage.com"
+    },
+    {
+      "name": "Xibo Contributors",
+      "homepage": "https://github.com/xibosignage/xibo/tree/master/contributors"
+    }
+  ],
   "repositories": [
     {
       "type": "vcs",
@@ -6,6 +33,7 @@
     }
   ],
   "require": {
+    "php": ">=5.4",
     "slim/slim": "~2.6",
     "erusev/parsedown": "~1.5",
     "league/oauth2-server": "~4.1",
@@ -18,6 +46,21 @@
     "slim/views": "0.1.*",
     "twig/twig": "~1.18",
     "twig/extensions": "~1.2",
-    "respect/validation": "0.9.*"
+    "respect/validation": "0.9.*",
+    "intervention/imagecache": "~2.3",
+    "rmccue/requests": "^1.6",
+    "abraham/twitteroauth": "^0.5.3",
+    "emojione/emojione": "^1.4"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "~4.0"
+  },
+  "autoload": {
+    "psr-4": { "Xibo\\" : "lib/" }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Xibo\\Tests\\": "tests/"
+    }
   }
 }

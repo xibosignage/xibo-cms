@@ -12,7 +12,7 @@
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
         <li><a title="{% trans "Open the Filter Form" %}" href="#" onclick="ToggleFilterView('Filter')">{% trans "Filter" %}</a></li>
-        <li><a class="XiboFormButton" title="{% trans "Add a new media item to the library" %}" href="{{ urlFor("library.add.form") }}">{% trans "Add Media" %}</a></li>
+        <li><a href="#" id="libraryUploadForm" title="{% trans "Add a new media item to the library" %}">{% trans "Add Media" %}</a></li>
         {% if settings.SETTING_LIBRARY_TIDY_ENABLED == 1 %}
             <li><a class="XiboFormButton" title="{% trans "Run through the library and remove unused and unnecessary files" %}" href="{{ urlFor("library.tidy.form") }}">{% trans "Tidy Library" %}</a></li>
         {% endif %}
@@ -88,6 +88,7 @@
                 { "data": "thumbnail"},
                 { "data": "duration"},
                 { "data": "fileSize"},
+                { "data": "owner"},
                 { "data": "groupsWithPermissions"},
                 { "data": "revised"},
                 { "data": "fileName"},
@@ -100,5 +101,79 @@
 
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
+
+        $("#libraryUploadForm").click(function() {
+
+            var template = Handlebars.compile($("#template-file-upload").html());
+
+            // Handle bars and open a dialog
+            bootbox.dialog({
+                message: template({
+                    trans: {
+                        addFiles: "{% trans "Add files" %}",
+                        startUpload: "{% trans "Start upload" %}",
+                        cancelUpload: "{% trans "Cancel upload" %}"
+                    },
+                    upload: {
+                        maxSize: {{ libraryUpload.maxSize }},
+                        maxSizeMessage: "{{ libraryUpload.maxSizeMessage  }}",
+                        validExt: "{{ libraryUpload.validExt }}"
+                    }
+                }),
+                title: "{% trans "Upload media" %}",
+                buttons: {
+                    main: {
+                        label: "{% trans "Done" %}",
+                        className: "btn-primary",
+                        callback: function() {
+                            table.ajax.reload();
+                            XiboDialogClose();
+                        }
+                    }
+                }
+            }).on('shown.bs.modal', function() {
+                // Configure the upload form
+                var url = "{{ urlFor("library.add") }}";
+                var form = $(this).find("form");
+
+                // Initialize the jQuery File Upload widget:
+                form.fileupload({
+                    url: url,
+                    disableImageResize: false
+                });
+
+                // Upload server status check for browsers with CORS support:
+                if ($.support.cors) {
+                    $.ajax({
+                        url: url,
+                        type: 'HEAD'
+                    }).fail(function () {
+                        $('<span class="alert alert-error"/>')
+                                .text('Upload server currently unavailable - ' + new Date())
+                                .appendTo(form);
+                    });
+                }
+
+                // Enable iframe cross-domain access via redirect option:
+                form.fileupload(
+                        'option',
+                        'redirect',
+                        window.location.href.replace(
+                                /\/[^\/]*$/,
+                                '/cors/result.html?%s'
+                        )
+                );
+
+                form.bind('fileuploadsubmit', function (e, data) {
+                    var inputs = data.context.find(':input');
+                    if (inputs.filter('[required][value=""]').first().focus().length) {
+                        return false;
+                    }
+                    data.formData = inputs.serializeArray().concat(form.serializeArray());
+
+                    inputs.filter("input").prop("disabled", true);
+                });
+            });
+        });
     </script>
 {% endblock %}

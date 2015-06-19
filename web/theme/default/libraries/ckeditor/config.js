@@ -41,7 +41,7 @@ CKEDITOR.editorConfig = function( config ) {
 
 	config.extraPlugins = 'iframe';
 
-	config.contentsCss = [ CKEDITOR.getUrl('contents.css'), '../../../../modules/preview/fonts.css' ];
+	config.contentsCss = [ CKEDITOR.getUrl('contents.css'), '../../../../modules/fonts.css' ];
 	/*REPLACE*/  /*ENDREPLACE*/
 
 	// Change the allowed content behaviour

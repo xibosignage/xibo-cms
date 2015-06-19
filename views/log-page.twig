@@ -35,6 +35,7 @@
                                     {{ inline.dropdown("filter_type", "single", "Type", defaults.type, options.type, "id", "value") }}
                                     {{ inline.dropdown("filter_intervalTypeId", "single", "Interval", defaults.intervalType, options.intervalType, "id", "value") }}
                                     {{ inline.number("filter_seconds", "Duration back", defaults.seconds) }}
+                                    {{ inline.text("runNo", "Run") }}
 
                                     {{ inline.checkbox("XiboFilterPinned", "Keep Open", defaults.filterPinned) }}
                                 </div>
@@ -53,11 +54,13 @@
                         <thead>
                             <tr>
                                 <th>{% trans "ID" %}</th>
+                                <th>{% trans "Run" %}</th>
                                 <th>{% trans "Date" %}</th>
+                                <th>{% trans "Channel" %}</th>
+                                <th>{% trans "Function" %}</th>
                                 <th>{% trans "Level" %}</th>
                                 <th>{% trans "Display" %}</th>
                                 <th>{% trans "Page" %}</th>
-                                <th>{% trans "Function" %}</th>
                                 <th>{% trans "Message" %}</th>
                             </tr>
                         </thead>
@@ -76,6 +79,7 @@
 
         var table = $("#logs").DataTable({
             serverSide: true,
+            filter: false,
             searchDelay: 3000,
             "order": [[ 0, "desc"]],
             ajax: {
@@ -86,11 +90,13 @@
             },
             "columns": [
                 { "data": "logId" },
+                { "data": "runNo" },
                 { "data": "logDate" },
+                { "data": "channel" },
+                { "data": "function" },
                 { "data": "type" },
                 { "data": "display" },
                 { "data": "page" },
-                { "data": "function" },
                 { "data": "message" }
             ]
         });

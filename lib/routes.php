@@ -29,23 +29,38 @@ $app->get('/clock', '\Xibo\Controller\Clock:clock')->name('clock');
 // Schedule
 //
 $app->get('/schedule/data/events', '\Xibo\Controller\Schedule:eventData')->name('schedule.calendar.data');
+$app->post('/schedule', '\Xibo\Controller\Schedule:add')->name('schedule.add');
+$app->put('/schedule/:id', '\Xibo\Controller\Schedule:edit')->name('schedule.edit');
+$app->delete('/schedule/:id', '\Xibo\Controller\Schedule:delete')->name('schedule.delete');
 
 //
 // Layouts
 //
 $app->get('/layout', '\Xibo\Controller\Layout:grid')->name('layout.search');
 $app->post('/layout', '\Xibo\Controller\Layout:add')->name('layout.add');
-$app->put('/layout/:id', '\Xibo\Controller\Layout:modify')->name('layout.update');
+$app->put('/layout/:id', '\Xibo\Controller\Layout:edit')->name('layout.edit');
+$app->post('/layout/copy/:id', '\Xibo\Controller\Layout:copy')->name('layout.copy');
 $app->delete('/layout/:id', '\Xibo\Controller\Layout:delete')->name('layout.delete');
 $app->put('/layout/retire/:id', '\Xibo\Controller\Layout:retire')->name('layout.retire');
+
+// Region
+$app->post('/region/:id', '\Xibo\Controller\Region:add')->name('region.add');
+$app->put('/region/:id', '\Xibo\Controller\Region:edit')->name('region.edit');
+$app->delete('/region/:id', '\Xibo\Controller\Region:delete')->name('region.delete');
+$app->put('/region/position/all/:id', '\Xibo\Controller\Region:positionAll')->name('region.position.all');
+$app->get('/region/:id', '\Xibo\Controller\Region:timeline')->name('region.timeline');
 
 //
 // Campaign
 //
 $app->get('/campaign', '\Xibo\Controller\Campaign:grid')->name('campaign.search');
 $app->post('/campaign', '\Xibo\Controller\Campaign:add')->name('campaign.add');
-$app->put('/campaign/:id', '\Xibo\Controller\Campaign:modify')->name('campaign.update');
+$app->put('/campaign/:id', '\Xibo\Controller\Campaign:edit')->name('campaign.edit');
 $app->delete('/campaign/:id', '\Xibo\Controller\Campaign:delete')->name('campaign.delete');
+
+// We use POST requests so that we can support multiple records
+$app->post('/campaign/layout/assign/:id', '\Xibo\Controller\Campaign:assignLayout')->name('campaign.assign.layout');
+$app->post('/campaign/layout/unassign/:id', '\Xibo\Controller\Campaign:unassignLayout')->name('campaign.unassign.layout');
 
 //
 // Template
@@ -56,11 +71,20 @@ $app->get('/template', '\Xibo\Controller\Template:grid')->name('template.search'
 // Resolutions
 //
 $app->get('/resolution', '\Xibo\Controller\Resolution:grid')->name('resolution.search');
+$app->post('/resolution', '\Xibo\Controller\Resolution:add')->name('resolution.add');
+$app->put('/resolution/:id', '\Xibo\Controller\Resolution:edit')->name('resolution.edit');
+$app->delete('/resolution/:id', '\Xibo\Controller\Resolution:delete')->name('resolution.delete');
 
 //
 // Library
 //
+$app->map('/library', '\Xibo\Controller\Library:add')->via('HEAD');
 $app->get('/library', '\Xibo\Controller\Library:grid')->name('library.search');
+$app->get('/library/download/:id', '\Xibo\Controller\Library:download')->name('library.download');
+$app->post('/library', '\Xibo\Controller\Library:add')->name('library.add');
+$app->put('/library/:id', '\Xibo\Controller\Library:edit')->name('library.edit');
+$app->delete('/library/:id', '\Xibo\Controller\Library:delete')->name('library.delete');
+$app->delete('/library/tidy/', '\Xibo\Controller\Library:tidy')->name('library.tidy');
 
 //
 // Displays
@@ -77,8 +101,12 @@ $app->put('/display/requestscreenshot/:id', '\Xibo\Controller\Display:requestScr
 $app->get('/displaygroup', '\Xibo\Controller\DisplayGroup:grid')->name('displayGroup.search');
 $app->post('/displaygroup', '\Xibo\Controller\DisplayGroup:add')->name('displayGroup.add');
 $app->put('/displaygroup/:id', '\Xibo\Controller\DisplayGroup:edit')->name('displayGroup.edit');
-$app->post('/displaygroup/members/:id', '\Xibo\Controller\DisplayGroup:members')->name('displayGroup.members');
 $app->post('/displaygroup/version/:id', '\Xibo\Controller\DisplayGroup:version')->name('displayGroup.version');
+
+$app->post('/displaygroup/display/assign/:id', '\Xibo\Controller\DisplayGroup:assignDisplay')->name('displayGroup.assign.display');
+$app->post('/displaygroup/display/unassign/:id', '\Xibo\Controller\DisplayGroup:unassignDisplay')->name('displayGroup.unassign.display');
+$app->post('/displaygroup/media/assign/:id', '\Xibo\Controller\DisplayGroup:assignMedia')->name('displayGroup.assign.media');
+$app->post('/displaygroup/media/unassign/:id', '\Xibo\Controller\DisplayGroup:unassignMedia')->name('displayGroup.unassign.media');
 
 //
 // Display Profile
@@ -123,7 +151,10 @@ $app->get('/group', '\Xibo\Controller\UserGroup:grid')->name('group.search');
 $app->post('/group', '\Xibo\Controller\UserGroup:add')->name('group.add');
 $app->put('/group/:id', '\Xibo\Controller\UserGroup:edit')->name('group.edit');
 $app->delete('/group/:id', '\Xibo\Controller\UserGroup:delete')->name('group.delete');
-$app->post('/group/members/:id', '\Xibo\Controller\UserGroup:members')->name('group.members');
+
+$app->post('/group/members/assign/:id', '\Xibo\Controller\UserGroup:assignUser')->name('group.members.assign');
+$app->post('/group/members/unassign/:id', '\Xibo\Controller\UserGroup:unassignUser')->name('group.members.unassign');
+
 $app->post('/group/acl/:entity/:id', '\Xibo\Controller\UserGroup:acl')->name('group.acl');
 
 //
@@ -135,6 +166,13 @@ $app->get('/applications', '\Xibo\Controller\Applications:grid')->name('applicat
 // Modules
 //
 $app->get('/module', '\Xibo\Controller\Module:grid')->name('module.search');
+$app->get('/module/resource/:regionId/:id', '\Xibo\Controller\Module:getResource')->name('module.getResource');
+$app->put('/module/settings/:id', '\Xibo\Controller\Module:settings')->name('module.settings');
+$app->put('/module/verify', '\Xibo\Controller\Module:verify')->name('module.verify');
+$app->post('/module/:type/:id', '\Xibo\Controller\Module:addWidget')->name('module.widget.add');
+$app->put('/module/:id', '\Xibo\Controller\Module:editWidget')->name('module.widget.edit');
+$app->delete('/module/:id', '\Xibo\Controller\Module:deleteWidget')->name('module.widget.delete');
+$app->put('/module/transition/:type/:id', '\Xibo\Controller\Module:editWidgetTransition')->name('module.widget.transition.edit');
 
 //
 // Transition

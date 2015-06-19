@@ -14,20 +14,25 @@ use Xibo\Helper\ObjectVars;
 trait EntityTrait
 {
     private $hash = null;
+    private $loaded = false;
+    private $deleting = false;
+
     public $buttons = [];
+    private $jsonExclude = ['buttons', 'jsonExclude'];
 
     /**
      * Hydrate an entity with properties
      *
      * @param array $properties
+     * @param array $intProperties
      *
      * @return self
      */
-    public function hydrate(array $properties)
+    public function hydrate(array $properties, $intProperties = [])
     {
         foreach ($properties as $prop => $val) {
             if (property_exists($this, $prop)) {
-                $this->{$prop} = (stripos(strrev($prop), 'dI') === 0) ? intval($val) : $val;
+                $this->{$prop} = (stripos(strrev($prop), 'dI') === 0 || in_array($prop, $intProperties)) ? intval($val) : $val;
             }
         }
 
@@ -40,8 +45,7 @@ trait EntityTrait
      */
     public function jsonSerialize()
     {
-        $exclude = (property_exists($this, 'jsonExclude')) ? $this->jsonExclude : [];
-        $exclude[] = 'jsonExclude';
+        $exclude = $this->jsonExclude;
 
         $properties = ObjectVars::getObjectVars($this);
         $json = [];
@@ -51,5 +55,23 @@ trait EntityTrait
             }
         }
         return $json;
+    }
+
+    /**
+     * Add a property to the excluded list
+     * @param string $property
+     */
+    public function excludeProperty($property)
+    {
+        $this->jsonExclude[] = $property;
+    }
+
+    /**
+     * Remove a property from the excluded list
+     * @param string $property
+     */
+    public function includeProperty($property)
+    {
+        $this->jsonExclude = array_diff($this->jsonExclude, [$property]);
     }
 }

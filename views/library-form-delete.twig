@@ -1,0 +1,32 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+Form::AddMessage(__('Are you sure you want to remove this Media?')),
+            Form::AddMessage(__('This action cannot be undone.')),
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Delete Media" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Save" %}, $("#libraryFormDelete").submit()
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="libraryFormDelete" class="XiboForm form-horizontal" method="delete" action="{{ urlFor("library.delete", {"id": media.mediaId}) }}">
+
+            </form>
+        </div>
+    </div>
+{% endblock %}

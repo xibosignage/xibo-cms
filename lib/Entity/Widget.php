@@ -26,10 +26,13 @@ use Xibo\Exception\NotFoundException;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\WidgetMediaFactory;
 use Xibo\Factory\WidgetOptionFactory;
+use Xibo\Helper\Log;
+use Xibo\Storage\PDOConnect;
+use Xibo\Widget\Module;
 
-class Widget
+class Widget implements \JsonSerializable
 {
-    private $hash;
+    use EntityTrait;
     public $widgetId;
     public $playlistId;
     public $ownerId;
@@ -38,17 +41,20 @@ class Widget
     public $duration;
     public $displayOrder;
 
-    public $widgetOptions;
+    public $widgetOptions = [];
 
     // A widget might be linked to file based media
-    public $mediaIds;
-    public $permissions;
+    public $mediaIds = [];
+    public $permissions = [];
+
+    /**
+     * @var Module $module A widget can contain a module which is useful for getting accessing module methods
+     */
+    public $module;
 
     public function __construct()
     {
-        $this->hash = null;
-        $this->widgetOptions = array();
-        $this->mediaIds = array();
+        $this->excludeProperty('module');
     }
 
     public function __clone()
@@ -205,6 +211,8 @@ class Widget
 
         // Manage the assigned media
         $this->linkMedia();
+
+        // TODO: Notify the Layout?
     }
 
     public function delete()
@@ -232,15 +240,15 @@ class Widget
         $this->unlinkMedia();
 
         // Delete this
-        \Xibo\Storage\PDOConnect::update('DELETE FROM `widget` WHERE widgetId = :widgetId', array('widgetId' => $this->widgetId));
+        PDOConnect::update('DELETE FROM `widget` WHERE widgetId = :widgetId', array('widgetId' => $this->widgetId));
     }
 
     private function add()
     {
-        \Xibo\Helper\Log::debug('Adding Widget ' . $this->type . ' to PlaylistId ' . $this->playlistId);
+        Log::debug('Adding Widget ' . $this->type . ' to PlaylistId ' . $this->playlistId);
 
         $sql = 'INSERT INTO `widget` (`playlistId`, `ownerId`, `type`, `duration`, `displayOrder`) VALUES (:playlistId, :ownerId, :type, :duration, :displayOrder)';
-        $this->widgetId = \Xibo\Storage\PDOConnect::insert($sql, array(
+        $this->widgetId = PDOConnect::insert($sql, array(
             'playlistId' => $this->playlistId,
             'ownerId' => $this->ownerId,
             'type' => $this->type,
@@ -251,10 +259,10 @@ class Widget
 
     private function update()
     {
-        \Xibo\Helper\Log::debug('Saving Widget ' . $this->type . ' on PlaylistId ' . $this->playlistId . ' WidgetId: ' . $this->widgetId);
+        Log::debug('Saving Widget ' . $this->type . ' on PlaylistId ' . $this->playlistId . ' WidgetId: ' . $this->widgetId);
 
         $sql = 'UPDATE `widget` SET `playlistId` = :playlistId, `ownerId` = :ownerId, `type` = :type, `duration` = :duration, `displayOrder` = :displayOrder WHERE `widgetId` = :widgetId';
-        \Xibo\Storage\PDOConnect::update($sql, array(
+        PDOConnect::update($sql, array(
             'playlistId' => $this->playlistId,
             'ownerId' => $this->ownerId,
             'type' => $this->type,
@@ -276,7 +284,7 @@ class Widget
 
             //\Debug::Audit('Linking MediaId ' . $mediaId . ' to Widget ' . $this->widgetId);
 
-            \Xibo\Storage\PDOConnect::insert($sql, array(
+            PDOConnect::insert($sql, array(
                 'widgetId' => $this->widgetId,
                 'mediaId' => $mediaId,
                 'mediaId2' => $mediaId
@@ -290,7 +298,7 @@ class Widget
     private function unlinkMedia()
     {
         foreach ($this->mediaIds as $mediaId) {
-            \Xibo\Storage\PDOConnect::update('DELETE FROM `lkwidgetmedia` WHERE widgetId = :widgetId AND mediaId = :mediaId', array(
+            PDOConnect::update('DELETE FROM `lkwidgetmedia` WHERE widgetId = :widgetId AND mediaId = :mediaId', array(
                 'widgetId' => $this->widgetId,
                 'mediaId' => $mediaId
             ));

@@ -57,9 +57,15 @@
     <script type="text/javascript">
         var table = $("#resolutions").DataTable({
             serverSide: true,
+            filter: false,
             searchDelay: 3000,
             "order": [[ 1, "asc"]],
-            ajax: "{{ urlFor("resolution.search") }}",
+            ajax: {
+                url: "{{ urlFor("resolution.search") }}",
+                data: function(d) {
+                    $.extend(d, $("#resolutions").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                }
+            },
             "columns": [
                 { "data": "resolutionId" },
                 { "data": "resolution" },

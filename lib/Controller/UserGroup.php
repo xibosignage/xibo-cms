@@ -21,22 +21,19 @@
 namespace Xibo\Controller;
 use baseDAO;
 use database;
-use Exception;
 use JSON;
 use Kit;
-use PDO;
 use Xibo\Entity\Permission;
 use Xibo\Entity\User;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\PermissionFactory;
+use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
-use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Form;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Session;
-use Xibo\Helper\Theme;
 
 
 class UserGroup extends Base
@@ -468,56 +465,49 @@ class UserGroup extends Base
      * Sets the Members of a group
      * @param int $groupId
      */
-    public function members($groupId)
+    public function assignUser($groupId)
     {
         $group = UserGroupFactory::getById($groupId);
 
         if (!$this->getUser()->checkEditable($group))
             throw new AccessDeniedException();
 
-        // Load the groups details
-        $group->load();
+        $users = Sanitize::getIntArray('userId');
 
-        $users = $this->getApp()->request()->params('userId');
+        foreach ($users as $userId) {
 
-        // We will receive a list of users from the UI which are in the "assign column" at the time the form is
-        // submitted.
-        // We want to go through and unlink any users that are NOT in that list, but that the current user has access
-        // to edit.
-        // We want to add any users that are in that list (but aren't already assigned)
+            $user = UserFactory::getById($userId);
 
-        // All users that this session has access to
-        $allUsers = $this->getUser()->userList();
+            if (!$this->getUser()->checkViewable($user))
+                throw new AccessDeniedException(__('Access Denied to User'));
 
-        // Convert to an array of ID's for convenience
-        $allUserIds = array_map(function ($user) {
-            return $user->userId;
-        }, $allUsers);
-
-        // Users in group
-        $usersAssigned = $this->getUser()->userList(null, array('groupIds' => array($groupId)));
-
-        foreach ($usersAssigned as $row) {
-            /* @var User $row */
-            // Did this session have permission to do anything to this user?
-            // If not, move on
-            if (!in_array($row->userId, $allUserIds))
-                continue;
-
-            // Is this user in the provided list of users?
-            if (in_array($row->userId, $users)) {
-                // This user is already assigned, so we remove it from the $users array
-                unset($users[$row->userId]);
-            } else {
-                // It isn't therefore needs to be removed
-                $group->unassignUser($row->userId);
-            }
+            $group->assignUser($user);
         }
 
-        // Add any users that are still missing after tha assignment process
+        $group->save(false);
+
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Membership set for %s'), $group->group),
+            'id' => $group->groupId
+        ]);
+    }
+
+    /**
+     * Unassign a User from group
+     * @param int $groupId
+     */
+    public function unassignUser($groupId)
+    {
+        $group = UserGroupFactory::getById($groupId);
+
+        if (!$this->getUser()->checkEditable($group))
+            throw new AccessDeniedException();
+
+        $users = Sanitize::getIntArray('userId');
+
         foreach ($users as $userId) {
-            // Add any that are missing
-            $group->assignUser($userId);
+            $group->unassignUser(UserFactory::getById($userId));
         }
 
         $group->save(false);

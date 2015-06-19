@@ -26,12 +26,10 @@ use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\MediaFactory;
+use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
-use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Help;
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
-use Xibo\Helper\Theme;
 
 
 class DisplayGroup extends Base
@@ -283,7 +281,64 @@ class DisplayGroup extends Base
      * Sets the Members of a group
      * @param int $displayGroupId
      */
-    public function members($displayGroupId)
+    public function assignDisplay($displayGroupId)
+    {
+        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
+
+        if (!$this->getUser()->checkEditable($displayGroup))
+            throw new AccessDeniedException();
+
+        $displays = Sanitize::getIntArray('displayId');
+
+        foreach ($displays as $displayId) {
+            $display = DisplayFactory::getById($displayId);
+
+            if (!$this->getUser()->checkViewable($displayId))
+                throw new AccessDeniedException(__('Access Denied to Display'));
+
+            $displayGroup->assignDisplay($display);
+        }
+
+        $displayGroup->save(false);
+
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Displays assigned to %s'), $displayGroup->displayGroup),
+            'id' => $displayGroup->displayGroupId
+        ]);
+    }
+
+    /**
+     * Unassign displays from a Display Group
+     * @param int $displayGroupId
+     */
+    public function unassignDisplay($displayGroupId)
+    {
+        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
+
+        if (!$this->getUser()->checkEditable($displayGroup))
+            throw new AccessDeniedException();
+
+        $displays = Sanitize::getIntArray('displayId');
+
+        foreach ($displays as $displayId) {
+            $displayGroup->unassignDisplay(DisplayFactory::getById($displayId));
+        }
+
+        $displayGroup->save(false);
+
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Displays unassigned from %s'), $displayGroup->displayGroup),
+            'id' => $displayGroup->displayGroupId
+        ]);
+    }
+
+    /**
+     * Media Form (media linked to displays)
+     * @param int $displayGroupId
+     */
+    public function mediaForm($displayGroupId)
     {
         $displayGroup = DisplayGroupFactory::getById($displayGroupId);
 
@@ -293,224 +348,80 @@ class DisplayGroup extends Base
         // Load the groups details
         $displayGroup->load();
 
-        $displays = Sanitize::getIntArray('displayId');
+        $this->getState()->template = 'displaygroup-form-media';
+        $this->getState()->setData([
+            'displayGroup' => $displayGroup,
+            'modules' => ModuleFactory::query(null, ['regionSpecific' => 0]),
+            'media' => MediaFactory::getByDisplayGroupId($displayGroup->displayGroupId),
+            'help' => Help::Link('DisplayGroup', 'FileAssociations')
+        ]);
+    }
 
-        // All users that this session has access to
-        $allDisplays = DisplayFactory::query();
+    /**
+     * Assign Media
+     * @param int $displayGroupId
+     */
+    public function assignMedia($displayGroupId)
+    {
+        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
 
-        // Convert to an array of ID's for convenience
-        $allDisplayIds = array_map(function ($display) {
-            return $display->displayId;
-        }, $allDisplays);
+        if (!$this->getUser()->checkEditable($displayGroup))
+            throw new AccessDeniedException();
 
-        // Users in group
-        $displaysAssigned = DisplayFactory::getByDisplayGroupId($displayGroupId);
+        // Load the groups details
+        $displayGroup->load();
 
-        foreach ($displaysAssigned as $row) {
-            /* @var Display $row */
-            // Did this session have permission to do anything to this user?
-            // If not, move on
-            if (!in_array($row->displayId, $allDisplayIds))
-                continue;
+        $mediaIds = Sanitize::getIntArray('mediaIds');
 
-            // Is this user in the provided list of users?
-            if (in_array($row->displayId, $displays)) {
-                // This user is already assigned, so we remove it from the $users array
-                unset($displays[$row->displayId]);
-            } else {
-                // It isn't therefore needs to be removed
-                $displayGroup->unassignDisplay($row->displayId);
-            }
-        }
+        // Loop through all the media
+        foreach ($mediaIds as $mediaId) {
 
-        // Add any users that are still missing after tha assignment process
-        foreach ($displays as $displayId) {
-            // Add any that are missing
-            $displayGroup->assignDisplay($displayId);
+            $media = MediaFactory::getById($mediaId);
+
+            if (!$this->getUser()->checkViewable($media))
+                throw new AccessDeniedException(__('You have selected media that you no longer have permission to use. Please reload the form.'));
+
+            $displayGroup->assignMedia($media);
         }
 
         $displayGroup->save(false);
 
         // Return
         $this->getState()->hydrate([
-            'message' => sprintf(__('Membership set for %s'), $displayGroup->displayGroup),
+            'message' => sprintf(__('Files assigned to %s'), $displayGroup->displayGroup),
             'id' => $displayGroup->displayGroupId
         ]);
     }
 
-    public function FileAssociations()
+    /**
+     * Unassign Media
+     * @param int $displayGroupId
+     */
+    public function unassignMedia($displayGroupId)
     {
+        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
 
-        $displayGroupId = \Xibo\Helper\Sanitize::getInt('DisplayGroupID');
+        if (!$this->getUser()->checkEditable($displayGroup))
+            throw new AccessDeniedException();
 
-        // Auth
-        $auth = $this->getUser()->DisplayGroupAuth($displayGroupId, true);
-        if (!$auth->edit)
-            trigger_error(__('You do not have permission to edit this display group'), E_USER_ERROR);
+        // Load the groups details
+        $displayGroup->load();
 
-        $id = uniqid();
-        Theme::Set('id', $id);
-        Theme::Set('form_meta', '<input type="hidden" name="p" value="displaygroup"><input type="hidden" name="q" value="FileAssociationsView"><input type="hidden" name="displaygroupid" value="' . $displayGroupId . '">');
-        Theme::Set('pager', ApplicationState::Pager($id, 'grid_pager'));
-
-        // Module types filter
-        $modules = $this->getUser()->ModuleAuth(0, '', -1);
-        $types = array();
-
-        foreach ($modules as $module) {
-            $type['moduleid'] = $module['Module'];
-            $type['module'] = $module['Name'];
-
-            $types[] = $type;
-        }
-
-        array_unshift($types, array('moduleid' => '', 'module' => 'All'));
-        Theme::Set('module_field_list', $types);
-
-        // Get the currently associated media items and put them in the top bar
-        $existing = array();
-
-        try {
-            $dbh = \Xibo\Storage\PDOConnect::init();
-
-            $sth = $dbh->prepare('
-                SELECT media.MediaID, media.Name
-                  FROM `media`
-                    INNER JOIN `lkmediadisplaygroup`
-                    ON lkmediadisplaygroup.mediaid = media.mediaid
-                 WHERE lkmediadisplaygroup.displaygroupid = :displaygroupid
-            ');
-
-            $sth->execute(array('displaygroupid' => $displayGroupId));
-
-            $existing = $sth->fetchAll();
-
-        } catch (\Exception $e) {
-
-            Log::error($e->getMessage(), get_class(), __FUNCTION__);
-
-            trigger_error(__('Unable to get existing assignments.'), E_USER_ERROR);
-        }
-
-        Theme::Set('existing_associations', $existing);
-
-        // Call to render the template
-        $output = Theme::RenderReturn('displaygroup_fileassociations_form_assign');
-
-        // Construct the Response
-        $response = $this->getState();
-        $response->html = $output;
-        $response->success = true;
-        $response->dialogSize = true;
-        $response->dialogClass = 'modal-big';
-        $response->dialogWidth = '780px';
-        $response->dialogHeight = '580px';
-        $response->dialogTitle = __('Associate an item from the Library');
-
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('DisplayGroup', 'FileAssociations') . '")');
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Assign'), 'FileAssociationsSubmit(' . $displayGroupId . ')');
-
-    }
-
-    public function FileAssociationsView()
-    {
-        $user = $this->getUser();
-
-        //Input vars
-        $mediatype = \Xibo\Helper\Sanitize::getString('filter_type');
-        $name = \Xibo\Helper\Sanitize::getString('filter_name');
-        $displaygroupid = \Xibo\Helper\Sanitize::getInt('displaygroupid');
-
-        // Get the currently associated media items and put them in the top bar
-        $existing = array();
-
-        try {
-            $dbh = \Xibo\Storage\PDOConnect::init();
-
-            $sth = $dbh->prepare('
-                SELECT mediaid
-                  FROM `lkmediadisplaygroup`
-                 WHERE displaygroupid = :displaygroupid
-            ');
-
-            $sth->execute(array('displaygroupid' => $displaygroupid));
-
-            while ($existing[] = $sth->fetchColumn()) ;
-        } catch (Exception $e) {
-
-            Log::error($e->getMessage(), get_class(), __FUNCTION__);
-
-            trigger_error(__('Unable to get existing assignments.'), E_USER_ERROR);
-        }
-
-        // Get a list of media
-        $mediaList = $user->MediaList(NULL, array('type' => $mediatype, 'name' => $name));
-
-        $rows = array();
-
-        // Add some extra information
-        foreach ($mediaList as $row) {
-
-            if (in_array($row['mediaid'], $existing))
-                continue;
-
-            $row['list_id'] = 'MediaID_' . $row['mediaid'];
-
-            $rows[] = $row;
-        }
-
-        Theme::Set('table_rows', $rows);
-
-        // Render the Theme
-        $response = $this->getState();
-        $response->SetGridResponse(Theme::RenderReturn('displaygroup_fileassociations_form_assign_list'));
-        $response->callBack = 'FileAssociationsCallback';
-        $response->pageSize = 5;
-
-    }
-
-    public function SetFileAssociations()
-    {
-        $user =& $this->user;
-        $response = new ApplicationState();
-
-        $displayGroupId = \Xibo\Helper\Sanitize::getInt('displaygroupid');
-        $mediaList = \Kit::GetParam('MediaID', _POST, _ARRAY_INT, NULL, false);
-
-        if ($displayGroupId == 0)
-            trigger_error(__('Display Group not selected'), E_USER_ERROR);
-
-        // Auth
-        $auth = $this->getUser()->DisplayGroupAuth($displayGroupId, true);
-        if (!$auth->del)
-            trigger_error(__('You do not have permission to edit this display group'), E_USER_ERROR);
-
-
-        $displayGroup = new DisplayGroup($this->db);
-
-        if (!$displayGroup->AssociateFiles($this->user, $displayGroupId, $mediaList))
-            trigger_error($displayGroup->GetErrorMessage(), E_USER_ERROR);
+        $mediaIds = Sanitize::getIntArray('mediaIds');
 
         // Loop through all the media
-        foreach ($mediaList as $mediaId)
-        {
-            $mediaId = \Xibo\Helper\Sanitize::int($mediaId);
+        foreach ($mediaIds as $mediaId) {
 
-            // Check we have permissions to use this media (we will use this to copy the media later)
-            $mediaAuth = $user->MediaAuth($mediaId, true);
-
-            if (!$mediaAuth->view)
-                $this->ThrowError(__('You have selected media that you no longer have permission to use. Please reload the form.'));
-
-            // Create the link
-            if (!$link->Link($displayGroupId, $mediaId))
-                $this->ThrowError(__('Unable to make this assignment'));
+            $displayGroup->unassignMedia(MediaFactory::getById($mediaId));
         }
 
-        // Success
-        $response->SetFormSubmitResponse(sprintf(__('%d Media Items Assigned'), count($mediaList)));
+        $displayGroup->save(false);
 
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Files unassigned from %s'), $displayGroup->displayGroup),
+            'id' => $displayGroup->displayGroupId
+        ]);
     }
 
     /**
@@ -572,5 +483,3 @@ class DisplayGroup extends Base
         ]);
     }
 }
-
-?>

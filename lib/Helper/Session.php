@@ -53,6 +53,7 @@ class Session
         register_shutdown_function('session_write_close');
 
         // Start the session
+        session_cache_limiter(false);
         session_start();
     }
 

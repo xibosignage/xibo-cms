@@ -20,12 +20,16 @@
  */
 namespace Xibo\Controller;
 
+use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\ModuleFactory;
-use Xibo\Helper\ApplicationState;
+use Xibo\Factory\PlaylistFactory;
+use Xibo\Factory\RegionFactory;
+use Xibo\Factory\TransitionFactory;
+use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
-use Xibo\Helper\Theme;
+use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
 
@@ -41,32 +45,27 @@ class Module extends Base
         // Do we have any modules to install?!
         if (Config::GetSetting('MODULE_CONFIG_LOCKED_CHECKB') != 'Checked') {
             // Get a list of matching files in the modules folder
-            $files = glob('modules/*.module.php');
-
-            $installed = [];
+            $files = glob('../modules/*.json');
 
             // Get a list of all currently installed modules
-            try {
-                $dbh = PDOConnect::init();
+            $installed = [];
+            $data['modulesToInstall'] = [];
 
-                $sth = $dbh->prepare("SELECT CONCAT('modules/', LOWER(Module), '.module.php') AS Module FROM `module`");
-                $sth->execute();
-
-                $rows = $sth->fetchAll();
-                $installed = array();
-
-                foreach ($rows as $row)
-                    $installed[] = $row['Module'];
-
-            } catch (\Exception $e) {
-                trigger_error(__('Cannot get installed modules'), E_USER_ERROR);
+            foreach (ModuleFactory::query() as $row) {
+                /* @var \Xibo\Entity\Module $row */
+                $installed[] = $row->type;
             }
 
             // Compare the two
-            $to_install = array_diff($files, $installed);
+            foreach ($files as $file) {
+                // Check to see if the module has already been installed
+                $fileName = explode('.', basename($file));
 
-            if (count($to_install) > 0) {
-                $data['modulesToInstall'] = $to_install;
+                if (in_array($fileName[0], $installed))
+                    continue;
+
+                // If not, open it up and get some information about it
+                $data['modulesToInstall'][] = json_decode(file_get_contents($file));
             }
         }
 
@@ -77,12 +76,17 @@ class Module extends Base
     /**
      * A grid of modules
      */
-    public function Grid()
+    public function grid()
     {
-        $modules = ModuleFactory::query();
+        $modules = ModuleFactory::query($this->gridRenderSort(), $this->gridRenderFilter());
 
         foreach ($modules as $module) {
             /* @var \Xibo\Entity\Module $module */
+
+            if ($this->isApi())
+                break;
+
+            $module->includeProperty('buttons');
 
             // If the module config is not locked, present some buttons
             if (Config::GetSetting('MODULE_CONFIG_LOCKED_CHECKB') != 'Checked') {
@@ -90,7 +94,7 @@ class Module extends Base
                 // Edit button
                 $module->buttons[] = array(
                     'id' => 'module_button_edit',
-                    'url' => 'index.php?p=module&q=EditForm&ModuleID=' . $module->moduleId,
+                    'url' => $this->urlFor('module.settings.form', ['id' => $module->moduleId]),
                     'text' => __('Edit')
                 );
             }
@@ -109,289 +113,364 @@ class Module extends Base
     }
 
     /**
-     * Edit Form
+     * Settings Form
+     * @param int $moduleId
      */
-    public function EditForm()
+    public function settingsForm($moduleId)
     {
-
-        $user = $this->getUser();
-        $response = $this->getState();
-        $helpManager = new Help($db, $user);
-
         // Can we edit?
         if (Config::GetSetting('MODULE_CONFIG_LOCKED_CHECKB') == 'Checked')
-            trigger_error(__('Module Config Locked'), E_USER_ERROR);
+            throw new \InvalidArgumentException(__('Module Config Locked'));
 
-        $moduleId = \Xibo\Helper\Sanitize::getInt('ModuleID');
+        if (!$this->getUser()->userTypeId == 1)
+            throw new AccessDeniedException();
 
-        // Pull the currently known info from the DB
-        $SQL = '';
-        $SQL .= 'SELECT ModuleID, ';
-        $SQL .= '   Module, ';
-        $SQL .= '   Name, ';
-        $SQL .= '   Enabled, ';
-        $SQL .= '   Description, ';
-        $SQL .= '   RegionSpecific, ';
-        $SQL .= '   ValidExtensions, ';
-        $SQL .= '   ImageUri, ';
-        $SQL .= '   PreviewEnabled ';
-        $SQL .= '  FROM `module` ';
-        $SQL .= ' WHERE ModuleID = %d ';
+        $module = ModuleFactory::createById($moduleId);
 
-        $SQL = sprintf($SQL, $moduleId);
+        $moduleFields = $module->settingsForm();
 
-        if (!$row = $db->GetSingleRow($SQL)) {
-            trigger_error($db->error());
-            trigger_error(__('Error getting Module'));
-        }
-
-        $type = \Kit::ValidateParam($row['Module'], _WORD);
-
-        // Set some information about the form
-        Theme::Set('form_id', 'ModuleEditForm');
-        Theme::Set('form_action', 'index.php?p=module&q=Edit');
-        Theme::Set('form_meta', '<input type="hidden" name="ModuleID" value="' . $moduleId . '" /><input type="hidden" name="type" value="' . $type . '" />');
-
-        $formFields = array();
-        $formFields[] = Form::AddText('ValidExtensions', __('Valid Extensions'), \Xibo\Helper\Sanitize::string($row['ValidExtensions']),
-            __('The Extensions allowed on files uploaded using this module. Comma Separated.'), 'e', '');
-
-        $formFields[] = Form::AddText('ImageUri', __('Image Uri'), \Xibo\Helper\Sanitize::string($row['ImageUri']),
-            __('The Image to display for this module. This should be a path relative to the root of the installation.'), 'i', '');
-
-        $formFields[] = Form::AddCheckbox('PreviewEnabled', __('Preview Enabled?'),
-            \Xibo\Helper\Sanitize::int($row['PreviewEnabled']), __('When PreviewEnabled users will be able to see a preview in the layout designer'),
-            'p');
-
-        $formFields[] = Form::AddCheckbox('Enabled', __('Enabled?'),
-            \Xibo\Helper\Sanitize::int($row['Enabled']), __('When Enabled users will be able to add media using this module'),
-            'b');
-
-        // Set any module specific form fields
-        $module = \Xibo\Factory\ModuleFactory::create($type);
-
-        // Merge in the fields from the settings
-        foreach ($module->ModuleSettingsForm() as $field)
-            $formFields[] = $field;
-
-        Theme::Set('form_fields', $formFields);
-
-        $response->SetFormRequestResponse(NULL, __('Edit Module'), '350px', '325px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Module', 'Edit') . '")');
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Save'), '$("#ModuleEditForm").submit()');
-
+        // Pass to view
+        $this->getState()->template = ($moduleFields == null) ? 'module-form-settings' : $moduleFields;
+        $this->getState()->setData([
+            'module' => $module,
+            'help' => Help::Link('Module', 'Edit')
+        ]);
     }
 
-    public function Edit()
+    /**
+     * Settings
+     * @param int $moduleId
+     */
+    public function settings($moduleId)
     {
-
-
-        $response = $this->getState();
-
         // Can we edit?
         if (Config::GetSetting('MODULE_CONFIG_LOCKED_CHECKB') == 'Checked')
-            trigger_error(__('Module Config Locked'), E_USER_ERROR);
+            throw new \InvalidArgumentException(__('Module Config Locked'));
 
-        $moduleId = \Xibo\Helper\Sanitize::getInt('ModuleID');
-        $type = \Kit::GetParam('type', _POST, _WORD);
-        $validExtensions = \Kit::GetParam('ValidExtensions', _POST, _STRING, '');
-        $imageUri = \Xibo\Helper\Sanitize::getString('ImageUri');
-        $enabled = \Xibo\Helper\Sanitize::getCheckbox('Enabled');
-        $previewEnabled = \Xibo\Helper\Sanitize::getCheckbox('PreviewEnabled');
+        if (!$this->getUser()->userTypeId == 1)
+            throw new AccessDeniedException();
 
-        // Validation
-        if ($moduleId == 0 || $moduleId == '')
-            trigger_error(__('Module ID is missing'), E_USER_ERROR);
-
-        if ($type == '')
-            trigger_error(__('Type is missing'), E_USER_ERROR);
-
-        if ($imageUri == '')
-            trigger_error(__('Image Uri is a required field.'), E_USER_ERROR);
-
-        // Process any module specific form fields
-        $module = ModuleFactory::create($type, $this->db, $this->user);
+        $module = ModuleFactory::createById($moduleId);
+        $module->getModule()->validExtensions = Sanitize::getString('validExtensions');
+        $module->getModule()->imageUri = Sanitize::getString('imageUri');
+        $module->getModule()->enabled = Sanitize::getString('enabled');
+        $module->getModule()->previewEnabled = Sanitize::getString('previewEnabled');
 
         // Install Files for this module
-        $module->InstallFiles();
+        $module->installFiles();
 
-        try {
-            // Get the settings (may throw an exception)
-            $settings = json_encode($module->ModuleSettings());
+        // Get the settings (may throw an exception)
+        $module->settings();
 
-            $dbh = \Xibo\Storage\PDOConnect::init();
+        // Save
+        $module->getModule()->save();
 
-            $sth = $dbh->prepare('
-                UPDATE `module` SET ImageUri = :image_url, ValidExtensions = :valid_extensions,
-                    Enabled = :enabled, PreviewEnabled = :preview_enabled, settings = :settings
-                 WHERE ModuleID = :module_id');
-
-            $sth->execute(array(
-                'image_url' => $imageUri,
-                'valid_extensions' => $validExtensions,
-                'enabled' => $enabled,
-                'preview_enabled' => $previewEnabled,
-                'settings' => $settings,
-                'module_id' => $moduleId
-            ));
-
-            $response->SetFormSubmitResponse(__('Module Edited'), false);
-
-        } catch (Exception $e) {
-
-            Log::error($e->getMessage());
-
-            if (!$this->IsError())
-                $this->SetError(1, __('Unknown Error'));
-
-            trigger_error(__('Unable to update module'), E_USER_ERROR);
-        }
+        // Successful
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Edited %s'), $module->getModule()->name),
+            'id' => $module->getModule()->moduleId,
+            'data' => [$module->getModule()]
+        ]);
     }
 
     /**
-     * Edit Form
+     * Verify
      */
-    public function VerifyForm()
+    public function verifyForm()
     {
-        $user = $this->getUser();
-        $response = $this->getState();
-        $helpManager = new Help(NULL, $user);
-
-        // Set some information about the form
-        Theme::Set('form_id', 'VerifyForm');
-        Theme::Set('form_action', 'index.php?p=module&q=Verify');
-
-        $formFields = array();
-        $formFields[] = Form::AddMessage(__('Verify all modules have been installed correctly by reinstalling any module related files'));
-
-        Theme::Set('form_fields', $formFields);
-
-        $response->SetFormRequestResponse(NULL, __('Verify'), '350px', '325px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . $helpManager->Link('Module', 'Edit') . '")');
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Verify'), '$("#VerifyForm").submit()');
-
+        // Pass to view
+        $this->getState()->template = 'module-form-verify';
+        $this->getState()->setData([
+            'help' => Help::Link('Module', 'Edit')
+        ]);
     }
 
-    public function Verify()
+    /**
+     * Verify Module
+     */
+    public function verify()
     {
+        // Set all files to valid = 0
+        PDOConnect::update('UPDATE `media` SET valid = 0 WHERE moduleSystemFile = 1', []);
 
+        // Install all files
+        Library::installAllModuleFiles();
 
-        $response = $this->getState();
-
-        try {
-            $dbh = \Xibo\Storage\PDOConnect::init();
-
-            $dbh->exec('UPDATE `media` SET valid = 0 WHERE moduleSystemFile = 1');
-        } catch (Exception $e) {
-
-            Log::error($e->getMessage());
-
-            if (!$this->IsError())
-                $this->SetError(1, __('Unknown Error'));
-
-            return false;
-        }
-
-        Media::installAllModuleFiles();
-
-        $response->SetFormSubmitResponse(__('Verified'), false);
-
+        // Successful
+        $this->getState()->hydrate([
+            'message' => __('Verified')
+        ]);
     }
 
-    public function Install()
+    /**
+     * @param string $name
+     */
+    public function installForm($name)
     {
-        // Module file name
-        $file = \Xibo\Helper\Sanitize::getString('module');
+        if (!file_exists('../modules/' . $name . '.json'))
+            throw new \InvalidArgumentException(__('Invalid module'));
 
-        if ($file == '')
-            trigger_error(__('Unable to install module'), E_USER_ERROR);
+        // Use the name to get details about this module.
+        $module = json_decode(file_get_contents('../modules/' . $name . '.json'));
 
-        Log::notice('Request to install Module: ' . $file, 'module', 'Install');
+        $this->getState()->template = 'module-form-install';
+        $this->getState()->setData([
+            'module' => $module,
+            'help' => Help::Link('Module', 'Install')
+        ]);
+    }
 
-        // Check that the file exists
-        if (!file_exists($file))
-            trigger_error(__('File does not exist'), E_USER_ERROR);
+    /**
+     * Install Module
+     * @param string $name
+     */
+    public function install($name)
+    {
+        Log::notice('Request to install Module: ' . $name);
 
-        // Make sure the file is in our list of expected module files
-        $files = glob('modules/*.module.php');
+        if (!file_exists('../modules/' . $name . '.json'))
+            throw new \InvalidArgumentException(__('Invalid module'));
 
-        if (!in_array($file, $files))
-            trigger_error(__('Not a module file'), E_USER_ERROR);
+        // Use the name to get details about this module.
+        $moduleDetails = json_decode(file_get_contents('../modules/' . $name . '.json'));
 
-        // Load the file
-        include_once($file);
+        // All modules should be capable of autoload
+        $module = ModuleFactory::createForInstall($moduleDetails->class);
+        $module->installOrUpdate();
 
-        $type = str_replace('modules/', '', $file);
-        $type = str_replace('.module.php', '', $type);
-
-        // Load the module object inside the file
-        if (!class_exists($type))
-            trigger_error(__('Module file does not contain a class of the correct name'), E_USER_ERROR);
-
-        try {
-            Log::notice('Validation passed, installing module.', 'module', 'Install');
-            $moduleObject = ModuleFactory::create($type, $this->db, $this->user);
-            $moduleObject->InstallOrUpdate();
-        } catch (Exception $e) {
-            trigger_error(__('Unable to install module'), E_USER_ERROR);
-        }
-
-        Log::notice('Module Installed: ' . $file, 'module', 'Install');
+        Log::notice('Module Installed: ' . $module->getModuleType());
 
         // Excellent... capital... success
-        $response = $this->getState();
-        $response->refresh = true;
-        $response->refreshLocation = 'index.php?p=module';
-
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Installed %s'), $module->getModuleType()),
+            'data' => [$module]
+        ]);
     }
 
     /**
-     * Execute a Module Action
+     * Add Widget Form
+     * @param string $type
+     * @param int $playlistId
      */
-    public function Exec()
+    public function addWidgetForm($type, $playlistId)
     {
-        $requestedModule = \Kit::GetParam('mod', _REQUEST, _WORD);
-        $requestedMethod = \Kit::GetParam('method', _REQUEST, _WORD);
+        $playlist = PlaylistFactory::getById($playlistId);
 
-        Log::debug('Module Exec for ' . $requestedModule . ' with method ' . $requestedMethod);
+        if (!$this->getUser()->checkEditable($playlist))
+            throw new AccessDeniedException();
 
-        // Validate that GetResource calls have a region
-        if ($requestedMethod == 'GetResource' && \Kit::GetParam('regionId', _REQUEST, _INT) == 0)
-            die(__('Get Resource Call without a Region'));
+        // Create a module to use
+        $module = ModuleFactory::createForWidget($type, null, $this->getUser()->userId, $playlistId);
 
-        // Create a new module to handle this request
-        $module = \Xibo\Factory\ModuleFactory::createForWidget(Kit::GetParam('mod', _REQUEST, _WORD), \Kit::GetParam('widgetId', _REQUEST, _INT), $this->getUser()->userId, \Kit::GetParam('playlistId', _REQUEST, _INT), \Kit::GetParam('regionId', _REQUEST, _INT));
+        // Pass to view
+        $this->getState()->template = $module->getModuleType() . '-form-add';
+        $this->getState()->setData([
+            'playlist' => $playlist,
+            'module' => $module
+        ]);
+    }
 
-        // Authenticate access to this widget
+    /**
+     * Add Widget
+     * @param string $type
+     * @param int $playlistId
+     */
+    public function addWidget($type, $playlistId)
+    {
+        $playlist = PlaylistFactory::getById($playlistId);
+
+        if (!$this->getUser()->checkEditable($playlist))
+            throw new AccessDeniedException();
+
+        // Create a module to use
+        $module = ModuleFactory::createForWidget($type, null, $this->getUser()->userId, $playlistId);
+
+        // Call module add
+        $module->add();
+
+        // Successful
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Added %s'), $module->getName()),
+            'id' => $module->widget->widgetId,
+            'data' => [$module]
+        ]);
+    }
+
+    /**
+     * Edit Widget Form
+     * @param int $widgetId
+     */
+    public function editWidgetForm($widgetId)
+    {
+        $module = ModuleFactory::createWithWidget(WidgetFactory::loadByWidgetId($widgetId));
+
+        if (!$this->getUser()->checkEditable($module->widget))
+            throw new AccessDeniedException();
+
+        // Pass to view
+        $this->getState()->template = $module->getModuleType() . '-form-edit';
+        $this->getState()->setData([
+            'module' => $module
+        ]);
+    }
+
+    /**
+     * Edit Widget
+     * @param int $widgetId
+     */
+    public function editWidget($widgetId)
+    {
+        $module = ModuleFactory::createWithWidget(WidgetFactory::loadByWidgetId($widgetId));
+
+        if (!$this->getUser()->checkEditable($module->widget))
+            throw new AccessDeniedException();
+
+        // Call Module Edit
+        $module->edit();
+
+        // Successful
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Edited %s'), $module->getName()),
+            'id' => $module->widget->widgetId,
+            'data' => [$module]
+        ]);
+    }
+
+    /**
+     * Delete Widget Form
+     * @param int $widgetId
+     */
+    public function deleteWidgetForm($widgetId)
+    {
+        $module = ModuleFactory::createWithWidget(WidgetFactory::loadByWidgetId($widgetId));
+
+        if (!$this->getUser()->checkDeleteable($module->widget))
+            throw new AccessDeniedException();
+
+        // Pass to view
+        $this->getState()->template = 'module-form-delete';
+        $this->getState()->setData([
+            'module' => $module,
+            'help' => Help::Link('Media', 'Delete')
+        ]);
+    }
+
+    /**
+     * Delete Widget
+     * @param int $widgetId
+     */
+    public function deleteWidget($widgetId)
+    {
+        $module = ModuleFactory::createWithWidget(WidgetFactory::loadByWidgetId($widgetId));
+
+        if (!$this->getUser()->checkDeleteable($module->widget))
+            throw new AccessDeniedException();
+
+        // Call Module Delete
+        $module->delete();
+
+        // Call Widget Delete
+        $module->widget->delete();
+
+        // Successful
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Deleted %s'), $module->getName())
+        ]);
+    }
+
+    /**
+     * Edit Widget Transition Form
+     * @param string $type
+     * @param int $widgetId
+     */
+    public function editWidgetTransitionForm($type, $widgetId)
+    {
+        $module = ModuleFactory::createWithWidget(WidgetFactory::loadByWidgetId($widgetId));
+
+        if (!$this->getUser()->checkEditable($module->widget))
+            throw new AccessDeniedException();
+
+        // Pass to view
+        $this->getState()->template = 'module-form-transition';
+        $this->getState()->setData([
+            'type' => $type,
+            'module' => $module,
+            'transitions' => [
+                'in' => TransitionFactory::getEnabledByType('in'),
+                'out' => TransitionFactory::getEnabledByType('out'),
+                'compassPoints' => array(
+                    array('id' => 'N', 'name' => __('North')),
+                    array('id' => 'NE', 'name' => __('North East')),
+                    array('id' => 'E', 'name' => __('East')),
+                    array('id' => 'SE', 'name' => __('South East')),
+                    array('id' => 'S', 'name' => __('South')),
+                    array('id' => 'SW', 'name' => __('South West')),
+                    array('id' => 'W', 'name' => __('West')),
+                    array('id' => 'NW', 'name' => __('North West'))
+                )
+            ],
+            'help' => Help::Link('Transition', 'Edit')
+        ]);
+    }
+
+    /**
+     * Edit Widget Transition
+     * @param string $type
+     * @param int $widgetId
+     */
+    public function editWidgetTransition($type, $widgetId)
+    {
+        $widget = WidgetFactory::getById($widgetId);
+
+        if (!$this->getUser()->checkEditable($widget))
+            throw new AccessDeniedException();
+
+        $widget->load();
+
+        switch ($type) {
+            case 'in':
+                $widget->setOptionValue('transIn', 'attrib', Sanitize::getString('transitionType'));
+                $widget->setOptionValue('transInDuration', 'attrib', Sanitize::getInt('transitionDuration'));
+                $widget->setOptionValue('transInDirection', 'attrib', Sanitize::getString('transitionDirection'));
+
+                break;
+
+            case 'out':
+                $widget->setOptionValue('transOut', 'attrib', Sanitize::getString('transitionType'));
+                $widget->setOptionValue('transOutDuration', 'attrib', Sanitize::getInt('transitionDuration'));
+                $widget->setOptionValue('transOutDirection', 'attrib', Sanitize::getString('transitionDirection'));
+
+                break;
+
+            default:
+                throw new \InvalidArgumentException(__('Unknown transition type'));
+        }
+
+        $widget->save();
+
+        // Successful
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Edited Transition')),
+            'id' => $widget->widgetId,
+            'data' => [$widget]
+        ]);
+    }
+
+    /**
+     * Get Resource
+     * @param $regionId
+     * @param $widgetId
+     * @throws \Xibo\Exception\NotFoundException
+     */
+    public function getResource($regionId, $widgetId)
+    {
+        $module = ModuleFactory::createWithWidget(WidgetFactory::loadByWidgetId($widgetId), RegionFactory::getById($regionId));
+
         if (!$this->getUser()->checkViewable($module->widget))
-            die(__('Access Denied'));
+            throw new AccessDeniedException();
 
-        // Set the permissions for this module
-        $module->setPermission($this->getUser()->getPermission($module->widget));
-
-        // Set the user - it is used in forms to return other entities
-        $module->setUser($this->user);
-
-        // What module has been requested?
-        $response = null;
-        $method = \Kit::GetParam('method', _REQUEST, _WORD);
-        $raw = \Kit::GetParam('raw', _REQUEST, _WORD);
-
-        if (method_exists($module, $method)) {
-            $response = $module->$method();
-        } else {
-            // Set the error to display
-            trigger_error(__('This Module does not exist'), E_USER_ERROR);
-        }
-
-        if ($raw == 'true') {
-            echo $response;
-            exit();
-        } else {
-            /* @var ApplicationState $response */
-
-        }
+        // Call module GetResource
+        echo $module->getResource();
+        $this->setNoOutput(true);
     }
 }

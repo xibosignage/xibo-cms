@@ -67,13 +67,19 @@
     <script type="text/javascript">
         var table = $("#layouts").DataTable({
             serverSide: true,
+            filter: false,
             searchDelay: 3000,
             "order": [[ 1, "asc"]],
-            ajax: "{{ urlFor("layout.search") }}",
+            ajax: {
+                url: "{{ urlFor("layout.search") }}",
+                "data": function(d) {
+                    $.extend(d, $("#layouts").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                }
+            },
             "columns": [
                 { "data": "layoutId" },
                 { "data": "layout" },
-                { "data": "description" },
+                { "data": "descriptionFormatted" },
                 { "data": "thumbnail" },
                 { "data": "owner" },
                 { "data": "permissions" },

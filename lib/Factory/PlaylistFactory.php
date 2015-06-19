@@ -25,6 +25,9 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Playlist;
 use Xibo\Exception\NotFoundException;
+use Xibo\Helper\Log;
+use Xibo\Helper\Sanitize;
+use Xibo\Storage\PDOConnect;
 
 class PlaylistFactory
 {
@@ -36,12 +39,7 @@ class PlaylistFactory
      */
     public static function getByRegionId($regionId)
     {
-        $playlists = PlaylistFactory::query(null, array('regionId' => $regionId));
-
-        if (count($playlists) <= 0)
-            throw new NotFoundException(__('Cannot find playlist'));
-
-        return $playlists;
+        return PlaylistFactory::query(null, array('regionId' => $regionId));
     }
 
     /**
@@ -80,27 +78,34 @@ class PlaylistFactory
         $entries = array();
 
         $params = array();
-        $sql = 'SELECT playlist.* FROM `playlist` ';
+        $sql = 'SELECT playlist.* ';
 
-        if (\Xibo\Helper\Sanitize::int('regionId', $filterBy) != 0) {
-            $sql .= 'INNER JOIN `lkregionplaylist` ON lkregionplaylist.playlistId = playlist.playlistId AND lkregionplaylist.regionId = :regionId ';
-            $params['regionId'] = \Xibo\Helper\Sanitize::int('regionId', $filterBy);
+        if (Sanitize::getInt('regionId', $filterBy) != null) {
+            $sql .= ' , lkregionplaylist.displayOrder ';
         }
 
-        if (\Xibo\Helper\Sanitize::int('playlistId', $filterBy) != 0) {
-            $sql .= ' WHERE playlistId = :playlistId ';
-            $params['playlistId'] = \Xibo\Helper\Sanitize::int('playlistId', $filterBy);
+        $sql .= '  FROM `playlist` ';
+
+        if (Sanitize::getInt('regionId', $filterBy) != null) {
+            $sql .= '
+                INNER JOIN `lkregionplaylist`
+                ON lkregionplaylist.playlistId = playlist.playlistId
+                    AND lkregionplaylist.regionId = :regionId
+            ';
+            $params['regionId'] = Sanitize::getInt('regionId', $filterBy);
         }
 
-        \Xibo\Helper\Log::sql($sql, $params);
+        $sql .= ' WHERE 1 = 1 ';
 
-        foreach (\Xibo\Storage\PDOConnect::select($sql, $params) as $row) {
-            $playlist = new Playlist();
-            $playlist->name = \Xibo\Helper\Sanitize::string($row['name']);
-            $playlist->ownerId = \Xibo\Helper\Sanitize::int($row['ownerId']);
-            $playlist->playlistId = \Xibo\Helper\Sanitize::int($row['playlistId']);
+        if (Sanitize::getInt('playlistId', $filterBy) != 0) {
+            $sql .= ' AND playlistId = :playlistId ';
+            $params['playlistId'] = Sanitize::getInt('playlistId', $filterBy);
+        }
 
-            $entries[] = $playlist;
+        Log::sql($sql, $params);
+
+        foreach (PDOConnect::select($sql, $params) as $row) {
+            $entries[] = (new Playlist())->hydrate($row);
         }
 
         return $entries;

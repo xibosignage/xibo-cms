@@ -25,6 +25,8 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Tag;
 use Xibo\Exception\NotFoundException;
+use Xibo\Helper\Sanitize;
+use Xibo\Storage\PDOConnect;
 
 class TagFactory
 {
@@ -99,6 +101,29 @@ class TagFactory
             $tag->tagId = \Xibo\Helper\Sanitize::int($row['tagId']);
             $tag->tag = \Xibo\Helper\Sanitize::string($row['tag']);
             $tag->assignLayout($layoutId);
+
+            $tags[] = $tag;
+        }
+
+        return $tags;
+    }
+
+    /**
+     * Gets tags for media
+     * @param $mediaId
+     * @return array[Tag]
+     */
+    public static function loadByMediaId($mediaId)
+    {
+        $tags = array();
+
+        $sql = 'SELECT tag.tagId, tag.tag FROM `tag` INNER JOIN `lktagmedia` ON lktagmedia.tagId = tag.tagId WHERE lktagmedia.mediaId = :mediaId';
+
+        foreach (PDOConnect::select($sql, array('mediaId' => $mediaId)) as $row) {
+            $tag = new Tag();
+            $tag->tagId = Sanitize::int($row['tagId']);
+            $tag->tag = Sanitize::string($row['tag']);
+            $tag->assignMedia($mediaId);
 
             $tags[] = $tag;
         }

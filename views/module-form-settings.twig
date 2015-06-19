@@ -1,0 +1,63 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+$formFields = array();
+        $formFields[] = Form::AddText('ValidExtensions', __('Valid Extensions'), \Xibo\Helper\Sanitize::string($row['ValidExtensions']),
+            __('The Extensions allowed on files uploaded using this module. Comma Separated.'), 'e', '');
+
+        $formFields[] = Form::AddText('ImageUri', __('Image Uri'), \Xibo\Helper\Sanitize::string($row['ImageUri']),
+            __('The Image to display for this module. This should be a path relative to the root of the installation.'), 'i', '');
+
+        $formFields[] = Form::AddCheckbox('PreviewEnabled', __('Preview Enabled?'),
+            \Xibo\Helper\Sanitize::int($row['PreviewEnabled']), __('When PreviewEnabled users will be able to see a preview in the layout designer'),
+            'p');
+
+        $formFields[] = Form::AddCheckbox('Enabled', __('Enabled?'),
+            \Xibo\Helper\Sanitize::int($row['Enabled']), __('When Enabled users will be able to add media using this module'),
+            'b');
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Edit Module" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Save" %}, $("#moduleEditForm").submit()
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="moduleEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.settings", {id: module.module.moduleId}) }}">
+
+                {% set title %}{% trans "Valid Extensions" %}{% endset %}
+                {% set helpText %}{% trans "The Extensions allowed on files uploaded using this module. Comma Separated." %}{% endset %}
+                {{ forms.text("validExtensions", title, module.module.validExtensions, helpText) }}
+
+                {% set title %}{% trans "Image Uri" %}{% endset %}
+                {% set helpText %}{% trans "The Image to display for this module. This should be a path relative to the root of the installation." %}{% endset %}
+                {{ forms.text("imageUri", title, module.module.imageUri, helpText) }}
+
+                {% set title %}{% trans "Preview Enabled?" %}{% endset %}
+                {% set helpText %}{% trans "When Preview is Enabled users will be able to see a preview in the layout designer." %}{% endset %}
+                {{ forms.checkbox("previewEnabled", title, module.module.previewEnabled, helpText) }}
+
+                {% set title %}{% trans "Enabled?" %}{% endset %}
+                {% set helpText %}{% trans "When Enabled users will be able to add media using this module." %}{% endset %}
+                {{ forms.checkbox("enabled", title, module.module.enabled, helpText) }}
+
+                {% block moduleFormFields %}
+
+                {% endblock %}
+            </form>
+        </div>
+    </div>
+{% endblock %}

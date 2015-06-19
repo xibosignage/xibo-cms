@@ -1,0 +1,38 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+$formFields[] = Form::AddText('resolution', __('Resolution'), NULL,
+            __('A name for this Resolution'), 'r', 'required');
+
+        $formFields[] = Form::AddNumber('width', __('Width'), NULL,
+            __('The Width for this Resolution'), 'w', 'required');
+
+        $formFields[] = Form::AddNumber('height', __('Height'), NULL,
+            __('The Height for this Resolution'), 'h', 'required');
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Add Resolution" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Save" %}, $("#<<id>>").submit()
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="<<id>>" class="XiboForm form-horizontal" method="post" action="{{ urlFor("resolution.add") }}">
+
+            </form>
+        </div>
+    </div>
+{% endblock %}

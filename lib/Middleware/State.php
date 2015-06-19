@@ -24,7 +24,9 @@ namespace Xibo\Middleware;
 
 
 use Slim\Middleware;
+use Xibo\Factory\ModuleFactory;
 use Xibo\Helper\ApplicationState;
+use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\Config;
 use Xibo\Helper\Session;
 use Xibo\Helper\Theme;
@@ -68,16 +70,12 @@ class State extends Middleware
         if (strtolower($this->app->getMode()) == 'test') {
             $this->app->config('debug', true);
             $this->app->config('log.level', \Slim\Log::DEBUG);
-            error_reporting(E_ALL);
-            ini_set('display_errors', 1);
         }
         else {
             // TODO: Use the log levels defined in the config
             $this->app->config('log.level', \Slim\Log::ERROR);
             error_reporting(0);
         }
-
-        $app = $this->app;
 
         // Attach a hook to log the route
         $this->app->hook('slim.before.dispatch', function() use ($app) {
@@ -90,16 +88,21 @@ class State extends Middleware
             // Configure some things in the theme
             if ($app->getName() == 'web') {
                 $app->view()->appendData(array(
-                    'baseUrl' => rtrim(str_replace('index.php', '', $app->request()->getRootUri()), '/') . '/',
+                    'baseUrl' => $app->urlFor('home'),
                     'route' => $app->router()->getCurrentRoute()->getName(),
-                    'theme' => Theme::GetConfig(),
+                    'theme' => Theme::getInstance(),
                     'settings' => $settings,
                     'translate' => [
                         'jsLocale' => Translate::GetJsLocale(),
                         'jsShortLocale' => ((strlen(Translate::GetJsLocale()) > 2) ? substr(Translate::GetJsLocale(), 0, 2) : Translate::GetJsLocale()),
                         'calendarLanguage' => ((strlen(Translate::GetJsLocale()) <= 2) ? Translate::GetJsLocale() . '-' . strtoupper(Translate::GetJsLocale()) : Translate::GetJsLocale())
                     ],
-                    'translations' => '{}'
+                    'translations' => '{}',
+                    'libraryUpload' => [
+                        'maxSize' => ByteFormatter::toBytes(Config::getMaxUploadSize()),
+                        'maxSizeMessage' => sprintf(__('This form accepts files up to a maximum size of %s'), Config::getMaxUploadSize()),
+                        'validExt' => implode('|', ModuleFactory::getValidExtensions())
+                    ]
                 ));
             }
         });

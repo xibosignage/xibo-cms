@@ -23,8 +23,12 @@
 namespace Xibo\Entity;
 
 
-class WidgetOption
+use Xibo\Helper\Log;
+use Xibo\Storage\PDOConnect;
+
+class WidgetOption implements \JsonSerializable
 {
+    use EntityTrait;
     public $widgetId;
 
     public $type;
@@ -43,21 +47,24 @@ class WidgetOption
 
     public function save()
     {
-        \Xibo\Helper\Log::debug('Saving ' . $this);
+        Log::debug('Saving ' . $this);
 
-        $sql = 'INSERT INTO `widgetoption` (`widgetId`, `type`, `option`, `value`) VALUES (:widgetId, :type, :option, :value) ON DUPLICATE KEY UPDATE `value` = :value2';
-        \Xibo\Storage\PDOConnect::insert($sql, array(
+        PDOConnect::insert('
+            INSERT INTO `widgetoption` (`widgetId`, `type`, `option`, `value`)
+              VALUES (:widgetId, :type, :option, :value) ON DUPLICATE KEY UPDATE `value` = :value2
+        ', array(
             'widgetId' => $this->widgetId,
             'type' => $this->type,
             'option' => $this->option,
             'value' => $this->value,
-            'value2' => $this->value,
+            'value2' => $this->value
         ));
     }
 
     public function delete()
     {
-        $sql = 'DELETE FROM `widgetoption` WHERE `widgetId` = :widgetId AND `option` = :option';
-        \Xibo\Storage\PDOConnect::update($sql, array('widgetId' => $this->widgetId, 'option' => $this->option));
+        PDOConnect::update('DELETE FROM `widgetoption` WHERE `widgetId` = :widgetId AND `option` = :option', array(
+            'widgetId' => $this->widgetId, 'option' => $this->option)
+        );
     }
 }

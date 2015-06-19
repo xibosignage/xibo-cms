@@ -25,7 +25,6 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
@@ -81,6 +80,16 @@ class UserFactory
             throw new NotFoundException(__('User not found'));
 
         return $users[0];
+    }
+
+    /**
+     * Get by groupId
+     * @param int $groupId
+     * @return array[User]
+     */
+    public static function getByGroupId($groupId)
+    {
+        return UserFactory::query(null, array('groupIds' => [$groupId]));
     }
 
     /**
@@ -160,7 +169,7 @@ class UserFactory
         if (is_array($sortOrder))
             $SQL .= 'ORDER BY ' . implode(',', $sortOrder);
 
-        Log::sql($SQL, $params);
+        // Log::sql($SQL, $params);
 
         foreach (PDOConnect::select($SQL, $params) as $row) {
             $entries[] = (new User())->hydrate($row);

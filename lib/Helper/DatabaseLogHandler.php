@@ -35,16 +35,18 @@ class DatabaseLogHandler extends AbstractProcessingHandler
         if (self::$statement == NULL) {
             $pdo = PDOConnect::newConnection();
 
-            $SQL = 'INSERT INTO log (logdate, type, page, function, message, userid, displayid)
-                      VALUES (:logdate, :type, :page, :function, :message, :userid, :displayid)
+            $SQL = 'INSERT INTO log (runNo, logdate, channel, type, page, function, message, userid, displayid)
+                      VALUES (:runNo, :logdate, :channel, :type, :page, :function, :message, :userid, :displayid)
                   ';
 
             self::$statement = $pdo->prepare($SQL);
         }
 
         $params = array(
+            'runNo' => isset($record['extra']['runNo']) ? $record['extra']['runNo'] : '',
             'logdate' => $record['datetime']->format("Y-m-d H:i:s"),
             'type' => $record['level_name'],
+            'channel' => $record['channel'],
             'page' => isset($record['extra']['route']) ? $record['extra']['route'] : '',
             'function' => isset($record['extra']['method']) ? $record['extra']['method'] : '',
             'message' => $record['message'],

@@ -49,7 +49,7 @@
                 <div class="row header">
                     <div class="col-sm-12">
                         <div class="meta pull-left">
-                            <div class="page"><img class="xibo-logo" src="{{ baseUrl }}theme/default/img/xibologo.png"></div>
+                            <div class="page"><img class="xibo-logo" src="{{ theme.uri("img/xibologo.png") }}"></div>
                         </div>
                         <div class="user pull-right">
                             <button type="button"  class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse-1">
@@ -60,7 +60,7 @@
                             </button>
                             <div class="item dropdown">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                                    <img src="{{ baseUrl }}theme/default/img/avatar.jpg" />
+                                    <img src="{{ theme.uri("img/avatar.jpg") }}" />
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-right">
                                     <li class="dropdown-header">{{ currentUser.userName }}<br/>
@@ -153,6 +153,107 @@
                 {{/each}}
             </ul>
         </div>
+    </script>
+
+    <script type="text/x-handlebars-template" id="template-file-upload">
+        <form method="post" enctype="multipart/form-data" data-max-file-size="{{ upload.maxSize }}" data-accept-file-types="/(\.|\/){{ upload.validExt }}$/i">
+            <div class="row fileupload-buttonbar">
+                <div class="col-md-7">
+                    <div class="well">
+                        {{ upload.maxSizeMessage }}
+                    </div>
+                    <!-- The fileinput-button span is used to style the file input field as button -->
+                <span class="btn btn-success fileinput-button">
+                    <i class="glyphicon glyphicon-plus glyphicon glyphicon-white"></i>
+                    <span>{{ trans.addFiles }}</span>
+                    <input type="file" name="files[]" multiple>
+                </span>
+                    <button type="submit" class="btn btn-primary start">
+                        <i class="glyphicon glyphicon-upload glyphicon glyphicon-white"></i>
+                        <span>{{ trans.startUpload }}</span>
+                    </button>
+                    <button type="reset" class="btn btn-warning cancel">
+                        <i class="glyphicon glyphicon-ban-circle glyphicon glyphicon-white"></i>
+                        <span>{{ trans.cancelUpload }}</span>
+                    </button>
+                    <!-- The loading indicator is shown during file processing -->
+                    <span class="fileupload-loading"></span>
+                </div>
+                <!-- The global progress information -->
+                <div class="col-md-4 fileupload-progress fade">
+                    <!-- The global progress bar -->
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" style="width:0%;">
+                            <div class="sr-only"></div>
+                        </div>
+                    </div>
+                    <!-- The extended global progress information -->
+                    <div class="progress-extended">&nbsp;</div>
+                </div>
+            </div>
+            <!-- The table listing the files available for upload/download -->
+            <table role="presentation" class="table table-striped"><tbody class="files"></tbody></table>
+        </form>
+    </script>
+
+    <!-- The template to display files available for upload -->
+    <script id="template-upload" type="text/x-tmpl">
+    {% for (var i=0, file; file=o.files[i]; i++) { %}
+        <tr class="template-upload fade">
+            <td>
+                <span class="fileupload-preview"></span>
+            </td>
+            <td class="title">
+                {% if (file.error) { %}
+                    <div><span class="label label-danger">{%=file.error%}</span></div>
+                {% } %}
+                {% if (!file.error) { %}
+                <label for="name[]"><input name="name[]" type="text" id="name" value="{%=file.name%}" /></label>
+                {% } %}
+            </td>
+            <td>
+                <p class="size">{%=o.formatFileSize(file.size)%}</p>
+                {% if (!o.files.error) { %}
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" style="width:0%;">
+                            <div class="sr-only"></div>
+                        </div>
+                    </div>
+                </div>
+                {% } %}
+            </td>
+            <td>
+                {% if (!o.files.error && !i && !o.options.autoUpload) { %}
+                    <button class="btn btn-primary start">
+                        <i class="glyphicon glyphicon-upload glyphicon glyphicon-white"></i>
+                    </button>
+                {% } %}
+                {% if (!i) { %}
+                    <button class="btn btn-warning cancel">
+                        <i class="glyphicon glyphicon-ban-circle glyphicon glyphicon-white"></i>
+                    </button>
+                {% } %}
+            </td>
+        </tr>
+    {% } %}
+    </script>
+        <!-- The template to display files available for download -->
+        <script id="template-download" type="text/x-tmpl">
+    {% for (var i=0, file; file=o.files[i]; i++) { %}
+        <tr class="template-download fade">
+           <td>
+                <p class="name" id="{%=file.storedas%}" status="{% if (file.error) { %}error{% } %}">
+                    {%=file.name%}
+                </p>
+                {% if (file.error) { %}
+                    <div><span class="label label-danger">{%=file.error%}</span></div>
+                {% } %}
+            </td>
+            <td>
+                <span class="size">{%=o.formatFileSize(file.size)%}</span>
+            </td>
+        </tr>
+    {% } %}
     </script>
     {% endraw %}
 

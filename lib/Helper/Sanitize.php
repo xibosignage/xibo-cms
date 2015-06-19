@@ -38,10 +38,11 @@ class Sanitize
                 case 'GET':
                     return $app->request->get($param, $default);
                 case 'POST':
-                case 'DELETE':
                     return $app->request->post($param, $default);
                 case 'PUT':
                     return $app->request->put($param, $default);
+                case 'DELETE':
+                    return $app->request->delete($param, $default);
                 default:
                     return $default;
             }
@@ -101,7 +102,7 @@ class Sanitize
     public static function getCheckbox($param, $default = null, $source = null)
     {
         $checkbox = Sanitize::getParam($param, $default, $source);
-        return ($checkbox === 'on' || $checkbox === 1 || $checkbox === 'true') ? 1 : 0;
+        return ($checkbox === 'on' || $checkbox === 1 || $checkbox === '1' || $checkbox === 'true') ? 1 : 0;
     }
 
     public static function bool($param)

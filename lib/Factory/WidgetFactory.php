@@ -25,6 +25,9 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Widget;
 use Xibo\Exception\NotFoundException;
+use Xibo\Helper\Log;
+use Xibo\Helper\Sanitize;
+use Xibo\Storage\PDOConnect;
 
 class WidgetFactory
 {
@@ -36,6 +39,16 @@ class WidgetFactory
     public static function getByPlaylistId($playlistId)
     {
         return WidgetFactory::query(null, array('playlistId' => $playlistId));
+    }
+
+    /**
+     * Load widgets by MediaId
+     * @param int $mediaId
+     * @return array[Widget]
+     */
+    public static function getByMediaId($mediaId)
+    {
+        return WidgetFactory::query(null, array('mediaId' => $mediaId));
     }
 
     /**
@@ -74,15 +87,17 @@ class WidgetFactory
      * @param int $playlistId
      * @param string $type
      * @param int $duration
+     * @param int $displayOrder
      * @return Widget
      */
-    public static function create($ownerId, $playlistId, $type, $duration)
+    public static function create($ownerId, $playlistId, $type, $duration, $displayOrder = 1)
     {
         $widget = new Widget();
         $widget->ownerId = $ownerId;
         $widget->playlistId = $playlistId;
         $widget->type = $type;
         $widget->duration = $duration;
+        $widget->displayOrder = $displayOrder;
 
         return $widget;
     }
@@ -95,32 +110,46 @@ class WidgetFactory
         $entries = array();
 
         $params = array();
-        $sql = 'SELECT * FROM `widget` WHERE 1 = 1';
+        $sql = '
+          SELECT widget.widgetId,
+              widget.playlistId,
+              widget.ownerId,
+              widget.type,
+              widget.duration,
+              widget.displayOrder
+            FROM `widget`
+        ';
 
-        if (\Xibo\Helper\Sanitize::int('playlistId', $filterBy) != 0) {
-            $sql .= ' AND playlistId = :playlistId';
-            $params['playlistId'] = \Xibo\Helper\Sanitize::int('playlistId', $filterBy);
+        if (Sanitize::getInt('mediaId', $filterBy) != null) {
+            $sql .= '
+                INNER JOIN `lkwidgetmedia`
+                ON `lkwidgetmedia`.widgetId = widget.widgetId
+                    AND `lkwidgetmedia`.mediaId = :mediaId
+            ';
+            $params['mediaId'] = Sanitize::getInt('mediaId', $filterBy);
         }
 
-        if (\Xibo\Helper\Sanitize::int('widgetId', $filterBy) != 0) {
+        $sql .= ' WHERE 1 = 1 ';
+
+        if (Sanitize::getInt('playlistId', $filterBy) != null) {
+            $sql .= ' AND playlistId = :playlistId';
+            $params['playlistId'] = Sanitize::getInt('playlistId', $filterBy);
+        }
+
+        if (Sanitize::getInt('widgetId', $filterBy) != null) {
             $sql .= ' AND widgetId = :widgetId';
-            $params['widgetId'] = \Xibo\Helper\Sanitize::int('widgetId', $filterBy);
+            $params['widgetId'] = Sanitize::getInt('widgetId', $filterBy);
         }
 
         // Sorting?
         if (is_array($sortOrder))
             $sql .= ' ORDER BY ' . implode(',', $sortOrder);
 
-        foreach (\Xibo\Storage\PDOConnect::select($sql, $params) as $row) {
-            $widget = new Widget();
-            $widget->widgetId = \Xibo\Helper\Sanitize::int($row['widgetId']);
-            $widget->playlistId = \Xibo\Helper\Sanitize::int($row['playlistId']);
-            $widget->ownerId = \Xibo\Helper\Sanitize::int($row['ownerId']);
-            $widget->type = \Kit::ValidateParam($row['type'], _WORD);
-            $widget->duration = \Xibo\Helper\Sanitize::int($row['duration']);
-            $widget->displayOrder = \Xibo\Helper\Sanitize::int($row['displayOrder']);
 
-            $entries[] = $widget;
+        Log::sql($sql, $params);
+
+        foreach (PDOConnect::select($sql, $params) as $row) {
+            $entries[] = (new Widget())->hydrate($row, ['duration']);
         }
 
         return $entries;

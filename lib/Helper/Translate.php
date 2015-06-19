@@ -128,7 +128,7 @@ class Translate
     public static function parseHttpAcceptLanguageHeader($header = null)
     {
         if ($header == null)
-            $header = $_SERVER['HTTP_ACCEPT_LANGUAGE'];
+            $header = isset($_SERVER['HTTP_ACCEPT_LANGUAGE']) ? $_SERVER['HTTP_ACCEPT_LANGUAGE'] : '';
 
         $languages = array();
 

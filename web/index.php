@@ -26,12 +26,7 @@ DEFINE('RELATIVE_URL_BASE', '../');
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-require '../lib/autoload.php';
 require '../vendor/autoload.php';
-
-// Classes we need to deprecate, namespace or put in composer
-require '../lib/data/data.class.php';
-// END
 
 if (!file_exists('settings.php'))
     die('Not configured');
@@ -41,12 +36,13 @@ Config::Load('settings.php');
 
 // Create a logger
 $logger = new \Flynsarmy\SlimMonolog\Log\MonologWriter(array(
+    'name' => 'WEB',
     'handlers' => array(
-        new \Monolog\Handler\ChromePHPHandler(),
+        new \Monolog\Handler\ChromePHPHandler(\Monolog\Logger::INFO),
         new \Xibo\Helper\DatabaseLogHandler()
     ),
     'processors' => array(
-        new \Xibo\Helper\RouteProcessor()
+        new \Xibo\Helper\LogProcessor()
     )
 ));
 
@@ -56,6 +52,7 @@ $app = new \Slim\Slim(array(
     'log.writer' => $logger
 ));
 $app->setName('web');
+$app->runNo = \Xibo\Helper\Random::generateString(10);
 
 // Twig templating
 $twig = new \Slim\Views\Twig();
@@ -69,16 +66,17 @@ $twig->parserExtensions = array(
 );
 
 // Configure the template folder
-$twig->twigTemplateDirs = ['../views'];
+$twig->twigTemplateDirs = array_merge(\Xibo\Factory\ModuleFactory::getViewPaths(), ['../views']);
 
 $app->view($twig);
 
-// Middleware
-$app->add(new \Xibo\Middleware\Storage());
-$app->add(new \Xibo\Middleware\State());
-$app->add(new \Xibo\Middleware\Actions());
-$app->add(new \Xibo\Middleware\CsrfGuard());
+// Middleware (onion, outside inwards and then out again - i.e. the last one is first and last)
 $app->add(new \Xibo\Middleware\WebAuthentication());
+$app->add(new \Xibo\Middleware\CsrfGuard());
+$app->add(new \Xibo\Middleware\Theme());
+$app->add(new \Xibo\Middleware\Actions());
+$app->add(new \Xibo\Middleware\State());
+$app->add(new \Xibo\Middleware\Storage());
 
 // All application routes
 require '../lib/routes-web.php';

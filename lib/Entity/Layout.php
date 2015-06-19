@@ -21,15 +21,18 @@
 namespace Xibo\Entity;
 
 use Xibo\Exception\NotFoundException;
+use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\TagFactory;
+use Xibo\Helper\Date;
 use Xibo\Helper\Log;
+use Xibo\Storage\PDOConnect;
 
-class Layout
+class Layout implements \JsonSerializable
 {
-    private $hash;
+    use EntityTrait;
     public $layoutId;
     public $ownerId;
     public $campaignId;
@@ -49,25 +52,20 @@ class Layout
     public $height;
 
     // Child items
-    public $regions;
-    public $tags;
-    public $permissions;
+    public $regions = [];
+    public $tags = [];
+    public $permissions = [];
+    public $campaigns = [];
 
     // Read only properties
     public $owner;
     public $groupsWithPermissions;
 
-    public function __construct()
-    {
-        $this->hash = null;
-        $this->regions = array();
-        $this->tags = array();
-    }
-
     public function __clone()
     {
         // Clear the layout id
         $this->layoutId = null;
+        $this->campaignId = null;
         $this->hash = null;
 
         // Clone the regions
@@ -135,9 +133,13 @@ class Layout
 
     /**
      * Load this Layout
+     * @param bool $loadPlaylists
      */
-    public function load()
+    public function load($loadPlaylists = false)
     {
+        if ($this->loaded)
+            return;
+
         Log::debug('Loading Layout ' . $this->layoutId);
 
         // Load permissions
@@ -145,16 +147,25 @@ class Layout
 
         // Load all regions
         $this->regions = RegionFactory::getByLayoutId($this->layoutId);
-        foreach ($this->regions as $region) {
-            /* @var Region $region */
-            $region->load();
+
+        if ($loadPlaylists) {
+            foreach ($this->regions as $region) {
+                /* @var Region $region */
+                $region->load();
+            }
         }
 
         // Load all tags
         $this->tags = TagFactory::loadByLayoutId($this->layoutId);
 
+        // Load Campaigns
+        $this->campaigns = CampaignFactory::getByLayoutId($this->layoutId);
+
         // Set the hash
         $this->hash = $this->hash();
+        $this->loaded = true;
+
+        Log::debug('Loaded %s' . $this->layoutId);
     }
 
     /**
@@ -162,6 +173,8 @@ class Layout
      */
     public function save()
     {
+        Log::debug('Saving %s', $this);
+
         // New or existing layout
         if ($this->layoutId == null || $this->layoutId == 0) {
             $this->add();
@@ -169,6 +182,8 @@ class Layout
         else if ($this->hash() != $this->hash) {
             $this->update();
         }
+
+        Log::debug('Saving Regions on %s', $this);
 
         // Update the regions
         foreach ($this->regions as $region) {
@@ -179,13 +194,19 @@ class Layout
             $region->save();
         }
 
-        // Save the tags
-        foreach ($this->tags as $tag) {
-            /* @var Tag $tag */
+        Log::debug('Saving tags on %s', $this);
 
-            $tag->assignLayout($this->layoutId);
-            $tag->save();
+        // Save the tags
+        if (is_array($this->tags)) {
+            foreach ($this->tags as $tag) {
+                /* @var Tag $tag */
+
+                $tag->assignLayout($this->layoutId);
+                $tag->save();
+            }
         }
+
+        Log::debug('Save finished for %s', $this);
     }
 
     /**
@@ -194,11 +215,13 @@ class Layout
      */
     public function delete()
     {
+        Log::debug('Deleting %s', $this);
+
         // We must ensure everything is loaded before we delete
-        if ($this->hash == null)
+        if (!$this->loaded)
             $this->load();
 
-        \Xibo\Helper\Log::debug('Deleting ' . $this);
+        Log::debug('Deleting ' . $this);
 
         // Delete Permissions
         foreach ($this->permissions as $permission) {
@@ -209,30 +232,32 @@ class Layout
         // Unassign all Tags
         foreach ($this->tags as $tag) {
             /* @var Tag $tag */
-
-            $tag->assignLayout($this->layoutId);
-            $tag->removeAssignments();
+            $tag->unassignLayout($this->layoutId);
+            $tag->save();
         }
 
         // Delete Regions
         foreach ($this->regions as $region) {
             /* @var Region $region */
-
-            // Assert the Layout Id
-            $region->layoutId = $this->layoutId;
             $region->delete();
         }
 
-        // Delete Campaign
-        $campaign = new \Campaign();
-        if (!$campaign->Delete($this->campaignId))
-            throw new \Exception(__('Problem deleting Campaign'));
+        // Unassign from all Campaigns
+        foreach ($this->campaigns as $campaign) {
+            /* @var Campaign $campaign */
+            $campaign->unassignLayout($this->layoutId);
+            $campaign->save(false);
+        }
+
+        // Delete our own Campaign
+        $campaign = CampaignFactory::getById($this->campaignId);
+        $campaign->delete();
 
         // Remove the Layout from any display defaults
-        \Xibo\Storage\PDOConnect::update('UPDATE `display` SET defaultlayoutid = 4 WHERE defaultlayoutid = :layoutid', array('layoutid' => $this->layoutId));
+        PDOConnect::update('UPDATE `display` SET defaultlayoutid = 4 WHERE defaultlayoutid = :layoutId', array('layoutId' => $this->layoutId));
 
         // Remove the Layout (now it is orphaned it can be deleted safely)
-        \Xibo\Storage\PDOConnect::update('DELETE FROM layout WHERE layoutid = :layoutid', array('layoutid' => $this->layoutId));
+        PDOConnect::update('DELETE FROM `layout` WHERE layoutid = :layoutId', array('layoutId' => $this->layoutId));
     }
 
     /**
@@ -287,14 +312,14 @@ class Layout
      */
     private function add()
     {
-        \Xibo\Helper\Log::debug('Adding Layout ' . $this->layout);
+        Log::debug('Adding Layout ' . $this->layout);
 
         $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, status, width, height, schemaVersion, backgroundImageId, backgroundColor, backgroundzIndex)
                   VALUES (:layout, :description, :userid, :createddt, :modifieddt, :status, :width, :height, 3, :backgroundImageId, :backgroundColor, :backgroundzIndex)';
 
-        $time = \Xibo\Helper\Date::getSystemDate(null, 'Y-m-d h:i:s');
+        $time = Date::getSystemDate(null, 'Y-m-d h:i:s');
 
-        $this->layoutId = \Xibo\Storage\PDOConnect::insert($sql, array(
+        $this->layoutId = PDOConnect::insert($sql, array(
             'layout' => $this->layout,
             'description' => $this->description,
             'userid' => $this->ownerId,
@@ -307,6 +332,16 @@ class Layout
             'backgroundColor' => $this->backgroundColor,
             'backgroundzIndex' => $this->backgroundzIndex,
         ));
+
+        // Add a Campaign
+        $campaign = new Campaign();
+        $campaign->campaign = $this->layout;
+        $campaign->isLayoutSpecific = 1;
+        $campaign->ownerId = $this->getOwnerId();
+        $campaign->assignLayout($this);
+
+        // Ready to save the Campaign
+        $campaign->save();
     }
 
     /**
@@ -315,16 +350,16 @@ class Layout
      */
     private function update()
     {
-        \Xibo\Helper\Log::debug('Editing Layout ' . $this->layout . '. Id = ' . $this->layoutId);
+        Log::debug('Editing Layout ' . $this->layout . '. Id = ' . $this->layoutId);
 
         $sql = '
         UPDATE layout SET layout = :layout, description = :description, modifiedDT = :modifieddt, retired = :retired, width = :width, height = :height, backgroundImageId = :backgroundImageId, backgroundColor = :backgroundColor, backgroundzIndex = :backgroundzIndex, xml = NULL
          WHERE layoutID = :layoutid
         ';
 
-        $time = \Xibo\Helper\Date::getSystemDate(null, 'Y-m-d h:i:s');
+        $time = Date::getSystemDate(null, 'Y-m-d h:i:s');
 
-        \Xibo\Storage\PDOConnect::update($sql, array(
+        PDOConnect::update($sql, array(
             'layoutid' => $this->layoutId,
             'layout' => $this->layout,
             'description' => $this->description,
@@ -338,7 +373,8 @@ class Layout
         ));
 
         // Update the Campaign
-        $campaign = new \Campaign();
-        $campaign->Edit($this->campaignId, $this->layout);
+        $campaign = CampaignFactory::getById($this->campaignId);
+        $campaign->campaign = $this->layout;
+        $campaign->save(false);
     }
 }

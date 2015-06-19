@@ -81,7 +81,7 @@
             ajax: {
                 "url": "{{ urlFor("display.search") }}",
                 "data": function(d) {
-
+                    $.extend(d, $("#displays").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                 }
             },
             "columns": [
@@ -99,46 +99,17 @@
                         }
                     }
                 },
-                {
-                    "data": function(data, type) {
-                        if (type != "display")
-                            return data.status;
-
-                        var icon = "";
-                        if (data.status == 1)
-                            icon = "glyphicon-ok";
-                        else if (data.status == 0)
-                            icon = "glyphicon-remove";
-                        else
-                            icon = "glyphicon-exclamation-sign";
-
-                        return "<span class='glyphicon " + icon + "' title='" + (data.statusDescription) + "'></span>";
-                    }
-                },
-                {
-                    "data": function(data, type) {
-                        if (type != "display")
-                            return data.licensed;
-
-                        var icon = "";
-                        if (data.licensed == 1)
-                            icon = "glyphicon-ok";
-                        else if (data.licensed == 0)
-                            icon = "glyphicon-remove";
-                        else
-                            icon = "glyphicon-exclamation-sign";
-
-                        return "<span class='glyphicon " + icon + "'></span>";
-                    }
-                },
+                { "data": dataTableTickCrossColumn },
+                { "data": dataTableTickCrossColumn },
                 { "data": "currentLayout" },
                 { "data": "storageAvailableSpace", "visible": false },
                 { "data": "storageTotalSpace", "visible": false },
                 { "data": "storagePercentage", "visible": false },
                 { "data": "description" , "visible": false},
-                { "data": "incSchedule" },
-                { "data": "emailAlert" },
-                { "data": "loggedIn" },
+                { "data": "defaultLayout" , "visible": false},
+                { "data": dataTableTickCrossColumn },
+                { "data": dataTableTickCrossColumn },
+                { "data": dataTableTickCrossColumn },
                 { "data": "lastAccessed" },
                 {
                     "data": function(data, type) {
@@ -151,7 +122,7 @@
                 },
                 { "data": "clientAddress", "visible": false },
                 { "data": "macAddress" },
-                { "data": "screenShotRequested", "visible": false },
+                { "data": dataTableTickCrossColumn, "visible": false },
                 {
                     "data": function(data, type) {
                         if (type != "display")

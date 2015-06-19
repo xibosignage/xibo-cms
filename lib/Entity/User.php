@@ -39,6 +39,7 @@ use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
+use Xibo\Helper\Session;
 use Xibo\Storage\PDOConnect;
 
 // These constants may be changed without breaking existing hashes.
@@ -75,13 +76,13 @@ class User
     public $libraryQuota;
 
     // Groups assigned to
-    public $groups;
+    public $groups = [];
 
     // Things Users can own
-    public $campaigns;
-    public $layouts;
-    public $media;
-    public $events;
+    public $campaigns = [];
+    public $layouts = [];
+    public $media = [];
+    public $events = [];
 
     // Readonly information
     public $homePage;
@@ -91,20 +92,6 @@ class User
      * @var array[Permission]
      */
     private $permissionCache = array();
-
-    /**
-     * Constructor
-     * Set default values
-     */
-    public function __construct()
-    {
-        $this->hash = null;
-        $this->groups = [];
-        $this->layouts = [];
-        $this->media = [];
-        $this->events = [];
-        $this->campaigns = [];
-    }
 
     public function __toString()
     {
@@ -323,6 +310,12 @@ class User
         foreach ($this->events as $event) {
             /* @var Schedule $event */
             $event->delete();
+        }
+
+        // Delete any media
+        foreach ($this->media as $media) {
+            /* @var Media $media */
+            $media->delete();
         }
 
         // Delete user specific entities
@@ -1011,21 +1004,20 @@ class User
         return $users;
     }
 
-    public function GetPref($key, $default = NULL)
+    public function getPref($key, $default = NULL)
     {
-        $storedValue = Session::Get($key);
+        $storedValue = Session::get($key);
 
         return ($storedValue == NULL) ? $default : $storedValue;
     }
 
-    public function SetPref($key, $value)
+    public function setPref($key, $value)
     {
-        Session::Set($key, $value);
+        Session::set($key, $value);
     }
 
     /**
      * Is this users library quota full
-     * @return bool true if the quota is full otherwise false
      * @throws LibraryFullException when the library is full or cannot be determined
      */
     public function isQuotaFullByUser()
@@ -1081,7 +1073,8 @@ class User
 
         $fileSize = Sanitize::int($row['SumSize']);
 
-        return (($fileSize / 1024) <= $userQuota);
+        if (($fileSize / 1024) <= $userQuota)
+            throw new LibraryFullException(__('You have exceeded your library quota'));
     }
 
     /*

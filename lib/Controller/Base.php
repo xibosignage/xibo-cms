@@ -24,6 +24,7 @@ namespace Xibo\Controller;
 use Slim\Slim;
 use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Helper\Date;
+use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 
@@ -213,6 +214,7 @@ class Base
 
                 $state->html = $view['html'];
                 $state->dialogTitle = trim($view['title']);
+                $state->callBack = $view['callBack'];
 
                 // Process the buttons
                 // Expect each button on a new line
@@ -237,6 +239,16 @@ class Base
 
                         }
                     }
+                }
+
+                // Process the fieldActions
+                // Expect each fieldAction on a new line
+                if (trim($view['fieldActions']) == '') {
+                    $state->fieldActions = [];
+                } else {
+                    // Convert to an array
+                    Log::error($view['fieldActions']);
+                    $state->fieldActions = json_decode($view['fieldActions']);
                 }
             }
 
@@ -297,7 +309,10 @@ class Base
     {
         $app = $this->getApp();
 
-        $columns = $app->request()->get('columns', array());
+        $columns = $app->request()->get('columns');
+
+        if ($columns == null || !is_array($columns))
+            return null;
 
         $order = array_map(function ($element) use ($columns) {
             return (($columns[$element['column']]['name'] != '') ? '`' . $columns[$element['column']]['name'] . '`' : '`' . $columns[$element['column']]['data']) . '`' . (($element['dir'] == 'desc') ? ' DESC' : '');

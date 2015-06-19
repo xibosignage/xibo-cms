@@ -17,6 +17,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+var timelineForm;
+var lastForm;
 var gridTimeouts = [];
 var buttonsTemplate;
 
@@ -347,6 +349,16 @@ function XiboFormRender(formUrl, data) {
     // Currently only support one of these at once.
     bootbox.hideAll();
 
+    // Store the last form?
+    if (formUrl.indexOf("region/form/timeline") > -1) {
+        timelineForm = {
+            url: formUrl,
+            data: data
+        };
+    }
+
+    lastForm = formUrl;
+
     // Call with AJAX
     $.ajax({
         type: "get",
@@ -360,9 +372,7 @@ function XiboFormRender(formUrl, data) {
             if (response.success) {
 
                 // Set the dialog HTML to be the response HTML
-                var message = response.html;
-
-                var dialogTitle = "Xibo";
+                var dialogTitle = "";
 
                 // Is there a title for the dialog?
                 if (response.dialogTitle != undefined && response.dialogTitle != "") {
@@ -378,10 +388,6 @@ function XiboFormRender(formUrl, data) {
                         title: dialogTitle,
                         animate: false
                     }).attr("id", id);
-
-                if (response.dialogClass != '') {
-                    dialog.addClass(response.dialogClass);
-                }
 
                 // Store the extra
                 dialog.data("extra", response.extra);
@@ -406,14 +412,20 @@ function XiboFormRender(formUrl, data) {
                                 extrabutton.addClass('btn-default');
                             }
 
-                            extrabutton.click(function() {
+                            extrabutton.click(function(e) {
+                                e.preventDefault();
 
                                 if ($(this).hasClass("save-button"))
                                     $(this).append(' <span class="saving fa fa-cog fa-spin"></span>');
 
-                                eval(value);
+                                if (value.indexOf("DialogClose") > -1 && lastForm.indexOf("module/form") > -1 && timelineForm != null) {
+                                    // Close button
+                                    // We might want to go back to the prior form
+                                    XiboFormRender(timelineForm.url, timelineForm.value);
+                                }
+                                else
+                                    eval(value);
 
-                                // Keep the modal window open!
                                 return false;
                             });
 
@@ -638,6 +650,9 @@ function XiboMultiSelectFormRender(button) {
                                     SystemMessageInline(response.message, footer.closest(".modal"));
                                 }
                             }
+                        },
+                        error: function(responseText) {
+                            SystemMessage(responseText, false);
                         }
                     });
                 },
@@ -775,6 +790,9 @@ function XiboFormSubmit(form) {
         success: function(xhr, textStatus, error) {
             
             XiboSubmitResponse(xhr, form);
+        },
+        error: function(xhr, textStatus, errorThrown) {
+            SystemMessage(xhr.responseText, false);
         }
     });
 
@@ -794,9 +812,13 @@ function XiboSubmitResponse(response, form) {
     var apply = $(form).data("apply");
     if (apply != undefined && apply) {
         response.keepOpen = true;
-        response.loadForm = false;
         response.refresh = false;
     }
+
+    // Check the refresh flag
+    var refresh = $(form).data("refresh");
+    if (refresh != undefined && refresh)
+        response.refresh = true;
 
     // Remove the apply flag
     $(form).data("apply", false);
@@ -821,17 +843,6 @@ function XiboSubmitResponse(response, form) {
             eval(response.callBack)(response);
         }
 
-        // Do we need to load a new form?
-        if (response.loadForm) {
-            // We need: uri, callback, onsubmit
-            var uri = response.loadFormUri;
-
-            // File forms give the URI back with &amp's in it
-            uri = unescape(uri);
-
-            XiboSwapDialog(uri);
-        }
-
         // Should we refresh the window or refresh the Grids?
         if (response.refresh) {
             // We need to refresh - check to see if there is a new location provided
@@ -846,6 +857,12 @@ function XiboSubmitResponse(response, form) {
         }
         else {
             XiboRefreshAllGrids();
+        }
+
+        if (!response.keepOpen && lastForm.indexOf("module/form") > -1 && timelineForm != null) {
+            // Close button
+            // We might want to go back to the prior form
+            XiboFormRender(timelineForm.url, timelineForm.value);
         }
     }
     else {
@@ -997,44 +1014,34 @@ function LoginBox(message) {
 /**
  * Displays the system message
  * @param {String} messageText
- * @param {Bool} success
+ * @param {boolean} success
  */
 function SystemMessage(messageText, success) {
 
     if (messageText == '' || messageText == null) 
         return;
 
-    var options = {};
-    options.backdrop = false;
-
-    // Buttons
-    var buttons = [];
-
-    var title = null;
-
-    // Only add certain things
-    if (!success) {
-        title = "Application Message";
-        buttons.push({
-        label: 'Close',
-            callback: function() {
-                dialog.modal('hide');
-            }
-        });
+    if (success) {
+        toastr.success(messageText);
     }
-
-    var dialog = bootbox.dialog({
-        message: messageText,
-        title: title,
-        buttons: buttons,
-        animate: true
-    });
-
-    if (success) {    
-        // Close after 1 second
-        setTimeout(function() {
-            dialog.modal('hide');
-        }, 2000);
+    else {
+        var dialog = bootbox.dialog({
+            message: messageText,
+            title: "Application Message",
+            buttons: [{
+                label: 'Close',
+                callback: function() {
+                    if (lastForm.indexOf("module/form") > -1 && timelineForm != null) {
+                        // Close button
+                        // We might want to go back to the prior form
+                        XiboFormRender(timelineForm.url, timelineForm.value);
+                    }
+                    else
+                        dialog.modal('hide');
+                }
+            }],
+            animate: false
+        });
     }
 }
 

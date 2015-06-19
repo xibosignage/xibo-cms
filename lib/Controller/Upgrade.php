@@ -34,7 +34,7 @@ class Upgrade extends Base
     {
 
         if (DBVERSION == WEBSITE_VERSION) {
-            Theme::Set('message', sprintf(__('Sorry you have arrived at this page in error, please try to navigate away.'), Theme::GetConfig('app_name')));
+            Theme::Set('message', sprintf(__('Sorry you have arrived at this page in error, please try to navigate away.'), Theme::getConfig('app_name')));
 
             $this->getState()->html .= Theme::RenderReturn('message_box');
             return;
@@ -42,7 +42,7 @@ class Upgrade extends Base
 
         if ($this->getUser()->userTypeId != 1) {
             // Make sure we actually need to do an upgrade
-            Theme::Set('message', sprintf(__('The CMS is temporarily off-line as an upgrade is in progress. Please check with your system administrator for updates or refresh your page in a few minutes.'), Theme::GetConfig('app_name')));
+            Theme::Set('message', sprintf(__('The CMS is temporarily off-line as an upgrade is in progress. Please check with your system administrator for updates or refresh your page in a few minutes.'), Theme::getConfig('app_name')));
 
             $this->getState()->html .= Theme::RenderReturn('message_box');
             return;
@@ -97,7 +97,7 @@ class Upgrade extends Base
 
         $formFields = array();
         $formButtons = array();
-        $formFields[] = Form::AddMessage(sprintf(__('First we need to re-check if your server meets %s\'s requirements. The CMS requirements may change from release to release. If this is the case there will be further information in the release notes.'), Theme::GetConfig('app_name')));
+        $formFields[] = Form::AddMessage(sprintf(__('First we need to re-check if your server meets %s\'s requirements. The CMS requirements may change from release to release. If this is the case there will be further information in the release notes.'), Theme::getConfig('app_name')));
 
         $formFields[] = Form::AddRaw($environment);
 

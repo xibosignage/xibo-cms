@@ -21,7 +21,7 @@ $(document).ready(function(){
     
     // Set the height of the grid to be something sensible for the current screen resolution
     $("#layoutJumpList").change(function(){
-        window.location = 'index.php?p=layout&modify=true&layoutid=' + $(this).val();
+        window.location = $(this).val();
     }).selectpicker();
 
     $("#layout").each(function() {
@@ -63,11 +63,12 @@ $(document).ready(function(){
         setInterval("XiboPing('" + $(this).data('statusUrl') + "', '.layout-status')", 1000 * 60); // Every minute
     });
 
-    $('.RegionOptionsMenuItem').click(function() {
+    $('.RegionOptionsMenuItem').click(function(e) {
+        e.preventDefault();
 
         // If any regions have been moved, then save them.
         if ($("#layout-save-all").length > 0) {
-            SystemMessage(translations.savePositionsFirst, true);
+            SystemMessage(translation.savePositionsFirst, true);
             return;
         }
 
@@ -78,7 +79,7 @@ $(document).ready(function(){
             zoom: $(this).closest('.layout').attr("zoom")
         };
 
-        var url = "index.php?p=timeline&q=ManualRegionPositionForm";
+        var url = $(this).prop("href");
 
         XiboFormRender(url, data);
     });
@@ -122,7 +123,7 @@ function regionPositionUpdate(e, ui) {
         $("<button/>",  {
                 "class": "btn",
                 id: "layout-save-all",
-                html: translations.save_position_button
+                html: translation.save_position_button
             })
             .click(function() {
                 // Save positions for all layouts / regions
@@ -134,7 +135,7 @@ function regionPositionUpdate(e, ui) {
         $("<button/>",  {
                 "class": "btn",
                 id: "layout-revert",
-                html: translations.revert_position_button
+                html: translation.revert_position_button
             })
             .click(function() {
                 // Reload
@@ -155,7 +156,7 @@ function savePositions() {
     $("#layout").each(function(){
 
         // Store the Layout ID
-        var layoutid = $(this).attr("layoutid");
+        var url = $(this).data().positionAllUrl;
 
         // Build an array of
         var regions = new Array();
@@ -179,8 +180,8 @@ function savePositions() {
         });
 
         $.ajax({
-                type: "post",
-                url: "index.php?p=timeline&q=RegionChange&layoutid="+layoutid+"&ajax=true",
+                type: "put",
+                url: url,
                 cache: false,
                 dataType: "json",
                 data: {regions : JSON.stringify(regions) },
@@ -227,7 +228,9 @@ function refreshPreview(regionId) {
     preview.SetSequence(preview.seq);
 }
 
-var LoadTimeLineCallback = function() {
+var loadTimeLineCallback = function(dialog) {
+
+    dialog.addClass("modal-big");
 
     refreshPreview($('#timelineControl').attr('regionid'));
 

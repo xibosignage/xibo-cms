@@ -177,6 +177,17 @@ class LayoutFactory
     }
 
     /**
+     * Get by CampaignId
+     * @param int $campaignId
+     * @return array[Layout]
+     * @throws NotFoundException
+     */
+    public static function getByCampaignId($campaignId)
+    {
+        return LayoutFactory::query(null, array('campaignId' => $campaignId, 'retired' => -1));
+    }
+
+    /**
      * Load a layout by its XLF
      * @param string $layoutXlf
      * @return Layout
@@ -295,197 +306,184 @@ class LayoutFactory
      * @return array[Layout]
      * @throws NotFoundException
      */
-    public static function query($sortOrder = array(), $filterBy = array())
+    public static function query($sortOrder = null, $filterBy = null)
     {
         $entries = array();
+        $params = array();
 
-        try {
-            $dbh = PDOConnect::init();
+        $sql  = "";
+        $sql .= "SELECT layout.layoutID, ";
+        $sql .= "        layout.layout, ";
+        $sql .= "        layout.description, ";
+        $sql .= "        layout.userID, ";
+        $sql .= "        `user`.UserName AS owner, ";
+        $sql .= "        campaign.CampaignID, ";
+        $sql .= "        layout.xml AS legacyXml, ";
+        $sql .= "        layout.status, ";
+        $sql .= "        layout.width, ";
+        $sql .= "        layout.height, ";
+        $sql .= "        layout.retired, ";
+        if (Sanitize::getInt('showTags', $filterBy) == 1)
+            $sql .= " tag.tag AS tags, ";
+        else
+            $sql .= " (SELECT GROUP_CONCAT(DISTINCT tag) FROM tag INNER JOIN lktaglayout ON lktaglayout.tagId = tag.tagId WHERE lktaglayout.layoutId = layout.LayoutID GROUP BY lktaglayout.layoutId) AS tags, ";
+        $sql .= "        layout.backgroundImageId, ";
+        $sql .= "        layout.backgroundColor, ";
+        $sql .= "        layout.backgroundzIndex, ";
+        $sql .= "        layout.schemaVersion, ";
+        $sql .= "     (SELECT GROUP_CONCAT(DISTINCT `group`.group)
+                          FROM `permission`
+                            INNER JOIN `permissionentity`
+                            ON `permissionentity`.entityId = permission.entityId
+                            INNER JOIN `group`
+                            ON `group`.groupId = `permission`.groupId
+                         WHERE entity = :entity
+                            AND objectId = campaign.CampaignID
+                        ) AS groupsWithPermissions ";
+        $params['entity'] = 'Xibo\\Entity\\Campaign';
+        $sql .= "   FROM layout ";
+        $sql .= "  INNER JOIN `lkcampaignlayout` ";
+        $sql .= "   ON lkcampaignlayout.LayoutID = layout.LayoutID ";
+        $sql .= "   INNER JOIN `campaign` ";
+        $sql .= "   ON lkcampaignlayout.CampaignID = campaign.CampaignID ";
+        $sql .= "       AND campaign.IsLayoutSpecific = 1";
+        $sql .= "   INNER JOIN `user` ON `user`.userId = `campaign`.userId ";
 
-            $params = array();
-            $sql  = "";
-            $sql .= "SELECT layout.layoutID, ";
-            $sql .= "        layout.layout, ";
-            $sql .= "        layout.description, ";
-            $sql .= "        layout.userID, ";
-            $sql .= "        `user`.UserName AS owner, ";
-            $sql .= "        campaign.CampaignID, ";
-            $sql .= "        layout.xml AS legacyXml, ";
-            $sql .= "        layout.status, ";
-            $sql .= "        layout.width, ";
-            $sql .= "        layout.height, ";
-            $sql .= "        layout.retired, ";
-            if (Sanitize::getInt('showTags', $filterBy) == 1)
-                $sql .= " tag.tag AS tags, ";
-            else
-                $sql .= " (SELECT GROUP_CONCAT(DISTINCT tag) FROM tag INNER JOIN lktaglayout ON lktaglayout.tagId = tag.tagId WHERE lktaglayout.layoutId = layout.LayoutID GROUP BY lktaglayout.layoutId) AS tags, ";
-            $sql .= "        layout.backgroundImageId, ";
-            $sql .= "        layout.backgroundColor, ";
-            $sql .= "        layout.backgroundzIndex, ";
-            $sql .= "        layout.schemaVersion, ";
-            $sql .= "     (SELECT GROUP_CONCAT(DISTINCT `group`.group)
-                              FROM `permission`
-                                INNER JOIN `permissionentity`
-                                ON `permissionentity`.entityId = permission.entityId
-                                INNER JOIN `group`
-                                ON `group`.groupId = `permission`.groupId
-                             WHERE entity = :entity
-                                AND objectId = campaign.CampaignID
-                            ) AS groupsWithPermissions ";
-            $params['entity'] = 'Xibo\\Entity\\Campaign';
-            $sql .= "   FROM layout ";
-            $sql .= "  INNER JOIN `lkcampaignlayout` ";
-            $sql .= "   ON lkcampaignlayout.LayoutID = layout.LayoutID ";
-            $sql .= "   INNER JOIN `campaign` ";
-            $sql .= "   ON lkcampaignlayout.CampaignID = campaign.CampaignID ";
-            $sql .= "       AND campaign.IsLayoutSpecific = 1";
-            $sql .= "   INNER JOIN `user` ON `user`.userId = `campaign`.userId ";
+        if (Sanitize::getInt('showTags', $filterBy) == 1) {
+            $sql .= " LEFT OUTER JOIN lktaglayout ON lktaglayout.layoutId = layout.layoutId ";
+            $sql .= " LEFT OUTER JOIN tag ON tag.tagId = lktaglayout.tagId ";
+        }
 
-            if (Sanitize::getInt('showTags', $filterBy) == 1) {
-                $sql .= " LEFT OUTER JOIN lktaglayout ON lktaglayout.layoutId = layout.layoutId ";
-                $sql .= " LEFT OUTER JOIN tag ON tag.tagId = lktaglayout.tagId ";
-            }
+        if (Sanitize::getInt('campaignId', 0, $filterBy) != 0) {
+            // Join Campaign back onto it again
+            $sql .= " INNER JOIN `lkcampaignlayout` lkcl ON lkcl.layoutid = layout.layoutid AND lkcl.CampaignID = :campaignId ";
+            $params['campaignId'] = Sanitize::getInt('campaignId', 0, $filterBy);
+        }
 
-            if (Sanitize::getInt('campaignId', 0, $filterBy) != 0) {
-                // Join Campaign back onto it again
-                $sql .= " INNER JOIN `lkcampaignlayout` lkcl ON lkcl.layoutid = layout.layoutid AND lkcl.CampaignID = :campaignId ";
-                $params['campaignId'] = Sanitize::getInt('campaignId', 0, $filterBy);
-            }
+        // MediaID
+        if (Sanitize::getInt('mediaId', 0, $filterBy) != 0) {
+            $sql .= " INNER JOIN `lklayoutmedia` ON lklayoutmedia.layoutid = layout.layoutid AND lklayoutmedia.mediaid = :mediaId";
+            $sql .= " INNER JOIN `media` ON lklayoutmedia.mediaid = media.mediaid ";
+            $params['mediaId'] = Sanitize::getInt('mediaId', 0, $filterBy);
+        }
 
-            // MediaID
-            if (Sanitize::getInt('mediaId', 0, $filterBy) != 0) {
-                $sql .= " INNER JOIN `lklayoutmedia` ON lklayoutmedia.layoutid = layout.layoutid AND lklayoutmedia.mediaid = :mediaId";
-                $sql .= " INNER JOIN `media` ON lklayoutmedia.mediaid = media.mediaid ";
-                $params['mediaId'] = Sanitize::getInt('mediaId', 0, $filterBy);
-            }
+        $sql .= " WHERE 1 = 1 ";
 
-            $sql .= " WHERE 1 = 1 ";
+        if (Sanitize::getString('layout', $filterBy) != '')
+        {
+            // convert into a space delimited array
+            $names = explode(' ', Sanitize::getString('layout', $filterBy));
 
-            if (Sanitize::getString('layout', $filterBy) != '')
+            foreach($names as $searchName)
             {
-                // convert into a space delimited array
-                $names = explode(' ', Sanitize::getString('layout', $filterBy));
-
-                foreach($names as $searchName)
-                {
-                    // Not like, or like?
-                    if (substr($searchName, 0, 1) == '-') {
-                        $sql.= " AND  layout.layout NOT LIKE :search ";
-                        $params['search'] = '%' . ltrim($searchName) . '%';
-                    }
-                    else {
-                        $sql.= " AND  layout.layout LIKE :search ";
-                        $params['search'] = '%' . $searchName . '%';
-                    }
-                }
-            }
-
-            if (Sanitize::getString('layoutExact', $filterBy) != '') {
-                $sql.= " AND layout.layout = :exact ";
-                $params['exact'] = Sanitize::getString('layoutExact', $filterBy);
-            }
-
-            // Layout
-            if (Sanitize::getInt('layoutId', 0, $filterBy) != 0) {
-                $sql .= " AND layout.layoutId = :layoutId ";
-                $params['layoutId'] = Sanitize::getInt('layoutId', 0, $filterBy);
-            }
-
-            // Not Layout
-            if (Sanitize::getInt('notLayoutId', 0, $filterBy) != 0) {
-                $sql .= " AND layout.layoutId <> :notLayoutId ";
-                $params['notLayoutId'] = Sanitize::getInt('notLayoutId', 0, $filterBy);
-            }
-
-            // Owner filter
-            if (Sanitize::getInt('userId', 0, $filterBy) != 0) {
-                $sql .= " AND layout.userid = :userId ";
-                $params['userId'] = Sanitize::getInt('userId', 0, $filterBy);
-            }
-
-            // Retired options (default to 0 - provide -1 to return all
-            if (Sanitize::getInt('retired', 0, $filterBy) != -1) {
-                $sql .= " AND layout.retired = :retired ";
-                $params['retired'] = Sanitize::getInt('retired', $filterBy);
-            }
-
-            // Tags
-            if (Sanitize::getString('tags', $filterBy) != '') {
-                $sql .= " AND layout.layoutID IN (
-                    SELECT lktaglayout.layoutId
-                      FROM tag
-                        INNER JOIN lktaglayout
-                        ON lktaglayout.tagId = tag.tagId
-                    WHERE tag LIKE :tags
-                    ) ";
-                $params['tags'] =  '%' . Sanitize::getString('tags', $filterBy) . '%';
-            }
-
-            // Exclude templates by default
-            if (Sanitize::getInt('excludeTemplates', 1, $filterBy) == 1) {
-                $sql .= " AND layout.layoutID NOT IN (SELECT layoutId FROM lktaglayout WHERE tagId = 1) ";
-            }
-
-            // Show All, Used or UnUsed
-            if (Sanitize::getInt('filterLayoutStatusId', 1, $filterBy) != 1)  {
-                if (Sanitize::getInt('filterLayoutStatusId', $filterBy) == 2) {
-                    // Only show used layouts
-                    $sql .= ' AND ('
-                        . '     campaign.CampaignID IN (SELECT DISTINCT schedule.CampaignID FROM schedule) '
-                        . '     OR layout.layoutID IN (SELECT DISTINCT defaultlayoutid FROM display) '
-                        . ' ) ';
+                // Not like, or like?
+                if (substr($searchName, 0, 1) == '-') {
+                    $sql.= " AND  layout.layout NOT LIKE :search ";
+                    $params['search'] = '%' . ltrim($searchName) . '%';
                 }
                 else {
-                    // Only show unused layouts
-                    $sql .= ' AND campaign.CampaignID NOT IN (SELECT DISTINCT schedule.CampaignID FROM schedule) '
-                        . ' AND layout.layoutID NOT IN (SELECT DISTINCT defaultlayoutid FROM display) ';
+                    $sql.= " AND  layout.layout LIKE :search ";
+                    $params['search'] = '%' . $searchName . '%';
                 }
             }
-
-            // Sorting?
-            if (is_array($sortOrder))
-                $sql .= 'ORDER BY ' . implode(',', $sortOrder);
-
-            Log::sql($sql, $params);
-
-            $sth = $dbh->prepare($sql);
-            $sth->execute($params);
-
-            foreach ($sth->fetchAll() as $row) {
-                $layout = new Layout();
-
-                // Validate each param and add it to the array.
-                $layout->layoutId = Sanitize::int($row['layoutID']);
-                $layout->schemaVersion = Sanitize::int($row['schemaVersion']);
-                $layout->layout = Sanitize::string($row['layout']);
-                $layout->description = Sanitize::string($row['description']);
-                $layout->tags = Sanitize::string($row['tags']);
-                $layout->backgroundColor = Sanitize::string($row['backgroundColor']);
-                $layout->owner = Sanitize::string($row['owner']);
-                $layout->ownerId = Sanitize::int($row['userID']);
-                $layout->campaignId = Sanitize::int($row['CampaignID']);
-                $layout->retired = Sanitize::int($row['retired']);
-                $layout->status = Sanitize::int($row['status']);
-                $layout->backgroundImageId = Sanitize::int($row['backgroundImageId']);
-                $layout->backgroundzIndex = Sanitize::int($row['backgroundzIndex']);
-                $layout->width = Sanitize::double($row['width']);
-                $layout->height = Sanitize::double($row['height']);
-
-                if (Sanitize::int('showLegacyXml', $filterBy) == 1)
-                    $layout->legacyXml = \Kit::ValidateParam($row['legacyXml'], _HTMLSTRING);
-
-                $layout->groupsWithPermissions = Sanitize::string($row['groupsWithPermissions']);
-
-                $entries[] = $layout;
-            }
-
-            return $entries;
-
-        } catch (\Exception $e) {
-
-            \Xibo\Helper\Log::error($e->getMessage());
-
-            throw new NotFoundException(__('Layout Not Found'));
         }
+
+        if (Sanitize::getString('layoutExact', $filterBy) != '') {
+            $sql.= " AND layout.layout = :exact ";
+            $params['exact'] = Sanitize::getString('layoutExact', $filterBy);
+        }
+
+        // Layout
+        if (Sanitize::getInt('layoutId', 0, $filterBy) != 0) {
+            $sql .= " AND layout.layoutId = :layoutId ";
+            $params['layoutId'] = Sanitize::getInt('layoutId', 0, $filterBy);
+        }
+
+        // Not Layout
+        if (Sanitize::getInt('notLayoutId', 0, $filterBy) != 0) {
+            $sql .= " AND layout.layoutId <> :notLayoutId ";
+            $params['notLayoutId'] = Sanitize::getInt('notLayoutId', 0, $filterBy);
+        }
+
+        // Owner filter
+        if (Sanitize::getInt('userId', 0, $filterBy) != 0) {
+            $sql .= " AND layout.userid = :userId ";
+            $params['userId'] = Sanitize::getInt('userId', 0, $filterBy);
+        }
+
+        // Retired options (default to 0 - provide -1 to return all
+        if (Sanitize::getInt('retired', 0, $filterBy) != -1) {
+            $sql .= " AND layout.retired = :retired ";
+            $params['retired'] = Sanitize::getInt('retired', $filterBy);
+        }
+
+        // Tags
+        if (Sanitize::getString('tags', $filterBy) != '') {
+            $sql .= " AND layout.layoutID IN (
+                SELECT lktaglayout.layoutId
+                  FROM tag
+                    INNER JOIN lktaglayout
+                    ON lktaglayout.tagId = tag.tagId
+                WHERE tag LIKE :tags
+                ) ";
+            $params['tags'] =  '%' . Sanitize::getString('tags', $filterBy) . '%';
+        }
+
+        // Exclude templates by default
+        if (Sanitize::getInt('excludeTemplates', 1, $filterBy) == 1) {
+            $sql .= " AND layout.layoutID NOT IN (SELECT layoutId FROM lktaglayout WHERE tagId = 1) ";
+        }
+
+        // Show All, Used or UnUsed
+        if (Sanitize::getInt('filterLayoutStatusId', 1, $filterBy) != 1)  {
+            if (Sanitize::getInt('filterLayoutStatusId', $filterBy) == 2) {
+                // Only show used layouts
+                $sql .= ' AND ('
+                    . '     campaign.CampaignID IN (SELECT DISTINCT schedule.CampaignID FROM schedule) '
+                    . '     OR layout.layoutID IN (SELECT DISTINCT defaultlayoutid FROM display) '
+                    . ' ) ';
+            }
+            else {
+                // Only show unused layouts
+                $sql .= ' AND campaign.CampaignID NOT IN (SELECT DISTINCT schedule.CampaignID FROM schedule) '
+                    . ' AND layout.layoutID NOT IN (SELECT DISTINCT defaultlayoutid FROM display) ';
+            }
+        }
+
+        // Sorting?
+        if (is_array($sortOrder))
+            $sql .= 'ORDER BY ' . implode(',', $sortOrder);
+
+        Log::sql($sql, $params);
+
+        foreach (PDOConnect::select($sql, $params) as $row) {
+            $layout = new Layout();
+
+            // Validate each param and add it to the array.
+            $layout->layoutId = Sanitize::int($row['layoutID']);
+            $layout->schemaVersion = Sanitize::int($row['schemaVersion']);
+            $layout->layout = Sanitize::string($row['layout']);
+            $layout->description = Sanitize::string($row['description']);
+            $layout->tags = Sanitize::string($row['tags']);
+            $layout->backgroundColor = Sanitize::string($row['backgroundColor']);
+            $layout->owner = Sanitize::string($row['owner']);
+            $layout->ownerId = Sanitize::int($row['userID']);
+            $layout->campaignId = Sanitize::int($row['CampaignID']);
+            $layout->retired = Sanitize::int($row['retired']);
+            $layout->status = Sanitize::int($row['status']);
+            $layout->backgroundImageId = Sanitize::int($row['backgroundImageId']);
+            $layout->backgroundzIndex = Sanitize::int($row['backgroundzIndex']);
+            $layout->width = Sanitize::double($row['width']);
+            $layout->height = Sanitize::double($row['height']);
+
+            if (Sanitize::int('showLegacyXml', $filterBy) == 1)
+                $layout->legacyXml = \Kit::ValidateParam($row['legacyXml'], _HTMLSTRING);
+
+            $layout->groupsWithPermissions = Sanitize::string($row['groupsWithPermissions']);
+
+            $entries[] = $layout;
+        }
+
+        return $entries;
     }
 }

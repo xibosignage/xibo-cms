@@ -22,9 +22,12 @@
 
 namespace Xibo\Entity;
 
+use Respect\Validation\Validator as v;
+use Xibo\Storage\PDOConnect;
 
 class Module
 {
+    use EntityTrait;
     public $moduleId;
 
     public $name;
@@ -38,12 +41,58 @@ class Module
     public $previewEnabled;
     public $assignable;
     public $renderAs;
-    public $settings;
+    public $settings = [];
     public $schemaVersion;
+    public $viewPath = '../modules';
+
+    public function __toString()
+    {
+        return sprintf('%s - %s', $this->type, $this->name);
+    }
+
+    public function validate()
+    {
+        if (!v::string()->notEmpty()->validate($this->imageUri))
+            throw new \InvalidArgumentException(__('Image Uri is a required field.'));
+    }
 
     public function save()
     {
-        $dbh = \Xibo\Storage\PDOConnect::init();
+        if ($this->moduleId == null || $this->moduleId == 0)
+            $this->add();
+        else
+            $this->edit();
+
+        $this->validate();
+    }
+
+    private function add()
+    {
+        $this->moduleId = PDOConnect::insert('
+          INSERT INTO `module` (`Module`, `Name`, `Enabled`, `RegionSpecific`, `Description`,
+                `ImageUri`, `SchemaVersion`, `ValidExtensions`, `PreviewEnabled`, `assignable`, `render_as`, `settings`, `viewPath`)
+            VALUES (:module, :name, :enabled, :region_specific, :description,
+                :image_uri, :schema_version, :valid_extensions, :preview_enabled, :assignable, :render_as, :settings, :viewPath)
+        ', [
+            'module' => $this->type,
+            'name' => $this->name,
+            'enabled' => $this->enabled,
+            'region_specific' => $this->regionSpecific,
+            'description' => $this->description,
+            'image_uri' => $this->imageUri,
+            'schema_version' => $this->schemaVersion,
+            'valid_extensions' => $this->validExtensions,
+            'preview_enabled' => $this->previewEnabled,
+            'assignable' => $this->assignable,
+            'render_as' => $this->renderAs,
+            'settings' => json_encode($this->settings),
+            'viewPath' => $this->viewPath
+        ]);
+    }
+
+    private function edit()
+    {
+        $dbh = PDOConnect::init();
 
         $sth = $dbh->prepare('UPDATE module SET settings = :settings WHERE moduleid = :moduleId');
 
