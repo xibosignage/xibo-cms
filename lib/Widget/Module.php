@@ -266,6 +266,22 @@ abstract class Module implements ModuleInterface
     }
 
     /**
+     * Add Media
+     */
+    public function add()
+    {
+        // Nothing to do
+    }
+
+    /**
+     * Edit Media
+     */
+    public function edit()
+    {
+        // Nothing to do
+    }
+
+    /**
      * Delete Widget
      */
     public function delete()

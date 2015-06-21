@@ -348,7 +348,7 @@ class ModuleFactory
 
             // Paging
             if (Sanitize::getInt('start') !== null && Sanitize::getInt('length') !== null) {
-                $SQL .= ' LIMIT ' . intval(Sanitize::getInt('start')) . ', ' . Sanitize::getInt('length', 10);
+                $SQL .= ' LIMIT ' . Sanitize::getInt('start') . ', ' . Sanitize::getInt('length', 10);
             }
 
             Log::sql($SQL, $params);
