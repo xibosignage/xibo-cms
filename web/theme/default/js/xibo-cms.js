@@ -851,7 +851,7 @@ function XiboSubmitResponse(response, form) {
             XiboRefreshAllGrids();
         }
 
-        if (!response.keepOpen && (lastForm.indexOf("module/form") > -1 || lastForm.indexOf("playlist/form/library/assign") > -1) && timelineForm != null) {
+        if (!response.keepOpen && (lastForm != undefined && lastForm.indexOf("module/form") > -1 || lastForm.indexOf("playlist/form/library/assign") > -1) && timelineForm != null) {
             // Close button
             // We might want to go back to the prior form
             XiboFormRender(timelineForm.url, timelineForm.value);
