@@ -30,7 +30,7 @@ $(document).delegate('*[data-toggle="lightbox"]', 'click', function(event) {
 
 $(document).ready(function() {
 
-    buttonsTemplate = Handlebars.compile($("#buttons-template").html());
+    buttonsTemplate = null;
 
     // Code from: http://stackoverflow.com/questions/7585351/testing-for-console-log-statements-in-ie/7585409#7585409
     // Handles console.log calls when there is no console
@@ -290,6 +290,9 @@ function dataTableButtonsColumn(data, type, row, meta) {
     if (type != "display")
         return "";
 
+    if (buttonsTemplate == null)
+        buttonsTemplate = Handlebars.compile($("#buttons-template").html());
+
     return buttonsTemplate({buttons: data.buttons});
 }
 
@@ -418,7 +421,7 @@ function XiboFormRender(formUrl, data) {
                                 if ($(this).hasClass("save-button"))
                                     $(this).append(' <span class="saving fa fa-cog fa-spin"></span>');
 
-                                if (value.indexOf("DialogClose") > -1 && lastForm.indexOf("module/form") > -1 && timelineForm != null) {
+                                if (value.indexOf("DialogClose") > -1 && (lastForm.indexOf("module/form") > -1 || lastForm.indexOf("playlist/form/library/assign") > -1) && timelineForm != null) {
                                     // Close button
                                     // We might want to go back to the prior form
                                     XiboFormRender(timelineForm.url, timelineForm.value);
@@ -441,17 +444,6 @@ function XiboFormRender(formUrl, data) {
                 // Focus in the first form element
                 if (response.focusInFirstInput) {
                     $('input[type=text]', dialog).eq(0).focus();
-                }
-
-                // Do we need to do anything else now?
-                if (response.sortable) {
-                    // Call paging
-                    if ($(response.sortingDiv + ' tbody', dialog).html() != "") {
-                        $(response.sortingDiv, dialog).tablesorter({
-                            sortList: [[response.initialSortColumn,response.initialSortOrder]],
-                            widthFixed: true
-                        });
-                    }
                 }
 
                 // Set up dependencies between controls
@@ -859,7 +851,7 @@ function XiboSubmitResponse(response, form) {
             XiboRefreshAllGrids();
         }
 
-        if (!response.keepOpen && lastForm.indexOf("module/form") > -1 && timelineForm != null) {
+        if (!response.keepOpen && (lastForm.indexOf("module/form") > -1 || lastForm.indexOf("playlist/form/library/assign") > -1) && timelineForm != null) {
             // Close button
             // We might want to go back to the prior form
             XiboFormRender(timelineForm.url, timelineForm.value);

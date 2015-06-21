@@ -134,6 +134,11 @@ $app->get('/region/form/delete/:id', '\Xibo\Controller\Region:deleteForm')->name
 $app->get('/region/form/timeline/:id', '\Xibo\Controller\Region:timelineForm')->name('region.timeline.form');
 
 //
+// playlists
+//
+$app->get('/playlist/form/library/assign/:id', '\Xibo\Controller\Playlist:libraryAssignForm')->name('playlist.library.assign.form');
+
+//
 // library
 //
 $app->get('/library/view', '\Xibo\Controller\Library:displayPage')->name('library.view');

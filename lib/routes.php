@@ -51,6 +51,11 @@ $app->put('/region/position/all/:id', '\Xibo\Controller\Region:positionAll')->na
 $app->get('/region/:id', '\Xibo\Controller\Region:timeline')->name('region.timeline');
 
 //
+// playlist
+//
+$app->post('/playlist/library/assign/:id', '\Xibo\Controller\Playlist:libraryAssign')->name('playlist.library.assign');
+
+//
 // Campaign
 //
 $app->get('/campaign', '\Xibo\Controller\Campaign:grid')->name('campaign.search');

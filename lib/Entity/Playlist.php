@@ -151,6 +151,17 @@ class Playlist implements \JsonSerializable
     }
 
     /**
+     * @param Widget $widget
+     */
+    public function assignWidget($widget)
+    {
+        $this->load();
+
+        $widget->displayOrder = count($this->widgets) + 1;
+        $this->widgets[] = $widget;
+    }
+
+    /**
      * Load
      * @param array $loadOptions
      */

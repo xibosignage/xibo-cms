@@ -30,60 +30,6 @@ class Timeline extends Base
 {
 
     /**
-     * Adds the media into the region provided
-     */
-    function AddFromLibrary()
-    {
-        $response = $this->getState();
-
-        // Load the region
-        $region = \Xibo\Factory\RegionFactory::getById(Kit::GetParam('regionid', _REQUEST, _INT));
-
-        Log::debug('Assigning files to ' . $region);
-
-        // Make sure we have permission to edit this region
-        if (!$this->getUser()->checkEditable($region))
-            trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
-
-        // Media to assign
-        $mediaList = \Kit::GetParam('MediaID', _POST, _ARRAY, array());
-
-        if (count($mediaList) <= 0)
-            throw new InvalidArgumentException(__('No media to assign'), 25006);
-
-        // Get the playlist for this region
-        // TODO: Playlist Implementation
-        $playlists = \Xibo\Factory\PlaylistFactory::getByRegionId($region->regionId);
-        $playlist = $playlists[0];
-        /* @var \Xibo\Entity\Playlist $playlist */
-
-        // Add each media item to the region and save
-        // Loop through all the media
-        foreach ($mediaList as $mediaId) {
-            /* @var int $mediaId */
-            $media = \Xibo\Factory\MediaFactory::getById($mediaId);
-
-            if (!$this->getUser()->checkViewable($media))
-                trigger_error(__('You do not have permissions to use this media'), E_USER_ERROR);
-
-            // Create a Widget and add it to our region
-            $widget = \Xibo\Factory\WidgetFactory::create($this->getUser()->userId, $playlist->playlistId, $media->mediaType, $media->duration);
-            $widget->assignMedia($mediaId);
-
-            $playlist->widgets[] = $widget;
-        }
-
-        // Save the playlist
-        $playlist->save();
-
-        // We want to load a new form
-        $response->SetFormSubmitResponse(sprintf(__('%d Media Items Assigned'), count($mediaList)));
-        $response->loadForm = true;
-        $response->loadFormUri = 'index.php?p=timeline&regionid=' . $region->regionId . '&q=Timeline';
-
-    }
-
-    /**
      * Timeline in Grid mode
      */
     public function TimelineGrid()

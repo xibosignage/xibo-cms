@@ -161,6 +161,8 @@ class Widget implements \JsonSerializable
      */
     public function assignMedia($mediaId)
     {
+        $this->load();
+
         if (!in_array($mediaId, $this->mediaIds))
             $this->mediaIds[] = $mediaId;
     }
@@ -171,6 +173,8 @@ class Widget implements \JsonSerializable
      */
     public function unassignMedia($mediaId)
     {
+        $this->load();
+
         unset($this->mediaIds[$mediaId]);
     }
 
@@ -179,6 +183,9 @@ class Widget implements \JsonSerializable
      */
     public function load()
     {
+        if ($this->loaded)
+            return;
+
         // Load permissions
         $this->permissions = PermissionFactory::getByObjectId(get_class(), $this->widgetId);
 

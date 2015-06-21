@@ -156,7 +156,10 @@ class ModuleFactory
             $playlist->load(['playlistIncludeRegionAssignments' => false]);
 
             // Create a new widget to use
-            $module->setWidget(WidgetFactory::create($ownerId, $playlistId, $module->getModuleType(), 0, count($playlist->widgets) + 1));
+            $widget = WidgetFactory::create($ownerId, $playlistId, $module->getModuleType(), 0);
+            $module->setWidget($widget);
+
+            $playlist->assignWidget($widget);
         }
         else {
             // Load the widget
