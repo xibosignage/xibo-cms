@@ -109,14 +109,6 @@ class Layout extends Base
             'zoom' => Sanitize::getDouble('zoom', 1)
         ];
 
-        // Get the regions
-        foreach ($layout->regions as $region) {
-            /* @var \Xibo\Entity\Region $region */
-
-            $region->viewable = $this->getUser()->checkViewable($region);
-            $region->editable = ($layout->schemaVersion >= 2 && $this->getUser()->checkEditable($region));
-        }
-
         // Call the render the template
         $this->getState()->template = 'layout-designer-page';
         $this->getState()->setData($data);

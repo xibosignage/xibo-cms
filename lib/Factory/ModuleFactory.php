@@ -243,11 +243,12 @@ class ModuleFactory
 
     /**
      * Get Valid Extensions
+     * @param array[Optional] $filterBy
      * @return array[string]
      */
-    public static function getValidExtensions()
+    public static function getValidExtensions($filterBy = [])
     {
-        $modules = ModuleFactory::query();
+        $modules = ModuleFactory::query(null, $filterBy);
         $extensions = array();
 
         foreach($modules as $module) {

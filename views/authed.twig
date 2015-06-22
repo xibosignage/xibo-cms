@@ -157,6 +157,9 @@
 
     <script type="text/x-handlebars-template" id="template-file-upload">
         <form method="post" enctype="multipart/form-data" data-max-file-size="{{ upload.maxSize }}" data-accept-file-types="/(\.|\/){{ upload.validExt }}$/i">
+            {{#if playlistId}}
+                <input type="hidden" name="playlistId" value="{{ playlistId }}" />
+            {{/if}}
             <div class="row fileupload-buttonbar">
                 <div class="col-md-7">
                     <div class="well">

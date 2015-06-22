@@ -101,7 +101,7 @@
                     {% set regionTop = region.top * designerScale %}
 
                     {# Disabled / Enabled CSS #}
-                    {% if region.editable %}
+                    {% if currentUser.checkEditable(region) %}
                         {% set disabledCss = "region" %}
                         {% set trasparencyCss = "" %}
                     {% else %}
@@ -109,14 +109,14 @@
                         {% set trasparencyCss = "regionDisabled" %}
                     {% endif %}
 
-                    {% if region.viewable %}
+                    {% if currentUser.checkViewable(region) %}
                         {% set previewCss = "regionPreview" %}
                     {% else %}
                         {% set previewCss = "" %}
                     {% endif %}
 
                     <div id="region_{{ region.regionId }}"
-                            regionEnabled="{{ region.editable }}"
+                            regionEnabled="{{ currentUser.checkEditable(region) }}"
                             regionid="{{ region.regionId }}"
                             layoutid="{{ layout.layoutId }}"
                             zindex="{{ region.zIndex }}"
@@ -125,13 +125,13 @@
                             width="{{ region.width }}"
                             height="{{ region.height }}"
                             href="{{ urlFor("region.timeline.form", {id: region.regionId}) }}"
-                            {% if region.editable %}ondblclick="XiboFormRender($(this).attr('href'))"{% endif %}
+                            {% if currentUser.checkEditable(region) %}ondblclick="XiboFormRender($(this).attr('href'))"{% endif %}
                             class="{{ disabledCss }} {{ previewCss }}"
                             data-preview-url="{{ urlFor("region.preview", {id: region.regionId}) }}"
                             style="position:absolute; width:{{ regionWidth }}px; height:{{ regionHeight }}px; top: {{ regionTop }}px; left:{{ regionLeft }}px; z-index: {{ region.zIndex }};">
                         <div class="regionTransparency {{ transparencyCss }}" style="width:100%; height:100%;"></div>
 
-                        {% if region.editable %}
+                        {% if currentUser.checkEditable(region) %}
                             <div class="btn-group regionInfo pull-right">
                                 <button class="btn dropdown-toggle" data-toggle="dropdown">
                                     <span class="region-tip">{{ region.width|round }} x {{ region.height|round }} ({{ region.left|round }},{{ region.top|round }})</span>
@@ -144,7 +144,7 @@
                                     <li><a class="XiboFormButton" href="{{ urlFor("user.permissions.form", {entity: "Region", id: region.regionId}) }}">{% trans "Permissions" %}</a></li>
                                 </ul>
                             </div>
-                        {% elseif region.viewable %}
+                        {% elseif layout.schemaVersion >= 2 and currentUser.checkViewable(region) %}
                             <div class="regionInfo">
                                 <span class="region-tip">{{ region.width|round }} x {{ region.height|round }} ({{ region.left|round }},{{ region.top|round }})</span>
                             </div>
@@ -247,6 +247,87 @@
 
             // Make our little list sortable
             $("#LibraryAssignSortable").sortable();
+        }
+
+        // Click Handler for Library Upload Buttons (image, video, powerpoint, flash)
+        function libraryUploadClick() {
+
+            var validExt = $(this).data().validExt.replace(/,/g, "|");
+            var playlistId = $(this).data().playlistId;
+
+            // Close the current dialog
+            XiboDialogClose();
+
+            var template = Handlebars.compile($("#template-file-upload").html());
+
+            // Handle bars and open a dialog
+            var fileUploadDialog = bootbox.dialog({
+                message: template({
+                    trans: {
+                        addFiles: "{% trans "Add files" %}",
+                        startUpload: "{% trans "Start upload" %}",
+                        cancelUpload: "{% trans "Cancel upload" %}"
+                    },
+                    upload: {
+                        maxSize: {{ libraryUpload.maxSize }},
+                        maxSizeMessage: "{{ libraryUpload.maxSizeMessage  }}",
+                        validExt: validExt
+                    },
+                    playlistId: playlistId
+                }),
+                title: "{% trans "Upload media" %}",
+                buttons: {
+                    main: {
+                        label: "{% trans "Done" %}",
+                        className: "btn-primary",
+                        callback: function() {
+                            XiboFormRender(timelineForm.url, timelineForm.value);
+                        }
+                    }
+                }
+            }).on('shown.bs.modal', function() {
+                // Configure the upload form
+                var url = "{{ urlFor("library.add") }}";
+                var form = $(this).find("form");
+
+                // Initialize the jQuery File Upload widget:
+                form.fileupload({
+                    url: url,
+                    disableImageResize: false
+                });
+
+                // Upload server status check for browsers with CORS support:
+                if ($.support.cors) {
+                    $.ajax({
+                        url: url,
+                        type: 'HEAD'
+                    }).fail(function () {
+                        $('<span class="alert alert-error"/>')
+                                .text('Upload server currently unavailable - ' + new Date())
+                                .appendTo(form);
+                    });
+                }
+
+                // Enable iframe cross-domain access via redirect option:
+                form.fileupload(
+                        'option',
+                        'redirect',
+                        window.location.href.replace(
+                                /\/[^\/]*$/,
+                                '/cors/result.html?%s'
+                        )
+                );
+
+                form.bind('fileuploadsubmit', function (e, data) {
+                    var inputs = data.context.find(':input');
+                    if (inputs.filter('[required][value=""]').first().focus().length) {
+                        return false;
+                    }
+                    data.formData = inputs.serializeArray().concat(form.serializeArray());
+
+                    inputs.filter("input").prop("disabled", true);
+                });
+            });
         }
     </script>
 {% endblock %}

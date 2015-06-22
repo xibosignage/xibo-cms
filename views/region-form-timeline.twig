@@ -37,7 +37,7 @@
                             {% if module.regionSpecific %}
                                 <li class="XiboFormButton" href="{{ urlFor("module.widget.add.form", {type: module.type, id: playlist.playlistId}) }}"><a tabindex="-1" href="#">{{ module.name }}</a></li>
                             {% else %}
-                                <li class="libraryUploadForm" href="#"><a tabindex="-1" href="#">{{ module.name }}</a></li>
+                                <li class="libraryUploadForm" href="#" data-playlist-id="{{ playlist.playlistId }}" data-valid-ext="{{ module.validExtensions }}"><a tabindex="-1" href="#">{{ module.name }}</a></li>
                             {% endif %}
                         {% endfor %}
                     </ul>

@@ -259,6 +259,9 @@ var loadTimeLineCallback = function(dialog) {
     });
 
     $(".timelineSortableListOfMedia").sortable();
+
+    // Hook up the library Upload Buttons
+    $(".libraryUploadForm").click(libraryUploadClick);
 };
 
 
