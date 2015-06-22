@@ -58,7 +58,7 @@ class Sanitize
 
     public static function int($param)
     {
-        if ($param == null)
+        if ($param === null)
             return null;
 
         return filter_var($param, FILTER_SANITIZE_NUMBER_INT);
@@ -71,7 +71,7 @@ class Sanitize
 
     public static function double($param)
     {
-        if ($param == null)
+        if ($param === null)
             return null;
 
         return filter_var($param, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);

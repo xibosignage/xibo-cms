@@ -310,7 +310,7 @@ class ModuleFactory
                  WHERE 1 = 1
             ';
 
-            if (Sanitize::getInt('moduleId', 0, $filterBy) != null) {
+            if (Sanitize::getInt('moduleId', $filterBy) != null) {
                 $params['moduleId'] = Sanitize::getInt('moduleId', $filterBy);
                 $SQL .= ' AND ModuleID = :moduleId ';
             }

@@ -414,7 +414,7 @@ class LayoutFactory
         // Retired options (default to 0 - provide -1 to return all
         if (Sanitize::getInt('retired', 0, $filterBy) != -1) {
             $sql .= " AND layout.retired = :retired ";
-            $params['retired'] = Sanitize::getInt('retired', $filterBy);
+            $params['retired'] = Sanitize::getInt('retired', 0, $filterBy);
         }
 
         // Tags
