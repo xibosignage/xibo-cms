@@ -158,6 +158,38 @@ class Date
     {
         return strtotime($date);
     }
-}
 
-?>
+    private static $timezones = null;
+
+    public static function timezoneList()
+    {
+        if (self::$timezones === null) {
+            self::$timezones = [];
+            $offsets = [];
+            $now = new DateTime();
+
+            foreach (\DateTimeZone::listIdentifiers() as $timezone) {
+                $now->setTimezone(new \DateTimeZone($timezone));
+                $offsets[] = $offset = $now->getOffset();
+                self::$timezones[$timezone] = '(' . self::formatGmtOffset($offset) . ') ' . self::formatTimezoneName($timezone);
+            }
+
+            array_multisort($offsets, self::$timezones);
+        }
+
+        return self::$timezones;
+    }
+
+    private static function formatGmtOffset($offset) {
+        $hours = intval($offset / 3600);
+        $minutes = abs(intval($offset % 3600 / 60));
+        return 'GMT' . ($offset ? sprintf('%+03d:%02d', $hours, $minutes) : '');
+    }
+
+    private static function formatTimezoneName($name) {
+        $name = str_replace('/', ', ', $name);
+        $name = str_replace('_', ' ', $name);
+        $name = str_replace('St ', 'St. ', $name);
+        return $name;
+    }
+}
