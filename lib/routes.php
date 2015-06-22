@@ -48,11 +48,11 @@ $app->post('/region/:id', '\Xibo\Controller\Region:add')->name('region.add');
 $app->put('/region/:id', '\Xibo\Controller\Region:edit')->name('region.edit');
 $app->delete('/region/:id', '\Xibo\Controller\Region:delete')->name('region.delete');
 $app->put('/region/position/all/:id', '\Xibo\Controller\Region:positionAll')->name('region.position.all');
-$app->get('/region/:id', '\Xibo\Controller\Region:timeline')->name('region.timeline');
 
 //
 // playlist
 //
+$app->get('/playlist/widget', '\Xibo\Controller\Playlist:widgetGrid')->name('playlist.widget.search');
 $app->post('/playlist/library/assign/:id', '\Xibo\Controller\Playlist:libraryAssign')->name('playlist.library.assign');
 
 //

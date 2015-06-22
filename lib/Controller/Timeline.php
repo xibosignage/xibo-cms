@@ -20,64 +20,12 @@
  */
 namespace Xibo\Controller;
 
-use Xibo\Helper\ApplicationState;
-use Xibo\Helper\Help;
 use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
 
 
 class Timeline extends Base
 {
-
-    /**
-     * Timeline in Grid mode
-     */
-    public function TimelineGrid()
-    {
-        $this->getUser()->setPref('timeLineView', 'grid');
-
-        $response = $this->getState();
-        $response->html = '';
-
-        // Load the region and get the dimensions, applying the scale factor if necessary (only v1 layouts will have a scale factor != 1)
-        $region = \Xibo\Factory\RegionFactory::loadByRegionId(Kit::GetParam('regionid', _GET, _INT));
-
-        if (!$this->getUser()->checkEditable($region))
-            trigger_error(__('You do not have permissions to edit this region'), E_USER_ERROR);
-
-        // Set the theme module buttons
-        $this->setModuleButtons($region->regionId, $region->playlists[0]->playlistId);
-
-        $id = uniqid();
-        Theme::Set('prepend', '<div class="row">' . Theme::RenderReturn('layout_designer_form_timeline') . '<div class="col-md-10">');
-        Theme::Set('append', '</div></div>');
-        Theme::Set('header_text', __('Media'));
-        Theme::Set('id', $id);
-        Theme::Set('form_fields', array());
-        Theme::Set('filter_id', 'XiboFilterPinned' . uniqid('filter'));
-        Theme::Set('pager', ApplicationState::Pager($id));
-        Theme::Set('form_meta', '<input type="hidden" name="p" value="timeline">
-            <input type="hidden" name="q" value="TimelineGridView">
-            <input type="hidden" name="regionid" value="' . $region->regionId . '">');
-
-        // Call to render the template
-        $response->html = Theme::RenderReturn('grid_render');
-
-        // Finish constructing the response
-        $response->dialogClass = 'modal-big';
-        $response->dialogTitle = __('Region Timeline');
-        $response->dialogSize = true;
-        $response->dialogWidth = '1000px';
-        $response->dialogHeight = '550px';
-        $response->focusInFirstInput = false;
-
-        // Add some buttons
-        $response->AddButton(__('Switch to List'), 'XiboSwapDialog("index.php?p=timeline&q=TimelineList&regionid=' . $region->regionId . '")');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Layout', 'RegionOptions') . '")');
-        $response->AddButton(__('Close'), 'XiboDialogClose()');
-
-    }
-
     /**
      * TimeLine Grid
      */
@@ -140,53 +88,7 @@ class Timeline extends Base
             $row['duration'] = sprintf('%d seconds', $widget->duration);
             $row['transition'] = sprintf('%s / %s', $tmpModule->getTransition('in'), $tmpModule->getTransition('out'));
 
-            if ($this->getUser()->checkEditable($widget)) {
-                $row['buttons'][] = array(
-                    'id' => 'timeline_button_edit',
-                    'url' => 'index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=EditForm&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '"',
-                    'text' => __('Edit')
-                );
-            }
 
-            if ($this->getUser()->checkDeleteable($widget)) {
-                $row['buttons'][] = array(
-                    'id' => 'timeline_button_delete',
-                    'url' => 'index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=DeleteForm&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '"',
-                    'text' => __('Remove'),
-                    'multi-select' => true,
-                    'dataAttributes' => array(
-                        array('name' => 'multiselectlink', 'value' => 'index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=DeleteMedia'),
-                        array('name' => 'rowtitle', 'value' => $row['name']),
-                        array('name' => 'regionid', 'value' => $region->regionId),
-                        array('name' => 'lkid', 'value' => $widget->widgetId),
-                        array('name' => 'options', 'value' => 'unassign')
-                    )
-                );
-            }
-
-            if ($this->getUser()->checkPermissionsModifyable($widget)) {
-                $row['buttons'][] = array(
-                    'id' => 'timeline_button_permissions',
-                    'url' => 'index.php?p=user&q=permissionsForm&entity=Widget&objectId=' . $widget->widgetId . '"',
-                    'text' => __('Permissions')
-                );
-            }
-
-            if (count($this->getUser()->TransitionAuth('in')) > 0) {
-                $row['buttons'][] = array(
-                    'id' => 'timeline_button_trans_in',
-                    'url' => 'index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=TransitionEditForm&type=in&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '"',
-                    'text' => __('In Transition')
-                );
-            }
-
-            if (count($this->getUser()->TransitionAuth('out')) > 0) {
-                $row['buttons'][] = array(
-                    'id' => 'timeline_button_trans_in',
-                    'url' => 'index.php?p=module&mod=' . $tmpModule->getModuleType() . '&q=Exec&method=TransitionEditForm&type=out&regionId=' . $region->regionId . '&widgetId=' . $widget->widgetId . '"',
-                    'text' => __('Out Transition')
-                );
-            }
 
             $rows[] = $row;
         }

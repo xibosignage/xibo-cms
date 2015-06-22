@@ -16,7 +16,7 @@
 
 {% block formButtons %}
     {% trans "Save Order" %}, $("#<<id>>").submit()
-    {% trans "Switch to Grid" %}, XiboSwapDialog("{{ urlFor("layout.designer", {id: region.regionId}) }}?view=grid") %}
+    {% trans "Switch to Grid" %}, XiboSwapDialog("{{ urlFor("region.timeline.form", {id: region.regionId}) }}?view=grid")
     {% trans "Close" %}, XiboDialogClose()
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
 {% endblock %}

@@ -329,5 +329,37 @@
                 });
             });
         }
+
+        function timelineGridCallback(dialog) {
+
+            dialog.addClass("modal-big");
+
+            var timelineWidgetTabel = $("#timelineWidgets").DataTable({
+                serverSide: true,
+                filter: false,
+                searchDelay: 3000,
+                "order": [[ 0, "asc"]],
+                ajax: {
+                    url: "{{ urlFor("playlist.widget.search") }}",
+                    "data": function(d) {
+                        $.extend(d, $("#timelineWidgets").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                    }
+                },
+                "columns": [
+                    { "data": "displayOrder" },
+                    { "data": "name", "orderable": false },
+                    { "data": "type" },
+                    { "data": "duration" },
+                    { "data": "transition" },
+                    {
+                        "orderable": false,
+                        "data": dataTableButtonsColumn
+                    }
+                ]
+            });
+
+            timelineWidgetTabel.on('draw', dataTableDraw);
+            timelineWidgetTabel.on('processing.dt', dataTableProcessing);
+        }
     </script>
 {% endblock %}
