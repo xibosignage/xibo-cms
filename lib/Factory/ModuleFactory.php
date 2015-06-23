@@ -156,7 +156,10 @@ class ModuleFactory
             $playlist->load(['playlistIncludeRegionAssignments' => false]);
 
             // Create a new widget to use
-            $module->setWidget(WidgetFactory::create($ownerId, $playlistId, $module->getModuleType(), 0, count($playlist->widgets) + 1));
+            $widget = WidgetFactory::create($ownerId, $playlistId, $module->getModuleType(), 0);
+            $module->setWidget($widget);
+
+            $playlist->assignWidget($widget);
         }
         else {
             // Load the widget
@@ -240,11 +243,12 @@ class ModuleFactory
 
     /**
      * Get Valid Extensions
+     * @param array[Optional] $filterBy
      * @return array[string]
      */
-    public static function getValidExtensions()
+    public static function getValidExtensions($filterBy = [])
     {
-        $modules = ModuleFactory::query();
+        $modules = ModuleFactory::query(null, $filterBy);
         $extensions = array();
 
         foreach($modules as $module) {
@@ -307,7 +311,7 @@ class ModuleFactory
                  WHERE 1 = 1
             ';
 
-            if (Sanitize::getInt('moduleId', 0, $filterBy) != null) {
+            if (Sanitize::getInt('moduleId', $filterBy) != null) {
                 $params['moduleId'] = Sanitize::getInt('moduleId', $filterBy);
                 $SQL .= ' AND ModuleID = :moduleId ';
             }
@@ -348,7 +352,7 @@ class ModuleFactory
 
             // Paging
             if (Sanitize::getInt('start') !== null && Sanitize::getInt('length') !== null) {
-                $SQL .= ' LIMIT ' . intval(Sanitize::getInt('start')) . ', ' . Sanitize::getInt('length', 10);
+                $SQL .= ' LIMIT ' . Sanitize::getInt('start') . ', ' . Sanitize::getInt('length', 10);
             }
 
             Log::sql($SQL, $params);

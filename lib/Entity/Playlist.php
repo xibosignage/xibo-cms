@@ -151,6 +151,17 @@ class Playlist implements \JsonSerializable
     }
 
     /**
+     * @param Widget $widget
+     */
+    public function assignWidget($widget)
+    {
+        $this->load();
+
+        $widget->displayOrder = count($this->widgets) + 1;
+        $this->widgets[] = $widget;
+    }
+
+    /**
      * Load
      * @param array $loadOptions
      */
@@ -194,6 +205,15 @@ class Playlist implements \JsonSerializable
             $this->add();
         else if ($this->hash != $this->hash())
             $this->update();
+
+        // Sort the widgets by their display order
+        usort($this->widgets, function($a, $b) {
+            /**
+             * @var Widget $a
+             * @var Widget$b
+             */
+            return $a->displayOrder - $b->displayOrder;
+        });
 
         $i = 0;
         foreach ($this->widgets as $widget) {

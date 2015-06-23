@@ -1,7 +1,10 @@
 # Introduction
 Xibo - Digital Signage - http://www.xibo.org.uk
-Copyright (C) 2006-2015 Daniel Garner, James Packer and Alex Harrington
+Copyright (C) 2006-2015 Daniel Garner and Contributors.
 
+This is the 1.8.0-alpha development branch and represents the next generation of the Xibo CMS. The CMS has been rewritten using the Slim Framework with Twig Middleware.
+
+## Licence
 Xibo is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
@@ -14,6 +17,28 @@ GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public License
 along with Xibo.  If not, see <http://www.gnu.org/licenses/>. 
+
+# Development
+The Xibo CMS now follows MVC and is PSR-4 compliant.
+
+The folder structure is as follows:
+ 
+ - lib/Controller - Controllers
+ - lib/Entity - Models
+ - lib/Factory - Factories for creating Models
+ - lib/Widget - Controllers for Modules
+ - views/ - Twig Views
+ - modules/ - Twig Views for Modules and other Module resources
+ - web/ - Web Document Root
+ - web/index.php - Entry point for the WEB GUI
+ - web/api/index.php - Entry point for the API
+ - web/maintenance/index.php - Entry point for Maintenance
+ - web/modules/ - Web Serviceable Resources for modules
+ - web/theme/ - GUI theme files
+ - web/xmds/xmds.php - XMDS SOAP Service
+ - tests/ - PHPUnit Tests
+
+The CMS is currently in heavy development and is not suitable for installation.
 
 # Contributing
 The standard licence for Xibo is the [AGPLv3](LICENSE). For more information please see [CONTRIBUTING.md](CONTRIBUTING.md).

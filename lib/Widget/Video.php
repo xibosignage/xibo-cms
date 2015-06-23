@@ -20,58 +20,19 @@
  */
 namespace Xibo\Widget;
 
-use Widget\Module;
-use Xibo\Helper\Form;
+
+use Xibo\Helper\Sanitize;
 
 class Video extends Module
 {
     /**
-     * Return the Edit Form as HTML
-     */
-    public function EditForm()
-    {
-        $response = $this->getState();
-        $formFields = array();
-        $formFields[] = Form::AddCheckbox('loop', __('Loop?'),
-            $this->GetOption('loop', 0), __('Should the video loop if it finishes before the provided duration?'),
-            'l', 'loop-fields');
-
-        $formFields[] = Form::AddCheckbox('mute', __('Mute?'),
-            $this->GetOption('mute', 1), __('Should the video be muted?'),
-            'm', 'mute-fields');
-
-        $response->AddFieldAction('duration', 'init', '0', array('.loop-fields' => array('display' => 'none')));
-        $response->AddFieldAction('duration', 'change', '0', array('.loop-fields' => array('display' => 'none')));
-        $response->AddFieldAction('duration', 'init', '0', array('.loop-fields' => array('display' => 'block')), 'not');
-        $response->AddFieldAction('duration', 'change', '0', array('.loop-fields' => array('display' => 'block')), 'not');
-
-        // Standard Edit Form
-        $this->baseEditForm($formFields, $response);
-    }
-
-    /**
      * Edit Media in the Database
      */
-    public function EditMedia()
+    public function edit()
     {
         // Set the properties specific to this module
-        $this->SetOption('loop', \Kit::GetParam('loop', _POST, _CHECKBOX));
-        $this->SetOption('mute', \Kit::GetParam('mute', _POST, _CHECKBOX));
-
-        parent::EditMedia();
-    }
-
-    /**
-     * Preview code for a module
-     * @param int $width
-     * @param int $height
-     * @param int $scaleOverride The Scale Override
-     * @return string The Rendered Content
-     */
-    public function Preview($width, $height, $scaleOverride = 0)
-    {
-        // Videos are never previewed in the browser.
-        return $this->previewIcon();
+        $this->setOption('loop', Sanitize::getCheckbox('loop'));
+        $this->setOption('mute', Sanitize::getCheckbox('mute'));
     }
 
     /**
@@ -79,17 +40,16 @@ class Video extends Module
      * @param int $displayId
      * @return mixed
      */
-    public function GetResource($displayId = 0)
+    public function getResource($displayId = 0)
     {
         $this->download();
-        exit();
     }
 
     /**
      * Is this module valid
      * @return int
      */
-    public function IsValid()
+    public function isValid()
     {
         // Yes
         return 1;

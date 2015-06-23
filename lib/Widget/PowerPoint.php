@@ -20,24 +20,10 @@
  */
 namespace Xibo\Widget;
 
-use Widget\Module;
 
 class PowerPoint extends Module
 {
-    /**
-     * Preview code for a module
-     * @param int $width
-     * @param int $height
-     * @param int $scaleOverride The Scale Override
-     * @return string The Rendered Content
-     */
-    public function Preview($width, $height, $scaleOverride = 0)
-    {
-        // PowerPoint cannot be previewed
-        return $this->previewIcon();
-    }
-
-    public function IsValid()
+    public function isValid()
     {
         // Client dependant
         return 2;
@@ -48,9 +34,8 @@ class PowerPoint extends Module
      * @param int $displayId
      * @return mixed
      */
-    public function GetResource($displayId = 0)
+    public function getResource($displayId = 0)
     {
         $this->download();
-        exit();
     }
 }

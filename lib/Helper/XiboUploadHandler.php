@@ -104,7 +104,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 $widget->assignMedia($media->mediaId);
 
                 // Assign the new widget to the playlist
-                $playlist->widgets[] = $widget;
+                $playlist->assignWidget($widget);
 
                 // Save the playlist
                 $playlist->save();

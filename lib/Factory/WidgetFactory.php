@@ -87,17 +87,16 @@ class WidgetFactory
      * @param int $playlistId
      * @param string $type
      * @param int $duration
-     * @param int $displayOrder
      * @return Widget
      */
-    public static function create($ownerId, $playlistId, $type, $duration, $displayOrder = 1)
+    public static function create($ownerId, $playlistId, $type, $duration)
     {
         $widget = new Widget();
         $widget->ownerId = $ownerId;
         $widget->playlistId = $playlistId;
         $widget->type = $type;
         $widget->duration = $duration;
-        $widget->displayOrder = $displayOrder;
+        $widget->displayOrder = 1;
 
         return $widget;
     }

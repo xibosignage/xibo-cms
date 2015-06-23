@@ -266,6 +266,22 @@ abstract class Module implements ModuleInterface
     }
 
     /**
+     * Add Media
+     */
+    public function add()
+    {
+        // Nothing to do
+    }
+
+    /**
+     * Edit Media
+     */
+    public function edit()
+    {
+        // Nothing to do
+    }
+
+    /**
      * Delete Widget
      */
     public function delete()
@@ -313,7 +329,7 @@ abstract class Module implements ModuleInterface
      */
     public function previewIcon()
     {
-        return '<div style="text-align:center;"><img alt="' . $this->getModuleType() . ' thumbnail" src="theme/default/img/forms/' . $this->getModuleType() . '.gif" /></div>';
+        return '<div style="text-align:center;"><img alt="' . $this->getModuleType() . ' thumbnail" src="' . Theme::uri('img/forms/' . $this->getModuleType() . '.gif') . '" /></div>';
     }
 
     /**
@@ -361,6 +377,16 @@ abstract class Module implements ModuleInterface
      * @throws ControllerNotImplemented
      */
     public function getResource($displayId = 0)
+    {
+        throw new ControllerNotImplemented();
+    }
+
+    /**
+     * Gets a Tab
+     * @return mixed
+     * @throws ControllerNotImplemented
+     */
+    public function getTab($tab)
     {
         throw new ControllerNotImplemented();
     }

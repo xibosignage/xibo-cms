@@ -4,38 +4,13 @@
  * Copyright (C) 2015 Spring Signage Ltd
  * (${FILE_NAME})
  */
-$formFields = array();
-        $formFields[] = Form::AddText('name', __('Name'), $this->GetOption('name'),
-            __('An optional name for this media'), 'n');
-
-        $formFields[] = Form::AddNumber('duration', __('Duration'), $this->getDuration(),
-            __('The duration in seconds this item should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
-
-        $formFields[] = Form::AddCheckbox('transparency', __('Background transparent?'),
-            $this->GetOption('transparency'), __('Should the HTML be shown with a transparent background. Not current available on the Windows Display Client.'),
-            't');
-
-        $formFields[] = Form::AddCheckbox('scaleContent', __('Scale Content?'),
-            $this->GetOption('scaleContent'), __('Should the embedded content be scaled along with the layout?'),
-            's');
-
-        $formFields[] = Form::AddMultiText('embedHtml', NULL, $this->getRawNode('embedHtml', null),
-            __('HTML to Embed'), 'h', 10);
-
-        $formFields[] = Form::AddMultiText('embedStyle', NULL, $this->getRawNode('embedStyle', null),
-            __('Custom Style Sheets'), 'h', 10);
-
-        $formFields[] = Form::AddMultiText('embedScript', NULL, $this->getRawNode('embedScript', null),
-            __('HEAD content to Embed (including script tags)'), 'h', 10);
-
-        Theme::Set('form_fields', $formFields);
 #}
 
 {% extends "form-base.twig" %}
 {% import "forms.twig" as forms %}
 
 {% block formTitle %}
-    {% trans "Title" %}
+    {% trans "Edit Embedded" %}
 {% endblock %}
 
 {% block formButtons %}

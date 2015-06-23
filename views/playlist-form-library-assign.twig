@@ -1,0 +1,66 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+
+{% extends "form-base.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block formTitle %}
+    {% trans "Assign an item from the Library" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Save" %}, LibraryAssignSubmit({{ playlist.playlistId }})
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+{% endblock %}
+
+{% block callBack %}mediaFormCallBack{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <div id="LibraryAssign" class="well" data-url="{{ urlFor("playlist.library.assign", {id: playlist.playlistId}) }}">
+                <div>
+                    <ul id="LibraryAssignSortable">
+                        {% for item in media %}
+                            <li id="MediaID_{{ item.mediaId }}" class="li-sortable">{{ item.name }}<span class="glyphicon glyphicon-minus-sign"></span></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="XiboGrid" id="{{ random() }}">
+                <div>
+                    {% set title %}{% trans "Name" %}{% endset %}
+                    {{ inline.text("filter_name", title) }}
+
+                    {% set title %}{% trans "Type" %}{% endset %}
+                    {{ inline.dropdown("filter_type", "single", title, "", modules, "moduleId", "name") }}
+                </div>
+                <div class="XiboData">
+                    <table id="mediaAssignments" class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th>{% trans "Name" %}</th>
+                            <th>{% trans "Type" %}</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

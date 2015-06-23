@@ -122,14 +122,14 @@ class UserGroupFactory
                 $params['userId'] = Sanitize::getInt('userId', $filterBy);
             }
 
-            if (Sanitize::getInt('isUserSpecific', $filterBy, 0) != -1) {
+            if (Sanitize::getInt('isUserSpecific', 0, $filterBy) != -1) {
                 $sql .= ' AND isUserSpecific = :isUserSpecific ';
-                $params['isUserSpecific'] = Sanitize::getInt('isUserSpecific', $filterBy, 0);
+                $params['isUserSpecific'] = Sanitize::getInt('isUserSpecific', 0, $filterBy);
             }
 
-            if (Sanitize::getInt('isEveryone', $filterBy, 0) != -1) {
+            if (Sanitize::getInt('isEveryone', 0, $filterBy) != -1) {
                 $sql .= ' AND isEveryone = :isEveryone ';
-                $params['isEveryone'] = Sanitize::getInt('isEveryone', $filterBy, 0);
+                $params['isEveryone'] = Sanitize::getInt('isEveryone', 0, $filterBy);
             }
 
             // Sorting?

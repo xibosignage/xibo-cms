@@ -298,6 +298,7 @@ class MediaFactory
             $sql .= 'ORDER BY ' . implode(',', $sortOrder);
 
         // Paging
+        $limit = '';
         if (Sanitize::getInt('start') !== null && Sanitize::getInt('length') !== null) {
             $limit = ' LIMIT ' . intval(Sanitize::getInt('start')) . ', ' . Sanitize::getInt('length', 10);
         }

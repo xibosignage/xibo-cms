@@ -20,8 +20,6 @@
  */
 namespace Xibo\Widget;
 
-use Widget\Module;
-
 class GenericFile extends Module
 {
     /**
@@ -31,7 +29,7 @@ class GenericFile extends Module
      * @param int $scaleOverride The Scale Override
      * @return string The Rendered Content
      */
-    public function Preview($width, $height, $scaleOverride = 0)
+    public function preview($width, $height, $scaleOverride = 0)
     {
         // Videos are never previewed in the browser.
         return $this->previewIcon();
@@ -42,7 +40,7 @@ class GenericFile extends Module
      * @param int $displayId
      * @return mixed
      */
-    public function GetResource($displayId = 0)
+    public function getResource($displayId = 0)
     {
         $this->download();
         exit();
@@ -52,7 +50,7 @@ class GenericFile extends Module
      * Is this module valid
      * @return int
      */
-    public function IsValid()
+    public function isValid()
     {
         // Yes
         return 1;
