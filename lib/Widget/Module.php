@@ -386,7 +386,7 @@ abstract class Module implements ModuleInterface
      * @return mixed
      * @throws ControllerNotImplemented
      */
-    public function getTab()
+    public function getTab($tab)
     {
         throw new ControllerNotImplemented();
     }

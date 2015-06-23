@@ -22,6 +22,8 @@
 namespace Xibo\Widget;
 
 use Xibo\Entity\Media;
+use Xibo\Exception\NotFoundException;
+use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Helper\Cache;
 use Xibo\Helper\Config;
@@ -118,28 +120,24 @@ class ForecastIo extends Module
      */
     public function add()
     {
-        $response = $this->getState();
+        $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
+        $this->setOption('name', Sanitize::getString('name'));
+        $this->setOption('useDisplayLocation', Sanitize::getCheckbox('useDisplayLocation'));
+        $this->setOption('color', Sanitize::getString('color'));
+        $this->setOption('longitude', Sanitize::getDouble('longitude'));
+        $this->setOption('latitude', Sanitize::getDouble('latitude'));
+        $this->setOption('templateId', Sanitize::getInt('templateId'));
+        $this->setOption('icons', Sanitize::getString('icons'));
+        $this->setOption('overrideTemplate', Sanitize::getCheckbox('overrideTemplate'));
+        $this->setOption('size', Sanitize::getInt('size'));
+        $this->setOption('units', Sanitize::getString('units'));
+        $this->setOption('updateInterval', Sanitize::getInt('updateInterval', 60));
+        $this->setOption('lang', Sanitize::getString('lang'));
+        $this->setOption('dayConditionsOnly', Sanitize::getCheckbox('dayConditionsOnly'));
 
-
-        // You can store any additional options for your module using the SetOption method
-        $this->SetOption('name', \Kit::GetParam('name', _POST, _STRING));
-        $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration(), false));
-        $this->SetOption('useDisplayLocation', \Kit::GetParam('useDisplayLocation', _POST, _CHECKBOX));
-        $this->SetOption('color', \Kit::GetParam('color', _POST, _STRING));
-        $this->SetOption('longitude', \Kit::GetParam('longitude', _POST, _DOUBLE));
-        $this->SetOption('latitude', \Kit::GetParam('latitude', _POST, _DOUBLE));
-        $this->SetOption('templateId', \Kit::GetParam('templateId', _POST, _STRING));
-        $this->SetOption('icons', \Kit::GetParam('icons', _POST, _STRING));
-        $this->SetOption('overrideTemplate', \Kit::GetParam('overrideTemplate', _POST, _CHECKBOX));
-        $this->SetOption('size', \Kit::GetParam('size', _POST, _INT));
-        $this->SetOption('units', \Kit::GetParam('units', _POST, _WORD));
-        $this->SetOption('updateInterval', Kit::GetParam('updateInterval', _POST, _INT, 60));
-        $this->SetOption('lang', \Kit::GetParam('lang', _POST, _WORD));
-        $this->SetOption('dayConditionsOnly', Kit::GetParam('dayConditionsOnly', _POST, _CHECKBOX));
-
-        $this->setRawNode('styleSheet', \Kit::GetParam('styleSheet', _POST, _HTMLSTRING));
-        $this->setRawNode('currentTemplate', \Kit::GetParam('currentTemplate', _POST, _HTMLSTRING));
-        $this->setRawNode('dailyTemplate', \Kit::GetParam('dailyTemplate', _POST, _HTMLSTRING));
+        $this->setRawNode('styleSheet', Sanitize::getParam('styleSheet', null));
+        $this->setRawNode('currentTemplate', Sanitize::getParam('currentTemplate', null));
+        $this->setRawNode('dailyTemplate', Sanitize::getParam('dailyTemplate', null));
 
         // Save the widget
         $this->saveWidget();
@@ -150,35 +148,24 @@ class ForecastIo extends Module
      */
     public function edit()
     {
-        $response = $this->getState();
+        $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
+        $this->setOption('name', Sanitize::getString('name'));
+        $this->setOption('useDisplayLocation', Sanitize::getCheckbox('useDisplayLocation'));
+        $this->setOption('color', Sanitize::getString('color'));
+        $this->setOption('longitude', Sanitize::getDouble('longitude'));
+        $this->setOption('latitude', Sanitize::getDouble('latitude'));
+        $this->setOption('templateId', Sanitize::getInt('templateId'));
+        $this->setOption('icons', Sanitize::getString('icons'));
+        $this->setOption('overrideTemplate', Sanitize::getCheckbox('overrideTemplate'));
+        $this->setOption('size', Sanitize::getInt('size'));
+        $this->setOption('units', Sanitize::getString('units'));
+        $this->setOption('updateInterval', Sanitize::getInt('updateInterval', 60));
+        $this->setOption('lang', Sanitize::getString('lang'));
+        $this->setOption('dayConditionsOnly', Sanitize::getCheckbox('dayConditionsOnly'));
 
-        if (!$this->auth->edit)
-            throw new Exception(__('You do not have permission to edit this widget.'));
-
-        //Other Properties
-        $name = \Xibo\Helper\Sanitize::getString('name');
-
-        // You must also provide a duration (all media items must provide this field)
-        $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration(), false));
-
-        // You can store any additional options for your module using the SetOption method
-        $this->SetOption('name', $name);
-        $this->SetOption('useDisplayLocation', \Kit::GetParam('useDisplayLocation', _POST, _CHECKBOX));
-        $this->SetOption('color', \Kit::GetParam('color', _POST, _STRING, '#000'));
-        $this->SetOption('longitude', \Kit::GetParam('longitude', _POST, _DOUBLE));
-        $this->SetOption('latitude', \Kit::GetParam('latitude', _POST, _DOUBLE));
-        $this->SetOption('templateId', \Kit::GetParam('templateId', _POST, _STRING));
-        $this->SetOption('icons', \Kit::GetParam('icons', _POST, _STRING));
-        $this->SetOption('overrideTemplate', \Kit::GetParam('overrideTemplate', _POST, _CHECKBOX));
-        $this->SetOption('size', \Kit::GetParam('size', _POST, _INT));
-        $this->SetOption('units', \Kit::GetParam('units', _POST, _WORD));
-        $this->SetOption('lang', \Kit::GetParam('lang', _POST, _WORD));
-        $this->SetOption('updateInterval', Kit::GetParam('updateInterval', _POST, _INT, 60));
-        $this->SetOption('dayConditionsOnly', Kit::GetParam('dayConditionsOnly', _POST, _CHECKBOX));
-
-        $this->setRawNode('styleSheet', \Kit::GetParam('styleSheet', _POST, _HTMLSTRING));
-        $this->setRawNode('currentTemplate', \Kit::GetParam('currentTemplate', _POST, _HTMLSTRING));
-        $this->setRawNode('dailyTemplate', \Kit::GetParam('dailyTemplate', _POST, _HTMLSTRING));
+        $this->setRawNode('styleSheet', Sanitize::getParam('styleSheet', null));
+        $this->setRawNode('currentTemplate', Sanitize::getParam('currentTemplate', null));
+        $this->setRawNode('dailyTemplate', Sanitize::getParam('dailyTemplate', null));
 
         // Save the widget
         $this->saveWidget();
@@ -234,18 +221,13 @@ class ForecastIo extends Module
         );
     }
 
-    // Request content for this tab
-    public function getTab()
+    /**
+     * Get Tab
+     */
+    public function getTab($tab)
     {
         if (!$data = $this->getForecastData(0))
-            die(__('No data returned, please check error log.'));
-
-        $cols = array(
-            array('name' => 'forecast', 'title' => __('Forecast')),
-            array('name' => 'key', 'title' => __('Substitute')),
-            array('name' => 'value', 'title' => __('Value'))
-        );
-        Theme::Set('table_cols', $cols);
+            throw new NotFoundException(__('No data returned, please check error log.'));
 
         $rows = array();
         foreach ($data['currently'] as $key => $value) {
@@ -264,25 +246,24 @@ class ForecastIo extends Module
             $rows[] = array('forecast' => __('Daily'), 'key' => $key, 'value' => $value);
         }
 
-        Theme::Set('table_rows', $rows);
-        $this->getState()->html .= Theme::RenderReturn('table_render');
-        exit();
+        return ['forecast' => $rows];
     }
 
-    // Get the forecast data for the provided display id
+    /**
+     * Get the forecast data for the provided display id
+     * @param int $displayId
+     * @return array
+     */
     private function getForecastData($displayId)
     {
-        $defaultLat = Config::GetSetting('DEFAULT_LAT');
-        $defaultLong = Config::GetSetting('DEFAULT_LONG');
+        $defaultLat = Config::getSetting('DEFAULT_LAT');
+        $defaultLong = Config::getSetting('DEFAULT_LONG');
 
         if ($this->GetOption('useDisplayLocation') == 1) {
             // Use the display ID or the default.
             if ($displayId != 0) {
 
-                $display = new Display();
-                $display->displayId = $displayId;
-                $display->Load();
-
+                $display = DisplayFactory::getById($displayId);
                 $defaultLat = $display->latitude;
                 $defaultLong = $display->longitude;
             }
@@ -291,7 +272,7 @@ class ForecastIo extends Module
             $defaultLong = $this->GetOption('longitude', $defaultLong);
         }
 
-        $apiKey = $this->GetSetting('apiKey');
+        $apiKey = $this->getSetting('apiKey');
         if ($apiKey == '')
             die(__('Incorrectly configured module'));
 
@@ -306,7 +287,7 @@ class ForecastIo extends Module
             }
 
             // If the response is empty, cache it for less time
-            $cacheDuration = $this->GetSetting('cachePeriod');
+            $cacheDuration = $this->getSetting('cachePeriod');
 
             // Cache
             Cache::put($key, $data, $cacheDuration);
@@ -407,22 +388,21 @@ class ForecastIo extends Module
      * @param int $displayId
      * @return mixed
      */
-    public function GetResource($displayId = 0)
+    public function getResource($displayId = 0)
     {
         // Behave exactly like the client.
         if (!$data = $this->getForecastData($displayId))
             return '';
 
-        // A template is provided which contains a number of different libraries that might
-        // be useful (jQuery, etc).
-        $pathPrefix = (\Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true') ? 'modules/theme/forecastio/weather_icons/' : '';
-
-        // Get the template
-        $template = file_get_contents('modules/preview/HtmlTemplate.html');
+        $data = [];
+        $isPreview = (Sanitize::getCheckbox('preview') == 1);
 
         // Replace the View Port Width?
-        if (isset($_GET['preview']))
-            $template = str_replace('[[ViewPortWidth]]', $this->region->width, $template);
+        $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
+
+        // A template is provided which contains a number of different libraries that might
+        // be useful (jQuery, etc).
+        $pathPrefix = $isPreview ? 'modules/forecastio/weather_icons/' : '';
 
         $headContent = '
             <link href="' . $pathPrefix . 'weather-icons.min.css" rel="stylesheet" media="screen">
@@ -434,11 +414,11 @@ class ForecastIo extends Module
         ';
 
         // Add our fonts.css file
-        $isPreview = (\Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
         $headContent .= '<link href="' . $this->getResourceUrl('fonts.css') . ' rel="stylesheet" media="screen">';
         $headContent .= '<style type="text/css">' . file_get_contents(Theme::uri('css/client.css', true)) . '</style>';
 
-        $data['head'] = $headContent;
+        // Replace any icon sets
+        $data['head'] = str_replace('[[ICONS]]', ($pathPrefix . $this->GetOption('icons')), $headContent);
 
         // Make some body content
         $body = $this->getRawNode('currentTemplate', null);
@@ -458,10 +438,8 @@ class ForecastIo extends Module
         }
 
         // Run replace over the main template
-        $template = str_replace('<!--[[[BODYCONTENT]]]-->', $this->makeSubstitutions($data['currently'], $body), $template);
+        $data['body'] = $this->makeSubstitutions($data['currently'], $body);
 
-        // Replace any icon sets
-        $template = str_replace('[[ICONS]]', ((($isPreview) ? 'modules/theme/forecastio/weather_icons/' : '') . $this->GetOption('icons')), $template);
 
         // JavaScript to control the size (override the original width and height so that the widget gets blown up )
         $options = array(
@@ -487,15 +465,10 @@ class ForecastIo extends Module
         $data['javaScript'] = $javaScriptContent;
 
         // Return that content.
-        return $template;
+        return $this->renderTemplate($data);
     }
 
-    public function GetName()
-    {
-        return $this->GetOption('name');
-    }
-
-    public function IsValid()
+    public function isValid()
     {
         // Using the information you have in your module calculate whether it is valid or not.
         // 0 = Invalid
@@ -518,9 +491,9 @@ class ForecastIo extends Module
             $request_url .= '?'. http_build_query($options);
         }
 
-        \Xibo\Helper\Log::debug('Calling API with: ' . $request_url);
+        Log::debug('Calling API with: ' . $request_url);
 
-        $request_url = str_replace('[APIKEY]', $this->api_key, $request_url);
+        $request_url = str_replace('[APIKEY]', $this->getSetting('apiKey'), $request_url);
 
         $httpOptions = array(
             CURLOPT_TIMEOUT => 20,
@@ -533,12 +506,12 @@ class ForecastIo extends Module
         );
 
         // Proxy support
-        if (\Xibo\Helper\Config::GetSetting('PROXY_HOST') != '' && !\Xibo\Helper\Config::isProxyException($request_url)) {
-            $httpOptions[CURLOPT_PROXY] = \Xibo\Helper\Config::GetSetting('PROXY_HOST');
-            $httpOptions[CURLOPT_PROXYPORT] = \Xibo\Helper\Config::GetSetting('PROXY_PORT');
+        if (Config::getSetting('PROXY_HOST') != '' && !Config::isProxyException($request_url)) {
+            $httpOptions[CURLOPT_PROXY] = Config::getSetting('PROXY_HOST');
+            $httpOptions[CURLOPT_PROXYPORT] = Config::getSetting('PROXY_PORT');
 
-            if (\Xibo\Helper\Config::GetSetting('PROXY_AUTH') != '')
-                $httpOptions[CURLOPT_PROXYUSERPWD] = \Xibo\Helper\Config::GetSetting('PROXY_AUTH');
+            if (Config::getSetting('PROXY_AUTH') != '')
+                $httpOptions[CURLOPT_PROXYUSERPWD] = Config::getSetting('PROXY_AUTH');
         }
 
         $curl = curl_init();
@@ -550,16 +523,16 @@ class ForecastIo extends Module
 
         if ($outHeaders['http_code'] == 0) {
             // Unable to connect
-            \Xibo\Helper\Log::error('Unable to reach Forecast API. No Host Found (HTTP Code 0). Curl Error = ' . curl_error($curl));
+            Log::error('Unable to reach Forecast API. No Host Found (HTTP Code 0). Curl Error = ' . curl_error($curl));
             return false;
         }
         else if ($outHeaders['http_code'] != 200) {
-            \Xibo\Helper\Log::error('ForecastIO API returned ' . $outHeaders['http_code'] . ' status. Unable to proceed. Headers = ' . var_export($outHeaders, true));
+            Log::error('ForecastIO API returned ' . $outHeaders['http_code'] . ' status. Unable to proceed. Headers = ' . var_export($outHeaders, true));
 
             // See if we can parse the error.
             $body = json_decode($result);
 
-            \Xibo\Helper\Log::error('ForecastIO Error: ' . ((isset($body->errors[0])) ? $body->errors[0]->message : 'Unknown Error'));
+            Log::error('ForecastIO Error: ' . ((isset($body->errors[0])) ? $body->errors[0]->message : 'Unknown Error'));
 
             return false;
         }

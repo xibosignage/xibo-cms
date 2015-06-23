@@ -35,7 +35,7 @@ interface ModuleInterface
     /**
      * HTML Content to completely render this module.
      */
-    public function getTab();
+    public function getTab($tab);
     public function getResource();
     public function preview($width, $height, $scaleOverride = 0);
 

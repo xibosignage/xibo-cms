@@ -471,7 +471,7 @@ class Module extends Base
 
         // Pass to view
         $this->getState()->template = $module->getModuleType() . '-tab-' . $tab;
-        $this->getState()->setData($module->getTab());
+        $this->getState()->setData($module->getTab($tab));
         $this->setNoOutput(true);
     }
 

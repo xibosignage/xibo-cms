@@ -157,6 +157,7 @@
 {% endblock %}
 
 {% block formButtons %}
+    {% trans "Get Forecast" %}, requestTab("forecast", "{{ urlFor("module.widget.tab.form", {tab: "forecast"}) }}")
     {% trans "Save" %}, $("#<<id>>").submit()
     {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
@@ -167,7 +168,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="<<id>>" class="XiboForm form-horizontal" method="post" action="{{ urlFor("module.widget.add", {type: module.widget.type, id: playlist.playlistId}) }}">
+            <form id="<<id>>" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
 
             </form>
         </div>
