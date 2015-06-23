@@ -457,6 +457,25 @@ class Module extends Base
     }
 
     /**
+     * Get Tab
+     * @param string $tab
+     * @param int $widgetId
+     * @throws \Xibo\Exception\NotFoundException
+     */
+    public function getTab($tab, $widgetId)
+    {
+        $module = ModuleFactory::createWithWidget(WidgetFactory::loadByWidgetId($widgetId));
+
+        if (!$this->getUser()->checkViewable($module->widget))
+            throw new AccessDeniedException();
+
+        // Pass to view
+        $this->getState()->template = $module->getModuleType() . '-tab-' . $tab;
+        $this->getState()->setData($module->getTab());
+        $this->setNoOutput(true);
+    }
+
+    /**
      * Get Resource
      * @param $regionId
      * @param $widgetId

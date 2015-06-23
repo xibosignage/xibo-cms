@@ -254,6 +254,13 @@ class User
         catch (NotFoundException $e) {
 
         }
+
+        try {
+            PageFactory::getById($this->homePageId);
+        }
+        catch (NotFoundException $e) {
+            throw new \InvalidArgumentException(__('Selected home page does not exist'));
+        }
     }
 
     /**
@@ -387,6 +394,7 @@ class User
         $group = UserGroupFactory::getById($this->groupId);
         $group->group = $this->userName;
         $group->libraryQuota = $this->libraryQuota;
+        $group->assignUser($this);
         $group->save();
     }
 

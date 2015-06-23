@@ -382,6 +382,16 @@ abstract class Module implements ModuleInterface
     }
 
     /**
+     * Gets a Tab
+     * @return mixed
+     * @throws ControllerNotImplemented
+     */
+    public function getTab()
+    {
+        throw new ControllerNotImplemented();
+    }
+
+    /**
      * Get Resource Url
      * @param $uri
      * @return string

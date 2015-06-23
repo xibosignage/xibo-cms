@@ -262,6 +262,7 @@ $app->get('/module/form/add/:type/:id', '\Xibo\Controller\Module:addWidgetForm')
 $app->get('/module/form/edit/:id', '\Xibo\Controller\Module:editWidgetForm')->name('module.widget.edit.form');
 $app->get('/module/form/delete/:id', '\Xibo\Controller\Module:deleteWidgetForm')->name('module.widget.delete.form');
 $app->get('/module/form/transition/edit/:type/:id', '\Xibo\Controller\Module:editWidgetTransitionForm')->name('module.widget.transition.edit.form');
+$app->get('/module/form/tab/:tab/:id', '\Xibo\Controller\Module:getTab')->name('module.widget.tab.form');
 
 //
 // transition

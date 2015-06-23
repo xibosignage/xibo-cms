@@ -84,7 +84,7 @@ $formFields[] = Form::AddText('uri', __('Link'), NULL,
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="webpageFormAdd" class="XiboForm form-horizontal" method="post" action="{{ urlFor("module.widget.add", {type: module.widget.type, id: playlist.playlistId}) }}">
+            <form id="webpageFormAdd" class="XiboForm form-horizontal" method="post" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
 
             </form>
         </div>
