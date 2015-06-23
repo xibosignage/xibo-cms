@@ -265,20 +265,28 @@ var loadTimeLineCallback = function(dialog) {
 };
 
 
-var XiboTimelineSaveOrder = function(mediaListId, regionId) {
+var XiboTimelineSaveOrder = function(timelineDiv) {
 
-    var widgets = $('#' + mediaListId + ' li.timelineMediaListItem').map(function(){return $(this).attr("widgetid");}).get();
+    var url = $("#" + timelineDiv).data().orderUrl;
+    var i = 0;
+    var widgets = {};
+
+    $('#' + timelineDiv + ' li.timelineMediaListItem').each(function() {
+        i++;
+        widgets[$(this).attr("widgetid")] = i;
+    });
 
     console.log(widgets);
+
 
     // Call the server to do the reorder
     $.ajax({
         type:"post",
-        url:"index.php?p=timeline&q=TimelineReorder&regionId="+regionId+"&ajax=true",
+        url: url,
         cache:false,
         dataType:"json",
         data:{
-            "widgetIds": widgets
+            "widgets": widgets
         },
         success: XiboSubmitResponse
     });

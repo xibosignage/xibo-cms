@@ -53,6 +53,7 @@ $app->put('/region/position/all/:id', '\Xibo\Controller\Region:positionAll')->na
 // playlist
 //
 $app->get('/playlist/widget', '\Xibo\Controller\Playlist:widgetGrid')->name('playlist.widget.search');
+$app->post('/playlist/order/:id', '\Xibo\Controller\Playlist:order')->name('playlist.order');
 $app->post('/playlist/library/assign/:id', '\Xibo\Controller\Playlist:libraryAssign')->name('playlist.library.assign');
 
 //

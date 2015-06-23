@@ -15,7 +15,7 @@
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Save Order" %}, $("#<<id>>").submit()
+    {% trans "Save Order" %}, XiboTimelineSaveOrder("timelineControl")
     {% trans "Switch to Grid" %}, XiboSwapDialog("{{ urlFor("region.timeline.form", {id: region.regionId}) }}?view=grid")
     {% trans "Close" %}, XiboDialogClose()
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
@@ -44,7 +44,7 @@
                 </div>
             </div>
             <div class="col-md-10">
-                <div id="timelineControl" class="timelineColumn" layoutid="{{ region.layoutId }}" regionid="{{ region.regionId }}">
+                <div id="timelineControl" class="timelineColumn" layoutid="{{ region.layoutId }}" regionid="{{ region.regionId }}" data-order-url="{{ urlFor("playlist.order", {id: playlist.playlistId}) }}">
                     <div class="timelineMediaVerticalList">
                         <ul id="{{ random() }}" class="timelineSortableListOfMedia">
                             {% for widget in playlist.widgets %}

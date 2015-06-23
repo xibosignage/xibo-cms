@@ -54,6 +54,9 @@ class Config
         include ($settings);
 
         Config::Version();
+
+        // Configure the timezone information
+        date_default_timezone_set(Config::GetSetting("defaultTimezone"));
     }
 
     /**

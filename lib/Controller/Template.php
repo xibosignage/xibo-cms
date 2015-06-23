@@ -20,7 +20,6 @@
  */
 namespace Xibo\Controller;
 
-use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Help;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Session;
@@ -35,7 +34,7 @@ class Template extends Base
     function displayPage()
     {
         // Default options
-        if (\Kit::IsFilterPinned('template', 'Filter')) {
+        if (Session::Get('layout', 'Filter') == 1) {
             $pinned = 1;
             $name = Session::Get('template', 'filter_name');
             $tags = Session::Get('template', 'filter_tags');

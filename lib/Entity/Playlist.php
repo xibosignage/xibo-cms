@@ -206,6 +206,15 @@ class Playlist implements \JsonSerializable
         else if ($this->hash != $this->hash())
             $this->update();
 
+        // Sort the widgets by their display order
+        usort($this->widgets, function($a, $b) {
+            /**
+             * @var Widget $a
+             * @var Widget$b
+             */
+            return $a->displayOrder - $b->displayOrder;
+        });
+
         $i = 0;
         foreach ($this->widgets as $widget) {
             /* @var Widget $widget */

@@ -196,8 +196,8 @@ $app->get('/template/view', '\Xibo\Controller\Template:displayPage')->name('temp
 //
 $app->get('/resolution/view', '\Xibo\Controller\Resolution:displayPage')->name('resolution.view');
 $app->get('/resolution/form/add', '\Xibo\Controller\Resolution:addForm')->name('resolution.add.form');
-$app->get('/resolution/form/edit', '\Xibo\Controller\Resolution:editForm')->name('resolution.edit.form');
-$app->get('/resolution/form/delete', '\Xibo\Controller\Resolution:deleteForm')->name('resolution.delete.form');
+$app->get('/resolution/form/edit/:id', '\Xibo\Controller\Resolution:editForm')->name('resolution.edit.form');
+$app->get('/resolution/form/delete/:id', '\Xibo\Controller\Resolution:deleteForm')->name('resolution.delete.form');
 
 //
 // dataset

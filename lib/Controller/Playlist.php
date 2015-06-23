@@ -17,6 +17,7 @@ use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\Help;
+use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 
 class Playlist extends Base
@@ -108,7 +109,7 @@ class Playlist extends Base
 
         $this->getState()->template = 'playlist-form-library-assign';
         $this->getState()->setData([
-            'playlist' => $playlist,
+            'data' => $playlist,
             'help' => Help::Link('Library', 'Assign')
         ]);
     }
@@ -151,7 +152,47 @@ class Playlist extends Base
         // Success
         $this->getState()->hydrate([
             'message' => __('Media Assigned'),
-            'playlist' => $playlist
+            'data' => $playlist
+        ]);
+    }
+
+    /**
+     * Order a playlist and its widgets
+     * @param int $playlistId
+     */
+    function order($playlistId)
+    {
+        $playlist = PlaylistFactory::getById($playlistId);
+
+        if (!$this->getUser()->checkEditable($playlist))
+            throw new AccessDeniedException();
+
+        // Load the widgets
+        $playlist->load();
+
+        // Get our list of widget orders
+        $widgets = Sanitize::getParam('widgets', null);
+
+        // Go through each one and move it
+        foreach ($widgets as $widgetId => $position) {
+
+            // Find this item in the existing list and add it to our new order
+            foreach ($playlist->widgets as $widget) {
+                /* @var \Xibo\Entity\Widget $widget */
+                if ($widget->getId() == $widgetId) {
+                    Log::debug('Setting Display Order ' . $position . ' on widgetId ' . $widgetId);
+                    $widget->displayOrder = $position;
+                    break;
+                }
+            }
+        }
+
+        $playlist->save();
+
+        // Success
+        $this->getState()->hydrate([
+            'message' => __('Order Changed'),
+            'data' => $playlist
         ]);
     }
 }
