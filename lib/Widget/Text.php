@@ -20,8 +20,8 @@
  */
 namespace Xibo\Widget;
 
-use Widget\Module;
-use Xibo\Helper\Form;
+use Xibo\Factory\MediaFactory;
+use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 
 class Text extends Module
@@ -29,281 +29,59 @@ class Text extends Module
     /**
      * Install Files
      */
-    public function InstallFiles()
+    public function installFiles()
     {
-        $media = new Media();
-        $media->addModuleFile('modules/preview/vendor/jquery-1.11.1.min.js');
-        $media->addModuleFile('modules/preview/vendor/moment.js');
-        $media->addModuleFile('modules/preview/vendor/jquery.marquee.min.js');
-        $media->addModuleFile('modules/preview/xibo-layout-scaler.js');
-        $media->addModuleFile('modules/preview/xibo-text-render.js');
+        MediaFactory::createModuleFile('modules/vendor/jquery-1.11.1.min.js')->save();
+        MediaFactory::createModuleFile('modules/vendor/moment.js')->save();
+        MediaFactory::createModuleFile('modules/vendor/jquery.marquee.min.js')->save();
+        MediaFactory::createModuleFile('modules/xibo-layout-scaler.js')->save();
+        MediaFactory::createModuleFile('modules/xibo-text-render.js')->save();
     }
 
-    /**
-     * Return the Add Form
-     */
-    public function AddForm()
+    public function validate()
     {
-        $response = $this->getState();
-
-        // Configure form
-        $this->configureForm('AddMedia');
-
-        // Two tabs
-        $tabs = array();
-        $tabs[] = Form::AddTab('general', __('General'), array(array('name' => 'enlarge', 'value' => true)));
-        $tabs[] = Form::AddTab('options', __('Options'));
-
-        Theme::Set('form_tabs', $tabs);
-
-        $formFields = array();
-
-        $formFields['options'][] = Form::AddText('name', __('Name'), NULL,
-            __('An optional name for this media'), 'n');
-
-        $formFields['options'][] = Form::AddCombo(
-            'effect',
-            __('Effect'),
-            $this->GetOption('effect'),
-            array(
-                array('effectid' => 'none', 'effect' => __('None')),
-                array('effectid' => 'fade', 'effect' => __('Fade')),
-                array('effectid' => 'fadeout', 'effect' => __('Fade Out')),
-                array('effectid' => 'scrollHorz', 'effect' => __('Scroll Horizontal')),
-                array('effectid' => 'scrollVert', 'effect' => __('Scroll Vertical')),
-                array('effectid' => 'flipHorz', 'effect' => __('Flip Horizontal')),
-                array('effectid' => 'flipVert', 'effect' => __('Flip Vertical')),
-                array('effectid' => 'shuffle', 'effect' => __('Shuffle')),
-                array('effectid' => 'tileSlide', 'effect' => __('Tile Slide')),
-                array('effectid' => 'tileBlind', 'effect' => __('Tile Blinds')),
-                array('effectid' => 'marqueeLeft', 'effect' => __('Marquee Left')),
-                array('effectid' => 'marqueeRight', 'effect' => __('Marquee Right')),
-                array('effectid' => 'marqueeUp', 'effect' => __('Marquee Up')),
-                array('effectid' => 'marqueeDown', 'effect' => __('Marquee Down')),
-            ),
-            'effectid',
-            'effect',
-            __('Please select the effect that will be used. Some effects will transition between paragraphs in the text. Marquee effects are CPU intensive and may not be suitable for lower power displays.'),
-            'e');
-
-        $formFields['options'][] = Form::AddNumber('speed', __('Speed'), NULL,
-            __('The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1).'), 's', NULL, 'effect-controls');
-
-        // A list of web safe colours
-        $formFields['options'][] = Form::AddText('backgroundColor', __('Background Colour'), NULL,
-            __('The selected effect works best with a background colour. Optionally add one here.'), 'c', NULL, 'effect-controls');
-
-        $formFields['options'][] = Form::AddNumber('duration', __('Duration'), NULL,
-            __('The duration in seconds this should be displayed'), 'd', 'required');
-
-        // Handle the substitutions as RAW items
-        $subs = array(
-            array('Substitute' => 'Clock'),
-            array('Substitute' => 'Clock|HH:mm'),
-            array('Substitute' => 'Date'),
-            array('Substitute' => 'Clock|DD/MM/YYYY')
-        );
-        Theme::Set('substitutions', $subs);
-        $formFields['general'][] = Form::AddRaw(Theme::RenderReturn('media_form_text_edit'));
-
-        $formFields['general'][] = Form::AddMultiText('ta_text', NULL, NULL,
-            __('Enter the text to display. Please note that the background colour has automatically coloured to your layout background colour.'), 't', 10);
-
-        Theme::Set('form_fields_general', $formFields['general']);
-        Theme::Set('form_fields_options', $formFields['options']);
-
-        // Add a dependency
-        $response->AddFieldAction('effect', 'init', 'none', array('.effect-controls' => array('display' => 'none')));
-        $response->AddFieldAction('effect', 'change', 'none', array('.effect-controls' => array('display' => 'none')));
-        $response->AddFieldAction('effect', 'init', 'none', array('.effect-controls' => array('display' => 'block')), 'not');
-        $response->AddFieldAction('effect', 'change', 'none', array('.effect-controls' => array('display' => 'block')), 'not');
-
-        $response->html = Theme::RenderReturn('form_render');
-        $response->callBack = 'text_callback';
-        $response->dialogSize = 'large';
-        $this->configureFormButtons($response);
-        $response->dialogTitle = __('Add Text');
-
-
-        return $response;
-    }
-
-    /**
-     * Return the Edit Form as HTML
-     */
-    public function EditForm()
-    {
-        $response = $this->getState();
-
-        // Edit calls are the same as add calls, except you will to check the user has permissions to do the edit
-        if (!$this->auth->edit)
-            throw new Exception(__('You do not have permission to edit this widget.'));
-
-        // Configure the form
-        $this->configureForm('EditMedia');
-
-        // Two tabs
-        $tabs = array();
-        $tabs[] = Form::AddTab('general', __('General'), array(array('name' => 'enlarge', 'value' => true)));
-        $tabs[] = Form::AddTab('options', __('Options'));
-
-        Theme::Set('form_tabs', $tabs);
-
-        $formFields = array();
-
-        // Handle older layouts that have a direction node but no effect node
-        $oldDirection = $this->GetOption('direction', 'none');
-        if ($oldDirection != 'none')
-            $oldDirection = 'marquee' . ucfirst($oldDirection);
-
-        $formFields['options'][] = Form::AddText('name', __('Name'), $this->GetOption('name'),
-            __('An optional name for this media'), 'n');
-
-        $formFields['options'][] = Form::AddCombo(
-            'effect',
-            __('Effect'),
-            $this->GetOption('effect', $oldDirection),
-            array(
-                array('effectid' => 'none', 'effect' => __('None')),
-                array('effectid' => 'fade', 'effect' => __('Fade')),
-                array('effectid' => 'fadeout', 'effect' => __('Fade Out')),
-                array('effectid' => 'scrollHorz', 'effect' => __('Scroll Horizontal')),
-                array('effectid' => 'scrollVert', 'effect' => __('Scroll Vertical')),
-                array('effectid' => 'flipHorz', 'effect' => __('Flip Horizontal')),
-                array('effectid' => 'flipVert', 'effect' => __('Flip Vertical')),
-                array('effectid' => 'shuffle', 'effect' => __('Shuffle')),
-                array('effectid' => 'tileSlide', 'effect' => __('Tile Slide')),
-                array('effectid' => 'tileBlind', 'effect' => __('Tile Blinds')),
-                array('effectid' => 'marqueeLeft', 'effect' => __('Marquee Left')),
-                array('effectid' => 'marqueeRight', 'effect' => __('Marquee Right')),
-                array('effectid' => 'marqueeUp', 'effect' => __('Marquee Up')),
-                array('effectid' => 'marqueeDown', 'effect' => __('Marquee Down')),
-            ),
-            'effectid',
-            'effect',
-            __('Please select the effect that will be used to transition between items. If all items should be output, select None. Marquee effects are CPU intensive and may not be suitable for lower power displays.'),
-            'e');
-
-        $formFields['options'][] = Form::AddNumber('speed', __('Speed'), $this->GetOption('speed'),
-            __('The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1).'), 's', NULL, 'effect-controls');
-
-        // A list of web safe colours
-        $formFields['options'][] = Form::AddText('backgroundColor', __('Background Colour'), $this->GetOption('backgroundColor'),
-            __('The selected effect works best with a background colour. Optionally add one here.'), 'c', NULL, 'effect-controls');
-
-        $formFields['options'][] = Form::AddNumber('duration', __('Duration'), $this->getDuration(),
-            __('The duration in seconds this counter should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
-
-        // Handle the substitutions as RAW items
-        $subs = array(
-            array('Substitute' => 'Clock'),
-            array('Substitute' => 'Clock|HH:mm'),
-            array('Substitute' => 'Date'),
-            array('Substitute' => 'Clock|DD/MM/YYYY')
-        );
-        Theme::Set('substitutions', $subs);
-
-        $textNode = $this->getRawNode('text', null);
-
-        $formFields['general'][] = Form::AddMultiText('ta_text', NULL, $textNode,
-            __('Enter the text to display. Please note that the background colour has automatically coloured to your layout background colour.'), 't', 10);
-
-        $formFields['general'][] = Form::AddRaw(Theme::RenderReturn('media_form_text_edit'));
-
-        Theme::Set('form_fields_general', $formFields['general']);
-        Theme::Set('form_fields_options', $formFields['options']);
-
-        // Add a dependency
-        $response->AddFieldAction('effect', 'init', 'none', array('.effect-controls' => array('display' => 'none')));
-        $response->AddFieldAction('effect', 'change', 'none', array('.effect-controls' => array('display' => 'none')));
-        $response->AddFieldAction('effect', 'init', 'none', array('.effect-controls' => array('display' => 'block')), 'not');
-        $response->AddFieldAction('effect', 'change', 'none', array('.effect-controls' => array('display' => 'block')), 'not');
-
-        $response->html = Theme::RenderReturn('form_render');
-        $response->callBack = 'text_callback';
-        $response->dialogSize = 'large';
-        $this->configureFormButtons($response);
-        $response->dialogTitle = __('Edit Text');
-        $this->response->AddButton(__('Apply'), 'XiboDialogApply("#ModuleForm")');
-
-        return $response;
-    }
-
-    /**
-     * Add Media to the Database
-     */
-    public function AddMedia()
-    {
-        $response = $this->getState();
-
-        // Other properties
-        $duration = \Kit::GetParam('duration', _POST, _INT, 0, false);
-        $text = \Kit::GetParam('ta_text', _POST, _HTMLSTRING);
-        $name = \Xibo\Helper\Sanitize::getString('name');
-
         // Validation
-        if ($text == '')
-            throw new InvalidArgumentException(__('Please enter some text'));
+        if ($this->getOption('text') == '')
+            throw new \InvalidArgumentException(__('Please enter some text'));
 
-        if ($duration == 0)
-            throw new InvalidArgumentException(__('You must enter a duration.'));
+        if ($this->getOption('duration') == 0)
+            throw new \InvalidArgumentException(__('You must enter a duration.'));
+    }
 
-        // Any Options
-        $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration()));
-        $this->SetOption('xmds', true);
-        $this->SetOption('effect', \Kit::GetParam('effect', _POST, _STRING));
-        $this->SetOption('speed', \Kit::GetParam('speed', _POST, _INT));
-        $this->SetOption('backgroundColor', \Kit::GetParam('backgroundColor', _POST, _STRING));
-        $this->SetOption('name', $name);
-        $this->setRawNode('text', $text);
+    /**
+     * Add Media
+     */
+    public function add()
+    {
+        $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
+        $this->setOption('xmds', true);
+        $this->setOption('effect', Sanitize::getString('effect'));
+        $this->setOption('speed', Sanitize::getInt('speed'));
+        $this->setOption('backgroundColor', Sanitize::getString('backgroundColor'));
+        $this->setOption('name', Sanitize::getString('name'));
+        $this->setRawNode('text', Sanitize::getParam('ta_text', null));
 
         // Save the widget
+        $this->validate();
         $this->saveWidget();
-
-        // Load form
-        $response->loadForm = true;
-        $response->loadFormUri = $this->getTimelineLink();
-
-        return $response;
     }
 
     /**
-     * Edit Media in the Database
+     * Edit Media
      */
-    public function EditMedia()
+    public function edit()
     {
-        $response = $this->getState();
-
-        // Edit calls are the same as add calls, except you will to check the user has permissions to do the edit
-        if (!$this->auth->edit)
-            throw new Exception(__('You do not have permission to edit this widget.'));
-
-        // Other properties
-        $text = \Kit::GetParam('ta_text', _POST, _HTMLSTRING);
-        $name = \Xibo\Helper\Sanitize::getString('name');
-
-        // Validation
-        if ($text == '')
-            throw new InvalidArgumentException(__('Please enter some text'));
-
-        // Any Options
-        $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration(), false));
-        $this->SetOption('xmds', true);
-        $this->SetOption('effect', \Kit::GetParam('effect', _POST, _STRING));
-        $this->SetOption('speed', \Kit::GetParam('speed', _POST, _INT));
-        $this->SetOption('backgroundColor', \Kit::GetParam('backgroundColor', _POST, _STRING));
-        $this->SetOption('name', $name);
-        $this->setRawNode('text', $text);
+        $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
+        $this->setOption('xmds', true);
+        $this->setOption('effect', Sanitize::getString('effect'));
+        $this->setOption('speed', Sanitize::getInt('speed'));
+        $this->setOption('backgroundColor', Sanitize::getString('backgroundColor'));
+        $this->setOption('name', Sanitize::getString('name'));
+        $this->setRawNode('text', Sanitize::getParam('ta_text', null));
 
         // Save the widget
+        $this->validate();
         $this->saveWidget();
-
-        // Load form
-        $response->loadForm = true;
-        $response->loadFormUri = $this->getTimelineLink();
-        $this->response->callBack = 'refreshPreview("' . $this->regionid . '")';
-
-        return $response;
     }
 
     /**
@@ -313,12 +91,11 @@ class Text extends Module
      */
     public function GetResource($displayId = 0)
     {
-        // Load in the template
-        $template = file_get_contents('modules/preview/HtmlTemplate.html');
+        $data = [];
+        $isPreview = (Sanitize::getCheckbox('preview') == 1);
 
         // Replace the View Port Width?
-        if (isset($_GET['preview']))
-            $template = str_replace('[[ViewPortWidth]]', $this->region->width, $template);
+        $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
 
         $duration = $this->getDuration();
 
@@ -381,23 +158,22 @@ class Text extends Module
         $items[] = $text;
 
         // Replace the head content
-        $isPreview = (\Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
-        $javaScriptContent = '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
+        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
 
         // Need the marquee plugin?
         if (stripos($effect, 'marquee') !== false)
-            $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery.marquee.min.js"></script>';
+            $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery.marquee.min.js') . '"></script>';
 
         // Need the cycle plugin?
         if ($effect != 'none')
-            $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-cycle-2.1.6.min.js"></script>';
+            $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-cycle-2.1.6.min.js') . '"></script>';
 
-        $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-layout-scaler.js"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-text-render.js"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-text-render.js') . '"></script>';
 
         // Do we need to include moment?
         if ($clock)
-            $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'moment.js"></script>';
+            $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/moment.js') . '"></script>';
 
         $javaScriptContent .= '<script type="text/javascript">';
         $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
@@ -431,10 +207,7 @@ class Text extends Module
 
         $data['head'] = $headContent;
 
-        // Replace the Body Content with our generated text
-        $template = str_replace('<!--[[[BODYCONTENT]]]-->', '', $template);
-
-        return $template;
+        return $this->renderTemplate($data);
     }
 
     public function HoverPreview()

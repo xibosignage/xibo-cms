@@ -400,12 +400,8 @@ class ForecastIo extends Module
         // Replace the View Port Width?
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
 
-        // A template is provided which contains a number of different libraries that might
-        // be useful (jQuery, etc).
-        $pathPrefix = $isPreview ? 'modules/forecastio/weather_icons/' : '';
-
         $headContent = '
-            <link href="' . $pathPrefix . 'weather-icons.min.css" rel="stylesheet" media="screen">
+            <link href="' . $this->getResourceUrl('forecastio/weather-icons.min.css') . '" rel="stylesheet" media="screen">
             <style type="text/css">
                 .container { color: ' . $this->GetOption('color', '000') . '; }
                 #content { zoom: ' . $this->GetOption('size', 1) . '; }
@@ -418,7 +414,7 @@ class ForecastIo extends Module
         $headContent .= '<style type="text/css">' . file_get_contents(Theme::uri('css/client.css', true)) . '</style>';
 
         // Replace any icon sets
-        $data['head'] = str_replace('[[ICONS]]', ($pathPrefix . $this->GetOption('icons')), $headContent);
+        $data['head'] = str_replace('[[ICONS]]', $this->getResourceUrl('forecastio/' . $this->GetOption('icons')), $headContent);
 
         // Make some body content
         $body = $this->getRawNode('currentTemplate', null);
