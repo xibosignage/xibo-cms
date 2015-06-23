@@ -107,6 +107,7 @@ $app->put('/display/requestscreenshot/:id', '\Xibo\Controller\Display:requestScr
 $app->get('/displaygroup', '\Xibo\Controller\DisplayGroup:grid')->name('displayGroup.search');
 $app->post('/displaygroup', '\Xibo\Controller\DisplayGroup:add')->name('displayGroup.add');
 $app->put('/displaygroup/:id', '\Xibo\Controller\DisplayGroup:edit')->name('displayGroup.edit');
+$app->delete('/displaygroup/:id', '\Xibo\Controller\DisplayGroup:delete')->name('displayGroup.delete');
 $app->post('/displaygroup/version/:id', '\Xibo\Controller\DisplayGroup:version')->name('displayGroup.version');
 
 $app->post('/displaygroup/display/assign/:id', '\Xibo\Controller\DisplayGroup:assignDisplay')->name('displayGroup.assign.display');
