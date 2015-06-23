@@ -401,12 +401,12 @@ var forecastIoFormSetup = function() {
 var requestTab = function(tabName, url) {
     // Fill a new tab with the forecast information and then switch to that tab.
     $.ajax({
-        type: "post",
-        url: url+"&ajax=true",
+        type: "get",
+        url: url,
         cache: false,
         data: "tab="+tabName,
         success: function(response, status, xhr) {
-            $(".tab-content #" + tabName).html(response);
+            $(".tab-content #" + tabName).html(response.html);
 
             $('.nav-tabs a[href="#' + tabName + '"]').tab('show');
         }

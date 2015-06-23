@@ -22,11 +22,14 @@ namespace Xibo\Controller;
 use baseDAO;
 use Maintenance;
 use Setting;
+use Xibo\Exception\AccessDeniedException;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Config;
+use Xibo\Helper\Date;
 use Xibo\Helper\Form;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
+use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 
 
@@ -67,7 +70,10 @@ class Settings extends Base
 
             // Time zone type requires special handling.
             if ($setting['fieldType'] == 'timezone') {
-                $options = $this->TimeZoneDropDown($validated);
+                $options = [];
+                foreach (Date::timezoneList() as $key => $value) {
+                    $options[] = ['id' => $key, 'value' => $value];
+                }
             }
 
             // Get a list of settings and assign them to the settings field
@@ -75,8 +81,8 @@ class Settings extends Base
                 'name' => $setting['setting'],
                 'type' => $setting['type'],
                 'fieldType' => $setting['fieldType'],
-                'helpText' => $setting['helptext'],
-                'title' => $setting['title'],
+                'helpText' => __($setting['helptext']),
+                'title' => __($setting['title']),
                 'options' => $options,
                 'validation' => $setting['validation'],
                 'value' => $validated,
@@ -96,12 +102,10 @@ class Settings extends Base
         $this->getState()->setData($data);
     }
 
-    function Edit()
+    function update()
     {
-        $response = $this->getState();
-
-
-        $data = new Setting();
+        if (!$this->getUser()->userTypeId == 1)
+            throw new AccessDeniedException();
 
         // Get all of the settings in an array
         $settings = Config::GetAll(NULL, array('userChange' => 1, 'userSee' => 1));
@@ -109,7 +113,26 @@ class Settings extends Base
         // Go through each setting, validate it and add it to the array
         foreach ($settings as $setting) {
             // Check to see if we have a setting that matches in the provided POST vars.
-            $value = \Kit::GetParam($setting['setting'], _POST, $setting['type'], (($setting['type'] == 'checkbox') ? NULL : $setting['default']));
+            switch ($setting['type']) {
+                case 'string':
+                    $value = Sanitize::getString($setting['setting'], $setting['default']);
+                    break;
+
+                case 'int':
+                    $value = Sanitize::getInt($setting['setting'], $setting['default']);
+                    break;
+
+                case 'double':
+                    $value = Sanitize::getDouble($setting['setting'], $setting['default']);
+                    break;
+
+                case 'checkbox':
+                    $value = Sanitize::getCheckbox($setting['setting']);
+                    break;
+
+                default:
+                    $value = Sanitize::getParam($setting['setting'], $setting['default']);
+            }
 
             // Check the library location setting
             if ($setting['setting'] == 'LIBRARY_LOCATION') {
@@ -126,93 +149,13 @@ class Settings extends Base
                     trigger_error(__('The Library Location you have picked is not writeable'), E_USER_ERROR);
             }
 
-            // Actually edit
-            if (!$data->Edit($setting['setting'], $value))
-                trigger_error($data->GetErrorMessage(), E_USER_ERROR);
+            Config::ChangeSetting($setting['setting'], $value);
         }
 
-        $response->SetFormSubmitResponse(__('Settings Updated'), false);
-        $response->callBack = 'settingsUpdated';
-
-    }
-
-    /**
-     * Timezone functionality
-     * @return
-     */
-    private function TimeZoneIdentifiersList()
-    {
-
-        if (function_exists('timezone_identifiers_list'))
-            return timezone_identifiers_list();
-
-        $list[] = 'Europe/London';
-        $list[] = 'America/New_York';
-        $list[] = 'Europe/Paris';
-        $list[] = 'America/Los_Angeles';
-        $list[] = 'America/Puerto_Rico';
-        $list[] = 'Europe/Moscow';
-        $list[] = 'Europe/Helsinki';
-        $list[] = 'Europe/Warsaw';
-        $list[] = 'Asia/Singapore';
-        $list[] = 'Asia/Dubai';
-        $list[] = 'Asia/Baghdad';
-        $list[] = 'Asia/Shanghai';
-        $list[] = 'Indian/Mauritius';
-        $list[] = 'Australia/Melbourne';
-        $list[] = 'Australia/Sydney';
-        $list[] = 'Arctic/Longyearbyen';
-        $list[] = 'Antarctica/South_Pole';
-
-        return $list;
-    }
-
-    public function TimeZoneDropDown($selectedzone)
-    {
-        $structure = '';
-        $i = 0;
-
-        // Create a Zone array containing the timezones
-        // From: http://php.oregonstate.edu/manual/en/function.timezone-identifiers-list.php
-        foreach ($this->TimeZoneIdentifiersList() as $zone) {
-            $zone = explode('/', $zone);
-            $zonen[$i]['continent'] = isset($zone[0]) ? $zone[0] : '';
-            $zonen[$i]['city'] = isset($zone[1]) ? $zone[1] : '';
-            $zonen[$i]['subcity'] = isset($zone[2]) ? $zone[2] : '';
-            $i++;
-        }
-
-        // Sort them
-        asort($zonen);
-
-        foreach ($zonen as $zone) {
-            extract($zone);
-
-            if ($continent == 'Africa' || $continent == 'America' || $continent == 'Antarctica' || $continent == 'Arctic' || $continent == 'Asia' || $continent == 'Atlantic' || $continent == 'Australia' || $continent == 'Europe' || $continent == 'Indian' || $continent == 'Pacific' || $continent == 'General') {
-                if (!isset($selectcontinent)) {
-                    $structure .= '<optgroup label="' . $continent . '">'; // continent
-                } elseif ($selectcontinent != $continent) {
-                    $structure .= '</optgroup><optgroup label="' . $continent . '">'; // continent
-                }
-
-                if (isset($city) != '') {
-                    if (!empty($subcity) != '') {
-                        $city = $city . '/' . $subcity;
-                    }
-                    $structure .= "<option " . ((($continent . '/' . $city) == $selectedzone) ? 'selected="selected "' : '') . " value=\"" . ($continent . '/' . $city) . "\">" . str_replace('_', ' ', $city) . "</option>"; //Timezone
-                } else {
-                    if (!empty($subcity) != '') {
-                        $city = $city . '/' . $subcity;
-                    }
-                    $structure .= "<option " . (($continent == $selectedzone) ? 'selected="selected "' : '') . " value=\"" . $continent . "\">" . $continent . "</option>"; //Timezone
-                }
-
-                $selectcontinent = $continent;
-            }
-        }
-        $structure .= '</optgroup>';
-
-        return $structure;
+        // Return
+        $this->getState()->hydrate([
+            'message' => __('Settings Updated')
+        ]);
     }
 
     /**

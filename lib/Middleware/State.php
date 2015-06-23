@@ -49,9 +49,6 @@ class State extends Middleware
         $this->app->container->singleton('session', function() { return new Session(); });
         $this->app->session->Get('nothing');
 
-        // Configure the timezone information
-        date_default_timezone_set(Config::GetSetting("defaultTimezone"));
-
         // Do we need SSL/STS?
         // Deal with HTTPS/STS config
         if ($app->request()->getScheme() == 'https') {

@@ -62,27 +62,6 @@ class Region extends Base
     }
 
     /**
-     * Time Line
-     * @param int $regionId
-     */
-    public function timeline($regionId)
-    {
-        $this->getState()->template = 'grid';
-
-        // Get a complex object of playlists and widgets
-        $region = RegionFactory::getById($regionId);
-
-        if (!$this->getUser()->checkEditable($region))
-            throw new AccessDeniedException();
-
-        // Load the region
-        $region->load();
-
-        // Store the table rows
-        $this->getState()->setData($region->playlists);
-    }
-
-    /**
      * Edit Form
      * @param int $regionId
      */

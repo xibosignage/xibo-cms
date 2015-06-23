@@ -29,62 +29,6 @@ use Xibo\Helper\Sanitize;
 class Image extends Module
 {
     /**
-     * Return the Edit Form as HTML
-     */
-    public function EditForm()
-    {
-
-        $response = $this->getState();
-
-        // Provide some extra form fields
-        $formFields = array();
-
-        $formFields[] = Form::AddCombo(
-            'scaleTypeId',
-            __('Scale Type'),
-            $this->getOption('scaleType'),
-            array(array('scaleTypeId' => 'center', 'scaleType' => __('Center')), array('scaleTypeId' => 'stretch', 'scaleType' => __('Stretch'))),
-            'scaleTypeId',
-            'scaleType',
-            __('How should this image be scaled?'),
-            's');
-
-        $formFields[] = Form::AddCombo(
-            'alignId',
-            __('Align'),
-            $this->getOption('align', 'center'),
-            array(array('alignId' => 'left', 'align' => __('Left')), array('alignId' => 'center', 'align' => __('Centre')), array('alignId' => 'right', 'align' => __('Right'))),
-            'alignId',
-            'align',
-            __('How should this image be aligned?'),
-            'a', 'align-fields');
-
-        $formFields[] = Form::AddCombo(
-            'valignId',
-            __('Vertical Align'),
-            $this->getOption('valign', 'middle'),
-            array(array('valignId' => 'top', 'valign' => __('Top')), array('valignId' => 'middle', 'valign' => __('Middle')), array('valignId' => 'bottom', 'valign' => __('Bottom'))),
-            'valignId',
-            'valign',
-            __('How should this image be vertically aligned?'),
-            'v', 'align-fields');
-
-        // Set some field dependencies
-        $response->AddFieldAction('scaleTypeId', 'init', 'center', array('.align-fields' => array('display' => 'block')));
-        $response->AddFieldAction('scaleTypeId', 'change', 'center', array('.align-fields' => array('display' => 'block')));
-        $response->AddFieldAction('scaleTypeId', 'init', 'center', array('.align-fields' => array('display' => 'none')), 'not');
-        $response->AddFieldAction('scaleTypeId', 'change', 'center', array('.align-fields' => array('display' => 'none')), 'not');
-
-        // Standard Edit Form
-        $this->baseEditForm($formFields, $response);
-    }
-
-    public function add()
-    {
-        // Nothing to do for images
-    }
-
-    /**
      * Edit Media
      */
     public function edit()
@@ -111,16 +55,16 @@ class Image extends Module
 
         $proportional = ($this->getOption('scaleType') == 'stretch') ? 'false' : 'true';
         $align = $this->getOption('align', 'center');
-        $valign = $this->getOption('valign', 'middle');
+        $vAlign = $this->getOption('valign', 'middle');
 
-        $html = '<div style="display:table; width:100%%; height: %dpx">
-            <div style="text-align:%s; display: table-cell; vertical-align: %s;">
-                <img src="index.php?p=content&q=getFile&mediaid=%d&width=%d&height=%d&dynamic=true&proportional=%s" />
+        $html = '<div style="display:table; width:100%; height: ' . $height . 'px">
+            <div style="text-align:' . $align . '; display: table-cell; vertical-align: ' . $vAlign . ';">
+                <img src="' . $this->getApp()->urlFor('library.download', ['id' => $this->getMediaId()]) . '?preview=1&width=' . $width . '&height=' . $height . '&proportional=' . $proportional . '" />
             </div>
         </div>';
 
         // Show the image - scaled to the aspect ratio of this region (get from GET)
-        return sprintf($html, $height, $align, $valign, $this->getMediaId(), $width, $height, $proportional);
+        return $html;
     }
 
     /**

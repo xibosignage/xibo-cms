@@ -259,79 +259,60 @@ var loadTimeLineCallback = function(dialog) {
     });
 
     $(".timelineSortableListOfMedia").sortable();
+
+    // Hook up the library Upload Buttons
+    $(".libraryUploadForm").click(libraryUploadClick);
 };
 
 
-var XiboTimelineSaveOrder = function(mediaListId, regionId) {
+var XiboTimelineSaveOrder = function(timelineDiv) {
 
-    var widgets = $('#' + mediaListId + ' li.timelineMediaListItem').map(function(){return $(this).attr("widgetid");}).get();
+    var url = $("#" + timelineDiv).data().orderUrl;
+    var i = 0;
+    var widgets = {};
+
+    $('#' + timelineDiv + ' li.timelineMediaListItem').each(function() {
+        i++;
+        widgets[$(this).attr("widgetid")] = i;
+    });
 
     console.log(widgets);
+
 
     // Call the server to do the reorder
     $.ajax({
         type:"post",
-        url:"index.php?p=timeline&q=TimelineReorder&regionId="+regionId+"&ajax=true",
+        url: url,
         cache:false,
         dataType:"json",
         data:{
-            "widgetIds": widgets
+            "widgets": widgets
         },
         success: XiboSubmitResponse
     });
-}
-
-/**
- * Library Assignment Form Callback
- */
-var LibraryAssignCallback = function()
-{
-    // Attach a click handler to all of the little pointers in the grid.
-    $("#LibraryAssignTable .library_assign_list_select").click(function(){
-        // Get the row that this is in.
-        var row = $(this).parent().parent();
-
-        // Construct a new list item for the lower list and append it.
-        var newItem = $("<li/>", {
-            text: row.attr("litext"),
-            id: row.attr("rowid"),
-            "class": "li-sortable",
-            dblclick: function(){
-                $(this).remove();
-            }
-        });
-
-        newItem.appendTo("#LibraryAssignSortable");
-
-        // Add a span to that new item
-        $("<span/>", {
-            "class": "glyphicon glyphicon-minus-sign",
-            click: function(){
-                $(this).parent().remove();
-            }
-        })
-        .appendTo(newItem);
-
-    });
-
-    $("#LibraryAssignSortable").sortable().disableSelection();
-}
+};
 
 var LibraryAssignSubmit = function(layoutId, regionId)
 {
-    // Serialize the data from the form and call submit
-    var mediaList = $("#LibraryAssignSortable").sortable('serialize');
+    // Collect our media
+    var media = [];
+    $("#LibraryAssignSortable > li").each(function() {
+        media.push($(this).data().mediaId);
+    });
 
-    mediaList = mediaList + "&regionid=" + regionId;
+    assignMediaToPlaylist($("#LibraryAssign").data().url, media);
+};
 
-    //console.log(mediaList);
+var assignMediaToPlaylist = function(url, media)
+{
+    toastr.info(media, "Assign Media to Playlist");
 
     $.ajax({
         type: "post",
-        url: "index.php?p=timeline&q=AddFromLibrary&layoutid="+layoutId+"&ajax=true",
+        url: url,
         cache: false,
         dataType: "json",
-        data: mediaList,
+        data: {media: media},
         success: XiboSubmitResponse
     });
 };

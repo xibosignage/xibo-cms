@@ -134,6 +134,11 @@ $app->get('/region/form/delete/:id', '\Xibo\Controller\Region:deleteForm')->name
 $app->get('/region/form/timeline/:id', '\Xibo\Controller\Region:timelineForm')->name('region.timeline.form');
 
 //
+// playlists
+//
+$app->get('/playlist/form/library/assign/:id', '\Xibo\Controller\Playlist:libraryAssignForm')->name('playlist.library.assign.form');
+
+//
 // library
 //
 $app->get('/library/view', '\Xibo\Controller\Library:displayPage')->name('library.view');
@@ -191,8 +196,8 @@ $app->get('/template/view', '\Xibo\Controller\Template:displayPage')->name('temp
 //
 $app->get('/resolution/view', '\Xibo\Controller\Resolution:displayPage')->name('resolution.view');
 $app->get('/resolution/form/add', '\Xibo\Controller\Resolution:addForm')->name('resolution.add.form');
-$app->get('/resolution/form/edit', '\Xibo\Controller\Resolution:editForm')->name('resolution.edit.form');
-$app->get('/resolution/form/delete', '\Xibo\Controller\Resolution:deleteForm')->name('resolution.delete.form');
+$app->get('/resolution/form/edit/:id', '\Xibo\Controller\Resolution:editForm')->name('resolution.edit.form');
+$app->get('/resolution/form/delete/:id', '\Xibo\Controller\Resolution:deleteForm')->name('resolution.delete.form');
 
 //
 // dataset
@@ -257,6 +262,9 @@ $app->get('/module/form/add/:type/:id', '\Xibo\Controller\Module:addWidgetForm')
 $app->get('/module/form/edit/:id', '\Xibo\Controller\Module:editWidgetForm')->name('module.widget.edit.form');
 $app->get('/module/form/delete/:id', '\Xibo\Controller\Module:deleteWidgetForm')->name('module.widget.delete.form');
 $app->get('/module/form/transition/edit/:type/:id', '\Xibo\Controller\Module:editWidgetTransitionForm')->name('module.widget.transition.edit.form');
+// Outputs
+$app->get('/module/tab/:tab/:id', '\Xibo\Controller\Module:getTab')->name('module.widget.tab.form');
+$app->get('/module/resource/:regionId/:id', '\Xibo\Controller\Module:getResource')->name('module.getResource');
 
 //
 // transition

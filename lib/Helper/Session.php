@@ -343,12 +343,10 @@ class Session
             $_SESSION[$key] = $secondKey;
             return $secondKey;
         } else {
-            if (isset($_SESSION[$key])) {
-                $_SESSION[$key][$secondKey] = $value;
-            }
-            else {
-                $_SESSION[$key] = [$secondKey => $value];
-            }
+            if (!isset($_SESSION[$key]) || !is_array($_SESSION[$key]))
+                $_SESSION[$key] = [];
+
+            $_SESSION[$key][(string) $secondKey] = $value;
             return $value;
         }
     }

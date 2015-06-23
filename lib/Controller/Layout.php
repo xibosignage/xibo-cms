@@ -109,14 +109,6 @@ class Layout extends Base
             'zoom' => Sanitize::getDouble('zoom', 1)
         ];
 
-        // Get the regions
-        foreach ($layout->regions as $region) {
-            /* @var \Xibo\Entity\Region $region */
-
-            $region->viewable = $this->getUser()->checkViewable($region);
-            $region->editable = ($layout->schemaVersion >= 2 && $this->getUser()->checkEditable($region));
-        }
-
         // Call the render the template
         $this->getState()->template = 'layout-designer-page';
         $this->getState()->setData($data);
@@ -725,95 +717,4 @@ class Layout extends Base
 
          $this->getState()->SetFormSubmitResponse(__('Layout Imported'));
     }
-
-    /**
-     * Displays the Library Assign form
-     * @return
-     */
-    function LibraryAssignForm()
-    {
-
-        $user = $this->getUser();
-        $response = $this->getState();
-
-        $id = uniqid();
-        Theme::Set('id', $id);
-        Theme::Set('form_meta', '<input type="hidden" name="p" value="content"><input type="hidden" name="q" value="LibraryAssignView">');
-        Theme::Set('pager', ApplicationState::Pager($id, 'grid_pager'));
-
-        // Module types filter
-        $modules = $this->getUser()->ModuleAuth(0, '', 1);
-        $types = array();
-
-        foreach ($modules as $module) {
-            $type['moduleid'] = $module['Module'];
-            $type['module'] = $module['Name'];
-
-            $types[] = $type;
-        }
-
-        array_unshift($types, array('moduleid' => '', 'module' => 'All'));
-        Theme::Set('module_field_list', $types);
-
-        // Call to render the template
-        $output = Theme::RenderReturn('library_form_assign');
-
-        // Input vars
-        $layoutId = Sanitize::getInt('layoutid');
-        $regionId = Sanitize::getString('regionid');
-
-        // Construct the Response
-        $response->html = $output;
-        $response->success = true;
-        $response->dialogSize = true;
-        $response->dialogClass = 'modal-big';
-        $response->dialogWidth = '780px';
-        $response->dialogHeight = '580px';
-        $response->dialogTitle = __('Assign an item from the Library');
-
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Library', 'Assign') . '")');
-        $response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $layoutId . '&regionid=' . $regionId . '&q=RegionOptions")');
-        $response->AddButton(__('Assign'), 'LibraryAssignSubmit("' . $layoutId . '","' . $regionId . '")');
-
-
-    }
-
-    /**
-     * Show the library
-     * @return
-     */
-    function LibraryAssignView()
-    {
-
-        $user = $this->getUser();
-        $response = $this->getState();
-
-        //Input vars
-        $mediatype = Sanitize::getString('filter_type');
-        $name = Sanitize::getString('filter_name');
-
-        // Get a list of media
-        $mediaList = $user->MediaList(NULL, array('type' => $mediatype, 'name' => $name));
-
-        $rows = array();
-
-        // Add some extra information
-        foreach ($mediaList as $row) {
-
-            $row['duration_text'] = sec2hms($row['duration']);
-            $row['list_id'] = 'MediaID_' . $row['mediaid'];
-
-            $rows[] = $row;
-        }
-
-        Theme::Set('table_rows', $rows);
-
-        // Render the Theme
-        $response->SetGridResponse(Theme::RenderReturn('library_form_assign_list'));
-        $response->callBack = 'LibraryAssignCallback';
-        $response->pageSize = 5;
-
-    }
 }
-
-?>

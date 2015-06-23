@@ -64,13 +64,7 @@
                                 {% elseif field.fieldType == "dropdown" %}
                                     {{ forms.dropdown(field.name, "single", field.title, field.value, field.options, "id", "value") }}
                                 {% elseif field.fieldType == "timezone" %}
-                                    <div class="form-group">
-                                        <label class="col-sm-2 control-label" for="{{ field.name }}" title="{{ field.helpText }}">{{ field.title }}</label>
-                                        <div class="col-sm-10">
-                                            <select class="form-control" name="{{ field.name }}">{{ field.options|raw }}</select>
-                                            <span class="help-block">{{ field.helpText }}</span>
-                                        </div>
-                                    </div>
+                                    {{ forms.dropdown(field.name, "single", field.title, field.value, field.options, "id", "value") }}
                                 {% endif %}
                             {% endfor %}
                         </div>

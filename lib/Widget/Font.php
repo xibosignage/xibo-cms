@@ -20,16 +20,15 @@
  */
 namespace Xibo\Widget;
 
-use Widget\Module;
 
 class Font extends Module
 {
     /*
      * Installs any files specific to this module
      */
-    public function InstallFiles()
+    public function installFiles()
     {
-        $fontsCss = 'modules/preview/fonts.css';
+        $fontsCss = 'modules/fonts.css';
 
         if (!file_exists($fontsCss)) {
             touch($fontsCss);
@@ -43,7 +42,7 @@ class Font extends Module
      * @param int $scaleOverride The Scale Override
      * @return string The Rendered Content
      */
-    public function Preview($width, $height, $scaleOverride = 0)
+    public function preview($width, $height, $scaleOverride = 0)
     {
         // Never previewed in the browser.
         return $this->previewIcon();
@@ -54,17 +53,16 @@ class Font extends Module
      * @param int $displayId
      * @return mixed
      */
-    public function GetResource($displayId = 0)
+    public function getResource($displayId = 0)
     {
-        $this->ReturnFile();
-        exit();
+        $this->download();
     }
 
     /**
      * Is this module valid
      * @return int
      */
-    public function IsValid()
+    public function isValid()
     {
         // Yes
         return 1;

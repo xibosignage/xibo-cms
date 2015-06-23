@@ -20,7 +20,6 @@
  */
 namespace Xibo\Widget;
 
-use Widget\Module;
 
 class Flash extends Module
 {
@@ -31,18 +30,12 @@ class Flash extends Module
      * @param int $scaleOverride The Scale Override
      * @return string The Rendered Content
      */
-    public function Preview($width, $height, $scaleOverride = 0)
+    public function preview($width, $height, $scaleOverride = 0)
     {
-        // Never previewed in the browser.
-        return $this->previewIcon();
-    }
+        if ($this->module->previewEnabled == 0)
+            return parent::preview($width, $height, $scaleOverride);
 
-    public function Preview($width, $height, $scaleOverride = 0)
-    {
-        if ($this->previewEnabled == 0)
-            return $this->Preview($width, $height, $scaleOverride);
-
-        $url = 'index.php?p=module&mod=' . $this->type . '&q=Exec&method=GetResource&raw=true&preview=true&scale_override=' . $scaleOverride . '&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&mediaid=' . $this->mediaid . '&lkid=' . $this->lkid . '&width=' . $width . '&height=' . $height;
+        $url = $this->getApp()->urlFor('module.getResource', ['regionId' => $this->region->regionId, 'id' => $this->getWidgetId()]);
 
         return '<object width="' . $width . '" height="' . $height . '">
             <param name="movie" value="' . $url . '"></param>
@@ -64,17 +57,16 @@ class Flash extends Module
      * @param int $displayId
      * @return mixed
      */
-    public function GetResource($displayId = 0)
+    public function getResource($displayId = 0)
     {
         $this->download();
-        exit();
     }
 
     /**
      * Is this module valid
      * @return int
      */
-    public function IsValid()
+    public function isValid()
     {
         // Yes
         return 1;

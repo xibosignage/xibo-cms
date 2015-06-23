@@ -1,0 +1,92 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+$formFields[] = Form::AddText('uri', __('Link'), NULL,
+            __('The Location (URL) of the webpage'), 'l', 'required');
+
+        $formFields[] = Form::AddText('name', __('Name'), NULL,
+            __('An optional name for this media'), 'n');
+
+        $formFields[] = Form::AddNumber('duration', __('Duration'), NULL,
+            __('The duration in seconds this item should be displayed'), 'd', 'required');
+
+        $formFields[] = Form::AddCombo(
+            'modeid',
+            __('Options'),
+            NULL,
+            array(
+                array('modeid' => '1', 'mode' => __('Open Natively')),
+                array('modeid' => '2', 'mode' => __('Manual Position')),
+                array('modeid' => '3', 'mode' => __('Best Fit'))
+            ),
+            'modeid',
+            'mode',
+            __('How should this web page be embedded?'),
+            'm');
+
+        $formFields[] = Form::AddNumber('pageWidth', __('Page Width'), NULL,
+            __('The width of the page. Leave empty to use the region width.'), 'w', NULL, 'webpage-widths');
+
+        $formFields[] = Form::AddNumber('pageHeight', __('Page Height'), NULL,
+            __('The height of the page. Leave empty to use the region height'), 'h', NULL, 'webpage-widths');
+
+        $formFields[] = Form::AddNumber('offsetTop', __('Offset Top'), NULL,
+            __('The starting point from the top in pixels'), 't', NULL, 'webpage-offsets');
+
+        $formFields[] = Form::AddNumber('offsetLeft', __('Offset Left'), NULL,
+            __('The starting point from the left in pixels'), 'l', NULL, 'webpage-offsets');
+
+        $formFields[] = Form::AddNumber('scaling', __('Scale Percentage'), NULL,
+            __('The Percentage to Scale this Webpage (0 - 100)'), 's', NULL, 'webpage-offsets');
+
+        $formFields[] = Form::AddCheckbox('transparency', __('Background transparent?'),
+            NULL, __('Should the HTML be shown with a transparent background. Not currently available on the Windows Display Client.'),
+            't');
+
+        // Field dependencies
+        $modeFieldDepencies_1 = array(
+            '.webpage-widths' => array('display' => 'none'),
+            '.webpage-offsets' => array('display' => 'none'),
+        );
+        $modeFieldDepencies_2 = array(
+            '.webpage-widths' => array('display' => 'block'),
+            '.webpage-offsets' => array('display' => 'block'),
+        );
+        $modeFieldDepencies_3 = array(
+            '.webpage-widths' => array('display' => 'block'),
+            '.webpage-offsets' => array('display' => 'none'),
+        );
+
+        $response->AddFieldAction('modeid', 'init', 1, $modeFieldDepencies_1);
+        $response->AddFieldAction('modeid', 'change', 1, $modeFieldDepencies_1);
+        $response->AddFieldAction('modeid', 'init', 2, $modeFieldDepencies_2);
+        $response->AddFieldAction('modeid', 'change', 2, $modeFieldDepencies_2);
+        $response->AddFieldAction('modeid', 'init', 3, $modeFieldDepencies_3);
+        $response->AddFieldAction('modeid', 'change', 3, $modeFieldDepencies_3);
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Add Webpage" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Save" %}, $("#webpageFormAdd").submit()
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="webpageFormAdd" class="XiboForm form-horizontal" method="post" action="{{ urlFor("module.widget.add", {type: module.widget.type, id: playlist.playlistId}) }}">
+
+            </form>
+        </div>
+    </div>
+{% endblock %}
