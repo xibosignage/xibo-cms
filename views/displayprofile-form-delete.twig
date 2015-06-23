@@ -15,7 +15,7 @@ Theme::Set('form_fields', array(Form::AddMessage(__('Are you sure you want to de
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Save" %}, $("#<<id>>").submit()
+    {% trans "Save" %}, $("#displayProfileDeleteForm").submit()
     {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
 {% endblock %}
@@ -23,8 +23,8 @@ Theme::Set('form_fields', array(Form::AddMessage(__('Are you sure you want to de
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="<<id>>" class="XiboForm form-horizontal" method="delete" action="{{ urlFor("displayProfile.delete", {id: displayProfile.displayProfileId}) }}">
-
+            <form id="displayProfileDeleteForm" class="XiboForm form-horizontal" method="delete" action="{{ urlFor("displayProfile.delete", {id: displayProfile.displayProfileId}) }}">
+                {{forms.message("Are you sure you want to delete this display profile?") }}
             </form>
         </div>
     </div>

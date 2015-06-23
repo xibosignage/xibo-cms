@@ -34,7 +34,7 @@ $formFields[] = Form::AddText('name', __('Name'), NULL,
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Save" %}, $("#<<id>>").submit()
+    {% trans "Save" %}, $("#displayProfileAddForm").submit()
     {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
 {% endblock %}
@@ -42,7 +42,14 @@ $formFields[] = Form::AddText('name', __('Name'), NULL,
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="<<id>>" class="XiboForm form-horizontal" method="post" action="{{ urlFor("displayProfile.add") }}">
+            <form id="displayProfileAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("displayProfile.add") }}">
+                {% set title %}{% trans "Name" %}{% endset %}
+                {% set helpText %}{% trans "The Name for this Display Profile" %}{% endset %}
+                {{ forms.text("name", title, "", helpText) }}
+
+                {% set title %}{% trans "Client Type" %}{% endset %}
+                {% set helpText %}{% trans "What type of display client is this profile intended for?" %}{% endset %}
+                {{ forms.dropdown() }} 
 
             </form>
         </div>
