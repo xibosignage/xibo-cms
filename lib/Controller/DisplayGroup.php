@@ -55,6 +55,8 @@ class DisplayGroup extends Base
             if ($this->isApi())
                 continue;
 
+            $group->includeProperty('buttons');
+
             if ($this->getUser()->checkEditable($group)) {
                 // Show the edit button, members button
 
