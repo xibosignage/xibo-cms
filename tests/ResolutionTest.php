@@ -61,12 +61,14 @@ class ResolutionTest extends TestCase
      */
     public function testEdit($resolutionId)
     {
+        $resolution = $this->getResolution($resolutionId);
+
         $name = \Xibo\Helper\Random::generateString(8, 'phpunit');
 
         $response = \Requests::put($this->url('/resolution/' . $resolutionId), [], [
             'resolution' => $name,
-            'width' => 1920,
-            'height' => 1080,
+            'width' => $resolution->width,
+            'height' => $resolution->height,
             'enabled' => 1
         ]);
 
@@ -75,9 +77,6 @@ class ResolutionTest extends TestCase
         $object = json_decode($response->body);
 
         $this->assertObjectHasAttribute('data', $object);
-
-        // Check the name has need edited
-        $this->assertSame($name, $object->data[0]->resolution);
 
         // Deeper check by querying for resolution again
         $object = $this->getResolution($resolutionId);
@@ -90,7 +89,40 @@ class ResolutionTest extends TestCase
 
     /**
      * @param $resolutionId
+     * @return int
      * @depends testEdit
+     */
+    public function testEditEnabled($resolutionId)
+    {
+        $resolution = $this->getResolution($resolutionId);
+
+        $response = \Requests::put($this->url('/resolution/' . $resolutionId), [], [
+            'resolution' => $resolution->resolution,
+            'width' => 1080,
+            'height' => 1920,
+            'enabled' => $resolution->enabled
+        ]);
+
+        $this->assertSame(200, $response->status_code);
+
+        $object = json_decode($response->body);
+
+        $this->assertObjectHasAttribute('data', $object);
+
+        // Deeper check by querying for resolution again
+        $object = $this->getResolution($resolutionId);
+
+        $this->assertSame($resolution->resolution, $object->resolution);
+        $this->assertSame(1080, $object->width);
+        $this->assertSame(1920, $object->height);
+        $this->assertSame($resolution->enabled, $object->enabled, 'Enabled has been switched');
+
+        return $resolutionId;
+    }
+
+    /**
+     * @param $resolutionId
+     * @depends testEditEnabled
      */
     public function testDelete($resolutionId)
     {

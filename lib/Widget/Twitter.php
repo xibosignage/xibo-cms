@@ -21,8 +21,9 @@
  */
 namespace Xibo\Widget;
 
+use Emojione\Emojione;
+use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\MediaFactory;
-use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Cache;
 use Xibo\Helper\Config;
 use Xibo\Helper\Date;
@@ -74,6 +75,7 @@ class Twitter extends Module
         MediaFactory::createModuleFile('modules/xibo-layout-scaler.js')->save();
         MediaFactory::createModuleFile('modules/twitter/emoji.css')->save();
         MediaFactory::createModuleFile('modules/twitter/emoji.png')->save();
+        MediaFactory::createModuleFile('vendor/emojione/assets/sprites/emojione.sprites.svg')->save();
     }
 
     /**
@@ -124,441 +126,76 @@ class Twitter extends Module
         return $this->module->settings;
     }
 
-    /**
-     * Return the Add Form
-     */
-    public function AddForm()
+    public function validate()
     {
-        $response = $this->getState();
-
-        // Augment settings with templates
-        $this->loadTemplates();
-
-        // Configure form
-        $this->configureForm('AddMedia');
-
-        $tabs = array();
-        $tabs[] = Form::AddTab('general', __('General'));
-        $tabs[] = Form::AddTab('template', __('Template'), array(array('name' => 'enlarge', 'value' => true)));
-        $tabs[] = Form::AddTab('effect', __('Effect'));
-        $tabs[] = Form::AddTab('advanced', __('Advanced'));
-        Theme::Set('form_tabs', $tabs);
-
-        $formFields['general'][] = Form::AddText('name', __('Name'), NULL,
-            __('An optional name for this media'), 'n');
-
-        // Any values for the form fields should be added to the theme here.
-        $formFields['general'][] = Form::AddNumber('duration', __('Duration'), NULL,
-            __('The duration in seconds this item should be displayed.'), 'd', 'required');
-
-        // Any values for the form fields should be added to the theme here.
-        $formFields['general'][] = Form::AddText('searchTerm', __('Search Term'), NULL,
-            __('Search term. You can test your search term in the twitter.com search box first.'), 's', 'required');
-
-        // Type
-        $formFields['general'][] = Form::AddCombo('resultType', __('Type'), 'mixed',
-            array(
-                array('typeid' => 'mixed', 'type' => __('Mixed')),
-                array('typeid' => 'recent', 'type' => __('Recent')),
-                array('typeid' => 'popular', 'type' => __('Popular')),
-            ),
-            'typeid',
-            'type',
-            __('Recent shows only the most recent tweets, Popular the most popular and Mixed includes both popular and recent results.'), 't', 'required');
-
-        // Distance
-        $formFields['general'][] = Form::AddNumber('tweetDistance', __('Distance'), NULL,
-            __('Distance in miles that the tweets should be returned from. Set to 0 for no restrictions.'), 'd');
-
-        // Distance
-        $formFields['general'][] = Form::AddNumber('tweetCount', __('Count'), 15,
-            __('The number of Tweets to return.'), 'c');
-
-        // Common fields
-        $formFields['effect'][] = Form::AddCombo(
-            'effect',
-            __('Effect'),
-            $this->GetOption('effect'),
-            array(
-                array('effectid' => 'none', 'effect' => __('None')),
-                array('effectid' => 'fade', 'effect' => __('Fade')),
-                array('effectid' => 'fadeout', 'effect' => __('Fade Out')),
-                array('effectid' => 'scrollHorz', 'effect' => __('Scroll Horizontal')),
-                array('effectid' => 'scrollVert', 'effect' => __('Scroll Vertical')),
-                array('effectid' => 'flipHorz', 'effect' => __('Flip Horizontal')),
-                array('effectid' => 'flipVert', 'effect' => __('Flip Vertical')),
-                array('effectid' => 'shuffle', 'effect' => __('Shuffle')),
-                array('effectid' => 'tileSlide', 'effect' => __('Tile Slide')),
-                array('effectid' => 'tileBlind', 'effect' => __('Tile Blinds')),
-                array('effectid' => 'marqueeLeft', 'effect' => __('Marquee Left')),
-                array('effectid' => 'marqueeRight', 'effect' => __('Marquee Right')),
-                array('effectid' => 'marqueeUp', 'effect' => __('Marquee Up')),
-                array('effectid' => 'marqueeDown', 'effect' => __('Marquee Down')),
-            ),
-            'effectid',
-            'effect',
-            __('Please select the effect that will be used to transition between items. If all items should be output, select None. Marquee effects are CPU intensive and may not be suitable for lower power displays.'),
-            'e');
-
-        $formFields['effect'][] = Form::AddNumber('speed', __('Speed'), NULL,
-            __('The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1).'), 's', NULL, 'effect-controls');
-
-        // A list of web safe colours
-        $formFields['advanced'][] = Form::AddText('backgroundColor', __('Background Colour'), NULL,
-            __('The selected effect works best with a background colour. Optionally add one here.'), 'c', NULL, 'background-color-group');
-
-        // Field empty
-        $formFields['advanced'][] = Form::AddText('noTweetsMessage', __('No tweets'), NULL,
-            __('A message to display when there are no tweets returned by the search query'), 'n');
-
-        // Date format
-        $formFields['advanced'][] = Form::AddText('dateFormat', __('Date Format'), 'd M',
-            __('The format to apply to all dates returned by the ticker. In PHP date format: http://uk3.php.net/manual/en/function.date.php'), 'f');
-
-        $formFields['advanced'][] = FormManager::AddNumber('updateInterval', __('Update Interval (mins)'), 60,
-            __('Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60.'),
-            'n', 'required');
-
-        // Template - for standard stuff
-        $formFields['template'][] = Form::AddCombo('templateId', __('Template'), $this->GetOption('templateId', 'tweet-only'),
-            $this->module->settings['templates'],
-            'id',
-            'value',
-            __('Select the template you would like to apply. This can be overridden using the check box below.'), 't', 'template-selector-control');
-
-        // Add a field for whether to override the template or not.
-        // Default to 1 so that it will work correctly with old items (that didn't have a template selected at all)
-        $formFields['template'][] = Form::AddCheckbox('overrideTemplate', __('Override the template?'), $this->GetOption('overrideTemplate', 0),
-            __('Tick if you would like to override the template.'), 'o');
-
-        // Add a text template
-        $formFields['template'][] = Form::AddMultiText('ta_text', NULL, null,
-            __('Enter the template. Please note that the background colour has automatically coloured to your layout background colour.'), 't', 10, NULL, 'template-override-controls');
-
-        // Field for the style sheet (optional)
-        $formFields['template'][] = Form::AddMultiText('ta_css', NULL, null,
-            __('Optional Stylesheet'), 's', 10, NULL, 'template-override-controls');
-
-        // Add some field dependencies
-        // When the override template check box is ticked, we want to expose the advanced controls and we want to hide the template selector
-        $response->AddFieldAction('overrideTemplate', 'init', false,
-            array(
-                '.template-override-controls' => array('display' => 'none'),
-                '.template-selector-control' => array('display' => 'block')
-            ), 'is:checked');
-        $response->AddFieldAction('overrideTemplate', 'change', false,
-            array(
-                '.template-override-controls' => array('display' => 'none'),
-                '.template-selector-control' => array('display' => 'block')
-            ), 'is:checked');
-        $response->AddFieldAction('overrideTemplate', 'init', true,
-            array(
-                '.template-override-controls' => array('display' => 'block'),
-                '.template-selector-control' => array('display' => 'none')
-            ), 'is:checked');
-        $response->AddFieldAction('overrideTemplate', 'change', true,
-            array(
-                '.template-override-controls' => array('display' => 'block'),
-                '.template-selector-control' => array('display' => 'none')
-            ), 'is:checked');
-
-        // Present an error message if the module has not been configured. Don't prevent further configuration.
-        if (!extension_loaded('curl') || $this->GetSetting('apiKey') == '' || $this->GetSetting('apiSecret') == '') {
-            $formFields['general'][] = Form::AddMessage(__('The Twitter Widget has not been configured yet, please ask your CMS Administrator to look at it for you.'), 'alert alert-danger');
-        }
-
-        // Modules should be rendered using the theme engine.
-        Theme::Set('form_fields_general', $formFields['general']);
-        Theme::Set('form_fields_template', $formFields['template']);
-        Theme::Set('form_fields_effect', $formFields['effect']);
-        Theme::Set('form_fields_advanced', $formFields['advanced']);
-
-        // Set the field dependencies
-        $this->setFieldDepencencies($response);
-        $response->html = Theme::RenderReturn('form_render');
-
-        $response->callBack = 'text_callback';
-        // Append the templates to the response
-        $response->extra = $this->module->settings['templates'];
-        $this->configureFormButtons($response);
-
-        // The response must be returned.
-        return $response;
-    }
-
-    /**
-     * Add Media to the Database
-     */
-    public function AddMedia()
-    {
-        $response = $this->getState();
-
-        // You should validate all form input using the \Kit::GetParam helper classes
         if (\Kit::GetParam('searchTerm', _POST, _STRING) == '')
             throw new InvalidArgumentException(__('Please enter a search term'));
+    }
 
-        $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration(), false));
-        $this->SetOption('name', \Kit::GetParam('name', _POST, _STRING));
-        $this->SetOption('searchTerm', \Kit::GetParam('searchTerm', _POST, _STRING));
-        $this->SetOption('effect', \Kit::GetParam('effect', _POST, _STRING));
-        $this->SetOption('speed', \Kit::GetParam('speed', _POST, _INT));
-        $this->SetOption('backgroundColor', \Kit::GetParam('backgroundColor', _POST, _STRING));
-        $this->SetOption('noTweetsMessage', \Kit::GetParam('noTweetsMessage', _POST, _STRING));
-        $this->SetOption('dateFormat', \Kit::GetParam('dateFormat', _POST, _STRING));
-        $this->SetOption('resultType', \Kit::GetParam('resultType', _POST, _STRING));
-        $this->SetOption('tweetDistance', \Kit::GetParam('tweetDistance', _POST, _INT));
-        $this->SetOption('tweetCount', \Kit::GetParam('tweetCount', _POST, _INT));
-        $this->setRawNode('template', \Kit::GetParam('ta_text', _POST, _HTMLSTRING));
-        $this->setRawNode('styleSheet', \Kit::GetParam('ta_css', _POST, _HTMLSTRING));
-        $this->SetOption('overrideTemplate', \Kit::GetParam('overrideTemplate', _POST, _CHECKBOX));
-        $this->SetOption('updateInterval', Kit::GetParam('updateInterval', _POST, _INT, 60));
-        $this->SetOption('templateId', \Kit::GetParam('templateId', _POST, _WORD));
+    /**
+     * Add Media
+     */
+    public function add()
+    {
+        $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
+        $this->setOption('name', Sanitize::getString('name'));
+        $this->setOption('searchTerm', Sanitize::getString('searchTerm'));
+        $this->setOption('effect', Sanitize::getString('effect'));
+        $this->setOption('speed', Sanitize::getInt('speed'));
+        $this->setOption('backgroundColor', Sanitize::getString('backgroundColor'));
+        $this->setOption('noTweetsMessage', Sanitize::getString('noTweetsMessage'));
+        $this->setOption('dateFormat', Sanitize::getString('dateFormat'));
+        $this->setOption('resultType', Sanitize::getString('resultType'));
+        $this->setOption('tweetDistance', Sanitize::getInt('tweetDistance'));
+        $this->setOption('tweetCount', Sanitize::int('tweetCount'));
+        $this->setOption('removeUrls', Sanitize::getCheckbox('removeUrls'));
+        $this->setOption('overrideTemplate', Sanitize::getCheckbox('overrideTemplate'));
+        $this->setOption('updateInterval', Sanitize::getInt('updateInterval', 60));
+        $this->setOption('templateId', Sanitize::getString('templateId'));
+
+        $this->setRawNode('template', Sanitize::getParam('ta_text', null));
+        $this->setRawNode('styleSheet', Sanitize::getParam('ta_css', null));
 
         // Save the widget
+        $this->validate();
         $this->saveWidget();
-
-        // Load form
-        $response->loadForm = true;
-        $response->loadFormUri = $this->getTimelineLink();
-
-        return $response;
     }
 
     /**
-     * Return the Edit Form as HTML
+     * Edit Media
      */
-    public function EditForm()
+    public function edit()
     {
-        $response = $this->getState();
+        $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
+        $this->setOption('name', Sanitize::getString('name'));
+        $this->setOption('searchTerm', Sanitize::getString('searchTerm'));
+        $this->setOption('effect', Sanitize::getString('effect'));
+        $this->setOption('speed', Sanitize::getInt('speed'));
+        $this->setOption('backgroundColor', Sanitize::getString('backgroundColor'));
+        $this->setOption('noTweetsMessage', Sanitize::getString('noTweetsMessage'));
+        $this->setOption('dateFormat', Sanitize::getString('dateFormat'));
+        $this->setOption('resultType', Sanitize::getString('resultType'));
+        $this->setOption('tweetDistance', Sanitize::getInt('tweetDistance'));
+        $this->setOption('tweetCount', Sanitize::int('tweetCount'));
+        $this->setOption('removeUrls', Sanitize::getCheckbox('removeUrls'));
+        $this->setOption('overrideTemplate', Sanitize::getCheckbox('overrideTemplate'));
+        $this->setOption('updateInterval', Sanitize::getInt('updateInterval', 60));
+        $this->setOption('templateId', Sanitize::getString('templateId'));
 
-        // Edit calls are the same as add calls, except you will to check the user has permissions to do the edit
-        if (!$this->auth->edit)
-            throw new Exception(__('You do not have permission to edit this widget.'));
-
-        // Configure the form
-        $this->configureForm('EditMedia');
-
-        // Augment settings with templates
-        $this->loadTemplates();
-
-        $tabs = array();
-        $tabs[] = Form::AddTab('general', __('General'));
-        $tabs[] = Form::AddTab('template', __('Appearance'), array(array('name' => 'enlarge', 'value' => true)));
-        $tabs[] = Form::AddTab('effect', __('Effect'));
-        $tabs[] = Form::AddTab('advanced', __('Advanced'));
-        Theme::Set('form_tabs', $tabs);
-
-        $formFields['general'][] = Form::AddText('name', __('Name'), $this->GetOption('name'),
-            __('An optional name for this media'), 'n');
-
-        // Duration
-        $formFields['general'][] = Form::AddNumber('duration', __('Duration'), $this->getDuration(),
-            __('The duration in seconds this item should be displayed.'), 'd', 'required');
-
-        // Search Term
-        $formFields['general'][] = Form::AddText('searchTerm', __('Search Term'), $this->GetOption('searchTerm'),
-            __('Search term. You can test your search term in the twitter.com search box first.'), 's', 'required');
-
-        // Type
-        $formFields['general'][] = Form::AddCombo('resultType', __('Type'), $this->GetOption('resultType'),
-            array(
-                array('typeid' => 'mixed', 'type' => __('Mixed')),
-                array('typeid' => 'recent', 'type' => __('Recent')),
-                array('typeid' => 'popular', 'type' => __('Popular')),
-            ),
-            'typeid',
-            'type',
-            __('Recent shows only the most recent tweets, Popular the most popular and Mixed includes both popular and recent results.'), 't', 'required');
-
-        // Distance
-        $formFields['general'][] = Form::AddNumber('tweetDistance', __('Distance'), $this->GetOption('tweetDistance'),
-            __('Distance in miles that the tweets should be returned from. Set to 0 for no restrictions.'), 'd');
-
-        // Distance
-        $formFields['general'][] = Form::AddNumber('tweetCount', __('Count'), $this->GetOption('tweetCount'),
-            __('The number of Tweets to return.'), 'c');
-
-        // Common fields
-        $formFields['effect'][] = Form::AddCombo(
-            'effect',
-            __('Effect'),
-            $this->GetOption('effect'),
-            array(
-                array('effectid' => 'none', 'effect' => __('None')),
-                array('effectid' => 'fade', 'effect' => __('Fade')),
-                array('effectid' => 'fadeout', 'effect' => __('Fade Out')),
-                array('effectid' => 'scrollHorz', 'effect' => __('Scroll Horizontal')),
-                array('effectid' => 'scrollVert', 'effect' => __('Scroll Vertical')),
-                array('effectid' => 'flipHorz', 'effect' => __('Flip Horizontal')),
-                array('effectid' => 'flipVert', 'effect' => __('Flip Vertical')),
-                array('effectid' => 'shuffle', 'effect' => __('Shuffle')),
-                array('effectid' => 'tileSlide', 'effect' => __('Tile Slide')),
-                array('effectid' => 'tileBlind', 'effect' => __('Tile Blinds')),
-                array('effectid' => 'marqueeLeft', 'effect' => __('Marquee Left')),
-                array('effectid' => 'marqueeRight', 'effect' => __('Marquee Right')),
-                array('effectid' => 'marqueeUp', 'effect' => __('Marquee Up')),
-                array('effectid' => 'marqueeDown', 'effect' => __('Marquee Down')),
-            ),
-            'effectid',
-            'effect',
-            __('Please select the effect that will be used to transition between items. If all items should be output, select None. Marquee effects are CPU intensive and may not be suitable for lower power displays.'),
-            'e');
-
-        $formFields['effect'][] = Form::AddNumber('speed', __('Speed'), $this->GetOption('speed'),
-            __('The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1).'), 's', NULL, 'effect-controls');
-
-        // A list of web safe colours
-        $formFields['advanced'][] = Form::AddText('backgroundColor', __('Background Colour'), $this->GetOption('backgroundColor'),
-            __('The selected effect works best with a background colour. Optionally add one here.'), 'c', NULL, 'background-color-group');
-
-        // Field empty
-        $formFields['advanced'][] = Form::AddText('noTweetsMessage', __('No tweets'), $this->GetOption('noTweetsMessage'),
-            __('A message to display when there are no tweets returned by the search query'), 'n');
-
-        $formFields['advanced'][] = Form::AddText('dateFormat', __('Date Format'), $this->GetOption('dateFormat'),
-            __('The format to apply to all dates returned by the ticker. In PHP date format: http://uk3.php.net/manual/en/function.date.php'), 'f');
-
-        $formFields['advanced'][] = Form::AddCheckbox('removeUrls', __('Remove URLs?'), $this->GetOption('removeUrls', 1),
-            __('Should URLs be removed from the Tweet Text. Most URLs do not compliment digital signage.'), 'u');
-
-        $formFields['advanced'][] = FormManager::AddNumber('updateInterval', __('Update Interval (mins)'), $this->GetOption('updateInterval', 60),
-            __('Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60.'),
-            'n', 'required');
-
-        // Encode up the template
-        if (Config::GetSetting('SERVER_MODE') == 'Test' && $this->getUser()->userTypeId == 1)
-            $formFields['advanced'][] = Form::AddMessage('<pre>' . htmlentities(json_encode(array('id' => 'ID', 'value' => 'TITLE', 'template' => $this->getRawNode('template', null), 'css' => $this->getRawNode('styleSheet', null)))) . '</pre>');
-
-        // Template - for standard stuff
-        $formFields['template'][] = Form::AddCombo('templateId', __('Template'), $this->GetOption('templateId', 'tweet-only'),
-            $this->module->settings['templates'],
-            'id',
-            'value',
-            __('Select the template you would like to apply. This can be overridden using the check box below.'), 't', 'template-selector-control');
-
-        // Add a field for whether to override the template or not.
-        // Default to 1 so that it will work correctly with old items (that didn't have a template selected at all)
-        $formFields['template'][] = Form::AddCheckbox('overrideTemplate', __('Override the template?'), $this->GetOption('overrideTemplate', 0),
-            __('Tick if you would like to override the template.'), 'o');
-
-        // Add a text template
-        $formFields['template'][] = Form::AddMultiText('ta_text', NULL, $this->getRawNode('template', null),
-            __('Enter the template. Please note that the background colour has automatically coloured to your layout background colour.'), 't', 10, NULL, 'template-override-controls');
-
-        // Field for the style sheet (optional)
-        $formFields['template'][] = Form::AddMultiText('ta_css', NULL, $this->getRawNode('styleSheet', null),
-            __('Optional Stylesheet'), 's', 10, NULL, 'template-override-controls');
-
-        // Add some field dependencies
-        // When the override template check box is ticked, we want to expose the advanced controls and we want to hide the template selector
-        $response->AddFieldAction('overrideTemplate', 'init', false,
-            array(
-                '.template-override-controls' => array('display' => 'none'),
-                '.template-selector-control' => array('display' => 'block')
-            ), 'is:checked');
-        $response->AddFieldAction('overrideTemplate', 'change', false,
-            array(
-                '.template-override-controls' => array('display' => 'none'),
-                '.template-selector-control' => array('display' => 'block')
-            ), 'is:checked');
-        $response->AddFieldAction('overrideTemplate', 'init', true,
-            array(
-                '.template-override-controls' => array('display' => 'block'),
-                '.template-selector-control' => array('display' => 'none')
-            ), 'is:checked');
-        $response->AddFieldAction('overrideTemplate', 'change', true,
-            array(
-                '.template-override-controls' => array('display' => 'block'),
-                '.template-selector-control' => array('display' => 'none')
-            ), 'is:checked');
-
-        // Present an error message if the module has not been configured. Don't prevent further configuration.
-        if (!extension_loaded('curl') || $this->GetSetting('apiKey') == '' || $this->GetSetting('apiSecret') == '') {
-            $formFields['general'][] = Form::AddMessage(__('The Twitter Widget has not been configured yet, please ask your CMS Administrator to look at it for you.'), 'alert alert-danger');
-        }
-
-        // Modules should be rendered using the theme engine.
-        Theme::Set('form_fields_general', $formFields['general']);
-        Theme::Set('form_fields_template', $formFields['template']);
-        Theme::Set('form_fields_effect', $formFields['effect']);
-        Theme::Set('form_fields_advanced', $formFields['advanced']);
-
-        // Set the field dependencies
-        $this->setFieldDepencencies($response);
-
-        $response->html = Theme::RenderReturn('form_render');
-        $response->callBack = 'text_callback';
-        // Append the templates to the response
-        $response->extra = $this->module->settings['templates'];
-        $this->configureFormButtons($response);
-        $this->response->AddButton(__('Apply'), 'XiboDialogApply("#ModuleForm")');
-
-        // The response must be returned.
-        return $response;
-    }
-
-    /**
-     * Edit Media in the Database
-     */
-    public function EditMedia()
-    {
-        $response = $this->getState();
-
-        // Edit calls are the same as add calls, except you will to check the user has permissions to do the edit
-        if (!$this->auth->edit)
-            throw new Exception(__('You do not have permission to edit this widget.'));
-
-        // You should validate all form input using the \Kit::GetParam helper classes
-        if (\Kit::GetParam('searchTerm', _POST, _STRING) == '')
-            throw new InvalidArgumentException(__('Please enter a search term'));
-
-        $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration(), false));
-        $this->SetOption('name', \Kit::GetParam('name', _POST, _STRING));
-        $this->SetOption('searchTerm', \Kit::GetParam('searchTerm', _POST, _STRING));
-        $this->SetOption('effect', \Kit::GetParam('effect', _POST, _STRING));
-        $this->SetOption('speed', \Kit::GetParam('speed', _POST, _INT));
-        $this->SetOption('backgroundColor', \Kit::GetParam('backgroundColor', _POST, _STRING));
-        $this->SetOption('noTweetsMessage', \Kit::GetParam('noTweetsMessage', _POST, _STRING));
-        $this->SetOption('dateFormat', \Kit::GetParam('dateFormat', _POST, _STRING));
-        $this->SetOption('resultType', \Kit::GetParam('resultType', _POST, _STRING));
-        $this->SetOption('tweetDistance', \Kit::GetParam('tweetDistance', _POST, _INT));
-        $this->SetOption('tweetCount', \Kit::GetParam('tweetCount', _POST, _INT));
-        $this->SetOption('removeUrls', \Kit::GetParam('removeUrls', _POST, _CHECKBOX));
-        $this->SetOption('overrideTemplate', \Kit::GetParam('overrideTemplate', _POST, _CHECKBOX));
-        $this->SetOption('templateId', \Kit::GetParam('templateId', _POST, _WORD));
-        $this->SetOption('updateInterval', Kit::GetParam('updateInterval', _POST, _INT, 60));
-
-        // Text Template
-        $this->setRawNode('template', \Kit::GetParam('ta_text', _POST, _HTMLSTRING));
-        $this->setRawNode('styleSheet', \Kit::GetParam('ta_css', _POST, _HTMLSTRING));
+        $this->setRawNode('template', Sanitize::getParam('ta_text', null));
+        $this->setRawNode('styleSheet', Sanitize::getParam('ta_css', null));
 
         // Save the widget
+        $this->validate();
         $this->saveWidget();
 
-        // Load an edit form
-        $response->loadForm = true;
-        $response->loadFormUri = $this->getTimelineLink();
-        $response->callBack = 'refreshPreview("' . $this->regionid . '")';
-
-        return $response;
-    }
-
-    /**
-     * Set field dependencies
-     * @param ApplicationState $response
-     */
-    private function setFieldDepencencies(&$response)
-    {
-        // Add a dependency
-        $response->AddFieldAction('effect', 'init', 'none', array('.effect-controls' => array('display' => 'none'), '.background-color-group' => array('display' => 'none')));
-        $response->AddFieldAction('effect', 'change', 'none', array('.effect-controls' => array('display' => 'none'), '.background-color-group' => array('display' => 'none')));
-        $response->AddFieldAction('effect', 'init', 'none', array('.effect-controls' => array('display' => 'block'), '.background-color-group' => array('display' => 'block')), 'not');
-        $response->AddFieldAction('effect', 'change', 'none', array('.effect-controls' => array('display' => 'block'), '.background-color-group' => array('display' => 'block')), 'not');
+        // Save the widget
+        $this->validate();
+        $this->saveWidget();
     }
 
     protected function getToken()
     {
-
         // Prepare the URL
         $url = 'https://api.twitter.com/oauth2/token';
 
@@ -722,15 +359,12 @@ class Twitter extends Module
 
         // Do we need to add a geoCode?
         $geoCode = '';
-        $distance = $this->GetOption('tweetDistance');
+        $distance = $this->getOption('tweetDistance');
         if ($distance != 0) {
             // Use the display ID or the default.
             if ($displayId != 0) {
                 // Look up the lat/long
-                $display = new Display();
-                $display->displayId = $displayId;
-                $display->Load();
-
+                $display = DisplayFactory::getById($displayId);
                 $defaultLat = $display->latitude;
                 $defaultLong = $display->longitude;
             } else {
@@ -743,18 +377,18 @@ class Twitter extends Module
         }
 
         // Connect to twitter and get the twitter feed.
-        $key = md5($this->GetOption('searchTerm') . $this->GetOption('resultType') . $this->GetOption('tweetCount', 15) . $geoCode);
+        $key = md5($this->getOption('searchTerm') . $this->getOption('resultType') . $this->getOption('tweetCount', 15) . $geoCode);
 
         if (!Cache::has($key) || Cache::get($key) == '') {
 
-            Log::debug('Querying API for ' . $this->GetOption('searchTerm'));
+            Log::debug('Querying API for ' . $this->getOption('searchTerm'));
 
             // We need to search for it
             if (!$token = $this->getToken())
                 return false;
 
             // We have the token, make a tweet
-            if (!$data = $this->searchApi($token, $this->GetOption('searchTerm'), $this->GetOption('resultType'), $geoCode, $this->GetOption('tweetCount', 15)))
+            if (!$data = $this->searchApi($token, $this->getOption('searchTerm'), $this->getOption('resultType'), $geoCode, $this->getOption('tweetCount', 15)))
                 return false;
 
             // Cache it
@@ -763,8 +397,6 @@ class Twitter extends Module
             Log::debug('Served from Cache');
             $data = Cache::get($key);
         }
-
-        Log::debug(var_export(json_encode($data), true));
 
         // Get the template
         $template = $this->getRawNode('template', null);
@@ -776,26 +408,22 @@ class Twitter extends Module
         // Build an array to return
         $return = array();
 
-        // Media Object to get profile images
-        $media = new Media();
-        $layout = new Layout();
-
         // Expiry time for any media that is downloaded
         $expires = time() + ($this->GetSetting('cachePeriodImages') * 60 * 60);
 
         // Remove URL setting
-        $removeUrls = $this->GetOption('removeUrls', 1);
+        $removeUrls = $this->getOption('removeUrls', 1);
 
         // If we have nothing to show, display a no tweets message.
         if (count($data->statuses) <= 0) {
             // Create ourselves an empty tweet so that the rest of the code can continue as normal
-            $user = new stdClass();
+            $user = new \stdClass();
             $user->name = '';
             $user->screen_name = '';
             $user->profile_image_url = '';
 
-            $tweet = new stdClass();
-            $tweet->text = $this->GetOption('noTweetsMessage', __('There are no tweets to display'));
+            $tweet = new \stdClass();
+            $tweet->text = $this->getOption('noTweetsMessage', __('There are no tweets to display'));
             $tweet->created_at = date("Y-m-d H:i:s");
             $tweet->user = $user;
 
@@ -830,7 +458,7 @@ class Twitter extends Module
                             $tweetText = preg_replace("((https?|ftp|gopher|telnet|file|notes|ms-help):((\/\/)|(\\\\))+[\w\d:#\@%\/;$()~_?\+-=\\\.&]*)", '', $tweetText);
                         }
 
-                        $replace = emoji_unified_to_html($tweetText);
+                        $replace = Emojione::toImage($tweetText);
                         break;
 
                     case '[User]':
@@ -842,18 +470,23 @@ class Twitter extends Module
                         break;
 
                     case '[Date]':
-                        $replace = date($this->GetOption('dateFormat', Config::GetSetting('DATE_FORMAT')), Date::getDateFromGregorianString($tweet->created_at));
+                        $replace = date($this->getOption('dateFormat', Config::GetSetting('DATE_FORMAT')), Date::getDateFromGregorianString($tweet->created_at));
                         break;
 
                     case '[ProfileImage]':
                         // Grab the profile image
                         if ($tweet->user->profile_image_url != '') {
-                            $file = $media->addModuleFileFromUrl($tweet->user->profile_image_url, 'twitter_' . $tweet->user->id, $expires);
+                            // Grab the profile image
+                            $file = MediaFactory::createModuleFile('twitter_' . $tweet->user->id, $tweet->user->profile_image_url);
+                            $file->isRemote = true;
+                            $file->expires = $expires;
+                            $file->save();
 
                             // Tag this layout with this file
-                            $this->assignMedia($file['mediaId']);
+                            $this->assignMedia($file->mediaId);
 
-                            $replace = ($isPreview) ? '<img src="index.php?p=content&q=getFile&mediaid=' . $file['mediaId'] . '" />' : '<img src="' . $file['storedAs'] . '" />';
+                            $url = $this->getApp()->urlFor('library.download', ['id' => $file->mediaId]);
+                            $replace = ($isPreview) ? '<img src="' . $url . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" />' : '<img src="' . $file->storedAs . '"  />';
                         }
                         break;
 
@@ -864,9 +497,16 @@ class Twitter extends Module
                             $photoUrl = $tweet->entities->media[0]->media_url;
 
                             if ($photoUrl != '') {
-                                $file = $media->addModuleFileFromUrl($photoUrl, 'twitter_photo_' . $tweet->user->id . '_' . $tweet->entities->media[0]->id_str, $expires);
-                                $this->assignMedia($file['mediaId']);
-                                $replace = ($isPreview) ? '<img src="index.php?p=content&q=getFile&mediaid=' . $file['mediaId'] . '" />' : '<img src="' . $file['storedAs'] . '" />';
+                                $file = MediaFactory::createModuleFile('twitter_photo_' . $tweet->user->id . '_' . $tweet->entities->media[0]->id_str, $photoUrl);
+                                $file->isRemote = true;
+                                $file->expires = $expires;
+                                $file->save();
+
+                                // Tag this layout with this file
+                                $this->assignMedia($file->mediaId);
+
+                                $url = $this->getApp()->urlFor('library.download', ['id' => $file->mediaId]);
+                                $replace = ($isPreview) ? '<img src="' . $url . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" />' : '<img src="' . $file->storedAs . '"  />';
                             }
                         }
 
@@ -892,7 +532,7 @@ class Twitter extends Module
      * @param int $displayId
      * @return mixed
      */
-    public function GetResource($displayId = 0)
+    public function getResource($displayId = 0)
     {
         // Make sure we are set up correctly
         if ($this->GetSetting('apiKey') == '' || $this->GetSetting('apiSecret') == '') {
@@ -900,13 +540,11 @@ class Twitter extends Module
             return '';
         }
 
-        // Load in the template
-        $template = file_get_contents('modules/preview/HtmlTemplate.html');
-        $isPreview = (\Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
+        $data = [];
+        $isPreview = (Sanitize::getCheckbox('preview') == 1);
 
         // Replace the View Port Width?
-        if ($isPreview)
-            $template = str_replace('[[ViewPortWidth]]', $this->region->width, $template);
+        $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
 
         // Information from the Module
         $duration = $this->getDuration();
@@ -920,10 +558,10 @@ class Twitter extends Module
 
         $options = array(
             'type' => $this->getModuleType(),
-            'fx' => $this->GetOption('effect', 'none'),
-            'speed' => $this->GetOption('speed', 500),
+            'fx' => $this->getOption('effect', 'none'),
+            'speed' => $this->getOption('speed', 500),
             'duration' => $duration,
-            'durationIsPerItem' => ($this->GetOption('durationIsPerItem', 0) == 1),
+            'durationIsPerItem' => ($this->getOption('durationIsPerItem', 0) == 1),
             'numItems' => count($items),
             'itemsPerPage' => 1,
             'originalWidth' => $this->region->width,
@@ -934,8 +572,7 @@ class Twitter extends Module
         );
 
         // Replace the control meta with our data from twitter
-        $controlMeta = '<!-- NUMITEMS=' . count($items) . ' -->' . PHP_EOL . '<!-- DURATION=' . ($this->GetOption('durationIsPerItem', 0) == 0 ? $duration : ($duration * count($items))) . ' -->';
-        $template = str_replace('<!--[[[CONTROLMETA]]]-->', $controlMeta, $template);
+        $data['controlMeta'] = '<!-- NUMITEMS=' . count($items) . ' -->' . PHP_EOL . '<!-- DURATION=' . ($this->getOption('durationIsPerItem', 0) == 0 ? $duration : ($duration * count($items))) . ' -->';
 
         // Replace the head content
         $headContent = '';
@@ -946,37 +583,35 @@ class Twitter extends Module
             $headContent .= '<style type="text/css">' . $css . '</style>';
         }
 
-        $backgroundColor = $this->GetOption('backgroundColor');
+        $backgroundColor = $this->getOption('backgroundColor');
         if ($backgroundColor != '') {
             $headContent .= '<style type="text/css">body, .page, .item { background-color: ' . $backgroundColor . ' }</style>';
         }
 
         // Add our fonts.css file
         $headContent .= '<link href="' . $this->getResourceUrl('fonts.css') . ' rel="stylesheet" media="screen">';
-        $headContent .= '<link href="' . (($isPreview) ? 'modules/theme/twitter/' : '') . 'emoji.css" rel="stylesheet" media="screen">';
         $headContent .= '<style type="text/css">' . file_get_contents(Theme::uri('css/client.css', true)) . '</style>';
 
         // Replace the Head Content with our generated javascript
         $data['head'] = $headContent;
 
         // Add some scripts to the JavaScript Content
-        $javaScriptContent = '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
+        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
 
         // Need the cycle plugin?
-        if ($this->GetSetting('effect') != 'none') {
-            $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-cycle-2.1.6.min.js"></script>';
-        }
+        if ($this->GetSetting('effect') != 'none')
+            $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-cycle-2.1.6.min.js') . '"></script>';
 
         // Need the marquee plugin?
         if (stripos($this->GetSetting('effect'), 'marquee'))
-            $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery.marquee.min.js"></script>';
+            $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery.marquee.min.js') . '"></script>';
 
-        $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-layout-scaler.js"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-text-render.js"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-text-render.js') . '"></script>';
 
         $javaScriptContent .= '<script type="text/javascript">';
         $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
-        $javaScriptContent .= '   var items = ' . \Kit::jsonEncode($items) . ';';
+        $javaScriptContent .= '   var items = ' . json_encode($items) . ';';
         $javaScriptContent .= '   $(document).ready(function() { ';
         $javaScriptContent .= '       $("body").xiboLayoutScaler(options); $("#content").xiboTextRender(options, items); ';
         $javaScriptContent .= '   }); ';
@@ -985,13 +620,10 @@ class Twitter extends Module
         // Replace the Head Content with our generated javascript
         $data['javaScript'] = $javaScriptContent;
 
-        // Replace the Body Content with our generated text
-        $template = str_replace('<!--[[[BODYCONTENT]]]-->', '', $template);
-
-        return $template;
+        return $this->renderTemplate($data);
     }
 
-    public function IsValid()
+    public function isValid()
     {
         // Using the information you have in your module calculate whether it is valid or not.
         // 0 = Invalid
