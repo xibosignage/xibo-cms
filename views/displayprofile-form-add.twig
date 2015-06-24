@@ -49,8 +49,11 @@ $formFields[] = Form::AddText('name', __('Name'), NULL,
 
                 {% set title %}{% trans "Client Type" %}{% endset %}
                 {% set helpText %}{% trans "What type of display client is this profile intended for?" %}{% endset %}
-                {{ forms.dropdown() }} 
+                {{ forms.dropdown("displayProfileId", "single", title,"", clientTypes, "displayProfileId", "displayProfile", helpText) }} 
 
+                {% set title %}{% trans "Default Profile?" %}{% endset %}
+                {% set helpText %}{% trans "Is this the default profile for all Displays of this type? Only 1 profile can be the default." %}{% endset %}
+                {{ forms.checkbox("isDefault", title, isDefault, helpText) }}
             </form>
         </div>
     </div>
