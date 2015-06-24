@@ -66,7 +66,8 @@ class ResolutionTest extends TestCase
         $response = \Requests::put($this->url('/resolution/' . $resolutionId), [], [
             'resolution' => $name,
             'width' => 1920,
-            'height' => 1080
+            'height' => 1080,
+            'enabled' => 1
         ]);
 
         $this->assertSame(200, $response->status_code);
@@ -74,7 +75,15 @@ class ResolutionTest extends TestCase
         $object = json_decode($response->body);
 
         $this->assertObjectHasAttribute('data', $object);
+
+        // Check the name has need edited
         $this->assertSame($name, $object->data[0]->resolution);
+
+        // Deeper check by querying for resolution again
+        $object = $this->getResolution($resolutionId);
+
+        $this->assertSame($name, $object->resolution);
+        $this->assertSame(1, $object->enabled, 'Enabled has been switched');
 
         return $resolutionId;
     }
@@ -88,5 +97,24 @@ class ResolutionTest extends TestCase
         $response = \Requests::delete($this->url('/resolution/' . $resolutionId));
 
         $this->assertSame(200, $response->status_code, $response->body);
+    }
+
+    /**
+     * Get a resolution back
+     * @param int $resolutionId
+     * @return mixed
+     */
+    private function getResolution($resolutionId)
+    {
+        $response = \Requests::get($this->url('/resolution', ['resolutionId' => $resolutionId]));
+
+        $this->assertSame(200, $response->status_code);
+        $this->assertNotEmpty($response->body);
+
+        $object = json_decode($response->body);
+
+        $this->assertObjectHasAttribute('data', $object, $response->body);
+
+        return $object->data[0];
     }
 }

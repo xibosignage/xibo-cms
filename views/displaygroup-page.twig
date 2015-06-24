@@ -73,17 +73,63 @@
             var mediaTable = $("#mediaAssignments").DataTable({
                 serverSide: true,
                 searchDelay: 3000,
-                "order": [[ 1, "asc"]],
+                "order": [[ 0, "asc"]],
                 "filter": false,
-                ajax: "{{ urlFor("library.search") }}",
+                ajax: {
+                    "url": "{{ urlFor("library.search") }}",
+                    "data": function(d) {
+                        $.extend(d, $("#mediaAssignments").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                    }
+                },
                 "columns": [
-                    { "data": "medaiId" },
-                    { "data": "name" }
+                    { "data": "name" },
+                    { "data": "mediaType" },
+                    {
+                        "sortable": false,
+                        "data": function(data, type, row, meta) {
+                            if (type != "display")
+                                return "";
+
+                            // Create a click-able span
+                            return "<a href=\"#\" class=\"assignItem\"><span class=\"glyphicon glyphicon-plus-sign\"></a>";
+                        }
+                    }
                 ]
             });
 
-            mediaTable.on('draw', dataTableDraw);
+            mediaTable.on('draw', function (e, settings) {
+                dataTableDraw(e, settings);
+
+                // Clicky on the +spans
+                $(".assignItem", "#mediaAssignments").click(function() {
+                    // Get the row that this is in.
+                    var data = mediaTable.row($(this).closest("tr")).data();
+
+                    // Construct a new list item for the lower list and append it.
+                    var newItem = $("<li/>", {
+                        "text": data.name,
+                        "data-media-id": data.mediaId,
+                        "class": "li-sortable",
+                        "dblclick": function(){
+                            $(this).remove();
+                        }
+                    });
+
+                    newItem.appendTo("#FileAssociationsSortable");
+
+                    // Add a span to that new item
+                    $("<span/>", {
+                        "class": "glyphicon glyphicon-minus-sign",
+                        click: function(){
+                            $(this).parent().remove();
+                        }
+                    }).appendTo(newItem);
+                });
+            });
             mediaTable.on('processing.dt', dataTableProcessing);
+
+            // Make our little list sortable
+            $("#FileAssociationsSortable").sortable();
         }
     </script>
 {% endblock %}

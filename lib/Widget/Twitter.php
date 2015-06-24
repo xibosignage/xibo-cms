@@ -21,15 +21,14 @@
  */
 namespace Xibo\Widget;
 
+use Xibo\Factory\MediaFactory;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Cache;
 use Xibo\Helper\Config;
 use Xibo\Helper\Date;
-use Xibo\Helper\Form;
 use Xibo\Helper\Log;
+use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
-
-include_once('modules/3rdparty/emoji.php');
 
 class Twitter extends Module
 {
@@ -38,7 +37,7 @@ class Twitter extends Module
     /**
      * Install or Update this module
      */
-    public function InstallOrUpdate()
+    public function installOrUpdate()
     {
         // This function should update the `module` table with information about your module.
         // The current version of the module in the database can be obtained in $this->schemaVersion
@@ -59,7 +58,7 @@ class Twitter extends Module
         }
 
         // Check we are all installed
-        $this->InstallFiles();
+        $this->installFiles();
 
         // After calling either Install or Update your code schema version will match the database schema version and this method will not be called
         // again. This means that if you want to change those fields in an update to your module, you will need to increment your codeSchemaVersion.
@@ -68,14 +67,13 @@ class Twitter extends Module
     /**
      * Install Files
      */
-    public function InstallFiles()
+    public function installFiles()
     {
-        $media = new Media();
-        $media->addModuleFile('modules/preview/vendor/jquery-1.11.1.min.js');
-        $media->addModuleFile('modules/preview/xibo-text-render.js');
-        $media->addModuleFile('modules/preview/xibo-layout-scaler.js');
-        $media->addModuleFile('modules/theme/twitter/emoji.css');
-        $media->addModuleFile('modules/theme/twitter/emoji.png');
+        MediaFactory::createModuleFile('modules/vendor/jquery-1.11.1.min.js')->save();
+        MediaFactory::createModuleFile('modules/xibo-text-render.js')->save();
+        MediaFactory::createModuleFile('modules/xibo-layout-scaler.js')->save();
+        MediaFactory::createModuleFile('modules/twitter/emoji.css')->save();
+        MediaFactory::createModuleFile('modules/twitter/emoji.png')->save();
     }
 
     /**
@@ -84,7 +82,7 @@ class Twitter extends Module
     public function loadTemplates()
     {
         // Scan the folder for template files
-        foreach (glob('modules/theme/twitter/*.template.json') as $template) {
+        foreach (glob('modules/twitter/*.template.json') as $template) {
             // Read the contents, json_decode and add to the array
             $this->module->settings['templates'][] = json_decode(file_get_contents($template), true);
         }
@@ -106,21 +104,21 @@ class Twitter extends Module
     public function settings()
     {
         // Process any module settings you asked for.
-        $apiKey = \Kit::GetParam('apiKey', _POST, _STRING, '');
+        $apiKey = Sanitize::getString('apiKey');
 
         if ($apiKey == '')
-            throw new InvalidArgumentException(__('Missing API Key'));
+            throw new \InvalidArgumentException(__('Missing API Key'));
 
         // Process any module settings you asked for.
-        $apiSecret = \Kit::GetParam('apiSecret', _POST, _STRING, '');
+        $apiSecret = Sanitize::getString('apiSecret');
 
         if ($apiSecret == '')
-            throw new InvalidArgumentException(__('Missing API Secret'));
+            throw new \InvalidArgumentException(__('Missing API Secret'));
 
         $this->module->settings['apiKey'] = $apiKey;
         $this->module->settings['apiSecret'] = $apiSecret;
-        $this->module->settings['cachePeriod'] = \Kit::GetParam('cachePeriod', _POST, _INT, 300);
-        $this->module->settings['cachePeriodImages'] = \Kit::GetParam('cachePeriodImages', _POST, _INT, 24);
+        $this->module->settings['cachePeriod'] = Sanitize::getInt('cachePeriod', 300);
+        $this->module->settings['cachePeriodImages'] = Sanitize::getInt('cachePeriodImages', 24);
 
         // Return an array of the processed settings.
         return $this->module->settings;

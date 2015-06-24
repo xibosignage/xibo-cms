@@ -23,6 +23,7 @@
 namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
+use Xibo\Helper\Log;
 use Xibo\Storage\PDOConnect;
 
 class Resolution implements \JsonSerializable
@@ -38,8 +39,8 @@ class Resolution implements \JsonSerializable
     public $designerWidth;
     public $designerHeight;
 
-    public $version;
-    public $enabled;
+    public $version = 2;
+    public $enabled = 1;
 
     public function getId()
     {
@@ -79,6 +80,8 @@ class Resolution implements \JsonSerializable
             $this->add();
         else
             $this->edit();
+
+        Log::audit('Resolution', $this->resolutionId, 'Saving', $this);
     }
 
     public function delete()
@@ -89,15 +92,16 @@ class Resolution implements \JsonSerializable
     private function add()
     {
         $this->resolutionId = PDOConnect::insert('
-          INSERT INTO `resolution` (resolution, width, height, intended_width, intended_height, version)
-            VALUES (:resolution, :width, :height, :intended_width, :intended_height, :version)
+          INSERT INTO `resolution` (resolution, width, height, intended_width, intended_height, version, enabled)
+            VALUES (:resolution, :width, :height, :intended_width, :intended_height, :version, :enabled)
         ', [
             'resolution' => $this->resolution,
             'width' => $this->designerWidth,
             'height' => $this->designerHeight,
             'intended_width' => $this->width,
             'intended_height' => $this->height,
-            'version' => 2
+            'version' => $this->version,
+            'enabled' => $this->enabled
         ]);
     }
 
