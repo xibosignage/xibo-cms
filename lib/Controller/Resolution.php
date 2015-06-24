@@ -26,6 +26,7 @@ use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\ResolutionFactory;
 use Xibo\Helper\Form;
 use Xibo\Helper\Help;
+use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Session;
 
@@ -65,7 +66,8 @@ class Resolution extends Base
 
         // Show enabled
         $filter = [
-            'enabled' => Session::Set('resolution', 'filterEnabled', Sanitize::getInt('filterEnabled', -1))
+            'enabled' => Session::Set('resolution', 'filterEnabled', Sanitize::getInt('filterEnabled', -1)),
+            'resolutionId' => Sanitize::getInt('resolutionId')
         ];
 
         $resolutions = ResolutionFactory::query($this->gridRenderSort(), $this->gridRenderFilter($filter));
@@ -173,6 +175,8 @@ class Resolution extends Base
 
         if (!$this->getUser()->checkEditable($resolution))
             throw new AccessDeniedException();
+
+        Log::debug(var_export($this->getApp()->request()->put(), true));
 
         $resolution->resolution = Sanitize::getString('resolution');
         $resolution->width = Sanitize::getInt('width');
