@@ -72,7 +72,6 @@ class DisplayProfile extends Base
         $this->getState()->setData([
             'clientTypes' => array(
                 array('key' => 'windows', 'value' => 'Windows'),
-                array('key' => 'ubuntu', 'value' => 'Ubuntu'),
                 array('key' => 'android', 'value' => 'Android')
             )
         ]);

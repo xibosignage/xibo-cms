@@ -16,8 +16,8 @@ class TestCase extends \PHPUnit_Framework_TestCase
         $this->url = 'http://172.28.128.3/api';
     }
 
-    protected function url($url)
+    protected function url($url, $data = [])
     {
-         return $this->url . $url;
+         return $this->url . $url . ((is_array($data) && count($data) > 0) ? '?' . http_build_query($data) : '');
     }
 }
