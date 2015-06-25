@@ -15,7 +15,7 @@ Theme::Set('form_fields', array(Form::AddMessage(__('Are you sure you want to de
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Save" %}, $("#<<id>>").submit()
+    {% trans "Save" %}, $("#displayDeleteForm").submit()
     {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
 {% endblock %}
@@ -23,8 +23,8 @@ Theme::Set('form_fields', array(Form::AddMessage(__('Are you sure you want to de
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="<<id>>" class="XiboForm form-horizontal" method="delete" action="{{ urlFor("display.delete", {id: display.displayId }) }}">
-
+            <form id="displayDeleteForm" class="XiboForm form-horizontal" method="delete" action="{{ urlFor("display.delete", {id: display.displayId }) }}">
+                {{forms.message("Are you sure you want to delete this display? This cannot be undone") }}
             </form>
         </div>
     </div>

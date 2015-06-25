@@ -25,7 +25,7 @@ $formFields[] = Form::AddText('resolution', __('Resolution'), $resolution->resol
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Save" %}, $("#<<id>>").submit()
+    {% trans "Save" %}, $("#resolutionEditForm").submit()
     {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
 {% endblock %}
@@ -33,8 +33,18 @@ $formFields[] = Form::AddText('resolution', __('Resolution'), $resolution->resol
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="<<id>>" class="XiboForm form-horizontal" method="put" action="{{ urlFor("resolution.edit", {"id": resolution.resolutionId}) }}">
-
+            <form id="resolutionEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("resolution.edit", {"id": resolution.resolutionId}) }}">
+                        {% set title %}{% trans "Resolution" %}{% endset %}
+                        {% set helpText %}{% trans "A name for this Resolution" %}{% endset %}
+                        {{ forms.text("resolution", title, resolution.resolution, helpText) }}
+                        
+                        {% set title %}{% trans "Width" %}{% endset %}
+                        {% set helpText %}{% trans "The Width for this Resolution" %}{% endset %}
+                        {{ forms.text("width", title, resolution.width, helpText) }}
+                       
+                        {% set title %}{% trans "Height" %}{% endset %}
+                        {% set helpText %}{% trans "The Height for this Resolution" %}{% endset %}
+                        {{ forms.text("height", title, resolution.height, helpText) }}
             </form>
         </div>
     </div>

@@ -15,7 +15,7 @@
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Save" %}, $("#<<id>>").submit()
+    {% trans "Save" %}, $("#displayGroupVersionForm").submit()
     {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
 {% endblock %}
@@ -23,7 +23,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="<<id>>" class="XiboForm form-horizontal" method="post" action="{{ urlFor("displayGroup.version", {id: displayGroup.displayGroupId}) }}">
+            <form id="displayGroupVersionForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("displayGroup.version", {id: displayGroup.displayGroupId}) }}">
                 {% set title %}{% trans "Installer File" %}{% endset %}
                 {% set helpText %}{% trans "Select the Installer File that should be pushed to the Players listed and installed." %}{% endset %}
                 {{ forms.dropdown("mediaId", "single", title, "", media, "mediaId", "media", helpText) }}
