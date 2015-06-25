@@ -101,8 +101,14 @@ class AuditLogFactory
             $order .= 'ORDER BY ' . implode(', ', $sortOrder) . ' ';
         }
 
+        $limit = '';
+        // Paging
+        if (Sanitize::getInt('start') !== null && Sanitize::getInt('length') !== null) {
+            $limit = ' LIMIT ' . intval(Sanitize::getInt('start')) . ', ' . Sanitize::getInt('length', 10);
+        }
+
         // The final statements
-        $sql = $select . $body . $order;
+        $sql = $select . $body . $order . $limit;
 
         Log::sql($sql, $params);
 
@@ -124,6 +130,13 @@ class AuditLogFactory
 
             $entries[] = $auditLog;
         }
+
+        // Paging
+        if ($limit != '' && count($entries) > 0) {
+            $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
+            self::$_countLast = intval($results[0]['total']);
+        }
+
         return $entries;
     }
 }

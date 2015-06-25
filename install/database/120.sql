@@ -166,6 +166,8 @@ CREATE TABLE IF NOT EXISTS `widgetoption` (
 
 ALTER TABLE  `module` ADD  `viewPath` VARCHAR( 254 ) NOT NULL DEFAULT  '../modules';
 
+DELETE FROM `setting` WHERE setting = 'USE_INTL_DATEFORMAT';
+
 UPDATE `version` SET `app_ver` = '1.8.0-alpha', `XmdsVersion` = 4, `XlfVersion` = 2;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';
 UPDATE `version` SET `DBVersion` = '120';

@@ -25,9 +25,9 @@ use Kit;
 use Xibo\Factory\AuditLogFactory;
 use Xibo\Helper\Date;
 use Xibo\Helper\Form;
+use Xibo\Helper\Help;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Session;
-use Xibo\Helper\Theme;
 
 class AuditLog extends Base
 {
@@ -111,43 +111,33 @@ class AuditLog extends Base
         }
 
         $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = AuditLogFactory::countLast();
         $this->getState()->setData($rows);
     }
 
     /**
      * Output CSV Form
      */
-    public function outputCsvForm()
+    public function exportForm()
     {
-        Theme::Set('form_id', 'OutputCsvForm');
-        Theme::Set('form_action', 'index.php?p=auditlog&q=OutputCSV');
-
-        $formFields = array();
-        $formFields[] = Form::AddText('filterFromDt', __('From Date'), Date::getLocalDate(time() - (86400 * 35), 'Y-m-d'), NULL, 'f');
-        $formFields[] = Form::AddText('filterToDt', __('To Date'), Date::getLocalDate(null, 'Y-m-d'), NULL, 't');
-
-        Theme::Set('header_text', __('Audit Trail'));
-        Theme::Set('form_fields', $formFields);
-        Theme::Set('form_class', 'XiboManualSubmit');
-
-        $this->getState()->SetFormRequestResponse(NULL, __('Output Audit Trail as CSV'), '550px', '275px');
-        $this->getState()->AddButton(__('Export'), '$("#OutputCsvForm").submit()');
-        $this->getState()->AddButton(__('Close'), 'XiboDialogClose()');
-        $this->getState()->Respond();
+        $this->getState()->template = 'auditlog-form-export';
+        $this->getState()->setData([
+            'help' => Help::Link('AuditLog', 'Export')
+        ]);
     }
 
     /**
      * Outputs a CSV of audit trail messages
      */
-    public function outputCSV()
+    public function export()
     {
         // We are expecting some parameters
-        $filterFromDt = Kit::GetParam('filterFromDt', _REQUEST, _STRING);
-        $filterToDt = Kit::GetParam('filterToDt', _REQUEST, _STRING);
+        $filterFromDt = Sanitize::getString('filterFromDt');
+        $filterToDt = Sanitize::getString('filterToDt');
 
-        $fromTimestamp = DateTime::createFromFormat('Y-m-d', $filterFromDt);
+        $fromTimestamp = Date::fromString($filterFromDt);
         $fromTimestamp->setTime(0, 0, 0);
-        $toTimestamp = DateTime::createFromFormat('Y-m-d', $filterToDt);
+        $toTimestamp = Date::fromString($filterToDt);
         $toTimestamp->setTime(0, 0, 0);
 
         $search = [
@@ -178,6 +168,7 @@ class AuditLog extends Base
         }
 
         fclose($out);
-        exit;
+
+        $this->setNoOutput(true);
     }
 }

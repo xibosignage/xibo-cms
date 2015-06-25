@@ -20,30 +20,30 @@
  */
 namespace Xibo\Helper;
 use DateTime;
-use IntlDateFormatter;
 use jDateTime;
 
 
 class Date
 {
+    private static $timezones = null;
+
     public static function getClock()
     {
-        return date("H:i T");
+        return Date::getLocalDate(null, 'H:i T');
     }
 
     public static function getSystemClock()
     {
-        return gmdate("H:i T");
+        return Date::getSystemDate(null, 'H:i T');
     }
 
     /**
      * Get a local date
      * @param int $timestamp
      * @param string $format
-     * @param bool $allowInternational
-     * @return bool|string
+     * @return string
      */
-    public static function getLocalDate($timestamp = NULL, $format = NULL, $allowInternational = true)
+    public static function getLocalDate($timestamp = NULL, $format = NULL)
     {
         if ($timestamp == NULL)
             $timestamp = time();
@@ -55,18 +55,16 @@ class Date
             return JDateTime::date($format, $timestamp, false);
         }
         else {
-
-            // Do we have the international date formatter?
-            if ($allowInternational && Config::GetSetting('USE_INTL_DATEFORMAT') == 1 && Config::CheckIntlDateFormat()) {
-                $formatter = new IntlDateFormatter(Config::GetSetting('DEFAULT_LANGUAGE'), IntlDateFormatter::FULL, IntlDateFormatter::FULL, Config::GetSetting('DEFAULT_TIMEZONE'), IntlDateFormatter::GREGORIAN, $format);
-                return $formatter->format($timestamp);
-            }
-            else {
-                return date($format, $timestamp);
-            }
+            return \Jenssegers\Date\Date::createFromTimestamp($timestamp)->format($format);
         }
     }
 
+    /**
+     * Get a system date
+     * @param null $timestamp
+     * @param null $format
+     * @return string
+     */
     public static function getSystemDate($timestamp = NULL, $format = NULL)
     {
         if ($timestamp == NULL)
@@ -79,6 +77,12 @@ class Date
         return gmdate($format, $timestamp);
     }
 
+    /**
+     * Get midnight system date
+     * @param string $timestamp
+     * @param string $format
+     * @return string
+     */
     public static function getMidnightSystemDate($timestamp = NULL, $format = NULL)
     {
         if ($timestamp == NULL)
@@ -117,26 +121,34 @@ class Date
      */
     public static function getTimestampFromString($date)
     {
-        $timestamp = strtotime($date);
+        return Date::fromString($date)->format('U');
+    }
 
-        // If we are Jalali, then we want to convert from Jalali back to Gregorian. Otherwise assume input is already Gregorian.
-        if (Config::GetSetting('CALENDAR_TYPE') == 'Jalali') {
+    /**
+     * Get Date from String
+     * @param $string
+     * @return \Jenssegers\Date\Date
+     */
+    public static function fromString($string)
+    {
+        if (Date::getCalendarType() == 'Jalali') {
+            // If we are Jalali, then we want to convert from Jalali back to Gregorian.
             // Split the time stamp into its component parts and pass it to the conversion.
-            $date = trim($date);
+            $date = trim($string);
 
             $split = (stripos($date, ' ') > 0) ? explode(' ', $date) : array($date, '');
 
             $dateSplit = explode('-', $split[0]);
+            $timeSplit = explode(':', $split[1]);
 
             $date = jDateTime::toGregorian($dateSplit[0], $dateSplit[1], $dateSplit[2]);
 
-            //Debug::Audit('Converted to Gregorian from Jalali: ' . var_export($date, true));
-
-            // Convert that back into a date using strtotime - the date is now Gregorian
-            $timestamp = strtotime($date[0] . '-' . $date[1] . '-' . $date[2] . ' ' . $split[1]);
+            // Create a date out of that string.
+            return \Jenssegers\Date\Date::create($date[0], $date[1], $date[2], $timeSplit[0], $timeSplit[1]);
         }
-
-        return $timestamp;
+        else {
+            return new \Jenssegers\Date\Date($string);
+        }
     }
 
     public static function getTimestampFromTimeString($time)
@@ -159,8 +171,11 @@ class Date
         return strtotime($date);
     }
 
-    private static $timezones = null;
 
+    /**
+     * Timezone identifiers
+     * @return array
+     */
     public static function timezoneList()
     {
         if (self::$timezones === null) {

@@ -23,6 +23,7 @@
 namespace Xibo\Middleware;
 
 
+use Jenssegers\Date\Date;
 use Slim\Middleware;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Helper\ApplicationState;
@@ -40,6 +41,9 @@ class State extends Middleware
 
         // Setup the translations for gettext
         Translate::InitLocale();
+
+        // Configure the locale for date/time
+        Date::setLocale(Translate::GetLocale(2));
 
         // Inject
         // The state of the application response

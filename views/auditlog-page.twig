@@ -57,7 +57,22 @@
 {% endblock %}
 
 {% block javaScript %}
+    {% raw %}
+    <script type="text/x-handlebars-template" id="table-array-viewer">
+        <a class="arrayViewerToggle" href="#"><span class="fa fa-search"></span></a>
+        <table class="arrayViewer">
+            {{#each items}}
+            <tr>
+                <td>{{ @key }}</td>
+                <td>{{ this }}</td>
+            </tr>
+            {{/each}}
+        </table>
+    </script>
+    {% endraw %}
     <script type="text/javascript">
+
+        var arrayViewer = Handlebars.compile($("#table-array-viewer").html());
 
         var table = $("#logs").DataTable({
             serverSide: true,
@@ -76,11 +91,25 @@
                 { "data": "userName" },
                 { "data": "entity" },
                 { "data": "message" },
-                { "data": "objectAfter" }
+                {
+                    "data": function(data, type) {
+                        if (type != "display")
+                            return data.status;
+
+                        return arrayViewer({"items": data.objectAfter});
+                    },
+                    "sortable": false
+                }
             ]
         });
 
-        table.on('draw', dataTableDraw);
+        table.on('draw', function(e, settings) {
+            dataTableDraw(e, settings);
+
+            $(".arrayViewerToggle").click(function() {
+                $(this).parent().find(".arrayViewer").toggle();
+            });
+        });
         table.on('processing.dt', dataTableProcessing);
 
         $("#refreshLog").click(function() {
