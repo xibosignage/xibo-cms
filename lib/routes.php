@@ -204,3 +204,9 @@ $app->delete('/help/delete/:id', '\Xibo\Controller\Help:delete')->name('help.del
 // Settings
 //
 $app->put('/admin', '\Xibo\Controller\Settings:update')->name('settings.update');
+
+//
+// Audit Log
+//
+$app->get('/audit', '\Xibo\Controller\AuditLog:grid')->name('auditLog.search');
+$app->get('/audit/export', '\Xibo\Controller\AuditLog:export')->name('auditLog.export');

@@ -540,8 +540,6 @@ class Ticker extends Module
         Log::notice('Then template for each row is: ' . $text);
 
         // Set an expiry time for the media
-        $media = new Media();
-        $layout = new Layout();
         $expires = time() + ($this->getOption('updateInterval', 3600) * 60);
 
         // Combine the column id's with the dataset data
@@ -559,7 +557,7 @@ class Ticker extends Module
         }
 
         // Get the dataset results
-        $dataSet = new DataSet();
+        $dataSet = new \DataSet();
         if (!$dataSetResults = $dataSet->DataSetResults($dataSetId, implode(',', $columnIds), $filter, $ordering, $lowerLimit, $upperLimit, $displayId)) {
             return '';
         }
@@ -589,12 +587,16 @@ class Ticker extends Module
                 // Check in the columns array to see if this is a special one
                 if ($columnMap[$header]['DataTypeID'] == 4) {
                     // Download the image, alter the replace to wrap in an image tag
-                    $file = $media->addModuleFileFromUrl(str_replace(' ', '%20', htmlspecialchars_decode($replace)), 'ticker_dataset_' . md5($dataSetId . $columnMap[$header]['DataSetColumnID'] . $replace), $expires);
+                    $file = MediaFactory::createModuleFile('ticker_dataset_' . md5($dataSetId . $columnMap[$header]['DataSetColumnID'] . $replace), str_replace(' ', '%20', htmlspecialchars_decode($replace)));
+                    $file->isRemote = true;
+                    $file->expires = $expires;
+                    $file->save();
 
                     // Tag this layout with this file
-                    $this->assignMedia($file['mediaId']);
+                    $this->assignMedia($file->mediaId);
 
-                    $replace = ($isPreview) ? '<img src="index.php?index.php?p=content&q=getFile&mediaid=' . $file['mediaId'] . '" />' : '<img src="' . $file['storedAs'] . '" />';
+                    $url = $this->getApp()->urlFor('library.download', ['id' => $file->mediaId]);
+                    $replace = ($isPreview) ? '<img src="' . $url . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" />' : '<img src="' . $file->storedAs . '" />';
                 }
 
                 $rowString = str_replace('[' . $sub . ']', $replace, $rowString);

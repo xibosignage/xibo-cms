@@ -305,4 +305,5 @@ $app->get('/stats/form/export', '\Xibo\Controller\Stats:exportForm')->name('stat
 //
 // Audit Log
 //
-$app->get('/audit', '\Xibo\Controller\AuditLog:displayPage')->name('auditlog.view');
+$app->get('/audit/view', '\Xibo\Controller\AuditLog:displayPage')->name('auditlog.view');
+$app->get('/audit/form/export', '\Xibo\Controller\AuditLog:exportForm')->name('auditLog.export.form');

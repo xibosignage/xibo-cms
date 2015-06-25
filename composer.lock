@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "ec9e62ed9269d341bdcab52b0fce67a1",
+    "hash": "9ac1c6a38c216de7a917be0e823c8340",
     "packages": [
         {
             "name": "abraham/twitteroauth",
@@ -815,6 +815,62 @@
                 "laravel"
             ],
             "time": "2015-05-24 11:53:20"
+        },
+        {
+            "name": "jenssegers/date",
+            "version": "v3.0.5",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/jenssegers/laravel-date.git",
+                "reference": "4d23b2000e156dd94be7c404cf3cdee5539e91b3"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/jenssegers/laravel-date/zipball/4d23b2000e156dd94be7c404cf3cdee5539e91b3",
+                "reference": "4d23b2000e156dd94be7c404cf3cdee5539e91b3",
+                "shasum": ""
+            },
+            "require": {
+                "nesbot/carbon": "~1.0",
+                "php": ">=5.3.3",
+                "symfony/translation": "~2.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "~4.0",
+                "satooshi/php-coveralls": "~0.6"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "3.0-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Jenssegers\\Date\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Jens Segers",
+                    "homepage": "http://jenssegers.be"
+                }
+            ],
+            "description": "A date library to help you work with dates in different languages",
+            "keywords": [
+                "carbon",
+                "date",
+                "datetime",
+                "i18n",
+                "laravel",
+                "time",
+                "translation"
+            ],
+            "time": "2015-06-04 09:21:04"
         },
         {
             "name": "jeremeamia/SuperClosure",

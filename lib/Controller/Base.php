@@ -209,8 +209,10 @@ class Base
                 $data['currentUser'] = $this->getUser();
                 $view = $app->view()->getInstance()->render($state->template . '.twig', $data);
 
-                if (!$view = json_decode($view, true))
+                if (!$view = json_decode($view, true)) {
+                    Log::error('Problem with Template: View = %s ', $state->template);
                     throw new ControllerNotImplemented(__('Problem with Form Template'));
+                }
 
                 $state->html = $view['html'];
                 $state->dialogTitle = trim($view['title']);

@@ -23,6 +23,9 @@
 namespace Xibo\Factory;
 
 use Xibo\Entity\AuditLog;
+use Xibo\Helper\Log;
+use Xibo\Helper\Sanitize;
+use Xibo\Storage\PDOConnect;
 
 class AuditLogFactory
 {
@@ -45,10 +48,10 @@ class AuditLogFactory
         $select = ' SELECT logId, logDate, user.userName, message, objectAfter, entity, entityId, auditlog.userId ';
         $body = 'FROM `auditlog` LEFT OUTER JOIN user ON user.userId = auditlog.userId WHERE 1 = 1 ';
 
-        if (\Kit::GetParam('search', $filterBy, _STRING) != '') {
+        if (Sanitize::getString('search', $filterBy) != null) {
             // tokenize
             $i = 0;
-            foreach (explode(' ', \Kit::GetParam('search', $filterBy, _STRING)) as $searchTerm) {
+            foreach (explode(' ', Sanitize::getString('search', $filterBy)) as $searchTerm) {
                 $i++;
 
                 if (stripos($searchTerm, '|') > -1) {
@@ -98,12 +101,18 @@ class AuditLogFactory
             $order .= 'ORDER BY ' . implode(', ', $sortOrder) . ' ';
         }
 
+        $limit = '';
+        // Paging
+        if (Sanitize::getInt('start') !== null && Sanitize::getInt('length') !== null) {
+            $limit = ' LIMIT ' . intval(Sanitize::getInt('start')) . ', ' . Sanitize::getInt('length', 10);
+        }
+
         // The final statements
-        $sql = $select . $body . $order;
+        $sql = $select . $body . $order . $limit;
 
-        \Debug::sql($sql, $params);
+        Log::sql($sql, $params);
 
-        $dbh = \PDOConnect::init();
+        $dbh = PDOConnect::init();
 
         $sth = $dbh->prepare($sql);
         $sth->execute($params);
@@ -121,6 +130,13 @@ class AuditLogFactory
 
             $entries[] = $auditLog;
         }
+
+        // Paging
+        if ($limit != '' && count($entries) > 0) {
+            $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
+            self::$_countLast = intval($results[0]['total']);
+        }
+
         return $entries;
     }
 }

@@ -210,10 +210,10 @@ class Text extends Module
         return $this->renderTemplate($data);
     }
 
-    public function HoverPreview()
+    public function hoverPreview()
     {
         // Default Hover window contains a thumbnail, media type and duration
-        $output = parent::HoverPreview();
+        $output = parent::hoverPreview();
 
         $output .= '<div class="hoverPreview">';
         $output .= '    ' . $this->getRawNode('text', null);;
@@ -222,12 +222,7 @@ class Text extends Module
         return $output;
     }
 
-    public function GetName()
-    {
-        return $this->GetOption('name');
-    }
-
-    public function IsValid()
+    public function isValid()
     {
         // Text rendering will be valid
         return 1;
