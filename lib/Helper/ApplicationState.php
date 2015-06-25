@@ -22,6 +22,7 @@ namespace Xibo\Helper;
 
 class ApplicationState
 {
+    public static $appName;
     public $template;
     public $message;
     public $success;

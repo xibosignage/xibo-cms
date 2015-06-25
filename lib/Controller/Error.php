@@ -48,8 +48,8 @@ class Error extends Base
             case 'api':
             case 'test':
 
-                $this->getState()->setData([
-                    'error' => true,
+                $this->getState()->hydrate([
+                    'success' => false,
                     'message' => (($handled) ? $e->getMessage() : __('Unexpected Error, please contact support.'))
                 ]);
 

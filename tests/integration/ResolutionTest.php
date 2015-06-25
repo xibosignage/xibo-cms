@@ -14,20 +14,18 @@ class ResolutionLocalWebTest extends LocalWebTestCase
     public function __construct()
     {
         parent::__construct('Resolution Test');
-
-        $this->start();
     }
 
     public function testListAll()
     {
-        $this->get('/resolution');
+        $this->client->get('/resolution');
 
-        $this->assertSame(200, $this->app->response->status());
-        $this->assertNotEmpty($this->app->response->body());
+        $this->assertSame(200, $this->client->response->status());
+        $this->assertNotEmpty($this->client->response->body());
 
-        $object = json_decode($this->app->response->body());
+        $object = json_decode($this->client->response->body());
 
-        $this->assertObjectHasAttribute('data', $object, $this->app->response->body());
+        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
     }
 
     /**
@@ -37,23 +35,20 @@ class ResolutionLocalWebTest extends LocalWebTestCase
     public function testAdd()
     {
         $name = Random::generateString(8, 'phpunit');
-        echo "response body: ";
 
-        $this->post('/resolution', [
+        $response = $this->client->post('/resolution', [
             'resolution' => $name,
             'width' => 1920,
             'height' => 1080
         ]);
 
+        $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
 
-        $this->assertSame(200, $this->app->response->status(), $this->app->response->body());
-
-        $object = json_decode($this->app->response->body());
+        $object = json_decode($this->client->response->body());
 
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
         $this->assertSame($name, $object->data[0]->resolution);
-
         return $object->id;
     }
 
@@ -69,16 +64,16 @@ class ResolutionLocalWebTest extends LocalWebTestCase
 
         $name = Random::generateString(8, 'phpunit');
 
-        $this->put('/resolution/' . $resolutionId, [
+        $this->client->put('/resolution/' . $resolutionId, [
             'resolution' => $name,
             'width' => $resolution->width,
             'height' => $resolution->height,
             'enabled' => 1
         ]);
 
-        $this->assertSame(200, $this->app->response->status());
+        $this->assertSame(200, $this->client->response->status());
 
-        $object = json_decode($this->app->response->body());
+        $object = json_decode($this->client->response->body());
 
         $this->assertObjectHasAttribute('data', $object);
 
@@ -100,16 +95,16 @@ class ResolutionLocalWebTest extends LocalWebTestCase
     {
         $resolution = $this->getResolution($resolutionId);
 
-        $this->put('/resolution/' . $resolutionId, [
+        $this->client->put('/resolution/' . $resolutionId, [
             'resolution' => $resolution->resolution,
             'width' => 1080,
             'height' => 1920,
             'enabled' => $resolution->enabled
         ]);
 
-        $this->assertSame(200, $this->app->response->status());
+        $this->assertSame(200, $this->client->response->status());
 
-        $object = json_decode($this->app->response->body());
+        $object = json_decode($this->client->response->body());
 
         $this->assertObjectHasAttribute('data', $object);
 
@@ -130,9 +125,9 @@ class ResolutionLocalWebTest extends LocalWebTestCase
      */
     public function testDelete($resolutionId)
     {
-        $this->delete('/resolution/' . $resolutionId);
+        $this->client->delete('/resolution/' . $resolutionId);
 
-        $this->assertSame(200, $this->app->response->status(), $this->app->response->body());
+        $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
     }
 
     /**
@@ -142,14 +137,14 @@ class ResolutionLocalWebTest extends LocalWebTestCase
      */
     private function getResolution($resolutionId)
     {
-        $this->get('/resolution', ['resolutionId' => $resolutionId]);
+        $this->client->get('/resolution', ['resolutionId' => $resolutionId]);
 
-        $this->assertSame(200, $this->app->response->status());
-        $this->assertNotEmpty($this->app->response->body());
+        $this->assertSame(200, $this->client->response->status());
+        $this->assertNotEmpty($this->client->response->body());
 
-        $object = json_decode($this->app->response->body());
+        $object = json_decode($this->client->response->body());
 
-        $this->assertObjectHasAttribute('data', $object, $this->app->response->body());
+        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
 
         return $object->data[0];
     }

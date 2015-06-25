@@ -23,6 +23,7 @@
 namespace Xibo\Controller;
 use Slim\Slim;
 use Xibo\Exception\ControllerNotImplemented;
+use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Date;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
@@ -68,7 +69,7 @@ class Base
      */
     public function __construct()
     {
-        $this->app = Slim::getInstance();
+        $this->app = Slim::getInstance(ApplicationState::$appName);
 
         // Reference back to this from the app
         $this->app->controller = $this;
@@ -171,7 +172,7 @@ class Base
         $state = $this->getState();
         $data = $state->getData();
 
-        $grid = ($state->template == 'grid');
+        $grid = ($state->template === 'grid');
 
         if ($grid) {
             $recordsTotal = ($state->recordsTotal == null) ? count($data) : $state->recordsTotal;
@@ -185,17 +186,29 @@ class Base
             ];
         }
 
-        if ($this->isApi()) {
-            // API
-            if (!is_array($data))
-                throw new ControllerNotImplemented();
+        //fwrite(STDERR, 'APP:'. var_export($app->runNo, true));
 
-            if (!$grid) {
+        if ($this->isApi()) {
+            // Success or not
+            if ($state->success) {
+                // API
+                if (!is_array($data))
+                    throw new ControllerNotImplemented();
+
+                if (!$grid) {
+                    $data = [
+                        'message' => $state->message,
+                        'id' => $state->id,
+                        'data' => $data
+                    ];
+                }
+            }
+            else {
                 $data = [
-                    'message' => $state->message,
-                    'id' => $state->id,
-                    'data' => $data
+                    'error' => true,
+                    'message' => $state->message
                 ];
+                fwrite(STDERR, 'APP:'. var_export($data, true));
             }
 
             $this->app->render(200, $data);
@@ -252,7 +265,7 @@ class Base
             // We always return 200's
             $app->status(200);
 
-            echo ($grid) ? json_encode($data) : $state->asJson();
+            $app->response()->body(($grid) ? json_encode($data) : $state->asJson());
         }
         else {
             // WEB Normal

@@ -54,6 +54,12 @@ $app->runNo = \Xibo\Helper\Random::generateString(10);
 $app->add(new \Xibo\Middleware\Storage());
 $app->add(new \Xibo\Middleware\State());
 
+// Configure the Slim error handler
+$app->error(function (\Exception $e) use ($app) {
+    $controller = new \Xibo\Controller\Error();
+    $controller->handler($e);
+});
+
 // oAuth Resource
 /*$sessionStorage = new Storage\SessionStorage();
 $accessTokenStorage = new Storage\AccessTokenStorage();
@@ -69,7 +75,6 @@ $server = new \League\OAuth2\Server\ResourceServer(
 
 $app->add(new \Xibo\Middleware\ApiAuthenticationOAuth($server));*/
 
-$app->add(new JsonApiMiddleware());
 $app->view(new JsonApiView());
 
 // The current user

@@ -50,7 +50,8 @@
     "intervention/imagecache": "~2.3",
     "rmccue/requests": "^1.6",
     "emojione/emojione": "^1.4",
-    "jenssegers/date": "^3.0"
+    "jenssegers/date": "^3.0",
+    "there4/slim-test-helpers": "dev-master"
   },
   "require-dev": {
     "phpunit/phpunit": "~4.0"
