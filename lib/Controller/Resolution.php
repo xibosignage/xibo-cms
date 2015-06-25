@@ -27,7 +27,6 @@ use Xibo\Factory\ResolutionFactory;
 use Xibo\Helper\Form;
 use Xibo\Helper\Help;
 use Xibo\Helper\Sanitize;
-use Xibo\Helper\Session;
 
 
 class Resolution extends Base
@@ -37,9 +36,9 @@ class Resolution extends Base
      */
     function displayPage()
     {
-        if (Session::Get('resolution', 'Filter') == 1) {
+        if ($this->getSession()->get('resolution', 'Filter') == 1) {
             $pinned = 1;
-            $enabled = Session::Get('resolution', 'filterEnabled');
+            $enabled = $this->getSession()->get('resolution', 'filterEnabled');
         } else {
             $enabled = 1;
             $pinned = 0;
@@ -61,11 +60,11 @@ class Resolution extends Base
      */
     function grid()
     {
-        Session::Set('resolution', 'ResolutionFilter', Sanitize::getCheckbox('XiboFilterPinned'));
+        $this->getSession()->set('resolution', 'ResolutionFilter', Sanitize::getCheckbox('XiboFilterPinned'));
 
         // Show enabled
         $filter = [
-            'enabled' => Session::Set('resolution', 'filterEnabled', Sanitize::getInt('filterEnabled', -1)),
+            'enabled' => $this->getSession()->set('resolution', 'filterEnabled', Sanitize::getInt('filterEnabled', -1)),
             'resolutionId' => Sanitize::getInt('resolutionId')
         ];
 

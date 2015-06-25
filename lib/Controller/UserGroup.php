@@ -33,7 +33,6 @@ use Xibo\Helper\Form;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
-use Xibo\Helper\Session;
 
 
 class UserGroup extends Base
@@ -44,9 +43,9 @@ class UserGroup extends Base
     function displayPage()
     {
         // Default options
-        if (Session::Get(get_class(), 'Filter') == 1) {
+        if ($this->getSession()->get(get_class(), 'Filter') == 1) {
             $filter_pinned = 1;
-            $filter_name = Session::Get(get_class(), 'filter_name');
+            $filter_name = $this->getSession()->get(get_class(), 'filter_name');
         } else {
             $filter_pinned = 0;
             $filter_name = NULL;
@@ -70,10 +69,10 @@ class UserGroup extends Base
     {
         $user = $this->getUser();
 
-        Session::Set(get_class(), 'Filter', Sanitize::getCheckbox('XiboFilterPinned', 0));
+        $this->getSession()->set(get_class(), 'Filter', Sanitize::getCheckbox('XiboFilterPinned', 0));
 
         $filterBy = [
-            'group' => Session::Set(get_class(), 'filter_name', Sanitize::getString('filter_name'))
+            'group' => $this->getSession()->set(get_class(), 'filter_name', Sanitize::getString('filter_name'))
         ];
 
         $groups = UserGroupFactory::query($this->gridRenderSort(), $this->gridRenderFilter($filterBy));

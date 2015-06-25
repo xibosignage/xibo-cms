@@ -239,7 +239,7 @@ class Session
         }
     }
 
-    function set_user($key, $userid)
+    function setUser($key, $userid)
     {
         $_SESSION['userid'] = $userid;
 
@@ -257,9 +257,8 @@ class Session
 
     /**
      * Updates the session ID with a new one
-     * @return
      */
-    public function RegenerateSessionID($oldSessionID)
+    public function regenerateSessionId($oldSessionID)
     {
 
         session_regenerate_id(false);
@@ -280,7 +279,7 @@ class Session
         }
     }
 
-    function set_page($key, $lastpage)
+    function setPage($key, $lastpage)
     {
         $_SESSION['pagename'] = $lastpage;
 

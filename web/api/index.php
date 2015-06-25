@@ -22,7 +22,7 @@
 use Xibo\Helper\Config;
 
 DEFINE('XIBO', true);
-define('PROJECT_ROOT', realpath(__DIR__ . '/..'));
+define('PROJECT_ROOT', realpath(__DIR__ . '/../..'));
 
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
@@ -77,7 +77,7 @@ $app->view(new JsonApiView());
 $app->user = \Xibo\Factory\UserFactory::getById(1);
 
 // All routes
-require '../../lib/routes.php';
+require PROJECT_ROOT . '/lib/routes.php';
 
 // Run app
 $app->run();

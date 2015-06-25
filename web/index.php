@@ -54,6 +54,12 @@ $app = new \Slim\Slim(array(
 $app->setName('web');
 $app->runNo = \Xibo\Helper\Random::generateString(10);
 
+// Configure the Slim error handler
+$app->error(function (\Exception $e) use ($app) {
+    $controller = new \Xibo\Controller\Error();
+    $controller->handler($e);
+});
+
 // Twig templating
 $twig = new \Slim\Views\Twig();
 $twig->parserOptions = array(

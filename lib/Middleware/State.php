@@ -29,6 +29,7 @@ use Xibo\Factory\ModuleFactory;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\Config;
+use Xibo\Helper\NullSession;
 use Xibo\Helper\Session;
 use Xibo\Helper\Theme;
 use Xibo\Helper\Translate;
@@ -50,8 +51,13 @@ class State extends Middleware
         $this->app->container->singleton('state', function() { return new ApplicationState(); });
 
         // Create a session
-        $this->app->container->singleton('session', function() { return new Session(); });
-        $this->app->session->Get('nothing');
+        $this->app->container->singleton('session', function() use ($app) {
+            if ($app->getName() == 'web')
+                return new Session();
+            else
+                return new NullSession();
+        });
+        $this->app->session->get('nothing');
 
         // Do we need SSL/STS?
         // Deal with HTTPS/STS config
@@ -73,6 +79,7 @@ class State extends Middleware
             $this->app->config('log.level', \Slim\Log::DEBUG);
         }
         else {
+            $this->app->config('debug', false);
             // TODO: Use the log levels defined in the config
             $this->app->config('log.level', \Slim\Log::ERROR);
             error_reporting(0);

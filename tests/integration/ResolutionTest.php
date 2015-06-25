@@ -36,15 +36,17 @@ class ResolutionLocalWebTest extends LocalWebTestCase
      */
     public function testAdd()
     {
-        $name = \Xibo\Helper\Random::generateString(8, 'phpunit');
+        $name = Random::generateString(8, 'phpunit');
+        echo "response body: ";
 
-        $response = \Requests::post($this->url('/resolution'), [], [
+        $this->post('/resolution', [
             'resolution' => $name,
             'width' => 1920,
             'height' => 1080
         ]);
 
-        $this->assertSame(200, $response->status_code, $this->app->response->body());
+
+        $this->assertSame(200, $this->app->response->status(), $this->app->response->body());
 
         $object = json_decode($this->app->response->body());
 
@@ -67,14 +69,14 @@ class ResolutionLocalWebTest extends LocalWebTestCase
 
         $name = Random::generateString(8, 'phpunit');
 
-        $response = \Requests::put($this->url('/resolution/' . $resolutionId), [], [
+        $this->put('/resolution/' . $resolutionId, [
             'resolution' => $name,
             'width' => $resolution->width,
             'height' => $resolution->height,
             'enabled' => 1
         ]);
 
-        $this->assertSame(200, $response->status_code);
+        $this->assertSame(200, $this->app->response->status());
 
         $object = json_decode($this->app->response->body());
 
@@ -98,14 +100,14 @@ class ResolutionLocalWebTest extends LocalWebTestCase
     {
         $resolution = $this->getResolution($resolutionId);
 
-        $response = \Requests::put($this->url('/resolution/' . $resolutionId), [], [
+        $this->put('/resolution/' . $resolutionId, [
             'resolution' => $resolution->resolution,
             'width' => 1080,
             'height' => 1920,
             'enabled' => $resolution->enabled
         ]);
 
-        $this->assertSame(200, $response->status_code);
+        $this->assertSame(200, $this->app->response->status());
 
         $object = json_decode($this->app->response->body());
 
@@ -128,9 +130,9 @@ class ResolutionLocalWebTest extends LocalWebTestCase
      */
     public function testDelete($resolutionId)
     {
-        $response = \Requests::delete($this->url('/resolution/' . $resolutionId));
+        $this->delete('/resolution/' . $resolutionId);
 
-        $this->assertSame(200, $response->status_code, $this->app->response->body());
+        $this->assertSame(200, $this->app->response->status(), $this->app->response->body());
     }
 
     /**
@@ -140,9 +142,9 @@ class ResolutionLocalWebTest extends LocalWebTestCase
      */
     private function getResolution($resolutionId)
     {
-        $response = \Requests::get($this->url('/resolution', ['resolutionId' => $resolutionId]));
+        $this->get('/resolution', ['resolutionId' => $resolutionId]);
 
-        $this->assertSame(200, $response->status_code);
+        $this->assertSame(200, $this->app->response->status());
         $this->assertNotEmpty($this->app->response->body());
 
         $object = json_decode($this->app->response->body());

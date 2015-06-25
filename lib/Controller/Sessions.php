@@ -22,13 +22,8 @@ namespace Xibo\Controller;
 
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\SessionFactory;
-use Xibo\Helper\ApplicationState;
-use Xibo\Helper\Date;
 use Xibo\Helper\Help;
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
-use Xibo\Helper\Session;
-use Xibo\Helper\Theme;
 use Xibo\Storage\PDOConnect;
 
 
@@ -38,10 +33,10 @@ class Sessions extends Base
     function displayPage()
     {
         // Construct Filter Form
-        if (Session::Get(get_class(), 'Filter') == 1) {
+        if ($this->getSession()->get(get_class(), 'Filter') == 1) {
             $filter_pinned = 1;
-            $filter_type = Session::Get(get_class(), 'filter_type');
-            $filter_fromdt = Session::Get(get_class(), 'filter_fromdt');
+            $filter_type = $this->getSession()->get(get_class(), 'filter_type');
+            $filter_fromdt = $this->getSession()->get(get_class(), 'filter_fromdt');
         } else {
             $filter_pinned = 0;
             $filter_type = '0';
@@ -72,9 +67,9 @@ class Sessions extends Base
         $type = Sanitize::getString('filter_type');
         $fromDt = Sanitize::getString('filter_fromdt');
 
-        Session::Set('sessions', 'Filter', Sanitize::getCheckbox('XiboFilterPinned'));
-        Session::Set('sessions', 'filter_type', $type);
-        Session::Set('sessions', 'filter_fromdt', $fromDt);
+        $this->getSession()->set('sessions', 'Filter', Sanitize::getCheckbox('XiboFilterPinned'));
+        $this->getSession()->set('sessions', 'filter_type', $type);
+        $this->getSession()->set('sessions', 'filter_fromdt', $fromDt);
 
         $sessions = SessionFactory::query($this->gridRenderSort(), $this->gridRenderFilter(['type' => $type, 'fromDt' => $fromDt]));
 

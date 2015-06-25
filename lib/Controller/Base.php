@@ -116,7 +116,7 @@ class Base
      */
     protected function isApi()
     {
-        return ($this->getApp()->getName() == 'api');
+        return ($this->getApp()->getName() != 'web');
     }
 
     /**
@@ -236,10 +236,6 @@ class Base
                             $state->buttons[trim($button[$i])] = trim($button[$i+1]);
                             $i++;
                         }
-
-                        foreach ($button as $key => $value) {
-
-                        }
                     }
                 }
 
@@ -249,10 +245,12 @@ class Base
                     $state->fieldActions = [];
                 } else {
                     // Convert to an array
-                    Log::error($view['fieldActions']);
                     $state->fieldActions = json_decode($view['fieldActions']);
                 }
             }
+
+            // We always return 200's
+            $app->status(200);
 
             echo ($grid) ? json_encode($data) : $state->asJson();
         }

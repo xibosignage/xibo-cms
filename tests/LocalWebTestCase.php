@@ -9,6 +9,7 @@ namespace Xibo\Tests;
 
 use Slim\Environment;
 use Slim\Slim;
+use Xibo\Controller\Error;
 
 class LocalWebTestCase extends \PHPUnit_Framework_TestCase
 {
@@ -34,13 +35,19 @@ class LocalWebTestCase extends \PHPUnit_Framework_TestCase
         $app = new \Slim\Slim(array(
             'mode' => 'testing'
         ));
-        $app->setName('api');
+        $app->setName('test');
         $app->runNo = \Xibo\Helper\Random::generateString(10);
         $app->add(new \Xibo\Middleware\Storage());
         $app->add(new \Xibo\Middleware\State());
 
         $app->add(new \JsonApiMiddleware());
         $app->view(new \JsonApiView());
+
+        // Configure the Slim error handler
+        $app->error(function (\Exception $e) use ($app) {
+            $controller = new Error();
+            $controller->handler($e);
+        });
 
         // Super User
         $app->user = \Xibo\Factory\UserFactory::getById(1);

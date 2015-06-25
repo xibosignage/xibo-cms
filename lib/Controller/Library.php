@@ -34,7 +34,6 @@ use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\Config;
 use Xibo\Helper\Help;
 use Xibo\Helper\Sanitize;
-use Xibo\Helper\Session;
 use Xibo\Helper\XiboUploadHandler;
 use Xibo\Storage\PDOConnect;
 
@@ -47,15 +46,15 @@ class Library extends Base
     function displayPage()
     {
         // Default options
-        if (Session::Get(get_class(), 'Filter') == 1) {
+        if ($this->getSession()->get(get_class(), 'Filter') == 1) {
             $filter_pinned = 1;
-            $filter_name = Session::Get('content', 'filter_name');
-            $filter_type = Session::Get('content', 'filter_type');
-            $filter_retired = Session::Get('content', 'filter_retired');
-            $filter_owner = Session::Get('content', 'filter_owner');
-            $filter_duration_in_seconds = Session::Get('content', 'filter_duration_in_seconds');
-            $showTags = Session::Get('content', 'showTags');
-            $filter_showThumbnail = Session::Get('content', 'filter_showThumbnail');
+            $filter_name = $this->getSession()->get('content', 'filter_name');
+            $filter_type = $this->getSession()->get('content', 'filter_type');
+            $filter_retired = $this->getSession()->get('content', 'filter_retired');
+            $filter_owner = $this->getSession()->get('content', 'filter_owner');
+            $filter_duration_in_seconds = $this->getSession()->get('content', 'filter_duration_in_seconds');
+            $showTags = $this->getSession()->get('content', 'showTags');
+            $filter_showThumbnail = $this->getSession()->get('content', 'filter_showThumbnail');
         } else {
             $filter_pinned = 0;
             $filter_name = NULL;
@@ -109,14 +108,14 @@ class Library extends Base
         $filter_showThumbnail = Sanitize::getCheckbox('filter_showThumbnail');
         $showTags = Sanitize::getCheckbox('showTags');
 
-        Session::Set('content', 'filter_type', $filter_type);
-        Session::Set('content', 'filter_name', $filter_name);
-        Session::Set('content', 'filter_owner', $filter_userid);
-        Session::Set('content', 'filter_retired', $filter_retired);
-        Session::Set('content', 'filter_duration_in_seconds', $filter_duration_in_seconds);
-        Session::Set('content', 'filter_showThumbnail', $filter_showThumbnail);
-        Session::Set('content', 'showTags', $showTags);
-        Session::Set('content', 'Filter', Sanitize::getCheckbox('XiboFilterPinned'));
+        $this->getSession()->set('content', 'filter_type', $filter_type);
+        $this->getSession()->set('content', 'filter_name', $filter_name);
+        $this->getSession()->set('content', 'filter_owner', $filter_userid);
+        $this->getSession()->set('content', 'filter_retired', $filter_retired);
+        $this->getSession()->set('content', 'filter_duration_in_seconds', $filter_duration_in_seconds);
+        $this->getSession()->set('content', 'filter_showThumbnail', $filter_showThumbnail);
+        $this->getSession()->set('content', 'showTags', $showTags);
+        $this->getSession()->set('content', 'Filter', Sanitize::getCheckbox('XiboFilterPinned'));
 
         // Construct the SQL
         $mediaList = MediaFactory::query($this->gridRenderSort(), $this->gridRenderFilter([
