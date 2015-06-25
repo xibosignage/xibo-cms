@@ -7,7 +7,7 @@
 
 namespace Xibo\Tests;
 
-class CampaignTest extends TestCase
+class CampaignLocalWebTest extends LocalWebTestCase
 {
     public function __construct()
     {

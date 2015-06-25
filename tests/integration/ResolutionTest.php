@@ -7,7 +7,9 @@
 
 namespace Xibo\Tests;
 
-class ResolutionTest extends TestCase
+use Xibo\Helper\Random;
+
+class ResolutionLocalWebTest extends LocalWebTestCase
 {
     public function __construct()
     {
@@ -18,14 +20,14 @@ class ResolutionTest extends TestCase
 
     public function testListAll()
     {
-        $response = \Requests::get($this->url('/resolution'));
+        $this->get('/resolution');
 
-        $this->assertSame(200, $response->status_code);
-        $this->assertNotEmpty($response->body);
+        $this->assertSame(200, $this->app->response->status());
+        $this->assertNotEmpty($this->app->response->body());
 
-        $object = json_decode($response->body);
+        $object = json_decode($this->app->response->body());
 
-        $this->assertObjectHasAttribute('data', $object, $response->body);
+        $this->assertObjectHasAttribute('data', $object, $this->app->response->body());
     }
 
     /**
@@ -42,9 +44,9 @@ class ResolutionTest extends TestCase
             'height' => 1080
         ]);
 
-        $this->assertSame(200, $response->status_code, $response->body);
+        $this->assertSame(200, $response->status_code, $this->app->response->body());
 
-        $object = json_decode($response->body);
+        $object = json_decode($this->app->response->body());
 
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
@@ -63,7 +65,7 @@ class ResolutionTest extends TestCase
     {
         $resolution = $this->getResolution($resolutionId);
 
-        $name = \Xibo\Helper\Random::generateString(8, 'phpunit');
+        $name = Random::generateString(8, 'phpunit');
 
         $response = \Requests::put($this->url('/resolution/' . $resolutionId), [], [
             'resolution' => $name,
@@ -74,7 +76,7 @@ class ResolutionTest extends TestCase
 
         $this->assertSame(200, $response->status_code);
 
-        $object = json_decode($response->body);
+        $object = json_decode($this->app->response->body());
 
         $this->assertObjectHasAttribute('data', $object);
 
@@ -105,7 +107,7 @@ class ResolutionTest extends TestCase
 
         $this->assertSame(200, $response->status_code);
 
-        $object = json_decode($response->body);
+        $object = json_decode($this->app->response->body());
 
         $this->assertObjectHasAttribute('data', $object);
 
@@ -128,7 +130,7 @@ class ResolutionTest extends TestCase
     {
         $response = \Requests::delete($this->url('/resolution/' . $resolutionId));
 
-        $this->assertSame(200, $response->status_code, $response->body);
+        $this->assertSame(200, $response->status_code, $this->app->response->body());
     }
 
     /**
@@ -141,11 +143,11 @@ class ResolutionTest extends TestCase
         $response = \Requests::get($this->url('/resolution', ['resolutionId' => $resolutionId]));
 
         $this->assertSame(200, $response->status_code);
-        $this->assertNotEmpty($response->body);
+        $this->assertNotEmpty($this->app->response->body());
 
-        $object = json_decode($response->body);
+        $object = json_decode($this->app->response->body());
 
-        $this->assertObjectHasAttribute('data', $object, $response->body);
+        $this->assertObjectHasAttribute('data', $object, $this->app->response->body());
 
         return $object->data[0];
     }

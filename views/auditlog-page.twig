@@ -92,9 +92,9 @@
                 { "data": "entity" },
                 { "data": "message" },
                 {
-                    "data": function(data, type) {
+                    "data": function(data, type, row, meta) {
                         if (type != "display")
-                            return data.status;
+                            return "";
 
                         return arrayViewer({"items": data.objectAfter});
                     },

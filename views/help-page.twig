@@ -52,9 +52,15 @@
     <script type="text/javascript">
         var table = $("#helpLinks").DataTable({
             serverSide: true,
+            filter: false,
             searchDelay: 3000,
             "order": [[ 1, "asc"]],
-            ajax: "{{ urlFor("help.search") }}",
+            ajax: {
+                "url": "{{ urlFor("help.search") }}",
+                "data": function(d) {
+                    $.extend(d, $("#helpLinks").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                }
+            },
             "columns": [
                 { "data": "topic"},
                 { "data": "category"},

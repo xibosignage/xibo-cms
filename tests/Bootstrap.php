@@ -19,5 +19,14 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-require_once __DIR__ . '/../vendor/autoload.php';
-require_once __DIR__ . '/TestCase.php';
+define('XIBO', true);
+define('PROJECT_ROOT', realpath(__DIR__ . '/..'));
+
+require_once PROJECT_ROOT . '/vendor/autoload.php';
+require_once PROJECT_ROOT . '/tests/LocalWebTestCase.php';
+
+if (!file_exists(PROJECT_ROOT . '/web/settings.php'))
+    die('Not configured');
+
+\Xibo\Helper\Config::Load(PROJECT_ROOT . '/web/settings.php');
+

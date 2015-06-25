@@ -21,7 +21,7 @@
 use Xibo\Helper\Config;
 
 DEFINE('XIBO', true);
-DEFINE('RELATIVE_URL_BASE', '../');
+define('PROJECT_ROOT', realpath(__DIR__ . '/..'));
 
 error_reporting(E_ALL);
 ini_set('display_errors', 1);

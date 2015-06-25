@@ -53,9 +53,15 @@
     <script type="text/javascript">
         var table = $("#datasets").DataTable({
             serverSide: true,
+            filter: false,
             searchDelay: 3000,
             "order": [[ 1, "asc"]],
-            ajax: "{{ urlFor("dataSet.search") }}",
+            ajax: {
+                "url": "{{ urlFor("dataSet.search") }}",
+                "data": function(d) {
+                    $.extend(d, $("#datasets").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                }
+            },
             "columns": [
                 { "data": "name" },
                 { "data": "description" },

@@ -1,7 +1,7 @@
 <phpunit bootstrap="tests/bootstrap.php" colors="true">
     <testsuites>
-        <testsuite name="Xibo Test Suite">
-            <directory suffix="Test.php">tests</directory>
+        <testsuite name="Xibo Integration Test Suite">
+            <directory suffix="Test.php">tests/integration</directory>
         </testsuite>
     </testsuites>
     <filter>

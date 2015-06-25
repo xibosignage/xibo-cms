@@ -77,9 +77,15 @@
     <script type="text/javascript">
         var table = $("#libraryItems").DataTable({
             serverSide: true,
+            filter: false,
             searchDelay: 3000,
             "order": [[ 1, "asc"]],
-            ajax: "{{ urlFor("library.search") }}",
+            ajax: {
+                "url": "{{ urlFor("library.search") }}",
+                "data": function(d) {
+                    $.extend(d, $("#libraryItems").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                }
+            },
             "columns": [
                 { "data": "mediaId"},
                 { "data": "name"},

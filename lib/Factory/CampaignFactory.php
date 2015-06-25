@@ -31,6 +31,17 @@ use Xibo\Storage\PDOConnect;
 
 class CampaignFactory
 {
+    private static $_countLast = 0;
+
+    /**
+     * Count of records returned for the last query.
+     * @return int
+     */
+    public static function countLast()
+    {
+        return self::$_countLast;
+    }
+
     /**
      * Get Campaign by ID
      * @param int $campaignId
@@ -83,13 +94,16 @@ class CampaignFactory
         $campaigns = array();
         $params = array();
 
-        $sql  = '
-          SELECT `campaign`.campaignId, `campaign`.campaign, `campaign`.isLayoutSpecific, `campaign`.userId AS ownerId,
+        $select = '
+        SELECT `campaign`.campaignId, `campaign`.campaign, `campaign`.isLayoutSpecific, `campaign`.userId AS ownerId,
               (
                 SELECT COUNT(*)
                   FROM lkcampaignlayout
                  WHERE lkcampaignlayout.campaignId = `campaign`.campaignId
               ) AS numberLayouts
+        ';
+
+        $body  = '
             FROM `campaign`
               LEFT OUTER JOIN `lkcampaignlayout`
               ON lkcampaignlayout.CampaignID = campaign.CampaignID
@@ -100,25 +114,25 @@ class CampaignFactory
 
         if (Sanitize::getString('isLayoutSpecific', 0, $filterBy) != -1) {
             // Exclude layout specific campaigns
-            $sql .= " AND `campaign`.isLayoutSpecific = :isLayoutSpecific ";
+            $body .= " AND `campaign`.isLayoutSpecific = :isLayoutSpecific ";
             $params['isLayoutSpecific'] = Sanitize::getString('isLayoutSpecific', 0, $filterBy);
         }
 
         if (Sanitize::getString('campaignId', 0, $filterBy) != 0) {
             // Join Campaign back onto it again
-            $sql .= " AND `campaign`.campaignId = :campaignId ";
+            $body .= " AND `campaign`.campaignId = :campaignId ";
             $params['campaignId'] = Sanitize::getString('campaignId', 0, $filterBy);
         }
 
         if (Sanitize::getString('ownerId', 0, $filterBy) != 0) {
             // Join Campaign back onto it again
-            $sql .= " AND `campaign`.userId = :ownerId ";
+            $body .= " AND `campaign`.userId = :ownerId ";
             $params['ownerId'] = Sanitize::getString('ownerId', 0, $filterBy);
         }
 
         if (Sanitize::getString('layoutId', 0, $filterBy) != 0) {
             // Filter by Layout
-            $sql .= " AND `lkcampaignlayout`.layoutId = :layoutId ";
+            $body .= " AND `lkcampaignlayout`.layoutId = :layoutId ";
             $params['layoutId'] = Sanitize::getString('layoutId', 0, $filterBy);
         }
 
@@ -132,21 +146,30 @@ class CampaignFactory
 
                 // Not like, or like?
                 if (substr($searchName, 0, 1) == '-') {
-                    $sql .= " AND campaign.Campaign NOT LIKE :search$i ";
+                    $body .= " AND campaign.Campaign NOT LIKE :search$i ";
                     $params['search' . $i] = '%' . ltrim($searchName) . '%';
                 }
                 else {
-                    $sql .= " AND campaign.Campaign LIKE :search$i ";
+                    $body .= " AND campaign.Campaign LIKE :search$i ";
                     $params['search' . $i] = '%' . ltrim($searchName) . '%';
                 }
             }
         }
 
-        $sql .= 'GROUP BY campaign.CampaignID, Campaign, IsLayoutSpecific, `campaign`.userId ';
+        $group = 'GROUP BY `campaign`.CampaignID, Campaign, IsLayoutSpecific, `campaign`.userId ';
 
         // Sorting?
+        $order = '';
         if (is_array($sortOrder))
-            $sql .= 'ORDER BY ' . implode(',', $sortOrder);
+            $order .= 'ORDER BY ' . implode(',', $sortOrder);
+
+        $limit = '';
+        // Paging
+        if (Sanitize::getInt('start') !== null && Sanitize::getInt('length') !== null) {
+            $limit = ' LIMIT ' . intval(Sanitize::getInt('start')) . ', ' . Sanitize::getInt('length', 10);
+        }
+
+        $sql = $select . $body . $group . $order . $limit;
 
         Log::sql($sql, $params);
 
@@ -154,6 +177,12 @@ class CampaignFactory
 
         foreach (PDOConnect::select($sql, $params) as $row) {
             $campaigns[] = (new Campaign())->hydrate($row, $intProperties);
+        }
+
+        // Paging
+        if ($limit != '' && count($campaigns) > 0) {
+            $results = PDOConnect::select('SELECT COUNT(DISTINCT campaign.campaignId) AS total ' . $body, $params);
+            self::$_countLast = intval($results[0]['total']);
         }
 
         return $campaigns;

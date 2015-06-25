@@ -98,9 +98,15 @@
     <script type="text/javascript">
         var table = $("#stats").DataTable({
             serverSide: true,
+            filter: false,
             searchDelay: 3000,
             "order": [[ 1, "asc"]],
-            ajax: "{{ urlFor("stats.search") }}",
+            ajax: {
+                "url": "{{ urlFor("stats.search") }}",
+                "data": function(d) {
+                    $.extend(d, $("#stats").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                }
+            },
             "columns": [
                 { "data": "Display" },
                 { "data": "Layout" },

@@ -9,7 +9,7 @@
 namespace Xibo\Tests;
 
 
-class ScheduleTest extends TestCase
+class ScheduleLocalWebTest extends LocalWebTestCase
 {
     protected $route = '/schedule';
 

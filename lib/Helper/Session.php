@@ -312,24 +312,6 @@ class Session
         }
     }
 
-    public static function setSecurityToken($token)
-    {
-        try {
-            // TODO: Remove global variable
-            global $session;
-            $dbh = PDOConnect::init();
-
-            // Delete sessions older than 10 times the max lifetime
-            $sth = $dbh->prepare('UPDATE session SET securitytoken = :securitytoken WHERE session_id = :session_id');
-            $sth->execute(array('session_id' => $session->key, 'securitytoken' => $token));
-
-            return true;
-        } catch (\Exception $e) {
-            Log::error($e->getMessage());
-            return false;
-        }
-    }
-
     /**
      * Store a variable in the session
      * @param string $key
