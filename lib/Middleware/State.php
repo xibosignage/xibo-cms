@@ -46,9 +46,6 @@ class State extends Middleware
         // Configure the locale for date/time
         Date::setLocale(Translate::GetLocale(2));
 
-        // Set the App name
-        ApplicationState::$appName = $app->getName();
-
         // Inject
         // The state of the application response
         $this->app->container->singleton('state', function() { return new ApplicationState(); });

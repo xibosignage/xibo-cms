@@ -52,6 +52,10 @@ $app = new \Slim\Slim(array(
     'log.writer' => $logger
 ));
 $app->setName('web');
+
+// Set the App name
+\Xibo\Helper\ApplicationState::$appName = $app->getName();
+
 $app->runNo = \Xibo\Helper\Random::generateString(10);
 
 // Configure the Slim error handler

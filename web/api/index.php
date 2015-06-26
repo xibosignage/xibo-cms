@@ -50,6 +50,10 @@ $app = new \Slim\Slim(array(
     'log.writer' => $logger
 ));
 $app->setName('api');
+
+// Set the App name
+\Xibo\Helper\ApplicationState::$appName = $app->getName();
+
 $app->runNo = \Xibo\Helper\Random::generateString(10);
 $app->add(new \Xibo\Middleware\Storage());
 $app->add(new \Xibo\Middleware\State());
@@ -75,7 +79,7 @@ $server = new \League\OAuth2\Server\ResourceServer(
 
 $app->add(new \Xibo\Middleware\ApiAuthenticationOAuth($server));*/
 
-$app->view(new JsonApiView());
+$app->view(new \Xibo\Middleware\ApiView());
 
 // The current user
 // this should be injected by the ApiAuthenticationOAuth middleware

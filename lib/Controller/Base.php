@@ -186,8 +186,6 @@ class Base
             ];
         }
 
-        //fwrite(STDERR, 'APP:'. var_export($app->runNo, true));
-
         if ($this->isApi()) {
             // Success or not
             if ($state->success) {
@@ -204,14 +202,15 @@ class Base
                 }
             }
             else {
+                $this->app->status(500);
+
                 $data = [
                     'error' => true,
                     'message' => $state->message
                 ];
-                fwrite(STDERR, 'APP:'. var_export($data, true));
             }
 
-            $this->app->render(200, $data);
+            $this->app->render(0, $data);
         }
         else if ($this->app->request->isAjax()) {
             // WEB Ajax
