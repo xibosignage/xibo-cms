@@ -4,7 +4,6 @@
  * Copyright (C) 2015 Spring Signage Ltd
  * (${FILE_NAME})
  */
-
 #}
 {% extends "authed.twig" %}
 
@@ -50,8 +49,7 @@
 
                             <li>
                                 <p>{% trans "Turn ON full auditing and debugging." %}</p>
-                                <form id="1" class="XiboAutoForm" action="index.php?p=admin" method="post">
-                                    <input type="hidden" name="q" value="SetMaxDebug" />
+                                <form id="1" class="XiboAutoForm" action="{{ urlFor("fault.debug.on") }}" method="put">
                                     <input class="btn btn-default" type="submit" value="{% trans "Turn ON Debugging" %}" />
                                 </form>
                             </li>
@@ -65,13 +63,12 @@
                                     {% trans "Automatically collect and export relevant information into a text file." %}
                                     {% trans "Please save this file to your PC." %}
                                 </p>
-                                <a class="btn btn-default" href="">{% trans "Collect and Save Data" %}</a>
+                                <a class="btn btn-default" href="{{ urlFor("fault.collect") }}">{% trans "Collect and Save Data" %}</a>
                             </li>
 
                             <li>
                                 <p>{% trans "Turn full auditing and debugging OFF." %}</p>
-                                <form id="2" class="XiboAutoForm" action="index.php?p=admin" method="post">
-                                    <input type="hidden" name="q" value="SetMinDebug" />
+                                <form id="2" class="XiboAutoForm" action="{{ urlFor("fault.debug.off") }}" method="put">
                                     <input class="btn btn-default" type="submit" value="{% trans "Turn OFF Debugging" %}" />
                                 </form>
                             </li>
@@ -82,40 +79,6 @@
                                     {% trans "Describe the problem and upload the file you obtained earlier." %}
                                 </p>
                                 <a class="btn btn-default" href="https://community.xibo.org.uk/c/support" target="_blank">{% trans "Ask a question" %}</a>
-                            </li>
-
-                        </ol>
-                    </div>
-
-                    <div class="ReportFault">
-                        <h2>{% trans "Further Action" %}</h2>
-                        <p>
-                            {% trans "We will do our best to use the information collected above to solve your issue." %}"
-                            {% trans "However sometimes this will not be enough and you will be asked to put your CMS into \"Test\" mode." %}
-                        </p>
-
-                        <ol>
-
-                            <li><p>{% trans "Switch to Test Mode." %}</p>
-                                <form class="XiboAutoForm" action="index.php?p=admin" method="post">
-                                    <input type="hidden" name="q" value="SetServerTestMode" />
-                                    <input class="btn btn-default" type="submit" value="{% trans "Switch to Test Mode" %}" />
-                                </form>
-                            </li>
-
-                            <li>
-                                <p>
-                                    {% trans "Recreate the Problem in a new window and Capture a screenshot." %}
-                                    {% trans "You should post your screenshot in the same topic as the question you asked previously." %}
-                                </p>
-                            </li>
-
-                            <li>
-                                <p>{% trans "Switch to Production Mode." %}</p>
-                                <form class="XiboAutoForm" action="index.php?p=admin" method="post">
-                                    <input type="hidden" name="q" value="SetServerProductionMode" />
-                                    <input class="btn btn-default" type="submit" value="{% trans "Switch to Production Mode" %}" />
-                                </form>
                             </li>
 
                         </ol>

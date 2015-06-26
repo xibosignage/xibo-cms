@@ -210,3 +210,10 @@ $app->put('/admin', '\Xibo\Controller\Settings:update')->name('settings.update')
 //
 $app->get('/audit', '\Xibo\Controller\AuditLog:grid')->name('auditLog.search');
 $app->get('/audit/export', '\Xibo\Controller\AuditLog:export')->name('auditLog.export');
+
+//
+// Fault
+//
+$app->put('/fault/debug/on', '\Xibo\Controller\Fault:debugOn')->name('fault.debug.on');
+$app->put('/fault/debug/off', '\Xibo\Controller\Fault:debugOff')->name('fault.debug.off');
+$app->get('/fault/collect', '\Xibo\Controller\Fault:collect')->name('fault.collect');
