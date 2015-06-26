@@ -57,9 +57,15 @@
     <script type="text/javascript">
         var table = $("#sessions").DataTable({
             serverSide: true,
+            filter: false,
             searchDelay: 3000,
             "order": [[ 1, "asc"]],
-            ajax: "{{ urlFor("sessions.search") }}",
+            ajax: {
+                "url": "{{ urlFor("sessions.search") }}",
+                "data": function(d) {
+                    $.extend(d, $("#sessions").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                }
+            },
             "columns": [
                 { "data": "lastAccessed" },
                 { "data": "isExpired" },

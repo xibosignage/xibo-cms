@@ -51,10 +51,15 @@
     <script type="text/javascript">
         var table = $("#displaygroups").DataTable({
             serverSide: true,
+            "filter": false,
             searchDelay: 3000,
             "order": [[ 1, "asc"]],
-            "filter": false,
-            ajax: "{{ urlFor("displayGroup.search") }}",
+            ajax: {
+                "url": "{{ urlFor("displayGroup.search") }}",
+                "data": function(d) {
+                    $.extend(d, $("#displaygroups").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                }
+            },
             "columns": [
                 { "data": "displayGroup" },
                 { "data": "description" },

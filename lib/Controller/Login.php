@@ -71,8 +71,8 @@ class Login extends Base
             // Switch Session ID's
             $session = $this->getSession();
             $session->setIsExpired(0);
-            $session->RegenerateSessionID(session_id());
-            $session->set_user(session_id(), $user->userId, 'user');
+            $session->regenerateSessionId(session_id());
+            $session->setUser(session_id(), $user->userId, 'user');
         }
         catch (NotFoundException $e) {
             Log::debug('User not found');

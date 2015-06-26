@@ -37,6 +37,17 @@ use Xibo\Storage\PDOConnect;
  */
 class LayoutFactory
 {
+    private static $_countLast = 0;
+
+    /**
+     * Count of records returned for the last query.
+     * @return int
+     */
+    public static function countLast()
+    {
+        return self::$_countLast;
+    }
+
     /**
      * Create Layout from Resolution
      * @param int $resolutionId
@@ -311,63 +322,63 @@ class LayoutFactory
         $entries = array();
         $params = array();
 
-        $sql  = "";
-        $sql .= "SELECT layout.layoutID, ";
-        $sql .= "        layout.layout, ";
-        $sql .= "        layout.description, ";
-        $sql .= "        layout.userID, ";
-        $sql .= "        `user`.UserName AS owner, ";
-        $sql .= "        campaign.CampaignID, ";
-        $sql .= "        layout.xml AS legacyXml, ";
-        $sql .= "        layout.status, ";
-        $sql .= "        layout.width, ";
-        $sql .= "        layout.height, ";
-        $sql .= "        layout.retired, ";
+        $select  = "";
+        $select .= "SELECT layout.layoutID, ";
+        $select .= "        layout.layout, ";
+        $select .= "        layout.description, ";
+        $select .= "        layout.userID, ";
+        $select .= "        `user`.UserName AS owner, ";
+        $select .= "        campaign.CampaignID, ";
+        $select .= "        layout.xml AS legacyXml, ";
+        $select .= "        layout.status, ";
+        $select .= "        layout.width, ";
+        $select .= "        layout.height, ";
+        $select .= "        layout.retired, ";
         if (Sanitize::getInt('showTags', $filterBy) == 1)
-            $sql .= " tag.tag AS tags, ";
+            $select .= " tag.tag AS tags, ";
         else
-            $sql .= " (SELECT GROUP_CONCAT(DISTINCT tag) FROM tag INNER JOIN lktaglayout ON lktaglayout.tagId = tag.tagId WHERE lktaglayout.layoutId = layout.LayoutID GROUP BY lktaglayout.layoutId) AS tags, ";
-        $sql .= "        layout.backgroundImageId, ";
-        $sql .= "        layout.backgroundColor, ";
-        $sql .= "        layout.backgroundzIndex, ";
-        $sql .= "        layout.schemaVersion, ";
-        $sql .= "     (SELECT GROUP_CONCAT(DISTINCT `group`.group)
+            $select .= " (SELECT GROUP_CONCAT(DISTINCT tag) FROM tag INNER JOIN lktaglayout ON lktaglayout.tagId = tag.tagId WHERE lktaglayout.layoutId = layout.LayoutID GROUP BY lktaglayout.layoutId) AS tags, ";
+        $select .= "        layout.backgroundImageId, ";
+        $select .= "        layout.backgroundColor, ";
+        $select .= "        layout.backgroundzIndex, ";
+        $select .= "        layout.schemaVersion, ";
+        $select .= "     (SELECT GROUP_CONCAT(DISTINCT `group`.group)
                           FROM `permission`
                             INNER JOIN `permissionentity`
                             ON `permissionentity`.entityId = permission.entityId
                             INNER JOIN `group`
                             ON `group`.groupId = `permission`.groupId
-                         WHERE entity = :entity
+                         WHERE entity = 'Xibo\\Entity\\Campaign'
                             AND objectId = campaign.CampaignID
                         ) AS groupsWithPermissions ";
-        $params['entity'] = 'Xibo\\Entity\\Campaign';
-        $sql .= "   FROM layout ";
-        $sql .= "  INNER JOIN `lkcampaignlayout` ";
-        $sql .= "   ON lkcampaignlayout.LayoutID = layout.LayoutID ";
-        $sql .= "   INNER JOIN `campaign` ";
-        $sql .= "   ON lkcampaignlayout.CampaignID = campaign.CampaignID ";
-        $sql .= "       AND campaign.IsLayoutSpecific = 1";
-        $sql .= "   INNER JOIN `user` ON `user`.userId = `campaign`.userId ";
+
+        $body  = "   FROM layout ";
+        $body .= "  INNER JOIN `lkcampaignlayout` ";
+        $body .= "   ON lkcampaignlayout.LayoutID = layout.LayoutID ";
+        $body .= "   INNER JOIN `campaign` ";
+        $body .= "   ON lkcampaignlayout.CampaignID = campaign.CampaignID ";
+        $body .= "       AND campaign.IsLayoutSpecific = 1";
+        $body .= "   INNER JOIN `user` ON `user`.userId = `campaign`.userId ";
 
         if (Sanitize::getInt('showTags', $filterBy) == 1) {
-            $sql .= " LEFT OUTER JOIN lktaglayout ON lktaglayout.layoutId = layout.layoutId ";
-            $sql .= " LEFT OUTER JOIN tag ON tag.tagId = lktaglayout.tagId ";
+            $body .= " LEFT OUTER JOIN lktaglayout ON lktaglayout.layoutId = layout.layoutId ";
+            $body .= " LEFT OUTER JOIN tag ON tag.tagId = lktaglayout.tagId ";
         }
 
         if (Sanitize::getInt('campaignId', 0, $filterBy) != 0) {
             // Join Campaign back onto it again
-            $sql .= " INNER JOIN `lkcampaignlayout` lkcl ON lkcl.layoutid = layout.layoutid AND lkcl.CampaignID = :campaignId ";
+            $body .= " INNER JOIN `lkcampaignlayout` lkcl ON lkcl.layoutid = layout.layoutid AND lkcl.CampaignID = :campaignId ";
             $params['campaignId'] = Sanitize::getInt('campaignId', 0, $filterBy);
         }
 
         // MediaID
         if (Sanitize::getInt('mediaId', 0, $filterBy) != 0) {
-            $sql .= " INNER JOIN `lklayoutmedia` ON lklayoutmedia.layoutid = layout.layoutid AND lklayoutmedia.mediaid = :mediaId";
-            $sql .= " INNER JOIN `media` ON lklayoutmedia.mediaid = media.mediaid ";
+            $body .= " INNER JOIN `lklayoutmedia` ON lklayoutmedia.layoutid = layout.layoutid AND lklayoutmedia.mediaid = :mediaId";
+            $body .= " INNER JOIN `media` ON lklayoutmedia.mediaid = media.mediaid ";
             $params['mediaId'] = Sanitize::getInt('mediaId', 0, $filterBy);
         }
 
-        $sql .= " WHERE 1 = 1 ";
+        $body .= " WHERE 1 = 1 ";
 
         if (Sanitize::getString('layout', $filterBy) != '')
         {
@@ -378,48 +389,48 @@ class LayoutFactory
             {
                 // Not like, or like?
                 if (substr($searchName, 0, 1) == '-') {
-                    $sql.= " AND  layout.layout NOT LIKE :search ";
+                    $body.= " AND  layout.layout NOT LIKE :search ";
                     $params['search'] = '%' . ltrim($searchName) . '%';
                 }
                 else {
-                    $sql.= " AND  layout.layout LIKE :search ";
+                    $body.= " AND  layout.layout LIKE :search ";
                     $params['search'] = '%' . $searchName . '%';
                 }
             }
         }
 
         if (Sanitize::getString('layoutExact', $filterBy) != '') {
-            $sql.= " AND layout.layout = :exact ";
+            $body.= " AND layout.layout = :exact ";
             $params['exact'] = Sanitize::getString('layoutExact', $filterBy);
         }
 
         // Layout
         if (Sanitize::getInt('layoutId', 0, $filterBy) != 0) {
-            $sql .= " AND layout.layoutId = :layoutId ";
+            $body .= " AND layout.layoutId = :layoutId ";
             $params['layoutId'] = Sanitize::getInt('layoutId', 0, $filterBy);
         }
 
         // Not Layout
         if (Sanitize::getInt('notLayoutId', 0, $filterBy) != 0) {
-            $sql .= " AND layout.layoutId <> :notLayoutId ";
+            $body .= " AND layout.layoutId <> :notLayoutId ";
             $params['notLayoutId'] = Sanitize::getInt('notLayoutId', 0, $filterBy);
         }
 
         // Owner filter
         if (Sanitize::getInt('userId', 0, $filterBy) != 0) {
-            $sql .= " AND layout.userid = :userId ";
+            $body .= " AND layout.userid = :userId ";
             $params['userId'] = Sanitize::getInt('userId', 0, $filterBy);
         }
 
         // Retired options (default to 0 - provide -1 to return all
         if (Sanitize::getInt('retired', 0, $filterBy) != -1) {
-            $sql .= " AND layout.retired = :retired ";
+            $body .= " AND layout.retired = :retired ";
             $params['retired'] = Sanitize::getInt('retired', 0, $filterBy);
         }
 
         // Tags
         if (Sanitize::getString('tags', $filterBy) != '') {
-            $sql .= " AND layout.layoutID IN (
+            $body .= " AND layout.layoutID IN (
                 SELECT lktaglayout.layoutId
                   FROM tag
                     INNER JOIN lktaglayout
@@ -431,28 +442,38 @@ class LayoutFactory
 
         // Exclude templates by default
         if (Sanitize::getInt('excludeTemplates', 1, $filterBy) == 1) {
-            $sql .= " AND layout.layoutID NOT IN (SELECT layoutId FROM lktaglayout WHERE tagId = 1) ";
+            $body .= " AND layout.layoutID NOT IN (SELECT layoutId FROM lktaglayout WHERE tagId = 1) ";
         }
 
         // Show All, Used or UnUsed
         if (Sanitize::getInt('filterLayoutStatusId', 1, $filterBy) != 1)  {
             if (Sanitize::getInt('filterLayoutStatusId', $filterBy) == 2) {
                 // Only show used layouts
-                $sql .= ' AND ('
+                $body .= ' AND ('
                     . '     campaign.CampaignID IN (SELECT DISTINCT schedule.CampaignID FROM schedule) '
                     . '     OR layout.layoutID IN (SELECT DISTINCT defaultlayoutid FROM display) '
                     . ' ) ';
             }
             else {
                 // Only show unused layouts
-                $sql .= ' AND campaign.CampaignID NOT IN (SELECT DISTINCT schedule.CampaignID FROM schedule) '
+                $body .= ' AND campaign.CampaignID NOT IN (SELECT DISTINCT schedule.CampaignID FROM schedule) '
                     . ' AND layout.layoutID NOT IN (SELECT DISTINCT defaultlayoutid FROM display) ';
             }
         }
 
         // Sorting?
+        $order = '';
         if (is_array($sortOrder))
-            $sql .= 'ORDER BY ' . implode(',', $sortOrder);
+            $order .= 'ORDER BY ' . implode(',', $sortOrder);
+
+        $limit = '';
+        // Paging
+        if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . intval(Sanitize::getInt('start')) . ', ' . Sanitize::getInt('length', 10);
+        }
+
+        // The final statements
+        $sql = $select . $body . $order . $limit;
 
         Log::sql($sql, $params);
 
@@ -477,11 +498,17 @@ class LayoutFactory
             $layout->height = Sanitize::double($row['height']);
 
             if (Sanitize::int('showLegacyXml', $filterBy) == 1)
-                $layout->legacyXml = \Kit::ValidateParam($row['legacyXml'], _HTMLSTRING);
+                $layout->legacyXml = $row['legacyXml'];
 
             $layout->groupsWithPermissions = Sanitize::string($row['groupsWithPermissions']);
 
             $entries[] = $layout;
+        }
+
+        // Paging
+        if ($limit != '' && count($entries) > 0) {
+            $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
+            self::$_countLast = intval($results[0]['total']);
         }
 
         return $entries;

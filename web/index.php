@@ -21,7 +21,7 @@
 use Xibo\Helper\Config;
 
 DEFINE('XIBO', true);
-DEFINE('RELATIVE_URL_BASE', '../');
+define('PROJECT_ROOT', realpath(__DIR__ . '/..'));
 
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
@@ -49,10 +49,21 @@ $logger = new \Flynsarmy\SlimMonolog\Log\MonologWriter(array(
 // Slim Application
 $app = new \Slim\Slim(array(
     'mode' => Config::GetSetting('SERVER_MODE'),
+    'debug' => false,
     'log.writer' => $logger
 ));
 $app->setName('web');
+
+// Set the App name
+\Xibo\Helper\ApplicationState::$appName = $app->getName();
+
 $app->runNo = \Xibo\Helper\Random::generateString(10);
+
+// Configure the Slim error handler
+$app->error(function (\Exception $e) use ($app) {
+    $controller = new \Xibo\Controller\Error();
+    $controller->handler($e);
+});
 
 // Twig templating
 $twig = new \Slim\Views\Twig();

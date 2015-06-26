@@ -32,7 +32,6 @@ use Xibo\Helper\Date;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
-use Xibo\Helper\Session;
 use Xibo\Helper\Theme;
 use Xibo\Helper\WakeOnLan;
 
@@ -45,14 +44,14 @@ class Display extends Base
     function displayPage()
     {
         // Default options
-        if (Session::Get(get_class(), 'Filter') == 1) {
+        if ($this->getSession()->get(get_class(), 'Filter') == 1) {
             $filter_pinned = 1;
-            $filter_displaygroup = Session::Get('display', 'filter_displaygroup');
-            $filter_display = Session::Get('display', 'filter_display');
-            $filterMacAddress = Session::Get('display', 'filterMacAddress');
-            $filter_showView = Session::Get('display', 'filter_showView');
-            $filterVersion = Session::Get('display', 'filterVersion');
-            $filter_autoRefresh = Session::Get('display', 'filter_autoRefresh');
+            $filter_displaygroup = $this->getSession()->get('display', 'filter_displaygroup');
+            $filter_display = $this->getSession()->get('display', 'filter_display');
+            $filterMacAddress = $this->getSession()->get('display', 'filterMacAddress');
+            $filter_showView = $this->getSession()->get('display', 'filter_showView');
+            $filterVersion = $this->getSession()->get('display', 'filterVersion');
+            $filter_autoRefresh = $this->getSession()->get('display', 'filter_autoRefresh');
         } else {
             $filter_pinned = 0;
             $filter_displaygroup = NULL;
@@ -140,29 +139,29 @@ class Display extends Base
 
         // Filter by Name
         $filter_display = Sanitize::getString('filter_display');
-        Session::Set('display', 'filter_display', $filter_display);
+        $this->getSession()->set('display', 'filter_display', $filter_display);
 
         // Filter by Name
         $filterMacAddress = Sanitize::getString('filterMacAddress');
-        Session::Set('display', 'filterMacAddress', $filterMacAddress);
+        $this->getSession()->set('display', 'filterMacAddress', $filterMacAddress);
 
         // Display Group
         $filter_displaygroupid = Sanitize::getInt('filter_displaygroup');
-        Session::Set('display', 'filter_displaygroup', $filter_displaygroupid);
+        $this->getSession()->set('display', 'filter_displaygroup', $filter_displaygroupid);
 
         // Thumbnail?
         $filter_showView = Sanitize::getInt('filter_showView');
-        Session::Set('display', 'filter_showView', $filter_showView);
+        $this->getSession()->set('display', 'filter_showView', $filter_showView);
 
         $filterVersion = Sanitize::getString('filterVersion');
-        Session::Set('display', 'filterVersion', $filterVersion);
+        $this->getSession()->set('display', 'filterVersion', $filterVersion);
 
         // filter_autoRefresh?
         $filter_autoRefresh = Sanitize::getCheckbox('filter_autoRefresh', 0);
-        Session::Set('display', 'filter_autoRefresh', $filter_autoRefresh);
+        $this->getSession()->set('display', 'filter_autoRefresh', $filter_autoRefresh);
 
         // Pinned option?
-        Session::Set('display', 'DisplayFilter', Sanitize::getCheckbox('XiboFilterPinned'));
+        $this->getSession()->set('display', 'DisplayFilter', Sanitize::getCheckbox('XiboFilterPinned'));
 
         $displays = $user->DisplayList($this->gridRenderSort(), $this->gridRenderFilter(array(
             'displaygroupid' => $filter_displaygroupid,
@@ -671,62 +670,6 @@ class Display extends Base
             'message' => sprintf(__('Wake on Lan sent for %s'), $display->display),
             'id' => $display->displayId
         ]);
-    }
-
-    /**
-     * Notify displays of this campaign change
-     * @param <type> $layoutId
-     */
-    public function NotifyDisplays($campaignId)
-    {
-        Log::debug(sprintf('Checking for Displays to refresh on Layout %d', $campaignId), 'display', 'NotifyDisplays');
-
-        try {
-            $dbh = \Xibo\Storage\PDOConnect::init();
-
-            $currentdate = time();
-            $rfLookahead = \Xibo\Helper\Sanitize::int(Config::GetSetting('REQUIRED_FILES_LOOKAHEAD'));
-            $rfLookahead = $currentdate + $rfLookahead;
-
-            // Which displays does a change to this layout effect?
-            $SQL  = " SELECT DISTINCT display.DisplayID ";
-            $SQL .= "   FROM schedule ";
-            $SQL .= "   INNER JOIN schedule_detail ";
-            $SQL .= "   ON schedule_detail.eventid = schedule.eventid ";
-            $SQL .= "   INNER JOIN lkdisplaydg ";
-            $SQL .= "   ON lkdisplaydg.DisplayGroupID = schedule_detail.DisplayGroupID ";
-            $SQL .= "   INNER JOIN display ";
-            $SQL .= "   ON lkdisplaydg.DisplayID = display.displayID ";
-            $SQL .= " WHERE schedule.CampaignID = :campaignid ";
-            $SQL .= " AND schedule_detail.FromDT < :fromdt AND schedule_detail.ToDT > :todt ";
-            $SQL .= " UNION ";
-            $SQL .= " SELECT DISTINCT display.DisplayID ";
-            $SQL .= "   FROM display ";
-            $SQL .= "       INNER JOIN lkcampaignlayout ";
-            $SQL .= "       ON lkcampaignlayout.LayoutID = display.DefaultLayoutID ";
-            $SQL .= " WHERE lkcampaignlayout.CampaignID = :campaignid";
-
-            $sth = $dbh->prepare($SQL);
-            $sth->execute(array(
-                'campaignid' => $campaignId,
-                'fromdt' => $rfLookahead,
-                'todt' => $currentdate - 3600
-            ));
-
-            while ($row = $sth->fetch()) {
-                // Notify each display in turn
-                $displayId = \Xibo\Helper\Sanitize::int($row['DisplayID']);
-                $this->FlagIncomplete($displayId);
-            }
-        }
-        catch (Exception $e) {
-            Log::error($e->getMessage());
-
-            if (!$this->IsError())
-                $this->SetError(25004, 'Unable to Flag Display as incomplete');
-
-            return false;
-        }
     }
 
     /**

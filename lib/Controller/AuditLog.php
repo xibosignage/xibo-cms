@@ -21,25 +21,22 @@
 namespace Xibo\Controller;
 use DateInterval;
 use DateTime;
-use Kit;
 use Xibo\Factory\AuditLogFactory;
 use Xibo\Helper\Date;
-use Xibo\Helper\Form;
 use Xibo\Helper\Help;
 use Xibo\Helper\Sanitize;
-use Xibo\Helper\Session;
 
 class AuditLog extends Base
 {
     public function displayPage()
     {
         // Construct Filter Form
-        if (Session::Get('auditlog', 'Filter') == 1) {
+        if ($this->getSession()->get('auditlog', 'Filter') == 1) {
             $filter_pinned = 1;
-            $filterFromDt = Session::Get('auditlog', 'filterFromDt');
-            $filterToDt = Session::Get('auditlog', 'filterToDt');
-            $filterUser = Session::Get('auditlog', 'filterUser');
-            $filterEntity = Session::Get('auditlog', 'filterEntity');
+            $filterFromDt = $this->getSession()->get('auditlog', 'filterFromDt');
+            $filterToDt = $this->getSession()->get('auditlog', 'filterToDt');
+            $filterUser = $this->getSession()->get('auditlog', 'filterUser');
+            $filterEntity = $this->getSession()->get('auditlog', 'filterEntity');
         } else {
             $filter_pinned = 0;
             $filterFromDt = NULL;
@@ -64,11 +61,11 @@ class AuditLog extends Base
 
     function grid()
     {
-        Session::Set('auditlog', 'Filter', Sanitize::getCheckbox('XiboFilterPinned'));
-        $filterFromDt = Session::Set('auditlog', 'filterFromDt', Sanitize::getString('filterFromDt'));
-        $filterToDt = Session::Set('auditlog', 'filterToDt', Sanitize::getString('filterToDt'));
-        $filterUser = Session::Set('auditlog', 'filterUser', Sanitize::getString('filterUser'));
-        $filterEntity = Session::Set('auditlog', 'filterEntity', Sanitize::getString('filterEntity'));
+        $this->getSession()->set('auditlog', 'Filter', Sanitize::getCheckbox('XiboFilterPinned'));
+        $filterFromDt = $this->getSession()->set('auditlog', 'filterFromDt', Sanitize::getString('filterFromDt'));
+        $filterToDt = $this->getSession()->set('auditlog', 'filterToDt', Sanitize::getString('filterToDt'));
+        $filterUser = $this->getSession()->set('auditlog', 'filterUser', Sanitize::getString('filterUser'));
+        $filterEntity = $this->getSession()->set('auditlog', 'filterEntity', Sanitize::getString('filterEntity'));
 
         $search = [];
 
@@ -153,10 +150,11 @@ class AuditLog extends Base
         $rows = AuditLogFactory::query('logId', ['search' => $search]);
 
         // We want to output a load of stuff to the browser as a text file.
-        header('Content-Type: text/csv');
-        header('Content-Disposition: attachment; filename="audittrail.csv"');
-        header("Content-Transfer-Encoding: binary");
-        header('Accept-Ranges: bytes');
+        $app = $this->getApp();
+        $app->response()->header('Content-Type', 'text/csv');
+        $app->response()->header('Content-Disposition', 'attachment; filename="audittrail.csv"');
+        $app->response()->header('Content-Transfer-Encoding', 'binary"');
+        $app->response()->header('Accept-Ranges', 'bytes');
 
         $out = fopen('php://output', 'w');
         fputcsv($out, ['ID', 'Date', 'User', 'Entity', 'Message', 'Object']);

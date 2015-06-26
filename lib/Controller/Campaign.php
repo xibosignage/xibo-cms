@@ -99,6 +99,7 @@ class Campaign extends Base
         }
 
         $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = CampaignFactory::countLast();
         $this->getState()->setData($campaigns);
     }
 

@@ -22,7 +22,6 @@ namespace Xibo\Controller;
 
 use Xibo\Helper\Help;
 use Xibo\Helper\Sanitize;
-use Xibo\Helper\Session;
 use Xibo\Helper\Theme;
 
 
@@ -34,11 +33,11 @@ class Template extends Base
     function displayPage()
     {
         // Default options
-        if (Session::Get('layout', 'Filter') == 1) {
+        if ($this->getSession()->get('layout', 'Filter') == 1) {
             $pinned = 1;
-            $name = Session::Get('template', 'filter_name');
-            $tags = Session::Get('template', 'filter_tags');
-            $showThumbnail = Session::Get('template', 'showThumbnail');
+            $name = $this->getSession()->get('template', 'filter_name');
+            $tags = $this->getSession()->get('template', 'filter_tags');
+            $showThumbnail = $this->getSession()->get('template', 'showThumbnail');
         } else {
             $pinned = 0;
             $name = '';
@@ -70,13 +69,13 @@ class Template extends Base
         $filter_name = Sanitize::getString('filter_name');
         $filter_tags = Sanitize::getString('filter_tags');
 
-        Session::Set('template', 'filter_name', $filter_name);
-        Session::Set('template', 'filter_tags', $filter_tags);
-        Session::Set('template', 'Filter', Sanitize::getCheckbox('XiboFilterPinned'));
+        $this->getSession()->set('template', 'filter_name', $filter_name);
+        $this->getSession()->set('template', 'filter_tags', $filter_tags);
+        $this->getSession()->set('template', 'Filter', Sanitize::getCheckbox('XiboFilterPinned'));
 
         // Show filter_showThumbnail
         $showThumbnail = Sanitize::getCheckbox('showThumbnail');
-        Session::Set('layout', 'showThumbnail', $showThumbnail);
+        $this->getSession()->set('layout', 'showThumbnail', $showThumbnail);
 
         $templates = $this->getUser()->TemplateList($filter_name, $filter_tags);
 

@@ -32,7 +32,6 @@ use Xibo\Helper\Form;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
-use Xibo\Helper\Session;
 
 
 class Schedule extends Base
@@ -73,16 +72,18 @@ class Schedule extends Base
     function eventData()
     {
         $this->getApp()->response()->header('Content-Type', 'application/json');
+        $this->setNoOutput();
 
         $displayGroupIds = Sanitize::getIntArray('DisplayGroupIDs');
         $start = Sanitize::getInt('from', 1000) / 1000;
         $end = Sanitize::getInt('to', 1000) / 1000;
 
         // if we have some displaygroupids then add them to the session info so we can default everything else.
-        Session::Set('DisplayGroupIDs', $displayGroupIds);
+        $this->getSession()->set('DisplayGroupIDs', $displayGroupIds);
 
         if (count($displayGroupIds) <= 0) {
-            die(json_encode(array('success' => 1, 'result' => array())));
+            $this->getApp()->response()->body(json_encode(array('success' => 1, 'result' => [])));
+            return;
         }
 
         $events = array();
@@ -157,8 +158,7 @@ class Schedule extends Base
             );
         }
 
-        echo json_encode(array('success' => 1, 'result' => $events));
-        $this->setNoOutput();
+        $this->getApp()->response()->body(json_encode(array('success' => 1, 'result' => $events)));
     }
 
     /**
@@ -189,7 +189,7 @@ class Schedule extends Base
             'displays' => $displays,
             'displayGroups' => $groups,
             'campaigns' => CampaignFactory::query(),
-            'displayGroupIds' => Session::get('displayGroupIds'),
+            'displayGroupIds' => $this->getSession()->get('displayGroupIds'),
             'help' => Help::Link('Schedule', 'Add')
         ]);
     }
@@ -278,7 +278,7 @@ class Schedule extends Base
             'displays' => $displays,
             'displayGroups' => $groups,
             'campaigns' => CampaignFactory::query(),
-            'displayGroupIds' => Session::get('displayGroupIds'),
+            'displayGroupIds' => $this->getSession()->get('displayGroupIds'),
             'help' => Help::Link('Schedule', 'Edit')
         ]);
     }
@@ -434,7 +434,7 @@ class Schedule extends Base
             'displays' => $displays,
             'displayGroups' => $groups,
             'campaigns' => CampaignFactory::query(),
-            'displayGroupIds' => Session::get('displayGroupIds'),
+            'displayGroupIds' => $this->getSession()->get('displayGroupIds'),
             'help' => Help::Link('Schedule', 'ScheduleNow')
         ]);
     }

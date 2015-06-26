@@ -23,6 +23,7 @@
 namespace Xibo\Controller;
 use Slim\Slim;
 use Xibo\Exception\ControllerNotImplemented;
+use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Date;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
@@ -68,7 +69,7 @@ class Base
      */
     public function __construct()
     {
-        $this->app = Slim::getInstance();
+        $this->app = Slim::getInstance(ApplicationState::$appName);
 
         // Reference back to this from the app
         $this->app->controller = $this;
@@ -116,7 +117,7 @@ class Base
      */
     protected function isApi()
     {
-        return ($this->getApp()->getName() == 'api');
+        return ($this->getApp()->getName() != 'web');
     }
 
     /**
@@ -160,19 +161,23 @@ class Base
 
     /**
      * End the controller execution, calling render
+     * @param int $status
      * @throws ControllerNotImplemented if the controller is not implemented correctly
      */
-    public function render()
+    public function render($status = 200)
     {
         if ($this->rendered || $this->noOutput)
             return;
 
         $app = $this->getApp();
+        // State will contain the current ApplicationState, including a success flag that can be used to determine
+        // if we are in error or not.
         $state = $this->getState();
         $data = $state->getData();
 
-        $grid = ($state->template == 'grid');
-
+        // Grid requests require some extra info appended.
+        // they can come from any application, hence being dealt with first
+        $grid = ($state->template === 'grid');
         if ($grid) {
             $recordsTotal = ($state->recordsTotal == null) ? count($data) : $state->recordsTotal;
             $recordsFiltered = ($state->recordsFiltered == null) ? $recordsTotal : $state->recordsFiltered;
@@ -185,76 +190,43 @@ class Base
             ];
         }
 
+        // API Request
         if ($this->isApi()) {
-            // API
-            if (!is_array($data))
-                throw new ControllerNotImplemented();
-
-            if (!$grid) {
+            // Success or not
+            if ($state->success) {
+                // If we are not a grid (the original data array might be empty here)
+                if (!$grid) {
+                    $data = [
+                        'message' => $state->message,
+                        'id' => $state->id,
+                        'data' => $data
+                    ];
+                }
+            }
+            else {
                 $data = [
-                    'message' => $state->message,
-                    'id' => $state->id,
-                    'data' => $data
+                    'error' => true,
+                    'message' => $state->message
                 ];
             }
 
-            $this->app->render(200, $data);
+            $this->app->render('', $data, $status);
         }
         else if ($this->app->request->isAjax()) {
             // WEB Ajax
             $app->response()->header('Content-Type', 'application/json');
 
-            // Standard output handler
+            // Are we a template that should be rendered to HTML
+            // and then returned?
             if ($state->template != '' && $state->template != 'grid') {
-                $data['currentUser'] = $this->getUser();
-                $view = $app->view()->getInstance()->render($state->template . '.twig', $data);
-
-                if (!$view = json_decode($view, true)) {
-                    Log::error('Problem with Template: View = %s ', $state->template);
-                    throw new ControllerNotImplemented(__('Problem with Form Template'));
-                }
-
-                $state->html = $view['html'];
-                $state->dialogTitle = trim($view['title']);
-                $state->callBack = $view['callBack'];
-
-                // Process the buttons
-                // Expect each button on a new line
-                if (trim($view['buttons']) == '') {
-                    $state->buttons = [];
-                } else {
-                    // Convert to an array
-                    $buttons = explode(PHP_EOL, $view['buttons']);
-
-                    foreach ($buttons as $button) {
-                        if ($button == '')
-                            continue;
-
-                        $button = explode(',', trim($button));
-
-                        for ($i = 0; $i < count($button); $i++) {
-                            $state->buttons[trim($button[$i])] = trim($button[$i+1]);
-                            $i++;
-                        }
-
-                        foreach ($button as $key => $value) {
-
-                        }
-                    }
-                }
-
-                // Process the fieldActions
-                // Expect each fieldAction on a new line
-                if (trim($view['fieldActions']) == '') {
-                    $state->fieldActions = [];
-                } else {
-                    // Convert to an array
-                    Log::error($view['fieldActions']);
-                    $state->fieldActions = json_decode($view['fieldActions']);
-                }
+                $this->renderTwigAjaxReturn($data, $app, $state);
             }
 
-            echo ($grid) ? json_encode($data) : $state->asJson();
+            // We always return 200's
+            // TODO: we might want to change this (we'd need to change the javascript to suit)
+            $app->status(200);
+
+            $app->response()->body(($grid) ? json_encode($data) : $state->asJson());
         }
         else {
             // WEB Normal
@@ -266,7 +238,7 @@ class Base
             $data['clock'] = Date::GetClock();
             $data['currentUser'] = $this->getUser();
 
-            $this->app->render($state->template . '.twig', $data);
+            $this->app->render($state->template . '.twig', $data, $status);
         }
 
         $this->rendered = true;
@@ -321,5 +293,59 @@ class Base
         }, $app->request()->get('order', array()));
 
         return $order;
+    }
+
+    /**
+     * @param $data
+     * @param $app
+     * @param $state
+     * @throws ControllerNotImplemented
+     */
+    public function renderTwigAjaxReturn($data, $app, $state)
+    {
+        // Supply the current user to the view
+        $data['currentUser'] = $this->getUser();
+
+        // Render the view manually with Twig, parse it and pull out various bits
+        $view = $app->view()->getInstance()->render($state->template . '.twig', $data);
+
+        if (!$view = json_decode($view, true)) {
+            Log::error('Problem with Template: View = %s ', $state->template);
+            throw new ControllerNotImplemented(__('Problem with Form Template'));
+        }
+
+        $state->html = $view['html'];
+        $state->dialogTitle = trim($view['title']);
+        $state->callBack = $view['callBack'];
+
+        // Process the buttons
+        // Expect each button on a new line
+        if (trim($view['buttons']) == '') {
+            $state->buttons = [];
+        } else {
+            // Convert to an array
+            $buttons = explode(PHP_EOL, $view['buttons']);
+
+            foreach ($buttons as $button) {
+                if ($button == '')
+                    continue;
+
+                $button = explode(',', trim($button));
+
+                for ($i = 0; $i < count($button); $i++) {
+                    $state->buttons[trim($button[$i])] = trim($button[$i + 1]);
+                    $i++;
+                }
+            }
+        }
+
+        // Process the fieldActions
+        // Expect each fieldAction on a new line
+        if (trim($view['fieldActions']) == '') {
+            $state->fieldActions = [];
+        } else {
+            // Convert to an array
+            $state->fieldActions = json_decode($view['fieldActions']);
+        }
     }
 }

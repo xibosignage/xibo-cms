@@ -58,9 +58,15 @@
     <script type="text/javascript">
         var table = $("#templates").DataTable({
             serverSide: true,
+            filter: false,
             searchDelay: 3000,
             "order": [[ 1, "asc"]],
-            ajax: "{{ urlFor("template.search") }}",
+            ajax: {
+                "url": "{{ urlFor("template.search") }}",
+                "data": function(d) {
+                    $.extend(d, $("#templates").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                }
+            },
             "columns": [
                 { "data": "layout"},
                 { "data": "owner"},

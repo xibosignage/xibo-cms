@@ -21,6 +21,7 @@
 namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
+use Slim\Slim;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\LibraryFullException;
 use Xibo\Exception\NotFoundException;
@@ -39,7 +40,6 @@ use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
-use Xibo\Helper\Session;
 use Xibo\Storage\PDOConnect;
 
 // These constants may be changed without breaking existing hashes.
@@ -1014,14 +1014,14 @@ class User
 
     public function getPref($key, $default = NULL)
     {
-        $storedValue = Session::get($key);
+        $storedValue = Slim::getInstance()->session->get($key);
 
         return ($storedValue == NULL) ? $default : $storedValue;
     }
 
     public function setPref($key, $value)
     {
-        Session::set($key, $value);
+        Slim::getInstance()->session->set($key, $value);
     }
 
     /**

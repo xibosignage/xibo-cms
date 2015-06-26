@@ -30,7 +30,6 @@ use Xibo\Helper\Config;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
-use Xibo\Helper\Session;
 use Xibo\Helper\Theme;
 
 class Layout extends Base
@@ -41,16 +40,16 @@ class Layout extends Base
     function displayPage()
     {
         // Default options
-        if (Session::Get('layout', 'Filter') == 1) {
+        if ($this->getSession()->get('layout', 'Filter') == 1) {
 
-            $layout = Session::Get('layout', 'filter_layout');
-            $tags = Session::Get('layout', 'filter_tags');
-            $retired = Session::Get('layout', 'filter_retired');
-            $owner = Session::Get('layout', 'filter_userid');
-            $filterLayoutStatusId = Session::Get('layout', 'filterLayoutStatusId');
-            $showDescriptionId = Session::Get('layout', 'showDescriptionId');
-            $showThumbnail = Session::Get('layout', 'showThumbnail');
-            $showTags = Session::Get('layout', 'showTags');
+            $layout = $this->getSession()->get('layout', 'filter_layout');
+            $tags = $this->getSession()->get('layout', 'filter_tags');
+            $retired = $this->getSession()->get('layout', 'filter_retired');
+            $owner = $this->getSession()->get('layout', 'filter_userid');
+            $filterLayoutStatusId = $this->getSession()->get('layout', 'filterLayoutStatusId');
+            $showDescriptionId = $this->getSession()->get('layout', 'showDescriptionId');
+            $showThumbnail = $this->getSession()->get('layout', 'showThumbnail');
+            $showTags = $this->getSession()->get('layout', 'showTags');
             $pinned = 1;
 
         } else {
@@ -268,38 +267,38 @@ class Layout extends Base
 
         // Filter by Name
         $name = Sanitize::getString('filter_layout');
-        Session::Set('layout', 'filter_layout', $name);
+        $this->getSession()->set('layout', 'filter_layout', $name);
 
         // User ID
         $filter_userid = Sanitize::getInt('filter_userid');
-        Session::Set('layout', 'filter_userid', $filter_userid);
+        $this->getSession()->set('layout', 'filter_userid', $filter_userid);
 
         // Show retired
         $filter_retired = Sanitize::getInt('filter_retired');
-        Session::Set('layout', 'filter_retired', $filter_retired);
+        $this->getSession()->set('layout', 'filter_retired', $filter_retired);
 
         // Show filterLayoutStatusId
         $filterLayoutStatusId = Sanitize::getInt('filterLayoutStatusId');
-        Session::Set('layout', 'filterLayoutStatusId', $filterLayoutStatusId);
+        $this->getSession()->set('layout', 'filterLayoutStatusId', $filterLayoutStatusId);
 
         // Show showDescriptionId
         $showDescriptionId = Sanitize::getInt('showDescriptionId');
-        Session::Set('layout', 'showDescriptionId', $showDescriptionId);
+        $this->getSession()->set('layout', 'showDescriptionId', $showDescriptionId);
 
         // Show filter_showThumbnail
         $showTags = Sanitize::getCheckbox('showTags');
-        Session::Set('layout', 'showTags', $showTags);
+        $this->getSession()->set('layout', 'showTags', $showTags);
 
         // Show filter_showThumbnail
         $showThumbnail = Sanitize::getCheckbox('showThumbnail');
-        Session::Set('layout', 'showThumbnail', $showThumbnail);
+        $this->getSession()->set('layout', 'showThumbnail', $showThumbnail);
 
         // Tags list
         $filter_tags = Sanitize::getString('filter_tags');
-        Session::Set('layout', 'filter_tags', $filter_tags);
+        $this->getSession()->set('layout', 'filter_tags', $filter_tags);
 
         // Pinned option?
-        Session::Set('layout', 'LayoutFilter', Sanitize::getCheckbox('XiboFilterPinned'));
+        $this->getSession()->set('layout', 'LayoutFilter', Sanitize::getCheckbox('XiboFilterPinned'));
 
         // Get all layouts
         $layouts = LayoutFactory::query($this->gridRenderSort(), $this->gridRenderFilter([
@@ -623,12 +622,12 @@ class Layout extends Base
         // Send via Apache X-Sendfile header?
         if (Config::GetSetting('SENDFILE_MODE') == 'Apache') {
             header("X-Sendfile: $fileName");
-            exit();
+            $this->getApp()->halt(200);
         }
         // Send via Nginx X-Accel-Redirect?
         if (Config::GetSetting('SENDFILE_MODE') == 'Nginx') {
             header("X-Accel-Redirect: /download/temp/" . basename($fileName));
-            exit();
+            $this->getApp()->halt(200);
         }
 
         // Return the file with PHP

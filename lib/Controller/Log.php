@@ -28,7 +28,6 @@ use Xibo\Helper\Date;
 use Xibo\Helper\Form;
 use Xibo\Helper\Help;
 use Xibo\Helper\Sanitize;
-use Xibo\Helper\Session;
 use Xibo\Helper\Theme;
 use Xibo\Storage\PDOConnect;
 
@@ -38,15 +37,15 @@ class Log extends Base
     public function displayPage()
     {
         // Construct Filter Form
-        if (Session::Get(get_class(), 'Filter') == 1) {
+        if ($this->getSession()->get(get_class(), 'Filter') == 1) {
             $filter_pinned = 1;
-            $filter_type = Session::Get('log', 'filter_type');
-            $filter_page = Session::Get('log', 'filter_page');
-            $filter_function = Session::Get('log', 'filter_function');
-            $filter_display = Session::Get('log', 'filter_display');
-            $filter_fromdt = Session::Get('log', 'filter_fromdt');
-            $filter_seconds = Session::Get('log', 'filter_seconds');
-            $filter_intervalTypeId = Session::Get('log', 'filter_intervalTypeId');
+            $filter_type = $this->getSession()->get('log', 'filter_type');
+            $filter_page = $this->getSession()->get('log', 'filter_page');
+            $filter_function = $this->getSession()->get('log', 'filter_function');
+            $filter_display = $this->getSession()->get('log', 'filter_display');
+            $filter_fromdt = $this->getSession()->get('log', 'filter_fromdt');
+            $filter_seconds = $this->getSession()->get('log', 'filter_seconds');
+            $filter_intervalTypeId = $this->getSession()->get('log', 'filter_intervalTypeId');
         } else {
             $filter_pinned = 0;
             $filter_type = 0;
@@ -102,14 +101,14 @@ class Log extends Base
         $seconds = Sanitize::getInt('filter_seconds', 120);
         $filter_intervalTypeId = Sanitize::getInt('filter_intervalTypeId', 1);
 
-        Session::Set('log', 'Filter', Sanitize::getCheckbox('XiboFilterPinned'));
-        Session::Set('log', 'filter_type', $type);
-        Session::Set('log', 'filter_function', $function);
-        Session::Set('log', 'filter_page', $page);
-        Session::Set('log', 'filter_fromdt', $fromdt);
-        Session::Set('log', 'filter_display', $displayid);
-        Session::Set('log', 'filter_seconds', $seconds);
-        Session::Set('log', 'filter_intervalTypeId', $filter_intervalTypeId);
+        $this->getSession()->set('log', 'Filter', Sanitize::getCheckbox('XiboFilterPinned'));
+        $this->getSession()->set('log', 'filter_type', $type);
+        $this->getSession()->set('log', 'filter_function', $function);
+        $this->getSession()->set('log', 'filter_page', $page);
+        $this->getSession()->set('log', 'filter_fromdt', $fromdt);
+        $this->getSession()->set('log', 'filter_display', $displayid);
+        $this->getSession()->set('log', 'filter_seconds', $seconds);
+        $this->getSession()->set('log', 'filter_intervalTypeId', $filter_intervalTypeId);
 
         // get the dates and times
         if ($fromdt == '') {

@@ -239,7 +239,7 @@ class Session
         }
     }
 
-    function set_user($key, $userid)
+    function setUser($key, $userid)
     {
         $_SESSION['userid'] = $userid;
 
@@ -257,9 +257,8 @@ class Session
 
     /**
      * Updates the session ID with a new one
-     * @return
      */
-    public function RegenerateSessionID($oldSessionID)
+    public function regenerateSessionId($oldSessionID)
     {
 
         session_regenerate_id(false);
@@ -280,7 +279,7 @@ class Session
         }
     }
 
-    function set_page($key, $lastpage)
+    function setPage($key, $lastpage)
     {
         $_SESSION['pagename'] = $lastpage;
 
@@ -306,24 +305,6 @@ class Session
             // Delete sessions older than 10 times the max lifetime
             $sth = $dbh->prepare('UPDATE session SET isexpired = :isexpired WHERE session_id = :session_id');
             $sth->execute(array('session_id' => $this->key, 'isexpired' => $isExpired));
-        } catch (\Exception $e) {
-            Log::error($e->getMessage());
-            return false;
-        }
-    }
-
-    public static function setSecurityToken($token)
-    {
-        try {
-            // TODO: Remove global variable
-            global $session;
-            $dbh = PDOConnect::init();
-
-            // Delete sessions older than 10 times the max lifetime
-            $sth = $dbh->prepare('UPDATE session SET securitytoken = :securitytoken WHERE session_id = :session_id');
-            $sth->execute(array('session_id' => $session->key, 'securitytoken' => $token));
-
-            return true;
         } catch (\Exception $e) {
             Log::error($e->getMessage());
             return false;

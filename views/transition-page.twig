@@ -47,9 +47,15 @@
     <script type="text/javascript">
         var table = $("#transitions").DataTable({
             serverSide: true,
+            filter: false,
             searchDelay: 3000,
             "order": [[ 0, "asc"]],
-            ajax: "{{ urlFor("transition.search") }}",
+            ajax: {
+                "url": "{{ urlFor("transition.search") }}",
+                "data": function(d) {
+                    $.extend(d, $("#transitions").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                }
+            },
             "columns": [
                 { "data": "transition" },
                 { "data": "hasDuration" },

@@ -37,7 +37,6 @@
     "slim/slim": "~2.6",
     "erusev/parsedown": "~1.5",
     "league/oauth2-server": "~4.1",
-    "entomb/slim-json-api": "~1.1",
     "flynsarmy/slim-monolog": "~1.0",
     "ezyang/htmlpurifier": "dev-master",
     "simplepie/simplepie": "dev-master",
@@ -49,9 +48,9 @@
     "respect/validation": "0.9.*",
     "intervention/imagecache": "~2.3",
     "rmccue/requests": "^1.6",
-    "abraham/twitteroauth": "^0.5.3",
     "emojione/emojione": "^1.4",
-    "jenssegers/date": "^3.0"
+    "jenssegers/date": "^3.0",
+    "there4/slim-test-helpers": "dev-master"
   },
   "require-dev": {
     "phpunit/phpunit": "~4.0"

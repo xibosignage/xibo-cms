@@ -43,7 +43,7 @@ class GenericFile extends Module
     public function getResource($displayId = 0)
     {
         $this->download();
-        exit();
+        $this->getApp()->halt(200);
     }
 
     /**

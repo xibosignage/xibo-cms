@@ -74,7 +74,12 @@
             filter: false,
             searchDelay: 3000,
             "order": [[ 1, "asc"]],
-            ajax: "{{ urlFor("module.search") }}",
+            ajax: {
+                "url": "{{ urlFor("module.search") }}",
+                "data": function(d) {
+                    $.extend(d, $("#modules").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                }
+            },
             "columns": [
                 { "data": "name" },
                 { "data": "description" },

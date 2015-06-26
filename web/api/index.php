@@ -22,7 +22,7 @@
 use Xibo\Helper\Config;
 
 DEFINE('XIBO', true);
-DEFINE('RELATIVE_URL_BASE', '../../');
+define('PROJECT_ROOT', realpath(__DIR__ . '/../..'));
 
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
@@ -47,12 +47,23 @@ $logger = new \Flynsarmy\SlimMonolog\Log\MonologWriter(array(
 
 $app = new \Slim\Slim(array(
     'mode' => Config::GetSetting('SERVER_MODE'),
+    'debug' => false,
     'log.writer' => $logger
 ));
 $app->setName('api');
+
+// Set the App name
+\Xibo\Helper\ApplicationState::$appName = $app->getName();
+
 $app->runNo = \Xibo\Helper\Random::generateString(10);
 $app->add(new \Xibo\Middleware\Storage());
 $app->add(new \Xibo\Middleware\State());
+
+// Configure the Slim error handler
+$app->error(function (\Exception $e) use ($app) {
+    $controller = new \Xibo\Controller\Error();
+    $controller->handler($e);
+});
 
 // oAuth Resource
 /*$sessionStorage = new Storage\SessionStorage();
@@ -69,15 +80,14 @@ $server = new \League\OAuth2\Server\ResourceServer(
 
 $app->add(new \Xibo\Middleware\ApiAuthenticationOAuth($server));*/
 
-$app->add(new JsonApiMiddleware());
-$app->view(new JsonApiView());
+$app->view(new \Xibo\Middleware\ApiView());
 
 // The current user
 // this should be injected by the ApiAuthenticationOAuth middleware
 $app->user = \Xibo\Factory\UserFactory::getById(1);
 
 // All routes
-require '../../lib/routes.php';
+require PROJECT_ROOT . '/lib/routes.php';
 
 // Run app
 $app->run();

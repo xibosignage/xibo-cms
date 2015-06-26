@@ -7,25 +7,26 @@
 
 namespace Xibo\Tests;
 
-class ResolutionTest extends TestCase
+use Xibo\Factory\ResolutionFactory;
+use Xibo\Helper\Random;
+
+class ResolutionTest extends LocalWebTestCase
 {
     public function __construct()
     {
         parent::__construct('Resolution Test');
-
-        $this->start();
     }
 
     public function testListAll()
     {
-        $response = \Requests::get($this->url('/resolution'));
+        $this->client->get('/resolution');
 
-        $this->assertSame(200, $response->status_code);
-        $this->assertNotEmpty($response->body);
+        $this->assertSame(200, $this->client->response->status());
+        $this->assertNotEmpty($this->client->response->body());
 
-        $object = json_decode($response->body);
+        $object = json_decode($this->client->response->body());
 
-        $this->assertObjectHasAttribute('data', $object, $response->body);
+        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
     }
 
     /**
@@ -34,22 +35,21 @@ class ResolutionTest extends TestCase
      */
     public function testAdd()
     {
-        $name = \Xibo\Helper\Random::generateString(8, 'phpunit');
+        $name = Random::generateString(8, 'phpunit');
 
-        $response = \Requests::post($this->url('/resolution'), [], [
+        $response = $this->client->post('/resolution', [
             'resolution' => $name,
             'width' => 1920,
             'height' => 1080
         ]);
 
-        $this->assertSame(200, $response->status_code, $response->body);
+        $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
 
-        $object = json_decode($response->body);
+        $object = json_decode($this->client->response->body());
 
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
         $this->assertSame($name, $object->data[0]->resolution);
-
         return $object->id;
     }
 
@@ -61,25 +61,25 @@ class ResolutionTest extends TestCase
      */
     public function testEdit($resolutionId)
     {
-        $resolution = $this->getResolution($resolutionId);
+        $resolution = ResolutionFactory::getById($resolutionId);
 
-        $name = \Xibo\Helper\Random::generateString(8, 'phpunit');
+        $name = Random::generateString(8, 'phpunit');
 
-        $response = \Requests::put($this->url('/resolution/' . $resolutionId), [], [
+        $this->client->put('/resolution/' . $resolutionId, [
             'resolution' => $name,
             'width' => $resolution->width,
             'height' => $resolution->height,
             'enabled' => 1
-        ]);
+        ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
-        $this->assertSame(200, $response->status_code);
+        $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
 
-        $object = json_decode($response->body);
+        $object = json_decode($this->client->response->body());
 
         $this->assertObjectHasAttribute('data', $object);
 
         // Deeper check by querying for resolution again
-        $object = $this->getResolution($resolutionId);
+        $object = ResolutionFactory::getById($resolutionId);
 
         $this->assertSame($name, $object->resolution);
         $this->assertSame(1, $object->enabled, 'Enabled has been switched');
@@ -94,23 +94,23 @@ class ResolutionTest extends TestCase
      */
     public function testEditEnabled($resolutionId)
     {
-        $resolution = $this->getResolution($resolutionId);
+        $resolution = ResolutionFactory::getById($resolutionId);
 
-        $response = \Requests::put($this->url('/resolution/' . $resolutionId), [], [
+        $this->client->put('/resolution/' . $resolutionId, [
             'resolution' => $resolution->resolution,
             'width' => 1080,
             'height' => 1920,
             'enabled' => $resolution->enabled
-        ]);
+        ], array('CONTENT_TYPE' => 'application/x-www-form-urlencoded'));
 
-        $this->assertSame(200, $response->status_code);
+        $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
 
-        $object = json_decode($response->body);
+        $object = json_decode($this->client->response->body());
 
         $this->assertObjectHasAttribute('data', $object);
 
         // Deeper check by querying for resolution again
-        $object = $this->getResolution($resolutionId);
+        $object = ResolutionFactory::getById($resolutionId);
 
         $this->assertSame($resolution->resolution, $object->resolution);
         $this->assertSame(1080, $object->width);
@@ -126,27 +126,8 @@ class ResolutionTest extends TestCase
      */
     public function testDelete($resolutionId)
     {
-        $response = \Requests::delete($this->url('/resolution/' . $resolutionId));
+        $this->client->delete('/resolution/' . $resolutionId);
 
-        $this->assertSame(200, $response->status_code, $response->body);
-    }
-
-    /**
-     * Get a resolution back
-     * @param int $resolutionId
-     * @return mixed
-     */
-    private function getResolution($resolutionId)
-    {
-        $response = \Requests::get($this->url('/resolution', ['resolutionId' => $resolutionId]));
-
-        $this->assertSame(200, $response->status_code);
-        $this->assertNotEmpty($response->body);
-
-        $object = json_decode($response->body);
-
-        $this->assertObjectHasAttribute('data', $object, $response->body);
-
-        return $object->data[0];
+        $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
     }
 }

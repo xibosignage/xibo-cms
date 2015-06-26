@@ -29,7 +29,6 @@ use Xibo\Factory\UserTypeFactory;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
-use Xibo\Helper\Session;
 use Xibo\Storage\PDOConnect;
 
 class User extends Base
@@ -40,10 +39,10 @@ class User extends Base
     function displayPage()
     {
         // Configure the theme
-        if (Session::Get('user_admin', 'Filter') == 1) {
+        if ($this->getSession()->get('user_admin', 'Filter') == 1) {
             $pinned = 1;
-            $userName = Session::Get('user_admin', 'userName');
-            $userTypeId = Session::Get('user_admin', 'userTypeId');
+            $userName = $this->getSession()->get('user_admin', 'userName');
+            $userTypeId = $this->getSession()->get('user_admin', 'userTypeId');
         } else {
             $pinned = 0;
             $userName = NULL;
@@ -75,12 +74,12 @@ class User extends Base
     function grid()
     {
         // Capture the filter options
-        Session::Set('user_admin', 'Filter', Sanitize::getCheckbox('XiboFilterPinned', 0));
+        $this->getSession()->set('user_admin', 'Filter', Sanitize::getCheckbox('XiboFilterPinned', 0));
 
         // Filter our users?
         $filterBy = [
-            'userTypeId' => Session::Set('user_admin', 'userTypeId', Sanitize::getInt('userTypeId')),
-            'userName' => Session::Set('user_admin', 'userName', Sanitize::getString('userName'))
+            'userTypeId' => $this->getSession()->set('user_admin', 'userTypeId', Sanitize::getInt('userTypeId')),
+            'userName' => $this->getSession()->set('user_admin', 'userName', Sanitize::getString('userName'))
         ];
 
         // Load results into an array

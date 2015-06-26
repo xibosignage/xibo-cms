@@ -299,7 +299,7 @@ class MediaFactory
 
         // Paging
         $limit = '';
-        if (Sanitize::getInt('start') !== null && Sanitize::getInt('length') !== null) {
+        if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
             $limit = ' LIMIT ' . intval(Sanitize::getInt('start')) . ', ' . Sanitize::getInt('length', 10);
         }
 
