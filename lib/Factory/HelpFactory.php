@@ -10,7 +10,6 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\Help;
-use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
@@ -60,7 +59,7 @@ class HelpFactory
             if (is_array($sortOrder))
                 $sql .= ' ORDER BY ' . implode(',', $sortOrder);
 
-            if (Sanitize::getInt('start') !== null && Sanitize::getInt('length') !== null) {
+            if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
                 $sql .= ' LIMIT ' . intval(Sanitize::getInt('start')) . ', ' . Sanitize::getInt('length', 10);
             }
 

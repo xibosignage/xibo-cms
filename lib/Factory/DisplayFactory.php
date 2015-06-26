@@ -24,6 +24,7 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Display;
 use Xibo\Exception\NotFoundException;
+use Xibo\Helper\Config;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
@@ -52,6 +53,16 @@ class DisplayFactory
     public static function getByDisplayGroupId($displayGroupId)
     {
         return DisplayFactory::query(null, ['displayGroupId' => $displayGroupId]);
+    }
+
+    /**
+     * Get displays by active campaignId
+     * @param $campaignId
+     * @return array[Display]
+     */
+    public static function getByActiveCampaignId($campaignId)
+    {
+        return DisplayFactory::query(null, ['activeCampaignId' => $campaignId]);
     }
 
     /**
@@ -165,6 +176,43 @@ class DisplayFactory
             $SQL .= "   WHERE  lkdisplaydg.DisplayGroupID   = :excludeDisplayGroupId ";
             $SQL .= "       )";
             $params['excludeDisplayGroupId'] = Sanitize::getInt('exclude_displaygroupid', $filterBy);
+        }
+
+        // Only ones with a particular active campaign
+        if (Sanitize::getInt('activeCampaignId', $filterBy) != null) {
+            // Which displays does a change to this layout effect?
+            $SQL .= '
+              AND display.displayId IN (
+                   SELECT DISTINCT display.DisplayID
+                     FROM `schedule`
+                       INNER JOIN `schedule_detail`
+                       ON schedule_detail.eventid = schedule.eventid
+                       INNER JOIN `lkscheduledisplaygroup`
+                       ON `lkscheduledisplaygroup`.eventId = `schedule`.eventId
+                       INNER JOIN `lkdisplaydg`
+                       ON lkdisplaydg.DisplayGroupID = `lkscheduledisplaygroup`.displayGroupId
+                       INNER JOIN `display`
+                       ON lkdisplaydg.DisplayID = display.displayID
+                    WHERE `schedule`.CampaignID = :activeCampaignId
+                      AND `schedule_detail`.FromDT < :fromDt
+                      AND `schedule_detail`.ToDT > :toDt
+                   UNION
+                   SELECT DISTINCT display.DisplayID
+                     FROM `display`
+                       INNER JOIN `lkcampaignlayout`
+                       ON `lkcampaignlayout`.LayoutID = `display`.DefaultLayoutID
+                    WHERE `lkcampaignlayout`.CampaignID = :activeCampaignId2
+              )
+            ';
+
+            $currentDate = time();
+            $rfLookAhead = Config::GetSetting('REQUIRED_FILES_LOOKAHEAD');
+            $rfLookAhead = intval($currentDate) + intval($rfLookAhead);
+
+            $params['fromDt'] = $rfLookAhead;
+            $params['toDt'] = $currentDate - 3600;
+            $params['activeCampaignId'] = Sanitize::getInt('activeCampaignId', $filterBy);
+            $params['activeCampaignId2'] = Sanitize::getInt('activeCampaignId', $filterBy);
         }
 
         // Sorting?

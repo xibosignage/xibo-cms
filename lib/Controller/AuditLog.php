@@ -21,7 +21,6 @@
 namespace Xibo\Controller;
 use DateInterval;
 use DateTime;
-use Kit;
 use Xibo\Factory\AuditLogFactory;
 use Xibo\Helper\Date;
 use Xibo\Helper\Help;
@@ -151,10 +150,11 @@ class AuditLog extends Base
         $rows = AuditLogFactory::query('logId', ['search' => $search]);
 
         // We want to output a load of stuff to the browser as a text file.
-        header('Content-Type: text/csv');
-        header('Content-Disposition: attachment; filename="audittrail.csv"');
-        header("Content-Transfer-Encoding: binary");
-        header('Accept-Ranges: bytes');
+        $app = $this->getApp();
+        $app->response()->header('Content-Type', 'text/csv');
+        $app->response()->header('Content-Disposition', 'attachment; filename="audittrail.csv"');
+        $app->response()->header('Content-Transfer-Encoding', 'binary"');
+        $app->response()->header('Accept-Ranges', 'bytes');
 
         $out = fopen('php://output', 'w');
         fputcsv($out, ['ID', 'Date', 'User', 'Entity', 'Message', 'Object']);

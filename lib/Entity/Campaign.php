@@ -23,6 +23,7 @@
 namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
+use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\ScheduleFactory;
@@ -110,6 +111,9 @@ class Campaign implements \JsonSerializable
             // Manage assignments
             $this->manageAssignments();
         }
+
+        // Notify anyone interested of the changes
+        $this->notify();
     }
 
     public function delete()
@@ -235,5 +239,19 @@ class Campaign implements \JsonSerializable
         $sql .= ')';
 
         PDOConnect::update($sql, $params);
+    }
+
+    /**
+     * Notify displays of this campaign change
+     */
+    private function notify()
+    {
+        Log::debug('Checking for Displays to refresh on Campaign %d', $this->campaignId);
+
+        foreach (DisplayFactory::getByActiveCampaignId($this->campaignId) as $display) {
+            /* @var \Xibo\Entity\Display $display */
+            $display->setMediaIncomplete();
+            $display->save(false);
+        }
     }
 }

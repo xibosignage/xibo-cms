@@ -622,12 +622,12 @@ class Layout extends Base
         // Send via Apache X-Sendfile header?
         if (Config::GetSetting('SENDFILE_MODE') == 'Apache') {
             header("X-Sendfile: $fileName");
-            exit();
+            $this->getApp()->halt(200);
         }
         // Send via Nginx X-Accel-Redirect?
         if (Config::GetSetting('SENDFILE_MODE') == 'Nginx') {
             header("X-Accel-Redirect: /download/temp/" . basename($fileName));
-            exit();
+            $this->getApp()->halt(200);
         }
 
         // Return the file with PHP

@@ -351,7 +351,7 @@ class ModuleFactory
                 $SQL .= 'ORDER BY ' . implode(',', $sortOrder);
 
             // Paging
-            if (Sanitize::getInt('start') !== null && Sanitize::getInt('length') !== null) {
+            if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
                 $SQL .= ' LIMIT ' . Sanitize::getInt('start') . ', ' . Sanitize::getInt('length', 10);
             }
 

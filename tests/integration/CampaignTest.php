@@ -10,7 +10,7 @@ namespace Xibo\Tests;
 use Xibo\Entity\Campaign;
 use Xibo\Factory\CampaignFactory;
 
-class CampaignLocalWebTest extends LocalWebTestCase
+class CampaignTest extends LocalWebTestCase
 {
     public function __construct()
     {

@@ -47,6 +47,7 @@ class LocalWebTestCase extends WebTestCase
 
         // All routes
         require PROJECT_ROOT . '/lib/routes.php';
+        require PROJECT_ROOT . '/lib/routes-web.php';
 
         return $app;
     }

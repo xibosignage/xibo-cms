@@ -10,7 +10,7 @@ namespace Xibo\Tests;
 use Xibo\Factory\ResolutionFactory;
 use Xibo\Helper\Random;
 
-class ResolutionLocalWebTest extends LocalWebTestCase
+class ResolutionTest extends LocalWebTestCase
 {
     public function __construct()
     {

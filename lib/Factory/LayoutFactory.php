@@ -468,7 +468,7 @@ class LayoutFactory
 
         $limit = '';
         // Paging
-        if (Sanitize::getInt('start') !== null && Sanitize::getInt('length') !== null) {
+        if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
             $limit = ' LIMIT ' . intval(Sanitize::getInt('start')) . ', ' . Sanitize::getInt('length', 10);
         }
 

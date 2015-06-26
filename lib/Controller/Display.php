@@ -673,62 +673,6 @@ class Display extends Base
     }
 
     /**
-     * Notify displays of this campaign change
-     * @param <type> $layoutId
-     */
-    public function NotifyDisplays($campaignId)
-    {
-        Log::debug(sprintf('Checking for Displays to refresh on Layout %d', $campaignId), 'display', 'NotifyDisplays');
-
-        try {
-            $dbh = \Xibo\Storage\PDOConnect::init();
-
-            $currentdate = time();
-            $rfLookahead = \Xibo\Helper\Sanitize::int(Config::GetSetting('REQUIRED_FILES_LOOKAHEAD'));
-            $rfLookahead = $currentdate + $rfLookahead;
-
-            // Which displays does a change to this layout effect?
-            $SQL  = " SELECT DISTINCT display.DisplayID ";
-            $SQL .= "   FROM schedule ";
-            $SQL .= "   INNER JOIN schedule_detail ";
-            $SQL .= "   ON schedule_detail.eventid = schedule.eventid ";
-            $SQL .= "   INNER JOIN lkdisplaydg ";
-            $SQL .= "   ON lkdisplaydg.DisplayGroupID = schedule_detail.DisplayGroupID ";
-            $SQL .= "   INNER JOIN display ";
-            $SQL .= "   ON lkdisplaydg.DisplayID = display.displayID ";
-            $SQL .= " WHERE schedule.CampaignID = :campaignid ";
-            $SQL .= " AND schedule_detail.FromDT < :fromdt AND schedule_detail.ToDT > :todt ";
-            $SQL .= " UNION ";
-            $SQL .= " SELECT DISTINCT display.DisplayID ";
-            $SQL .= "   FROM display ";
-            $SQL .= "       INNER JOIN lkcampaignlayout ";
-            $SQL .= "       ON lkcampaignlayout.LayoutID = display.DefaultLayoutID ";
-            $SQL .= " WHERE lkcampaignlayout.CampaignID = :campaignid";
-
-            $sth = $dbh->prepare($SQL);
-            $sth->execute(array(
-                'campaignid' => $campaignId,
-                'fromdt' => $rfLookahead,
-                'todt' => $currentdate - 3600
-            ));
-
-            while ($row = $sth->fetch()) {
-                // Notify each display in turn
-                $displayId = \Xibo\Helper\Sanitize::int($row['DisplayID']);
-                $this->FlagIncomplete($displayId);
-            }
-        }
-        catch (Exception $e) {
-            Log::error($e->getMessage());
-
-            if (!$this->IsError())
-                $this->SetError(25004, 'Unable to Flag Display as incomplete');
-
-            return false;
-        }
-    }
-
-    /**
      * Validate the display list
      * @return array[Display]
      */
