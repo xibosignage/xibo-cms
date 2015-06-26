@@ -22,7 +22,8 @@ class LocalWebTestCase extends WebTestCase
     public function getSlimInstance()
     {
         $app = new Slim(array(
-            'mode' => 'testing'
+            'mode' => 'testing',
+            'debug' => false
         ));
         $app->setName('test');
 

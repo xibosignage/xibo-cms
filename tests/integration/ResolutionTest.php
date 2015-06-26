@@ -70,7 +70,7 @@ class ResolutionLocalWebTest extends LocalWebTestCase
             'width' => $resolution->width,
             'height' => $resolution->height,
             'enabled' => 1
-        ], array('CONTENT_TYPE' => 'application/x-www-form-urlencoded'));
+        ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
         $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
 

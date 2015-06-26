@@ -72,6 +72,7 @@ class Schedule extends Base
     function eventData()
     {
         $this->getApp()->response()->header('Content-Type', 'application/json');
+        $this->setNoOutput();
 
         $displayGroupIds = Sanitize::getIntArray('DisplayGroupIDs');
         $start = Sanitize::getInt('from', 1000) / 1000;
@@ -81,7 +82,8 @@ class Schedule extends Base
         $this->getSession()->set('DisplayGroupIDs', $displayGroupIds);
 
         if (count($displayGroupIds) <= 0) {
-            die(json_encode(array('success' => 1, 'result' => array())));
+            $this->getApp()->response()->body(json_encode(array('success' => 1, 'result' => [])));
+            return;
         }
 
         $events = array();
@@ -156,8 +158,7 @@ class Schedule extends Base
             );
         }
 
-        echo json_encode(array('success' => 1, 'result' => $events));
-        $this->setNoOutput();
+        $this->getApp()->response()->body(json_encode(array('success' => 1, 'result' => $events)));
     }
 
     /**

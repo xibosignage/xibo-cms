@@ -69,20 +69,17 @@ class State extends Middleware
             if (Config::GetSetting('FORCE_HTTPS', 0) == 1) {
                 $redirect = "https://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
                 header("Location: $redirect");
-                exit();
+                $app->halt(302);
             }
         }
 
         // Configure logging
         if (strtolower($this->app->getMode()) == 'test') {
-            $this->app->config('debug', true);
             $this->app->config('log.level', \Slim\Log::DEBUG);
         }
         else {
-            $this->app->config('debug', false);
             // TODO: Use the log levels defined in the config
             $this->app->config('log.level', \Slim\Log::ERROR);
-            error_reporting(0);
         }
 
         // Attach a hook to log the route

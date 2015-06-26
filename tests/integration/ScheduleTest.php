@@ -16,20 +16,18 @@ class ScheduleLocalWebTest extends LocalWebTestCase
     public function __construct()
     {
         parent::__construct('Schedule Test');
-
-        $this->start();
     }
 
     public function testListAll()
     {
-        $response = \Requests::get($this->url($this->route) . '/data/events');
+        $this->client->get($this->route . '/data/events');
 
-        $this->assertSame(200, $response->status_code);
-        $this->assertNotEmpty($response->body);
+        $this->assertSame(200, $this->client->response->status());
+        $this->assertNotEmpty($this->client->response->body());
 
-        $object = json_decode($response->body);
+        $object = json_decode($this->client->response->body());
 
-        $this->assertObjectHasAttribute('result', $object, $response->body);
+        $this->assertObjectHasAttribute('result', $object, $this->client->response->body());
     }
 
     /**
@@ -41,7 +39,7 @@ class ScheduleLocalWebTest extends LocalWebTestCase
         $fromDt = time();
         $toDt = time() + 3600;
 
-        $response = \Requests::post($this->url($this->route), [], [
+        $this->client->post($this->route, [
             'fromDt' => date('Y-m-d h:i:s', $fromDt),
             'toDt' => date('Y-m-d h:i:s', $toDt),
             'campaignId' => 2,
@@ -50,12 +48,12 @@ class ScheduleLocalWebTest extends LocalWebTestCase
             'isPriority' => 0
         ]);
 
-        $this->assertSame(200, $response->status_code, $response->body);
+        $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
 
-        $object = json_decode($response->body);
+        $object = json_decode($this->client->response->body());
 
-        $this->assertObjectHasAttribute('data', $object, $response->body);
-        $this->assertObjectHasAttribute('id', $object, $response->body);
+        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
+        $this->assertObjectHasAttribute('id', $object, $this->client->response->body());
 
         return $object->id;
     }
@@ -71,18 +69,18 @@ class ScheduleLocalWebTest extends LocalWebTestCase
         $fromDt = time();
         $toDt = time() + 86400;
 
-        $response = \Requests::put($this->url($this->route . '/' . $eventId), [], [
+        $this->client->put($this->route . '/' . $eventId, [
             'fromDt' => date('Y-m-d h:i:s', $fromDt),
             'toDt' => date('Y-m-d h:i:s', $toDt),
             'campaignId' => 2,
             'displayGroupIds' => [1, 12],
             'displayOrder' => 1,
             'isPriority' => 1
-        ]);
+        ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
-        $this->assertSame(200, $response->status_code);
+        $this->assertSame(200, $this->client->response->status());
 
-        $object = json_decode($response->body);
+        $object = json_decode($this->client->response->body());
 
         $this->assertObjectHasAttribute('data', $object);
         $this->assertSame(1, $object->data[0]->isPriority);
@@ -96,8 +94,8 @@ class ScheduleLocalWebTest extends LocalWebTestCase
      */
     public function testDelete($eventId)
     {
-        $response = \Requests::delete($this->url($this->route . '/' . $eventId));
+        $this->client->delete($this->route . '/' . $eventId);
 
-        $this->assertSame(200, $response->status_code, $response->body);
+        $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
     }
 }

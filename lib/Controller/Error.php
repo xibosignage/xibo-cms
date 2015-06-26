@@ -9,6 +9,7 @@
 namespace Xibo\Controller;
 
 
+use League\OAuth2\Server\Exception\OAuthException;
 use Xibo\Helper\Log;
 
 class Error extends Base
@@ -18,12 +19,16 @@ class Error extends Base
         $app = $this->getApp();
         $handled = $this->handledError($e);
 
-        if (!$handled) {
+        if ($handled) {
+            Log::debug($e->getMessage());
+        }
+        else {
             // Log the full error
             Log::debug($e->getMessage() . $e->getTraceAsString());
             Log::error($e->getMessage() . ' Exception Type: ' . get_class($e));
         }
 
+        // Different action depending on the app name
         switch ($app->getName()) {
 
             case 'web':
@@ -53,7 +58,12 @@ class Error extends Base
                     'message' => (($handled) ? $e->getMessage() : __('Unexpected Error, please contact support.'))
                 ]);
 
-                $this->render();
+                $status = 500;
+
+                if ($e instanceof OAuthException)
+                    $status = $e->httpStatusCode;
+
+                $this->render($status);
 
                 break;
 

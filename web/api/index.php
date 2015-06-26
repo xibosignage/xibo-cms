@@ -47,6 +47,7 @@ $logger = new \Flynsarmy\SlimMonolog\Log\MonologWriter(array(
 
 $app = new \Slim\Slim(array(
     'mode' => Config::GetSetting('SERVER_MODE'),
+    'debug' => false,
     'log.writer' => $logger
 ));
 $app->setName('api');

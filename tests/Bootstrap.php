@@ -19,6 +19,8 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+ini_set('display_errors', 1);
+
 define('XIBO', true);
 define('PROJECT_ROOT', realpath(__DIR__ . '/..'));
 
