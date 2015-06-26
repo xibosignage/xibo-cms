@@ -4,7 +4,6 @@
  * Copyright (C) 2015 Spring Signage Ltd
  * (${FILE_NAME})
  */
-Theme::Set('form_fields', array(Form::AddMessage(__('Are you sure you want to delete this display? This cannot be undone.'))));
 #}
 
 {% extends "form-base.twig" %}
@@ -15,7 +14,7 @@ Theme::Set('form_fields', array(Form::AddMessage(__('Are you sure you want to de
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Save" %}, $("#displayDeleteForm").submit()
+    {% trans "Yes" %}, $("#displayDeleteForm").submit()
     {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
 {% endblock %}

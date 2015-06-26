@@ -4,11 +4,7 @@
  * Copyright (C) 2015 Spring Signage Ltd
  * (${FILE_NAME})
  */
-$formFields[] = Form::AddText('group', __('Name'), \Xibo\Helper\Sanitize::string($row['DisplayGroup']),
-            __('The Name for this Group'), 'n', 'required');
 
-        $formFields[] = Form::AddText('desc', __('Description'), \Xibo\Helper\Sanitize::string($row['Description']),
-            __('A short description of this Group'), 'd', 'maxlength="254"');
 #}
 
 {% extends "form-base.twig" %}

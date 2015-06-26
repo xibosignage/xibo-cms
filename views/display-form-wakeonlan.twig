@@ -4,7 +4,7 @@
  * Copyright (C) 2015 Spring Signage Ltd
  * (${FILE_NAME})
  */
-Theme::Set('form_fields', array(Form::AddMessage(__('Are you sure you want to send a Wake On Lan message to this display?'))));
+
 #}
 
 {% extends "form-base.twig" %}
@@ -15,7 +15,7 @@ Theme::Set('form_fields', array(Form::AddMessage(__('Are you sure you want to se
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Save" %}, $("#displayWakeOnLanForm").submit()
+    {% trans "Yes" %}, $("#displayWakeOnLanForm").submit()
     {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
 {% endblock %}

@@ -4,14 +4,7 @@
  * Copyright (C) 2015 Spring Signage Ltd
  * (${FILE_NAME})
  */
-$formFields[] = Form::AddText('resolution', __('Resolution'), $resolution->resolution,
-            __('A name for this Resolution'), 'r', 'required');
 
-        $formFields[] = Form::AddNumber('width', __('Width'), $resolution->width,
-            __('The Width for this Resolution'), 'w', 'required');
-
-        $formFields[] = Form::AddNumber('height', __('Height'), $resolution->height,
-            __('The Height for this Resolution'), 'h', 'required');
 
         $formFields[] = Form::AddCheckbox('enabled', __('Enable?'), $resolution->enabled,
             __('Is the Resolution enabled for use?'), 'e');
