@@ -126,8 +126,6 @@ class Applications extends Base
         // We are authorized
         if (Sanitize::getString('authorization') === 'Approve') {
 
-            Log::debug('Approval Granted with oAuth params: %s', json_encode($authParams));
-
             // Create a server
             $server = new AuthorizationServer();
 

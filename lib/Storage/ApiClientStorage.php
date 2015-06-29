@@ -45,7 +45,7 @@ class ApiClientStorage extends AbstractStorage implements ClientInterface
 
         if ($redirectUri) {
             $sql = '
-                SELECT oauth_clients.*, oauth_client_redirect_uris.*
+                SELECT oauth_clients.*
                   FROM oauth_clients
                     INNER JOIN oauth_client_redirect_uris ON oauth_clients.id = oauth_client_redirect_uris.client_id
                  WHERE oauth_clients.id = :clientId
@@ -72,7 +72,7 @@ class ApiClientStorage extends AbstractStorage implements ClientInterface
             return $client;
         }
 
-        return;
+        return false;
     }
 
     /**
@@ -99,6 +99,6 @@ class ApiClientStorage extends AbstractStorage implements ClientInterface
             return $client;
         }
 
-        return;
+        return false;
     }
 }
