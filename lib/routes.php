@@ -167,7 +167,8 @@ $app->post('/group/acl/:entity/:id', '\Xibo\Controller\UserGroup:acl')->name('gr
 //
 // Applications
 //
-$app->get('/applications', '\Xibo\Controller\Applications:grid')->name('application.search');
+$app->get('/application', '\Xibo\Controller\Applications:grid')->name('application.search');
+$app->post('/application', '\Xibo\Controller\Applications:add')->name('application.add');
 
 //
 // Modules

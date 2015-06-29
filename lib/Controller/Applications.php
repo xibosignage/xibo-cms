@@ -20,10 +20,21 @@
  */
 namespace Xibo\Controller;
 
+use League\OAuth2\Server\AuthorizationServer;
+use League\OAuth2\Server\Grant\AuthCodeGrant;
+use League\OAuth2\Server\Util\RedirectUri;
+use League\OAuth2\Server\Util\SecureKey;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
+use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
+use Xibo\Storage\ApiAccessTokenStorage;
+use Xibo\Storage\ApiAuthCodeStorage;
+use Xibo\Storage\ApiClientStorage;
+use Xibo\Storage\ApiScopeStorage;
+use Xibo\Storage\ApiSessionStorage;
+use Xibo\Storage\PDOConnect;
 
 
 class Applications extends Base
@@ -40,7 +51,7 @@ class Applications extends Base
     /**
      * Display page grid
      */
-    public function Grid()
+    public function grid()
     {
         $this->getState()->template = 'grid';
         $this->getState()->setData([
@@ -88,118 +99,106 @@ class Applications extends Base
     }
 
     /**
-     * Authorize an OAuth request OR display the Authorize form.
+     * Display the Authorize form.
+     */
+    public function authorizeRequest()
+    {
+        // Pull authorize params from our session
+        $authParams = $this->getSession()->get('authParams');
+
+        // Get, show page
+        $this->getState()->template = 'applications-authorize-page';
+        $this->getState()->setData([
+            'authServerAuthorizeUrl' => $this->getApp()->urlFor('home') . 'authorize',
+            'authParams' => $authParams
+        ]);
+    }
+
+    /**
+     * Authorize an oAuth request
+     * @throws \League\OAuth2\Server\Exception\InvalidGrantException
      */
     public function authorize()
     {
-        // Do we have an OAuth signed request?
-        $userid = $this->getUser()->userId;
+        // Pull authorize params from our session
+        $authParams = $this->getSession()->get('authParams');
 
-        $server = new OAuthServer();
+        // We are authorized
+        if (Sanitize::getString('authorization') === 'Approve') {
 
-        // Request must be signed
-        try {
-            $consumerDetails = $server->authorizeVerify();
+            Log::debug('Approval Granted with oAuth params: %s', json_encode($authParams));
 
-            // Has the user submitted the form?
-            if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Create a server
+            $server = new AuthorizationServer();
 
-                // See if the user clicked the 'allow' submit button
-                if (isset($_POST['Allow']))
-                    $authorized = true;
-                else
-                    $authorized = false;
+            $server->setSessionStorage(new ApiSessionStorage());
+            $server->setAccessTokenStorage(new ApiAccessTokenStorage());
+            $server->setClientStorage(new ApiClientStorage());
+            $server->setScopeStorage(new ApiScopeStorage());
+            $server->setAuthCodeStorage(new ApiAuthCodeStorage());
 
-                Log::notice('Allow submitted. Application is ' . (($authorized) ? 'authed' : 'denied'));
+            $authCodeGrant = new AuthCodeGrant();
+            $server->addGrantType($authCodeGrant);
 
-                // Set the request token to be authorized or not authorized
-                // When there was a oauth_callback then this will redirect to the consumer
-                $server->authorizeFinish($authorized, $userid);
-
-                // No oauth_callback, show the user the result of the authorization
-                echo __('Request authorized. Please return to your application.');
-            } else {
-                // Not submitted the form, therefore we must show the login box.
-                $store = OAuthStore::instance();
-                $consumer = $store->getConsumer($consumerDetails['consumer_key'], $userid, true);
-
-                Theme::Set('application_title', $consumer['application_title']);
-                Theme::Set('application_descr', $consumer['application_descr']);
-                Theme::Set('application_uri', $consumer['application_uri']);
-
-                $this->getState()->html .= Theme::RenderReturn('header');
-                $this->getState()->html .= Theme::RenderReturn('application_verify');
-                $this->getState()->html .= Theme::RenderReturn('footer');
-                exit();
-            }
-        } catch (OAuthException $e) {
-            // Unsigned request is not allowed.
-            trigger_error($e->getMessage());
-            trigger_error(__('Unsigned requests are not allowed to the authorize page.'), E_USER_ERROR);
+            // Authorize the request
+            $redirectUri = $server->getGrantType('authorization_code')->newAuthorizeRequest('user', $this->getUser()->userId, $authParams);
         }
+        else {
+            $error = new \League\OAuth2\Server\Exception\AccessDeniedException();
+            $error->redirectUri = $authParams['redirect_uri'];
+
+            $redirectUri = RedirectUri::make($authParams['redirect_uri'], [
+                'error' => $error->errorType,
+                'message' => $error->getMessage()
+            ]);
+        }
+
+        Log::debug('Redirect URL is %s', $redirectUri);
+
+        $this->getApp()->redirect($redirectUri, 302);
     }
 
     /**
      * Form to register a new application.
      */
-    public function RegisterForm()
+    public function addForm()
     {
-        $db =& $this->db;
-        $user =& $this->user;
-        $response = new ApplicationState();
-
-        Theme::Set('form_id', 'RegisterOAuth');
-        Theme::Set('form_action', 'index.php?p=oauth&q=Register');
-
-        $formFields = array();
-        $formFields[] = Form::AddText('requester_name', __('Full Name'), NULL,
-            __('The name of the person or organization that authored this application.'), 'n', 'required');
-
-        $formFields[] = Form::AddEmail('requester_email', __('Email Address'), NULL,
-            __('The email address of the person or organization that authored this application.'), 'e', 'required');
-
-        $formFields[] = Form::AddText('application_uri', __('Application Homepage'), NULL,
-            __('The URL of your application homepage'), 'h', '');
-
-        $formFields[] = Form::AddText('callback_uri', __('Application Homepage'), NULL,
-            __('The call back URL for requests'), 'c', '');
-
-        Theme::Set('form_fields', $formFields);
-
-        $response->SetFormRequestResponse(NULL, __('Registration for Consumer Information'), '550px', '475px');
-        $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Services&Category=Register')");
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Register'), '$("#RegisterOAuth").submit()');
-
+        $this->getState()->template = 'applications-form-add';
+        $this->getState()->setData([
+            'help' => Help::Link('Services', 'Register')
+        ]);
     }
 
     /**
      * Register a new application with OAuth
      */
-    public function Register()
+    public function add()
     {
+        // Make and ID/Secret
+        $id = SecureKey::generate();
+        $secret = SecureKey::generate(254);
 
+        // Simple Insert for now
+        PDOConnect::insert('
+            INSERT INTO `oauth_clients` (`id`, `secret`, `name`)
+              VALUES (:id, :secret, :name)
+        ', [
+            'id' => $id,
+            'secret' => $secret,
+            'name' => Sanitize::getString('name')
+        ]);
 
-        $user = $this->getUser();
-        $response = $this->getState();
-        $userid = \Xibo\Helper\Sanitize::getInt('userid');
+        // Update the URI
+        PDOConnect::insert('INSERT INTO `oauth_client_redirect_uris` (client_id, redirect_uri) VALUES (:clientId, :redirectUri)', [
+            'clientId' => $id,
+            'redirectUri' => Sanitize::getString('redirectUri')
+        ]);
 
-        $message = '';
-
-        try {
-            $store = OAuthStore::instance();
-            $key = $store->updateConsumer($_POST, $userid);
-
-            $c = $store->getConsumer($key, $userid);
-
-            $message .= sprintf(__('Your consumer key is: %s'), $c['consumer_key']) . '<br />';
-            $message .= sprintf(__('Your consumer secret is: %s'), $c['consumer_secret']) . '<br />';
-        } catch (OAuthException $e) {
-            trigger_error('Error: ' . $e->getMessage(), E_USER_ERROR);
-        }
-
-        $response->SetFormSubmitResponse($message, false);
-
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Added %s'), Sanitize::getString('name')),
+            'id' => $id
+        ]);
     }
 
     /**

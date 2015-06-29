@@ -22,42 +22,29 @@
 
 namespace Xibo\Middleware;
 
-
-use League\OAuth2\Server\Exception\OAuthException;
 use League\OAuth2\Server\ResourceServer;
 use Slim\Middleware;
+use Xibo\Factory\UserFactory;
 
 class ApiAuthenticationOAuth extends Middleware
 {
-    /**
-     * @var ResourceServer $server
-     */
-    private $server;
-
-    public function ApiOAuth($server)
-    {
-        $this->server = $server;
-    }
-
     public function call()
     {
-        try {
-            $this->server->isValidRequest();
+        $app = $this->app;
 
-            // Call the next middleware
-            $this->next->call();
-        }
-        catch (OAuthException $e) {
-            $response = $this->app->response();
+        $isAuthorised = function() use ($app) {
+            // Validate we are a valid auth
+            /* @var ResourceServer $server */
+            $server = $this->app->server;
 
-            $response->setBody(json_encode(array(
-                'error' =>  $e->getMessage()
-            )));
-            $response->status(403);
+            $app->server->isValidRequest();
 
-            foreach ($e->getHttpHeaders() as $header) {
-                $response->headers($header);
-            }
-        }
+            $this->app->user = UserFactory::loadByClientId($server->getAccessToken()->getSession()->getOwnerId());
+        };
+
+        $app->hook('slim.before.dispatch', $isAuthorised);
+
+        // Call the next middleware
+        $this->next->call();
     }
 }

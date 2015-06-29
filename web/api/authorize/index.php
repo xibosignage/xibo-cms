@@ -22,21 +22,21 @@
 use Xibo\Helper\Config;
 
 DEFINE('XIBO', true);
-define('PROJECT_ROOT', realpath(__DIR__ . '/../..'));
+define('PROJECT_ROOT', realpath(__DIR__ . '/../../..'));
 
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-require '../../vendor/autoload.php';
+require PROJECT_ROOT . '/vendor/autoload.php';
 
-if (!file_exists('../settings.php'))
+if (!file_exists(PROJECT_ROOT . '/web/settings.php'))
     die('Not configured');
 
-Config::Load('../settings.php');
+Config::Load(PROJECT_ROOT . '/web/settings.php');
 
 // Create a logger
 $logger = new \Flynsarmy\SlimMonolog\Log\MonologWriter(array(
-    'name' => 'API',
+    'name' => 'AUTH',
     'handlers' => array(
         new \Xibo\Helper\DatabaseLogHandler()
     ),
@@ -50,7 +50,7 @@ $app = new \Slim\Slim(array(
     'debug' => false,
     'log.writer' => $logger
 ));
-$app->setName('api');
+$app->setName('auth');
 
 // Set the App name
 \Xibo\Helper\ApplicationState::$appName = $app->getName();
@@ -58,7 +58,6 @@ $app->setName('api');
 $app->runNo = \Xibo\Helper\Random::generateString(10);
 $app->add(new \Xibo\Middleware\Storage());
 $app->add(new \Xibo\Middleware\State());
-$app->add(new \Xibo\Middleware\ApiAuthenticationOAuth());
 $app->view(new \Xibo\Middleware\ApiView());
 
 // Configure the Slim error handler
@@ -68,23 +67,44 @@ $app->error(function (\Exception $e) use ($app) {
 });
 
 // oAuth Resource
-$sessionStorage = new \Xibo\Storage\ApiSessionStorage();
-$accessTokenStorage = new \Xibo\Storage\ApiAccessTokenStorage();
-$clientStorage = new \Xibo\Storage\ApiClientStorage();
-$scopeStorage = new \Xibo\Storage\ApiScopeStorage();
+$server = new \League\OAuth2\Server\AuthorizationServer;
 
-$server = new \League\OAuth2\Server\ResourceServer(
-    $sessionStorage,
-    $accessTokenStorage,
-    $clientStorage,
-    $scopeStorage
-);
+$server->setSessionStorage(new \Xibo\Storage\ApiSessionStorage());
+$server->setAccessTokenStorage(new \Xibo\Storage\ApiAccessTokenStorage());
+$server->setClientStorage(new \Xibo\Storage\ApiClientStorage());
+$server->setScopeStorage(new \Xibo\Storage\ApiScopeStorage());
+$server->setAuthCodeStorage(new \Xibo\Storage\ApiAuthCodeStorage());
+
+$authCodeGrant = new \League\OAuth2\Server\Grant\AuthCodeGrant();
+$server->addGrantType($authCodeGrant);
+
+$refreshTokenGrant = new \League\OAuth2\Server\Grant\RefreshTokenGrant();
+$server->addGrantType($refreshTokenGrant);
 
 // DI in the server
 $app->server = $server;
 
-// All routes
-require PROJECT_ROOT . '/lib/routes.php';
+// Auth Routes
+$app->get('/', function() use ($app) {
+
+    $authParams = $app->server->getGrantType('authorization_code')->checkAuthorizeParams();
+
+    // Redirect the user to the UI - save the auth params in the session.
+    $app->session->set('authParams', $authParams);
+
+    // We know we are at /api/authorize, so convert that to /application/authorise
+
+    $app->redirect(str_replace('/api/authorize/', '/application/authorize', $app->request()->getPath()));
+})->name('home');
+
+// Access Token
+$app->post('/access_token', function() use ($app) {
+
+    // Issue an access token
+    $app->halt(200, json_encode($app->server->issueAccessToken()));
+
+    // Exceptions are caught by our error controller automatically.
+});
 
 // Run app
 $app->run();

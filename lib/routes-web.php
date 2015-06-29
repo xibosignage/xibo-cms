@@ -57,7 +57,7 @@ $app->get('/login', '\Xibo\Controller\Login:loginForm')->name('login');
 $app->post('/login', function () use ($app) {
 
     // Capture the prior route (if there is one)
-    $priorRoute = ($app->request()->post('priorPage'));
+    $priorRoute = ($app->request()->post('priorRoute'));
 
     try {
         $controller = new \Xibo\Controller\Login($app);
@@ -67,7 +67,7 @@ $app->post('/login', function () use ($app) {
         \Xibo\Helper\Log::info('%s user logged in.', $app->user->userName);
 
         try {
-            $redirect = $app->urlFor(($priorRoute == '' || stripos($priorRoute, 'login')) ? 'home' : $priorRoute);
+            $redirect = ($priorRoute == '' || stripos($priorRoute, 'login')) ? $app->urlFor('home') : $priorRoute;
         }
         catch (RuntimeException $e) {
             $redirect = $app->urlFor('home');
@@ -245,9 +245,11 @@ $app->get('/admin/form/tidy', '\Xibo\Controller\Settings:tidyLibraryForm')->name
 //
 // oauth
 //
-$app->get('/applications/view', '\Xibo\Controller\Applications:displayPage')->name('applications.view');
-$app->get('/applications/data/activity', '\Xibo\Controller\Applications:viewActivity')->name('application.view.activity');
-$app->get('/applications/form/add', '\Xibo\Controller\Applications:addForm')->name('application.add.form');
+$app->get('/application/view', '\Xibo\Controller\Applications:displayPage')->name('application.view');
+$app->get('/application/data/activity', '\Xibo\Controller\Applications:viewActivity')->name('application.view.activity');
+$app->get('/application/form/add', '\Xibo\Controller\Applications:addForm')->name('application.add.form');
+$app->get('/application/authorize', '\Xibo\Controller\Applications:authorizeRequest')->name('application.authorize.request');
+$app->post('/application/authorize', '\Xibo\Controller\Applications:authorize')->name('application.authorize');
 
 //
 // module
