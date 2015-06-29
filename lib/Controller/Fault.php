@@ -19,16 +19,13 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
-use baseDAO;
-use Slim\Log;
+
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\LogFactory;
 use Xibo\Helper\Config;
 
-
 class Fault extends Base
 {
-
     function displayPage()
     {
         $config = new Config();
@@ -49,7 +46,7 @@ class Fault extends Base
 
         // Do some post processing
         foreach (LogFactory::query(['logId'], ['fromDt' => (time() - (60 * 10))]) as $row) {
-            /* @var \Xibo\Entity\Log $row */
+            /* @var \Xibo\Entity\LogEntry $row */
             fputcsv($out, [$row->logId, $row->runNo, $row->logDate, $row->channel, $row->page, $row->function, $row->message, $row->display, $row->type]);
         }
 
@@ -69,7 +66,7 @@ class Fault extends Base
         if ($this->getUser()->userTypeId != 1)
             throw new AccessDeniedException();
 
-        Config::ChangeSetting('audit', Log::DEBUG);
+        Config::ChangeSetting('audit', \Slim\Log::DEBUG);
 
         // Return
         $this->getState()->hydrate([
@@ -82,7 +79,7 @@ class Fault extends Base
         if ($this->getUser()->userTypeId != 1)
             throw new AccessDeniedException();
 
-        Config::ChangeSetting('audit', Log::EMERGENCY);
+        Config::ChangeSetting('audit', \Slim\Log::EMERGENCY);
 
         // Return
         $this->getState()->hydrate([
