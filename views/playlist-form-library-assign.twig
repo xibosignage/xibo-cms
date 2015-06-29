@@ -15,9 +15,9 @@
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Save" %}, LibraryAssignSubmit({{ playlist.playlistId }})
-    {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, LibraryAssignSubmit({{ playlist.playlistId }})
 {% endblock %}
 
 {% block callBack %}mediaFormCallBack{% endblock %}

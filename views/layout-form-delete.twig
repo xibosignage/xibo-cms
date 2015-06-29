@@ -7,10 +7,10 @@
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Yes" %}, $("#layoutDeleteForm").submit()
-    {% trans "No" %}, XiboDialogClose()
-    {% trans "Retire" %}, XiboSwapDialog("{{ urlFor("layout.retire.form", {id: layout.layoutId}) }}")
     {% trans "Help" %}, XiboHelpRender("{{ help.delete }}")
+    {% trans "Retire" %}, XiboSwapDialog("{{ urlFor("layout.retire.form", {id: layout.layoutId}) }}")
+    {% trans "No" %}, XiboDialogClose()
+    {% trans "Yes" %}, $("#layoutDeleteForm").submit()
 {% endblock %}
 
 {% block formHtml %}

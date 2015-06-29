@@ -16,9 +16,9 @@ $formFields[] = Form::AddMessage(sprintf(__('There is %s of data stored in %d fi
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Save" %}, $("#<<id>>").submit()
-    {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#<<id>>").submit()
 {% endblock %}
 
 {% block formHtml %}

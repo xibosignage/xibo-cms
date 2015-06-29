@@ -5,9 +5,6 @@
  * (${FILE_NAME})
  */
 
-
-        $formFields[] = Form::AddCheckbox('enabled', __('Enable?'), $resolution->enabled,
-            __('Is the Resolution enabled for use?'), 'e');
 #}
 
 {% extends "form-base.twig" %}
@@ -18,9 +15,9 @@
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Save" %}, $("#resolutionEditForm").submit()
-    {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#resolutionEditForm").submit()
 {% endblock %}
 
 {% block formHtml %}
@@ -38,6 +35,10 @@
                         {% set title %}{% trans "Height" %}{% endset %}
                         {% set helpText %}{% trans "The Height for this Resolution" %}{% endset %}
                         {{ forms.text("height", title, resolution.height, helpText) }}
+
+                        {% set title %}{% trans "Enable?" %}{% endset %}
+                        {% set helpText %}{% trans "Is the Resolution enabled for use?" %}{% endset %}
+                        {{ forms.checkbox("enabled", title, resolution.enabled, helpText) }}
             </form>
         </div>
     </div>

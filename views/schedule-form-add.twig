@@ -127,10 +127,10 @@
 {% block callBack %}setupScheduleForm{% endblock %}
 
 {% block formButtons %}
-    {% trans "Next" %}, $("#<<id>>").submit()
-    {% trans "Save" %}, $("#<<id>>").submit()
-    {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#<<id>>").submit()
+    {% trans "Next" %}, $("#<<id>>").submit()
 {% endblock %}
 
 {% block formHtml %}

@@ -15,9 +15,9 @@ Theme::Set('form_fields', array(Form::AddMessage(__('Are you sure you want to re
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Save" %}, $("#displayRequestScreenshotForm").submit()
-    {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#displayRequestScreenshotForm").submit()
 {% endblock %}
 
 {% block formHtml %}

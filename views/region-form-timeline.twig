@@ -15,10 +15,10 @@
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Save Order" %}, XiboTimelineSaveOrder("timelineControl")
-    {% trans "Switch to Grid" %}, XiboSwapDialog("{{ urlFor("region.timeline.form", {id: region.regionId}) }}?view=grid")
-    {% trans "Close" %}, XiboDialogClose()
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Close" %}, XiboDialogClose()
+    {% trans "Switch to Grid" %}, XiboSwapDialog("{{ urlFor("region.timeline.form", {id: region.regionId}) }}?view=grid")
+    {% trans "Save Order" %}, XiboTimelineSaveOrder("timelineControl")
 {% endblock %}
 
 {% block callBack %}loadTimeLineCallback{% endblock %}
