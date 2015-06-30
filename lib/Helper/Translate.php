@@ -43,7 +43,7 @@ class Translate
         $supportedLanguages = scandir($localeDir);
 
         // Try to get the local firstly from _REQUEST (post then get)
-        $requestedLanguage = Sanitize::getString('lang');
+        $requestedLanguage = Sanitize::getString('lang', $language);
         $foundLanguage = '';
 
         if ($requestedLanguage != '') {

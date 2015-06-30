@@ -42,34 +42,9 @@ class Install
 
     public function Step1()
     {
-        Theme::Set('form_action', 'install.php');
-        // Check environment
-        $config = new Config();
-
-        $environment = $config->CheckEnvironment();
-
-        $formFields = array();
-        $formButtons = array();
-        $formFields[] = Form::AddMessage(sprintf(__("First we need to check if your server meets %s's requirements."), Theme::getConfig('app_name')));
-
-        $formFields[] = Form::AddRaw($environment);
-
-        if ($config->EnvironmentFault()) {
-            $formFields[] = Form::AddHidden('step', 1);
-            $formButtons[] = Form::AddButton(__('Retest'));
-        } else if ($config->EnvironmentWarning()) {
-            $formFields[] = Form::AddHidden('step', 2);
-            $formButtons[] = Form::AddButton(__('Retest'), 'link', 'install.php?step=1');
-            $formButtons[] = Form::AddButton(__('Next'));
-        } else {
-            $formFields[] = Form::AddHidden('step', 2);
-            $formButtons[] = Form::AddButton(__('Next'));
-        }
-
-        // Return a rendered form
-        Theme::Set('form_fields', $formFields);
-        Theme::Set('form_buttons', $formButtons);
-        return Theme::RenderReturn('form_render');
+        return [
+            'config' => new Config()
+        ];
     }
 
     public function Step2()

@@ -1,9 +1,9 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2015 Daniel Garner
+ * Copyright (C) 2009-2014 Alex Harrington and Daniel Garner
  *
- * This file (index.php) is part of Xibo.
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -18,48 +18,39 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-use Xibo\Helper\Config;
+use Xibo\Helper\Theme;
+use Xibo\Helper\Translate;
 
 DEFINE('XIBO', true);
-define('PROJECT_ROOT', realpath(__DIR__ . '/..'));
+DEFINE('MAX_EXECUTION', true);
+define('PROJECT_ROOT', realpath(__DIR__ . '/../..'));
 
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 require PROJECT_ROOT . '/vendor/autoload.php';
 
-if (!file_exists('settings.php')) {
-    if (file_exists(PROJECT_ROOT . '/web/install/index.php')) {
-        header('Location: install/');
-        exit();
-    }
-    else {
-        die('Not configured');
-    }
-}
-
-// Load the config
-Config::Load('settings.php');
+// Create a theme
+new Theme('default');
 
 // Create a logger
 $logger = new \Flynsarmy\SlimMonolog\Log\MonologWriter(array(
-    'name' => 'WEB',
+    'name' => 'INSTALL',
     'handlers' => array(
-        new \Monolog\Handler\ChromePHPHandler(\Monolog\Logger::INFO),
-        new \Xibo\Helper\DatabaseLogHandler()
+        new \Monolog\Handler\StreamHandler(PROJECT_ROOT . '/library/install_log.txt')
     ),
     'processors' => array(
         new \Xibo\Helper\LogProcessor()
     )
 ));
 
-// Slim Application
+// Installer is its own little Slim application
 $app = new \Slim\Slim(array(
-    'mode' => Config::GetSetting('SERVER_MODE'),
+    'mode' => 'install',
     'debug' => false,
     'log.writer' => $logger
 ));
-$app->setName('web');
+$app->setName('install');
 
 // Set the App name
 \Xibo\Helper\ApplicationState::$appName = $app->getName();
@@ -68,15 +59,14 @@ $app->runNo = \Xibo\Helper\Random::generateString(10);
 
 // Configure the Slim error handler
 $app->error(function (\Exception $e) use ($app) {
-    $controller = new \Xibo\Controller\Error();
-    $controller->handler($e);
+    $app->halt(500, 'Sorry there has been an unexpected error. ' . $e->getMessage());
 });
 
 // Twig templating
 $twig = new \Slim\Views\Twig();
 $twig->parserOptions = array(
     'debug' => true,
-    'cache' => '../cache'
+    'cache' => PROJECT_ROOT . '/cache'
 );
 $twig->parserExtensions = array(
     new \Slim\Views\TwigExtension(),
@@ -84,21 +74,33 @@ $twig->parserExtensions = array(
 );
 
 // Configure the template folder
-$twig->twigTemplateDirs = array_merge(\Xibo\Factory\ModuleFactory::getViewPaths(), ['../views']);
-
+$twig->twigTemplateDirs = [PROJECT_ROOT . '/views'];
 $app->view($twig);
 
-// Middleware (onion, outside inwards and then out again - i.e. the last one is first and last)
-$app->add(new \Xibo\Middleware\WebAuthentication());
-$app->add(new \Xibo\Middleware\CsrfGuard());
-$app->add(new \Xibo\Middleware\Theme());
-$app->add(new \Xibo\Middleware\Actions());
-$app->add(new \Xibo\Middleware\State());
-$app->add(new \Xibo\Middleware\Storage());
+$twig->appendData(['theme' => Theme::getConfig()]);
 
-// All application routes
-require '../lib/routes-web.php';
-require '../lib/routes.php';
+// Hook to setup translations
+$app->hook('slim.before.dispatch', function() use ($app) {
+
+    \Xibo\Helper\Log::debug('Hook before Dispatch');
+
+    if (file_exists(PROJECT_ROOT . '/web/settings.php')) {
+        include_once(PROJECT_ROOT . '/web/settings.php');
+        // Set-up the translations for get text
+        Translate::InitLocale();
+
+        $app->settingsExists = true;
+    }
+    else {
+        \Xibo\Helper\Log::debug('Setting up Translations for default language');
+
+        Translate::InitLocale('en_GB');
+    }
+
+    \Xibo\Helper\Log::debug('Hook complete');
+});
+
+require PROJECT_ROOT . '/lib/routes-install.php';
 
 // Run App
 $app->run();

@@ -1,0 +1,118 @@
+<?php
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (routes-install.php)
+ */
+
+$app->get('/(:step)', function($step = 1) use($app) {
+
+    \Xibo\Helper\Log::debug('Matched route with Step %s', $step);
+
+    $install = new \Xibo\Helper\Install();
+    $settingsExists = $app->settingsExists;
+    $template = '';
+    $data = [];
+
+    switch ($step) {
+
+        case 1:
+            if ($settingsExists)
+                throw new \Xibo\Exception\InstallationError(__('The CMS has already been installed. Please contact your system administrator.'));
+
+            // Welcome to the installer (this should only show once)
+            // Checks environment
+            $template = 'install-step1';
+            $data = $install->Step1();
+            break;
+
+        case 2:
+            if ($settingsExists)
+                throw new \Xibo\Exception\InstallationError(__('The CMS has already been installed. Please contact your system administrator.'));
+
+            // Collect details about the database
+            $template = 'install-step2';
+            $data = $install->Step2();
+            break;
+
+        case 3:
+            if ($settingsExists)
+                throw new \Xibo\Exception\InstallationError(__('The CMS has already been installed. Please contact your system administrator.'));
+
+            // Check and validate DB details
+            if (defined('MAX_EXECUTION') && MAX_EXECUTION)
+                set_time_limit(0);
+
+            try {
+                $install->Step3();
+
+                // Redirect to step 4
+                $app->redirectTo('install', ['step' => 4]);
+            }
+            catch (Exception $e) {
+                $install->errorMessage = $e->getMessage();
+
+                // Reload step 2
+                $template = 'install-step2';
+                $data = $install->Step2();
+            }
+            break;
+
+        case 4:
+            // DB installed and we are ready to collect some more details
+            // We should get the admin username and password
+            $data = $install->Step4();
+            $template = 'install-step4';
+            break;
+
+        case 5:
+            // Create a user account
+            try {
+                $install->Step5();
+
+                // Redirect to step 6
+                $app->redirectTo('install', ['step' => 6]);
+            }
+            catch (Exception $e) {
+                $install->errorMessage = $e->getMessage();
+
+                // Reload step 4
+                $template = 'install-step4';
+                $data = $install->Step4();
+            }
+            break;
+
+        case 6:
+            $template = 'install-step6';
+            $data = $install->Step6();
+            break;
+
+        case 7:
+            // Create a user account
+            try {
+                $template = 'install-step7';
+                $install->Step7();
+
+                // Redirect to step 6
+                $app->redirectTo('install', ['step' => 8]);
+            }
+            catch (Exception $e) {
+                $install->errorMessage = $e->getMessage();
+
+                // Reload step 6
+                $template = 'install-step6';
+                $data = $install->Step6();
+            }
+            break;
+
+        case 8:
+            // Step 8 ends the execution
+            $template = 'login';
+            $install->Step8();
+            break;
+    }
+
+    // Render
+    $app->render($template . '.twig', $data);
+
+})->name('install');
