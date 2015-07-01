@@ -59,7 +59,7 @@ $app->runNo = \Xibo\Helper\Random::generateString(10);
 
 // Configure the Slim error handler
 $app->error(function (\Exception $e) use ($app) {
-    \Xibo\Helper\Log::critical('Unexpected Error: %s', $step, $e->getMessage());
+    \Xibo\Helper\Log::critical('Unexpected Error: %s', $e->getMessage());
     \Xibo\Helper\Log::debug($e->getTraceAsString());
 
     $app->halt(500, 'Sorry there has been an unexpected error. ' . $e->getMessage());
