@@ -125,9 +125,10 @@ class Stat extends data
 
             Debug::Audit('Display Up: ' . $displayId);
         
-            $sth = $dbh->prepare('UPDATE stat SET end = :toDt WHERE displayId = :displayId AND end IS NULL');
+            $sth = $dbh->prepare('UPDATE `stat` SET end = :toDt WHERE displayId = :displayId AND end IS NULL AND type = :type');
             $sth->execute(array(
                     'toDt' => date('Y-m-d H:i:s'),
+                    'type' => 'displaydown',
                     'displayId' => $displayId
                 ));
           
