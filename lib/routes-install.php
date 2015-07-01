@@ -108,7 +108,7 @@ $app->map('/(:step)', function($step = 1) use($app) {
 
                 // Redirect to login
                 // This will always be one folder down
-                $login = str_replace('/install', '/', $app->urlFor('login'));
+                $login = str_replace('/install', '', $app->urlFor('login'));
 
                 \Xibo\Helper\Log::info('Installation Complete. Redirecting to %s', $login);
 
