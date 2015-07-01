@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2009-2014 Alex Harrington and Daniel Garner
+ * Copyright (C) 2009-2015 Spring Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -59,6 +59,9 @@ $app->runNo = \Xibo\Helper\Random::generateString(10);
 
 // Configure the Slim error handler
 $app->error(function (\Exception $e) use ($app) {
+    \Xibo\Helper\Log::critical('Unexpected Error: %s', $step, $e->getMessage());
+    \Xibo\Helper\Log::debug($e->getTraceAsString());
+
     $app->halt(500, 'Sorry there has been an unexpected error. ' . $e->getMessage());
 });
 
@@ -82,8 +85,6 @@ $twig->appendData(['theme' => Theme::getInstance()]);
 // Hook to setup translations
 $app->hook('slim.before.dispatch', function() use ($app) {
 
-    \Xibo\Helper\Log::debug('Hook before Dispatch');
-
     if (file_exists(PROJECT_ROOT . '/web/settings.php')) {
         include_once(PROJECT_ROOT . '/web/settings.php');
         // Set-up the translations for get text
@@ -92,12 +93,9 @@ $app->hook('slim.before.dispatch', function() use ($app) {
         $app->settingsExists = true;
     }
     else {
-        \Xibo\Helper\Log::debug('Setting up Translations for default language');
-
         Translate::InitLocale('en_GB');
     }
 
-    \Xibo\Helper\Log::debug('Hook complete');
 });
 
 require PROJECT_ROOT . '/lib/routes-install.php';

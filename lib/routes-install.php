@@ -7,7 +7,7 @@
 
 $app->map('/(:step)', function($step = 1) use($app) {
 
-    \Xibo\Helper\Log::debug('Matched route with Step %s', $step);
+    \Xibo\Helper\Log::info('Installer Step %s', $step);
 
     $install = new \Xibo\Helper\Install();
     $settingsExists = $app->settingsExists;
@@ -40,8 +40,10 @@ $app->map('/(:step)', function($step = 1) use($app) {
                 throw new \Xibo\Exception\InstallationError(__('The CMS has already been installed. Please contact your system administrator.'));
 
             // Check and validate DB details
-            if (defined('MAX_EXECUTION') && MAX_EXECUTION)
+            if (defined('MAX_EXECUTION') && MAX_EXECUTION) {
+                \Xibo\Helper\Log::info('Setting unlimited max execution time.');
                 set_time_limit(0);
+            }
 
             try {
                 $install->Step3();
@@ -50,6 +52,9 @@ $app->map('/(:step)', function($step = 1) use($app) {
                 $app->redirectTo('install', ['step' => 4]);
             }
             catch (\Xibo\Exception\InstallationError $e) {
+
+                \Xibo\Helper\Log::error('Installation Exception on Step %d: %s', $step, $e->getMessage());
+
                 $app->flashNow('error', $e->getMessage());
 
                 // Add our object properties to the flash vars, so we render the form with them set
@@ -79,6 +84,9 @@ $app->map('/(:step)', function($step = 1) use($app) {
                 $app->redirectTo('install', ['step' => 6]);
             }
             catch (\Xibo\Exception\InstallationError $e) {
+
+                \Xibo\Helper\Log::error('Installation Exception on Step %d: %s', $step, $e->getMessage());
+
                 $app->flashNow('error', $e->getMessage());
 
                 // Reload step 4
@@ -101,9 +109,14 @@ $app->map('/(:step)', function($step = 1) use($app) {
                 // Redirect to login
                 // This will always be one folder down
                 $login = str_replace('/install', '/', $app->urlFor('login'));
+
+                \Xibo\Helper\Log::info('Installation Complete. Redirecting to %s', $login);
+
                 $app->redirect($login);
             }
             catch (\Xibo\Exception\InstallationError $e) {
+                \Xibo\Helper\Log::error('Installation Exception on Step %d: %s', $step, $e->getMessage());
+
                 $app->flashNow('error', $e->getMessage());
 
                 // Reload step 6

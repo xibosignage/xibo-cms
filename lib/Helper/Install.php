@@ -346,8 +346,8 @@ END;
         }
 
         // Delete install
-        if (!unlink('install.php'))
-            throw new InstallationError(__("Unable to delete install.php. Please ensure the web server has permission to unlink this file and retry"));
+        if (!@unlink('index.php'))
+            throw new InstallationError(__("Unable to delete install/index.php. Please ensure the web server has permission to unlink this file and retry"));
     }
 
     /*
