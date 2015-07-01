@@ -355,7 +355,7 @@ class ModuleFactory
                 $SQL .= ' LIMIT ' . Sanitize::getInt('start') . ', ' . Sanitize::getInt('length', 10);
             }
 
-            Log::sql($SQL, $params);
+            //Log::sql($SQL, $params);
 
             $sth = $dbh->prepare($SQL);
             $sth->execute($params);

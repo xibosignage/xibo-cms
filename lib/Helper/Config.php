@@ -221,22 +221,6 @@ class Config
             'advice' => $advice
         );
 
-        // Check for MySQL
-        $advice = __('MySQL support must be enabled in PHP.');
-        if ($this->CheckMySQL()) {
-            $status = 1;
-        } else {
-            $this->envFault = true;
-
-            $status = 0;
-        }
-
-        $rows[] = array(
-            'item' => __('MySQL database (PHP MySql)'),
-            'status' => $status,
-            'advice' => $advice
-        );
-
         // Check for PDO
         $advice = __('PDO support with MySQL drivers must be enabled in PHP.');
         if ($this->CheckPDO()) {
@@ -482,7 +466,7 @@ class Config
         } else {
             $this->envWarning = true;
             $status = 2;
-            $advice = __('You probably want to allow larger files to be uploaded than is currently available with your PHP configuration.') . '<br />';
+            $advice = __('You probably want to allow larger files to be uploaded than is currently available with your PHP configuration.');
             $advice .= __('We suggest setting your PHP post_max_size and upload_max_size to at least 128M, and also increasing your max_execution_time to at least 120 seconds.');
         }
 
@@ -556,15 +540,6 @@ class Config
     function CheckPHP()
     {
         return (version_compare(phpversion(), Config::$VERSION_REQUIRED) != -1);
-    }
-
-    /**
-     * Check PHP has MySQL module installed
-     * @return
-     */
-    function CheckMySQL()
-    {
-        return extension_loaded("mysql");
     }
 
     /**

@@ -24,18 +24,22 @@ namespace Xibo\Middleware;
 
 
 use Slim\Middleware;
+use Xibo\Controller\Library;
+use Xibo\Helper\Config;
 use Xibo\Helper\Log;
-use Xibo\Helper\Theme;
 
 class Actions extends Middleware
 {
     public function call()
     {
         // Process Actions
-        if (\Xibo\Helper\Config::GetSetting('DEFAULTS_IMPORTED') == 0) {
+        if (Config::GetSetting('DEFAULTS_IMPORTED') == 0) {
 
             //$layout = new Layout();
             //$layout->importFolder('theme' . DIRECTORY_SEPARATOR . Theme::ThemeFolder() . DIRECTORY_SEPARATOR . 'layouts');
+
+            // Install files
+            Library::installAllModuleFiles();
 
             \Xibo\Helper\Config::ChangeSetting('DEFAULTS_IMPORTED', 1);
         }

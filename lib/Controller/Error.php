@@ -10,6 +10,7 @@ namespace Xibo\Controller;
 
 
 use League\OAuth2\Server\Exception\OAuthException;
+use Xibo\Exception\FormExpiredException;
 use Xibo\Helper\Log;
 
 class Error extends Base
@@ -50,6 +51,7 @@ class Error extends Base
 
                 break;
 
+            case 'auth':
             case 'api':
             case 'test':
 
@@ -60,8 +62,13 @@ class Error extends Base
 
                 $status = 500;
 
-                if ($e instanceof OAuthException)
+                if ($e instanceof OAuthException) {
                     $status = $e->httpStatusCode;
+
+                    foreach ($e->getHttpHeaders() as $header) {
+                        $app->response()->headers($header);
+                    }
+                }
 
                 $this->render($status);
 
@@ -86,6 +93,9 @@ class Error extends Base
 
     private function handledError($e)
     {
-        return ($e instanceof \InvalidArgumentException);
+        return ($e instanceof \InvalidArgumentException
+            || $e instanceof OAuthException
+            || $e instanceof FormExpiredException
+        );
     }
 }

@@ -9,7 +9,7 @@
 namespace Xibo\Factory;
 
 
-use Xibo\Entity\Log;
+use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
@@ -30,7 +30,7 @@ class LogFactory
      * Query
      * @param array $sortOrder
      * @param array $filterBy
-     * @return array[Log]
+     * @return array[\Xibo\Entity\Log]
      */
     public static function query($sortOrder, $filterBy)
     {
@@ -97,10 +97,10 @@ class LogFactory
 
         $sql = $select . $body . $order . $limit;
 
-        \Xibo\Helper\Log::sql($sql, $params);
+        Log::sql($sql, $params);
 
         foreach (PDOConnect::select($sql, $params) as $row) {
-            $entries[] = (new Log())->hydrate($row);
+            $entries[] = (new \Xibo\Entity\LogEntry())->hydrate($row);
         }
 
         // Paging

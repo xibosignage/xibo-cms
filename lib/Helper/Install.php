@@ -20,190 +20,92 @@
  */
 namespace Xibo\Helper;
 
-
+use Xibo\Exception\InstallationError;
+use Xibo\Storage\PDOConnect;
 
 class Install
 {
-
-    public $errorMessage;
-
     // DB Details
-    private $db_create;
-    private $db_admin_user;
-    private $db_admin_pass;
-    private $new_db_host;
-    private $new_db_user;
-    private $new_db_pass;
-    private $new_db_name;
-    private $existing_db_host;
-    private $existing_db_user;
-    private $existing_db_pass;
-    private $existing_db_name;
+    public $db_create;
+    public $db_admin_user;
+    public $db_admin_pass;
+    public $new_db_host;
+    public $new_db_user;
+    public $new_db_pass;
+    public $new_db_name;
+    public $existing_db_host;
+    public $existing_db_user;
+    public $existing_db_pass;
+    public $existing_db_name;
 
     public function Step1()
     {
-        Theme::Set('form_action', 'install.php');
-        // Check environment
-        $config = new Config();
-
-        $environment = $config->CheckEnvironment();
-
-        $formFields = array();
-        $formButtons = array();
-        $formFields[] = Form::AddMessage(sprintf(__("First we need to check if your server meets %s's requirements."), Theme::getConfig('app_name')));
-
-        $formFields[] = Form::AddRaw($environment);
-
-        if ($config->EnvironmentFault()) {
-            $formFields[] = Form::AddHidden('step', 1);
-            $formButtons[] = Form::AddButton(__('Retest'));
-        } else if ($config->EnvironmentWarning()) {
-            $formFields[] = Form::AddHidden('step', 2);
-            $formButtons[] = Form::AddButton(__('Retest'), 'link', 'install.php?step=1');
-            $formButtons[] = Form::AddButton(__('Next'));
-        } else {
-            $formFields[] = Form::AddHidden('step', 2);
-            $formButtons[] = Form::AddButton(__('Next'));
-        }
-
-        // Return a rendered form
-        Theme::Set('form_fields', $formFields);
-        Theme::Set('form_buttons', $formButtons);
-        return Theme::RenderReturn('form_render');
+        return [
+            'config' => new Config()
+        ];
     }
 
     public function Step2()
     {
-        Theme::Set('form_action', 'install.php');
-        // Choice of new or existing database
-        // Tabs
-        $tabs = array();
-        $tabs[] = Form::AddTab('new', __('Create a new database'));
-        $tabs[] = Form::AddTab('existing', __('Use an existing database'));
-        Theme::Set('form_tabs', $tabs);
-
-        $formFields = array();
-
-        // Set some defaults
-        $this->db_create = ($this->db_create == '') ? 1 : $this->db_create;
-        $this->new_db_host = ($this->new_db_host == '') ? 'localhost' : $this->new_db_host;
-        $this->db_admin_user = ($this->db_admin_user == '') ? 'root' : $this->db_admin_user;
-
-        // New DB tab
-        $formFields['new'][] = Form::AddHidden('step', 3);
-
-        $formFields['new'][] = Form::AddMessage(sprintf(__("%s needs to set-up a connection to your MySQL database."), Theme::getConfig('app_name')));
-
-        $formFields['new'][] = Form::AddMessage(__('If you have not yet created an empty database and database user for Xibo to use, and know the user name / password of a MySQL administrator stay on this tab, otherwise click "Use Existing".'));
-
-        $formFields['new'][] = Form::AddRadio('db_create', 'db_create1', __('Create a new database'), $this->db_create, 1,
-            __('Select to create a new database'), 'c');
-
-        $formFields['new'][] = Form::AddText('host', __('Host'), $this->new_db_host,
-            __('Please enter the hostname for the MySQL server. This is usually localhost.'), 'h');
-
-        $formFields['new'][] = Form::AddText('admin_username', __('Admin Username'), $this->db_admin_user,
-            __('Please enter the user name of an account that has administrator privileges on the MySQL server.'), 'h');
-
-        $formFields['new'][] = Form::AddPassword('admin_password', __('Admin Password'), $this->db_admin_pass,
-            __('Please enter password for the Admin account.'), 'h');
-
-        $formFields['new'][] = Form::AddText('db_name', __('Database Name'), $this->new_db_name,
-            __('Please enter the name of the database that should be created.'), 'h');
-
-        $formFields['new'][] = Form::AddText('db_username', __('Database Username'), $this->new_db_user,
-            __('Please enter the name of the database user that should be created.'), 'h');
-
-        $formFields['new'][] = Form::AddPassword('db_password', __('Database Password'), $this->new_db_pass,
-            __('Please enter a password for this user.'), 'h');
-
-        // Existing DB tab
-        $formFields['existing'][] = Form::AddRadio('db_create', 'db_create2', __('Use an existing database'), $this->db_create, 2,
-            __('Select to use an existing database. Please note that when you use an existing database it must be empty of all other contents.'), 'e');
-
-        $formFields['existing'][] = Form::AddText('existing_host', __('Host'), $this->existing_db_host,
-            __('Please enter the hostname for the MySQL server. This is usually localhost.'), 'h');
-
-        $formFields['existing'][] = Form::AddText('existing_db_name', __('Database Name'), $this->existing_db_name,
-            __('Please enter the name of the database that should be created.'), 'h');
-
-        $formFields['existing'][] = Form::AddText('existing_db_username', __('Database Username'), $this->existing_db_user,
-            __('Please enter the name of the database user that should be created.'), 'h');
-
-        $formFields['existing'][] = Form::AddPassword('existing_db_password', __('Database Password'), $this->existing_db_pass,
-            __('Please enter a password for this user.'), 'h');
-
-        // Put up an error message if one has been set (and then unset it)
-        if ($this->errorMessage != '') {
-            Theme::Set('message', $this->errorMessage);
-            Theme::Set('prepend', Theme::RenderReturn('message_box'));
-            $this->errorMessage == '';
-        }
-
-        // Return a rendered form
-        Theme::Set('form_fields_new', $formFields['new']);
-        Theme::Set('form_fields_existing', $formFields['existing']);
-        Theme::Set('form_buttons', array(Form::AddButton(__('Next'))));
-        return Theme::RenderReturn('form_render');
+        return [];
     }
 
     public function Step3()
     {
-
         // Have we been told to create a new database
-        $this->db_create = \Xibo\Helper\Sanitize::getInt('db_create');
+        $this->db_create = Sanitize::getInt('db_create');
 
         // Check all parameters have been specified
-        $this->db_admin_user = \Kit::GetParam('admin_username', _POST, _PASSWORD);
-        $this->db_admin_pass = \Kit::GetParam('admin_password', _POST, _PASSWORD);
+        $this->db_admin_user = Sanitize::getString('admin_username');
+        $this->db_admin_pass = Sanitize::getString('admin_password');
 
-        $this->new_db_host = \Xibo\Helper\Sanitize::getString('host');
-        $this->new_db_user = \Kit::GetParam('db_username', _POST, _PASSWORD);
-        $this->new_db_pass = \Kit::GetParam('db_password', _POST, _PASSWORD);
-        $this->new_db_name = \Kit::GetParam('db_name', _POST, _PASSWORD);
+        $this->new_db_host = Sanitize::getString('host');
+        $this->new_db_user = Sanitize::getString('db_username');
+        $this->new_db_pass = Sanitize::getString('db_password');
+        $this->new_db_name = Sanitize::getString('db_name');
 
-        $this->existing_db_host = \Xibo\Helper\Sanitize::getString('existing_host');
-        $this->existing_db_user = \Kit::GetParam('existing_db_username', _POST, _PASSWORD);
-        $this->existing_db_pass = \Kit::GetParam('existing_db_password', _POST, _PASSWORD);
-        $this->existing_db_name = \Kit::GetParam('existing_db_name', _POST, _PASSWORD);
+        $this->existing_db_host = Sanitize::getString('existing_host');
+        $this->existing_db_user = Sanitize::getString('existing_db_username');
+        $this->existing_db_pass = Sanitize::getString('existing_db_password');
+        $this->existing_db_name = Sanitize::getString('existing_db_name');
 
         // If an administrator user name / password has been specified then we should create a new DB
         if ($this->db_create == 1) {
             // Check details for a new database
             if ($this->new_db_host == '')
-                throw new Exception(__('Please provide a database host. This is usually localhost.'));
+                throw new InstallationError(__('Please provide a database host. This is usually localhost.'));
 
             if ($this->new_db_user == '')
-                throw new Exception(__('Please provide a user for the new database.'));
+                throw new InstallationError(__('Please provide a user for the new database.'));
 
             if ($this->new_db_pass == '')
-                throw new Exception(__('Please provide a password for the new database.'));
+                throw new InstallationError(__('Please provide a password for the new database.'));
 
             if ($this->new_db_name == '')
-                throw new Exception(__('Please provide a name for the new database.'));
+                throw new InstallationError(__('Please provide a name for the new database.'));
 
             if ($this->db_admin_user == '')
-                throw new Exception(__('Please provide an admin user name.'));
+                throw new InstallationError(__('Please provide an admin user name.'));
 
             // Try to create the new database
             // Try and connect using these details and create the new database
             try {
-                $dbh = \Xibo\Storage\PDOConnect::connect($this->new_db_host, $this->db_admin_user, $this->db_admin_pass);
-            } catch (Exception $e) {
-                throw new Exception(sprintf(__('Could not connect to MySQL with the administrator details. Please check and try again. Error Message = [%s]'), $e->getMessage()));
+                PDOConnect::connect($this->new_db_host, $this->db_admin_user, $this->db_admin_pass);
+            } catch (\PDOException $e) {
+                throw new InstallationError(sprintf(__('Could not connect to MySQL with the administrator details. Please check and try again. Error Message = [%s]'), $e->getMessage()));
             }
 
             // Try to create the new database
             try {
-                $dbh = \Xibo\Storage\PDOConnect::init();
+                $dbh = PDOConnect::init();
                 $dbh->exec(sprintf('CREATE DATABASE `%s`', $this->new_db_name));
-            } catch (Exception $e) {
-                throw new Exception(sprintf(__('Could not create a new database with the administrator details [%s]. Please check and try again. Error Message = [%s]'), $this->db_admin_user, $e->getMessage()));
+            } catch (\PDOException $e) {
+                throw new InstallationError(sprintf(__('Could not create a new database with the administrator details [%s]. Please check and try again. Error Message = [%s]'), $this->db_admin_user, $e->getMessage()));
             }
 
             // Try to create the new user
             try {
-                $dbh = \Xibo\Storage\PDOConnect::init();
+                $dbh = PDOConnect::init();
 
                 // Create the user and grant privileges
                 if ($this->new_db_host == 'localhost') {
@@ -223,8 +125,8 @@ class Install
 
                 // Flush
                 $dbh->exec('FLUSH PRIVILEGES');
-            } catch (Exception $e) {
-                throw new Exception(sprintf(__('Could not create a new user with the administrator details. Please check and try again. Error Message = [%s]'), $e->getMessage()));
+            } catch (\PDOException $e) {
+                throw new InstallationError(sprintf(__('Could not create a new user with the administrator details. Please check and try again. Error Message = [%s]'), $e->getMessage()));
             }
 
             // Set our DB details
@@ -234,27 +136,27 @@ class Install
             $this->existing_db_name = $this->new_db_name;
 
             // Close the connection
-            \Xibo\Storage\PDOConnect::close();
+            PDOConnect::close();
         } else {
             // Check details for a new database
             if ($this->existing_db_host == '')
-                throw new Exception(__('Please provide a database host. This is usually localhost.'));
+                throw new InstallationError(__('Please provide a database host. This is usually localhost.'));
 
             if ($this->existing_db_user == '')
-                throw new Exception(__('Please provide a user for the existing database.'));
+                throw new InstallationError(__('Please provide a user for the existing database.'));
 
             if ($this->existing_db_pass == '')
-                throw new Exception(__('Please provide a password for the existing database.'));
+                throw new InstallationError(__('Please provide a password for the existing database.'));
 
             if ($this->existing_db_name == '')
-                throw new Exception(__('Please provide a name for the existing database.'));
+                throw new InstallationError(__('Please provide a name for the existing database.'));
         }
 
         // Try and make a connection with this database
         try {
-            $dbh = \Xibo\Storage\PDOConnect::connect($this->existing_db_host, $this->existing_db_user, $this->existing_db_pass, $this->existing_db_name);
-        } catch (Exception $e) {
-            throw new Exception(sprintf(__('Could not connect to MySQL with the administrator details. Please check and try again. Error Message = [%s]'), $e->getMessage()));
+            PDOConnect::connect($this->existing_db_host, $this->existing_db_user, $this->existing_db_pass, $this->existing_db_name);
+        } catch (\PDOException $e) {
+            throw new InstallationError(sprintf(__('Could not connect to MySQL with the administrator details. Please check and try again. Error Message = [%s]'), $e->getMessage()));
         }
 
         // We should have a database that we can access and populate with our tables.
@@ -264,11 +166,11 @@ class Install
         $sql = '';
 
         try {
-            $dbh = \Xibo\Storage\PDOConnect::init();
+            $dbh = PDOConnect::init();
 
             foreach ($sql_files as $filename) {
                 $delimiter = ';';
-                $sql_file = @file_get_contents('install/master/' . $filename);
+                $sql_file = @file_get_contents(PROJECT_ROOT . '/install/master/' . $filename);
                 $sql_file = Install::remove_remarks($sql_file);
                 $sql_file = Install::split_sql_file($sql_file, $delimiter);
 
@@ -278,21 +180,21 @@ class Install
                     $dbh->exec($sql);
                 }
             }
-        } catch (Exception $e) {
-            throw new Exception(sprintf(__('An error occurred populating the database. Statement number: %d. Error Message = [%s]. File = [%s]. SQL = [%s].'), $sqlStatementCount, $e->getMessage(), $sql_file, $sql));
+        } catch (\PDOException $e) {
+            throw new InstallationError(sprintf(__('An error occurred populating the database. Statement number: %d. Error Message = [%s]. File = [%s]. SQL = [%s].'), $sqlStatementCount, $e->getMessage(), $sql_file, $sql));
         }
 
         // Write out a new settings.php
         $fh = fopen('settings.php', 'wt');
 
         if (!$fh)
-            throw new Exception(__('Unable to write to settings.php. We already checked this was possible earlier, so something changed.'));
+            throw new InstallationError(__('Unable to write to settings.php. We already checked this was possible earlier, so something changed.'));
 
         // Generate a secret key for various reasons
-        $secretKey = Install::gen_secret();
+        $secretKey = Install::generateSecret();
 
         // Escape the password before we write it to disk
-        $dbh = \Xibo\Storage\PDOConnect::init();
+        $dbh = PDOConnect::init();
         $existing_db_pass = addslashes($this->existing_db_pass);
 
         $settings = <<<END
@@ -323,7 +225,7 @@ define('SECRET_KEY', '$secretKey');
 END;
 
         if (!fwrite($fh, $settings))
-            throw new Exception(__('Unable to write to settings.php. We already checked this was possible earlier, so something changed.'));
+            throw new InstallationError(__('Unable to write to settings.php. We already checked this was possible earlier, so something changed.'));
 
         fclose($fh);
 
@@ -333,49 +235,24 @@ END;
 
     public function Step4()
     {
-        // Form to collect an admin user account and password.
-        $formFields = array();
-
-        $formFields[] = Form::AddHidden('step', 5);
-
-        $formFields[] = Form::AddMessage(sprintf(__("%s needs an administrator user account to be the first user account that has access to the CMS. Please enter your chosen details below."), Theme::getConfig('app_name')));
-
-        // User name and password
-        $formFields[] = Form::AddText('admin_username', __('Admin Username'), NULL,
-            __('Please enter a user name for the first administrator account.'), 'n');
-
-        $formFields[] = Form::AddPassword('admin_password', __('Admin Password'), NULL,
-            __('Please enter a password for this user. This user will have full access to the system'), 'p');
-
-        // Put up an error message if one has been set (and then unset it)
-        if ($this->errorMessage != '') {
-            Theme::Set('message', $this->errorMessage);
-            Theme::Set('prepend', Theme::RenderReturn('message_box'));
-            $this->errorMessage == '';
-        }
-
-        // Return a rendered form
-        Theme::Set('form_action', 'install.php');
-        Theme::Set('form_fields', $formFields);
-        Theme::Set('form_buttons', array(Form::AddButton(__('Next'))));
-        return Theme::RenderReturn('form_render');
+        return [];
     }
 
     public function Step5()
     {
         // Configure the user account
-        $username = \Xibo\Helper\Sanitize::getString('admin_username');
-        $password = \Kit::GetParam('admin_password', _POST, _PASSWORD);
+        $username = Sanitize::getString('admin_username');
+        $password = Sanitize::getString('admin_password');
 
         if ($username == '')
-            throw new Exception(__('Missing the admin username.'));
+            throw new InstallationError(__('Missing the admin username.'));
 
         if ($password == '')
-            throw new Exception(__('Missing the admin password.'));
+            throw new InstallationError(__('Missing the admin password.'));
 
         // Update user id 1 with these details.
         try {
-            $dbh = \Xibo\Storage\PDOConnect::init();
+            $dbh = PDOConnect::init();
 
             $sth = $dbh->prepare('UPDATE `user` SET UserName = :username, UserPassword = :password WHERE UserID = 1 LIMIT 1');
             $sth->execute(array(
@@ -388,51 +265,30 @@ END;
             $sth->execute(array(
                 'username' => $username
             ));
-        } catch (Exception $e) {
-            throw new Exception(sprintf(__('Unable to set the user details. This is an unexpected error, please contact support. Error Message = [%s]'), $e->getMessage()));
+
+        } catch (InstallationError $e) {
+            throw new InstallationError(sprintf(__('Unable to set the user details. This is an unexpected error, please contact support. Error Message = [%s]'), $e->getMessage()));
         }
     }
 
     public function Step6()
     {
-        // Form to collect the library location and server key
-        $formFields = array();
-        $formFields[] = Form::AddHidden('step', 7);
-
-        $formFields[] = Form::AddText('library_location', __('Library Location'), NULL,
-            sprintf(__('%s needs somewhere to store the things you upload to be shown. Ideally, this should be somewhere outside the root of your web server - that is such that is not accessible by a web browser. Please input the full path to this folder. If the folder does not already exist, we will attempt to create it for you.'), Theme::getConfig('app_name')), 'n');
-
-        $formFields[] = Form::AddText('server_key', __('Server Key'), Install::gen_secret(6),
-            sprintf(__('%s needs you to choose a "key". This will be required each time you set-up a new client. It should be complicated, and hard to remember. It is visible in the CMS interface, so it need not be written down separately.'), Theme::getConfig('app_name')), 'n');
-
-        $formFields[] = Form::AddCheckbox('stats', __('Statistics'), 1,
-            sprintf(__('We\'d love to know you\'re running %s. If you\'re happy for us to collect anonymous statistics (version number, number of displays) then please leave the box ticked. Please un tick the box if your server does not have direct access to the internet.'), Theme::getConfig('app_name')), 'n');
-
-        // Put up an error message if one has been set (and then unset it)
-        if ($this->errorMessage != '') {
-            Theme::Set('message', $this->errorMessage);
-            Theme::Set('prepend', Theme::RenderReturn('message_box'));
-            $this->errorMessage == '';
-        }
-
-        // Return a rendered form
-        Theme::Set('form_action', 'install.php');
-        Theme::Set('form_fields', $formFields);
-        Theme::Set('form_buttons', array(Form::AddButton(__('Next'))));
-        return Theme::RenderReturn('form_render');
+        return [
+            'serverKey' => Install::generateSecret(6)
+        ];
     }
 
     public function Step7()
     {
-        $server_key = \Xibo\Helper\Sanitize::getString('server_key');
-        $library_location = \Xibo\Helper\Sanitize::getString('library_location');
-        $stats = \Xibo\Helper\Sanitize::getCheckbox('stats');
+        $server_key = Sanitize::getString('server_key');
+        $library_location = Sanitize::getString('library_location');
+        $stats = Sanitize::getCheckbox('stats');
 
         if ($server_key == '')
-            throw new Exception(__('Missing the server key.'));
+            throw new InstallationError(__('Missing the server key.'));
 
         if ($library_location == '')
-            throw new Exception(__('Missing the library location.'));
+            throw new InstallationError(__('Missing the library location.'));
 
         // Remove trailing white space from the path given.
         $library_location = trim($library_location);
@@ -440,23 +296,23 @@ END;
         if (!is_dir($library_location)) {
             // Make sure they haven't given a file as the library location
             if (is_file($library_location))
-                throw new Exception(__('A file exists with the name you gave for the Library Location. Please choose another location'));
+                throw new InstallationError(__('A file exists with the name you gave for the Library Location. Please choose another location'));
 
             // Directory does not exist. Attempt to make it
             // Using mkdir recursively, so it will attempt to make any
             // intermediate folders required.
             if (!mkdir($library_location, 0755, true)) {
-                throw new Exception(__('Could not create the Library Location directory for you. Please ensure the webserver has permission to create a folder in this location, or create the folder manually and grant permission for the webserver to write to the folder.'));
+                throw new InstallationError(__('Could not create the Library Location directory for you. Please ensure the webserver has permission to create a folder in this location, or create the folder manually and grant permission for the webserver to write to the folder.'));
             }
         }
 
         // Is library_location writable?
         if (!is_writable($library_location))
-            throw new Exception(__('The Library Location you gave is not writable by the webserver. Please fix the permissions and try again.'));
+            throw new InstallationError(__('The Library Location you gave is not writable by the webserver. Please fix the permissions and try again.'));
 
         // Is library_location empty?
         if (count(Install::ls("*", $library_location, true)) > 0)
-            throw new Exception(__('The Library Location you gave is not empty. Please give the location of an empty folder'));
+            throw new InstallationError(__('The Library Location you gave is not empty. Please give the location of an empty folder'));
 
         // Check if the user has added a trailing slash. If not, add one.
         if (!((substr($library_location, -1) == '/') || (substr($library_location, -1) == '\\'))) {
@@ -464,7 +320,7 @@ END;
         }
 
         try {
-            $dbh = \Xibo\Storage\PDOConnect::init();
+            $dbh = PDOConnect::init();
 
             // Library Location
             $sth = $dbh->prepare('UPDATE `setting` SET `value` = :value WHERE `setting`.`setting` = \'LIBRARY_LOCATION\' LIMIT 1');
@@ -485,36 +341,13 @@ END;
             // Phone Home Key
             $sth = $dbh->prepare('UPDATE `setting` SET `value` = :value WHERE `setting`.`setting` = \'PHONE_HOME_KEY\' LIMIT 1');
             $sth->execute(array('value' => md5(uniqid(rand(), true))));
-        } catch (Exception $e) {
-            throw new Exception(sprintf(__('An error occurred updating these settings. This is an unexpected error, please contact support. Error Message = [%s]'), $e->getMessage()));
+        } catch (\PDOException $e) {
+            throw new InstallationError(sprintf(__('An error occurred updating these settings. This is an unexpected error, please contact support. Error Message = [%s]'), $e->getMessage()));
         }
-    }
-
-    public function Step8()
-    {
-
-        \Xibo\Storage\PDOConnect::init();
-
-        // Define the VERSION
-        Config::Version();
-
-        Theme::Set('form_action', 'index.php?q=login');
-        Theme::Set('about_url', 'index.php?p=index&q=About');
-        Theme::Set('source_url', Theme::SourceLink());
-
-        // Message (either from the URL or the session)
-        Theme::Set('login_message', sprintf(__("%s was successfully installed. Please log-in with the user details you chose earlier."), Theme::getConfig('app_name')));
-
-        $this->getState()->html .= Theme::RenderReturn('login_page');
-
-        // Install files
-        Media::installAllModuleFiles();
 
         // Delete install
-        if (!unlink('install.php'))
-            throw new Exception(__("Unable to delete install.php. Please ensure the webserver has permission to unlink this file and retry"));
-
-        exit();
+        if (!@unlink('index.php'))
+            throw new InstallationError(__("Unable to delete install/index.php. Please ensure the web server has permission to unlink this file and retry"));
     }
 
     /*
@@ -614,7 +447,7 @@ END;
         return $all;
     }
 
-    public static function gen_secret($length = 12)
+    public static function generateSecret($length = 12)
     {
         # Generates a random 12 character alphanumeric string to use as a salt
         mt_srand((double)microtime() * 1000000);

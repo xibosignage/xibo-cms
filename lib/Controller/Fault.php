@@ -19,14 +19,13 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
-use baseDAO;
-use Xibo\Helper\Config;
-use Xibo\Helper\Theme;
 
+use Xibo\Exception\AccessDeniedException;
+use Xibo\Factory\LogFactory;
+use Xibo\Helper\Config;
 
 class Fault extends Base
 {
-
     function displayPage()
     {
         $config = new Config();
@@ -40,155 +39,51 @@ class Fault extends Base
         $this->getState()->setData($data);
     }
 
-    function CollectData()
+    public function collect()
     {
+        $out = fopen('php://output', 'w');
+        fputcsv($out, ['logId', 'runNo', 'logDate', 'channel', 'page', 'function', 'message', 'display.display', 'type']);
 
+        // Do some post processing
+        foreach (LogFactory::query(['logId'], ['fromDt' => (time() - (60 * 10))]) as $row) {
+            /* @var \Xibo\Entity\LogEntry $row */
+            fputcsv($out, [$row->logId, $row->runNo, $row->logDate, $row->channel, $row->page, $row->function, $row->message, $row->display, $row->type]);
+        }
+
+        fclose($out);
 
         // We want to output a load of stuff to the browser as a text file.
-        header('Content-Type: text/plain');
-        header('Content-Disposition: attachment; filename="troubleshoot.txt"');
-        header("Content-Transfer-Encoding: binary");
-        header('Accept-Ranges: bytes');
+        $app = $this->getApp();
+        $app->response()->header('Content-Type', 'text/csv');
+        $app->response()->header('Content-Disposition', 'attachment; filename="troubleshoot.csv"');
+        $app->response()->header('Content-Transfer-Encoding', 'binary"');
+        $app->response()->header('Accept-Ranges', 'bytes');
+        $this->setNoOutput(true);
+    }
 
+    public function debugOn()
+    {
+        if ($this->getUser()->userTypeId != 1)
+            throw new AccessDeniedException();
 
-        $config = new Config();
-        echo "--------------------------------------\n";
-        echo 'Environment Checks' . "\n";
-        echo "--------------------------------------\n";
-        echo $config->CheckEnvironment();
+        Config::ChangeSetting('audit', \Slim\Log::DEBUG);
 
-        echo "\n";
-        echo "--------------------------------------\n";
-        echo 'LOG Dump' . "\n";
-        echo "--------------------------------------\n";
+        // Return
+        $this->getState()->hydrate([
+            'message' => __('Switched to Debug Mode')
+        ]);
+    }
 
-        // Get the last 10 minutes of log messages
-        $SQL = "SELECT logdate, page, function, message FROM log ";
-        $SQL .= sprintf("WHERE logdate > '%s' ", date("Y-m-d H:i:s", time() - (60 * 10)));
-        $SQL .= "ORDER BY logdate DESC, logid ";
+    public function debugOff()
+    {
+        if ($this->getUser()->userTypeId != 1)
+            throw new AccessDeniedException();
 
-        if (!$results = $db->query($SQL)) {
-            trigger_error($db->error());
-            trigger_error("Can not query the log", E_USER_ERROR);
-        }
+        Config::ChangeSetting('audit', \Slim\Log::EMERGENCY);
 
-        echo 'Date,Page,Function,Message' . PHP_EOL;
-
-        while ($row = $db->get_row($results)) {
-            $logdate = \Xibo\Helper\Sanitize::string($row[0]);
-            $page = \Xibo\Helper\Sanitize::string($row[1]);
-            $function = \Xibo\Helper\Sanitize::string($row[2]);
-            $message = \Kit::ValidateParam($row[3], _HTMLSTRING);
-
-            echo '"' . $logdate . '","' . $page . '","' . $function . '","' . $message . '"' . PHP_EOL;
-        }
-
-        echo "\n";
-        echo "--------------------------------------\n";
-        echo 'Display Dump' . "\n";
-        echo "--------------------------------------\n";
-
-        $SQL = <<<SQL
-		SELECT  display.displayid,
-				display.display,
-				layout.layout,
-				display.loggedin,
-				display.lastaccessed,
-				display.inc_schedule ,
-				display.licensed
-		FROM display
-		LEFT OUTER JOIN layout ON layout.layoutid = display.defaultlayoutid
-		ORDER BY display.displayid
-SQL;
-
-        if (!($results = $db->query($SQL))) {
-            trigger_error($db->error());
-            trigger_error("Can not list displays", E_USER_ERROR);
-        }
-
-        while ($aRow = $db->get_row($results)) {
-            $displayid = $aRow[0];
-            $display = $aRow[1];
-            $defaultlayoutid = $aRow[2];
-            $loggedin = $aRow[3];
-            $lastaccessed = $aRow[4];
-            $inc_schedule = $aRow[5];
-            $licensed = $aRow[6];
-
-            $output = <<<END
-DisplayID: $displayid
-Display: $display
-Default Layout: $defaultlayoutid
-Logged In: $loggedin
-Last Accessed: $lastaccessed
-Interleave: $inc_schedule
-Licensed: $licensed
-\n
-END;
-            echo $output;
-        }
-
-        echo "\n";
-        echo "--------------------------------------\n";
-        echo 'Settings Dump' . "\n";
-        echo "--------------------------------------\n";
-
-        $SQL = <<<SQL
-		SELECT  *
-		FROM setting
-		WHERE setting NOT IN ('SERVER_KEY','PHONE_HOME_KEY')
-SQL;
-
-        if (!($results = $db->query($SQL))) {
-            trigger_error($db->error());
-            trigger_error("Can not list Settings", E_USER_ERROR);
-        }
-
-        while ($row = $db->get_assoc_row($results)) {
-            $setting = $row['setting'];
-            $value = $row['value'];
-
-            $output = <<<END
-Setting: $setting - Value:   $value
-\n
-END;
-            echo $output;
-        }
-
-        echo "\n";
-        echo "--------------------------------------\n";
-        echo 'Sessions Dump' . "\n";
-        echo "--------------------------------------\n";
-
-        $SQL = <<<SQL
-		SELECT  *
-		FROM session
-		WHERE IsExpired = 0
-SQL;
-
-        if (!($results = $db->query($SQL))) {
-            trigger_error($db->error());
-            trigger_error("Can not list sessions", E_USER_ERROR);
-        }
-
-        while ($row = $db->get_assoc_row($results)) {
-            $userAgent = $row['UserAgent'];
-            $remoteAddress = $row['RemoteAddr'];
-            $sessionData = $row['session_data'];
-
-            $output = <<<END
-UserAgent: $userAgent
-RemoteAddress: $remoteAddress
-Session Data
-$sessionData
-----
-\n
-END;
-            echo $output;
-        }
-
-        exit;
+        // Return
+        $this->getState()->hydrate([
+            'message' => __('Switched to Normal Mode')
+        ]);
     }
 }
-
-?>

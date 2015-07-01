@@ -9,7 +9,7 @@
 namespace Xibo\Entity;
 
 
-class Log
+class LogEntry
 {
     use EntityTrait;
 

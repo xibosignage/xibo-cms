@@ -52,7 +52,7 @@ class State extends Middleware
 
         // Create a session
         $this->app->container->singleton('session', function() use ($app) {
-            if ($app->getName() == 'web')
+            if ($app->getName() == 'web' || $app->getName() == 'auth')
                 return new Session();
             else
                 return new NullSession();

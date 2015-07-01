@@ -149,13 +149,6 @@ class AuditLog extends Base
 
         $rows = AuditLogFactory::query('logId', ['search' => $search]);
 
-        // We want to output a load of stuff to the browser as a text file.
-        $app = $this->getApp();
-        $app->response()->header('Content-Type', 'text/csv');
-        $app->response()->header('Content-Disposition', 'attachment; filename="audittrail.csv"');
-        $app->response()->header('Content-Transfer-Encoding', 'binary"');
-        $app->response()->header('Accept-Ranges', 'bytes');
-
         $out = fopen('php://output', 'w');
         fputcsv($out, ['ID', 'Date', 'User', 'Entity', 'Message', 'Object']);
 
@@ -167,6 +160,12 @@ class AuditLog extends Base
 
         fclose($out);
 
+        // We want to output a load of stuff to the browser as a text file.
+        $app = $this->getApp();
+        $app->response()->header('Content-Type', 'text/csv');
+        $app->response()->header('Content-Disposition', 'attachment; filename="audittrail.csv"');
+        $app->response()->header('Content-Transfer-Encoding', 'binary"');
+        $app->response()->header('Accept-Ranges', 'bytes');
         $this->setNoOutput(true);
     }
 }

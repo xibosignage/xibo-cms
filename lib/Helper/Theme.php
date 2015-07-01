@@ -158,11 +158,20 @@ class Theme
     {
         $app = Slim::getInstance();
 
-        if (file_exists('theme' . DIRECTORY_SEPARATOR . self::getInstance()->name . DIRECTORY_SEPARATOR . $uri)) {
-            return ((!$local) ? $app->urlFor('home') : '') . 'theme' . DIRECTORY_SEPARATOR . self::getInstance()->name . DIRECTORY_SEPARATOR . $uri;
+        $rootUri = $app->request->getRootUri();
+
+        switch ($app->getName()) {
+
+            case 'install':
+                $rootUri = str_replace('/install', '/', $rootUri);
+                break;
+        }
+
+        if (file_exists(PROJECT_ROOT . '/web/theme' . DIRECTORY_SEPARATOR . self::getInstance()->name . DIRECTORY_SEPARATOR . $uri)) {
+            return ((!$local) ? $rootUri : '') . 'theme' . DIRECTORY_SEPARATOR . self::getInstance()->name . DIRECTORY_SEPARATOR . $uri;
         }
         else {
-            return ((!$local) ? $app->urlFor('home') : '') . 'theme' . DIRECTORY_SEPARATOR . 'default' . DIRECTORY_SEPARATOR . $uri;
+            return ((!$local) ? $rootUri : '') . 'theme' . DIRECTORY_SEPARATOR . 'default' . DIRECTORY_SEPARATOR . $uri;
         }
     }
 }

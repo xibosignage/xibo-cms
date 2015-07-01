@@ -93,6 +93,21 @@ class UserFactory
     }
 
     /**
+     * Load by client Id
+     * @param string $clientId
+     * @throws NotFoundException
+     */
+    public static function loadByClientId($clientId)
+    {
+        $users = UserFactory::query(null, array('clientId' => $clientId));
+
+        if (count($users) <= 0)
+            throw new NotFoundException(sprintf('User not found'));
+
+        return $users[0];
+    }
+
+    /**
      * Query for users
      * @param array[mixed] $sortOrder
      * @param array[mixed] $filterBy
@@ -163,6 +178,11 @@ class UserFactory
         if (Sanitize::getInt('retired', $filterBy) != null) {
             $SQL .= " AND user.retired = :retired ";
             $params['retired'] = Sanitize::getInt('retired', $filterBy);
+        }
+
+        if (Sanitize::getString('clientId', $filterBy) != null) {
+            $SQL .= ' AND user.userId = (SELECT userId FROM oauth_clients WHERE id = :clientId) ';
+            $params['clientId'] = Sanitize::getString('clientId', $filterBy);
         }
 
         // Sorting?
