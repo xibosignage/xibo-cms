@@ -77,7 +77,7 @@ $twig->parserExtensions = array(
 $twig->twigTemplateDirs = [PROJECT_ROOT . '/views'];
 $app->view($twig);
 
-$twig->appendData(['theme' => Theme::getConfig()]);
+$twig->appendData(['theme' => Theme::getInstance()]);
 
 // Hook to setup translations
 $app->hook('slim.before.dispatch', function() use ($app) {

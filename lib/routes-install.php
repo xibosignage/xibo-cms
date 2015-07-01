@@ -5,7 +5,7 @@
  * (routes-install.php)
  */
 
-$app->get('/(:step)', function($step = 1) use($app) {
+$app->map('/(:step)', function($step = 1) use($app) {
 
     \Xibo\Helper\Log::debug('Matched route with Step %s', $step);
 
@@ -49,8 +49,13 @@ $app->get('/(:step)', function($step = 1) use($app) {
                 // Redirect to step 4
                 $app->redirectTo('install', ['step' => 4]);
             }
-            catch (Exception $e) {
-                $install->errorMessage = $e->getMessage();
+            catch (\Xibo\Exception\InstallationError $e) {
+                $app->flashNow('error', $e->getMessage());
+
+                // Add our object properties to the flash vars, so we render the form with them set
+                foreach (\Xibo\Helper\ObjectVars::getObjectVars($install) as $key => $value) {
+                    $app->flashNow($key, $value);
+                }
 
                 // Reload step 2
                 $template = 'install-step2';
@@ -73,8 +78,8 @@ $app->get('/(:step)', function($step = 1) use($app) {
                 // Redirect to step 6
                 $app->redirectTo('install', ['step' => 6]);
             }
-            catch (Exception $e) {
-                $install->errorMessage = $e->getMessage();
+            catch (\Xibo\Exception\InstallationError $e) {
+                $app->flashNow('error', $e->getMessage());
 
                 // Reload step 4
                 $template = 'install-step4';
@@ -93,26 +98,27 @@ $app->get('/(:step)', function($step = 1) use($app) {
                 $template = 'install-step7';
                 $install->Step7();
 
-                // Redirect to step 6
-                $app->redirectTo('install', ['step' => 8]);
+                // Redirect to login
+                // This will always be one folder down
+                $login = str_replace('/install', '/', $app->urlFor('login'));
+                $app->redirect($login);
             }
-            catch (Exception $e) {
-                $install->errorMessage = $e->getMessage();
+            catch (\Xibo\Exception\InstallationError $e) {
+                $app->flashNow('error', $e->getMessage());
 
                 // Reload step 6
                 $template = 'install-step6';
                 $data = $install->Step6();
             }
             break;
-
-        case 8:
-            // Step 8 ends the execution
-            $template = 'login';
-            $install->Step8();
-            break;
     }
 
     // Render
     $app->render($template . '.twig', $data);
 
-})->name('install');
+})->via('GET', 'POST')->name('install');
+
+$app->get('/login', function() use ($app) {
+    // Just a helper to get correct login route url
+    $app->halt(404, __('This function should not be called from install/.'));
+})->name('login');
