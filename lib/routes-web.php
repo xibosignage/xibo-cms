@@ -21,6 +21,7 @@
 
 // Special "root" route
 $app->get('/', function () use ($app) {
+
     // Different controller depending on the homepage of the user.
     $controller = null;
     $user = $app->user;
@@ -47,7 +48,7 @@ $app->get('/', function () use ($app) {
 
 // Dashboards
 $app->get('/dashboard/status', '\Xibo\Controller\StatusDashboard:displayPage')->name('statusdashboard.view');
-$app->get('/dashboard/icon', '\Xibo\Controller\Dashboard:displayPage')->name('dashboard.view');
+$app->get('/dashboard/icon', '\Xibo\Controller\IconDashboard:displayPage')->name('dashboard.view');
 $app->get('/dashboard/media', '\Xibo\Controller\MediaManager:displayPage')->name('mediamanager.view');
 
 // Login Form

@@ -25,9 +25,11 @@ CREATE TABLE IF NOT EXISTS `permissionentity` (
 
 ALTER TABLE `permissionentity` ADD PRIMARY KEY(`entityId`);
 
-ALTER TABLE  `lkusergroup` ADD UNIQUE (  `GroupID` ,  `UserID` ) ;
-ALTER TABLE  `lkdisplaydg` ADD UNIQUE (  `DisplayGroupID` ,  `DisplayId` ) ;
+ALTER TABLE `lkusergroup` ADD UNIQUE (  `GroupID` ,  `UserID` ) ;
+ALTER TABLE `lkdisplaydg` ADD UNIQUE (  `DisplayGroupID` ,  `DisplayId` ) ;
 
+ALTER TABLE `pages` DROP FOREIGN KEY  `pages_ibfk_1` ;
+ALTER TABLE `pages` DROP `pagegroupID`;
 
 /* Take existing permissions and pull them into the permissions table */
 INSERT INTO `permission` (`groupId`, `entityId`, `objectId`, `objectIdString`, `view`, `edit`, `delete`)
@@ -65,6 +67,18 @@ INSERT INTO `permission` (`groupId`, `entityId`, `objectId`, `view`, `edit`, `de
   FROM `lkmenuitemgroup`;
 
 DROP TABLE `lkmenuitemgroup`;
+
+INSERT INTO `permission` (`groupId`, `entityId`, `objectId`, `view`, `edit`, `delete`)
+  SELECT groupId, 2, menuItemId, 1, 0, 0
+  FROM `lkdatasetgroup`;
+
+DROP TABLE `lkdatasetgroup`;
+
+INSERT INTO `permission` (`groupId`, `entityId`, `objectId`, `view`, `edit`, `delete`)
+  SELECT groupId, 2, menuItemId, 1, 0, 0
+  FROM `lkdisplaygroupgroup`;
+
+DROP TABLE `lkdisplaygroupgroup`;
 
 
 /* End permissions swap */

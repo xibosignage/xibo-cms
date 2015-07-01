@@ -27,12 +27,12 @@ define('PROJECT_ROOT', realpath(__DIR__ . '/../..'));
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-require '../../vendor/autoload.php';
+require PROJECT_ROOT . '/vendor/autoload.php';
 
-if (!file_exists('../settings.php'))
+if (!file_exists(PROJECT_ROOT . '/web/settings.php'))
     die('Not configured');
 
-Config::Load('../settings.php');
+Config::Load(PROJECT_ROOT . '/web/settings.php');
 
 // Create a logger
 $logger = new \Flynsarmy\SlimMonolog\Log\MonologWriter(array(
