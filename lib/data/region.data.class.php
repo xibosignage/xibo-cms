@@ -370,6 +370,12 @@ class Region extends Data
         //Xpath for it
         $mediaNodeList  = $xpath->query($xpathQuery);
         $mediaNode      = $mediaNodeList->item(0);
+
+        if ($mediaNode == null) {
+            // Protect against corrupted layouts with left over lklayoutmedia records.
+            Debug::Error('Cannot find this media in layoutId ' . $layoutid . ' using ' . $xpathQuery);
+            return true;
+        }
         
         $mediaNode->parentNode->removeChild($mediaNode);
         
