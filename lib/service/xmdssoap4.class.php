@@ -118,7 +118,6 @@ class XMDSSoap4
 
             $displayId = Kit::ValidateParam($row['displayid'], _INT);
             $display = Kit::ValidateParam($row['display'], _STRING);
-            $clientType = Kit::ValidateParam($row['client_type'], _WORD);
             $versionInstructions = Kit::ValidateParam($row['version_instructions'], _HTMLSTRING);
             $screenShotRequested = Kit::ValidateParam($row['screenShotRequested'], _INT);
             $emailAlert = Kit::ValidateParam($row['email_alert'], _INT);
