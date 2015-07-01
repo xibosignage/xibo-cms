@@ -78,10 +78,10 @@ $formFields[] = Form::AddNumber('height', __('Height'), $height,
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Set Full Screen" %}, setFullScreenLayout()
-    {% trans "Save" %}, $("#regionEditForm").submit()
-    {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#regionEditForm").submit()
+    {% trans "Set Full Screen" %}, setFullScreenLayout()
 {% endblock %}
 
 {% block formHtml %}

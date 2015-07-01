@@ -4,14 +4,7 @@
  * Copyright (C) 2015 Spring Signage Ltd
  * (${FILE_NAME})
  */
-$formFields[] = Form::AddText('Topic', __('Topic'), Sanitize::string($row['Topic']),
-            __('The Topic for this Help Link'), 't', 'maxlength="254" required');
 
-        $formFields[] = Form::AddText('Category', __('Category'), Sanitize::string($row['Category']),
-            __('The Category for this Help Link'), 'c', 'maxlength="254" required');
-
-        $formFields[] = Form::AddText('Link', __('Link'), Sanitize::string($row['Link']),
-            __('The Link to open for this help topic and category'), 'c', 'maxlength="254" required');
 #}
 
 {% extends "form-base.twig" %}
@@ -22,9 +15,8 @@ $formFields[] = Form::AddText('Topic', __('Topic'), Sanitize::string($row['Topic
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Save" %}, $("#helpEditForm").submit()
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Save" %}, $("#helpEditForm").submit()
 {% endblock %}
 
 {% block formHtml %}

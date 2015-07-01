@@ -21,9 +21,6 @@ $formFields[] = Form::AddText('name', __('Name'), NULL,
             __('What type of display client is this profile intended for?'),
             't');
 
-        $formFields[] = Form::AddCheckbox('isdefault', __('Default Profile?'),
-            NULL, __('Is this the default profile for all Displays of this type? Only 1 profile can be the default.'),
-            'd');
 #}
 
 {% extends "form-base.twig" %}
@@ -34,9 +31,9 @@ $formFields[] = Form::AddText('name', __('Name'), NULL,
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Save" %}, $("#displayProfileAddForm").submit()
-    {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#displayProfileAddForm").submit()
 {% endblock %}
 
 {% block formHtml %}
@@ -49,7 +46,9 @@ $formFields[] = Form::AddText('name', __('Name'), NULL,
 
                 {% set title %}{% trans "Client Type" %}{% endset %}
                 {% set helpText %}{% trans "What type of display client is this profile intended for?" %}{% endset %}
-                {{ forms.dropdown("displayProfileId", "single", title,"", clientTypes, "displayProfileId", "displayProfile", helpText) }} 
+                    
+              {#  {% set testP = { windows: 'Windows', android: 'Android' } %}  dunno how to do it at the moment (and with clientTypes it also don't want to work, you may have to tell me more about it#}
+                {{ forms.dropdown("type", "single", title,"", clientTypes, "displayProfileId", "displayProfile", helpText) }} 
 
                 {% set title %}{% trans "Default Profile?" %}{% endset %}
                 {% set helpText %}{% trans "Is this the default profile for all Displays of this type? Only 1 profile can be the default." %}{% endset %}

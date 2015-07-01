@@ -14,9 +14,9 @@
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Save" %}, $("#layoutAddForm").submit()
-    {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#layoutAddForm").submit()
 {% endblock %}
 
 {% block formFieldActions %}

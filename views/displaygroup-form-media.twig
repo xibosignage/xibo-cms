@@ -16,9 +16,9 @@
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Save" %}, $("#FileAssociationsAssign").submit()
-    {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#FileAssociationsAssign").submit()    
 {% endblock %}
 
 {% block callBack %}mediaFormCallBack{% endblock %}

@@ -14,9 +14,9 @@
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Save" %}, $("#scheduleDeleteForm").submit()
-    {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Yes" %}, $("#scheduleDeleteForm").submit()
 {% endblock %}
 
 {% block formHtml %}

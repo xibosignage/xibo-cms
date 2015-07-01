@@ -143,16 +143,57 @@ $tabs[] = Form::AddTab('general', __('General'));
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Save" %}, $("#<<id>>").submit()
-    {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#displayEditForm").submit()
 {% endblock %}
 
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="<<id>>" class="XiboForm form-horizontal" method="put" action="{{ urlFor("display.edit") }}">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                <li><a href="#location" role="tab" data-toggle="tab"><span>{% trans "Location" %}</span></a></li>
+                <li><a href="#maintenance" role="tab" data-toggle="tab"><span>{% trans "Maintenance" %}</span></a></li>
+                <li><a href="#wol" role="tab" data-toggle="tab"><span>{% trans "Wake on LAN" %}</span></a></li>
+                <li><a href="#advanced" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
+            </ul>
+            <form id="displayEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("display.edit") }}">
+                <div class="tab-content">
+                    <div class="tab-pane active" id="general">
+                        {% set title %}{% trans "Display" %}{% endset %}
+                        {% set helpText %}{% trans "The Name of the Display - (1 - 50 characters)." %}{% endset %}
+                        {{ forms.text("display", title, display.display, helpText) }}
+                
+                        {% set title %}{% trans "Display's Hardware Key" %}{% endset %}
+                        {% set helpText %}{% trans "A unique identifier for this display." %}{% endset %}
+                        {{ forms.text("hardwareKey", title, display.hardwareKey, helpText) }}
 
+                        {% set title %}{% trans "Description" %}{% endset %}
+                        {% set helpText %}{% trans "A description - (1 - 254 characters)." %}{% endset %}
+                        {{ forms.text("description", title, diplay.description, helpText) }}
+                    </div>
+                    <div class="tab-pane" id="location">
+                        {{ forms.number("latitude", "Latitude", display.latitude, "The Latitude of this display") }}
+                        {{ forms.number("longitude", "Longitude", display.longitude, "The Longitude of this Display") }}
+                    </div>
+                    <div class="tab-pane" id="maintenance">
+
+                    </div>
+                    <div class="tab-pane" id="wol">
+                        {% set title %}{% trans "Enable Wake on LAN" %}{% endset %}
+                        {% set helpText %}{% trans "Wake on Lan requires the correct network configuration to route the magic packet to the display PC" %}{% endset %}
+                        {{ forms.checkbox("wakeOnLanEnabled", title, display.wakeOnLanEnabled, helpText) }}
+
+                        {% set title %}{% trans "BroadCast Address" %}{% endset %}
+                        {% set helpText %}{% trans "The IP address of the remote host\'s broadcast address (or gateway)" %}{% endset %}
+                        {{ forms.text("broadCastAddress", title, display.broadCastAddress, helpText) }}
+                    </div>
+                    <div class="tab-pane" id="advanced">
+
+                    </div>
+
+                </div>    
             </form>
         </div>
     </div>

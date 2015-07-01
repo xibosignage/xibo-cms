@@ -15,9 +15,9 @@
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Save" %}, $("#MembersForm").submit()
-    {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Help" %}, XiboHelpRender("{{ help.permissions }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#MembersForm").submit()
 {% endblock %}
 
 {% block formHtml %}

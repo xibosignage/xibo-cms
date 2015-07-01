@@ -15,9 +15,9 @@
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Install" %}, $("#moduleInstallForm").submit()
-    {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Install" %}, $("#moduleInstallForm").submit()
 {% endblock %}
 
 {% block callBack %}installModuleComplete{% endblock %}

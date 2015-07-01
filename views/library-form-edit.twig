@@ -24,9 +24,9 @@ $formFields[] = Form::AddCheckbox('deleteOldVersion', __('Delete the old version
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Save" %}, $("#mediaFormEdit").submit()
-    {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#mediaFormEdit").submit()
 {% endblock %}
 
 {% block formHtml %}

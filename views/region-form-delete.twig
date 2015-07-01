@@ -4,7 +4,7 @@
  * Copyright (C) 2015 Spring Signage Ltd
  * (${FILE_NAME})
  */
-Theme::Set('form_fields', array(Form::AddMessage(__(''))));
+
 #}
 
 {% extends "form-base.twig" %}
@@ -15,9 +15,9 @@ Theme::Set('form_fields', array(Form::AddMessage(__(''))));
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Delete" %}, $("#regionFormDelete").submit()
     {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Yes" %}, $("#regionFormDelete").submit()
 {% endblock %}
 
 {% block formHtml %}

@@ -24,9 +24,9 @@ Theme::Set('form_class', 'XiboManualSubmit');
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Export" %}, $("#exportForm").submit()
-    {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Export" %}, $("#exportForm").submit()
 {% endblock %}
 
 {% block formHtml %}

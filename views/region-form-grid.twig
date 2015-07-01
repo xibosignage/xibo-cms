@@ -15,9 +15,9 @@
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Switch to Timeline" %}, XiboSwapDialog("{{ urlFor("region.timeline.form", {id: region.regionId}) }}?view=timeline")
-    {% trans "Close" %}, XiboDialogClose()
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Close" %}, XiboDialogClose()
+    {% trans "Switch to Timeline" %}, XiboSwapDialog("{{ urlFor("region.timeline.form", {id: region.regionId}) }}?view=timeline")
 {% endblock %}
 
 {% block callBack %}timelineGridCallback{% endblock %}

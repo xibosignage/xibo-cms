@@ -4,11 +4,7 @@
  * Copyright (C) 2015 Spring Signage Ltd
  * (${FILE_NAME})
  */
-$formFields[] = Form::AddText('group', __('Name'), NULL,
-            __('The Name for this Group'), 'n', 'required');
 
-        $formFields[] = Form::AddText('desc', __('Description'), NULL,
-            __('A short description of this Group'), 'd', 'maxlength="254"');
 #}
 
 {% extends "form-base.twig" %}
@@ -19,9 +15,9 @@ $formFields[] = Form::AddText('group', __('Name'), NULL,
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Save" %}, $("#displayGroupAddForm").submit()
-    {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#displayGroupAddForm").submit()
 {% endblock %}
 
 {% block formHtml %}

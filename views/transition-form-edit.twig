@@ -21,9 +21,9 @@ $formFields[] = Form::AddCheckbox('EnabledForIn', __('Available for In Transitio
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Save" %}, $("#<<id>>").submit()
-    {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#<<id>>").submit()
 {% endblock %}
 
 {% block formHtml %}

@@ -4,7 +4,7 @@
  * Copyright (C) 2015 Spring Signage Ltd
  * (${FILE_NAME})
  */
-Theme::Set('form_fields', array(Form::AddMessage(__('Are you sure you want to delete?'))));
+
 #}
 
 {% extends "form-base.twig" %}
@@ -15,9 +15,9 @@ Theme::Set('form_fields', array(Form::AddMessage(__('Are you sure you want to de
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Save" %}, $("#displayProfileDeleteForm").submit()
-    {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#displayProfileDeleteForm").submit()
 {% endblock %}
 
 {% block formHtml %}
