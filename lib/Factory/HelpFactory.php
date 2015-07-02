@@ -17,6 +17,17 @@ use Xibo\Storage\PDOConnect;
 
 class HelpFactory
 {
+    private static $_countLast = 0;
+
+    /**
+     * Count of records returned for the last query.
+     * @return int
+     */
+    public static function countLast()
+    {
+        return self::$_countLast;
+    }
+
     /**
      * @param int $helpId
      * @return Help
@@ -43,39 +54,42 @@ class HelpFactory
         $entries = array();
         $params = array();
 
-        try {
-            $sql = '
-            SELECT `helpId`, `topic`, `category`, `link`
-              FROM `help`
-             WHERE 1 = 1
-            ';
+        $select = 'SELECT `helpId`, `topic`, `category`, `link` ';
 
-            if (Sanitize::getInt('helpId', $filterBy) != null) {
-                $sql .= ' AND help.helpId = :helpId ';
-                $params['helpId'] = Sanitize::getInt('helpId', $filterBy);
-            }
+        $body = '
+          FROM `help`
+         WHERE 1 = 1
+        ';
 
-            // Sorting?
-            if (is_array($sortOrder))
-                $sql .= ' ORDER BY ' . implode(',', $sortOrder);
-
-            if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-                $sql .= ' LIMIT ' . intval(Sanitize::getInt('start')) . ', ' . Sanitize::getInt('length', 10);
-            }
-
-            Log::sql($sql, $params);
-
-            foreach (PDOConnect::select($sql, $params) as $row) {
-                $entries[] = (new Help())->hydrate($row);
-            }
-
-            return $entries;
-
-        } catch (\Exception $e) {
-
-            Log::error($e);
-
-            throw new NotFoundException();
+        if (Sanitize::getInt('helpId', $filterBy) != null) {
+            $body .= ' AND help.helpId = :helpId ';
+            $params['helpId'] = Sanitize::getInt('helpId', $filterBy);
         }
+
+        // Sorting?
+        $order = '';
+        if (is_array($sortOrder))
+            $order .= ' ORDER BY ' . implode(',', $sortOrder);
+
+        $limit = '';
+        if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
+            $limit .= ' LIMIT ' . intval(Sanitize::getInt('start')) . ', ' . Sanitize::getInt('length', 10);
+        }
+
+        $sql = $select . $body . $order . $limit;
+
+        Log::sql($sql, $params);
+
+        foreach (PDOConnect::select($sql, $params) as $row) {
+            $entries[] = (new Help())->hydrate($row);
+        }
+
+        // Paging
+        if ($limit != '' && count($entries) > 0) {
+            $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
+            self::$_countLast = intval($results[0]['total']);
+        }
+
+        return $entries;
     }
 }

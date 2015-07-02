@@ -19,10 +19,9 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
-use baseDAO;
+
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\HelpFactory;
-use Xibo\Helper\Form;
 use Xibo\Helper\Sanitize;
 
 
@@ -70,6 +69,7 @@ class Help extends Base
         }
 
         $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = HelpFactory::countLast();
         $this->getState()->setData($helpLinks);
     }
 

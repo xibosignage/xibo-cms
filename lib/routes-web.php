@@ -21,6 +21,7 @@
 
 // Special "root" route
 $app->get('/', function () use ($app) {
+
     // Different controller depending on the homepage of the user.
     $controller = null;
     $user = $app->user;
@@ -47,7 +48,7 @@ $app->get('/', function () use ($app) {
 
 // Dashboards
 $app->get('/dashboard/status', '\Xibo\Controller\StatusDashboard:displayPage')->name('statusdashboard.view');
-$app->get('/dashboard/icon', '\Xibo\Controller\Dashboard:displayPage')->name('dashboard.view');
+$app->get('/dashboard/icon', '\Xibo\Controller\IconDashboard:displayPage')->name('dashboard.view');
 $app->get('/dashboard/media', '\Xibo\Controller\MediaManager:displayPage')->name('mediamanager.view');
 
 // Login Form
@@ -121,7 +122,6 @@ $app->get('/layout/form/edit/:id', '\Xibo\Controller\Layout:editForm')->name('la
 $app->get('/layout/form/copy/:id', '\Xibo\Controller\Layout:copyForm')->name('layout.copy.form');
 $app->get('/layout/form/delete/:id', '\Xibo\Controller\Layout:deleteForm')->name('layout.delete.form');
 $app->get('/layout/form/retire/:id', '\Xibo\Controller\Layout:retireForm')->name('layout.retire.form');
-$app->get('/layout/form/import', '\Xibo\Controller\Layout:retireForm')->name('layout.import.form');
 $app->get('/layout/form/upgrade/:id', '\Xibo\Controller\Layout:upgradeForm')->name('layout.upgrade.form');
 $app->get('/layout/form/template/:id', '\Xibo\Controller\Layout:templateForm')->name('layout.template.form');
 

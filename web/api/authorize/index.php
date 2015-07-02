@@ -93,8 +93,8 @@ $app->get('/', function() use ($app) {
     $app->session->set('authParams', $authParams);
 
     // We know we are at /api/authorize, so convert that to /application/authorise
-
     $app->redirect(str_replace('/api/authorize/', '/application/authorize', $app->request()->getPath()));
+
 })->name('home');
 
 // Access Token

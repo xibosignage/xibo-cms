@@ -24,11 +24,10 @@ use League\OAuth2\Server\AuthorizationServer;
 use League\OAuth2\Server\Grant\AuthCodeGrant;
 use League\OAuth2\Server\Util\RedirectUri;
 use League\OAuth2\Server\Util\SecureKey;
-use Xibo\Helper\ApplicationState;
+use Xibo\Factory\ApplicationFactory;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
-use Xibo\Helper\Theme;
 use Xibo\Storage\ApiAccessTokenStorage;
 use Xibo\Storage\ApiAuthCodeStorage;
 use Xibo\Storage\ApiClientStorage;
@@ -39,7 +38,6 @@ use Xibo\Storage\PDOConnect;
 
 class Applications extends Base
 {
-
     /**
      * Display Page
      */
@@ -54,48 +52,8 @@ class Applications extends Base
     public function grid()
     {
         $this->getState()->template = 'grid';
-        $this->getState()->setData([
-
-        ]);
-    }
-
-    /**
-     * View the Log
-     */
-    public function ViewLog()
-    {
-        $db =& $this->db;
-        $user =& $this->user;
-        $response = new ApplicationState();
-
-        $store = OAuthStore::instance();
-
-        try {
-            $list = $store->listLog(null, $this->getUser()->userId);
-        } catch (OAuthException $e) {
-            trigger_error($e->getMessage());
-            trigger_error(__('Error listing Log.'), E_USER_ERROR);
-        }
-
-        $rows = array();
-
-        foreach ($list as $row) {
-            $row['received'] = \Xibo\Helper\Sanitize::string($row['received']);
-            $row['notes'] = \Xibo\Helper\Sanitize::string($row['notes']);
-            $row['timestamp'] = \Xibo\Helper\Sanitize::string($row['timestamp']);
-
-            $rows[] = $row;
-        }
-
-        Theme::Set('table_rows', $rows);
-
-        $output = Theme::RenderReturn('applications_form_view_log');
-
-        $response->SetFormRequestResponse($output, __('OAuth Access Log'), '1000', '600');
-        $response->AddButton(__('Help'), "XiboHelpRender('index.php?p=help&q=Display&Topic=Services&Category=Log')");
-        $response->AddButton(__('Close'), 'XiboDialogClose()');
-        $response->dialogClass = 'modal-big';
-
+        $this->getState()->setData(ApplicationFactory::query($this->gridRenderSort(), $this->gridRenderFilter()));
+        $this->getState()->recordsTotal = ApplicationFactory::countLast();
     }
 
     /**
@@ -197,44 +155,6 @@ class Applications extends Base
             'message' => sprintf(__('Added %s'), Sanitize::getString('name')),
             'id' => $id
         ]);
-    }
-
-    /**
-     * Shows the Authorised applications this user has
-     */
-    public function UserTokens()
-    {
-        $db =& $this->db;
-        $user =& $this->user;
-        $response = new ApplicationState();
-
-        $store = OAuthStore::instance();
-
-        try {
-            $list = $store->listConsumerTokens(Kit::GetParam('userID', _GET, _INT));
-        } catch (OAuthException $e) {
-            trigger_error($e->getMessage());
-            trigger_error(__('Error listing Log.'), E_USER_ERROR);
-        }
-
-        $rows = array();
-
-        foreach ($list as $app) {
-            $app['application_title'] = \Xibo\Helper\Sanitize::string($app['application_title']);
-            $app['enabled'] = \Xibo\Helper\Sanitize::string($app['enabled']);
-            $app['status'] = \Xibo\Helper\Sanitize::string($app['status']);
-
-            $rows[] = $app;
-        }
-
-        Theme::Set('table_rows', $rows);
-
-        $output = Theme::RenderReturn('application_form_user_applications');
-
-        $response->SetFormRequestResponse($output, __('Authorized applications for user'), '650', '450');
-        $response->AddButton(__('Help'), "XiboHelpRender('" . Help::Link('User', 'Applications') . "')");
-        $response->AddButton(__('Close'), 'XiboDialogClose()');
-
     }
 }
 

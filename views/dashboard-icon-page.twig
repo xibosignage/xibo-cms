@@ -1,0 +1,29 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block pageContent %}
+    <div id="dashbuttons">
+        {% for item in icons %}
+        <div class="dashicons">
+            {% if item.external == 1 %}
+                {% set link = item.link  %}
+            {% else %}
+                {% set link = urlFor(item.link) %}
+            {% endif %}
+            <a id="{{ item.class }}" alt="{{ item.title }}" href="{{ link }}">
+                {% set image %}img/{{ item.img }}{% endset %}
+                <img src="{{ theme.uri(image) }}" class="dash_button" />
+                <span class="dash_text">{{ item.title }}</span>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+{% endblock %}

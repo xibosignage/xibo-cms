@@ -158,20 +158,36 @@ class Theme
     {
         $app = Slim::getInstance();
 
-        $rootUri = $app->request->getRootUri();
+        $rootUri = '';
 
-        switch ($app->getName()) {
+        if (!$local) {
+            $rootUri = $app->request->getScriptName();
 
-            case 'install':
-                $rootUri = str_replace('/install', '/', $rootUri);
-                break;
+            switch ($app->getName()) {
+
+                case 'install':
+                    $rootUri = str_replace('/install', '', $rootUri);
+                    break;
+
+                case 'api':
+                    $rootUri = str_replace('/api', '', $rootUri);
+                    break;
+
+                case 'auth':
+                    $rootUri = str_replace('/api/authorize', '', $rootUri);
+                    break;
+
+                case 'maintenance':
+                    $rootUri = str_replace('/maintenance', '', $rootUri);
+                    break;
+            }
         }
 
-        if (file_exists(PROJECT_ROOT . '/web/theme' . DIRECTORY_SEPARATOR . self::getInstance()->name . DIRECTORY_SEPARATOR . $uri)) {
-            return ((!$local) ? $rootUri : '') . 'theme' . DIRECTORY_SEPARATOR . self::getInstance()->name . DIRECTORY_SEPARATOR . $uri;
+        if (file_exists(PROJECT_ROOT . '/web/theme.' . self::getInstance()->name . '/' . $uri)) {
+            return $rootUri . '/theme/' . self::getInstance()->name . '/' . $uri;
         }
         else {
-            return ((!$local) ? $rootUri : '') . 'theme' . DIRECTORY_SEPARATOR . 'default' . DIRECTORY_SEPARATOR . $uri;
+            return $rootUri . '/theme/default/' . $uri;
         }
     }
 }

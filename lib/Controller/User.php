@@ -21,6 +21,7 @@
 namespace Xibo\Controller;
 
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Factory\ApplicationFactory;
 use Xibo\Factory\PageFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\UserFactory;
@@ -462,6 +463,15 @@ class User extends Base
         // Return
         $this->getState()->hydrate([
             'message' => __('Permissions Updated')
+        ]);
+    }
+
+    public function myApplications()
+    {
+        $this->getState()->template = 'user-applications-form';
+        $this->getState()->setData([
+            'applications' => ApplicationFactory::getByUserId($this->getUser()->userId),
+            'help' => Help::Link('User', 'Applications')
         ]);
     }
 }

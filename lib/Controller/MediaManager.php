@@ -19,12 +19,12 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
-use baseDAO;
+
 use DOMDocument;
 use DOMXPath;
 use Xibo\Helper\ApplicationState;
-use Xibo\Helper\Form;
 use Xibo\Helper\Log;
+use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 
 
@@ -33,8 +33,6 @@ class MediaManager extends Base
 
     public function displayPage()
     {
-
-
         // Default options
         if (\Kit::IsFilterPinned('mediamanager', 'Filter')) {
             $filter_pinned = 1;
@@ -109,11 +107,11 @@ class MediaManager extends Base
         $filterMediaName = \Xibo\Helper\Sanitize::getString('filter_media_name');
         $filterMediaType = \Xibo\Helper\Sanitize::getInt('filter_type');
 
-        \Xibo\Helper\$this->getSession()->set('mediamanager', 'filter_layout_name', $filterLayout);
-        \Xibo\Helper\$this->getSession()->set('mediamanager', 'filter_region_name', $filterRegion);
-        \Xibo\Helper\$this->getSession()->set('mediamanager', 'filter_media_name', $filterMediaName);
-        \Xibo\Helper\$this->getSession()->set('mediamanager', 'filter_type', $filterMediaType);
-        \Xibo\Helper\$this->getSession()->set('mediamanager', 'Filter', Sanitize::getCheckbox('XiboFilterPinned'));
+        $this->getSession()->set('mediamanager', 'filter_layout_name', $filterLayout);
+        $this->getSession()->set('mediamanager', 'filter_region_name', $filterRegion);
+        $this->getSession()->set('mediamanager', 'filter_media_name', $filterMediaName);
+        $this->getSession()->set('mediamanager', 'filter_type', $filterMediaType);
+        $this->getSession()->set('mediamanager', 'Filter', Sanitize::getCheckbox('XiboFilterPinned'));
 
         // Lookup the module name
         if ($filterMediaType != 0) {

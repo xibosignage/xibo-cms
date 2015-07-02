@@ -129,41 +129,44 @@ INSERT INTO `pagegroup` (`pagegroupID`, `pagegroup`) VALUES
 (13, 'Web Services'),
 (14, 'DataSets');
 
-INSERT INTO `pages` (`pageID`, `name`, `pagegroupID`) VALUES
-(1, 'dashboard', 2),
-(2, 'schedule', 1),
-(3, 'mediamanager', 2),
-(5, 'layout', 3),
-(7, 'content', 4),
-(11, 'display', 7),
-(12, 'update', 11),
-(14, 'admin', 10),
-(15, 'group', 8),
-(16, 'log', 9),
-(17, 'user', 8),
-(18, 'license', 10),
-(19, 'index', 2),
-(24, 'module', 4),
-(25, 'template', 3),
-(26, 'fault', 10),
-(27, 'stats', 9),
-(28, 'manual', 2),
-(29, 'resolution', 12),
-(30, 'help', 2),
-(31, 'clock', 2),
-(32, 'displaygroup', 7),
-(33, 'oauth', 13),
-(34, 'help', 2),
-(35, 'clock', 2),
-(36, 'dataset', 14),
-(37, 'campaign', 3),
-(38, 'transition', 4),
-(39, 'timeline', 3),
-(40, 'sessions', 9),
-(41, 'preview', 3),
-(42, 'statusdashboard', 2),
-(43, 'displayprofile', 7),
-(44, 'auditlog', 9);
+INSERT INTO `pages` (`pageID`, `name`) VALUES
+  (1, 'dashboard'),
+  (2, 'schedule'),
+  (3, 'mediamanager'),
+  (5, 'layout'),
+  (7, 'library'),
+  (11, 'display'),
+  (12, 'update'),
+  (14, 'admin'),
+  (15, 'group'),
+  (16, 'log'),
+  (17, 'user'),
+  (18, 'license'),
+  (19, 'index'),
+  (24, 'module'),
+  (25, 'template'),
+  (26, 'fault'),
+  (27, 'stats'),
+  (28, 'manual'),
+  (29, 'resolution'),
+  (30, 'help'),
+  (31, 'clock'),
+  (32, 'displaygroup'),
+  (33, 'application'),
+  (34, 'help'),
+  (35, 'clock'),
+  (36, 'dataset'),
+  (37, 'campaign'),
+  (38, 'transition'),
+  (39, 'timeline'),
+  (40, 'sessions'),
+  (41, 'preview'),
+  (42, 'statusdashboard'),
+  (43, 'displayprofile'),
+  (44, 'auditlog'),
+  (46, 'region'),
+  (48, 'playlist'),
+  (49, 'audit');
 
 INSERT INTO `menuitem` (`MenuItemID`, `MenuID`, `PageID`, `Args`, `Text`, `Class`, `Img`, `Sequence`, `External`) VALUES
 (1, 1, 2, NULL, 'Schedule', NULL, NULL, 1, 0),
@@ -275,8 +278,7 @@ INSERT INTO `setting` (`settingid`, `setting`, `value`, `fieldType`, `helptext`,
 (81, 'CALENDAR_TYPE', 'Gregorian', 'dropdown', 'Which Calendar Type should the CMS use?', 'Gregorian|Jalali', 'regional', 1, 'Calendar Type', '', 50, 'Gregorian', 1, 'string'),
 (82, 'DASHBOARD_LATEST_NEWS_ENABLED', '1', 'checkbox', 'Should the Dashboard show latest news? The address is provided by the theme.', '', 'general', 1, 'Enable Latest News?', '', 110, '1', 1, 'checkbox'),
 (83, 'LIBRARY_MEDIA_DELETEOLDVER_CHECKB','Unchecked','dropdown','Default the checkbox for Deleting Old Version of media when a new file is being uploaded to the library.','Checked|Unchecked','defaults',1,'Default for "Delete old version of Media" checkbox. Shown when Editing Library Media.', '', 50, 'Unchecked', 1, 'dropdown'),
-(84, 'USE_INTL_DATEFORMAT', '0', 'checkbox', 'Should dates be internationalised where possible.', '', 'regional', 1, 'Show international dates?', '', 60, '0', 1, 'checkbox'),
-(85, 'PROXY_EXCEPTIONS', '', 'text', 'Hosts and Keywords that should not be loaded via the Proxy Specified. These should be comma separated.', '', 'network', 1, 'Proxy Exceptions', '', 32, '', 1, 'text');
+(84, 'PROXY_EXCEPTIONS', '', 'text', 'Hosts and Keywords that should not be loaded via the Proxy Specified. These should be comma separated.', '', 'network', 1, 'Proxy Exceptions', '', 32, '', 1, 'text');
 
 INSERT INTO `usertype` (`usertypeid`, `usertype`) VALUES
 (1, 'Super Admin'),
@@ -300,20 +302,8 @@ INSERT INTO `lkmenuitemgroup` (`LkMenuItemGroupID`, `GroupID`, `MenuItemID`) VAL
 (11, 1, 30),
 (12, 1, 26);
 
-INSERT INTO `lkpagegroup` (`lkpagegroupID`, `pageID`, `groupID`) VALUES
-(1, 2, 1),
-(2, 1, 1),
-(3, 3, 1),
-(4, 19, 1),
-(5, 5, 1),
-(6, 7, 1),
-(7, 24, 1),
-(8, 39, 1),
-(9, 41, 1),
-(10, 42, 1);
-
 INSERT INTO `lkusergroup` (`LkUserGroupID`, `GroupID`, `UserID`) VALUES
-(10, 3, 1);
+(1, 3, 1);
 
 INSERT INTO `transition` (`TransitionID`, `Transition`, `Code`, `HasDuration`, `HasDirection`, `AvailableAsIn`, `AvailableAsOut`) VALUES
 (1, 'Fade In', 'fadeIn', 1, 0, 0, 0),

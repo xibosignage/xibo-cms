@@ -27,6 +27,7 @@ use Xibo\Entity\Layout;
 use Xibo\Entity\Widget;
 use Xibo\Entity\WidgetOption;
 use Xibo\Exception\NotFoundException;
+use Xibo\Helper\Config;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
@@ -262,7 +263,7 @@ class LayoutFactory
                 /* @var \Xibo\Entity\Module $module */
 
                 if ($module->regionSpecific == 0) {
-                    $widget->mediaIds[] = $xlfMediaId;
+                    $widget->assignMedia($xlfMediaId);
                 }
 
                 // Get all widget options
@@ -307,6 +308,107 @@ class LayoutFactory
 
 
         // The parsed, finished layout
+        return $layout;
+    }
+
+    /**
+     * Create Layout from ZIP File
+     * @param string $zipFile
+     * @param string $layoutName
+     * @param int $userId
+     * @param int $template
+     * @param int $replaceExisting
+     * @param int $importTags
+     * @return Layout
+     */
+    public static function createFromZip($zipFile, $layoutName, $userId, $template, $replaceExisting, $importTags)
+    {
+        $libraryLocation = Config::GetSetting('LIBRARY_LOCATION') . 'temp/';
+
+        // Do some pre-checks on the arguments we have been provided
+        if (!file_exists($zipFile))
+            throw new \InvalidArgumentException(__('File does not exist'));
+
+        // Open the Zip file
+        $zip = new \ZipArchive();
+        if (!$zip->open($zipFile))
+            throw new \InvalidArgumentException(__('Unable to open ZIP'));
+
+        // Get the layout details
+        $layoutDetails = json_decode($zip->getFromName('layout.json'), true);
+
+        // Construct the Layout
+        $layout = LayoutFactory::loadByXlf($zip->getFromName('layout.xml'));
+
+        // Override the name/description
+        $layout->layout = (($layoutName != '') ? $layoutName : $layoutDetails['layout']);
+        $layout->description = (isset($layoutDetails['description']) ? $layoutDetails['description'] : '');
+
+        // Remove the tags if necessary
+        if (!$importTags) {
+            $layout->tags = [];
+        }
+
+        // Add the template tag if we are importing a template
+        if ($template) {
+            $layout->tags[] = TagFactory::getByTag('template');
+        }
+
+        // Tag as imported
+        $layout->tags[] = TagFactory::getByTag('imported');
+
+        // Set the owner
+        $layout->setOwner($userId);
+
+        // Go through each region and add the media (updating the media ids)
+        $mappings = json_decode($zip->getFromName('mapping.json'), true);
+
+        foreach ($mappings as $file) {
+            // Import the Media File
+            $intendedMediaName = $file['name'];
+            $temporaryFileName = $libraryLocation . md5($file['name']);
+            if (file_put_contents($temporaryFileName, $zip->getFromName('library/' . $file['file'])) === false)
+                throw new \InvalidArgumentException(__('Cannot save media file from ZIP file'));
+
+            // Check we don't already have one
+            try {
+                $media = MediaFactory::getByName($intendedMediaName);
+
+                if ($replaceExisting) {
+                    // Media with this name already exists, but we don't want to use it.
+                    $intendedMediaName = 'import_' . $layout . '_' . uniqid();
+                    throw new NotFoundException();
+                }
+
+            } catch (NotFoundException $e) {
+                // Create it instead
+                $media = MediaFactory::create($intendedMediaName, $temporaryFileName, $file['type'], $userId, $file['duration']);
+                $media->tags[] = TagFactory::getByTag('imported');
+                $media->save();
+            }
+
+            // Find where this is used and swap for the real mediaId
+            $widgets = $layout->getWidgets();
+            $oldMediaId = $file['mediaid'];
+            $newMediaId = $media->mediaId;
+
+            if ($file['background'] == 1) {
+                $layout->backgroundImageId = $newMediaId;
+            }
+            else {
+                // Go through all widgets and replace if necessary
+                // Keep the keys the same? Doesn't matter
+                foreach ($widgets as $widget) {
+                    /* @var Widget $widget */
+                    $widget->unassignMedia($oldMediaId);
+                    $widget->assignMedia($newMediaId);
+                }
+            }
+        }
+
+        // Finished
+        $zip->close();
+
         return $layout;
     }
 

@@ -22,12 +22,14 @@ namespace Xibo\Controller;
 
 use Parsedown;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\LibraryFullException;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ResolutionFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Help;
+use Xibo\Helper\LayoutUploadHandler;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
@@ -635,9 +637,8 @@ class Layout extends Base
         readfile($fileName);
     }
 
-    public function ImportForm()
+    public function importForm()
     {
-        global $session;
 
          
 
@@ -683,37 +684,43 @@ class Layout extends Base
 
     }
 
-    public function Import()
+    public function import()
     {
-        // What are we importing?
-        $template = \Kit::GetParam('template', _POST, _STRING, 'false');
-        $template = ($template == 'true');
+        $libraryFolder = Config::GetSetting('LIBRARY_LOCATION');
 
-        $layout = Sanitize::getString('layout');
-        $replaceExisting = Sanitize::getCheckbox('replaceExisting');
-        $importTags = \Kit::GetParam('importTags', _POST, _CHECKBOX, (!$template));
+        // Make sure the library exists
+        Library::ensureLibraryExists();
 
-        // File data
-        $tmpName = Sanitize::getString('hidFileID');
+        $options = array(
+            'userId' => $this->getUser()->userId,
+            'controller' => $this,
+            'upload_dir' => $libraryFolder . 'temp/',
+            'download_via_php' => true,
+            'script_url' => $this->urlFor('layout.import'),
+            'upload_url' => $this->urlFor('layout.import'),
+            'image_versions' => array(),
+            'accept_file_types' => '/\.zip$/i'
+        );
 
-        if ($tmpName == '')
-            trigger_error(__('Please ensure you have picked a file and it has finished uploading'), E_USER_ERROR);
+        // Make sure there is room in the library
+        $libraryLimit = Config::GetSetting('LIBRARY_SIZE_LIMIT_KB');
 
-        // File name and extension (original name)
-        $fileName = Sanitize::getString('txtFileName');
-        $fileName = basename($fileName);
-        $ext = strtolower(substr(strrchr($fileName, "."), 1));
+        if ($libraryLimit > 0 && Library::libraryUsage() > $libraryLimit)
+            throw new LibraryFullException(sprintf(__('Your library is full. Library Limit: %s K'), $libraryLimit));
 
-        // File upload directory.. get this from the settings object
-        $fileLocation = Config::GetSetting('LIBRARY_LOCATION') . 'temp/' . $tmpName;
+        // Check for a user quota
+        $this->getUser()->isQuotaFullByUser();
 
+        try {
+            // Hand off to the Upload Handler provided by jquery-file-upload
+            new LayoutUploadHandler($options);
 
-        $layoutObject = new Layout($this->db);
-
-        if (!$layoutObject->Import($fileLocation, $layout, $this->getUser()->userId, $template, $replaceExisting, $importTags)) {
-            trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);
+        } catch (\Exception $e) {
+            // We must not issue an error, the file upload return should have the error object already
+            //TODO: for some reason this commits... it shouldn't
+            $this->app->commit = false;
         }
 
-         $this->getState()->SetFormSubmitResponse(__('Layout Imported'));
+        $this->setNoOutput(true);
     }
 }

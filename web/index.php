@@ -72,11 +72,11 @@ $app->error(function (\Exception $e) use ($app) {
     $controller->handler($e);
 });
 
-// Twig templating
+// Twig templates
 $twig = new \Slim\Views\Twig();
 $twig->parserOptions = array(
     'debug' => true,
-    'cache' => '../cache'
+    'cache' => PROJECT_ROOT . '/cache'
 );
 $twig->parserExtensions = array(
     new \Slim\Views\TwigExtension(),
@@ -84,7 +84,7 @@ $twig->parserExtensions = array(
 );
 
 // Configure the template folder
-$twig->twigTemplateDirs = array_merge(\Xibo\Factory\ModuleFactory::getViewPaths(), ['../views']);
+$twig->twigTemplateDirs = array_merge(\Xibo\Factory\ModuleFactory::getViewPaths(), [PROJECT_ROOT . '/views']);
 
 $app->view($twig);
 
@@ -97,8 +97,8 @@ $app->add(new \Xibo\Middleware\State());
 $app->add(new \Xibo\Middleware\Storage());
 
 // All application routes
-require '../lib/routes-web.php';
-require '../lib/routes.php';
+require PROJECT_ROOT . '/lib/routes-web.php';
+require PROJECT_ROOT . '/lib/routes.php';
 
 // Run App
 $app->run();

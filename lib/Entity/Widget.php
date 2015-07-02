@@ -183,7 +183,7 @@ class Widget implements \JsonSerializable
      */
     public function load()
     {
-        if ($this->loaded)
+        if ($this->loaded || $this->widgetId == null || $this->widgetId == 0)
             return;
 
         // Load permissions
