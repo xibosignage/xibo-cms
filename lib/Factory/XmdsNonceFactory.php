@@ -69,14 +69,16 @@ class XmdsNonceFactory
      * @param $displayId
      * @param $layoutId
      * @param $size
+     * @param $path
      * @return XmdsNonce
      */
-    public static function createForLayout($displayId, $layoutId, $size)
+    public static function createForLayout($displayId, $layoutId, $size, $path)
     {
         $nonce = new XmdsNonce();
         $nonce->displayId = $displayId;
         $nonce->layoutId = $layoutId;
         $nonce->size = $size;
+        $nonce->storedAs = $path;
         return $nonce;
     }
 

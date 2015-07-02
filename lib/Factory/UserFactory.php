@@ -107,6 +107,11 @@ class UserFactory
         return $users[0];
     }
 
+    public static function getByDisplayGroupId($displayGroupId)
+    {
+        return DisplayFactory::query(null, ['displayGroupId' => $displayGroupId]);
+    }
+
     /**
      * Query for users
      * @param array[mixed] $sortOrder
@@ -181,8 +186,24 @@ class UserFactory
         }
 
         if (Sanitize::getString('clientId', $filterBy) != null) {
-            $SQL .= ' AND user.userId = (SELECT userId FROM oauth_clients WHERE id = :clientId) ';
+            $SQL .= ' AND user.userId = (SELECT DISTINCT owner_id FROM oauth_sessions WHERE client_id = :clientId) ';
             $params['clientId'] = Sanitize::getString('clientId', $filterBy);
+        }
+
+        if (Sanitize::getString('displayGroupId', $filterBy) != null) {
+            $SQL .= ' AND user.userId IN (
+                SELECT DISTINCT user.userId, user.userName, user.email
+                  FROM `user`
+                    INNER JOIN `lkusergroup`
+                    ON lkusergroup.userId = user.userId
+                    INNER JOIN `permission`
+                    ON `permission`.groupId = `lkusergroup`.groupId
+                    INNER JOIN `permissionentity`
+                    ON `permissionentity`.entityId = permission.entityId
+                        AND `permissionentity`.entity = \'Xibo\\Entity\\DisplayGroup\'
+                 WHERE `permission`.objectId = :displayGroupId
+            ) ';
+            $params['displayGroupId'] = Sanitize::getString('displayGroupId', $filterBy);
         }
 
         // Sorting?

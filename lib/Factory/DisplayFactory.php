@@ -46,6 +46,21 @@ class DisplayFactory
     }
 
     /**
+     * @param string $licence
+     * @return Display
+     * @throws NotFoundException
+     */
+    public static function getByLicence($licence)
+    {
+        $displays = DisplayFactory::query(null, ['license' => $licence]);
+
+        if (count($displays) <= 0)
+            throw new NotFoundException();
+
+        return $displays[0];
+    }
+
+    /**
      * @param int $displayGroupId
      * @return array[Display]
      * @throws NotFoundException
@@ -139,6 +154,12 @@ class DisplayFactory
         if (Sanitize::getInt('displayId', $filterBy) != 0) {
             $SQL .= ' AND display.displayid = :displayId ';
             $params['displayId'] = Sanitize::getInt('displayId', $filterBy);
+        }
+
+        // Filter by Licence?
+        if (Sanitize::getString('license', $filterBy) != null) {
+            $SQL .= ' AND display.license = :license ';
+            $params['license'] = Sanitize::getString('license', $filterBy);
         }
 
         // Filter by Display Name?

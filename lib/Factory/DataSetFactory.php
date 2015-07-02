@@ -50,6 +50,7 @@ class DataSetFactory
             $sql .= "       dataset.dataSet, ";
             $sql .= "       dataset.description, ";
             $sql .= "       dataset.userId, ";
+            $sql .= "       dataset.lastDataEdit, ";
             $sql .= "       user.userName AS owner ";
             $sql .= "  FROM dataset ";
             $sql .= "   INNER JOIN `user` ON user.userId = dataset.userId ";
