@@ -23,10 +23,11 @@ namespace Xibo\Xmds;
 use Xibo\Entity\Bandwidth;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DisplayFactory;
+use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\XmdsNonceFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
-use Xibo\Storage\PDOConnect;
 
 class Soap3 extends Soap
 {
@@ -105,7 +106,7 @@ class Soap3 extends Soap
      * @param int $chunkOffset The Offset of the Chunk Requested
      * @param string $chunkSize The Size of the Chunk Requested
      * @param string $version
-     * @return mixed
+     * @return string
      * @throws \SoapFault
      */
     function GetFile($serverKey, $hardwareKey, $filePath, $fileType, $chunkOffset, $chunkSize, $version)
@@ -135,52 +136,52 @@ class Soap3 extends Soap
         if ($this->display->isAuditing == 1)
             Log::debug("[IN] Params: [$hardwareKey] [$filePath] [$fileType] [$chunkOffset] [$chunkSize]", $this->display->displayId);
 
-        $nonce = new Nonce();
+        $file = null;
 
-        if ($fileType == "layout") {
-            $fileId = Sanitize::int($filePath);
+        try {
+            // Handle fetching the file
+            if ($fileType == "layout") {
+                $fileId = Sanitize::int($filePath);
 
-            // Validate the nonce
-            if (!$nonce->AllowedFile('layout', $this->display->displayId, NULL, $fileId))
-                throw new \SoapFault('Receiver', 'Requested an invalid file.');
+                // Validate the nonce
+                if (count(XmdsNonceFactory::getByDisplayAndLayout($this->display->displayId, $fileId)) <= 0)
+                    throw new NotFoundException('Invalid Nonce for ' . $fileId);
 
-            try {
-                $dbh = PDOConnect::init();
+                // Load the layout
+                $layout = LayoutFactory::getById($fileId);
+                $path = $layout->xlfToDisk();
 
-                $sth = $dbh->prepare('SELECT xml FROM layout WHERE layoutid = :layoutid');
-                $sth->execute(array('layoutid' => $fileId));
+                $file = file_get_contents($path);
+                $chunkSize = filesize($path);
 
-                if (!$row = $sth->fetch())
-                    throw new Exception('No file found with that ID');
+            } else if ($fileType == "media") {
+                // Get the ID
+                if (strstr($filePath, '/') || strstr($filePath, '\\'))
+                    throw new NotFoundException("Invalid file path.");
 
-                $file = $row['xml'];
+                $fileId = explode('.', $filePath);
+
+                // Validate the nonce
+                if (count(XmdsNonceFactory::getByDisplayAndMedia($this->display->displayId, $fileId[0])) <= 0)
+                    throw new NotFoundException('Invalid Nonce for ' . $filePath);
+
+                // Return the Chunk size specified
+                $f = fopen($libraryLocation . $filePath, 'r');
+
+                fseek($f, $chunkOffset);
+
+                $file = fread($f, $chunkSize);
 
                 // Store file size for bandwidth log
                 $chunkSize = strlen($file);
-            } catch (Exception $e) {
-                Log::error($e->getMessage(), $this->display->displayId);
-                return new \SoapFault('Receiver', 'Unable the find layout.');
+
+            } else {
+                throw new NotFoundException('Unknown FileType Requested.');
             }
-        } else if ($fileType == "media") {
-            // Get the ID
-            if (strstr($filePath, '/') || strstr($filePath, '\\'))
-                throw new \SoapFault('Receiver', "Invalid file path.");
-
-            // Validate the nonce
-            if (!$nonce->AllowedFile('oldfile', $this->display->displayId, $filePath))
-                throw new \SoapFault('Receiver', 'Requested an invalid file.');
-
-            // Return the Chunk size specified
-            $f = fopen($libraryLocation . $filePath, 'r');
-
-            fseek($f, $chunkOffset);
-
-            $file = fread($f, $chunkSize);
-
-            // Store file size for bandwidth log
-            $chunkSize = strlen($file);
-        } else {
-            throw new \SoapFault('Receiver', 'Unknown FileType Requested.');
+        }
+        catch (NotFoundException $e) {
+            Log::error($e->getMessage(), $this->display->displayId);
+            throw new \SoapFault('Receiver', 'Requested an invalid file.');
         }
 
         // Log Bandwidth

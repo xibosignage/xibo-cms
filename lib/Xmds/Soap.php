@@ -801,13 +801,13 @@ class Soap
             throw new \SoapFault('Receiver', 'Inventory Cannot be Empty');
 
         // Load the XML into a DOMDocument
-        $document = new DOMDocument("1.0");
+        $document = new \DOMDocument("1.0");
         $document->loadXML($inventory);
 
         // Assume we are complete (but we are getting some)
         $mediaInventoryComplete = 1;
 
-        $xpath = new DOMXPath($document);
+        $xpath = new \DOMXPath($document);
         $fileNodes = $xpath->query("//file");
 
         foreach ($fileNodes as $node) {
