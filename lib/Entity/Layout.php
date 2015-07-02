@@ -132,6 +132,25 @@ class Layout implements \JsonSerializable
     }
 
     /**
+     * Get Widgets assigned to this Layout
+     * @return array[Widget]
+     */
+    public function getWidgets()
+    {
+        $widgets = [];
+
+        foreach ($this->regions as $region) {
+            /* @var Region $region */
+            foreach ($region->playlists as $playlist) {
+                /* @var Playlist $playlist */
+                $widgets = array_merge($playlist->widgets, $widgets);
+            }
+        }
+
+        return $widgets;
+    }
+
+    /**
      * Load this Layout
      * @param bool $loadPlaylists
      */
@@ -205,6 +224,9 @@ class Layout implements \JsonSerializable
                 $tag->save();
             }
         }
+
+        // TODO: Handle the Background Image (in 1.7 it was linked to the layout with lklayoutmedia).
+        // lklayoutmedia has gone now, so I suppose it will have to be handled in requiredfiles.
 
         Log::debug('Save finished for %s', $this);
     }

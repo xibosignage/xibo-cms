@@ -42,6 +42,9 @@ $app->put('/layout/:id', '\Xibo\Controller\Layout:edit')->name('layout.edit');
 $app->post('/layout/copy/:id', '\Xibo\Controller\Layout:copy')->name('layout.copy');
 $app->delete('/layout/:id', '\Xibo\Controller\Layout:delete')->name('layout.delete');
 $app->put('/layout/retire/:id', '\Xibo\Controller\Layout:retire')->name('layout.retire');
+// Layout Import
+$app->map('/layout/import', '\Xibo\Controller\Library:add')->via('HEAD');
+$app->post('/layout/import', '\Xibo\Controller\Layout:add')->name('layout.import');
 
 // Region
 $app->post('/region/:id', '\Xibo\Controller\Region:add')->name('region.add');
