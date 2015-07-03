@@ -172,13 +172,38 @@ $tabs[] = Form::AddTab('general', __('General'));
                         {% set title %}{% trans "Description" %}{% endset %}
                         {% set helpText %}{% trans "A description - (1 - 254 characters)." %}{% endset %}
                         {{ forms.text("description", title, diplay.description, helpText) }}
+
+                        {% set title %}{% trans "Licence display?" %}{% endset %}
+                        {% set helpText %}{% trans "Use one of the available licenses for this display?" %}{% endset %}
+                        {% set yes %}{% trans "Yes" %}{% endset %}
+                        {% set no %}{% trans "No" %}{% endset %}
+                        {% set licensed = [
+                        { licensedid: 1, licensed: yes },
+                        { licensedid: 0, licensed: no }
+                        ] %}
+                        {{ forms.dropdown("licensed", "single", title, "", licensed, "licensedid", "licensed", helpText) }}
+
+                        {# is default layout#}
                     </div>
                     <div class="tab-pane" id="location">
                         {{ forms.number("latitude", "Latitude", display.latitude, "The Latitude of this display") }}
                         {{ forms.number("longitude", "Longitude", display.longitude, "The Longitude of this Display") }}
                     </div>
                     <div class="tab-pane" id="maintenance">
+                        {% set title %}{% trans "Email Alerts" %}{% endset %}
+                        {% set helpText %}{% trans "Do you want to be notified by email if there is a problem with this display?" %}{% endset %}
+                        {% set yes %}{% trans "Yes" %}{% endset %}
+                        {% set no %}{% trans "No" %}{% endset %}
+                        {% set emailAlert = [
+                        { id: 0, value: no },
+                        { id: 1, value: yes }
+                        ] %}
+                        {{ forms.dropdown("emailAlert", "single", title, "", emailAlert, "id", "value", helpText) }}
 
+
+                        {% set title %}{% trans "Use the Global Timeout?" %}{% endset %}
+                        {% set helpText %}{% trans "Should this display be tested against the global time out or the client collection interval?" %}{% endset %}
+                        {{ forms.checkbox("alertTimeout", title, display.alertTimeout, helpText) }}
                     </div>
                     <div class="tab-pane" id="wol">
                         {% set title %}{% trans "Enable Wake on LAN" %}{% endset %}
@@ -188,6 +213,19 @@ $tabs[] = Form::AddTab('general', __('General'));
                         {% set title %}{% trans "BroadCast Address" %}{% endset %}
                         {% set helpText %}{% trans "The IP address of the remote host\'s broadcast address (or gateway)" %}{% endset %}
                         {{ forms.text("broadCastAddress", title, display.broadCastAddress, helpText) }}
+
+                        {% set title %}{% trans "Wake on LAN SecureOn" %}{% endset %}
+                        {% set helpText %}{% trans "Enter a hexadecimal password of a SecureOn enabled Network Interface Card (NIC) of the remote host. Enter a value in this pattern: \'xx-xx-xx-xx-xx-xx\'. Leave the following field empty, if SecureOn is not used (for example, because the NIC of the remote host does not support SecureOn)." %}{% endset %}
+                        {{ forms.text("secureOn", title, display.secureOn, helpText) }}
+
+                        {% set title %}{% trans "Wake on LAN Time" %}{% endset %}
+                        {% set helpText %}{% trans "The time this display should receive the WOL command, using the 24hr clock - e.g. 19:00. Maintenance must be enabled." %}{% endset %}
+                        {{ forms.text("wakeOnLanTime", title, display.wakeOnLanTime, helpText) }}
+
+
+                        {% set title %}{% trans "Wake on LAN CIDR" %}{% endset %}
+                        {% set helpText %}{% trans "Enter a number within the range of 0 to 32 in the following field. Leave the following field empty, if no subnet mask should be used (CIDR = 0). If the remote host\'s broadcast address is unknown: Enter the host name or IP address of the remote host in Broad Cast Address and enter the CIDR subnet mask of the remote host in this field." %}{% endset %}
+                        {{ forms.text("cidr", title, display.cidr, helpText) }}
                     </div>
                     <div class="tab-pane" id="advanced">
 
