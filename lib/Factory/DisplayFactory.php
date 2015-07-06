@@ -25,6 +25,7 @@ namespace Xibo\Factory;
 use Xibo\Entity\Display;
 use Xibo\Exception\NotFoundException;
 use Xibo\Helper\Config;
+use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
@@ -239,6 +240,8 @@ class DisplayFactory
         // Sorting?
         if (is_array($sortOrder))
             $SQL .= 'ORDER BY ' . implode(',', $sortOrder);
+
+        Log::sql($SQL, $params);
 
         foreach (PDOConnect::select($SQL, $params) as $row) {
             $entries[] = (new Display())->hydrate($row);

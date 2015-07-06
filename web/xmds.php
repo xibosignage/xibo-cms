@@ -50,6 +50,35 @@ if (isset($_GET['wsdl']) || isset($_GET['WSDL'])) {
     exit;
 }
 
+// We create a Slim Object ONLY for logging
+// Create a logger
+$logger = new \Flynsarmy\SlimMonolog\Log\MonologWriter(array(
+    'name' => 'XMDS',
+    'handlers' => array(
+        new \Xibo\Helper\DatabaseLogHandler()
+    ),
+    'processors' => [
+        new \Monolog\Processor\UidProcessor(7)
+    ]
+));
+
+// Slim Application
+$app = new \Slim\Slim(array(
+    'mode' => Config::GetSetting('SERVER_MODE'),
+    'debug' => false,
+    'log.writer' => $logger
+));
+$app->setName('api');
+
+// Set the App name
+\Xibo\Helper\ApplicationState::$appName = $app->getName();
+
+// Set state
+\Xibo\Middleware\State::setState($app);
+
+// Configure a user
+$app->user = \Xibo\Factory\UserFactory::getById(1);
+
 // Check to see if we have a file attribute set (for HTTP file downloads)
 if (isset($_GET['file'])) {
     // Check send file mode is enabled
@@ -98,6 +127,8 @@ if (isset($_GET['file'])) {
 
 
 try {
+    \Xibo\Storage\PDOConnect::init()->beginTransaction();
+
     $wsdl = PROJECT_ROOT . '/lib/Xmds/service_v' . $version . '.wsdl';
 
     if (!file_exists($wsdl))
@@ -107,13 +138,16 @@ try {
     new \Xibo\Helper\Theme();
 
     // Create a SoapServer
-    $soap = new SoapServer($wsdl);
-    //$soap = new SoapServer($wsdl, array('cache_wsdl' => WSDL_CACHE_NONE));
-    $soap->setClass('Xibo\Xmds\Soap' . $version);
+    //$soap = new SoapServer($wsdl);
+    $soap = new SoapServer($wsdl, array('cache_wsdl' => WSDL_CACHE_NONE));
+    $soap->setClass('\Xibo\Xmds\Soap' . $version);
     $soap->handle();
+
+    \Xibo\Storage\PDOConnect::init()->commit();
 }
 catch (Exception $e) {
     Log::error($e->getMessage());
+    \Xibo\Storage\PDOConnect::init()->rollBack();
 
     header('HTTP/1.1 500 Internal Server Error');
     header('Content-Type: text/plain');

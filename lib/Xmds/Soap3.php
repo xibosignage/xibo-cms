@@ -200,7 +200,7 @@ class Soap3 extends Soap
      */
     function Schedule($serverKey, $hardwareKey, $version)
     {
-        return $this->getSchedule($serverKey, $hardwareKey);
+        return $this->doSchedule($serverKey, $hardwareKey);
     }
 
     /**

@@ -33,8 +33,6 @@ class LogProcessor
 
         $app = Slim::getInstance();
 
-        $record['extra']['runNo'] = $app->runNo;
-
         $route = $app->router()->getCurrentRoute();
         if ($route != null)
             $record['extra']['route'] = $route->getPattern();

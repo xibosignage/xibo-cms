@@ -11,6 +11,7 @@ namespace Xibo\Xmds;
 define('BLACKLIST_ALL', "All");
 define('BLACKLIST_SINGLE', "Single");
 
+use Slim\Slim;
 use Xibo\Entity\Bandwidth;
 use Xibo\Entity\Display;
 use Xibo\Entity\Playlist;
@@ -39,6 +40,29 @@ class Soap
      * @var Display
      */
     protected $display;
+
+    /**
+     * @var LogProcessor
+     */
+    protected $logProcessor;
+
+
+    public function __construct()
+    {
+        $app = Slim::getInstance();
+
+        // Create a log processor
+        $this->logProcessor = new LogProcessor();
+
+        // Set
+        if (!$app->logWriter->resource) {
+            // Append to settings
+            $app->logWriter->settings['processors'][] = $this->logProcessor;
+        }
+        else {
+            $app->logWriter->resource->pushProcessor($this->logProcessor);
+        }
+    }
 
     /**
      * Get Required Files (common)
@@ -376,8 +400,10 @@ class Soap
      * @return mixed
      * @throws \SoapFault
      */
-    protected function getSchedule($serverKey, $hardwareKey)
+    protected function doSchedule($serverKey, $hardwareKey)
     {
+        $this->logProcessor->setRoute('Schedule');
+
         // Sanitize
         $serverKey = Sanitize::string($serverKey);
         $hardwareKey = Sanitize::string($hardwareKey);
@@ -969,21 +995,14 @@ class Soap
             // to say that it has come back on-line
             $this->alertDisplayUp();
 
-            // Client IP
-            $clientIp = '';
-            $keys = array('X_FORWARDED_FOR', 'HTTP_X_FORWARDED_FOR', 'CLIENT_IP', 'REMOTE_ADDR');
-            foreach ($keys as $key) {
-                if (isset($_SERVER[$key])) {
-                    $clientIp = $_SERVER[$key];
-                    break;
-                }
-            }
-
             // Last accessed date on the display
             $this->display->lastAccessed = time();
             $this->display->loggedIn = 1;
-            $this->display->clientAddress = $clientIp;
+            $this->display->clientAddress = $this->getIp();
             $this->display->save(false);
+
+            // Configure our log processor
+            $this->logProcessor->setDisplay($this->display->displayId);
 
             return true;
 
@@ -1049,6 +1068,21 @@ class Soap
                     Log::error('Unable to send Display Up mail to %s', $msgTo);
             }
         }
+    }
+
+    protected function getIp()
+    {
+        $clientIp = '';
+
+        $keys = array('X_FORWARDED_FOR', 'HTTP_X_FORWARDED_FOR', 'CLIENT_IP', 'REMOTE_ADDR');
+        foreach ($keys as $key) {
+            if (isset($_SERVER[$key])) {
+                $clientIp = $_SERVER[$key];
+                break;
+            }
+        }
+
+        return $clientIp;
     }
 
     /**

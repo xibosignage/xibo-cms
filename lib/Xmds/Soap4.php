@@ -23,6 +23,10 @@ namespace Xibo\Xmds;
 use Xibo\Controller\Library;
 use Xibo\Entity\Bandwidth;
 use Xibo\Entity\Display;
+use Xibo\Exception\NotFoundException;
+use Xibo\Factory\DisplayFactory;
+use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\MediaFactory;
 use Xibo\Factory\XmdsNonceFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Log;
@@ -42,7 +46,7 @@ class Soap4 extends Soap
      * @param string $operatingSystem
      * @param string $macAddress
      * @return string
-     * @throws SoapFault
+     * @throws \SoapFault
      */
     public function RegisterDisplay($serverKey, $hardwareKey, $displayName, $clientType, $clientVersion, $clientCode, $operatingSystem, $macAddress)
     {
@@ -67,146 +71,93 @@ class Soap4 extends Soap
         if (strlen($hardwareKey) > 40)
             throw new \SoapFault('Sender', 'The Hardware Key you sent was too long. Only 40 characters are allowed (SHA1).');
 
-        // Check in the database for this hardwareKey
-        try {
-            $dbh = \Xibo\Storage\PDOConnect::init();
-            $sth = $dbh->prepare('
-                SELECT licensed, display, displayid, displayprofileid, client_type, version_instructions, screenShotRequested, email_alert, loggedin, isAuditing
-                  FROM display
-                WHERE license = :hardwareKey');
-
-            $sth->execute(array(
-                'hardwareKey' => $hardwareKey
-            ));
-
-            $result = $sth->fetchAll();
-        } catch (Exception $e) {
-            Log::error('Error trying to check hardware key. ' . $e->getMessage());
-            throw new \SoapFault('Sender', 'Cannot check client key.');
-        }
-
-        // Use a display object to Add or Edit the display
-        $displayObject = new Display();
-
         // Return an XML formatted string
-        $return = new DOMDocument('1.0');
+        $return = new \DOMDocument('1.0');
         $displayElement = $return->createElement('display');
         $return->appendChild($displayElement);
 
-        // Is it there?
-        if (count($result) == 0) {
-
-            // Get the default layout id
-            $defaultLayoutId = 4;
-
-            // Add this display record
-            if (!$displayId = $displayObject->Add($displayName, 0, $defaultLayoutId, $hardwareKey, 0, 0))
-                throw new \SoapFault('Sender', 'Error adding display');
-
-            $displayElement->setAttribute('status', 1);
-            $displayElement->setAttribute('code', 'ADDED');
-            $displayElement->setAttribute('message', 'Display added and is awaiting licensing approval from an Administrator.');
-
-            // New displays don't audit
-            $isAuditing = 0;
-        } else {
-            // We have seen this display before, so check the licensed value
-            $row = $result[0];
-
-            $displayId = Sanitize::int($row['displayid']);
-            $display = Sanitize::string($row['display']);
-            $clientType = \Kit::ValidateParam($row['client_type'], _WORD);
-            $versionInstructions = \Kit::ValidateParam($row['version_instructions'], _HTMLSTRING);
-            $screenShotRequested = Sanitize::int($row['screenShotRequested']);
-            $emailAlert = Sanitize::int($row['email_alert']);
-            $loggedIn = Sanitize::int($row['loggedin']);
-            $isAuditing = Sanitize::int($row['isAuditing']);
+        // Check in the database for this hardwareKey
+        try {
+            $display = DisplayFactory::getByLicence($hardwareKey);
 
             // Determine if we are licensed or not
-            if ($row['licensed'] == 0) {
+            if ($display->licensed == 0) {
                 // It is not licensed
                 $displayElement->setAttribute('status', 2);
                 $displayElement->setAttribute('code', 'WAITING');
                 $displayElement->setAttribute('message', 'Display is awaiting licensing approval from an Administrator.');
+
             } else {
                 // It is licensed
                 $displayElement->setAttribute('status', 0);
                 $displayElement->setAttribute('code', 'READY');
                 $displayElement->setAttribute('message', 'Display is active and ready to start.');
-                $displayElement->setAttribute('version_instructions', $versionInstructions);
+                $displayElement->setAttribute('version_instructions', $display->versionInstructions);
 
-                // Use the display profile and type to get this clients settings
-                try {
-                    $displayProfile = new DisplayProfile();
-                    $displayProfile->displayProfileId = (empty($row['displayprofileid']) ? 0 : Sanitize::int($row['displayprofileid']));
+                // Display Settings
+                $settings = $display->getSettings();
 
-                    if ($displayProfile->displayProfileId == 0) {
-                        // Load the default profile
-                        $displayProfile->type = $clientType;
-                        $displayProfile->LoadDefault();
-                    } else {
-                        // Load the specified profile
-                        $displayProfile->Load();
-                    }
-
-                    // Load the config and inject the display name
-                    if ($clientType == 'windows') {
-                        $displayProfile->config[] = array(
-                            'name' => 'DisplayName',
-                            'value' => $display,
-                            'type' => 'string'
-                        );
-                        $displayProfile->config[] = array(
-                            'name' => 'ScreenShotRequested',
-                            'value' => $screenShotRequested,
-                            'type' => 'checkbox'
-                        );
-                    } else {
-                        $displayProfile->config[] = array(
-                            'name' => 'displayName',
-                            'value' => $display,
-                            'type' => 'string'
-                        );
-                        $displayProfile->config[] = array(
-                            'name' => 'screenShotRequested',
-                            'value' => $screenShotRequested,
-                            'type' => 'checkbox'
-                        );
-                    }
-
-                    // Create the XML nodes
-                    foreach ($displayProfile->config as $arrayItem) {
-                        $node = $return->createElement($arrayItem['name'], (isset($arrayItem['value']) ? $arrayItem['value'] : $arrayItem['default']));
-                        $node->setAttribute('type', $arrayItem['type']);
-                        $displayElement->appendChild($node);
-                    }
-                } catch (Exception $e) {
-                    Log::error('Error loading display config. ' . $e->getMessage());
-                    throw new \SoapFault('Sender', 'Error after display found');
+                // Create the XML nodes
+                foreach ($settings as $arrayItem) {
+                    $node = $return->createElement($arrayItem['name'], (isset($arrayItem['value']) ? $arrayItem['value'] : $arrayItem['default']));
+                    $node->setAttribute('type', $arrayItem['type']);
+                    $displayElement->appendChild($node);
                 }
 
+                // Add some special settings
+                $nodeName = ($display->clientType == 'windows') ? 'DisplayName' : 'displayName';
+                $node = $return->createElement($nodeName, $display->display);
+                $node->setAttribute('type', 'string');
+                $displayElement->appendChild($node);
+
+                $nodeName = ($display->clientType == 'windows') ? 'ScreenShotRequested' : 'screenShotRequested';
+                $node = $return->createElement($nodeName, $display->screenShotRequested);
+                $node->setAttribute('type', 'checkbox');
+                $displayElement->appendChild($node);
+
                 // Send Notification if required
-                $this->AlertDisplayUp($displayId, $display, $loggedIn, $emailAlert);
+                $this->AlertDisplayUp($display->displayId, $display->display, $display->loggedIn, $display->emailAlert);
             }
+
+        } catch (NotFoundException $e) {
+
+            // Add a new display
+            try {
+                $display = new Display();
+                $display->display = $displayName;
+                $display->isAuditing = 0;
+                $display->defaultLayoutId = 4;
+                $display->license = $hardwareKey;
+                $display->licensed = 0;
+                $display->incSchedule = 0;
+                $display->clientAddress = $this->getIp();
+            }
+            catch (\InvalidArgumentException $e) {
+                throw new \SoapFault('Sender', $e->getMessage());
+            }
+
+            $displayElement->setAttribute('status', 1);
+            $displayElement->setAttribute('code', 'ADDED');
+            $displayElement->setAttribute('message', 'Display added and is awaiting licensing approval from an Administrator.');
         }
 
-        // Touch the display record
-        $displayObject->Touch($displayId, array(
-            'clientAddress' => $clientAddress,
-            'macAddress' => $macAddress,
-            'clientType' => $clientType,
-            'clientVersion' => $clientVersion,
-            'clientCode' => $clientCode,
-            'operatingSystem' => $operatingSystem
-        ));
+
+        $display->lastAccessed = time();
+        $display->loggedIn = 1;
+        $display->clientAddress = $clientAddress;
+        $display->macAddress = $macAddress;
+        $display->clientType = $clientType;
+        $display->clientVersion = $clientVersion;
+        $display->clientCode = $clientCode;
+        $display->save(false);
 
         // Log Bandwidth
         $returnXml = $return->saveXML();
-        $this->LogBandwidth($displayId, Bandwidth::$REGISTER, strlen($returnXml));
+        $this->LogBandwidth($display->displayId, Bandwidth::$REGISTER, strlen($returnXml));
 
         // Audit our return
-        if ($isAuditing == 1)
-            Log::debug($returnXml, $displayId);
+        if ($display->isAuditing == 1)
+            Log::debug($returnXml, $display->displayId);
 
         return $returnXml;
     }
@@ -216,7 +167,7 @@ class Soap4 extends Soap
      * @param string $serverKey The Server Key
      * @param string $hardwareKey Display Hardware Key
      * @return string $requiredXml Xml Formatted String
-     * @throws SoapFault
+     * @throws \SoapFault
      */
     function RequiredFiles($serverKey, $hardwareKey)
     {
@@ -233,7 +184,7 @@ class Soap4 extends Soap
      * @param int $chunkOffset The Offset of the Chunk Requested
      * @param string $chunkSize The Size of the Chunk Requested
      * @return mixed
-     * @throws SoapFault
+     * @throws \SoapFault
      */
     function GetFile($serverKey, $hardwareKey, $fileId, $fileType, $chunkOffset, $chunkSize)
     {
@@ -241,7 +192,7 @@ class Soap4 extends Soap
         $serverKey = Sanitize::string($serverKey);
         $hardwareKey = Sanitize::string($hardwareKey);
         $fileId = Sanitize::int($fileId);
-        $fileType = \Kit::ValidateParam($fileType, _WORD);
+        $fileType = Sanitize::string($fileType);
         $chunkOffset = Sanitize::int($chunkOffset);
         $chunkSize = Sanitize::int($chunkSize);
 
@@ -262,46 +213,30 @@ class Soap4 extends Soap
         if ($this->display->isAuditing == 1)
             Log::debug('hardwareKey: ' . $hardwareKey . ', fileId: ' . $fileId . ', fileType: ' . $fileType . ', chunkOffset: ' . $chunkOffset . ', chunkSize: ' . $chunkSize, $this->display->displayId);
 
-        if ($fileType == "layout") {
-            $fileId = Sanitize::int($fileId);
+        try {
+            if ($fileType == "layout") {
+                $fileId = Sanitize::int($fileId);
 
-            // Validate the nonce
-            if (count(XmdsNonceFactory::getByDisplayAndLayout($this->display->displayId, $fileId)) <= 0)
-                throw new \SoapFault('Receiver', 'Requested an invalid file.');
+                // Validate the nonce
+                if (count(XmdsNonceFactory::getByDisplayAndLayout($this->display->displayId, $fileId)) <= 0)
+                    throw new NotFoundException('Invalid Nonce for ' . $fileId);
 
-            try {
-                $dbh = \Xibo\Storage\PDOConnect::init();
+                // Load the layout
+                $layout = LayoutFactory::getById($fileId);
+                $path = $layout->xlfToDisk();
 
-                $sth = $dbh->prepare('SELECT xml FROM layout WHERE layoutid = :layoutid');
-                $sth->execute(array('layoutid' => $fileId));
+                $file = file_get_contents($path);
+                $chunkSize = filesize($path);
 
-                if (!$row = $sth->fetch())
-                    throw new Exception('No file found with that ID');
+            } else if ($fileType == "media") {
+                // Validate the nonce
+                if (count(XmdsNonceFactory::getByDisplayAndMedia($this->display->displayId, $fileId)) <= 0)
+                    throw new NotFoundException('Invalid Nonce for ' . $fileId);
 
-                $file = $row['xml'];
-
-                // Store file size for bandwidth log
-                $chunkSize = strlen($file);
-            } catch (Exception $e) {
-                Log::error('Unable to find the layout to download. ' . $e->getMessage(), $this->display->displayId);
-                return new \SoapFault('Receiver', 'Unable the find layout.');
-            }
-        } else if ($fileType == "media") {
-            // Validate the nonce
-            if (count(XmdsNonceFactory::getByDisplayAndMedia($this->display->displayId, $fileId)) <= 0)
-                throw new \SoapFault('Receiver', 'Requested an invalid file.');
-
-            try {
-                $dbh = \Xibo\Storage\PDOConnect::init();
-
-                $sth = $dbh->prepare('SELECT storedAs FROM `media` WHERE mediaid = :mediaid');
-                $sth->execute(array('mediaid' => $fileId));
-
-                if (!$row = $sth->fetch())
-                    throw new Exception('No file found with that ID');
+                $media = MediaFactory::getById($fileId);
 
                 // Return the Chunk size specified
-                $f = fopen($libraryLocation . $row['storedAs'], 'r');
+                $f = fopen($libraryLocation . $media->storedAs, 'r');
 
                 fseek($f, $chunkOffset);
 
@@ -309,12 +244,14 @@ class Soap4 extends Soap
 
                 // Store file size for bandwidth log
                 $chunkSize = strlen($file);
-            } catch (Exception $e) {
-                Log::error('Unable to find the media to download. ' . $e->getMessage(), $this->display->displayId);
-                return new \SoapFault('Receiver', 'Unable the find media.');
+
+            } else {
+                throw new NotFoundException('Unknown FileType Requested.');
             }
-        } else {
-            throw new \SoapFault('Receiver', 'Unknown FileType Requested.');
+        }
+        catch (NotFoundException $e) {
+            Log::error($e->getMessage());
+            throw new \SoapFault('Receiver', 'Requested an invalid file.');
         }
 
         // Log Bandwidth
@@ -332,7 +269,7 @@ class Soap4 extends Soap
      */
     function Schedule($serverKey, $hardwareKey)
     {
-        return $this->getSchedule($serverKey, $hardwareKey);
+        return $this->doSchedule($serverKey, $hardwareKey);
     }
 
     /**

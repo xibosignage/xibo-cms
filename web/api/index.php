@@ -41,7 +41,8 @@ $logger = new \Flynsarmy\SlimMonolog\Log\MonologWriter(array(
         new \Xibo\Helper\DatabaseLogHandler()
     ),
     'processors' => array(
-        new \Xibo\Helper\LogProcessor()
+        new \Xibo\Helper\LogProcessor(),
+        new \Monolog\Processor\UidProcessor(7)
     )
 ));
 
@@ -55,7 +56,6 @@ $app->setName('api');
 // Set the App name
 \Xibo\Helper\ApplicationState::$appName = $app->getName();
 
-$app->runNo = \Xibo\Helper\Random::generateString(10);
 $app->add(new \Xibo\Middleware\Storage());
 $app->add(new \Xibo\Middleware\State());
 $app->add(new \Xibo\Middleware\ApiAuthenticationOAuth());
