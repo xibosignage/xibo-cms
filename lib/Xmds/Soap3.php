@@ -94,7 +94,7 @@ class Soap3 extends Soap
     function RequiredFiles($serverKey, $hardwareKey, $version)
     {
         $httpDownloads = false;
-        return $this->getRequiredFiles($serverKey, $hardwareKey, $httpDownloads);
+        return $this->doRequiredFiles($serverKey, $hardwareKey, $httpDownloads);
     }
 
     /**
@@ -134,7 +134,7 @@ class Soap3 extends Soap
             throw new \SoapFault('Receiver', "This display client is not licensed");
 
         if ($this->display->isAuditing == 1)
-            Log::debug("[IN] Params: [$hardwareKey] [$filePath] [$fileType] [$chunkOffset] [$chunkSize]", $this->display->displayId);
+            Log::debug("[IN] Params: [$hardwareKey] [$filePath] [$fileType] [$chunkOffset] [$chunkSize]");
 
         $file = null;
 
@@ -180,7 +180,7 @@ class Soap3 extends Soap
             }
         }
         catch (NotFoundException $e) {
-            Log::error($e->getMessage(), $this->display->displayId);
+            Log::error($e->getMessage());
             throw new \SoapFault('Receiver', 'Requested an invalid file.');
         }
 
@@ -216,7 +216,7 @@ class Soap3 extends Soap
      */
     function BlackList($serverKey, $hardwareKey, $mediaId, $type, $reason, $version)
     {
-        return $this->getBlackList($serverKey, $hardwareKey, $mediaId, $type, $reason);
+        return $this->doBlackList($serverKey, $hardwareKey, $mediaId, $type, $reason);
     }
 
     /**

@@ -39,7 +39,7 @@ class Display
     public $isAuditing;
     public $display;
     public $description;
-    public $defaultLayoutId;
+    public $defaultLayoutId = 4;
     public $license;
     public $licensed;
     public $currentlyLicensed;
@@ -160,8 +160,9 @@ class Display
     /**
      * Save
      * @param bool $validate
+     * @param bool $audit
      */
-    public function save($validate = true)
+    public function save($validate = true, $audit = true)
     {
         if ($validate)
             $this->validate();
@@ -171,7 +172,8 @@ class Display
         else
             $this->edit();
 
-        Log::audit('Display', $this->displayId, 'Display Saved', $this->jsonSerialize());
+        if ($audit)
+            Log::audit('Display', $this->displayId, 'Display Saved', $this->jsonSerialize());
     }
 
     /**
@@ -208,7 +210,7 @@ class Display
         ', [
             'display' => $this->display,
             'isauditing' => 0,
-            'defaultlayoutid' => 1,
+            'defaultlayoutid' => $this->defaultLayoutId,
             'license' => $this->license,
             'licensed' => 0,
             'inc_schedule' => 0,

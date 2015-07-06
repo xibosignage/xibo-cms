@@ -72,8 +72,10 @@ class Soap
      * @return string
      * @throws \SoapFault
      */
-    protected function getRequiredFiles($serverKey, $hardwareKey, $httpDownloads)
+    protected function doRequiredFiles($serverKey, $hardwareKey, $httpDownloads)
     {
+        $this->logProcessor->setRoute('RequiredFiles');
+
         // Sanitize
         $serverKey = Sanitize::string($serverKey);
         $hardwareKey = Sanitize::string($hardwareKey);
@@ -94,7 +96,7 @@ class Soap
             throw new \SoapFault('Sender', 'This display is not licensed.');
 
         if ($this->display->isAuditing == 1)
-            Log::debug('[IN] with hardware key: ' . $hardwareKey, $this->display->displayId);
+            Log::debug('[IN] with hardware key: ' . $hardwareKey);
 
         // Remove all Nonces for this display
         XmdsNonce::removeAllForDisplay($this->display->displayId);
@@ -114,22 +116,33 @@ class Soap
         $toFilter = $rfLookAhead - ($rfLookAhead % 3600);
 
         if ($this->display->isAuditing == 1)
-            Log::debug(sprintf('Required files date criteria. FromDT = %s. ToDt = %s', date('Y-m-d h:i:s', $fromFilter), date('Y-m-d h:i:s', $toFilter)), $this->display->displayId);
+            Log::debug(sprintf('Required files date criteria. FromDT = %s. ToDt = %s', date('Y-m-d h:i:s', $fromFilter), date('Y-m-d h:i:s', $toFilter)));
 
         try {
             $dbh = PDOConnect::init();
 
             // Get a list of all layout ids in the schedule right now.
-            $SQL = " SELECT DISTINCT layout.layoutID ";
-            $SQL .= " FROM `campaign` ";
-            $SQL .= "   INNER JOIN schedule ON schedule.CampaignID = campaign.CampaignID ";
-            $SQL .= "   INNER JOIN schedule_detail ON schedule_detail.eventID = schedule.eventID ";
-            $SQL .= "   INNER JOIN `lkcampaignlayout` ON lkcampaignlayout.CampaignID = campaign.CampaignID ";
-            $SQL .= "   INNER JOIN `layout` ON lkcampaignlayout.LayoutID = layout.LayoutID ";
-            $SQL .= "   INNER JOIN lkdisplaydg ON lkdisplaydg.DisplayGroupID = schedule_detail.DisplayGroupID ";
-            $SQL .= " WHERE lkdisplaydg.DisplayID = :displayId ";
-            $SQL .= " AND schedule_detail.FromDT < :fromdt AND schedule_detail.ToDT > :todt ";
-            $SQL .= "   AND layout.retired = 0  ";
+            $SQL = '
+                SELECT layout.layoutID
+                  FROM `campaign`
+                    INNER JOIN `schedule`
+                    ON `schedule`.CampaignID = campaign.CampaignID
+                    INNER JOIN schedule_detail
+                    ON schedule_detail.eventID = `schedule`.eventID
+                    INNER JOIN `lkscheduledisplaygroup`
+                    ON `lkscheduledisplaygroup`.eventId = `schedule`.eventId
+                    INNER JOIN `lkcampaignlayout`
+                    ON lkcampaignlayout.CampaignID = campaign.CampaignID
+                    INNER JOIN `layout`
+                    ON lkcampaignlayout.LayoutID = layout.LayoutID
+                    INNER JOIN lkdisplaydg
+                    ON lkdisplaydg.DisplayGroupID = `lkscheduledisplaygroup`.displayGroupId
+                 WHERE lkdisplaydg.DisplayID = :displayId
+                    AND schedule_detail.FromDT < :fromdt
+                    AND schedule_detail.ToDT > :todt
+                    AND layout.retired = 0
+                ORDER BY schedule.DisplayOrder, lkcampaignlayout.DisplayOrder, schedule_detail.eventID
+            ';
 
             $sth = $dbh->prepare($SQL);
             $sth->execute(array(
@@ -147,7 +160,7 @@ class Soap
                 $layouts[] = Sanitize::int($row['layoutID']);
 
         } catch (\Exception $e) {
-            Log::error('Unable to get a list of layouts. ' . $e->getMessage(), $this->display->displayId);
+            Log::error('Unable to get a list of layouts. ' . $e->getMessage());
             return new \SoapFault('Sender', 'Unable to get a list of layouts');
         }
 
@@ -166,10 +179,16 @@ class Soap
                     UNION
                     SELECT 3 AS DownloadOrder, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize
                       FROM media
-                       INNER JOIN lklayoutmedia
-                       ON lklayoutmedia.MediaID = media.MediaID
+                       INNER JOIN `lkwidgetmedia`
+                       ON `lkwidgetmedia`.mediaID = media.MediaID
+                       INNER JOIN `widget`
+                       ON `widget`.widgetId = `lkwidgetmedia`.widgetId
+                       INNER JOIN `lkregionplaylist`
+                       ON `lkregionplaylist`.playlistId = `widget`.playlistId
+                       INNER JOIN `region`
+                       ON `region`.regionId = `lkregionplaylist`.regionId
                        INNER JOIN layout
-                       ON layout.LayoutID = lklayoutmedia.LayoutID ";
+                       ON layout.LayoutID = region.layoutId ";
             $SQL .= sprintf(" WHERE layout.layoutid IN (%s)  ", $layoutIdList);
             $SQL .= "
                     UNION
@@ -181,7 +200,7 @@ class Soap
                         ON lkdisplaydg.DisplayGroupID = lkmediadisplaygroup.DisplayGroupID
                     ";
             $SQL .= " WHERE lkdisplaydg.DisplayID = :displayId ";
-            $SQL .= " ORDER BY DownloadOrder, RecordType DESC";
+            $SQL .= " ORDER BY DownloadOrder DESC";
 
             $sth = $dbh->prepare($SQL);
             $sth->execute(array(
@@ -244,7 +263,7 @@ class Soap
                 $pathsAdded[] = $path;
             }
         } catch (\Exception $e) {
-            Log::error('Unable to get a list of required files. ' . $e->getMessage(), $this->display->displayId);
+            Log::error('Unable to get a list of required files. ' . $e->getMessage());
             return new \SoapFault('Sender', 'Unable to get a list of files');
         }
 
@@ -270,7 +289,7 @@ class Soap
 
             // Log
             if ($this->display->isAuditing == 1)
-                Log::debug('MD5 for layoutid ' . $layoutId . ' is: [' . $md5 . ']', $this->display->displayId);
+                Log::debug('MD5 for layoutid ' . $layoutId . ' is: [' . $md5 . ']');
 
             // Add nonce
             $layoutNonce = XmdsNonceFactory::createForLayout($this->display->displayId, $layoutId, $fileSize, $path);
@@ -374,7 +393,7 @@ class Soap
                 $blackList->appendChild($file);
             }
         } catch (\Exception $e) {
-            Log::error('Unable to get a list of blacklisted files. ' . $e->getMessage(), $this->display->displayId);
+            Log::error('Unable to get a list of blacklisted files. ' . $e->getMessage());
             return new \SoapFault('Sender', 'Unable to get a list of blacklisted files');
         }
 
@@ -382,7 +401,7 @@ class Soap
         $this->phoneHome();
 
         if ($this->display->isAuditing == 1)
-            Log::debug($requiredFilesXml->saveXML(), $this->display->displayId);
+            Log::debug($requiredFilesXml->saveXML());
 
         // Return the results of requiredFiles()
         $requiredFilesXml->formatOutput = true;
@@ -440,7 +459,7 @@ class Soap
             $toFilter = ($fromFilter + 3600) - (($fromFilter + 3600) % 3600);
 
         if ($this->display->isAuditing == 1)
-            Log::debug(sprintf('FromDT = %s. ToDt = %s', date('Y-m-d h:i:s', $fromFilter), date('Y-m-d h:i:s', $toFilter)), $this->display->displayId);
+            Log::debug(sprintf('FromDT = %s. ToDt = %s', date('Y-m-d h:i:s', $fromFilter), date('Y-m-d h:i:s', $toFilter)));
 
         try {
             $dbh = PDOConnect::init();
@@ -456,18 +475,35 @@ class Soap
 
             // Add file nodes to the $fileElements
             // Firstly get all the scheduled layouts
-            $SQL = " SELECT layout.layoutID, schedule_detail.FromDT, schedule_detail.ToDT, schedule.eventID, schedule.is_priority, ";
-            $SQL .= "  (SELECT GROUP_CONCAT(DISTINCT StoredAs) FROM media INNER JOIN lklayoutmedia ON lklayoutmedia.MediaID = media.MediaID WHERE lklayoutmedia.LayoutID = layout.LayoutID AND lklayoutmedia.regionID <> 'module' GROUP BY lklayoutmedia.LayoutID) AS Dependents";
-            $SQL .= " FROM `campaign` ";
-            $SQL .= " INNER JOIN schedule ON schedule.CampaignID = campaign.CampaignID ";
-            $SQL .= " INNER JOIN schedule_detail ON schedule_detail.eventID = schedule.eventID ";
-            $SQL .= " INNER JOIN `lkcampaignlayout` ON lkcampaignlayout.CampaignID = campaign.CampaignID ";
-            $SQL .= " INNER JOIN `layout` ON lkcampaignlayout.LayoutID = layout.LayoutID ";
-            $SQL .= " INNER JOIN lkdisplaydg ON lkdisplaydg.DisplayGroupID = schedule_detail.DisplayGroupID ";
-            $SQL .= " WHERE lkdisplaydg.DisplayID = :displayId ";
-            $SQL .= " AND (schedule_detail.FromDT < :fromdt AND schedule_detail.ToDT > :todt )";
-            $SQL .= "   AND layout.retired = 0  ";
-            $SQL .= " ORDER BY schedule.DisplayOrder, lkcampaignlayout.DisplayOrder, schedule_detail.eventID ";
+            $SQL = '
+                SELECT layout.layoutID, schedule_detail.FromDT, schedule_detail.ToDT, schedule.eventID, schedule.is_priority,
+                  (
+                    SELECT GROUP_CONCAT(DISTINCT StoredAs)
+                      FROM media
+                        INNER JOIN lklayoutmedia ON lklayoutmedia.MediaID = media.MediaID
+                     WHERE lklayoutmedia.LayoutID = layout.LayoutID
+                      AND lklayoutmedia.regionID <> \'module\'
+                    GROUP BY lklayoutmedia.LayoutID
+                  ) AS Dependents
+                  FROM `campaign`
+                    INNER JOIN `schedule`
+                    ON `schedule`.CampaignID = campaign.CampaignID
+                    INNER JOIN schedule_detail
+                    ON schedule_detail.eventID = `schedule`.eventID
+                    INNER JOIN `lkscheduledisplaygroup`
+                    ON `lkscheduledisplaygroup`.eventId = `schedule`.eventId
+                    INNER JOIN `lkcampaignlayout`
+                    ON lkcampaignlayout.CampaignID = campaign.CampaignID
+                    INNER JOIN `layout`
+                    ON lkcampaignlayout.LayoutID = layout.LayoutID
+                    INNER JOIN lkdisplaydg
+                    ON lkdisplaydg.DisplayGroupID = `lkscheduledisplaygroup`.displayGroupId
+                 WHERE lkdisplaydg.DisplayID = :displayId
+                    AND schedule_detail.FromDT < :fromdt
+                    AND schedule_detail.ToDT > :todt
+                    AND layout.retired = 0
+                ORDER BY schedule.DisplayOrder, lkcampaignlayout.DisplayOrder, schedule_detail.eventID
+            ';
 
             $sth = $dbh->prepare($SQL);
             $sth->execute(array(
@@ -498,7 +534,7 @@ class Soap
                 $layoutElements->appendChild($layout);
             }
         } catch (\Exception $e) {
-            Log::error('Error getting a list of layouts for the schedule. ' . $e->getMessage(), $this->display->displayId);
+            Log::error('Error getting a list of layouts for the schedule. ' . $e->getMessage());
             return new \SoapFault('Sender', 'Unable to get A list of layouts for the schedule');
         }
 
@@ -534,7 +570,7 @@ class Soap
         $scheduleXml->formatOutput = true;
 
         if ($this->display->isAuditing == 1)
-            Log::debug($scheduleXml->saveXML(), $this->display->displayId);
+            Log::debug($scheduleXml->saveXML());
 
         $output = $scheduleXml->saveXML();
 
@@ -553,8 +589,10 @@ class Soap
      * @return bool|\SoapFault
      * @throws \SoapFault
      */
-    protected function getBlackList($serverKey, $hardwareKey, $mediaId, $type, $reason)
+    protected function doBlackList($serverKey, $hardwareKey, $mediaId, $type, $reason)
     {
+        $this->logProcessor->setRoute('BlackList');
+
         // Sanitize
         $serverKey = Sanitize::string($serverKey);
         $hardwareKey = Sanitize::string($hardwareKey);
@@ -575,7 +613,7 @@ class Soap
             throw new \SoapFault('Receiver', "This display client is not licensed", $hardwareKey);
 
         if ($this->display->isAuditing == 1)
-            Log::debug('Blacklisting ' . $mediaId . ' for ' . $reason, $this->display->displayId);
+            Log::debug('Blacklisting ' . $mediaId . ' for ' . $reason);
 
         try {
             $dbh = PDOConnect::init();
@@ -620,10 +658,10 @@ class Soap
                 }
             } else {
                 if ($this->display->isAuditing == 1)
-                    Log::debug($mediaId . ' already black listed', $this->display->displayId);
+                    Log::debug($mediaId . ' already black listed');
             }
         } catch (\Exception $e) {
-            Log::error('Unable to query for Blacklist records. ' . $e->getMessage(), $this->display->displayId);
+            Log::error('Unable to query for Blacklist records. ' . $e->getMessage());
             return new \SoapFault('Sender', "Unable to query for BlackList records.");
         }
 
@@ -634,6 +672,8 @@ class Soap
 
     protected function doSubmitLog($serverKey, $hardwareKey, $logXml)
     {
+        $this->logProcessor->setRoute('SubmitLog');
+
         // Sanitize
         $serverKey = Sanitize::string($serverKey);
         $hardwareKey = Sanitize::string($hardwareKey);
@@ -651,13 +691,13 @@ class Soap
             throw new \SoapFault('Sender', 'This display client is not licensed.');
 
         if ($this->display->isAuditing == 1)
-            Log::debug('XML log: ' . $logXml, $this->display->displayId);
+            Log::debug('XML log: ' . $logXml);
 
         // Load the XML into a DOMDocument
         $document = new \DOMDocument("1.0");
 
         if (!$document->loadXML($logXml)) {
-            Log::error('Malformed XML from Player, this will be discarded. The Raw XML String provided is: ' . $logXml, $this->display->displayId);
+            Log::error('Malformed XML from Player, this will be discarded. The Raw XML String provided is: ' . $logXml);
             return true;
         }
 
@@ -683,7 +723,7 @@ class Soap
             $cat = strtolower($node->getAttribute('category'));
 
             if ($date == '' || $cat == '') {
-                Log::error('Log submitted without a date or category attribute', $this->display->displayId);
+                Log::error('Log submitted without a date or category attribute');
                 continue;
             }
 
@@ -715,7 +755,7 @@ class Soap
             // We should have enough information to log this now.
             $logType = ($cat == 'error') ? 'error' : 'audit';
 
-            Log::notice($logType, $message, 'Client', $thread . $method . $type, $date, $this->display->displayId, $scheduleId, $layoutId, $mediaId);
+            Log::notice('%s,%s,%s,%s,%s,%s,%s,%s', $logType, $message, 'Client', $thread . $method . $type, $date, $scheduleId, $layoutId, $mediaId);
         }
 
         $this->LogBandwidth($this->display->displayId, Bandwidth::$SUBMITLOG, strlen($logXml));
@@ -732,10 +772,11 @@ class Soap
      */
     protected function doSubmitStats($serverKey, $hardwareKey, $statXml)
     {
+        $this->logProcessor->setRoute('SubmitStats');
+
         // Sanitize
         $serverKey = Sanitize::string($serverKey);
         $hardwareKey = Sanitize::string($hardwareKey);
-        $statXml = \Kit::ValidateParam($statXml, _HTMLSTRING);
 
         // Check the serverKey matches
         if ($serverKey != Config::GetSetting('SERVER_KEY'))
@@ -750,19 +791,17 @@ class Soap
             throw new \SoapFault('Receiver', "This display client is not licensed");
 
         if ($this->display->isAuditing == 1)
-            Log::debug('Received XML. ' . $statXml, $this->display->displayId);
+            Log::debug('Received XML. ' . $statXml);
 
         if ($statXml == "")
             throw new \SoapFault('Receiver', "Stat XML is empty.");
 
-        // Log
-        $statObject = new Stat();
-
         // Load the XML into a DOMDocument
-        $document = new DOMDocument("1.0");
+        $document = new \DOMDocument("1.0");
         $document->loadXML($statXml);
 
         foreach ($document->documentElement->childNodes as $node) {
+            /* @var \DOMElement $node */
             // Make sure we don't consider any text nodes
             if ($node->nodeType == XML_TEXT_NODE)
                 continue;
@@ -773,7 +812,7 @@ class Soap
             $type = $node->getAttribute('type');
 
             if ($fromdt == '' || $todt == '' || $type == '') {
-                Log::error('Stat submitted without the fromdt, todt or type attributes.', $this->display->displayId);
+                Log::error('Stat submitted without the fromdt, todt or type attributes.');
                 continue;
             }
 
@@ -783,9 +822,20 @@ class Soap
             $tag = $node->getAttribute('tag');
 
             // Write the stat record with the information we have available to us.
-            if (!$statObject->Add($type, $fromdt, $todt, $scheduleID, $this->display->displayId, $layoutID, $mediaID, $tag)) {
-                Log::error(sprintf('Stat Add failed with error: %s', $statObject->GetErrorMessage()), $this->display->displayId);
-                continue;
+            try {
+                $stat = new Stat();
+                $stat->type = $type;
+                $stat->fromDt = $fromdt;
+                $stat->toDt = $todt;
+                $stat->scheduleId = $scheduleID;
+                $stat->displayId = $this->display->displayId;
+                $stat->layoutId = $layoutID;
+                $stat->mediaId = $mediaID;
+                $stat->tag = $tag;
+                $stat->save();
+            }
+            catch (\PDOException $e) {
+                Log::error('Stat Add failed with error: %s', $e->getMessage());
             }
         }
 
@@ -803,6 +853,8 @@ class Soap
      */
     protected function doMediaInventory($serverKey, $hardwareKey, $inventory)
     {
+        $this->logProcessor->setRoute('MediaInventory');
+
         // Sanitize
         $serverKey = Sanitize::string($serverKey);
         $hardwareKey = Sanitize::string($hardwareKey);
@@ -820,7 +872,7 @@ class Soap
             throw new \SoapFault('Receiver', 'This display client is not licensed');
 
         if ($this->display->isAuditing == 1)
-            Log::debug($inventory, $this->display->displayId);
+            Log::debug($inventory);
 
         // Check that the $inventory contains something
         if ($inventory == '')
@@ -837,6 +889,7 @@ class Soap
         $fileNodes = $xpath->query("//file");
 
         foreach ($fileNodes as $node) {
+            /* @var \DOMElement $node */
             $mediaId = $node->getAttribute('id');
             $complete = $node->getAttribute('complete');
             $md5 = $node->getAttribute('md5');
@@ -849,9 +902,9 @@ class Soap
                 $mediaInventoryComplete = 2;
         }
 
-        // Touch the display record
-        $displayObject = new Display();
-        $displayObject->Touch($this->display->displayId, array('mediaInventoryStatus' => $mediaInventoryComplete, 'mediaInventoryXml' => $inventory));
+        $this->display->mediaInventoryStatus = $mediaInventoryComplete;
+        $this->display->mediaInventoryXml = $inventory;
+        $this->display->save(false, false);
 
         $this->LogBandwidth($this->display->displayId, Bandwidth::$MEDIAINVENTORY, strlen($inventory));
 
@@ -869,6 +922,8 @@ class Soap
      */
     protected function doGetResource($serverKey, $hardwareKey, $layoutId, $regionId, $mediaId)
     {
+        $this->logProcessor->setRoute('GetResource');
+
         // Sanitize
         $serverKey = Sanitize::string($serverKey);
         $hardwareKey = Sanitize::string($hardwareKey);
@@ -914,7 +969,7 @@ class Soap
         try {
             $module = ModuleFactory::load($type, $layoutId, $regionId, $mediaId, null, null, $user);
         } catch (Exception $e) {
-            Log::error($e->getMessage(), $this->display->displayId);
+            Log::error($e->getMessage());
             throw new \SoapFault('Receiver', 'Cannot create module. Check CMS Log');
         }
 
@@ -999,7 +1054,7 @@ class Soap
             $this->display->lastAccessed = time();
             $this->display->loggedIn = 1;
             $this->display->clientAddress = $this->getIp();
-            $this->display->save(false);
+            $this->display->save(false, false);
 
             // Configure our log processor
             $this->logProcessor->setDisplay($this->display->displayId);
@@ -1030,7 +1085,7 @@ class Soap
                 $msgFrom = Config::GetSetting("mail_from");
 
                 $subject = sprintf(__("Recovery for Display %s"), $this->display->display);
-                $body = sprintf(__("Display %s with ID %d is now back online."), $this->display->display, $this->display->displayId);
+                $body = sprintf(__("Display %s with ID %d is now back online."), $this->display->display);
 
                 // Get a list of people that have view access to the display?
                 if (Config::GetSetting('MAINTENANCE_ALERTS_FOR_VIEW_USERS') == 1) {
@@ -1109,7 +1164,7 @@ class Soap
             return ($bandwidthUsage >= ($xmdsLimit * 1024)) ? false : true;
 
         } catch (\Exception $e) {
-            Log::error($e->getMessage(), $this->display->displayId);
+            Log::error($e->getMessage());
             return false;
         }
     }

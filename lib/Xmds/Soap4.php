@@ -172,7 +172,7 @@ class Soap4 extends Soap
     function RequiredFiles($serverKey, $hardwareKey)
     {
         $httpDownloads = (Config::GetSetting('SENDFILE_MODE') != 'Off');
-        return $this->getRequiredFiles($serverKey, $hardwareKey, $httpDownloads);
+        return $this->doRequiredFiles($serverKey, $hardwareKey, $httpDownloads);
     }
 
     /**
@@ -211,7 +211,7 @@ class Soap4 extends Soap
             throw new \SoapFault('Receiver', "This display client is not licensed");
 
         if ($this->display->isAuditing == 1)
-            Log::debug('hardwareKey: ' . $hardwareKey . ', fileId: ' . $fileId . ', fileType: ' . $fileType . ', chunkOffset: ' . $chunkOffset . ', chunkSize: ' . $chunkSize, $this->display->displayId);
+            Log::debug('hardwareKey: ' . $hardwareKey . ', fileId: ' . $fileId . ', fileType: ' . $fileType . ', chunkOffset: ' . $chunkOffset . ', chunkSize: ' . $chunkSize);
 
         try {
             if ($fileType == "layout") {
@@ -284,7 +284,7 @@ class Soap4 extends Soap
      */
     function BlackList($serverKey, $hardwareKey, $mediaId, $type, $reason)
     {
-        return $this->getBlackList($serverKey, $hardwareKey, $mediaId, $type, $reason);
+        return $this->doBlackList($serverKey, $hardwareKey, $mediaId, $type, $reason);
     }
 
     /**
@@ -368,7 +368,7 @@ class Soap4 extends Soap
             throw new \SoapFault('Receiver', 'This display client is not licensed');
 
         if ($this->display->isAuditing == 1)
-            Log::debug($status, $this->display->displayId);
+            Log::debug($status);
 
         $this->LogBandwidth($this->display->displayId, Bandwidth::$NOTIFYSTATUS, strlen($status));
 
@@ -406,7 +406,7 @@ class Soap4 extends Soap
             throw new \SoapFault('Receiver', 'This display client is not licensed');
 
         if ($this->display->isAuditing == 1)
-            Log::debug('Received Screen shot', $this->display->displayId);
+            Log::debug('Received Screen shot');
 
         // Open this displays screen shot file and save this.
         Library::ensureLibraryExists();

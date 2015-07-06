@@ -38,7 +38,7 @@ class Stat
     {
         $this->statId = PDOConnect::insert('
             INSERT INTO `stat` (type, statDate, start, end, scheduleID, displayID, layoutID, mediaID, Tag)
-              VALUES (:type, :statdate, :start, :end, :scheduleId, :displayId, :layoutId, :mediaId, :tag)
+              VALUES (:type, :statDate, :start, :end, :scheduleId, :displayId, :layoutId, :mediaId, :tag)
         ', [
             'type' => $this->type,
             'statDate' => date("Y-m-d H:i:s"),
