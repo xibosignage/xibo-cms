@@ -38,7 +38,7 @@ class Stat
     {
         $this->statId = PDOConnect::insert('
             INSERT INTO `stat` (type, statDate, start, end, scheduleID, displayID, layoutID, mediaID, Tag)
-              VALUES (:type, :statdate, :start, :end, :scheduleId, :displayId, :layoutId, :mediaId, :tag)
+              VALUES (:type, :statDate, :start, :end, :scheduleId, :displayId, :layoutId, :mediaId, :tag)
         ', [
             'type' => $this->type,
             'statDate' => date("Y-m-d H:i:s"),
@@ -55,5 +55,17 @@ class Stat
     private function edit()
     {
         PDOConnect::update('UPDATE stat SET end = :toDt WHERE statId = :statId', ['statId' => $this->statId, 'toDt' => $this->toDt]);
+    }
+
+    public static function displayUp($displayId)
+    {
+        $dbh = PDOConnect::init();
+
+        $sth = $dbh->prepare('UPDATE `stat` SET end = :toDt WHERE displayId = :displayId AND end IS NULL AND type = :type');
+        $sth->execute(array(
+            'toDt' => date('Y-m-d H:i:s'),
+            'type' => 'displaydown',
+            'displayId' => $displayId
+        ));
     }
 }

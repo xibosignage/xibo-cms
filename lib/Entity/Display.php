@@ -39,7 +39,7 @@ class Display
     public $isAuditing;
     public $display;
     public $description;
-    public $defaultLayoutId;
+    public $defaultLayoutId = 4;
     public $license;
     public $licensed;
     public $currentlyLicensed;
@@ -124,11 +124,11 @@ class Display
         }
 
         // Broadcast Address
-        if (!v::ip()->validate($this->broadCastAddress))
+        if ($this->broadCastAddress != '' && !v::ip()->validate($this->broadCastAddress))
             throw new \InvalidArgumentException(__('BroadCast Address is not a valid IP Address'));
 
         // CIDR
-        if (!v::numeric()->between(0, 32)->validate($this->cidr))
+        if (!empty($this->cidr) && !v::numeric()->between(0, 32)->validate($this->cidr))
             throw new \InvalidArgumentException(__('CIDR subnet mask is not a number within the range of 0 to 32.'));
 
         // secureOn
@@ -160,8 +160,9 @@ class Display
     /**
      * Save
      * @param bool $validate
+     * @param bool $audit
      */
-    public function save($validate = true)
+    public function save($validate = true, $audit = true)
     {
         if ($validate)
             $this->validate();
@@ -171,7 +172,8 @@ class Display
         else
             $this->edit();
 
-        Log::audit('Display', $this->displayId, 'Display Saved', $this->jsonSerialize());
+        if ($audit)
+            Log::audit('Display', $this->displayId, 'Display Saved', $this->jsonSerialize());
     }
 
     /**
@@ -185,7 +187,7 @@ class Display
         // Remove our display from any groups it is assigned to
         foreach ($this->displayGroups as $displayGroup) {
             /* @var DisplayGroup $displayGroup */
-            $displayGroup->unassignDisplay($this->displayId);
+            $displayGroup->unassignDisplay($this);
             $displayGroup->save(false);
         }
 
@@ -208,7 +210,7 @@ class Display
         ', [
             'display' => $this->display,
             'isauditing' => 0,
-            'defaultlayoutid' => 1,
+            'defaultlayoutid' => $this->defaultLayoutId,
             'license' => $this->license,
             'licensed' => 0,
             'inc_schedule' => 0,

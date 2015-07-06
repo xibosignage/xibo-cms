@@ -26,6 +26,7 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\TagFactory;
+use Xibo\Helper\Config;
 use Xibo\Helper\Date;
 use Xibo\Helper\Log;
 use Xibo\Storage\PDOConnect;
@@ -44,6 +45,8 @@ class Layout implements \JsonSerializable
     public $backgroundColor;
     public $legacyXml;
 
+    public $createdDt;
+    public $modifiedDt;
     public $status;
     public $retired;
     public $backgroundzIndex;
@@ -323,6 +326,20 @@ class Layout implements \JsonSerializable
     public function toZip()
     {
         return new \ZipArchive();
+    }
+
+    /**
+     * Save the XLF to disk
+     * @return string the path
+     */
+    public function xlfToDisk()
+    {
+        $libraryLocation = Config::GetSetting('LIBRARY_LOCATION');
+        $path = $libraryLocation . $this->layoutId . '.xlf';
+
+        file_put_contents($path, $this->toXlf());
+
+        return $path;
     }
 
     //

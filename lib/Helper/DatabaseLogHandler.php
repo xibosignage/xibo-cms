@@ -43,7 +43,7 @@ class DatabaseLogHandler extends AbstractProcessingHandler
         }
 
         $params = array(
-            'runNo' => isset($record['extra']['runNo']) ? $record['extra']['runNo'] : '',
+            'runNo' => isset($record['extra']['uid']) ? $record['extra']['uid'] : '',
             'logdate' => $record['datetime']->format("Y-m-d H:i:s"),
             'type' => $record['level_name'],
             'channel' => $record['channel'],

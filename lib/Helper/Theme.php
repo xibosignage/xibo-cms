@@ -34,18 +34,12 @@ class Theme
 {
     private static $instance = null;
 
-    private $dateManager;
-
     private $name = '';
     private $pageName = '';
     private $config = null;
 
     public function __construct($theme = NULL)
     {
-        // Store some things for the Theme engine to use
-        $this->help = new Help();
-        $this->dateManager = new Date();
-
         // What is the currently selected theme?
         $globalTheme = ($theme == NULL) ? Config::GetSetting('GLOBAL_THEME_NAME', 'default') : $theme;
 

@@ -78,7 +78,7 @@
             serverSide: true,
             filter: false,
             searchDelay: 3000,
-            "order": [[ 0, "asc"]],
+            "order": [[ 1, "asc"]],
             ajax: {
                 "url": "{{ urlFor("display.search") }}",
                 "data": function(d) {
@@ -88,6 +88,7 @@
             "columns": [
                 { "data": "displayId" },
                 {
+                    "name": "display",
                     "data": function(data, type) {
                         if (type != "display")
                             return data.display;
@@ -100,7 +101,7 @@
                         }
                     }
                 },
-                { "data": dataTableTickCrossColumn },
+                { "name": "mediaInventoryStatus", "data": dataTableTickCrossColumn },
                 { "data": dataTableTickCrossColumn },
                 { "data": "currentLayout" },
                 { "data": "storageAvailableSpace", "visible": false },
@@ -147,6 +148,6 @@
 
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
-        dataTableAddColVis(table, '#displays_filter');
+        dataTableAddColVis(table, $('#displays_wrapper').find('.col-sm-6').eq(1));
     </script>
 {% endblock %}

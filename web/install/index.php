@@ -40,7 +40,8 @@ $logger = new \Flynsarmy\SlimMonolog\Log\MonologWriter(array(
         new \Monolog\Handler\StreamHandler(PROJECT_ROOT . '/library/install_log.txt')
     ),
     'processors' => array(
-        new \Xibo\Helper\LogProcessor()
+        new \Xibo\Helper\LogProcessor(),
+        new \Monolog\Processor\UidProcessor(7)
     )
 ));
 
@@ -54,8 +55,6 @@ $app->setName('install');
 
 // Set the App name
 \Xibo\Helper\ApplicationState::$appName = $app->getName();
-
-$app->runNo = \Xibo\Helper\Random::generateString(10);
 
 // Configure the Slim error handler
 $app->error(function (\Exception $e) use ($app) {

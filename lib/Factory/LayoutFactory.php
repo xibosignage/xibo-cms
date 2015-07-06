@@ -436,6 +436,8 @@ class LayoutFactory
         $select .= "        layout.width, ";
         $select .= "        layout.height, ";
         $select .= "        layout.retired, ";
+        $select .= "        layout.createdDt, ";
+        $select .= "        layout.modifiedDt, ";
         if (Sanitize::getInt('showTags', $filterBy) == 1)
             $select .= " tag.tag AS tags, ";
         else
@@ -598,6 +600,8 @@ class LayoutFactory
             $layout->backgroundzIndex = Sanitize::int($row['backgroundzIndex']);
             $layout->width = Sanitize::double($row['width']);
             $layout->height = Sanitize::double($row['height']);
+            $layout->createdDt = $row['createdDt'];
+            $layout->modifiedDt = $row['modifiedDt'];
 
             if (Sanitize::int('showLegacyXml', $filterBy) == 1)
                 $layout->legacyXml = $row['legacyXml'];
