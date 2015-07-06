@@ -76,15 +76,51 @@ $formFields[] = Form::AddText('uri', __('Link'), NULL,
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Save" %}, $("#webpageFormAdd").submit()
-    {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#webpageAddForm").submit()
 {% endblock %}
 
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="webpageFormAdd" class="XiboForm form-horizontal" method="post" action="{{ urlFor("module.widget.add", {type: module.widget.type, id: playlist.playlistId}) }}">
+            <form id="webpageAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("module.widget.add", {type: module.widget.type, id: playlist.playlistId}) }}">
+                {% set title %}{% trans "Link" %}{% endset %}
+                {% set helpText %}{% trans "The Location (URL) of the webpage" %}{% endset %}
+                {{ forms.text("url", title, "", helpText, "", "required") }}
+
+                {% set title %}{% trans "Name" %}{% endset %}
+                {% set helpText %}{% trans "An optional name for this media" %}{% endset %}
+                {{ forms.text("name", title, "", helpText) }}
+
+                {{ forms.number("duration", "Duration", displayOrder, "The duration in seconds this item should be displayed", "", "required") }}
+                
+                {% set title %}{% trans "Options" %}{% endset %}
+                {% set helpText %}{% trans "How should this web page be embedded?" %}{% endset %}
+                {% set openNatively %}{% trans "Open Natively" %}{% endset %}
+                {% set manualPosition %}{% trans "Manual Position" %}{% endset %}
+                {% set bestFit %}{% trans "Best Fit" %}{% endset %}
+                {% set options = [
+                { modeid: 1, mode: openNatively },
+                { modeid: 2, mode: manualPosition },
+                { modeid: 3, mode: bestFit}
+                ] %}
+                {{ forms.dropdown("options", "single", title, "", options, "modeid", "mode", helpText) }}
+
+
+                        $formFields[] = Form::AddCombo(
+            'modeid',
+            __('Options'),
+            NULL,
+            array(
+                array('modeid' => '1', 'mode' => __('Open Natively')),
+                array('modeid' => '2', 'mode' => __('Manual Position')),
+                array('modeid' => '3', 'mode' => __('Best Fit'))
+            ),
+            'modeid',
+            'mode',
+            __('How should this web page be embedded?'),
+            'm');
 
             </form>
         </div>

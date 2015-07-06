@@ -17,13 +17,13 @@
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Yes" %}, $("#libraryFormDelete").submit()
+    {% trans "Yes" %}, $("#libraryDeleteForm").submit()
 {% endblock %}
 
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="libraryFormDelete" class="XiboForm form-horizontal" method="delete" action="{{ urlFor("library.delete", {"id": media.mediaId}) }}">
+            <form id="libraryDeleteForm" class="XiboForm form-horizontal" method="delete" action="{{ urlFor("library.delete", {"id": media.mediaId}) }}">
                  {{ forms.message("Are you sure you want to delete this file?") }}
             </form>
         </div>

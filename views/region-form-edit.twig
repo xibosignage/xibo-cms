@@ -89,6 +89,27 @@ $formFields[] = Form::AddNumber('height', __('Height'), $height,
         <div class="col-md-12">
             <form id="regionEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("region.edit", {id: region.regionId}) }}">
 
+                {% set title %}{% trans "Name" %}{% endset %}
+                {% set helpText %}{% trans "Name of the Region" %}{% endset %}
+                {{ forms.text("name", title, region.name, helpText) }}
+
+                {{ forms.number("top", "Top", region.top, "Offset from the Top Corner") }}
+
+                {{ forms.number("left", "Left", region.left, "Offset from the Left Corner") }}
+
+                {{ forms.number("width", "Width", region.width, "Width of the Region") }}
+
+                {{ forms.number("height", "Height", region.height, "Height of the Region") }}
+
+                {# Transitions and dependencies #}
+
+                {% set title %}{% trans "Loop?" %}{% endset %}
+                {% set helpText %}{% trans "If there is only one item in this region should it loop? Not currently available for Windows Players" %}{% endset %}
+                {{ forms.checkbox("loop", title, region.loop, helpText) }}
+
+                {{ forms.number("zIndex", "Layer", region.zIndex, "The layering order of this region (z-index). Advanced use only.") }}
+
+                {# hard to test - 'Options' is not working at the moment.#}
             </form>
         </div>
     </div>

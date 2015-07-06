@@ -18,14 +18,14 @@ $formFields[] = Form::AddMessage(sprintf(__('There is %s of data stored in %d fi
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, $("#<<id>>").submit()
+    {% trans "Save" %}, $("#libraryTidyForm").submit()
 {% endblock %}
 
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="<<id>>" class="XiboForm form-horizontal" method="delete" action="{{ urlFor("library.tidy") }}">
-
+            <form id="libraryTidyForm" class="XiboForm form-horizontal" method="delete" action="{{ urlFor("library.tidy") }}">
+                {#ask about it#}
             </form>
         </div>
     </div>

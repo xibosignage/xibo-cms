@@ -14,9 +14,9 @@
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Save" %}, $("#clockFormEdit").submit()
-    {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#clockFormEdit").submit()
 {% endblock %}
 
 {% block formFieldActions %}

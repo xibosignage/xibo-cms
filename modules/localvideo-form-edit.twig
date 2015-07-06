@@ -14,9 +14,9 @@
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Save" %}, $("#localVideoForm").submit()
-    {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#localVideoForm").submit()
 {% endblock %}
 
 {% block formHtml %}

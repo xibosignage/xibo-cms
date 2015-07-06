@@ -15,7 +15,7 @@
         // List of Display Groups
         $optionGroups = array(
             array('id' => 'group', 'label' => __('Groups')),
-            array('id' => 'display', 'label' => __('Displays'))
+            array('id' => 'display', 'label' => __('Displays')) 
         );
 
 
@@ -129,15 +129,82 @@
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, $("#<<id>>").submit()
+    {% trans "Save" %}, $("#scheduleAddForm").submit()
     {% trans "Next" %}, $("#<<id>>").submit()
 {% endblock %}
 
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="<<id>>" class="XiboForm form-horizontal" method="post" action="{{ urlFor("schedule.add") }}">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                <li><a href="#repeats" role="tab" data-toggle="tab"><span>{% trans "Repeats" %}</span></a></li>
+            </ul>
+            <form id="scheduleAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("schedule.add") }}">
+                <div class="tab-content">
+                    <div class="tab-pane active" id="general">
+                {# display groups #}
 
+                {# start/end time #}
+
+                {% set title %}{% trans "Start Time" %}{% endset %}
+                {% set helpText %}{% trans "Select the start time for this event" %}{% endset %}
+                {{ forms.text("fromDt", title, "", helpText) }}
+
+                {% set title %}{% trans "End Time" %}{% endset %}
+                {% set helpText %}{% trans "Select the end time for this event" %}{% endset %}
+                {{ forms.text("toDt", title, "", helpText) }}
+
+                {# Add two hidden fields to always carry the ISO date #}
+                {# Generate a list of layouts. #}
+
+                {# nah very wrong...#}
+                {% set title %}{% trans "Layout / Campaign" %}{% endset %}
+                {% set helpText %}{% trans "Please select a Layout or Campaign for this Event to show" %}{% endset %}
+                {% set aaa = [
+                { id: campaign, value: campaignOptions },
+                { id: layout, value: layoutOptions }
+                ] %}
+                {{ forms.dropdown("campaignId", "single", title, "", aaa, "id", "value", helpText) }}
+  
+                {{ forms.number("displayOrder", "Display Order", displayOrder, "Please select the order this event should appear in relation to others when there is more than one event scheduled") }}
+                
+                {% set title %}{% trans "Priority" %}{% endset %}
+                {% set helpText %}{% trans "Sets whether or not this event has priority. If set the event will be show in preference to other events." %}{% endset %}
+                {{ forms.checkbox("isPriority", title, isPriority, helpText) }}
+
+                    </div>
+                    
+                    <div class="tab-pane" id="repeats">
+                    {# ask about none! date search etc #}
+                        {% set title %}{% trans "Repeats" %}{% endset %}
+                        {% set helpText %}{% trans "What type of repeat is required?" %}{% endset %}
+                        {% set perminute %}{% trans "Per Minute" %}{% endset %}
+                        {% set hourly %}{% trans "Hourly" %}{% endset %}
+                        {% set daily %}{% trans "Daily" %}{% endset %}
+                        {% set weekly %}{% trans "Weekly" %}{% endset %}
+                        {% set monthly %}{% trans "Monthly" %}{% endset %}
+                        {% set yearly %}{% trans "Yearly" %}{% endset %}
+                        {% set reccurenceType = [
+                        { id: "", name: none },
+                        { id: Minute, name: perminute },
+                        { id: Hour, name: hourly},
+                        { id: Day, name: daily},
+                        { id: Week, name: weekly},
+                        { id: Month, name: monthly},
+                        { id: Year, name: yearly}
+                        ] %}
+                        {{ forms.dropdown("reccurenceType", "single", title, "", reccurenceType, "id", "name", helpText) }}
+
+                        {{ forms.number("reccurenceDetail", "Repeat every", reccurenceDetail, "How often does this event repeat?") }}
+
+                        {% set title %}{% trans "Until" %}{% endset %}
+                        {% set helpText %}{% trans "When should this event stop repeating?" %}{% endset %}
+                        {{ forms.text("reccurenceRange", title, "", helpText) }}
+                        
+                        {# hidden thingies etc#}
+
+                    </div>
             </form>
         </div>
     </div>

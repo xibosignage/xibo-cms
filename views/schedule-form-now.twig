@@ -34,7 +34,7 @@
             'CampaignID',
             __('Layout'),
             $campaignId,
-            array('campaign' => $campaignOptions, 'layout' => $layoutOptions),
+            array('campaign' => $campaignOptions, 'layout' => $layoutOptions), 
             'id',
             'value',
             __('Please select a Layout or Campaign for this Event to show'),
@@ -113,6 +113,36 @@
     <div class="row">
         <div class="col-md-12">
             <form id="scheduleNowForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("schedule.add") }}">
+            {# display groups lists etc #}
+
+            {# nah very wrong...#}
+                {% set title %}{% trans "Layout / Campaign" %}{% endset %}
+                {% set helpText %}{% trans "Please select a Layout or Campaign for this Event to show" %}{% endset %}
+                {% set aaa = [
+                { id: campaign, value: campaignOptions },
+                { id: layout, value: layoutOptions }
+                ] %}
+                {{ forms.dropdown("campaignId", "single", title, "", aaa, "id", "value", helpText) }}
+
+                {% set title %}{% trans "Hours" %}{% endset %}
+                {% set helpText %}{% trans "Hours this event should be scheduled for" %}{% endset %}
+                {{ forms.text("hours", title, "", helpText) }}
+                
+                {% set title %}{% trans "Minutes" %}{% endset %}
+                {% set helpText %}{% trans "Minutes this event should be scheduled for" %}{% endset %}
+                {{ forms.text("minutes", title, "", helpText) }}
+                
+                {% set title %}{% trans "Seconds" %}{% endset %}
+                {% set helpText %}{% trans "Seconds this event should be scheduled for" %}{% endset %}
+                {{ forms.text("seconds", title, "", helpText) }}
+            
+            {#stuff that i don't know how to add at the moment#}
+
+                {{ forms.number("displayOrder", "Display Order", displayOrder, "Should this event have an order?") }}
+                
+                {% set title %}{% trans "Priority" %}{% endset %}
+                {% set helpText %}{% trans "Sets whether or not this event has priority. If set the event will be show in preference to other events." %}{% endset %}
+                {{ forms.checkbox("isPriority", title, isPriority, helpText) }}
 
             </form>
         </div>
