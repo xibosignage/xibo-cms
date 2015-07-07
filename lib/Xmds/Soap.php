@@ -963,8 +963,6 @@ class Soap
             throw new \SoapFault('Receiver', 'Unable to get the media resource');
         }
 
-        Log::debug('Resource: ' . $resource);
-
         // Log Bandwidth
         $this->LogBandwidth($this->display->displayId, Bandwidth::$GETRESOURCE, strlen($resource));
 

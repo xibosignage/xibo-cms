@@ -323,7 +323,7 @@ class Soap4 extends Soap
      */
     public function MediaInventory($serverKey, $hardwareKey, $inventory)
     {
-        $this->doMediaInventory($serverKey, $hardwareKey, $inventory);
+        return $this->doMediaInventory($serverKey, $hardwareKey, $inventory);
     }
 
     /**
@@ -338,7 +338,7 @@ class Soap4 extends Soap
      */
     function GetResource($serverKey, $hardwareKey, $layoutId, $regionId, $mediaId)
     {
-        $this->doGetResource($serverKey, $hardwareKey, $layoutId, $regionId, $mediaId);
+        return $this->doGetResource($serverKey, $hardwareKey, $layoutId, $regionId, $mediaId);
     }
 
     /**
