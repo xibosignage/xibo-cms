@@ -373,8 +373,8 @@ class Soap4 extends Soap
         $this->LogBandwidth($this->display->displayId, Bandwidth::$NOTIFYSTATUS, strlen($status));
 
         // Touch the display record
-        $displayObject = new Display();
-        $displayObject->Touch($this->display->displayId, json_decode($status, true));
+        $this->display->hydrate(json_decode($status, true));
+        $this->display->save(false, false);
 
         return true;
     }
@@ -416,8 +416,8 @@ class Soap4 extends Soap
         fclose($fp);
 
         // Touch the display record
-        $displayObject = new Display();
-        $displayObject->Touch($this->display->displayId, array('screenShotRequested' => 0));
+        $this->display->screenShotRequested = 0;
+        $this->display->save(false, false);
 
         $this->LogBandwidth($this->display->displayId, Bandwidth::$SCREENSHOT, filesize($location));
 

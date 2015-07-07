@@ -20,13 +20,16 @@ use Xibo\Entity\Stat;
 use Xibo\Entity\User;
 use Xibo\Entity\Widget;
 use Xibo\Entity\XmdsNonce;
+use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\BandwidthFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\ModuleFactory;
+use Xibo\Factory\RegionFactory;
 use Xibo\Factory\UserFactory;
+use Xibo\Factory\WidgetFactory;
 use Xibo\Factory\XmdsNonceFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Log;
@@ -279,6 +282,7 @@ class Soap
 
             // Load this layout
             $layout = LayoutFactory::loadById($layoutId);
+            $layout->loadPlaylists();
 
             // Make sure its XLF is up to date
             $path = $layout->xlfToDisk();
@@ -333,10 +337,10 @@ class Soap
                             $widget->type == 'datasetview' ||
                             $widget->type == 'webpage' ||
                             $widget->type == 'embedded' ||
-                            $modules[$widget->type]->render = 'html'
+                            $modules[$widget->type]->renderAs == 'html'
                         ) {
                             // Add nonce
-                            XmdsNonceFactory::createForGetResource($this->display->displayId, $layoutId, $region->regionId, $widget->widgetId);
+                            XmdsNonceFactory::createForGetResource($this->display->displayId, $layoutId, $region->regionId, $widget->widgetId)->save();
 
                             // Does the media provide a modified Date?
                             $widgetModifiedDt = $layoutModifiedDt->getTimestamp();
@@ -702,7 +706,7 @@ class Soap
         }
 
         foreach ($document->documentElement->childNodes as $node) {
-
+            /* @var \DOMElement $node */
             // Make sure we don't consider any text nodes
             if ($node->nodeType == XML_TEXT_NODE)
                 continue;
@@ -944,39 +948,22 @@ class Soap
             throw new \SoapFault('Receiver', "This display client is not licensed");
 
         // Validate the nonce
-        $nonce = new Nonce();
-
         if (count(XmdsNonceFactory::getByDisplayAndResource($this->display->displayId, $layoutId, $regionId, $mediaId)) <= 0)
             throw new \SoapFault('Receiver', 'Requested an invalid file.');
 
-        // What type of module is this?
-        $region = new region();
-        $type = $region->GetMediaNodeType($layoutId, $regionId, $mediaId);
-
-        if ($type == '')
-            throw new \SoapFault('Receiver', 'Unable to get the media node type');
-
-        // Dummy User Object
-        $user = new User();
-        $user->userId = 0;
-        $user->userTypeId = 1;
-
-        // Initialise the theme (for global styles in GetResource)
-        new Theme($user);
-        Theme::SetPagename('module');
-
-        // Get the resource from the module
+        // The MediaId is actually the widgetId
         try {
-            $module = ModuleFactory::load($type, $layoutId, $regionId, $mediaId, null, null, $user);
-        } catch (Exception $e) {
-            Log::error($e->getMessage());
-            throw new \SoapFault('Receiver', 'Cannot create module. Check CMS Log');
+            $module = ModuleFactory::createWithWidget(WidgetFactory::getById($mediaId), RegionFactory::getById($regionId));
+            $resource = $module->GetResource($this->display->displayId);
+
+            if ($resource == '')
+                throw new ControllerNotImplemented();
+        }
+        catch (ControllerNotImplemented $e) {
+            throw new \SoapFault('Receiver', 'Unable to get the media resource');
         }
 
-        $resource = $module->GetResource($this->display->displayId);
-
-        if (!$resource || $resource == '')
-            throw new \SoapFault('Receiver', 'Unable to get the media resource');
+        Log::debug('Resource: ' . $resource);
 
         // Log Bandwidth
         $this->LogBandwidth($this->display->displayId, Bandwidth::$GETRESOURCE, strlen($resource));
@@ -1125,6 +1112,10 @@ class Soap
         }
     }
 
+    /**
+     * Get the Client IP Address
+     * @return string
+     */
     protected function getIp()
     {
         $clientIp = '';

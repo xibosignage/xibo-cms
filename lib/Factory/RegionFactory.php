@@ -176,7 +176,7 @@ class RegionFactory
         Log::sql($sql, $params);
 
         foreach (PDOConnect::select($sql, $params) as $row) {
-            $entries[] = (new Region())->hydrate($row, ['zIndex']);
+            $entries[] = (new Region())->hydrate($row, ['intProperties' => ['zIndex']]);
         }
 
         return $entries;
