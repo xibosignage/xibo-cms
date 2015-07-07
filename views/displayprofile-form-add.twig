@@ -46,9 +46,14 @@ $formFields[] = Form::AddText('name', __('Name'), NULL,
 
                 {% set title %}{% trans "Client Type" %}{% endset %}
                 {% set helpText %}{% trans "What type of display client is this profile intended for?" %}{% endset %}
-                    
-              {#  {% set testP = { windows: 'Windows', android: 'Android' } %}  dunno how to do it at the moment (and with clientTypes it also don't want to work, you may have to tell me more about it#}
-                {{ forms.dropdown("type", "single", title,"", clientTypes, "displayProfileId", "displayProfile", helpText) }} 
+                {% set windows %}{% trans "Windows" %}{% endset %}
+                {% set android %}{% trans "Android" %}{% endset %}
+                {% set clientTypes = [
+                { id: 1, value: windows },
+                { id: 2, value: android }
+                ] %}
+                {{ forms.dropdown("type", "single", title,"", clientTypes, "id","value", helpText) }} 
+                {#this is giving me "Unexpected Error, please contact support.""  not sure whats wrong, tried different things without 'set clientTypes' too because it is set in controller, but well probably some obvious mistake#}
 
                 {% set title %}{% trans "Default Profile?" %}{% endset %}
                 {% set helpText %}{% trans "Is this the default profile for all Displays of this type? Only 1 profile can be the default." %}{% endset %}

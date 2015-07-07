@@ -24,18 +24,22 @@ $form = Theme::RenderReturn('form_render');
 {% import "forms.twig" as forms %}
 
 {% block formTitle %}
-    
+    {% set layout = layout.layout %}
+    {% trans %}Retire {{ layout }}{% endtrans %}
 {% endblock %}
 
 {% block formButtons %}
-    
+    {% trans "Help" %}, XiboHelpRender("{{ help.retire }}")
+    {% trans "Delete" %}, XiboSwapDialog("{{ urlFor("layout.delete.form", {id: layout.layoutId}) }}")
+    {% trans "No" %}, XiboDialogClose()
+    {% trans "Yes" %}, $("#layoutRetireForm").submit()
 {% endblock %}
 
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="" class="form-horizontal" method="post" action="">
-
+            <form id="layoutRetireForm" class="form-horizontal" method="post" action="{{ urlFor("layout.retire.form", {id: layout.layoutId}) }}">
+				{{ forms.message("Are you sure you want to retire this layout?") }}
             </form>
         </div>
     </div>

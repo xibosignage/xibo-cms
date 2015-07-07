@@ -4,7 +4,7 @@
  * Copyright (C) 2015 Spring Signage Ltd
  * (${FILE_NAME})
  */
-Theme::Set('form_fields', array(Form::AddMessage(__('Are you sure you want to logout this user?'))));
+
 #}
 
 {% extends "form-base.twig" %}
@@ -17,14 +17,14 @@ Theme::Set('form_fields', array(Form::AddMessage(__('Are you sure you want to lo
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Yes" %}, $("#<<id>>").submit()
+    {% trans "Yes" %}, $("#sessionsConfirmLogoutForm").submit()
 {% endblock %}
 
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="<<id>>" class="XiboForm form-horizontal" method="post" action="{{ urlFor("sessions.confirm.logout", {id: userId}) }}">
-
+            <form id="sessionsConfirmLogoutForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("sessions.confirm.logout", {id: userId}) }}">
+                {{forms.message("Are you sure you want to logout this user?") }}
             </form>
         </div>
     </div>

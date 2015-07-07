@@ -14,10 +14,10 @@
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Save" %}, $("#embeddedFormEdit").submit()
-    {% trans "Apply" %}, XiboDialogApply("#embeddedFormEdit")
-    {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Apply" %}, XiboDialogApply("#embeddedFormEdit")
+    {% trans "Save" %}, $("#embeddedFormEdit").submit()
 {% endblock %}
 
 {% block formHtml %}

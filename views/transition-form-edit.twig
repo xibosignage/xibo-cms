@@ -23,14 +23,20 @@ $formFields[] = Form::AddCheckbox('EnabledForIn', __('Available for In Transitio
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, $("#<<id>>").submit()
+    {% trans "Save" %}, $("#transitionEditForm").submit()
 {% endblock %}
 
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="<<id>>" class="XiboForm form-horizontal" method="post" action="{{ urlFor("transition.edit", {id: transition.transitionId}) }}">
+            <form id="transitionEditForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("transition.edit", {id: transition.transitionId}) }}">
+                {% set title %}{% trans "Available for In Transitions?" %}{% endset %}
+                {% set helpText %}{% trans "Can this transition be used for media start?" %}{% endset %}
+                {{ forms.checkbox("enabledForIn", title, transition.availableAsIn, helpText) }}
 
+                {% set title %}{% trans "Available for Out Transitions?" %}{% endset %}
+                {% set helpText %}{% trans "Can this transition be used for media end?" %}{% endset %}
+                {{ forms.checkbox("enabledForOut", title, transition.availableAsOut, helpText) }}
             </form>
         </div>
     </div>

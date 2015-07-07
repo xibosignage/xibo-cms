@@ -19,16 +19,22 @@ $formFields[] = Form::AddText('windowsCommand', __('Windows Command'), NULL,
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Save" %}, $("#shellCommandAddForm").submit()
-    {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#shellCommandAddForm").submit()
 {% endblock %}
 
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
             <form id="shellCommandAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("module.widget.add", {type: module.widget.type, id: playlist.playlistId}) }}">
+                {% set title %}{% trans "Windows Command" %}{% endset %}
+                {% set helpText %}{% trans "Enter a Windows Command Line compatible command" %}{% endset %}
+                {{ forms.text("windowsCommand", title, "", helpText) }}
 
+                {% set title %}{% trans "Android / Linux Command" %}{% endset %}
+                {% set helpText %}{% trans "Enter an Android / Linux Command Line compatible command" %}{% endset %}
+                {{ forms.text("linuxCommand", title, "", helpText) }}
             </form>
         </div>
     </div>
