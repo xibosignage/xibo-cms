@@ -115,7 +115,7 @@ class ScheduleFactory
         Log::sql($sql, $params);
 
         foreach (PDOConnect::select($sql, $params) as $row) {
-            $entries[] = (new Schedule())->hydrate($row, ['isPriority']);
+            $entries[] = (new Schedule())->hydrate($row, ['intProperties' => ['isPriority']]);
         }
 
         return $entries;

@@ -84,12 +84,20 @@ class Sanitize
 
     public static function string($param)
     {
+        if ($param === null)
+            return null;
+
         return filter_var($param, FILTER_SANITIZE_STRING);
     }
 
     public static function getUserName($param, $default = null, $source = null)
     {
-        $param = filter_var(Sanitize::getParam($param, $default, $source), FILTER_SANITIZE_STRING);
+        $param = Sanitize::getParam($param, $default, $source);
+
+        if ($param === null)
+            return null;
+
+        $param = filter_var($param, FILTER_SANITIZE_STRING);
         $param = (string) preg_replace( '/[\x00-\x1F\x7F<>"\'%&]/', '', $param);
         return strtolower($param);
     }

@@ -10,6 +10,7 @@ namespace Xibo\Entity;
 
 
 use Xibo\Helper\ObjectVars;
+use Xibo\Helper\Sanitize;
 
 trait EntityTrait
 {
@@ -24,15 +25,24 @@ trait EntityTrait
      * Hydrate an entity with properties
      *
      * @param array $properties
-     * @param array $intProperties
+     * @param array $options
      *
      * @return self
      */
-    public function hydrate(array $properties, $intProperties = [])
+    public function hydrate(array $properties, $options = [])
     {
+        $intProperties = (array_key_exists('intProperties', $options)) ? $options['intProperties'] : [];
+        $stringProperties = (array_key_exists('stringProperties', $options)) ? $options['stringProperties'] : [];
+
         foreach ($properties as $prop => $val) {
             if (property_exists($this, $prop)) {
-                $this->{$prop} = (stripos(strrev($prop), 'dI') === 0 || in_array($prop, $intProperties)) ? intval($val) : $val;
+
+                if (stripos(strrev($prop), 'dI') === 0 || in_array($prop, $intProperties))
+                    $val = intval($val);
+                else if (in_array($prop, $stringProperties))
+                    $val = Sanitize::string($val);
+
+                $this->{$prop} =  $val;
             }
         }
 

@@ -100,6 +100,7 @@ class DisplayFactory
                   display.licensed AS currentlyLicenced,
                   display.loggedIn,
                   display.lastAccessed,
+                  display.isAuditing,
                   display.inc_schedule AS incSchedule,
                   display.email_alert AS emailAlert,
                   display.alert_timeout AS alertTimeout,

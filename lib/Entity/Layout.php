@@ -23,6 +23,8 @@ namespace Xibo\Entity;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\MediaFactory;
+use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\TagFactory;
@@ -118,6 +120,14 @@ class Layout implements \JsonSerializable
     }
 
     /**
+     * Set the status of this layout to indicate a build is required
+     */
+    public function setBuildRequired()
+    {
+        $this->status = 3;
+    }
+
+    /**
      * Load Regions from a Layout
      * @param int $regionId
      * @return Region
@@ -155,14 +165,16 @@ class Layout implements \JsonSerializable
 
     /**
      * Load this Layout
-     * @param bool $loadPlaylists
+     * @param array $options
      */
-    public function load($loadPlaylists = false)
+    public function load($options = [])
     {
+        $options = array_merge(['loadPlaylists' => false], $options);
+
         if ($this->loaded)
             return;
 
-        Log::debug('Loading Layout ' . $this->layoutId);
+        Log::debug('Loading Layout %d with options %s', $this->layoutId, json_encode($options));
 
         // Load permissions
         $this->permissions = PermissionFactory::getByObjectId('campaign', $this->campaignId);
@@ -170,12 +182,8 @@ class Layout implements \JsonSerializable
         // Load all regions
         $this->regions = RegionFactory::getByLayoutId($this->layoutId);
 
-        if ($loadPlaylists) {
-            foreach ($this->regions as $region) {
-                /* @var Region $region */
-                $region->load();
-            }
-        }
+        if ($options['loadPlaylists'])
+            $this->loadPlaylists();
 
         // Load all tags
         $this->tags = TagFactory::loadByLayoutId($this->layoutId);
@@ -191,40 +199,66 @@ class Layout implements \JsonSerializable
     }
 
     /**
-     * Save this Layout
+     * Load Playlists
      */
-    public function save()
+    public function loadPlaylists()
     {
-        Log::debug('Saving %s', $this);
+        foreach ($this->regions as $region) {
+            /* @var Region $region */
+            $region->load();
+        }
+    }
+
+    /**
+     * Save this Layout
+     * @param array $options
+     */
+    public function save($options = [])
+    {
+        // Default options
+        $options = array_merge([
+            'saveLayout' => true,
+            'saveRegions' => true,
+            'saveTags' => true,
+            'setBuildRequired' => true
+        ], $options);
+
+        if ($options['setBuildRequired'])
+            $this->setBuildRequired();
+
+        Log::debug('Saving %s with options', $this, json_encode($options));
 
         // New or existing layout
         if ($this->layoutId == null || $this->layoutId == 0) {
             $this->add();
-        }
-        else if ($this->hash() != $this->hash) {
+        } else if ($this->hash() != $this->hash && $options['saveLayout']) {
             $this->update();
         }
 
-        Log::debug('Saving Regions on %s', $this);
+        if ($options['saveRegions']) {
+            Log::debug('Saving Regions on %s', $this);
 
-        // Update the regions
-        foreach ($this->regions as $region) {
-            /* @var Region $region */
+            // Update the regions
+            foreach ($this->regions as $region) {
+                /* @var Region $region */
 
-            // Assert the Layout Id
-            $region->layoutId = $this->layoutId;
-            $region->save();
+                // Assert the Layout Id
+                $region->layoutId = $this->layoutId;
+                $region->save();
+            }
         }
 
-        Log::debug('Saving tags on %s', $this);
+        if ($options['saveTags']) {
+            Log::debug('Saving tags on %s', $this);
 
-        // Save the tags
-        if (is_array($this->tags)) {
-            foreach ($this->tags as $tag) {
-                /* @var Tag $tag */
+            // Save the tags
+            if (is_array($this->tags)) {
+                foreach ($this->tags as $tag) {
+                    /* @var Tag $tag */
 
-                $tag->assignLayout($this->layoutId);
-                $tag->save();
+                    $tag->assignLayout($this->layoutId);
+                    $tag->save();
+                }
             }
         }
 
@@ -315,17 +349,144 @@ class Layout implements \JsonSerializable
      */
     public function toXlf()
     {
-        // TODO: Represent this Layout in XML
-        return '<xml></xml>';
+        $this->load(['loadPlaylists' => true]);
+
+        // Get an array of modules to use
+        $modules = ModuleFactory::get();
+
+        $document = new \DOMDocument();
+        $layoutNode = $document->createElement('layout');
+        $layoutNode->setAttribute('width', $this->width);
+        $layoutNode->setAttribute('height', $this->height);
+        $layoutNode->setAttribute('bgcolor', $this->backgroundColor);
+        $layoutNode->setAttribute('schemaVersion', $this->schemaVersion);
+
+        $document->appendChild($layoutNode);
+
+        foreach ($this->regions as $region) {
+            /* @var Region $region */
+            $regionNode = $document->createElement('region');
+            $regionNode->setAttribute('id', $region->regionId);
+            $regionNode->setAttribute('width', $region->width);
+            $regionNode->setAttribute('height', $region->height);
+            $regionNode->setAttribute('top', $region->top);
+            $regionNode->setAttribute('left', $region->left);
+
+            $layoutNode->appendChild($regionNode);
+
+            foreach ($region->playlists as $playlist) {
+                /* @var Playlist $playlist */
+                foreach ($playlist->widgets as $widget) {
+                    /* @var Widget $widget */
+                    $mediaNode = $document->createElement('media');
+                    $mediaNode->setAttribute('id', $widget->widgetId);
+                    $mediaNode->setAttribute('duration', $widget->duration);
+                    $mediaNode->setAttribute('type', $widget->type);
+                    $mediaNode->setAttribute('render', $modules[$widget->type]->renderAs);
+
+                    // Create options nodes
+                    $optionsNode = $document->createElement('options');
+                    $rawNode = $document->createElement('raw');
+
+                    $mediaNode->appendChild($optionsNode);
+                    $mediaNode->appendChild($rawNode);
+
+                    // Inject the URI
+                    if ($modules[$widget->type]->regionSpecific == 0) {
+                        $media = MediaFactory::getById($widget->mediaIds[0]);
+                        $optionNode = $document->createElement('uri', $media->storedAs);
+                        $optionsNode->appendChild($optionNode);
+                    }
+
+                    foreach ($widget->widgetOptions as $option) {
+                        /* @var WidgetOption $option */
+                        if ($option->type == 'cdata') {
+                            $optionNode = $document->createElement($option->option);
+                            $cdata = $document->createCDATASection($option->value);
+                            $optionNode->appendChild($cdata);
+                            $rawNode->appendChild($optionNode);
+                        }
+                        else if ($option->type == 'attrib') {
+                            $optionNode = $document->createElement($option->option, $option->value);
+                            $optionsNode->appendChild($optionNode);
+                        }
+                    }
+
+                    $regionNode->appendChild($mediaNode);
+                }
+            }
+
+            $tagsNode = $document->createElement('tags');
+
+            foreach ($this->tags as $tag) {
+                /* @var Tag $tag */
+                $tagNode = $document->createElement('tag', $tag->tag);
+                $tagsNode->appendChild($tagNode);
+            }
+
+            $layoutNode->appendChild($tagsNode);
+        }
+
+        return $document->saveXML();
     }
 
     /**
      * Export the Layout as a ZipArchive
-     * @return \ZipArchive
+     * @param string $fileName
      */
-    public function toZip()
+    public function toZip($fileName)
     {
-        return new \ZipArchive();
+        $zip = new \ZipArchive();
+        $result = $zip->open($fileName, \ZIPARCHIVE::CREATE | \ZIPARCHIVE::OVERWRITE);
+        if ($result !== true)
+            throw new \InvalidArgumentException(__('Can\'t create ZIP. Error Code: ' . $result));
+
+        // Add layout information to the ZIP
+        $zip->addFromString('layout.json', json_encode([
+            'layout' => $this->layout,
+            'description' => $this->description
+        ]));
+
+        // Add the layout XLF
+        $zip->addFile($this->xlfToDisk(), 'layout.xml');
+
+        // Add all media
+        $libraryLocation = Config::GetSetting('LIBRARY_LOCATION');
+        $mappings = [];
+
+        foreach (MediaFactory::getByLayoutId($this->layoutId) as $media) {
+            /* @var Media $media */
+            $zip->addFile($libraryLocation . $media->storedAs, $media->fileName);
+
+            $mappings[] = [
+                'file' => $media->fileName,
+                'mediaid' => $media->mediaId,
+                'name' => $media->name,
+                'type' => $media->mediaType,
+                'duration' => $media->duration,
+                'background' => 0
+            ];
+        }
+
+        // Add the background image
+        if ($this->backgroundImageId != 0) {
+            $media = MediaFactory::getById($this->backgroundImageId);
+            $zip->addFile($libraryLocation . $media->storedAs, $media->fileName);
+
+            $mappings[] = [
+                'file' => $media->fileName,
+                'mediaid' => $media->mediaId,
+                'name' => $media->name,
+                'type' => $media->mediaType,
+                'duration' => $media->duration,
+                'background' => 1
+            ];
+        }
+
+        // Add the mappings file to the ZIP
+        $zip->addFromString('mapping.json', json_encode($mappings));
+
+        $zip->close();
     }
 
     /**
@@ -337,7 +498,16 @@ class Layout implements \JsonSerializable
         $libraryLocation = Config::GetSetting('LIBRARY_LOCATION');
         $path = $libraryLocation . $this->layoutId . '.xlf';
 
-        file_put_contents($path, $this->toXlf());
+        if ($this->status == 3) {
+            file_put_contents($path, $this->toXlf());
+            $this->status = 1;
+
+            $this->save([
+                'saveRegions' => false,
+                'saveTags' => false,
+                'setBuildRequired' => false
+            ]);
+        }
 
         return $path;
     }
@@ -392,7 +562,18 @@ class Layout implements \JsonSerializable
         Log::debug('Editing Layout ' . $this->layout . '. Id = ' . $this->layoutId);
 
         $sql = '
-        UPDATE layout SET layout = :layout, description = :description, modifiedDT = :modifieddt, retired = :retired, width = :width, height = :height, backgroundImageId = :backgroundImageId, backgroundColor = :backgroundColor, backgroundzIndex = :backgroundzIndex, xml = NULL
+        UPDATE layout
+          SET layout = :layout,
+              description = :description,
+              modifiedDT = :modifieddt,
+              retired = :retired,
+              width = :width,
+              height = :height,
+              backgroundImageId = :backgroundImageId,
+              backgroundColor = :backgroundColor,
+              backgroundzIndex = :backgroundzIndex,
+              `xml` = NULL,
+              `status` = :status
          WHERE layoutID = :layoutid
         ';
 
@@ -409,6 +590,7 @@ class Layout implements \JsonSerializable
             'backgroundImageId' => $this->backgroundImageId,
             'backgroundColor' => $this->backgroundColor,
             'backgroundzIndex' => $this->backgroundzIndex,
+            'status' => $this->status
         ));
 
         // Update the Campaign

@@ -76,6 +76,22 @@ $app->setName('api');
 // Set state
 \Xibo\Middleware\State::setState($app);
 
+// We need a View for rendering GetResource Templates
+// Twig templates
+$twig = new \Slim\Views\Twig();
+$twig->parserOptions = array(
+    'debug' => true,
+    'cache' => PROJECT_ROOT . '/cache'
+);
+$twig->parserExtensions = array(
+    new \Slim\Views\TwigExtension(),
+    new Twig_Extensions_Extension_I18n()
+);
+
+// Configure the template folder
+$twig->twigTemplateDirs = array_merge(\Xibo\Factory\ModuleFactory::getViewPaths(), [PROJECT_ROOT . '/views']);
+$app->view($twig);
+
 // Configure a user
 $app->user = \Xibo\Factory\UserFactory::getById(1);
 
