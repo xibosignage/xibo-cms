@@ -38,6 +38,7 @@ class Storage extends Middleware
 
             $this->next->call();
 
+            //Log::debug('Commit Required? %d', $this->app->commit);
             if ($this->app->commit) {
                 PDOConnect::init()->commit();
             }

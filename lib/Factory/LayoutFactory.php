@@ -220,6 +220,7 @@ class LayoutFactory
         $layout->width = $document->documentElement->getAttribute('width');
         $layout->height = $document->documentElement->getAttribute('height');
         $layout->backgroundColor = $document->documentElement->getAttribute('bgcolor');
+        $layout->backgroundzIndex = $document->documentElement->getAttribute('zindex');
 
         // Xpath to use when getting media
         $xpath = new \DOMXPath($document);
@@ -323,6 +324,8 @@ class LayoutFactory
      */
     public static function createFromZip($zipFile, $layoutName, $userId, $template, $replaceExisting, $importTags)
     {
+        Log::debug('Create Layout from ZIP File: %s, imported name will be %s.', $zipFile, $layoutName);
+
         $libraryLocation = Config::GetSetting('LIBRARY_LOCATION') . 'temp/';
 
         // Do some pre-checks on the arguments we have been provided
@@ -355,10 +358,12 @@ class LayoutFactory
         }
 
         // Tag as imported
-        $layout->tags[] = TagFactory::getByTag('imported');
+        $layout->tags[] = TagFactory::tagFromString('imported');
 
         // Set the owner
         $layout->setOwner($userId);
+
+        Log::debug('Process mapping.json file.');
 
         // Go through each region and add the media (updating the media ids)
         $mappings = json_decode($zip->getFromName('mapping.json'), true);
@@ -366,13 +371,15 @@ class LayoutFactory
         foreach ($mappings as $file) {
             // Import the Media File
             $intendedMediaName = $file['name'];
-            $temporaryFileName = $libraryLocation . md5($file['name']);
+            $temporaryFileName = $libraryLocation . $file['file'];
             if (file_put_contents($temporaryFileName, $zip->getFromName('library/' . $file['file'])) === false)
                 throw new \InvalidArgumentException(__('Cannot save media file from ZIP file'));
 
             // Check we don't already have one
             try {
                 $media = MediaFactory::getByName($intendedMediaName);
+
+                Log::debug('Media already exists with name: %s', $intendedMediaName);
 
                 if ($replaceExisting) {
                     // Media with this name already exists, but we don't want to use it.
@@ -382,8 +389,10 @@ class LayoutFactory
 
             } catch (NotFoundException $e) {
                 // Create it instead
-                $media = MediaFactory::create($intendedMediaName, $temporaryFileName, $file['type'], $userId, $file['duration']);
-                $media->tags[] = TagFactory::getByTag('imported');
+                Log::debug('Media does not exist in Library, add it. %s', $file['file']);
+
+                $media = MediaFactory::create($intendedMediaName, $file['file'], $file['type'], $userId, $file['duration']);
+                $media->tags[] = TagFactory::tagFromString('imported');
                 $media->save();
             }
 
@@ -391,6 +400,8 @@ class LayoutFactory
             $widgets = $layout->getWidgets();
             $oldMediaId = $file['mediaid'];
             $newMediaId = $media->mediaId;
+
+            Log::debug('Layout has %d widgets', count($widgets));
 
             if ($file['background'] == 1) {
                 $layout->backgroundImageId = $newMediaId;
@@ -405,6 +416,8 @@ class LayoutFactory
                 }
             }
         }
+
+        Log::debug('Finished creating from Zip');
 
         // Finished
         $zip->close();

@@ -47,19 +47,30 @@ class TagFactory
         foreach(explode(',', $tagString) as $tagName) {
             $tagName = trim($tagName);
 
-            // Add to the list
-            try {
-                $tags[] = TagFactory::getByTag($tagName);
-            }
-            catch (NotFoundException $e) {
-                // New tag
-                $tag = new Tag();
-                $tag->tag = $tagName;
-                $tags[] = $tag;
-            }
+            $tags[] = TagFactory::tagFromString($tagName);
         }
 
         return $tags;
+    }
+
+    /**
+     * Get Tag from String
+     * @param string $tagString
+     * @return Tag
+     */
+    public static function tagFromString($tagString)
+    {
+        // Add to the list
+        try {
+            $tag = TagFactory::getByTag($tagString);
+        }
+        catch (NotFoundException $e) {
+            // New tag
+            $tag = new Tag();
+            $tag->tag = $tagString;
+        }
+
+        return $tag;
     }
 
     /**

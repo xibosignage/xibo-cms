@@ -288,7 +288,7 @@ class Media
         // Work out the extension
         $extension = strtolower(substr(strrchr($this->fileName, '.'), 1));
 
-        Log::debug('saveFile with storedAs = %s. %s to %s', $this->storedAs, $this->fileName, $this->mediaId . '.' . $extension);
+        Log::debug('saveFile for "%s" with storedAs = "%s", fileName = "%s" to "%s"', $this->name, $this->storedAs, $this->fileName, $this->mediaId . '.' . $extension);
 
         // If the storesAs is empty, then set it to be the moved file name
         if (empty($this->storedAs)) {

@@ -690,6 +690,8 @@ class Layout extends Base
 
     public function import()
     {
+        Log::debug('Import Layout');
+
         $libraryFolder = Config::GetSetting('LIBRARY_LOCATION');
 
         // Make sure the library exists
