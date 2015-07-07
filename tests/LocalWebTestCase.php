@@ -30,7 +30,6 @@ class LocalWebTestCase extends WebTestCase
         // Set the App name
         \Xibo\Helper\ApplicationState::$appName = $app->getName();
 
-        $app->runNo = \Xibo\Helper\Random::generateString(10);
         $app->add(new \Xibo\Middleware\Storage());
         $app->add(new \Xibo\Middleware\State());
 

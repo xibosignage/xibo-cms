@@ -17,6 +17,7 @@ class DataSet
     public $dataSet;
     public $description;
     public $userId;
+    public $lastDataEdit;
 
     // Read only properties
     public $owner;

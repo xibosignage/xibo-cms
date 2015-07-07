@@ -25,6 +25,7 @@ namespace Xibo\Middleware;
 
 use Jenssegers\Date\Date;
 use Slim\Middleware;
+use Slim\Slim;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\ByteFormatter;
@@ -40,47 +41,8 @@ class State extends Middleware
     {
         $app = $this->app;
 
-        // Setup the translations for gettext
-        Translate::InitLocale();
-
-        // Configure the locale for date/time
-        Date::setLocale(Translate::GetLocale(2));
-
-        // Inject
-        // The state of the application response
-        $this->app->container->singleton('state', function() { return new ApplicationState(); });
-
-        // Create a session
-        $this->app->container->singleton('session', function() use ($app) {
-            if ($app->getName() == 'web' || $app->getName() == 'auth')
-                return new Session();
-            else
-                return new NullSession();
-        });
-        $this->app->session->get('nothing');
-
-        // Do we need SSL/STS?
-        // Deal with HTTPS/STS config
-        if ($app->request()->getScheme() == 'https') {
-            if (Config::GetSetting('ISSUE_STS', 0) == 1)
-                $app->response()->header('strict-transport-security', 'max-age=' . Config::GetSetting('STS_TTL', 600));
-        }
-        else {
-            if (Config::GetSetting('FORCE_HTTPS', 0) == 1) {
-                $redirect = "https://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
-                header("Location: $redirect");
-                $app->halt(302);
-            }
-        }
-
-        // Configure logging
-        if (strtolower($this->app->getMode()) == 'test') {
-            $this->app->config('log.level', \Slim\Log::DEBUG);
-        }
-        else {
-            // TODO: Use the log levels defined in the config
-            $this->app->config('log.level', \Slim\Log::ERROR);
-        }
+        // Set state
+        State::setState($app);
 
         // Attach a hook to log the route
         $this->app->hook('slim.before.dispatch', function() use ($app) {
@@ -121,5 +83,53 @@ class State extends Middleware
 
         // Next middleware
         $this->next->call();
+    }
+
+    /**
+     * @param Slim $app
+     */
+    public static function setState($app)
+    {
+        // Setup the translations for gettext
+        Translate::InitLocale();
+
+        // Configure the locale for date/time
+        Date::setLocale(Translate::GetLocale(2));
+
+        // Inject
+        // The state of the application response
+        $app->container->singleton('state', function() { return new ApplicationState(); });
+
+        // Create a session
+        $app->container->singleton('session', function() use ($app) {
+            if ($app->getName() == 'web' || $app->getName() == 'auth')
+                return new Session();
+            else
+                return new NullSession();
+        });
+        $app->session->get('nothing');
+
+        // Do we need SSL/STS?
+        // Deal with HTTPS/STS config
+        if ($app->request()->getScheme() == 'https') {
+            if (Config::GetSetting('ISSUE_STS', 0) == 1)
+                $app->response()->header('strict-transport-security', 'max-age=' . Config::GetSetting('STS_TTL', 600));
+        }
+        else {
+            if (Config::GetSetting('FORCE_HTTPS', 0) == 1) {
+                $redirect = "https://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+                header("Location: $redirect");
+                $app->halt(302);
+            }
+        }
+
+        // Configure logging
+        if (strtolower($app->getMode()) == 'test') {
+            $app->config('log.level', \Slim\Log::DEBUG);
+        }
+        else {
+            // TODO: Use the log levels defined in the config
+            $app->config('log.level', \Slim\Log::ERROR);
+        }
     }
 }

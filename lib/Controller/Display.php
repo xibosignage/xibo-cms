@@ -132,9 +132,6 @@ class Display extends Base
      */
     function grid()
     {
-        // validate displays so we get a realistic view of the table
-        $this->validateDisplays();
-
         $user = $this->getUser();
 
         // Filter by Name
@@ -163,12 +160,16 @@ class Display extends Base
         // Pinned option?
         $this->getSession()->set('display', 'DisplayFilter', Sanitize::getCheckbox('XiboFilterPinned'));
 
-        $displays = $user->DisplayList($this->gridRenderSort(), $this->gridRenderFilter(array(
+        // Get a list of displays
+        $displays = DisplayFactory::query($this->gridRenderSort(), $this->gridRenderFilter(array(
             'displaygroupid' => $filter_displaygroupid,
             'display' => $filter_display,
             'macAddress' => $filterMacAddress,
             'clientVersion' => $filterVersion))
         );
+
+        // validate displays so we get a realistic view of the table
+        $this->validateDisplays($displays);
 
         foreach ($displays as $display) {
 
@@ -674,16 +675,17 @@ class Display extends Base
 
     /**
      * Validate the display list
+     * @param array[Display] $displays
      * @return array[Display]
      */
-    public function validateDisplays()
+    public static function validateDisplays($displays)
     {
         $timedOutDisplays = [];
 
         // Get the global time out (overrides the alert time out on the display if 0)
         $globalTimeout = Config::GetSetting('MAINTENANCE_ALERT_TOUT') * 60;
 
-        foreach (DisplayFactory::query() as $display) {
+        foreach ($displays as $display) {
             /* @var \Xibo\Entity\Display $display */
 
             // Should we test against the collection interval or the preset alert timeout?
@@ -710,6 +712,7 @@ class Display extends Base
 
                     // Log the down event
                     $stat = new Stat();
+                    $stat->type = 'displaydown';
                     $stat->displayId = $display->displayId;
                     $stat->fromDt = $display->lastAccessed;
                     $stat->save();

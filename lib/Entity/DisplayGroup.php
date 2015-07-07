@@ -128,7 +128,7 @@ class DisplayGroup implements \JsonSerializable
      */
     public function load()
     {
-        if ($this->loaded)
+        if ($this->loaded || $this->displayGroupId == null || $this->displayGroupId == 0)
             return;
 
         $this->permissions = PermissionFactory::getByObjectId('displaygroup', $this->displayGroupId);
@@ -138,6 +138,9 @@ class DisplayGroup implements \JsonSerializable
         $this->media = MediaFactory::getByDisplayGroupId($this->displayGroupId);
 
         $this->events = ScheduleFactory::getByDisplayGroupId($this->displayGroupId);
+
+        // We are loaded
+        $this->loaded = true;
     }
 
     /**
@@ -148,7 +151,7 @@ class DisplayGroup implements \JsonSerializable
         if (!v::string()->notEmpty()->validate($this->displayGroup))
             throw new \InvalidArgumentException(__('Please enter a display group name'));
 
-        if (!v::string()->length(null, 254)->validate($this->description))
+        if (!empty($this->description) && !v::string()->length(null, 254)->validate($this->description))
             throw new \InvalidArgumentException(__('Description can not be longer than 254 characters'));
 
         if ($this->isDisplaySpecific == 0) {
@@ -172,8 +175,10 @@ class DisplayGroup implements \JsonSerializable
         if ($validate)
             $this->validate();
 
-        if ($this->displayGroupId == null || $this->displayGroupId == 0)
+        if ($this->displayGroupId == null || $this->displayGroupId == 0) {
             $this->add();
+            $this->loaded = true;
+        }
         else
             $this->edit();
 
@@ -221,6 +226,9 @@ class DisplayGroup implements \JsonSerializable
      */
     public function removeAssignments()
     {
+        $this->displays = [];
+        $this->media = [];
+
         $this->unlinkDisplays();
         $this->unlinkMedia();
     }

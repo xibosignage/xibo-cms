@@ -49,7 +49,8 @@ $logger = new \Flynsarmy\SlimMonolog\Log\MonologWriter(array(
         new \Xibo\Helper\DatabaseLogHandler()
     ),
     'processors' => array(
-        new \Xibo\Helper\LogProcessor()
+        new \Xibo\Helper\LogProcessor(),
+        new \Monolog\Processor\UidProcessor(7)
     )
 ));
 
@@ -63,8 +64,6 @@ $app->setName('web');
 
 // Set the App name
 \Xibo\Helper\ApplicationState::$appName = $app->getName();
-
-$app->runNo = \Xibo\Helper\Random::generateString(10);
 
 // Configure the Slim error handler
 $app->error(function (\Exception $e) use ($app) {

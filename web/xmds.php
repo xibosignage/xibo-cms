@@ -22,18 +22,62 @@ use Xibo\Helper\Config;
 use Xibo\Helper\Log;
 
 DEFINE('XIBO', true);
-require 'lib/xmds.inc.php';
+define('PROJECT_ROOT', realpath(__DIR__ . '/..'));
 
-$version = \Kit::GetParam('v', _REQUEST, _INT, 3);
-$serviceResponse = new XiboServiceResponse();
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+require PROJECT_ROOT . '/vendor/autoload.php';
+
+if (!file_exists(PROJECT_ROOT . '/web/settings.php')) {
+    die('Not configured');
+}
+
+// Load the config
+Config::Load(PROJECT_ROOT . '/web/settings.php');
+
+// Always have a version defined
+$version = \Xibo\Helper\Sanitize::getInt('v', 3, $_REQUEST);
 
 // Version Request?
 if (isset($_GET['what']))
     die(Config::Version('XmdsVersion'));
 
 // Is the WSDL being requested.
-if (isset($_GET['wsdl']) || isset($_GET['WSDL']))
-    $serviceResponse->WSDL($version);
+if (isset($_GET['wsdl']) || isset($_GET['WSDL'])) {
+    $wsdl = new \Xibo\Xmds\Wsdl(PROJECT_ROOT . '/lib/Xmds/service_v' . $version . '.wsdl', $version);
+    $wsdl->output();
+    exit;
+}
+
+// We create a Slim Object ONLY for logging
+// Create a logger
+$logger = new \Flynsarmy\SlimMonolog\Log\MonologWriter(array(
+    'name' => 'XMDS',
+    'handlers' => array(
+        new \Xibo\Helper\DatabaseLogHandler()
+    ),
+    'processors' => [
+        new \Monolog\Processor\UidProcessor(7)
+    ]
+));
+
+// Slim Application
+$app = new \Slim\Slim(array(
+    'mode' => Config::GetSetting('SERVER_MODE'),
+    'debug' => false,
+    'log.writer' => $logger
+));
+$app->setName('api');
+
+// Set the App name
+\Xibo\Helper\ApplicationState::$appName = $app->getName();
+
+// Set state
+\Xibo\Middleware\State::setState($app);
+
+// Configure a user
+$app->user = \Xibo\Factory\UserFactory::getById(1);
 
 // Check to see if we have a file attribute set (for HTTP file downloads)
 if (isset($_GET['file'])) {
@@ -81,22 +125,31 @@ if (isset($_GET['file'])) {
     exit;
 }
 
-// We need a theme
-
 
 try {
-    $wsdl = 'lib/service/service_v' . $version . '.wsdl';
+    \Xibo\Storage\PDOConnect::init()->beginTransaction();
 
-    if (!file_exists($wsdl)) {
-        $serviceResponse->ErrorServerError('Your client is not the correct version to communicate with this CMS.');
-    }
+    $wsdl = PROJECT_ROOT . '/lib/Xmds/service_v' . $version . '.wsdl';
 
-    $soap = new SoapServer($wsdl);
-    //$soap = new SoapServer($wsdl, array('cache_wsdl' => WSDL_CACHE_NONE));
-    $soap->setClass('XMDSSoap' . $version);
+    if (!file_exists($wsdl))
+        throw new InvalidArgumentException('Your client is not the correct version to communicate with this CMS.');
+
+    // Initialise a theme
+    new \Xibo\Helper\Theme();
+
+    // Create a SoapServer
+    //$soap = new SoapServer($wsdl);
+    $soap = new SoapServer($wsdl, array('cache_wsdl' => WSDL_CACHE_NONE));
+    $soap->setClass('\Xibo\Xmds\Soap' . $version);
     $soap->handle();
+
+    \Xibo\Storage\PDOConnect::init()->commit();
 }
 catch (Exception $e) {
     Log::error($e->getMessage());
-    $serviceResponse->ErrorServerError('Unable to create SOAP Server: ' . $e->getMessage());
+    \Xibo\Storage\PDOConnect::init()->rollBack();
+
+    header('HTTP/1.1 500 Internal Server Error');
+    header('Content-Type: text/plain');
+    die ($e->getMessage());
 }

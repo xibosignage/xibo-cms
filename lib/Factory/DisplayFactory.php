@@ -25,6 +25,7 @@ namespace Xibo\Factory;
 use Xibo\Entity\Display;
 use Xibo\Exception\NotFoundException;
 use Xibo\Helper\Config;
+use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
@@ -38,6 +39,21 @@ class DisplayFactory
     public static function getById($displayId)
     {
         $displays = DisplayFactory::query(null, ['displayId' => $displayId]);
+
+        if (count($displays) <= 0)
+            throw new NotFoundException();
+
+        return $displays[0];
+    }
+
+    /**
+     * @param string $licence
+     * @return Display
+     * @throws NotFoundException
+     */
+    public static function getByLicence($licence)
+    {
+        $displays = DisplayFactory::query(null, ['license' => $licence]);
 
         if (count($displays) <= 0)
             throw new NotFoundException();
@@ -141,6 +157,12 @@ class DisplayFactory
             $params['displayId'] = Sanitize::getInt('displayId', $filterBy);
         }
 
+        // Filter by Licence?
+        if (Sanitize::getString('license', $filterBy) != null) {
+            $SQL .= ' AND display.license = :license ';
+            $params['license'] = Sanitize::getString('license', $filterBy);
+        }
+
         // Filter by Display Name?
         if (Sanitize::getString('display', $filterBy) != '') {
             // convert into a space delimited array
@@ -218,6 +240,8 @@ class DisplayFactory
         // Sorting?
         if (is_array($sortOrder))
             $SQL .= 'ORDER BY ' . implode(',', $sortOrder);
+
+        Log::sql($SQL, $params);
 
         foreach (PDOConnect::select($SQL, $params) as $row) {
             $entries[] = (new Display())->hydrate($row);
