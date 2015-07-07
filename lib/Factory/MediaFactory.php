@@ -168,6 +168,16 @@ class MediaFactory
         return MediaFactory::query(null, array('displayGroupId' => $displayGroupId));
     }
 
+    /**
+     * Get Media by LayoutId
+     * @param int $layoutId
+     * @return array[Media]
+     */
+    public static function getByLayoutId($layoutId)
+    {
+        return MediaFactory::query(null, ['layoutId' => $layoutId]);
+    }
+
     public static function query($sortOrder = null, $filterBy = null)
     {
         $entries = array();
@@ -291,6 +301,24 @@ class MediaFactory
         if (Sanitize::getInt('expires', $filterBy) != 0) {
             $sql .= ' AND media.expires < :expires AND IFNULL(media.expires, 0) <> 0 ';
             $params['expires'] = Sanitize::getInt('expires', $filterBy);
+        }
+
+        if (Sanitize::getInt('layoutId', $filterBy) != null) {
+            $sql .= '
+                AND media.mediaId IN (
+                    SELECT `lkwidgetmedia`.mediaId
+                      FROM`lkwidgetmedia`
+                        INNER JOIN `widget`
+                        ON `widget`.widgetId = `lkwidgetmedia`.widgetId
+                        INNER JOIN `lkregionplaylist`
+                        ON `lkregionplaylist`.playlistId = `widget`.playlistId
+                        INNER JOIN `region`
+                        ON `region`.regionId = `lkregionplaylist`.regionId
+                    WHERE region.layoutId = :layoutId
+                )
+                AND media.type <> \'module\'
+            ';
+            $params['layoutId'] = Sanitize::getInt('layoutId', $filterBy);
         }
 
         // Sorting?

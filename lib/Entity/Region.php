@@ -159,11 +159,11 @@ class Region implements \JsonSerializable
 
     /**
      * Load
-     * @param array $loadOptions
+     * @param array $options
      */
-    public function load($loadOptions = [])
+    public function load($options = [])
     {
-        $options = array_merge(['regionIncludePlaylists' => true], $loadOptions);
+        $options = array_merge(['regionIncludePlaylists' => true], $options);
 
         Log::debug('Load Region with %s', json_encode($options));
 
@@ -175,7 +175,7 @@ class Region implements \JsonSerializable
             $this->playlists = PlaylistFactory::getByRegionId($this->regionId);
             foreach ($this->playlists as $playlist) {
                 /* @var Playlist $playlist */
-                $playlist->load($loadOptions);
+                $playlist->load($options);
 
                 // Assign my regionId
                 $playlist->assignRegion($this);
