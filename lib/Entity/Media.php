@@ -31,6 +31,7 @@ use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\Config;
+use Xibo\Helper\Date;
 use Xibo\Helper\Log;
 use Xibo\Storage\PDOConnect;
 
@@ -46,7 +47,7 @@ class Media
     public $storedAs;
     public $fileName;
 
-    // Thing we might be referred to
+    // Thing that might be referred to
     public $tags = [];
     private $widgets = [];
     private $displayGroups = [];
@@ -69,6 +70,7 @@ class Media
     public $force;
     public $isRemote;
     public $cloned = false;
+    public $newExpiry;
 
     public function __clone()
     {
@@ -138,6 +140,8 @@ class Media
             // Display Groups
             $this->displayGroups = DisplayGroupFactory::getByMediaId($this->mediaId);
         }
+
+        $this->loaded = true;
     }
 
     /**
@@ -146,13 +150,11 @@ class Media
      */
     public function save($validate = true)
     {
+        if (!$this->loaded)
+            $this->load();
+
         if ($validate && $this->mediaType != 'module')
             $this->validate();
-
-        // If we are a remote media item, we want to download the newFile and save it to a temporary location
-        if ($this->isRemote) {
-            $this->download();
-        }
 
         // Add or edit
         if ($this->mediaId == null || $this->mediaId == 0) {
@@ -252,6 +254,7 @@ class Media
         // Do we need to pull a new update?
         // Is the file either expired or is force set
         if ($this->force || ($this->expires > 0 && $this->expires < time())) {
+            Log::debug('Media %s has expired: %s. Force = %d', $this->name, Date::getLocalDate($this->expires), $this->force);
             $this->saveFile();
         }
 
@@ -283,6 +286,11 @@ class Media
 
     private function saveFile()
     {
+        // If we are a remote media item, we want to download the newFile and save it to a temporary location
+        if ($this->isRemote) {
+            $this->download();
+        }
+
         $libraryFolder = Config::GetSetting('LIBRARY_LOCATION');
 
         // Work out the extension
@@ -343,6 +351,8 @@ class Media
         if (!$this->isRemote || $this->fileName == '')
             throw new \InvalidArgumentException(__('Not in a suitable state to download'));
 
+        Log::debug('Downloading %s', $this->fileName);
+
         // Proxy
         $options = [];
         if (Config::GetSetting('PROXY_HOST') != '' && !Config::isProxyException($this->fileName)) {
@@ -358,7 +368,10 @@ class Media
         // Download the file and save it. Fill in the "storedAs" with the temporary file name and then continue
         $response = \Requests::get($this->fileName, [], $options);
 
-        $this->storedAs = Config::GetSetting('LIBRARY_LOCATION') . 'temp' . DIRECTORY_SEPARATOR . $this->name;
-        file_put_contents($this->storedAs, $response->body);
+        $storedAs = Config::GetSetting('LIBRARY_LOCATION') . 'temp' . DIRECTORY_SEPARATOR . $this->name;
+        file_put_contents($storedAs, $response->body);
+
+        // Change the filename to our temporary file
+        $this->fileName = $storedAs;
     }
 }

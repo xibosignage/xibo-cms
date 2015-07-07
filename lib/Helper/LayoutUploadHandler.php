@@ -34,6 +34,9 @@ class LayoutUploadHandler extends BlueImpUploadHandler
 
             @unlink(Config::GetSetting('LIBRARY_LOCATION') . 'temp/' . $fileName);
 
+            // Set the name for the return
+            $file->name = $layout->layout;
+
         } catch (Exception $e) {
             $file->error = $e->getMessage();
         }

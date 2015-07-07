@@ -67,17 +67,19 @@ class MediaFactory
 
         try {
             $media = MediaFactory::getByName($name);
+
+            if ($media->mediaType != 'module')
+                throw new NotFoundException();
         }
         catch (NotFoundException $e) {
             $media = new Media();
             $media->name = $name;
+            $media->fileName = $file;
+            $media->mediaType = 'module';
+            $media->expires = 0;
+            $media->storedAs = $name;
+            $media->ownerId = 1;
         }
-
-        $media->fileName = $file;
-        $media->mediaType = 'module';
-        $media->expires = 0;
-        $media->storedAs = $name;
-        $media->ownerId = 1;
 
         return $media;
     }
@@ -113,7 +115,7 @@ class MediaFactory
      */
     public static function getById($mediaId)
     {
-        $media = MediaFactory::query(null, array('mediaId' => $mediaId));
+        $media = MediaFactory::query(null, array('mediaId' => $mediaId, 'allModules' => 1));
 
         if (count($media) <= 0)
             throw new NotFoundException(__('Cannot find media'));
@@ -129,7 +131,7 @@ class MediaFactory
      */
     public static function getByName($name)
     {
-        $media = MediaFactory::query(null, array('name' => $name));
+        $media = MediaFactory::query(null, array('name' => $name, 'allModules' => 1));
 
         if (count($media) <= 0)
             throw new NotFoundException(__('Cannot find media'));
@@ -155,7 +157,7 @@ class MediaFactory
      */
     public static function getByMediaType($type)
     {
-        return MediaFactory::query(null, array('type' => $type));
+        return MediaFactory::query(null, array('type' => $type, 'allModules' => 1));
     }
 
     /**
@@ -240,7 +242,7 @@ class MediaFactory
         $sql .= " WHERE media.isEdited = 0 ";
 
         if (Sanitize::getInt('allModules', $filterBy) == 0) {
-            $sql .= "AND media.type <> 'module'";
+            $sql .= ' AND media.type <> \'module\' ';
         }
 
         // Unused only?

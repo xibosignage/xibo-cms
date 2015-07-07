@@ -33,6 +33,7 @@ use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\Config;
 use Xibo\Helper\Help;
+use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\XiboUploadHandler;
 use Xibo\Storage\PDOConnect;
@@ -419,16 +420,28 @@ class Library extends Base
     /**
      * Gets a file from the library
      * @param int $mediaId
+     * @param string $type
      */
-    public function download($mediaId)
+    public function download($mediaId, $type = '')
     {
+        Log::debug('Download request for mediaId %d and type %s', $mediaId, $type);
+
         $media = MediaFactory::getById($mediaId);
 
         if (!$this->getUser()->checkViewable($media))
             throw new AccessDeniedException();
 
-        // Make a media module
-        $widget = ModuleFactory::createWithMedia($media);
+        if ($type != '') {
+            $widget = ModuleFactory::create($type);
+            $widgetOverride = new Widget();
+            $widgetOverride->assignMedia($media->mediaId);
+            $widget->setWidget($widgetOverride);
+
+        } else {
+            // Make a media module
+            $widget = ModuleFactory::createWithMedia($media);
+        }
+
         $widget->getResource();
 
         $this->setNoOutput(true);
@@ -515,7 +528,6 @@ class Library extends Base
         foreach (MediaFactory::query(null, array('expires' => time(), 'allModules' => 1)) as $entry) {
             /* @var \Xibo\Entity\Media $entry */
             // If the media type is a module, then pretend its a generic file
-            $entry->load();
             $entry->delete();
         }
     }

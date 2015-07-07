@@ -451,7 +451,7 @@ class Ticker extends Module
                             // Tag this layout with this file
                             $this->assignMedia($file->mediaId);
 
-                            $url = $this->getApp()->urlFor('library.download', ['id' => $file->mediaId]);
+                            $url = $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']);
                             $replace = ($isPreview) ? '<img src="' . $url . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" ' . $attributes . '/>' : '<img src="' . $file->storedAs . '" ' . $attributes . ' />';
                         }
                     } else {
@@ -595,7 +595,7 @@ class Ticker extends Module
                     // Tag this layout with this file
                     $this->assignMedia($file->mediaId);
 
-                    $url = $this->getApp()->urlFor('library.download', ['id' => $file->mediaId]);
+                    $url = $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']);
                     $replace = ($isPreview) ? '<img src="' . $url . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" />' : '<img src="' . $file->storedAs . '" />';
                 }
 
