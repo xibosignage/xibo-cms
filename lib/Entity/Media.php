@@ -366,6 +366,12 @@ class Media
      */
     private function deleteFile()
     {
+        // Make sure storedAs isn't null
+        if ($this->storedAs == null) {
+            Log::error('Deleting media [%s] with empty stored as. Skipping library file delete.', $this->name);
+            return;
+        }
+
         // Library location
         $libraryLocation = Config::GetSetting("LIBRARY_LOCATION");
 

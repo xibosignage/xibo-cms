@@ -21,9 +21,9 @@ class Stat
     public $toDt;
     public $displayId;
 
-    public $scheduleId;
-    public $layoutId;
-    public $mediaId;
+    public $scheduleId = 0;
+    public $layoutId = 0;
+    public $mediaId = 0;
     public $tag;
 
     public function save()

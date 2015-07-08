@@ -79,7 +79,7 @@ class DisplayGroupFactory
         if (Sanitize::getInt('mediaId', $filterBy) != null) {
             $sql .= '
                 INNER JOIN lkmediadisplaygroup
-                ON lkmediadisplaygroup.displayGroupId = displayGroup.displayGroupId
+                ON lkmediadisplaygroup.displayGroupId = `displaygroup`.displayGroupId
                     AND lkmediadisplaygroup.mediaId = :mediaId
             ';
             $params['mediaId'] = Sanitize::getInt('mediaId', $filterBy);
