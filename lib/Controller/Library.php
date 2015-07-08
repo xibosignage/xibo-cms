@@ -514,7 +514,7 @@ class Library extends Base
             /* @var Module $module */
 
             // Install Files for this module
-            $moduleObject = ModuleFactory::create($module->name);
+            $moduleObject = ModuleFactory::create($module->type);
             $moduleObject->installFiles();
         }
     }

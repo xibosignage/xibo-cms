@@ -89,12 +89,14 @@ ALTER TABLE  `log` CHANGE  `type`  `type` VARCHAR( 254 ) CHARACTER SET utf8 COLL
 
 UPDATE  `pages` SET  `name` =  'library' WHERE  `pages`.`name` = 'content';
 UPDATE  `pages` SET  `name` =  'applications' WHERE  `pages`.`name` = 'oauth';
-INSERT INTO `pages` (`pageID`, `name`, `pagegroupID`) VALUES (NULL, 'playlist', '9');
+INSERT INTO `pages` (`pageID`, `name`, `pagegroupID`) VALUES (NULL, 'playlist');
+INSERT INTO `pages` (`pageID`, `name`, `pagegroupID`) VALUES (NULL, 'maintenance');
 
 /* Update the home page to be a homePageId */
 UPDATE `user` SET homepage = IFNULL((SELECT pageId FROM `pages` WHERE pages.name = `user`.homepage), 1);
 ALTER TABLE  `user` CHANGE  `homepage`  `homePageId` INT NOT NULL DEFAULT  '1' COMMENT  'The users homepage';
 
+DELETE FROM module WHERE module = 'counter';
 
 ALTER TABLE `log`
   DROP `scheduleID`,

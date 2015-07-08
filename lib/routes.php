@@ -210,6 +210,14 @@ $app->delete('/help/delete/:id', '\Xibo\Controller\Help:delete')->name('help.del
 $app->put('/admin', '\Xibo\Controller\Settings:update')->name('settings.update');
 
 //
+// Maintenance
+//
+$app->post('/maintenance/tidy', '\Xibo\Controller\Maintenance:tidyLibrary')->name('maintenance.tidy');
+$app->get('/maintenance/export', '\Xibo\Controller\Maintenance:export')->name('maintenance.export');
+$app->post('/maintenance/import', '\Xibo\Controller\Maintenance:import')->name('maintenance.import');
+$app->map('/maintenance/import', '\Xibo\Controller\Library:add')->via('HEAD');
+
+//
 // Audit Log
 //
 $app->get('/audit', '\Xibo\Controller\AuditLog:grid')->name('auditLog.search');

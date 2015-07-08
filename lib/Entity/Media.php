@@ -372,19 +372,28 @@ class Media
             return;
         }
 
+        Media::unlink($this->storedAs);
+    }
+
+    /**
+     * Unlink a file
+     * @param string $fileName
+     */
+    public static function unlink($fileName)
+    {
         // Library location
         $libraryLocation = Config::GetSetting("LIBRARY_LOCATION");
 
         // 3 things to check for..
         // the actual file, the thumbnail, the background
-        if (file_exists($libraryLocation . $this->storedAs))
-            unlink($libraryLocation . $this->storedAs);
+        if (file_exists($libraryLocation . $fileName))
+            unlink($libraryLocation . $fileName);
 
-        if (file_exists($libraryLocation . 'tn_' . $this->storedAs))
-            unlink($libraryLocation . 'tn_' . $this->storedAs);
+        if (file_exists($libraryLocation . 'tn_' . $fileName))
+            unlink($libraryLocation . 'tn_' . $fileName);
 
-        if (file_exists($libraryLocation . 'bg_' . $this->storedAs))
-            unlink($libraryLocation . 'bg_' . $this->storedAs);
+        if (file_exists($libraryLocation . 'bg_' . $fileName))
+            unlink($libraryLocation . 'bg_' . $fileName);
     }
 
     /**

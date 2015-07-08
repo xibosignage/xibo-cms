@@ -32,7 +32,6 @@ use Xibo\Helper\Help;
 use Xibo\Helper\LayoutUploadHandler;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
-use Xibo\Helper\Theme;
 
 class Layout extends Base
 {
@@ -639,53 +638,6 @@ class Layout extends Base
         // Return the file with PHP
         // Disable any buffering to prevent OOM errors.
         readfile($fileName);
-    }
-
-    public function importForm()
-    {
-
-         
-
-        // Set the Session / Security information
-        $sessionId = session_id();
-        $securityToken = CreateFormToken();
-
-        $session->setSecurityToken($securityToken);
-
-        // Find the max file size
-        $maxFileSizeBytes = convertBytes(ini_get('upload_max_filesize'));
-
-        // Set some information about the form
-        Theme::Set('form_id', 'LayoutImportForm');
-        Theme::Set('form_action', 'index.php?p=layout&q=Import');
-        Theme::Set('form_meta', '<input type="hidden" id="txtFileName" name="txtFileName" readonly="true" /><input type="hidden" name="hidFileID" id="hidFileID" value="" /><input type="hidden" name="template" value="' . \Kit::GetParam('template', _GET, _STRING, 'false') . '" />');
-
-        Theme::Set('form_upload_id', 'file_upload');
-        Theme::Set('form_upload_action', 'index.php?p=content&q=FileUpload');
-        Theme::Set('form_upload_meta', '<input type="hidden" id="PHPSESSID" value="' . $sessionId . '" /><input type="hidden" id="SecurityToken" value="' . $securityToken . '" /><input type="hidden" name="MAX_FILE_SIZE" value="' . $maxFileSizeBytes . '" />');
-
-        Theme::Set('prepend', Theme::RenderReturn('form_file_upload_single'));
-
-        $formFields = array();
-        $formFields[] = Form::AddText('layout', __('Name'), NULL, __('The Name of the Layout - (1 - 50 characters). Leave blank to use the name from the import.'), 'n');
-        $formFields[] = Form::AddCheckbox('replaceExisting', __('Replace Existing Media?'),
-            NULL,
-            __('If the import finds existing media with the same name, should it be replaced in the Layout or should the Layout use that media.'),
-            'r');
-
-        if (\Kit::GetParam('template', _GET, _STRING, 'false') != 'true')
-            $formFields[] = Form::AddCheckbox('importTags', __('Import Tags?'),
-                NULL,
-                __('Would you like to import any tags contained on the layout.'),
-                't');
-
-        Theme::Set('form_fields', $formFields);
-
-         $this->getState()->SetFormRequestResponse(NULL, __('Import Layout'), '350px', '200px');
-         $this->getState()->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('DataSet', 'ImportCsv') . '")');
-         $this->getState()->AddButton(__('Cancel'), 'XiboDialogClose()');
-         $this->getState()->AddButton(__('Import'), '$("#LayoutImportForm").submit()');
-
     }
 
     public function import()

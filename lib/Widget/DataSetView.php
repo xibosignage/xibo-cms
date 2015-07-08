@@ -23,10 +23,7 @@ namespace Xibo\Widget;
 use DataSet;
 use Exception;
 use InvalidArgumentException;
-use Kit;
-use Media;
-use Widget\Module;
-use Xibo\Helper\Form;
+use Xibo\Factory\MediaFactory;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 
@@ -37,11 +34,10 @@ class DataSetView extends Module
      */
     public function InstallFiles()
     {
-        $media = new Media();
-        $media->addModuleFile('modules/preview/vendor/jquery-1.11.1.min.js');
-        $media->addModuleFile('modules/preview/vendor/jquery-cycle-2.1.6.min.js');
-        $media->addModuleFile('modules/preview/xibo-layout-scaler.js');
-        $media->addModuleFile('modules/preview/xibo-dataset-render.js');
+        MediaFactory::createModuleFile('modules/vendor/jquery-1.11.1.min.js')->save();
+        MediaFactory::createModuleFile('modules/vendor/jquery-cycle-2.1.6.min.js')->save();
+        MediaFactory::createModuleFile('modules/xibo-layout-scaler.js')->save();
+        MediaFactory::createModuleFile('modules/xibo-dataset-render.js')->save();
     }
 
     /**

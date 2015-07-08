@@ -238,9 +238,12 @@ $app->get('/group/form/members/:id', '\Xibo\Controller\UserGroup:membersForm')->
 // admin
 //
 $app->get('/admin/view', '\Xibo\Controller\Settings:displayPage')->name('admin.view');
-$app->get('/admin/form/export', '\Xibo\Controller\Settings:exportForm')->name('settings.export.form');
-$app->get('/admin/form/import', '\Xibo\Controller\Settings:importForm')->name('settings.import.form');
-$app->get('/admin/form/tidy', '\Xibo\Controller\Settings:tidyLibraryForm')->name('settings.libraryTidy.form');
+
+//
+// maintenance
+//
+$app->get('/maintenance/form/export', '\Xibo\Controller\Maintenance:exportForm')->name('maintenance.export.form');
+$app->get('/maintenance/form/tidy', '\Xibo\Controller\Maintenance:tidyLibraryForm')->name('maintenance.libraryTidy.form');
 
 //
 // oauth
