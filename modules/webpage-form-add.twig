@@ -93,7 +93,7 @@ $formFields[] = Form::AddText('uri', __('Link'), NULL,
                 {% set helpText %}{% trans "An optional name for this media" %}{% endset %}
                 {{ forms.text("name", title, "", helpText) }}
 
-                {{ forms.number("duration", "Duration", displayOrder, "The duration in seconds this item should be displayed", "", "required") }}
+                {{ forms.number("duration", "Duration", duration, "The duration in seconds this item should be displayed", "", "required") }}
                 
                 {% set title %}{% trans "Options" %}{% endset %}
                 {% set helpText %}{% trans "How should this web page be embedded?" %}{% endset %}
@@ -103,24 +103,22 @@ $formFields[] = Form::AddText('uri', __('Link'), NULL,
                 {% set options = [
                 { modeid: 1, mode: openNatively },
                 { modeid: 2, mode: manualPosition },
-                { modeid: 3, mode: bestFit}
+                { modeid: 3, mode: bestFit }
                 ] %}
                 {{ forms.dropdown("options", "single", title, "", options, "modeid", "mode", helpText) }}
 
+                {{ forms.number("pageWidth", "Page Width", pageWidth, "The width of the page. Leave empty to use the region width.", "", "webpage-widths") }}
+                {{ forms.number("pageHeight", "Page Height", pageHeight, "The height of the page. Leave empty to use the region height.", "", "webpage-widths") }}
+                {{ forms.number("offsetTop", "Offset Top", offsetTop, "The starting point from the top in pixels", "", "webpage-offsets") }}
+                {{ forms.number("offsetLeft", "Offset Left", offsetLeft, "The starting point from the left in pixels", "", "webpage-offsets") }}
+                {{ forms.number("scaling", "Scale Percentage", scaling, "The Percentage to Scale this Webpage (0 - 100)", "", "webpage-offsets") }}
 
-                        $formFields[] = Form::AddCombo(
-            'modeid',
-            __('Options'),
-            NULL,
-            array(
-                array('modeid' => '1', 'mode' => __('Open Natively')),
-                array('modeid' => '2', 'mode' => __('Manual Position')),
-                array('modeid' => '3', 'mode' => __('Best Fit'))
-            ),
-            'modeid',
-            'mode',
-            __('How should this web page be embedded?'),
-            'm');
+                {% set title %}{% trans "Background transparent?" %}{% endset %}
+                {% set helpText %}{% trans "Should the HTML be shown with a transparent background. Not currently available on the Windows Display Client." %}{% endset %}
+                {{ forms.checkbox("transparency", title, transparency, helpText) }}
+
+                {# Field dependencies #}
+
 
             </form>
         </div>

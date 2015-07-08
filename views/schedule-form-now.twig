@@ -114,15 +114,18 @@
         <div class="col-md-12">
             <form id="scheduleNowForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("schedule.add") }}">
             {# display groups lists etc #}
-
+                {% set optionGroups = [
+                {id: campaign, label: Campaigns},
+                {id: layout, label: Layouts}
+                ] %}
             {# nah very wrong...#}
                 {% set title %}{% trans "Layout / Campaign" %}{% endset %}
                 {% set helpText %}{% trans "Please select a Layout or Campaign for this Event to show" %}{% endset %}
-                {% set aaa = [
+                {% set options = [
                 { id: campaign, value: campaignOptions },
                 { id: layout, value: layoutOptions }
                 ] %}
-                {{ forms.dropdown("campaignId", "single", title, "", aaa, "id", "value", helpText) }}
+                {{ forms.dropdown("campaignId", "single", title, "", options, "id", "value", helpText, "", optionGroups) }}
 
                 {% set title %}{% trans "Hours" %}{% endset %}
                 {% set helpText %}{% trans "Hours this event should be scheduled for" %}{% endset %}

@@ -32,11 +32,11 @@ $formFields[] = Form::AddCheckbox('EnabledForIn', __('Available for In Transitio
             <form id="transitionEditForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("transition.edit", {id: transition.transitionId}) }}">
                 {% set title %}{% trans "Available for In Transitions?" %}{% endset %}
                 {% set helpText %}{% trans "Can this transition be used for media start?" %}{% endset %}
-                {{ forms.checkbox("enabledForIn", title, transition.availableAsIn, helpText) }}
+                {{ forms.checkbox("availableAsIn", title, transition.availableAsIn, helpText) }}
 
                 {% set title %}{% trans "Available for Out Transitions?" %}{% endset %}
                 {% set helpText %}{% trans "Can this transition be used for media end?" %}{% endset %}
-                {{ forms.checkbox("enabledForOut", title, transition.availableAsOut, helpText) }}
+                {{ forms.checkbox("availableAsOut", title, transition.availableAsOut, helpText) }}
             </form>
         </div>
     </div>

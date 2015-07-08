@@ -4,16 +4,7 @@
  * Copyright (C) 2015 Spring Signage Ltd
  * (${FILE_NAME})
  */
-$formFields[] = Form::AddCheckbox('replaceBackgroundImages', __('Replace background images?'),
-    0,
-    __('If the current image is used as a background, should the new image replace it?'),
-    '', 'replacement-controls');
 
-
-$formFields[] = Form::AddCheckbox('deleteOldVersion', __('Delete the old version?'),
-    ((Config::GetSetting('LIBRARY_MEDIA_UPDATEINALL_CHECKB') == 'Checked') ? 1 : 0),
-    __('Completely remove the old version of this media item if a new file is being uploaded.'),
-    '');
 #}
 
 {% extends "form-base.twig" %}

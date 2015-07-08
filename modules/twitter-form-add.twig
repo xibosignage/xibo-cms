@@ -175,7 +175,7 @@
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, $("#<<id>>").submit()
+    {% trans "Save" %}, $("#twitterAddForm").submit()
 {% endblock %}
 
 {% block callBack %}text_callback{% endblock %}
@@ -183,7 +183,112 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="<<id>>" class="XiboForm form-horizontal" method="post" action="{{ urlFor("module.widget.add", {type: module.widget.type, id: playlist.playlistId}) }}">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                <li><a href="#template" role="tab" data-toggle="tab"><span>{% trans "Template" %}</span></a></li>
+                <li><a href="#effect" role="tab" data-toggle="tab"><span>{% trans "Effect" %}</span></a></li>
+                <li><a href="#advanced" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
+            </ul>
+            <form id="twitterAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("module.widget.add", {type: module.widget.type, id: playlist.playlistId}) }}">
+                <div class="tab-content">
+                    <div class="tab-pane active" id="general">
+                        {% set title %}{% trans "Name" %}{% endset %}
+                        {% set helpText %}{% trans "An optional name for this media" %}{% endset %}
+                        {{ forms.text("name", title, "", helpText) }}
+
+                        {% set title %}{% trans "Duration" %}{% endset %}
+                        {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
+                        {{ forms.number("duration", title, "", helpText, "", "required") }}
+
+                        {% set title %}{% trans "Search Term" %}{% endset %}
+                        {% set helpText %}{% trans "Search term. You can test your search term in the twitter.com search box first." %}{% endset %}
+                        {{ forms.text("searchTerm", title, "", helpText), "", "required" }}
+
+                        {% set title %}{% trans "Type" %}{% endset %}
+                        {% set helpText %}{% trans "Recent shows only the most recent tweets, Popular the most popular and Mixed includes both popular and recent results." %}{% endset %}
+                        {% set mixed %}{% trans "Mixed" %}{% endset %}
+                        {% set recent %}{% trans "Recent" %}{% endset %}
+                        {% set popular %}{% trans "Popular" %}{% endset %}
+                        {% set options = [
+                        { typeid: mixed, type: mixed },
+                        { typeid: recent, type: recent },
+                        { typeid: popular, type: popular }
+                        ] %}
+                        {{ forms.dropdown("resultType", "single", title, "mixed", options, "typeid", "type", helpText,"", "required") }}
+
+                        {% set title %}{% trans "Distance" %}{% endset %}
+                        {% set helpText %}{% trans "Distance in miles that the tweets should be returned from. Set to 0 for no restrictions." %}{% endset %}
+                        {{ forms.number("tweetDistance", title, "", helpText) }}
+
+                        {% set title %}{% trans "Count" %}{% endset %}
+                        {% set helpText %}{% trans "The number of Tweets to return." %}{% endset %}
+                        {{ forms.number("tweetCount", title, "", helpText) }}
+                    </div>
+
+                    <div class="tab-pane" id="template">
+
+                    </div>
+
+                    <div class="tab-pane" id="effect">
+
+                        {% set title %}{% trans "Effect" %}{% endset %}
+                        {% set helpText %}{% trans "Please select the effect that will be used to transition between items. If all items should be output, select None. Marquee effects are CPU intensive and may not be suitable for lower power displays." %}{% endset %}
+                        {% set fade %}{% trans "Fade" %}{% endset %}
+                        {% set fadeout %}{% trans "Fade Out" %}{% endset %}
+                        {% set scrollHorz %}{% trans "Scroll Horizontal" %}{% endset %}
+                        {% set scrollVert %}{% trans "Scroll Vertical" %}{% endset %}
+                        {% set flipHorz %}{% trans "Flip Horizontal" %}{% endset %}
+                        {% set flipVert %}{% trans "Flip Vertical" %}{% endset %}
+                        {% set shuffle %}{% trans "shuffle" %}{% endset %}
+                        {% set tileSlide %}{% trans "Tile Slide" %}{% endset %}
+                        {% set tileBlind %}{% trans "Tile Blind" %}{% endset %}
+                        {% set marqueeLeft %}{% trans "Marquee Left" %}{% endset %}
+                        {% set marqueeRight %}{% trans "Marquee Right" %}{% endset %}
+                        {% set marqueeUp %}{% trans "Marquee Up" %}{% endset %}
+                        {% set marqueeDown %}{% trans "Marquee Down" %}{% endset %}
+                        {% set options = [
+                        { effectid: "", effect: none },
+                        { effectid: fade, effect: fade },
+                        { effectid: fadeout, effect: fadeout},
+                        { effectid: scrollHorz, effect: scrollHorz},
+                        { effectid: scrollVert, effect: scrollVert},
+                        { effectid: flipHorz, effect: flipHorz},
+                        { effectid: flipVert, effect: flipVert},
+                        { effectid: shuffle, effect: shuffle},
+                        { effectid: tileSlide, effect: tileSlide},
+                        { effectid: tileBlind, effect: tileBlind},
+                        { effectid: marqueeLeft, effect: marqueeLeft},
+                        { effectid: marqueeRight, effect: marqueeRight},
+                        { effectid: marqueeUp, effect: marqueeUp},
+                        { effectid: marqueeDown, effect: marqueeDown}
+                        ] %}
+                        {{ forms.dropdown("effect", "single", title, module.getOption("effect"), "effectid", "effect", helpText) }}
+
+                        {% set title %}{% trans "Speed" %}{% endset %}
+                        {% set helpText %}{% trans "The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1)." %}{% endset %}
+                        {{ forms.number("speed", title, "", helpText, "", "effect-controls") }}
+                    </div>
+
+                    <div class="tab-pane" id="advanced">
+
+                        {% set title %}{% trans "Background Colour" %}{% endset %}
+                        {% set helpText %}{% trans "The selected effect works best with a background colour. Optionally add one here." %}{% endset %}
+                        {{ forms.text("backgroundColor", title, "", helpText, "", "", "background-color-group") }}
+                        
+                        {% set title %}{% trans "No tweets" %}{% endset %}
+                        {% set helpText %}{% trans "A message to display when there are no tweets returned by the search query" %}{% endset %}
+                        {{ forms.text("noTweetsMessage", title, "", helpText) }}
+                        
+                        {% set title %}{% trans "Date Format" %}{% endset %}
+                        {% set helpText %}{% trans "The format to apply to all dates returned by the ticker. In PHP date format: http://uk3.php.net/manual/en/function.date.php" %}{% endset %}
+                        {{ forms.text("dateFormat", title, "d M", helpText) }}
+
+                        {% set title %}{% trans "Update Interval (mins)" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60." %}{% endset %}
+                        {{ forms.number("updateInterval", title, 60, helpText, "", "required") }}
+                    <div>
+                </div>
+
 
             </form>
         </div>

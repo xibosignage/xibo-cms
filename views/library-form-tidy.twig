@@ -25,6 +25,7 @@ $formFields[] = Form::AddMessage(sprintf(__('There is %s of data stored in %d fi
     <div class="row">
         <div class="col-md-12">
             <form id="libraryTidyForm" class="XiboForm form-horizontal" method="delete" action="{{ urlFor("library.tidy") }}">
+               {{ forms.message("Tidying your Library will delete any media that is not currently in use.") }}
                 {#ask about it#}
             </form>
         </div>

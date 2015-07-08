@@ -143,17 +143,23 @@
             <form id="scheduleAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("schedule.add") }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
-                {# display groups #}
+                {# display groups and stuff #}
+                    
+                    {% set optionGroups = [
+                    {id: group, label: Groups},
+                    {id: display, label: Diplays}
+                    ] %}
+
 
                 {# start/end time #}
 
                 {% set title %}{% trans "Start Time" %}{% endset %}
                 {% set helpText %}{% trans "Select the start time for this event" %}{% endset %}
-                {{ forms.text("fromDt", title, "", helpText) }}
+                {{ forms.text("fromDt", title, "", helpText,"", "required") }}
 
                 {% set title %}{% trans "End Time" %}{% endset %}
                 {% set helpText %}{% trans "Select the end time for this event" %}{% endset %}
-                {{ forms.text("toDt", title, "", helpText) }}
+                {{ forms.text("toDt", title, "", helpText, "", "required") }}
 
                 {# Add two hidden fields to always carry the ISO date #}
                 {# Generate a list of layouts. #}
@@ -161,11 +167,11 @@
                 {# nah very wrong...#}
                 {% set title %}{% trans "Layout / Campaign" %}{% endset %}
                 {% set helpText %}{% trans "Please select a Layout or Campaign for this Event to show" %}{% endset %}
-                {% set aaa = [
+                {% set options = [
                 { id: campaign, value: campaignOptions },
                 { id: layout, value: layoutOptions }
                 ] %}
-                {{ forms.dropdown("campaignId", "single", title, "", aaa, "id", "value", helpText) }}
+                {{ forms.dropdown("campaignId", "single", title, "", options, "id", "value", helpText,"", optionGroups) }}
   
                 {{ forms.number("displayOrder", "Display Order", displayOrder, "Please select the order this event should appear in relation to others when there is more than one event scheduled") }}
                 
@@ -185,7 +191,7 @@
                         {% set weekly %}{% trans "Weekly" %}{% endset %}
                         {% set monthly %}{% trans "Monthly" %}{% endset %}
                         {% set yearly %}{% trans "Yearly" %}{% endset %}
-                        {% set reccurenceType = [
+                        {% set options = [
                         { id: "", name: none },
                         { id: Minute, name: perminute },
                         { id: Hour, name: hourly},
@@ -194,7 +200,7 @@
                         { id: Month, name: monthly},
                         { id: Year, name: yearly}
                         ] %}
-                        {{ forms.dropdown("reccurenceType", "single", title, "", reccurenceType, "id", "name", helpText) }}
+                        {{ forms.dropdown("reccurenceType", "single", title, "", options, "id", "name", helpText) }}
 
                         {{ forms.number("reccurenceDetail", "Repeat every", reccurenceDetail, "How often does this event repeat?") }}
 

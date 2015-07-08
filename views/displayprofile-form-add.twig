@@ -42,17 +42,17 @@ $formFields[] = Form::AddText('name', __('Name'), NULL,
             <form id="displayProfileAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("displayProfile.add") }}">
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "The Name for this Display Profile" %}{% endset %}
-                {{ forms.text("name", title, "", helpText) }}
+                {{ forms.text("name", title, "", helpText,"","required") }}
 
                 {% set title %}{% trans "Client Type" %}{% endset %}
                 {% set helpText %}{% trans "What type of display client is this profile intended for?" %}{% endset %}
                 {% set windows %}{% trans "Windows" %}{% endset %}
                 {% set android %}{% trans "Android" %}{% endset %}
-                {% set clientTypes = [
-                { id: 1, value: windows },
-                { id: 2, value: android }
+                {% set options = [
+                { typeid: windows, type: windows },
+                { typeid: android, type: android }
                 ] %}
-                {{ forms.dropdown("type", "single", title,"", clientTypes, "id","value", helpText) }} 
+                {{ forms.dropdown("type", "single", title,"", options, "typeid","type", helpText) }} 
                 {#this is giving me "Unexpected Error, please contact support.""  not sure whats wrong, tried different things without 'set clientTypes' too because it is set in controller, but well probably some obvious mistake#}
 
                 {% set title %}{% trans "Default Profile?" %}{% endset %}

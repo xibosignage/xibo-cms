@@ -29,13 +29,22 @@ $formFields = array();
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, $("#<<id>>").submit()
+    {% trans "Save" %}, $("#videoEditForm").submit()
 {% endblock %}
 
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="<<id>>" class="XiboForm form-horizontal" method="put" action="action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}"">
+            <form id="videoEditForm" class="XiboForm form-horizontal" method="put" action="action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}"">
+                {% set title %}{% trans "Loop?" %}{% endset %}
+                {% set helpText %}{% trans "Should the video loop if it finishes before the provided duration?" %}{% endset %}
+                {{ forms.checkbox("loop", title, module.getOption("loop"), helpText) }}
+                
+                {% set title %}{% trans "Mute?" %}{% endset %}
+                {% set helpText %}{% trans "Should the video be muted?" %}{% endset %}
+                {{ forms.checkbox("mute", title, module.getOption("mute"), helpText) }}
+
+                {# dependencies #}
 
             </form>
         </div>
