@@ -28,7 +28,7 @@ class Font extends Module
      */
     public function installFiles()
     {
-        $fontsCss = 'modules/fonts.css';
+        $fontsCss = PROJECT_ROOT . '/web/modules/fonts.css';
 
         if (!file_exists($fontsCss)) {
             touch($fontsCss);

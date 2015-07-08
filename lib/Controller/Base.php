@@ -72,7 +72,9 @@ class Base
         $this->app = Slim::getInstance(ApplicationState::$appName);
 
         // Reference back to this from the app
-        $this->app->controller = $this;
+        // but only the first time
+        if ($this->app->controller == null)
+            $this->app->controller = $this;
     }
 
     /**

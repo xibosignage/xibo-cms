@@ -218,7 +218,7 @@ class Media
         foreach ($this->widgets as $widget) {
             /* @var \Xibo\Entity\Widget $widget */
             $widget->unassignMedia($this->mediaId);
-            $widget->save();
+            $widget->save(['saveWidgetOptions' => false]);
         }
 
         foreach ($this->displayGroups as $displayGroup) {

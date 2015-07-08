@@ -708,7 +708,7 @@ class Display extends Base
 
                     // Update the display and set it as logged out
                     $display->loggedIn = 0;
-                    $display->save(false);
+                    $display->save(false, false);
 
                     // Log the down event
                     $stat = new Stat();

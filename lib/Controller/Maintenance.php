@@ -10,20 +10,311 @@ namespace Xibo\Controller;
 
 
 use Xibo\Entity\Media;
+use Xibo\Entity\User;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Exception\LibraryFullException;
+use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\MediaFactory;
+use Xibo\Factory\UserFactory;
 use Xibo\Helper\BackupUploadHandler;
 use Xibo\Helper\Config;
+use Xibo\Helper\Date;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
+use Xibo\Helper\Theme;
+use Xibo\Helper\WakeOnLan;
 use Xibo\Storage\PDOConnect;
 
 class Maintenance extends Base
 {
+    public function run()
+    {
+        // Output HTML Headers
+        print '<html>';
+        print '  <head>';
+        print '    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />';
+        print '    <title>Maintenance</title>';
+        print '  </head>';
+        print '<body>';
+
+        // Should the Scheduled Task script be running at all?
+        if (Config::GetSetting("MAINTENANCE_ENABLED")=="Off") {
+            print "<h1>" . __("Maintenance Disabled") . "</h1>";
+            print __("Maintenance tasks are disabled at the moment. Please enable them in the &quot;Settings&quot; dialog.");
+
+        } else {
+            $quick = (Sanitize::getCheckbox('quick') == 1);
+
+            // Set defaults that don't match on purpose!
+            $key = 1;
+            $aKey = 2;
+            $pKey = 3;
+
+            if (Config::GetSetting("MAINTENANCE_ENABLED")=="Protected") {
+                // Check that the magic parameter is set
+                $key = Config::GetSetting("MAINTENANCE_KEY");
+
+                // Get key from POST or from ARGV
+                $pKey = Sanitize::getString('key');
+                if(isset($argv[1]))
+                {
+                    $aKey = Sanitize::string($argv[1]);
+                }
+            }
+
+            if (($aKey == $key) || ($pKey == $key) || (Config::GetSetting("MAINTENANCE_ENABLED")=="On")) {
+                // Email Alerts
+                // Note that email alerts for displays coming back online are triggered directly from
+                // the XMDS service.
+
+                print "<h1>" . __("Email Alerts") . "</h1>";
+
+                $emailAlerts = (Config::GetSetting("MAINTENANCE_EMAIL_ALERTS") == 'On');
+                $alwaysAlert = (Config::GetSetting("MAINTENANCE_ALWAYS_ALERT") == 'On');
+                $alertForViewUsers = (Config::GetSetting('MAINTENANCE_ALERTS_FOR_VIEW_USERS') == 1);
+
+                // The time in the past that the last connection must be later than globally.
+                $globalTimeout = time() - (60 * Sanitize::int(Config::GetSetting("MAINTENANCE_ALERT_TOUT")));
+
+                $msgTo = Config::GetSetting("mail_to");
+                $msgFrom = Config::GetSetting("mail_from");
+
+
+                foreach (Display::validateDisplays(DisplayFactory::query()) as $display) {
+                    /* @var \Xibo\Entity\Display $display */
+                    // Is this the first time this display has gone "off-line"
+                    $displayGoneOffline = ($display->loggedIn == 1);
+
+                    // Should we send an email?
+                    if ($emailAlerts) {
+                        // Alerts enabled for this display
+                        if ($display->emailAlert == 1) {
+                            // Display just gone offline, or always alert
+                            if ($displayGoneOffline || $alwaysAlert) {
+                                // Fields for email
+                                $subject = sprintf(__("Email Alert for Display %s"), $display->display);
+                                $body = sprintf(__("Display %s with ID %d was last seen at %s."), $display->display, $display->displayId, Date::getLocalDate($display->lastAccessed));
+
+                                // Get a list of people that have view access to the display?
+                                if ($alertForViewUsers) {
+                                    foreach (UserFactory::getByDisplayGroupId($display->displayGroupId) as $user) {
+                                        /* @var User $user */
+                                        if ($user->email != '') {
+                                            // Send them an email
+                                            $mail = new \PHPMailer();
+                                            $mail->From = $msgFrom;
+                                            $mail->FromName = Theme::getConfig('theme_name');
+                                            $mail->Subject = $subject;
+                                            $mail->addAddress($user->email);
+
+                                            // Body
+                                            $mail->Body = $body;
+
+                                            if (!$mail->send())
+                                                Log::error('Unable to send Display Up mail to %s', $user->email);
+                                        }
+                                    }
+                                }
+
+                                // Send to the original admin contact
+                                $mail = new \PHPMailer();
+                                $mail->From = $msgFrom;
+                                $mail->FromName = Theme::getConfig('theme_name');
+                                $mail->Subject = $subject;
+                                $mail->addAddress($msgTo);
+
+                                // Body
+                                $mail->Body = $body;
+
+                                if (!$mail->send()) {
+                                    echo 'A';
+                                } else {
+                                    echo 'E';
+                                }
+
+                            }
+                        }
+                        else {
+                            // Alert disabled for this display
+                            print "D";
+                        }
+                    }
+                    else {
+                        // Email alerts disabled globally
+                        print "X";
+                    }
+                }
+
+                // Log Tidy
+                print "<h1>" . __("Tidy Logs") . "</h1>";
+                if (!$quick && Config::GetSetting("MAINTENANCE_LOG_MAXAGE") != 0) {
+
+                    $maxage = date("Y-m-d H:i:s", time() - (86400 * Sanitize::int(Config::GetSetting("MAINTENANCE_LOG_MAXAGE"))));
+
+                    try {
+                        $dbh = PDOConnect::init();
+
+                        $sth = $dbh->prepare('DELETE FROM `log` WHERE logdate < :maxage');
+                        $sth->execute(array(
+                            'maxage' => $maxage
+                        ));
+
+                        print __('Done.');
+                    }
+                    catch (\PDOException $e) {
+                        Log::error($e->getMessage());
+                    }
+                }
+                else {
+                    print "-&gt;" . __("Disabled") . "<br/>\n";
+                }
+                // Stats Tidy
+                print "<h1>" . __("Tidy Stats") . "</h1>";
+                if (!$quick &&  Config::GetSetting("MAINTENANCE_STAT_MAXAGE") != 0) {
+
+                    $maxage = date("Y-m-d H:i:s",time() - (86400 * Sanitize::int(Config::GetSetting("MAINTENANCE_STAT_MAXAGE"))));
+
+                    try {
+                        $dbh = PDOConnect::init();
+
+                        $sth = $dbh->prepare('DELETE FROM `stat` WHERE statDate < :maxage');
+                        $sth->execute(array(
+                            'maxage' => $maxage
+                        ));
+
+                        print __('Done.');
+                    }
+                    catch (\PDOException $e) {
+                        Log::error($e->getMessage());
+                    }
+                }
+                else {
+                    print "-&gt;" . __("Disabled") . "<br/>\n";
+                }
+
+                // Validate Display Licence Slots
+                $maxDisplays = Config::GetSetting('MAX_LICENSED_DISPLAYS');
+
+                if ($maxDisplays > 0) {
+                    print '<h1>' . __('Licence Slot Validation') . '</h1>';
+
+                    // Get a list of all displays
+                    try {
+                        $dbh = PDOConnect::init();
+                        $sth = $dbh->prepare('SELECT displayId, display FROM `display` WHERE licensed = 1 ORDER BY lastAccessed');
+                        $sth->execute();
+
+                        $displays = $sth->fetchAll(\PDO::FETCH_ASSOC);
+
+                        if (count($displays) > $maxDisplays) {
+                            // :(
+                            // We need to un-licence some displays
+                            $difference = count($displays) - $maxDisplays;
+
+                            $update = $dbh->prepare('UPDATE `display` SET licensed = 0 WHERE displayId = :displayId');
+
+                            foreach ($displays as $display) {
+
+                                // If we are down to 0 difference, then stop
+                                if ($difference == 0)
+                                    break;
+
+                                echo sprintf(__('Disabling %s'), $display['display']) . '<br/>' . PHP_EOL;
+                                $update->execute(['displayId' => $display['displayId']]);
+
+                                $difference--;
+                            }
+                        }
+                        else {
+                            echo __('Done.');
+                        }
+                    }
+                    catch (\Exception $e) {
+                        Log::error($e);
+                    }
+                }
+
+                // Wake On LAN
+                print '<h1>' . __('Wake On LAN') . '</h1>';
+
+                // Create a display object to use later
+                $displayObject = new Display();
+
+                try {
+                    $dbh = PDOConnect::init();
+
+                    // Get a list of all displays which have WOL enabled
+                    $sth = $dbh->prepare('SELECT DisplayID, Display, WakeOnLanTime, LastWakeOnLanCommandSent FROM `display` WHERE WakeOnLan = 1');
+                    $sth->execute(array());
+
+                    foreach(DisplayFactory::query(null, ['wakeOnLan' => 1]) as $display) {
+
+                        // Time to WOL (with respect to today)
+                        $timeToWake = strtotime(date('Y-m-d') . ' ' . $display->wakeOnLanTime);
+                        $timeNow = time();
+
+                        // Should the display be awake?
+                        if ($timeNow >= $timeToWake) {
+                            // Client should be awake, so has this displays WOL time been passed
+                            if ($display->lastWakeOnLanCommandSent < $timeToWake) {
+                                // Call the Wake On Lan method of the display object
+                                if ($display->macAddress == '' || $display->broadCastAddress == '')
+                                    throw new \InvalidArgumentException(__('This display has no mac address recorded against it yet. Make sure the display is running.'));
+
+                                Log::notice('About to send WOL packet to ' . $display->broadCastAddress . ' with Mac Address ' . $display->macAddress);
+
+                                try {
+                                    WakeOnLan::TransmitWakeOnLan($display->macAddress, $display->secureOn, $display->broadCastAddress, $display->cidr, '9');
+                                    print $display->display . ':Sent WOL Message. Previous WOL send time: ' . Date::getLocalDate($display->lastWakeOnLanCommandSent) . '<br/>\n';
+
+                                    $display->lastWakeOnLanCommandSent = time();
+                                    $display->save(false);
+                                }
+                                catch (\Exception $e) {
+                                    print $display->display . ':Error=' . $displayObject->GetErrorMessage() . '<br/>\n';
+                                }
+                            }
+                            else
+                                print $display->display . ':Display already awake. Previous WOL send time: ' . Date::getLocalDate($display->lastWakeOnLanCommandSent) . '<br/>\n';
+                        }
+                        else
+                            print $display->display . ':Sleeping<br/>\n';
+                        print $display->display . ':N/A<br/>\n';
+                    }
+
+                    print __('Done.');
+                }
+                catch (\PDOException $e) {
+                    Log::error($e->getMessage());
+                }
+
+                // Keep tidy
+                Library::removeExpiredFiles();
+
+                // Install module files
+                if (!$quick) {
+                    Log::debug('Installing Module Files');
+                    Library::installAllModuleFiles();
+                }
+            }
+            else {
+                print __("Maintenance key invalid.");
+            }
+        }
+
+        // Output HTML Footers
+        print "\n  </body>\n";
+        print "</html>";
+
+        Log::debug('Maintenance Complete');
+
+        // No output
+        $this->setNoOutput(true);
+    }
+
     /**
      * Tidy Library Form
      */

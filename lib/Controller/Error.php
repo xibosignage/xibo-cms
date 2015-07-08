@@ -75,17 +75,15 @@ class Error extends Base
 
                 break;
 
-            case 'auth':
-                $this->render();
-                break;
-
             case 'console':
+            case 'maint':
+
                 // Render the error page.
                 if ($handled) {
                     echo $e->getMessage();
                 }
                 else
-                    echo $e;
+                    echo __('Unknown Error');
 
                 $app->stop();
                 break;

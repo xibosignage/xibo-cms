@@ -158,6 +158,12 @@ class DisplayFactory
             $params['displayId'] = Sanitize::getInt('displayId', $filterBy);
         }
 
+        // Filter by Wake On LAN
+        if (Sanitize::getInt('wakeOnLan', $filterBy) != 0) {
+            $SQL .= ' AND display.wakeOnLan = :wakeOnLan ';
+            $params['wakeOnLan'] = Sanitize::getInt('wakeOnLan', $filterBy);
+        }
+
         // Filter by Licence?
         if (Sanitize::getString('license', $filterBy) != null) {
             $SQL .= ' AND display.license = :license ';

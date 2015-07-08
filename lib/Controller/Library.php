@@ -35,6 +35,7 @@ use Xibo\Helper\Config;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
+use Xibo\Helper\Theme;
 use Xibo\Helper\XiboUploadHandler;
 use Xibo\Storage\PDOConnect;
 
@@ -483,10 +484,10 @@ class Library extends Base
             $ckEditorString .= $font['name'] . '/' . $font['name'] . ';';
         }
 
-        file_put_contents('modules/preview/fonts.css', $css);
+        file_put_contents(PROJECT_ROOT . '/web/modules/fonts.css', $css);
 
         // Install it (doesn't expire, isn't a system file, force update)
-        $media = MediaFactory::createModuleFile('fonts.css', 'modules/preview/fonts.css');
+        $media = MediaFactory::createModuleFile('fonts.css', PROJECT_ROOT . '/web/modules/fonts.css');
         $media->expires = 0;
         $media->moduleSystemFile = true;
         $media->force = true;
@@ -496,12 +497,12 @@ class Library extends Base
         file_put_contents('modules/preview/fonts.css', $localCss);
 
         // Edit the CKEditor file
-        $ckEditor = file_get_contents('theme/default/libraries/ckeditor/config.js');
+        $ckEditor = file_get_contents(Theme::uri('libraries/ckeditor/config.js', true));
         $replace = "/*REPLACE*/ config.font_names = '" . $ckEditorString . "' + config.font_names; /*ENDREPLACE*/";
 
         $ckEditor = preg_replace('/\/\*REPLACE\*\/.*?\/\*ENDREPLACE\*\//', $replace, $ckEditor);
 
-        file_put_contents('theme/default/libraries/ckeditor/config.js', $ckEditor);
+        file_put_contents(Theme::uri('libraries/ckeditor/config.js', true), $ckEditor);
     }
 
     /**
@@ -528,6 +529,7 @@ class Library extends Base
         foreach (MediaFactory::query(null, array('expires' => time(), 'allModules' => 1)) as $entry) {
             /* @var \Xibo\Entity\Media $entry */
             // If the media type is a module, then pretend its a generic file
+            Log::info('Removing Expired File %s', $entry->name);
             $entry->delete();
         }
     }

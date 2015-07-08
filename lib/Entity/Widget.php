@@ -300,8 +300,6 @@ class Widget implements \JsonSerializable
 
         foreach ($this->mediaIds as $mediaId) {
 
-            Log::debug('Linking MediaId %d to Widget %d', $mediaId, $this->widgetId);
-
             PDOConnect::insert($sql, array(
                 'widgetId' => $this->widgetId,
                 'mediaId' => $mediaId,
