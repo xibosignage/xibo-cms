@@ -33,6 +33,7 @@ trait EntityTrait
     {
         $intProperties = (array_key_exists('intProperties', $options)) ? $options['intProperties'] : [];
         $stringProperties = (array_key_exists('stringProperties', $options)) ? $options['stringProperties'] : [];
+        $htmlStringProperties = (array_key_exists('htmlStringProperties', $options)) ? $options['htmlStringProperties'] : [];
 
         foreach ($properties as $prop => $val) {
             if (property_exists($this, $prop)) {
@@ -41,6 +42,8 @@ trait EntityTrait
                     $val = intval($val);
                 else if (in_array($prop, $stringProperties))
                     $val = Sanitize::string($val);
+                else if (in_array($prop, $htmlStringProperties))
+                    $val = htmlentities($val);
 
                 $this->{$prop} =  $val;
             }

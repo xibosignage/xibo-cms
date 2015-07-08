@@ -19,6 +19,7 @@ class Error extends Base
     {
         $app = $this->getApp();
         $handled = $this->handledError($e);
+        $app->commit = false;
 
         if ($handled) {
             Log::debug($e->getMessage());

@@ -88,16 +88,27 @@ class Media
         $this->cloned = true;
     }
 
+    /**
+     * Get Id
+     * @return int
+     */
     public function getId()
     {
         return $this->mediaId;
     }
 
+    /**
+     * Get Owner Id
+     * @return int
+     */
     public function getOwnerId()
     {
         return $this->ownerId;
     }
 
+    /**
+     * Validate
+     */
     public function validate()
     {
         if (!v::string()->notEmpty()->validate($this->mediaType))
@@ -124,6 +135,9 @@ class Media
             throw new \InvalidArgumentException(__('Media you own already has this name. Please choose another.'));
     }
 
+    /**
+     * Load
+     */
     public function load()
     {
         // Tags
@@ -181,6 +195,10 @@ class Media
         }
     }
 
+    /**
+     * Delete
+     * @throws \Xibo\Exception\NotFoundException
+     */
     public function delete()
     {
         $this->deleting = true;
@@ -222,6 +240,10 @@ class Media
         }
     }
 
+    /**
+     * Add
+     * @throws ConfigurationException
+     */
     private function add()
     {
         $this->mediaId = PDOConnect::insert('
@@ -249,6 +271,10 @@ class Media
         ]);
     }
 
+    /**
+     * Edit
+     * @throws ConfigurationException
+     */
     private function edit()
     {
         // Do we need to pull a new update?
@@ -284,6 +310,12 @@ class Media
         ]);
     }
 
+    /**
+     * Save File to Library
+     *  this should download remote files, handle clones, handle local module files and also handle files uploaded
+     *  over the web ui
+     * @throws ConfigurationException
+     */
     private function saveFile()
     {
         // If we are a remote media item, we want to download the newFile and save it to a temporary location
@@ -329,6 +361,9 @@ class Media
         $this->fileSize = filesize($libraryFolder . $this->storedAs);
     }
 
+    /**
+     * Delete a Library File
+     */
     private function deleteFile()
     {
         // Library location
@@ -346,6 +381,9 @@ class Media
             unlink($libraryLocation . 'bg_' . $this->storedAs);
     }
 
+    /**
+     * Download remote file
+     */
     private function download()
     {
         if (!$this->isRemote || $this->fileName == '')

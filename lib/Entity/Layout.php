@@ -317,6 +317,10 @@ class Layout implements \JsonSerializable
 
         // Remove the Layout (now it is orphaned it can be deleted safely)
         PDOConnect::update('DELETE FROM `layout` WHERE layoutid = :layoutId', array('layoutId' => $this->layoutId));
+
+        // Delete the cached file (if there is one)
+        if (file_exists($this->getCachePath()))
+            @unlink($this->getCachePath());
     }
 
     /**
@@ -495,8 +499,7 @@ class Layout implements \JsonSerializable
      */
     public function xlfToDisk()
     {
-        $libraryLocation = Config::GetSetting('LIBRARY_LOCATION');
-        $path = $libraryLocation . $this->layoutId . '.xlf';
+        $path = $this->getCachePath();
 
         if ($this->status == 3) {
             file_put_contents($path, $this->toXlf());
@@ -510,6 +513,15 @@ class Layout implements \JsonSerializable
         }
 
         return $path;
+    }
+
+    /**
+     * @return string
+     */
+    private function getCachePath()
+    {
+        $libraryLocation = Config::GetSetting('LIBRARY_LOCATION');
+        return $libraryLocation . $this->layoutId . '.xlf';
     }
 
     //

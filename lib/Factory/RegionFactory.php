@@ -64,7 +64,9 @@ class RegionFactory
         $region->zIndex = $zIndex;
 
         // Create a Playlist for this region
-        $region->playlists[] = PlaylistFactory::create($name, $ownerId);
+        // many to many relationship
+        $playlist = PlaylistFactory::create($name, $ownerId);
+        $region->assignPlaylist($playlist);
 
         return $region;
     }

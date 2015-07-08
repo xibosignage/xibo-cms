@@ -31,30 +31,21 @@ class Storage extends Middleware
 {
     public function call()
     {
-        try {
-            $this->app->commit = true;
+        $this->app->commit = true;
 
-            PDOConnect::init()->beginTransaction();
+        PDOConnect::init()->beginTransaction();
 
-            $this->next->call();
+        $this->next->call();
 
-            //Log::debug('Commit Required? %d', $this->app->commit);
-            if ($this->app->commit) {
-                PDOConnect::init()->commit();
-            }
-            else {
-                if (PDOConnect::init()->inTransaction())
-                    PDOConnect::init()->rollBack();
-            }
+        //Log::debug('Commit Required? %d', $this->app->commit);
+        if ($this->app->commit) {
+            PDOConnect::init()->commit();
         }
-        catch (\Exception $e) {
-
-            Log::debug('Storage rollback because: %s', $e->getMessage());
-
-            if (PDOConnect::init()->inTransaction())
+        else {
+            if (PDOConnect::init()->inTransaction()) {
+                Log::debug('Storage rollback.');
                 PDOConnect::init()->rollBack();
-
-            throw $e;
+            }
         }
     }
 }

@@ -100,7 +100,7 @@ class LogFactory
         Log::sql($sql, $params);
 
         foreach (PDOConnect::select($sql, $params) as $row) {
-            $entries[] = (new \Xibo\Entity\LogEntry())->hydrate($row,  ['stringProperties' => ['message']]);
+            $entries[] = (new \Xibo\Entity\LogEntry())->hydrate($row,  ['htmlStringProperties' => ['message']]);
         }
 
         // Paging
