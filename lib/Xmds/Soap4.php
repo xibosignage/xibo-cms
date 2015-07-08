@@ -323,7 +323,7 @@ class Soap4 extends Soap
      */
     public function MediaInventory($serverKey, $hardwareKey, $inventory)
     {
-        $this->doMediaInventory($serverKey, $hardwareKey, $inventory);
+        return $this->doMediaInventory($serverKey, $hardwareKey, $inventory);
     }
 
     /**
@@ -338,7 +338,7 @@ class Soap4 extends Soap
      */
     function GetResource($serverKey, $hardwareKey, $layoutId, $regionId, $mediaId)
     {
-        $this->doGetResource($serverKey, $hardwareKey, $layoutId, $regionId, $mediaId);
+        return $this->doGetResource($serverKey, $hardwareKey, $layoutId, $regionId, $mediaId);
     }
 
     /**
@@ -373,8 +373,8 @@ class Soap4 extends Soap
         $this->LogBandwidth($this->display->displayId, Bandwidth::$NOTIFYSTATUS, strlen($status));
 
         // Touch the display record
-        $displayObject = new Display();
-        $displayObject->Touch($this->display->displayId, json_decode($status, true));
+        $this->display->hydrate(json_decode($status, true));
+        $this->display->save(false, false);
 
         return true;
     }
@@ -416,8 +416,8 @@ class Soap4 extends Soap
         fclose($fp);
 
         // Touch the display record
-        $displayObject = new Display();
-        $displayObject->Touch($this->display->displayId, array('screenShotRequested' => 0));
+        $this->display->screenShotRequested = 0;
+        $this->display->save(false, false);
 
         $this->LogBandwidth($this->display->displayId, Bandwidth::$SCREENSHOT, filesize($location));
 

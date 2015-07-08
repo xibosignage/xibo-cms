@@ -616,6 +616,10 @@ class Layout extends Base
         $fileName = Config::GetSetting('LIBRARY_LOCATION') . 'temp/export_' . $layout->layout . '.zip';
         $layout->toZip($fileName);
 
+        if (ini_get('zlib.output_compression')) {
+            ini_set('zlib.output_compression', 'Off');
+        }
+
         header('Content-Type: application/octet-stream');
         header("Content-Transfer-Encoding: Binary");
         header("Content-disposition: attachment; filename=\"" . basename($fileName) . "\"");

@@ -173,7 +173,7 @@ class CampaignFactory
 
         Log::sql($sql, $params);
 
-        $intProperties = ['numberLayouts'];
+        $intProperties = ['intProperties' => ['numberLayouts']];
 
         foreach (PDOConnect::select($sql, $params) as $row) {
             $campaigns[] = (new Campaign())->hydrate($row, $intProperties);

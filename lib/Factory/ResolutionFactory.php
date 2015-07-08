@@ -109,7 +109,7 @@ class ResolutionFactory
         Log::sql($sql, $params);
 
         foreach(PDOConnect::select($sql, $params) as $record) {
-            $entities[] = (new Resolution())->hydrate($record, ['width', 'height', 'version', 'enabled']);
+            $entities[] = (new Resolution())->hydrate($record, ['intProperties' => ['width', 'height', 'version', 'enabled']]);
         }
 
         return $entities;

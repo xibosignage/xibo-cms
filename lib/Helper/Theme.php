@@ -177,11 +177,14 @@ class Theme
             }
         }
 
+        if (!$local)
+            $rootUri .= '/';
+
         if (file_exists(PROJECT_ROOT . '/web/theme.' . self::getInstance()->name . '/' . $uri)) {
-            return $rootUri . '/theme/' . self::getInstance()->name . '/' . $uri;
+            return $rootUri . 'theme/' . self::getInstance()->name . '/' . $uri;
         }
         else {
-            return $rootUri . '/theme/default/' . $uri;
+            return $rootUri . 'theme/default/' . $uri;
         }
     }
 }

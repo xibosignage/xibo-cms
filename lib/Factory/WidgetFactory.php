@@ -148,7 +148,7 @@ class WidgetFactory
         Log::sql($sql, $params);
 
         foreach (PDOConnect::select($sql, $params) as $row) {
-            $entries[] = (new Widget())->hydrate($row, ['duration']);
+            $entries[] = (new Widget())->hydrate($row, ['intProperties' => ['duration']]);
         }
 
         return $entries;

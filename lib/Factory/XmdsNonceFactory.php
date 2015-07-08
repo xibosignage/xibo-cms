@@ -138,24 +138,29 @@ class XmdsNonceFactory
             WHERE 1 = 1
         ';
 
-        if (Sanitize::getString('nonce') != null) {
+        if (Sanitize::getString('nonce', $filterBy) !== null) {
             $sql .= ' AND xmdsnonce.nonce = :nonce';
-            $params['nonce'] = Sanitize::getString('nonce');
+            $params['nonce'] = Sanitize::getString('nonce', $filterBy);
         }
 
-        if (Sanitize::getInt('displayId') != null) {
+        if (Sanitize::getInt('displayId', $filterBy) !== null) {
             $sql .= ' AND xmdsnonce.displayId = :displayId';
-            $params['displayId'] = Sanitize::getInt('displayId');
+            $params['displayId'] = Sanitize::getInt('displayId', $filterBy);
         }
 
-        if (Sanitize::getInt('layoutId') != null) {
+        if (Sanitize::getInt('layoutId', $filterBy) !== null) {
             $sql .= ' AND xmdsnonce.layoutId = :layoutId';
-            $params['layoutId'] = Sanitize::getInt('layoutId');
+            $params['layoutId'] = Sanitize::getInt('layoutId', $filterBy);
         }
 
-        if (Sanitize::getInt('mediaId') != null) {
+        if (Sanitize::getInt('regionId', $filterBy) !== null) {
+            $sql .= ' AND xmdsnonce.regionId = :regionId';
+            $params['regionId'] = Sanitize::getInt('regionId', $filterBy);
+        }
+
+        if (Sanitize::getInt('mediaId', $filterBy) !== null) {
             $sql .= ' AND xmdsnonce.mediaId = :mediaId';
-            $params['mediaId'] = Sanitize::getInt('mediaId');
+            $params['mediaId'] = Sanitize::getInt('mediaId', $filterBy);
         }
 
         // Sorting?
@@ -165,7 +170,7 @@ class XmdsNonceFactory
         Log::sql($sql, $params);
 
         foreach (PDOConnect::select($sql, $params) as $row) {
-            $entries[] = (new XmdsNonce())->hydrate($row, ['expires', 'lastUsed', 'size']);
+            $entries[] = (new XmdsNonce())->hydrate($row, ['intProperties' => ['expires', 'lastUsed', 'size']]);
         }
 
         return $entries;
