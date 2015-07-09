@@ -9,6 +9,7 @@
 namespace Xibo\Entity;
 
 
+use Xibo\Helper\Date;
 use Xibo\Storage\PDOConnect;
 
 class Stat
@@ -42,8 +43,8 @@ class Stat
         ', [
             'type' => $this->type,
             'statDate' => date("Y-m-d H:i:s"),
-            'start' => $this->fromDt,
-            'end' => $this->toDt,
+            'start' => Date::getLocalDate($this->fromDt, 'Y-m-d H:i:s'),
+            'end' => Date::getLocalDate($this->toDt, 'Y-m-d H:i:s'),
             'scheduleId' => $this->scheduleId,
             'displayId' => $this->displayId,
             'layoutId' => $this->layoutId,

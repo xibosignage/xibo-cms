@@ -12,7 +12,7 @@
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
         <li><a title="{% trans "Open the Filter Form" %}" href="#" onclick="ToggleFilterView('Filter')">{% trans "Filter" %}</a></li>
-        <li><a class="XiboFormButton" title="{% trans "Import a Layout from a ZIP file." %}" href="{{ urlFor("layout.import.form") }}">{% trans "Import" %}</a></li>
+        <li><a id="layoutUploadForm" title="{% trans "Import a Layout from a ZIP file." %}" href="#">{% trans "Import" %}</a></li>
     </ul>
 {% endblock %}
 

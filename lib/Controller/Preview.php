@@ -22,78 +22,49 @@ namespace Xibo\Controller;
 
 use baseDAO;
 use database;
-use Xibo\Entity\User;
+use Xibo\Exception\AccessDeniedException;
+use Xibo\Factory\LayoutFactory;
 use Xibo\Helper\Theme;
 
 
 class Preview extends Base
 {
-    /* @var \Xibo\Entity\Layout $layout */
-    private $layout;
-
-    function __construct(database $db, user $user)
+    /**
+     * Layout Preview
+     * @param int $layoutId
+     */
+    public function show($layoutId)
     {
-        $this->db =& $db;
-        $this->user =& $user;
+        $layout = LayoutFactory::getById($layoutId);
 
-        $layoutId = \Xibo\Helper\Sanitize::getInt('layoutid');
+        if (!$this->getUser()->checkViewable($layout))
+            throw new AccessDeniedException();
 
-        //if we have modify selected then we need to get some info
-        if ($layoutId != 0) {
-            // get the permissions
-            $layout = $this->getUser()->LayoutList(NULL, array('layoutId' => $layoutId));
-
-            if (count($layout) <= 0)
-                trigger_error(__('You do not have permissions to view this layout'), E_USER_ERROR);
-
-            $this->layout = $layout[0];
-        }
+        $this->getState()->template = 'layout-preview';
+        $this->getState()->setData([
+            'layout' => $layout,
+            'previewOptions' => [
+                'getXlfUrl' => $this->urlFor('layout.getXlf', ['id' => $layout->layoutId]),
+                'getResourceUrl' => $this->urlFor('module.getResource'),
+                'libraryDownloadUrl' => $this->urlFor('library.download'),
+                'loaderUrl' => Theme::uri('img/loader.gif')
+            ]
+        ]);
     }
 
-    function render()
+    /**
+     * Get the XLF for a Layout
+     * @param $layoutId
+     */
+    function getXlf($layoutId)
     {
-        $favicon = Theme::ImageUrl('favicon.ico');
+        $layout = LayoutFactory::getById($layoutId);
 
-        // Render a specific layout in the previewer
-        // layoutid must be provided
-        $pfl = __('Preview for Layout');
+        if (!$this->getUser()->checkViewable($layout))
+            throw new AccessDeniedException();
 
-        $previewCss = Theme::ItemPath('css/html-preview.css');
+        echo file_get_contents($layout->xlfToDisk());
 
-        $output = <<<EOT
-            <!DOCTYPE html>
-            <html>
-                <head>
-                    <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
-                    <title>$pfl {$this->layout->layoutId}</title>
-                    <link rel="stylesheet" type="text/css" href="$previewCss" />
-                    <script type="text/JavaScript" src="theme/default/libraries/jquery/jquery-1.9.1.js"></script>
-                    <script type="text/JavaScript" src="modules/preview/html5Preloader.js"></script>
-                    <script type="text/JavaScript" src="modules/preview/html-preview.js"></script>
-                    <link rel="shortcut icon" href="$favicon" />
-                </head>
-                <body onload="dsInit({$this->layout->layoutId})">
-                    <div id="player">
-                        <div id="info"></div>
-                        <div id="log"></div>
-                        <div id="screen">
-                            <div id="splash">
-                                <div id="loader"></div>
-                                <div id="loaderCaption"><p>
-EOT;
-
-        $output .= __("Loading layout...");
-        $output .= "</p></div>";
-        $output .= "</div>";
-        $output .= '<div id="end"><a href="javascript:history.go(0)" style="text-decoration: none; color: #ffffff">';
-        $output .= __("Play again?");
-        $output .= "</a></div></div></div></body></html>";
-
-        print $output;
-    }
-
-    function getXlf()
-    {
-        print $this->layout->toXlf();
+        $this->setNoOutput(true);
     }
 }

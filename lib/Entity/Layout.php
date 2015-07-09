@@ -365,6 +365,13 @@ class Layout implements \JsonSerializable
         $layoutNode->setAttribute('bgcolor', $this->backgroundColor);
         $layoutNode->setAttribute('schemaVersion', $this->schemaVersion);
 
+        if ($this->backgroundImageId != 0) {
+            // Get stored as
+            $media = MediaFactory::getById($this->backgroundImageId);
+
+            $layoutNode->setAttribute('background', $media->storedAs);
+        }
+
         $document->appendChild($layoutNode);
 
         foreach ($this->regions as $region) {
@@ -501,7 +508,7 @@ class Layout implements \JsonSerializable
     {
         $path = $this->getCachePath();
 
-        if ($this->status == 3) {
+        if ($this->status == 3 || !file_exists($path)) {
             file_put_contents($path, $this->toXlf());
             $this->status = 1;
 

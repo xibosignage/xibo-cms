@@ -61,7 +61,7 @@ class Sanitize
         if ($param === null)
             return null;
 
-        return filter_var($param, FILTER_SANITIZE_NUMBER_INT);
+        return intval(filter_var($param, FILTER_SANITIZE_NUMBER_INT));
     }
 
     public static function getDouble($param, $default = null, $source = null)
@@ -74,7 +74,7 @@ class Sanitize
         if ($param === null)
             return null;
 
-        return filter_var($param, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+        return doubleval(filter_var($param, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION));
     }
 
     public static function getString($param, $default = null, $source = null)

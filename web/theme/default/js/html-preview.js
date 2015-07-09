@@ -1,6 +1,6 @@
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2014 Alex Harrington
+ * Copyright (C) 2014-15 Alex Harrington
  *
  * This file is part of Xibo.
  *
@@ -22,15 +22,17 @@
 var LOG_LEVEL;
 
 /* String: Client Version */
-var VERSION = "1.7.0";
+var VERSION = "1.8.0";
 
 /* Int: Counter to ensure unique IDs */
 var ID_COUNTER = 0;
 
 var PRELOAD;
+var OPTIONS;
 
-function dsInit(layoutid) {
-    LOG_LEVEL = 0;
+function dsInit(layoutid, options) {
+    LOG_LEVEL = 10;
+    OPTIONS = options;
 
     /* Hide the info and log divs */
     $("#log").css("display", "none");
@@ -43,7 +45,7 @@ function dsInit(layoutid) {
     playLog(0, "info", "Xibo HTML Preview v" + VERSION + " Starting Up", true);
     
     PRELOAD = html5Preloader();
-    runningLayout = new layout(layoutid);
+    new Layout(layoutid);
 }
 
 /* Generate a unique ID for region DIVs, media nodes etc */
@@ -76,13 +78,13 @@ function playLog(logLevel, logClass, logMessage, logToScreen) {
 function timestamp() {
     var str = "";
 
-    var currentTime = new Date()
-    var day = currentTime.getDate()
-    var month = currentTime.getMonth() + 1
-    var year = currentTime.getFullYear()
-    var hours = currentTime.getHours()
-    var minutes = currentTime.getMinutes()
-    var seconds = currentTime.getSeconds()
+    var currentTime = new Date();
+    var day = currentTime.getDate();
+    var month = currentTime.getMonth() + 1;
+    var year = currentTime.getFullYear();
+    var hours = currentTime.getHours();
+    var minutes = currentTime.getMinutes();
+    var seconds = currentTime.getSeconds();
 
     if (minutes < 10) {
         minutes = "0" + minutes
@@ -101,11 +103,12 @@ function keyHandler(event) {
     var letter = String.fromCharCode(chCode);
 
     if (letter == 'l') {
-        if ($("#log").css("display") == 'none') {
-            $("#log").css("display", "block");
+        var log = $("#log");
+        if (log.css("display") == 'none') {
+            log.css("display", "block");
         }
         else {
-            $("#log").css("display", "none");
+            log.css("display", "none");
         }
     }
     /*else if (letter == 'i') {
@@ -132,7 +135,7 @@ function keyHandler(event) {
     }*/
 }
 
-function layout(id) {
+function Layout(id) {
     /* Layout Object */
     /* Parses a layout and when run runs it in containerName */
     
@@ -143,13 +146,16 @@ function layout(id) {
         self.containerName = "L" + self.id + "-" + nextId();
         
         /* Create a hidden div to show the layout in */
-        $("#screen").append('<div id="' + self.containerName + '"></div>');
-        $("#" + self.containerName).css("display", "none");
-        $("#" + self.containerName).css("outline", "red solid thin");
+        var screen = $("#screen");
+        screen.append('<div id="' + self.containerName + '"></div>');
+
+        var layout = $("#" + self.containerName);
+        layout.css("display", "none");
+        layout.css("outline", "red solid thin");
         
         /* Calculate the screen size */
-        self.sw = $("#screen").width();
-        self.sh = $("#screen").height();
+        self.sw = screen.width();
+        self.sh = screen.height();
         playLog(7, "debug", "Screen is (" + self.sw + "x" + self.sh + ") pixels");
         
         /* Find the Layout node in the XLF */
@@ -171,11 +177,11 @@ function layout(id) {
         playLog(7, "debug", "Offset will be (" + self.offsetX + "," + self.offsetY + ") pixels");
         
         /* Scale the Layout Container */
-        $("#" + self.containerName).css("width", self.sWidth + "px");
-        $("#" + self.containerName).css("height", self.sHeight + "px");
-        $("#" + self.containerName).css("position", "absolute");
-        $("#" + self.containerName).css("left", self.offsetX + "px");
-        $("#" + self.containerName).css("top", self.offsetY + "px");
+        layout.css("width", self.sWidth + "px");
+        layout.css("height", self.sHeight + "px");
+        layout.css("position", "absolute");
+        layout.css("left", self.offsetX + "px");
+        layout.css("top", self.offsetY + "px");
         
         /* Set the layout background */
         self.bgColour = $(self.layoutNode).filter(":first").attr('bgcolor');
@@ -184,25 +190,30 @@ function layout(id) {
         if (!(self.bgImage == "" || self.bgImage == undefined)) {
             /* Extract the image ID from the filename */
             self.bgId = self.bgImage.substring(0, self.bgImage.indexOf('.'));
+
+            var tmpUrl = OPTIONS.libraryDownloadUrl.replace(":id", self.bgId).replace(":type", "image") + '?preview=1';
             
-            PRELOAD.addFiles("index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=" + self.bgId + "&width=" + self.sWidth + "&height=" + self.sHeight + "&dynamic&proportional=0");
-            $("#" + self.containerName).css("background", "url('index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=" + self.bgId + "&width=" + self.sWidth + "&height=" + self.sHeight + "&dynamic&proportional=0')");
-            $("#" + self.containerName).css("background-repeat", "no-repeat");
-            $("#" + self.containerName).css("background-size", self.sWidth + "px " + self.sHeight + "px");
-            $("#" + self.containerName).css("background-position", "0px 0px");
+            PRELOAD.addFiles(tmpUrl + "&width=" + self.sWidth + "&height=" + self.sHeight + "&dynamic&proportional=0");
+            layout.css("background", "url('" + tmpUrl + "&width=" + self.sWidth + "&height=" + self.sHeight + "&dynamic&proportional=0')");
+            layout.css("background-repeat", "no-repeat");
+            layout.css("background-size", self.sWidth + "px " + self.sHeight + "px");
+            layout.css("background-position", "0px 0px");
         }
 
         // Set the background color
-        $("#" + self.containerName).css("background-color", self.bgColour);
+        layout.css("background-color", self.bgColour);
         
-        $(self.layoutNode).find("region").each(function() { playLog(4, "debug", "Creating region " + $(this).attr('id'), false);
-                                                 self.regionObjects.push(new region(self, $(this).attr('id'), this));
-                                               });
+        $(self.layoutNode).find("region").each(function() {
+            playLog(4, "debug", "Creating region " + $(this).attr('id'), false);
+
+            self.regionObjects.push(new Region(self, $(this).attr('id'), this));
+        });
+
         playLog(4, "debug", "Layout " + self.id + " has " + self.regionObjects.length + " regions");
         self.ready = true;
-        PRELOAD.addFiles('modules/preview/loader.gif');
+        PRELOAD.addFiles(OPTIONS.loaderUrl);
         PRELOAD.on('finish', self.run);
-    }
+    };
 
     self.run = function() {
         playLog(4, "debug", "Running Layout ID " + self.id, false);
@@ -217,19 +228,19 @@ function layout(id) {
         else {
             playLog(4, "error", "Attempted to run Layout ID " + self.id + " before it was ready.", false);
         }
-    }
+    };
     
     self.end = function() {
         /* Ask the layout to gracefully stop running now */
         for (var i = 0; i < self.regionObjects.length; i++) {
             self.regionObjects[i].end();
         }
-    }
+    };
     
     self.destroy = function() {
         /* Forcibly remove the layout and destroy this object
            Layout Object may not be reused after this */
-    }
+    };
 
     self.regionExpired = function() {
         /* One of the regions on the layout expired
@@ -250,7 +261,7 @@ function layout(id) {
             playLog(4, "debug", "All regions have expired", false);
             self.end();
         }
-    }
+    };
     
     self.regionEnded = function() {
         /* One of the regions completed it's exit transition
@@ -271,26 +282,30 @@ function layout(id) {
         if (self.allEnded) {
             playLog(4, "debug", "All regions have ended", false);
             $("#end").css("display", "block");
-            $("#" + self.containerName).remove();
+            //$("#" + self.containerName).remove();
         }
 
-    }
+    };
     
     self.ready = false;
     self.id = id;
-    self.regionObjects = new Array();
+    self.regionObjects = [];
     
     playLog(3, "debug", "Loading Layout " + self.id , true);
-    
-    $.get('index.php', {p: 'preview', q: 'getXlf', layoutid: self.id, ajax: 'true'}, self.parseXlf);
+
+    $.ajax({
+        "type": "GET",
+        "url": OPTIONS.getXlfUrl,
+        "success": self.parseXlf
+    });
 }
 
-function region(parent, id, xml) {
+function Region(parent, id, xml) {
     var self = this;
     self.layout = parent;
     self.id = id;
     self.xml = xml;
-    self.mediaObjects = new Array();
+    self.mediaObjects = [];
     self.currentMedia = -1;
     self.complete = false;
     self.containerName = "R-" + self.id + "-" + nextId();
@@ -303,25 +318,25 @@ function region(parent, id, xml) {
     self.finished = function() {
         self.complete = true;
         self.layout.regionExpired()
-    }
+    };
     
     self.exitTransition = function() {
         /* TODO: Actually implement region exit transitions */
         $("#" + self.containerName).css("display", "none");
         self.exitTransitionComplete();
-    }
+    };
     
     self.end = function() {
         self.ending = true;
         /* The Layout has finished running */
         /* Do any region exit transition then clean up */
         self.exitTransition();
-    }
+    };
     
     self.exitTransitionComplete = function() {
         self.ended = true;
         self.layout.regionEnded();
-    }
+    };
     
     self.transitionNodes = function(oldMedia, newMedia) {
         /* TODO: Actually support the transition */
@@ -342,7 +357,7 @@ function region(parent, id, xml) {
         }
         
         $("#" + newMedia.containerName).css("display", "block");
-    }
+    };
     
     self.nextMedia = function() {
         /* The current media has finished running */
@@ -375,11 +390,11 @@ function region(parent, id, xml) {
         
         /* Do the transition */
         self.transitionNodes(self.oldMedia, self.curMedia);
-    }
+    };
     
     self.run = function() {
         self.nextMedia();
-    }
+    };
     
     self.sWidth = $(xml).attr("width") * self.layout.scaleFactor;
     self.sHeight = $(xml).attr("height") * self.layout.scaleFactor;
@@ -408,9 +423,9 @@ function region(parent, id, xml) {
 
 function media(parent, id, xml) {
     var self = this;
-    self.region = parent
-    self.xml = xml
-    self.id = id
+    self.region = parent;
+    self.xml = xml;
+    self.id = id;
     self.containerName = "M-" + self.id + "-" + nextId();
     self.iframeName = self.containerName + "-iframe";
     self.mediaType = $(self.xml).attr('type');
@@ -419,7 +434,7 @@ function media(parent, id, xml) {
         self.render = "module";
     
     self.run = function() {
-        playLog(5, "debug", "Running media " + self.id + " for " + self.duration + " seconds")
+        playLog(5, "debug", "Running media " + self.id + " for " + self.duration + " seconds");
                
         if (self.mediaType == "video") {
             $("#" + self.containerName + "-vid").get(0).play();
@@ -439,7 +454,7 @@ function media(parent, id, xml) {
         else {
             setTimeout(self.region.nextMedia, self.duration * 1000);
         }
-    }
+    };
     
     self.divWidth = self.region.sWidth;
     self.divHeight = self.region.sHeight;
@@ -447,53 +462,56 @@ function media(parent, id, xml) {
     /* Build Media Options */
     self.duration = $(self.xml).attr('duration');
     self.lkid = $(self.xml).attr('lkid');
-    self.options = new Array();
+    self.options = [];
     
-    $(self.xml).find('options').children().each(function() { playLog(9, "debug", "Option " + this.nodeName.toLowerCase() + " -> " + $(this).text(), false);
-                                                             self.options[this.nodeName.toLowerCase()] = $(this).text();
-                                                });
+    $(self.xml).find('options').children().each(function() {
+        playLog(9, "debug", "Option " + this.nodeName.toLowerCase() + " -> " + $(this).text(), false);
+        self.options[this.nodeName.toLowerCase()] = $(this).text();
+    });
     
     $("#" + self.region.containerName).append('<div id="' + self.containerName + '"></div>');
 
     /* Scale the Content Container */
-    $("#" + self.containerName).css("display", "none");
-    $("#" + self.containerName).css("width", self.divWidth + "px");
-    $("#" + self.containerName).css("height", self.divHeight + "px");
-    $("#" + self.containerName).css("position", "absolute");
-    $("#" + self.containerName).css("background-size", "contain");
-    $("#" + self.containerName).css("background-repeat", "no-repeat");
-    $("#" + self.containerName).css("background-position", "center");
-    /* $("#" + self.containerName).css("left", self.offsetX + "px");
-    $("#" + self.containerName).css("top", self.offsetY + "px"); */
+    var media = $("#" + self.containerName);
+    media.css("display", "none");
+    media.css("width", self.divWidth + "px");
+    media.css("height", self.divHeight + "px");
+    media.css("position", "absolute");
+    media.css("background-size", "contain");
+    media.css("background-repeat", "no-repeat");
+    media.css("background-position", "center");
+    /* media.css("left", self.offsetX + "px");
+    media.css("top", self.offsetY + "px"); */
+
+    var tmpUrl = OPTIONS.getResourceUrl.replace(":regionId", self.region.id).replace(":id", self.id) + '?preview=1';
     
     if (self.render == "html") {
-        $("#" + self.containerName).append('<iframe scrolling="no" id="' + self.iframeName + '" src="index.php?p=module&mod=' + self.mediaType + '&q=Exec&method=GetResource&raw=true&preview=true&layoutid=' + self.region.layout.id + '&regionid=' + self.region.id + '&mediaid=' + self.id + '&lkid=&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
+        media.append('<iframe scrolling="no" id="' + self.iframeName + '" src="' + tmpUrl + '&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
     }
     else if (self.mediaType == "image") {
-        var tmpUrl = "index.php?p=module&mod=image&q=Exec&method=GetResource&layoutid=" + self.region.layout.id + "&regionid=" + self.region.id + "&mediaid=" + self.id + "&lkid=" + self.lkid;
         PRELOAD.addFiles(tmpUrl);
-        $("#" + self.containerName).css("background-image", "url('" + tmpUrl + "')");
+        media.css("background-image", "url('" + tmpUrl + "')");
         if (self.options['scaletype'] == 'stretch')
-            $("#" + self.containerName).css("background-size", "cover");
+            media.css("background-size", "cover");
         else {
             // Center scale type, do we have align or valign?
             var align = (self.options['align'] == "") ? "center" : self.options['align'];
             var valign = (self.options['valign'] == "" || self.options['valign'] == "middle") ? "center" : self.options['valign'];
-            $("#" + self.containerName).css("background-position", align + " " + valign);
+            media.css("background-position", align + " " + valign);
         }
     }
     else if (self.mediaType == "text" || self.mediaType == "datasetview" || self.mediaType == "webpage" || self.mediaType == "embedded") {
-        $("#" + self.containerName).append('<iframe scrolling="no" id="' + self.iframeName + '" src="index.php?p=module&mod=' + self.mediaType + '&q=Exec&method=GetResource&raw=true&preview=true&layoutid=' + self.region.layout.id + '&regionid=' + self.region.id + '&mediaid=' + self.id + '&lkid=&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
+        media.append('<iframe scrolling="no" id="' + self.iframeName + '" src="' + tmpUrl + '&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
     }
     else if (self.mediaType == "ticker") {
-        $("#" + self.containerName).append('<iframe scrolling="no" id="' + self.iframeName + '" src="index.php?p=module&mod=ticker&q=Exec&method=GetResource&raw=true&preview=true&layoutid=' + self.region.layout.id + '&regionid=' + self.region.id + '&mediaid=' + self.id + '&lkid=&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
+        media.append('<iframe scrolling="no" id="' + self.iframeName + '" src="' + tmpUrl + '&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
         /* Check if the ticker duration is based on the number of items in the feed */
         if (self.options['durationisperitem'] == '1') {
             var regex =  new RegExp("<!-- NUMITEMS=(.*?) -->"); 
             jQuery.ajax({
-                url: 'index.php?p=module&mod=ticker&q=Exec&method=GetResource&raw=true&preview=true&layoutid=' + self.region.layout.id + '&regionid=' + self.region.id + '&mediaid=' + self.id + '&lkid=&width=' + self.divWidth + '&height=' + self.divHeight,
+                url: tmpUrl + '&width=' + self.divWidth + '&height=' + self.divHeight,
                 success: function(html) {
-                  res = regex.exec(html);
+                  var res = regex.exec(html);
                   if (res != null) {
                     /* The ticker is duration per item, so multiply the duration
                        by the number of items from the feed */
@@ -505,19 +523,17 @@ function media(parent, id, xml) {
         }
     }
     else if (self.mediaType == "video") {
-        var tmpUrl = "index.php?p=module&mod=video&q=Exec&method=GetResource&layoutid=" + self.region.layout.id + "&regionid=" + self.region.id + "&mediaid=" + self.id + "&lkid=" + self.lkid;
         PRELOAD.addFiles(tmpUrl);
-        $("#" + self.containerName).append('<video id="' + self.containerName + '-vid" preload="auto"><source src="' + tmpUrl + '">Unsupported Video</video>');
+        media.append('<video id="' + self.containerName + '-vid" preload="auto"><source src="' + tmpUrl + '">Unsupported Video</video>');
     }
     else if (self.mediaType == "flash") {
-        var tmpUrl = "index.php?p=module&mod=flash&q=Exec&method=GetResource&layoutid=" + self.region.layout.id + "&regionid=" + self.region.id + "&mediaid=" + self.id + "&lkid=" + self.lkid;
         var embedCode = '<OBJECT classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=6,0,0,0" WIDTH="100%" HEIGHT="100%" id="Yourfilename" ALIGN="">';
         embedCode = embedCode + '<PARAM NAME=movie VALUE="' + tmpUrl + '"> <PARAM NAME=quality VALUE=high> <param name="wmode" value="transparent"> <EMBED src="' + tmpUrl + '" quality="high" wmode="transparent" WIDTH="100%" HEIGHT="100%" NAME="Yourfilename" ALIGN="" TYPE="application/x-shockwave-flash" PLUGINSPAGE="http://www.macromedia.com/go/getflashplayer"></EMBED> </OBJECT>';
         PRELOAD.addFiles(tmpUrl);
-        $("#" + self.containerName).append(embedCode);
+        media.append(embedCode);
     }
     else {
-        $("#" + self.containerName).css("outline", "red solid thin");
+        media.css("outline", "red solid thin");
     }
     
     playLog(5, "debug", "Created media " + self.id)

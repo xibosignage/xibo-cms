@@ -710,6 +710,11 @@ class Display extends Base
                     $display->loggedIn = 0;
                     $display->save(false, false);
 
+                    // We put it back again (in memory only)
+                    // this is then used to indicate whether or not this is the first time this display has gone
+                    // offline (for anything that uses the timedOutDisplays return
+                    $display->loggedIn = 1;
+
                     // Log the down event
                     $stat = new Stat();
                     $stat->type = 'displaydown';

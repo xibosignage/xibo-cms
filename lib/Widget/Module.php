@@ -298,7 +298,7 @@ abstract class Module implements ModuleInterface
     {
         Log::debug('Media assigned: ' . count($this->widget->mediaIds));
 
-        if (count($this->widget->mediaIds) > 0) {
+        if ($this->getModule()->regionSpecific == 0 && count($this->widget->mediaIds) > 0) {
             $media = MediaFactory::getById($this->widget->mediaIds[0]);
             $name = $media->name;
         } else {
@@ -402,6 +402,8 @@ abstract class Module implements ModuleInterface
 
         if ($isPreview)
             $uri = $this->getApp()->urlFor('home') . 'modules/' . $uri;
+        else
+            $uri = basename($uri);
 
         return $uri;
     }

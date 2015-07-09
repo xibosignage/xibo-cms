@@ -404,6 +404,10 @@ class Maintenance extends Base
             if (strstr($file, 'tn_') || strstr($file, 'bg_'))
                 continue;
 
+            // Ignore XLF files
+            if (strstr($file, '.xlf'))
+                continue;
+
             $i++;
 
             // Is this file in the system anywhere?
