@@ -53,8 +53,6 @@ $app = new \Slim\Slim(array(
 ));
 $app->setName('maint');
 
-// Set the App name
-\Xibo\Helper\ApplicationState::$appName = $app->getName();
 \Xibo\Middleware\State::setState($app);
 
 $app->add(new \Xibo\Middleware\Storage());

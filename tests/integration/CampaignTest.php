@@ -9,14 +9,10 @@ namespace Xibo\Tests;
 
 use Xibo\Entity\Campaign;
 use Xibo\Factory\CampaignFactory;
+use Xibo\Factory\LayoutFactory;
 
 class CampaignTest extends LocalWebTestCase
 {
-    public function __construct()
-    {
-        parent::__construct('Campaign Test');
-    }
-
     public function testListAll()
     {
         $this->client->get('/campaign');
@@ -93,19 +89,19 @@ class CampaignTest extends LocalWebTestCase
         $campaign->ownerId = 1;
         $campaign->save();
 
-        $id = $campaign->campaignId;
+        $layout = LayoutFactory::query(null, ['start' => 1, 'length' => 1]);
 
         // Call assign on the default layout
-        $this->client->post('/campaign/layout/assign/' . $id, ['layoutIds' => [8]]);
-        $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
+        $this->client->post('/campaign/layout/assign/' . $campaign->campaignId, ['layoutIds' => [$layout[0]->layoutId]]);
+        $this->assertSame(200, $this->client->response->status(), '/campaign/layout/assign/' . $campaign->campaignId . '. Body: ' . $this->client->response->body());
 
-        // Get this campaign and check it has 0 layouts
-        $campaign = CampaignFactory::getById($id);
+        // Get this campaign and check it has 1 layout
+        $campaignCheck = CampaignFactory::getById($campaign->campaignId);
 
-        $this->assertSame($id, $campaign->campaignId, $this->client->response->body());
-        $this->assertSame(1, $campaign->numberLayouts, $this->client->response->body());
+        $this->assertSame($campaign->campaignId, $campaignCheck->campaignId, $this->client->response->body());
+        $this->assertSame(1, $campaignCheck->numberLayouts, $this->client->response->body());
 
-        return $id;
+        return $campaign->campaignId;
     }
 
     /**
@@ -114,8 +110,11 @@ class CampaignTest extends LocalWebTestCase
      */
     public function testUnassignLayout($campaignId)
     {
+        // Get any old layout
+        $layout = LayoutFactory::query(null, ['start' => 1, 'length' => 1]);
+
         // Call assign on the default layout
-        $this->client->post('/campaign/layout/unassign/' . $campaignId, ['layoutIds' => [8]]);
+        $this->client->post('/campaign/layout/unassign/' . $campaignId, ['layoutIds' => [$layout[0]->layoutId]]);
 
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
 

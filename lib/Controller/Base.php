@@ -23,7 +23,6 @@
 namespace Xibo\Controller;
 use Slim\Slim;
 use Xibo\Exception\ControllerNotImplemented;
-use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Date;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
@@ -69,7 +68,7 @@ class Base
      */
     public function __construct()
     {
-        $this->app = Slim::getInstance(ApplicationState::$appName);
+        $this->app = Slim::getInstance();
 
         // Reference back to this from the app
         // but only the first time

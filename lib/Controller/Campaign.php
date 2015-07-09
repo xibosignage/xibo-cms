@@ -24,6 +24,7 @@ use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Helper\Help;
+use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 
 
@@ -234,6 +235,8 @@ class Campaign extends Base
      */
     public function assignLayout($campaignId)
     {
+        Log::debug('assignLayout with campaignId' . $campaignId);
+
         $campaign = CampaignFactory::getById($campaignId);
 
         if (!$this->getUser()->checkEditable($campaign))

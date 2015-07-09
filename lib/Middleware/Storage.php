@@ -47,5 +47,7 @@ class Storage extends Middleware
                 PDOConnect::init()->rollBack();
             }
         }
+
+        PDOConnect::close();
     }
 }

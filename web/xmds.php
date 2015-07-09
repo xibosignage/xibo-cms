@@ -70,9 +70,6 @@ $app = new \Slim\Slim(array(
 ));
 $app->setName('api');
 
-// Set the App name
-\Xibo\Helper\ApplicationState::$appName = $app->getName();
-
 // Set state
 \Xibo\Middleware\State::setState($app);
 

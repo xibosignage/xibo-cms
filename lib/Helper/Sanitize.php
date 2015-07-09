@@ -33,7 +33,7 @@ class Sanitize
             return isset($default[$param]) ? $default[$param] : null;
         }
         else if ($source == null) {
-            $app = Slim::getInstance(ApplicationState::$appName);
+            $app = Slim::getInstance();
             switch ($app->request->getMethod()) {
                 case 'GET':
                     return $app->request->get($param, $default);

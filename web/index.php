@@ -62,9 +62,6 @@ $app = new \Slim\Slim(array(
 ));
 $app->setName('web');
 
-// Set the App name
-\Xibo\Helper\ApplicationState::$appName = $app->getName();
-
 // Configure the Slim error handler
 $app->error(function (\Exception $e) use ($app) {
     $controller = new \Xibo\Controller\Error();

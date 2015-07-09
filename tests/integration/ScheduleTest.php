@@ -9,6 +9,9 @@
 namespace Xibo\Tests;
 
 
+use Xibo\Factory\DisplayGroupFactory;
+use Xibo\Factory\LayoutFactory;
+
 class ScheduleTest extends LocalWebTestCase
 {
     protected $route = '/schedule';
@@ -36,14 +39,19 @@ class ScheduleTest extends LocalWebTestCase
      */
     public function testAdd()
     {
+        // Get a layout to schedule
+        $layout = LayoutFactory::query(null, ['start' => 1, 'length' => 1])[0];
+        // Get a Display Group Id
+        $displayGroup = DisplayGroupFactory::query(null, ['start' => 1, 'length' => 1])[0];
+
         $fromDt = time();
         $toDt = time() + 3600;
 
         $this->client->post($this->route, [
             'fromDt' => date('Y-m-d h:i:s', $fromDt),
             'toDt' => date('Y-m-d h:i:s', $toDt),
-            'campaignId' => 2,
-            'displayGroupIds' => [1, 12],
+            'campaignId' => $layout->campaignId,
+            'displayGroupIds' => [$displayGroup->displayGroupId],
             'displayOrder' => 1,
             'isPriority' => 0
         ]);

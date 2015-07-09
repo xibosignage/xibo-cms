@@ -53,9 +53,6 @@ $app = new \Slim\Slim(array(
 ));
 $app->setName('api');
 
-// Set the App name
-\Xibo\Helper\ApplicationState::$appName = $app->getName();
-
 $app->add(new \Xibo\Middleware\Storage());
 $app->add(new \Xibo\Middleware\State());
 $app->add(new \Xibo\Middleware\ApiAuthenticationOAuth());
