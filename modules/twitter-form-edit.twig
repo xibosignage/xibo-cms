@@ -10,96 +10,6 @@ $response = $this->getState();
         if (!$this->auth->edit)
             throw new Exception(__('You do not have permission to edit this widget.'));
 
-        // Configure the form
-        $this->configureForm('EditMedia');
-
-        // Augment settings with templates
-        $this->loadTemplates();
-
-        $tabs = array();
-        $tabs[] = Form::AddTab('general', __('General'));
-        $tabs[] = Form::AddTab('template', __('Appearance'), array(array('name' => 'enlarge', 'value' => true)));
-        $tabs[] = Form::AddTab('effect', __('Effect'));
-        $tabs[] = Form::AddTab('advanced', __('Advanced'));
-        Theme::Set('form_tabs', $tabs);
-
-        $formFields['general'][] = Form::AddText('name', __('Name'), $this->GetOption('name'),
-            __('An optional name for this media'), 'n');
-
-        // Duration
-        $formFields['general'][] = Form::AddNumber('duration', __('Duration'), $this->getDuration(),
-            __('The duration in seconds this item should be displayed.'), 'd', 'required');
-
-        // Search Term
-        $formFields['general'][] = Form::AddText('searchTerm', __('Search Term'), $this->GetOption('searchTerm'),
-            __('Search term. You can test your search term in the twitter.com search box first.'), 's', 'required');
-
-        // Type
-        $formFields['general'][] = Form::AddCombo('resultType', __('Type'), $this->GetOption('resultType'),
-            array(
-                array('typeid' => 'mixed', 'type' => __('Mixed')),
-                array('typeid' => 'recent', 'type' => __('Recent')),
-                array('typeid' => 'popular', 'type' => __('Popular')),
-            ),
-            'typeid',
-            'type',
-            __('Recent shows only the most recent tweets, Popular the most popular and Mixed includes both popular and recent results.'), 't', 'required');
-
-        // Distance
-        $formFields['general'][] = Form::AddNumber('tweetDistance', __('Distance'), $this->GetOption('tweetDistance'),
-            __('Distance in miles that the tweets should be returned from. Set to 0 for no restrictions.'), 'd');
-
-        // Distance
-        $formFields['general'][] = Form::AddNumber('tweetCount', __('Count'), $this->GetOption('tweetCount'),
-            __('The number of Tweets to return.'), 'c');
-
-        // Common fields
-        $formFields['effect'][] = Form::AddCombo(
-            'effect',
-            __('Effect'),
-            $this->GetOption('effect'),
-            array(
-                array('effectid' => 'none', 'effect' => __('None')),
-                array('effectid' => 'fade', 'effect' => __('Fade')),
-                array('effectid' => 'fadeout', 'effect' => __('Fade Out')),
-                array('effectid' => 'scrollHorz', 'effect' => __('Scroll Horizontal')),
-                array('effectid' => 'scrollVert', 'effect' => __('Scroll Vertical')),
-                array('effectid' => 'flipHorz', 'effect' => __('Flip Horizontal')),
-                array('effectid' => 'flipVert', 'effect' => __('Flip Vertical')),
-                array('effectid' => 'shuffle', 'effect' => __('Shuffle')),
-                array('effectid' => 'tileSlide', 'effect' => __('Tile Slide')),
-                array('effectid' => 'tileBlind', 'effect' => __('Tile Blinds')),
-                array('effectid' => 'marqueeLeft', 'effect' => __('Marquee Left')),
-                array('effectid' => 'marqueeRight', 'effect' => __('Marquee Right')),
-                array('effectid' => 'marqueeUp', 'effect' => __('Marquee Up')),
-                array('effectid' => 'marqueeDown', 'effect' => __('Marquee Down')),
-            ),
-            'effectid',
-            'effect',
-            __('Please select the effect that will be used to transition between items. If all items should be output, select None. Marquee effects are CPU intensive and may not be suitable for lower power displays.'),
-            'e');
-
-        $formFields['effect'][] = Form::AddNumber('speed', __('Speed'), $this->GetOption('speed'),
-            __('The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1).'), 's', NULL, 'effect-controls');
-
-        // A list of web safe colours
-        $formFields['advanced'][] = Form::AddText('backgroundColor', __('Background Colour'), $this->GetOption('backgroundColor'),
-            __('The selected effect works best with a background colour. Optionally add one here.'), 'c', NULL, 'background-color-group');
-
-        // Field empty
-        $formFields['advanced'][] = Form::AddText('noTweetsMessage', __('No tweets'), $this->GetOption('noTweetsMessage'),
-            __('A message to display when there are no tweets returned by the search query'), 'n');
-
-        $formFields['advanced'][] = Form::AddText('dateFormat', __('Date Format'), $this->GetOption('dateFormat'),
-            __('The format to apply to all dates returned by the ticker. In PHP date format: http://uk3.php.net/manual/en/function.date.php'), 'f');
-
-        $formFields['advanced'][] = Form::AddCheckbox('removeUrls', __('Remove URLs?'), $this->GetOption('removeUrls', 1),
-            __('Should URLs be removed from the Tweet Text. Most URLs do not compliment digital signage.'), 'u');
-
-        $formFields['advanced'][] = FormManager::AddNumber('updateInterval', __('Update Interval (mins)'), $this->GetOption('updateInterval', 60),
-            __('Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60.'),
-            'n', 'required');
-
         // Encode up the template
         if (Config::GetSetting('SERVER_MODE') == 'Test' && $this->getUser()->userTypeId == 1)
             $formFields['advanced'][] = Form::AddMessage('<pre>' . htmlentities(json_encode(array('id' => 'ID', 'value' => 'TITLE', 'template' => $this->getRawNode('template', null), 'css' => $this->getRawNode('styleSheet', null)))) . '</pre>');
@@ -111,18 +21,6 @@ $response = $this->getState();
             'value',
             __('Select the template you would like to apply. This can be overridden using the check box below.'), 't', 'template-selector-control');
 
-        // Add a field for whether to override the template or not.
-        // Default to 1 so that it will work correctly with old items (that didn't have a template selected at all)
-        $formFields['template'][] = Form::AddCheckbox('overrideTemplate', __('Override the template?'), $this->GetOption('overrideTemplate', 0),
-            __('Tick if you would like to override the template.'), 'o');
-
-        // Add a text template
-        $formFields['template'][] = Form::AddMultiText('ta_text', NULL, $this->getRawNode('template', null),
-            __('Enter the template. Please note that the background colour has automatically coloured to your layout background colour.'), 't', 10, NULL, 'template-override-controls');
-
-        // Field for the style sheet (optional)
-        $formFields['template'][] = Form::AddMultiText('ta_css', NULL, $this->getRawNode('styleSheet', null),
-            __('Optional Stylesheet'), 's', 10, NULL, 'template-override-controls');
 
         // Add some field dependencies
         // When the override template check box is ticked, we want to expose the advanced controls and we want to hide the template selector
@@ -205,6 +103,14 @@ $response = $this->getState();
             <form id="twitterEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
                  <div class="tab-content">
                     <div class="tab-pane active" id="general">
+                {#
+                        if (!$this->auth->edit)
+                        throw new Exception(__('You do not have permission to edit this widget.'));
+
+
+                        module.loadTemplates()
+
+               #}
                         {% set title %}{% trans "Name" %}{% endset %}
                         {% set helpText %}{% trans "An optional name for this media" %}{% endset %}
                         {{ forms.text("name", title, module.getOption("name"), helpText) }}
@@ -239,6 +145,26 @@ $response = $this->getState();
                     </div>
 
                     <div class="tab-pane" id="template">
+                        {# 
+
+                        Encode template
+
+                        {% set title %}{% trans "Template" %}{% endset %}
+                        {% set helpText %}{% trans "Select the template you would like to apply. This can be overridden using the check box below." %}{% endset %}
+                        {{ forms.dropdown("templateId", title, module.getOption("templateId", "tweet-only"), module.,"id", "value", helptext, "", "template-selector-control") }}
+                        
+                          $this->module->settings['templates'] is in twitter.php, not sure how to refrence it here
+                        #}
+
+                        {% set title %}{% trans "Override the template?" %}{% endset %}
+                        {% set helpText %}{% trans "Tick if you would like to override the template." %}{% endset %}
+                        {{ forms.checkbox("overrideTemplate", title, module.getOption("overrideTemplate", 0), helpText) }}
+
+                        {% set helpText %}{% trans "Enter the template. Please note that the background colour has automatically coloured to your layout background colour." %}{% endset %}
+                        {{ forms.textarea("ta_text", "", module.getRawMode("template", null), helpText, "", 10, "", "template-override-controls") }}
+
+                        {% set title %}{% trans "Optional Stylesheet" %}{% endset %}
+                        {{ forms.textarea("ta_css", "", module.getRawMode("styleSheet", null), title, "", 10, "", "template-override-controls") }}
 
                     </div>
 

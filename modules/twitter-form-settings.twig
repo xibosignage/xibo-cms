@@ -40,11 +40,11 @@
 
     {% set title %}{% trans "Cache Period" %}{% endset %}
     {% set helpText %}{% trans "Enter the number of seconds you would like to cache twitter search results." %}{% endset %}
-    {{ forms.text("cachePeriod", title, module.getSetting("cachePeriod"), helpText, "", "required") }}
+    {{ forms.text("cachePeriod", title, module.getSetting("cachePeriod", 300), helpText, "", "required") }}
 
     {% set title %}{% trans "Cache Period for Images" %}{% endset %}
     {% set helpText %}{% trans "Enter the number of hours you would like to cache twitter images." %}{% endset %}
-    {{ forms.text("cachePeriodImages", title, module.getSetting("cachePeriodImages"), helpText, "", "required") }}
+    {{ forms.text("cachePeriodImages", title, module.getSetting("cachePeriodImages", 24), helpText, "", "required") }}
 
-    {# error message #}
+    {# error message it is in widget.twitter.php #}
 {% endblock %}

@@ -268,7 +268,7 @@
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, $("#<<id>>").submit()
+    {% trans "Save" %}, $("#tickerEditForm").submit()
 {% endblock %}
 
 {% block callBack %}forecastIoFormSetup{% endblock %}
@@ -276,8 +276,110 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="<<id>>" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                <li><a href="#template" role="tab" data-toggle="tab"><span>{% trans "Apperance" %}</span></a></li>
+                <li><a href="#format" role="tab" data-toggle="tab"><span>{% trans "Format" %}</span></a></li>
+                <li><a href="#advanced" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
+            </ul>
+            <form id="tickerEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
+                        {# some idea how to link this later to tabs, but well it will be similar to old code for now #}
 
+                        {#
+                        only if source is feed
+                       
+                        {% set title%}{% trans "Feed URL"%{% endset %}}
+                        {% set helpText %}{% trans "The Link for the RSS feed" %}{% endset %}
+                        {{ forms.text("uri", title, module.getOption("uri"), helpText, "", "", "feed-fields")}}
+                        
+                        #}
+
+                        {# Common Fields #}
+                        
+                        {% set title%}{% trans "Name"%{% endset %}}
+                        {% set helpText %}{% trans "TAn optional name for this media" %}{% endset %}
+                        {{ forms.text("name", title, module.getOption("name"), helpText)}}
+
+                        {{ forms.number("duration", "Duration", module.getDuration(), "The duration in seconds this item should be displayed", "", "required") }}
+
+                        {# according to ticker.php should be good this way #}
+                        {% set title %}{% trans "Effect" %}{% endset %}
+                        {% set helpText %}{% trans "Please select the effect that will be used to transition between items. If all items should be output, select None. Marquee effects are CPU intensive and may not be suitable for lower power displays." %}{% endset %}
+                        {% set fade %}{% trans "Fade" %}{% endset %}
+                        {% set fadeout %}{% trans "Fade Out" %}{% endset %}
+                        {% set scrollHorz %}{% trans "Scroll Horizontal" %}{% endset %}
+                        {% set scrollVert %}{% trans "Scroll Vertical" %}{% endset %}
+                        {% set flipHorz %}{% trans "Flip Horizontal" %}{% endset %}
+                        {% set flipVert %}{% trans "Flip Vertical" %}{% endset %}
+                        {% set shuffle %}{% trans "shuffle" %}{% endset %}
+                        {% set tileSlide %}{% trans "Tile Slide" %}{% endset %}
+                        {% set tileBlind %}{% trans "Tile Blind" %}{% endset %}
+                        {% set marqueeLeft %}{% trans "Marquee Left" %}{% endset %}
+                        {% set marqueeRight %}{% trans "Marquee Right" %}{% endset %}
+                        {% set marqueeUp %}{% trans "Marquee Up" %}{% endset %}
+                        {% set marqueeDown %}{% trans "Marquee Down" %}{% endset %}
+                        {% set options = [
+                        { effectid: "", effect: none },
+                        { effectid: fade, effect: fade },
+                        { effectid: fadeout, effect: fadeout},
+                        { effectid: scrollHorz, effect: scrollHorz},
+                        { effectid: scrollVert, effect: scrollVert},
+                        { effectid: flipHorz, effect: flipHorz},
+                        { effectid: flipVert, effect: flipVert},
+                        { effectid: shuffle, effect: shuffle},
+                        { effectid: tileSlide, effect: tileSlide},
+                        { effectid: tileBlind, effect: tileBlind},
+                        { effectid: marqueeLeft, effect: marqueeLeft},
+                        { effectid: marqueeRight, effect: marqueeRight},
+                        { effectid: marqueeUp, effect: marqueeUp},
+                        { effectid: marqueeDown, effect: marqueeDown}
+                        ] %}
+                        {{ forms.dropdown("effect", "single", title, effect, "effectid", "effect", helpText) }}
+
+                        {% set title %}{% trans "Speed" %}{% endset %}
+                        {% set helpText %}{% trans "The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1)." %}{% endset %}
+                        {{ forms.number("speed", title, module.getOption("speed"), module.getOption("scrollSpeed"), helpText, "", "effect-controls") }}
+
+                        {% set title %}{% trans "Background Colour" %}{% endset %}
+                        {% set helpText %}{% trans "The selected effect works best with a background colour. Optionally add one here." %}{% endset %}
+                        {{ forms.text("backgroundColor", title, module.getOption("backgroundColor"), helpText, "", "background-color-group") }}
+
+                        {% set title %}{% trans "Items per page" %}{% endset %}
+                        {% set helpText %}{% trans "When in single mode how many items per page should be shown." %}{% endset %}
+                        {{ forms.number("itemsPerPage", title, module.getOption("itemsPerPage"), helpText, "", "effect-controls") }}
+
+                        {% set title %}{% trans "Update Interval (mins)" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60." %}{% endset %}
+                        {{ forms.number("updateInterval", title, module.getOption("updateInterval", 5), helpText, "", "required") }}
+
+                        {% set title %}{% trans "Duration is per item" %}{% endset %}
+                        {% set helpText %}{% trans "The duration specified is per item otherwise it is per feed." %}{% endset %}
+                        {{ forms.checkbox("durationIsPerItem", title, module.getDOption("durationIsPerItem"), helpText) }}
+
+                        {% set title %}{% trans "Show itms side by side?" %}{% endset %}
+                        {% set helpText %}{% trans "Should items be shown side by side?" %}{% endset %}
+                        {{ forms.checkbox("itemsSideBySide", title, module.getOption("itemsSideBySide"), helpText) }}
+
+
+
+
+
+                <div class="tab-content">
+                    <div class="tab-pane active" id="general">
+
+
+                    </div>
+
+                    <div class="tab-pane" id="template">
+
+                    </div>
+                    <div class="tab-pane" id="format">
+
+                    </div>
+                    <div class="tab-pane" id="advanced">
+
+                    </div>
+                </div>
             </form>
         </div>
     </div>

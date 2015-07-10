@@ -5,52 +5,7 @@
  * (${FILE_NAME})
  */
 // Two tabs
-        $tabs = array();
-        $tabs[] = Form::AddTab('general', __('General'), array(array('name' => 'enlarge', 'value' => true)));
-        $tabs[] = Form::AddTab('options', __('Options'));
-
-        Theme::Set('form_tabs', $tabs);
-
-        $formFields = array();
-
-        $formFields['options'][] = Form::AddText('name', __('Name'), NULL,
-            __('An optional name for this media'), 'n');
-
-        $formFields['options'][] = Form::AddCombo(
-            'effect',
-            __('Effect'),
-            $this->GetOption('effect'),
-            array(
-                array('effectid' => 'none', 'effect' => __('None')),
-                array('effectid' => 'fade', 'effect' => __('Fade')),
-                array('effectid' => 'fadeout', 'effect' => __('Fade Out')),
-                array('effectid' => 'scrollHorz', 'effect' => __('Scroll Horizontal')),
-                array('effectid' => 'scrollVert', 'effect' => __('Scroll Vertical')),
-                array('effectid' => 'flipHorz', 'effect' => __('Flip Horizontal')),
-                array('effectid' => 'flipVert', 'effect' => __('Flip Vertical')),
-                array('effectid' => 'shuffle', 'effect' => __('Shuffle')),
-                array('effectid' => 'tileSlide', 'effect' => __('Tile Slide')),
-                array('effectid' => 'tileBlind', 'effect' => __('Tile Blinds')),
-                array('effectid' => 'marqueeLeft', 'effect' => __('Marquee Left')),
-                array('effectid' => 'marqueeRight', 'effect' => __('Marquee Right')),
-                array('effectid' => 'marqueeUp', 'effect' => __('Marquee Up')),
-                array('effectid' => 'marqueeDown', 'effect' => __('Marquee Down')),
-            ),
-            'effectid',
-            'effect',
-            __('Please select the effect that will be used. Some effects will transition between paragraphs in the text. Marquee effects are CPU intensive and may not be suitable for lower power displays.'),
-            'e');
-
-        $formFields['options'][] = Form::AddNumber('speed', __('Speed'), NULL,
-            __('The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1).'), 's', NULL, 'effect-controls');
-
-        // A list of web safe colours
-        $formFields['options'][] = Form::AddText('backgroundColor', __('Background Colour'), NULL,
-            __('The selected effect works best with a background colour. Optionally add one here.'), 'c', NULL, 'effect-controls');
-
-        $formFields['options'][] = Form::AddNumber('duration', __('Duration'), NULL,
-            __('The duration in seconds this should be displayed'), 'd', 'required');
-
+        
         // Handle the substitutions as RAW items
         $subs = array(
             array('Substitute' => 'Clock'),
@@ -103,7 +58,13 @@
             <form id="textAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("module.widget.add", {type: module.widget.type, id: playlist.playlistId}) }}">
 
                 <div class="tab-pane active" id="general">
-                      {# RAW item subs #}
+                      {# RAW item subs 
+
+                    <?php foreach(Theme::Get('substitutions') as $column) { ?>
+                    <li class="ckeditor_snippits" linkedto="ta_text"><?php echo $column['Substitute']; ?></li>
+                    <?php } ?>
+
+                      #}
 
                         {% set helpText %}{% trans "Enter the text to display. Please note that the background colour has automatically coloured to your layout background colour." %}{% endset %}
                         {{ forms.textarea("ta_text", "", "", helpText, "", 10) }}
@@ -160,7 +121,7 @@
                         {{ forms.number("duration", title, "", helpText, "", "required") }}
                 </div>
                 {# // Add a dependency #}
-                
+
             </form>
         </div>
     </div>

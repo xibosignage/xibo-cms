@@ -30,16 +30,6 @@
             __('Please select one or more displays / groups for this event to be shown on.'),
             'd', '', true, '', '', '', $optionGroups, array(array('name' => 'data-live-search', 'value' => "true"), array('name' => 'data-selected-text-format', 'value' => "count > 4")));
 
-        // Time controls
-        $formFields['general'][] = Form::AddText('starttimeControl', __('Start Time'), NULL,
-            __('Select the start time for this event'), 's', 'required');
-
-        $formFields['general'][] = Form::AddText('endtimeControl', __('End Time'), NULL,
-            __('Select the end time for this event'), 'e', 'required');
-
-        // Add two hidden fields to always carry the ISO date
-        $formFields['general'][] = Form::AddHidden('starttime', NULL);
-        $formFields['general'][] = Form::AddHidden('endtime', NULL);
 
         // Generate a list of layouts.
         $layouts = $user->CampaignList(NULL, false /* isRetired */, false /* show Empty */);
@@ -51,6 +41,10 @@
 
         $layoutOptions = array();
         $campaignOptions = array();
+
+        twig = campaigns variable
+        for item in campaigns
+            item.isLayoutSpecific == 1
 
         foreach ($layouts as $layout) {
 
@@ -77,38 +71,6 @@
             __('Please select a Layout or Campaign for this Event to show'),
             'l', '', true, '', '', '', $optionGroups);
 
-        $formFields['general'][] = Form::AddNumber('DisplayOrder', __('Display Order'), NULL,
-            __('Please select the order this event should appear in relation to others when there is more than one event scheduled'), 'o');
-
-        $formFields['general'][] = Form::AddCheckbox('is_priority', __('Priority'),
-            NULL, __('Sets whether or not this event has priority. If set the event will be show in preference to other events.'),
-            'p');
-
-        $formFields['repeats'][] = Form::AddCombo(
-            'rec_type',
-            __('Repeats'),
-            NULL,
-            array(
-                array('id' => '', 'name' => __('None')),
-                array('id' => 'Minute', 'name' => __('Per Minute')),
-                array('id' => 'Hour', 'name' => __('Hourly')),
-                array('id' => 'Day', 'name' => __('Daily')),
-                array('id' => 'Week', 'name' => __('Weekly')),
-                array('id' => 'Month', 'name' => __('Monthly')),
-                array('id' => 'Year', 'name' => __('Yearly'))
-            ),
-            'id',
-            'name',
-            __('What type of repeat is required?'),
-            'r');
-
-        $formFields['repeats'][] = Form::AddNumber('rec_detail', __('Repeat every'), NULL,
-            __('How often does this event repeat?'), 'o', '', 'repeat-control-group');
-
-        $formFields['repeats'][] = Form::AddText('rec_rangeControl', __('Until'), NULL,
-            __('When should this event stop repeating?'), 'u', '', 'repeat-control-group');
-
-        $formFields['repeats'][] = Form::AddHidden('rec_range', NULL);
 
         // Set some field dependencies
         $response->AddFieldAction('rec_type', 'init', '', array('.repeat-control-group' => array('display' => 'none')));
@@ -143,13 +105,17 @@
             <form id="scheduleAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("schedule.add") }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
-                {# display groups and stuff #}
+                {# display groups and stuff 
                     
                     {% set optionGroups = [
                     {id: group, label: Groups},
                     {id: display, label: Diplays}
                     ] %}
-
+        
+                    {% set title %}{% trans "Display" %}{% endset %}
+                    {% set helpText %}{% trans "Please select one or more displays / groups for this event to be shown on." %}{% endset %}
+                    {{ forms.dropdownmulti("displayGroupIds", title, "displaygroupid", "displaygroup", helpText, "", "", true, "", "", "", ) }}
+                #}
 
                 {# start/end time #}
 
@@ -161,18 +127,18 @@
                 {% set helpText %}{% trans "Select the end time for this event" %}{% endset %}
                 {{ forms.text("toDt", title, "", helpText, "", "required") }}
 
-                {# Add two hidden fields to always carry the ISO date #}
+                {{ forms.hidden("starttime", "") }}
+                {{ forms.hidden("endtime", "") }}
+
                 {# Generate a list of layouts. #}
 
-                {# nah very wrong...#}
+                {# nah very wrong...missing stuff hate this.
+                
                 {% set title %}{% trans "Layout / Campaign" %}{% endset %}
                 {% set helpText %}{% trans "Please select a Layout or Campaign for this Event to show" %}{% endset %}
-                {% set options = [
-                { id: campaign, value: campaignOptions },
-                { id: layout, value: layoutOptions }
-                ] %}
-                {{ forms.dropdown("campaignId", "single", title, "", options, "id", "value", helpText,"", optionGroups) }}
-  
+                {{ forms.dropdown("campaignId", "single", title, "", layouts, "id", "value", helpText,"","", true, "", "", "", displayGroups) }}
+
+                #}
                 {{ forms.number("displayOrder", "Display Order", displayOrder, "Please select the order this event should appear in relation to others when there is more than one event scheduled") }}
                 
                 {% set title %}{% trans "Priority" %}{% endset %}
@@ -207,9 +173,7 @@
                         {% set title %}{% trans "Until" %}{% endset %}
                         {% set helpText %}{% trans "When should this event stop repeating?" %}{% endset %}
                         {{ forms.text("reccurenceRange", title, "", helpText) }}
-                        
-                        {# hidden thingies etc#}
-
+                        {{ forms.hidden("rec_range", "") }}
                     </div>
             </form>
         </div>

@@ -4,22 +4,8 @@
  * Copyright (C) 2015 Spring Signage Ltd
  * (${FILE_NAME})
  */
-$formFields[] = Form::AddText('name', __('Name'), NULL,
-            __('The Name of the Profile - (1 - 50 characters)'), 'n', 'maxlength="50" required');
 
-        $formFields[] = Form::AddCombo(
-            'type',
-            __('Client Type'),
-            NULL,
-            array(
-                array('key' => 'windows', 'value' => 'Windows'),
-                array('key' => 'ubuntu', 'value' => 'Ubuntu'),
-                array('key' => 'android', 'value' => 'Android')
-            ),
-            'typeid',
-            'type',
-            __('What type of display client is this profile intended for?'),
-            't');
+In theory it is fine, although  it may be better to user clientTypes from controller??
 
 #}
 
