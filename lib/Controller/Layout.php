@@ -152,7 +152,7 @@ class Layout extends Base
      */
     function edit($layoutId)
     {
-        $layout = LayoutFactory::loadById($layoutId);
+        $layout = LayoutFactory::getById($layoutId);
 
         // Make sure we have permission
         if (!$this->getUser()->checkEditable($layout))
@@ -175,7 +175,12 @@ class Layout extends Base
         $layout->validate();
 
         // Save
-        $layout->save();
+        $layout->save([
+            'saveLayout' => true,
+            'saveRegions' => false,
+            'saveTags' => false,
+            'setBuildRequired' => false
+        ]);
 
         // Return
         $this->getState()->hydrate([
@@ -242,6 +247,11 @@ class Layout extends Base
             throw new AccessDeniedException(__('You do not have permissions to delete this layout'));
 
         $layout->delete();
+
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Deleted %s'), $layout->layout)
+        ]);
     }
 
     /**
@@ -250,13 +260,23 @@ class Layout extends Base
      */
     function retire($layoutId)
     {
-        $layout = LayoutFactory::loadById($layoutId);
+        $layout = LayoutFactory::getById($layoutId);
 
         if (!$this->getUser()->checkEditable($layout))
             throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
 
         $layout->retired = 1;
-        $layout->save();
+        $layout->save([
+            'saveLayout' => true,
+            'saveRegions' => false,
+            'saveTags' => false,
+            'setBuildRequired' => false
+        ]);
+
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Retired %s'), $layout->layout)
+        ]);
     }
 
     /**

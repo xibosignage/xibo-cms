@@ -8,6 +8,7 @@
 namespace Xibo\Tests;
 
 use Monolog\Logger;
+use Slim\Environment;
 use Slim\Slim;
 use There4\Slim\Test\WebTestCase;
 use Xibo\Controller\Error;
@@ -22,6 +23,13 @@ class LocalWebTestCase extends WebTestCase
      */
     public function getSlimInstance()
     {
+        // Mock and Environment for use before the test is called
+        Environment::mock([
+            'REQUEST_METHOD' => 'GET',
+            'PATH_INFO'      => '/',
+            'SERVER_NAME'    => 'local.dev'
+        ]);
+
         // Create a logger
         $logger = new \Flynsarmy\SlimMonolog\Log\MonologWriter(array(
             'name' => 'PHPUNIT',
