@@ -71,8 +71,6 @@ class Schedule extends Base
      */
     function eventData()
     {
-        fwrite(STDERR, 'APP: Event Data' . PHP_EOL);
-
         $this->getApp()->response()->header('Content-Type', 'application/json');
         $this->setNoOutput();
 

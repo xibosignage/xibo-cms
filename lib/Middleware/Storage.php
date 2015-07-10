@@ -33,7 +33,8 @@ class Storage extends Middleware
     {
         $this->app->commit = true;
 
-        PDOConnect::init()->beginTransaction();
+        if (!PDOConnect::init()->inTransaction())
+            PDOConnect::init()->beginTransaction();
 
         $this->next->call();
 

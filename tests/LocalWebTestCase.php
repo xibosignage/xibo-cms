@@ -11,7 +11,6 @@ use Monolog\Logger;
 use Slim\Slim;
 use There4\Slim\Test\WebTestCase;
 use Xibo\Controller\Error;
-use Xibo\Helper\SlimHelper;
 use Xibo\Middleware\ApiView;
 
 class LocalWebTestCase extends WebTestCase
@@ -23,14 +22,11 @@ class LocalWebTestCase extends WebTestCase
      */
     public function getSlimInstance()
     {
-        // Clear all Slim instances to prevent mishaps
-        SlimHelper::clearInstances();
-
         // Create a logger
         $logger = new \Flynsarmy\SlimMonolog\Log\MonologWriter(array(
             'name' => 'PHPUNIT',
             'handlers' => array(
-                new \Xibo\Helper\DatabaseLogHandler(Logger::DEBUG)
+                new \Xibo\Helper\DatabaseLogHandler(Logger::ERROR)
             ),
             'processors' => array(
                 new \Xibo\Helper\LogProcessor(),
@@ -39,14 +35,15 @@ class LocalWebTestCase extends WebTestCase
         ));
 
         $app = new Slim(array(
-            'mode' => 'test',
+            'mode' => 'phpunit',
             'debug' => false,
             'log.writer' => $logger
         ));
+        $app->setName('default');
         $app->setName('test');
 
-        $app->add(new \Xibo\Middleware\Storage());
         $app->add(new \Xibo\Middleware\State());
+        $app->add(new \Xibo\Middleware\Storage());
 
         $app->view(new ApiView());
 
