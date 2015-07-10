@@ -101,19 +101,36 @@
                         }
                     }
                 },
-                { "name": "mediaInventoryStatus", "data": dataTableTickCrossColumn },
-                { "data": dataTableTickCrossColumn },
+                {
+                    "data": "mediaInventoryStatus",
+                    "render": function (data, type, row) {
+                        if (type != "display")
+                            return data;
+
+                        var icon = "";
+                        if (data == 1)
+                            icon = "fa-check";
+                        else if (data == 0)
+                            icon = "fa-times";
+                        else
+                            icon = "fa-cloud-download";
+
+                        return "<span class='fa " + icon + "'></span>";
+                    }
+                },
+                { "data": "licensed", "render": dataTableTickCrossColumn },
                 { "data": "currentLayout" },
                 { "data": "storageAvailableSpace", "visible": false },
                 { "data": "storageTotalSpace", "visible": false },
                 { "data": "storagePercentage", "visible": false },
                 { "data": "description" , "visible": false},
                 { "data": "defaultLayout" , "visible": false},
-                { "data": dataTableTickCrossColumn },
-                { "data": dataTableTickCrossColumn },
-                { "data": dataTableTickCrossColumn },
+                { "data": "incSchedule", "render": dataTableTickCrossColumn },
+                { "data": "emailAlert", "render": dataTableTickCrossColumn },
+                { "data": "loggedIn", "render": dataTableTickCrossColumn },
                 { "data": "lastAccessed" },
                 {
+                    "name": "clientVersion",
                     "data": function(data, type) {
                         if (type != "display")
                             return data.clientVersion;
@@ -124,8 +141,9 @@
                 },
                 { "data": "clientAddress", "visible": false },
                 { "data": "macAddress" },
-                { "data": dataTableTickCrossColumn, "visible": false },
+                { "data": "screenShotRequested", "render": dataTableTickCrossColumn, "visible": false },
                 {
+                    "orderable": false,
                     "data": function(data, type) {
                         if (type != "display")
                             return data.thumbnail;
@@ -134,7 +152,7 @@
                             return '<a data-toggle="lightbox" data-type="image" href="' + data.thumbnail + '"><img class="display-screenshot" src="' + data.thumbnail + '" /></a>';
                         }
                         else {
-                            return data.display;
+                            return "";
                         }
                     },
                     "visible": false

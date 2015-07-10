@@ -361,23 +361,19 @@ class Layout extends Base
             switch ($layout->status) {
 
                 case 1:
-                    $layout->status = 1;
                     $layout->statusDescription = __('This Layout is ready to play');
                     break;
 
                 case 2:
-                    $layout->status = 2;
                     $layout->statusDescription = __('There are items on this Layout that can only be assessed by the Display');
                     break;
 
                 case 3:
-                    $layout->status = 0;
-                    $layout->statusDescription = __('This Layout is invalid and should not be scheduled');
+                    $layout->statusDescription = __('This Layout has not been built yet');
                     break;
 
                 default:
-                    $layout->status = 0;
-                    $layout->statusDescription = __('The Status of this Layout is not known');
+                    $layout->statusDescription = __('This Layout is invalid and should not be scheduled');
             }
 
             // Add some buttons for this row

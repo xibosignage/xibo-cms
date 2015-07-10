@@ -84,19 +84,22 @@
                 { "data": "owner" },
                 { "data": "permissions" },
                 {
+                    "name": "status",
                     "data": function(data, type) {
                         if (type != "display")
                             return data.status;
 
                         var icon = "";
                         if (data.status == 1)
-                            icon = "glyphicon-ok";
+                            icon = "fa-check";
                         else if (data.status == 0)
-                            icon = "glyphicon-remove";
+                            icon = "fa-times";
+                        else if (data.status == 3)
+                            icon = "fa-cogs";
                         else
-                            icon = "glyphicon-exclamation-sign";
+                            icon = "fa-exclamation";
 
-                        return "<span class='glyphicon " + icon + "' title='" + (data.statusDescription) + "'></span>";
+                        return "<span class='fa " + icon + "' title='" + (data.statusDescription) + "'></span>";
                     }
                 },
                 {

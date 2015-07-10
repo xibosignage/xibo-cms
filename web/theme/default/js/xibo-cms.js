@@ -302,13 +302,13 @@ function dataTableTickCrossColumn(data, type, row) {
 
     var icon = "";
     if (data == 1)
-        icon = "glyphicon-ok";
+        icon = "fa-check";
     else if (data == 0)
-        icon = "glyphicon-remove";
+        icon = "fa-times";
     else
-        icon = "glyphicon-exclamation-sign";
+        icon = "fa-exclamation";
 
-    return "<span class='glyphicon " + icon + "'></span>";
+    return "<span class='fa " + icon + "'></span>";
 }
 
 /**
