@@ -422,10 +422,10 @@ class UserGroup extends Base
             throw new AccessDeniedException();
 
         // Users in group
-        $usersAssigned = $this->getUser()->userList(null, array('groupIds' => array($groupId)));
+        $usersAssigned = UserFactory::query(null, array('groupIds' => array($groupId)));
 
         // Users not in group
-        $allUsers = $this->getUser()->userList();
+        $allUsers = UserFactory::query();
 
         // The available users are all users except users already in assigned users
         $checkboxes = array();

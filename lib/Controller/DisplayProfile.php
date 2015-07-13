@@ -38,7 +38,7 @@ class DisplayProfile extends Base
 
     function grid()
     {
-        $profiles = $this->getUser()->DisplayProfileList();
+        $profiles = DisplayProfileFactory::query();
 
         foreach ($profiles as $profile) {
             /* @var \Xibo\Entity\DisplayProfile $profile */

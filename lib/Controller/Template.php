@@ -20,6 +20,7 @@
  */
 namespace Xibo\Controller;
 
+use Xibo\Factory\LayoutFactory;
 use Xibo\Helper\Help;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
@@ -77,9 +78,7 @@ class Template extends Base
         $showThumbnail = Sanitize::getCheckbox('showThumbnail');
         $this->getSession()->set('layout', 'showThumbnail', $showThumbnail);
 
-        $templates = $this->getUser()->TemplateList($filter_name, $filter_tags);
-
-        foreach ($templates as $template) {
+        foreach (LayoutFactory::query(null, ['excludeTemplates' => 0, 'tags' => 'template', 'name' => $filter_name]) as $template) {
             /* @var \Xibo\Entity\Layout $template */
 
             $template->thumbnail = '';

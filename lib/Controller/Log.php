@@ -23,6 +23,7 @@ namespace Xibo\Controller;
 use Exception;
 use Kit;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LogFactory;
 use Xibo\Helper\Date;
 use Xibo\Helper\Form;
@@ -57,10 +58,6 @@ class Log extends Base
             $filter_intervalTypeId = 1;
         }
 
-        // Display
-        $displays = $this->getUser()->DisplayList();
-        array_unshift($displays, array('displayId' => 0, 'display' => 'All'));
-
         $data = [
             'defaults' => [
                 'filterPinned' => $filter_pinned,
@@ -83,7 +80,7 @@ class Log extends Base
                     array('id' => 2, 'value' => __('Audit')),
                     array('id' => 1, 'value' => __('Error'))
                 ),
-                'displays' => $displays
+                'displays' => DisplayFactory::query()
             ]
         ];
 

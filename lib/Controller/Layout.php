@@ -27,6 +27,7 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ResolutionFactory;
 use Xibo\Factory\TagFactory;
+use Xibo\Factory\UserFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Help;
 use Xibo\Helper\LayoutUploadHandler;
@@ -66,13 +67,9 @@ class Layout extends Base
             $showTags = 0;
         }
 
-        // Users we have permission to see
-        $users = $this->getUser()->userList();
-        $users = array_map(function($element) { return array('userid' => $element->userId, 'username' => $element->userName); }, $users);
-        array_unshift($users, array('userid' => '', 'username' => 'All'));
-
         $data = [
-            'users' => $users,
+            // Users we have permission to see
+            'users' => UserFactory::query(),
             'defaults' => [
                 'layout' => $layout,
                 'tags' => $tags,

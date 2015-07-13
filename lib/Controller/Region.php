@@ -36,7 +36,7 @@ class Region extends Base
             throw new AccessDeniedException();
 
         // Set the view we have requested
-        $this->getUser()->setPref('timeLineView', Sanitize::getString('view'));
+        $this->getSession()->set('timeLineView', Sanitize::getString('view'));
 
         // Load the region
         $region->load(['playlistIncludeRegionAssignments' => false]);
@@ -52,7 +52,7 @@ class Region extends Base
         }
 
         // Pass to view
-        $this->getState()->template = ($this->getUser()->getPref('timeLineView') == 'grid') ? 'region-form-grid' : 'region-form-timeline';
+        $this->getState()->template = ($this->getSession()->get('timeLineView') == 'grid') ? 'region-form-grid' : 'region-form-timeline';
         $this->getState()->setData([
             'region' => $region,
             'modules' => ModuleFactory::getAssignableModules(),

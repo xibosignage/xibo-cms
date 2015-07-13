@@ -23,6 +23,7 @@ namespace Xibo\Widget;
 use DataSet;
 use Exception;
 use InvalidArgumentException;
+use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
@@ -55,7 +56,7 @@ class DataSetView extends Module
             'datasetid',
             __('DataSet'),
             NULL,
-            $this->getUser()->DataSetList(),
+            DataSetFactory::query(),
             'datasetid',
             'dataset',
             __('Please select the DataSet to use as a source of data for this view.'),

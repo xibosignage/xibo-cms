@@ -22,6 +22,7 @@ namespace Xibo\Controller;
 
 use DOMDocument;
 use DOMXPath;
+use Xibo\Factory\LayoutFactory;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
@@ -133,13 +134,9 @@ class MediaManager extends Base
         );
         Theme::Set('table_cols', $cols);
 
-        // We would like a list of all layouts, media and media assignments that this user
-        // has access to.
-        $layouts = $user->LayoutList(NULL, array('layout' => $filterLayout));
-
         $rows = array();
 
-        foreach ($layouts as $layout) {
+        foreach (LayoutFactory::query(null, ['layout' => $filterLayout]) as $layout) {
             // We have edit permissions?
             if (!$layout['edit'])
                 continue;

@@ -27,6 +27,8 @@ use Xibo\Entity\Stat;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
+use Xibo\Factory\DisplayProfileFactory;
+use Xibo\Factory\LayoutFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Date;
 use Xibo\Helper\Help;
@@ -74,9 +76,7 @@ class Display extends Base
             ]
         ];
 
-        $displayGroups = $this->getUser()->DisplayGroupList();
-        array_unshift($displayGroups, array('displaygroupid' => '0', 'displaygroup' => 'All'));
-        $data['displayGroup'] = $displayGroups;
+        $data['displayGroup'] = DisplayGroupFactory::query();
 
         // Call to render the template
         $this->getState()->template = 'display-page';
@@ -350,8 +350,8 @@ class Display extends Base
         $this->getState()->template = 'display-form-edit';
         $this->getState()->setData([
             'display' => $display,
-            'layouts' => $this->getUser()->LayoutList(),
-            'profiles' => $this->getUser()->DisplayProfileList(NULL, array('type' => $display->clientType)),
+            'layouts' => LayoutFactory::query(),
+            'profiles' => DisplayProfileFactory::query(NULL, array('type' => $display->clientType)),
             'settings' => $profile,
             'help' => Help::Link('Display', 'Edit')
         ]);

@@ -21,6 +21,7 @@
 namespace Xibo\Controller;
 use Exception;
 use SimplePie;
+use Xibo\Factory\DisplayFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\Config;
 use Xibo\Helper\Date;
@@ -147,9 +148,7 @@ class StatusDashboard extends Base
             $data['libraryWidget'] = json_encode($output);
 
             // Also a display widget
-            $sort_order = array('display');
-            $displays = $this->getUser()->DisplayList($sort_order);
-
+            $displays = DisplayFactory::query(['display']);
             $rows = array();
 
             if (is_array($displays) && count($displays) > 0) {

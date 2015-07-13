@@ -23,7 +23,7 @@ use baseDAO;
 use DataSetColumn;
 use DataSetData;
 use DataSetGroupSecurity;
-use Xibo\Helper\ApplicationState;
+use Xibo\Factory\DataSetFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Form;
 use Xibo\Helper\Help;
@@ -70,7 +70,7 @@ class DataSet extends Base
     {
         $user = $this->getUser();
 
-        $dataSets = $this->getUser()->DataSetList();
+        $dataSets = DataSetFactory::query();
 
         foreach ($dataSets as $dataSet) {
             /* @var \Xibo\Entity\DataSet $dataSet */

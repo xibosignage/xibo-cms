@@ -20,6 +20,8 @@
  */
 namespace Xibo\Controller;
 
+use Xibo\Factory\DisplayFactory;
+use Xibo\Factory\MediaFactory;
 use Xibo\Helper\Date;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
@@ -34,17 +36,11 @@ class Stats extends Base
      */
     function displayPage()
     {
-        // List of Displays this user has permission for
-        $displays = $this->getUser()->DisplayList();
-        array_unshift($displays, array('displayId' => 0, 'display' => 'All'));
-
-        // List of Media this user has permission for
-        $media = $this->getUser()->MediaList();
-        array_unshift($media, array('mediaId' => 0, 'media' => 'All'));
-
         $data = [
-            'displays' => $displays,
-            'media' => $media,
+            // List of Displays this user has permission for
+            'displays' => DisplayFactory::query(),
+            // List of Media this user has permission for
+            'media' => MediaFactory::query(),
             'defaults' => [
                 'fromDate' => Date::getLocalDate(time() - (86400 * 35), 'Y-m-d'),
                 'fromDateOneDay' => Date::getLocalDate(time() - 86400, 'Y-m-d'),
@@ -75,10 +71,9 @@ class Stats extends Base
         Log::debug('Converted Times received are: FromDt=' . $fromDt . '. ToDt=' . $toDt);
 
         // Get an array of display id this user has access to.
-        $displays = $this->getUser()->DisplayList();
         $display_ids = array();
 
-        foreach ($displays as $display) {
+        foreach (DisplayFactory::query() as $display) {
             $display_ids[] = $display['displayid'];
         }
 
@@ -258,11 +253,10 @@ class Stats extends Base
         $displayId = Sanitize::getInt('displayid');
 
         // Get an array of display id this user has access to.
-        $displays = $this->getUser()->DisplayList();
         $displayIds = array();
 
-        foreach ($displays as $display) {
-            $displayIds[] = $display['displayid'];
+        foreach (DisplayFactory::query() as $display) {
+            $displayIds[] = $display->displayId;
         }
 
         if (count($displayIds) <= 0)
@@ -326,10 +320,9 @@ class Stats extends Base
         $toDt = Date::getTimestampFromString(Sanitize::getString('todt'));
 
         // Get an array of display id this user has access to.
-        $displays = $this->getUser()->DisplayList();
         $displayIds = array();
 
-        foreach ($displays as $display) {
+        foreach (DisplayFactory::query() as $display) {
             $displayIds[] = $display->displayId;
         }
 
@@ -431,13 +424,11 @@ class Stats extends Base
         $formFields[] = Form::AddText('todt', __('To Date'), Date::getLocalDate(null, 'Y-m-d'), NULL, 't');
 
         // List of Displays this user has permission for
-        $displays = $this->getUser()->DisplayGroupList(1);
-        array_unshift($displays, array('displayid' => 0, 'displaygroup' => 'All'));
         $formFields[] = Form::AddCombo(
             'displayid',
             __('Display'),
             NULL,
-            $displays,
+            DisplayFactory::query(),
             'displayid',
             'displaygroup',
             NULL,
@@ -478,10 +469,9 @@ class Stats extends Base
         header('Accept-Ranges: bytes');
 
         // Get an array of display id this user has access to.
-        $displays = $this->getUser()->DisplayList();
         $display_ids = array();
 
-        foreach ($displays as $display) {
+        foreach (DisplayFactory::query() as $display) {
             $display_ids[] = $display['displayid'];
         }
 

@@ -84,7 +84,7 @@ class User extends Base
         ];
 
         // Load results into an array
-        $users = $this->getUser()->userList($this->gridRenderSort(), $this->gridRenderFilter($filterBy));
+        $users = UserFactory::query($this->gridRenderSort(), $this->gridRenderFilter($filterBy));
 
         foreach ($users as $user) {
             /* @var \Xibo\Entity\User $user */

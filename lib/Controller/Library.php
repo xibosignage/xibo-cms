@@ -29,6 +29,7 @@ use Xibo\Exception\LibraryFullException;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\TagFactory;
+use Xibo\Factory\UserFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\Config;
@@ -82,9 +83,7 @@ class Library extends Base
         ];
 
         // Users we have permission to see
-        $users = $this->getUser()->userList();
-        array_unshift($users, array('userid' => '', 'username' => 'All'));
-        $data['users'] = $users;
+        $data['users'] = UserFactory::query();
 
         $types = ModuleFactory::query(['module'], ['regionSpecific' => 0, 'enabled' => 1]);
         array_unshift($types, array('moduleid' => '', 'module' => 'All'));
