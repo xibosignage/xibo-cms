@@ -10,6 +10,7 @@ namespace Xibo\Factory;
 
 
 use Slim\Slim;
+use Xibo\Entity\User;
 use Xibo\Helper\Sanitize;
 
 class BaseFactory
@@ -25,9 +26,27 @@ class BaseFactory
         return self::$_countLast;
     }
 
+    /**
+     * Get User
+     * @return User
+     */
+    public static function getUser()
+    {
+        return Slim::getInstance()->user;
+    }
+
+    /**
+     * View Permission SQL
+     * @param $entity
+     * @param $sql
+     * @param $params
+     * @param $idColumn
+     * @param null $ownerColumn
+     * @param array $filterBy
+     */
     public static function viewPermissionSql($entity, &$sql, &$params, $idColumn, $ownerColumn = null, $filterBy = [])
     {
-        $user = Slim::getInstance()->user;
+        $user = self::getUser();
 
         if (Sanitize::getCheckbox('disableUserCheck', 0, $filterBy) == 0 && $user->userTypeId != 1) {
             $sql .= '

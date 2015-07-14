@@ -28,7 +28,7 @@ use Xibo\Exception\NotFoundException;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
-class UserFactory
+class UserFactory extends BaseFactory
 {
     /**
      * Get User by ID
@@ -38,7 +38,7 @@ class UserFactory
      */
     public static function getById($userId)
     {
-        $users = UserFactory::query(null, array('userId' => $userId));
+        $users = UserFactory::query(null, array('disableUserCheck' => 1, 'userId' => $userId));
 
         if (count($users) <= 0)
             throw new NotFoundException(__('User not found'));
@@ -54,13 +54,7 @@ class UserFactory
      */
     public static function loadById($userId)
     {
-        $users = UserFactory::query(null, array('userId' => $userId));
-
-        if (count($users) <= 0)
-            throw new NotFoundException(__('User not found'));
-
-        $user = $users[0];
-        /* @var User $user */
+        $user = UserFactory::getById($userId);
         $user->load();
 
         return $user;
@@ -74,7 +68,7 @@ class UserFactory
      */
     public static function getByName($userName)
     {
-        $users = UserFactory::query(null, array('userName' => $userName));
+        $users = UserFactory::query(null, array('disableUserCheck' => 1, 'userName' => $userName));
 
         if (count($users) <= 0)
             throw new NotFoundException(__('User not found'));
@@ -89,7 +83,7 @@ class UserFactory
      */
     public static function getByGroupId($groupId)
     {
-        return UserFactory::query(null, array('groupIds' => [$groupId]));
+        return UserFactory::query(null, array('disableUserCheck' => 1, 'groupIds' => [$groupId]));
     }
 
     /**
@@ -99,7 +93,7 @@ class UserFactory
      */
     public static function loadByClientId($clientId)
     {
-        $users = UserFactory::query(null, array('clientId' => $clientId));
+        $users = UserFactory::query(null, array('disableUserCheck' => 1, 'clientId' => $clientId));
 
         if (count($users) <= 0)
             throw new NotFoundException(sprintf('User not found'));
@@ -107,9 +101,14 @@ class UserFactory
         return $users[0];
     }
 
+    /**
+     * Get users by Display Group
+     * @param $displayGroupId
+     * @return array
+     */
     public static function getByDisplayGroupId($displayGroupId)
     {
-        return DisplayFactory::query(null, ['displayGroupId' => $displayGroupId]);
+        return DisplayFactory::query(null, ['disableUserCheck' => 1, 'displayGroupId' => $displayGroupId]);
     }
 
     /**
@@ -147,17 +146,47 @@ class UserFactory
                 INNER JOIN lkusergroup
                 ON lkusergroup.userId = user.userId
                 INNER JOIN `group`
-                ON group.groupId = lkusergroup.groupId
+                ON `group`.groupId = lkusergroup.groupId
                   AND isUserSpecific = 1
                 INNER JOIN `pages`
                 ON pages.pageId = `user`.homePageId
              WHERE 1 = 1
          ';
 
+        if (Sanitize::getCheckbox('disableUserCheck', 0, $filterBy) == 0) {
+            // Normal users can only see themselves
+            if (self::getUser()->userTypeId == 3) {
+                $filterBy['userId'] = self::getUser()->userId;
+            }
+            // Group admins can only see users from their groups.
+            else if (self::getUser()->userTypeId == 2) {
+                $SQL .= '
+                    AND user.userId IN (
+                        SELECT `otherUserLinks`.userId
+                          FROM `lkusergroup`
+                            INNER JOIN `group`
+                            ON `group`.groupId = `lkusergroup`.groupId
+                                AND `group`.isUserSpecific = 0
+                            INNER JOIN `lkusergroup` `otherUserLinks`
+                            ON `otherUserLinks`.groupId = `group`.groupId
+                         WHERE `lkusergroup`.userId = :currentUserId
+                    )
+                ';
+                $params['currentUserId'] = self::getUser()->userId;
+            }
+        }
+
         // User Id Provided?
         if (Sanitize::getInt('userId', $filterBy) != 0) {
             $SQL .= " AND user.userId = :userId ";
             $params['userId'] = Sanitize::getInt('userId', $filterBy);
+        }
+
+        // Groups Provided
+        $groups = Sanitize::getParam('groupIds', $filterBy);
+
+        if (count($groups) > 0) {
+            $SQL .= ' AND user.userId IN (SELECT userId FROM `lkusergroup` WHERE groupId IN (' . implode($groups, ',') . ')) ';
         }
 
         // User Type Provided
@@ -170,13 +199,6 @@ class UserFactory
         if (Sanitize::getString('userName', $filterBy) != '') {
             $SQL .= " AND user.userName = :userName ";
             $params['userName'] = Sanitize::getString('userName', $filterBy);
-        }
-
-        // Groups Provided
-        $groups = Sanitize::getParam('groupIds', $filterBy);
-
-        if (count($groups) > 0) {
-            $SQL .= " AND user.userId IN (SELECT userId FROM `lkusergroup` WHERE groupid IN (" . implode($groups, ',') . ")) ";
         }
 
         // Retired users?
