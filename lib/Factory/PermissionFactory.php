@@ -28,7 +28,7 @@ use Xibo\Exception\NotFoundException;
 use Xibo\Helper\Log;
 use Xibo\Storage\PDOConnect;
 
-class PermissionFactory
+class PermissionFactory extends BaseFactory
 {
     /**
      * Create a new Permission

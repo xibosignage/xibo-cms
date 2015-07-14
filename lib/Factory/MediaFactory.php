@@ -29,7 +29,7 @@ use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
-class MediaFactory
+class MediaFactory extends BaseFactory
 {
     /**
      * Create New Media

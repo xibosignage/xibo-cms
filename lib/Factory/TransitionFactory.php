@@ -15,7 +15,7 @@ use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
-class TransitionFactory
+class TransitionFactory extends BaseFactory
 {
     /**
      * @param int $transitionId

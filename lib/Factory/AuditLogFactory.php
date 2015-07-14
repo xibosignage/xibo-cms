@@ -27,19 +27,8 @@ use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
-class AuditLogFactory
+class AuditLogFactory extends BaseFactory
 {
-    private static $_countLast = 0;
-
-    /**
-     * Count of records returned for the last query.
-     * @return int
-     */
-    public static function countLast()
-    {
-        return self::$_countLast;
-    }
-
     public static function query($sortOrder = null, $filterBy = null)
     {
         $entries = array();

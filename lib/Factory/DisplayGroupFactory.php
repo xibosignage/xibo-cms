@@ -15,7 +15,7 @@ use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
-class DisplayGroupFactory
+class DisplayGroupFactory extends BaseFactory
 {
     /**
      * @param int $displayGroupId

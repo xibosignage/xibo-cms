@@ -29,7 +29,7 @@ use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
-class RegionFactory
+class RegionFactory extends BaseFactory
 {
     /**
      * Create a new region

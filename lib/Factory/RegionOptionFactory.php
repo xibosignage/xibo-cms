@@ -25,7 +25,7 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\RegionOption;
 
-class RegionOptionFactory
+class RegionOptionFactory extends BaseFactory
 {
     /**
      * Load by Region Id

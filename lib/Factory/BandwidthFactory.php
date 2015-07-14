@@ -11,7 +11,7 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Bandwidth;
 
-class BandwidthFactory
+class BandwidthFactory extends BaseFactory
 {
     /**
      * Create and Save Bandwidth record

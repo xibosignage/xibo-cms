@@ -15,7 +15,7 @@ use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
-class DisplayProfileFactory
+class DisplayProfileFactory extends BaseFactory
 {
     /**
      * @param int $displayProfileId

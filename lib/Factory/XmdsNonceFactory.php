@@ -15,7 +15,7 @@ use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
-class XmdsNonceFactory
+class XmdsNonceFactory extends BaseFactory
 {
     /**
      * @param string $nonce

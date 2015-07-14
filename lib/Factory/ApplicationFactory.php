@@ -14,19 +14,8 @@ use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
-class ApplicationFactory
+class ApplicationFactory extends BaseFactory
 {
-    private static $_countLast = 0;
-
-    /**
-     * Count of records returned for the last query.
-     * @return int
-     */
-    public static function countLast()
-    {
-        return self::$_countLast;
-    }
-
     public static function getByUserId($userId)
     {
         return ApplicationFactory::query(null, ['userId' => $userId]);

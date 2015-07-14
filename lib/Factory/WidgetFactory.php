@@ -29,7 +29,7 @@ use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
-class WidgetFactory
+class WidgetFactory extends BaseFactory
 {
     /**
      * Load widgets by Playlist ID

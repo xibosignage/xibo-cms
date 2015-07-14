@@ -29,7 +29,7 @@ use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
-class PageFactory
+class PageFactory extends BaseFactory
 {
     /**
      * Get by ID

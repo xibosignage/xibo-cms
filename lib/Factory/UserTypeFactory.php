@@ -14,7 +14,7 @@ use Xibo\Exception\NotFoundException;
 use Xibo\Helper\Log;
 use Xibo\Storage\PDOConnect;
 
-class UserTypeFactory
+class UserTypeFactory extends BaseFactory
 {
     /**
      * @param array $sortOrder

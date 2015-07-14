@@ -15,7 +15,7 @@ use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
-class DataSetFactory
+class DataSetFactory extends BaseFactory
 {
     /**
      * Get DataSets by ID

@@ -16,7 +16,7 @@ use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
-class SessionFactory
+class SessionFactory extends BaseFactory
 {
     /**
      * @param array $sortOrder

@@ -30,7 +30,7 @@ use Xibo\Exception\NotFoundException;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 
-class ModuleFactory
+class ModuleFactory extends BaseFactory
 {
     /**
      * Create a Module

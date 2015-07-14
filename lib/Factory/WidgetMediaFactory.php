@@ -23,7 +23,7 @@
 namespace Xibo\Factory;
 
 
-class WidgetMediaFactory
+class WidgetMediaFactory extends BaseFactory
 {
     /**
      * Media Linked to Widgets by WidgetId

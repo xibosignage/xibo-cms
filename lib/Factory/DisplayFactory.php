@@ -29,7 +29,7 @@ use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
-class DisplayFactory
+class DisplayFactory extends BaseFactory
 {
     /**
      * @param int $displayId

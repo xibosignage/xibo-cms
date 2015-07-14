@@ -15,7 +15,7 @@ use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
-class ScheduleFactory
+class ScheduleFactory extends BaseFactory
 {
     /**
      * @param int $eventId

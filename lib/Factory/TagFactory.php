@@ -28,7 +28,7 @@ use Xibo\Exception\NotFoundException;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
-class TagFactory
+class TagFactory extends BaseFactory
 {
     /**
      * Get tags from a string
