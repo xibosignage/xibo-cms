@@ -330,8 +330,8 @@ class User
      */
     private function add()
     {
-        $sql = 'INSERT INTO `user` (UserName, UserPassword, usertypeid, email, homePageId)
-                     VALUES (:userName, :password, :userTypeId, :email, :homePageId)';
+        $sql = 'INSERT INTO `user` (UserName, UserPassword, usertypeid, email, homePageId, CSPRNG)
+                     VALUES (:userName, :password, :userTypeId, :email, :homePageId, :CSPRNG)';
 
         // Get the ID of the record we just inserted
         $this->userId = PDOConnect::insert($sql, [
@@ -339,7 +339,8 @@ class User
             'password' => $this->password,
             'userTypeId' => $this->userTypeId,
             'email' => $this->email,
-            'homePageId' => $this->homePageId
+            'homePageId' => $this->homePageId,
+            'CSPRNG' => $this->CSPRNG,
         ]);
 
         // Add the user group

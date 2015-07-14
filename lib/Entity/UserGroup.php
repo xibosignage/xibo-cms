@@ -120,7 +120,7 @@ class UserGroup
      */
     public function load()
     {
-        if ($this->loaded)
+        if ($this->loaded || $this->groupId == 0)
             return;
 
         // Load all assigned users
@@ -128,6 +128,7 @@ class UserGroup
 
         // Set the hash
         $this->hash = $this->hash();
+        $this->loaded = true;
     }
 
     /**

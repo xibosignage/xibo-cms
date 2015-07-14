@@ -72,14 +72,7 @@ class UserGroupFactory
      */
     public static function getByUserId($userId)
     {
-        $groups = UserGroupFactory::query(null, ['userId' => $userId, 'isUserSpecific' => 0]);
-
-        foreach ($groups as $group) {
-            /* @var UserGroup $group */
-            $group->assignUser($userId);
-        }
-
-        return $groups;
+        return UserGroupFactory::query(null, ['userId' => $userId, 'isUserSpecific' => 0]);
     }
 
     /**

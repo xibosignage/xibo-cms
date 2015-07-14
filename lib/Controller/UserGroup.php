@@ -466,6 +466,8 @@ class UserGroup extends Base
      */
     public function assignUser($groupId)
     {
+        Log::debug('Assign User for groupId %d', $groupId);
+
         $group = UserGroupFactory::getById($groupId);
 
         if (!$this->getUser()->checkEditable($group))
@@ -474,6 +476,8 @@ class UserGroup extends Base
         $users = Sanitize::getIntArray('userId');
 
         foreach ($users as $userId) {
+
+            Log::debug('Assign User %d for groupId %d', $userId, $groupId);
 
             $user = UserFactory::getById($userId);
 

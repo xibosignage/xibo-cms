@@ -43,7 +43,9 @@
                                     {{ inline.date("filter_fromdt", "From Date", defaults.fromDt) }}
                                     {{ inline.text("filter_page", "Page", defaults.page) }}
                                     {{ inline.text("filter_function", "Function", defaults.function) }}
-                                    {{ inline.dropdown("filter_display", "single", "Display", defaults.display, options.displays, "displayId", "display") }}
+
+                                    {% set displays = options.displays|merge({displayId: null, display: ""}) %}
+                                    {{ inline.dropdown("filter_display", "single", "Display", defaults.display, displays, "displayId", "display") }}
                                 </div>
                             </div>
                         </form>

@@ -138,11 +138,17 @@ class User extends Base
         $user->userTypeId = Sanitize::getInt('userTypeId');
         $user->homePageId = Sanitize::getInt('homePageId');
         $user->libraryQuota = Sanitize::getInt('libraryQuota');
-        $user->groupId = Sanitize::getInt('groupId');
         $user->setNewPassword(Sanitize::getString('password'));
+
+        // Initial user group
+        $group = UserGroupFactory::getById(Sanitize::getInt('groupId'));
 
         // Save the user
         $user->save();
+
+        // Assign the initial group
+        $group->assignUser($user);
+        $group->save(false);
 
         // Return
         $this->getState()->hydrate([

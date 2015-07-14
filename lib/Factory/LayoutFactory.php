@@ -36,19 +36,8 @@ use Xibo\Storage\PDOConnect;
  * Class LayoutFactory
  * @package Xibo\Factory
  */
-class LayoutFactory
+class LayoutFactory extends BaseFactory
 {
-    private static $_countLast = 0;
-
-    /**
-     * Count of records returned for the last query.
-     * @return int
-     */
-    public static function countLast()
-    {
-        return self::$_countLast;
-    }
-
     /**
      * Create Layout from Resolution
      * @param int $resolutionId
@@ -497,8 +486,11 @@ class LayoutFactory
 
         $body .= " WHERE 1 = 1 ";
 
-        if (Sanitize::getString('layout', $filterBy) != '')
-        {
+        // Logged in user view permissions
+        self::viewPermissionSql('Xibo\Entity\Campaign', $body, $params, 'layout.layoutId', 'layout.userId', $filterBy);
+
+        // Layout Like
+        if (Sanitize::getString('layout', $filterBy) != '') {
             // convert into a space delimited array
             $names = explode(' ', Sanitize::getString('layout', $filterBy));
 
