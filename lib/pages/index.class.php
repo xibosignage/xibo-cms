@@ -137,7 +137,7 @@ class indexDAO extends baseDAO {
         $password       = md5($password_plain);
         
         //update the password
-        $SQL = sprintf("UPDATE user SET UserPassword = '%s' WHERE userid = %d", $db->escape_string($password), $userid);
+        $SQL = sprintf("UPDATE user SET UserPassword = '%s', CSPRNG = 0 WHERE userid = %d", $db->escape_string($password), $userid);
         
         if (!$db->query($SQL)) 
         {
