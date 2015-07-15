@@ -311,6 +311,21 @@ function dataTableTickCrossColumn(data, type, row) {
     return "<span class='fa " + icon + "'></span>";
 }
 
+function dataTableTickCrossInverseColumn(data, type, row) {
+    if (type != "display")
+        return data;
+
+    var icon = "";
+    if (data == 1)
+        icon = "fa-times";
+    else if (data == 0)
+        icon = "fa-check";
+    else
+        icon = "fa-exclamation";
+
+    return "<span class='fa " + icon + "'></span>";
+}
+
 /**
  * DataTable Refresher
  * @param gridId

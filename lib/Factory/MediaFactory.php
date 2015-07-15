@@ -115,7 +115,7 @@ class MediaFactory extends BaseFactory
      */
     public static function getById($mediaId)
     {
-        $media = MediaFactory::query(null, array('mediaId' => $mediaId, 'allModules' => 1));
+        $media = MediaFactory::query(null, array('disableUserCheck' => 1, 'mediaId' => $mediaId, 'allModules' => 1));
 
         if (count($media) <= 0)
             throw new NotFoundException(__('Cannot find media'));
@@ -131,7 +131,7 @@ class MediaFactory extends BaseFactory
      */
     public static function getByName($name)
     {
-        $media = MediaFactory::query(null, array('name' => $name, 'allModules' => 1));
+        $media = MediaFactory::query(null, array('disableUserCheck' => 1, 'name' => $name, 'allModules' => 1));
 
         if (count($media) <= 0)
             throw new NotFoundException(__('Cannot find media'));
@@ -147,7 +147,7 @@ class MediaFactory extends BaseFactory
      */
     public static function getByOwnerId($ownerId)
     {
-        return MediaFactory::query(null, array('ownerId' => $ownerId));
+        return MediaFactory::query(null, array('disableUserCheck' => 1, 'ownerId' => $ownerId));
     }
 
     /**
@@ -157,7 +157,7 @@ class MediaFactory extends BaseFactory
      */
     public static function getByMediaType($type)
     {
-        return MediaFactory::query(null, array('type' => $type, 'allModules' => 1));
+        return MediaFactory::query(null, array('disableUserCheck' => 1, 'type' => $type, 'allModules' => 1));
     }
 
     /**
@@ -167,7 +167,7 @@ class MediaFactory extends BaseFactory
      */
     public static function getByDisplayGroupId($displayGroupId)
     {
-        return MediaFactory::query(null, array('displayGroupId' => $displayGroupId));
+        return MediaFactory::query(null, array('disableUserCheck' => 1, 'displayGroupId' => $displayGroupId));
     }
 
     /**
@@ -177,7 +177,7 @@ class MediaFactory extends BaseFactory
      */
     public static function getByLayoutId($layoutId)
     {
-        return MediaFactory::query(null, ['layoutId' => $layoutId]);
+        return MediaFactory::query(null, ['disableUserCheck' => 1, 'layoutId' => $layoutId]);
     }
 
     public static function query($sortOrder = null, $filterBy = null)
@@ -185,29 +185,30 @@ class MediaFactory extends BaseFactory
         $entries = array();
 
         $params = array();
-        $sql  = '';
-        $sql .= "SELECT  media.mediaId, ";
-        $sql .= "   media.name, ";
-        $sql .= "   media.type AS mediaType, ";
-        $sql .= "   media.duration, ";
-        $sql .= "   media.userId AS ownerId, ";
-        $sql .= "   media.fileSize, ";
-        $sql .= "   media.storedAs, ";
-        $sql .= "   media.valid, ";
-        $sql .= "   media.moduleSystemFile, ";
-        $sql .= "   media.expires, ";
-        $sql .= "   media.md5, ";
-        $sql .= "   media.retired, ";
-        $sql .= "   media.isEdited, ";
-        $sql .= "   IFNULL((SELECT parentmedia.mediaid FROM media parentmedia WHERE parentmedia.editedmediaid = media.mediaid),0) AS parentId, ";
+        $select = '
+            SELECT  media.mediaId,
+               media.name,
+               media.type AS mediaType,
+               media.duration,
+               media.userId AS ownerId,
+               media.fileSize,
+               media.storedAs,
+               media.valid,
+               media.moduleSystemFile,
+               media.expires,
+               media.md5,
+               media.retired,
+               media.isEdited,
+               IFNULL((SELECT parentmedia.mediaid FROM media parentmedia WHERE parentmedia.editedmediaid = media.mediaid),0) AS parentId,
+        ';
 
         if (Sanitize::getInt('showTags', $filterBy) == 1)
-            $sql .= " tag.tag AS tags, ";
+            $select .= " tag.tag AS tags, ";
         else
-            $sql .= " (SELECT GROUP_CONCAT(DISTINCT tag) FROM tag INNER JOIN lktagmedia ON lktagmedia.tagId = tag.tagId WHERE lktagmedia.mediaId = media.mediaID GROUP BY lktagmedia.mediaId) AS tags, ";
+            $select .= " (SELECT GROUP_CONCAT(DISTINCT tag) FROM tag INNER JOIN lktagmedia ON lktagmedia.tagId = tag.tagId WHERE lktagmedia.mediaId = media.mediaID GROUP BY lktagmedia.mediaId) AS tags, ";
 
-        $sql .= "        `user`.UserName AS owner, ";
-        $sql .= "     (SELECT GROUP_CONCAT(DISTINCT `group`.group)
+        $select .= "        `user`.UserName AS owner, ";
+        $select .= "     (SELECT GROUP_CONCAT(DISTINCT `group`.group)
                               FROM `permission`
                                 INNER JOIN `permissionentity`
                                 ON `permissionentity`.entityId = permission.entityId
@@ -218,19 +219,20 @@ class MediaFactory extends BaseFactory
                             ) AS groupsWithPermissions, ";
         $params['entity'] = 'Xibo\\Entity\\Media';
 
-        $sql .= "   media.originalFileName AS fileName ";
-        $sql .= " FROM media ";
-        $sql .= "   LEFT OUTER JOIN media parentmedia ";
-        $sql .= "   ON parentmedia.MediaID = media.MediaID ";
-        $sql .= "   INNER JOIN `user` ON `user`.userId = `media`.userId ";
+        $select .= "   media.originalFileName AS fileName ";
+
+        $body = " FROM media ";
+        $body .= "   LEFT OUTER JOIN media parentmedia ";
+        $body .= "   ON parentmedia.MediaID = media.MediaID ";
+        $body .= "   INNER JOIN `user` ON `user`.userId = `media`.userId ";
 
         if (Sanitize::getInt('showTags', $filterBy) == 1) {
-            $sql .= " LEFT OUTER JOIN lktagmedia ON lktagmedia.mediaId = media.mediaId ";
-            $sql .= " LEFT OUTER JOIN tag ON tag.tagId = lktagmedia.tagId";
+            $body .= " LEFT OUTER JOIN lktagmedia ON lktagmedia.mediaId = media.mediaId ";
+            $body .= " LEFT OUTER JOIN tag ON tag.tagId = lktagmedia.tagId";
         }
 
         if (Sanitize::getInt('displayGroupId', $filterBy) != null) {
-            $sql .= '
+            $body .= '
                 INNER JOIN `lkmediadisplaygroup`
                 ON lkmediadisplaygroup.mediaid = media.mediaid
                     AND lkmediadisplaygroup.displayGroupId = :displayGroupId
@@ -239,15 +241,18 @@ class MediaFactory extends BaseFactory
             $params['displayGroupId'] = Sanitize::getInt('displayGroupId', $filterBy);
         }
 
-        $sql .= " WHERE media.isEdited = 0 ";
+        $body .= " WHERE media.isEdited = 0 ";
+
+        // View Permissions
+        self::viewPermissionSql('Xibo\Entity\Media', $body, $params, '`media`.mediaId', '`media`.userId', $filterBy);
 
         if (Sanitize::getInt('allModules', $filterBy) == 0) {
-            $sql .= ' AND media.type <> \'module\' ';
+            $body .= ' AND media.type <> \'module\' ';
         }
 
         // Unused only?
         if (Sanitize::getInt('unusedOnly', $filterBy) != null) {
-            $sql .= '
+            $body .= '
                 AND media.mediaId NOT IN (SELECT mediaId FROM `lkwidgetmedia`)
                 AND media.mediaId NOT IN (SELECT mediaId FROM `lkmediadisplaygroup`)
                 AND media.type <> \'module\'
@@ -263,50 +268,50 @@ class MediaFactory extends BaseFactory
                 $i++;
                 // Not like, or like?
                 if (substr($searchName, 0, 1) == '-') {
-                    $sql .= " AND media.name NOT LIKE :notLike ";
+                    $body .= " AND media.name NOT LIKE :notLike ";
                     $params['notLike'] = '%' . ltrim($searchName, '-') . '%';
                 }
                 else {
-                    $sql .= " AND media.name LIKE :like ";
+                    $body .= " AND media.name LIKE :like ";
                     $params['like'] = '%' . $searchName . '%';
                 }
             }
         }
 
         if (Sanitize::getInt('mediaId', -1, $filterBy) != -1) {
-            $sql .= " AND media.mediaId = :mediaId ";
+            $body .= " AND media.mediaId = :mediaId ";
             $params['mediaId'] = Sanitize::getInt('mediaId', $filterBy);
         }
 
         if (Sanitize::getString('type', $filterBy) != '') {
-            $sql .= 'AND media.type = :type';
+            $body .= 'AND media.type = :type';
             $params['type'] = Sanitize::getString('type', $filterBy);
         }
 
         if (Sanitize::getString('storedAs', $filterBy) != '') {
-            $sql .= 'AND media.storedAs = :storedAs';
+            $body .= 'AND media.storedAs = :storedAs';
             $params['storedAs'] = Sanitize::getString('storedAs', $filterBy);
         }
 
-        if (Sanitize::getInt('ownerId', $filterBy) != 0) {
-            $sql .= " AND media.userid = :ownerId ";
-            $params['ownerId'] = Sanitize::getInt('ownerid', $filterBy);
+        if (Sanitize::getInt('ownerId', $filterBy) != null) {
+            $body .= " AND media.userid = :ownerId ";
+            $params['ownerId'] = Sanitize::getInt('ownerId', $filterBy);
         }
 
         if (Sanitize::getInt('retired', -1, $filterBy) == 1)
-            $sql .= " AND media.retired = 1 ";
+            $body .= " AND media.retired = 1 ";
 
         if (Sanitize::getInt('retired', -1, $filterBy) == 0)
-            $sql .= " AND media.retired = 0 ";
+            $body .= " AND media.retired = 0 ";
 
         // Expired files?
         if (Sanitize::getInt('expires', $filterBy) != 0) {
-            $sql .= ' AND media.expires < :expires AND IFNULL(media.expires, 0) <> 0 ';
+            $body .= ' AND media.expires < :expires AND IFNULL(media.expires, 0) <> 0 ';
             $params['expires'] = Sanitize::getInt('expires', $filterBy);
         }
 
         if (Sanitize::getInt('layoutId', $filterBy) != null) {
-            $sql .= '
+            $body .= '
                 AND media.mediaId IN (
                     SELECT `lkwidgetmedia`.mediaId
                       FROM`lkwidgetmedia`
@@ -324,19 +329,29 @@ class MediaFactory extends BaseFactory
         }
 
         // Sorting?
+        $order = '';
         if (is_array($sortOrder))
-            $sql .= 'ORDER BY ' . implode(',', $sortOrder);
+            $order .= 'ORDER BY ' . implode(',', $sortOrder);
 
-        // Paging
         $limit = '';
+        // Paging
         if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval(Sanitize::getInt('start')) . ', ' . Sanitize::getInt('length', 10);
+            $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
         }
 
-        Log::sql($sql . $limit, $params);
+        $sql = $select . $body . $order . $limit;
 
-        foreach (PDOConnect::select($sql . $limit, $params) as $row) {
+        Log::sql($sql, $params);
+
+        foreach (PDOConnect::select($sql, $params) as $row) {
             $entries[] = (new Media())->hydrate($row);
+        }
+
+        // Paging
+        if ($limit != '' && count($entries) > 0) {
+            unset($params['entity']);
+            $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
+            self::$_countLast = intval($results[0]['total']);
         }
 
         return $entries;

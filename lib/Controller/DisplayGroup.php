@@ -47,7 +47,9 @@ class DisplayGroup extends Base
      */
     public function grid()
     {
-        foreach (DisplayFactory::query() as $group) {
+        $displayGroups = DisplayGroupFactory::query();
+
+        foreach ($displayGroups as $group) {
             /* @var \Xibo\Entity\DisplayGroup $group */
 
             if ($this->isApi())

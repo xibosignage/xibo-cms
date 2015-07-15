@@ -39,7 +39,7 @@ class CampaignFactory extends BaseFactory
      */
     public static function getById($campaignId)
     {
-        $campaigns = CampaignFactory::query(null, array('campaignId' => $campaignId, 'isLayoutSpecific' => -1));
+        $campaigns = CampaignFactory::query(null, array('disableUserCheck' => 1, 'campaignId' => $campaignId, 'isLayoutSpecific' => -1));
 
         if (count($campaigns) <= 0) {
             throw new NotFoundException(\__('Campaign not found'));
@@ -66,7 +66,7 @@ class CampaignFactory extends BaseFactory
      */
     public static function getByLayoutId($layoutId)
     {
-        return CampaignFactory::query(null, array('layoutId' => $layoutId));
+        return CampaignFactory::query(null, array('disableUserCheck' => 1, 'layoutId' => $layoutId));
     }
 
     /**
@@ -100,6 +100,9 @@ class CampaignFactory extends BaseFactory
               ON lkcampaignlayout.LayoutID = layout.LayoutID
            WHERE 1 = 1
         ';
+
+        // View Permissions
+        self::viewPermissionSql('Xibo\Entity\Campaign', $body, $params, '`campaign`.campaignId', '`campaign`.userId', $filterBy);
 
         if (Sanitize::getString('isLayoutSpecific', 0, $filterBy) != -1) {
             // Exclude layout specific campaigns
@@ -155,7 +158,7 @@ class CampaignFactory extends BaseFactory
         $limit = '';
         // Paging
         if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval(Sanitize::getInt('start')) . ', ' . Sanitize::getInt('length', 10);
+            $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
         }
 
         $sql = $select . $body . $group . $order . $limit;

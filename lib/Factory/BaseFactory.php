@@ -62,12 +62,13 @@ class BaseFactory
                     LEFT OUTER JOIN `user`
                     ON lkusergroup.UserID = `user`.UserID
                       AND `user`.userId = :currentUserId
-                 WHERE `permissionentity`.entity = :entity
+                 WHERE `permissionentity`.entity = :permissionEntity
+                    AND `permission`.view = 1
                     AND (`user`.userId IS NOT NULL OR `group`.IsEveryone = 1)
               )
             ';
 
-            $params['entity'] = $entity;
+            $params['permissionEntity'] = $entity;
             $params['currentUserId'] = $user->userId;
 
             if ($ownerColumn != null) {

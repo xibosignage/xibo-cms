@@ -38,7 +38,7 @@ class DisplayFactory extends BaseFactory
      */
     public static function getById($displayId)
     {
-        $displays = DisplayFactory::query(null, ['displayId' => $displayId]);
+        $displays = DisplayFactory::query(null, ['disableUserCheck' => 1, 'displayId' => $displayId]);
 
         if (count($displays) <= 0)
             throw new NotFoundException();
@@ -53,7 +53,7 @@ class DisplayFactory extends BaseFactory
      */
     public static function getByLicence($licence)
     {
-        $displays = DisplayFactory::query(null, ['license' => $licence]);
+        $displays = DisplayFactory::query(null, ['disableUserCheck' => 1, 'license' => $licence]);
 
         if (count($displays) <= 0)
             throw new NotFoundException();
@@ -68,7 +68,7 @@ class DisplayFactory extends BaseFactory
      */
     public static function getByDisplayGroupId($displayGroupId)
     {
-        return DisplayFactory::query(null, ['displayGroupId' => $displayGroupId]);
+        return DisplayFactory::query(null, ['disableUserCheck' => 1, 'displayGroupId' => $displayGroupId]);
     }
 
     /**
@@ -78,7 +78,7 @@ class DisplayFactory extends BaseFactory
      */
     public static function getByActiveCampaignId($campaignId)
     {
-        return DisplayFactory::query(null, ['activeCampaignId' => $campaignId]);
+        return DisplayFactory::query(null, ['disableUserCheck' => 1, 'activeCampaignId' => $campaignId]);
     }
 
     /**
@@ -90,7 +90,7 @@ class DisplayFactory extends BaseFactory
     {
         $entries = array();
         $params = array();
-        $SQL = '
+        $select = '
               SELECT display.displayId,
                   display.display,
                   display.defaultLayoutId,
@@ -130,7 +130,9 @@ class DisplayFactory extends BaseFactory
                   display.storageAvailableSpace,
                   display.storageTotalSpace,
                   displaygroup.displayGroupId,
-                  displaygroup.description
+                  displaygroup.description ';
+
+        $body = '
                 FROM `display`
                     INNER JOIN `lkdisplaydg`
                     ON lkdisplaydg.displayid = display.displayId
@@ -143,30 +145,32 @@ class DisplayFactory extends BaseFactory
                WHERE 1 = 1
             ';
 
+        self::viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, 'display.displayId', null, $filterBy);
+
         if (Sanitize::getInt('displayGroupId', $filterBy) != 0) {
             // Restrict to a specific display group
-            $SQL .= ' AND displaygroup.displaygroupid = :displayGroupId ';
+            $body .= ' AND displaygroup.displaygroupid = :displayGroupId ';
             $params['displayGroupId'] = Sanitize::getInt('displayGroupId', $filterBy);
         } else {
             // Restrict to display specific groups
-            $SQL .= ' AND displaygroup.isDisplaySpecific = 1 ';
+            $body .= ' AND displaygroup.isDisplaySpecific = 1 ';
         }
 
         // Filter by Display ID?
         if (Sanitize::getInt('displayId', $filterBy) != 0) {
-            $SQL .= ' AND display.displayid = :displayId ';
+            $body .= ' AND display.displayid = :displayId ';
             $params['displayId'] = Sanitize::getInt('displayId', $filterBy);
         }
 
         // Filter by Wake On LAN
         if (Sanitize::getInt('wakeOnLan', $filterBy) != 0) {
-            $SQL .= ' AND display.wakeOnLan = :wakeOnLan ';
+            $body .= ' AND display.wakeOnLan = :wakeOnLan ';
             $params['wakeOnLan'] = Sanitize::getInt('wakeOnLan', $filterBy);
         }
 
         // Filter by Licence?
         if (Sanitize::getString('license', $filterBy) != null) {
-            $SQL .= ' AND display.license = :license ';
+            $body .= ' AND display.license = :license ';
             $params['license'] = Sanitize::getString('license', $filterBy);
         }
 
@@ -180,37 +184,37 @@ class DisplayFactory extends BaseFactory
                 $i++;
                 // Not like, or like?
                 if (substr($searchName, 0, 1) == '-') {
-                    $SQL .= " AND  (display.display NOT LIKE :search$i ";
+                    $body .= " AND  (display.display NOT LIKE :search$i ";
                     $params['search' . $i] = '%' . ltrim(($searchName), '-') . '%';
                 }
                 else {
-                    $SQL .= " AND  (display.display LIKE :search$i ";
+                    $body .= " AND  (display.display LIKE :search$i ";
                     $params['search' . $i] = '%' . $searchName . '%';
                 }
             }
         }
 
         if (Sanitize::getString('macAddress', $filterBy) != '') {
-            $SQL .= ' AND display.macaddress LIKE :macAddress ';
+            $body .= ' AND display.macaddress LIKE :macAddress ';
             $params['macAddress'] = '%' . Sanitize::getString('macAddress', $filterBy) . '%';
         }
 
         // Exclude a group?
         if (Sanitize::getInt('exclude_displaygroupid', $filterBy) != 0) {
-            $SQL .= " AND display.DisplayID NOT IN ";
-            $SQL .= "       (SELECT display.DisplayID ";
-            $SQL .= "       FROM    display ";
-            $SQL .= "               INNER JOIN lkdisplaydg ";
-            $SQL .= "               ON      lkdisplaydg.DisplayID = display.DisplayID ";
-            $SQL .= "   WHERE  lkdisplaydg.DisplayGroupID   = :excludeDisplayGroupId ";
-            $SQL .= "       )";
+            $body .= " AND display.DisplayID NOT IN ";
+            $body .= "       (SELECT display.DisplayID ";
+            $body .= "       FROM    display ";
+            $body .= "               INNER JOIN lkdisplaydg ";
+            $body .= "               ON      lkdisplaydg.DisplayID = display.DisplayID ";
+            $body .= "   WHERE  lkdisplaydg.DisplayGroupID   = :excludeDisplayGroupId ";
+            $body .= "       )";
             $params['excludeDisplayGroupId'] = Sanitize::getInt('exclude_displaygroupid', $filterBy);
         }
 
         // Only ones with a particular active campaign
         if (Sanitize::getInt('activeCampaignId', $filterBy) != null) {
             // Which displays does a change to this layout effect?
-            $SQL .= '
+            $body .= '
               AND display.displayId IN (
                    SELECT DISTINCT display.DisplayID
                      FROM `schedule`
@@ -245,13 +249,28 @@ class DisplayFactory extends BaseFactory
         }
 
         // Sorting?
+        $order = '';
         if (is_array($sortOrder))
-            $SQL .= 'ORDER BY ' . implode(',', $sortOrder);
+            $order .= 'ORDER BY ' . implode(',', $sortOrder);
 
-        Log::sql($SQL, $params);
+        $limit = '';
+        // Paging
+        if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
+        }
 
-        foreach (PDOConnect::select($SQL, $params) as $row) {
+        $sql = $select . $body . $order . $limit;
+
+        Log::sql($sql, $params);
+
+        foreach (PDOConnect::select($sql, $params) as $row) {
             $entries[] = (new Display())->hydrate($row);
+        }
+
+        // Paging
+        if ($limit != '' && count($entries) > 0) {
+            $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
+            self::$_countLast = intval($results[0]['total']);
         }
 
         return $entries;
