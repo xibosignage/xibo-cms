@@ -123,6 +123,7 @@ class User extends Base
         }
 
         $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = UserFactory::countLast();
         $this->getState()->setData($users);
     }
 

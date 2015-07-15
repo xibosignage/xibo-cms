@@ -30,38 +30,55 @@ class SessionFactory extends BaseFactory
         $params = array();
 
         try {
-            $sql = '
-            SELECT session.userId, user.userName, isExpired, lastPage, session.lastAccessed, remoteAddr AS remoteAddress, userAgent
+            $select = '
+            SELECT session.userId, user.userName, isExpired, lastPage, session.lastAccessed, remoteAddr AS remoteAddress, userAgent ';
+
+            $body = '
               FROM `session`
                 LEFT OUTER JOIN user ON user.userID = session.userID
              WHERE 1 = 1
             ';
 
             if (Sanitize::getString('fromDt', $filterBy) != '') {
-                $sql .= ' AND session.LastAccessed < :lastAccessed ';
+                $body .= ' AND session.LastAccessed < :lastAccessed ';
                 $params['lastAccessed'] = Date::getMidnightSystemDate(Date::getTimestampFromString(Sanitize::getString('fromDt', $filterBy)));
             }
 
             if (Sanitize::getString('type', $filterBy) == 'active') {
-                $sql .= ' AND IsExpired = 0 ';
+                $body .= ' AND IsExpired = 0 ';
             }
 
             if (Sanitize::getString('type', $filterBy) == 'active') {
-                $sql .= ' AND IsExpired = 1 ';
+                $body .= ' AND IsExpired = 1 ';
             }
 
             if (Sanitize::getString('type', $filterBy) == 'active') {
-                $sql .= ' AND session.userID IS NULL ';
+                $body .= ' AND session.userID IS NULL ';
             }
 
             // Sorting?
+            $order = '';
             if (is_array($sortOrder))
-                $sql .= 'ORDER BY ' . implode(',', $sortOrder);
+                $order .= 'ORDER BY ' . implode(',', $sortOrder);
+
+            $limit = '';
+            // Paging
+            if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
+                $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
+            }
+
+            $sql = $select . $body . $order . $limit;
 
             Log::sql($sql, $params);
 
             foreach (PDOConnect::select($sql, $params) as $row) {
                 $entries[] = (new Session())->hydrate($row);
+            }
+
+            // Paging
+            if ($limit != '' && count($entries) > 0) {
+                $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
+                self::$_countLast = intval($results[0]['total']);
             }
 
             return $entries;

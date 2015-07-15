@@ -39,7 +39,7 @@ class ResolutionFactory extends BaseFactory
      */
     public static function getById($resolutionId)
     {
-        $resolutions = ResolutionFactory::query(null, array('resolutionId' => $resolutionId));
+        $resolutions = ResolutionFactory::query(null, array('disableUserCheck' => 1, 'resolutionId' => $resolutionId));
 
         if (count($resolutions) <= 0)
             throw new NotFoundException;
@@ -56,7 +56,7 @@ class ResolutionFactory extends BaseFactory
      */
     public static function getByDimensions($width, $height)
     {
-        $resolutions = ResolutionFactory::query(null, array('width' => $width, 'height' => $height));
+        $resolutions = ResolutionFactory::query(null, array('disableUserCheck' => 1, 'width' => $width, 'height' => $height));
 
         if (count($resolutions) <= 0)
             throw new NotFoundException('Resolution not found');

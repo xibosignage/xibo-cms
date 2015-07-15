@@ -39,7 +39,7 @@ class PlaylistFactory extends BaseFactory
      */
     public static function getByRegionId($regionId)
     {
-        return PlaylistFactory::query(null, array('regionId' => $regionId));
+        return PlaylistFactory::query(null, array('disableUserCheck' => 1, 'regionId' => $regionId));
     }
 
     /**
@@ -50,7 +50,7 @@ class PlaylistFactory extends BaseFactory
      */
     public static function getById($playlistId)
     {
-        $playlists = PlaylistFactory::query(null, array('playlistId' => $playlistId));
+        $playlists = PlaylistFactory::query(null, array('disableUserCheck' => 1, 'playlistId' => $playlistId));
 
         if (count($playlists) <= 0)
             throw new NotFoundException(__('Cannot find playlist'));
@@ -78,16 +78,16 @@ class PlaylistFactory extends BaseFactory
         $entries = array();
 
         $params = array();
-        $sql = 'SELECT playlist.* ';
+        $select = 'SELECT playlist.* ';
 
         if (Sanitize::getInt('regionId', $filterBy) != null) {
-            $sql .= ' , lkregionplaylist.displayOrder ';
+            $select .= ' , lkregionplaylist.displayOrder ';
         }
 
-        $sql .= '  FROM `playlist` ';
+        $body = '  FROM `playlist` ';
 
         if (Sanitize::getInt('regionId', $filterBy) != null) {
-            $sql .= '
+            $body .= '
                 INNER JOIN `lkregionplaylist`
                 ON lkregionplaylist.playlistId = playlist.playlistId
                     AND lkregionplaylist.regionId = :regionId
@@ -95,17 +95,36 @@ class PlaylistFactory extends BaseFactory
             $params['regionId'] = Sanitize::getInt('regionId', $filterBy);
         }
 
-        $sql .= ' WHERE 1 = 1 ';
+        $body .= ' WHERE 1 = 1 ';
 
         if (Sanitize::getInt('playlistId', $filterBy) != 0) {
-            $sql .= ' AND playlistId = :playlistId ';
+            $body .= ' AND playlistId = :playlistId ';
             $params['playlistId'] = Sanitize::getInt('playlistId', $filterBy);
         }
+
+        // Sorting?
+        $order = '';
+        if (is_array($sortOrder))
+            $order .= 'ORDER BY ' . implode(',', $sortOrder);
+
+        $limit = '';
+        // Paging
+        if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
+        }
+
+        $sql = $select . $body . $order . $limit;
 
         Log::sql($sql, $params);
 
         foreach (PDOConnect::select($sql, $params) as $row) {
             $entries[] = (new Playlist())->hydrate($row);
+        }
+
+        // Paging
+        if ($limit != '' && count($entries) > 0) {
+            $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
+            self::$_countLast = intval($results[0]['total']);
         }
 
         return $entries;
