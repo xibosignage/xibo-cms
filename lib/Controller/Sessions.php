@@ -85,6 +85,7 @@ class Sessions extends Base
         }
 
         $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = SessionFactory::countLast();
         $this->getState()->setData($sessions);
     }
 

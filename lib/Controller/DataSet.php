@@ -130,6 +130,7 @@ class DataSet extends Base
         }
 
         $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = DataSetFactory::countLast();
         $this->getState()->setData($dataSets);
     }
 

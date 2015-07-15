@@ -120,6 +120,7 @@ class UserGroup extends Base
         }
 
         $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = UserGroupFactory::countLast();
         $this->getState()->setData($groups);
     }
 

@@ -313,6 +313,7 @@ class Display extends Base
         }
 
         $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = DisplayFactory::countLast();
         $this->getState()->setData($displays);
     }
 

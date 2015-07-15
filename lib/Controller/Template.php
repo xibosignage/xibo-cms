@@ -78,7 +78,9 @@ class Template extends Base
         $showThumbnail = Sanitize::getCheckbox('showThumbnail');
         $this->getSession()->set('layout', 'showThumbnail', $showThumbnail);
 
-        foreach (LayoutFactory::query(null, ['excludeTemplates' => 0, 'tags' => 'template', 'name' => $filter_name]) as $template) {
+        $templates = LayoutFactory::query(null, ['excludeTemplates' => 0, 'tags' => 'template', 'name' => $filter_name]);
+
+        foreach ($templates as $template) {
             /* @var \Xibo\Entity\Layout $template */
 
             $template->thumbnail = '';

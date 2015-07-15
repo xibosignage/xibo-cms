@@ -38,7 +38,7 @@ class WidgetFactory extends BaseFactory
      */
     public static function getByPlaylistId($playlistId)
     {
-        return WidgetFactory::query(null, array('playlistId' => $playlistId));
+        return WidgetFactory::query(null, array('disableUserCheck' => 1, 'playlistId' => $playlistId));
     }
 
     /**
@@ -48,7 +48,7 @@ class WidgetFactory extends BaseFactory
      */
     public static function getByMediaId($mediaId)
     {
-        return WidgetFactory::query(null, array('mediaId' => $mediaId));
+        return WidgetFactory::query(null, array('disableUserCheck' => 1, 'mediaId' => $mediaId));
     }
 
     /**
@@ -58,7 +58,7 @@ class WidgetFactory extends BaseFactory
      */
     public static function getById($widgetId)
     {
-        $widgets = WidgetFactory::query(null, array('widgetId' => $widgetId));
+        $widgets = WidgetFactory::query(null, array('disableUserCheck' => 1, 'widgetId' => $widgetId));
         return $widgets[0];
     }
 
@@ -70,7 +70,7 @@ class WidgetFactory extends BaseFactory
      */
     public static function loadByWidgetId($widgetId)
     {
-        $widgets = WidgetFactory::query(null, array('widgetId' => $widgetId));
+        $widgets = WidgetFactory::query(null, array('disableUserCheck' => 1, 'widgetId' => $widgetId));
 
         if (count($widgets) <= 0)
             throw new NotFoundException(__('Widget not found'));
@@ -129,6 +129,9 @@ class WidgetFactory extends BaseFactory
         }
 
         $sql .= ' WHERE 1 = 1 ';
+
+        // Permissions
+        self::viewPermissionSql('Xibo\Entity\Widget', $sql, $params, 'widget.widgetId', 'widget.ownerId', $filterBy);
 
         if (Sanitize::getInt('playlistId', $filterBy) != null) {
             $sql .= ' AND playlistId = :playlistId';

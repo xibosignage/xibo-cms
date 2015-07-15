@@ -23,12 +23,10 @@ namespace Xibo\Controller;
 use baseDAO;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\TransitionFactory;
-use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Config;
 use Xibo\Helper\Form;
 use Xibo\Helper\Help;
 use Xibo\Helper\Sanitize;
-use Xibo\Helper\Theme;
 
 
 class Transition extends Base
@@ -61,6 +59,7 @@ class Transition extends Base
         }
 
         $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = TransitionFactory::countLast();
         $this->getState()->setData($transitions);
     }
 

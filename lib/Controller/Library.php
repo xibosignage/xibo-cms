@@ -180,6 +180,7 @@ class Library extends Base
         }
 
         $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = MediaFactory::countLast();
         $this->getState()->setData($mediaList);
     }
 

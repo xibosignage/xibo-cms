@@ -113,6 +113,7 @@ class DisplayGroup extends Base
         }
 
         $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = DisplayGroupFactory::countLast();
         $this->getState()->setData($displayGroups);
     }
 

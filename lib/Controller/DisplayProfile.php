@@ -60,6 +60,7 @@ class DisplayProfile extends Base
         }
 
         $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = DisplayProfileFactory::countLast();
         $this->getState()->setData($profiles);
     }
 

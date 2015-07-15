@@ -100,7 +100,7 @@ class Stats extends Base
         $SQL .= 'ORDER BY display.Display, layout.Layout';
 
         // Log
-        Log::sql($SQL);
+        Log::sql($SQL, []);
 
         if (!$results = $this->db->query($SQL)) {
             trigger_error($db->error());

@@ -475,6 +475,7 @@ class Layout extends Base
         }
 
         // Store the table rows
+        $this->getState()->recordsTotal = LayoutFactory::countLast();
         $this->getState()->setData($layouts);
     }
 
