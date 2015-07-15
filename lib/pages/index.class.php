@@ -123,7 +123,7 @@ class indexDAO extends baseDAO {
             trigger_error("Can not get the user information", E_USER_ERROR);
         }
         
-        if ($db->num_rows($results) < 0 || $db->num_rows($results) > 1) 
+        if ($db->num_rows($results) !=1) 
         {
             setMessage("The details you entered are incorrect.");
             return $return;
