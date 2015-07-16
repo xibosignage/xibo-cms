@@ -4,86 +4,6 @@
  * Copyright (C) 2015 Spring Signage Ltd
  * (${FILE_NAME})
  */
-// Augment settings with templates
-        $this->loadTemplates();
-
-        // Configure form
-        $this->configureForm('AddMedia');
-
-        // Two tabs
-        $tabs = array();
-        $tabs[] = Form::AddTab('general', __('General'));
-        $tabs[] = Form::AddTab('advanced', __('Appearance'));
-        $tabs[] = Form::AddTab('forecast', __('Forecast'));
-
-        Theme::Set('form_tabs', $tabs);
-
-        $formFields['general'][] = Form::AddText('name', __('Name'), NULL,
-            __('An optional name for this media'), 'n');
-
-        $formFields['general'][] = Form::AddNumber('duration', __('Duration'), NULL,
-            __('The duration in seconds this item should be displayed.'), 'd', 'required');
-
-        $formFields['general'][] = Form::AddCheckbox('useDisplayLocation', __('Use the Display Location'), $this->GetOption('useDisplayLocation'),
-            __('Use the location configured on the display'), 'd');
-
-        // Any values for the form fields should be added to the theme here.
-        $formFields['general'][] = Form::AddNumber('latitude', __('Latitude'), $this->GetOption('latitude'),
-            __('The Latitude for this weather module'), 'l', '', 'locationControls');
-
-        $formFields['general'][] = Form::AddNumber('longitude', __('Longitude'), $this->GetOption('longitude'),
-            __('The Longitude for this weather module'), 'g', '', 'locationControls');
-
-        $formFields['advanced'][] = Form::AddCombo('templateId', __('Weather Template'), $this->GetOption('templateId'),
-            $this->module->settings['templates'],
-            'id',
-            'value',
-            __('Select the template you would like to apply. This can be overridden using the check box below.'), 't', 'template-selector-control');
-
-        $formFields['advanced'][] = Form::AddCombo('icons', __('Icons'), $this->GetOption('icons'),
-            $this->iconsAvailable(),
-            'id',
-            'value',
-            __('Select the icon set you would like to use.'), 't', 'icon-controls');
-
-        $formFields['advanced'][] = Form::AddNumber('size', __('Size'), $this->GetOption('size', 1),
-            __('Set the size. Start at 1 and work up until the widget fits your region appropriately.'), 's', 'number', 'template-selector-control');
-
-        $formFields['advanced'][] = Form::AddCombo('units', __('Units'), $this->GetOption('units'),
-            $this->unitsAvailable(),
-            'id',
-            'value',
-            __('Select the units you would like to use.'), 'u');
-
-        $formFields['advanced'][] = Form::AddCombo('lang', __('Language'), Translate::GetLocale(2),
-            $this->supportedLanguages(),
-            'id',
-            'value',
-            __('Select the language you would like to use.'), 'l');
-
-        $formFields['advanced'][] = FormManager::AddNumber('updateInterval', __('Update Interval (mins)'), $this->GetOption('updateInterval', 60),
-            __('Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60.'),
-            'n', 'required');
-
-        $formFields['advanced'][] = FormManager::AddCheckbox('dayConditionsOnly', __('Only show Daytime weather conditions'), 1,
-            __('Tick if you would like to only show the Daytime weather conditions.'), 'd');
-
-        $formFields['general'][] = FormManager::AddText('color', __('Colour'), '#000',
-            __('Please select a colour for the foreground text.'), 'c', 'required');
-
-        $formFields['advanced'][] = Form::AddCheckbox('overrideTemplate', __('Override the template?'), 0,
-            __('Tick if you would like to override the template.'), 'o');
-
-        $formFields['advanced'][] = Form::AddMultiText('currentTemplate', __('Template for Current Forecast'), NULL,
-            __('Enter the template for the current forecast. For a list of substitutions click "Request Forecast" below.'), 't', 10, 'required', 'template-override-controls');
-
-        $formFields['advanced'][] = Form::AddMultiText('dailyTemplate', __('Template for Daily Forecast'), NULL,
-            __('Enter the template for the daily forecast. Replaces [dailyForecast] in main template.'), 't', 10, NULL, 'template-override-controls');
-
-        $formFields['advanced'][] = Form::AddMultiText('styleSheet', __('CSS Style Sheet'), NULL, __('Enter a CSS style sheet to style the weather widget'), 'c', 10, 'required', 'template-override-controls');
-
-        $formFields['forecast'][] = Form::AddMessage(__('Please press Request Forecast'));
-
         // Configure the field dependencies
         $this->SetFieldDepencencies($response);
 
@@ -157,9 +77,10 @@
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Save" %}, $("#<<id>>").submit()
-    {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Get Forecast" %}, requestTab("forecast", "{{ urlFor("module.widget.tab.form", {tab: "forecast"}) }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#forecastAddForm").submit()
 {% endblock %}
 
 {% block callBack %}forecastIoFormSetup{% endblock %}
@@ -167,8 +88,94 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="<<id>>" class="XiboForm form-horizontal" method="post" action="{{ urlFor("module.widget.add", {type: module.widget.type, id: playlist.playlistId}) }}">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                <li><a href="#advanced" role="tab" data-toggle="tab"><span>{% trans "Appearance" %}</span></a></li>
+                <li><a href="#forecast" role="tab" data-toggle="tab"><span>{% trans "Forecast" %}</span></a></li>
+            </ul>
+            <form id="forecastAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("module.widget.add", {type: module.widget.type, id: playlist.playlistId}) }}">
+                <div class="tab-content">
+                    <div class="tab-pane active" id="general">
+                        {% set title %}{% trans "Name" %}{% endset %}
+                        {% set helpText %}{% trans "An optional name for this media" %}{% endset %}
+                        {{ forms.text("name", title, "", helpText) }}
 
+                        {% set title %}{% trans "Duration" %}{% endset %}
+                        {% set helpText %}{% trans "The duration in seconds this item should be displayed." %}{% endset %}
+                        {{ forms.number("duration", title, "", helpText, "", "required") }}
+
+                        {% set title %}{% trans "Use the Display Location" %}{% endset %}
+                        {% set helpText %}{% trans "Use the location configured on the display" %}{% endset %}
+                        {{ forms.checkbox("useDisplayLocation", title, module.getOption("useDisplayLocation"), helpText) }}
+
+                        {% set title %}{% trans "'Latitude" %}{% endset %}
+                        {% set helpText %}{% trans "The Latitude for this weather module" %}{% endset %}
+                        {{ forms.number("latitude", title, module.getOption("latitude"), helpText, "", "", "locationcontols") }}
+
+                        {% set title %}{% trans "Longitude" %}{% endset %}
+                        {% set helpText %}{% trans "The Longitude for this weather module" %}{% endset %}
+                        {{ forms.number("longitude", title, module.getOption("longitude"), helpText, "", "", "locationcontrols") }}
+
+                        {% set title %}{% trans "Colour" %}{% endset %}
+                        {% set helpText %}{% trans "Please select a colour for the foreground text." %}{% endset %}
+                        {{ forms.text("color", title, "#000", helpText, "", "required") }}
+                    </div>
+
+                    <div class="tab-pane" id="advanced">
+                    {# as with ticker and twitter not sure how to refrence $this->module->settings['templates'] just templates ? can't test at the moment#}
+                        {% set title %}{% trans "Weather Template" %}{% endset %}
+                        {% set helpText %}{% trans "Select the template you would like to apply. This can be overridden using the check box below." %}{% endset %}
+                        {{ forms.dropdown("templateId", "single", title, module.getOpion("templateId"), $this->module->settings['templates'], "id", "value", helpText, "", "template-selector-control") }}
+
+                    {# $this->iconsAvailable() and $this->unitsAvailable() and Translate::GetLocale(2),
+            $this->supportedLanguages() not entirely sure how to refrence those #}
+
+                        {% set title %}{% trans "Icons" %}{% endset %}
+                        {% set helpText %}{% trans "Select the icon set you would like to use." %}{% endset %}
+                        {{ forms.dropdown("icons", "single", title, module.getOpion("icons"), module.iconsAvailable(), "id", "value", helpText, "", "icon-controls") }}
+
+                        {% set title %}{% trans "Size" %}{% endset %}
+                        {% set helpText %}{% trans "Set the size. Start at 1 and work up until the widget fits your region appropriately." %}{% endset %}
+                        {{ forms.number("size", title, module.getOption("size", 1), helpText, "", "number", "template-selector-control") }}
+
+                        {% set title %}{% trans "Units" %}{% endset %}
+                        {% set helpText %}{% trans "Select the units you would like to use." %}{% endset %}
+                        {{ forms.dropdown("units", "single", title, module.getOpion("units"), module.unitsAvailable(), "id", "value", helpText) }}
+
+                        {% set title %}{% trans "Language" %}{% endset %}
+                        {% set helpText %}{% trans "Select the language you would like to use." %}{% endset %}
+                        {{ forms.dropdown("lang", "single", title, Translate::GetLocale(2), module.supportedLanguages(), "id", "value", helpText) }}
+
+                        {% set title %}{% trans "Update Interval (mins)" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60." %}{% endset %}
+                        {{ forms.number("updateInterval", title, module.getOption("updateInterval", 60), helpText, "", "required") }}
+
+                        {% set title %}{% trans "Only show Daytime weather conditions" %}{% endset %}
+                        {% set helpText %}{% trans "Tick if you would like to only show the Daytime weather conditions." %}{% endset %}
+                        {{ forms.checkbox("dayConditionsOnly", title, 1, helpText) }}
+
+                        {% set title %}{% trans "Override the template?" %}{% endset %}
+                        {% set helpText %}{% trans "Tick if you would like to override the template." %}{% endset %}
+                        {{ forms.checkbox("overrideTemplate'", title, 0, helpText) }}
+
+                        {% set title %}{% trans "Template for Current Forecast" %}{% endset %}
+                        {% set helpText %}{% trans "Enter the template for the current forecast. For a list of substitutions click "Request Forecast" below." %}{% endset %}
+                        {{ forms.textarea("currentTemplate", title, "", helpText, "", 10, "required", "template-override-controls") }}
+
+                        {% set title %}{% trans "Template for Daily Forecast" %}{% endset %}
+                        {% set helpText %}{% trans "Enter the template for the daily forecast. Replaces [dailyForecast] in main template." %}{% endset %}
+                        {{ forms.textarea("dailyTemplate", title, "", helpText, "", 10, "", "template-override-controls") }}
+
+                        {% set title %}{% trans "CSS Style Sheet" %}{% endset %}
+                        {% set helpText %}{% trans "Enter a CSS style sheet to style the weather widget" %}{% endset %}
+                        {{ forms.textarea("styleSheet", title, "", helpText, "", 10, "required", "template-override-controls") }}
+                    </div>
+                    <div class="tab-pane" id="forecast">
+       {# there was no request forecast button in this form...so I added one (copy/paste from forecastEdit form #}
+                        {% set message %}{% trans "Please press Request Forecast" %}{% endset %}
+                        {{ forms.message(message) }}  
+                    </div>
+                </div>
             </form>
         </div>
     </div>
