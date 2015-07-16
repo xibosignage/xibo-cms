@@ -137,6 +137,7 @@ $app->get('/dataset', '\Xibo\Controller\DataSet:grid')->name('dataSet.search');
 $app->get('/stats', '\Xibo\Controller\Stats:grid')->name('stats.search');
 $app->get('/stats/data/bandwidth', '\Xibo\Controller\Stats:bandwidthData')->name('stats.bandwidth.data');
 $app->get('/stats/data/availability', '\Xibo\Controller\Stats:availabilityData')->name('stats.availability.data');
+$app->get('/stats/export', '\Xibo\Controller\Stats:export')->name('stats.export');
 
 //
 // Log

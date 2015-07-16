@@ -20,12 +20,12 @@
  */
 namespace Xibo\Controller;
 
+use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Helper\Date;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
-use Xibo\Helper\Theme;
 use Xibo\Storage\PDOConnect;
 
 
@@ -214,6 +214,9 @@ class Stats extends Base
         ];
     }
 
+    /**
+     * Bandwidth Data
+     */
     public function bandwidthData()
     {
         $fromDt = Date::getTimestampFromString(Sanitize::getString('fromdt'));
@@ -312,119 +315,90 @@ class Stats extends Base
         ];
     }
 
-    public function outputCsvForm()
+    /**
+     * Output CSV Form
+     */
+    public function exportForm()
     {
-        $response = $this->getState();
-
-        Theme::Set('form_id', 'OutputCsvForm');
-        Theme::Set('form_action', 'index.php?p=stats&q=OutputCSV');
-
-        $formFields = array();
-        $formFields[] = Form::AddText('fromdt', __('From Date'), Date::getLocalDate(time() - (86400 * 35), 'Y-m-d'), NULL, 'f');
-        $formFields[] = Form::AddText('todt', __('To Date'), Date::getLocalDate(null, 'Y-m-d'), NULL, 't');
-
-        // List of Displays this user has permission for
-        $formFields[] = Form::AddCombo(
-            'displayid',
-            __('Display'),
-            NULL,
-            DisplayFactory::query(),
-            'displayid',
-            'displaygroup',
-            NULL,
-            'd');
-
-        Theme::Set('header_text', __('Bandwidth'));
-        Theme::Set('form_fields', $formFields);
-        Theme::Set('form_class', 'XiboManualSubmit');
-
-        $response->SetFormRequestResponse(NULL, __('Export Statistics'), '550px', '275px');
-        $response->AddButton(__('Export'), '$("#OutputCsvForm").submit()');
-        $response->AddButton(__('Close'), 'XiboDialogClose()');
-
+        $this->getState()->template = 'statistics-form-export';
     }
 
     /**
      * Outputs a CSV of stats
-     * @return
      */
-    public function OutputCSV()
+    public function export()
     {
-        $db =& $this->db;
-        $output = '';
-
         // We are expecting some parameters
-        $fromdt = Date::getIsoDateFromString(Kit::GetParam('fromdt', _POST, _STRING));
-        $todt = Date::getIsoDateFromString(Kit::GetParam('todt', _POST, _STRING));
-        $displayID = Sanitize::getInt('displayid');
+        $fromDt = Date::getIsoDateFromString(Sanitize::getString('fromDt'));
+        $toDt = Date::getIsoDateFromString(Sanitize::getString('toDt'));
+        $displayId = Sanitize::getInt('displayid');
 
-        if ($fromdt == $todt) {
-            $todt = date("Y-m-d", strtotime($todt) + 86399);
+        if ($fromDt == $toDt) {
+            $toDt = date("Y-m-d", strtotime($toDt) + 86399);
         }
-
-        // We want to output a load of stuff to the browser as a text file.
-        header('Content-Type: text/csv');
-        header('Content-Disposition: attachment; filename="stats.csv"');
-        header("Content-Transfer-Encoding: binary");
-        header('Accept-Ranges: bytes');
 
         // Get an array of display id this user has access to.
-        $display_ids = array();
+        $displayIds = array();
 
         foreach (DisplayFactory::query() as $display) {
-            $display_ids[] = $display['displayid'];
+            $displayIds[] = $display->displayId;
         }
 
-        if (count($display_ids) <= 0) {
-            echo __('No displays with View permissions');
-            exit;
+        if (count($displayIds) <= 0)
+            throw new AccessDeniedException();
+
+        $sql = '
+        SELECT stat.*, display.Display, layout.Layout, media.Name AS MediaName
+          FROM stat
+            INNER JOIN display
+            ON stat.DisplayID = display.DisplayID
+            LEFT OUTER JOIN layout
+            ON layout.LayoutID = stat.LayoutID
+            LEFT OUTER JOIN media
+            ON media.mediaID = stat.mediaID
+         WHERE 1 = 1
+          AND stat.end > :fromDt
+          AND stat.start <= :toDt
+          AND stat.displayID IN (' . implode(',', $displayIds) . ')
+        ';
+
+        $params = [
+            'fromDt' => $fromDt,
+            'toDt' => $toDt
+        ];
+
+        if ($displayId != 0) {
+            $sql .= '  AND stat.displayID = :displayId ';
+            $params['displayId'] = $displayId;
         }
 
-        $SQL = 'SELECT stat.*, display.Display, layout.Layout, media.Name AS MediaName ';
-        $SQL .= '  FROM stat ';
-        $SQL .= '  INNER JOIN display ON stat.DisplayID = display.DisplayID ';
-        $SQL .= '  LEFT OUTER JOIN layout ON layout.LayoutID = stat.LayoutID ';
-        $SQL .= '  LEFT OUTER JOIN media ON media.mediaID = stat.mediaID ';
-        $SQL .= ' WHERE 1=1 ';
-        $SQL .= sprintf("  AND stat.end > '%s' ", $fromdt);
-        $SQL .= sprintf("  AND stat.start <= '%s' ", $todt);
+        $sql .= " ORDER BY stat.start ";
 
-        $SQL .= ' AND stat.displayID IN (' . implode(',', $display_ids) . ') ';
+        $out = fopen('php://output', 'w');
+        fputcsv($out, ['Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag']);
 
-        if ($displayID != 0) {
-            $SQL .= sprintf("  AND stat.displayID = %d ", $displayID);
-        }
-
-        $SQL .= " ORDER BY stat.start ";
-
-        Log::notice($SQL, 'Stats', 'OutputCSV');
-
-        if (!$result = $db->query($SQL)) {
-            trigger_error($db->error());
-            trigger_error('Failed to query for Stats.', E_USER_ERROR);
-        }
-
-        // Header row
-        $output .= "Type, FromDT, ToDT, Layout, Display, Media, Tag\n";
-
-        while ($row = $db->get_assoc_row($result)) {
+        // Do some post processing
+        foreach (PDOConnect::select($sql, $params) as $row) {
             // Read the columns
             $type = Sanitize::string($row['Type']);
-            $fromdt = Sanitize::string($row['start']);
-            $todt = Sanitize::string($row['end']);
+            $fromDt = Sanitize::string($row['start']);
+            $toDt = Sanitize::string($row['end']);
             $layout = Sanitize::string($row['Layout']);
             $display = Sanitize::string($row['Display']);
             $media = Sanitize::string($row['MediaName']);
             $tag = Sanitize::string($row['Tag']);
 
-            $output .= "$type, $fromdt, $todt, $layout, $display, $media, $tag\n";
+            fputcsv($out, [$type, $fromDt, $toDt, $layout, $display, $media, $tag]);
         }
 
-        //Log::debug('Output: ' . $output, 'Stats', 'OutputCSV');
+        fclose($out);
 
-        echo $output;
-        exit;
+        // We want to output a load of stuff to the browser as a text file.
+        $app = $this->getApp();
+        $app->response()->header('Content-Type', 'text/csv');
+        $app->response()->header('Content-Disposition', 'attachment; filename="stats.csv"');
+        $app->response()->header('Content-Transfer-Encoding', 'binary"');
+        $app->response()->header('Accept-Ranges', 'bytes');
+        $this->setNoOutput(true);
     }
 }
-
-?>
