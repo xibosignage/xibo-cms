@@ -131,6 +131,12 @@ $app->delete('/displayprofile/:id', '\Xibo\Controller\DisplayProfile:delete')->n
 //
 $app->get('/dataset', '\Xibo\Controller\DataSet:grid')->name('dataSet.search');
 $app->post('/dataset', '\Xibo\Controller\DataSet:add')->name('dataSet.add');
+$app->put('/dataset/:id', '\Xibo\Controller\DataSet:edit')->name('dataSet.edit');
+$app->delete('/dataset/:id', '\Xibo\Controller\DataSet:delete')->name('dataSet.delete');
+// Columns
+$app->post('/dataset/:id/column/add', '\Xibo\Controller\DataSetColumn:add')->name('dataSet.column.add');
+$app->put('/dataset/:id/column/edit/:colId', '\Xibo\Controller\DataSetColumn:edit')->name('dataSet.column.edit');
+$app->delete('/dataset/:id/column/delete/:colId', '\Xibo\Controller\DataSetColumn:delete')->name('dataSet.column.delete');
 
 //
 // Statistics

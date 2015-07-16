@@ -39,21 +39,6 @@ class DataSet extends Base
         $this->getState()->template = 'dataset-page';
     }
 
-    public function displayDataEntry()
-    {
-        Theme::Set('id', 'DataEntryGrid');
-        $dataSetId = \Xibo\Helper\Sanitize::getInt('datasetid');
-        $dataSet = \Xibo\Helper\Sanitize::getString('dataset');
-
-        Theme::Set('form_meta', '<input type="hidden" name="p" value="dataset"><input type="hidden" name="q" value="DataSetDataForm"><input type="hidden" name="datasetid" value="' . $dataSetId . '"><input type="hidden" name="dataset" value="' . $dataSet . '">');
-
-        // Call to render the template
-        Theme::Set('header_text', $dataSet);
-        Theme::Set('form_fields', array());
-        $this->getState()->html .= Theme::RenderReturn('grid_render');
-        $this->getState()->template = 'dataset-dataentry-page';
-    }
-
     /**
      * Search Data
      * @throws \Xibo\Exception\NotFoundException
@@ -85,7 +70,8 @@ class DataSet extends Base
                 // View Columns
                 $dataSet->buttons[] = array(
                     'id' => 'dataset_button_viewcolumns',
-                    'url' => $this->urlFor('dataSet.columns.form', ['id' => $dataSet->dataSetId]),
+                    'url' => $this->urlFor('dataSet.column.view', ['id' => $dataSet->dataSetId]),
+                    'link' => true,
                     'text' => __('View Columns')
                 );
 

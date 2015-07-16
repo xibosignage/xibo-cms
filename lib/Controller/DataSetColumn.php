@@ -11,7 +11,12 @@ namespace Xibo\Controller;
 
 class DataSetColumn extends Base
 {
-    public function DataSetColumnsForm()
+    public function displayPage()
+    {
+        $this->getState()->template = 'dataset-column-page';
+    }
+
+    public function grid()
     {
 
         $response = $this->getState();

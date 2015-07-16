@@ -209,7 +209,11 @@ $app->get('/dataset/form/add', '\Xibo\Controller\DataSet:addForm')->name('dataSe
 $app->get('/dataset/form/edit/:id', '\Xibo\Controller\DataSet:editForm')->name('dataSet.edit.form');
 $app->get('/dataset/form/delete/:id', '\Xibo\Controller\DataSet:deleteForm')->name('dataSet.delete.form');
 $app->get('/dataset/form/import/:id', '\Xibo\Controller\DataSet:importForm')->name('dataSet.import.form');
-$app->get('/dataset/form/columns/:id', '\Xibo\Controller\DataSet:columnsForm')->name('dataSet.columns.form');
+// columns
+$app->get('/dataset/:id/column/view', '\Xibo\Controller\DataSetColumn:view')->name('dataSet.column.view');
+$app->get('/dataset/:id/column/form/add', '\Xibo\Controller\DataSetColumn:addForm')->name('dataSet.column.add.form');
+$app->get('/dataset/:id/column/form/edit/:colId', '\Xibo\Controller\DataSetColumn:editForm')->name('dataSet.column.edit.form');
+$app->get('/dataset/:id/column/form/delete/:colId', '\Xibo\Controller\DataSetColumn:deleteForm')->name('dataSet.column.delete.form');
 
 //
 // displaygroup
