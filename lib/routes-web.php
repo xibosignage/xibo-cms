@@ -204,7 +204,12 @@ $app->get('/resolution/form/delete/:id', '\Xibo\Controller\Resolution:deleteForm
 // dataset
 //
 $app->get('/dataset/view', '\Xibo\Controller\DataSet:displayPage')->name('dataset.view');
+$app->get('/dataset/data/view/:id', '\Xibo\Controller\DataSet:displayDataEntry')->name('dataset.view.data');
 $app->get('/dataset/form/add', '\Xibo\Controller\DataSet:addForm')->name('dataSet.add.form');
+$app->get('/dataset/form/edit/:id', '\Xibo\Controller\DataSet:editForm')->name('dataSet.edit.form');
+$app->get('/dataset/form/delete/:id', '\Xibo\Controller\DataSet:deleteForm')->name('dataSet.delete.form');
+$app->get('/dataset/form/import/:id', '\Xibo\Controller\DataSet:importForm')->name('dataSet.import.form');
+$app->get('/dataset/form/columns/:id', '\Xibo\Controller\DataSet:columnsForm')->name('dataSet.columns.form');
 
 //
 // displaygroup

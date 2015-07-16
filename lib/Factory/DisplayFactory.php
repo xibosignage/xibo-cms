@@ -82,6 +82,17 @@ class DisplayFactory extends BaseFactory
     }
 
     /**
+     * Get displays by dataSetId
+     * @param $dataSetId
+     * @return array[Display]
+     */
+    public static function getByDataSetId($dataSetId)
+    {
+        //TODO
+        return DisplayFactory::query(null, ['disableUserCheck' => 1, 'dataSetUd' => $dataSetId]);
+    }
+
+    /**
      * @param array $sortOrder
      * @param array $filterBy
      * @return array[Display]

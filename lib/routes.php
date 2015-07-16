@@ -130,6 +130,7 @@ $app->delete('/displayprofile/:id', '\Xibo\Controller\DisplayProfile:delete')->n
 // DataSet
 //
 $app->get('/dataset', '\Xibo\Controller\DataSet:grid')->name('dataSet.search');
+$app->post('/dataset', '\Xibo\Controller\DataSet:add')->name('dataSet.add');
 
 //
 // Statistics

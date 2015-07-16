@@ -32,6 +32,21 @@ class DataSetFactory extends BaseFactory
 
         return $dataSets[0];
     }
+    /**
+     * Get DataSets by Name
+     * @param $dataSet
+     * @return DataSet
+     * @throws NotFoundException
+     */
+    public static function getByName($dataSet)
+    {
+        $dataSets = DataSetFactory::query(null, ['disableUserCheck' => 1, 'dataSet' => $dataSet]);
+
+        if (count($dataSets) <= 0)
+            throw new NotFoundException();
+
+        return $dataSets[0];
+    }
 
     /**
      * @param array $sortOrder
@@ -52,7 +67,17 @@ class DataSetFactory extends BaseFactory
                 dataset.description,
                 dataset.userId,
                 dataset.lastDataEdit,
-                user.userName AS owner
+                user.userName AS owner,
+                (
+                  SELECT GROUP_CONCAT(DISTINCT `group`.group)
+                      FROM `permission`
+                        INNER JOIN `permissionentity`
+                        ON `permissionentity`.entityId = permission.entityId
+                        INNER JOIN `group`
+                        ON `group`.groupId = `permission`.groupId
+                     WHERE entity = \'Xibo\\Entity\\DataSet\'
+                        AND objectId = dataset.dataSetId
+                ) AS groupsWithPermissions
             ';
 
             $body = '
@@ -67,6 +92,11 @@ class DataSetFactory extends BaseFactory
             if (Sanitize::getInt('dataSetId') != null) {
                 $body .= ' AND dataset.dataSetId = :dataSetId ';
                 $params['dataSetId'] = Sanitize::getInt('dataSetId');
+            }
+
+            if (Sanitize::getString('dataSet') != null) {
+                $body .= ' AND dataset.dataSet = :dataSet ';
+                $params['dataSet'] = Sanitize::getString('dataSet');
             }
 
             // Sorting?
