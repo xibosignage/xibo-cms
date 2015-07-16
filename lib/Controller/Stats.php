@@ -74,176 +74,76 @@ class Stats extends Base
         $display_ids = array();
 
         foreach (DisplayFactory::query() as $display) {
-            $display_ids[] = $display['displayid'];
+            $display_ids[] = $display->displayId;
         }
 
         if (count($display_ids) <= 0)
             trigger_error(__('No displays with View permissions'), E_USER_ERROR);
 
-        // 3 grids showing different stats.
-
-        // Layouts Ran
-        $SQL = 'SELECT display.Display, layout.Layout, COUNT(StatID) AS NumberPlays, SUM(TIME_TO_SEC(TIMEDIFF(end, start))) AS Duration, MIN(start) AS MinStart, MAX(end) AS MaxEnd ';
-        $SQL .= '  FROM stat ';
-        $SQL .= '  INNER JOIN layout ON layout.LayoutID = stat.LayoutID ';
-        $SQL .= '  INNER JOIN display ON stat.DisplayID = display.DisplayID ';
-        $SQL .= " WHERE stat.type = 'layout' ";
-        $SQL .= sprintf("  AND stat.end > '%s' ", $fromDt);
-        $SQL .= sprintf("  AND stat.start <= '%s' ", $toDt);
-
-        $SQL .= ' AND stat.displayID IN (' . implode(',', $display_ids) . ') ';
-
-        if ($displayId != 0)
-            $SQL .= sprintf("  AND stat.displayID = %d ", $displayId);
-
-        $SQL .= 'GROUP BY display.Display, layout.Layout ';
-        $SQL .= 'ORDER BY display.Display, layout.Layout';
-
-        // Log
-        Log::sql($SQL, []);
-
-        if (!$results = $this->db->query($SQL)) {
-            trigger_error($db->error());
-            trigger_error(__('Unable to get Layouts Shown'), E_USER_ERROR);
-        }
-
-        $cols = array(
-            array('name' => 'Display', 'title' => __('Display')),
-            array('name' => 'Layout', 'title' => __('Layout')),
-            array('name' => 'NumberPlays', 'title' => __('Number of Plays')),
-            array('name' => 'DurationSec', 'title' => __('Total Duration (s)')),
-            array('name' => 'Duration', 'title' => __('Total Duration')),
-            array('name' => 'MinStart', 'title' => __('First Shown')),
-            array('name' => 'MaxEnd', 'title' => __('Last Shown'))
-        );
-        Theme::Set('table_cols', $cols);
-
-        $rows = array();
-
-        while ($row = $db->get_assoc_row($results)) {
-            $row['Display'] = Sanitize::string($row['Display']);
-            $row['Layout'] = Sanitize::string($row['Layout']);
-            $row['NumberPlays'] = Sanitize::int($row['NumberPlays']);
-            $row['DurationSec'] = Sanitize::int($row['Duration']);
-            $row['Duration'] = sec2hms(Kit::ValidateParam($row['Duration'], _INT));
-            $row['MinStart'] = Date::getLocalDate(strtotime(Kit::ValidateParam($row['MinStart'], _STRING)));
-            $row['MaxEnd'] = Date::getLocalDate(strtotime(Kit::ValidateParam($row['MaxEnd'], _STRING)));
-
-            $rows[] = $row;
-        }
-
-        Theme::Set('table_rows', $rows);
-        Theme::Set('table_layouts_shown', Theme::RenderReturn('table_render'));
-
-        // Media Ran
-        $SQL = 'SELECT display.Display, media.Name, COUNT(StatID) AS NumberPlays, SUM(TIME_TO_SEC(TIMEDIFF(end, start))) AS Duration, MIN(start) AS MinStart, MAX(end) AS MaxEnd ';
-        $SQL .= '  FROM stat ';
-        $SQL .= '  INNER JOIN display ON stat.DisplayID = display.DisplayID ';
-        $SQL .= '  INNER JOIN  media ON media.MediaID = stat.MediaID ';
-        $SQL .= " WHERE stat.type = 'media' ";
-        $SQL .= sprintf("  AND stat.end > '%s' ", $fromDt);
-        $SQL .= sprintf("  AND stat.start <= '%s' ", $toDt);
-        $SQL .= ' AND stat.displayID IN (' . implode(',', $display_ids) . ') ';
-
-        if ($mediaId != 0)
-            $SQL .= sprintf("  AND media.MediaID = %d ", $mediaId);
-
-        if ($displayId != 0)
-            $SQL .= sprintf("  AND stat.displayID = %d ", $displayId);
-
-        $SQL .= 'GROUP BY display.Display, media.Name ';
-        $SQL .= 'ORDER BY display.Display, media.Name';
-
-        if (!$results = $this->db->query($SQL)) {
-            trigger_error($db->error());
-            trigger_error(__('Unable to get Library Media Ran'), E_USER_ERROR);
-        }
-
-        $cols = array(
-            array('name' => 'Display', 'title' => __('Display')),
-            array('name' => 'Media', 'title' => __('Media')),
-            array('name' => 'NumberPlays', 'title' => __('Number of Plays')),
-            array('name' => 'DurationSec', 'title' => __('Total Duration (s)')),
-            array('name' => 'Duration', 'title' => __('Total Duration')),
-            array('name' => 'MinStart', 'title' => __('First Shown')),
-            array('name' => 'MaxEnd', 'title' => __('Last Shown'))
-        );
-        Theme::Set('table_cols', $cols);
-        $rows = array();
-
-        while ($row = $db->get_assoc_row($results)) {
-            $row['Display'] = Sanitize::string($row['Display']);
-            $row['Media'] = Sanitize::string($row['Name']);
-            $row['NumberPlays'] = Sanitize::int($row['NumberPlays']);
-            $row['DurationSec'] = Sanitize::int($row['Duration']);
-            $row['Duration'] = sec2hms(Kit::ValidateParam($row['Duration'], _INT));
-            $row['MinStart'] = Date::getLocalDate(strtotime(Kit::ValidateParam($row['MinStart'], _STRING)));
-            $row['MaxEnd'] = Date::getLocalDate(strtotime(Kit::ValidateParam($row['MaxEnd'], _STRING)));
-
-            $rows[] = $row;
-        }
-        Theme::Set('table_rows', $rows);
-        Theme::Set('table_media_shown', Theme::RenderReturn('table_render'));
-
         // Media on Layouts Ran
-        $SQL = "SELECT display.Display, layout.Layout, IFNULL(media.Name, 'Text/Rss/Webpage') AS Name, COUNT(StatID) AS NumberPlays, SUM(TIME_TO_SEC(TIMEDIFF(end, start))) AS Duration, MIN(start) AS MinStart, MAX(end) AS MaxEnd ";
-        $SQL .= '  FROM stat ';
-        $SQL .= '  INNER JOIN display ON stat.DisplayID = display.DisplayID ';
-        $SQL .= '  INNER JOIN layout ON layout.LayoutID = stat.LayoutID ';
-        $SQL .= '  LEFT OUTER JOIN media ON media.MediaID = stat.MediaID ';
-        $SQL .= " WHERE stat.type = 'media' ";
-        $SQL .= sprintf("  AND stat.end > '%s' ", $fromDt);
-        $SQL .= sprintf("  AND stat.start <= '%s' ", $toDt);
-        $SQL .= ' AND stat.displayID IN (' . implode(',', $display_ids) . ') ';
+        $sql = '
+          SELECT stat.type,
+              display.Display,
+              layout.Layout,
+              IFNULL(widgetoption.value, widget.type) AS Name,
+              COUNT(StatID) AS NumberPlays,
+              SUM(TIME_TO_SEC(TIMEDIFF(end, start))) AS Duration,
+              MIN(start) AS MinStart,
+              MAX(end) AS MaxEnd
+            FROM stat
+              INNER JOIN display
+              ON stat.DisplayID = display.DisplayID
+              INNER JOIN layout
+              ON layout.LayoutID = stat.LayoutID
+              INNER JOIN `widget`
+              ON `widget`.widgetId = stat.MediaID
+              LEFT OUTER JOIN `widgetoption`
+              ON `widgetoption`.widgetId = `widget`.widgetId
+                AND `widgetoption`.type = \'attribute\'
+                AND `widgetoption`.option = \'name\'
+           WHERE stat.type <> \'displaydown\'
+                AND stat.end > :fromDt
+                AND stat.start <= :toDt
+                AND stat.displayID IN (' . implode(',', $display_ids) . ')
+        ';
 
-        if ($mediaId != 0)
-            $SQL .= sprintf("  AND media.MediaID = %d ", $mediaId);
+        $params = [
+            'fromDt' => $fromDt,
+            'toDt' => $toDt
+        ];
 
-        if ($displayId != 0)
-            $SQL .= sprintf("  AND stat.displayID = %d ", $displayId);
-
-        $SQL .= "GROUP BY display.Display, layout.Layout, IFNULL(media.Name, 'Text/Rss/Webpage') ";
-        $SQL .= "ORDER BY display.Display, layout.Layout, IFNULL(media.Name, 'Text/Rss/Webpage')";
-
-        if (!$results = $this->db->query($SQL)) {
-            trigger_error($db->error());
-            trigger_error(__('Unable to get Library Media Ran'), E_USER_ERROR);
+        if ($mediaId != 0) {
+            $sql .= '  AND widget.widgetId IN (SELECT widgetId FROM `lkwidgetmedia` WHERE mediaId =  :mediaId) ';
+            $params['mediaId'] = $mediaId;
         }
 
-        $cols = array(
-            array('name' => 'Display', 'title' => __('Display')),
-            array('name' => 'Layout', 'title' => __('Layout')),
-            array('name' => 'Media', 'title' => __('Media')),
-            array('name' => 'NumberPlays', 'title' => __('Number of Plays')),
-            array('name' => 'DurationSec', 'title' => __('Total Duration (s)')),
-            array('name' => 'Duration', 'title' => __('Total Duration')),
-            array('name' => 'MinStart', 'title' => __('First Shown')),
-            array('name' => 'MaxEnd', 'title' => __('Last Shown'))
-        );
-        Theme::Set('table_cols', $cols);
+        if ($displayId != 0) {
+            $sql .= '  AND stat.displayID = :displayId ';
+            $params['displayId'] = $displayId;
+        }
+
+        $sql .= '
+            GROUP BY stat.type, display.Display, layout.Layout, IFNULL(widgetoption.value, widget.type)
+            ORDER BY stat.type, display.Display, layout.Layout, IFNULL(widgetoption.value, widget.type)
+        ';
 
         $rows = array();
 
-        while ($row = $db->get_assoc_row($results)) {
-            $row['Display'] = Sanitize::string($row['Display']);
-            $row['Layout'] = Sanitize::string($row['Layout']);
-            $row['Media'] = Sanitize::string($row['Name']);
-            $row['NumberPlays'] = Sanitize::int($row['NumberPlays']);
-            $row['DurationSec'] = Sanitize::int($row['Duration']);
-            $row['Duration'] = sec2hms(Kit::ValidateParam($row['Duration'], _INT));
-            $row['MinStart'] = Date::getLocalDate(strtotime(Kit::ValidateParam($row['MinStart'], _STRING)));
-            $row['MaxEnd'] = Date::getLocalDate(strtotime(Kit::ValidateParam($row['MaxEnd'], _STRING)));
+        foreach (PDOConnect::select($sql, $params) as $row) {
+            $row['type'] = Sanitize::string($row['type']);
+            $row['display'] = Sanitize::string($row['Display']);
+            $row['layout'] = Sanitize::string($row['Layout']);
+            $row['media'] = Sanitize::string($row['Name']);
+            $row['numberPlays'] = Sanitize::int($row['NumberPlays']);
+            $row['duration'] = Sanitize::int($row['Duration']);
+            $row['minStart'] = Date::getLocalDate(Date::getTimestampFromTimeString(Sanitize::getString($row['MinStart'])));
+            $row['maxEnd'] = Date::getLocalDate(Date::getTimestampFromTimeString(Sanitize::getString($row['MaxEnd'])));
 
             $rows[] = $row;
         }
-        Theme::Set('table_rows', $rows);
 
-        Theme::Set('table_media_on_layouts_shown', Theme::RenderReturn('table_render'));
-
-        $output = Theme::RenderReturn('stats_page_grid');
-
-        $response->SetGridResponse($output);
-        $response->paging = false;
+        $this->getState()->template = 'grid';
+        $this->getState()->setData($rows);
     }
 
     public function availabilityData()

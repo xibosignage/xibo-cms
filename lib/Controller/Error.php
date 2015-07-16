@@ -41,7 +41,8 @@ class Error extends Base
                 if ($this->getApp()->request()->isAjax()) {
                     $this->getState()->hydrate([
                         'success' => false,
-                        'message' => $message
+                        'message' => $message,
+                        'template' => ''
                     ]);
                 }
                 else {

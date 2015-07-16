@@ -305,7 +305,7 @@ $app->get('/help/form/delete/:id', '\Xibo\Controller\Help:deleteForm')->name('he
 //
 // Stats
 //
-$app->get('/stats', '\Xibo\Controller\Stats:displayPage')->name('stats.view');
+$app->get('/stats/view', '\Xibo\Controller\Stats:displayPage')->name('stats.view');
 $app->get('/stats/form/export', '\Xibo\Controller\Stats:exportForm')->name('stats.export.form');
 
 //
