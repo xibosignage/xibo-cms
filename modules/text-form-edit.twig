@@ -4,54 +4,14 @@
  * Copyright (C) 2015 Spring Signage Ltd
  * (${FILE_NAME})
  */
-// Two tabs
-        $tabs = array();
-        $tabs[] = Form::AddTab('general', __('General'), array(array('name' => 'enlarge', 'value' => true)));
-        $tabs[] = Form::AddTab('options', __('Options'));
 
-        Theme::Set('form_tabs', $tabs);
-
-        $formFields = array();
 
         // Handle older layouts that have a direction node but no effect node
         $oldDirection = $this->GetOption('direction', 'none');
         if ($oldDirection != 'none')
             $oldDirection = 'marquee' . ucfirst($oldDirection);
 
-        $formFields['options'][] = Form::AddText('name', __('Name'), $this->GetOption('name'),
-            __('An optional name for this media'), 'n');
-
-        $formFields['options'][] = Form::AddCombo(
-            'effect',
-            __('Effect'),
-            $this->GetOption('effect', $oldDirection),
-            array(
-                array('effectid' => 'none', 'effect' => __('None')),
-                array('effectid' => 'fade', 'effect' => __('Fade')),
-                array('effectid' => 'fadeout', 'effect' => __('Fade Out')),
-                array('effectid' => 'scrollHorz', 'effect' => __('Scroll Horizontal')),
-                array('effectid' => 'scrollVert', 'effect' => __('Scroll Vertical')),
-                array('effectid' => 'flipHorz', 'effect' => __('Flip Horizontal')),
-                array('effectid' => 'flipVert', 'effect' => __('Flip Vertical')),
-                array('effectid' => 'shuffle', 'effect' => __('Shuffle')),
-                array('effectid' => 'tileSlide', 'effect' => __('Tile Slide')),
-                array('effectid' => 'tileBlind', 'effect' => __('Tile Blinds')),
-                array('effectid' => 'marqueeLeft', 'effect' => __('Marquee Left')),
-                array('effectid' => 'marqueeRight', 'effect' => __('Marquee Right')),
-                array('effectid' => 'marqueeUp', 'effect' => __('Marquee Up')),
-                array('effectid' => 'marqueeDown', 'effect' => __('Marquee Down')),
-            ),
-            'effectid',
-            'effect',
-            __('Please select the effect that will be used to transition between items. If all items should be output, select None. Marquee effects are CPU intensive and may not be suitable for lower power displays.'),
-            'e');
-
-        $formFields['options'][] = Form::AddNumber('speed', __('Speed'), $this->GetOption('speed'),
-            __('The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1).'), 's', NULL, 'effect-controls');
-
-        // A list of web safe colours
-        $formFields['options'][] = Form::AddText('backgroundColor', __('Background Colour'), $this->GetOption('backgroundColor'),
-            __('The selected effect works best with a background colour. Optionally add one here.'), 'c', NULL, 'effect-controls');
+   
 
         $formFields['options'][] = Form::AddNumber('duration', __('Duration'), $this->getDuration(),
             __('The duration in seconds this counter should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
@@ -67,8 +27,6 @@
 
         $textNode = $this->getRawNode('text', null);
 
-        $formFields['general'][] = Form::AddMultiText('ta_text', NULL, $textNode,
-            __('Enter the text to display. Please note that the background colour has automatically coloured to your layout background colour.'), 't', 10);
 
         $formFields['general'][] = Form::AddRaw(Theme::RenderReturn('media_form_text_edit'));
 
@@ -99,7 +57,7 @@
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, $("#<<id>>").submit()
+    {% trans "Save" %}, $("#textEditForm").submit()
 {% endblock %}
 
 {% block callBack %}forecastIoFormSetup{% endblock %}
@@ -107,8 +65,76 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="<<id>>" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
+                <ul class="nav nav-tabs" role="tablist">
+                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                <li><a href="#options" role="tab" data-toggle="tab"><span>{% trans "Options" %}</span></a></li>
+                </ul>
+            <form id="textEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
+                {# old layouts handler #}
+                <div class="tab-pane active" id="general">
+                      {# RAW item subs
 
+                        <?php foreach(Theme::Get('substitutions') as $column) { ?>
+                        <li class="ckeditor_snippits" linkedto="ta_text"><?php echo $column['Substitute']; ?></li>
+                        <?php } ?>
+
+                       #}
+
+                        {% set helpText %}{% trans "Enter the text to display. Please note that the background colour has automatically coloured to your layout background colour." %}{% endset %}
+                        {{ forms.textarea("ta_text", "", "", helpText, "", 10) }}
+                </div>
+
+                 <div class="tab-pane" id="options">
+                        {% set title %}{% trans "Name" %}{% endset %}
+                        {% set helpText %}{% trans "An optional name for this media" %}{% endset %}
+                        {{ forms.text("name", title, module.getOption("name"), helpText) }}
+
+                        {% set title %}{% trans "Effect" %}{% endset %}
+                        {% set helpText %}{% trans "Please select the effect that will be used to transition between items. If all items should be output, select None. Marquee effects are CPU intensive and may not be suitable for lower power displays." %}{% endset %}
+                        {% set fade %}{% trans "Fade" %}{% endset %}
+                        {% set fadeout %}{% trans "Fade Out" %}{% endset %}
+                        {% set scrollHorz %}{% trans "Scroll Horizontal" %}{% endset %}
+                        {% set scrollVert %}{% trans "Scroll Vertical" %}{% endset %}
+                        {% set flipHorz %}{% trans "Flip Horizontal" %}{% endset %}
+                        {% set flipVert %}{% trans "Flip Vertical" %}{% endset %}
+                        {% set shuffle %}{% trans "shuffle" %}{% endset %}
+                        {% set tileSlide %}{% trans "Tile Slide" %}{% endset %}
+                        {% set tileBlind %}{% trans "Tile Blind" %}{% endset %}
+                        {% set marqueeLeft %}{% trans "Marquee Left" %}{% endset %}
+                        {% set marqueeRight %}{% trans "Marquee Right" %}{% endset %}
+                        {% set marqueeUp %}{% trans "Marquee Up" %}{% endset %}
+                        {% set marqueeDown %}{% trans "Marquee Down" %}{% endset %}
+                        {% set options = [
+                        { effectid: "", effect: none },
+                        { effectid: fade, effect: fade },
+                        { effectid: fadeout, effect: fadeout},
+                        { effectid: scrollHorz, effect: scrollHorz},
+                        { effectid: scrollVert, effect: scrollVert},
+                        { effectid: flipHorz, effect: flipHorz},
+                        { effectid: flipVert, effect: flipVert},
+                        { effectid: shuffle, effect: shuffle},
+                        { effectid: tileSlide, effect: tileSlide},
+                        { effectid: tileBlind, effect: tileBlind},
+                        { effectid: marqueeLeft, effect: marqueeLeft},
+                        { effectid: marqueeRight, effect: marqueeRight},
+                        { effectid: marqueeUp, effect: marqueeUp},
+                        { effectid: marqueeDown, effect: marqueeDown}
+                        ] %}
+                        {{ forms.dropdown("effect", "single", title, module.getOption("effect"), "effectid", "effect", helpText) }}
+
+                        {% set title %}{% trans "Speed" %}{% endset %}
+                        {% set helpText %}{% trans "The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1)." %}{% endset %}
+                        {{ forms.number("speed", title, module.getOption("speed"), helpText, "", "effect-controls") }}
+
+                        {% set title %}{% trans "Background Colour" %}{% endset %}
+                        {% set helpText %}{% trans "The selected effect works best with a background colour. Optionally add one here." %}{% endset %}
+                        {{ forms.text("backgroundColor", title, module.getOption("backgroundColor"), helpText, "", "effect-controls") }}
+
+                        {% set title %}{% trans "Duration" %}{% endset %}
+                        {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
+                        {{ forms.number("duration", title, module.getDuration(), helpText, "", "required") }}
+                </div>
+                {# // Add a dependency #}
             </form>
         </div>
     </div>

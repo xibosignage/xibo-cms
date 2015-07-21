@@ -38,8 +38,9 @@ $form = Theme::RenderReturn('form_render');
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="layoutRetireForm" class="form-horizontal" method="post" action="{{ urlFor("layout.retire.form", {id: layout.layoutId}) }}">
+            <form id="layoutRetireForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("layout.retire", {id: layout.layoutId}) }}">
 				{{ forms.message("Are you sure you want to retire this layout?") }}
+				{# it is missing few things obviously #}
             </form>
         </div>
     </div>

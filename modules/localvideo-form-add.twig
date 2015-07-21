@@ -16,13 +16,13 @@
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, $("#localVideoForm").submit()
+    {% trans "Save" %}, $("#localVideoAddForm").submit()
 {% endblock %}
 
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="localVideoForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("module.widget.add", {type: module.widget.type, id: playlist.playlistId}) }}">
+            <form id="localVideoAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("module.widget.add", {type: module.widget.type, id: playlist.playlistId}) }}">
                 {% set title %}{% trans "Video Path" %}{% endset %}
                 {% set helpText %}{% trans "A local file path or URL to the video. This can be a RTSP stream." %}{% endset %}
                 {{ forms.text("uri", title, "", helpText, "", "required") }}

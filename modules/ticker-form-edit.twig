@@ -5,165 +5,13 @@
  * (${FILE_NAME})
  */
 // Augment settings with templates
-        $this->loadTemplates();
-
-        $formFields = array();
-
-        // What is the source for this ticker?
-        $sourceId = $this->GetOption('sourceId');
-        $dataSetId = $this->GetOption('datasetid');
-
-        $tabs = array();
-        $tabs[] = Form::AddTab('general', __('General'));
-        $tabs[] = Form::AddTab('template', __('Appearance'), array(array('name' => 'enlarge', 'value' => true)));
-        $tabs[] = Form::AddTab('format', __('Format'));
-        $tabs[] = Form::AddTab('advanced', __('Advanced'));
-        Theme::Set('form_tabs', $tabs);
-
-        $field_name = Form::AddText('name', __('Name'), $this->GetOption('name'),
-            __('An optional name for this media'), 'n');
-
-        $field_duration = Form::AddNumber('duration', __('Duration'), $this->getDuration(),
-            __('The duration in seconds this item should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
-
-        // Common fields
-        $oldDirection = $this->GetOption('direction');
-
-        if ($oldDirection == 'single')
-            $oldDirection = 'fade';
-        else if ($oldDirection != 'none')
-            $oldDirection = 'marquee' . ucfirst($oldDirection);
-
-        $fieldFx = Form::AddCombo(
-            'effect',
-            __('Effect'),
-            $this->GetOption('effect', $oldDirection),
-            array(
-                array('effectid' => 'none', 'effect' => __('None')),
-                array('effectid' => 'fade', 'effect' => __('Fade')),
-                array('effectid' => 'fadeout', 'effect' => __('Fade Out')),
-                array('effectid' => 'scrollHorz', 'effect' => __('Scroll Horizontal')),
-                array('effectid' => 'scrollVert', 'effect' => __('Scroll Vertical')),
-                array('effectid' => 'flipHorz', 'effect' => __('Flip Horizontal')),
-                array('effectid' => 'flipVert', 'effect' => __('Flip Vertical')),
-                array('effectid' => 'shuffle', 'effect' => __('Shuffle')),
-                array('effectid' => 'tileSlide', 'effect' => __('Tile Slide')),
-                array('effectid' => 'tileBlind', 'effect' => __('Tile Blinds')),
-                array('effectid' => 'marqueeLeft', 'effect' => __('Marquee Left')),
-                array('effectid' => 'marqueeRight', 'effect' => __('Marquee Right')),
-                array('effectid' => 'marqueeUp', 'effect' => __('Marquee Up')),
-                array('effectid' => 'marqueeDown', 'effect' => __('Marquee Down')),
-            ),
-            'effectid',
-            'effect',
-            __('Please select the effect that will be used to transition between items. If all items should be output, select None. Marquee effects are CPU intensive and may not be suitable for lower power displays.'),
-            'e');
-
-        $fieldScrollSpeed = Form::AddNumber('speed', __('Speed'), $this->GetOption('speed', $this->GetOption('scrollSpeed')),
-            __('The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1).'), 's', NULL, 'effect-controls');
-
-        $fieldBackgroundColor = Form::AddText('backgroundColor', __('Background Colour'), $this->GetOption('backgroundColor'),
-            __('The selected effect works best with a background colour. Optionally add one here.'), 'c', NULL, 'background-color-group');
-
-        $field_itemsPerPage = Form::AddNumber('itemsPerPage', __('Items per page'), $this->GetOption('itemsPerPage'),
-            __('When in single mode how many items per page should be shown.'), 'p');
-
-        $field_updateInterval = Form::AddNumber('updateInterval', __('Update Interval (mins)'), $this->GetOption('updateInterval', 5),
-            __('Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60.'),
-            'n', 'required');
-
-        $field_durationIsPerItem = Form::AddCheckbox('durationIsPerItem', __('Duration is per item'),
-            $this->GetOption('durationIsPerItem'), __('The duration specified is per item otherwise it is per feed.'),
-            'i');
-
-        $field_itemsSideBySide = Form::AddCheckbox('itemsSideBySide', __('Show items side by side?'),
-            $this->GetOption('itemsSideBySide'), __('Should items be shown side by side?'),
-            's');
 
         // Data Set Source
-        if ($sourceId == 2) {
-
-            $formFields['general'][] = $field_name;
-            $formFields['general'][] = $field_duration;
-            $formFields['general'][] = $fieldFx;
-            $formFields['general'][] = $fieldScrollSpeed;
-            $formFields['advanced'][] = $fieldBackgroundColor;
-            $formFields['advanced'][] = $field_durationIsPerItem;
-            $formFields['advanced'][] = $field_updateInterval;
-
-            // Extra Fields for the DataSet
-            $formFields['general'][] = Form::AddText('ordering', __('Order'), $this->GetOption('ordering'),
-                __('Please enter a SQL clause for how this dataset should be ordered'), 'o');
-
-            $formFields['general'][] = Form::AddText('filter', __('Filter'), $this->GetOption('filter'),
-                __('Please enter a SQL clause to filter this DataSet.'), 'f');
-
-            $formFields['advanced'][] = Form::AddNumber('lowerLimit', __('Lower Row Limit'), $this->GetOption('lowerLimit'),
-                __('Please enter the Lower Row Limit for this DataSet (enter 0 for no limit)'), 'l');
-
-            $formFields['advanced'][] = Form::AddNumber('upperLimit', __('Upper Row Limit'), $this->GetOption('upperLimit'),
-                __('Please enter the Upper Row Limit for this DataSet (enter 0 for no limit)'), 'u');
-
-            $formFields['format'][] = $field_itemsPerPage;
-            $formFields['format'][] = $field_itemsSideBySide;
 
             Theme::Set('columns', \Xibo\Storage\PDOConnect::select(sprintf("SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetID = %d ", $dataSetId), array()));
 
             $formFields['template'][] = Form::AddRaw(Theme::RenderReturn('media_form_ticker_dataset_edit'));
         } else {
-            // Extra Fields for the Ticker
-            $formFields['general'][] = Form::AddText('uri', __('Feed URL'), urldecode($this->GetOption('uri')),
-                __('The Link for the RSS feed'), 'f');
-
-            $formFields['general'][] = $field_name;
-            $formFields['general'][] = $field_duration;
-            $formFields['general'][] = $fieldFx;
-            $formFields['format'][] = $fieldScrollSpeed;
-
-            // Add a field for RTL tickers
-            $formFields['format'][] = Form::AddCombo(
-                'textDirection',
-                __('Text direction'),
-                $this->GetOption('textDirection'),
-                array(
-                    array('textdirectionid' => 'ltr', 'textdirection' => __('Left to Right (LTR)')),
-                    array('textdirectionid' => 'rtl', 'textdirection' => __('Right to Left (RTL)'))
-                ),
-                'textdirectionid',
-                'textdirection',
-                __('Which direction does the text in the feed use? (left to right or right to left)'),
-                'd');
-
-            $formFields['advanced'][] = $fieldBackgroundColor;
-
-            $formFields['format'][] = Form::AddNumber('numItems', __('Number of Items'), $this->GetOption('numItems'),
-                __('The Number of RSS items you want to display'), 'o');
-
-            $formFields['format'][] = $field_itemsPerPage;
-
-            $formFields['advanced'][] = Form::AddText('copyright', __('Copyright'), $this->GetOption('copyright'),
-                __('Copyright information to display as the last item in this feed. This can be styled with the #copyright CSS selector.'), 'f');
-
-            $formFields['advanced'][] = $field_updateInterval;
-
-            $formFields['format'][] = Form::AddCombo(
-                'takeItemsFrom',
-                __('Take items from the '),
-                $this->GetOption('takeItemsFrom'),
-                array(
-                    array('takeitemsfromid' => 'start', 'takeitemsfrom' => __('Start of the Feed')),
-                    array('takeitemsfromid' => 'end', 'takeitemsfrom' => __('End of the Feed'))
-                ),
-                'takeitemsfromid',
-                'takeitemsfrom',
-                __('Take the items from the beginning or the end of the list'),
-                't');
-
-            $formFields['format'][] = $field_durationIsPerItem;
-            $formFields['advanced'][] = $field_itemsSideBySide;
-
-            $formFields['advanced'][] = Form::AddText('dateFormat', __('Date Format'), $this->GetOption('dateFormat'),
-                __('The format to apply to all dates returned by the ticker. In PHP date format: http://uk3.php.net/manual/en/function.date.php'), 'f');
 
             $subs = array(
                 array('Substitute' => 'Name'),
@@ -180,28 +28,16 @@
 
             $formFieldSubs = Form::AddRaw(Theme::RenderReturn('media_form_ticker_edit'));
 
-            $formFields['advanced'][] = Form::AddText('allowedAttributes', __('Allowable Attributes'), $this->GetOption('allowedAttributes'),
-                __('A comma separated list of attributes that should not be stripped from the incoming feed.'), '');
 
-            $formFields['advanced'][] = Form::AddText('stripTags', __('Strip Tags'), $this->GetOption('stripTags'),
-                __('A comma separated list of HTML tags that should be stripped from the feed in addition to the default ones.'), '');
-
-            $formFields['advanced'][] = Form::AddCheckbox('disableDateSort', __('Disable Date Sort'), $this->GetOption('disableDateSort'),
-                __('Should the date sort applied to the feed be disabled?'), '');
 
             // Encode up the template
             //$formFields['advanced'][] = Form::AddMessage('<pre>' . htmlentities(json_encode(array('id' => 'media-rss-with-title', 'value' => 'Image overlaid with the Title', 'template' => '<div class="image">[Link|image]<div class="cycle-overlay"><p style="font-family: Arial, Verdana, sans-serif; font-size:48px;">[Title]</p></div></div>', 'css' => '.image img { width:100%;}.cycle-overlay {color: white;background: black;opacity: .6;filter: alpha(opacity=60);position: absolute;bottom: 0;width: 100%;padding: 15px;text-align:center;}'))) . '</pre>');
         }
 
-        // Get the CSS node
-        $formFields['template'][] = Form::AddMultiText('ta_css', NULL, $this->getRawNode('css', null),
-            __('Optional Style sheet'), 's', 10, NULL, 'template-override-controls');
 
-        // Get the Text Node out of this
-        $formFields['template'][] = Form::AddMultiText('ta_text', NULL, $this->getRawNode('template', null),
-            __('Enter the template. Please note that the background colour has automatically coloured to your layout background colour.'), 't', 10, NULL, 'template-override-controls');
+        // Dependencies and stuff
 
-        // RSS
+
         if ($this->GetOption('sourceId') == 1) {
 
             // Append the templates to the response
@@ -209,20 +45,9 @@
 
             $formFields['template'][] = $formFieldSubs;
 
-            // Add a field for whether to override the template or not.
-            // Default to 1 so that it will work correctly with old items (that didn't have a template selected at all)
-            $formFields['template'][] = Form::AddCheckbox('overrideTemplate', __('Override the template?'), $this->GetOption('overrideTemplate', 1),
-                __('Tick if you would like to override the template.'), 'o');
-
-            // Template - for standard stuff
-            $formFields['template'][] = Form::AddCombo('templateId', __('Template'), $this->GetOption('templateId', 'title-only'),
-                $this->module->settings['templates'],
-                'id',
-                'value',
-                __('Select the template you would like to apply. This can be overridden using the check box below.'), 't', 'template-selector-control');
-
             // Add some field dependencies
             // When the override template check box is ticked, we want to expose the advanced controls and we want to hide the template selector
+            
             $response->AddFieldAction('overrideTemplate', 'init', false,
                 array(
                     '.template-override-controls' => array('display' => 'none'),
@@ -268,7 +93,7 @@
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, $("#<<id>>").submit()
+    {% trans "Save" %}, $("#tickerEditForm").submit()
 {% endblock %}
 
 {% block callBack %}forecastIoFormSetup{% endblock %}
@@ -276,8 +101,232 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="<<id>>" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                <li><a href="#template" role="tab" data-toggle="tab"><span>{% trans "Apperance" %}</span></a></li>
+                <li><a href="#format" role="tab" data-toggle="tab"><span>{% trans "Format" %}</span></a></li>
+                <li><a href="#advanced" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
+            </ul>
+            <form id="tickerEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
 
+                        {# Common Fields #}
+                        
+                        {% set title%}{% trans "Name"%{% endset %}}
+                        {% set helpText %}{% trans "TAn optional name for this media" %}{% endset %}
+                        {{ forms.text("name", title, module.getOption("name"), helpText)}}
+
+                        {{ forms.number("duration", "Duration", module.getDuration(), "The duration in seconds this item should be displayed", "", "required") }}
+
+                        {% set title %}{% trans "Effect" %}{% endset %}
+                        {% set helpText %}{% trans "Please select the effect that will be used to transition between items. If all items should be output, select None. Marquee effects are CPU intensive and may not be suitable for lower power displays." %}{% endset %}
+                        {% set fade %}{% trans "Fade" %}{% endset %}
+                        {% set fadeout %}{% trans "Fade Out" %}{% endset %}
+                        {% set scrollHorz %}{% trans "Scroll Horizontal" %}{% endset %}
+                        {% set scrollVert %}{% trans "Scroll Vertical" %}{% endset %}
+                        {% set flipHorz %}{% trans "Flip Horizontal" %}{% endset %}
+                        {% set flipVert %}{% trans "Flip Vertical" %}{% endset %}
+                        {% set shuffle %}{% trans "shuffle" %}{% endset %}
+                        {% set tileSlide %}{% trans "Tile Slide" %}{% endset %}
+                        {% set tileBlind %}{% trans "Tile Blind" %}{% endset %}
+                        {% set marqueeLeft %}{% trans "Marquee Left" %}{% endset %}
+                        {% set marqueeRight %}{% trans "Marquee Right" %}{% endset %}
+                        {% set marqueeUp %}{% trans "Marquee Up" %}{% endset %}
+                        {% set marqueeDown %}{% trans "Marquee Down" %}{% endset %}
+                        {% set options = [
+                        { effectid: "", effect: none },
+                        { effectid: fade, effect: fade },
+                        { effectid: fadeout, effect: fadeout},
+                        { effectid: scrollHorz, effect: scrollHorz},
+                        { effectid: scrollVert, effect: scrollVert},
+                        { effectid: flipHorz, effect: flipHorz},
+                        { effectid: flipVert, effect: flipVert},
+                        { effectid: shuffle, effect: shuffle},
+                        { effectid: tileSlide, effect: tileSlide},
+                        { effectid: tileBlind, effect: tileBlind},
+                        { effectid: marqueeLeft, effect: marqueeLeft},
+                        { effectid: marqueeRight, effect: marqueeRight},
+                        { effectid: marqueeUp, effect: marqueeUp},
+                        { effectid: marqueeDown, effect: marqueeDown}
+                        ] %}
+                        {{ forms.dropdown("effect", "single", title, module.getOption("effect"), "effectid", "effect", helpText) }}
+
+                        {% set title %}{% trans "Speed" %}{% endset %}
+                        {% set helpText %}{% trans "The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1)." %}{% endset %}
+                        {{ forms.number("speed", title, module.getOption("speed"), module.getOption("scrollSpeed"), helpText, "", "effect-controls") }}
+
+                        {% set title %}{% trans "Background Colour" %}{% endset %}
+                        {% set helpText %}{% trans "The selected effect works best with a background colour. Optionally add one here." %}{% endset %}
+                        {{ forms.text("backgroundColor", title, module.getOption("backgroundColor"), helpText, "", "background-color-group") }}
+
+                        {% set title %}{% trans "Items per page" %}{% endset %}
+                        {% set helpText %}{% trans "When in single mode how many items per page should be shown." %}{% endset %}
+                        {{ forms.number("itemsPerPage", title, module.getOption("itemsPerPage"), helpText, "", "effect-controls") }}
+
+                        {% set title %}{% trans "Update Interval (mins)" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60." %}{% endset %}
+                        {{ forms.number("updateInterval", title, module.getOption("updateInterval", 5), helpText, "", "required") }}
+
+                        {% set title %}{% trans "Duration is per item" %}{% endset %}
+                        {% set helpText %}{% trans "The duration specified is per item otherwise it is per feed." %}{% endset %}
+                        {{ forms.checkbox("durationIsPerItem", title, module.getDOption("durationIsPerItem"), helpText) }}
+
+                        {% set title %}{% trans "Show itms side by side?" %}{% endset %}
+                        {% set helpText %}{% trans "Should items be shown side by side?" %}{% endset %}
+                        {{ forms.checkbox("itemsSideBySide", title, module.getOption("itemsSideBySide"), helpText) }}
+
+
+
+
+
+                <div class="tab-content">
+                    <div class="tab-pane active" id="general">
+                        {# Source = Feed #}
+
+                        {% if module.getOption("sourceId") == 1 %}
+
+                            {% set title%}{% trans "Feed URL" %{% endset %}}
+                            {% set helpText %}{% trans "The Link for the RSS feed" %}{% endset %}
+                            {{ forms.text("uri", title, module.getOption("uri"), helpText, "", "", "feed-fields")}}
+                        
+                        {# Name Duration and effect from common fields #}
+                        
+                        {# Source = Dataset #}
+                        {% elseif module.getOption("sourceId") == 2 %}
+                        
+                        {# Name Duration effect and speed from common fields #}
+
+                            {% set title%}{% trans "Order" %{% endset %}}
+                            {% set helpText %}{% trans "Please enter a SQL clause for how this dataset should be ordered" %}{% endset %}
+                            {{ forms.text("ordering", title, module.getOption("ordering"), helpText)}}
+                            
+                            {% set title%}{% trans "Filter" %{% endset %}}
+                            {% set helpText %}{% trans "Please enter a SQL clause to filter this DataSet." %}{% endset %}
+                            {{ forms.text("filter", title, module.getOption("filter"), helpText)}}
+                        
+                        {% endif %}
+                    </div>
+
+                    <div class="tab-pane" id="template">
+                        {# Source = Feed #}
+                        {% if module.getOption("sourceId") == 1 %}
+                        
+                            {% set title %}{% trans "Override the template?" %}{% endset %}
+                            {% set helpText %}{% trans "Tick if you would like to override the template." %}{% endset %}
+                            {{ forms.checkbox("overrideTemplate", title, module.getOption("overrideTemplate", 1), helpText) }}
+                        
+                            {# same problem as in twitter edit
+
+                            {% set title %}{% trans "Template" %}{% endset %}
+                            {% set helpText %}{% trans "Select the template you would like to apply. This can be overridden using the check box below." %}{% endset %}
+                            {{ forms.dropdown("templateId", title, module.getOption("templateId", "tweet-only"), module.,"id", "value", helptext, "", "template-selector-control") }}
+                        
+                          $this->module->settings['templates'] is in twitter.php, not sure how to refrence it here
+                             #}
+                            
+                            {% set helpText %}{% trans "Enter the template. Please note that the background colour has automatically coloured to your layout background colour." %}{% endset %}
+                            {{ forms.textarea("ta_text", "", module.getRawMode("template", null), helpText, "", 10, "", "template-override-controls") }}
+
+                            {% set title %}{% trans "Optional Stylesheet" %}{% endset %}
+                            {{ forms.textarea("ta_css", "", module.getRawMode("styleSheet", null), title, "", 10, "", "template-override-controls") }}
+
+                            
+                            {# Source = Dataset #}
+
+                            {% elseif module.getOption("sourceId") == 2 %}
+                            
+                            {% set helpText %}{% trans "Enter the template. Please note that the background colour has automatically coloured to your layout background colour." %}{% endset %}
+                            {{ forms.textarea("ta_text", "", module.getRawMode("template", null), helpText, "", 10, "", "template-override-controls") }}
+                            
+                            {% set title %}{% trans "Optional Stylesheet" %}{% endset %}
+                            {{ forms.textarea("ta_css", "", module.getRawMode("styleSheet", null), title, "", 10, "", "template-override-controls") }}
+
+
+                        {% endif %}
+                    </div>
+                    <div class="tab-pane" id="format">
+                        {# Source = Feed #}
+                        {% if module.getOption("sourceId") == 1 %}
+                        
+                        {# speed from common fields #}
+
+                            {% set title %}{% trans "Text direction" %}{% endset %}
+                            {% set helpText %}{% trans "Which direction does the text in the feed use? (left to right or right to left" %}{% endset %}
+                            {% set leftToRight %}{% trans "Left to Right (LTR)" %}{% endset %}
+                            {% set rightToLeft %}{% trans "Right to Left (RTL)" %}{% endset %}
+                            {% set options = [
+                            { textdirectionid: ltr, textdirection: leftToRight },
+                            { textdirectionid: rtl, textdirection: rightToLeft }
+                            ] %}
+                            {{ forms.dropdown("textDirection", "single", title, module.getOption("textDirection"), options, "textdirectionid", "textdirection", helpText) }}
+                        
+                            {% set title %}{% trans "Number of Items" %}{% endset %}
+                            {% set helpText %}{% trans "The Number of RSS items you want to display" %}{% endset %}
+                            {{ forms.number("numItems", title, module.getOption("numItems"), helpText) }}
+
+                        {# items per page from common fields #}
+
+                            {% set title %}{% trans "Take items from the" %}{% endset %}
+                            {% set helpText %}{% trans "Take the items from the beginning or the end of the list" %}{% endset %}
+                            {% set startOfTheFeed %}{% trans "Start of the Feed" %}{% endset %}
+                            {% set endOfTheFeed %}{% trans "End of the Feed" %}{% endset %}
+                            {% set options = [
+                            { takeitemsfromid: start, takeitemsfrom: startOfTheFeed },
+                            { takeitemsfromid: end, takeitemsfrom: endOfTheFeed }
+                            ] %}
+                            {{ forms.dropdown("takeItemsFrom", "single", title, module.getOption("takeItemsFrom"), options, "takeitemsfromid", "takeitemsfrom", helpText) }}
+                        
+                        {# duration is per item from common fields #}
+                        
+                        {# Source = Dataset #}         
+                            {% elseif module.getOption("sourceId") == 2 %}
+                        {# items per page and side by side from common fields #}
+
+                        {% endif %}
+                    </div>
+                    <div class="tab-pane" id="advanced">
+                        {# Source = Feed #}
+                        {% if module.getOption("sourceId") == 1 %}
+                        
+                        {# background colour from common fields #}
+
+                            {% set title %}{% trans "Copyright" %}{% endset %}
+                            {% set helpText %}{% trans "Copyright information to display as the last item in this feed. This can be styled with the #copyright CSS selector." %}{% endset %}
+                            {{ forms.text("copyright", title, module.getOption("copyright"), helpText) }}
+                        
+                        {# Update interval and items side by side from common fields #}
+
+                            {% set title %}{% trans "Date Format" %}{% endset %}
+                            {% set helpText %}{% trans "The format to apply to all dates returned by the ticker. In PHP date format: http://uk3.php.net/manual/en/function.date.php" %}{% endset %}
+                            {{ forms.text("dateFormat", title, module.getOption("dateFormat"), helpText) }}
+
+                            {% set title %}{% trans "Allowable Attributes" %}{% endset %}
+                            {% set helpText %}{% trans "A comma separated list of attributes that should not be stripped from the incoming feed." %}{% endset %}
+                            {{ forms.text("allowedAttributes", title, module.getOption("allowedAttributes"), helpText) }}
+                            
+                            {% set title %}{% trans "Strip Tags" %}{% endset %}
+                            {% set helpText %}{% trans "A comma separated list of HTML tags that should be stripped from the feed in addition to the default ones." %}{% endset %}
+                            {{ forms.text("stripTags", title, module.getOption("stripTags"), helpText) }}
+
+                            {% set title %}{% trans "Disable Date Sort" %}{% endset %}
+                            {% set helpText %}{% trans "Should the date sort applied to the feed be disabled?" %}{% endset %}
+                            {{ forms.checkbox("disableDateSort", title, module.getOption("disableDateSort"), helpText) }}
+                        
+                        {# Source = Dataset #}         
+                            {% elseif module.getOption("sourceId") == 2 %}
+
+                        {# backround colour and update interval from common fields #}
+
+                            {% set title %}{% trans "Lower Row Limit" %}{% endset %}
+                            {% set helpText %}{% trans "Please enter the Lower Row Limit for this DataSet (enter 0 for no limit)" %}{% endset %}
+                            {{ forms.number("lowerLimit", title, module.getOption("lowerLimit"), helpText) }}
+                            
+                            {% set title %}{% trans "Upper Row Limit" %}{% endset %}
+                            {% set helpText %}{% trans "Please enter the Upper Row Limit for this DataSet (enter 0 for no limit)" %}{% endset %}
+                            {{ forms.number("upperLimit", title, module.getOption("upperLimit"), helpText) }}
+            
+                        {% endif %}
+                    </div>
+                </div>
             </form>
         </div>
     </div>

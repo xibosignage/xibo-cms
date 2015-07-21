@@ -4,13 +4,7 @@
  * Copyright (C) 2015 Spring Signage Ltd
  * (${FILE_NAME})
  */
-$formFields[] = Form::AddCheckbox('EnabledForIn', __('Available for In Transitions?'),
-            \Xibo\Helper\Sanitize::int($row['AvailableAsIn']), __('Can this transition be used for media start?'),
-            'i');
 
-        $formFields[] = Form::AddCheckbox('EnabledForOut', __('Available for Out Transitions?'),
-            \Xibo\Helper\Sanitize::int($row['AvailableAsOut']), __('Can this transition be used for media end?'),
-            'o');
 #}
 
 {% extends "form-base.twig" %}
@@ -32,11 +26,11 @@ $formFields[] = Form::AddCheckbox('EnabledForIn', __('Available for In Transitio
             <form id="transitionEditForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("transition.edit", {id: transition.transitionId}) }}">
                 {% set title %}{% trans "Available for In Transitions?" %}{% endset %}
                 {% set helpText %}{% trans "Can this transition be used for media start?" %}{% endset %}
-                {{ forms.checkbox("enabledForIn", title, transition.availableAsIn, helpText) }}
+                {{ forms.checkbox("availableAsIn", title, transition.availableAsIn, helpText) }}
 
                 {% set title %}{% trans "Available for Out Transitions?" %}{% endset %}
                 {% set helpText %}{% trans "Can this transition be used for media end?" %}{% endset %}
-                {{ forms.checkbox("enabledForOut", title, transition.availableAsOut, helpText) }}
+                {{ forms.checkbox("availableAsOut", title, transition.availableAsOut, helpText) }}
             </form>
         </div>
     </div>

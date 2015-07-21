@@ -4,39 +4,6 @@
  * Copyright (C) 2015 Spring Signage Ltd
  * (${FILE_NAME})
  */
-// Provide some extra form fields
-        $formFields = array();
-
-        $formFields[] = Form::AddCombo(
-            'scaleTypeId',
-            __('Scale Type'),
-            $this->getOption('scaleType'),
-            array(array('scaleTypeId' => 'center', 'scaleType' => __('Center')), array('scaleTypeId' => 'stretch', 'scaleType' => __('Stretch'))),
-            'scaleTypeId',
-            'scaleType',
-            __('How should this image be scaled?'),
-            's');
-
-        $formFields[] = Form::AddCombo(
-            'alignId',
-            __('Align'),
-            $this->getOption('align', 'center'),
-            array(array('alignId' => 'left', 'align' => __('Left')), array('alignId' => 'center', 'align' => __('Centre')), array('alignId' => 'right', 'align' => __('Right'))),
-            'alignId',
-            'align',
-            __('How should this image be aligned?'),
-            'a', 'align-fields');
-
-        $formFields[] = Form::AddCombo(
-            'valignId',
-            __('Vertical Align'),
-            $this->getOption('valign', 'middle'),
-            array(array('valignId' => 'top', 'valign' => __('Top')), array('valignId' => 'middle', 'valign' => __('Middle')), array('valignId' => 'bottom', 'valign' => __('Bottom'))),
-            'valignId',
-            'valign',
-            __('How should this image be vertically aligned?'),
-            'v', 'align-fields');
-
         // Set some field dependencies
         $response->AddFieldAction('scaleTypeId', 'init', 'center', array('.align-fields' => array('display' => 'block')));
         $response->AddFieldAction('scaleTypeId', 'change', 'center', array('.align-fields' => array('display' => 'block')));
@@ -54,13 +21,13 @@
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, $("#<<id>>").submit()
+    {% trans "Save" %}, $("#imageEditForm").submit()
 {% endblock %}
 
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="<<id>>" class="XiboForm form-horizontal" method="post" action="">
+            <form id="imageEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "An optional name for this media" %}{% endset %}
                 {{ forms.text("name", title, "", helpText) }}
@@ -68,6 +35,40 @@
                 {% set title %}{% trans "Duration" %}{% endset %}
                 {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
                 {{ forms.number("duration", title, module.getDuration(), helpText, "", "required") }}
+
+                {% set title %}{% trans "Scale type" %}{% endset %}
+                {% set helpText %}{% trans "How should this image be scaled?" %}{% endset %}
+                {% set center %}{% trans "Center" %}{% endset %}
+                {% set stretch %}{% trans "Stretch" %}{% endset %}
+                {% set options = [
+                { scaleTypeId: center, scaleType: center },
+                { scaleTypeId: stretch, scaleType: stretch }
+                ] %}
+                {{ forms.dropdown("scaleTypeId", "single", title, module.getOption("scaleType"), options, "scaleTypeId", "scaleType", helpText) }}
+
+                {% set title %}{% trans "Align" %}{% endset %}
+                {% set helpText %}{% trans "How should this image be aligned?" %}{% endset %}
+                {% set left %}{% trans "Left" %}{% endset %}
+                {% set center %}{% trans "Centre" %}{% endset %}
+                {% set right %}{% trans "Right" %}{% endset %}
+                {% set options = [
+                { alignId: left, align: left },
+                { alignId: center, align: center },
+                { alignId: right, align: right }
+                ] %}
+                {{ forms.dropdown("alignId", "single", title, module.getOption("align","center"), options, "alignId", "align", helpText, "", "align-fields") }}
+
+                {% set title %}{% trans "Vertical Align" %}{% endset %}
+                {% set helpText %}{% trans "How should this image be vertically aligned?" %}{% endset %}
+                {% set top %}{% trans "Top" %}{% endset %}
+                {% set middle %}{% trans "Middle" %}{% endset %}
+                {% set bottom %}{% trans "Bottom" %}{% endset %}
+                {% set options = [
+                { valignId: top, valign: top },
+                { valignId: middle, valign: middle },
+                { valignId: bottom, valign: bottom }
+                ] %}
+                {{ forms.dropdown("valignId", "single", title, module.getoption("valign", "middle"), options, "valignId", "valign", helpText, "", "align-fields") }}
             </form>
         </div>
     </div>

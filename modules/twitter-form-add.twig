@@ -7,90 +7,6 @@
 // Augment settings with templates
         $this->loadTemplates();
 
-        // Configure form
-        $this->configureForm('AddMedia');
-
-        $tabs = array();
-        $tabs[] = Form::AddTab('general', __('General'));
-        $tabs[] = Form::AddTab('template', __('Template'), array(array('name' => 'enlarge', 'value' => true)));
-        $tabs[] = Form::AddTab('effect', __('Effect'));
-        $tabs[] = Form::AddTab('advanced', __('Advanced'));
-        Theme::Set('form_tabs', $tabs);
-
-        $formFields['general'][] = Form::AddText('name', __('Name'), NULL,
-            __('An optional name for this media'), 'n');
-
-        // Any values for the form fields should be added to the theme here.
-        $formFields['general'][] = Form::AddNumber('duration', __('Duration'), NULL,
-            __('The duration in seconds this item should be displayed.'), 'd', 'required');
-
-        // Any values for the form fields should be added to the theme here.
-        $formFields['general'][] = Form::AddText('searchTerm', __('Search Term'), NULL,
-            __('Search term. You can test your search term in the twitter.com search box first.'), 's', 'required');
-
-        // Type
-        $formFields['general'][] = Form::AddCombo('resultType', __('Type'), 'mixed',
-            array(
-                array('typeid' => 'mixed', 'type' => __('Mixed')),
-                array('typeid' => 'recent', 'type' => __('Recent')),
-                array('typeid' => 'popular', 'type' => __('Popular')),
-            ),
-            'typeid',
-            'type',
-            __('Recent shows only the most recent tweets, Popular the most popular and Mixed includes both popular and recent results.'), 't', 'required');
-
-        // Distance
-        $formFields['general'][] = Form::AddNumber('tweetDistance', __('Distance'), NULL,
-            __('Distance in miles that the tweets should be returned from. Set to 0 for no restrictions.'), 'd');
-
-        // Distance
-        $formFields['general'][] = Form::AddNumber('tweetCount', __('Count'), 15,
-            __('The number of Tweets to return.'), 'c');
-
-        // Common fields
-        $formFields['effect'][] = Form::AddCombo(
-            'effect',
-            __('Effect'),
-            $this->GetOption('effect'),
-            array(
-                array('effectid' => 'none', 'effect' => __('None')),
-                array('effectid' => 'fade', 'effect' => __('Fade')),
-                array('effectid' => 'fadeout', 'effect' => __('Fade Out')),
-                array('effectid' => 'scrollHorz', 'effect' => __('Scroll Horizontal')),
-                array('effectid' => 'scrollVert', 'effect' => __('Scroll Vertical')),
-                array('effectid' => 'flipHorz', 'effect' => __('Flip Horizontal')),
-                array('effectid' => 'flipVert', 'effect' => __('Flip Vertical')),
-                array('effectid' => 'shuffle', 'effect' => __('Shuffle')),
-                array('effectid' => 'tileSlide', 'effect' => __('Tile Slide')),
-                array('effectid' => 'tileBlind', 'effect' => __('Tile Blinds')),
-                array('effectid' => 'marqueeLeft', 'effect' => __('Marquee Left')),
-                array('effectid' => 'marqueeRight', 'effect' => __('Marquee Right')),
-                array('effectid' => 'marqueeUp', 'effect' => __('Marquee Up')),
-                array('effectid' => 'marqueeDown', 'effect' => __('Marquee Down')),
-            ),
-            'effectid',
-            'effect',
-            __('Please select the effect that will be used to transition between items. If all items should be output, select None. Marquee effects are CPU intensive and may not be suitable for lower power displays.'),
-            'e');
-
-        $formFields['effect'][] = Form::AddNumber('speed', __('Speed'), NULL,
-            __('The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1).'), 's', NULL, 'effect-controls');
-
-        // A list of web safe colours
-        $formFields['advanced'][] = Form::AddText('backgroundColor', __('Background Colour'), NULL,
-            __('The selected effect works best with a background colour. Optionally add one here.'), 'c', NULL, 'background-color-group');
-
-        // Field empty
-        $formFields['advanced'][] = Form::AddText('noTweetsMessage', __('No tweets'), NULL,
-            __('A message to display when there are no tweets returned by the search query'), 'n');
-
-        // Date format
-        $formFields['advanced'][] = Form::AddText('dateFormat', __('Date Format'), 'd M',
-            __('The format to apply to all dates returned by the ticker. In PHP date format: http://uk3.php.net/manual/en/function.date.php'), 'f');
-
-        $formFields['advanced'][] = FormManager::AddNumber('updateInterval', __('Update Interval (mins)'), 60,
-            __('Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60.'),
-            'n', 'required');
 
         // Template - for standard stuff
         $formFields['template'][] = Form::AddCombo('templateId', __('Template'), $this->GetOption('templateId', 'tweet-only'),
@@ -99,18 +15,7 @@
             'value',
             __('Select the template you would like to apply. This can be overridden using the check box below.'), 't', 'template-selector-control');
 
-        // Add a field for whether to override the template or not.
-        // Default to 1 so that it will work correctly with old items (that didn't have a template selected at all)
-        $formFields['template'][] = Form::AddCheckbox('overrideTemplate', __('Override the template?'), $this->GetOption('overrideTemplate', 0),
-            __('Tick if you would like to override the template.'), 'o');
-
-        // Add a text template
-        $formFields['template'][] = Form::AddMultiText('ta_text', NULL, null,
-            __('Enter the template. Please note that the background colour has automatically coloured to your layout background colour.'), 't', 10, NULL, 'template-override-controls');
-
-        // Field for the style sheet (optional)
-        $formFields['template'][] = Form::AddMultiText('ta_css', NULL, null,
-            __('Optional Stylesheet'), 's', 10, NULL, 'template-override-controls');
+        Lots of dependencies missing, otherwise probably fine
 
         // Add some field dependencies
         // When the override template check box is ticked, we want to expose the advanced controls and we want to hide the template selector
@@ -175,7 +80,7 @@
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, $("#<<id>>").submit()
+    {% trans "Save" %}, $("#twitterAddForm").submit()
 {% endblock %}
 
 {% block callBack %}text_callback{% endblock %}
@@ -183,7 +88,130 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="<<id>>" class="XiboForm form-horizontal" method="post" action="{{ urlFor("module.widget.add", {type: module.widget.type, id: playlist.playlistId}) }}">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                <li><a href="#template" role="tab" data-toggle="tab"><span>{% trans "Template" %}</span></a></li>
+                <li><a href="#effect" role="tab" data-toggle="tab"><span>{% trans "Effect" %}</span></a></li>
+                <li><a href="#advanced" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
+            </ul>
+            <form id="twitterAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("module.widget.add", {type: module.widget.type, id: playlist.playlistId}) }}">
+                <div class="tab-content">
+                    <div class="tab-pane active" id="general">
+                        {% set title %}{% trans "Name" %}{% endset %}
+                        {% set helpText %}{% trans "An optional name for this media" %}{% endset %}
+                        {{ forms.text("name", title, "", helpText) }}
+
+                        {% set title %}{% trans "Duration" %}{% endset %}
+                        {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
+                        {{ forms.number("duration", title, "", helpText, "", "required") }}
+
+                        {% set title %}{% trans "Search Term" %}{% endset %}
+                        {% set helpText %}{% trans "Search term. You can test your search term in the twitter.com search box first." %}{% endset %}
+                        {{ forms.text("searchTerm", title, "", helpText), "", "required" }}
+
+                        {% set title %}{% trans "Type" %}{% endset %}
+                        {% set helpText %}{% trans "Recent shows only the most recent tweets, Popular the most popular and Mixed includes both popular and recent results." %}{% endset %}
+                        {% set mixed %}{% trans "Mixed" %}{% endset %}
+                        {% set recent %}{% trans "Recent" %}{% endset %}
+                        {% set popular %}{% trans "Popular" %}{% endset %}
+                        {% set options = [
+                        { typeid: mixed, type: mixed },
+                        { typeid: recent, type: recent },
+                        { typeid: popular, type: popular }
+                        ] %}
+                        {{ forms.dropdown("resultType", "single", title, "mixed", options, "typeid", "type", helpText,"", "required") }}
+
+                        {% set title %}{% trans "Distance" %}{% endset %}
+                        {% set helpText %}{% trans "Distance in miles that the tweets should be returned from. Set to 0 for no restrictions." %}{% endset %}
+                        {{ forms.number("tweetDistance", title, "", helpText) }}
+
+                        {% set title %}{% trans "Count" %}{% endset %}
+                        {% set helpText %}{% trans "The number of Tweets to return." %}{% endset %}
+                        {{ forms.number("tweetCount", title, "", helpText) }}
+                    </div>
+
+                    <div class="tab-pane" id="template">
+                        {#
+                        {% set title %}{% trans "Template" %}{% endset %}
+                        {% set helpText %}{% trans "Select the template you would like to apply. This can be overridden using the check box below." %}{% endset %}
+                        {{ forms.dropdown("templateId", title, module.getOption("templateId", "tweet-only"), module.,"id", "value", helptext, "", "template-selector-control") }}
+                        
+                        $this->module->settings['templates'] is in twitter.php, not sure how to refrence it here
+                        #}
+
+                        {% set title %}{% trans "Override the template?" %}{% endset %}
+                        {% set helpText %}{% trans "Tick if you would like to override the template." %}{% endset %}
+                        {{ forms.checkbox("overrideTemplate", title, module.getOption("overrideTemplate", 0), helpText) }}
+
+                        {% set helpText %}{% trans "Enter the template. Please note that the background colour has automatically coloured to your layout background colour." %}{% endset %}
+                        {{ forms.textarea("ta_text", "", "", helpText, "", 10, "", "template-override-controls") }}
+
+                        {% set title %}{% trans "Optional Stylesheet" %}{% endset %}
+                        {{ forms.textarea("ta_css", "", "", title, "", 10, "", "template-override-controls") }}
+
+
+                    </div>
+
+                    <div class="tab-pane" id="effect">
+
+                        {% set title %}{% trans "Effect" %}{% endset %}
+                        {% set helpText %}{% trans "Please select the effect that will be used to transition between items. If all items should be output, select None. Marquee effects are CPU intensive and may not be suitable for lower power displays." %}{% endset %}
+                        {% set fade %}{% trans "Fade" %}{% endset %}
+                        {% set fadeout %}{% trans "Fade Out" %}{% endset %}
+                        {% set scrollHorz %}{% trans "Scroll Horizontal" %}{% endset %}
+                        {% set scrollVert %}{% trans "Scroll Vertical" %}{% endset %}
+                        {% set flipHorz %}{% trans "Flip Horizontal" %}{% endset %}
+                        {% set flipVert %}{% trans "Flip Vertical" %}{% endset %}
+                        {% set shuffle %}{% trans "shuffle" %}{% endset %}
+                        {% set tileSlide %}{% trans "Tile Slide" %}{% endset %}
+                        {% set tileBlind %}{% trans "Tile Blind" %}{% endset %}
+                        {% set marqueeLeft %}{% trans "Marquee Left" %}{% endset %}
+                        {% set marqueeRight %}{% trans "Marquee Right" %}{% endset %}
+                        {% set marqueeUp %}{% trans "Marquee Up" %}{% endset %}
+                        {% set marqueeDown %}{% trans "Marquee Down" %}{% endset %}
+                        {% set options = [
+                        { effectid: "", effect: none },
+                        { effectid: fade, effect: fade },
+                        { effectid: fadeout, effect: fadeout},
+                        { effectid: scrollHorz, effect: scrollHorz},
+                        { effectid: scrollVert, effect: scrollVert},
+                        { effectid: flipHorz, effect: flipHorz},
+                        { effectid: flipVert, effect: flipVert},
+                        { effectid: shuffle, effect: shuffle},
+                        { effectid: tileSlide, effect: tileSlide},
+                        { effectid: tileBlind, effect: tileBlind},
+                        { effectid: marqueeLeft, effect: marqueeLeft},
+                        { effectid: marqueeRight, effect: marqueeRight},
+                        { effectid: marqueeUp, effect: marqueeUp},
+                        { effectid: marqueeDown, effect: marqueeDown}
+                        ] %}
+                        {{ forms.dropdown("effect", "single", title, module.getOption("effect"), "effectid", "effect", helpText) }}
+
+                        {% set title %}{% trans "Speed" %}{% endset %}
+                        {% set helpText %}{% trans "The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1)." %}{% endset %}
+                        {{ forms.number("speed", title, "", helpText, "", "effect-controls") }}
+                    </div>
+
+                    <div class="tab-pane" id="advanced">
+
+                        {% set title %}{% trans "Background Colour" %}{% endset %}
+                        {% set helpText %}{% trans "The selected effect works best with a background colour. Optionally add one here." %}{% endset %}
+                        {{ forms.text("backgroundColor", title, "", helpText, "", "", "background-color-group") }}
+                        
+                        {% set title %}{% trans "No tweets" %}{% endset %}
+                        {% set helpText %}{% trans "A message to display when there are no tweets returned by the search query" %}{% endset %}
+                        {{ forms.text("noTweetsMessage", title, "", helpText) }}
+                        
+                        {% set title %}{% trans "Date Format" %}{% endset %}
+                        {% set helpText %}{% trans "The format to apply to all dates returned by the ticker. In PHP date format: http://uk3.php.net/manual/en/function.date.php" %}{% endset %}
+                        {{ forms.text("dateFormat", title, "d M", helpText) }}
+
+                        {% set title %}{% trans "Update Interval (mins)" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60." %}{% endset %}
+                        {{ forms.number("updateInterval", title, 60, helpText, "", "required") }}
+                    <div>
+                </div>
+
 
             </form>
         </div>
