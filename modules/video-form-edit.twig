@@ -4,14 +4,8 @@
  * Copyright (C) 2015 Spring Signage Ltd
  * (${FILE_NAME})
  */
-$formFields = array();
-        $formFields[] = Form::AddCheckbox('loop', __('Loop?'),
-            $this->GetOption('loop', 0), __('Should the video loop if it finishes before the provided duration?'),
-            'l', 'loop-fields');
 
-        $formFields[] = Form::AddCheckbox('mute', __('Mute?'),
-            $this->GetOption('mute', 1), __('Should the video be muted?'),
-            'm', 'mute-fields');
+Fine, missing:
 
         $response->AddFieldAction('duration', 'init', '0', array('.loop-fields' => array('display' => 'none')));
         $response->AddFieldAction('duration', 'change', '0', array('.loop-fields' => array('display' => 'none')));
@@ -29,13 +23,22 @@ $formFields = array();
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, $("#<<id>>").submit()
+    {% trans "Save" %}, $("#videoEditForm").submit()
 {% endblock %}
 
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="<<id>>" class="XiboForm form-horizontal" method="put" action="action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}"">
+            <form id="videoEditForm" class="XiboForm form-horizontal" method="put" action="action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}"">
+                {% set title %}{% trans "Loop?" %}{% endset %}
+                {% set helpText %}{% trans "Should the video loop if it finishes before the provided duration?" %}{% endset %}
+                {{ forms.checkbox("loop", title, module.getOption("loop", 0), helpText, "", "loop-fields") }}
+                
+                {% set title %}{% trans "Mute?" %}{% endset %}
+                {% set helpText %}{% trans "Should the video be muted?" %}{% endset %}
+                {{ forms.checkbox("mute", title, module.getOption("mute", 1), helpText "", "mute-fields") }}
+
+                {# dependencies #}
 
             </form>
         </div>

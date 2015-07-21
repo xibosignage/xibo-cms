@@ -7,20 +7,6 @@
 // Augment settings with templates
         $this->loadTemplates();
 
-        $formFields = array();
-        $formFields[] = Form::AddCombo(
-            'sourceid',
-            __('Source Type'),
-            NULL,
-            array(array('sourceid' => '1', 'source' => __('Feed')), array('sourceid' => '2', 'source' => __('DataSet'))),
-            'sourceid',
-            'source',
-            __('The source for this Ticker'),
-            's');
-
-        $formFields[] = Form::AddText('uri', __('Feed URL'), NULL,
-            __('The Link for the RSS feed'), 'f', '', 'feed-fields');
-
         $datasets = $this->getUser()->DataSetList();
         array_unshift($datasets, array('datasetid' => '0', 'dataset' => 'None'));
         Theme::Set('dataset_field_list', $datasets);
@@ -72,7 +58,7 @@
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, $("#<<id>>").submit()
+    {% trans "Save" %}, $("#tickerAddForm").submit()
 {% endblock %}
 
 {% block callBack %}forecastIoFormSetup{% endblock %}
@@ -80,8 +66,29 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="<<id>>" class="XiboForm form-horizontal" method="post" action="{{ urlFor("module.widget.add", {type: module.widget.type, id: playlist.playlistId}) }}">
+            <form id="tickerAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("module.widget.add", {type: module.widget.type, id: playlist.playlistId}) }}">
+                        {% set title %}{% trans "Source Type" %}{% endset %}
+                        {% set helpText %}{% trans "The source for this Ticker" %}{% endset %}
+                        {% set feed %}{% trans "Feed" %}{% endset %}
+                        {% set dataSet %}{% trans "DataSet" %}{% endset %}
+                        {% set options = [
+                        { sourceid: 1, source: feed },
+                        { sourceid: 2, source: dataset }
+                        ] %}
+                        {{ forms.dropdown("sourceId", "single", title, "", options, "sourceid", "source", helpText) }}
+                        
+                        {% set title %}{% trans "Feed URL"%{% endset %}}
+                        {% set helpText %}{% trans "The Link for the RSS feed" %}{% endset %}
+                        {{ forms.text("uri", title, "", helpText, "", "", "feed-fields")}}
+                        
+                        {# not sure if fine #}
+                        {% set title %}{% trans "DataSet" %}{% endset %}
+                        {% set helpText %}{% trans "Please select the DataSet to use as a source of data for this ticker." %}{% endset %}
+                        {{ forms.dropdown("datasetId", "single", title, "", datasets, "datasetid", "dataset", helpText, "", "dataset-fields") }}
 
+                        {{ forms.number("duration", "Duration", "", "The duration in seconds this should be displayed", "", "required") }}
+
+                        {# dependencies #}
             </form>
         </div>
     </div>
