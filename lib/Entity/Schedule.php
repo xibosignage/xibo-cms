@@ -90,7 +90,7 @@ class Schedule implements \JsonSerializable
             throw new \InvalidArgumentException(__('No display groups selected'));
 
         // Validate layout
-        if (!v::int()->notEmpty()->validate($this->campaignId))
+        if (!v::int()->notEmpty()->min(1)->validate($this->campaignId))
             throw new \InvalidArgumentException(__('No layout selected'));
 
         // validate the dates

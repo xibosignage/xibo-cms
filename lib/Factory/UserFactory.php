@@ -28,7 +28,7 @@ use Xibo\Exception\NotFoundException;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
-class UserFactory
+class UserFactory extends BaseFactory
 {
     /**
      * Get User by ID
@@ -38,7 +38,7 @@ class UserFactory
      */
     public static function getById($userId)
     {
-        $users = UserFactory::query(null, array('userId' => $userId));
+        $users = UserFactory::query(null, array('disableUserCheck' => 1, 'userId' => $userId));
 
         if (count($users) <= 0)
             throw new NotFoundException(__('User not found'));
@@ -54,13 +54,7 @@ class UserFactory
      */
     public static function loadById($userId)
     {
-        $users = UserFactory::query(null, array('userId' => $userId));
-
-        if (count($users) <= 0)
-            throw new NotFoundException(__('User not found'));
-
-        $user = $users[0];
-        /* @var User $user */
+        $user = UserFactory::getById($userId);
         $user->load();
 
         return $user;
@@ -74,7 +68,7 @@ class UserFactory
      */
     public static function getByName($userName)
     {
-        $users = UserFactory::query(null, array('userName' => $userName));
+        $users = UserFactory::query(null, array('disableUserCheck' => 1, 'userName' => $userName));
 
         if (count($users) <= 0)
             throw new NotFoundException(__('User not found'));
@@ -89,7 +83,7 @@ class UserFactory
      */
     public static function getByGroupId($groupId)
     {
-        return UserFactory::query(null, array('groupIds' => [$groupId]));
+        return UserFactory::query(null, array('disableUserCheck' => 1, 'groupIds' => [$groupId]));
     }
 
     /**
@@ -99,7 +93,7 @@ class UserFactory
      */
     public static function loadByClientId($clientId)
     {
-        $users = UserFactory::query(null, array('clientId' => $clientId));
+        $users = UserFactory::query(null, array('disableUserCheck' => 1, 'clientId' => $clientId));
 
         if (count($users) <= 0)
             throw new NotFoundException(sprintf('User not found'));
@@ -107,9 +101,14 @@ class UserFactory
         return $users[0];
     }
 
+    /**
+     * Get users by Display Group
+     * @param $displayGroupId
+     * @return array
+     */
     public static function getByDisplayGroupId($displayGroupId)
     {
-        return DisplayFactory::query(null, ['displayGroupId' => $displayGroupId]);
+        return DisplayFactory::query(null, ['disableUserCheck' => 1, 'displayGroupId' => $displayGroupId]);
     }
 
     /**
@@ -127,7 +126,7 @@ class UserFactory
             $sortOrder = array('username');
 
         $params = array();
-        $SQL  = '
+        $select = '
             SELECT `user`.userId,
                 userName,
                 userTypeId,
@@ -142,56 +141,81 @@ class UserFactory
                 UserPassword AS password,
                 group.groupId,
                 group.group,
-                IFNULL(group.libraryQuota, 0) AS libraryQuota
+                IFNULL(group.libraryQuota, 0) AS libraryQuota ';
+
+        $body = '
               FROM `user`
                 INNER JOIN lkusergroup
                 ON lkusergroup.userId = user.userId
                 INNER JOIN `group`
-                ON group.groupId = lkusergroup.groupId
+                ON `group`.groupId = lkusergroup.groupId
                   AND isUserSpecific = 1
                 INNER JOIN `pages`
                 ON pages.pageId = `user`.homePageId
              WHERE 1 = 1
          ';
 
+        if (Sanitize::getCheckbox('disableUserCheck', 0, $filterBy) == 0) {
+            // Normal users can only see themselves
+            if (self::getUser()->userTypeId == 3) {
+                $filterBy['userId'] = self::getUser()->userId;
+            }
+            // Group admins can only see users from their groups.
+            else if (self::getUser()->userTypeId == 2) {
+                $body .= '
+                    AND user.userId IN (
+                        SELECT `otherUserLinks`.userId
+                          FROM `lkusergroup`
+                            INNER JOIN `group`
+                            ON `group`.groupId = `lkusergroup`.groupId
+                                AND `group`.isUserSpecific = 0
+                            INNER JOIN `lkusergroup` `otherUserLinks`
+                            ON `otherUserLinks`.groupId = `group`.groupId
+                         WHERE `lkusergroup`.userId = :currentUserId
+                    )
+                ';
+                $params['currentUserId'] = self::getUser()->userId;
+            }
+        }
+
         // User Id Provided?
         if (Sanitize::getInt('userId', $filterBy) != 0) {
-            $SQL .= " AND user.userId = :userId ";
+            $body .= " AND user.userId = :userId ";
             $params['userId'] = Sanitize::getInt('userId', $filterBy);
-        }
-
-        // User Type Provided
-        if (Sanitize::getInt('userTypeId', $filterBy) != 0) {
-            $SQL .= " AND user.userTypeId = :userTypeId ";
-            $params['userTypeId'] = Sanitize::getInt('userTypeId', $filterBy);
-        }
-
-        // User Name Provided
-        if (Sanitize::getString('userName', $filterBy) != '') {
-            $SQL .= " AND user.userName = :userName ";
-            $params['userName'] = Sanitize::getString('userName', $filterBy);
         }
 
         // Groups Provided
         $groups = Sanitize::getParam('groupIds', $filterBy);
 
         if (count($groups) > 0) {
-            $SQL .= " AND user.userId IN (SELECT userId FROM `lkusergroup` WHERE groupid IN (" . implode($groups, ',') . ")) ";
+            $body .= ' AND user.userId IN (SELECT userId FROM `lkusergroup` WHERE groupId IN (' . implode($groups, ',') . ')) ';
+        }
+
+        // User Type Provided
+        if (Sanitize::getInt('userTypeId', $filterBy) != 0) {
+            $body .= " AND user.userTypeId = :userTypeId ";
+            $params['userTypeId'] = Sanitize::getInt('userTypeId', $filterBy);
+        }
+
+        // User Name Provided
+        if (Sanitize::getString('userName', $filterBy) != '') {
+            $body .= " AND user.userName = :userName ";
+            $params['userName'] = Sanitize::getString('userName', $filterBy);
         }
 
         // Retired users?
         if (Sanitize::getInt('retired', $filterBy) != null) {
-            $SQL .= " AND user.retired = :retired ";
+            $body .= " AND user.retired = :retired ";
             $params['retired'] = Sanitize::getInt('retired', $filterBy);
         }
 
         if (Sanitize::getString('clientId', $filterBy) != null) {
-            $SQL .= ' AND user.userId = (SELECT DISTINCT owner_id FROM oauth_sessions WHERE client_id = :clientId) ';
+            $body .= ' AND user.userId = (SELECT DISTINCT owner_id FROM oauth_sessions WHERE client_id = :clientId) ';
             $params['clientId'] = Sanitize::getString('clientId', $filterBy);
         }
 
         if (Sanitize::getString('displayGroupId', $filterBy) != null) {
-            $SQL .= ' AND user.userId IN (
+            $body .= ' AND user.userId IN (
                 SELECT DISTINCT user.userId, user.userName, user.email
                   FROM `user`
                     INNER JOIN `lkusergroup`
@@ -207,13 +231,28 @@ class UserFactory
         }
 
         // Sorting?
+        $order = '';
         if (is_array($sortOrder))
-            $SQL .= 'ORDER BY ' . implode(',', $sortOrder);
+            $order .= 'ORDER BY ' . implode(',', $sortOrder);
+
+        $limit = '';
+        // Paging
+        if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
+        }
+
+        $sql = $select . $body . $order . $limit;
 
         // Log::sql($SQL, $params);
 
-        foreach (PDOConnect::select($SQL, $params) as $row) {
+        foreach (PDOConnect::select($sql, $params) as $row) {
             $entries[] = (new User())->hydrate($row);
+        }
+
+        // Paging
+        if ($limit != '' && count($entries) > 0) {
+            $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
+            self::$_countLast = intval($results[0]['total']);
         }
 
         return $entries;

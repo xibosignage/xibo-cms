@@ -1,0 +1,36 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+$formFields = array();
+        $formFields[] = Form::AddText('dataSet', __('Name'), NULL,
+            __('A name for this DataSet'), 'n', 'required');
+
+        $formFields[] = Form::AddText('description', __('Description'), NULL,
+            __('An optional description'), 'd', 'maxlength="250"');
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Add DataSet" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#<<id>>").submit()    
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="<<id>>" class="XiboForm form-horizontal" method="post" action="{{ urlFor("dataSet.add") }}">
+
+            </form>
+        </div>
+    </div>
+{% endblock %}

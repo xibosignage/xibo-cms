@@ -10,6 +10,7 @@ namespace Xibo\Controller;
 
 
 use League\OAuth2\Server\Exception\OAuthException;
+use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\FormExpiredException;
 use Xibo\Helper\Log;
 
@@ -19,6 +20,7 @@ class Error extends Base
     {
         $app = $this->getApp();
         $handled = $this->handledError($e);
+        $app->commit = false;
 
         if ($handled) {
             Log::debug($e->getMessage());
@@ -39,7 +41,8 @@ class Error extends Base
                 if ($this->getApp()->request()->isAjax()) {
                     $this->getState()->hydrate([
                         'success' => false,
-                        'message' => $message
+                        'message' => $message,
+                        'template' => ''
                     ]);
                 }
                 else {
@@ -74,17 +77,15 @@ class Error extends Base
 
                 break;
 
-            case 'auth':
-                $this->render();
-                break;
-
             case 'console':
+            case 'maint':
+
                 // Render the error page.
                 if ($handled) {
                     echo $e->getMessage();
                 }
                 else
-                    echo $e;
+                    echo __('Unknown Error');
 
                 $app->stop();
                 break;
@@ -96,6 +97,7 @@ class Error extends Base
         return ($e instanceof \InvalidArgumentException
             || $e instanceof OAuthException
             || $e instanceof FormExpiredException
+            || $e instanceof AccessDeniedException
         );
     }
 }

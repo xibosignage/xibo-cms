@@ -20,10 +20,12 @@
  */
 namespace Xibo\Controller;
 
+use Xibo\Exception\AccessDeniedException;
+use Xibo\Factory\DisplayFactory;
+use Xibo\Factory\MediaFactory;
 use Xibo\Helper\Date;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
-use Xibo\Helper\Theme;
 use Xibo\Storage\PDOConnect;
 
 
@@ -34,17 +36,11 @@ class Stats extends Base
      */
     function displayPage()
     {
-        // List of Displays this user has permission for
-        $displays = $this->getUser()->DisplayList();
-        array_unshift($displays, array('displayId' => 0, 'display' => 'All'));
-
-        // List of Media this user has permission for
-        $media = $this->getUser()->MediaList();
-        array_unshift($media, array('mediaId' => 0, 'media' => 'All'));
-
         $data = [
-            'displays' => $displays,
-            'media' => $media,
+            // List of Displays this user has permission for
+            'displays' => DisplayFactory::query(),
+            // List of Media this user has permission for
+            'media' => MediaFactory::query(),
             'defaults' => [
                 'fromDate' => Date::getLocalDate(time() - (86400 * 35), 'Y-m-d'),
                 'fromDateOneDay' => Date::getLocalDate(time() - 86400, 'Y-m-d'),
@@ -75,180 +71,79 @@ class Stats extends Base
         Log::debug('Converted Times received are: FromDt=' . $fromDt . '. ToDt=' . $toDt);
 
         // Get an array of display id this user has access to.
-        $displays = $this->getUser()->DisplayList();
         $display_ids = array();
 
-        foreach ($displays as $display) {
-            $display_ids[] = $display['displayid'];
+        foreach (DisplayFactory::query() as $display) {
+            $display_ids[] = $display->displayId;
         }
 
         if (count($display_ids) <= 0)
             trigger_error(__('No displays with View permissions'), E_USER_ERROR);
 
-        // 3 grids showing different stats.
-
-        // Layouts Ran
-        $SQL = 'SELECT display.Display, layout.Layout, COUNT(StatID) AS NumberPlays, SUM(TIME_TO_SEC(TIMEDIFF(end, start))) AS Duration, MIN(start) AS MinStart, MAX(end) AS MaxEnd ';
-        $SQL .= '  FROM stat ';
-        $SQL .= '  INNER JOIN layout ON layout.LayoutID = stat.LayoutID ';
-        $SQL .= '  INNER JOIN display ON stat.DisplayID = display.DisplayID ';
-        $SQL .= " WHERE stat.type = 'layout' ";
-        $SQL .= sprintf("  AND stat.end > '%s' ", $fromDt);
-        $SQL .= sprintf("  AND stat.start <= '%s' ", $toDt);
-
-        $SQL .= ' AND stat.displayID IN (' . implode(',', $display_ids) . ') ';
-
-        if ($displayId != 0)
-            $SQL .= sprintf("  AND stat.displayID = %d ", $displayId);
-
-        $SQL .= 'GROUP BY display.Display, layout.Layout ';
-        $SQL .= 'ORDER BY display.Display, layout.Layout';
-
-        // Log
-        Log::sql($SQL);
-
-        if (!$results = $this->db->query($SQL)) {
-            trigger_error($db->error());
-            trigger_error(__('Unable to get Layouts Shown'), E_USER_ERROR);
-        }
-
-        $cols = array(
-            array('name' => 'Display', 'title' => __('Display')),
-            array('name' => 'Layout', 'title' => __('Layout')),
-            array('name' => 'NumberPlays', 'title' => __('Number of Plays')),
-            array('name' => 'DurationSec', 'title' => __('Total Duration (s)')),
-            array('name' => 'Duration', 'title' => __('Total Duration')),
-            array('name' => 'MinStart', 'title' => __('First Shown')),
-            array('name' => 'MaxEnd', 'title' => __('Last Shown'))
-        );
-        Theme::Set('table_cols', $cols);
-
-        $rows = array();
-
-        while ($row = $db->get_assoc_row($results)) {
-            $row['Display'] = Sanitize::string($row['Display']);
-            $row['Layout'] = Sanitize::string($row['Layout']);
-            $row['NumberPlays'] = Sanitize::int($row['NumberPlays']);
-            $row['DurationSec'] = Sanitize::int($row['Duration']);
-            $row['Duration'] = sec2hms(Kit::ValidateParam($row['Duration'], _INT));
-            $row['MinStart'] = Date::getLocalDate(strtotime(Kit::ValidateParam($row['MinStart'], _STRING)));
-            $row['MaxEnd'] = Date::getLocalDate(strtotime(Kit::ValidateParam($row['MaxEnd'], _STRING)));
-
-            $rows[] = $row;
-        }
-
-        Theme::Set('table_rows', $rows);
-        Theme::Set('table_layouts_shown', Theme::RenderReturn('table_render'));
-
-        // Media Ran
-        $SQL = 'SELECT display.Display, media.Name, COUNT(StatID) AS NumberPlays, SUM(TIME_TO_SEC(TIMEDIFF(end, start))) AS Duration, MIN(start) AS MinStart, MAX(end) AS MaxEnd ';
-        $SQL .= '  FROM stat ';
-        $SQL .= '  INNER JOIN display ON stat.DisplayID = display.DisplayID ';
-        $SQL .= '  INNER JOIN  media ON media.MediaID = stat.MediaID ';
-        $SQL .= " WHERE stat.type = 'media' ";
-        $SQL .= sprintf("  AND stat.end > '%s' ", $fromDt);
-        $SQL .= sprintf("  AND stat.start <= '%s' ", $toDt);
-        $SQL .= ' AND stat.displayID IN (' . implode(',', $display_ids) . ') ';
-
-        if ($mediaId != 0)
-            $SQL .= sprintf("  AND media.MediaID = %d ", $mediaId);
-
-        if ($displayId != 0)
-            $SQL .= sprintf("  AND stat.displayID = %d ", $displayId);
-
-        $SQL .= 'GROUP BY display.Display, media.Name ';
-        $SQL .= 'ORDER BY display.Display, media.Name';
-
-        if (!$results = $this->db->query($SQL)) {
-            trigger_error($db->error());
-            trigger_error(__('Unable to get Library Media Ran'), E_USER_ERROR);
-        }
-
-        $cols = array(
-            array('name' => 'Display', 'title' => __('Display')),
-            array('name' => 'Media', 'title' => __('Media')),
-            array('name' => 'NumberPlays', 'title' => __('Number of Plays')),
-            array('name' => 'DurationSec', 'title' => __('Total Duration (s)')),
-            array('name' => 'Duration', 'title' => __('Total Duration')),
-            array('name' => 'MinStart', 'title' => __('First Shown')),
-            array('name' => 'MaxEnd', 'title' => __('Last Shown'))
-        );
-        Theme::Set('table_cols', $cols);
-        $rows = array();
-
-        while ($row = $db->get_assoc_row($results)) {
-            $row['Display'] = Sanitize::string($row['Display']);
-            $row['Media'] = Sanitize::string($row['Name']);
-            $row['NumberPlays'] = Sanitize::int($row['NumberPlays']);
-            $row['DurationSec'] = Sanitize::int($row['Duration']);
-            $row['Duration'] = sec2hms(Kit::ValidateParam($row['Duration'], _INT));
-            $row['MinStart'] = Date::getLocalDate(strtotime(Kit::ValidateParam($row['MinStart'], _STRING)));
-            $row['MaxEnd'] = Date::getLocalDate(strtotime(Kit::ValidateParam($row['MaxEnd'], _STRING)));
-
-            $rows[] = $row;
-        }
-        Theme::Set('table_rows', $rows);
-        Theme::Set('table_media_shown', Theme::RenderReturn('table_render'));
-
         // Media on Layouts Ran
-        $SQL = "SELECT display.Display, layout.Layout, IFNULL(media.Name, 'Text/Rss/Webpage') AS Name, COUNT(StatID) AS NumberPlays, SUM(TIME_TO_SEC(TIMEDIFF(end, start))) AS Duration, MIN(start) AS MinStart, MAX(end) AS MaxEnd ";
-        $SQL .= '  FROM stat ';
-        $SQL .= '  INNER JOIN display ON stat.DisplayID = display.DisplayID ';
-        $SQL .= '  INNER JOIN layout ON layout.LayoutID = stat.LayoutID ';
-        $SQL .= '  LEFT OUTER JOIN media ON media.MediaID = stat.MediaID ';
-        $SQL .= " WHERE stat.type = 'media' ";
-        $SQL .= sprintf("  AND stat.end > '%s' ", $fromDt);
-        $SQL .= sprintf("  AND stat.start <= '%s' ", $toDt);
-        $SQL .= ' AND stat.displayID IN (' . implode(',', $display_ids) . ') ';
+        $sql = '
+          SELECT stat.type,
+              display.Display,
+              layout.Layout,
+              IFNULL(widgetoption.value, widget.type) AS Name,
+              COUNT(StatID) AS NumberPlays,
+              SUM(TIME_TO_SEC(TIMEDIFF(end, start))) AS Duration,
+              MIN(start) AS MinStart,
+              MAX(end) AS MaxEnd
+            FROM stat
+              INNER JOIN display
+              ON stat.DisplayID = display.DisplayID
+              INNER JOIN layout
+              ON layout.LayoutID = stat.LayoutID
+              INNER JOIN `widget`
+              ON `widget`.widgetId = stat.MediaID
+              LEFT OUTER JOIN `widgetoption`
+              ON `widgetoption`.widgetId = `widget`.widgetId
+                AND `widgetoption`.type = \'attribute\'
+                AND `widgetoption`.option = \'name\'
+           WHERE stat.type <> \'displaydown\'
+                AND stat.end > :fromDt
+                AND stat.start <= :toDt
+                AND stat.displayID IN (' . implode(',', $display_ids) . ')
+        ';
 
-        if ($mediaId != 0)
-            $SQL .= sprintf("  AND media.MediaID = %d ", $mediaId);
+        $params = [
+            'fromDt' => $fromDt,
+            'toDt' => $toDt
+        ];
 
-        if ($displayId != 0)
-            $SQL .= sprintf("  AND stat.displayID = %d ", $displayId);
-
-        $SQL .= "GROUP BY display.Display, layout.Layout, IFNULL(media.Name, 'Text/Rss/Webpage') ";
-        $SQL .= "ORDER BY display.Display, layout.Layout, IFNULL(media.Name, 'Text/Rss/Webpage')";
-
-        if (!$results = $this->db->query($SQL)) {
-            trigger_error($db->error());
-            trigger_error(__('Unable to get Library Media Ran'), E_USER_ERROR);
+        if ($mediaId != 0) {
+            $sql .= '  AND widget.widgetId IN (SELECT widgetId FROM `lkwidgetmedia` WHERE mediaId =  :mediaId) ';
+            $params['mediaId'] = $mediaId;
         }
 
-        $cols = array(
-            array('name' => 'Display', 'title' => __('Display')),
-            array('name' => 'Layout', 'title' => __('Layout')),
-            array('name' => 'Media', 'title' => __('Media')),
-            array('name' => 'NumberPlays', 'title' => __('Number of Plays')),
-            array('name' => 'DurationSec', 'title' => __('Total Duration (s)')),
-            array('name' => 'Duration', 'title' => __('Total Duration')),
-            array('name' => 'MinStart', 'title' => __('First Shown')),
-            array('name' => 'MaxEnd', 'title' => __('Last Shown'))
-        );
-        Theme::Set('table_cols', $cols);
+        if ($displayId != 0) {
+            $sql .= '  AND stat.displayID = :displayId ';
+            $params['displayId'] = $displayId;
+        }
+
+        $sql .= '
+            GROUP BY stat.type, display.Display, layout.Layout, IFNULL(widgetoption.value, widget.type)
+            ORDER BY stat.type, display.Display, layout.Layout, IFNULL(widgetoption.value, widget.type)
+        ';
 
         $rows = array();
 
-        while ($row = $db->get_assoc_row($results)) {
-            $row['Display'] = Sanitize::string($row['Display']);
-            $row['Layout'] = Sanitize::string($row['Layout']);
-            $row['Media'] = Sanitize::string($row['Name']);
-            $row['NumberPlays'] = Sanitize::int($row['NumberPlays']);
-            $row['DurationSec'] = Sanitize::int($row['Duration']);
-            $row['Duration'] = sec2hms(Kit::ValidateParam($row['Duration'], _INT));
-            $row['MinStart'] = Date::getLocalDate(strtotime(Kit::ValidateParam($row['MinStart'], _STRING)));
-            $row['MaxEnd'] = Date::getLocalDate(strtotime(Kit::ValidateParam($row['MaxEnd'], _STRING)));
+        foreach (PDOConnect::select($sql, $params) as $row) {
+            $row['type'] = Sanitize::string($row['type']);
+            $row['display'] = Sanitize::string($row['Display']);
+            $row['layout'] = Sanitize::string($row['Layout']);
+            $row['media'] = Sanitize::string($row['Name']);
+            $row['numberPlays'] = Sanitize::int($row['NumberPlays']);
+            $row['duration'] = Sanitize::int($row['Duration']);
+            $row['minStart'] = Date::getLocalDate(Date::getTimestampFromTimeString(Sanitize::getString($row['MinStart'])));
+            $row['maxEnd'] = Date::getLocalDate(Date::getTimestampFromTimeString(Sanitize::getString($row['MaxEnd'])));
 
             $rows[] = $row;
         }
-        Theme::Set('table_rows', $rows);
 
-        Theme::Set('table_media_on_layouts_shown', Theme::RenderReturn('table_render'));
-
-        $output = Theme::RenderReturn('stats_page_grid');
-
-        $response->SetGridResponse($output);
-        $response->paging = false;
+        $this->getState()->template = 'grid';
+        $this->getState()->setData($rows);
     }
 
     public function availabilityData()
@@ -258,11 +153,10 @@ class Stats extends Base
         $displayId = Sanitize::getInt('displayid');
 
         // Get an array of display id this user has access to.
-        $displays = $this->getUser()->DisplayList();
         $displayIds = array();
 
-        foreach ($displays as $display) {
-            $displayIds[] = $display['displayid'];
+        foreach (DisplayFactory::query() as $display) {
+            $displayIds[] = $display->displayId;
         }
 
         if (count($displayIds) <= 0)
@@ -320,16 +214,18 @@ class Stats extends Base
         ];
     }
 
+    /**
+     * Bandwidth Data
+     */
     public function bandwidthData()
     {
         $fromDt = Date::getTimestampFromString(Sanitize::getString('fromdt'));
         $toDt = Date::getTimestampFromString(Sanitize::getString('todt'));
 
         // Get an array of display id this user has access to.
-        $displays = $this->getUser()->DisplayList();
         $displayIds = array();
 
-        foreach ($displays as $display) {
+        foreach (DisplayFactory::query() as $display) {
             $displayIds[] = $display->displayId;
         }
 
@@ -419,122 +315,90 @@ class Stats extends Base
         ];
     }
 
-    public function outputCsvForm()
+    /**
+     * Output CSV Form
+     */
+    public function exportForm()
     {
-        $response = $this->getState();
-
-        Theme::Set('form_id', 'OutputCsvForm');
-        Theme::Set('form_action', 'index.php?p=stats&q=OutputCSV');
-
-        $formFields = array();
-        $formFields[] = Form::AddText('fromdt', __('From Date'), Date::getLocalDate(time() - (86400 * 35), 'Y-m-d'), NULL, 'f');
-        $formFields[] = Form::AddText('todt', __('To Date'), Date::getLocalDate(null, 'Y-m-d'), NULL, 't');
-
-        // List of Displays this user has permission for
-        $displays = $this->getUser()->DisplayGroupList(1);
-        array_unshift($displays, array('displayid' => 0, 'displaygroup' => 'All'));
-        $formFields[] = Form::AddCombo(
-            'displayid',
-            __('Display'),
-            NULL,
-            $displays,
-            'displayid',
-            'displaygroup',
-            NULL,
-            'd');
-
-        Theme::Set('header_text', __('Bandwidth'));
-        Theme::Set('form_fields', $formFields);
-        Theme::Set('form_class', 'XiboManualSubmit');
-
-        $response->SetFormRequestResponse(NULL, __('Export Statistics'), '550px', '275px');
-        $response->AddButton(__('Export'), '$("#OutputCsvForm").submit()');
-        $response->AddButton(__('Close'), 'XiboDialogClose()');
-
+        $this->getState()->template = 'statistics-form-export';
     }
 
     /**
      * Outputs a CSV of stats
-     * @return
      */
-    public function OutputCSV()
+    public function export()
     {
-        $db =& $this->db;
-        $output = '';
-
         // We are expecting some parameters
-        $fromdt = Date::getIsoDateFromString(Kit::GetParam('fromdt', _POST, _STRING));
-        $todt = Date::getIsoDateFromString(Kit::GetParam('todt', _POST, _STRING));
-        $displayID = Sanitize::getInt('displayid');
+        $fromDt = Date::getIsoDateFromString(Sanitize::getString('fromDt'));
+        $toDt = Date::getIsoDateFromString(Sanitize::getString('toDt'));
+        $displayId = Sanitize::getInt('displayid');
 
-        if ($fromdt == $todt) {
-            $todt = date("Y-m-d", strtotime($todt) + 86399);
+        if ($fromDt == $toDt) {
+            $toDt = date("Y-m-d", strtotime($toDt) + 86399);
         }
-
-        // We want to output a load of stuff to the browser as a text file.
-        header('Content-Type: text/csv');
-        header('Content-Disposition: attachment; filename="stats.csv"');
-        header("Content-Transfer-Encoding: binary");
-        header('Accept-Ranges: bytes');
 
         // Get an array of display id this user has access to.
-        $displays = $this->getUser()->DisplayList();
-        $display_ids = array();
+        $displayIds = array();
 
-        foreach ($displays as $display) {
-            $display_ids[] = $display['displayid'];
+        foreach (DisplayFactory::query() as $display) {
+            $displayIds[] = $display->displayId;
         }
 
-        if (count($display_ids) <= 0) {
-            echo __('No displays with View permissions');
-            exit;
+        if (count($displayIds) <= 0)
+            throw new AccessDeniedException();
+
+        $sql = '
+        SELECT stat.*, display.Display, layout.Layout, media.Name AS MediaName
+          FROM stat
+            INNER JOIN display
+            ON stat.DisplayID = display.DisplayID
+            LEFT OUTER JOIN layout
+            ON layout.LayoutID = stat.LayoutID
+            LEFT OUTER JOIN media
+            ON media.mediaID = stat.mediaID
+         WHERE 1 = 1
+          AND stat.end > :fromDt
+          AND stat.start <= :toDt
+          AND stat.displayID IN (' . implode(',', $displayIds) . ')
+        ';
+
+        $params = [
+            'fromDt' => $fromDt,
+            'toDt' => $toDt
+        ];
+
+        if ($displayId != 0) {
+            $sql .= '  AND stat.displayID = :displayId ';
+            $params['displayId'] = $displayId;
         }
 
-        $SQL = 'SELECT stat.*, display.Display, layout.Layout, media.Name AS MediaName ';
-        $SQL .= '  FROM stat ';
-        $SQL .= '  INNER JOIN display ON stat.DisplayID = display.DisplayID ';
-        $SQL .= '  LEFT OUTER JOIN layout ON layout.LayoutID = stat.LayoutID ';
-        $SQL .= '  LEFT OUTER JOIN media ON media.mediaID = stat.mediaID ';
-        $SQL .= ' WHERE 1=1 ';
-        $SQL .= sprintf("  AND stat.end > '%s' ", $fromdt);
-        $SQL .= sprintf("  AND stat.start <= '%s' ", $todt);
+        $sql .= " ORDER BY stat.start ";
 
-        $SQL .= ' AND stat.displayID IN (' . implode(',', $display_ids) . ') ';
+        $out = fopen('php://output', 'w');
+        fputcsv($out, ['Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag']);
 
-        if ($displayID != 0) {
-            $SQL .= sprintf("  AND stat.displayID = %d ", $displayID);
-        }
-
-        $SQL .= " ORDER BY stat.start ";
-
-        Log::notice($SQL, 'Stats', 'OutputCSV');
-
-        if (!$result = $db->query($SQL)) {
-            trigger_error($db->error());
-            trigger_error('Failed to query for Stats.', E_USER_ERROR);
-        }
-
-        // Header row
-        $output .= "Type, FromDT, ToDT, Layout, Display, Media, Tag\n";
-
-        while ($row = $db->get_assoc_row($result)) {
+        // Do some post processing
+        foreach (PDOConnect::select($sql, $params) as $row) {
             // Read the columns
             $type = Sanitize::string($row['Type']);
-            $fromdt = Sanitize::string($row['start']);
-            $todt = Sanitize::string($row['end']);
+            $fromDt = Sanitize::string($row['start']);
+            $toDt = Sanitize::string($row['end']);
             $layout = Sanitize::string($row['Layout']);
             $display = Sanitize::string($row['Display']);
             $media = Sanitize::string($row['MediaName']);
             $tag = Sanitize::string($row['Tag']);
 
-            $output .= "$type, $fromdt, $todt, $layout, $display, $media, $tag\n";
+            fputcsv($out, [$type, $fromDt, $toDt, $layout, $display, $media, $tag]);
         }
 
-        //Log::debug('Output: ' . $output, 'Stats', 'OutputCSV');
+        fclose($out);
 
-        echo $output;
-        exit;
+        // We want to output a load of stuff to the browser as a text file.
+        $app = $this->getApp();
+        $app->response()->header('Content-Type', 'text/csv');
+        $app->response()->header('Content-Disposition', 'attachment; filename="stats.csv"');
+        $app->response()->header('Content-Transfer-Encoding', 'binary"');
+        $app->response()->header('Accept-Ranges', 'bytes');
+        $this->setNoOutput(true);
     }
 }
-
-?>

@@ -29,7 +29,7 @@ use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
-class ResolutionFactory
+class ResolutionFactory extends BaseFactory
 {
     /**
      * Load the Resolution by ID
@@ -39,7 +39,7 @@ class ResolutionFactory
      */
     public static function getById($resolutionId)
     {
-        $resolutions = ResolutionFactory::query(null, array('resolutionId' => $resolutionId));
+        $resolutions = ResolutionFactory::query(null, array('disableUserCheck' => 1, 'resolutionId' => $resolutionId));
 
         if (count($resolutions) <= 0)
             throw new NotFoundException;
@@ -56,7 +56,7 @@ class ResolutionFactory
      */
     public static function getByDimensions($width, $height)
     {
-        $resolutions = ResolutionFactory::query(null, array('width' => $width, 'height' => $height));
+        $resolutions = ResolutionFactory::query(null, array('disableUserCheck' => 1, 'width' => $width, 'height' => $height));
 
         if (count($resolutions) <= 0)
             throw new NotFoundException('Resolution not found');
@@ -69,7 +69,7 @@ class ResolutionFactory
         $entities = array();
 
         $params = array();
-        $sql  = '
+        $select  = '
           SELECT `resolution`.resolutionId,
               `resolution`.resolution,
               `resolution`.intended_width AS width,
@@ -78,38 +78,57 @@ class ResolutionFactory
               `resolution`.height AS designerHeight,
               `resolution`.version,
               `resolution`.enabled
+        ';
+
+        $body = '
             FROM `resolution`
            WHERE 1 = 1
         ';
 
         if (Sanitize::getInt('enabled', -1, $filterBy) != -1) {
-            $sql .= ' AND enabled = :enabled ';
+            $body .= ' AND enabled = :enabled ';
             $params['enabled'] = Sanitize::getInt('enabled', $filterBy);
         }
 
         if (Sanitize::getInt('resolutionId', $filterBy) != null) {
-            $sql .= ' AND resolutionId = :resolutionId';
+            $body .= ' AND resolutionId = :resolutionId';
             $params['resolutionId'] = Sanitize::getInt('resolutionId', $filterBy);
         }
 
         if (Sanitize::getInt('width', $filterBy) != null) {
-            $sql .= ' AND intended_width = :width';
+            $body .= ' AND intended_width = :width';
             $params['width'] = Sanitize::getInt('width', $filterBy);
         }
 
         if (Sanitize::getInt('height', $filterBy) != null) {
-            $sql .= ' AND intended_height = :height';
+            $body .= ' AND intended_height = :height';
             $params['height'] = Sanitize::getInt('height', $filterBy);
         }
 
         // Sorting?
+        $order = '';
         if (is_array($sortOrder))
-            $sql .= 'ORDER BY ' . implode(',', $sortOrder);
+            $order .= 'ORDER BY ' . implode(',', $sortOrder);
+
+        $limit = '';
+        // Paging
+        if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . Sanitize::getInt('start', 0) . ', ' . Sanitize::getInt('length', 10);
+        }
+
+        // The final statements
+        $sql = $select . $body . $order . $limit;
 
         Log::sql($sql, $params);
 
         foreach(PDOConnect::select($sql, $params) as $record) {
             $entities[] = (new Resolution())->hydrate($record, ['intProperties' => ['width', 'height', 'version', 'enabled']]);
+        }
+
+        // Paging
+        if ($limit != '' && count($entities) > 0) {
+            $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
+            self::$_countLast = intval($results[0]['total']);
         }
 
         return $entities;

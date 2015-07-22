@@ -31,6 +31,7 @@ use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\Config;
+use Xibo\Helper\Date;
 use Xibo\Helper\Log;
 use Xibo\Storage\PDOConnect;
 
@@ -46,7 +47,7 @@ class Media
     public $storedAs;
     public $fileName;
 
-    // Thing we might be referred to
+    // Thing that might be referred to
     public $tags = [];
     private $widgets = [];
     private $displayGroups = [];
@@ -69,6 +70,7 @@ class Media
     public $force;
     public $isRemote;
     public $cloned = false;
+    public $newExpiry;
 
     public function __clone()
     {
@@ -86,16 +88,27 @@ class Media
         $this->cloned = true;
     }
 
+    /**
+     * Get Id
+     * @return int
+     */
     public function getId()
     {
         return $this->mediaId;
     }
 
+    /**
+     * Get Owner Id
+     * @return int
+     */
     public function getOwnerId()
     {
         return $this->ownerId;
     }
 
+    /**
+     * Validate
+     */
     public function validate()
     {
         if (!v::string()->notEmpty()->validate($this->mediaType))
@@ -122,6 +135,9 @@ class Media
             throw new \InvalidArgumentException(__('Media you own already has this name. Please choose another.'));
     }
 
+    /**
+     * Load
+     */
     public function load()
     {
         // Tags
@@ -138,6 +154,8 @@ class Media
             // Display Groups
             $this->displayGroups = DisplayGroupFactory::getByMediaId($this->mediaId);
         }
+
+        $this->loaded = true;
     }
 
     /**
@@ -146,13 +164,11 @@ class Media
      */
     public function save($validate = true)
     {
+        if (!$this->loaded)
+            $this->load();
+
         if ($validate && $this->mediaType != 'module')
             $this->validate();
-
-        // If we are a remote media item, we want to download the newFile and save it to a temporary location
-        if ($this->isRemote) {
-            $this->download();
-        }
 
         // Add or edit
         if ($this->mediaId == null || $this->mediaId == 0) {
@@ -179,6 +195,10 @@ class Media
         }
     }
 
+    /**
+     * Delete
+     * @throws \Xibo\Exception\NotFoundException
+     */
     public function delete()
     {
         $this->deleting = true;
@@ -198,7 +218,7 @@ class Media
         foreach ($this->widgets as $widget) {
             /* @var \Xibo\Entity\Widget $widget */
             $widget->unassignMedia($this->mediaId);
-            $widget->save();
+            $widget->save(['saveWidgetOptions' => false]);
         }
 
         foreach ($this->displayGroups as $displayGroup) {
@@ -220,6 +240,10 @@ class Media
         }
     }
 
+    /**
+     * Add
+     * @throws ConfigurationException
+     */
     private function add()
     {
         $this->mediaId = PDOConnect::insert('
@@ -247,11 +271,16 @@ class Media
         ]);
     }
 
+    /**
+     * Edit
+     * @throws ConfigurationException
+     */
     private function edit()
     {
         // Do we need to pull a new update?
         // Is the file either expired or is force set
         if ($this->force || ($this->expires > 0 && $this->expires < time())) {
+            Log::debug('Media %s has expired: %s. Force = %d', $this->name, Date::getLocalDate($this->expires), $this->force);
             $this->saveFile();
         }
 
@@ -281,14 +310,25 @@ class Media
         ]);
     }
 
+    /**
+     * Save File to Library
+     *  this should download remote files, handle clones, handle local module files and also handle files uploaded
+     *  over the web ui
+     * @throws ConfigurationException
+     */
     private function saveFile()
     {
+        // If we are a remote media item, we want to download the newFile and save it to a temporary location
+        if ($this->isRemote) {
+            $this->download();
+        }
+
         $libraryFolder = Config::GetSetting('LIBRARY_LOCATION');
 
         // Work out the extension
         $extension = strtolower(substr(strrchr($this->fileName, '.'), 1));
 
-        Log::debug('saveFile with storedAs = %s. %s to %s', $this->storedAs, $this->fileName, $this->mediaId . '.' . $extension);
+        Log::debug('saveFile for "%s" with storedAs = "%s", fileName = "%s" to "%s"', $this->name, $this->storedAs, $this->fileName, $this->mediaId . '.' . $extension);
 
         // If the storesAs is empty, then set it to be the moved file name
         if (empty($this->storedAs)) {
@@ -321,27 +361,50 @@ class Media
         $this->fileSize = filesize($libraryFolder . $this->storedAs);
     }
 
+    /**
+     * Delete a Library File
+     */
     private function deleteFile()
+    {
+        // Make sure storedAs isn't null
+        if ($this->storedAs == null) {
+            Log::error('Deleting media [%s] with empty stored as. Skipping library file delete.', $this->name);
+            return;
+        }
+
+        Media::unlink($this->storedAs);
+    }
+
+    /**
+     * Unlink a file
+     * @param string $fileName
+     */
+    public static function unlink($fileName)
     {
         // Library location
         $libraryLocation = Config::GetSetting("LIBRARY_LOCATION");
 
         // 3 things to check for..
         // the actual file, the thumbnail, the background
-        if (file_exists($libraryLocation . $this->storedAs))
-            unlink($libraryLocation . $this->storedAs);
+        if (file_exists($libraryLocation . $fileName))
+            unlink($libraryLocation . $fileName);
 
-        if (file_exists($libraryLocation . 'tn_' . $this->storedAs))
-            unlink($libraryLocation . 'tn_' . $this->storedAs);
+        if (file_exists($libraryLocation . 'tn_' . $fileName))
+            unlink($libraryLocation . 'tn_' . $fileName);
 
-        if (file_exists($libraryLocation . 'bg_' . $this->storedAs))
-            unlink($libraryLocation . 'bg_' . $this->storedAs);
+        if (file_exists($libraryLocation . 'bg_' . $fileName))
+            unlink($libraryLocation . 'bg_' . $fileName);
     }
 
+    /**
+     * Download remote file
+     */
     private function download()
     {
         if (!$this->isRemote || $this->fileName == '')
             throw new \InvalidArgumentException(__('Not in a suitable state to download'));
+
+        Log::debug('Downloading %s', $this->fileName);
 
         // Proxy
         $options = [];
@@ -358,7 +421,10 @@ class Media
         // Download the file and save it. Fill in the "storedAs" with the temporary file name and then continue
         $response = \Requests::get($this->fileName, [], $options);
 
-        $this->storedAs = Config::GetSetting('LIBRARY_LOCATION') . 'temp' . DIRECTORY_SEPARATOR . $this->name;
-        file_put_contents($this->storedAs, $response->body);
+        $storedAs = Config::GetSetting('LIBRARY_LOCATION') . 'temp' . DIRECTORY_SEPARATOR . $this->name;
+        file_put_contents($storedAs, $response->body);
+
+        // Change the filename to our temporary file
+        $this->fileName = $storedAs;
     }
 }

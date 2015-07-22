@@ -29,8 +29,9 @@ use Xibo\Entity\Widget;
 use Xibo\Exception\NotFoundException;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
+use Xibo\Storage\PDOConnect;
 
-class ModuleFactory
+class ModuleFactory extends BaseFactory
 {
     /**
      * Create a Module
@@ -288,11 +289,11 @@ class ModuleFactory
         $entries = array();
 
         try {
-            $dbh = \Xibo\Storage\PDOConnect::init();
+            $dbh = PDOConnect::init();
 
             $params = array();
 
-            $SQL = '
+            $select = '
                 SELECT ModuleID,
                    Module,
                    Name,
@@ -306,58 +307,64 @@ class ModuleFactory
                    PreviewEnabled,
                    assignable,
                    SchemaVersion,
-                   viewPath
+                   viewPath ';
+
+            $body = '
                   FROM `module`
                  WHERE 1 = 1
             ';
 
             if (Sanitize::getInt('moduleId', $filterBy) != null) {
                 $params['moduleId'] = Sanitize::getInt('moduleId', $filterBy);
-                $SQL .= ' AND ModuleID = :moduleId ';
+                $body .= ' AND ModuleID = :moduleId ';
             }
 
             if (Sanitize::getString('name', $filterBy) != '') {
                 $params['name'] = Sanitize::getString('name', $filterBy);
-                $SQL .= ' AND name = :name ';
+                $body .= ' AND name = :name ';
             }
 
             if (Sanitize::getString('type', $filterBy) != '') {
                 $params['type'] = Sanitize::getString('type', $filterBy);
-                $SQL .= ' AND module = :type ';
+                $body .= ' AND module = :type ';
             }
 
             if (Sanitize::getString('extension', $filterBy) != '') {
                 $params['extension'] = '%' . Sanitize::getString('extension', $filterBy) . '%';
-                $SQL .= ' AND ValidExtensions LIKE :extension ';
+                $body .= ' AND ValidExtensions LIKE :extension ';
             }
 
             if (Sanitize::getInt('assignable', -1, $filterBy) != -1) {
-                $SQL .= " AND assignable = :assignable ";
+                $body .= " AND assignable = :assignable ";
                 $params['assignable'] = Sanitize::getInt('assignable', $filterBy);
             }
 
             if (Sanitize::getInt('enabled', -1, $filterBy) != -1) {
-                $SQL .= " AND enabled = :enabled ";
+                $body .= " AND enabled = :enabled ";
                 $params['enabled'] = Sanitize::getInt('enabled', $filterBy);
             }
 
             if (Sanitize::getInt('regionSpecific', -1, $filterBy) != -1) {
-                $SQL .= " AND regionSpecific = :regionSpecific ";
+                $body .= " AND regionSpecific = :regionSpecific ";
                 $params['regionSpecific'] = Sanitize::getInt('regionSpecific', $filterBy);
             }
 
             // Sorting?
+            $order = '';
             if (is_array($sortOrder))
-                $SQL .= 'ORDER BY ' . implode(',', $sortOrder);
+                $order .= 'ORDER BY ' . implode(',', $sortOrder);
 
+            $limit = '';
             // Paging
             if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-                $SQL .= ' LIMIT ' . Sanitize::getInt('start') . ', ' . Sanitize::getInt('length', 10);
+                $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
             }
 
-            //Log::sql($SQL, $params);
+            $sql = $select . $body . $order . $limit;
 
-            $sth = $dbh->prepare($SQL);
+            Log::sql($sql, $params);
+
+            $sth = $dbh->prepare($sql);
             $sth->execute($params);
 
             foreach ($sth->fetchAll(\PDO::FETCH_ASSOC) as $row) {
@@ -380,6 +387,12 @@ class ModuleFactory
                 $module->settings = ($settings == '') ? array() : json_decode($settings, true);
 
                 $entries[] = $module;
+            }
+
+            // Paging
+            if ($limit != '' && count($entries) > 0) {
+                $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
+                self::$_countLast = intval($results[0]['total']);
             }
 
             return $entries;

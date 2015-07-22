@@ -13,6 +13,7 @@ use Respect\Validation\Validator as v;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
+use Xibo\Helper\Log;
 use Xibo\Storage\PDOConnect;
 
 class UserGroup
@@ -120,7 +121,7 @@ class UserGroup
      */
     public function load()
     {
-        if ($this->loaded)
+        if ($this->loaded || $this->groupId == 0)
             return;
 
         // Load all assigned users
@@ -128,6 +129,7 @@ class UserGroup
 
         // Set the hash
         $this->hash = $this->hash();
+        $this->loaded = true;
     }
 
     /**
@@ -202,8 +204,10 @@ class UserGroup
 
         foreach ($this->users as $user) {
             /* @var User $user */
+            Log::debug('Linking %s to %s', $user->userName, $this->group);
+
             $insert->execute([
-                'groupId' =>$this->groupId,
+                'groupId' => $this->groupId,
                 'userId' => $user->userId
             ]);
         }
@@ -227,6 +231,8 @@ class UserGroup
         }
 
         $sql .= ')';
+
+        Log::sql($sql, $params);
 
         PDOConnect::update($sql, $params);
     }

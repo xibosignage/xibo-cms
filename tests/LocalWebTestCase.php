@@ -7,6 +7,8 @@
 
 namespace Xibo\Tests;
 
+use Monolog\Logger;
+use Slim\Environment;
 use Slim\Slim;
 use There4\Slim\Test\WebTestCase;
 use Xibo\Controller\Error;
@@ -21,17 +23,35 @@ class LocalWebTestCase extends WebTestCase
      */
     public function getSlimInstance()
     {
-        $app = new Slim(array(
-            'mode' => 'testing',
-            'debug' => false
+        // Mock and Environment for use before the test is called
+        Environment::mock([
+            'REQUEST_METHOD' => 'GET',
+            'PATH_INFO'      => '/',
+            'SERVER_NAME'    => 'local.dev'
+        ]);
+
+        // Create a logger
+        $logger = new \Flynsarmy\SlimMonolog\Log\MonologWriter(array(
+            'name' => 'PHPUNIT',
+            'handlers' => array(
+                new \Xibo\Helper\DatabaseLogHandler(Logger::ERROR)
+            ),
+            'processors' => array(
+                new \Xibo\Helper\LogProcessor(),
+                new \Monolog\Processor\UidProcessor(7)
+            )
         ));
+
+        $app = new Slim(array(
+            'mode' => 'phpunit',
+            'debug' => false,
+            'log.writer' => $logger
+        ));
+        $app->setName('default');
         $app->setName('test');
 
-        // Set the App name
-        \Xibo\Helper\ApplicationState::$appName = $app->getName();
-
-        $app->add(new \Xibo\Middleware\Storage());
         $app->add(new \Xibo\Middleware\State());
+        $app->add(new \Xibo\Middleware\Storage());
 
         $app->view(new ApiView());
 

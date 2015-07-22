@@ -36,8 +36,13 @@ class ForecastIo extends Module
 {
     const API_ENDPOINT = 'https://api.forecast.io/forecast/';
 
-    private $resourceFolder = 'modules/forecastio';
+    private $resourceFolder;
     protected $codeSchemaVersion = 1;
+
+    public function __construct()
+    {
+        $this->resourceFolder = PROJECT_ROOT . '/web/modules/forecastio';
+    }
 
     /**
      * Install or Update this module

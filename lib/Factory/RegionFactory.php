@@ -29,7 +29,7 @@ use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
-class RegionFactory
+class RegionFactory extends BaseFactory
 {
     /**
      * Create a new region
@@ -64,7 +64,9 @@ class RegionFactory
         $region->zIndex = $zIndex;
 
         // Create a Playlist for this region
-        $region->playlists[] = PlaylistFactory::create($name, $ownerId);
+        // many to many relationship
+        $playlist = PlaylistFactory::create($name, $ownerId);
+        $region->assignPlaylist($playlist);
 
         return $region;
     }
@@ -77,7 +79,7 @@ class RegionFactory
     public static function getByLayoutId($layoutId)
     {
         // Get all regions for this layout
-        return RegionFactory::query(array(), array('layoutId' => $layoutId));
+        return RegionFactory::query(array(), array('disableUserCheck' => 1, 'layoutId' => $layoutId));
     }
 
     /**
@@ -88,7 +90,7 @@ class RegionFactory
     public static function getByPlaylistId($playlistId)
     {
         // Get all regions for this layout
-        return RegionFactory::query(array(), array('playlistId' => $playlistId));
+        return RegionFactory::query(array(), array('disableUserCheck' => 1, 'playlistId' => $playlistId));
     }
 
     /**
@@ -112,7 +114,7 @@ class RegionFactory
     public static function getById($regionId)
     {
         // Get a region by its ID
-        $regions = RegionFactory::query(array(), array('regionId' => $regionId));
+        $regions = RegionFactory::query(array(), array('disableUserCheck' => 1, 'regionId' => $regionId));
 
         if (count($regions) <= 0)
             throw new NotFoundException(__('Region not found'));

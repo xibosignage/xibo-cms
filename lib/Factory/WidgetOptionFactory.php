@@ -27,7 +27,7 @@ use Xibo\Entity\WidgetOption;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
-class WidgetOptionFactory
+class WidgetOptionFactory extends BaseFactory
 {
     /**
      * Create a Widget Option

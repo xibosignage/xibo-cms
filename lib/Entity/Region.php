@@ -47,7 +47,10 @@ class Region implements \JsonSerializable
     public $regionOptions = [];
     public $permissions = [];
 
-    // Display Order when assigned to a Playlist
+    /**
+     * When linked from a Playlist, what is the display order of that link
+     * @var int
+     */
     public $displayOrder;
 
     public function __construct()
@@ -158,11 +161,43 @@ class Region implements \JsonSerializable
     }
 
     /**
+     * Assign this Playlist to a Region
+     * @param Playlist $playlist
+     */
+    public function assignPlaylist($playlist)
+    {
+        $this->load();
+
+        $playlist->displayOrder = ($playlist->displayOrder == null || $playlist->displayOrder == 0) ? count($this->playlists) + 1 : $playlist->displayOrder ;
+        $this->playlists[] = $playlist;
+    }
+
+    /**
+     * Unassign a Playlist
+     * @param $playlist
+     */
+    public function unassignPlaylist($playlist)
+    {
+        $this->load();
+
+        $this->playlists = array_udiff($this->playlists, [$playlist], function($a, $b) {
+            /**
+             * @var Playlist $a
+             * @var Playlist $b
+             */
+            return $a->getId() - $b->getId() + $a->displayOrder - $b->displayOrder;
+        });
+    }
+
+    /**
      * Load
      * @param array $options
      */
     public function load($options = [])
     {
+        if ($this->loaded || $this->regionId == 0)
+            return;
+
         $options = array_merge(['regionIncludePlaylists' => true], $options);
 
         Log::debug('Load Region with %s', json_encode($options));
@@ -173,12 +208,10 @@ class Region implements \JsonSerializable
         // Load all playlists
         if ($options['regionIncludePlaylists']) {
             $this->playlists = PlaylistFactory::getByRegionId($this->regionId);
+
             foreach ($this->playlists as $playlist) {
                 /* @var Playlist $playlist */
                 $playlist->load($options);
-
-                // Assign my regionId
-                $playlist->assignRegion($this);
             }
         }
 
@@ -186,6 +219,7 @@ class Region implements \JsonSerializable
         $this->regionOptions = RegionOptionFactory::getByRegionId($this->regionId);
 
         $this->hash = $this->hash();
+        $this->loaded = true;
     }
 
     /**
@@ -200,22 +234,14 @@ class Region implements \JsonSerializable
         else if ($this->hash != $this->hash())
             $this->update();
 
-        // Save all Playlists
-        foreach ($this->playlists as $playlist) {
-            /* @var Playlist $playlist */
-
-            // Make sure this region is assigned
-            $playlist->assignRegion($this, $playlist->displayOrder);
-
-            // Save the playlist
-            $playlist->save();
-        }
-
         // Save all Options
         foreach ($this->regionOptions as $regionOption) {
             /* @var RegionOption $regionOption */
             $regionOption->save();
         }
+
+        // Manage the assignments to regions
+        $this->manageAssignments();
     }
 
     /**
@@ -235,22 +261,15 @@ class Region implements \JsonSerializable
             $permission->deleteAll();
         }
 
-        // To delete a region we must delete all playlists
-        foreach ($this->playlists as $playlist) {
-            /* @var Playlist $playlist */
-
-            // Unassign this region
-            $playlist->unassignRegion($this);
-
-            // Save the playlist
-            $playlist->save();
-        }
-
         // Delete all region options
         foreach ($this->regionOptions as $regionOption) {
             /* @var RegionOption $regionOption */
             $regionOption->delete();
         }
+
+        // Unlink playlists
+        $this->playlists = [];
+        $this->unlinkPlaylists();
 
         // Delete this region
         PDOConnect::update('DELETE FROM `region` WHERE regionId = :regionId', array('regionId' => $this->regionId));
@@ -297,5 +316,60 @@ class Region implements \JsonSerializable
             'zIndex' => $this->zIndex,
             'regionId' => $this->regionId
         ));
+    }
+
+    private function manageAssignments()
+    {
+        $this->linkPlaylists();
+        $this->unlinkPlaylists();
+    }
+
+    /**
+     * Link regions
+     */
+    private function linkPlaylists()
+    {
+        foreach ($this->playlists as $playlist) {
+            /* @var Playlist $playlist */
+
+            // The playlist might be new
+            if ($playlist->playlistId == 0)
+                $playlist->save();
+
+            PDOConnect::insert('INSERT INTO `lkregionplaylist` (regionId, playlistId, displayOrder) VALUES (:regionId, :playlistId, :displayOrder) ON DUPLICATE KEY UPDATE regionId = regionId', array(
+                'regionId' => $this->regionId,
+                'playlistId' => $playlist->playlistId,
+                'displayOrder' => $playlist->displayOrder
+            ));
+        }
+    }
+
+    /**
+     * Unlink all Regions
+     */
+    private function unlinkPlaylists()
+    {
+        // Unlink any media that is NOT in the collection
+        $params = ['regionId' => $this->regionId];
+
+        $sql = '
+          DELETE FROM `lkregionplaylist` WHERE regionId = :regionId
+        ';
+
+        $i = 0;
+        foreach ($this->playlists as $playlist) {
+            /* @var Playlist $playlist */
+
+            $sql .= ' AND ( ';
+
+            $i++;
+            $sql .= ' (playlistId <> :playlistId' . $i . ' AND displayOrder <> :displayOrder' . $i . '))';
+            $params['playlistId' . $i] = $playlist->playlistId;
+            $params['displayOrder' . $i] = $playlist->displayOrder;
+        }
+
+        Log::sql($sql, $params);
+
+        PDOConnect::update($sql, $params);
     }
 }

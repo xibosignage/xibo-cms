@@ -27,6 +27,8 @@ use Xibo\Entity\Stat;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
+use Xibo\Factory\DisplayProfileFactory;
+use Xibo\Factory\LayoutFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Date;
 use Xibo\Helper\Help;
@@ -74,9 +76,7 @@ class Display extends Base
             ]
         ];
 
-        $displayGroups = $this->getUser()->DisplayGroupList();
-        array_unshift($displayGroups, array('displaygroupid' => '0', 'displaygroup' => 'All'));
-        $data['displayGroup'] = $displayGroups;
+        $data['displayGroup'] = DisplayGroupFactory::query();
 
         // Call to render the template
         $this->getState()->template = 'display-page';
@@ -313,6 +313,7 @@ class Display extends Base
         }
 
         $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = DisplayFactory::countLast();
         $this->getState()->setData($displays);
     }
 
@@ -350,8 +351,8 @@ class Display extends Base
         $this->getState()->template = 'display-form-edit';
         $this->getState()->setData([
             'display' => $display,
-            'layouts' => $this->getUser()->LayoutList(),
-            'profiles' => $this->getUser()->DisplayProfileList(NULL, array('type' => $display->clientType)),
+            'layouts' => LayoutFactory::query(),
+            'profiles' => DisplayProfileFactory::query(NULL, array('type' => $display->clientType)),
             'settings' => $profile,
             'help' => Help::Link('Display', 'Edit')
         ]);
@@ -708,7 +709,12 @@ class Display extends Base
 
                     // Update the display and set it as logged out
                     $display->loggedIn = 0;
-                    $display->save(false);
+                    $display->save(false, false);
+
+                    // We put it back again (in memory only)
+                    // this is then used to indicate whether or not this is the first time this display has gone
+                    // offline (for anything that uses the timedOutDisplays return
+                    $display->loggedIn = 1;
 
                     // Log the down event
                     $stat = new Stat();

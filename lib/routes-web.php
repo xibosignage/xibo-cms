@@ -114,7 +114,8 @@ $app->get('/schedule/form/now/:from/:id', '\Xibo\Controller\Schedule:scheduleNow
 $app->get('/layout/view', '\Xibo\Controller\Layout:displayPage')->name('layout.view');
 $app->get('/layout/designer/:id', '\Xibo\Controller\Layout:displayDesigner')->name('layout.designer');
 $app->get('/layout/status/:id', '\Xibo\Controller\Layout:status')->setName('layout.status');
-$app->get('/layout/preview/:id', '\Xibo\Controller\Preview:render')->name('layout.preview');
+$app->get('/layout/preview/:id', '\Xibo\Controller\Preview:show')->name('layout.preview');
+$app->get('/layout/xlf/:id', '\Xibo\Controller\Preview:getXlf')->name('layout.getXlf');
 $app->get('/layout/export/:id', '\Xibo\Controller\Layout:export')->name('layout.export');
 // forms
 $app->get('/layout/form/add', '\Xibo\Controller\Layout:addForm')->name('layout.add.form');
@@ -203,7 +204,16 @@ $app->get('/resolution/form/delete/:id', '\Xibo\Controller\Resolution:deleteForm
 // dataset
 //
 $app->get('/dataset/view', '\Xibo\Controller\DataSet:displayPage')->name('dataset.view');
+$app->get('/dataset/data/view/:id', '\Xibo\Controller\DataSet:displayDataEntry')->name('dataset.view.data');
 $app->get('/dataset/form/add', '\Xibo\Controller\DataSet:addForm')->name('dataSet.add.form');
+$app->get('/dataset/form/edit/:id', '\Xibo\Controller\DataSet:editForm')->name('dataSet.edit.form');
+$app->get('/dataset/form/delete/:id', '\Xibo\Controller\DataSet:deleteForm')->name('dataSet.delete.form');
+$app->get('/dataset/form/import/:id', '\Xibo\Controller\DataSet:importForm')->name('dataSet.import.form');
+// columns
+$app->get('/dataset/:id/column/view', '\Xibo\Controller\DataSetColumn:view')->name('dataSet.column.view');
+$app->get('/dataset/:id/column/form/add', '\Xibo\Controller\DataSetColumn:addForm')->name('dataSet.column.add.form');
+$app->get('/dataset/:id/column/form/edit/:colId', '\Xibo\Controller\DataSetColumn:editForm')->name('dataSet.column.edit.form');
+$app->get('/dataset/:id/column/form/delete/:colId', '\Xibo\Controller\DataSetColumn:deleteForm')->name('dataSet.column.delete.form');
 
 //
 // displaygroup
@@ -238,9 +248,12 @@ $app->get('/group/form/members/:id', '\Xibo\Controller\UserGroup:membersForm')->
 // admin
 //
 $app->get('/admin/view', '\Xibo\Controller\Settings:displayPage')->name('admin.view');
-$app->get('/admin/form/export', '\Xibo\Controller\Settings:exportForm')->name('settings.export.form');
-$app->get('/admin/form/import', '\Xibo\Controller\Settings:importForm')->name('settings.import.form');
-$app->get('/admin/form/tidy', '\Xibo\Controller\Settings:tidyLibraryForm')->name('settings.libraryTidy.form');
+
+//
+// maintenance
+//
+$app->get('/maintenance/form/export', '\Xibo\Controller\Maintenance:exportForm')->name('maintenance.export.form');
+$app->get('/maintenance/form/tidy', '\Xibo\Controller\Maintenance:tidyLibraryForm')->name('maintenance.libraryTidy.form');
 
 //
 // oauth
@@ -301,7 +314,7 @@ $app->get('/help/form/delete/:id', '\Xibo\Controller\Help:deleteForm')->name('he
 //
 // Stats
 //
-$app->get('/stats', '\Xibo\Controller\Stats:displayPage')->name('stats.view');
+$app->get('/stats/view', '\Xibo\Controller\Stats:displayPage')->name('stats.view');
 $app->get('/stats/form/export', '\Xibo\Controller\Stats:exportForm')->name('stats.export.form');
 
 //

@@ -120,6 +120,7 @@ class UserGroup extends Base
         }
 
         $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = UserGroupFactory::countLast();
         $this->getState()->setData($groups);
     }
 
@@ -422,10 +423,10 @@ class UserGroup extends Base
             throw new AccessDeniedException();
 
         // Users in group
-        $usersAssigned = $this->getUser()->userList(null, array('groupIds' => array($groupId)));
+        $usersAssigned = UserFactory::query(null, array('groupIds' => array($groupId)));
 
         // Users not in group
-        $allUsers = $this->getUser()->userList();
+        $allUsers = UserFactory::query();
 
         // The available users are all users except users already in assigned users
         $checkboxes = array();
@@ -466,6 +467,8 @@ class UserGroup extends Base
      */
     public function assignUser($groupId)
     {
+        Log::debug('Assign User for groupId %d', $groupId);
+
         $group = UserGroupFactory::getById($groupId);
 
         if (!$this->getUser()->checkEditable($group))
@@ -474,6 +477,8 @@ class UserGroup extends Base
         $users = Sanitize::getIntArray('userId');
 
         foreach ($users as $userId) {
+
+            Log::debug('Assign User %d for groupId %d', $userId, $groupId);
 
             $user = UserFactory::getById($userId);
 

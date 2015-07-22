@@ -27,12 +27,12 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ResolutionFactory;
 use Xibo\Factory\TagFactory;
+use Xibo\Factory\UserFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Help;
 use Xibo\Helper\LayoutUploadHandler;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
-use Xibo\Helper\Theme;
 
 class Layout extends Base
 {
@@ -67,13 +67,9 @@ class Layout extends Base
             $showTags = 0;
         }
 
-        // Users we have permission to see
-        $users = $this->getUser()->userList();
-        $users = array_map(function($element) { return array('userid' => $element->userId, 'username' => $element->userName); }, $users);
-        array_unshift($users, array('userid' => '', 'username' => 'All'));
-
         $data = [
-            'users' => $users,
+            // Users we have permission to see
+            'users' => UserFactory::query(),
             'defaults' => [
                 'layout' => $layout,
                 'tags' => $tags,
@@ -153,7 +149,7 @@ class Layout extends Base
      */
     function edit($layoutId)
     {
-        $layout = LayoutFactory::loadById($layoutId);
+        $layout = LayoutFactory::getById($layoutId);
 
         // Make sure we have permission
         if (!$this->getUser()->checkEditable($layout))
@@ -176,7 +172,12 @@ class Layout extends Base
         $layout->validate();
 
         // Save
-        $layout->save();
+        $layout->save([
+            'saveLayout' => true,
+            'saveRegions' => false,
+            'saveTags' => false,
+            'setBuildRequired' => false
+        ]);
 
         // Return
         $this->getState()->hydrate([
@@ -243,6 +244,11 @@ class Layout extends Base
             throw new AccessDeniedException(__('You do not have permissions to delete this layout'));
 
         $layout->delete();
+
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Deleted %s'), $layout->layout)
+        ]);
     }
 
     /**
@@ -251,13 +257,23 @@ class Layout extends Base
      */
     function retire($layoutId)
     {
-        $layout = LayoutFactory::loadById($layoutId);
+        $layout = LayoutFactory::getById($layoutId);
 
         if (!$this->getUser()->checkEditable($layout))
             throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
 
         $layout->retired = 1;
-        $layout->save();
+        $layout->save([
+            'saveLayout' => true,
+            'saveRegions' => false,
+            'saveTags' => false,
+            'setBuildRequired' => false
+        ]);
+
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Retired %s'), $layout->layout)
+        ]);
     }
 
     /**
@@ -342,23 +358,19 @@ class Layout extends Base
             switch ($layout->status) {
 
                 case 1:
-                    $layout->status = 1;
                     $layout->statusDescription = __('This Layout is ready to play');
                     break;
 
                 case 2:
-                    $layout->status = 2;
                     $layout->statusDescription = __('There are items on this Layout that can only be assessed by the Display');
                     break;
 
                 case 3:
-                    $layout->status = 0;
-                    $layout->statusDescription = __('This Layout is invalid and should not be scheduled');
+                    $layout->statusDescription = __('This Layout has not been built yet');
                     break;
 
                 default:
-                    $layout->status = 0;
-                    $layout->statusDescription = __('The Status of this Layout is not known');
+                    $layout->statusDescription = __('This Layout is invalid and should not be scheduled');
             }
 
             // Add some buttons for this row
@@ -463,6 +475,7 @@ class Layout extends Base
         }
 
         // Store the table rows
+        $this->getState()->recordsTotal = LayoutFactory::countLast();
         $this->getState()->setData($layouts);
     }
 
@@ -641,55 +654,10 @@ class Layout extends Base
         readfile($fileName);
     }
 
-    public function importForm()
-    {
-
-         
-
-        // Set the Session / Security information
-        $sessionId = session_id();
-        $securityToken = CreateFormToken();
-
-        $session->setSecurityToken($securityToken);
-
-        // Find the max file size
-        $maxFileSizeBytes = convertBytes(ini_get('upload_max_filesize'));
-
-        // Set some information about the form
-        Theme::Set('form_id', 'LayoutImportForm');
-        Theme::Set('form_action', 'index.php?p=layout&q=Import');
-        Theme::Set('form_meta', '<input type="hidden" id="txtFileName" name="txtFileName" readonly="true" /><input type="hidden" name="hidFileID" id="hidFileID" value="" /><input type="hidden" name="template" value="' . \Kit::GetParam('template', _GET, _STRING, 'false') . '" />');
-
-        Theme::Set('form_upload_id', 'file_upload');
-        Theme::Set('form_upload_action', 'index.php?p=content&q=FileUpload');
-        Theme::Set('form_upload_meta', '<input type="hidden" id="PHPSESSID" value="' . $sessionId . '" /><input type="hidden" id="SecurityToken" value="' . $securityToken . '" /><input type="hidden" name="MAX_FILE_SIZE" value="' . $maxFileSizeBytes . '" />');
-
-        Theme::Set('prepend', Theme::RenderReturn('form_file_upload_single'));
-
-        $formFields = array();
-        $formFields[] = Form::AddText('layout', __('Name'), NULL, __('The Name of the Layout - (1 - 50 characters). Leave blank to use the name from the import.'), 'n');
-        $formFields[] = Form::AddCheckbox('replaceExisting', __('Replace Existing Media?'),
-            NULL,
-            __('If the import finds existing media with the same name, should it be replaced in the Layout or should the Layout use that media.'),
-            'r');
-
-        if (\Kit::GetParam('template', _GET, _STRING, 'false') != 'true')
-            $formFields[] = Form::AddCheckbox('importTags', __('Import Tags?'),
-                NULL,
-                __('Would you like to import any tags contained on the layout.'),
-                't');
-
-        Theme::Set('form_fields', $formFields);
-
-         $this->getState()->SetFormRequestResponse(NULL, __('Import Layout'), '350px', '200px');
-         $this->getState()->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('DataSet', 'ImportCsv') . '")');
-         $this->getState()->AddButton(__('Cancel'), 'XiboDialogClose()');
-         $this->getState()->AddButton(__('Import'), '$("#LayoutImportForm").submit()');
-
-    }
-
     public function import()
     {
+        Log::debug('Import Layout');
+
         $libraryFolder = Config::GetSetting('LIBRARY_LOCATION');
 
         // Make sure the library exists

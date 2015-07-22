@@ -15,7 +15,7 @@ use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
-class TransitionFactory
+class TransitionFactory extends BaseFactory
 {
     /**
      * @param int $transitionId
@@ -25,6 +25,22 @@ class TransitionFactory
     public static function getById($transitionId)
     {
         $transitions = TransitionFactory::query(null, ['transitionId' => $transitionId]);
+
+        if (count($transitions) <= 0)
+            throw new NotFoundException();
+
+        return $transitions[0];
+    }
+
+    /**
+     * Get by Code
+     * @param string $code
+     * @return Transition
+     * @throws NotFoundException
+     */
+    public static function getByCode($code)
+    {
+        $transitions = TransitionFactory::query(null, ['code' => $code]);
 
         if (count($transitions) <= 0)
             throw new NotFoundException();
@@ -87,6 +103,11 @@ class TransitionFactory
         if (Sanitize::getInt('availableAsOut', $filterBy) != null) {
             $sql .= ' AND transition.availableAsOut = :availableAsOut ';
             $params['availableAsOut'] = Sanitize::getInt('availableAsOut', $filterBy);
+        }
+
+        if (Sanitize::getString('code', $filterBy) != null) {
+            $sql .= ' AND transition.code = :code ';
+            $params['code'] = Sanitize::getString('code', $filterBy);
         }
 
         // Sorting?

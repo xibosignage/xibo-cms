@@ -25,6 +25,7 @@ use Xibo\Entity\User;
 use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\MediaFactory;
+use Xibo\Factory\TransitionFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
@@ -298,7 +299,7 @@ abstract class Module implements ModuleInterface
     {
         Log::debug('Media assigned: ' . count($this->widget->mediaIds));
 
-        if (count($this->widget->mediaIds) > 0) {
+        if ($this->getModule()->regionSpecific == 0 && count($this->widget->mediaIds) > 0) {
             $media = MediaFactory::getById($this->widget->mediaIds[0]);
             $name = $media->name;
         } else {
@@ -402,6 +403,8 @@ abstract class Module implements ModuleInterface
 
         if ($isPreview)
             $uri = $this->getApp()->urlFor('home') . 'modules/' . $uri;
+        else
+            $uri = basename($uri);
 
         return $uri;
     }
@@ -443,9 +446,9 @@ abstract class Module implements ModuleInterface
             return __('None');
 
         // Look up the real transition name
-        $transition = $this->user->TransitionAuth('', $code);
+        $transition = TransitionFactory::getByCode($code);
 
-        return __($transition[0]['transition']);
+        return __($transition->transition);
     }
 
     /**

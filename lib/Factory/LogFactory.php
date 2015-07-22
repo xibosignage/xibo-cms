@@ -13,19 +13,8 @@ use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
-class LogFactory
+class LogFactory extends BaseFactory
 {
-    private static $_countLast = 0;
-
-    /**
-     * Count of records returned for the last query.
-     * @return int
-     */
-    public static function countLast()
-    {
-        return self::$_countLast;
-    }
-
     /**
      * Query
      * @param array $sortOrder
@@ -68,17 +57,17 @@ class LogFactory
         }
 
         if (Sanitize::getString('page', $filterBy) != null) {
-            $body .= ' AND page <= :page ';
-            $params['page'] = Sanitize::getInt('page', $filterBy);
+            $body .= ' AND page LIKE :page ';
+            $params['page'] = '%' . Sanitize::getString('page', $filterBy) . '%';
         }
 
         if (Sanitize::getString('function', $filterBy) != null) {
-            $body .= ' AND function <= :function ';
-            $params['function'] = Sanitize::getInt('function', $filterBy);
+            $body .= ' AND function LIKE :function ';
+            $params['function'] = '%' . Sanitize::getString('function', $filterBy) . '%';
         }
 
         if (Sanitize::getInt('displayId', $filterBy) != 0) {
-            $body .= ' AND log.displayId <= :displayId ';
+            $body .= ' AND log.displayId = :displayId ';
             $params['displayId'] = Sanitize::getInt('displayId', $filterBy);
         }
 
@@ -92,7 +81,7 @@ class LogFactory
 
         // Paging
         if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval(Sanitize::getInt('start')) . ', ' . Sanitize::getInt('length', 10);
+            $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
         }
 
         $sql = $select . $body . $order . $limit;
@@ -100,7 +89,7 @@ class LogFactory
         Log::sql($sql, $params);
 
         foreach (PDOConnect::select($sql, $params) as $row) {
-            $entries[] = (new \Xibo\Entity\LogEntry())->hydrate($row,  ['stringProperties' => ['message']]);
+            $entries[] = (new \Xibo\Entity\LogEntry())->hydrate($row,  ['htmlStringProperties' => ['message']]);
         }
 
         // Paging

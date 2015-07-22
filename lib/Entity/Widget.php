@@ -196,24 +196,35 @@ class Widget implements \JsonSerializable
         $this->mediaIds = WidgetMediaFactory::getByWidgetId($this->widgetId);
 
         $this->hash = $this->hash();
+        $this->loaded = true;
     }
 
     /**
      * Save the widget
+     * @param array $options
      */
-    public function save()
+    public function save($options = [])
     {
+        // Default options
+        $options = array_merge([
+            'saveWidgetOptions' => true
+        ], $options);
+
+        // Add/Edit
         if ($this->widgetId == null || $this->widgetId == 0)
             $this->add();
         else if ($this->hash != $this->hash())
             $this->update();
 
-        foreach ($this->widgetOptions as $widgetOption) {
-            /* @var \Xibo\Entity\WidgetOption $widgetOption */
+        // Save the widget options
+        if ($options['saveWidgetOptions']) {
+            foreach ($this->widgetOptions as $widgetOption) {
+                /* @var \Xibo\Entity\WidgetOption $widgetOption */
 
-            // Assert the widgetId
-            $widgetOption->widgetId = $this->widgetId;
-            $widgetOption->save();
+                // Assert the widgetId
+                $widgetOption->widgetId = $this->widgetId;
+                $widgetOption->save();
+            }
         }
 
         // Manage the assigned media
@@ -288,8 +299,6 @@ class Widget implements \JsonSerializable
         $sql = 'INSERT INTO `lkwidgetmedia` (widgetId, mediaId) VALUES (:widgetId, :mediaId) ON DUPLICATE KEY UPDATE mediaId = :mediaId2';
 
         foreach ($this->mediaIds as $mediaId) {
-
-            //\Debug::Audit('Linking MediaId ' . $mediaId . ' to Widget ' . $this->widgetId);
 
             PDOConnect::insert($sql, array(
                 'widgetId' => $this->widgetId,

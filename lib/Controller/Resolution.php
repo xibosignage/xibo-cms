@@ -95,6 +95,7 @@ class Resolution extends Base
 
         $this->getState()->template = 'grid';
         $this->getState()->setData($resolutions);
+        $this->getState()->recordsTotal = ResolutionFactory::countLast();
     }
 
     /**

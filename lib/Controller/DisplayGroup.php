@@ -47,7 +47,7 @@ class DisplayGroup extends Base
      */
     public function grid()
     {
-        $displayGroups = $this->getUser()->DisplayGroupList();
+        $displayGroups = DisplayGroupFactory::query();
 
         foreach ($displayGroups as $group) {
             /* @var \Xibo\Entity\DisplayGroup $group */
@@ -113,6 +113,7 @@ class DisplayGroup extends Base
         }
 
         $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = DisplayGroupFactory::countLast();
         $this->getState()->setData($displayGroups);
     }
 

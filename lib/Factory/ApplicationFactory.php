@@ -14,19 +14,8 @@ use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
-class ApplicationFactory
+class ApplicationFactory extends BaseFactory
 {
-    private static $_countLast = 0;
-
-    /**
-     * Count of records returned for the last query.
-     * @return int
-     */
-    public static function countLast()
-    {
-        return self::$_countLast;
-    }
-
     public static function getByUserId($userId)
     {
         return ApplicationFactory::query(null, ['userId' => $userId]);
@@ -72,7 +61,7 @@ class ApplicationFactory
         $limit = '';
         // Paging
         if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval(Sanitize::getInt('start')) . ', ' . Sanitize::getInt('length', 10);
+            $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
         }
 
         // The final statements

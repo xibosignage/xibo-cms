@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2009-2013 Daniel Garner
+ * Copyright (C) 2009-2015 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -21,16 +21,13 @@
  * A very simple file cache
  */
 namespace Xibo\Helper;
-use Xibo\Controller\File;
 
+
+use Xibo\Controller\Library;
 
 class Cache
 {
     private static $_data;
-
-    private function __construct()
-    {
-    }
 
     public static function put($key, $value, $expires)
     {
@@ -98,7 +95,7 @@ class Cache
             self::$_data = array();
 
         // Set the location for this key
-        $location = Config::GetSetting('LIBRARY_LOCATION') . 'cache/cache_' . \Kit::ValidateParam($key, _FILENAME);
+        $location = Config::GetSetting('LIBRARY_LOCATION') . 'cache/cache_' . $key;
 
         // If the key isn't there already, do nothing. Otherwise load it.
         if (file_exists($location)) {
@@ -112,16 +109,16 @@ class Cache
      */
     private static function save($key)
     {
-        File::EnsureLibraryExists();
+        Library::ensureLibraryExists();
 
-        $location = Config::GetSetting('LIBRARY_LOCATION') . 'cache/cache_' . \Kit::ValidateParam($key, _FILENAME);
+        $location = Config::GetSetting('LIBRARY_LOCATION') . 'cache/cache_' . $key;
 
         file_put_contents($location, serialize(self::$_data[$key]));
     }
 
     private static function remove($key)
     {
-        $location = Config::GetSetting('LIBRARY_LOCATION') . 'cache/cache_' . \Kit::ValidateParam($key, _FILENAME);
+        $location = Config::GetSetting('LIBRARY_LOCATION') . 'cache/cache_' . $key;
 
         if (file_exists($location)) {
             unset(self::$_data[$key]);

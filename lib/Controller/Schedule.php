@@ -199,6 +199,8 @@ class Schedule extends Base
      */
     public function add()
     {
+        Log::debug('Add Schedule');
+
         $schedule = new \Xibo\Entity\Schedule();
         $schedule->userId = $this->getUser()->userId;
         $schedule->campaignId = Sanitize::getInt('campaignId');

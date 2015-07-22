@@ -97,6 +97,7 @@ class Playlist extends Base
         }
 
         // Store the table rows
+        $this->getState()->recordsTotal = WidgetFactory::countLast();
         $this->getState()->setData($widgets);
     }
 

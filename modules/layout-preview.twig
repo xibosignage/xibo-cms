@@ -1,0 +1,38 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+#}
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>{% trans "Preview for Layout" %} {{ layout.layoutId }}</title>
+
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <link rel="shortcut icon" href="{{ theme.uri("img/favicon.ico") }}" />
+        <link rel="stylesheet" type="text/css" href="{{ theme.uri("css/html-preview.css") }}" />
+    </head>
+    <body onload="dsInit({{ layout.layoutId }}, {{ previewOptions|json_encode() }})">
+        <div id="player">
+            <div id="info"></div>
+            <div id="log"></div>
+            <div id="screen">
+                <div id="splash">
+                    <div id="loader"></div>
+                    <div id="loaderCaption">
+                        <p>{% trans "Loading Layout..." %}</p>
+                    </div>
+                </div>
+                <div id="end"><a href="javascript:history.go(0)" style="text-decoration: none; color: #ffffff">{% trans "Play again?" %}</a></div>
+            </div>
+        </div>
+        <script src="{{ theme.uri("libraries/jquery/jquery-1.11.1.min.js") }}"></script>
+        <script src="{{ theme.uri("libraries/html5preloader/html5Preloader.js") }}"></script>
+        <script src="{{ theme.uri("js/html-preview.js") }}"></script>
+    </body>
+</html>

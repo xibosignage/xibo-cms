@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 define('XIBO', true);

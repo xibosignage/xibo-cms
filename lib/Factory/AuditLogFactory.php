@@ -27,19 +27,8 @@ use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
-class AuditLogFactory
+class AuditLogFactory extends BaseFactory
 {
-    private static $_countLast = 0;
-
-    /**
-     * Count of records returned for the last query.
-     * @return int
-     */
-    public static function countLast()
-    {
-        return self::$_countLast;
-    }
-
     public static function query($sortOrder = null, $filterBy = null)
     {
         $entries = array();
@@ -104,7 +93,7 @@ class AuditLogFactory
         $limit = '';
         // Paging
         if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval(Sanitize::getInt('start')) . ', ' . Sanitize::getInt('length', 10);
+            $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
         }
 
         // The final statements

@@ -30,14 +30,8 @@ class Tag
     public $tagId;
     public $tag;
 
-    public $layoutIds;
-    public $mediaIds;
-
-    public function __construct()
-    {
-        $this->mediaIds = array();
-        $this->mediaIds = array();
-    }
+    public $layoutIds = [];
+    public $mediaIds = [];
 
     public function __clone()
     {

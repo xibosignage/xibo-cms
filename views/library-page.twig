@@ -31,8 +31,9 @@
                             {{ inline.text("filter_name", "Name", defaults.layout) }}
                             {{ inline.text("filter_tags", "Tags", defaults.tags) }}
 
+                            {% set users = users|merge({userId: null, userName: ""}) %}
                             {{ inline.dropdown("filter_owner", "single", "Owner", defaults.owner, users, "userId", "userName") }}
-                            {{ inline.dropdown("filter_type", "single", "Type", defaults.type, modules, "moduleId", "module") }}
+                            {{ inline.dropdown("filter_type", "single", "Type", defaults.type, modules, "moduleId", "name") }}
 
                             {% set values = [{id: 1, value: "Yes"}, {id: 0, value: "No"}] %}
                             {{ inline.dropdown("filter_retired", "single", "Retired", defaults.retired, values, "id", "value") }}

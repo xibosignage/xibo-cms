@@ -44,7 +44,7 @@ $app->delete('/layout/:id', '\Xibo\Controller\Layout:delete')->name('layout.dele
 $app->put('/layout/retire/:id', '\Xibo\Controller\Layout:retire')->name('layout.retire');
 // Layout Import
 $app->map('/layout/import', '\Xibo\Controller\Library:add')->via('HEAD');
-$app->post('/layout/import', '\Xibo\Controller\Layout:add')->name('layout.import');
+$app->post('/layout/import', '\Xibo\Controller\Layout:import')->name('layout.import');
 
 // Region
 $app->post('/region/:id', '\Xibo\Controller\Region:add')->name('region.add');
@@ -89,7 +89,7 @@ $app->delete('/resolution/:id', '\Xibo\Controller\Resolution:delete')->name('res
 //
 $app->map('/library', '\Xibo\Controller\Library:add')->via('HEAD');
 $app->get('/library', '\Xibo\Controller\Library:grid')->name('library.search');
-$app->get('/library/download/:id', '\Xibo\Controller\Library:download')->name('library.download');
+$app->get('/library/download/:id(/:type)', '\Xibo\Controller\Library:download')->name('library.download');
 $app->post('/library', '\Xibo\Controller\Library:add')->name('library.add');
 $app->put('/library/:id', '\Xibo\Controller\Library:edit')->name('library.edit');
 $app->delete('/library/:id', '\Xibo\Controller\Library:delete')->name('library.delete');
@@ -130,6 +130,14 @@ $app->delete('/displayprofile/:id', '\Xibo\Controller\DisplayProfile:delete')->n
 // DataSet
 //
 $app->get('/dataset', '\Xibo\Controller\DataSet:grid')->name('dataSet.search');
+$app->post('/dataset', '\Xibo\Controller\DataSet:add')->name('dataSet.add');
+$app->put('/dataset/:id', '\Xibo\Controller\DataSet:edit')->name('dataSet.edit');
+$app->delete('/dataset/:id', '\Xibo\Controller\DataSet:delete')->name('dataSet.delete');
+// Columns
+$app->get('/dataset/:id/column', '\Xibo\Controller\DataSetColumn:grid')->name('dataSet.column.search');
+$app->post('/dataset/:id/column', '\Xibo\Controller\DataSetColumn:add')->name('dataSet.column.add');
+$app->put('/dataset/:id/column/:colId', '\Xibo\Controller\DataSetColumn:edit')->name('dataSet.column.edit');
+$app->delete('/dataset/:id/column/:colId', '\Xibo\Controller\DataSetColumn:delete')->name('dataSet.column.delete');
 
 //
 // Statistics
@@ -137,6 +145,7 @@ $app->get('/dataset', '\Xibo\Controller\DataSet:grid')->name('dataSet.search');
 $app->get('/stats', '\Xibo\Controller\Stats:grid')->name('stats.search');
 $app->get('/stats/data/bandwidth', '\Xibo\Controller\Stats:bandwidthData')->name('stats.bandwidth.data');
 $app->get('/stats/data/availability', '\Xibo\Controller\Stats:availabilityData')->name('stats.availability.data');
+$app->get('/stats/export', '\Xibo\Controller\Stats:export')->name('stats.export');
 
 //
 // Log
@@ -208,6 +217,14 @@ $app->delete('/help/delete/:id', '\Xibo\Controller\Help:delete')->name('help.del
 // Settings
 //
 $app->put('/admin', '\Xibo\Controller\Settings:update')->name('settings.update');
+
+//
+// Maintenance
+//
+$app->post('/maintenance/tidy', '\Xibo\Controller\Maintenance:tidyLibrary')->name('maintenance.tidy');
+$app->get('/maintenance/export', '\Xibo\Controller\Maintenance:export')->name('maintenance.export');
+$app->post('/maintenance/import', '\Xibo\Controller\Maintenance:import')->name('maintenance.import');
+$app->map('/maintenance/import', '\Xibo\Controller\Library:add')->via('HEAD');
 
 //
 // Audit Log

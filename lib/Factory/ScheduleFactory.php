@@ -15,7 +15,7 @@ use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
-class ScheduleFactory
+class ScheduleFactory extends BaseFactory
 {
     /**
      * @param int $eventId
@@ -24,7 +24,7 @@ class ScheduleFactory
      */
     public static function getById($eventId)
     {
-        $events = ScheduleFactory::query(null, ['eventId' => $eventId]);
+        $events = ScheduleFactory::query(null, ['disableUserCheck' => 1, 'eventId' => $eventId]);
 
         if (count($events) <= 0)
             throw new NotFoundException();
@@ -39,7 +39,7 @@ class ScheduleFactory
      */
     public static function getByDisplayGroupId($displayGroupId)
     {
-        return ScheduleFactory::query(null, ['displayGroupId' => $displayGroupId]);
+        return ScheduleFactory::query(null, ['disableUserCheck' => 1, 'displayGroupId' => $displayGroupId]);
     }
 
     /**
@@ -50,7 +50,7 @@ class ScheduleFactory
      */
     public static function getByCampaignId($campaignId)
     {
-        return ScheduleFactory::query(null, ['campaignId' => $campaignId]);
+        return ScheduleFactory::query(null, ['disableUserCheck' => 1, 'campaignId' => $campaignId]);
     }
 
     /**
@@ -60,7 +60,7 @@ class ScheduleFactory
      */
     public static function getByOwnerId($ownerId)
     {
-        $events = ScheduleFactory::query(null, ['ownerId' => $ownerId]);
+        $events = ScheduleFactory::query(null, ['disableUserCheck' => 1, 'ownerId' => $ownerId]);
 
         if (count($events) <= 0)
             throw new NotFoundException();

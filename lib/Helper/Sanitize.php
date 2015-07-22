@@ -33,7 +33,7 @@ class Sanitize
             return isset($default[$param]) ? $default[$param] : null;
         }
         else if ($source == null) {
-            $app = Slim::getInstance(ApplicationState::$appName);
+            $app = Slim::getInstance();
             switch ($app->request->getMethod()) {
                 case 'GET':
                     return $app->request->get($param, $default);
@@ -61,7 +61,7 @@ class Sanitize
         if ($param === null)
             return null;
 
-        return filter_var($param, FILTER_SANITIZE_NUMBER_INT);
+        return intval(filter_var($param, FILTER_SANITIZE_NUMBER_INT));
     }
 
     public static function getDouble($param, $default = null, $source = null)
@@ -74,7 +74,7 @@ class Sanitize
         if ($param === null)
             return null;
 
-        return filter_var($param, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+        return doubleval(filter_var($param, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION));
     }
 
     public static function getString($param, $default = null, $source = null)
@@ -110,7 +110,7 @@ class Sanitize
     public static function getCheckbox($param, $default = null, $source = null)
     {
         $checkbox = Sanitize::getParam($param, $default, $source);
-        return ($checkbox === 'on' || $checkbox === 1 || $checkbox === '1' || $checkbox === 'true') ? 1 : 0;
+        return ($checkbox === 'on' || $checkbox === 1 || $checkbox === '1' || $checkbox === 'true' || $checkbox === true) ? 1 : 0;
     }
 
     public static function bool($param)

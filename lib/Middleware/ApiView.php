@@ -11,13 +11,12 @@ namespace Xibo\Middleware;
 
 use Slim\Slim;
 use Slim\View;
-use Xibo\Helper\ApplicationState;
 
 class ApiView extends View
 {
     public function render($status=200, $data = NULL) {
 
-        $app = Slim::getInstance(ApplicationState::$appName);
+        $app = Slim::getInstance();
 
         $status = intval($status);
 

@@ -29,9 +29,12 @@ class LogProcessor
 {
     public function __invoke(array $record)
     {
-        $record['extra']['method'] = Slim::getInstance()->request->getMethod();
-
         $app = Slim::getInstance();
+
+        if ($app === null)
+            return $record;
+
+        $record['extra']['method'] = $app->request->getMethod();
 
         $route = $app->router()->getCurrentRoute();
         if ($route != null)

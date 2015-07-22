@@ -25,8 +25,10 @@ namespace Xibo\Middleware;
 
 use Slim\Middleware;
 use Xibo\Controller\Library;
+use Xibo\Factory\LayoutFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Log;
+use Xibo\Helper\Theme;
 
 class Actions extends Middleware
 {
@@ -35,13 +37,19 @@ class Actions extends Middleware
         // Process Actions
         if (Config::GetSetting('DEFAULTS_IMPORTED') == 0) {
 
-            //$layout = new Layout();
-            //$layout->importFolder('theme' . DIRECTORY_SEPARATOR . Theme::ThemeFolder() . DIRECTORY_SEPARATOR . 'layouts');
+            $folder = Theme::uri('layouts', true);
+
+            foreach (array_diff(scandir($folder), array('..', '.')) as $file) {
+                if (stripos($file, '.zip')) {
+                    $layout = LayoutFactory::createFromZip($folder . '/' . $file, null, 1, false, false, true);
+                    $layout->save();
+                }
+            }
 
             // Install files
             Library::installAllModuleFiles();
 
-            \Xibo\Helper\Config::ChangeSetting('DEFAULTS_IMPORTED', 1);
+            Config::ChangeSetting('DEFAULTS_IMPORTED', 1);
         }
 
         // Process notifications

@@ -28,7 +28,7 @@ use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
-class MenuFactory
+class MenuFactory extends BaseFactory
 {
     public static function getById($menuItemId)
     {
@@ -63,6 +63,9 @@ class MenuFactory
         $SQL .= "         INNER JOIN pages ";
         $SQL .= "         ON       pages.pageID = menuitem.PageID ";
         $SQL .= "WHERE  1=1 ";
+
+        // Logged in user view permissions
+        self::viewPermissionSql('Xibo\Entity\Menu', $SQL, $params, 'menuitem.menuitemId', null, $filterBy);
 
         if (Sanitize::getString('menu', $filterBy) != null) {
             $SQL .= ' AND menu.Menu = :menu ';

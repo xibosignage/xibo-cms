@@ -16,18 +16,26 @@ class LayoutUploadHandler extends BlueImpUploadHandler
 
         // Upload and Save
         try {
+            $name = isset($_REQUEST['name']) ? $_REQUEST['name'][$index] : '';
+            $template = isset($_REQUEST['template']) ? $_REQUEST['template'][$index] : 0;
+            $replaceExisting = isset($_REQUEST['replaceExisting']) ? $_REQUEST['replaceExisting'][$index] : 0;
+            $importTags = isset($_REQUEST['importTags']) ? $_REQUEST['importTags'][$index] : 0;
+
             $layout = LayoutFactory::createFromZip(
                 Config::GetSetting('LIBRARY_LOCATION') . 'temp/' . $fileName,
-                $_REQUEST['layout'][$index],
+                $name,
                 $this->options['userId'],
-                $_REQUEST['template'][$index],
-                $_REQUEST['replaceExisting'][$index],
-                $_REQUEST['importTags'][$index]
+                $template,
+                $replaceExisting,
+                $importTags
             );
 
             $layout->save();
 
             @unlink(Config::GetSetting('LIBRARY_LOCATION') . 'temp/' . $fileName);
+
+            // Set the name for the return
+            $file->name = $layout->layout;
 
         } catch (Exception $e) {
             $file->error = $e->getMessage();

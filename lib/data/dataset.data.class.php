@@ -49,60 +49,6 @@ class DataSet extends Data
     }
 
     /**
-     * Add a data set
-     * @param <type> $dataSet
-     * @param <type> $description
-     * @param <type> $userId
-     * @return <type>
-     */
-    public function Add($dataSet, $description, $userId)
-    {
-        try {
-            $dbh = \Xibo\Storage\PDOConnect::init();
-
-            // Validation
-            if (strlen($dataSet) > 50 || strlen($dataSet) < 1)
-                return $this->SetError(25001, __("Name must be between 1 and 50 characters"));
-
-            if (strlen($description) > 254)
-                return $this->SetError(25002, __("Description can not be longer than 254 characters"));
-
-
-            // Ensure there are no layouts with the same name
-            $sth = $dbh->prepare('SELECT DataSet FROM dataset WHERE DataSet = :dataset');
-            $sth->execute(array(
-                    'dataset' => $dataSet
-                ));
-
-            if ($row = $sth->fetch())
-                return $this->SetError(25004, sprintf(__("There is already dataset called '%s'. Please choose another name."), $dataSet));
-
-            // End Validation
-
-            $SQL = "INSERT INTO dataset (DataSet, Description, UserID) ";
-            $SQL .= " VALUES (:dataset, :description, :userid) ";
-
-            // Insert the data set
-            $sth = $dbh->prepare($SQL);
-            $sth->execute(array(
-                    'dataset' => $dataSet,
-                    'description' => $description,
-                    'userid' => $userId
-                ));
-
-            $id = $dbh->lastInsertId();
-
-            Log::notice('Complete', 'DataSet', 'Add');
-
-            return $id;
-        }
-        catch (Exception $e) {
-            Log::error($e->getMessage());
-            return $this->SetError(25005, __('Could not add DataSet'));
-        }
-    }
-
-    /**
      * Edit a DataSet
      * @param <type> $dataSetId
      * @param <type> $dataSet

@@ -109,6 +109,7 @@ class Module extends Base
         }
 
         $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = ModuleFactory::countLast();
         $this->getState()->setData($modules);
     }
 

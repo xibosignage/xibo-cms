@@ -9,14 +9,13 @@
 namespace Xibo\Tests;
 
 
+use Xibo\Factory\DisplayGroupFactory;
+use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\ScheduleFactory;
+
 class ScheduleTest extends LocalWebTestCase
 {
     protected $route = '/schedule';
-
-    public function __construct()
-    {
-        parent::__construct('Schedule Test');
-    }
 
     public function testListAll()
     {
@@ -36,14 +35,19 @@ class ScheduleTest extends LocalWebTestCase
      */
     public function testAdd()
     {
+        // Get a layout to schedule
+        $layout = LayoutFactory::query(null, ['start' => 1, 'length' => 1])[0];
+        // Get a Display Group Id
+        $displayGroup = DisplayGroupFactory::query(null, ['start' => 1, 'length' => 1])[0];
+
         $fromDt = time();
         $toDt = time() + 3600;
 
         $this->client->post($this->route, [
             'fromDt' => date('Y-m-d h:i:s', $fromDt),
             'toDt' => date('Y-m-d h:i:s', $toDt),
-            'campaignId' => 2,
-            'displayGroupIds' => [1, 12],
+            'campaignId' => $layout->campaignId,
+            'displayGroupIds' => [$displayGroup->displayGroupId],
             'displayOrder' => 1,
             'isPriority' => 0
         ]);
@@ -66,14 +70,18 @@ class ScheduleTest extends LocalWebTestCase
      */
     public function testEdit($eventId)
     {
+        // Get the scheduled event
+        $event = ScheduleFactory::getById($eventId);
+        $event->load();
+
         $fromDt = time();
         $toDt = time() + 86400;
 
         $this->client->put($this->route . '/' . $eventId, [
-            'fromDt' => date('Y-m-d h:i:s', $fromDt),
-            'toDt' => date('Y-m-d h:i:s', $toDt),
-            'campaignId' => 2,
-            'displayGroupIds' => [1, 12],
+            'fromDt' => date('Y-m-d h:i:s', $event->fromDt),
+            'toDt' => date('Y-m-d h:i:s', $event->toDt),
+            'campaignId' => $event->campaignId,
+            'displayGroupIds' => $event->displayGroups,
             'displayOrder' => 1,
             'isPriority' => 1
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);

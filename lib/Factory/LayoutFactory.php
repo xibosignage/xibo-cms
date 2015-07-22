@@ -36,19 +36,8 @@ use Xibo\Storage\PDOConnect;
  * Class LayoutFactory
  * @package Xibo\Factory
  */
-class LayoutFactory
+class LayoutFactory extends BaseFactory
 {
-    private static $_countLast = 0;
-
-    /**
-     * Count of records returned for the last query.
-     * @return int
-     */
-    public static function countLast()
-    {
-        return self::$_countLast;
-    }
-
     /**
      * Create Layout from Resolution
      * @param int $resolutionId
@@ -166,7 +155,7 @@ class LayoutFactory
      */
     public static function getById($layoutId)
     {
-        $layouts = LayoutFactory::query(null, array('layoutId' => $layoutId, 'excludeTemplates' => 0, 'retired' => -1));
+        $layouts = LayoutFactory::query(null, array('disableUserCheck' => 1, 'layoutId' => $layoutId, 'excludeTemplates' => 0, 'retired' => -1));
 
         if (count($layouts) <= 0) {
             throw new NotFoundException(\__('Layout not found'));
@@ -184,8 +173,7 @@ class LayoutFactory
      */
     public static function getByOwnerId($ownerId)
     {
-        //TODO add filtering
-        return LayoutFactory::query(null, array('ownerId' => $ownerId, 'excludeTemplates' => 0, 'retired' => -1));
+        return LayoutFactory::query(null, array('userId' => $ownerId, 'excludeTemplates' => 0, 'retired' => -1));
     }
 
     /**
@@ -220,6 +208,7 @@ class LayoutFactory
         $layout->width = $document->documentElement->getAttribute('width');
         $layout->height = $document->documentElement->getAttribute('height');
         $layout->backgroundColor = $document->documentElement->getAttribute('bgcolor');
+        $layout->backgroundzIndex = $document->documentElement->getAttribute('zindex');
 
         // Xpath to use when getting media
         $xpath = new \DOMXPath($document);
@@ -323,6 +312,8 @@ class LayoutFactory
      */
     public static function createFromZip($zipFile, $layoutName, $userId, $template, $replaceExisting, $importTags)
     {
+        Log::debug('Create Layout from ZIP File: %s, imported name will be %s.', $zipFile, $layoutName);
+
         $libraryLocation = Config::GetSetting('LIBRARY_LOCATION') . 'temp/';
 
         // Do some pre-checks on the arguments we have been provided
@@ -355,10 +346,12 @@ class LayoutFactory
         }
 
         // Tag as imported
-        $layout->tags[] = TagFactory::getByTag('imported');
+        $layout->tags[] = TagFactory::tagFromString('imported');
 
         // Set the owner
         $layout->setOwner($userId);
+
+        Log::debug('Process mapping.json file.');
 
         // Go through each region and add the media (updating the media ids)
         $mappings = json_decode($zip->getFromName('mapping.json'), true);
@@ -366,13 +359,15 @@ class LayoutFactory
         foreach ($mappings as $file) {
             // Import the Media File
             $intendedMediaName = $file['name'];
-            $temporaryFileName = $libraryLocation . md5($file['name']);
+            $temporaryFileName = $libraryLocation . $file['file'];
             if (file_put_contents($temporaryFileName, $zip->getFromName('library/' . $file['file'])) === false)
                 throw new \InvalidArgumentException(__('Cannot save media file from ZIP file'));
 
             // Check we don't already have one
             try {
                 $media = MediaFactory::getByName($intendedMediaName);
+
+                Log::debug('Media already exists with name: %s', $intendedMediaName);
 
                 if ($replaceExisting) {
                     // Media with this name already exists, but we don't want to use it.
@@ -382,8 +377,10 @@ class LayoutFactory
 
             } catch (NotFoundException $e) {
                 // Create it instead
-                $media = MediaFactory::create($intendedMediaName, $temporaryFileName, $file['type'], $userId, $file['duration']);
-                $media->tags[] = TagFactory::getByTag('imported');
+                Log::debug('Media does not exist in Library, add it. %s', $file['file']);
+
+                $media = MediaFactory::create($intendedMediaName, $file['file'], $file['type'], $userId, $file['duration']);
+                $media->tags[] = TagFactory::tagFromString('imported');
                 $media->save();
             }
 
@@ -391,6 +388,8 @@ class LayoutFactory
             $widgets = $layout->getWidgets();
             $oldMediaId = $file['mediaid'];
             $newMediaId = $media->mediaId;
+
+            Log::debug('Layout has %d widgets', count($widgets));
 
             if ($file['background'] == 1) {
                 $layout->backgroundImageId = $newMediaId;
@@ -405,6 +404,8 @@ class LayoutFactory
                 }
             }
         }
+
+        Log::debug('Finished creating from Zip');
 
         // Finished
         $zip->close();
@@ -484,8 +485,11 @@ class LayoutFactory
 
         $body .= " WHERE 1 = 1 ";
 
-        if (Sanitize::getString('layout', $filterBy) != '')
-        {
+        // Logged in user view permissions
+        self::viewPermissionSql('Xibo\Entity\Campaign', $body, $params, 'layout.layoutId', 'layout.userId', $filterBy);
+
+        // Layout Like
+        if (Sanitize::getString('layout', $filterBy) != '') {
             // convert into a space delimited array
             $names = explode(' ', Sanitize::getString('layout', $filterBy));
 
@@ -573,7 +577,7 @@ class LayoutFactory
         $limit = '';
         // Paging
         if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval(Sanitize::getInt('start')) . ', ' . Sanitize::getInt('length', 10);
+            $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
         }
 
         // The final statements

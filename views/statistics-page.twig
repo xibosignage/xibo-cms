@@ -17,6 +17,9 @@
 
 
 {% block pageContent %}
+
+    {% set displayFilterOptions = displays|merge({displayId: null, display: ""}) %}
+
     <div class="widget">
         <div class="widget-title">{% trans "Bandwidth" %}</div>
         <div class="widget-body">
@@ -26,12 +29,12 @@
                         <form class="form-inline">
                             {{ inline.date("fromdt", "From Date", defaults.fromDate) }}
                             {{ inline.date("todt", "To Date", defaults.toDate) }}
-                            {{ inline.dropdown("displayid", "single", "Display", "", displays, "displayId", "display") }}
+                            {{ inline.dropdown("displayid", "single", "Display", "", displayFilterOptions, "displayId", "display") }}
                         </form>
                     </div>
                 </div>
                 <div class="XiboData">
-                    <div id="bandwidthChart" style="height: 230px;"></div>
+                    <div id="bandwidthChart" style="clear:both; height: 230px;"></div>
                 </div>
             </div>
         </div>
@@ -45,12 +48,12 @@
                         <form class="form-inline">
                             {{ inline.date("fromdt", "From Date", defaults.fromDate) }}
                             {{ inline.date("todt", "To Date", defaults.toDate) }}
-                            {{ inline.dropdown("displayid", "single", "Display", "", displays, "displayId", "display") }}
+                            {{ inline.dropdown("displayid", "single", "Display", "", displayFilterOptions, "displayId", "display") }}
                         </form>
                     </div>
                 </div>
                 <div class="XiboData">
-                    <div id="availabilityChart" style="height: 230px;"></div>
+                    <div id="availabilityChart" style="clear:both; height: 230px;"></div>
                 </div>
             </div>
         </div>
@@ -64,8 +67,10 @@
                         <form class="form-inline">
                             {{ inline.date("fromdt", "From Date", defaults.fromDateOneDay) }}
                             {{ inline.date("todt", "To Date", defaults.toDate) }}
-                            {{ inline.dropdown("displayid", "single", "Display", "", displays, "displayId", "display") }}
-                            {{ inline.dropdown("mediaid", "single", "Media", "", media, "mediaId", "media") }}
+                            {{ inline.dropdown("displayid", "single", "Display", "", displayFilterOptions, "displayId", "display") }}
+
+                            {% set mediaFilterOptions = media|merge({mediaId: null, name: ""}) %}
+                            {{ inline.dropdown("mediaid", "single", "Media", "", mediaFilterOptions, "mediaId", "name") }}
                         </form>
                     </div>
                 </div>
@@ -73,6 +78,7 @@
                     <table id="stats" class="table table-striped">
                         <thead>
                             <tr>
+                                <th>{% trans "Type" %}</th>
                                 <th>{% trans "Display" %}</th>
                                 <th>{% trans "Layout" %}</th>
                                 <th>{% trans "Media" %}</th>
@@ -81,7 +87,6 @@
                                 <th>{% trans "Total Duration" %}</th>
                                 <th>{% trans "First Shown" %}</th>
                                 <th>{% trans "Last Shown" %}</th>
-                                <th></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -108,18 +113,15 @@
                 }
             },
             "columns": [
-                { "data": "Display" },
-                { "data": "Layout" },
-                { "data": "Media" },
-                { "data": "NumberPlays" },
-                { "data": "DurationSec" },
-                { "data": "Duration" },
-                { "data": "MinStart" },
-                { "data": "MaxEnd" },
-                {
-                    "orderable": false,
-                    "data": dataTableButtonsColumn
-                }
+                { "data": "type" },
+                { "data": "display" },
+                { "data": "layout" },
+                { "data": "media" },
+                { "data": "numberPlays" },
+                { "data": "durationSec" },
+                { "data": "duration" },
+                { "data": "minStart" },
+                { "data": "maxEnd" }
             ]
         });
 
@@ -201,10 +203,10 @@
                 success: function(response) {
                     if (availabilityChart == undefined) {
                         // Create our chart
-                        availabilityChartOptions.data = response.extra;
+                        availabilityChartOptions.data = response.extra.data;
                         availabilityChart = Morris.Bar(availabilityChartOptions);
                     } else {
-                        availabilityChart.setData(response.extra);
+                        availabilityChart.setData(response.extra.data);
                     }
                 }
             });

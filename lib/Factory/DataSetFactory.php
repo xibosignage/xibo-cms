@@ -15,7 +15,7 @@ use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
-class DataSetFactory
+class DataSetFactory extends BaseFactory
 {
     /**
      * Get DataSets by ID
@@ -25,7 +25,22 @@ class DataSetFactory
      */
     public static function getById($dataSetId)
     {
-        $dataSets = DataSetFactory::query(null, ['dataSetId' => $dataSetId]);
+        $dataSets = DataSetFactory::query(null, ['disableUserCheck' => 1, 'dataSetId' => $dataSetId]);
+
+        if (count($dataSets) <= 0)
+            throw new NotFoundException();
+
+        return $dataSets[0];
+    }
+    /**
+     * Get DataSets by Name
+     * @param $dataSet
+     * @return DataSet
+     * @throws NotFoundException
+     */
+    public static function getByName($dataSet)
+    {
+        $dataSets = DataSetFactory::query(null, ['disableUserCheck' => 1, 'dataSet' => $dataSet]);
 
         if (count($dataSets) <= 0)
             throw new NotFoundException();
@@ -36,7 +51,7 @@ class DataSetFactory
     /**
      * @param array $sortOrder
      * @param array $filterBy
-     * @return array[DisplayProfile]
+     * @return array[DataSet]
      * @throws NotFoundException
      */
     public static function query($sortOrder = null, $filterBy = null)
@@ -46,29 +61,67 @@ class DataSetFactory
 
         try {
 
-            $sql  = "SELECT dataset.dataSetId, ";
-            $sql .= "       dataset.dataSet, ";
-            $sql .= "       dataset.description, ";
-            $sql .= "       dataset.userId, ";
-            $sql .= "       dataset.lastDataEdit, ";
-            $sql .= "       user.userName AS owner ";
-            $sql .= "  FROM dataset ";
-            $sql .= "   INNER JOIN `user` ON user.userId = dataset.userId ";
-            $sql .= ' WHERE 1 = 1 ';
+            $select  = '
+              SELECT dataset.dataSetId,
+                dataset.dataSet,
+                dataset.description,
+                dataset.userId,
+                dataset.lastDataEdit,
+                user.userName AS owner,
+                (
+                  SELECT GROUP_CONCAT(DISTINCT `group`.group)
+                      FROM `permission`
+                        INNER JOIN `permissionentity`
+                        ON `permissionentity`.entityId = permission.entityId
+                        INNER JOIN `group`
+                        ON `group`.groupId = `permission`.groupId
+                     WHERE entity = \'Xibo\\Entity\\DataSet\'
+                        AND objectId = dataset.dataSetId
+                ) AS groupsWithPermissions
+            ';
+
+            $body = '
+                  FROM dataset
+                   INNER JOIN `user` ON user.userId = dataset.userId
+                 WHERE 1 = 1
+            ';
+
+            // View Permissions
+            self::viewPermissionSql('Xibo\Entity\DataSet', $body, $params, '`dataset`.dataSetId', '`dataset`.userId', $filterBy);
 
             if (Sanitize::getInt('dataSetId') != null) {
-                $sql .= ' AND dataset.dataSetId = :dataSetId ';
+                $body .= ' AND dataset.dataSetId = :dataSetId ';
                 $params['dataSetId'] = Sanitize::getInt('dataSetId');
             }
 
+            if (Sanitize::getString('dataSet') != null) {
+                $body .= ' AND dataset.dataSet = :dataSet ';
+                $params['dataSet'] = Sanitize::getString('dataSet');
+            }
+
             // Sorting?
+            $order = '';
             if (is_array($sortOrder))
-                $sql .= 'ORDER BY ' . implode(',', $sortOrder);
+                $order .= 'ORDER BY ' . implode(',', $sortOrder);
+
+            $limit = '';
+            // Paging
+            if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
+                $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
+            }
+
+            $sql = $select . $body . $order . $limit;
 
             Log::sql($sql, $params);
 
             foreach (PDOConnect::select($sql, $params) as $row) {
                 $entries[] = (new DataSet())->hydrate($row);
+            }
+
+            // Paging
+            if ($limit != '' && count($entries) > 0) {
+                $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
+                self::$_countLast = intval($results[0]['total']);
             }
 
             return $entries;

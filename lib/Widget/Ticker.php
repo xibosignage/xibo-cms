@@ -354,6 +354,10 @@ class Ticker extends Module
         // Make sure we have the cache location configured
         Library::ensureLibraryExists();
 
+        // We might need to save the widget associated with this module
+        //  for example if we have assigned an image to it
+        $saveRequired = false;
+
         // Parse the text template
         $matches = '';
         preg_match_all('/\[.*?\]/', $text, $matches);
@@ -451,7 +455,10 @@ class Ticker extends Module
                             // Tag this layout with this file
                             $this->assignMedia($file->mediaId);
 
-                            $url = $this->getApp()->urlFor('library.download', ['id' => $file->mediaId]);
+                            // We will need to save
+                            $saveRequired = true;
+
+                            $url = $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']);
                             $replace = ($isPreview) ? '<img src="' . $url . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" ' . $attributes . '/>' : '<img src="' . $file->storedAs . '" ' . $attributes . ' />';
                         }
                     } else {
@@ -524,12 +531,20 @@ class Ticker extends Module
             $items[] = '<span id="copyright">' . $this->getOption('copyright') . '</span>';
         }
 
+        // Should we save
+        if ($saveRequired)
+            $this->widget->save(['saveWidgetOptions' => false]);
+
         // Return the formatted items
         return $items;
     }
 
     private function getDataSetItems($displayId, $isPreview, $text)
     {
+        // We might need to save the widget associated with this module
+        //  for example if we have assigned an image to it
+        $saveRequired = false;
+
         // Extra fields for data sets
         $dataSetId = $this->getOption('datasetid');
         $upperLimit = $this->getOption('upperLimit');
@@ -595,7 +610,10 @@ class Ticker extends Module
                     // Tag this layout with this file
                     $this->assignMedia($file->mediaId);
 
-                    $url = $this->getApp()->urlFor('library.download', ['id' => $file->mediaId]);
+                    // We will need to save
+                    $saveRequired = true;
+
+                    $url = $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']);
                     $replace = ($isPreview) ? '<img src="' . $url . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" />' : '<img src="' . $file->storedAs . '" />';
                 }
 
@@ -604,6 +622,9 @@ class Ticker extends Module
 
             $items[] = $rowString;
         }
+
+        if ($saveRequired)
+            $this->widget->save(['saveWidgetOptions' => false]);
 
         return $items;
     }

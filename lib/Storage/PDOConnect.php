@@ -23,11 +23,15 @@ namespace Xibo\Storage;
 
 class PDOConnect
 {
+    /**
+     * @var \PDO The connection
+     */
 	private static $conn = NULL;
 
 	private function __construct() {}
 
-	public static function init() {
+	public static function init()
+    {
 		if (!self::$conn) {
 			self::$conn = \Xibo\Storage\PDOConnect::newConnection();
 		}
@@ -35,7 +39,15 @@ class PDOConnect
 		return self::$conn;
 	}
 
-	public static function newConnection() {
+    public static function close()
+    {
+        if (self::$conn) {
+            self::$conn = null;
+        }
+    }
+
+	public static function newConnection()
+    {
 		global $dbhost;
 		global $dbuser;
 		global $dbpass;
@@ -62,7 +74,8 @@ class PDOConnect
 		return $conn;
 	}
 
-	public static function connect($dbhost, $dbuser, $dbpass, $dbname = '') {
+	public static function connect($dbhost, $dbuser, $dbpass, $dbname = '')
+    {
 		if (!self::$conn) {
 			self::close();
 		}
@@ -90,12 +103,6 @@ class PDOConnect
 		
 
 		return self::$conn;
-	}
-
-	public static function close() {
-		if (self::$conn) {
-			self::$conn = null;
-		}
 	}
 
     /**

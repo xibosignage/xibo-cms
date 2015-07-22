@@ -83,12 +83,12 @@
             "columns": [
                 { "data": "name" },
                 { "data": "description" },
-                { "data": "regionSpecific" },
+                { "data": "regionSpecific", "render": dataTableTickCrossInverseColumn },
                 { "data": "validExtensions" },
                 { "data": "imageUri" },
-                { "data": "previewEnabled" },
-                { "data": "assignable" },
-                { "data": "enabled" },
+                { "data": "previewEnabled", "render": dataTableTickCrossColumn },
+                { "data": "assignable", "render": dataTableTickCrossColumn },
+                { "data": "enabled", "render": dataTableTickCrossColumn },
                 {
                     "orderable": false,
                     "data": dataTableButtonsColumn

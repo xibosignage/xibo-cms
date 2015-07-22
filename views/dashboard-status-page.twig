@@ -165,11 +165,11 @@
     <script type="text/javascript">
 
         {% if xmdsLimitSet %}
-            var yKeys = ['value'];
-            var labels = ['{% trans "Value" %}'];
-        {% else %}
             var yKeys = ['value','limit'];
             var labels = ['{% trans "Value" %}','{% trans "Remaining" %}'];
+        {% else %}
+            var yKeys = ['value'];
+            var labels = ['{% trans "Value" %}'];
         {% endif %}
 
         var bandwidthChart = {
@@ -180,7 +180,7 @@
                 xkey: 'label',
                 ykeys: yKeys,
                 labels: labels,
-                stacked: {% if xmdsLimitSet == "" %}false{% else %}true{% endif %}
+                stacked: {% if xmdsLimitSet %}true{% else %}false{% endif %}
         }
         };
 

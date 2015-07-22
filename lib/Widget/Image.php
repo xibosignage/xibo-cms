@@ -87,22 +87,30 @@ class Image extends Module
             Img::configure(array('driver' => 'gd'));
 
             // Output a thumbnail?
-            $width = Sanitize::getInt('width');
-            $height = Sanitize::getInt('height');
+            $width = intval(Sanitize::getDouble('width'));
+            $height = intval(Sanitize::getDouble('height'));
 
             Log::debug('Preview Requested with Width and Height %d x %d', $width, $height);
 
             if ($width != 0 || $height != 0) {
-                // Save a thumbnail and output it
-                $thumbPath = $libraryLocation . sprintf('tn_%dx%d_%s', $width, $height, $media->storedAs);
 
-                $eTag = md5($media->md5 . $thumbPath);
+                if (Sanitize::getInt('preview', 0) == 0) {
+                    // Save a thumbnail and output it
+                    $thumbPath = $libraryLocation . sprintf('tn_%dx%d_%s', $width, $height, $media->storedAs);
 
-                // Create the thumbnail here
-                if (!file_exists($thumbPath)) {
-                    $img = Img::make($filePath)->fit($width, $height)->save($thumbPath);
-                } else {
-                    $img = Img::make($thumbPath);
+                    $eTag = md5($media->md5 . $thumbPath);
+
+                    // Create the thumbnail here
+                    if (!file_exists($thumbPath)) {
+                        $img = Img::make($filePath)->fit($width, $height)->save($thumbPath);
+                    } else {
+                        $img = Img::make($thumbPath);
+                    }
+                }
+                else {
+                    $eTag = md5($media->md5 . $width . $height);
+
+                    $img = Img::make($filePath)->fit($width, $height);
                 }
             }
             else {
