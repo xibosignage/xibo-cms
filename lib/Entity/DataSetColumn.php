@@ -24,6 +24,9 @@ class DataSetColumn
     public $columnOrder;
     public $formula;
 
+    public $dataType;
+    public $dataSetColumnType;
+
     public function validate()
     {
         if ($this->dataSetId == 0 || $this->dataSetId == '')

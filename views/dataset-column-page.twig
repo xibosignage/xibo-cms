@@ -1,0 +1,82 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block actionMenu %}
+    <ul class="nav nav-pills pull-right">
+        <li><a class="XiboFormButton" title="{% trans "Add Column" %}" href="{{ urlFor("dataSet.column.add.form") }}">{% trans "Add Column" %}</a></li>
+    </ul>
+{% endblock %}
+
+
+{% block pageContent %}
+    <div class="widget">
+        <div class="widget-title">{% trans "Columns for %s" %}</div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}">
+                <div class="XiboFilter">
+                    <div class="FilterDiv" id="Filter">
+                        <form class="form-inline">
+                            {{ inline.checkbox("XiboFilterPinned", "Keep Open", defaults.filterPinned) }}
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData">
+                    <table id="datasets" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Heading" %}</th>
+                                <th>{% trans "DataType" %}</th>
+                                <th>{% trans "Column Type" %}</th>
+                                <th>{% trans "List Content" %}</th>
+                                <th>{% trans "Order" %}</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        var table = $("#datasets").DataTable({
+            serverSide: true,
+            filter: false,
+            searchDelay: 3000,
+            "order": [[ 1, "asc"]],
+            ajax: {
+                "url": "{{ urlFor("dataSet.column.search", {id: dataSet.dataSetId}) }}",
+                "data": function(d) {
+                    $.extend(d, $("#datasets").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                }
+            },
+            "columns": [
+                { "data": "heading" },
+                { "data": "dataType" },
+                { "data": "columnType" },
+                { "data": "listContent" },
+                { "data": "columnOrder" },
+                {
+                    "orderable": false,
+                    "data": dataTableButtonsColumn
+                }
+            ]
+        });
+
+        table.on('draw', dataTableDraw);
+        table.on('processing.dt', dataTableProcessing);
+    </script>
+{% endblock %}

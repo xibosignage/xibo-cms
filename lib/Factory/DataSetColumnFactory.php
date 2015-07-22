@@ -10,16 +10,37 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\DataSetColumn;
+use Xibo\Exception\NotFoundException;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
 class DataSetColumnFactory extends BaseFactory
 {
+    /**
+     * Get by Id
+     * @param int $dataSetColumnId
+     * @return DataSetColumn
+     * @throws NotFoundException
+     */
+    public static function getById($dataSetColumnId)
+    {
+        $columns = DataSetColumnFactory::query(null, ['dataSetColumnId' => $dataSetColumnId]);
+
+        if (count($columns) <= 0)
+            throw new NotFoundException();
+
+        return $columns[0];
+    }
+
+    /**
+     * Get by dataSetId
+     * @param $dataSetId
+     * @return array[DataSetColumn]
+     */
     public static function getByDataSetId($dataSetId)
     {
-
-        return [];
+        return DataSetColumnFactory::query(null, ['dataSetId' => $dataSetId]);
     }
 
     public static function query($sortOrder = null, $filterBy = null)
@@ -30,15 +51,30 @@ class DataSetColumnFactory extends BaseFactory
         if ($sortOrder == null)
             $sortOrder = ['columnOrder'];
 
-        $select = 'SELECT dataSetColumnId, heading, datatype.dataType, datasetcolumntype.dataSetColumnType, listContent, columnOrder ';
+        $select = '
+            SELECT dataSetColumnId,
+                heading,
+                datatype.dataTypeId,
+                datatype.dataType,
+                datasetcolumn.dataSetColumnType,
+                datasetcolumntype.dataSetColumnType,
+                listContent,
+                columnOrder,
+                formula
+            ';
 
         $body = '
-                  FROM `datasetcolumn`
-                   INNER JOIN `datatype`
-                   ON datatype.DataTypeID = datasetcolumn.DataTypeID
-                   INNER JOIN `datasetcolumntype`
-                   ON datasetcolumntype.DataSetColumnTypeID = datasetcolumn.DataSetColumnTypeID
-                 WHERE 1 = 1 ';
+              FROM `datasetcolumn`
+               INNER JOIN `datatype`
+               ON datatype.DataTypeID = datasetcolumn.DataTypeID
+               INNER JOIN `datasetcolumntype`
+               ON datasetcolumntype.DataSetColumnTypeID = datasetcolumn.DataSetColumnTypeID
+             WHERE 1 = 1 ';
+
+        if (Sanitize::getInt('dataSetColumnId') != null) {
+            $body .= ' AND dataSetColumnId = :dataSetColumnId ';
+            $params['dataSetColumnId'] = Sanitize::getInt('dataSetColumnId');
+        }
 
         if (Sanitize::getInt('dataSetId') != null) {
             $body .= ' AND DataSetID = :dataSetId ';
