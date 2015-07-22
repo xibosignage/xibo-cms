@@ -44,6 +44,30 @@ class DataSet
         return $this->userId;
     }
 
+    public function getColumns()
+    {
+        return $this->columns;
+    }
+
+    /**
+     * @param array[Optional] $params
+     * @return array The Data
+     */
+    public function getData($params = [])
+    {
+        // Build a SQL statement, based on the columns for this dataset
+        $this->load();
+
+        $sql = '';
+
+        foreach ($this->getColumns() as $column) {
+            /* @var DataSetColumn $column */
+
+        }
+
+        return PDOConnect::select($sql, $params);
+    }
+
     /**
      * Assign a column
      * @param DataSetColumn $column
@@ -65,7 +89,7 @@ class DataSet
      */
     public function hasData()
     {
-        return PDOConnect::exists('SELECT * FROM dataset_' . $this->dataSetId . ' LIMIT 1', []);
+        return PDOConnect::exists('SELECT id FROM dataset_' . $this->dataSetId . ' LIMIT 1', []);
     }
 
     /**
@@ -80,9 +104,10 @@ class DataSet
             throw new \InvalidArgumentException(__('Description can not be longer than 254 characters'));
 
         try {
-            DataSetFactory::getByName($this->dataSet);
+            $existing = DataSetFactory::getByName($this->dataSet);
 
-            throw new \InvalidArgumentException(sprintf(__('There is already dataSet called %s. Please choose another name.'), $this->dataSet));
+            if ($this->dataSetId == 0 || $this->dataSetId != $existing->dataSetId)
+                throw new \InvalidArgumentException(sprintf(__('There is already dataSet called %s. Please choose another name.'), $this->dataSet));
         }
         catch (NotFoundException $e) {
             // This is good
@@ -157,31 +182,45 @@ class DataSet
         // Delete the data set
         PDOConnect::update('DELETE FROM `dataset` WHERE dataSetId = :dataSetId', ['dataSetId' => $this->dataSetId]);
 
-        // The last thing we do is truncate the table
-        PDOConnect::update('TRUNCATE TABLE dataset_' . $this->dataSetId, []);
+        // The last thing we do is drop the dataSet table
+        PDOConnect::update('DROP TABLE dataset_' . $this->dataSetId, []);
     }
 
+    /**
+     * Add
+     */
     private function add()
     {
         $this->dataSetId = PDOConnect::insert('
           INSERT INTO `dataset` (DataSet, Description, UserID)
             VALUES (:dataSet, :description, :userId)
         ', [
-            'dataset' => $this->dataSet,
+            'dataSet' => $this->dataSet,
             'description' => $this->description,
             'userId' => $this->userId
         ]);
+
+        // Create the data table for this dataset
+        PDOConnect::update('
+          CREATE TABLE `dataset_' . $this->dataSetId . '` (
+            `id` int(11) NOT NULL AUTO_INCREMENT,
+            PRIMARY KEY (`id`)
+          ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1
+        ', []);
     }
 
+    /**
+     * Edit
+     */
     private function edit()
     {
         PDOConnect::update('
-          UPDATE dataset SET DataSet = :dataSet, Description = :description WHERE DataSetID = :dataSetId
+          UPDATE dataset SET DataSet = :dataSet, Description = :description, lastDataEdit = :lastDataEdit WHERE DataSetID = :dataSetId
         ', [
             'dataSetId' => $this->dataSetId,
             'dataSet' => $this->dataSet,
             'description' => $this->description,
-            'userId' => $this->userId
+            'lastDataEdit' => $this->lastDataEdit
         ]);
     }
 
@@ -197,5 +236,48 @@ class DataSet
             $display->setMediaIncomplete();
             $display->save(false);
         }
+    }
+
+    /**
+     * Add a row
+     * @return int
+     */
+    public function addRow()
+    {
+        $this->lastDataEdit = time();
+
+        return PDOConnect::insert('INSERT INTO `' . $this->dataSetId . '` (id) VALUES (NULL)', []);
+    }
+
+    /**
+     * Edit a row
+     * @param $rowId
+     * @param $columnId
+     * @param $value
+     */
+    public function editRow($rowId, $columnId, $value)
+    {
+        $this->lastDataEdit = time();
+
+        // Get the column
+        $column = DataSetColumnFactory::getById($columnId);
+
+        PDOConnect::update('UPDATE `' . $this->dataSetId . '` SET `' . $column->heading . '` = :value WHERE id = :id', [
+            'value' => $value,
+            'id' => $rowId
+        ]);
+    }
+
+    /**
+     * Delete Row
+     * @param $rowId
+     */
+    public function deleteRow($rowId)
+    {
+        $this->lastDataEdit = time();
+
+        PDOConnect::update('DELETE FROM `' . $this->dataSetId . '` WHERE id = :id', [
+            'id' => $rowId
+        ]);
     }
 }

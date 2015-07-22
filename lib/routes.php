@@ -138,6 +138,11 @@ $app->get('/dataset/:id/column', '\Xibo\Controller\DataSetColumn:grid')->name('d
 $app->post('/dataset/:id/column', '\Xibo\Controller\DataSetColumn:add')->name('dataSet.column.add');
 $app->put('/dataset/:id/column/:colId', '\Xibo\Controller\DataSetColumn:edit')->name('dataSet.column.edit');
 $app->delete('/dataset/:id/column/:colId', '\Xibo\Controller\DataSetColumn:delete')->name('dataSet.column.delete');
+// Data
+$app->get('/dataset/data/:id', '\Xibo\Controller\DataSetData:grid')->name('dataSet.data.search');
+$app->post('/dataset/data/:id', '\Xibo\Controller\DataSetData:add')->name('dataSet.data.add');
+$app->put('/dataset/data/:id/:rowId/:columnId', '\Xibo\Controller\DataSetData:edit')->name('dataSet.data.edit');
+$app->delete('/dataset/data/:id/:rowId', '\Xibo\Controller\DataSetData:delete')->name('dataSet.data.delete');
 
 //
 // Statistics

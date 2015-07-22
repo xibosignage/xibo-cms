@@ -11,14 +11,16 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li><a title="{% trans "Add more rows to the end of this DataSet" %}" href="#" onclick="XiboGridRender('DataEntryGrid')">{% trans "More Rows" %}</a></li>
+        <li><a id="dataSetMoreRows" title="{% trans "Add more rows to the end of this DataSet" %}" href="#">{% trans "More Rows" %}</a></li>
     </ul>
 {% endblock %}
 
 
 {% block pageContent %}
+    {% set dataSetName = dataSet.dataSet %}
+    {% set widgetTitle %}{% trans %}Data Entry for {{ dataSetName }}{% endtrans %}{% endset %}
     <div class="widget">
-        <div class="widget-title">{% trans "Page Name" %}</div>
+        <div class="widget-title">{{ widgetTitle }}</div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}">
                 <div class="XiboFilter">
@@ -29,11 +31,13 @@
                     </div>
                 </div>
                 <div class="XiboData">
-                    <table id="tableid" class="table table-striped">
+                    <table id="datasets" class="table table-striped">
                         <thead>
-                            <tr>
-                                <th></th>
-                            </tr>
+                        <tr>
+                            {% for col in dataSet.getColumns() %}
+                                <th>{{ col.heading }}</th>
+                            {% endfor %}
+                        </tr>
                         </thead>
                         <tbody>
 
@@ -47,20 +51,31 @@
 
 {% block javaScript %}
     <script type="text/javascript">
-        var table = $("#tableid").DataTable({
+        var cols = [];
+        {% for col in dataSet.getColumns() %}
+        cols.push({ "data": "{{ col.heading }}" });
+        {% endfor %}
+
+        var table = $("#datasets").DataTable({
             serverSide: true,
+            filter: false,
             searchDelay: 3000,
-            "order": [[ 1, "asc"]],
-            ajax: "{{ urlFor("pageSearch") }}",
-            "columns": [
-                {
-                    "orderable": false,
-                    "data": dataTableButtonsColumn
+            "order": [[ 0, "asc"]],
+            ajax: {
+                "url": "{{ urlFor("dataSet.data.search") }}",
+                "data": function(d) {
+                    $.extend(d, $("#datasets").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                 }
-            ]
+            },
+            "columns": cols
         });
 
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
+
+
+        $("#dataSetMoreRows").click(function() {
+            toastr.success("More rows wanted");
+        });
     </script>
 {% endblock %}

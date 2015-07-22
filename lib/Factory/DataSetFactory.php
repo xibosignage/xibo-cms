@@ -89,14 +89,14 @@ class DataSetFactory extends BaseFactory
             // View Permissions
             self::viewPermissionSql('Xibo\Entity\DataSet', $body, $params, '`dataset`.dataSetId', '`dataset`.userId', $filterBy);
 
-            if (Sanitize::getInt('dataSetId') != null) {
+            if (Sanitize::getInt('dataSetId', $filterBy) != null) {
                 $body .= ' AND dataset.dataSetId = :dataSetId ';
-                $params['dataSetId'] = Sanitize::getInt('dataSetId');
+                $params['dataSetId'] = Sanitize::getInt('dataSetId', $filterBy);
             }
 
-            if (Sanitize::getString('dataSet') != null) {
+            if (Sanitize::getString('dataSet', $filterBy) != null) {
                 $body .= ' AND dataset.dataSet = :dataSet ';
-                $params['dataSet'] = Sanitize::getString('dataSet');
+                $params['dataSet'] = Sanitize::getString('dataSet', $filterBy);
             }
 
             // Sorting?

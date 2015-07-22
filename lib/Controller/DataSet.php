@@ -71,7 +71,7 @@ class DataSet extends Base
                 $dataSet->buttons[] = array(
                     'id' => 'dataset_button_viewcolumns',
                     'url' => $this->urlFor('dataSet.column.view', ['id' => $dataSet->dataSetId]),
-                    'link' => true,
+                    'class' => 'XiboRedirectButton',
                     'text' => __('View Columns')
                 );
 
@@ -140,6 +140,7 @@ class DataSet extends Base
         $dataSetColumn->columnOrder = 1;
         $dataSetColumn->heading = 'Col1';
         $dataSetColumn->dataSetColumnTypeId = 1;
+        $dataSetColumn->dataTypeId = 1;
 
         // Add Column
         $dataSet->assignColumn($dataSetColumn);

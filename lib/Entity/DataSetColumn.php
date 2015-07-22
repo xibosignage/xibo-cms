@@ -27,6 +27,9 @@ class DataSetColumn
     public $dataType;
     public $dataSetColumnType;
 
+    /**
+     * Validate
+     */
     public function validate()
     {
         if ($this->dataSetId == 0 || $this->dataSetId == '')
@@ -70,6 +73,10 @@ class DataSetColumn
         }
     }
 
+    /**
+     * Save
+     * @param array[Optional] $options
+     */
     public function save($options = [])
     {
         $options = array_merge(['validate' => true], $options);
@@ -83,11 +90,22 @@ class DataSetColumn
             $this->edit();
     }
 
+    /**
+     * Delete
+     */
     public function delete()
     {
         PDOConnect::update('DELETE FROM `datasetcolumn` WHERE DataSetColumnID = :dataSetColumnId', ['dataSetColumnId' => $this->dataSetColumnId]);
+
+        // Delete column
+        if ($this->dataSetColumnTypeId == 1) {
+            PDOConnect::update('ALTER TABLE `dataset_' . $this->dataSetId . '` DROP `' . $this->heading . '`', []);
+        }
     }
 
+    /**
+     * Add
+     */
     private function add()
     {
         $this->dataSetColumnId = PDOConnect::insert('
@@ -102,8 +120,16 @@ class DataSetColumn
             'dataSetColumnTypeId' => $this->dataSetColumnTypeId,
             'formula' => $this->formula
         ]);
+
+        // Add Column to Underlying Table
+        if ($this->dataSetColumnTypeId == 1) {
+            PDOConnect::update('ALTER TABLE `dataset_' . $this->dataSetId . '` ADD `' . $this->heading . '` ' . $this->sqlDataType() . ' NULL', []);
+        }
     }
 
+    /**
+     * Edit
+     */
     private function edit()
     {
         PDOConnect::update('
@@ -126,5 +152,36 @@ class DataSetColumn
             'formula' => $this->formula,
             'dataSetColumnId' => $this->dataSetColumnId
         ]);
+
+        if ($this->dataSetColumnTypeId == 1) {
+            PDOConnect::update('ALTER TABLE `dataset_' . $this->dataSetId . '` CHANGE `' . $this->heading . '` ' . $this->sqlDataType() . ' NULL DEFAULT NULL', []);
+        }
+    }
+
+    /**
+     * Get the SQL Data Type for this Column Definition
+     * @return string
+     */
+    private function sqlDataType()
+    {
+        $dataType = null;
+
+        switch ($this->dataTypeId) {
+
+            case 'number':
+                $dataType = 'FLOAT';
+                break;
+
+            case 'date':
+                $dataType = 'TIMESTAMP';
+                break;
+
+            case 'string':
+            case 'image':
+            default:
+                $dataType = 'VARCHAR(1000)';
+        }
+
+        return $dataType;
     }
 }
