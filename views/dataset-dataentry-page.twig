@@ -11,7 +11,7 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li><a id="dataSetMoreRows" title="{% trans "Add more rows to the end of this DataSet" %}" href="#">{% trans "More Rows" %}</a></li>
+        <li><a class="XiboFormButton" title="{% trans "Add a row to the end of this DataSet" %}" href="{{ urlFor("dataSet.data.add.form", {"id": dataSet.dataSetId}) }}">{% trans "Add Row" %}</a></li>
     </ul>
 {% endblock %}
 
@@ -72,10 +72,5 @@
 
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
-
-
-        $("#dataSetMoreRows").click(function() {
-            toastr.success("More rows wanted");
-        });
     </script>
 {% endblock %}

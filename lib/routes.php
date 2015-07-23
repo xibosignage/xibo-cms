@@ -141,7 +141,7 @@ $app->delete('/dataset/:id/column/:colId', '\Xibo\Controller\DataSetColumn:delet
 // Data
 $app->get('/dataset/data/:id', '\Xibo\Controller\DataSetData:grid')->name('dataSet.data.search');
 $app->post('/dataset/data/:id', '\Xibo\Controller\DataSetData:add')->name('dataSet.data.add');
-$app->put('/dataset/data/:id/:rowId/:columnId', '\Xibo\Controller\DataSetData:edit')->name('dataSet.data.edit');
+$app->put('/dataset/data/:id/:rowId', '\Xibo\Controller\DataSetData:edit')->name('dataSet.data.edit');
 $app->delete('/dataset/data/:id/:rowId', '\Xibo\Controller\DataSetData:delete')->name('dataSet.data.delete');
 
 //

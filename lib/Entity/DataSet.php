@@ -14,6 +14,7 @@ use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\PermissionFactory;
+use Xibo\Helper\Config;
 use Xibo\Helper\Log;
 use Xibo\Storage\PDOConnect;
 
@@ -46,24 +47,108 @@ class DataSet
 
     public function getColumns()
     {
+        $this->load();
+
         return $this->columns;
     }
 
     /**
-     * @param array[Optional] $params
-     * @return array The Data
+     * Get DataSet Data
+     * @param int $start
+     * @param int $size
+     * @param string $filter
+     * @param string $ordering
+     * @param int $displayId
+     * @return array
      */
-    public function getData($params = [])
+    public function getData($start = 0, $size = 0, $filter = '', $ordering = '', $displayId = 0)
     {
+        // Params
+        $params = [];
+
+        // Sanitize the filter options provided
+        $blackList = array(';', 'INSERT', 'UPDATE', 'SELECT', 'DELETE', 'TRUNCATE', 'TABLE', 'FROM', 'WHERE');
+
+        // Get the Latitude and Longitude ( might be used in a formula )
+        if ($displayId == 0) {
+            $displayGeoLocation = "GEOMFROMTEXT('POINT(" . Config::GetSetting('DEFAULT_LAT') . " " . Config::GetSetting('DEFAULT_LONG') . ")')";
+        }
+        else {
+            $displayGeoLocation = '(SELECT GeoLocation FROM `display` WHERE DisplayID = :displayId)';
+            $params['displayId'] = $displayId;
+        }
+
         // Build a SQL statement, based on the columns for this dataset
         $this->load();
 
-        $sql = '';
+        $sql = 'SELECT id';
 
+        // Keep track of the columns we are allowed to order by
+        $allowedOrderCols = [];
+
+        // Select (columns)
         foreach ($this->getColumns() as $column) {
             /* @var DataSetColumn $column */
+            $allowedOrderCols[] = $column->heading;
 
+            // Formula column?
+            if ($column->dataSetColumnTypeId == 2) {
+                $formula = str_replace($blackList, '', htmlspecialchars_decode($column->formula, ENT_QUOTES));
+
+                $heading = str_replace('[DisplayGeoLocation]', $displayGeoLocation, $formula) . ' AS \'' . $column->heading . '\'';
+            }
+            else {
+                $heading = '`' . $column->heading . '`';
+            }
+
+            $sql .= ', ' . $heading;
         }
+
+        $sql .= ' FROM `dataset_' . $this->dataSetId . '`';
+
+        // Filtering
+        if ($filter != '') {
+            $sql .= ' WHERE ' . str_replace($blackList, '', $filter);
+        }
+
+        // Ordering
+        if ($ordering != '') {
+            $order = ' ORDER BY ';
+
+            $ordering = explode(',', $ordering);
+
+            foreach ($ordering as $orderPair) {
+                // Sanitize the clause
+                $sanitized = str_replace(' DESC', '', $orderPair);
+
+                // Check allowable
+                if (!in_array($sanitized, $allowedOrderCols)) {
+                    Log::Info('Disallowed column: ' . $sanitized);
+                    continue;
+                }
+
+                // Substitute
+                if (strripos($orderPair, ' DESC')) {
+                    $order .= sprintf(' `%s`  DESC,', $sanitized);
+                }
+                else {
+                    $order .= sprintf(' `%s`,', $sanitized);
+                }
+            }
+
+            $sql .= trim($order, ',');
+        }
+        else {
+            $sql .= ' ORDER BY id ';
+        }
+
+        // Limit
+        if ($start != 0 || $size != 0) {
+            // Substitute in
+            $sql .= sprintf(' LIMIT %d, %d ', $start, $size);
+        }
+
+        Log::sql($sql, $params);
 
         return PDOConnect::select($sql, $params);
     }
@@ -89,7 +174,7 @@ class DataSet
      */
     public function hasData()
     {
-        return PDOConnect::exists('SELECT id FROM dataset_' . $this->dataSetId . ' LIMIT 1', []);
+        return PDOConnect::exists('SELECT id FROM `dataset_' . $this->dataSetId . '` LIMIT 1', []);
     }
 
     /**
@@ -137,7 +222,7 @@ class DataSet
      */
     public function save($options = [])
     {
-        $options = array_merge(['validate' => true], $options);
+        $options = array_merge(['validate' => true, 'saveColumns' => true], $options);
 
         if ($options['validate'])
             $this->validate();
@@ -148,10 +233,12 @@ class DataSet
             $this->edit();
 
         // Columns
-        foreach ($this->columns as $column) {
-            /* @var \Xibo\Entity\DataSetColumn $column */
-            $column->dataSetId = $this->dataSetId;
-            $column->save();
+        if ($options['saveColumns']) {
+            foreach ($this->columns as $column) {
+                /* @var \Xibo\Entity\DataSetColumn $column */
+                $column->dataSetId = $this->dataSetId;
+                $column->save();
+            }
         }
 
         // Notify Displays?
@@ -240,13 +327,28 @@ class DataSet
 
     /**
      * Add a row
+     * @param array $row
      * @return int
      */
-    public function addRow()
+    public function addRow($row)
     {
+        Log::debug('Adding row %s', var_export($row, true));
+
+        // Update the last edit date on this dataSet
         $this->lastDataEdit = time();
 
-        return PDOConnect::insert('INSERT INTO `' . $this->dataSetId . '` (id) VALUES (NULL)', []);
+        // Build a query to insert
+        $keys = array_keys($row);
+        $keys[] = 'id';
+
+        $values = array_values($row);
+        $values[] = 'NULL';
+
+        $sql = 'INSERT INTO `dataset_' . $this->dataSetId . '` (' . implode(',', $keys) . ') VALUES (' . implode(',', array_fill(0, count($values), '?')) . ')';
+
+        Log::sql($sql, $values);
+
+        return PDOConnect::insert($sql, $values);
     }
 
     /**
