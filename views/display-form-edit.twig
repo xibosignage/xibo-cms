@@ -38,11 +38,11 @@ It is done, I mean this twig is probably fine, the 'name' in the settings at the
 
                         {% set title %}{% trans "Display" %}{% endset %}
                         {% set helpText %}{% trans "The Name of the Display - (1 - 50 characters)." %}{% endset %}
-                        {{ forms.text("display", title, display.display, helpText,"","required") }}
+                        {{ forms.text("display", title, display.display, helpText, "", "required") }}
                 
                         {% set title %}{% trans "Display's Hardware Key" %}{% endset %}
                         {% set helpText %}{% trans "A unique identifier for this display." %}{% endset %}
-                        {{ forms.text("hardwareKey", title, display.license, helpText,"","required","", false) }}
+                        {{ forms.text("hardwareKey", title, display.license, helpText, "", "required", "", false) }}
 
                         {% set title %}{% trans "Description" %}{% endset %}
                         {% set helpText %}{% trans "A description - (1 - 254 characters)." %}{% endset %}
