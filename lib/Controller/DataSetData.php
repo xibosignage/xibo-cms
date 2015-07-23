@@ -48,8 +48,12 @@ class DataSetData extends Base
         if (!$this->getUser()->checkEditable($dataSet))
             throw new AccessDeniedException();
 
+        $sorting = $this->gridRenderSort();
+
         $this->getState()->template = 'grid';
-        $this->getState()->setData($dataSet->getData());
+        $this->getState()->setData($dataSet->getData([
+            'order' => implode(',', $sorting)
+        ]));
     }
 
     /**
@@ -122,12 +126,32 @@ class DataSetData extends Base
     }
 
     /**
+     * Edit FOrm
+     * @param $dataSetId
+     * @param $rowId
+     */
+    public function editForm($dataSetId, $rowId)
+    {
+        $dataSet = DataSetFactory::getById($dataSetId);
+
+        if (!$this->getUser()->checkEditable($dataSet))
+            throw new AccessDeniedException();
+
+        $dataSet->load();
+
+        $this->getState()->template = 'dataset-data-form-edit';
+        $this->getState()->setData([
+            'dataSet' => $dataSet,
+            'row' => $dataSet->getData(['id' => $rowId])[0]
+        ]);
+    }
+
+    /**
      * Edit Row
      * @param int $dataSetId
      * @param int $rowId
-     * @param int $columnId
      */
-    public function edit($dataSetId, $rowId, $columnId)
+    public function edit($dataSetId, $rowId)
     {
         $dataSet = DataSetFactory::getById($dataSetId);
 

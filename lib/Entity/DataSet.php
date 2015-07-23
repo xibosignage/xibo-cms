@@ -16,6 +16,7 @@ use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Log;
+use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
 class DataSet
@@ -54,15 +55,17 @@ class DataSet
 
     /**
      * Get DataSet Data
-     * @param int $start
-     * @param int $size
-     * @param string $filter
-     * @param string $ordering
-     * @param int $displayId
+     * @param array $filterBy
      * @return array
      */
-    public function getData($start = 0, $size = 0, $filter = '', $ordering = '', $displayId = 0)
+    public function getData($filterBy = [])
     {
+        $start = Sanitize::getInt('start', 0, $filterBy);
+        $size = Sanitize::getInt('size', 0, $filterBy);
+        $filter = Sanitize::getString('filter', $filterBy);
+        $ordering = Sanitize::getString('order', $filterBy);
+        $displayId = Sanitize::getInt('displayId', 0, $filterBy);
+
         // Params
         $params = [];
 
@@ -104,11 +107,17 @@ class DataSet
             $sql .= ', ' . $heading;
         }
 
-        $sql .= ' FROM `dataset_' . $this->dataSetId . '`';
+        $sql .= ' FROM `dataset_' . $this->dataSetId . '` WHERE 1 = 1 ';
 
         // Filtering
         if ($filter != '') {
-            $sql .= ' WHERE ' . str_replace($blackList, '', $filter);
+            $sql .= ' AND ' . str_replace($blackList, '', $filter);
+        }
+
+        // Filter by ID
+        if (Sanitize::getInt('id', $filterBy) != null) {
+            $sql .= ' AND id = :id ';
+            $params['id'] = Sanitize::getInt('id', $filterBy);
         }
 
         // Ordering
@@ -119,7 +128,7 @@ class DataSet
 
             foreach ($ordering as $orderPair) {
                 // Sanitize the clause
-                $sanitized = str_replace(' DESC', '', $orderPair);
+                $sanitized = str_replace('`', '', str_replace(' DESC', '', $orderPair));
 
                 // Check allowable
                 if (!in_array($sanitized, $allowedOrderCols)) {

@@ -62,7 +62,7 @@
             searchDelay: 3000,
             "order": [[ 0, "asc"]],
             ajax: {
-                "url": "{{ urlFor("dataSet.data.search") }}",
+                "url": "{{ urlFor("dataSet.data.search", {id: dataSet.dataSetId}) }}",
                 "data": function(d) {
                     $.extend(d, $("#datasets").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                 }
@@ -72,5 +72,12 @@
 
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
+
+        $("#datasets tbody").on('click', 'tr', function() {
+            var data = table.row($(this)).data();
+            // Load the edit form.
+            var editUrl = "{{ urlFor("dataSet.data.edit.form", {"id": dataSet.dataSetId}) }}".replace(":rowId", data.id);
+            XiboFormRender(editUrl);
+        });
     </script>
 {% endblock %}
