@@ -20,11 +20,13 @@
  */
 namespace Xibo\Widget;
 
-use DataSet;
-use Exception;
 use InvalidArgumentException;
+use Respect\Validation\Validator as v;
+use Xibo\Entity\DataSetColumn;
+use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\MediaFactory;
+use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 
@@ -33,7 +35,7 @@ class DataSetView extends Module
     /**
      * Install Modules Files
      */
-    public function InstallFiles()
+    public function installFiles()
     {
         MediaFactory::createModuleFile('modules/vendor/jquery-1.11.1.min.js')->save();
         MediaFactory::createModuleFile('modules/vendor/jquery-cycle-2.1.6.min.js')->save();
@@ -42,265 +44,90 @@ class DataSetView extends Module
     }
 
     /**
-     * Return the Add Form as HTML
+     * DataSets
+     * @return array[DataSet]
      */
-    public function AddForm()
+    public function dataSets()
     {
-        $response = $this->getState();
-
-        // Configure form
-        $this->configureForm('AddMedia');
-
-        $formFields = array();
-        $formFields[] = Form::AddCombo(
-            'datasetid',
-            __('DataSet'),
-            NULL,
-            DataSetFactory::query(),
-            'datasetid',
-            'dataset',
-            __('Please select the DataSet to use as a source of data for this view.'),
-            'd');
-
-        $formFields[] = Form::AddNumber('duration', __('Duration'), NULL,
-            __('The duration in seconds this counter should be displayed'), 'd', 'required');
-
-        Theme::Set('form_fields', $formFields);
-
-        $response->SetFormRequestResponse(NULL, __('Add DataSet View'), '350px', '275px');
-        $this->configureFormButtons($response);
-
-        return $response;
+        return DataSetFactory::query();
     }
 
     /**
-     * Return the Edit Form as HTML
+     * validate
      */
-    public function EditForm()
+    public function validate()
     {
-        $response = $this->getState();
-        if (!$this->auth->edit)
-            throw new Exception(__('You do not have permission to edit this widget.'));
+        // Must have a duration
+        if ($this->getDuration() == 0)
+            throw new \InvalidArgumentException(__('Please enter a duration'));
 
-        // Configure the form
-        $this->configureForm('EditMedia');
+        // Validate Data Set Selected
+        if ($this->getOption('dataSetId') == 0)
+            throw new \InvalidArgumentException(__('Please select a DataSet'));
 
-        // We want 2 tabs
-        $tabs = array();
-        $tabs[] = Form::AddTab('general', __('General'));
-        $tabs[] = Form::AddTab('advanced', __('Advanced'));
-        Theme::Set('form_tabs', $tabs);
+        // Check we have permission to use this DataSetId
+        if (!$this->getUser()->checkViewable(DataSetFactory::getById($this->getOption('dataSetId'))))
+            throw new \InvalidArgumentException(__('You do not have permission to use that dataset'));
 
-        $formFields = array();
-        $formFields[] = Form::AddHidden('dataSetId', $this->GetOption('datasetid'));
+        if ($this->getWidgetId() != 0) {
 
-        $formFields[] = Form::AddNumber('duration', __('Duration'), $this->getDuration(),
-            __('The duration in seconds this item should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
+            if (!v::int()->notEmpty()->min(0)->validate($this->getOption('upperLimit')))
+                throw new InvalidArgumentException(__('Upper Limit must be a number greater than or equal to 0.'));
 
-        $formFields[] = Form::AddText('ordering', __('Order'), $this->GetOption('ordering'),
-            __('Please enter a SQL clause for how this dataset should be ordered'), 'o');
+            if (!v::int()->notEmpty()->min(0)->validate($this->getOption('lowerLimit')))
+                throw new InvalidArgumentException(__('Lower Limit must be a number greater than or equal to 0.'));
 
-        $formFields[] = Form::AddText('filter', __('Filter'), $this->GetOption('filter'),
-            __('Please enter a SQL clause to filter this DataSet.'), 'f');
+            if (!v::int()->notEmpty()->min(0)->validate($this->getOption('updateInterval')))
+                throw new InvalidArgumentException(__('Update Interval must be greater than or equal to 0'));
 
-        $formFields[] = Form::AddCheckbox('showHeadings', __('Show the table headings?'),
-            $this->GetOption('showHeadings'), __('Should the Table headings be shown?'),
-            'h');
-
-        // Handle the columns
-        $columns = $this->GetOption('columns');
-
-        if ($columns != '') {
-            // Query for more info about the selected and available columns
-            $notColumns = \Xibo\Storage\PDOConnect::select(sprintf("SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetID = %d AND DataSetColumnID NOT IN (%s)", $this->GetOption('datasetid'), $columns), array());
-
-            // These columns need to be in order
-            $columnIds = explode(',', $columns);
-            $headings = array();
-
-            foreach ($columnIds as $col) {
-                $heading = \Xibo\Storage\PDOConnect::select(sprintf('SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetColumnID = %d', $col), array());
-                $headings[] = $heading[0]['Heading'];
-            }
-
-            $columns = $headings;
-        } else {
-            $columns = array();
-            $notColumns = \Xibo\Storage\PDOConnect::select(sprintf("SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetID = %d ", $this->GetOption('datasetid')), array());
+            // Make sure we haven't entered a silly value in the filter
+            if (strstr($this->getOption('filter'), 'DESC'))
+                throw new InvalidArgumentException(__('Cannot user ordering criteria in the Filter Clause'));
         }
-
-        // Build the two lists
-        $columnsSelected = '<ul id="columnsIn" class="connectedSortable">';
-        $columnsNotSelected = '<ul id="columnsOut" class="connectedSortable">';
-
-        foreach ($columns as $col)
-            $columnsSelected .= '<li id="DataSetColumnId_' . $col['DataSetColumnID'] . '" class="li-sortable">' . $col['Heading'] . '</li>';
-
-        $columnsSelected .= '</ul>';
-
-        foreach ($notColumns as $notCol)
-            $columnsNotSelected .= '<li id="DataSetColumnId_' . $notCol['DataSetColumnID'] . '" class="li-sortable">' . $notCol['Heading'] . '</li>';
-
-        $columnsNotSelected .= '</ul>';
-
-        Theme::Set('columns_selected_list', $columnsSelected);
-        Theme::Set('columns_available_list', $columnsNotSelected);
-
-        // Add the columns in as a RAW message
-        $formFields[] = Form::AddRaw(Theme::RenderReturn('media_form_datasetview_edit'));
-
-        Theme::Set('form_fields_general', $formFields);
-
-        // Advanced Tab
-        $formFields = array();
-        $formFields[] = Form::AddNumber('lowerLimit', __('Lower Row Limit'), $this->GetOption('lowerLimit'),
-            __('Please enter the Lower Row Limit for this DataSet (enter 0 for no limit)'), 'l');
-
-        $formFields[] = Form::AddNumber('upperLimit', __('Upper Row Limit'), $this->GetOption('upperLimit'),
-            __('Please enter the Upper Row Limit for this DataSet (enter 0 for no limit)'), 'u');
-
-        $formFields[] = Form::AddNumber('updateInterval', __('Update Interval (mins)'), $this->GetOption('updateInterval', 5),
-            __('Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per day this could be set to 60.'),
-            'n', 'required');
-
-        $formFields[] = Form::AddNumber('rowsPerPage', __('Rows per page'), $this->GetOption('rowsPerPage'),
-            __('Please enter the number of rows per page. 0 for no pages.'), 'u');
-
-        $formFields[] = Form::AddMultiText('styleSheet', NULL, $this->getRawNode('styleSheet', $this->DefaultStyleSheet()),
-            __('Enter a style sheet for the table'), 's', 10);
-
-        Theme::Set('form_fields_advanced', $formFields);
-
-        $response->SetFormRequestResponse(NULL, 'Edit DataSet View for DataSet', '650px', '575px');
-
-        $this->configureFormButtons($response);
-        $response->callBack = 'datasetview_callback';
-
-
-        return $response;
     }
 
     /**
      * Add Media to the Database
-     * @return
      */
-    public function AddMedia()
+    public function add()
     {
-        $response = $this->getState();
-
-        // Other properties
-        $dataSetId = \Kit::GetParam('datasetid', _POST, _INT, 0);
-        $duration = \Kit::GetParam('duration', _POST, _INT, 0, false);
-
-        // validation
-        if ($dataSetId == 0)
-            throw new InvalidArgumentException(__('Please select a DataSet'));
-
-        // Check we have permission to use this DataSetId
-        if (!$this->getUser()->DataSetAuth($dataSetId))
-            throw new InvalidArgumentException(__('You do not have permission to use that dataset'));
-
-        if ($duration == 0)
-            throw new InvalidArgumentException(__('You must enter a duration.'));
-
-
-        // Any Options
-        $this->setDuration($duration);
-        $this->SetOption('datasetid', $dataSetId);
+        $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
+        $this->setOption('dataSetId', Sanitize::getInt('dataSetId'));
 
         // Save the widget
+        $this->validate();
         $this->saveWidget();
-
-        // Load an edit form
-        $response->loadForm = true;
-        $response->loadFormUri = $this->getTimelineLink();
-
-        // Link
-        // TODO: repair this link in some way. They can't be linked to layouts anymore before one widget might end up
-        // in more than one layout, due to the playlist it belongs to
-        //$dataSet = new DataSet();
-        //$dataSet->LinkLayout($dataSetId, $this->layoutid, $this->regionid, $this->mediaid);
-
-        return $response;
     }
 
     /**
      * Edit Media in the Database
      */
-    public function EditMedia()
+    public function edit()
     {
-        $response = $this->getState();
-
-        if (!$this->auth->edit)
-            throw new Exception(__('You do not have permission to edit this media.'));
-
-        $columns = \Kit::GetParam('DataSetColumnId', _GET, _ARRAY, array());
-        $upperLimit = \Xibo\Helper\Sanitize::getInt('upperLimit');
-        $lowerLimit = \Xibo\Helper\Sanitize::getInt('lowerLimit');
-        $filter = \Kit::GetParam('filter', _POST, _STRINGSPECIAL);
-        $ordering = \Xibo\Helper\Sanitize::getString('ordering');
-        $showHeadings = \Xibo\Helper\Sanitize::getCheckbox('showHeadings');
-        $styleSheet = \Kit::GetParam('styleSheet', _POST, _HTMLSTRING);
-        $updateInterval = \Xibo\Helper\Sanitize::getInt('updateInterval');
-        $rowsPerPage = \Xibo\Helper\Sanitize::getInt('rowsPerPage');
-
+        // Columns
+        $columns = Sanitize::getIntArray('dataSetColumnId');
         if (count($columns) == 0)
             $this->SetOption('columns', '');
         else
             $this->SetOption('columns', implode(',', $columns));
 
-        // Validate some content
-        if (!is_numeric($upperLimit) || !is_numeric($lowerLimit))
-            trigger_error(__('Limits must be numbers'), E_USER_ERROR);
+        // Other properties
+        $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
+        $this->setOption('updateInterval', Sanitize::getInt('updateInterval', 120));
+        $this->setOption('name', Sanitize::getString('name'));
+        $this->setOption('rowsPerPage', Sanitize::getInt('rowsPerPage'));
+        $this->setOption('showHeadings', Sanitize::getCheckbox('showHeadings'));
+        $this->setOption('upperLimit', Sanitize::getInt('upperLimit'));
+        $this->setOption('lowerLimit', Sanitize::getInt('lowerLimit'));
+        $this->setOption('filter', Sanitize::getString('filter'));
+        $this->setOption('ordering', Sanitize::getString('ordering'));
 
-        if ($upperLimit < 0 || $lowerLimit < 0)
-            trigger_error(__('Limits cannot be lower than 0'), E_USER_ERROR);
-
-        // Check the bounds of the limits
-        if ($upperLimit < $lowerLimit)
-            trigger_error(__('Upper limit must be higher than lower limit'), E_USER_ERROR);
-
-        if ($updateInterval < 0)
-            trigger_error(__('Update Interval must be greater than or equal to 0'), E_USER_ERROR);
-
-        // Make sure we havent entered a silly value in the filter
-        if (strstr($filter, 'DESC'))
-            trigger_error(__('Cannot user ordering criteria in the Filter Clause'), E_USER_ERROR);
-
-        // Store the values on the XLF
-        $this->setDuration(Kit::GetParam('duration', _POST, _INT, $this->getDuration(), false));
-        $this->SetOption('upperLimit', $upperLimit);
-        $this->SetOption('lowerLimit', $lowerLimit);
-        $this->SetOption('filter', $filter);
-        $this->SetOption('ordering', $ordering);
-        $this->SetOption('showHeadings', $showHeadings);
-        $this->SetOption('duration', $this->duration);
-        $this->SetOption('updateInterval', $updateInterval);
-        $this->SetOption('rowsPerPage', $rowsPerPage);
-        $this->setRawNode('styleSheet', $styleSheet);
+        // Style Sheet
+        $this->setRawNode('styleSheet', Sanitize::getParam('styleSheet', null));
 
         // Save the widget
+        $this->validate();
         $this->saveWidget();
-
-        // Load an edit form
-        $response->loadForm = true;
-        $response->loadFormUri = $this->getTimelineLink();
-
-        return $response;
-    }
-
-    /**
-     * Delete Media
-     * @throws Exception
-     */
-    public function DeleteMedia()
-    {
-        // TODO: repair this link in some way. They can't be linked to layouts anymore before one widget might end up
-        // in more than one layout, due to the playlist it belongs to
-        // $dataSet = new DataSet($this->db);
-        // $dataSet->UnlinkLayout($this->GetOption('datasetid'), $this->layoutid, $this->regionid, $this->mediaid);
-
-        parent::DeleteMedia();
     }
 
     /**
@@ -310,18 +137,17 @@ class DataSetView extends Module
      * @param integer $displayId If this comes from a real client, this will be the display id.
      * @return mixed
      */
-    public function GetResource($displayId = 0)
+    public function getResource($displayId = 0)
     {
-        $template = file_get_contents('modules/preview/HtmlTemplate.html');
-
-        $isPreview = (\Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
+        // Load in the template
+        $data = [];
+        $isPreview = (Sanitize::getCheckbox('preview') == 1);
 
         // Replace the View Port Width?
-        if ($isPreview)
-            $template = str_replace('[[ViewPortWidth]]', $this->region->width, $template);
+        $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
 
         // Get the embedded HTML out of RAW
-        $styleSheet = $this->GetRawNode('styleSheet', $this->DefaultStyleSheet());
+        $styleSheet = $this->GetRawNode('styleSheet', $this->defaultStyleSheet());
 
         $options = array(
             'type' => $this->getModuleType(),
@@ -340,14 +166,14 @@ class DataSetView extends Module
         $headContent .= '<style type="text/css">' . $styleSheet . '</style>';
 
         $data['head'] = $headContent;
-
-        $template = str_replace('<!--[[[BODYCONTENT]]]-->', $this->DataSetTableHtml($displayId, $isPreview), $template);
+        $data['body'] = $this->dataSetTableHtml($displayId, $isPreview);
 
         // Build some JS nodes
-        $javaScriptContent = '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-cycle-2.1.6.min.js"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-layout-scaler.js"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-dataset-render.js"></script>';
+        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-cycle-2.1.6.min.js') . '"></script>';
+
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-dataset-render.js') . '"></script>';
 
         $javaScriptContent .= '<script type="text/javascript">';
         $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
@@ -359,10 +185,10 @@ class DataSetView extends Module
         // Replace the Head Content with our generated javascript
         $data['javaScript'] = $javaScriptContent;
 
-        return $template;
+        return $this->renderTemplate($data);
     }
 
-    public function DefaultStyleSheet()
+    public function defaultStyleSheet()
     {
         $styleSheet = <<<END
 table.DataSetTable {
@@ -418,10 +244,14 @@ END;
      * @param bool $isPreview
      * @return string
      */
-    public function DataSetTableHtml($displayId = 0, $isPreview = true)
+    public function dataSetTableHtml($displayId = 0, $isPreview = true)
     {
+        // We might need to save the widget associated with this module
+        //  for example if we have assigned an image to it
+        $saveRequired = false;
+
         // Show a preview of the data set table output.
-        $dataSetId = $this->GetOption('datasetid');
+        $dataSetId = $this->GetOption('dataSetId');
         $upperLimit = $this->GetOption('upperLimit');
         $lowerLimit = $this->GetOption('lowerLimit');
         $filter = $this->GetOption('filter');
@@ -431,90 +261,144 @@ END;
         $rowsPerPage = $this->GetOption('rowsPerPage');
 
         if ($columnIds == '')
-            return 'No columns';
+            return __('No columns');
+
+        // Array of columnIds we want
+        $columnIds = explode(',', $columnIds);
 
         // Set an expiry time for the media
-        $media = new Media();
         $expires = time() + ($this->GetOption('updateInterval', 3600) * 60);
 
-        // Create a data set view object, to get the results.
-        $dataSet = new DataSet();
-        if (!$dataSetResults = $dataSet->DataSetResults($dataSetId, $columnIds, $filter, $ordering, $lowerLimit, $upperLimit, $displayId)) {
+        // Create a data set object, to get the results.
+        try {
+            $dataSet = DataSetFactory::getById($dataSetId);
+
+            // Get an array representing the id->heading mappings
+            $mappings = [];
+            foreach ($columnIds as $dataSetColumnId) {
+                // Get the column definition this represents
+                $column = $dataSet->getColumn($dataSetColumnId);
+                /* @var DataSetColumn $column */
+
+                $mappings[] = [
+                    'dataSetColumnId' => $dataSetColumnId,
+                    'heading' => $column->heading,
+                    'dataTypeId' => $column->dataTypeId
+                ];
+            }
+
+            Log::debug('Resolved column mappings: %s', json_encode($columnIds));
+
+            $filter = [
+                'filter' => $filter,
+                'order' => $ordering,
+                'displayId' => $displayId
+            ];
+
+            // limits?
+            if ($lowerLimit != 0 || $upperLimit != 0) {
+                // Start should be the lower limit
+                // Size should be the distance between upper and lower
+                $filter['start'] = $lowerLimit;
+                $filter['size'] = $upperLimit - $lowerLimit;
+            }
+
+            // Get the data (complete table, filtered)
+            $dataSetResults = $dataSet->getData($filter);
+
+            if (count($dataSetResults) <= 0)
+                throw new NotFoundException(__('Empty Result Set with filter criteria.'));
+
+            $rowCount = 1;
+            $rowCountThisPage = 1;
+            $totalRows = count($dataSetResults);
+
+            if ($rowsPerPage > 0)
+                $totalPages = $totalRows / $rowsPerPage;
+            else
+                $totalPages = 1;
+
+            $table = '<div id="DataSetTableContainer" totalRows="' . $totalRows . '" totalPages="' . $totalPages . '">';
+
+            foreach ($dataSetResults as $row) {
+                if (($rowsPerPage > 0 && $rowCountThisPage >= $rowsPerPage) || $rowCount == 1) {
+
+                    // Reset the row count on this page
+                    $rowCountThisPage = 0;
+
+                    if ($rowCount > 1) {
+                        $table .= '</tbody>';
+                        $table .= '</table>';
+                    }
+
+                    // Output the table header
+                    $table .= '<table class="DataSetTable">';
+
+                    if ($showHeadings == 1) {
+                        $table .= '<thead>';
+                        $table .= ' <tr class="HeaderRow">';
+
+                        foreach (array_keys($row) as $col)
+                            $table .= '<th class="DataSetColumnHeaderCell">' . $col . '</th>';
+
+                        $table .= ' </tr>';
+                        $table .= '</thead>';
+                    }
+
+                    $table .= '<tbody>';
+                }
+
+                $table .= '<tr class="DataSetRow DataSetRow' . (($rowCount % 2) ? 'Odd' : 'Even') . '" id="row_' . $rowCount . '">';
+
+                // Output each cell for these results
+                $i = 0;
+                foreach ($mappings as $mapping) {
+                    $i++;
+
+                    // Pull out the cell for this row / column
+                    $replace = $row[$mapping['heading']];
+
+                    // What if this column is an image column type?
+                    if ($mapping['dataTypeId'] == 4) {
+                        // Grab the profile image
+                        $file = MediaFactory::createModuleFile(str_replace(' ', '%20', htmlspecialchars_decode($replace)), 'datasetview_' . md5($dataSetId . $mapping['dataSetColumnId'] . $replace));
+                        $file->isRemote = true;
+                        $file->expires = $expires;
+                        $file->save();
+
+                        // Tag this layout with this file
+                        $this->assignMedia($file->mediaId);
+
+                        // We will need to save
+                        $saveRequired = true;
+
+                        $url = $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']);
+                        $replace = ($isPreview) ? '<img src="' . $url . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" />' : '<img src="' . $file->storedAs . '" />';
+                    }
+
+                    $table .= '<td class="DataSetColumn" id="column_' . ($i + 1) . '"><span class="DataSetCellSpan" id="span_' . $rowCount . '_' . ($i + 1) . '">' . $replace . '</span></td>';
+                }
+
+                $table .= '</tr>';
+
+                $rowCount++;
+                $rowCountThisPage++;
+            }
+
+            $table .= '</tbody>';
+            $table .= '</table>';
+            $table .= '</div>';
+
+            // Should we save
+            if ($saveRequired)
+                $this->widget->save(['saveWidgetOptions' => false]);
+
+            return $table;
+        }
+        catch (NotFoundException $e) {
+            Log::error('Request failed for dataSet id=%d. Widget=%d. Due to %s', $dataSetId, $this->getWidgetId(), $e->getMessage());
             return '';
         }
-
-        $rowCount = 1;
-        $rowCountThisPage = 1;
-        $totalRows = count($dataSetResults['Rows']);
-
-        if ($rowsPerPage > 0)
-            $totalPages = $totalRows / $rowsPerPage;
-        else
-            $totalPages = 1;
-
-        $table = '<div id="DataSetTableContainer" totalRows="' . $totalRows . '" totalPages="' . $totalPages . '">';
-
-        foreach ($dataSetResults['Rows'] as $row) {
-            if (($rowsPerPage > 0 && $rowCountThisPage >= $rowsPerPage) || $rowCount == 1) {
-
-                // Reset the row count on this page
-                $rowCountThisPage = 0;
-
-                if ($rowCount > 1) {
-                    $table .= '</tbody>';
-                    $table .= '</table>';
-                }
-
-                // Output the table header
-                $table .= '<table class="DataSetTable">';
-
-                if ($showHeadings == 1) {
-                    $table .= '<thead>';
-                    $table .= ' <tr class="HeaderRow">';
-
-                    foreach ($dataSetResults['Columns'] as $col)
-                        $table .= '<th class="DataSetColumnHeaderCell">' . $col['Text'] . '</th>';
-
-                    $table .= ' </tr>';
-                    $table .= '</thead>';
-                }
-
-                $table .= '<tbody>';
-            }
-
-            $table .= '<tr class="DataSetRow DataSetRow' . (($rowCount % 2) ? 'Odd' : 'Even') . '" id="row_' . $rowCount . '">';
-
-            // Output each cell for these results
-            for ($i = 0; $i < count($dataSetResults['Columns']); $i++) {
-
-                // Pull out the cell for this row / column
-                $replace = $row[$i];
-
-                // What if this column is an image column type?
-                if ($dataSetResults['Columns'][$i]['DataTypeID'] == 4) {
-                    // Download the image, alter the replace to wrap in an image tag
-                    $file = $media->addModuleFileFromUrl(str_replace(' ', '%20', htmlspecialchars_decode($replace)), 'datasetview_' . md5($dataSetId . $dataSetResults['Columns'][$i]['DataSetColumnID'] . $replace), $expires);
-
-                    // Tag this layout with this file
-                    $this->assignMedia($file['mediaId']);
-
-                    $replace = ($isPreview) ? '<img src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $file['mediaId'] . '" />' : '<img src="' . $file['storedAs'] . '" />';
-                }
-
-                $table .= '<td class="DataSetColumn" id="column_' . ($i + 1) . '"><span class="DataSetCellSpan" id="span_' . $rowCount . '_' . ($i + 1) . '">' . $replace . '</span></td>';
-            }
-
-            $table .= '</tr>';
-
-            $rowCount++;
-            $rowCountThisPage++;
-        }
-
-        $table .= '</tbody>';
-        $table .= '</table>';
-        $table .= '</div>';
-
-        return $table;
     }
 
     /**

@@ -89,7 +89,7 @@ class DataSetData extends Base
         $row = [];
 
         // Expect input for each value-column
-        foreach ($dataSet->getColumns() as $column) {
+        foreach ($dataSet->getColumn() as $column) {
             /* @var DataSetColumn $column */
             if ($column->dataSetColumnTypeId == 1) {
 
@@ -162,7 +162,7 @@ class DataSetData extends Base
         $row = [];
 
         // Expect input for each value-column
-        foreach ($dataSet->getColumns() as $column) {
+        foreach ($dataSet->getColumn() as $column) {
             /* @var DataSetColumn $column */
 
             $existingValue = Sanitize::getParam($column->heading, null, $existingRow);

@@ -99,7 +99,7 @@ class DataSet extends Base
                 );
 
                 // Import columns
-                foreach ($dataSet->getColumns() as $column) {
+                foreach ($dataSet->getColumn() as $column) {
                     /* @var DataSetColumn $column */
                     if ($column->dataSetColumnTypeId == 1)
                         $dataSet->importColumns[] = $column;

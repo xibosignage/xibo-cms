@@ -24,7 +24,7 @@
     <div class="row">
         <div class="col-md-12">
             <form id="dataSetDataAdd" class="XiboForm form-horizontal" method="post" action="{{ urlFor("dataSet.data.add", {id: dataSet.dataSetId}) }}">
-                {% for col in dataSet.getColumns() %}
+                {% for col in dataSet.getColumn() %}
                     {% if col.dataSetColumnTypeId == 1 %}
                         {% set fieldId = "dataSetColumnId_#{col.dataSetColumnId}" %}
 

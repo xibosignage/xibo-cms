@@ -46,11 +46,29 @@ class DataSet
         return $this->userId;
     }
 
-    public function getColumns()
+    /**
+     * Get Column
+     * @param int[Optional] $dataSetColumnId
+     * @return array[DataSetColumn]|DataSetColumn
+     * @throws NotFoundException when the heading is provided and the column cannot be found
+     */
+    public function getColumn($dataSetColumnId = 0)
     {
         $this->load();
 
-        return $this->columns;
+        if ($dataSetColumnId != 0) {
+
+            foreach ($this->columns as $column) {
+                /* @var DataSetColumn $column */
+                if ($column->dataSetColumnId == $dataSetColumnId)
+                    return $column;
+            }
+
+            throw new NotFoundException(sprintf(__('Column %s not found'), $dataSetColumnId));
+
+        } else {
+            return $this->columns;
+        }
     }
 
     /**
@@ -90,7 +108,7 @@ class DataSet
         $allowedOrderCols = ['id'];
 
         // Select (columns)
-        foreach ($this->getColumns() as $column) {
+        foreach ($this->getColumn() as $column) {
             /* @var DataSetColumn $column */
             $allowedOrderCols[] = $column->heading;
 

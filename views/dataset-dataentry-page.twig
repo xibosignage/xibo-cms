@@ -35,7 +35,7 @@
                         <thead>
                         <tr>
                             <th>{% trans "ID" %}</th>
-                            {% for col in dataSet.getColumns() %}
+                            {% for col in dataSet.getColumn() %}
                                 <th>{{ col.heading }}</th>
                             {% endfor %}
                             <th></th>
@@ -55,7 +55,7 @@
     <script type="text/javascript">
         var cols = [];
         cols.push({ "name": "id", "data": "id" });
-        {% for col in dataSet.getColumns() %}
+        {% for col in dataSet.getColumn() %}
         cols.push({ "data": "{{ col.heading }}" });
         {% endfor %}
 

@@ -35,7 +35,7 @@ class DataSetUploadHandler extends BlueImpUploadHandler
             // Enumerate over the columns in the DataSet and set a row value for each
             $spreadSheetMapping = [];
 
-            foreach ($dataSet->getColumns() as $column) {
+            foreach ($dataSet->getColumn() as $column) {
                 /* @var \Xibo\Entity\DataSetColumn $column */
                 if ($column->dataSetColumnTypeId == 1) {
                     // Has this column been provided in the mappings?
