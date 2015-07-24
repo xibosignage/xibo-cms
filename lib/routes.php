@@ -133,11 +133,18 @@ $app->get('/dataset', '\Xibo\Controller\DataSet:grid')->name('dataSet.search');
 $app->post('/dataset', '\Xibo\Controller\DataSet:add')->name('dataSet.add');
 $app->put('/dataset/:id', '\Xibo\Controller\DataSet:edit')->name('dataSet.edit');
 $app->delete('/dataset/:id', '\Xibo\Controller\DataSet:delete')->name('dataSet.delete');
+$app->map('/dataset/import/:id', '\Xibo\Controller\DataSet:import')->via('HEAD');
+$app->post('/dataset/import/:id', '\Xibo\Controller\DataSet:import')->name('dataSet.import');
 // Columns
 $app->get('/dataset/:id/column', '\Xibo\Controller\DataSetColumn:grid')->name('dataSet.column.search');
 $app->post('/dataset/:id/column', '\Xibo\Controller\DataSetColumn:add')->name('dataSet.column.add');
 $app->put('/dataset/:id/column/:colId', '\Xibo\Controller\DataSetColumn:edit')->name('dataSet.column.edit');
 $app->delete('/dataset/:id/column/:colId', '\Xibo\Controller\DataSetColumn:delete')->name('dataSet.column.delete');
+// Data
+$app->get('/dataset/data/:id', '\Xibo\Controller\DataSetData:grid')->name('dataSet.data.search');
+$app->post('/dataset/data/:id', '\Xibo\Controller\DataSetData:add')->name('dataSet.data.add');
+$app->put('/dataset/data/:id/:rowId', '\Xibo\Controller\DataSetData:edit')->name('dataSet.data.edit');
+$app->delete('/dataset/data/:id/:rowId', '\Xibo\Controller\DataSetData:delete')->name('dataSet.data.delete');
 
 //
 // Statistics

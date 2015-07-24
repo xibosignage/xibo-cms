@@ -110,7 +110,12 @@ class Sanitize
     public static function getCheckbox($param, $default = null, $source = null)
     {
         $checkbox = Sanitize::getParam($param, $default, $source);
-        return ($checkbox === 'on' || $checkbox === 1 || $checkbox === '1' || $checkbox === 'true' || $checkbox === true) ? 1 : 0;
+        return Sanitize::checkbox($checkbox);
+    }
+
+    public static function checkbox($param)
+    {
+        return ($param === 'on' || $param === 1 || $param === '1' || $param === 'true' || $param === true) ? 1 : 0;
     }
 
     public static function bool($param)

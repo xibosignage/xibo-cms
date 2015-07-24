@@ -17,8 +17,10 @@
 
 
 {% block pageContent %}
+    {% set dataSetName = dataSet.dataSet %}
+    {% set widgetTitle %}{% trans %}Columns for {{ dataSetName }}{% endtrans %}{% endset %}
     <div class="widget">
-        <div class="widget-title">{% trans "Columns for %s" %}</div>
+        <div class="widget-title">{{ widgetTitle }}</div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}">
                 <div class="XiboFilter">
@@ -56,7 +58,7 @@
             serverSide: true,
             filter: false,
             searchDelay: 3000,
-            "order": [[ 1, "asc"]],
+            "order": [[ 0, "asc"]],
             ajax: {
                 "url": "{{ urlFor("dataSet.column.search", {id: dataSet.dataSetId}) }}",
                 "data": function(d) {
@@ -66,7 +68,7 @@
             "columns": [
                 { "data": "heading" },
                 { "data": "dataType" },
-                { "data": "columnType" },
+                { "data": "dataSetColumnType" },
                 { "data": "listContent" },
                 { "data": "columnOrder" },
                 {

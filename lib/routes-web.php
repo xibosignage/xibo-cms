@@ -204,16 +204,20 @@ $app->get('/resolution/form/delete/:id', '\Xibo\Controller\Resolution:deleteForm
 // dataset
 //
 $app->get('/dataset/view', '\Xibo\Controller\DataSet:displayPage')->name('dataset.view');
-$app->get('/dataset/data/view/:id', '\Xibo\Controller\DataSet:displayDataEntry')->name('dataset.view.data');
+$app->get('/dataset/data/view/:id', '\Xibo\Controller\DataSetData:displayPage')->name('dataSet.view.data');
 $app->get('/dataset/form/add', '\Xibo\Controller\DataSet:addForm')->name('dataSet.add.form');
 $app->get('/dataset/form/edit/:id', '\Xibo\Controller\DataSet:editForm')->name('dataSet.edit.form');
 $app->get('/dataset/form/delete/:id', '\Xibo\Controller\DataSet:deleteForm')->name('dataSet.delete.form');
 $app->get('/dataset/form/import/:id', '\Xibo\Controller\DataSet:importForm')->name('dataSet.import.form');
 // columns
-$app->get('/dataset/:id/column/view', '\Xibo\Controller\DataSetColumn:view')->name('dataSet.column.view');
+$app->get('/dataset/:id/column/view', '\Xibo\Controller\DataSetColumn:displayPage')->name('dataSet.column.view');
 $app->get('/dataset/:id/column/form/add', '\Xibo\Controller\DataSetColumn:addForm')->name('dataSet.column.add.form');
 $app->get('/dataset/:id/column/form/edit/:colId', '\Xibo\Controller\DataSetColumn:editForm')->name('dataSet.column.edit.form');
 $app->get('/dataset/:id/column/form/delete/:colId', '\Xibo\Controller\DataSetColumn:deleteForm')->name('dataSet.column.delete.form');
+// data
+$app->get('/dataset/data/form/add/:id', '\Xibo\Controller\DataSetData:addForm')->name('dataSet.data.add.form');
+$app->get('/dataset/data/form/edit/:id/:rowId', '\Xibo\Controller\DataSetData:editForm')->name('dataSet.data.edit.form');
+$app->get('/dataset/data/form/delete/:id/:rowId', '\Xibo\Controller\DataSetData:deleteForm')->name('dataSet.data.delete.form');
 
 //
 // displaygroup

@@ -121,9 +121,9 @@ class DataSetColumn extends Base
 
         // Return
         $this->getState()->hydrate([
-            'message' => sprintf(__('Added %s'), $dataSet->dataSet),
-            'id' => $dataSet->dataSetId,
-            'data' => [$dataSet]
+            'message' => sprintf(__('Added %s'), $column->heading),
+            'id' => $column->dataSetColumnId,
+            'data' => [$column]
         ]);
     }
 
@@ -175,9 +175,9 @@ class DataSetColumn extends Base
 
         // Return
         $this->getState()->hydrate([
-            'message' => sprintf(__('Edited %s'), $dataSet->dataSet),
-            'id' => $dataSet->dataSetId,
-            'data' => [$dataSet]
+            'message' => sprintf(__('Edited %s'), $column->heading),
+            'id' => $column->dataSetColumnId,
+            'data' => [$column]
         ]);
     }
 

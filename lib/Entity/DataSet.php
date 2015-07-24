@@ -14,7 +14,9 @@ use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\PermissionFactory;
+use Xibo\Helper\Config;
 use Xibo\Helper\Log;
+use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
 class DataSet
@@ -45,6 +47,140 @@ class DataSet
     }
 
     /**
+     * Get Column
+     * @param int[Optional] $dataSetColumnId
+     * @return array[DataSetColumn]|DataSetColumn
+     * @throws NotFoundException when the heading is provided and the column cannot be found
+     */
+    public function getColumn($dataSetColumnId = 0)
+    {
+        $this->load();
+
+        if ($dataSetColumnId != 0) {
+
+            foreach ($this->columns as $column) {
+                /* @var DataSetColumn $column */
+                if ($column->dataSetColumnId == $dataSetColumnId)
+                    return $column;
+            }
+
+            throw new NotFoundException(sprintf(__('Column %s not found'), $dataSetColumnId));
+
+        } else {
+            return $this->columns;
+        }
+    }
+
+    /**
+     * Get DataSet Data
+     * @param array $filterBy
+     * @return array
+     */
+    public function getData($filterBy = [])
+    {
+        $start = Sanitize::getInt('start', 0, $filterBy);
+        $size = Sanitize::getInt('size', 0, $filterBy);
+        $filter = Sanitize::getString('filter', $filterBy);
+        $ordering = Sanitize::getString('order', $filterBy);
+        $displayId = Sanitize::getInt('displayId', 0, $filterBy);
+
+        // Params
+        $params = [];
+
+        // Sanitize the filter options provided
+        $blackList = array(';', 'INSERT', 'UPDATE', 'SELECT', 'DELETE', 'TRUNCATE', 'TABLE', 'FROM', 'WHERE');
+
+        // Get the Latitude and Longitude ( might be used in a formula )
+        if ($displayId == 0) {
+            $displayGeoLocation = "GEOMFROMTEXT('POINT(" . Config::GetSetting('DEFAULT_LAT') . " " . Config::GetSetting('DEFAULT_LONG') . ")')";
+        }
+        else {
+            $displayGeoLocation = '(SELECT GeoLocation FROM `display` WHERE DisplayID = :displayId)';
+            $params['displayId'] = $displayId;
+        }
+
+        // Build a SQL statement, based on the columns for this dataset
+        $this->load();
+
+        $sql = 'SELECT id';
+
+        // Keep track of the columns we are allowed to order by
+        $allowedOrderCols = ['id'];
+
+        // Select (columns)
+        foreach ($this->getColumn() as $column) {
+            /* @var DataSetColumn $column */
+            $allowedOrderCols[] = $column->heading;
+
+            // Formula column?
+            if ($column->dataSetColumnTypeId == 2) {
+                $formula = str_replace($blackList, '', htmlspecialchars_decode($column->formula, ENT_QUOTES));
+
+                $heading = str_replace('[DisplayGeoLocation]', $displayGeoLocation, $formula) . ' AS \'' . $column->heading . '\'';
+            }
+            else {
+                $heading = '`' . $column->heading . '`';
+            }
+
+            $sql .= ', ' . $heading;
+        }
+
+        $sql .= ' FROM `dataset_' . $this->dataSetId . '` WHERE 1 = 1 ';
+
+        // Filtering
+        if ($filter != '') {
+            $sql .= ' AND ' . str_replace($blackList, '', $filter);
+        }
+
+        // Filter by ID
+        if (Sanitize::getInt('id', $filterBy) != null) {
+            $sql .= ' AND id = :id ';
+            $params['id'] = Sanitize::getInt('id', $filterBy);
+        }
+
+        // Ordering
+        if ($ordering != '') {
+            $order = ' ORDER BY ';
+
+            $ordering = explode(',', $ordering);
+
+            foreach ($ordering as $orderPair) {
+                // Sanitize the clause
+                $sanitized = str_replace('`', '', str_replace(' DESC', '', $orderPair));
+
+                // Check allowable
+                if (!in_array($sanitized, $allowedOrderCols)) {
+                    Log::Info('Disallowed column: ' . $sanitized);
+                    continue;
+                }
+
+                // Substitute
+                if (strripos($orderPair, ' DESC')) {
+                    $order .= sprintf(' `%s`  DESC,', $sanitized);
+                }
+                else {
+                    $order .= sprintf(' `%s`,', $sanitized);
+                }
+            }
+
+            $sql .= trim($order, ',');
+        }
+        else {
+            $sql .= ' ORDER BY id ';
+        }
+
+        // Limit
+        if ($start != 0 || $size != 0) {
+            // Substitute in
+            $sql .= sprintf(' LIMIT %d, %d ', $start, $size);
+        }
+
+        Log::sql($sql, $params);
+
+        return PDOConnect::select($sql, $params);
+    }
+
+    /**
      * Assign a column
      * @param DataSetColumn $column
      */
@@ -65,7 +201,7 @@ class DataSet
      */
     public function hasData()
     {
-        return PDOConnect::exists('SELECT * FROM dataset_' . $this->dataSetId . ' LIMIT 1', []);
+        return PDOConnect::exists('SELECT id FROM `dataset_' . $this->dataSetId . '` LIMIT 1', []);
     }
 
     /**
@@ -80,9 +216,10 @@ class DataSet
             throw new \InvalidArgumentException(__('Description can not be longer than 254 characters'));
 
         try {
-            DataSetFactory::getByName($this->dataSet);
+            $existing = DataSetFactory::getByName($this->dataSet);
 
-            throw new \InvalidArgumentException(sprintf(__('There is already dataSet called %s. Please choose another name.'), $this->dataSet));
+            if ($this->dataSetId == 0 || $this->dataSetId != $existing->dataSetId)
+                throw new \InvalidArgumentException(sprintf(__('There is already dataSet called %s. Please choose another name.'), $this->dataSet));
         }
         catch (NotFoundException $e) {
             // This is good
@@ -112,7 +249,7 @@ class DataSet
      */
     public function save($options = [])
     {
-        $options = array_merge(['validate' => true], $options);
+        $options = array_merge(['validate' => true, 'saveColumns' => true], $options);
 
         if ($options['validate'])
             $this->validate();
@@ -123,10 +260,12 @@ class DataSet
             $this->edit();
 
         // Columns
-        foreach ($this->columns as $column) {
-            /* @var \Xibo\Entity\DataSetColumn $column */
-            $column->dataSetId = $this->dataSetId;
-            $column->save();
+        if ($options['saveColumns']) {
+            foreach ($this->columns as $column) {
+                /* @var \Xibo\Entity\DataSetColumn $column */
+                $column->dataSetId = $this->dataSetId;
+                $column->save();
+            }
         }
 
         // Notify Displays?
@@ -157,31 +296,52 @@ class DataSet
         // Delete the data set
         PDOConnect::update('DELETE FROM `dataset` WHERE dataSetId = :dataSetId', ['dataSetId' => $this->dataSetId]);
 
-        // The last thing we do is truncate the table
-        PDOConnect::update('TRUNCATE TABLE dataset_' . $this->dataSetId, []);
+        // The last thing we do is drop the dataSet table
+        PDOConnect::update('DROP TABLE dataset_' . $this->dataSetId, []);
     }
 
+    public function deleteData()
+    {
+        // The last thing we do is drop the dataSet table
+        PDOConnect::update('TRUNCATE TABLE `dataset_' . $this->dataSetId . '`', []);
+        PDOConnect::update('ALTER TABLE `dataset_' . $this->dataSetId . '` AUTO_INCREMENT = 1', []);
+    }
+
+    /**
+     * Add
+     */
     private function add()
     {
         $this->dataSetId = PDOConnect::insert('
           INSERT INTO `dataset` (DataSet, Description, UserID)
             VALUES (:dataSet, :description, :userId)
         ', [
-            'dataset' => $this->dataSet,
+            'dataSet' => $this->dataSet,
             'description' => $this->description,
             'userId' => $this->userId
         ]);
+
+        // Create the data table for this dataset
+        PDOConnect::update('
+          CREATE TABLE `dataset_' . $this->dataSetId . '` (
+            `id` int(11) NOT NULL AUTO_INCREMENT,
+            PRIMARY KEY (`id`)
+          ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1
+        ', []);
     }
 
+    /**
+     * Edit
+     */
     private function edit()
     {
         PDOConnect::update('
-          UPDATE dataset SET DataSet = :dataSet, Description = :description WHERE DataSetID = :dataSetId
+          UPDATE dataset SET DataSet = :dataSet, Description = :description, lastDataEdit = :lastDataEdit WHERE DataSetID = :dataSetId
         ', [
             'dataSetId' => $this->dataSetId,
             'dataSet' => $this->dataSet,
             'description' => $this->description,
-            'userId' => $this->userId
+            'lastDataEdit' => $this->lastDataEdit
         ]);
     }
 
@@ -197,5 +357,78 @@ class DataSet
             $display->setMediaIncomplete();
             $display->save(false);
         }
+    }
+
+    /**
+     * Add a row
+     * @param array $row
+     * @return int
+     */
+    public function addRow($row)
+    {
+        Log::debug('Adding row %s', var_export($row, true));
+
+        // Update the last edit date on this dataSet
+        $this->lastDataEdit = time();
+
+        // Build a query to insert
+        $keys = array_keys($row);
+        $keys[] = 'id';
+
+        $values = array_values($row);
+        $values[] = 'NULL';
+
+        $sql = 'INSERT INTO `dataset_' . $this->dataSetId . '` (' . implode(',', $keys) . ') VALUES (' . implode(',', array_fill(0, count($values), '?')) . ')';
+
+        Log::sql($sql, $values);
+
+        return PDOConnect::insert($sql, $values);
+    }
+
+    /**
+     * Edit a row
+     * @param int $rowId
+     * @param array $row
+     */
+    public function editRow($rowId, $row)
+    {
+        Log::debug('Editing row %s', var_export($row, true));
+
+        // Update the last edit date on this dataSet
+        $this->lastDataEdit = time();
+
+        // Params
+        $params = ['id' => $rowId];
+
+        // Generate a SQL statement
+        $sql = 'UPDATE `dataset_' . $this->dataSetId . '` SET';
+
+        $i = 0;
+        foreach ($row as $key => $value) {
+            $i++;
+            $sql .= ' `' . $key . '` = :value' . $i . ',';
+            $params['value' . $i] = $value;
+        }
+
+        $sql = rtrim($sql, ',');
+
+        $sql .= ' WHERE `id` = :id ';
+
+        Log::sql($sql, $params);
+
+        PDOConnect::update($sql, $params);
+    }
+
+    /**
+     * Delete Row
+     * @param $rowId
+     */
+    public function deleteRow($rowId)
+    {
+        $this->lastDataEdit = time();
+
+        PDOConnect::update('DELETE FROM `' . $this->dataSetId . '` WHERE id = :id', [
+            'id' => $rowId
+        ]);
     }
 }

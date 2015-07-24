@@ -1,0 +1,130 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+// We want 2 tabs
+        $tabs = array();
+        $tabs[] = Form::AddTab('general', __('General'));
+        $tabs[] = Form::AddTab('advanced', __('Advanced'));
+        Theme::Set('form_tabs', $tabs);
+
+        $formFields = array();
+        $formFields[] = Form::AddHidden('dataSetId', $this->GetOption('datasetid'));
+
+        $formFields[] = Form::AddNumber('duration', __('Duration'), $this->getDuration(),
+            __('The duration in seconds this item should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
+
+        $formFields[] = Form::AddText('ordering', __('Order'), $this->GetOption('ordering'),
+            __('Please enter a SQL clause for how this dataset should be ordered'), 'o');
+
+        $formFields[] = Form::AddText('filter', __('Filter'), $this->GetOption('filter'),
+            __('Please enter a SQL clause to filter this DataSet.'), 'f');
+
+        $formFields[] = Form::AddCheckbox('showHeadings', __('Show the table headings?'),
+            $this->GetOption('showHeadings'), __('Should the Table headings be shown?'),
+            'h');
+
+        // Handle the columns
+        $columns = $this->GetOption('columns');
+
+        if ($columns != '') {
+            // Query for more info about the selected and available columns
+            $notColumns = \Xibo\Storage\PDOConnect::select(sprintf("SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetID = %d AND DataSetColumnID NOT IN (%s)", $this->GetOption('datasetid'), $columns), array());
+
+            // These columns need to be in order
+            $columnIds = explode(',', $columns);
+            $headings = array();
+
+            foreach ($columnIds as $col) {
+                $heading = \Xibo\Storage\PDOConnect::select(sprintf('SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetColumnID = %d', $col), array());
+                $headings[] = $heading[0]['Heading'];
+            }
+
+            $columns = $headings;
+        } else {
+            $columns = array();
+            $notColumns = \Xibo\Storage\PDOConnect::select(sprintf("SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetID = %d ", $this->GetOption('datasetid')), array());
+        }
+
+        // Build the two lists
+        $columnsSelected = '<ul id="columnsIn" class="connectedSortable">';
+        $columnsNotSelected = '<ul id="columnsOut" class="connectedSortable">';
+
+        foreach ($columns as $col)
+            $columnsSelected .= '<li id="DataSetColumnId_' . $col['DataSetColumnID'] . '" class="li-sortable">' . $col['Heading'] . '</li>';
+
+        $columnsSelected .= '</ul>';
+
+        foreach ($notColumns as $notCol)
+            $columnsNotSelected .= '<li id="DataSetColumnId_' . $notCol['DataSetColumnID'] . '" class="li-sortable">' . $notCol['Heading'] . '</li>';
+
+        $columnsNotSelected .= '</ul>';
+
+        Theme::Set('columns_selected_list', $columnsSelected);
+        Theme::Set('columns_available_list', $columnsNotSelected);
+
+        // Add the columns in as a RAW message
+        $formFields[] = Form::AddRaw(Theme::RenderReturn('media_form_datasetview_edit'));
+
+        Theme::Set('form_fields_general', $formFields);
+
+        // Advanced Tab
+        $formFields = array();
+        $formFields[] = Form::AddNumber('lowerLimit', __('Lower Row Limit'), $this->GetOption('lowerLimit'),
+            __('Please enter the Lower Row Limit for this DataSet (enter 0 for no limit)'), 'l');
+
+        $formFields[] = Form::AddNumber('upperLimit', __('Upper Row Limit'), $this->GetOption('upperLimit'),
+            __('Please enter the Upper Row Limit for this DataSet (enter 0 for no limit)'), 'u');
+
+        $formFields[] = Form::AddNumber('updateInterval', __('Update Interval (mins)'), $this->GetOption('updateInterval', 5),
+            __('Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per day this could be set to 60.'),
+            'n', 'required');
+
+        $formFields[] = Form::AddNumber('rowsPerPage', __('Rows per page'), $this->GetOption('rowsPerPage'),
+            __('Please enter the number of rows per page. 0 for no pages.'), 'u');
+
+        $formFields[] = Form::AddMultiText('styleSheet', NULL, $this->getRawNode('styleSheet', $this->DefaultStyleSheet()),
+            __('Enter a style sheet for the table'), 's', 10);
+
+        Theme::Set('form_fields_advanced', $formFields);
+
+        $response->SetFormRequestResponse(NULL, 'Edit DataSet View for DataSet', '650px', '575px');
+
+        $this->configureFormButtons($response);
+        $response->callBack = 'datasetview_callback';
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Edit DataSet View" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#tickerEditForm").submit()
+{% endblock %}
+
+{% block callBack %}forecastIoFormSetup{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                <li><a href="#template" role="tab" data-toggle="tab"><span>{% trans "Apperance" %}</span></a></li>
+
+            </ul>
+            <form id="tickerEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
+
+
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

@@ -53,10 +53,11 @@ class DataSetColumnFactory extends BaseFactory
 
         $select = '
             SELECT dataSetColumnId,
+                dataSetId,
                 heading,
                 datatype.dataTypeId,
                 datatype.dataType,
-                datasetcolumn.dataSetColumnType,
+                datasetcolumn.dataSetColumnTypeId,
                 datasetcolumntype.dataSetColumnType,
                 listContent,
                 columnOrder,
@@ -71,14 +72,14 @@ class DataSetColumnFactory extends BaseFactory
                ON datasetcolumntype.DataSetColumnTypeID = datasetcolumn.DataSetColumnTypeID
              WHERE 1 = 1 ';
 
-        if (Sanitize::getInt('dataSetColumnId') != null) {
+        if (Sanitize::getInt('dataSetColumnId', $filterBy) != null) {
             $body .= ' AND dataSetColumnId = :dataSetColumnId ';
-            $params['dataSetColumnId'] = Sanitize::getInt('dataSetColumnId');
+            $params['dataSetColumnId'] = Sanitize::getInt('dataSetColumnId', $filterBy);
         }
 
-        if (Sanitize::getInt('dataSetId') != null) {
+        if (Sanitize::getInt('dataSetId', $filterBy) != null) {
             $body .= ' AND DataSetID = :dataSetId ';
-            $params['dataSetId'] = Sanitize::getInt('dataSetId');
+            $params['dataSetId'] = Sanitize::getInt('dataSetId', $filterBy);
         }
 
         // Sorting?
