@@ -75,10 +75,12 @@ class DataSetFactory extends BaseFactory
                         ON `permissionentity`.entityId = permission.entityId
                         INNER JOIN `group`
                         ON `group`.groupId = `permission`.groupId
-                     WHERE entity = \'Xibo\\Entity\\DataSet\'
+                     WHERE entity = :groupsWithPermissionsEntity
                         AND objectId = dataset.dataSetId
                 ) AS groupsWithPermissions
             ';
+
+            $params['groupsWithPermissionsEntity'] = 'Xibo\\Entity\\DataSet';
 
             $body = '
                   FROM dataset
@@ -123,6 +125,8 @@ class DataSetFactory extends BaseFactory
                 $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
                 self::$_countLast = intval($results[0]['total']);
             }
+
+            Log::debug(json_encode($entries));
 
             return $entries;
 

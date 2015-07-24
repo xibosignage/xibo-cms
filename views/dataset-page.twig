@@ -74,7 +74,217 @@
             ]
         });
 
-        table.on('draw', dataTableDraw);
+        table.on('draw', function(e, settings) {
+            dataTableDraw(e, settings);
+
+            // Upload form
+            $(".dataSetImportForm").click(function() {
+
+                var template = Handlebars.compile($("#template-dataset-upload").html());
+                var data = table.row($(this).closest("tr")).data();
+
+                // Handle bars and open a dialog
+                bootbox.dialog({
+                    message: template({
+                        trans: {
+                            addFiles: "{% trans "Add ZIP Files" %}",
+                            startUpload: "{% trans "Start upload" %}",
+                            cancelUpload: "{% trans "Cancel upload" %}"
+                        },
+                        upload: {
+                            maxSize: {{ libraryUpload.maxSize }},
+                            maxSizeMessage: "{{ libraryUpload.maxSizeMessage  }}",
+                            validExt: "{{ libraryUpload.validExt }}"
+                        },
+                        columns: data.importColumns
+                    }),
+                    title: "{% trans "CSV Import" %}",
+                    buttons: {
+                        main: {
+                            label: "{% trans "Done" %}",
+                            className: "btn-primary",
+                            callback: function() {
+                                table.ajax.reload();
+                                XiboDialogClose();
+                            }
+                        }
+                    }
+                }).on('shown.bs.modal', function() {
+                    // Configure the upload form
+                    var url = "{{ urlFor("dataSet.import") }}".replace(":id", data.dataSetId);
+                    var form = $(this).find("form");
+
+                    // Initialize the jQuery File Upload widget:
+                    form.fileupload({
+                        url: url,
+                        disableImageResize: false
+                    });
+
+                    // Upload server status check for browsers with CORS support:
+                    if ($.support.cors) {
+                        $.ajax({
+                            url: url,
+                            type: 'HEAD'
+                        }).fail(function () {
+                            $('<span class="alert alert-error"/>')
+                                    .text('Upload server currently unavailable - ' + new Date())
+                                    .appendTo(form);
+                        });
+                    }
+
+                    // Enable iframe cross-domain access via redirect option:
+                    form.fileupload(
+                            'option',
+                            'redirect',
+                            window.location.href.replace(
+                                    /\/[^\/]*$/,
+                                    '/cors/result.html?%s'
+                            )
+                    );
+
+                    form.bind('fileuploadsubmit', function (e, data) {
+                        var inputs = data.context.find(':input');
+                        if (inputs.filter('[required][value=""]').first().focus().length) {
+                            return false;
+                        }
+                        data.formData = inputs.serializeArray().concat(form.serializeArray());
+
+                        inputs.filter("input").prop("disabled", true);
+                    });
+                });
+            });
+        });
         table.on('processing.dt', dataTableProcessing);
     </script>
+{% endblock %}
+
+{% block javaScriptTemplates %}
+    {{ parent() }}
+
+    {% raw %}
+
+    <script type="text/x-handlebars-template" id="template-dataset-upload">
+        <form method="post" enctype="multipart/form-data" data-max-file-size="{{ upload.maxSize }}" data-accept-file-types="/(\.|\/)csv/i">
+            <div class="row fileupload-buttonbar">
+                <div class="col-md-7">
+                    <div class="well">
+                        {{ upload.maxSizeMessage }}
+                    </div>
+                    <!-- The fileinput-button span is used to style the file input field as button -->
+                    <span class="btn btn-success fileinput-button">
+                        <i class="glyphicon glyphicon-plus glyphicon glyphicon-white"></i>
+                        <span>{{ trans.addFiles }}</span>
+                        <input type="file" name="files[]" multiple>
+                    </span>
+                    <button type="submit" class="btn btn-primary start">
+                        <i class="glyphicon glyphicon-upload glyphicon glyphicon-white"></i>
+                        <span>{{ trans.startUpload }}</span>
+                    </button>
+                    <button type="reset" class="btn btn-warning cancel">
+                        <i class="glyphicon glyphicon-ban-circle glyphicon glyphicon-white"></i>
+                        <span>{{ trans.cancelUpload }}</span>
+                    </button>
+                    <!-- The loading indicator is shown during file processing -->
+                    <span class="fileupload-loading"></span>
+                </div>
+                <!-- The global progress information -->
+                <div class="col-md-4 fileupload-progress fade">
+                    <!-- The global progress bar -->
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" style="width:0%;">
+                            <div class="sr-only"></div>
+                        </div>
+                    </div>
+                    <!-- The extended global progress information -->
+                    <div class="progress-extended">&nbsp;</div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <label for="overwrite" title="Erase all content in this DataSet and overwrite it with the new content in this import.">
+                        <input type="checkbox" id="overwrite" name="overwrite">
+                        Overwrite existing data?
+                    </label>
+                </div>
+                <div class="col-md-6">
+                    <label for="ignorefirstrow" title="Ignore the first row? Useful if the CSV has headings.">
+                        <input type="checkbox" id="ignorefirstrow" name="ignorefirstrow">
+                        Ignore first row?
+                    </label>
+                </div>
+            </div>
+            {{#each columns}}
+            <div class="form-group">
+                <label class="col-sm-2 control-label" for="csvImport_{{dataSetColumnId}}">{{heading}}</label>
+                <div class="col-sm-10">
+                    <input class="form-control" name="csvImport_{{dataSetColumnId}}" type="number" id="csvImport_{{dataSetColumnId}}" value="" />
+                </div>
+            </div>
+            {{/each}}
+            <!-- The table listing the files available for upload/download -->
+            <table role="presentation" class="table table-striped"><tbody class="files"></tbody></table>
+        </form>
+    </script>
+
+    <!-- The template to display files available for upload -->
+    <script id="template-dataset-upload" type="text/x-tmpl">
+        {% for (var i=0, file; file=o.files[i]; i++) { %}
+            <tr class="template-upload fade">
+                <td>
+                    <span class="fileupload-preview"></span>
+                </td>
+                <td class="title">
+                    {% if (file.error) { %}
+                        <div><span class="label label-danger">{%=file.error%}</span></div>
+                    {% } %}
+                    {% if (!file.error) { %}
+                    <label for="name[]"><input name="name[]" type="text" id="name" value="" /></label>
+                    {% } %}
+                </td>
+                <td>
+                    <p class="size">{%=o.formatFileSize(file.size)%}</p>
+                    {% if (!o.files.error) { %}
+                        <div class="progress">
+                            <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" style="width:0%;">
+                                <div class="sr-only"></div>
+                            </div>
+                        </div>
+                    </div>
+                    {% } %}
+                </td>
+                <td>
+                    {% if (!o.files.error && !i && !o.options.autoUpload) { %}
+                        <button class="btn btn-primary start">
+                            <i class="glyphicon glyphicon-upload glyphicon glyphicon-white"></i>
+                        </button>
+                    {% } %}
+                    {% if (!i) { %}
+                        <button class="btn btn-warning cancel">
+                            <i class="glyphicon glyphicon-ban-circle glyphicon glyphicon-white"></i>
+                        </button>
+                    {% } %}
+                </td>
+            </tr>
+        {% } %}
+        </script>
+    <!-- The template to display files available for download -->
+    <script id="template-dataset-download" type="text/x-tmpl">
+        {% for (var i=0, file; file=o.files[i]; i++) { %}
+            <tr class="template-download fade">
+               <td>
+                    <p class="name" id="{%=file.storedas%}" status="{% if (file.error) { %}error{% } %}">
+                        {%=file.name%}
+                    </p>
+                    {% if (file.error) { %}
+                        <div><span class="label label-danger">{%=file.error%}</span></div>
+                    {% } %}
+                </td>
+                <td>
+                    <span class="size">{%=o.formatFileSize(file.size)%}</span>
+                </td>
+            </tr>
+        {% } %}
+        </script>
+
+    {% endraw %}
 {% endblock %}

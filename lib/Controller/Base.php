@@ -89,7 +89,7 @@ class Base
      * Get the Current User
      * @return \Xibo\Entity\User
      */
-    protected function getUser()
+    public function getUser()
     {
         return $this->app->user;
     }

@@ -158,16 +158,66 @@ class DataSetData extends Base
         if (!$this->getUser()->checkEditable($dataSet))
             throw new AccessDeniedException();
 
-        // Use the data object to edit a row
-        $dataSet->editRow($rowId, $columnId, Sanitize::getParam('value', null));
+        $existingRow = $dataSet->getData(['id' => $rowId])[0];
+        $row = [];
+
+        // Expect input for each value-column
+        foreach ($dataSet->getColumns() as $column) {
+            /* @var DataSetColumn $column */
+
+            $existingValue = Sanitize::getParam($column->heading, null, $existingRow);
+
+            if ($column->dataSetColumnTypeId == 1) {
+
+                // Sanitize accordingly
+                if ($column->dataTypeId == 2) {
+                    // Number
+                    $value = Sanitize::getDouble('dataSetColumnId_' . $column->dataSetColumnId, $existingValue);
+                }
+                else if ($column->dataTypeId == 3) {
+                    // Date
+                    $value = Date::getTimestampFromString(Sanitize::getString('dataSetColumnId_' . $column->dataSetColumnId, $existingValue));
+                }
+                else {
+                    // String
+                    $value = Sanitize::getString('dataSetColumnId_' . $column->dataSetColumnId, $existingValue);
+                }
+
+                $row[$column->heading] = $value;
+            }
+        }
+
+        // Use the data set object to add a row
+        $dataSet->editRow($rowId, $row);
 
         // Save the dataSet
-        $dataSet->save(['validate' => false]);
+        $dataSet->save(['validate' => false, 'saveColumns' => false]);
 
         // Return
         $this->getState()->hydrate([
             'message' => __('Edited Row'),
             'id' => $rowId
+        ]);
+    }
+
+    /**
+     * Delete Form
+     * @param int $dataSetId
+     * @param int $rowId
+     */
+    public function deleteForm($dataSetId, $rowId)
+    {
+        $dataSet = DataSetFactory::getById($dataSetId);
+
+        if (!$this->getUser()->checkEditable($dataSet))
+            throw new AccessDeniedException();
+
+        $dataSet->load();
+
+        $this->getState()->template = 'dataset-data-form-delete';
+        $this->getState()->setData([
+            'dataSet' => $dataSet,
+            'row' => $dataSet->getData(['id' => $rowId])[0]
         ]);
     }
 
@@ -183,10 +233,11 @@ class DataSetData extends Base
         if (!$this->getUser()->checkEditable($dataSet))
             throw new AccessDeniedException();
 
+        // Delete the row
         $dataSet->deleteRow($rowId);
 
         // Save the dataSet
-        $dataSet->save(['validate' => false]);
+        $dataSet->save(['validate' => false, 'saveColumns' => false]);
 
         // Return
         $this->getState()->hydrate([

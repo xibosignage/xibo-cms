@@ -16,14 +16,13 @@
 
 {% block formButtons %}
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Next" %}, $("#dataSetEditData").submit()
     {% trans "Save" %}, $("#dataSetEditData").submit()
 {% endblock %}
 
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="dataSetEditData" class="XiboForm form-horizontal" method="put" action="{{ urlFor("dataSet.data.edit", {id: dataSet.dataSetId}) }}">
+            <form id="dataSetEditData" class="XiboForm form-horizontal" method="put" action="{{ urlFor("dataSet.data.edit", {id: dataSet.dataSetId, rowId: row.id}) }}">
                 {% for col in dataSet.getColumns() %}
                     {% if col.dataSetColumnTypeId == 1 %}
                         {% set fieldId = "dataSetColumnId_#{col.dataSetColumnId}" %}

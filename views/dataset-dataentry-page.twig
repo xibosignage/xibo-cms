@@ -34,9 +34,11 @@
                     <table id="datasets" class="table table-striped">
                         <thead>
                         <tr>
+                            <th>{% trans "ID" %}</th>
                             {% for col in dataSet.getColumns() %}
                                 <th>{{ col.heading }}</th>
                             {% endfor %}
+                            <th></th>
                         </tr>
                         </thead>
                         <tbody>
@@ -52,9 +54,22 @@
 {% block javaScript %}
     <script type="text/javascript">
         var cols = [];
+        cols.push({ "name": "id", "data": "id" });
         {% for col in dataSet.getColumns() %}
         cols.push({ "data": "{{ col.heading }}" });
         {% endfor %}
+
+        cols.push({
+            "orderable": false,
+            "data": function(data, type, row, meta) {
+                if (type != "display")
+                    return "";
+
+                var url = "{{ urlFor("dataSet.data.delete.form", {"id": dataSet.dataSetId}) }}".replace(":rowId", data.id);
+
+                return "<a href=\"" + url + "\" class=\"XiboFormButton\"><span class=\"fa fa-times\"></span></a>";
+            }
+        });
 
         var table = $("#datasets").DataTable({
             serverSide: true,

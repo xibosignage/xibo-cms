@@ -87,7 +87,7 @@ class DataSet
         $sql = 'SELECT id';
 
         // Keep track of the columns we are allowed to order by
-        $allowedOrderCols = [];
+        $allowedOrderCols = ['id'];
 
         // Select (columns)
         foreach ($this->getColumns() as $column) {
@@ -282,6 +282,13 @@ class DataSet
         PDOConnect::update('DROP TABLE dataset_' . $this->dataSetId, []);
     }
 
+    public function deleteData()
+    {
+        // The last thing we do is drop the dataSet table
+        PDOConnect::update('TRUNCATE TABLE `dataset_' . $this->dataSetId . '`', []);
+        PDOConnect::update('ALTER TABLE `dataset_' . $this->dataSetId . '` AUTO_INCREMENT = 1', []);
+    }
+
     /**
      * Add
      */
@@ -362,21 +369,36 @@ class DataSet
 
     /**
      * Edit a row
-     * @param $rowId
-     * @param $columnId
-     * @param $value
+     * @param int $rowId
+     * @param array $row
      */
-    public function editRow($rowId, $columnId, $value)
+    public function editRow($rowId, $row)
     {
+        Log::debug('Editing row %s', var_export($row, true));
+
+        // Update the last edit date on this dataSet
         $this->lastDataEdit = time();
 
-        // Get the column
-        $column = DataSetColumnFactory::getById($columnId);
+        // Params
+        $params = ['id' => $rowId];
 
-        PDOConnect::update('UPDATE `' . $this->dataSetId . '` SET `' . $column->heading . '` = :value WHERE id = :id', [
-            'value' => $value,
-            'id' => $rowId
-        ]);
+        // Generate a SQL statement
+        $sql = 'UPDATE `dataset_' . $this->dataSetId . '` SET';
+
+        $i = 0;
+        foreach ($row as $key => $value) {
+            $i++;
+            $sql .= ' `' . $key . '` = :value' . $i . ',';
+            $params['value' . $i] = $value;
+        }
+
+        $sql = rtrim($sql, ',');
+
+        $sql .= ' WHERE `id` = :id ';
+
+        Log::sql($sql, $params);
+
+        PDOConnect::update($sql, $params);
     }
 
     /**
