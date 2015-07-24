@@ -148,23 +148,7 @@ class StatusDashboard extends Base
             $data['libraryWidget'] = json_encode($output);
 
             // Also a display widget
-            $displays = DisplayFactory::query(['display']);
-            $rows = array();
-
-            if (is_array($displays) && count($displays) > 0) {
-                // Output a table showing the displays
-                foreach ($displays as $display) {
-                    /* @var \Xibo\Entity\Display $display */
-                    $row['mediainventorystatus'] = ($display->mediaInventoryStatus == 1) ? 'success' : (($display->mediaInventoryStatus == 2) ? 'danger' : 'warning');
-                    $row['display'] = $display->display;
-                    $row['loggedin'] = $display->loggedIn;
-                    $row['licensed'] = $display->licensed;
-                    // Assign this to the table row
-                    $rows[] = $row;
-                }
-            }
-
-            $data['display-widget-rows']= $rows;
+            $data['displays'] = DisplayFactory::query(['display']);
 
             // Get a count of users
             $sth = $dbh->prepare('SELECT IFNULL(COUNT(*), 0) AS count_users FROM `user`');
