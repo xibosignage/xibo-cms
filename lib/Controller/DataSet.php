@@ -24,9 +24,10 @@ use Xibo\Entity\DataSetColumn;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Helper\Config;
+use Xibo\Helper\DataSetUploadHandler;
 use Xibo\Helper\Help;
+use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
-use Xibo\Helper\Theme;
 
 
 class DataSet extends Base
@@ -56,6 +57,7 @@ class DataSet extends Base
                 break;
 
             $dataSet->buttons = [];
+            $dataSet->importColumns = [];
 
             if ($user->checkEditable($dataSet)) {
 
@@ -71,9 +73,23 @@ class DataSet extends Base
                 $dataSet->buttons[] = array(
                     'id' => 'dataset_button_viewcolumns',
                     'url' => $this->urlFor('dataSet.column.view', ['id' => $dataSet->dataSetId]),
-                    'link' => true,
+                    'class' => 'XiboRedirectButton',
                     'text' => __('View Columns')
                 );
+
+                // Divider
+                $dataSet->buttons[] = ['divider' => true];
+
+                // Import DataSet
+                $dataSet->buttons[] = array(
+                    'id' => 'dataset_button_import',
+                    'class' => 'dataSetImportForm',
+                    'url' => $this->urlFor('dataSet.import.form', ['id' => $dataSet->dataSetId]),
+                    'text' => __('Import CSV')
+                );
+
+                // Divider
+                $dataSet->buttons[] = ['divider' => true];
 
                 // Edit DataSet
                 $dataSet->buttons[] = array(
@@ -82,12 +98,12 @@ class DataSet extends Base
                     'text' => __('Edit')
                 );
 
-                // Import DataSet
-                $dataSet->buttons[] = array(
-                    'id' => 'dataset_button_import',
-                    'url' => $this->urlFor('dataSet.import.form', ['id' => $dataSet->dataSetId]),
-                    'text' => __('Import CSV')
-                );
+                // Import columns
+                foreach ($dataSet->getColumn() as $column) {
+                    /* @var DataSetColumn $column */
+                    if ($column->dataSetColumnTypeId == 1)
+                        $dataSet->importColumns[] = $column;
+                }
             }
 
             if ($user->checkDeleteable($dataSet)) {
@@ -98,6 +114,9 @@ class DataSet extends Base
                     'text' => __('Delete')
                 );
             }
+
+            // Divider
+            $dataSet->buttons[] = ['divider' => true];
 
             if ($user->checkPermissionsModifyable($dataSet)) {
                 // Edit Permissions
@@ -140,6 +159,7 @@ class DataSet extends Base
         $dataSetColumn->columnOrder = 1;
         $dataSetColumn->heading = 'Col1';
         $dataSetColumn->dataSetColumnTypeId = 1;
+        $dataSetColumn->dataTypeId = 1;
 
         // Add Column
         $dataSet->assignColumn($dataSetColumn);
@@ -242,160 +262,40 @@ class DataSet extends Base
     }
 
     /**
-     * Import Form
-     * @param $dataSetId
-     */
-    public function importForm($dataSetId)
-    {
-        global $session;
-
-        $response = $this->getState();
-
-        $dataSetId = \Xibo\Helper\Sanitize::getInt('datasetid');
-        $dataSet = \Xibo\Helper\Sanitize::getString('dataset');
-
-        $auth = $this->getUser()->DataSetAuth($dataSetId, true);
-        if (!$auth->edit)
-            trigger_error(__('Access Denied'), E_USER_ERROR);
-
-        // Set the Session / Security information
-        $sessionId = session_id();
-        $securityToken = CreateFormToken();
-
-        $session->setSecurityToken($securityToken);
-
-        // Find the max file size
-        $maxFileSizeBytes = convertBytes(ini_get('upload_max_filesize'));
-
-        // Set some information about the form
-        Theme::Set('form_id', 'DataSetImportCsvForm');
-        Theme::Set('form_action', 'index.php?p=dataset&q=ImportCsv');
-        Theme::Set('form_meta', '<input type="hidden" name="dataset" value="' . $dataSet . '" /><input type="hidden" name="datasetid" value="' . $dataSetId . '" /><input type="hidden" id="txtFileName" name="txtFileName" readonly="true" /><input type="hidden" name="hidFileID" id="hidFileID" value="" />');
-
-        Theme::Set('form_upload_id', 'file_upload');
-        Theme::Set('form_upload_action', 'index.php?p=content&q=FileUpload');
-        Theme::Set('form_upload_meta', '<input type="hidden" id="PHPSESSID" value="' . $sessionId . '" /><input type="hidden" id="SecurityToken" value="' . $securityToken . '" /><input type="hidden" name="MAX_FILE_SIZE" value="' . $maxFileSizeBytes . '" />');
-
-        Theme::Set('prepend', Theme::RenderReturn('form_file_upload_single'));
-
-        $formFields = array();
-        $formFields[] = Form::AddCheckbox('overwrite', __('Overwrite existing data?'),
-            NULL,
-            __('Erase all content in this DataSet and overwrite it with the new content in this import.'),
-            'o');
-
-        $formFields[] = Form::AddCheckbox('ignorefirstrow', __('Ignore first row?'),
-            NULL,
-            __('Ignore the first row? Useful if the CSV has headings.'),
-            'i');
-
-        // Enumerate over the columns in the DataSet and offer a column mapping for each one (from the file)
-        $SQL = "";
-        $SQL .= "SELECT DataSetColumnID, Heading ";
-        $SQL .= "  FROM datasetcolumn ";
-        $SQL .= sprintf(" WHERE DataSetID = %d ", $dataSetId);
-        $SQL .= "   AND DataSetColumnTypeID = 1 ";
-        $SQL .= "ORDER BY ColumnOrder ";
-
-        // Load results into an array
-        $dataSetColumns = $db->GetArray($SQL);
-
-        if (!is_array($dataSetColumns)) {
-            trigger_error($db->error());
-            trigger_error(__('Error getting list of dataSetColumns'), E_USER_ERROR);
-        }
-
-        $i = 0;
-
-        foreach ($dataSetColumns as $row) {
-            $i++;
-
-            $formFields[] = Form::AddNumber('csvImport_' . \Xibo\Helper\Sanitize::int($row['DataSetColumnID']),
-                \Xibo\Helper\Sanitize::string($row['Heading']), $i, NULL, 'c');
-        }
-
-        Theme::Set('form_fields', $formFields);
-
-        $response->SetFormRequestResponse(NULL, __('CSV Import'), '350px', '200px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('DataSet', 'ImportCsv') . '")');
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Import'), '$("#DataSetImportCsvForm").submit()');
-
-    }
-
-    /**
+     * Import CSV
      * @param int $dataSetId
      */
     public function import($dataSetId)
     {
-        $dataSet = DataSetFactory::getById($dataSetId);
+        Log::debug('Import DataSet');
 
-        if (!$this->getUser()->checkEditable($dataSet))
-            throw new AccessDeniedException();
+        $libraryFolder = Config::GetSetting('LIBRARY_LOCATION');
 
-        $response = $this->getState();
-        $dataSetId = \Xibo\Helper\Sanitize::getInt('datasetid');
-        $overwrite = \Xibo\Helper\Sanitize::getCheckbox('overwrite');
-        $ignorefirstrow = \Xibo\Helper\Sanitize::getCheckbox('ignorefirstrow');
+        // Make sure the library exists
+        Library::ensureLibraryExists();
 
-        $auth = $this->getUser()->DataSetAuth($dataSetId, true);
-        if (!$auth->edit)
-            trigger_error(__('Access Denied'), E_USER_ERROR);
+        $options = array(
+            'userId' => $this->getUser()->userId,
+            'dataSetId' => $dataSetId,
+            'controller' => $this,
+            'upload_dir' => $libraryFolder . 'temp/',
+            'download_via_php' => true,
+            'script_url' => $this->urlFor('dataSet.import'),
+            'upload_url' => $this->urlFor('dataSet.import'),
+            'image_versions' => array(),
+            'accept_file_types' => '/\.csv/i'
+        );
 
-        // File data
-        $tmpName = \Xibo\Helper\Sanitize::getString('hidFileID');
+        try {
+            // Hand off to the Upload Handler provided by jquery-file-upload
+            new DataSetUploadHandler($options);
 
-        if ($tmpName == '')
-            trigger_error(__('Please ensure you have picked a file and it has finished uploading'), E_USER_ERROR);
-
-        // File name and extension (original name)
-        $fileName = \Xibo\Helper\Sanitize::getString('txtFileName');
-        $fileName = basename($fileName);
-        $ext = strtolower(substr(strrchr($fileName, "."), 1));
-
-        // Check it is a CSV file
-        if ($ext != 'csv')
-            trigger_error(__('Files with a CSV extension only.'), E_USER_ERROR);
-
-        // File upload directory.. get this from the settings object
-        $csvFileLocation = Config::GetSetting('LIBRARY_LOCATION') . 'temp/' . $tmpName;
-
-        // Enumerate over the columns in the DataSet and offer a column mapping for each one (from the file)
-        $SQL = "";
-        $SQL .= "SELECT DataSetColumnID ";
-        $SQL .= "  FROM datasetcolumn ";
-        $SQL .= sprintf(" WHERE DataSetID = %d ", $dataSetId);
-        $SQL .= "   AND DataSetColumnTypeID = 1 ";
-        $SQL .= "ORDER BY ColumnOrder ";
-
-        // Load results into an array
-        $dataSetColumns = $db->GetArray($SQL);
-
-        if (!is_array($dataSetColumns)) {
-            trigger_error($db->error());
-            trigger_error(__('Error getting list of dataSetColumns'), E_USER_ERROR);
+        } catch (\Exception $e) {
+            // We must not issue an error, the file upload return should have the error object already
+            //TODO: for some reason this commits... it shouldn't
+            $this->app->commit = false;
         }
 
-        $spreadSheetMapping = array();
-
-        foreach ($dataSetColumns as $row) {
-
-            $dataSetColumnId = \Xibo\Helper\Sanitize::int($row['DataSetColumnID']);
-            $spreadSheetColumn = \Kit::GetParam('csvImport_' . $dataSetColumnId, _POST, _INT);
-
-            // If it has been left blank, then skip
-            if ($spreadSheetColumn != 0)
-                $spreadSheetMapping[($spreadSheetColumn - 1)] = $dataSetColumnId;
-        }
-
-        $dataSetObject = new DataSetData($db);
-
-        if (!$dataSetObject->ImportCsv($dataSetId, $csvFileLocation, $spreadSheetMapping, ($overwrite == 1), ($ignorefirstrow == 1)))
-            trigger_error($dataSetObject->GetErrorMessage(), E_USER_ERROR);
-
-        $response->SetFormSubmitResponse(__('CSV File Imported'));
-
+        $this->setNoOutput(true);
     }
 }
-
-?>

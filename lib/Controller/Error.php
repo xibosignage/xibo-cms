@@ -12,6 +12,7 @@ namespace Xibo\Controller;
 use League\OAuth2\Server\Exception\OAuthException;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\FormExpiredException;
+use Xibo\Exception\NotFoundException;
 use Xibo\Helper\Log;
 
 class Error extends Base
@@ -98,6 +99,7 @@ class Error extends Base
             || $e instanceof OAuthException
             || $e instanceof FormExpiredException
             || $e instanceof AccessDeniedException
+            || $e instanceof NotFoundException
         );
     }
 }

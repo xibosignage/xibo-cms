@@ -75,10 +75,12 @@ class DataSetFactory extends BaseFactory
                         ON `permissionentity`.entityId = permission.entityId
                         INNER JOIN `group`
                         ON `group`.groupId = `permission`.groupId
-                     WHERE entity = \'Xibo\\Entity\\DataSet\'
+                     WHERE entity = :groupsWithPermissionsEntity
                         AND objectId = dataset.dataSetId
                 ) AS groupsWithPermissions
             ';
+
+            $params['groupsWithPermissionsEntity'] = 'Xibo\\Entity\\DataSet';
 
             $body = '
                   FROM dataset
@@ -89,14 +91,14 @@ class DataSetFactory extends BaseFactory
             // View Permissions
             self::viewPermissionSql('Xibo\Entity\DataSet', $body, $params, '`dataset`.dataSetId', '`dataset`.userId', $filterBy);
 
-            if (Sanitize::getInt('dataSetId') != null) {
+            if (Sanitize::getInt('dataSetId', $filterBy) != null) {
                 $body .= ' AND dataset.dataSetId = :dataSetId ';
-                $params['dataSetId'] = Sanitize::getInt('dataSetId');
+                $params['dataSetId'] = Sanitize::getInt('dataSetId', $filterBy);
             }
 
-            if (Sanitize::getString('dataSet') != null) {
+            if (Sanitize::getString('dataSet', $filterBy) != null) {
                 $body .= ' AND dataset.dataSet = :dataSet ';
-                $params['dataSet'] = Sanitize::getString('dataSet');
+                $params['dataSet'] = Sanitize::getString('dataSet', $filterBy);
             }
 
             // Sorting?
@@ -123,6 +125,8 @@ class DataSetFactory extends BaseFactory
                 $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
                 self::$_countLast = intval($results[0]['total']);
             }
+
+            Log::debug(json_encode($entries));
 
             return $entries;
 

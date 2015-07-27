@@ -286,6 +286,9 @@ class Module extends Base
         // Create a module to use
         $module = ModuleFactory::createForWidget($type, null, $this->getUser()->userId, $playlistId);
 
+        // Inject the Current User
+        $module->setUser($this->getUser());
+
         // Call module add
         $module->add();
 
@@ -325,6 +328,9 @@ class Module extends Base
 
         if (!$this->getUser()->checkEditable($module->widget))
             throw new AccessDeniedException();
+
+        // Inject the Current User
+        $module->setUser($this->getUser());
 
         // Call Module Edit
         $module->edit();
@@ -366,6 +372,9 @@ class Module extends Base
 
         if (!$this->getUser()->checkDeleteable($module->widget))
             throw new AccessDeniedException();
+
+        // Inject the Current User
+        $module->setUser($this->getUser());
 
         // Call Module Delete
         $module->delete();

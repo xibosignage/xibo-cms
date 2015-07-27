@@ -22,6 +22,8 @@ namespace Xibo\Widget;
 
 use Respect\Validation\Validator as v;
 use Xibo\Controller\Library;
+use Xibo\Entity\DataSetColumn;
+use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Helper\Date;
@@ -42,6 +44,15 @@ class Ticker extends Module
         MediaFactory::createModuleFile('modules/vendor/jquery-cycle-2.1.6.min.js')->save();
         MediaFactory::createModuleFile('modules/xibo-layout-scaler.js')->save();
         MediaFactory::createModuleFile('modules/xibo-text-render.js')->save();
+    }
+
+    /**
+     * DataSets
+     * @return array[DataSet]
+     */
+    public function dataSets()
+    {
+        return DataSetFactory::query();
     }
 
     /**
@@ -546,7 +557,7 @@ class Ticker extends Module
         $saveRequired = false;
 
         // Extra fields for data sets
-        $dataSetId = $this->getOption('datasetid');
+        $dataSetId = $this->getOption('dataSetId');
         $upperLimit = $this->getOption('upperLimit');
         $lowerLimit = $this->getOption('lowerLimit');
         $filter = $this->getOption('filter');
@@ -571,62 +582,93 @@ class Ticker extends Module
             $columnIds[] = $col[1];
         }
 
-        // Get the dataset results
-        $dataSet = new \DataSet();
-        if (!$dataSetResults = $dataSet->DataSetResults($dataSetId, implode(',', $columnIds), $filter, $ordering, $lowerLimit, $upperLimit, $displayId)) {
-            return '';
-        }
+        // Create a data set object, to get the results.
+        try {
+            $dataSet = DataSetFactory::getById($dataSetId);
 
-        // Create an array of header|datatypeid pairs
-        $columnMap = array();
-        foreach ($dataSetResults['Columns'] as $col) {
-            $columnMap[$col['Text']] = $col;
-        }
+            // Get an array representing the id->heading mappings
+            $mappings = [];
+            foreach ($columnIds as $dataSetColumnId) {
+                // Get the column definition this represents
+                $column = $dataSet->getColumn($dataSetColumnId);
+                /* @var DataSetColumn $column */
 
-        Log::debug(var_export($columnMap, true));
-
-        $items = array();
-
-        foreach ($dataSetResults['Rows'] as $row) {
-            // For each row, substitute into our template
-            $rowString = $text;
-
-            foreach ($matches[1] as $sub) {
-                // Pick the appropriate column out
-                $subs = explode('|', $sub);
-
-                // The column header
-                $header = $subs[0];
-                $replace = $row[$header];
-
-                // Check in the columns array to see if this is a special one
-                if ($columnMap[$header]['DataTypeID'] == 4) {
-                    // Download the image, alter the replace to wrap in an image tag
-                    $file = MediaFactory::createModuleFile('ticker_dataset_' . md5($dataSetId . $columnMap[$header]['DataSetColumnID'] . $replace), str_replace(' ', '%20', htmlspecialchars_decode($replace)));
-                    $file->isRemote = true;
-                    $file->expires = $expires;
-                    $file->save();
-
-                    // Tag this layout with this file
-                    $this->assignMedia($file->mediaId);
-
-                    // We will need to save
-                    $saveRequired = true;
-
-                    $url = $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']);
-                    $replace = ($isPreview) ? '<img src="' . $url . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" />' : '<img src="' . $file->storedAs . '" />';
-                }
-
-                $rowString = str_replace('[' . $sub . ']', $replace, $rowString);
+                $mappings[$column->heading] = [
+                    'dataSetColumnId' => $dataSetColumnId,
+                    'heading' => $column->heading,
+                    'dataTypeId' => $column->dataTypeId
+                ];
             }
 
-            $items[] = $rowString;
+            Log::debug('Resolved column mappings: %s', json_encode($columnIds));
+
+            $filter = [
+                'filter' => $filter,
+                'order' => $ordering,
+                'displayId' => $displayId
+            ];
+
+            // limits?
+            if ($lowerLimit != 0 || $upperLimit != 0) {
+                // Start should be the lower limit
+                // Size should be the distance between upper and lower
+                $filter['start'] = $lowerLimit;
+                $filter['size'] = $upperLimit - $lowerLimit;
+            }
+
+            // Get the data (complete table, filtered)
+            $dataSetResults = $dataSet->getData($filter);
+
+            if (count($dataSetResults) <= 0)
+                throw new NotFoundException(__('Empty Result Set with filter criteria.'));
+
+            $items = array();
+
+            foreach ($dataSetResults as $row) {
+                // For each row, substitute into our template
+                $rowString = $text;
+
+                foreach ($matches[1] as $sub) {
+                    // Pick the appropriate column out
+                    $subs = explode('|', $sub);
+
+                    // The column header
+                    $header = $subs[0];
+                    $replace = $row[$header];
+
+                    // Check in the columns array to see if this is a special one
+                    if ($mappings[$header]['dataTypeID'] == 4) {
+                        // Download the image, alter the replace to wrap in an image tag
+                        $file = MediaFactory::createModuleFile('ticker_dataset_' . md5($dataSetId . $mappings[$header]['dataSetColumnID'] . $replace), str_replace(' ', '%20', htmlspecialchars_decode($replace)));
+                        $file->isRemote = true;
+                        $file->expires = $expires;
+                        $file->save();
+
+                        // Tag this layout with this file
+                        $this->assignMedia($file->mediaId);
+
+                        // We will need to save
+                        $saveRequired = true;
+
+                        $url = $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']);
+                        $replace = ($isPreview) ? '<img src="' . $url . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" />' : '<img src="' . $file->storedAs . '" />';
+                    }
+
+                    $rowString = str_replace('[' . $sub . ']', $replace, $rowString);
+                }
+
+                $items[] = $rowString;
+            }
+
+            if ($saveRequired)
+                $this->widget->save(['saveWidgetOptions' => false]);
+
+            return $items;
         }
-
-        if ($saveRequired)
-            $this->widget->save(['saveWidgetOptions' => false]);
-
-        return $items;
+        catch (NotFoundException $e) {
+            Log::error('Request failed for dataSet id=%d. Widget=%d. Due to %s', $dataSetId, $this->getWidgetId(), $e->getMessage());
+            return [];
+        }
     }
 
     public function isValid()
