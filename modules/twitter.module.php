@@ -1043,7 +1043,7 @@ class Twitter extends Module
         }
 
         // Need the marquee plugin?
-        if (stripos($this->GetSetting('effect'), 'marquee'))
+        if (stripos($this->GetSetting('effect'), 'marquee') !== false)
             $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery.marquee.min.js"></script>';
         
         $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-layout-scaler.js"></script>';
