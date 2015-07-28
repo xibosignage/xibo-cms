@@ -20,6 +20,32 @@
  */
 defined('XIBO') or die('Sorry, you are not allowed to directly access this page.');
 
+/**
+ * @SWG\Swagger(
+ *  basePath="/api",
+ *  produces={"application/json"},
+ *  security="auth"
+ * )
+ *
+ * @SWG\Info(
+ *  title="Xibo API",
+ *  description="Xibo CMS API",
+ *  version="1.8.0-alpha",
+ *  @SWG\License(
+ *      name="AGPLv3 or later",
+ *      url="http://www.gnu.org/licenses/"
+ *  )
+ * )
+ *
+ * @SWG\SecurityScheme(
+ *   securityDefinition="auth",
+ *   type="oauth2",
+ *   authorizationUrl="/application/authorize",
+ *   tokenUrl="/api/authorize/access_token",
+ *   flow="accessCode"
+ * )
+ */
+
 // About Page
 $app->get('/about', '\Xibo\Controller\Login:About')->name('about');
 

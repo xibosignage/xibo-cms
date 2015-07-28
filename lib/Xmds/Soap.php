@@ -58,12 +58,12 @@ class Soap
         $this->logProcessor = new LogProcessor();
 
         // Set
-        if (!$app->logWriter->resource) {
+        if (!$app->logWriter->getWriter()) {
             // Append to settings
             $app->logWriter->settings['processors'][] = $this->logProcessor;
         }
         else {
-            $app->logWriter->resource->pushProcessor($this->logProcessor);
+            $app->logWriter->getWriter()->pushProcessor($this->logProcessor);
         }
     }
 

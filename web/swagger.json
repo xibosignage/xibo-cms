@@ -1,0 +1,161 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "Xibo API",
+        "description": "Xibo CMS API",
+        "license": {
+            "name": "AGPLv3 or later",
+            "url": "http://www.gnu.org/licenses/"
+        },
+        "version": "1.8.0-alpha"
+    },
+    "basePath": "/api",
+    "produces": [
+        "application/json"
+    ],
+    "paths": {
+        "/layout": {
+            "post": {
+                "tags": [
+                    "layout"
+                ],
+                "summary": "Add a Layout",
+                "description": "Add a new Layout to the CMS",
+                "operationId": "layoutAdd",
+                "parameters": [
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "The layout name",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "description",
+                        "in": "formData",
+                        "description": "The layout description",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "layoutId",
+                        "in": "formData",
+                        "description": "If the Layout should be created with a Template, provide the ID, otherwise don't provide",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "resolutionId",
+                        "in": "formData",
+                        "description": "If a Template is not provided, provide the resolutionId for this Layout.",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Layout"
+                        }
+                    }
+                }
+            }
+        },
+        "/layout/{layoutId}": {
+            "put": {
+                "operationId": "layoutEdit",
+                "parameters": [
+                    {
+                        "name": "layoutId",
+                        "in": "path",
+                        "type": "integer"
+                    }
+                ]
+            }
+        }
+    },
+    "definitions": {
+        "Layout": {
+            "properties": {
+                "layoutId": {
+                    "description": "The layoutId",
+                    "type": "integer"
+                },
+                "ownerId": {
+                    "description": "",
+                    "type": "integer"
+                },
+                "campaignId": {
+                    "description": "",
+                    "type": "integer"
+                },
+                "backgroundImageId": {
+                    "description": "",
+                    "type": "integer"
+                },
+                "schemaVersion": {
+                    "description": "",
+                    "type": "integer"
+                },
+                "layout": {
+                    "description": "",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "",
+                    "type": "string"
+                },
+                "backgroundColor": {
+                    "description": "",
+                    "type": "string"
+                },
+                "createdDt": {
+                    "description": "",
+                    "type": "string"
+                },
+                "modifiedDt": {
+                    "description": "",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "",
+                    "type": "integer"
+                },
+                "retired": {
+                    "description": "",
+                    "type": "integer"
+                },
+                "backgroundzIndex": {
+                    "description": "",
+                    "type": "integer"
+                },
+                "width": {
+                    "description": "",
+                    "type": "number",
+                    "format": "double"
+                },
+                "height": {
+                    "description": "",
+                    "type": "number",
+                    "format": "double"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "auth": {
+            "type": "oauth2",
+            "flow": "accessCode",
+            "authorizationUrl": "/application/authorize",
+            "tokenUrl": "/api/authorize/access_token"
+        }
+    },
+    "security": "auth",
+    "tags": [
+        {
+            "name": "layout",
+            "description": "Layouts"
+        }
+    ]
+}

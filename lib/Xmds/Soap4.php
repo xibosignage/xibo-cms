@@ -372,8 +372,13 @@ class Soap4 extends Soap
 
         $this->LogBandwidth($this->display->displayId, Bandwidth::$NOTIFYSTATUS, strlen($status));
 
+        $status = json_decode($status, true);
+
+        $this->display->currentLayoutId = Sanitize::getInt('currentLayoutId', $this->display->currentLayoutId, $status);
+        $this->display->storageAvailableSpace = Sanitize::getInt('availableSpace', $this->display->storageAvailableSpace, $status);
+        $this->display->storageTotalSpace = Sanitize::getInt('totalSpace', $this->display->storageTotalSpace, $status);
+
         // Touch the display record
-        $this->display->hydrate(json_decode($status, true));
         $this->display->save(false, false);
 
         return true;

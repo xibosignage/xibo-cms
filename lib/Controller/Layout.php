@@ -34,6 +34,15 @@ use Xibo\Helper\LayoutUploadHandler;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 
+/**
+ * Class Layout
+ * @package Xibo\Controller
+ *
+ * @SWG\Tag(
+ *  name="layout",
+ *  description="Layouts"
+ * )
+ */
 class Layout extends Base
 {
     /**
@@ -113,6 +122,46 @@ class Layout extends Base
 
     /**
      * Add a Layout
+     * @SWG\Post(
+     *  path="/layout",
+     *  operationId="layoutAdd",
+     *  tags={"layout"},
+     *  summary="Add a Layout",
+     *  description="Add a new Layout to the CMS",
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="The layout name",
+     *      type="string",
+     *      required=true
+     *  ),
+     *  @SWG\Parameter(
+     *      name="description",
+     *      in="formData",
+     *      description="The layout description",
+     *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="layoutId",
+     *      in="formData",
+     *      description="If the Layout should be created with a Template, provide the ID, otherwise don't provide",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="resolutionId",
+     *      in="formData",
+     *      description="If a Template is not provided, provide the resolutionId for this Layout.",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Layout")
+     *  )
+     * )
      */
     function add()
     {
@@ -146,6 +195,16 @@ class Layout extends Base
     /**
      * Edit Layout
      * @param int $layoutId
+     *
+     * @SWG\Put(
+     *  path="/layout/{layoutId}",
+     *  operationId="layoutEdit",
+     *  @SWG\Parameter(
+     *      name="layoutId",
+     *      type="integer",
+     *      in="path"
+     *  )
+     * )
      */
     function edit($layoutId)
     {
@@ -164,9 +223,14 @@ class Layout extends Base
         $layout->backgroundzIndex = Sanitize::getInt('backgroundzIndex');
 
         // Resolution
+        $saveRegions = false;
         $resolution = ResolutionFactory::getById(Sanitize::getInt('resolutionId'));
-        $layout->width = $resolution->width;
-        $layout->height = $resolution->height;
+
+        if ($layout->width != $resolution->width || $layout->height != $resolution->height) {
+            $saveRegions = true;
+            $layout->width = $resolution->width;
+            $layout->height = $resolution->height;
+        }
 
         // Validate
         $layout->validate();
@@ -174,9 +238,9 @@ class Layout extends Base
         // Save
         $layout->save([
             'saveLayout' => true,
-            'saveRegions' => false,
-            'saveTags' => false,
-            'setBuildRequired' => false
+            'saveRegions' => $saveRegions,
+            'saveTags' => true,
+            'setBuildRequired' => true
         ]);
 
         // Return
