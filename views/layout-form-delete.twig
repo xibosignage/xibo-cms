@@ -17,8 +17,11 @@
     <div class="row">
         <div class="col-md-12">
             <form id="layoutDeleteForm" class="XiboForm form-horizontal" method="delete" action="{{ urlFor("layout.delete", {id: layout.layoutId}) }}">
-                {{ forms.message("Are you sure you want to delete this layout?") }}
-                {{ forms.message("All media will be unassigned and any layout specific media such as text/rss will be lost. The layout will be removed from all Schedules.") }}
+                {% set message %}{% trans "Are you sure you want to delete this layout?" %}{% endset %}
+                {{ forms.message(message) }}
+                
+                {% set message %}{% trans "All media will be unassigned and any layout specific media such as text/rss will be lost. The layout will be removed from all Schedules." %}{% endset %}
+                {{ forms.message(message) }}
             </form>
         </div>
     </div>

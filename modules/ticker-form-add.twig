@@ -21,9 +21,6 @@
             __('Please select the DataSet to use as a source of data for this ticker.'),
             'd', 'dataset-fields');
 
-        $formFields[] = Form::AddNumber('duration', __('Duration'), NULL,
-            __('The duration in seconds this should be displayed'), 'd', 'required');
-
         Theme::Set('form_fields', $formFields);
 
         // Field dependencies
@@ -77,7 +74,7 @@
                         ] %}
                         {{ forms.dropdown("sourceId", "single", title, "", options, "sourceid", "source", helpText) }}
                         
-                        {% set title %}{% trans "Feed URL"%{% endset %}}
+                        {% set title %}{% trans "Feed URL" %{% endset %}}
                         {% set helpText %}{% trans "The Link for the RSS feed" %}{% endset %}
                         {{ forms.text("uri", title, "", helpText, "", "", "feed-fields")}}
                         
@@ -86,7 +83,9 @@
                         {% set helpText %}{% trans "Please select the DataSet to use as a source of data for this ticker." %}{% endset %}
                         {{ forms.dropdown("datasetId", "single", title, "", datasets, "datasetid", "dataset", helpText, "", "dataset-fields") }}
 
-                        {{ forms.number("duration", "Duration", "", "The duration in seconds this should be displayed", "", "required") }}
+                        {% set title %}{% trans "Duration" %}{% endset %}
+                        {% set helpText %}{% trans "The duration in seconds this item should be displayed" %}{% endset %}
+                        {{ forms.number("duration", title, "", helpText, "", "required") }}
 
                         {# dependencies #}
             </form>

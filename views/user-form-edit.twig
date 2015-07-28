@@ -24,17 +24,40 @@
     <div class="row">
         <div class="col-md-12">
             <form id="userEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("user.edit", {id: user.userId}) }}">
-                {{ forms.text("userName", "User Name", user.userName, "The Login Name of the user.", "", "required maxlength='50'") }}
-                {{ forms.email("email", "Email", user.email, "The Email Address for this user.") }}
+                {% set title %}{% trans "User Name" %}{% endset %}
+                {% set helpText %}{% trans "The Login Name of the user." %}{% endset %}
+                {{ forms.text("userName", title, user.userName, helpText, "", "required maxlength='50'") }}
+
+                {% set title %}{% trans "Email" %}{% endset %}
+                {% set helpText %}{% trans "The Email Address for this user." %}{% endset %}
+                {{ forms.email("email", title, user.email, helpText) }}
+                
                 {% if currentUser.userTypeId == 1 %}
                     {# This is an admin user and can therefore change the users password #}
-                    {{ forms.password("newPassword", "New Password", "", "The new Password for this user.") }}
-                    {{ forms.password("retypeNewPassword", "Retype New Password", "", "Repeat the new Password for this user.") }}
+                    {% set title %}{% trans "New Password" %}{% endset %}
+                    {% set helpText %}{% trans "The new Password for this user." %}{% endset %}
+                    {{ forms.password("newPassword", title, "", helpText) }}
+
+                    {% set title %}{% trans "Retype New Password" %}{% endset %}
+                    {% set helpText %}{% trans "Repeat the new Password for this user." %}{% endset %}
+                    {{ forms.password("retypeNewPassword", title, "", helpText) }}
                 {% endif %}
-                {{ forms.dropdown("homePageId", "single", "Homepage", user.homePageId, options.homepage, "pageId", "page", "Homepage for this user. This is the page they will be taken to when they login.") }}
-                {{ forms.dropdown("userTypeId", "single", "User Type", user.userTypeId, options.userTypes, "userTypeId", "userType", "What is this users type?") }}
-                {{ forms.number("libraryQuota", "Library Quota", user.libraryQuota, "The quota in Kb that should be applied. Enter 0 for no quota.") }}
-                {{ forms.checkbox("retired", "Retired?", user.retired, "Is this user retired?") }}
+
+                {% set title %}{% trans "Homepage" %}{% endset %}
+                {% set helpText %}{% trans "Homepage for this user. This is the page they will be taken to when they login." %}{% endset %}
+                {{ forms.dropdown("homePageId", "single", title, user.homePageId, options.homepage, "pageId", "page", helpText) }}
+
+                {% set title %}{% trans "User Type" %}{% endset %}
+                {% set helpText %}{% trans "What is this users type?" %}{% endset %}
+                {{ forms.dropdown("userTypeId", "single", title, user.userTypeId, options.userTypes, "userTypeId", "userType", helpText) }}
+
+                {% set title %}{% trans "Library Quota" %}{% endset %}
+                {% set helpText %}{% trans "The quota in Kb that should be applied. Enter 0 for no quota." %}{% endset %}
+                {{ forms.number("libraryQuota", title, user.libraryQuota, helpText) }}
+
+                {% set title %}{% trans "Retired?" %}{% endset %}
+                {% set helpText %}{% trans "Is this user retired?" %}{% endset %}
+                {{ forms.checkbox("retired", title, user.retired, helpText) }}
             </form>
         </div>
     </div>

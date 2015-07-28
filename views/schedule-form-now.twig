@@ -136,8 +136,9 @@
                 {{ forms.text("seconds", title, "", helpText) }}
             
             {# multi dropdown will have same issue as in scheduleAddForm #}
-
-                {{ forms.number("displayOrder", "Display Order", displayOrder, "Should this event have an order?") }}
+                {% set title %}{% trans "Display Order" %}{% endset %}
+                {% set helpText %}{% trans "Should this event have an order?" %}{% endset %}
+                {{ forms.number("displayOrder", title, displayOrder, helpText) }}
                 
                 {% set title %}{% trans "Priority" %}{% endset %}
                 {% set helpText %}{% trans "Sets whether or not this event has priority. If set the event will be show in preference to other events." %}{% endset %}
