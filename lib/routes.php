@@ -59,9 +59,13 @@ $app->post('/schedule', '\Xibo\Controller\Schedule:add')->name('schedule.add');
 $app->put('/schedule/:id', '\Xibo\Controller\Schedule:edit')->name('schedule.edit');
 $app->delete('/schedule/:id', '\Xibo\Controller\Schedule:delete')->name('schedule.delete');
 
-//
-// Layouts
-//
+/**
+ * Layouts
+ * @SWG\Tag(
+ *  name="layout",
+ *  description="Layouts"
+ * )
+ */
 $app->get('/layout', '\Xibo\Controller\Layout:grid')->name('layout.search');
 $app->post('/layout', '\Xibo\Controller\Layout:add')->name('layout.add');
 $app->put('/layout/:id', '\Xibo\Controller\Layout:edit')->name('layout.edit');
@@ -130,9 +134,13 @@ $app->delete('/display/:id', '\Xibo\Controller\Display:delete')->name('display.d
 $app->get('/display/wol/:id', '\Xibo\Controller\Display:wakeOnLan')->name('display.wol');
 $app->put('/display/requestscreenshot/:id', '\Xibo\Controller\Display:requestScreenShot')->name('display.requestscreenshot');
 
-//
-// Display Group
-//
+/**
+ * Display Groups
+ * @SWG\Tag(
+ *  name="displayGroup",
+ *  description="Display Groups"
+ * )
+ */
 $app->get('/displaygroup', '\Xibo\Controller\DisplayGroup:grid')->name('displayGroup.search');
 $app->post('/displaygroup', '\Xibo\Controller\DisplayGroup:add')->name('displayGroup.add');
 $app->put('/displaygroup/:id', '\Xibo\Controller\DisplayGroup:edit')->name('displayGroup.edit');

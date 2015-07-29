@@ -183,6 +183,21 @@ class Base
             $recordsTotal = ($state->recordsTotal == null) ? count($data) : $state->recordsTotal;
             $recordsFiltered = ($state->recordsFiltered == null) ? $recordsTotal : $state->recordsFiltered;
 
+            /**
+             * @SWG\Definition(
+             *  definition="searchResponse",
+             *  @SWG\Property(
+             *      property="draw",
+             *      type="string",
+             *      description="The draw request, useful for validating async request responses"
+             *  ),
+             *  @SWG\Property(
+             *      property="recordsTotal",
+             *      type="integer",
+             *      description="The total number of records"
+             *  )
+             * )
+             */
             $data = [
                 'draw' => intval(Sanitize::getInt('draw')),
                 'recordsTotal' => $recordsTotal,

@@ -17,12 +17,46 @@ use Xibo\Factory\ScheduleFactory;
 use Xibo\Helper\Log;
 use Xibo\Storage\PDOConnect;
 
+/**
+ * Class DisplayGroup
+ * @package Xibo\Entity
+ *
+ * @SWG\Definition()
+ */
 class DisplayGroup implements \JsonSerializable
 {
     use EntityTrait;
+
+    /**
+     * @SWG\Property(
+     *  description="The displayGroup Id"
+     * )
+     * @var int
+     */
     public $displayGroupId;
+
+    /**
+     * @SWG\Property(
+     *  description="The displayGroup Name"
+     * )
+     * @var string
+     */
     public $displayGroup;
+
+    /**
+     * @SWG\Property(
+     *  description="The displayGroup Description"
+     * )
+     * @var string
+     */
     public $description;
+
+    /**
+     * @SWG\Property(
+     *  description="A flag indicating whether this displayGroup is a single display displayGroup",
+     * )
+     * @var int
+     */
     public $isDisplaySpecific = 0;
 
     // Child Items the Display Group is linked to

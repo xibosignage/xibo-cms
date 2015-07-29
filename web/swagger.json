@@ -14,6 +14,23 @@
         "application/json"
     ],
     "paths": {
+        "/displaygroup": {
+            "get": {
+                "tags": [
+                    "displayGroup"
+                ],
+                "summary": "Get Display Groups",
+                "operationId": "displayGroupSearch",
+                "responses": {
+                    "200": {
+                        "description": "a successful response",
+                        "schema": {
+                            "$ref": "#/definitions/displayGroupSearchResult"
+                        }
+                    }
+                }
+            }
+        },
         "/layout": {
             "post": {
                 "tags": [
@@ -76,6 +93,55 @@
         }
     },
     "definitions": {
+        "searchResponse": {
+            "properties": {
+                "draw": {
+                    "description": "The draw request, useful for validating async request responses",
+                    "type": "string"
+                },
+                "recordsTotal": {
+                    "description": "The total number of records",
+                    "type": "integer"
+                }
+            }
+        },
+        "displayGroupSearchResult": {
+            "allOf": [
+                {
+                    "$ref": "#/definitions/searchResponse"
+                },
+                {
+                    "properties": {
+                        "data": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/DisplayGroup"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "DisplayGroup": {
+            "properties": {
+                "displayGroupId": {
+                    "description": "The displayGroup Id",
+                    "type": "integer"
+                },
+                "displayGroup": {
+                    "description": "The displayGroup Name",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "The displayGroup Description",
+                    "type": "string"
+                },
+                "isDisplaySpecific": {
+                    "description": "A flag indicating whether this displayGroup is a single display displayGroup",
+                    "type": "integer"
+                }
+            }
+        },
         "Layout": {
             "properties": {
                 "layoutId": {
@@ -83,6 +149,68 @@
                     "type": "integer"
                 },
                 "ownerId": {
+                    "description": "The userId of the Layout Owner",
+                    "type": "integer"
+                },
+                "campaignId": {
+                    "description": "The id of the Layout's dedicated Campaign",
+                    "type": "integer"
+                },
+                "backgroundImageId": {
+                    "description": "The id of the image media set as the background",
+                    "type": "integer"
+                },
+                "schemaVersion": {
+                    "description": "The XLF schema version",
+                    "type": "integer"
+                },
+                "layout": {
+                    "description": "The name of the Layout",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "The description of the Layout",
+                    "type": "string"
+                },
+                "backgroundColor": {
+                    "description": "A HEX string representing the Layout background color",
+                    "type": "string"
+                },
+                "createdDt": {
+                    "description": "The datetime the Layout was created",
+                    "type": "string"
+                },
+                "modifiedDt": {
+                    "description": "The datetime the Layout was last modified",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "Flag indicating the Layout status",
+                    "type": "integer"
+                },
+                "retired": {
+                    "description": "Flag indicating whether the Layout is retired",
+                    "type": "integer"
+                },
+                "backgroundzIndex": {
+                    "description": "The Layer that the background should occupy",
+                    "type": "integer"
+                },
+                "width": {
+                    "description": "The Layout Width",
+                    "type": "number",
+                    "format": "double"
+                },
+                "height": {
+                    "description": "The Layout Height",
+                    "type": "number",
+                    "format": "double"
+                }
+            }
+        },
+        "Schedule": {
+            "properties": {
+                "eventId": {
                     "description": "",
                     "type": "integer"
                 },
@@ -90,55 +218,57 @@
                     "description": "",
                     "type": "integer"
                 },
-                "backgroundImageId": {
-                    "description": "",
+                "displayGroups": {
+                    "description": "Display Groups assigned to this Scheduled Event.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DisplayGroup"
+                    }
+                },
+                "userId": {
+                    "description": "The userId that owns this event.",
                     "type": "integer"
                 },
-                "schemaVersion": {
-                    "description": "",
+                "fromDt": {
+                    "description": "A Unix timestamp representing the from date of this event in CMS time.",
                     "type": "integer"
                 },
-                "layout": {
-                    "description": "",
-                    "type": "string"
-                },
-                "description": {
-                    "description": "",
-                    "type": "string"
-                },
-                "backgroundColor": {
-                    "description": "",
-                    "type": "string"
-                },
-                "createdDt": {
-                    "description": "",
-                    "type": "string"
-                },
-                "modifiedDt": {
-                    "description": "",
-                    "type": "string"
-                },
-                "status": {
-                    "description": "",
+                "toDt": {
+                    "description": "A Unix timestamp representing the to date of this event in CMS time.",
                     "type": "integer"
                 },
-                "retired": {
-                    "description": "",
+                "isPriority": {
+                    "description": "Flag indicating whether the event should be considered priority or not.",
                     "type": "integer"
                 },
-                "backgroundzIndex": {
-                    "description": "",
+                "displayOrder": {
+                    "description": "The display order for this event.",
                     "type": "integer"
                 },
-                "width": {
-                    "description": "",
-                    "type": "number",
-                    "format": "double"
+                "recurrenceType": {
+                    "description": "If this event recurs when what is the recurrence period.",
+                    "type": "string",
+                    "enum": [
+                        "Minute",
+                        "Hour",
+                        "Day",
+                        "Week",
+                        "Month",
+                        "Year"
+                    ]
                 },
-                "height": {
-                    "description": "",
-                    "type": "number",
-                    "format": "double"
+                "recurrenceDetail": {
+                    "description": "If this event recurs when what is the recurrence frequency.",
+                    "type": "integer"
+                },
+                "recurrenceRange": {
+                    "description": "A Unix timestamp indicating the end time of the recurring events.",
+                    "type": "integer"
+                },
+                "campaign": {
+                    "description": "The Campaign/Layout Name",
+                    "type": "string",
+                    "readOnly": true
                 }
             }
         }
@@ -156,6 +286,10 @@
         {
             "name": "layout",
             "description": "Layouts"
+        },
+        {
+            "name": "displayGroup",
+            "description": "Display Groups"
         }
     ]
 }

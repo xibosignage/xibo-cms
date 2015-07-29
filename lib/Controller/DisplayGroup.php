@@ -43,7 +43,31 @@ class DisplayGroup extends Base
     }
 
     /**
-     * Shows the Display groups
+     * @SWG\Definition(
+     *  definition="displayGroupSearchResult",
+     *  allOf={
+     *      @SWG\Schema(ref="#/definitions/searchResponse"),
+     *      @SWG\Schema(
+     *          @SWG\Property(
+     *              property="data",
+     *              type="array",
+     *              @SWG\Items(ref="#/definitions/DisplayGroup")
+     *          )
+     *      )
+     *  }
+     * )
+     *
+     * @SWG\Get(
+     *  path="/displaygroup",
+     *  summary="Get Display Groups",
+     *  tags={"displayGroup"},
+     *  operationId="displayGroupSearch",
+     *  @SWG\Response(
+     *      response=200,
+     *      description="a successful response",
+     *      @SWG\Schema(ref="#/definitions/displayGroupSearchResult")
+     *  )
+     * )
      */
     public function grid()
     {

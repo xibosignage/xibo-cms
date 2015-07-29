@@ -38,10 +38,6 @@ use Xibo\Helper\Sanitize;
  * Class Layout
  * @package Xibo\Controller
  *
- * @SWG\Tag(
- *  name="layout",
- *  description="Layouts"
- * )
  */
 class Layout extends Base
 {
