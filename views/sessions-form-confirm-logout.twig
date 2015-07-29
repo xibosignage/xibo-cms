@@ -24,7 +24,8 @@
     <div class="row">
         <div class="col-md-12">
             <form id="sessionsConfirmLogoutForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("sessions.confirm.logout", {id: userId}) }}">
-                {{forms.message("Are you sure you want to logout this user?") }}
+                {% set message %}{% trans "Are you sure you want to logout this user?" %}{% endset %}
+                {{ forms.message(message) }}
             </form>
         </div>
     </div>

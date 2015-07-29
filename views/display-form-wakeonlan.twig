@@ -5,6 +5,8 @@
  * (${FILE_NAME})
  */
 
+{ action missing }
+
 #}
 
 {% extends "form-base.twig" %}
@@ -24,7 +26,8 @@
     <div class="row">
         <div class="col-md-12">
             <form id="displayWakeOnLanForm" class="XiboForm form-horizontal" method="post" action="">
-                {{forms.message("Are you sure you want to send a Wake On Lan message to this display?") }}
+                {% set message %}{% trans "re you sure you want to send a Wake On Lan message to this display?" %}{% endset %}
+                {{ forms.message(message) }}
             </form>
         </div>
     </div>

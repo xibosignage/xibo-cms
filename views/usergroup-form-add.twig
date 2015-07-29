@@ -24,8 +24,13 @@
     <div class="row">
         <div class="col-md-12">
             <form id="userGroupAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("group.add") }}">
-                {{ forms.text("group", "Name", "", "The Name for this User Group", "", "required maxlength='50'") }}
-                {{ forms.number("libraryQuota", "Library Quota", "", "The quota in Kb that should be applied. Enter 0 for no quota.") }}
+                {% set title %}{% trans "Name" %}{% endset %}
+                {% set helpText %}{% trans "The Name for this User Group" %}{% endset %}
+                {{ forms.text("group", title, "", helpText, "", "required maxlength='50'") }}
+
+                {% set title %}{% trans "Library Quota" %}{% endset %}
+                {% set helpText %}{% trans "The quota in Kb that should be applied. Enter 0 for no quota." %}{% endset %}
+                {{ forms.number("libraryQuota", title, "", helpText) }}
             </form>
         </div>
     </div>

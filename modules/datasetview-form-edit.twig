@@ -11,20 +11,7 @@
         Theme::Set('form_tabs', $tabs);
 
         $formFields = array();
-        $formFields[] = Form::AddHidden('dataSetId', $this->GetOption('datasetid'));
 
-        $formFields[] = Form::AddNumber('duration', __('Duration'), $this->getDuration(),
-            __('The duration in seconds this item should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
-
-        $formFields[] = Form::AddText('ordering', __('Order'), $this->GetOption('ordering'),
-            __('Please enter a SQL clause for how this dataset should be ordered'), 'o');
-
-        $formFields[] = Form::AddText('filter', __('Filter'), $this->GetOption('filter'),
-            __('Please enter a SQL clause to filter this DataSet.'), 'f');
-
-        $formFields[] = Form::AddCheckbox('showHeadings', __('Show the table headings?'),
-            $this->GetOption('showHeadings'), __('Should the Table headings be shown?'),
-            'h');
 
         // Handle the columns
         $columns = $this->GetOption('columns');
@@ -72,21 +59,7 @@
 
         // Advanced Tab
         $formFields = array();
-        $formFields[] = Form::AddNumber('lowerLimit', __('Lower Row Limit'), $this->GetOption('lowerLimit'),
-            __('Please enter the Lower Row Limit for this DataSet (enter 0 for no limit)'), 'l');
-
-        $formFields[] = Form::AddNumber('upperLimit', __('Upper Row Limit'), $this->GetOption('upperLimit'),
-            __('Please enter the Upper Row Limit for this DataSet (enter 0 for no limit)'), 'u');
-
-        $formFields[] = Form::AddNumber('updateInterval', __('Update Interval (mins)'), $this->GetOption('updateInterval', 5),
-            __('Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per day this could be set to 60.'),
-            'n', 'required');
-
-        $formFields[] = Form::AddNumber('rowsPerPage', __('Rows per page'), $this->GetOption('rowsPerPage'),
-            __('Please enter the number of rows per page. 0 for no pages.'), 'u');
-
-        $formFields[] = Form::AddMultiText('styleSheet', NULL, $this->getRawNode('styleSheet', $this->DefaultStyleSheet()),
-            __('Enter a style sheet for the table'), 's', 10);
+        
 
         Theme::Set('form_fields_advanced', $formFields);
 
@@ -116,12 +89,50 @@
         <div class="col-md-12">
             <ul class="nav nav-tabs" role="tablist">
                 <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
-                <li><a href="#template" role="tab" data-toggle="tab"><span>{% trans "Apperance" %}</span></a></li>
+                <li><a href="#advanced" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
 
             </ul>
             <form id="tickerEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
+                <div class="tab-content">
+                    <div class="tab-pane active" id="general">
+                        {{ forms.hidden("dataSetId", module.getOption("datasetid")) }}
+                        
+                        {% set title %}{% trans "Duration" %}{% endset %}
+                        {% set helpText %}{% trans "The duration in seconds this item should be displayed" %}{% endset %}
+                        {{ forms.number("duration", title, module.getDuration(), helpText, "", "required", "", $this->auth->modifyPermissions) ) }}
 
+                        {% set title %}{% trans "Order" %{% endset %}}
+                        {% set helpText %}{% trans "Please enter a SQL clause for how this dataset should be ordered" %}{% endset %}
+                        {{ forms.text("ordering", title, module.getoption("ordering"), helpText)}}
 
+                        {% set title %}{% trans "Filter" %{% endset %}}
+                        {% set helpText %}{% trans "Please enter a SQL clause to filter this DataSet." %}{% endset %}
+                        {{ forms.text("filter", title, module.getoption("filter"), helpText)}}
+
+                        {% set title %}{% trans "Show the table headings?" %{% endset %}}
+                        {% set helpText %}{% trans "Should the Table headings be shown?" %}{% endset %}
+                        {{ forms.checkbox("showHeadings", title, module.getoption("showHeadings"), helpText)}}      
+                    </div>
+
+                    <div class="tab-pane" id="advanced">
+                        {% set title %}{% trans "Lower Row Limit" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter the Lower Row Limit for this DataSet (enter 0 for no limit)')" %}{% endset %}
+                        {{ forms.number("lowerLimit", title, module.getOption("lowerLimit"), helpText) }}
+
+                        {% set title %}{% trans "Upper Row Limit" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter the Upper Row Limit for this DataSet (enter 0 for no limit)" %}{% endset %}
+                        {{ forms.number("upperLimit", title, module.getOption("upperLimit"), helpText ) }}
+
+                        {% set title %}{% trans "Update Interval (mins)" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per day this could be set to 60." %}{% endset %}
+                        {{ forms.number("updateInterval", title, module.getOption("updateInterval", 5), helpText, "", "required") }}
+
+                        {% set title %}{% trans "Rows per page" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter the number of rows per page. 0 for no pages." %}{% endset %}
+                        {{ forms.number("rowsPerPage", title, module.getOption("rowsPerPage"), helpText) }}
+
+                        {% set title %}{% trans "Enter a style sheet for the table" %}{% endset %}
+                        {{ forms.textarea("stylesheet", "", module.getRawMode("styleSheet", module.defaultStyleSheet() $this->DefaultStyleSheet()), title, "", 10) }}
                     </div>
                 </div>
             </form>
