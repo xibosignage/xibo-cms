@@ -241,6 +241,27 @@ class DisplayGroup extends Base
 
     /**
      * Adds a Display Group
+     * @SWG\Post(
+     *  path="/displaygroup",
+     *  operationId="displayGroupAdd",
+     *  tags={"displayGroup"},
+     *  summary="Add a Display Group",
+     *  description="Add a new Display Group to the CMS",
+     *  @SWG\Parameter(
+     *      name="displayGroup",
+     *      in="formData",
+     *      description="The Display Group Name",
+     *      type="string",
+     *      required=true
+     *  ),
+     *  @SWG\Parameter(
+     *      name="description",
+     *      in="formData",
+     *      description="The Display Group Description",
+     *      type="string",
+     *      required=false
+     *  )
+     * )
      */
     public function add()
     {

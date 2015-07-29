@@ -29,6 +29,30 @@
                         }
                     }
                 }
+            },
+            "post": {
+                "tags": [
+                    "displayGroup"
+                ],
+                "summary": "Add a Display Group",
+                "description": "Add a new Display Group to the CMS",
+                "operationId": "displayGroupAdd",
+                "parameters": [
+                    {
+                        "name": "displayGroup",
+                        "in": "formData",
+                        "description": "The Display Group Name",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "description",
+                        "in": "formData",
+                        "description": "The Display Group Description",
+                        "required": false,
+                        "type": "string"
+                    }
+                ]
             }
         },
         "/layout": {
@@ -284,12 +308,72 @@
     "security": "auth",
     "tags": [
         {
+            "name": "schedule",
+            "description": "Schedule"
+        },
+        {
             "name": "layout",
             "description": "Layouts"
         },
         {
+            "name": "region",
+            "description": "Regions"
+        },
+        {
+            "name": "playlist",
+            "description": "Playlists"
+        },
+        {
+            "name": "campaign",
+            "description": "Campaigns"
+        },
+        {
+            "name": "template",
+            "description": "Templates"
+        },
+        {
+            "name": "resolution",
+            "description": "Resolutions"
+        },
+        {
+            "name": "library",
+            "description": "Library"
+        },
+        {
+            "name": "display",
+            "description": "Displays"
+        },
+        {
             "name": "displayGroup",
             "description": "Display Groups"
+        },
+        {
+            "name": "displayprofile",
+            "description": "Display Settings"
+        },
+        {
+            "name": "dataset",
+            "description": "DataSets"
+        },
+        {
+            "name": "statistics",
+            "description": "Statistics"
+        },
+        {
+            "name": "log",
+            "description": "Logs"
+        },
+        {
+            "name": "user",
+            "description": "Users"
+        },
+        {
+            "name": "usergroup",
+            "description": "User Groups"
+        },
+        {
+            "name": "module",
+            "description": "Modules and Widgets"
         }
     ]
 }
