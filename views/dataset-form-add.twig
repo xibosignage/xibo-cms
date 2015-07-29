@@ -4,12 +4,6 @@
  * Copyright (C) 2015 Spring Signage Ltd
  * (${FILE_NAME})
  */
-$formFields = array();
-        $formFields[] = Form::AddText('dataSet', __('Name'), NULL,
-            __('A name for this DataSet'), 'n', 'required');
-
-        $formFields[] = Form::AddText('description', __('Description'), NULL,
-            __('An optional description'), 'd', 'maxlength="250"');
 #}
 
 {% extends "form-base.twig" %}
@@ -22,14 +16,20 @@ $formFields = array();
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, $("#<<id>>").submit()    
+    {% trans "Save" %}, $("#datasetAddForm").submit()    
 {% endblock %}
 
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="<<id>>" class="XiboForm form-horizontal" method="post" action="{{ urlFor("dataSet.add") }}">
+            <form id="dataSetAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("dataSet.add") }}">
+                    {% set title %}{% trans "Name" %}{% endset %}
+                    {% set helpText %}{% trans "A name for this DataSet" %}{% endset %}
+                    {{ forms.text("dataSet", title, "", helpText, "", "required") }}
 
+                    {% set title %}{% trans "Description" %}{% endset %}
+                    {% set helpText %}{% trans "An optional description" %}{% endset %}
+                    {{ forms.text("description", title, "", helpText) }}
             </form>
         </div>
     </div>

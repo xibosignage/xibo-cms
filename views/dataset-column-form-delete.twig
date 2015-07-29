@@ -4,7 +4,6 @@
  * Copyright (C) 2015 Spring Signage Ltd
  * (${FILE_NAME})
  */
-Theme::Set('form_fields', array(Form::AddMessage(__('Are you sure you want to delete?'))));
 #}
 
 {% extends "form-base.twig" %}
@@ -17,14 +16,15 @@ Theme::Set('form_fields', array(Form::AddMessage(__('Are you sure you want to de
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, $("#<<id>>").submit()    
+    {% trans "Save" %}, $("#dataSetColumnDeleteForm").submit()    
 {% endblock %}
 
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="<<id>>" class="XiboForm form-horizontal" method="delete" action="{{ urlFor("dataSet.column.delete", {id: dataSet.dataSetId, colId: dataSetColumn.dataSetColumnId}) }}">
-
+            <form id="dataSetColumnDeleteForm" class="XiboForm form-horizontal" method="delete" action="{{ urlFor("dataSet.column.delete", {id: dataSet.dataSetId, colId: dataSetColumn.dataSetColumnId}) }}">
+                {% set message %}{% trans "Are you sure you want to delete?" %}{% endset %}
+                {{ forms.message(message) }}
             </form>
         </div>
     </div>

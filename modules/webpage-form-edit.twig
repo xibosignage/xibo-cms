@@ -54,7 +54,9 @@ Probably fine, missing:
                 {% set helpText %}{% trans "An optional name for this media" %}{% endset %}
                 {{ forms.text("name", title, module.getOption("name"), helpText) }}
 
-                {{ forms.number("duration", "Duration", module.getDuration(), "The duration in seconds this item should be displayed","", "required")}}
+                {% set title %}{% trans "Duration" %}{% endset %}
+                {% set helpText %}{% trans "The duration in seconds this item should be displayed" %}{% endset %}
+                {{ forms.number("duration", title, module.getDuration(), helpText,"", "required")}}
 
                 {% set title %}{% trans "Options" %}{% endset %}
                 {% set helpText %}{% trans "How should this web page be embedded?" %}{% endset %}
@@ -68,11 +70,25 @@ Probably fine, missing:
                 ] %}
                 {{ forms.dropdown("options", "single", title, "", module.getOption("options"), "modeid", "mode", helpText) }}
 
-                {{ forms.number("pageWidth", "Page Width", module.getOption("pageWidth"), "The width of the page. Leave empty to use the region width.", "", "webpage-widths") }}
-                {{ forms.number("pageHeight", "Page Height", module.getOption("pageHeight"), "The height of the page. Leave empty to use the region height.", "", "webpage-widths") }}
-                {{ forms.number("offsetTop", "Offset Top", module.getOption("offsetTop"), "The starting point from the top in pixels", "", "webpage-offsets") }}
-                {{ forms.number("offsetLeft", "Offset Left", module.getOption("offsetLeft"), "The starting point from the left in pixels", "", "webpage-offsets") }}
-                {{ forms.number("scaling", "Scale Percentage", module.getOption("scaling"), "The Percentage to Scale this Webpage (0 - 100)", "", "webpage-offsets") }}
+                {% set title %}{% trans "Page Width" %}{% endset %}
+                {% set helpText %}{% trans "The width of the page. Leave empty to use the region width." %}{% endset %}
+                {{ forms.number("pageWidth", title, module.getOption("pageWidth"), helpText, "", "webpage-widths") }}
+
+                {% set title %}{% trans "Page Height" %}{% endset %}
+                {% set helpText %}{% trans "The height of the page. Leave empty to use the region height." %}{% endset %}
+                {{ forms.number("pageHeight", title, module.getOption("pageHeight"), helpText, "", "webpage-widths") }}
+
+                {% set title %}{% trans "Offset Top" %}{% endset %}
+                {% set helpText %}{% trans "The starting point from the top in pixels" %}{% endset %}
+                {{ forms.number("offsetTop", title, module.getOption("offsetTop"), helpText, "", "webpage-offsets") }}
+
+                {% set title %}{% trans "Offset Left" %}{% endset %}
+                {% set helpText %}{% trans "The starting point from the left in pixels" %}{% endset %}
+                {{ forms.number("offsetLeft", title, module.getOption("offsetLeft"), helpText, "", "webpage-offsets") }}
+
+                {% set title %}{% trans "Scale Percentage" %}{% endset %}
+                {% set helpText %}{% trans "The Percentage to Scale this Webpage (0 - 100)" %}{% endset %}
+                {{ forms.number("scaling", title, module.getOption("scaling"), helpText, "", "webpage-offsets") }}
 
                 {% set title %}{% trans "Background transparent?" %}{% endset %}
                 {% set helpText %}{% trans "Should the HTML be shown with a transparent background. Not currently available on the Windows Display Client." %}{% endset %}

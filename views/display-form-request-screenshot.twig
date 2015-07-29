@@ -25,7 +25,8 @@
     <div class="row">
         <div class="col-md-12">
             <form id="displayRequestScreenshotForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("display.requestscreenshot", {id: display.displayId}) }}">
-                {{forms.message("Are you sure you want to request a screenshot? The next time the client connects to the CMS the screenshot will be sent") }}
+                {% set message %}{% trans "Are you sure you want to request a screenshot? The next time the client connects to the CMS the screenshot will be sent" %}{% endset %}
+                {{ forms.message(message) }}
             </form>
         </div>
     </div>

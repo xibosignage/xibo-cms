@@ -162,8 +162,9 @@
                     {% set helpText %}{% trans "Please select a Layout or Campaign for this Event to show" %}{% endset %}
                     {{ forms.dropdown("campaignId", "single", title, "", "id", "value", helpText,"","", true, "", "", "", optionGroups) }}
 
-    
-                    {{ forms.number("displayOrder", "Display Order", displayOrder, "Please select the order this event should appear in relation to others when there is more than one event scheduled") }}
+                    {% set title %}{% trans "Display Order" %}{% endset %}
+                    {% set helpText %}{% trans "Please select the order this event should appear in relation to others when there is more than one event scheduled" %}{% endset %}
+                    {{ forms.number("displayOrder", title, displayOrder, helpText) }}
                 
                     {% set title %}{% trans "Priority" %}{% endset %}
                     {% set helpText %}{% trans "Sets whether or not this event has priority. If set the event will be show in preference to other events." %}{% endset %}
@@ -191,8 +192,10 @@
                         { id: Year, name: yearly}
                         ] %}
                         {{ forms.dropdown("reccurenceType", "single", title, "", options, "id", "name", helpText) }}
-
-                        {{ forms.number("reccurenceDetail", "Repeat every", reccurenceDetail, "How often does this event repeat?") }}
+                    
+                        {% set title %}{% trans "Repeat every" %}{% endset %}
+                        {% set helpText %}{% trans "How often does this event repeat?" %}{% endset %}
+                        {{ forms.number("reccurenceDetail", title, reccurenceDetail, helpText) }}
 
                         {% set title %}{% trans "Until" %}{% endset %}
                         {% set helpText %}{% trans "When should this event stop repeating?" %}{% endset %}

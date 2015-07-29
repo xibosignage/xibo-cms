@@ -4,10 +4,6 @@
  * Copyright (C) 2015 Spring Signage Ltd
  * (${FILE_NAME})
  */
-$formFields[] = Form::AddMessage(__('Are you sure you want to delete?'));
-        $formFields[] = Form::AddCheckbox('deleteData', __('Delete any associated data?'), NULL,
-            __('Please tick the box if you would like to delete all the Data contained in this DataSet'), 'c');
-
 #}
 
 {% extends "form-base.twig" %}
@@ -20,14 +16,19 @@ $formFields[] = Form::AddMessage(__('Are you sure you want to delete?'));
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, $("#<<id>>").submit()    
+    {% trans "Yes" %}, $("#datasetDeleteForm").submit()    
 {% endblock %}
 
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="<<id>>" class="XiboForm form-horizontal" method="delete" action="{{ urlFor("dataSet.delete") }}">
+            <form id="dataSetDeleteForm" class="XiboForm form-horizontal" method="delete" action="{{ urlFor("dataSet.delete") }}">
+                {% set message %}{% trans "Are you sure you want to delete?" %}{% endset %}
+                {{ forms.message(message) }}
 
+                {% set title %}{% trans "Delete any associated data?" %}{% endset %}
+                {% set helpText %}{% trans "Please tick the box if you would like to delete all the Data contained in this DataSet" %}{% endset %}
+                {{ forms.checkbox("deleteData", title, "", helpText) }}
             </form>
         </div>
     </div>

@@ -30,14 +30,21 @@ $formFields[] = Form::AddCombo(
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, $("#<<id>>").submit()    
+    {% trans "Save" %}, $("#statisticsExportForm").submit()    
 {% endblock %}
 
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="<<id>>" class="XiboManualForm form-horizontal" method="get" action="{{ urlFor("stats.export") }}">
+            <form id="statisticsExportForm" class="XiboManualForm form-horizontal" method="get" action="{{ urlFor("stats.export") }}">
+                    {% set title %}{% trans "From Date" %}{% endset %}
+                    {{ forms.text("fromDt", title) }}
 
+                    {% set title %}{% trans "To Date" %}{% endset %}
+                    {{ forms.text("toDt", title) }}
+
+                    {% set title %}{% trans "Display" %}{% endset %}
+                    {{ forms.dropdown("displayid", "single", title, "", module.dataSets(), "displayid", "displaygroup") }}
             </form>
         </div>
     </div>
