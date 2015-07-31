@@ -95,7 +95,7 @@ class DisplayProfile extends Base
         $this->getState()->hydrate([
             'message' => sprintf(__('Added %s'), $displayProfile->name),
             'id' => $displayProfile->displayProfileId,
-            'data' => [$displayProfile]
+            'data' => $displayProfile
         ]);
     }
 
@@ -185,7 +185,7 @@ class DisplayProfile extends Base
         $this->getState()->hydrate([
             'message' => sprintf(__('Edited %s'), $displayProfile->name),
             'id' => $displayProfile->displayProfileId,
-            'data' => [$displayProfile]
+            'data' => $displayProfile
         ]);
     }
 

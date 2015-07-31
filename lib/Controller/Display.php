@@ -411,7 +411,7 @@ class Display extends Base
         $this->getState()->hydrate([
             'message' => sprintf(__('Edited %s'), $display->display),
             'id' => $display->displayId,
-            'data' => [$display]
+            'data' => $display
         ]);
     }
 
@@ -432,7 +432,7 @@ class Display extends Base
         $this->getState()->hydrate([
             'message' => sprintf(__('Deleted %s'), $display->display),
             'id' => $display->displayId,
-            'data' => [$display]
+            'data' => $display
         ]);
     }
 

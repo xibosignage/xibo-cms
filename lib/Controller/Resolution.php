@@ -160,7 +160,7 @@ class Resolution extends Base
         $this->getState()->hydrate([
             'message' => sprintf(__('Added %s'), $resolution->resolution),
             'id' => $resolution->resolutionId,
-            'data' => [$resolution]
+            'data' => $resolution
         ]);
     }
 
@@ -185,7 +185,7 @@ class Resolution extends Base
         $this->getState()->hydrate([
             'message' => sprintf(__('Edited %s'), $resolution->resolution),
             'id' => $resolution->resolutionId,
-            'data' => [$resolution]
+            'data' => $resolution
         ]);
     }
 

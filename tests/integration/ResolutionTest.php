@@ -49,7 +49,7 @@ class ResolutionTest extends LocalWebTestCase
 
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
-        $this->assertSame($name, $object->data[0]->resolution);
+        $this->assertSame($name, $object->data->resolution);
         return $object->id;
     }
 

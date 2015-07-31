@@ -284,7 +284,7 @@ class DisplayGroup extends Base
         $this->getState()->hydrate([
             'message' => sprintf(__('Added %s'), $displayGroup->displayGroup),
             'id' => $displayGroup->displayGroupId,
-            'data' => [$displayGroup]
+            'data' => $displayGroup
         ]);
     }
 
@@ -341,7 +341,7 @@ class DisplayGroup extends Base
         $this->getState()->hydrate([
             'message' => sprintf(__('Edited %s'), $displayGroup->displayGroup),
             'id' => $displayGroup->displayGroupId,
-            'data' => [$displayGroup]
+            'data' => $displayGroup
         ]);
     }
 

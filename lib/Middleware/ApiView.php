@@ -23,7 +23,7 @@ class ApiView extends View
         $app = Slim::getInstance();
 
         // Don't envelope unless requested
-        if (Sanitize::getInt('envelope') == 1) {
+        if ($app->request()->get('envelope', 0) == 1 || $app->getName() == 'test') {
             // Envelope
             $response = $this->all();
 

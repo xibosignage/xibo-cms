@@ -323,7 +323,7 @@ class Library extends Base
         $this->getState()->hydrate([
             'message' => sprintf(__('Edited %s'), $media->name),
             'id' => $media->mediaId,
-            'data' => [$media]
+            'data' => $media
         ]);
     }
 

@@ -39,7 +39,7 @@ class CampaignTest extends LocalWebTestCase
 
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
-        $this->assertSame($name, $object->data[0]->campaign);
+        $this->assertSame($name, $object->data->campaign);
 
         return $object->id;
     }
@@ -63,7 +63,7 @@ class CampaignTest extends LocalWebTestCase
         $object = json_decode($this->client->response->body());
 
         $this->assertObjectHasAttribute('data', $object);
-        $this->assertSame($name, $object->data[0]->campaign);
+        $this->assertSame($name, $object->data->campaign);
 
         return $campaignId;
     }

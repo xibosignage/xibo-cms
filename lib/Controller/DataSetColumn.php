@@ -123,7 +123,7 @@ class DataSetColumn extends Base
         $this->getState()->hydrate([
             'message' => sprintf(__('Added %s'), $column->heading),
             'id' => $column->dataSetColumnId,
-            'data' => [$column]
+            'data' => $column
         ]);
     }
 
@@ -177,7 +177,7 @@ class DataSetColumn extends Base
         $this->getState()->hydrate([
             'message' => sprintf(__('Edited %s'), $column->heading),
             'id' => $column->dataSetColumnId,
-            'data' => [$column]
+            'data' => $column
         ]);
     }
 

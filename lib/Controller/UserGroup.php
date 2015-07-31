@@ -195,7 +195,7 @@ class UserGroup extends Base
         $this->getState()->hydrate([
             'message' => sprintf(__('Added %s'), $group->group),
             'id' => $group->groupId,
-            'data' => [$group]
+            'data' => $group
         ]);
     }
 
@@ -220,7 +220,7 @@ class UserGroup extends Base
         $this->getState()->hydrate([
             'message' => sprintf(__('Edited %s'), $group->group),
             'id' => $group->groupId,
-            'data' => [$group]
+            'data' => $group
         ]);
     }
 

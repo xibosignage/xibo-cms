@@ -184,7 +184,7 @@ class Layout extends Base
         $this->getState()->hydrate([
             'message' => sprintf(__('Added %s'), $layout->layout),
             'id' => $layout->layoutId,
-            'data' => [$layout]
+            'data' => $layout
         ]);
     }
 
@@ -249,7 +249,7 @@ class Layout extends Base
         $this->getState()->hydrate([
             'message' => sprintf(__('Edited %s'), $layout->layout),
             'id' => $layout->layoutId,
-            'data' => [$layout]
+            'data' => $layout
         ]);
     }
 
@@ -639,7 +639,7 @@ class Layout extends Base
         $this->getState()->hydrate([
             'message' => sprintf(__('Copied as %s'), $layout->layout),
             'id' => $layout->layoutId,
-            'data' => [$layout]
+            'data' => $layout
         ]);
     }
 

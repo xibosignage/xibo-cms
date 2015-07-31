@@ -129,7 +129,7 @@ class Campaign extends Base
         $this->getState()->hydrate([
             'message' => sprintf(__('Added %s'), $campaign->campaign),
             'id' => $campaign->campaignId,
-            'data' => [$campaign]
+            'data' => $campaign
         ]);
     }
 
@@ -169,7 +169,7 @@ class Campaign extends Base
         $this->getState()->hydrate([
             'message' => sprintf(__('Edited %s'), $campaign->campaign),
             'id' => $campaign->campaignId,
-            'data' => [$campaign]
+            'data' => $campaign
         ]);
     }
 

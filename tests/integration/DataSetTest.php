@@ -47,7 +47,7 @@ class DataSetTest extends LocalWebTestCase
 
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
-        $this->assertSame($name, $object->data[0]->dataSet);
+        $this->assertSame($name, $object->data->dataSet);
         return $object->id;
     }
 
@@ -123,7 +123,7 @@ class DataSetTest extends LocalWebTestCase
 
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
-        $this->assertSame($name, $object->data[0]->heading);
+        $this->assertSame($name, $object->data->heading);
         return $object->id;
     }
 }

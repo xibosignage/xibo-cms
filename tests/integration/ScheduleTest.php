@@ -91,7 +91,7 @@ class ScheduleTest extends LocalWebTestCase
         $object = json_decode($this->client->response->body());
 
         $this->assertObjectHasAttribute('data', $object);
-        $this->assertSame(1, $object->data[0]->isPriority);
+        $this->assertSame(1, $object->data->isPriority);
 
         return $eventId;
     }

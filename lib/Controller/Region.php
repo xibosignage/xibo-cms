@@ -122,7 +122,7 @@ class Region extends Base
         $this->getState()->hydrate([
             'message' => sprintf(__('Added %s'), $region->name),
             'id' => $region->regionId,
-            'data' => [$region]
+            'data' => $region
         ]);
     }
 
@@ -158,7 +158,7 @@ class Region extends Base
         $this->getState()->hydrate([
             'message' => sprintf(__('Edited %s'), $region->name),
             'id' => $region->regionId,
-            'data' => [$region]
+            'data' => $region
         ]);
     }
 
@@ -229,7 +229,7 @@ class Region extends Base
         $this->getState()->hydrate([
             'message' => sprintf(__('Edited %s'), $layout->layout),
             'id' => $layout->layoutId,
-            'data' => [$layout]
+            'data' => $layout
         ]);
     }
 

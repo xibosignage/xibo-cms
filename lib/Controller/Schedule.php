@@ -240,7 +240,7 @@ class Schedule extends Base
         $this->getState()->hydrate([
             'message' => __('Added Event'),
             'id' => $schedule->eventId,
-            'data' => [$schedule]
+            'data' => $schedule
         ]);
     }
 
@@ -335,7 +335,7 @@ class Schedule extends Base
         $this->getState()->hydrate([
             'message' => __('Edited Event'),
             'id' => $schedule->eventId,
-            'data' => [$schedule]
+            'data' => $schedule
         ]);
     }
 

@@ -155,7 +155,7 @@ class User extends Base
         $this->getState()->hydrate([
             'message' => sprintf(__('Added %s'), $user->userName),
             'id' => $user->userId,
-            'data' => [$user]
+            'data' => $user
         ]);
     }
 
@@ -201,7 +201,7 @@ class User extends Base
         $this->getState()->hydrate([
             'message' => sprintf(__('Edited %s'), $user->userName),
             'id' => $user->userId,
-            'data' => [$user]
+            'data' => $user
         ]);
     }
 
@@ -332,7 +332,7 @@ class User extends Base
         $this->getState()->hydrate([
             'message' => __('Password Changed'),
             'id' => $user->userId,
-            'data' => [$user]
+            'data' => $user
         ]);
     }
 

@@ -171,7 +171,7 @@ class DataSet extends Base
         $this->getState()->hydrate([
             'message' => sprintf(__('Added %s'), $dataSet->dataSet),
             'id' => $dataSet->dataSetId,
-            'data' => [$dataSet]
+            'data' => $dataSet
         ]);
     }
 
@@ -214,7 +214,7 @@ class DataSet extends Base
         $this->getState()->hydrate([
             'message' => sprintf(__('Edited %s'), $dataSet->dataSet),
             'id' => $dataSet->dataSetId,
-            'data' => [$dataSet]
+            'data' => $dataSet
         ]);
     }
 
