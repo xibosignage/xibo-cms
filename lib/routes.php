@@ -40,9 +40,14 @@ defined('XIBO') or die('Sorry, you are not allowed to directly access this page.
  * @SWG\SecurityScheme(
  *   securityDefinition="auth",
  *   type="oauth2",
+ *   in="header",
  *   authorizationUrl="/application/authorize",
  *   tokenUrl="/api/authorize/access_token",
- *   flow="accessCode"
+ *   flow="accessCode",
+ *   scopes={
+ *      "read:all": "read access",
+ *      "write:all": "write access"
+ *   }
  * )
  */
 

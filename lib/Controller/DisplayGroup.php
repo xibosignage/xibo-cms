@@ -260,6 +260,11 @@ class DisplayGroup extends Base
      *      description="The Display Group Description",
      *      type="string",
      *      required=false
+     *  ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/DisplayGroup")
      *  )
      * )
      */
@@ -286,6 +291,40 @@ class DisplayGroup extends Base
     /**
      * Edits a Display Group
      * @param int $displayGroupId
+     *
+     * @SWG\Put(
+     *  path="/displaygroup/{displayGroupId}",
+     *  operationId="displayGroupEdit",
+     *  tags={"displayGroup"},
+     *  summary="Edit a Display Group",
+     *  description="Edit an existing Display Group identified by its Id",
+     *  @SWG\Parameter(
+     *      name="displayGroupId",
+     *      type="integer",
+     *      in="path",
+     *      description="The displayGroupId to edit.",
+     *      required=true
+     *  ),
+     *  @SWG\Parameter(
+     *      name="displayGroup",
+     *      in="formData",
+     *      description="The Display Group Name",
+     *      type="string",
+     *      required=true
+     *  ),
+     *  @SWG\Parameter(
+     *      name="description",
+     *      in="formData",
+     *      description="The Display Group Description",
+     *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/DisplayGroup")
+     *  )
+     * )
      */
     public function edit($displayGroupId)
     {
@@ -309,6 +348,25 @@ class DisplayGroup extends Base
     /**
      * Deletes a Group
      * @param int $displayGroupId
+     *
+     * @SWG\Delete(
+     *  path="/displaygroup/{displayGroupId}",
+     *  operationId="displayGroupDelete",
+     *  tags={"displayGroup"},
+     *  summary="Delete a Display Group",
+     *  description="Delete an existing Display Group identified by its Id",
+     *  @SWG\Parameter(
+     *      name="displayGroupId",
+     *      type="integer",
+     *      in="path",
+     *      description="The displayGroupId to delete",
+     *      required=true
+     *  ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
      */
     function delete($displayGroupId)
     {

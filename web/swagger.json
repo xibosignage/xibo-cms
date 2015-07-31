@@ -52,7 +52,78 @@
                         "required": false,
                         "type": "string"
                     }
-                ]
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/DisplayGroup"
+                        }
+                    }
+                }
+            }
+        },
+        "/displaygroup/{displayGroupId}": {
+            "put": {
+                "tags": [
+                    "displayGroup"
+                ],
+                "summary": "Edit a Display Group",
+                "description": "Edit an existing Display Group identified by its Id",
+                "operationId": "displayGroupEdit",
+                "parameters": [
+                    {
+                        "name": "displayGroupId",
+                        "in": "path",
+                        "description": "The displayGroupId to edit.",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "displayGroup",
+                        "in": "formData",
+                        "description": "The Display Group Name",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "description",
+                        "in": "formData",
+                        "description": "The Display Group Description",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/DisplayGroup"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "displayGroup"
+                ],
+                "summary": "Delete a Display Group",
+                "description": "Delete an existing Display Group identified by its Id",
+                "operationId": "displayGroupDelete",
+                "parameters": [
+                    {
+                        "name": "displayGroupId",
+                        "in": "path",
+                        "description": "The displayGroupId to delete",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
             }
         },
         "/layout": {
@@ -105,6 +176,9 @@
         },
         "/layout/{layoutId}": {
             "put": {
+                "tags": [
+                    "layout"
+                ],
                 "operationId": "layoutEdit",
                 "parameters": [
                     {
@@ -112,7 +186,15 @@
                         "in": "path",
                         "type": "integer"
                     }
-                ]
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Layout"
+                        }
+                    }
+                }
             }
         }
     },
@@ -300,9 +382,14 @@
     "securityDefinitions": {
         "auth": {
             "type": "oauth2",
+            "in": "header",
             "flow": "accessCode",
             "authorizationUrl": "/application/authorize",
-            "tokenUrl": "/api/authorize/access_token"
+            "tokenUrl": "/api/authorize/access_token",
+            "scopes": {
+                "read:all": "read access",
+                "write:all": "write access"
+            }
         }
     },
     "security": "auth",

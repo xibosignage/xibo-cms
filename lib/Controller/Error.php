@@ -59,11 +59,6 @@ class Error extends Base
             case 'api':
             case 'test':
 
-                $this->getState()->hydrate([
-                    'success' => false,
-                    'message' => (($handled) ? $e->getMessage() : __('Unexpected Error, please contact support.'))
-                ]);
-
                 $status = 500;
 
                 if ($e instanceof OAuthException) {
@@ -74,7 +69,13 @@ class Error extends Base
                     }
                 }
 
-                $this->render($status);
+                $this->getState()->hydrate([
+                    'httpStatus' => $status,
+                    'success' => false,
+                    'message' => (($handled) ? $e->getMessage() : __('Unexpected Error, please contact support.'))
+                ]);
+
+                $this->render();
 
                 break;
 

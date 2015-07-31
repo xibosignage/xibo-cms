@@ -162,10 +162,9 @@ class Base
 
     /**
      * End the controller execution, calling render
-     * @param int $status
      * @throws ControllerNotImplemented if the controller is not implemented correctly
      */
-    public function render($status = 200)
+    public function render()
     {
         if ($this->rendered || $this->noOutput)
             return;
@@ -208,25 +207,16 @@ class Base
 
         // API Request
         if ($this->isApi()) {
-            // Success or not
-            if ($state->success) {
-                // If we are not a grid (the original data array might be empty here)
-                if (!$grid) {
-                    $data = [
-                        'message' => $state->message,
-                        'id' => $state->id,
-                        'data' => $data
-                    ];
-                }
-            }
-            else {
-                $data = [
-                    'error' => true,
-                    'message' => $state->message
-                ];
-            }
+            // Envelope by default - the APIView will un-pack if necessary
+            $data = [
+                'success' => $state->success,
+                'status' => $state->httpStatus,
+                'message' => $state->message,
+                'id' => $state->id,
+                'data' => $data
+            ];
 
-            $this->app->render('', $data, $status);
+            $this->app->render('', $data, $state->httpStatus);
         }
         else if ($this->app->request->isAjax()) {
             // WEB Ajax
@@ -254,7 +244,7 @@ class Base
             $data['clock'] = Date::GetClock();
             $data['currentUser'] = $this->getUser();
 
-            $this->app->render($state->template . '.twig', $data, $status);
+            $this->app->render($state->template . '.twig', $data, $state->httpStatus);
         }
 
         $this->rendered = true;
