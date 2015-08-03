@@ -25,12 +25,36 @@ namespace Xibo\Entity;
 
 use Xibo\Storage\PDOConnect;
 
+/**
+ * Class Tag
+ * @package Xibo\Entity
+ *
+ * @SWG\Definition()
+ */
 class Tag
 {
+    /**
+     * @SWG\Property(description="The Tag ID")
+     * @var int
+     */
     public $tagId;
+
+    /**
+     * @SWG\Property(description="The Tag Name")
+     * @var string
+     */
     public $tag;
 
+    /**
+     * @SWG\Property(description="An array of layoutIDs with this Tag")
+     * @var int[]
+     */
     public $layoutIds = [];
+
+    /**
+     * @SWG\Property(description="An array of mediaIds with this Tag")
+     * @var int[]
+     */
     public $mediaIds = [];
 
     public function __clone()

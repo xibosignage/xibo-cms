@@ -24,6 +24,7 @@ defined('XIBO') or die('Sorry, you are not allowed to directly access this page.
  * @SWG\Swagger(
  *  basePath="/api",
  *  produces={"application/json"},
+ *  schemes={"http"},
  *  security={
  *      {"auth": {"write:all", "read:all"}}
  *  },
@@ -50,10 +51,9 @@ defined('XIBO') or die('Sorry, you are not allowed to directly access this page.
  * @SWG\SecurityScheme(
  *   securityDefinition="auth",
  *   type="oauth2",
- *   in="header",
+ *   flow="accessCode",
  *   authorizationUrl="/application/authorize",
  *   tokenUrl="/api/authorize/access_token",
- *   flow="accessCode",
  *   scopes={
  *      "read:all": "read access",
  *      "write:all": "write access"

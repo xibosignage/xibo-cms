@@ -30,24 +30,72 @@ use Xibo\Helper\Log;
 use Xibo\Storage\PDOConnect;
 use Xibo\Widget\Module;
 
+/**
+ * Class Widget
+ * @package Xibo\Entity
+ *
+ * @SWG\Definition()
+ */
 class Widget implements \JsonSerializable
 {
     use EntityTrait;
+
+    /**
+     * @SWG\Property(description="The Widget ID")
+     * @var int
+     */
     public $widgetId;
+
+    /**
+     * @SWG\Property(description="The ID of the Playlist this Widget belongs to")
+     * @var int
+     */
     public $playlistId;
+
+    /**
+     * @SWG\Property(description="The ID of the User that owns this Widget")
+     * @var int
+     */
     public $ownerId;
 
+    /**
+     * @SWG\Property(description="The Module Type Code")
+     * @var string
+     */
     public $type;
+
+    /**
+     * @SWG\Property(description="The duration in seconds this widget should be shown")
+     * @var int
+     */
     public $duration;
+
+    /**
+     * @SWG\Property(description="The display order of this widget")
+     * @var int
+     */
     public $displayOrder;
 
+    /**
+     * @SWG\Property(description="An array of Widget Options")
+     * @var WidgetOption[]
+     */
     public $widgetOptions = [];
 
-    // A widget might be linked to file based media
+    /**
+     * @SWG\Property(description="An array of MediaIds this widget is linked to")
+     * @var int[]
+     */
     public $mediaIds = [];
+
+    /**
+     * @SWG\Property(description="An array of permissions for this widget")
+     * @var Permission[]
+     */
     public $permissions = [];
 
     /**
+     * @SWG\Property(description="The Module Object for this Widget")
      * @var Module $module A widget can contain a module which is useful for getting accessing module methods
      */
     public $module;

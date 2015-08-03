@@ -195,11 +195,13 @@ class Layout extends Base
      * @SWG\Put(
      *  path="/layout/{layoutId}",
      *  operationId="layoutEdit",
+     *  description="Edit a Layout",
      *  tags={"layout"},
      *  @SWG\Parameter(
      *      name="layoutId",
      *      type="integer",
-     *      in="path"
+     *      in="path",
+     *      required=true
      *  ),
      *  @SWG\Response(
      *      response=200,

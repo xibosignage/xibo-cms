@@ -30,20 +30,62 @@ use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\Log;
 use Xibo\Storage\PDOConnect;
 
+/**
+ * Class Playlist
+ * @package Xibo\Entity
+ *
+ * @SWG\Definition()
+ */
 class Playlist implements \JsonSerializable
 {
     use EntityTrait;
+
+    /**
+     * @SWG\Property(description="The ID of this Playlist")
+     * @var int
+     */
     public $playlistId;
+
+    /**
+     * @SWG\Property(description="The userId of the User that owns this Playlist")
+     * @var int
+     */
     public $ownerId;
 
+    /**
+     * @SWG\Property(description="The Name of the Playlist")
+     * @var string
+     */
     public $name;
 
+    /**
+     * @SWG\Property(description="An array of Tags")
+     * @var Tag[]
+     */
     public $tags = [];
+
+    /**
+     * @SWG\Property(description="An array of Regions this Playlist is assigned to")
+     * @var Region[]
+     */
     public $regions = [];
+
+    /**
+     * @SWG\Property(description="An array of Widgets assigned to this Playlist")
+     * @var Widget[]
+     */
     public $widgets = [];
+
+    /**
+     * @SWG\Property(description="An array of permissions")
+     * @var Permission[]
+     */
     public $permissions = [];
 
-    // Display Order when assigned to a Region
+    /**
+     * @SWG\Property(description="The display order of the Playlist when assigned to a Region")
+     * @var int
+     */
     public $displayOrder;
 
     public function __construct()

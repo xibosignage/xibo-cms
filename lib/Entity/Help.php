@@ -10,13 +10,38 @@ namespace Xibo\Entity;
 use Respect\Validation\Validator as v;
 use Xibo\Storage\PDOConnect;
 
+/**
+ * Class Help
+ * @package Xibo\Entity
+ *
+ * @SWG\Definition()
+ */
 class Help
 {
     use EntityTrait;
 
+    /**
+     * @SWG\Property(description="The ID of this Help Record")
+     * @var int
+     */
     public $helpId;
+
+    /**
+     * @SWG\Property(description="The topic for this Help Record")
+     * @var string
+     */
     public $topic;
+
+    /**
+     * @SWG\Property(description="The Category for this Help Record")
+     * @var string
+     */
     public $category;
+
+    /**
+     * @SWG\Property(description="The Link to the Manual for this Help Record")
+     * @var string
+     */
     public $link;
 
     public function getId()

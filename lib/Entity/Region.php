@@ -29,26 +29,90 @@ use Xibo\Factory\RegionOptionFactory;
 use Xibo\Helper\Log;
 use Xibo\Storage\PDOConnect;
 
+/**
+ * Class Region
+ * @package Xibo\Entity
+ *
+ * @SWG\Definition()
+ */
 class Region implements \JsonSerializable
 {
     use EntityTrait;
+
+    /**
+     * @SWG\Property(description="The ID of this region")
+     * @var int
+     */
     public $regionId;
+
+    /**
+     * @SWG\Property(description="The Layout ID this region belongs to")
+     * @var int
+     */
     public $layoutId;
+
+    /**
+     * @SWG\Property(description="The userId of the User that owns this Region")
+     * @var int
+     */
     public $ownerId;
 
+    /**
+     * @SWG\Property(description="The name of this Region")
+     * @var string
+     */
     public $name;
+
+    /**
+     * @SWG\Property(description="Width of the region")
+     * @var double
+     */
     public $width;
+
+    /**
+     * @SWG\Property(description="Height of the Region")
+     * @var double
+     */
     public $height;
+
+    /**
+     * @SWG\Property(description="The top coordinate of the Region")
+     * @var double
+     */
     public $top;
+
+    /**
+     * @SWG\Property(description="The left coordinate of the Region")
+     * @var double
+     */
     public $left;
+
+    /**
+     * @SWG\Property(description="The z-index of the Region to control Layering")
+     * @var int
+     */
     public $zIndex;
 
+    /**
+     * @SWG\Property(description="An array of Playlists assigned")
+     * @var Playlist[]
+     */
     public $playlists = [];
+
+    /**
+     * @SWG\Property(description="An array of Region Options")
+     * @var RegionOption[]
+     */
     public $regionOptions = [];
+
+    /**
+     * @SWG\Property(description="An array of Permissions")
+     * @var Permission[]
+     */
     public $permissions = [];
 
     /**
-     * When linked from a Playlist, what is the display order of that link
+     * @SWG\Property(description="When linked from a Playlist, what is the display order of that link")
      * @var int
      */
     public $displayOrder;

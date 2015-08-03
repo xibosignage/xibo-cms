@@ -24,7 +24,7 @@ class Schedule implements \JsonSerializable
 
     /**
      * @SWG\Property(
-     *  description=""
+     *  description="The ID of this Event"
      * )
      * @var int
      */
@@ -32,7 +32,7 @@ class Schedule implements \JsonSerializable
 
     /**
      * @SWG\Property(
-     *  description=""
+     *  description="The CampaignID this event is for"
      * )
      * @var int
      */
@@ -44,7 +44,7 @@ class Schedule implements \JsonSerializable
      *  type="array",
      *  @SWG\Items(ref="#/definitions/DisplayGroup")
      * )
-     * @var array[DisplayGroup]
+     * @var DisplayGroup[]
      */
     public $displayGroups = [];
 

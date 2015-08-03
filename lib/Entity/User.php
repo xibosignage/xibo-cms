@@ -49,42 +49,130 @@ define("HASH_ITERATION_INDEX", 1);
 define("HASH_SALT_INDEX", 2);
 define("HASH_PBKDF2_INDEX", 3);
 
+/**
+ * Class User
+ * @package Xibo\Entity
+ *
+ * @SWG\Definition()
+ */
 class User
 {
     use EntityTrait;
+
+    /**
+     * @SWG\Property(description="The ID of this User")
+     * @var int
+     */
     public $userId;
+
+    /**
+     * @SWG\Property(description="The user name")
+     * @var string
+     */
     public $userName;
+
+    /**
+     * @SWG\Property(description="The user type ID")
+     * @var int
+     */
     public $userTypeId;
+
+    /**
+     * @SWG\Property(description="Flag indicating whether this user is logged in or not")
+     * @var int
+     */
     public $loggedIn;
+
+    /**
+     * @SWG\Property(description="Email address of the user used for email alerts")
+     * @var string
+     */
     public $email;
+
+    /**
+     * @SWG\Property(description="The pageId of the Homepage for this User")
+     * @var int
+     */
     public $homePageId;
+
+    /**
+     * @SWG\Property(description="A timestamp indicating the time the user last logged into the CMS")
+     * @var int
+     */
     public $lastAccessed;
+
+    /**
+     * @SWG\Property(description="A flag indicating whether this user has see the new user wizard")
+     * @var int
+     */
     public $newUserWizard;
+
+    /**
+     * @SWG\Property(description="A flag indicating whether the user is retired")
+     * @var int
+     */
     public $retired;
 
     private $CSPRNG;
     private $password;
 
-    // Users own group
+    /**
+     * @SWG\Property(description="The users user group ID")
+     * @var int
+     */
     public $groupId;
+
+    /**
+     * @SWG\Property(description="The users group name")
+     * @var int
+     */
     public $group;
+
+    /**
+     * @SWG\Property(description="The users library quota in bytes")
+     * @var
+     */
     public $libraryQuota;
 
-    // Groups assigned to
+    /**
+     * @SWG\Property(description="An array of user groups this user is assigned to")
+     * @var UserGroup[]
+     */
     public $groups = [];
 
-    // Things Users can own
+    /**
+     * @SWG\Property(description="An array of Campaigns for this User")
+     * @var Campaign[]
+     */
     public $campaigns = [];
+
+    /**
+     * @SWG\Property(description="An array of Layouts for this User")
+     * @var Layout[]
+     */
     public $layouts = [];
+
+    /**
+     * @SWG\Property(description="An array of Media for this user")
+     * @var Media[]
+     */
     public $media = [];
+
+    /**
+     * @SWG\Property(description="An array of Scheduled Events for this User")
+     * @var Schedule[]
+     */
     public $events = [];
 
-    // Readonly information
+    /**
+     * @SWG\Property(description="The name of home page")
+     * @var string
+     */
     public $homePage;
 
     /**
      * Cached Permissions
-     * @var array[Permission]
+     * @var Permission[]
      */
     private $permissionCache = array();
 

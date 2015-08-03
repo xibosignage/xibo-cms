@@ -19,18 +19,56 @@ use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
-class DataSet
+/**
+ * Class DataSet
+ * @package Xibo\Entity
+ *
+ * @SWG\Definition()
+ */
+class DataSet implements \JsonSerializable
 {
     use EntityTrait;
 
+    /**
+     * @SWG\Property(description="The dataSetId")
+     * @var int
+     */
     public $dataSetId;
+
+    /**
+     * @SWG\Property(description="The dataSet Name")
+     * @var string
+     */
     public $dataSet;
+
+    /**
+     * @SWG\Property(description="The dataSet description")
+     * @var string
+     */
     public $description;
+
+    /**
+     * @SWG\Property(description="The userId of the User that owns this DataSet")
+     * @var int
+     */
     public $userId;
+
+    /**
+     * @SWG\Property(description="Timestamp indicating the date/time this DataSet was edited last")
+     * @var int
+     */
     public $lastDataEdit;
 
-    // Read only properties
+    /**
+     * @SWG\Property(description="The user name of the User that owns this DataSet")
+     * @var string
+     */
     public $owner;
+
+    /**
+     * @SWG\Property(description="A comma separated list of Groups/Users that have permission to this DataSet")
+     * @var string
+     */
     public $groupsWithPermissions;
 
     private $permissions = [];

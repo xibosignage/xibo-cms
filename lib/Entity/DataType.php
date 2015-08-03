@@ -9,9 +9,25 @@
 namespace Xibo\Entity;
 
 
-class DataType
+/**
+ * Class DataType
+ * @package Xibo\Entity
+ *
+ * @SWG\Definition()
+ */
+class DataType implements \JsonSerializable
 {
     use EntityTrait;
+
+    /**
+     * @SWG\Property(description="The ID for this DataType")
+     * @var int
+     */
     public $dataTypeId;
+
+    /**
+     * @SWG\Property(description="The Name for this DataType")
+     * @var string
+     */
     public $dataType;
 }

@@ -8,7 +8,10 @@
 
 namespace Xibo\Entity;
 
-
+/**
+ * Class Session
+ * @package Xibo\Entity
+ */
 class Session
 {
     use EntityTrait;

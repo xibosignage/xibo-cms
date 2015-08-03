@@ -14,6 +14,9 @@
         "version": "1.8.0-alpha"
     },
     "basePath": "/api",
+    "schemes": [
+        "http"
+    ],
     "produces": [
         "application/json"
     ],
@@ -198,11 +201,13 @@
                 "tags": [
                     "layout"
                 ],
+                "description": "Edit a Layout",
                 "operationId": "layoutEdit",
                 "parameters": [
                     {
                         "name": "layoutId",
                         "in": "path",
+                        "required": true,
                         "type": "integer"
                     }
                 ],
@@ -218,6 +223,351 @@
         }
     },
     "definitions": {
+        "Application": {
+            "properties": {
+                "key": {
+                    "description": "Application Key",
+                    "type": "string"
+                },
+                "secret": {
+                    "description": "Private Secret Key",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Application Name",
+                    "type": "string"
+                },
+                "expires": {
+                    "description": "Application Session Expiry",
+                    "type": "integer"
+                }
+            }
+        },
+        "AuditLog": {
+            "properties": {
+                "logId": {
+                    "description": "The Log Id",
+                    "type": "integer"
+                },
+                "logDate": {
+                    "description": "The Log Date",
+                    "type": "integer"
+                },
+                "userId": {
+                    "description": "The userId of the User that took this action",
+                    "type": "integer"
+                },
+                "message": {
+                    "description": "Message describing the action taken",
+                    "type": "string"
+                },
+                "entity": {
+                    "description": "The effected entity",
+                    "type": "string"
+                },
+                "entityId": {
+                    "description": "The effected entityId",
+                    "type": "integer"
+                },
+                "objectAfter": {
+                    "description": "A JSON representation of the object after it was changed",
+                    "type": "string"
+                },
+                "userName": {
+                    "description": "The User Name of the User that took this action",
+                    "type": "string"
+                }
+            }
+        },
+        "Campaign": {
+            "properties": {
+                "campaignId": {
+                    "description": "The Campaign Id",
+                    "type": "integer"
+                },
+                "ownerId": {
+                    "description": "The userId of the User that owns this Campaign",
+                    "type": "integer"
+                },
+                "campaign": {
+                    "description": "The name of the Campaign",
+                    "type": "string"
+                },
+                "isLayoutSpecific": {
+                    "description": "A 0|1 flag to indicate whether this is a Layout specific Campaign or not.",
+                    "type": "integer"
+                },
+                "numberLayouts": {
+                    "description": "The number of Layouts associated with this Campaign",
+                    "type": "integer"
+                }
+            }
+        },
+        "DataSet": {
+            "properties": {
+                "dataSetId": {
+                    "description": "The dataSetId",
+                    "type": "integer"
+                },
+                "dataSet": {
+                    "description": "The dataSet Name",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "The dataSet description",
+                    "type": "string"
+                },
+                "userId": {
+                    "description": "The userId of the User that owns this DataSet",
+                    "type": "integer"
+                },
+                "lastDataEdit": {
+                    "description": "Timestamp indicating the date/time this DataSet was edited last",
+                    "type": "integer"
+                },
+                "owner": {
+                    "description": "The user name of the User that owns this DataSet",
+                    "type": "string"
+                },
+                "groupsWithPermissions": {
+                    "description": "A comma separated list of Groups/Users that have permission to this DataSet",
+                    "type": "string"
+                }
+            }
+        },
+        "DataSetColumn": {
+            "properties": {
+                "dataSetColumnId": {
+                    "description": "The ID of this DataSetColumn",
+                    "type": "integer"
+                },
+                "dataSetId": {
+                    "description": "The ID of the DataSet that this Column belongs to",
+                    "type": "integer"
+                },
+                "heading": {
+                    "description": "The Column Heading",
+                    "type": "string"
+                },
+                "dataTypeId": {
+                    "description": "The ID of the DataType for this Column",
+                    "type": "integer"
+                },
+                "dataSetColumnTypeId": {
+                    "description": "The ID of the ColumnType for this Column",
+                    "type": "integer"
+                },
+                "listContent": {
+                    "description": "Comma separated list of valid content for drop down columns",
+                    "type": "string"
+                },
+                "columnOrder": {
+                    "description": "The order this column should be displayed",
+                    "type": "integer"
+                },
+                "formula": {
+                    "description": "A MySQL formula for this column",
+                    "type": "string"
+                },
+                "dataType": {
+                    "description": "The data type for this Column",
+                    "type": "string"
+                },
+                "dataSetColumnType": {
+                    "description": "The column type for this Column",
+                    "type": "string"
+                }
+            }
+        },
+        "DataSetColumnType": {
+            "properties": {
+                "dataSetColumnTypeId": {
+                    "description": "The ID for this DataSetColumnType",
+                    "type": "integer"
+                },
+                "dataSetColumnType": {
+                    "description": "The name for this DataSetColumnType",
+                    "type": "string"
+                }
+            }
+        },
+        "DataType": {
+            "properties": {
+                "dataTypeId": {
+                    "description": "The ID for this DataType",
+                    "type": "integer"
+                },
+                "dataType": {
+                    "description": "The Name for this DataType",
+                    "type": "string"
+                }
+            }
+        },
+        "Display": {
+            "properties": {
+                "displayId": {
+                    "description": "The ID of this Display",
+                    "type": "integer"
+                },
+                "isAuditing": {
+                    "description": "Flag indicating whether this Display is recording Auditing Information from XMDS",
+                    "type": "integer"
+                },
+                "display": {
+                    "description": "The Name of this Display",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "The Description of this Display",
+                    "type": "string"
+                },
+                "defaultLayoutId": {
+                    "description": "The ID of the Default Layout",
+                    "type": "integer"
+                },
+                "license": {
+                    "description": "The Display Unique Identifier also called hardware key",
+                    "type": "string"
+                },
+                "licensed": {
+                    "description": "A flag indicating whether this Display is licensed or not",
+                    "type": "integer"
+                },
+                "loggedIn": {
+                    "description": "A flag indicating whether this Display is currently logged in",
+                    "type": "integer"
+                },
+                "lastAccessed": {
+                    "description": "A timestamp in CMS time for the last time the Display accessed XMDS",
+                    "type": "integer"
+                },
+                "incSchedule": {
+                    "description": "A flag indicating whether the default layout is interleaved with the Schedule",
+                    "type": "integer"
+                },
+                "emailAlert": {
+                    "description": "A flag indicating whether the Display will send email alerts.",
+                    "type": "integer"
+                },
+                "alertTimeout": {
+                    "description": "A timeout in seconds for the Display to send email alerts.",
+                    "type": "integer"
+                },
+                "clientAddress": {
+                    "description": "The MAC Address of the Display",
+                    "type": "string"
+                },
+                "mediaInventoryStatus": {
+                    "description": "The media inventory status of the Display",
+                    "type": "integer"
+                },
+                "mediaInventoryXml": {
+                    "description": "The last submitted Media Inventory XML from the Player",
+                    "type": "string"
+                },
+                "macAddress": {
+                    "description": "The current Mac Address of the Player",
+                    "type": "string"
+                },
+                "lastChanged": {
+                    "description": "A timestamp indicating the last time the Mac Address changed",
+                    "type": "integer"
+                },
+                "numberOfMacAddressChanges": {
+                    "description": "A count of Mac Address changes",
+                    "type": "integer"
+                },
+                "lastWakeOnLanCommandSent": {
+                    "description": "A timestamp indicating the last time a WOL command was sent",
+                    "type": "integer"
+                },
+                "wakeOnLanEnabled": {
+                    "description": "A flag indicating whether Wake On Lan is enabled",
+                    "type": "integer"
+                },
+                "wakeOnLanTime": {
+                    "description": "A h:i string indicating the time to send a WOL command",
+                    "type": "string"
+                },
+                "broadCastAddress": {
+                    "description": "The broad cast address for this Display",
+                    "type": "string"
+                },
+                "secureOn": {
+                    "description": "The secureOn WOL settings for this display.",
+                    "type": "string"
+                },
+                "cidr": {
+                    "description": "The CIDR WOL settings for this display",
+                    "type": "string"
+                },
+                "latitude": {
+                    "description": "The display Latitude",
+                    "type": "number",
+                    "format": "double"
+                },
+                "longitude": {
+                    "description": "The display longitude",
+                    "type": "number",
+                    "format": "double"
+                },
+                "versionInstructions": {
+                    "description": "A JSON string representing the player installer that should be installed",
+                    "type": "string"
+                },
+                "clientType": {
+                    "description": "A string representing the player type",
+                    "type": "string"
+                },
+                "clientVersion": {
+                    "description": "A string representing the player version",
+                    "type": "string"
+                },
+                "clientCode": {
+                    "description": "A number representing the Player version code",
+                    "type": "integer"
+                },
+                "displayProfileId": {
+                    "description": "The display settings profile ID for this Display",
+                    "type": "integer"
+                },
+                "currentLayoutId": {
+                    "description": "The current layout ID reported via XMDS",
+                    "type": "integer"
+                },
+                "screenShotRequested": {
+                    "description": "A flag indicating that a screen shot should be taken by the Player",
+                    "type": "integer"
+                },
+                "storageAvailableSpace": {
+                    "description": "The number of bytes of storage available on the device.",
+                    "type": "integer"
+                },
+                "storageTotalSpace": {
+                    "description": "The number of bytes of storage in total on the device",
+                    "type": "integer"
+                },
+                "displayGroupId": {
+                    "description": "The ID of the Display Group for this Device",
+                    "type": "integer"
+                },
+                "currentLayout": {
+                    "description": "The current layout",
+                    "type": "string"
+                },
+                "defaultLayout": {
+                    "description": "The default layout",
+                    "type": "string"
+                },
+                "displayGroups": {
+                    "description": "The Display Groups this Display belongs to",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DisplayGroup"
+                    }
+                }
+            }
+        },
         "DisplayGroup": {
             "properties": {
                 "displayGroupId": {
@@ -235,6 +585,71 @@
                 "isDisplaySpecific": {
                     "description": "A flag indicating whether this displayGroup is a single display displayGroup",
                     "type": "integer"
+                }
+            }
+        },
+        "DisplayProfile": {
+            "properties": {
+                "displayProfileId": {
+                    "description": "The ID of this Display Profile",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "The name of this Display Profile",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "The player type that this Display Profile is for",
+                    "type": "string"
+                },
+                "config": {
+                    "description": "The configuration options for this Profile",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "isDefault": {
+                    "description": "A flag indicating if this profile should be used as the Default for the client type",
+                    "type": "integer"
+                },
+                "userId": {
+                    "description": "The userId of the User that owns this profile",
+                    "type": "integer"
+                },
+                "configDefault": {
+                    "description": "The default configuration options for this Profile",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "configTabs": {
+                    "description": "Array of tab names to logically group the configuration options",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "Help": {
+            "properties": {
+                "helpId": {
+                    "description": "The ID of this Help Record",
+                    "type": "integer"
+                },
+                "topic": {
+                    "description": "The topic for this Help Record",
+                    "type": "string"
+                },
+                "category": {
+                    "description": "The Category for this Help Record",
+                    "type": "string"
+                },
+                "link": {
+                    "description": "The Link to the Manual for this Help Record",
+                    "type": "string"
                 }
             }
         },
@@ -304,14 +719,436 @@
                 }
             }
         },
+        "LogEntry": {
+            "properties": {
+                "logId": {
+                    "description": "The Log ID",
+                    "type": "integer"
+                },
+                "runNo": {
+                    "description": "A unique run number for a set of Log Messages.",
+                    "type": "string"
+                },
+                "logDate": {
+                    "description": "A timestamp representing the CMS date this log message occured",
+                    "type": "integer"
+                },
+                "channel": {
+                    "description": "The Channel that generated this message. WEB/API/MAINT/TEST",
+                    "type": "string"
+                },
+                "page": {
+                    "description": "The requested route",
+                    "type": "string"
+                },
+                "function": {
+                    "description": "The request method, GET/POST/PUT/DELETE",
+                    "type": "string"
+                },
+                "message": {
+                    "description": "The log message",
+                    "type": "string"
+                },
+                "displayId": {
+                    "description": "The display ID this message relates to or NULL for CMS",
+                    "type": "integer"
+                },
+                "type": {
+                    "description": "The Log Level",
+                    "type": "string"
+                },
+                "display": {
+                    "description": "The display this message relates to or CMS for CMS.",
+                    "type": "string"
+                }
+            }
+        },
+        "Media": {
+            "properties": {
+                "mediaId": {
+                    "description": "The Media ID",
+                    "type": "integer"
+                },
+                "ownerId": {
+                    "description": "The ID of the User that owns this Media",
+                    "type": "integer"
+                },
+                "parentId": {
+                    "description": "The Parent ID of this Media if it has been revised",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "The Name of this Media",
+                    "type": "string"
+                },
+                "mediaType": {
+                    "description": "The module type of this Media",
+                    "type": "integer"
+                },
+                "storedAs": {
+                    "description": "The file name of the media as stored in the library",
+                    "type": "string"
+                },
+                "fileName": {
+                    "description": "The original file name as it was uploaded",
+                    "type": "string"
+                },
+                "tags": {
+                    "description": "Tags associated with this Media",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Tag"
+                    }
+                },
+                "fileSize": {
+                    "description": "The file size in bytes",
+                    "type": "integer"
+                },
+                "duration": {
+                    "description": "The duration to use when assigning this media to a Layout widget",
+                    "type": "integer"
+                },
+                "valid": {
+                    "description": "Flag indicating whether this media is valid.",
+                    "type": "integer"
+                },
+                "moduleSystemFile": {
+                    "description": "Flag indicating whether this media is a system file or not",
+                    "type": "boolean"
+                },
+                "expires": {
+                    "description": "Timestamp indicating when this media should expire",
+                    "type": "integer"
+                },
+                "retired": {
+                    "description": "Flag indicating whether this media is retired",
+                    "type": "integer"
+                },
+                "isEdited": {
+                    "description": "Flag indicating whether this media has been edited and replaced with a newer file",
+                    "type": "integer"
+                },
+                "md5": {
+                    "description": "A MD5 checksum of the stored media file",
+                    "type": "string"
+                },
+                "owner": {
+                    "description": "The username of the User that owns this media",
+                    "type": "string"
+                },
+                "groupsWithPermissions": {
+                    "description": "A comma separated list of groups/users with permissions to this Media",
+                    "type": "string"
+                }
+            }
+        },
+        "Module": {
+            "properties": {
+                "moduleId": {
+                    "description": "The ID of this Module",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "Module Name",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "Description of the Module",
+                    "type": "string"
+                },
+                "validExtensions": {
+                    "description": "A comma separated list of Valid Extensions",
+                    "type": "string"
+                },
+                "imageUri": {
+                    "description": "The file uri of an image to represent this Module",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "The type code for this module",
+                    "type": "string"
+                },
+                "enabled": {
+                    "description": "A flag indicating whether this module is enabled",
+                    "type": "integer"
+                },
+                "regionSpecific": {
+                    "description": "A flag indicating whether this module is specific to a Layout or can be uploaded to the Library",
+                    "type": "integer"
+                },
+                "previewEnabled": {
+                    "description": "A flag indicating whether the Layout designer should render a preview of this module",
+                    "type": "integer"
+                },
+                "assignable": {
+                    "description": "A flag indicating whether the module is assignable to a Layout",
+                    "type": "integer"
+                },
+                "renderAs": {
+                    "description": "A flag indicating whether the module should be rendered natively by the Player or via the CMS (native|html)",
+                    "type": "string"
+                },
+                "settings": {
+                    "description": "An array of additional module specific settings",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "schemaVersion": {
+                    "description": "The schema version of the module",
+                    "type": "integer"
+                },
+                "viewPath": {
+                    "description": "The Twig View path for module specific templates",
+                    "type": "string"
+                }
+            }
+        },
+        "Page": {
+            "properties": {
+                "pageId": {
+                    "description": "The ID of the Page",
+                    "type": "integer"
+                },
+                "page": {
+                    "description": "A code name for the page",
+                    "type": "string"
+                }
+            }
+        },
+        "Permission": {
+            "properties": {
+                "permissionId": {
+                    "description": "The ID of this Permission Record",
+                    "type": "integer"
+                },
+                "entityId": {
+                    "description": "The Entity ID that this Permission refers to",
+                    "type": "integer"
+                },
+                "groupId": {
+                    "description": "The User Group ID that this permission refers to",
+                    "type": "integer"
+                },
+                "objectId": {
+                    "description": "The object ID that this permission refers to",
+                    "type": "integer"
+                },
+                "isUser": {
+                    "description": "A flag indicating whether the groupId refers to a user specific group",
+                    "type": "integer"
+                },
+                "entity": {
+                    "description": "The entity name that this refers to",
+                    "type": "string"
+                },
+                "objectIdString": {
+                    "description": "Legacy for when the Object ID is a string",
+                    "type": "string"
+                },
+                "group": {
+                    "description": "The group name that this refers to",
+                    "type": "string"
+                },
+                "view": {
+                    "description": "A flag indicating whether view permission is granted",
+                    "type": "integer"
+                },
+                "edit": {
+                    "description": "A flag indicating whether edit permission is granted",
+                    "type": "integer"
+                },
+                "delete": {
+                    "description": "A flag indicating whether delete permission is granted",
+                    "type": "integer"
+                },
+                "modifyPermissions": {
+                    "description": "A flag indicating whether modify permission permission is granted.",
+                    "type": "integer"
+                }
+            }
+        },
+        "Playlist": {
+            "properties": {
+                "playlistId": {
+                    "description": "The ID of this Playlist",
+                    "type": "integer"
+                },
+                "ownerId": {
+                    "description": "The userId of the User that owns this Playlist",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "The Name of the Playlist",
+                    "type": "string"
+                },
+                "tags": {
+                    "description": "An array of Tags",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Tag"
+                    }
+                },
+                "regions": {
+                    "description": "An array of Regions this Playlist is assigned to",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Region"
+                    }
+                },
+                "widgets": {
+                    "description": "An array of Widgets assigned to this Playlist",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Widget"
+                    }
+                },
+                "permissions": {
+                    "description": "An array of permissions",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Permission"
+                    }
+                },
+                "displayOrder": {
+                    "description": "The display order of the Playlist when assigned to a Region",
+                    "type": "integer"
+                }
+            }
+        },
+        "Region": {
+            "properties": {
+                "regionId": {
+                    "description": "The ID of this region",
+                    "type": "integer"
+                },
+                "layoutId": {
+                    "description": "The Layout ID this region belongs to",
+                    "type": "integer"
+                },
+                "ownerId": {
+                    "description": "The userId of the User that owns this Region",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "The name of this Region",
+                    "type": "string"
+                },
+                "width": {
+                    "description": "Width of the region",
+                    "type": "number",
+                    "format": "double"
+                },
+                "height": {
+                    "description": "Height of the Region",
+                    "type": "number",
+                    "format": "double"
+                },
+                "top": {
+                    "description": "The top coordinate of the Region",
+                    "type": "number",
+                    "format": "double"
+                },
+                "left": {
+                    "description": "The left coordinate of the Region",
+                    "type": "number",
+                    "format": "double"
+                },
+                "zIndex": {
+                    "description": "The z-index of the Region to control Layering",
+                    "type": "integer"
+                },
+                "playlists": {
+                    "description": "An array of Playlists assigned",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Playlist"
+                    }
+                },
+                "regionOptions": {
+                    "description": "An array of Region Options",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/RegionOption"
+                    }
+                },
+                "permissions": {
+                    "description": "An array of Permissions",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Permission"
+                    }
+                },
+                "displayOrder": {
+                    "description": "When linked from a Playlist, what is the display order of that link",
+                    "type": "integer"
+                }
+            }
+        },
+        "RegionOption": {
+            "properties": {
+                "regionId": {
+                    "description": "The regionId that this Option applies to"
+                },
+                "option": {
+                    "description": "The option name",
+                    "type": "string"
+                },
+                "value": {
+                    "description": "The option value",
+                    "type": "string"
+                }
+            }
+        },
+        "Resolution": {
+            "properties": {
+                "resolutionId": {
+                    "description": "The ID of this Resolution",
+                    "type": "integer"
+                },
+                "resolution": {
+                    "description": "The resolution name",
+                    "type": "string"
+                },
+                "width": {
+                    "description": "The display width of the resolution",
+                    "type": "number",
+                    "format": "double"
+                },
+                "height": {
+                    "description": "The display height of the resolution",
+                    "type": "number",
+                    "format": "double"
+                },
+                "designerWidth": {
+                    "description": "The designer width of the resolution",
+                    "type": "number",
+                    "format": "double"
+                },
+                "designerHeight": {
+                    "description": "The designer height of the resolution",
+                    "type": "number",
+                    "format": "double"
+                },
+                "version": {
+                    "description": "The layout schema version",
+                    "type": "integer"
+                },
+                "enabled": {
+                    "description": "A flag indicating whether this resolution is enabled or not",
+                    "type": "integer"
+                }
+            }
+        },
         "Schedule": {
             "properties": {
                 "eventId": {
-                    "description": "",
+                    "description": "The ID of this Event",
                     "type": "integer"
                 },
                 "campaignId": {
-                    "description": "",
+                    "description": "The CampaignID this event is for",
                     "type": "integer"
                 },
                 "displayGroups": {
@@ -367,12 +1204,255 @@
                     "readOnly": true
                 }
             }
+        },
+        "Tag": {
+            "properties": {
+                "tagId": {
+                    "description": "The Tag ID",
+                    "type": "integer"
+                },
+                "tag": {
+                    "description": "The Tag Name",
+                    "type": "string"
+                },
+                "layoutIds": {
+                    "description": "An array of layoutIDs with this Tag",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "mediaIds": {
+                    "description": "An array of mediaIds with this Tag",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "Transition": {
+            "properties": {
+                "transitionId": {
+                    "description": "The transition ID",
+                    "type": "integer"
+                },
+                "transition": {
+                    "description": "The transition name",
+                    "type": "string"
+                },
+                "code": {
+                    "description": "Code for transition",
+                    "type": "string"
+                },
+                "hasDirection": {
+                    "description": "Flag indicating whether this is a directional transition",
+                    "type": "integer"
+                },
+                "hasDuration": {
+                    "description": "Flag indicating whether this transition has a duration option",
+                    "type": "integer"
+                },
+                "availableAsIn": {
+                    "description": "Flag indicating whether this transition should be available for IN assignments",
+                    "type": "integer"
+                },
+                "availableAsOut": {
+                    "description": "Flag indicating whether this transition should be available for OUT assignments",
+                    "type": "integer"
+                }
+            }
+        },
+        "User": {
+            "properties": {
+                "userId": {
+                    "description": "The ID of this User",
+                    "type": "integer"
+                },
+                "userName": {
+                    "description": "The user name",
+                    "type": "string"
+                },
+                "userTypeId": {
+                    "description": "The user type ID",
+                    "type": "integer"
+                },
+                "loggedIn": {
+                    "description": "Flag indicating whether this user is logged in or not",
+                    "type": "integer"
+                },
+                "email": {
+                    "description": "Email address of the user used for email alerts",
+                    "type": "string"
+                },
+                "homePageId": {
+                    "description": "The pageId of the Homepage for this User",
+                    "type": "integer"
+                },
+                "lastAccessed": {
+                    "description": "A timestamp indicating the time the user last logged into the CMS",
+                    "type": "integer"
+                },
+                "newUserWizard": {
+                    "description": "A flag indicating whether this user has see the new user wizard",
+                    "type": "integer"
+                },
+                "retired": {
+                    "description": "A flag indicating whether the user is retired",
+                    "type": "integer"
+                },
+                "groupId": {
+                    "description": "The users user group ID",
+                    "type": "integer"
+                },
+                "group": {
+                    "description": "The users group name",
+                    "type": "integer"
+                },
+                "libraryQuota": {
+                    "description": "The users library quota in bytes"
+                },
+                "groups": {
+                    "description": "An array of user groups this user is assigned to",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/UserGroup"
+                    }
+                },
+                "campaigns": {
+                    "description": "An array of Campaigns for this User",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Campaign"
+                    }
+                },
+                "layouts": {
+                    "description": "An array of Layouts for this User",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Layout"
+                    }
+                },
+                "media": {
+                    "description": "An array of Media for this user",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Media"
+                    }
+                },
+                "events": {
+                    "description": "An array of Scheduled Events for this User",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Schedule"
+                    }
+                },
+                "homePage": {
+                    "description": "The name of home page",
+                    "type": "string"
+                }
+            }
+        },
+        "UserGroup": {
+            "properties": {
+                "groupId": {
+                    "description": "The Group ID",
+                    "type": "integer"
+                },
+                "group": {
+                    "description": "The group name",
+                    "type": "string"
+                },
+                "isUserSpecific": {
+                    "description": "A flag indicating whether this is a user specific group or not",
+                    "type": "integer"
+                },
+                "isEveryone": {
+                    "description": "A flag indicating the special everyone group",
+                    "type": "integer"
+                },
+                "libraryQuota": {
+                    "description": "This users library quota in bytes. 0 = unlimited",
+                    "type": "integer"
+                }
+            }
+        },
+        "Widget": {
+            "properties": {
+                "widgetId": {
+                    "description": "The Widget ID",
+                    "type": "integer"
+                },
+                "playlistId": {
+                    "description": "The ID of the Playlist this Widget belongs to",
+                    "type": "integer"
+                },
+                "ownerId": {
+                    "description": "The ID of the User that owns this Widget",
+                    "type": "integer"
+                },
+                "type": {
+                    "description": "The Module Type Code",
+                    "type": "string"
+                },
+                "duration": {
+                    "description": "The duration in seconds this widget should be shown",
+                    "type": "integer"
+                },
+                "displayOrder": {
+                    "description": "The display order of this widget",
+                    "type": "integer"
+                },
+                "widgetOptions": {
+                    "description": "An array of Widget Options",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/WidgetOption"
+                    }
+                },
+                "mediaIds": {
+                    "description": "An array of MediaIds this widget is linked to",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "permissions": {
+                    "description": "An array of permissions for this widget",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Permission"
+                    }
+                },
+                "module": {
+                    "description": "The Module Object for this Widget"
+                }
+            }
+        },
+        "WidgetOption": {
+            "properties": {
+                "widgetId": {
+                    "description": "The Widget ID that this Option belongs to",
+                    "type": "integer"
+                },
+                "type": {
+                    "description": "The option type, either attrib or raw",
+                    "type": "string"
+                },
+                "option": {
+                    "description": "The option name",
+                    "type": "string"
+                },
+                "value": {
+                    "description": "The option value",
+                    "type": "string"
+                }
+            }
         }
     },
     "securityDefinitions": {
         "auth": {
             "type": "oauth2",
-            "in": "header",
             "flow": "accessCode",
             "authorizationUrl": "/application/authorize",
             "tokenUrl": "/api/authorize/access_token",

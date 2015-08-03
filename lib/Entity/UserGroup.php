@@ -16,14 +16,44 @@ use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\Log;
 use Xibo\Storage\PDOConnect;
 
+/**
+ * Class UserGroup
+ * @package Xibo\Entity
+ *
+ * @SWG\Definition()
+ */
 class UserGroup
 {
     use EntityTrait;
 
+    /**
+     * @SWG\Property(description="The Group ID")
+     * @var int
+     */
     public $groupId;
+
+    /**
+     * @SWG\Property(description="The group name")
+     * @var string
+     */
     public $group;
+
+    /**
+     * @SWG\Property(description="A flag indicating whether this is a user specific group or not")
+     * @var int
+     */
     public $isUserSpecific = 0;
+
+    /**
+     * @SWG\Property(description="A flag indicating the special everyone group")
+     * @var int
+     */
     public $isEveryone = 0;
+
+    /**
+     * @SWG\Property(description="This users library quota in bytes. 0 = unlimited")
+     * @var int
+     */
     public $libraryQuota;
 
     // Users

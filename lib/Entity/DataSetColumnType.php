@@ -8,10 +8,25 @@
 
 namespace Xibo\Entity;
 
-
-class DataSetColumnType
+/**
+ * Class DataSetColumnType
+ * @package Xibo\Entity
+ *
+ * @SWG\Definition()
+ */
+class DataSetColumnType implements \JsonSerializable
 {
     use EntityTrait;
+
+    /**
+     * @SWG\Property(description="The ID for this DataSetColumnType")
+     * @var int
+     */
     public $dataSetColumnTypeId;
+
+    /**
+     * @SWG\Property(description="The name for this DataSetColumnType")
+     * @var string
+     */
     public $dataSetColumnType;
 }

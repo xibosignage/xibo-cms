@@ -8,7 +8,11 @@
 
 namespace Xibo\Entity;
 
-
+/**
+ * Class UserType
+ * @package Xibo\Entity
+ *
+ */
 class UserType
 {
     use EntityTrait;

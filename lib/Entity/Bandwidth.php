@@ -11,6 +11,11 @@ namespace Xibo\Entity;
 
 use Xibo\Storage\PDOConnect;
 
+/**
+ * Class Bandwidth
+ * @package Xibo\Entity
+ *
+ */
 class Bandwidth
 {
     public static $REGISTER = 1;

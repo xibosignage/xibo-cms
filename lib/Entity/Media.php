@@ -35,35 +35,127 @@ use Xibo\Helper\Date;
 use Xibo\Helper\Log;
 use Xibo\Storage\PDOConnect;
 
-class Media
+/**
+ * Class Media
+ * @package Xibo\Entity
+ *
+ * @SWG\Definition()
+ */
+class Media implements \JsonSerializable
 {
     use EntityTrait;
+
+    /**
+     * @SWG\Property(description="The Media ID")
+     * @var int
+     */
     public $mediaId;
+
+    /**
+     * @SWG\Property(description="The ID of the User that owns this Media")
+     * @var int
+     */
     public $ownerId;
+
+    /**
+     * @SWG\Property(description="The Parent ID of this Media if it has been revised")
+     * @var int
+     */
     public $parentId;
 
+    /**
+     * @SWG\Property(description="The Name of this Media")
+     * @var string
+     */
     public $name;
+
+    /**
+     * @SWG\Property(description="The module type of this Media")
+     * @var int
+     */
     public $mediaType;
+
+    /**
+     * @SWG\Property(description="The file name of the media as stored in the library")
+     * @var string
+     */
     public $storedAs;
+
+    /**
+     * @SWG\Property(description="The original file name as it was uploaded")
+     * @var string
+     */
     public $fileName;
 
     // Thing that might be referred to
+    /**
+     * @SWG\Property(description="Tags associated with this Media")
+     * @var Tag[]
+     */
     public $tags = [];
+
     private $widgets = [];
     private $displayGroups = [];
     private $permissions = [];
 
+    /**
+     * @SWG\Property(description="The file size in bytes")
+     * @var int
+     */
     public $fileSize;
+
+    /**
+     * @SWG\Property(description="The duration to use when assigning this media to a Layout widget")
+     * @var int
+     */
     public $duration = 0;
+
+    /**
+     * @SWG\Property(description="Flag indicating whether this media is valid.")
+     * @var int
+     */
     public $valid;
+
+    /**
+     * @SWG\Property(description="Flag indicating whether this media is a system file or not")
+     * @var bool
+     */
     public $moduleSystemFile = false;
+
+    /**
+     * @SWG\Property(description="Timestamp indicating when this media should expire")
+     * @var int
+     */
     public $expires = 0;
+
+    /**
+     * @SWG\Property(description="Flag indicating whether this media is retired")
+     * @var int
+     */
     public $retired = 0;
+
+    /**
+     * @SWG\Property(description="Flag indicating whether this media has been edited and replaced with a newer file")
+     * @var int
+     */
     public $isEdited = 0;
+
+    /**
+     * @SWG\Property(description="A MD5 checksum of the stored media file")
+     * @var string
+     */
     public $md5;
 
-    // Read only properties
+    /**
+     * @SWG\Property(description="The username of the User that owns this media")
+     * @var string
+     */
     public $owner;
+
+    /**
+     * @SWG\Property(description="A comma separated list of groups/users with permissions to this Media")
+     * @var string
+     */
     public $groupsWithPermissions;
 
     // New file revision

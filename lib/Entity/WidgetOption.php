@@ -26,13 +26,38 @@ namespace Xibo\Entity;
 use Xibo\Helper\Log;
 use Xibo\Storage\PDOConnect;
 
+/**
+ * Class WidgetOption
+ * @package Xibo\Entity
+ *
+ * @SWG\Definition()
+ */
 class WidgetOption implements \JsonSerializable
 {
     use EntityTrait;
+
+    /**
+     * @SWG\Property(description="The Widget ID that this Option belongs to")
+     * @var int
+     */
     public $widgetId;
 
+    /**
+     * @SWG\Property(description="The option type, either attrib or raw")
+     * @var string
+     */
     public $type;
+
+    /**
+     * @SWG\Property(description="The option name")
+     * @var string
+     */
     public $option;
+
+    /**
+     * @SWG\Property(description="The option value")
+     * @var string
+     */
     public $value;
 
     public function __toString()

@@ -27,15 +27,6 @@ class XmdsNonce implements \JsonSerializable
     public $regionId;
     public $mediaId;
 
-    // Xmds Nonce statements
-    private $insertFileStatement;
-    private $insertLayoutStatement;
-    private $insertResourceStatement;
-    private $validateNonceStatement;
-    private $validateFileStatement;
-    private $validateLayoutStatement;
-    private $validateResourceStatement;
-
     public function save()
     {
         if ($this->nonceId == null || $this->nonceId == 0) {
