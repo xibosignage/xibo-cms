@@ -116,6 +116,21 @@ class Login extends Base
 
     /**
      * Shows information about Xibo
+     *
+     * @SWG\Get(
+     *  path="/about",
+     *  operationId="about",
+     *  tags={"misc"},
+     *  @SWG\Response(
+     *      response=200,
+     *      @SWG\Schema(
+     *          type="object",
+     *          additionalProperties={
+     *              "version"="string"
+     *          }
+     *      )
+     *  )
+     * )
      */
     function about()
     {

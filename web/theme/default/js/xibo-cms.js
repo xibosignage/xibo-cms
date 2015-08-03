@@ -735,6 +735,10 @@ function XiboPing(url, updateDiv) {
                 if (updateDiv != undefined) {
                     $(updateDiv).html(response.html);
                 }
+
+                if (response.clockUpdate) {
+                    XiboClockUpdate(response.html);
+                }
             }
             else {
                 // Login Form needed?
@@ -743,10 +747,6 @@ function XiboPing(url, updateDiv) {
                     LoginBox(response.message);
                     
                     return false;
-                }
-
-                if (response.clockUpdate) {
-                    XiboClockUpdate(response.html);
                 }
             }
 

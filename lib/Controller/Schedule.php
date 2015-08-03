@@ -68,6 +68,42 @@ class Schedule extends Base
 
     /**
      * Generates the calendar that we draw events on
+     *
+     * @SWG\Get(
+     *  path="/schedule/data/events",
+     *  operationId="scheduleCalendarData",
+     *  tags={"schedule"},
+     *  @SWG\Parameter(
+     *      name="DisplayGroupIds",
+     *      description="The DisplayGroupIds to return the schedule for. Empty for All.",
+     *      in="formData",
+     *      type="array",
+     *      @SWG\Items(
+     *          type="integer"
+     *      )
+     *  ),
+     *  @SWG\Parameter(
+     *      name="from",
+     *      in="formData",
+     *      required=true,
+     *      type="integer",
+     *      description="From Date Timestamp in Microseconds"
+     *  ),
+     *  @SWG\Parameter(
+     *      name="to",
+     *      in="formData",
+     *      required=true,
+     *      type="integer",
+     *      description="To Date Timestamp in Microseconds"
+     *  ),
+     *  @SWG\Response(
+     *      response=200,
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(ref="#/definitions/ScheduleCalendarData")
+     *      )
+     *  )
+     * )
      */
     function eventData()
     {
@@ -146,6 +182,25 @@ class Schedule extends Base
                 $extra = 'view-only';
             }
 
+            /**
+             * @SWG\Definition(
+             *  definition="ScheduleCalendarData",
+             *  @SWG\Property(
+             *      property="id",
+             *      type="integer",
+             *      description="Event ID"
+             *  ),
+             *  @SWG\Property(
+             *      property="title",
+             *      type="string",
+             *      description="Event Title"
+             *  ),
+             *  @SWG\Property(
+             *      property="event",
+             *      ref="#/definitions/Schedule"
+             *  )
+             * )
+             */
             $events[] = array(
                 'id' => $row->eventId,
                 'title' => $title,

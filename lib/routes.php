@@ -61,7 +61,13 @@ defined('XIBO') or die('Sorry, you are not allowed to directly access this page.
  * )
  */
 
-// About Page
+/**
+ * Misc
+ * @SWG\Tag(
+ *  name="misc",
+ *  description="Miscellaneous"
+ * )
+ */
 $app->get('/about', '\Xibo\Controller\Login:About')->name('about');
 $app->get('/clock', '\Xibo\Controller\Clock:clock')->name('clock');
 
@@ -193,12 +199,12 @@ $app->get('/displaygroup', '\Xibo\Controller\DisplayGroup:grid')->name('displayG
 $app->post('/displaygroup', '\Xibo\Controller\DisplayGroup:add')->name('displayGroup.add');
 $app->put('/displaygroup/:id', '\Xibo\Controller\DisplayGroup:edit')->name('displayGroup.edit');
 $app->delete('/displaygroup/:id', '\Xibo\Controller\DisplayGroup:delete')->name('displayGroup.delete');
-$app->post('/displaygroup/version/:id', '\Xibo\Controller\DisplayGroup:version')->name('displayGroup.version');
+$app->post('/displaygroup/:id/version', '\Xibo\Controller\DisplayGroup:version')->name('displayGroup.version');
 
-$app->post('/displaygroup/display/assign/:id', '\Xibo\Controller\DisplayGroup:assignDisplay')->name('displayGroup.assign.display');
-$app->post('/displaygroup/display/unassign/:id', '\Xibo\Controller\DisplayGroup:unassignDisplay')->name('displayGroup.unassign.display');
-$app->post('/displaygroup/media/assign/:id', '\Xibo\Controller\DisplayGroup:assignMedia')->name('displayGroup.assign.media');
-$app->post('/displaygroup/media/unassign/:id', '\Xibo\Controller\DisplayGroup:unassignMedia')->name('displayGroup.unassign.media');
+$app->post('/displaygroup/:id/display/assign', '\Xibo\Controller\DisplayGroup:assignDisplay')->name('displayGroup.assign.display');
+$app->post('/displaygroup/:id/display/unassign', '\Xibo\Controller\DisplayGroup:unassignDisplay')->name('displayGroup.unassign.display');
+$app->post('/displaygroup/:id/media/assign', '\Xibo\Controller\DisplayGroup:assignMedia')->name('displayGroup.assign.media');
+$app->post('/displaygroup/:id/media/unassign', '\Xibo\Controller\DisplayGroup:unassignMedia')->name('displayGroup.unassign.media');
 
 /**
  * Display Profile

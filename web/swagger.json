@@ -21,6 +21,24 @@
         "application/json"
     ],
     "paths": {
+        "/clock": {
+            "get": {
+                "tags": [
+                    "misc"
+                ],
+                "operationId": "clock",
+                "responses": {
+                    "200": {
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "time": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/displaygroup": {
             "get": {
                 "tags": [
@@ -148,6 +166,173 @@
                 }
             }
         },
+        "/displaygroup/{displayGroupId}/display/assign": {
+            "post": {
+                "tags": [
+                    "displayGroup"
+                ],
+                "summary": "Assign one or more Displays to a Display Group",
+                "description": "Adds the provided Displays to the Display Group",
+                "operationId": "displayGroupDisplayAssign",
+                "parameters": [
+                    {
+                        "name": "displayGroupId",
+                        "in": "path",
+                        "description": "The Display Group to assign to",
+                        "required": "true",
+                        "type": "integer"
+                    },
+                    {
+                        "name": "displayId",
+                        "in": "formData",
+                        "description": "The Display Ids to assign",
+                        "required": "true",
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/displaygroup/{displayGroupId}/display/unassign": {
+            "post": {
+                "tags": [
+                    "displayGroup"
+                ],
+                "summary": "Unassigns one or more Displays to a Display Group",
+                "description": "Removes the provided Displays from the Display Group",
+                "operationId": "displayGroupDisplayUnassign",
+                "parameters": [
+                    {
+                        "name": "displayGroupId",
+                        "in": "path",
+                        "description": "The Display Group to unassign from",
+                        "required": "true",
+                        "type": "integer"
+                    },
+                    {
+                        "name": "displayId",
+                        "in": "formData",
+                        "description": "The Display Ids to unassign",
+                        "required": "true",
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/displaygroup/{displayGroupId}/media/assign": {
+            "post": {
+                "tags": [
+                    "displayGroup"
+                ],
+                "summary": "Assign one or more Media items to a Display Group",
+                "description": "Adds the provided Media to the Display Group",
+                "operationId": "displayGroupMediaAssign",
+                "parameters": [
+                    {
+                        "name": "displayGroupId",
+                        "in": "path",
+                        "description": "The Display Group to assign to",
+                        "required": "true",
+                        "type": "integer"
+                    },
+                    {
+                        "name": "mediaId",
+                        "in": "formData",
+                        "description": "The Media Ids to assign",
+                        "required": "true",
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/displaygroup/{displayGroupId}/media/unassign": {
+            "post": {
+                "tags": [
+                    "displayGroup"
+                ],
+                "summary": "Unassign one or more Media items from a Display Group",
+                "description": "Removes the provided from the Display Group",
+                "operationId": "displayGroupMediaUnassign",
+                "parameters": [
+                    {
+                        "name": "displayGroupId",
+                        "in": "path",
+                        "description": "The Display Group to unassign from",
+                        "required": "true",
+                        "type": "integer"
+                    },
+                    {
+                        "name": "mediaId",
+                        "in": "formData",
+                        "description": "The Media Ids to unassign",
+                        "required": "true",
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/displaygroup/{displayGroupId}/version": {
+            "post": {
+                "tags": [
+                    "displayGroup"
+                ],
+                "summary": "Set the Version for this Display",
+                "description": "Sets the version instructions on all Displays in the Group",
+                "operationId": "displayGroupDisplayVersion",
+                "parameters": [
+                    {
+                        "name": "displayGroupId",
+                        "in": "path",
+                        "description": "The Display Group ID",
+                        "required": "true",
+                        "type": "integer"
+                    },
+                    {
+                        "name": "mediaId",
+                        "in": "formData",
+                        "description": "The Media Id of the Installer File",
+                        "required": "true",
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
         "/layout": {
             "post": {
                 "tags": [
@@ -220,9 +405,85 @@
                     }
                 }
             }
+        },
+        "/about": {
+            "get": {
+                "tags": [
+                    "misc"
+                ],
+                "operationId": "about",
+                "responses": {
+                    "200": {
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "version": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/schedule/data/events": {
+            "get": {
+                "tags": [
+                    "schedule"
+                ],
+                "operationId": "scheduleCalendarData",
+                "parameters": [
+                    {
+                        "name": "DisplayGroupIds",
+                        "in": "formData",
+                        "description": "The DisplayGroupIds to return the schedule for. Empty for All.",
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "from",
+                        "in": "formData",
+                        "description": "From Date Timestamp in Microseconds",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "to",
+                        "in": "formData",
+                        "description": "To Date Timestamp in Microseconds",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/ScheduleCalendarData"
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "ScheduleCalendarData": {
+            "properties": {
+                "id": {
+                    "description": "Event ID",
+                    "type": "integer"
+                },
+                "title": {
+                    "description": "Event Title",
+                    "type": "string"
+                },
+                "event": {
+                    "$ref": "#/definitions/Schedule"
+                }
+            }
+        },
         "Application": {
             "properties": {
                 "key": {
@@ -1471,6 +1732,10 @@
         }
     ],
     "tags": [
+        {
+            "name": "misc",
+            "description": "Miscellaneous"
+        },
         {
             "name": "schedule",
             "description": "Schedule"
