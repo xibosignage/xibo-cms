@@ -40,6 +40,8 @@ class ApiAuthenticationOAuth extends Middleware
             $app->server->isValidRequest();
 
             $this->app->user = UserFactory::loadByClientId($server->getAccessToken()->getSession()->getOwnerId());
+
+            //$this->app->user = UserFactory::getById(1);
         };
 
         $app->hook('slim.before.dispatch', $isAuthorised);

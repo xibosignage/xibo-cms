@@ -18,12 +18,13 @@ class ApiView extends View
 {
     public function render($template = '', $data = NULL)
     {
-        Log::debug('API Render with data %s', json_encode($this->all()));
-
         $app = Slim::getInstance();
 
+        // JSONP Callback?
+        $jsonPCallback = $app->request->get('callback', null);
+
         // Don't envelope unless requested
-        if ($app->request()->get('envelope', 0) == 1 || $app->getName() == 'test') {
+        if ($jsonPCallback != null || $app->request()->get('envelope', 0) == 1 || $app->getName() == 'test') {
             // Envelope
             $response = $this->all();
 
@@ -60,21 +61,50 @@ class ApiView extends View
                 $app->stop();
             }
             else {
-                // Set the response to our data object
-                $response = $this->get('data');
+
+                // Are we a grid?
+                if ($this->get('grid') == true) {
+                    // Set the response to our data['data'] object
+                    $grid = $this->get('data');
+                    $response = $grid['data'];
+
+                    // Total Number of Rows
+                    $totalRows = $grid['recordsTotal'];
+
+                    // Set some headers indicating our next/previous pages
+                    $start = Sanitize::getInt('start', 0);
+                    $size = Sanitize::getInt('size', 10);
+
+                    $linkHeader = '';
+                    $url = $app->request()->getUrl() . $app->request()->getPath();
+
+                    // Is there a next page?
+                    if ($start + $size < $totalRows)
+                        $linkHeader .= '<' . $url . '?start' . ($start + $size * 2) . '&size=' . $size . '>; rel="next", ';
+
+                    // Is there a previous page?
+                    if ($start > 0)
+                        $linkHeader .= '<' . $url . '?start' . ($start - $size) . '&size=' . $size . '>; rel="prev", ';
+
+                    // The first page
+                    $linkHeader .= '<' . $url . '?start=0&size=' . $size . '>; rel="first"';
+
+                    $app->response()->header('X-Total-Count', $totalRows);
+                    $app->response()->header('Link', $linkHeader);
+                } else {
+                    // Set the response to our data object
+                    $response = $this->get('data');
+                }
             }
         }
 
         // JSON header
         $app->response()->header('Content-Type', 'application/json');
 
-        // Callback?
-        $jsonp_callback = $app->request->get('callback', null);
-
-        if ($jsonp_callback !== null) {
-            $app->response()->body($jsonp_callback.'('.json_encode($response).')');
+        if ($jsonPCallback !== null) {
+            $app->response()->body($jsonPCallback.'('.json_encode($response).')');
         } else {
-            $app->response()->body(json_encode($response));
+            $app->response()->body(json_encode($response, JSON_PRETTY_PRINT));
         }
 
         $app->stop();

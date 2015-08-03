@@ -24,16 +24,26 @@ defined('XIBO') or die('Sorry, you are not allowed to directly access this page.
  * @SWG\Swagger(
  *  basePath="/api",
  *  produces={"application/json"},
- *  security="auth"
+ *  security={
+ *      {"auth": {"write:all", "read:all"}}
+ *  },
+ *  @SWG\ExternalDocumentation(
+ *      description="Manual",
+ *      url="http://xibo.org.uk/manual"
+ *  )
  * )
  *
  * @SWG\Info(
  *  title="Xibo API",
  *  description="Xibo CMS API",
  *  version="1.8.0-alpha",
+ *  termsOfService="http://xibo.org.uk/legal",
  *  @SWG\License(
  *      name="AGPLv3 or later",
  *      url="http://www.gnu.org/licenses/"
+ *  ),
+ *  @SWG\Contact(
+ *      email="info@xibo.org.uk"
  *  )
  * )
  *

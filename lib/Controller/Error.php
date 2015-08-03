@@ -68,6 +68,9 @@ class Error extends Base
                         $app->response()->headers($header);
                     }
                 }
+                else if ($e instanceof \InvalidArgumentException) {
+                    $status = 422;
+                }
 
                 $this->getState()->hydrate([
                     'httpStatus' => $status,

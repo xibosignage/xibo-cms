@@ -43,20 +43,6 @@ class DisplayGroup extends Base
     }
 
     /**
-     * @SWG\Definition(
-     *  definition="displayGroupSearchResult",
-     *  allOf={
-     *      @SWG\Schema(ref="#/definitions/searchResponse"),
-     *      @SWG\Schema(
-     *          @SWG\Property(
-     *              property="data",
-     *              type="array",
-     *              @SWG\Items(ref="#/definitions/DisplayGroup")
-     *          )
-     *      )
-     *  }
-     * )
-     *
      * @SWG\Get(
      *  path="/displaygroup",
      *  summary="Get Display Groups",
@@ -65,7 +51,15 @@ class DisplayGroup extends Base
      *  @SWG\Response(
      *      response=200,
      *      description="a successful response",
-     *      @SWG\Schema(ref="#/definitions/displayGroupSearchResult")
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(ref="#/definitions/DisplayGroup")
+     *      ),
+     *      @SWG\Header(
+     *          header="X-Total-Count",
+     *          description="The total number of records",
+     *          type="integer"
+     *      )
      *  )
      * )
      */
@@ -264,7 +258,12 @@ class DisplayGroup extends Base
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/DisplayGroup")
+     *      @SWG\Schema(ref="#/definitions/DisplayGroup"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new DisplayGroup",
+     *          type="string"
+     *      )
      *  )
      * )
      */
@@ -282,6 +281,7 @@ class DisplayGroup extends Base
 
         // Return
         $this->getState()->hydrate([
+            'httpState' => 201,
             'message' => sprintf(__('Added %s'), $displayGroup->displayGroup),
             'id' => $displayGroup->displayGroupId,
             'data' => $displayGroup

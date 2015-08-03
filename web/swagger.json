@@ -3,6 +3,10 @@
     "info": {
         "title": "Xibo API",
         "description": "Xibo CMS API",
+        "termsOfService": "http://xibo.org.uk/legal",
+        "contact": {
+            "email": "info@xibo.org.uk"
+        },
         "license": {
             "name": "AGPLv3 or later",
             "url": "http://www.gnu.org/licenses/"
@@ -25,7 +29,16 @@
                     "200": {
                         "description": "a successful response",
                         "schema": {
-                            "$ref": "#/definitions/displayGroupSearchResult"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/DisplayGroup"
+                            }
+                        },
+                        "headers": {
+                            "X-Total-Count": {
+                                "description": "The total number of records",
+                                "type": "integer"
+                            }
                         }
                     }
                 }
@@ -58,6 +71,12 @@
                         "description": "successful operation",
                         "schema": {
                             "$ref": "#/definitions/DisplayGroup"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new DisplayGroup",
+                                "type": "string"
+                            }
                         }
                     }
                 }
@@ -199,35 +218,6 @@
         }
     },
     "definitions": {
-        "searchResponse": {
-            "properties": {
-                "draw": {
-                    "description": "The draw request, useful for validating async request responses",
-                    "type": "string"
-                },
-                "recordsTotal": {
-                    "description": "The total number of records",
-                    "type": "integer"
-                }
-            }
-        },
-        "displayGroupSearchResult": {
-            "allOf": [
-                {
-                    "$ref": "#/definitions/searchResponse"
-                },
-                {
-                    "properties": {
-                        "data": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/DisplayGroup"
-                            }
-                        }
-                    }
-                }
-            ]
-        },
         "DisplayGroup": {
             "properties": {
                 "displayGroupId": {
@@ -392,7 +382,14 @@
             }
         }
     },
-    "security": "auth",
+    "security": [
+        {
+            "auth": [
+                "write:all",
+                "read:all"
+            ]
+        }
+    ],
     "tags": [
         {
             "name": "schedule",
@@ -462,5 +459,9 @@
             "name": "module",
             "description": "Modules and Widgets"
         }
-    ]
+    ],
+    "externalDocs": {
+        "description": "Manual",
+        "url": "http://xibo.org.uk/manual"
+    }
 }
