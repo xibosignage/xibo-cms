@@ -236,6 +236,218 @@
                 }
             }
         },
+        "/display/{displayId}": {
+            "put": {
+                "tags": [
+                    "display"
+                ],
+                "summary": "Display Edit",
+                "description": "Edit a Display",
+                "operationId": "displayEdit",
+                "parameters": [
+                    {
+                        "name": "displayId",
+                        "in": "path",
+                        "description": "The Display ID",
+                        "required": "true",
+                        "type": "integer"
+                    },
+                    {
+                        "name": "display",
+                        "in": "formData",
+                        "description": "The Display Name",
+                        "required": "true",
+                        "type": "string"
+                    },
+                    {
+                        "name": "description",
+                        "in": "formData",
+                        "description": "A description of the Display",
+                        "required": "false",
+                        "type": "string"
+                    },
+                    {
+                        "name": "isAuditing",
+                        "in": "formData",
+                        "description": "Flag indicating whether this Display records auditing information.",
+                        "required": "true",
+                        "type": "integer"
+                    },
+                    {
+                        "name": "defaultLayoutId",
+                        "in": "formData",
+                        "description": "A Layout ID representing the Default Layout for this Display.",
+                        "required": "true",
+                        "type": "integer"
+                    },
+                    {
+                        "name": "licensed",
+                        "in": "formData",
+                        "description": "Flag indicating whether this display is licensed.",
+                        "required": "true",
+                        "type": "integer"
+                    },
+                    {
+                        "name": "incSchedule",
+                        "in": "formData",
+                        "description": "Flag indicating whether the Default Layout should be included in the Schedule",
+                        "required": "true",
+                        "type": "integer"
+                    },
+                    {
+                        "name": "emailAlert",
+                        "in": "formData",
+                        "description": "Flag indicating whether the Display generates up/down email alerts.",
+                        "required": "true",
+                        "type": "integer"
+                    },
+                    {
+                        "name": "alertTimeout",
+                        "in": "formData",
+                        "description": "How long in seconds should this display wait before alerting when it hasn't connected. Override for the collection interval.",
+                        "required": "false",
+                        "type": "integer"
+                    },
+                    {
+                        "name": "wakeOnLanEnabled",
+                        "in": "formData",
+                        "description": "Flag indicating if Wake On LAN is enabled for this Display",
+                        "required": "true",
+                        "type": "integer"
+                    },
+                    {
+                        "name": "wakeOnLanTime",
+                        "in": "formData",
+                        "description": "A h:i string representing the time that the Display should receive its Wake on LAN command",
+                        "required": "false",
+                        "type": "string"
+                    },
+                    {
+                        "name": "broadCastAddress",
+                        "in": "formData",
+                        "description": "The BroadCast Address for this Display - used by Wake On LAN",
+                        "required": "false",
+                        "type": "string"
+                    },
+                    {
+                        "name": "secureOn",
+                        "in": "formData",
+                        "description": "The secure on configuration for this Display",
+                        "required": "false",
+                        "type": "string"
+                    },
+                    {
+                        "name": "cidr",
+                        "in": "formData",
+                        "description": "The CIDR configuration for this Display",
+                        "required": "false",
+                        "type": "int"
+                    },
+                    {
+                        "name": "latitude",
+                        "in": "formData",
+                        "description": "The Latitude of this Display",
+                        "required": "false",
+                        "type": "double"
+                    },
+                    {
+                        "name": "longitude",
+                        "in": "formData",
+                        "description": "The Longitude of this Display",
+                        "required": "false",
+                        "type": "double"
+                    },
+                    {
+                        "name": "displayProfileId",
+                        "in": "formData",
+                        "description": "The Display Settings Profile ID",
+                        "required": "false",
+                        "type": "int"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Display"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "display"
+                ],
+                "summary": "Display Delete",
+                "description": "Delete a Display",
+                "operationId": "displayDelete",
+                "parameters": [
+                    {
+                        "name": "displayId",
+                        "in": "path",
+                        "description": "The Display ID",
+                        "required": "true",
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/display/requestscreenshot/{displayId}": {
+            "put": {
+                "tags": [
+                    "display"
+                ],
+                "summary": "Request Screen Shot",
+                "description": "Notify the display that the CMS would like a screen shot to be sent.",
+                "operationId": "displayRequestScreenshot",
+                "parameters": [
+                    {
+                        "name": "displayId",
+                        "in": "path",
+                        "description": "The Display ID",
+                        "required": "true",
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Display"
+                        }
+                    }
+                }
+            }
+        },
+        "/display/wol/{displayId}": {
+            "get": {
+                "tags": [
+                    "display"
+                ],
+                "summary": "Issue WOL",
+                "description": "Send a Wake On LAN packet to this Display",
+                "operationId": "displayWakeOnLan",
+                "parameters": [
+                    {
+                        "name": "displayId",
+                        "in": "path",
+                        "description": "The Display ID",
+                        "required": "true",
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
         "/displaygroup": {
             "get": {
                 "tags": [
@@ -519,6 +731,148 @@
                         "name": "mediaId",
                         "in": "formData",
                         "description": "The Media Id of the Installer File",
+                        "required": "true",
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/displayprofile": {
+            "get": {
+                "tags": [
+                    "displayprofile"
+                ],
+                "summary": "Display Profile Search",
+                "description": "Search this users Display Profiles",
+                "operationId": "displayProfileSearch",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/DisplayProfile"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "displayprofile"
+                ],
+                "summary": "Add Display Profile",
+                "description": "Add a Display Profile",
+                "operationId": "displayProfileAdd",
+                "parameters": [
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "The Name of the Display Profile",
+                        "required": "true",
+                        "type": "string"
+                    },
+                    {
+                        "name": "type",
+                        "in": "formData",
+                        "description": "The Client Type this Profile will apply to",
+                        "required": "true",
+                        "type": "string"
+                    },
+                    {
+                        "name": "isDefault",
+                        "in": "formData",
+                        "description": "Flag indicating if this is the default profile for the client type",
+                        "required": "true",
+                        "type": "int"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/DisplayProfile"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new record",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/displayprofile/{displayProfileId}": {
+            "put": {
+                "tags": [
+                    "displayprofile"
+                ],
+                "summary": "Edit Display Profile",
+                "description": "Edit a Display Profile",
+                "operationId": "displayProfileEdit",
+                "parameters": [
+                    {
+                        "name": "displayProfileId",
+                        "in": "formData",
+                        "description": "The Display Profile ID",
+                        "required": "true",
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "The Name of the Display Profile",
+                        "required": "true",
+                        "type": "string"
+                    },
+                    {
+                        "name": "type",
+                        "in": "formData",
+                        "description": "The Client Type this Profile will apply to",
+                        "required": "true",
+                        "type": "string"
+                    },
+                    {
+                        "name": "isDefault",
+                        "in": "formData",
+                        "description": "Flag indicating if this is the default profile for the client type",
+                        "required": "true",
+                        "type": "int"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/DisplayProfile"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new record",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "displayprofile"
+                ],
+                "summary": "Delete Display Profile",
+                "description": "Delete an existing Display Profile",
+                "operationId": "displayProfileDelete",
+                "parameters": [
+                    {
+                        "name": "displayProfileId",
+                        "in": "path",
+                        "description": "The Display Profile ID",
                         "required": "true",
                         "type": "integer"
                     }

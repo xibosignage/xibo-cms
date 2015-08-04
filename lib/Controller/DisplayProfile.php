@@ -36,6 +36,23 @@ class DisplayProfile extends Base
         $this->getState()->template = 'displayprofile-page';
     }
 
+    /**
+     * @SWG\Get(
+     *  path="/displayprofile",
+     *  operationId="displayProfileSearch",
+     *  tags={"displayprofile"},
+     *  summary="Display Profile Search",
+     *  description="Search this users Display Profiles",
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(ref="#/definitions/DisplayProfile")
+     *      )
+     *  )
+     * )
+     */
     function grid()
     {
         $profiles = DisplayProfileFactory::query();
@@ -80,6 +97,45 @@ class DisplayProfile extends Base
 
     /**
      * Display Profile Add
+     *
+     * @SWG\Post(
+     *  path="/displayprofile",
+     *  operationId="displayProfileAdd",
+     *  tags={"displayprofile"},
+     *  summary="Add Display Profile",
+     *  description="Add a Display Profile",
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="The Name of the Display Profile",
+     *      type="string",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="type",
+     *      in="formData",
+     *      description="The Client Type this Profile will apply to",
+     *      type="string",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="isDefault",
+     *      in="formData",
+     *      description="Flag indicating if this is the default profile for the client type",
+     *      type="int",
+     *      required="true"
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/DisplayProfile"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new record",
+     *          type="string"
+     *      )
+     *  )
+     * )
      */
     public function add()
     {
@@ -93,6 +149,7 @@ class DisplayProfile extends Base
 
         // Return
         $this->getState()->hydrate([
+            'httpStatus' => 201,
             'message' => sprintf(__('Added %s'), $displayProfile->name),
             'id' => $displayProfile->displayProfileId,
             'data' => $displayProfile
@@ -122,7 +179,52 @@ class DisplayProfile extends Base
     /**
      * Edit Form
      * @param $displayProfileId
-     * @throws \Xibo\Exception\NotFoundException
+     * 
+     * @SWG\Put(
+     *  path="/displayprofile/{displayProfileId}",
+     *  operationId="displayProfileEdit",
+     *  tags={"displayprofile"},
+     *  summary="Edit Display Profile",
+     *  description="Edit a Display Profile",
+     *  @SWG\Parameter(
+     *      name="displayProfileId",
+     *      in="formData",
+     *      description="The Display Profile ID",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="The Name of the Display Profile",
+     *      type="string",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="type",
+     *      in="formData",
+     *      description="The Client Type this Profile will apply to",
+     *      type="string",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="isDefault",
+     *      in="formData",
+     *      description="Flag indicating if this is the default profile for the client type",
+     *      type="int",
+     *      required="true"
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/DisplayProfile"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new record",
+     *          type="string"
+     *      )
+     *  )
+     * )
      */
     public function edit($displayProfileId)
     {
@@ -212,6 +314,25 @@ class DisplayProfile extends Base
     /**
      * Delete Display Profile
      * @param int $displayProfileId
+     *
+     * @SWG\Delete(
+     *  path="/displayprofile/{displayProfileId}",
+     *  operationId="displayProfileDelete",
+     *  tags={"displayprofile"},
+     *  summary="Delete Display Profile",
+     *  description="Delete an existing Display Profile",
+     *  @SWG\Parameter(
+     *      name="displayProfileId",
+     *      in="path",
+     *      description="The Display Profile ID",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
      */
     function delete($displayProfileId)
     {
@@ -225,6 +346,7 @@ class DisplayProfile extends Base
 
         // Return
         $this->getState()->hydrate([
+            'httpStatus' => 204,
             'message' => sprintf(__('Deleted %s'), $displayProfile->name)
         ]);
     }
