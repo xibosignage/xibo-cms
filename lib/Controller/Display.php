@@ -129,11 +129,25 @@ class Display extends Base
 
     /**
      * Grid of Displays
+     *
+     * @SWG\Get(
+     *  path="/display",
+     *  operationId="displaySearch",
+     *  tags={"display"},
+     *  summary="Display Search",
+     *  description="Search Displays for this User",
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(ref="#/definitions/Display")
+     *      )
+     *  )
+     * )
      */
     function grid()
     {
-        $user = $this->getUser();
-
         // Filter by Name
         $filter_display = Sanitize::getString('filter_display');
         $this->getSession()->set('display', 'filter_display', $filter_display);
@@ -379,6 +393,27 @@ class Display extends Base
     /**
      * Display Edit
      * @param int $displayId
+     *
+     * @SWG\Put(
+     *  path="/display/{displayId}",
+     *  operationId="displayEdit",
+     *  tags={"display"},
+     *  summary="Display Edit",
+     *  description="Edit a Display",
+     *  @SWG\Parameter(
+     *      name="displayId",
+     *      in="path",
+     *      description="The Display ID",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Display")
+     *  )
+     * )
      */
     function edit($displayId)
     {

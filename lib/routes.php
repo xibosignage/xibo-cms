@@ -102,10 +102,6 @@ $app->post('/layout/import', '\Xibo\Controller\Layout:import')->name('layout.imp
 
 /**
  * Region
- * @SWG\Tag(
- *  name="region",
- *  description="Regions"
- * )
  */
 $app->post('/region/:id', '\Xibo\Controller\Region:add')->name('region.add');
 $app->put('/region/:id', '\Xibo\Controller\Region:edit')->name('region.edit');
@@ -173,7 +169,7 @@ $app->get('/library/download/:id(/:type)', '\Xibo\Controller\Library:download')-
 $app->post('/library', '\Xibo\Controller\Library:add')->name('library.add');
 $app->put('/library/:id', '\Xibo\Controller\Library:edit')->name('library.edit');
 $app->delete('/library/:id', '\Xibo\Controller\Library:delete')->name('library.delete');
-$app->delete('/library/tidy/', '\Xibo\Controller\Library:tidy')->name('library.tidy');
+$app->delete('/library/tidy', '\Xibo\Controller\Library:tidy')->name('library.tidy');
 
 /**
  * Displays

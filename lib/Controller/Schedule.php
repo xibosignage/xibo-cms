@@ -251,6 +251,91 @@ class Schedule extends Base
 
     /**
      * Add Event
+     * @SWG\Post(
+     *  path="/schedule",
+     *  operationId="scheduleAdd",
+     *  tags={"schedule"},
+     *  summary="Add Schedule Event",
+     *  description="Add a new scheduled event for a Campaign/Layout to be shown on a Display Group/Display.",
+     *  @SWG\Parameter(
+     *      name="campaignId",
+     *      in="formData",
+     *      description="The Campaign ID to use for this Event. If a Layout is needed then the Campaign specific ID for that Layout should be used.",
+     *      type="integer",
+     *      required="true"
+     *  ),
+     *  @SWG\Parameter(
+     *      name="displayOrder",
+     *      in="formData",
+     *      description="The display order for this event. ",
+     *      type="integer",
+     *      required="true"
+     *  ),
+     *  @SWG\Parameter(
+     *      name="isPriority",
+     *      in="formData",
+     *      description="A 0|1 flag indicating whether this event should be considered priority",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *   @SWG\Parameter(
+     *      name="displayGroupIds",
+     *      in="formData",
+     *      description="The Display Group IDs for this event. Display specific Group IDs should be used to schedule on single displays.",
+     *      type="array",
+     *      required="true",
+     *      @SWG\Items(type="integer")
+     *   ),
+     *   @SWG\Parameter(
+     *      name="fromDt",
+     *      in="formData",
+     *      description="The from date for this event.",
+     *      type="string",
+     *      format="date-time",
+     *      required="true"
+     *   ),
+     *   @SWG\Parameter(
+     *      name="toDt",
+     *      in="formData",
+     *      description="The to date for this event.",
+     *      type="string",
+     *      format="date-time",
+     *      required="true"
+     *   ),
+     *   @SWG\Parameter(
+     *      name="recurrenceType",
+     *      in="formData",
+     *      description="The type of recurrence to apply to this event.",
+     *      type="string",
+     *      required="false",
+     *      enum={"", "Minute", "Hour", "Day", "Week", "Month", "Year"}
+     *   ),
+     *   @SWG\Parameter(
+     *      name="recurrentDetail",
+     *      in="formData",
+     *      description="The interval for the recurrence.",
+     *      type="int",
+     *      required="false"
+     *   ),
+     *   @SWG\Parameter(
+     *      name="recurrenceRange",
+     *      in="formData",
+     *      description="The end date for this events recurrence.",
+     *      type="string",
+     *      format="date-time",
+     *      required="false"
+     *   ),
+     *   @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Schedule"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new record",
+     *          type="string"
+     *      )
+     *  )
+     * )
      */
     public function add()
     {
@@ -293,6 +378,7 @@ class Schedule extends Base
 
         // Return
         $this->getState()->hydrate([
+            'httpStatus' => 201,
             'message' => __('Added Event'),
             'id' => $schedule->eventId,
             'data' => $schedule
@@ -343,6 +429,94 @@ class Schedule extends Base
     /**
      * Edits an event
      * @param int $eventId
+     *
+     * @SWG\Put(
+     *  path="/schedule/{eventId}",
+     *  operationId="scheduleEdit",
+     *  tags={"schedule"},
+     *  summary="Edit Schedule Event",
+     *  description="Edit a scheduled event for a Campaign/Layout to be shown on a Display Group/Display.",
+     *  @SWG\Parameter(
+     *      name="eventID",
+     *      in="path",
+     *      description="The Scheduled Event ID",
+     *      type="integer",
+     *      required="true"
+     *  ),
+     *  @SWG\Parameter(
+     *      name="campaignId",
+     *      in="formData",
+     *      description="The Campaign ID to use for this Event. If a Layout is needed then the Campaign specific ID for that Layout should be used.",
+     *      type="integer",
+     *      required="true"
+     *  ),
+     *  @SWG\Parameter(
+     *      name="displayOrder",
+     *      in="formData",
+     *      description="The display order for this event. ",
+     *      type="integer",
+     *      required="true"
+     *  ),
+     *  @SWG\Parameter(
+     *      name="isPriority",
+     *      in="formData",
+     *      description="A 0|1 flag indicating whether this event should be considered priority",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *   @SWG\Parameter(
+     *      name="displayGroupIds",
+     *      in="formData",
+     *      description="The Display Group IDs for this event. Display specific Group IDs should be used to schedule on single displays.",
+     *      type="array",
+     *      required="true",
+     *      @SWG\Items(type="integer")
+     *   ),
+     *   @SWG\Parameter(
+     *      name="fromDt",
+     *      in="formData",
+     *      description="The from date for this event.",
+     *      type="string",
+     *      format="date-time",
+     *      required="true"
+     *   ),
+     *   @SWG\Parameter(
+     *      name="toDt",
+     *      in="formData",
+     *      description="The to date for this event.",
+     *      type="string",
+     *      format="date-time",
+     *      required="true"
+     *   ),
+     *   @SWG\Parameter(
+     *      name="recurrenceType",
+     *      in="formData",
+     *      description="The type of recurrence to apply to this event.",
+     *      type="string",
+     *      required="false",
+     *      enum={"", "Minute", "Hour", "Day", "Week", "Month", "Year"}
+     *   ),
+     *   @SWG\Parameter(
+     *      name="recurrentDetail",
+     *      in="formData",
+     *      description="The interval for the recurrence.",
+     *      type="int",
+     *      required="false"
+     *   ),
+     *   @SWG\Parameter(
+     *      name="recurrenceRange",
+     *      in="formData",
+     *      description="The end date for this events recurrence.",
+     *      type="string",
+     *      format="date-time",
+     *      required="false"
+     *   ),
+     *   @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Schedule")
+     *  )
+     * )
      */
     public function edit($eventId)
     {
@@ -416,6 +590,25 @@ class Schedule extends Base
     /**
      * Deletes an Event from all displays
      * @param int $eventId
+     *
+     * @SWG\Delete(
+     *  path="/schedule/{eventId}",
+     *  operationId="scheduleDelete",
+     *  tags={"schedule"},
+     *  summary="Delete Event",
+     *  description="Delete a Scheduled Event",
+     *  @SWG\Parameter(
+     *      name="eventId",
+     *      in="path",
+     *      description="The Scheduled Event ID",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
      */
     public function delete($eventId)
     {
@@ -429,6 +622,7 @@ class Schedule extends Base
 
         // Return
         $this->getState()->hydrate([
+            'httpStatus' => 204,
             'message' => __('Deleted Event')
         ]);
     }

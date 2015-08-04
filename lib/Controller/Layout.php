@@ -153,9 +153,14 @@ class Layout extends Base
      *      required=false
      *  ),
      *  @SWG\Response(
-     *      response=200,
+     *      response=201,
      *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Layout")
+     *      @SWG\Schema(ref="#/definitions/Layout"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new record",
+     *          type="string"
+     *      )
      *  )
      * )
      */
@@ -182,6 +187,7 @@ class Layout extends Base
 
         // Return
         $this->getState()->hydrate([
+            'httpStatus' => 201,
             'message' => sprintf(__('Added %s'), $layout->layout),
             'id' => $layout->layoutId,
             'data' => $layout
@@ -195,6 +201,7 @@ class Layout extends Base
      * @SWG\Put(
      *  path="/layout/{layoutId}",
      *  operationId="layoutEdit",
+     *  summary="Edit Layout",
      *  description="Edit a Layout",
      *  tags={"layout"},
      *  @SWG\Parameter(
@@ -203,6 +210,62 @@ class Layout extends Base
      *      in="path",
      *      required=true
      *  ),
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="The Layout Name",
+     *      type="string",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="description",
+     *      in="formData",
+     *      description="The Layout Description",
+     *      type="string",
+     *      required="false"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="tags",
+     *      in="formData",
+     *      description="A comma separated list of Tags",
+     *      type="string",
+     *      required="false"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="retired",
+     *      in="formData",
+     *      description="A flag indicating whether this Layout is retired.",
+     *      type="integer",
+     *      required="false"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="backgroundColor",
+     *      in="formData",
+     *      description="A HEX color to use as the background color of this Layout.",
+     *      type="string",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="backgroundImageId",
+     *      in="formData",
+     *      description="A media ID to use as the background image for this Layout.",
+     *      type="integer",
+     *      required="false"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="backgroundzIndex",
+     *      in="formData",
+     *      description="The Layer Number to use for the background.",
+     *      type="integer",
+     *      required="false"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="resolutionId",
+     *      in="formData",
+     *      description="The Resolution ID to use on this Layout.",
+     *      type="integer",
+     *      required="true"
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -303,6 +366,25 @@ class Layout extends Base
     /**
      * Deletes a layout
      * @param int $layoutId
+     *
+     * @SWG\Delete(
+     *  path="/layout/{layoutId}",
+     *  operationId="layoutDelete",
+     *  tags={"layout"},
+     *  summary="Delete Layout",
+     *  description="Delete a Layout",
+     *  @SWG\Parameter(
+     *      name="layoutId",
+     *      in="path",
+     *      description="The Layout ID to Delete",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
      */
     function delete($layoutId)
     {
@@ -315,6 +397,7 @@ class Layout extends Base
 
         // Return
         $this->getState()->hydrate([
+            'httpStatus' => 204,
             'message' => sprintf(__('Deleted %s'), $layout->layout)
         ]);
     }
@@ -322,6 +405,25 @@ class Layout extends Base
     /**
      * Retires a layout
      * @param int $layoutId
+     *
+     * @SWG\Put(
+     *  path="/layout/retire/{layoutId}",
+     *  operationId="layoutRetire",
+     *  tags={"layout"},
+     *  summary="Retire Layout",
+     *  description="Retire a Layout so that it isn't available to Schedule. Existing Layouts will still be played",
+     *  @SWG\Parameter(
+     *      name="layoutId",
+     *      in="path",
+     *      description="The Layout ID",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
      */
     function retire($layoutId)
     {
@@ -340,12 +442,29 @@ class Layout extends Base
 
         // Return
         $this->getState()->hydrate([
+            'httpStatus' => 204,
             'message' => sprintf(__('Retired %s'), $layout->layout)
         ]);
     }
 
     /**
      * Shows the Layout Grid
+     *
+     * @SWG\Get(
+     *  path="/layout",
+     *  operationId="layoutSearch",
+     *  tags={"layout"},
+     *  summary="Search Layouts",
+     *  description="Search for Layouts viewable by this user",
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(ref="#/definitions/Layout")
+     *      )
+     *  )
+     * )
      */
     function grid()
     {
@@ -609,6 +728,52 @@ class Layout extends Base
     /**
      * Copies a layout
      * @param int $layoutId
+     *
+     * @SWG\Post(
+     *  path="/layout/copy/{layoutId}",
+     *  operationId="layoutCopy",
+     *  tags={"layout"},
+     *  summary="Copy Layout",
+     *  description="Copy a Layout, providing a new name if applicable",
+     *  @SWG\Parameter(
+     *      name="layoutId",
+     *      in="path",
+     *      description="The Layout ID to Copy",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="The name for the new Layout",
+     *      type="string",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="description",
+     *      in="formData",
+     *      description="The Description for the new Layout",
+     *      type="string",
+     *      required="false"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="copyMediaFiles",
+     *      in="formData",
+     *      description="Flag indicating whether to make new Copies of all Media Files assigned to the Layout being Copied",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Layout"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new record",
+     *          type="string"
+     *      )
+     *  )
+     * )
      */
     public function copy($layoutId)
     {
@@ -639,6 +804,7 @@ class Layout extends Base
 
         // Return
         $this->getState()->hydrate([
+            'httpStatus' => 201,
             'message' => sprintf(__('Copied as %s'), $layout->layout),
             'id' => $layout->layoutId,
             'data' => $layout
@@ -722,6 +888,24 @@ class Layout extends Base
         readfile($fileName);
     }
 
+    /**
+     * TODO: Not sure how to document this.
+     * @SWG\Post(
+     *  path="/layout/import",
+     *  operationId="layoutImport",
+     *  tags={"layout"},
+     *  summary="Import Layout",
+     *  description="Upload and Import a Layout",
+     *  consumes="multipart/form-data",
+     *  @SWG\Parameter(
+     *      name="file",
+     *      in="formData",
+     *      description="The file",
+     *      type="file",
+     *      required="true"
+     *   )
+     * )
+     */
     public function import()
     {
         Log::debug('Import Layout');

@@ -37,6 +37,22 @@ class Campaign extends Base
 
     /**
      * Returns a Grid of Campaigns
+     *
+     * @SWG\Get(
+     *  path="/campaign",
+     *  operationId="campaignSearch",
+     *  tags={"campaign"},
+     *  summary="Search Campaigns",
+     *  description="Search all Campaigns this user has access to",
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(ref="#/definitions/Campaign")
+     *      )
+     *  )
+     * )
      */
     public function grid()
     {
@@ -117,6 +133,31 @@ class Campaign extends Base
 
     /**
      * Add a Campaign
+     *
+     * @SWG\Post(
+     *  path="/campaign",
+     *  operationId="campaignAdd",
+     *  tags={"campaign"},
+     *  summary="Add Campaign",
+     *  description="Add a Campaign",
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="Name for this Campaign",
+     *      type="string",
+     *      required="true"
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Campaign"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new record",
+     *          type="string"
+     *      )
+     *  )
+     * )
      */
     public function add()
     {
@@ -127,6 +168,7 @@ class Campaign extends Base
 
         // Return
         $this->getState()->hydrate([
+            'httpStatus' => 201,
             'message' => sprintf(__('Added %s'), $campaign->campaign),
             'id' => $campaign->campaignId,
             'data' => $campaign
@@ -154,6 +196,33 @@ class Campaign extends Base
     /**
      * Edit a Campaign
      * @param int $campaignId
+     *
+     * @SWG\Put(
+     *  path="/campaign/{campaignId}",
+     *  operationId="campaignEdit",
+     *  tags={"campaign"},
+     *  summary="Edit Campaign",
+     *  description="Edit an existing Campaign",
+     *  @SWG\Parameter(
+     *      name="campaignId",
+     *      in="path",
+     *      description="The Campaign ID to Edit",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="Name for this Campaign",
+     *      type="string",
+     *      required="true"
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Campaign")
+     *  )
+     * )
      */
     public function edit($campaignId)
     {
@@ -194,6 +263,25 @@ class Campaign extends Base
     /**
      * Delete Campaign
      * @param int $campaignId
+     *
+     * @SWG\Delete(
+     *  path="/campaign/{campaignId}",
+     *  operationId="campaignDelete",
+     *  tags={"campaign"},
+     *  summary="Delete Campaign",
+     *  description="Delete an existing Campaign",
+     *  @SWG\Parameter(
+     *      name="campaignId",
+     *      in="path",
+     *      description="The Campaign ID to Delete",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
      */
     public function delete($campaignId)
     {
@@ -206,6 +294,7 @@ class Campaign extends Base
 
         // Return
         $this->getState()->hydrate([
+            'httpStatus' => 204,
             'message' => sprintf(__('Deleted %s'), $campaign->campaign)
         ]);
     }
@@ -232,6 +321,33 @@ class Campaign extends Base
     /**
      * Assigns a layout to a Campaign
      * @param int $campaignId
+     *
+     * @SWG\Post(
+     *  path="/campaign/layout/assign/{layoutId}",
+     *  operationId="campaignAssignLayout",
+     *  tags={"campaign"},
+     *  summary="Assign Layouts",
+     *  description="Assign Layouts to a Campaign",
+     *  @SWG\Parameter(
+     *      name="campaignId",
+     *      in="path",
+     *      description="The Campaign ID",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="layoutIds",
+     *      in="formData",
+     *      description="Array of Layout IDs to Assign",
+     *      type="array",
+     *      required="true",
+     *      @SWG\Items(type="integer")
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
      */
     public function assignLayout($campaignId)
     {
@@ -263,6 +379,7 @@ class Campaign extends Base
 
         // Return
         $this->getState()->hydrate([
+            'httpStatus' => 204,
             'message' => sprintf(__('Assigned Layouts to %s'), $campaign->campaign)
         ]);
     }
@@ -270,6 +387,33 @@ class Campaign extends Base
     /**
      * Unassign a layout to a Campaign
      * @param int $campaignId
+     *
+     * @SWG\Post(
+     *  path="/campaign/layout/unassign/{layoutId}",
+     *  operationId="campaignUnassignLayout",
+     *  tags={"campaign"},
+     *  summary="Unassign Layouts",
+     *  description="Unassign Layouts from a Campaign",
+     *  @SWG\Parameter(
+     *      name="campaignId",
+     *      in="path",
+     *      description="The Campaign ID",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="layoutIds",
+     *      in="formData",
+     *      description="Array of Layout IDs to Unassign",
+     *      type="array",
+     *      required="true",
+     *      @SWG\Items(type="integer")
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
      */
     public function unassignLayout($campaignId)
     {
@@ -293,6 +437,7 @@ class Campaign extends Base
 
         // Return
         $this->getState()->hydrate([
+            'httpStatus' => 204,
             'message' => sprintf(__('Unassigned Layouts from %s'), $campaign->campaign)
         ]);
     }

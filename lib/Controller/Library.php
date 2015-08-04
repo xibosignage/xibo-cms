@@ -95,6 +95,22 @@ class Library extends Base
 
     /**
      * Prints out a Table of all media items
+     *
+     * @SWG\Get(
+     *  path="/library",
+     *  operationId="librarySearch",
+     *  tags={"library"},
+     *  summary="Library Search",
+     *  description="Search the Library for this user",
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(ref="#/definitions/Media")
+     *      )
+     *  )
+     * )
      */
     function grid()
     {
@@ -205,6 +221,25 @@ class Library extends Base
     /**
      * Delete Media
      * @param int $mediaId
+     *
+     * @SWG\Delete(
+     *  path="/library/{mediaId}",
+     *  operationId="libraryDelete",
+     *  tags={"library"},
+     *  summary="Delete Media",
+     *  description="Delete Media from the Library",
+     *  @SWG\Parameter(
+     *      name="mediaId",
+     *      in="path",
+     *      description="The Media ID to Delete",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
      */
     public function delete($mediaId)
     {
@@ -218,6 +253,7 @@ class Library extends Base
 
         // Return
         $this->getState()->hydrate([
+            'httpStatus' => 204,
             'message' => sprintf(__('Deleted %s'), $media->name)
         ]);
     }
@@ -226,6 +262,21 @@ class Library extends Base
      * Add a file to the library
      *  expects to be fed by the blueimp file upload handler
      * @throws \Exception
+     *
+     * @SWG\Post(
+     *  path="/library",
+     *  operationId="libraryAdd",
+     *  tags={"library"},
+     *  summary="Add Media",
+     *  description="Add Media to the Library",
+     *  @SWG\Parameter(
+     *      name="file",
+     *      in="formData",
+     *      description="The Uploaded File",
+     *      type="file",
+     *      required="true"
+     *   )
+     * )
      */
     public function add()
     {
@@ -295,6 +346,61 @@ class Library extends Base
     /**
      * Edit Media
      * @param int $mediaId
+     *
+     * @SWG\Put(
+     *  path="/library/{mediaId}",
+     *  operationId="libraryEdit",
+     *  tags={"library"},
+     *  summary="Edit Media",
+     *  description="Edit a Media Item in the Library",
+     *  @SWG\Parameter(
+     *      name="mediaId",
+     *      in="path",
+     *      description="The Media ID to Edit",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="Media Item Name",
+     *      type="string",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="duration",
+     *      in="formData",
+     *      description="The duration in seconds for this Media Item",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="retired",
+     *      in="formData",
+     *      description="Flag indicating if this Layout is retired",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="tags",
+     *      in="formData",
+     *      description="Comma separated list of Tags",
+     *      type="string",
+     *      required="false"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="updateInLayouts",
+     *      in="formData",
+     *      description="Flag indicating whether to update the duration in all Layouts the Media is assigned to",
+     *      type="integer",
+     *      required="false"
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Media")
+     *  )
+     * )
      */
     public function edit($mediaId)
     {
@@ -352,6 +458,18 @@ class Library extends Base
 
     /**
      * Tidies up the library
+     *
+     * @SWG\Post(
+     *  path="/library/tidy",
+     *  operationId="libraryTidy",
+     *  tags={"library"},
+     *  summary="Tidy Library",
+     *  description="Routine tidy of the library, removing unused files.",
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation"
+     *  )
+     * )
      */
     public function tidy()
     {
@@ -422,6 +540,44 @@ class Library extends Base
      * Gets a file from the library
      * @param int $mediaId
      * @param string $type
+     *
+     * @SWG\Get(
+     *  path="/library/download/{mediaId}/{type}",
+     *  operationId="libraryDownload",
+     *  tags={"library"},
+     *  summary="Download Media",
+     *  description="Download a Media file from the Library",
+     *  produces="application/octet-stream",
+     *  @SWG\Parameter(
+     *      name="mediaId",
+     *      in="path",
+     *      description="The Media ID to Download",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="type",
+     *      in="path",
+     *      description="The Module Type of the Download",
+     *      type="string",
+     *      required="true"
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(type="file"),
+     *      @SWG\Header(
+     *          header="X-Sendfile",
+     *          description="Apache Send file header - if enabled.",
+     *          type="string"
+     *      ),
+     *      @SWG\Header(
+     *          header="X-Accel-Redirect",
+     *          description="nginx send file header - if enabled.",
+     *          type="string"
+     *      )
+     *  )
+     * )
      */
     public function download($mediaId, $type = '')
     {

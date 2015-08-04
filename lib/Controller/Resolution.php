@@ -57,6 +57,22 @@ class Resolution extends Base
 
     /**
      * Resolution Grid
+     *
+     * @SWG\Get(
+     *  path="/resolution",
+     *  operationId="resolutionSearch",
+     *  tags={"resolution"},
+     *  summary="Resolution Search",
+     *  description="Search Resolutions this user has access to",
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(ref="#/definitions/Resolution")
+     *      )
+     *  )
+     * )
      */
     function grid()
     {
@@ -147,6 +163,45 @@ class Resolution extends Base
 
     /**
      * Add Resolution
+     *
+     * @SWG\Post(
+     *  path="/resolution",
+     *  operationId="resolutionAdd",
+     *  tags={"resolution"},
+     *  summary="Add Resolution",
+     *  description="Add new Resolution",
+     *  @SWG\Parameter(
+     *      name="resolution",
+     *      in="formData",
+     *      description="A name for the Resolution",
+     *      type="string",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="width",
+     *      in="formData",
+     *      description="The Display Width of the Resolution",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="height",
+     *      in="formData",
+     *      description="The Display Height of the Resolution",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Resolution"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new record",
+     *          type="string"
+     *      )
+     *  )
+     * )
      */
     function add()
     {
@@ -158,6 +213,7 @@ class Resolution extends Base
 
         // Return
         $this->getState()->hydrate([
+            'httpStatus' => 201,
             'message' => sprintf(__('Added %s'), $resolution->resolution),
             'id' => $resolution->resolutionId,
             'data' => $resolution
@@ -167,6 +223,47 @@ class Resolution extends Base
     /**
      * Edit Resolution
      * @param int $resolutionId
+     *
+     * @SWG\Put(
+     *  path="/resolution/{resolutionId}",
+     *  operationId="resolutionEdit",
+     *  tags={"resolution"},
+     *  summary="Edit Resolution",
+     *  description="Edit new Resolution",
+     *  @SWG\Parameter(
+     *      name="resolutionId",
+     *      in="path",
+     *      description="The Resolution ID to Edit",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="resolution",
+     *      in="formData",
+     *      description="A name for the Resolution",
+     *      type="string",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="width",
+     *      in="formData",
+     *      description="The Display Width of the Resolution",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="height",
+     *      in="formData",
+     *      description="The Display Height of the Resolution",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Resolution")
+     *  )
+     * )
      */
     function edit($resolutionId)
     {
@@ -192,6 +289,25 @@ class Resolution extends Base
     /**
      * Delete Resolution
      * @param int $resolutionId
+     *
+     * @SWG\Delete(
+     *  path="/resolution/{resolutionId}",
+     *  operationId="resolutionDelete",
+     *  tags={"resolution"},
+     *  summary="Delete Resolution",
+     *  description="Delete Resolution",
+     *  @SWG\Parameter(
+     *      name="resolutionId",
+     *      in="path",
+     *      description="The Resolution ID to Delete",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
      */
     function delete($resolutionId)
     {
