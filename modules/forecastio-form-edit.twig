@@ -4,69 +4,6 @@
  * Copyright (C) 2015 Spring Signage Ltd
  * (${FILE_NAME})
  */
-        // Configure the field dependencies
-        $this->SetFieldDepencencies($response);
-
-        // Append the Templates to the response
-        $response->extra = $this->module->settings['templates'];
-
-        // Modules should be rendered using the theme engine.
-        Theme::Set('form_fields_general', $formFields['general']);
-        Theme::Set('form_fields_advanced', $formFields['advanced']);
-        Theme::Set('form_fields_forecast', $formFields['forecast']);
-        $response->html = Theme::RenderReturn('form_render');
-
-        // The response object outputs the required JSON object to the browser
-        // which is then processed by the CMS JavaScript library (xibo-cms.js).
-        $response->AddButton(__('Request Forecast'), 'requestTab("forecast", "index.php?p=module&q=exec&mod=' . $this->getModuleType() . '&method=requestTab&widgetId=' . $this->getWidgetId() . '")');
-        $this->configureFormButtons($response);
-
-        $response->dialogTitle = __('Forecast IO');
-        $response->callBack = 'forecastIoFormSetup';
-
-        // Add a dependency
-        $locationControls_0 = array(
-            '.locationControls' => array('display' => 'block')
-        );
-
-        $locationControls_1 = array(
-            '.locationControls' => array('display' => 'none')
-        );
-
-        $response->AddFieldAction('useDisplayLocation', 'init', false, $locationControls_0, 'is:checked');
-        $response->AddFieldAction('useDisplayLocation', 'change', false, $locationControls_0, 'is:checked');
-        $response->AddFieldAction('useDisplayLocation', 'init', true, $locationControls_1, 'is:checked');
-        $response->AddFieldAction('useDisplayLocation', 'change', true, $locationControls_1, 'is:checked');
-        $response->AddFieldAction('templateId', 'init', 'picture', array('.icon-controls' => array('display' => 'block')));
-        $response->AddFieldAction('templateId', 'change', 'picture', array('.icon-controls' => array('display' => 'block')));
-        $response->AddFieldAction('templateId', 'init', 'picture', array('.icon-controls' => array('display' => 'none')), 'not');
-        $response->AddFieldAction('templateId', 'change', 'picture', array('.icon-controls' => array('display' => 'none')), 'not');
-
-        // When the override template check box is ticked, we want to expose the advanced controls and we want to hide the template selector
-        $response->AddFieldAction('overrideTemplate', 'init', false,
-            array(
-                '.template-override-controls' => array('display' => 'none'),
-                '.reloadTemplateButton' => array('display' => 'none'),
-                '.template-selector-control' => array('display' => 'block')
-            ), 'is:checked');
-        $response->AddFieldAction('overrideTemplate', 'change', false,
-            array(
-                '.template-override-controls' => array('display' => 'none'),
-                '.reloadTemplateButton' => array('display' => 'none'),
-                '.template-selector-control' => array('display' => 'block')
-            ), 'is:checked');
-        $response->AddFieldAction('overrideTemplate', 'init', true,
-            array(
-                '.template-override-controls' => array('display' => 'block'),
-                '.reloadTemplateButton' => array('display' => 'block'),
-                '.template-selector-control' => array('display' => 'none')
-            ), 'is:checked');
-        $response->AddFieldAction('overrideTemplate', 'change', true,
-            array(
-                '.template-override-controls' => array('display' => 'block'),
-                '.reloadTemplateButton' => array('display' => 'block'),
-                '.template-selector-control' => array('display' => 'none')
-            ), 'is:checked');
 #}
 
 {% extends "form-base.twig" %}
@@ -77,13 +14,122 @@
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Get Forecast" %}, requestTab("forecast"| "{{ urlFor("module.widget.tab.form", {tab: "forecast", id: module.widget.widgetId}) }}")
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Get Forecast" %}, requestTab("forecast", "{{ urlFor("module.widget.tab.form", {tab: "forecast"}) }}")
     {% trans "Save" %}, $("#forecastEditForm").submit()
 {% endblock %}
 
 {% block callBack %}forecastIoFormSetup{% endblock %}
+
+{% block extra %}{{ module.templatesAvailable()|json_encode|raw }}{% endblock %}
+
+{% block formFieldActions %}
+    [{
+    "field": "useDisplayLocation",
+    "trigger": "init",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".locationControls": { "display": "block" }
+    }
+    },{
+    "field": "useDisplayLocation",
+    "trigger": "change",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".locationControls": { "display": "block" }
+    }
+    },{
+    "field": "useDisplayLocation",
+    "trigger": "init",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".locationControls": { "display": "none" }
+    }
+    },{
+    "field": "useDisplayLocation",
+    "trigger": "change",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".locationControls": { "display": "none" }
+    }
+    },{
+    "field": "templateId",
+    "trigger": "init",
+    "value": "picture",
+    "operation": "equals",
+    "actions": {
+    ".icon-controls": { "display": "block" }
+    }
+    },{
+    "field": "templateId",
+    "trigger": "change",
+    "value": "picture",
+    "operation": "equals",
+    "actions": {
+    ".icon-controls": { "display": "block" }
+    }
+    },{
+    "field": "templateId",
+    "trigger": "init",
+    "value": "picture",
+    "operation": "not",
+    "actions": {
+    ".icon-controls": { "display": "none" }
+    }
+    },{
+    "field": "templateId",
+    "trigger": "change",
+    "value": "picture",
+    "operation": "not",
+    "actions": {
+    ".icon-controls": { "display": "none" }
+    }
+    },{
+    "field": "overrideTemplate",
+    "trigger": "init",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".template-override-controls": { "display": "none" },
+    ".reloadTemplateButton": { "display": "none" },
+    ".template-selector-control": { "display": "block" }
+    }
+    },{
+    "field": "overrideTemplate",
+    "trigger": "change",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".template-override-controls": { "display": "none" },
+    ".reloadTemplateButton": { "display": "none" },
+    ".template-selector-control": { "display": "block" }
+    }
+    },{
+    "field": "overrideTemplate",
+    "trigger": "init",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".template-override-controls": { "display": "block" },
+    ".reloadTemplateButton": { "display": "block" },
+    ".template-selector-control": { "display": "none" }
+    }
+    },{
+    "field": "overrideTemplate",
+    "trigger": "change",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".template-override-controls": { "display": "block" },
+    ".reloadTemplateButton": { "display": "block" },
+    ".template-selector-control": { "display": "none" }
+    }
+    }]
+{% endblock %}
 
 {% block formHtml %}
     <div class="row">
@@ -96,7 +142,6 @@
             <form id="forecastEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
-                       {# not sure why in old code here there is not getOptions for name etc...I added that for now I think it should be there #} 
                         {% set title %}{% trans "Name" %}{% endset %}
                         {% set helpText %}{% trans "An optional name for this media" %}{% endset %}
                         {{ forms.text("name", title, module.getOption("name"), helpText) }}
@@ -109,43 +154,40 @@
                         {% set helpText %}{% trans "Use the location configured on the display" %}{% endset %}
                         {{ forms.checkbox("useDisplayLocation", title, module.getOption("useDisplayLocation"), helpText) }}
 
-                        {% set title %}{% trans "'Latitude" %}{% endset %}
+                        {% set title %}{% trans "Latitude" %}{% endset %}
                         {% set helpText %}{% trans "The Latitude for this weather module" %}{% endset %}
-                        {{ forms.number("latitude", title, module.getOption("latitude"), helpText, "", "", "locationcontols") }}
+                        {{ forms.number("latitude", title, module.getOption("latitude"), helpText, "locationControls") }}
 
                         {% set title %}{% trans "Longitude" %}{% endset %}
                         {% set helpText %}{% trans "The Longitude for this weather module" %}{% endset %}
-                        {{ forms.number("longitude", title, module.getOption("longitude"), helpText, "", "", "locationcontrols") }}
+                        {{ forms.number("longitude", title, module.getOption("longitude"), helpText, "locationControls") }}
 
                         {% set title %}{% trans "Colour" %}{% endset %}
                         {% set helpText %}{% trans "Please select a colour for the foreground text." %}{% endset %}
-                        {{ forms.text("color", title, module.getOption("color", "#000"), helpText, "", "required") }}
+                        {{ forms.text("color", title, module.getOption("color"), helpText, "", "required") }}
                     </div>
 
                     <div class="tab-pane" id="advanced">
-{# as with ticker and twitter not sure how to refrence $this->module->settings['templates'] just templates ? can't test at the moment#}
+
                         {% set title %}{% trans "Weather Template" %}{% endset %}
                         {% set helpText %}{% trans "Select the template you would like to apply. This can be overridden using the check box below." %}{% endset %}
-                        {{ forms.dropdown("templateId", "single", title, module.getOpion("templateId"), $this->module->settings['templates'], "id", "value", helpText, "", "template-selector-control") }}
-
-                    {# $this->iconsAvailable() and $this->unitsAvailable() and Translate::GetLocale(2),
-            $this->supportedLanguages() not entirely sure how to refrence those #}
+                        {{ forms.dropdown("templateId", "single", title, module.getOption("templateId"), module.templatesAvailable(), "id", "value", helpText, "template-selector-control") }}
 
                         {% set title %}{% trans "Icons" %}{% endset %}
                         {% set helpText %}{% trans "Select the icon set you would like to use." %}{% endset %}
-                        {{ forms.dropdown("icons", "single", title, module.getOpion("icons"), module.iconsAvailable(), "id", "value", helpText, "", "icon-controls") }}
+                        {{ forms.dropdown("icons", "single", title, module.getOption("icons"), module.iconsAvailable(), "id", "value", helpText, "icon-controls") }}
 
                         {% set title %}{% trans "Size" %}{% endset %}
                         {% set helpText %}{% trans "Set the size. Start at 1 and work up until the widget fits your region appropriately." %}{% endset %}
-                        {{ forms.number("size", title, module.getOption("size", 1), helpText, "", "number", "template-selector-control") }}
+                        {{ forms.number("size", title, module.getOption("size"), helpText, "template-selector-control", "number") }}
 
                         {% set title %}{% trans "Units" %}{% endset %}
                         {% set helpText %}{% trans "Select the units you would like to use." %}{% endset %}
-                        {{ forms.dropdown("units", "single", title, module.getOpion("units"), module.unitsAvailable(), "id", "value", helpText) }}
+                        {{ forms.dropdown("units", "single", title, module.getOption("units"), module.unitsAvailable(), "id", "value", helpText) }}
 
                         {% set title %}{% trans "Language" %}{% endset %}
                         {% set helpText %}{% trans "Select the language you would like to use." %}{% endset %}
-                        {{ forms.dropdown("lang", "single", title, Translate::GetLocale(2), module.supportedLanguages(), "id", "value", helpText) }}
+                        {{ forms.dropdown("lang", "single", title, module.getOption("lang"), module.supportedLanguages(), "id", "value", helpText) }}
 
                         {% set title %}{% trans "Update Interval (mins)" %}{% endset %}
                         {% set helpText %}{% trans "Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60." %}{% endset %}
@@ -153,23 +195,23 @@
 
                         {% set title %}{% trans "Only show Daytime weather conditions" %}{% endset %}
                         {% set helpText %}{% trans "Tick if you would like to only show the Daytime weather conditions." %}{% endset %}
-                        {{ forms.checkbox("dayConditionsOnly", title, 1, helpText) }}
+                        {{ forms.checkbox("dayConditionsOnly", title, module.getOption("dayConditionsOnly"), helpText) }}
 
                         {% set title %}{% trans "Override the template?" %}{% endset %}
                         {% set helpText %}{% trans "Tick if you would like to override the template." %}{% endset %}
-                        {{ forms.checkbox("overrideTemplate'", title, 0, helpText) }}
+                        {{ forms.checkbox("overrideTemplate", title, module.getOption("overrideTemplate"), helpText) }}
 
                         {% set title %}{% trans "Template for Current Forecast" %}{% endset %}
-                        {% set helpText %}{% trans "Enter the template for the current forecast. For a list of substitutions click "Request Forecast" below." %}{% endset %}
-                        {{ forms.textarea("currentTemplate", title, "", helpText, "", 10, "required", "template-override-controls") }}
+                        {% set helpText %}{% trans "Enter the template for the current forecast. For a list of substitutions click Request Forecast below." %}{% endset %}
+                        {{ forms.textarea("currentTemplate", title, module.getOption("currentTemplate"), helpText, "template-override-controls", "required", 10) }}
 
                         {% set title %}{% trans "Template for Daily Forecast" %}{% endset %}
                         {% set helpText %}{% trans "Enter the template for the daily forecast. Replaces [dailyForecast] in main template." %}{% endset %}
-                        {{ forms.textarea("dailyTemplate", title, "", helpText, "", 10, "", "template-override-controls") }}
+                        {{ forms.textarea("dailyTemplate", title, module.getOption("dailyTemplate"), helpText, "template-override-controls", "", 10) }}
 
                         {% set title %}{% trans "CSS Style Sheet" %}{% endset %}
                         {% set helpText %}{% trans "Enter a CSS style sheet to style the weather widget" %}{% endset %}
-                        {{ forms.textarea("styleSheet", title, "", helpText, "", 10, "required", "template-override-controls") }}
+                        {{ forms.textarea("styleSheet", title, module.getOption("styleSheet"), helpText, "template-override-controls", "required", 10) }}
                     </div>
                     <div class="tab-pane" id="forecast">
                         {% set message %}{% trans "Please press Request Forecast" %}{% endset %}

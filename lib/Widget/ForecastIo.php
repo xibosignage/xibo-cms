@@ -42,6 +42,8 @@ class ForecastIo extends Module
     public function __construct()
     {
         $this->resourceFolder = PROJECT_ROOT . '/web/modules/forecastio';
+
+        parent::__construct();
     }
 
     /**
@@ -109,7 +111,7 @@ class ForecastIo extends Module
     /**
      * Loads templates for this module
      */
-    public function loadTemplates()
+    private function loadTemplates()
     {
         // Scan the folder for template files
         foreach (glob('../modules/forecastio/*.template.json') as $template) {
@@ -118,6 +120,18 @@ class ForecastIo extends Module
         }
 
         Log::debug(count($this->module->settings['templates']));
+    }
+
+    /**
+     * Templates available
+     * @return array
+     */
+    public function templatesAvailable()
+    {
+        if (!isset($this->module->settings['templates']))
+            $this->loadTemplates();
+
+        return $this->module->settings['templates'];
     }
 
     /**
@@ -131,7 +145,7 @@ class ForecastIo extends Module
         $this->setOption('color', Sanitize::getString('color'));
         $this->setOption('longitude', Sanitize::getDouble('longitude'));
         $this->setOption('latitude', Sanitize::getDouble('latitude'));
-        $this->setOption('templateId', Sanitize::getInt('templateId'));
+        $this->setOption('templateId', Sanitize::getString('templateId'));
         $this->setOption('icons', Sanitize::getString('icons'));
         $this->setOption('overrideTemplate', Sanitize::getCheckbox('overrideTemplate'));
         $this->setOption('size', Sanitize::getInt('size'));
@@ -159,7 +173,7 @@ class ForecastIo extends Module
         $this->setOption('color', Sanitize::getString('color'));
         $this->setOption('longitude', Sanitize::getDouble('longitude'));
         $this->setOption('latitude', Sanitize::getDouble('latitude'));
-        $this->setOption('templateId', Sanitize::getInt('templateId'));
+        $this->setOption('templateId', Sanitize::getString('templateId'));
         $this->setOption('icons', Sanitize::getString('icons'));
         $this->setOption('overrideTemplate', Sanitize::getCheckbox('overrideTemplate'));
         $this->setOption('size', Sanitize::getInt('size'));
@@ -396,7 +410,7 @@ class ForecastIo extends Module
     public function getResource($displayId = 0)
     {
         // Behave exactly like the client.
-        if (!$data = $this->getForecastData($displayId))
+        if (!$foreCast = $this->getForecastData($displayId))
             return '';
 
         $data = [];
@@ -431,7 +445,7 @@ class ForecastIo extends Module
             $dailySubs = '';
             // Substitute for every day (i.e. 7 times).
             for ($i = 0; $i < 7; $i++) {
-                $dailySubs .= $this->makeSubstitutions($data['daily']['data'][$i], $dailyTemplate);
+                $dailySubs .= $this->makeSubstitutions($foreCast['daily']['data'][$i], $dailyTemplate);
             }
 
             // Substitute the completed template
@@ -439,7 +453,7 @@ class ForecastIo extends Module
         }
 
         // Run replace over the main template
-        $data['body'] = $this->makeSubstitutions($data['currently'], $body);
+        $data['body'] = $this->makeSubstitutions($foreCast['currently'], $body);
 
 
         // JavaScript to control the size (override the original width and height so that the widget gets blown up )

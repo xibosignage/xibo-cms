@@ -31,7 +31,7 @@ use Xibo\Storage\PDOConnect;
  *
  * @SWG\Definition()
  */
-class Module
+class Module implements \JsonSerializable
 {
     use EntityTrait;
 
