@@ -13,6 +13,20 @@ Probably fine, missing:
         $response->AddFieldAction('modeid', 'change', 2, $modeFieldDepencies_2);
         $response->AddFieldAction('modeid', 'init', 3, $modeFieldDepencies_3);
         $response->AddFieldAction('modeid', 'change', 3, $modeFieldDepencies_3);
+
+        // Field dependencies
+        $modeFieldDepencies_1 = array(
+                '.webpage-widths' => array('display' => 'none'),
+                '.webpage-offsets' => array('display' => 'none'),
+            );
+        $modeFieldDepencies_2 = array(
+                '.webpage-widths' => array('display' => 'block'),
+                '.webpage-offsets' => array('display' => 'block'),
+            );
+        $modeFieldDepencies_3 = array(
+                '.webpage-widths' => array('display' => 'block'),
+                '.webpage-offsets' => array('display' => 'none'),
+            );
 #}
 
 {% extends "form-base.twig" %}
@@ -26,6 +40,64 @@ Probably fine, missing:
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Save" %}, $("#webpageAddForm").submit()
+{% endblock %}
+
+{% block formFieldActions %}
+    [{
+    "field": "modeId",
+    "trigger": "init",
+    "value": 1,
+    "operation": "equals",
+    "actions": {
+    ".webpage-widths": { "display": "none" },
+    ".webpage-offsets": { "display": "none" }
+    }
+    },{
+    "field": "modeId",
+    "trigger": "change",
+    "value": 1,
+    "operation": "equals",
+    "actions": {
+    ".webpage-widths": { "display": "none" },
+    ".webpage-offsets": { "display": "none" }
+    }
+    },{
+    "field": "modeId",
+    "trigger": "init",
+    "value": 2,
+    "operation": "equals",
+    "actions": {
+    ".webpage-widths": { "display": "block" },
+    ".webpage-offsets": { "display": "block" }
+    }
+    },{
+    "field": "modeId",
+    "trigger": "change",
+    "value": 2,
+    "operation": "equals",
+    "actions": {
+    ".webpage-widths": { "display": "block" },
+    ".webpage-offsets": { "display": "block" }
+    }
+    },{
+    "field": "modeId",
+    "trigger": "init",
+    "value": 3,
+    "operation": "equals",
+    "actions": {
+    ".webpage-widths": { "display": "block" },
+    ".webpage-offsets": { "display": "none" }
+    }
+    },{
+    "field": "modeId",
+    "trigger": "change",
+    "value": 3,
+    "operation": "equals",
+    "actions": {
+    ".webpage-widths": { "display": "block" },
+    ".webpage-offsets": { "display": "none" }
+    }
+    }]
 {% endblock %}
 
 {% block formHtml %}
@@ -54,34 +126,31 @@ Probably fine, missing:
                 { modeid: 2, mode: manualPosition },
                 { modeid: 3, mode: bestFit }
                 ] %}
-                {{ forms.dropdown("options", "single", title, "", options, "modeid", "mode", helpText) }}
+                {{ forms.dropdown("modeId", "single", title, "", options, "modeid", "mode", helpText) }}
 
                 {% set title %}{% trans "Page Width" %}{% endset %}
                 {% set helpText %}{% trans "The width of the page. Leave empty to use the region width." %}{% endset %}
-                {{ forms.number("pageWidth", title, pageWidth, helpText, "", "webpage-widths") }}
+                {{ forms.number("pageWidth", title, pageWidth, helpText, "webpage-widths") }}
 
                 {% set title %}{% trans "Page Height" %}{% endset %}
                 {% set helpText %}{% trans "The height of the page. Leave empty to use the region height." %}{% endset %}
-                {{ forms.number("pageHeight", title, pageHeight, helpText, "", "webpage-widths") }}
+                {{ forms.number("pageHeight", title, pageHeight, helpText, "webpage-widths") }}
 
                 {% set title %}{% trans "Offset Top" %}{% endset %}
                 {% set helpText %}{% trans "The starting point from the top in pixels" %}{% endset %}
-                {{ forms.number("offsetTop", title, offsetTop, helpText, "", "webpage-offsets") }}
+                {{ forms.number("offsetTop", title, offsetTop, helpText, "webpage-offsets") }}
 
                 {% set title %}{% trans "Offset Left" %}{% endset %}
                 {% set helpText %}{% trans "The starting point from the left in pixels" %}{% endset %}
-                {{ forms.number("offsetLeft", title, offsetLeft, helpText, "", "webpage-offsets") }}
+                {{ forms.number("offsetLeft", title, offsetLeft, helpText, "webpage-offsets") }}
 
                 {% set title %}{% trans "Scale Percentage" %}{% endset %}
                 {% set helpText %}{% trans "The Percentage to Scale this Webpage (0 - 100)" %}{% endset %}
-                {{ forms.number("scaling", title, scaling, helpText, "", "webpage-offsets") }}
+                {{ forms.number("scaling", title, scaling, helpText, "webpage-offsets") }}
 
                 {% set title %}{% trans "Background transparent?" %}{% endset %}
                 {% set helpText %}{% trans "Should the HTML be shown with a transparent background. Not currently available on the Windows Display Client." %}{% endset %}
                 {{ forms.checkbox("transparency", title, transparency, helpText) }}
-
-                {# Field dependencies #}
-
 
             </form>
         </div>

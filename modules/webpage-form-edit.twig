@@ -4,29 +4,6 @@
  * Copyright (C) 2015 Spring Signage Ltd
  * (${FILE_NAME})
  */
-
-Probably fine, missing:
-
-        // Field dependencies
-        $modeFieldDepencies_1 = array(
-            '.webpage-widths' => array('display' => 'none'),
-            '.webpage-offsets' => array('display' => 'none'),
-        );
-        $modeFieldDepencies_2 = array(
-            '.webpage-widths' => array('display' => 'block'),
-            '.webpage-offsets' => array('display' => 'block'),
-        );
-        $modeFieldDepencies_3 = array(
-            '.webpage-widths' => array('display' => 'block'),
-            '.webpage-offsets' => array('display' => 'none'),
-        );
-
-        $response->AddFieldAction('modeid', 'init', 1, $modeFieldDepencies_1);
-        $response->AddFieldAction('modeid', 'change', 1, $modeFieldDepencies_1);
-        $response->AddFieldAction('modeid', 'init', 2, $modeFieldDepencies_2);
-        $response->AddFieldAction('modeid', 'change', 2, $modeFieldDepencies_2);
-        $response->AddFieldAction('modeid', 'init', 3, $modeFieldDepencies_3);
-        $response->AddFieldAction('modeid', 'change', 3, $modeFieldDepencies_3);
 #}
 
 {% extends "form-base.twig" %}
@@ -42,13 +19,71 @@ Probably fine, missing:
     {% trans "Save" %}, $("#webpageEditForm").submit()
 {% endblock %}
 
+{% block formFieldActions %}
+    [{
+    "field": "modeId",
+    "trigger": "init",
+    "value": 1,
+    "operation": "equals",
+    "actions": {
+    ".webpage-widths": { "display": "none" },
+    ".webpage-offsets": { "display": "none" }
+    }
+    },{
+    "field": "modeId",
+    "trigger": "change",
+    "value": 1,
+    "operation": "equals",
+    "actions": {
+    ".webpage-widths": { "display": "none" },
+    ".webpage-offsets": { "display": "none" }
+    }
+    },{
+    "field": "modeId",
+    "trigger": "init",
+    "value": 2,
+    "operation": "equals",
+    "actions": {
+    ".webpage-widths": { "display": "block" },
+    ".webpage-offsets": { "display": "block" }
+    }
+    },{
+    "field": "modeId",
+    "trigger": "change",
+    "value": 2,
+    "operation": "equals",
+    "actions": {
+    ".webpage-widths": { "display": "block" },
+    ".webpage-offsets": { "display": "block" }
+    }
+    },{
+    "field": "modeId",
+    "trigger": "init",
+    "value": 3,
+    "operation": "equals",
+    "actions": {
+    ".webpage-widths": { "display": "block" },
+    ".webpage-offsets": { "display": "none" }
+    }
+    },{
+    "field": "modeId",
+    "trigger": "change",
+    "value": 3,
+    "operation": "equals",
+    "actions": {
+    ".webpage-widths": { "display": "block" },
+    ".webpage-offsets": { "display": "none" }
+    }
+    }]
+{% endblock %}
+
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
             <form id="webpageEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
                 {% set title %}{% trans "Link" %}{% endset %}
                 {% set helpText %}{% trans "The Location (URL) of the webpage" %}{% endset %}
-                {{ forms.text("uri", title, "", helpText, module.getOption("uri"), "required") }}
+                {{ forms.text("uri", title, module.getOption("uri"), helpText, "required") }}
 
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "An optional name for this media" %}{% endset %}
@@ -68,33 +103,32 @@ Probably fine, missing:
                 { modeid: 2, mode: manualPosition },
                 { modeid: 3, mode: bestFit }
                 ] %}
-                {{ forms.dropdown("options", "single", title, "", module.getOption("options"), "modeid", "mode", helpText) }}
+                {{ forms.dropdown("modeId", "single", title, module.getOption("modeid"), options, "modeid", "mode", helpText) }}
 
                 {% set title %}{% trans "Page Width" %}{% endset %}
                 {% set helpText %}{% trans "The width of the page. Leave empty to use the region width." %}{% endset %}
-                {{ forms.number("pageWidth", title, module.getOption("pageWidth"), helpText, "", "webpage-widths") }}
+                {{ forms.number("pageWidth", title, module.getOption("pageWidth"), helpText, "webpage-widths") }}
 
                 {% set title %}{% trans "Page Height" %}{% endset %}
                 {% set helpText %}{% trans "The height of the page. Leave empty to use the region height." %}{% endset %}
-                {{ forms.number("pageHeight", title, module.getOption("pageHeight"), helpText, "", "webpage-widths") }}
+                {{ forms.number("pageHeight", title, module.getOption("pageHeight"), helpText, "webpage-widths") }}
 
                 {% set title %}{% trans "Offset Top" %}{% endset %}
                 {% set helpText %}{% trans "The starting point from the top in pixels" %}{% endset %}
-                {{ forms.number("offsetTop", title, module.getOption("offsetTop"), helpText, "", "webpage-offsets") }}
+                {{ forms.number("offsetTop", title, module.getOption("offsetTop"), helpText, "webpage-offsets") }}
 
                 {% set title %}{% trans "Offset Left" %}{% endset %}
                 {% set helpText %}{% trans "The starting point from the left in pixels" %}{% endset %}
-                {{ forms.number("offsetLeft", title, module.getOption("offsetLeft"), helpText, "", "webpage-offsets") }}
+                {{ forms.number("offsetLeft", title, module.getOption("offsetLeft"), helpText, "webpage-offsets") }}
 
                 {% set title %}{% trans "Scale Percentage" %}{% endset %}
                 {% set helpText %}{% trans "The Percentage to Scale this Webpage (0 - 100)" %}{% endset %}
-                {{ forms.number("scaling", title, module.getOption("scaling"), helpText, "", "webpage-offsets") }}
+                {{ forms.number("scaling", title, module.getOption("scaling"), helpText, "webpage-offsets") }}
 
                 {% set title %}{% trans "Background transparent?" %}{% endset %}
                 {% set helpText %}{% trans "Should the HTML be shown with a transparent background. Not currently available on the Windows Display Client." %}{% endset %}
                 {{ forms.checkbox("transparency", title, module.GetOption("transparency"), helpText) }}
 
-                {# Field dependencies #}
             </form>
         </div>
     </div>

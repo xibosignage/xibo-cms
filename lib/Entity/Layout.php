@@ -282,7 +282,7 @@ class Layout implements \JsonSerializable
      */
     public function load($options = [])
     {
-        $options = array_merge(['loadPlaylists' => false], $options);
+        $options = array_merge(['loadPlaylists' => true], $options);
 
         if ($this->loaded)
             return;
