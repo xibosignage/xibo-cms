@@ -56,7 +56,7 @@
                 <li><a href="#options" role="tab" data-toggle="tab"><span>{% trans "Options" %}</span></a></li>
                 </ul>
             <form id="textAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("module.widget.add", {type: module.widget.type, id: playlist.playlistId}) }}">
-
+            <div class="tab-content">
                 <div class="tab-pane active" id="general">
                       {# RAW item subs 
 
@@ -106,7 +106,7 @@
                         { effectid: marqueeUp, effect: marqueeUp},
                         { effectid: marqueeDown, effect: marqueeDown}
                         ] %}
-                        {{ forms.dropdown("effect", "single", title, module.getOption("effect"), "effectid", "effect", helpText) }}
+                        {{ forms.dropdown("effect", "single", title, module.getOption("effect"), options, "effectid", "effect", helpText) }}
 
                         {% set title %}{% trans "Speed" %}{% endset %}
                         {% set helpText %}{% trans "The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1)." %}{% endset %}
@@ -120,6 +120,7 @@
                         {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
                         {{ forms.number("duration", title, "", helpText, "", "required") }}
                 </div>
+            </div>
                 {# // Add a dependency #}
 
             </form>
