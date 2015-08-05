@@ -39,6 +39,29 @@ class DataSetColumn extends Base
     /**
      * Column Search
      * @param $dataSetId
+     *
+     * @SWG\Get(
+     *  path="/dataset/{dataSetId}/column",
+     *  operationId="dataSetColumnSearch",
+     *  tags={"dataset"},
+     *  summary="Search Columns",
+     *  description="Search Columns for DataSet",
+     *  @SWG\Parameter(
+     *      name="dataSetId",
+     *      in="path",
+     *      description="The DataSet ID",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(ref="#/definitions/DataSetColumn")
+     *      )
+     *  )
+     * )
      */
     public function grid($dataSetId)
     {
@@ -99,6 +122,73 @@ class DataSetColumn extends Base
     /**
      * Add
      * @param $dataSetId
+     *
+     * @SWG\Post(
+     *  path="/dataset/{dataSetId}/column",
+     *  operationId="dataSetColumnAdd",
+     *  tags={"dataset"},
+     *  summary="Add Column",
+     *  description="Add a Column to a DataSet",
+     *  @SWG\Parameter(
+     *      name="dataSetId",
+     *      in="path",
+     *      description="The DataSet ID",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="heading",
+     *      in="formData",
+     *      description="The heading for the Column",
+     *      type="string",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="listContent",
+     *      in="formData",
+     *      description="A comma separated list of content for drop downs",
+     *      type="string",
+     *      required="false"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="columnOrder",
+     *      in="formData",
+     *      description="The display order for this column",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dataTypeId",
+     *      in="formData",
+     *      description="The data type ID for this column",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dataSetColumnTypeId",
+     *      in="formData",
+     *      description="The column type for this column",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="formula",
+     *      in="formData",
+     *      description="MySQL SELECT syntax formula for this Column if the column type is formula",
+     *      type="string",
+     *      required="false"
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/DataSetColumn"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new record",
+     *          type="string"
+     *      )
+     *  )
+     * )
      */
     public function add($dataSetId)
     {
@@ -121,6 +211,7 @@ class DataSetColumn extends Base
 
         // Return
         $this->getState()->hydrate([
+            'httpStatus' => 201,
             'message' => sprintf(__('Added %s'), $column->heading),
             'id' => $column->dataSetColumnId,
             'data' => $column
@@ -153,6 +244,80 @@ class DataSetColumn extends Base
      * Edit
      * @param $dataSetId
      * @param $dataSetColumnId
+     *
+     * @SWG\Put(
+     *  path="/dataset/{dataSetId}/column/{dataSetColumnId}",
+     *  operationId="dataSetColumnEdit",
+     *  tags={"dataset"},
+     *  summary="Edit Column",
+     *  description="Edit a Column to a DataSet",
+     *  @SWG\Parameter(
+     *      name="dataSetId",
+     *      in="path",
+     *      description="The DataSet ID",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dataSetColumnId",
+     *      in="path",
+     *      description="The Column ID",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="heading",
+     *      in="formData",
+     *      description="The heading for the Column",
+     *      type="string",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="listContent",
+     *      in="formData",
+     *      description="A comma separated list of content for drop downs",
+     *      type="string",
+     *      required="false"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="columnOrder",
+     *      in="formData",
+     *      description="The display order for this column",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dataTypeId",
+     *      in="formData",
+     *      description="The data type ID for this column",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dataSetColumnTypeId",
+     *      in="formData",
+     *      description="The column type for this column",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="formula",
+     *      in="formData",
+     *      description="MySQL SELECT syntax formula for this Column if the column type is formula",
+     *      type="string",
+     *      required="false"
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/DataSetColumn"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new record",
+     *          type="string"
+     *      )
+     *  )
+     * )
      */
     public function edit($dataSetId, $dataSetColumnId)
     {
@@ -205,6 +370,32 @@ class DataSetColumn extends Base
      * Delete
      * @param $dataSetId
      * @param $dataSetColumnId
+     *
+     * @SWG\Delete(
+     *  path="/dataset/{dataSetId}/column/{dataSetColumnId}",
+     *  operationId="dataSetColumnDelete",
+     *  tags={"dataset"},
+     *  summary="Delete Column",
+     *  description="Delete DataSet Column",
+     *  @SWG\Parameter(
+     *      name="dataSetId",
+     *      in="path",
+     *      description="The DataSet ID",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dataSetColumnId",
+     *      in="path",
+     *      description="The Column ID",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
      */
     public function delete($dataSetId, $dataSetColumnId)
     {
@@ -219,6 +410,7 @@ class DataSetColumn extends Base
 
         // Return
         $this->getState()->hydrate([
+            'httpStatus' => 204,
             'message' => sprintf(__('Deleted %s'), $column->heading)
         ]);
     }

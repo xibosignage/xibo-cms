@@ -43,6 +43,22 @@ class DataSet extends Base
     /**
      * Search Data
      * @throws \Xibo\Exception\NotFoundException
+     *
+     * @SWG\Get(
+     *  path="/dataset",
+     *  operationId="dataSetSearch",
+     *  tags={"dataset"},
+     *  summary="DataSet Search",
+     *  description="Search this users DataSets",
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(ref="#/definitions/DataSet")
+     *      )
+     *  )
+     * )
      */
     public function grid()
     {
@@ -146,6 +162,38 @@ class DataSet extends Base
 
     /**
      * Add dataSet
+     *
+     * @SWG\Post(
+     *  path="/dataset",
+     *  operationId="dataSetAdd",
+     *  tags={"dataset"},
+     *  summary="Add DataSet",
+     *  description="Add a DataSet",
+     *  @SWG\Parameter(
+     *      name="dataSet",
+     *      in="formData",
+     *      description="The DataSet Name",
+     *      type="string",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="description",
+     *      in="formData",
+     *      description="A description of this DataSet",
+     *      type="string",
+     *      required="false"
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/DataSet"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new record",
+     *          type="string"
+     *      )
+     *  )
+     * )
      */
     public function add()
     {
@@ -169,6 +217,7 @@ class DataSet extends Base
 
         // Return
         $this->getState()->hydrate([
+            'httpStatus' => 201,
             'message' => sprintf(__('Added %s'), $dataSet->dataSet),
             'id' => $dataSet->dataSetId,
             'data' => $dataSet
@@ -198,6 +247,40 @@ class DataSet extends Base
     /**
      * Edit DataSet
      * @param int $dataSetId
+     *
+     * @SWG\Put(
+     *  path="/dataset/{dataSetId}",
+     *  operationId="dataSetEdit",
+     *  tags={"dataset"},
+     *  summary="Edit DataSet",
+     *  description="Edit a DataSet",
+     *  @SWG\Parameter(
+     *      name="dataSetId",
+     *      in="path",
+     *      description="The DataSet ID",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dataSet",
+     *      in="formData",
+     *      description="The DataSet Name",
+     *      type="string",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="description",
+     *      in="formData",
+     *      description="A description of this DataSet",
+     *      type="string",
+     *      required="false"
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/DataSet")
+     *  )
+     * )
      */
     public function edit($dataSetId)
     {
@@ -240,6 +323,25 @@ class DataSet extends Base
     /**
      * DataSet Delete
      * @param int $dataSetId
+     *
+     * @SWG\Delete(
+     *  path="/dataset/{dataSetId}",
+     *  operationId="dataSetDelete",
+     *  tags={"dataset"},
+     *  summary="Delete DataSet",
+     *  description="Delete a DataSet",
+     *  @SWG\Parameter(
+     *      name="dataSetId",
+     *      in="path",
+     *      description="The DataSet ID",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
      */
     public function delete($dataSetId)
     {
@@ -257,6 +359,7 @@ class DataSet extends Base
 
         // Return
         $this->getState()->hydrate([
+            'httpStatus' => 204,
             'message' => sprintf(__('Deleted %s'), $dataSet->dataSet)
         ]);
     }
@@ -264,6 +367,33 @@ class DataSet extends Base
     /**
      * Import CSV
      * @param int $dataSetId
+     *
+     * @SWG\Post(
+     *  path="/dataset/import/{dataSetId}",
+     *  operationId="dataSetImport",
+     *  tags={"dataset"},
+     *  summary="Import CSV",
+     *  description="Import a CSV into a DataSet",
+     *  consumes="multipart/form-data",
+     *  @SWG\Parameter(
+     *      name="dataSetId",
+     *      in="path",
+     *      description="The DataSet ID to import into.",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="file",
+     *      in="formData",
+     *      description="The file",
+     *      type="file",
+     *      required="true"
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation"
+     *  )
+     * )
      */
     public function import($dataSetId)
     {

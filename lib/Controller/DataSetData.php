@@ -40,6 +40,26 @@ class DataSetData extends Base
     /**
      * Grid
      * @param $dataSetId
+     *
+     * @SWG\Get(
+     *  path="/dataset/data/{dataSetId}",
+     *  operationId="dataSetData",
+     *  tags={"dataset"},
+     *  summary="DataSet Data",
+     *  description="Get Data for DataSet",
+     *  @SWG\Parameter(
+     *      name="dataSetId",
+     *      in="formData",
+     *      description="The DataSet ID",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(type="array")
+     *  )
+     * )
      */
     public function grid($dataSetId)
     {
@@ -78,6 +98,37 @@ class DataSetData extends Base
     /**
      * Add
      * @param int $dataSetId
+     *
+     * @SWG\Post(
+     *  path="/dataset/data/{dataSetId}",
+     *  operationId="dataSetDataAdd",
+     *  tags={"dataset"},
+     *  summary="Add Row",
+     *  description="Add a row of Data to a DataSet",
+     *  @SWG\Parameter(
+     *      name="dataSetId",
+     *      in="path",
+     *      description="The DataSet ID",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dataSetColumnId_ID",
+     *      in="formData",
+     *      description="Parameter for each dataSetColumnId in the DataSet",
+     *      type="string",
+     *      required="true"
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new record",
+     *          type="string"
+     *      )
+     *  )
+     * )
      */
     public function add($dataSetId)
     {
@@ -120,13 +171,14 @@ class DataSetData extends Base
 
         // Return
         $this->getState()->hydrate([
+            'httpStatus' => 201,
             'message' => __('Added Row'),
             'id' => $rowId
         ]);
     }
 
     /**
-     * Edit FOrm
+     * Edit Form
      * @param $dataSetId
      * @param $rowId
      */
@@ -150,6 +202,39 @@ class DataSetData extends Base
      * Edit Row
      * @param int $dataSetId
      * @param int $rowId
+     *
+     * @SWG\Put(
+     *  path="/dataset/data/{dataSetId}/{rowId}",
+     *  operationId="dataSetDataEdit",
+     *  tags={"dataset"},
+     *  summary="Edit Row",
+     *  description="Edit a row of Data to a DataSet",
+     *  @SWG\Parameter(
+     *      name="dataSetId",
+     *      in="path",
+     *      description="The DataSet ID",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="rowId",
+     *      in="path",
+     *      description="The Row ID of the Data to Edit",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dataSetColumnId_ID",
+     *      in="formData",
+     *      description="Parameter for each dataSetColumnId in the DataSet",
+     *      type="string",
+     *      required="true"
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation"
+     *  )
+     * )
      */
     public function edit($dataSetId, $rowId)
     {
@@ -225,6 +310,32 @@ class DataSetData extends Base
      * Delete Row
      * @param $dataSetId
      * @param $rowId
+     *
+     * @SWG\Delete(
+     *  path="/dataset/data/{dataSetId}/{rowId}",
+     *  operationId="dataSetDataDelete",
+     *  tags={"dataset"},
+     *  summary="Delete Row",
+     *  description="Delete a row of Data to a DataSet",
+     *  @SWG\Parameter(
+     *      name="dataSetId",
+     *      in="path",
+     *      description="The DataSet ID",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="rowId",
+     *      in="path",
+     *      description="The Row ID of the Data to Delete",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
      */
     public function delete($dataSetId, $rowId)
     {
@@ -241,6 +352,7 @@ class DataSetData extends Base
 
         // Return
         $this->getState()->hydrate([
+            'httpStatus' => 204,
             'message' => __('Deleted Row'),
             'id' => $rowId
         ]);

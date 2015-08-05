@@ -215,6 +215,503 @@
                 }
             }
         },
+        "/dataset": {
+            "get": {
+                "tags": [
+                    "dataset"
+                ],
+                "summary": "DataSet Search",
+                "description": "Search this users DataSets",
+                "operationId": "dataSetSearch",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/DataSet"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "dataset"
+                ],
+                "summary": "Add DataSet",
+                "description": "Add a DataSet",
+                "operationId": "dataSetAdd",
+                "parameters": [
+                    {
+                        "name": "dataSet",
+                        "in": "formData",
+                        "description": "The DataSet Name",
+                        "required": "true",
+                        "type": "string"
+                    },
+                    {
+                        "name": "description",
+                        "in": "formData",
+                        "description": "A description of this DataSet",
+                        "required": "false",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/DataSet"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new record",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/dataset/{dataSetId}": {
+            "put": {
+                "tags": [
+                    "dataset"
+                ],
+                "summary": "Edit DataSet",
+                "description": "Edit a DataSet",
+                "operationId": "dataSetEdit",
+                "parameters": [
+                    {
+                        "name": "dataSetId",
+                        "in": "path",
+                        "description": "The DataSet ID",
+                        "required": "true",
+                        "type": "integer"
+                    },
+                    {
+                        "name": "dataSet",
+                        "in": "formData",
+                        "description": "The DataSet Name",
+                        "required": "true",
+                        "type": "string"
+                    },
+                    {
+                        "name": "description",
+                        "in": "formData",
+                        "description": "A description of this DataSet",
+                        "required": "false",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/DataSet"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "dataset"
+                ],
+                "summary": "Delete DataSet",
+                "description": "Delete a DataSet",
+                "operationId": "dataSetDelete",
+                "parameters": [
+                    {
+                        "name": "dataSetId",
+                        "in": "path",
+                        "description": "The DataSet ID",
+                        "required": "true",
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/dataset/import/{dataSetId}": {
+            "post": {
+                "tags": [
+                    "dataset"
+                ],
+                "summary": "Import CSV",
+                "description": "Import a CSV into a DataSet",
+                "operationId": "dataSetImport",
+                "consumes": "multipart/form-data",
+                "parameters": [
+                    {
+                        "name": "dataSetId",
+                        "in": "path",
+                        "description": "The DataSet ID to import into.",
+                        "required": "true",
+                        "type": "integer"
+                    },
+                    {
+                        "name": "file",
+                        "in": "formData",
+                        "description": "The file",
+                        "required": "true",
+                        "type": "file"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/dataset/{dataSetId}/column": {
+            "get": {
+                "tags": [
+                    "dataset"
+                ],
+                "summary": "Search Columns",
+                "description": "Search Columns for DataSet",
+                "operationId": "dataSetColumnSearch",
+                "parameters": [
+                    {
+                        "name": "dataSetId",
+                        "in": "path",
+                        "description": "The DataSet ID",
+                        "required": "true",
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/DataSetColumn"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "dataset"
+                ],
+                "summary": "Add Column",
+                "description": "Add a Column to a DataSet",
+                "operationId": "dataSetColumnAdd",
+                "parameters": [
+                    {
+                        "name": "dataSetId",
+                        "in": "path",
+                        "description": "The DataSet ID",
+                        "required": "true",
+                        "type": "integer"
+                    },
+                    {
+                        "name": "heading",
+                        "in": "formData",
+                        "description": "The heading for the Column",
+                        "required": "true",
+                        "type": "string"
+                    },
+                    {
+                        "name": "listContent",
+                        "in": "formData",
+                        "description": "A comma separated list of content for drop downs",
+                        "required": "false",
+                        "type": "string"
+                    },
+                    {
+                        "name": "columnOrder",
+                        "in": "formData",
+                        "description": "The display order for this column",
+                        "required": "true",
+                        "type": "integer"
+                    },
+                    {
+                        "name": "dataTypeId",
+                        "in": "formData",
+                        "description": "The data type ID for this column",
+                        "required": "true",
+                        "type": "integer"
+                    },
+                    {
+                        "name": "dataSetColumnTypeId",
+                        "in": "formData",
+                        "description": "The column type for this column",
+                        "required": "true",
+                        "type": "integer"
+                    },
+                    {
+                        "name": "formula",
+                        "in": "formData",
+                        "description": "MySQL SELECT syntax formula for this Column if the column type is formula",
+                        "required": "false",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/DataSetColumn"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new record",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/dataset/{dataSetId}/column/{dataSetColumnId}": {
+            "put": {
+                "tags": [
+                    "dataset"
+                ],
+                "summary": "Edit Column",
+                "description": "Edit a Column to a DataSet",
+                "operationId": "dataSetColumnEdit",
+                "parameters": [
+                    {
+                        "name": "dataSetId",
+                        "in": "path",
+                        "description": "The DataSet ID",
+                        "required": "true",
+                        "type": "integer"
+                    },
+                    {
+                        "name": "dataSetColumnId",
+                        "in": "path",
+                        "description": "The Column ID",
+                        "required": "true",
+                        "type": "integer"
+                    },
+                    {
+                        "name": "heading",
+                        "in": "formData",
+                        "description": "The heading for the Column",
+                        "required": "true",
+                        "type": "string"
+                    },
+                    {
+                        "name": "listContent",
+                        "in": "formData",
+                        "description": "A comma separated list of content for drop downs",
+                        "required": "false",
+                        "type": "string"
+                    },
+                    {
+                        "name": "columnOrder",
+                        "in": "formData",
+                        "description": "The display order for this column",
+                        "required": "true",
+                        "type": "integer"
+                    },
+                    {
+                        "name": "dataTypeId",
+                        "in": "formData",
+                        "description": "The data type ID for this column",
+                        "required": "true",
+                        "type": "integer"
+                    },
+                    {
+                        "name": "dataSetColumnTypeId",
+                        "in": "formData",
+                        "description": "The column type for this column",
+                        "required": "true",
+                        "type": "integer"
+                    },
+                    {
+                        "name": "formula",
+                        "in": "formData",
+                        "description": "MySQL SELECT syntax formula for this Column if the column type is formula",
+                        "required": "false",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/DataSetColumn"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new record",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "dataset"
+                ],
+                "summary": "Delete Column",
+                "description": "Delete DataSet Column",
+                "operationId": "dataSetColumnDelete",
+                "parameters": [
+                    {
+                        "name": "dataSetId",
+                        "in": "path",
+                        "description": "The DataSet ID",
+                        "required": "true",
+                        "type": "integer"
+                    },
+                    {
+                        "name": "dataSetColumnId",
+                        "in": "path",
+                        "description": "The Column ID",
+                        "required": "true",
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/dataset/data/{dataSetId}": {
+            "get": {
+                "tags": [
+                    "dataset"
+                ],
+                "summary": "DataSet Data",
+                "description": "Get Data for DataSet",
+                "operationId": "dataSetData",
+                "parameters": [
+                    {
+                        "name": "dataSetId",
+                        "in": "formData",
+                        "description": "The DataSet ID",
+                        "required": "true",
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "dataset"
+                ],
+                "summary": "Add Row",
+                "description": "Add a row of Data to a DataSet",
+                "operationId": "dataSetDataAdd",
+                "parameters": [
+                    {
+                        "name": "dataSetId",
+                        "in": "path",
+                        "description": "The DataSet ID",
+                        "required": "true",
+                        "type": "integer"
+                    },
+                    {
+                        "name": "dataSetColumnId_ID",
+                        "in": "formData",
+                        "description": "Parameter for each dataSetColumnId in the DataSet",
+                        "required": "true",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new record",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/dataset/data/{dataSetId}/{rowId}": {
+            "put": {
+                "tags": [
+                    "dataset"
+                ],
+                "summary": "Edit Row",
+                "description": "Edit a row of Data to a DataSet",
+                "operationId": "dataSetDataEdit",
+                "parameters": [
+                    {
+                        "name": "dataSetId",
+                        "in": "path",
+                        "description": "The DataSet ID",
+                        "required": "true",
+                        "type": "integer"
+                    },
+                    {
+                        "name": "rowId",
+                        "in": "path",
+                        "description": "The Row ID of the Data to Edit",
+                        "required": "true",
+                        "type": "integer"
+                    },
+                    {
+                        "name": "dataSetColumnId_ID",
+                        "in": "formData",
+                        "description": "Parameter for each dataSetColumnId in the DataSet",
+                        "required": "true",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "dataset"
+                ],
+                "summary": "Delete Row",
+                "description": "Delete a row of Data to a DataSet",
+                "operationId": "dataSetDataDelete",
+                "parameters": [
+                    {
+                        "name": "dataSetId",
+                        "in": "path",
+                        "description": "The DataSet ID",
+                        "required": "true",
+                        "type": "integer"
+                    },
+                    {
+                        "name": "rowId",
+                        "in": "path",
+                        "description": "The Row ID of the Data to Delete",
+                        "required": "true",
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
         "/display": {
             "get": {
                 "tags": [
@@ -1596,14 +2093,14 @@
                     {
                         "name": "transitionDirection",
                         "in": "formData",
-                        "description": "The transition direction if required by the tranisition type.",
+                        "description": "The transition direction if required by the transition type.",
                         "required": "false",
                         "type": "string"
                     },
                     {
                         "name": "loop",
                         "in": "formData",
-                        "description": "Flag indiciating whether this region should loop if there is only 1 media item in the timeline",
+                        "description": "Flag indicating whether this region should loop if there is only 1 media item in the timeline",
                         "required": "true",
                         "type": "integer"
                     }
@@ -2094,6 +2591,25 @@
                 }
             }
         },
+        "/stats": {
+            "get": {
+                "tags": [
+                    "statistics"
+                ],
+                "operationId": "statsSearch",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/template": {
             "get": {
                 "tags": [
@@ -2109,6 +2625,27 @@
                             "type": "array",
                             "items": {
                                 "$ref": "#/definitions/Layout"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/user": {
+            "get": {
+                "tags": [
+                    "user"
+                ],
+                "summary": "User Search",
+                "description": "Search users",
+                "operationId": "userSearch",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/User"
                             }
                         }
                     }

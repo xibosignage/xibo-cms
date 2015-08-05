@@ -248,14 +248,14 @@ class Region extends Base
      *  @SWG\Parameter(
      *      name="transitionDirection",
      *      in="formData",
-     *      description="The transition direction if required by the tranisition type.",
+     *      description="The transition direction if required by the transition type.",
      *      type="string",
      *      required="false"
      *   ),
      *  @SWG\Parameter(
      *      name="loop",
      *      in="formData",
-     *      description="Flag indiciating whether this region should loop if there is only 1 media item in the timeline",
+     *      description="Flag indicating whether this region should loop if there is only 1 media item in the timeline",
      *      type="integer",
      *      required="true"
      *   ),
