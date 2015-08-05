@@ -114,7 +114,7 @@ class ForecastIo extends Module
     private function loadTemplates()
     {
         // Scan the folder for template files
-        foreach (glob('../modules/forecastio/*.template.json') as $template) {
+        foreach (glob(PROJECT_ROOT . '/modules/forecastio/*.template.json') as $template) {
             // Read the contents, json_decode and add to the array
             $this->module->settings['templates'][] = json_decode(file_get_contents($template), true);
         }

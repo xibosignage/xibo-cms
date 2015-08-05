@@ -21,6 +21,7 @@
  */
 namespace Xibo\Widget;
 
+use Respect\Validation\Validator as v;
 use Emojione\Emojione;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\MediaFactory;
@@ -40,29 +41,27 @@ class Twitter extends Module
      */
     public function installOrUpdate()
     {
-        // This function should update the `module` table with information about your module.
-        // The current version of the module in the database can be obtained in $this->schemaVersion
-        // The current version of this code can be obtained in $this->codeSchemaVersion
-
-        // $settings will be made available to all instances of your module in $this->module->settings. These are global settings to your module,
-        // not instance specific (i.e. not settings specific to the layout you are adding the module to).
-        // $settings will be collected from the Administration -> Modules CMS page.
-        //
-        // Layout specific settings should be managed with $this->SetOption in your add / edit forms.
-
-        if ($this->module->schemaVersion <= 1) {
+        if ($this->module == null) {
             // Install
-            $this->InstallModule('Twitter', 'Twitter Search Module', 'forms/library.gif', 1, 1, array());
-        } else {
-            // Update
-            // Call "$this->UpdateModule($name, $description, $imageUri, $previewEnabled, $assignable, $settings)" with the updated items
+            $module = new \Xibo\Entity\Module();
+            $module->name = 'Twitter';
+            $module->type = 'twitter';
+            $module->description = 'Twitter Search Module';
+            $module->imageUri = 'forms/library.gif';
+            $module->enabled = 1;
+            $module->previewEnabled = 1;
+            $module->assignable = 1;
+            $module->regionSpecific = 1;
+            $module->renderAs = 'html';
+            $module->schemaVersion = $this->codeSchemaVersion;
+            $module->settings = [];
+
+            $this->setModule($module);
+            $this->installModule();
         }
 
         // Check we are all installed
         $this->installFiles();
-
-        // After calling either Install or Update your code schema version will match the database schema version and this method will not be called
-        // again. This means that if you want to change those fields in an update to your module, you will need to increment your codeSchemaVersion.
     }
 
     /**
@@ -73,23 +72,35 @@ class Twitter extends Module
         MediaFactory::createModuleFile('modules/vendor/jquery-1.11.1.min.js')->save();
         MediaFactory::createModuleFile('modules/xibo-text-render.js')->save();
         MediaFactory::createModuleFile('modules/xibo-layout-scaler.js')->save();
-        MediaFactory::createModuleFile('modules/twitter/emoji.css')->save();
-        MediaFactory::createModuleFile('modules/twitter/emoji.png')->save();
-        MediaFactory::createModuleFile('vendor/emojione/assets/sprites/emojione.sprites.svg')->save();
+        MediaFactory::createModuleFile(PROJECT_ROOT . '/vendor/emojione/emojione/assets/sprites/emojione.sprites.svg')->save();
     }
 
     /**
      * Loads templates for this module
      */
-    public function loadTemplates()
+    private function loadTemplates()
     {
+        $this->module->settings['templates'] = [];
+
         // Scan the folder for template files
-        foreach (glob('modules/twitter/*.template.json') as $template) {
+        foreach (glob(PROJECT_ROOT . '/modules/twitter/*.template.json') as $template) {
             // Read the contents, json_decode and add to the array
             $this->module->settings['templates'][] = json_decode(file_get_contents($template), true);
         }
 
         Log::debug(count($this->module->settings['templates']));
+    }
+
+    /**
+     * Templates available
+     * @return array
+     */
+    public function templatesAvailable()
+    {
+        if (!isset($this->module->settings['templates']))
+            $this->loadTemplates();
+
+        return $this->module->settings['templates'];
     }
 
     /**
@@ -128,8 +139,8 @@ class Twitter extends Module
 
     public function validate()
     {
-        if (\Kit::GetParam('searchTerm', _POST, _STRING) == '')
-            throw new InvalidArgumentException(__('Please enter a search term'));
+        if (!v::string()->notEmpty()->validate($this->getOption('searchTerm')))
+            throw new \InvalidArgumentException(__('Please enter a search term'));
     }
 
     /**
