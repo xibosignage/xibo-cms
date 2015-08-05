@@ -4,7 +4,6 @@
  * Copyright (C) 2015 Spring Signage Ltd
  * (${FILE_NAME})
  */
-// Augment settings with templates
 
         // Data Set Source
 
@@ -69,18 +68,6 @@
                     '.template-selector-control' => array('display' => 'none')
                 ), 'is:checked');
         }
-
-        Theme::Set('form_fields_general', $formFields['general']);
-        Theme::Set('form_fields_template', array_reverse($formFields['template']));
-        Theme::Set('form_fields_format', $formFields['format']);
-        Theme::Set('form_fields_advanced', $formFields['advanced']);
-
-        // Generate the Response
-        $response->html = Theme::RenderReturn('form_render');
-        $response->callBack = 'text_callback';
-        $this->configureFormButtons($response);
-        $response->dialogTitle = __('Edit Ticker');
-        $this->response->AddButton(__('Apply'), 'XiboDialogApply("#ModuleForm")');
 #}
 
 {% extends "form-base.twig" %}
@@ -91,12 +78,56 @@
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Apply" %}, XiboDialogApply("#tickerEditForm")
     {% trans "Save" %}, $("#tickerEditForm").submit()
 {% endblock %}
 
-{% block callBack %}forecastIoFormSetup{% endblock %}
+{% block callBack %}text_callback{% endblock %}
+
+{% block extra %}{{ module.templatesAvailable()|json_encode|raw }}{% endblock %}
+
+{% block formFieldActions %}
+    {% if module.getOption("sourceId") == 1 %}
+    [{
+    "field": "overrideTemplate",
+    "trigger": "init",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".template-override-controls": { "display": "none" },
+    ".template-selector-control": { "display": "block" }
+    }
+    },{
+    "field": "overrideTemplate",
+    "trigger": "change",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".template-override-controls": { "display": "none" },
+    ".template-selector-control": { "display": "block" }
+    }
+    },{
+    "field": "overrideTemplate",
+    "trigger": "init",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".template-override-controls": { "display": "block" },
+    ".template-selector-control": { "display": "none" }
+    }
+    },{
+    "field": "overrideTemplate",
+    "trigger": "change",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".template-override-controls": { "display": "block" },
+    ".template-selector-control": { "display": "none" }
+    }
+    }]
+    {% endif %}
+{% endblock %}
 
 {% block formHtml %}
     <div class="row">
@@ -108,224 +139,200 @@
                 <li><a href="#advanced" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
             </ul>
             <form id="tickerEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
-
-                        {# Common Fields #}
-                        
-                        {% set title%}{% trans "Name"%{% endset %}}
-                        {% set helpText %}{% trans "TAn optional name for this media" %}{% endset %}
-                        {{ forms.text("name", title, module.getOption("name"), helpText)}}
-
-                        {{ forms.number("duration", "Duration", module.getDuration(), "The duration in seconds this item should be displayed", "", "required") }}
-
-                        {% set title %}{% trans "Effect" %}{% endset %}
-                        {% set helpText %}{% trans "Please select the effect that will be used to transition between items. If all items should be output, select None. Marquee effects are CPU intensive and may not be suitable for lower power displays." %}{% endset %}
-                        {% set fade %}{% trans "Fade" %}{% endset %}
-                        {% set fadeout %}{% trans "Fade Out" %}{% endset %}
-                        {% set scrollHorz %}{% trans "Scroll Horizontal" %}{% endset %}
-                        {% set scrollVert %}{% trans "Scroll Vertical" %}{% endset %}
-                        {% set flipHorz %}{% trans "Flip Horizontal" %}{% endset %}
-                        {% set flipVert %}{% trans "Flip Vertical" %}{% endset %}
-                        {% set shuffle %}{% trans "shuffle" %}{% endset %}
-                        {% set tileSlide %}{% trans "Tile Slide" %}{% endset %}
-                        {% set tileBlind %}{% trans "Tile Blind" %}{% endset %}
-                        {% set marqueeLeft %}{% trans "Marquee Left" %}{% endset %}
-                        {% set marqueeRight %}{% trans "Marquee Right" %}{% endset %}
-                        {% set marqueeUp %}{% trans "Marquee Up" %}{% endset %}
-                        {% set marqueeDown %}{% trans "Marquee Down" %}{% endset %}
-                        {% set options = [
-                        { effectid: "", effect: none },
-                        { effectid: fade, effect: fade },
-                        { effectid: fadeout, effect: fadeout},
-                        { effectid: scrollHorz, effect: scrollHorz},
-                        { effectid: scrollVert, effect: scrollVert},
-                        { effectid: flipHorz, effect: flipHorz},
-                        { effectid: flipVert, effect: flipVert},
-                        { effectid: shuffle, effect: shuffle},
-                        { effectid: tileSlide, effect: tileSlide},
-                        { effectid: tileBlind, effect: tileBlind},
-                        { effectid: marqueeLeft, effect: marqueeLeft},
-                        { effectid: marqueeRight, effect: marqueeRight},
-                        { effectid: marqueeUp, effect: marqueeUp},
-                        { effectid: marqueeDown, effect: marqueeDown}
-                        ] %}
-                        {{ forms.dropdown("effect", "single", title, module.getOption("effect"), options, "effectid", "effect", helpText) }}
-
-                        {% set title %}{% trans "Speed" %}{% endset %}
-                        {% set helpText %}{% trans "The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1)." %}{% endset %}
-                        {{ forms.number("speed", title, module.getOption("speed"), module.getOption("scrollSpeed"), helpText, "", "effect-controls") }}
-
-                        {% set title %}{% trans "Background Colour" %}{% endset %}
-                        {% set helpText %}{% trans "The selected effect works best with a background colour. Optionally add one here." %}{% endset %}
-                        {{ forms.text("backgroundColor", title, module.getOption("backgroundColor"), helpText, "", "background-color-group") }}
-
-                        {% set title %}{% trans "Items per page" %}{% endset %}
-                        {% set helpText %}{% trans "When in single mode how many items per page should be shown." %}{% endset %}
-                        {{ forms.number("itemsPerPage", title, module.getOption("itemsPerPage"), helpText, "", "effect-controls") }}
-
-                        {% set title %}{% trans "Update Interval (mins)" %}{% endset %}
-                        {% set helpText %}{% trans "Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60." %}{% endset %}
-                        {{ forms.number("updateInterval", title, module.getOption("updateInterval", 5), helpText, "", "required") }}
-
-                        {% set title %}{% trans "Duration is per item" %}{% endset %}
-                        {% set helpText %}{% trans "The duration specified is per item otherwise it is per feed." %}{% endset %}
-                        {{ forms.checkbox("durationIsPerItem", title, module.getDOption("durationIsPerItem"), helpText) }}
-
-                        {% set title %}{% trans "Show itms side by side?" %}{% endset %}
-                        {% set helpText %}{% trans "Should items be shown side by side?" %}{% endset %}
-                        {{ forms.checkbox("itemsSideBySide", title, module.getOption("itemsSideBySide"), helpText) }}
-
-
-
-
-
                 <div class="tab-content">
+
+                {# Common Fields #}
+                {% set title %}{% trans "Name" %}{% endset %}
+                {% set helpText %}{% trans "An optional name for this media" %}{% endset %}
+                {% set fieldName %}{{ forms.text("name", title, module.getOption("name"), helpText) }}{% endset %}
+
+                {% set title %}{% trans "Duration" %}{% endset %}
+                {% set helpText %}{% trans "The duration in seconds this item should be displayed" %}{% endset %}
+                {% set fieldDuration %}{{ forms.number("duration", title, module.getDuration(), helpText, "", "required") }}{% endset %}
+
+                {% set title %}{% trans "Effect" %}{% endset %}
+                {% set helpText %}{% trans "Please select the effect that will be used to transition between items. If all items should be output, select None. Marquee effects are CPU intensive and may not be suitable for lower power displays." %}{% endset %}
+                {% set noneOption %}{% trans "None" %}{% endset %}
+                {% set fade %}{% trans "Fade" %}{% endset %}
+                {% set fadeout %}{% trans "Fade Out" %}{% endset %}
+                {% set scrollHorz %}{% trans "Scroll Horizontal" %}{% endset %}
+                {% set scrollVert %}{% trans "Scroll Vertical" %}{% endset %}
+                {% set flipHorz %}{% trans "Flip Horizontal" %}{% endset %}
+                {% set flipVert %}{% trans "Flip Vertical" %}{% endset %}
+                {% set shuffle %}{% trans "Shuffle" %}{% endset %}
+                {% set tileSlide %}{% trans "Tile Slide" %}{% endset %}
+                {% set tileBlind %}{% trans "Tile Blind" %}{% endset %}
+                {% set marqueeLeft %}{% trans "Marquee Left" %}{% endset %}
+                {% set marqueeRight %}{% trans "Marquee Right" %}{% endset %}
+                {% set marqueeUp %}{% trans "Marquee Up" %}{% endset %}
+                {% set marqueeDown %}{% trans "Marquee Down" %}{% endset %}
+                {% set options = [
+                { effectid: "", effect: noneOption },
+                { effectid: "fade", effect: fade },
+                { effectid: "fadeout", effect: fadeout},
+                { effectid: "scrollHorz", effect: scrollHorz},
+                { effectid: "scrollVert", effect: scrollVert},
+                { effectid: "flipHorz", effect: flipHorz},
+                { effectid: "flipVert", effect: flipVert},
+                { effectid: "shuffle", effect: shuffle},
+                { effectid: "tileSlide", effect: tileSlide},
+                { effectid: "tileBlind", effect: tileBlind},
+                { effectid: "marqueeLeft", effect: marqueeLeft},
+                { effectid: "marqueeRight", effect: marqueeRight},
+                { effectid: "marqueeUp", effect: marqueeUp},
+                { effectid: "marqueeDown", effect: marqueeDown}
+                ] %}
+                {% set fieldEffect %}{{ forms.dropdown("effect", "single", title, module.getOption("effect"), options, "effectid", "effect", helpText) }}{% endset %}
+
+                {% set title %}{% trans "Speed" %}{% endset %}
+                {% set helpText %}{% trans "The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1)." %}{% endset %}
+                {% set fieldSpeed %}{{ forms.number("speed", title, module.getOption("speed", module.getOption("scrollSpeed")), helpText, "effect-controls") }}{% endset %}
+
+                {% set title %}{% trans "Background Colour" %}{% endset %}
+                {% set helpText %}{% trans "The selected effect works best with a background colour. Optionally add one here." %}{% endset %}
+                {% set fieldBackgroundColor %}{{ forms.text("backgroundColor", title, module.getOption("backgroundColor"), helpText, "background-color-group") }}{% endset %}
+
+                {% set title %}{% trans "Items per page" %}{% endset %}
+                {% set helpText %}{% trans "When in single mode how many items per page should be shown." %}{% endset %}
+                {% set fieldItemsPerPage %}{{ forms.number("itemsPerPage", title, module.getOption("itemsPerPage"), helpText, "effect-controls") }}{% endset %}
+
+                {% set title %}{% trans "Update Interval (mins)" %}{% endset %}
+                {% set helpText %}{% trans "Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60." %}{% endset %}
+                {% set fieldUpdateInterval %}{{ forms.number("updateInterval", title, module.getOption("updateInterval", 5), helpText, "", "required") }}{% endset %}
+
+                {% set title %}{% trans "Duration is per item" %}{% endset %}
+                {% set helpText %}{% trans "The duration specified is per item otherwise it is per feed." %}{% endset %}
+                {% set fieldDurationIsPerItem %}{{ forms.checkbox("durationIsPerItem", title, module.getDOption("durationIsPerItem"), helpText) }}{% endset %}
+
+                {% set title %}{% trans "Show itms side by side?" %}{% endset %}
+                {% set helpText %}{% trans "Should items be shown side by side?" %}{% endset %}
+                {% set fieldItemsSideBySide %}{{ forms.checkbox("itemsSideBySide", title, module.getOption("itemsSideBySide"), helpText) }}{% endset %}
+
+                {% set helpText %}{% trans "Enter the template. Please note that the background colour has automatically coloured to your layout background colour." %}{% endset %}
+                {% set fieldTemplate %}{{ forms.textarea("ta_text", "", module.getRawMode("template"), helpText, "template-override-controls", "", 10) }}{% endset %}
+
+                {% set title %}{% trans "Optional Stylesheet" %}{% endset %}
+                {% set fieldStyleSheet %}{{ forms.textarea("ta_css", "", module.getRawMode("styleSheet"), title, "template-override-controls", "", 10) }}{% endset %}
+
+                {# Different fields for each type of Ticker #}
+                {% if module.getOption("sourceId") == 1 %}
+                    {# Source = Feed #}
                     <div class="tab-pane active" id="general">
-                        {# Source = Feed #}
+                        {% set title %}{% trans "Feed URL" %}{% endset %}
+                        {% set helpText %}{% trans "The Link for the RSS feed" %}{% endset %}
+                        {{ forms.text("uri", title, module.getOption("uri"), helpText, "feed-fields") }}
 
-                        {% if module.getOption("sourceId") == 1 %}
-
-                            {% set title%}{% trans "Feed URL" %{% endset %}}
-                            {% set helpText %}{% trans "The Link for the RSS feed" %}{% endset %}
-                            {{ forms.text("uri", title, module.getOption("uri"), helpText, "", "", "feed-fields")}}
-                        
-                        {# Name Duration and effect from common fields #}
-                        
-                        {# Source = Dataset #}
-                        {% elseif module.getOption("sourceId") == 2 %}
-                        
-                        {# Name Duration effect and speed from common fields #}
-
-                            {% set title%}{% trans "Order" %{% endset %}}
-                            {% set helpText %}{% trans "Please enter a SQL clause for how this dataset should be ordered" %}{% endset %}
-                            {{ forms.text("ordering", title, module.getOption("ordering"), helpText)}}
-                            
-                            {% set title%}{% trans "Filter" %{% endset %}}
-                            {% set helpText %}{% trans "Please enter a SQL clause to filter this DataSet." %}{% endset %}
-                            {{ forms.text("filter", title, module.getOption("filter"), helpText)}}
-                        
-                        {% endif %}
+                        {{ fieldName }}
+                        {{ fieldDuration }}
+                        {{ fieldEffect }}
                     </div>
-
                     <div class="tab-pane" id="template">
-                        {# Source = Feed #}
-                        {% if module.getOption("sourceId") == 1 %}
-                        
-                            {% set title %}{% trans "Override the template?" %}{% endset %}
-                            {% set helpText %}{% trans "Tick if you would like to override the template." %}{% endset %}
-                            {{ forms.checkbox("overrideTemplate", title, module.getOption("overrideTemplate", 1), helpText) }}
-                        
-                            {# same problem as in twitter edit
+                        {{ fieldTemplate }}
+                        {{ fieldStyleSheet }}
 
-                            {% set title %}{% trans "Template" %}{% endset %}
-                            {% set helpText %}{% trans "Select the template you would like to apply. This can be overridden using the check box below." %}{% endset %}
-                            {{ forms.dropdown("templateId", title, module.getOption("templateId", "tweet-only"), module.,"id", "value", helptext, "", "template-selector-control") }}
-                        
-                          $this->module->settings['templates'] is in twitter.php, not sure how to refrence it here
-                             #}
-                            
-                            {% set helpText %}{% trans "Enter the template. Please note that the background colour has automatically coloured to your layout background colour." %}{% endset %}
-                            {{ forms.textarea("ta_text", "", module.getRawMode("template", null), helpText, "", 10, "", "template-override-controls") }}
+                        {% set title %}{% trans "Override the template?" %}{% endset %}
+                        {% set helpText %}{% trans "Tick if you would like to override the template." %}{% endset %}
+                        {{ forms.checkbox("overrideTemplate", title, module.getOption("overrideTemplate", 0), helpText) }}
 
-                            {% set title %}{% trans "Optional Stylesheet" %}{% endset %}
-                            {{ forms.textarea("ta_css", "", module.getRawMode("styleSheet", null), title, "", 10, "", "template-override-controls") }}
-
-                            
-                            {# Source = Dataset #}
-
-                            {% elseif module.getOption("sourceId") == 2 %}
-                            
-                            {% set helpText %}{% trans "Enter the template. Please note that the background colour has automatically coloured to your layout background colour." %}{% endset %}
-                            {{ forms.textarea("ta_text", "", module.getRawMode("template", null), helpText, "", 10, "", "template-override-controls") }}
-                            
-                            {% set title %}{% trans "Optional Stylesheet" %}{% endset %}
-                            {{ forms.textarea("ta_css", "", module.getRawMode("styleSheet", null), title, "", 10, "", "template-override-controls") }}
-
-
-                        {% endif %}
+                        {% set title %}{% trans "Template" %}{% endset %}
+                        {% set helpText %}{% trans "Select the template you would like to apply. This can be overridden using the check box below." %}{% endset %}
+                        {{ forms.dropdown("templateId", "single", title, module.getOption("templateId", "tweet-only"), module.templatesAvailable(), "id", "value", helptext, "template-selector-control") }}
                     </div>
                     <div class="tab-pane" id="format">
-                        {# Source = Feed #}
-                        {% if module.getOption("sourceId") == 1 %}
-                        
-                        {# speed from common fields #}
+                        {{ fieldSpeed }}
 
-                            {% set title %}{% trans "Text direction" %}{% endset %}
-                            {% set helpText %}{% trans "Which direction does the text in the feed use? (left to right or right to left" %}{% endset %}
-                            {% set leftToRight %}{% trans "Left to Right (LTR)" %}{% endset %}
-                            {% set rightToLeft %}{% trans "Right to Left (RTL)" %}{% endset %}
-                            {% set options = [
-                            { textdirectionid: ltr, textdirection: leftToRight },
-                            { textdirectionid: rtl, textdirection: rightToLeft }
-                            ] %}
-                            {{ forms.dropdown("textDirection", "single", title, module.getOption("textDirection"), options, "textdirectionid", "textdirection", helpText) }}
-                        
-                            {% set title %}{% trans "Number of Items" %}{% endset %}
-                            {% set helpText %}{% trans "The Number of RSS items you want to display" %}{% endset %}
-                            {{ forms.number("numItems", title, module.getOption("numItems"), helpText) }}
+                        {% set title %}{% trans "Text direction" %}{% endset %}
+                        {% set helpText %}{% trans "Which direction does the text in the feed use? (left to right or right to left" %}{% endset %}
+                        {% set leftToRight %}{% trans "Left to Right (LTR)" %}{% endset %}
+                        {% set rightToLeft %}{% trans "Right to Left (RTL)" %}{% endset %}
+                        {% set options = [
+                        { textdirectionid: ltr, textdirection: leftToRight },
+                        { textdirectionid: rtl, textdirection: rightToLeft }
+                        ] %}
+                        {{ forms.dropdown("textDirection", "single", title, module.getOption("textDirection"), options, "textdirectionid", "textdirection", helpText) }}
 
-                        {# items per page from common fields #}
+                        {% set title %}{% trans "Number of Items" %}{% endset %}
+                        {% set helpText %}{% trans "The Number of RSS items you want to display" %}{% endset %}
+                        {{ forms.number("numItems", title, module.getOption("numItems"), helpText) }}
 
-                            {% set title %}{% trans "Take items from the" %}{% endset %}
-                            {% set helpText %}{% trans "Take the items from the beginning or the end of the list" %}{% endset %}
-                            {% set startOfTheFeed %}{% trans "Start of the Feed" %}{% endset %}
-                            {% set endOfTheFeed %}{% trans "End of the Feed" %}{% endset %}
-                            {% set options = [
-                            { takeitemsfromid: start, takeitemsfrom: startOfTheFeed },
-                            { takeitemsfromid: end, takeitemsfrom: endOfTheFeed }
-                            ] %}
-                            {{ forms.dropdown("takeItemsFrom", "single", title, module.getOption("takeItemsFrom"), options, "takeitemsfromid", "takeitemsfrom", helpText) }}
-                        
-                        {# duration is per item from common fields #}
-                        
-                        {# Source = Dataset #}         
-                            {% elseif module.getOption("sourceId") == 2 %}
-                        {# items per page and side by side from common fields #}
+                        {{ fieldItemsPerPage }}
 
-                        {% endif %}
+                        {% set title %}{% trans "Take items from the" %}{% endset %}
+                        {% set helpText %}{% trans "Take the items from the beginning or the end of the list" %}{% endset %}
+                        {% set startOfTheFeed %}{% trans "Start of the Feed" %}{% endset %}
+                        {% set endOfTheFeed %}{% trans "End of the Feed" %}{% endset %}
+                        {% set options = [
+                        { takeitemsfromid: "start", takeitemsfrom: startOfTheFeed },
+                        { takeitemsfromid: "end", takeitemsfrom: endOfTheFeed }
+                        ] %}
+                        {{ forms.dropdown("takeItemsFrom", "single", title, module.getOption("takeItemsFrom", "start"), options, "takeitemsfromid", "takeitemsfrom", helpText) }}
+
+                        {{ fieldDurationIsPerItem }}
                     </div>
                     <div class="tab-pane" id="advanced">
-                        {# Source = Feed #}
-                        {% if module.getOption("sourceId") == 1 %}
-                        
-                        {# background colour from common fields #}
+                        {{ fieldBackgroundColor }}
+                        {{ fieldUpdateInterval }}
 
-                            {% set title %}{% trans "Copyright" %}{% endset %}
-                            {% set helpText %}{% trans "Copyright information to display as the last item in this feed. This can be styled with the #copyright CSS selector." %}{% endset %}
-                            {{ forms.text("copyright", title, module.getOption("copyright"), helpText) }}
-                        
-                        {# Update interval and items side by side from common fields #}
+                        {% set title %}{% trans "Copyright" %}{% endset %}
+                        {% set helpText %}{% trans "Copyright information to display as the last item in this feed. This can be styled with the #copyright CSS selector." %}{% endset %}
+                        {{ forms.text("copyright", title, module.getOption("copyright"), helpText) }}
 
-                            {% set title %}{% trans "Date Format" %}{% endset %}
-                            {% set helpText %}{% trans "The format to apply to all dates returned by the ticker. In PHP date format: http://uk3.php.net/manual/en/function.date.php" %}{% endset %}
-                            {{ forms.text("dateFormat", title, module.getOption("dateFormat"), helpText) }}
+                        {{ fieldItemsSideBySide }}
 
-                            {% set title %}{% trans "Allowable Attributes" %}{% endset %}
-                            {% set helpText %}{% trans "A comma separated list of attributes that should not be stripped from the incoming feed." %}{% endset %}
-                            {{ forms.text("allowedAttributes", title, module.getOption("allowedAttributes"), helpText) }}
-                            
-                            {% set title %}{% trans "Strip Tags" %}{% endset %}
-                            {% set helpText %}{% trans "A comma separated list of HTML tags that should be stripped from the feed in addition to the default ones." %}{% endset %}
-                            {{ forms.text("stripTags", title, module.getOption("stripTags"), helpText) }}
+                        {% set title %}{% trans "Date Format" %}{% endset %}
+                        {% set helpText %}{% trans "The format to apply to all dates returned by the ticker. In PHP date format: http://uk3.php.net/manual/en/function.date.php" %}{% endset %}
+                        {{ forms.text("dateFormat", title, module.getOption("dateFormat"), helpText) }}
 
-                            {% set title %}{% trans "Disable Date Sort" %}{% endset %}
-                            {% set helpText %}{% trans "Should the date sort applied to the feed be disabled?" %}{% endset %}
-                            {{ forms.checkbox("disableDateSort", title, module.getOption("disableDateSort"), helpText) }}
-                        
-                        {# Source = Dataset #}         
-                            {% elseif module.getOption("sourceId") == 2 %}
+                        {% set title %}{% trans "Allowable Attributes" %}{% endset %}
+                        {% set helpText %}{% trans "A comma separated list of attributes that should not be stripped from the incoming feed." %}{% endset %}
+                        {{ forms.text("allowedAttributes", title, module.getOption("allowedAttributes"), helpText) }}
 
-                        {# backround colour and update interval from common fields #}
+                        {% set title %}{% trans "Strip Tags" %}{% endset %}
+                        {% set helpText %}{% trans "A comma separated list of HTML tags that should be stripped from the feed in addition to the default ones." %}{% endset %}
+                        {{ forms.text("stripTags", title, module.getOption("stripTags"), helpText) }}
 
-                            {% set title %}{% trans "Lower Row Limit" %}{% endset %}
-                            {% set helpText %}{% trans "Please enter the Lower Row Limit for this DataSet (enter 0 for no limit)" %}{% endset %}
-                            {{ forms.number("lowerLimit", title, module.getOption("lowerLimit"), helpText) }}
-                            
-                            {% set title %}{% trans "Upper Row Limit" %}{% endset %}
-                            {% set helpText %}{% trans "Please enter the Upper Row Limit for this DataSet (enter 0 for no limit)" %}{% endset %}
-                            {{ forms.number("upperLimit", title, module.getOption("upperLimit"), helpText) }}
-            
-                        {% endif %}
+                        {% set title %}{% trans "Disable Date Sort" %}{% endset %}
+                        {% set helpText %}{% trans "Should the date sort applied to the feed be disabled?" %}{% endset %}
+                        {{ forms.checkbox("disableDateSort", title, module.getOption("disableDateSort"), helpText) }}
                     </div>
+                {% else %}
+                    {# Source = Dataset #}
+                    <div class="tab-pane active" id="general">
+                        {{ fieldName }}
+                        {{ fieldDuration }}
+                        {{ fieldEffect }}
+                        {{ fieldSpeed }}
+
+                        {% set title %}{% trans "Order" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter a SQL clause for how this dataset should be ordered" %}{% endset %}
+                        {{ forms.text("ordering", title, module.getOption("ordering"), helpText) }}
+
+                        {% set title %}{% trans "Filter" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter a SQL clause to filter this DataSet." %}{% endset %}
+                        {{ forms.text("filter", title, module.getOption("filter"), helpText) }}
+                    </div>
+                    <div class="tab-pane" id="template">
+                        {{ fieldTemplate }}
+                        {{ fieldStyleSheet }}
+                    </div>
+                    <div class="tab-pane" id="format">
+                        {{ fieldItemsPerPage }}
+                        {{ fieldItemsSideBySide }}
+                    </div>
+                    <div class="tab-pane" id="advanced">
+                        {{ fieldBackgroundColor }}
+                        {{ fieldDurationIsPerItem }}
+                        {{ fieldUpdateInterval }}
+
+                        {% set title %}{% trans "Lower Row Limit" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter the Lower Row Limit for this DataSet (enter 0 for no limit)" %}{% endset %}
+                        {{ forms.number("lowerLimit", title, module.getOption("lowerLimit"), helpText) }}
+
+                        {% set title %}{% trans "Upper Row Limit" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter the Upper Row Limit for this DataSet (enter 0 for no limit)" %}{% endset %}
+                        {{ forms.number("upperLimit", title, module.getOption("upperLimit"), helpText) }}
+                    </div>
+                {% endif %}
                 </div>
             </form>
         </div>

@@ -21,6 +21,8 @@
  */
 namespace Xibo\Widget;
 
+use Emojione\Client;
+use Emojione\Ruleset;
 use Respect\Validation\Validator as v;
 use Emojione\Emojione;
 use Xibo\Factory\DisplayFactory;
@@ -72,7 +74,7 @@ class Twitter extends Module
         MediaFactory::createModuleFile('modules/vendor/jquery-1.11.1.min.js')->save();
         MediaFactory::createModuleFile('modules/xibo-text-render.js')->save();
         MediaFactory::createModuleFile('modules/xibo-layout-scaler.js')->save();
-        MediaFactory::createModuleFile(PROJECT_ROOT . '/vendor/emojione/emojione/assets/sprites/emojione.sprites.svg')->save();
+        MediaFactory::createModuleFile(PROJECT_ROOT . '/web/modules/emojione/emojione.sprites.svg')->save();
     }
 
     /**
@@ -442,6 +444,12 @@ class Twitter extends Module
             $data->statuses[] = $tweet;
         }
 
+        // Make an emojione client
+        $emoji = new Client(new Ruleset());
+        $emoji->imageType = 'svg';
+        $emoji->sprites = true;
+        $emoji->imagePathSVGSprites = $this->getResourceUrl('emojione/emojione.sprites.svg');
+
         // This should return the formatted items.
         foreach ($data->statuses as $tweet) {
             // Substitute for all matches in the template
@@ -469,7 +477,7 @@ class Twitter extends Module
                             $tweetText = preg_replace("((https?|ftp|gopher|telnet|file|notes|ms-help):((\/\/)|(\\\\))+[\w\d:#\@%\/;$()~_?\+-=\\\.&]*)", '', $tweetText);
                         }
 
-                        $replace = Emojione::toImage($tweetText);
+                        $replace = $emoji->toImage($tweetText);
                         break;
 
                     case '[User]':

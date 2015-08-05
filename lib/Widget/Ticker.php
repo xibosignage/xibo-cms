@@ -58,15 +58,27 @@ class Ticker extends Module
     /**
      * Loads templates for this module
      */
-    public function loadTemplates()
+    private function loadTemplates()
     {
         // Scan the folder for template files
-        foreach (glob('modules/ticker/*.template.json') as $template) {
+        foreach (glob(PROJECT_ROOT . '/modules/ticker/*.template.json') as $template) {
             // Read the contents, json_decode and add to the array
             $this->module->settings['templates'][] = json_decode(file_get_contents($template), true);
         }
 
         Log::debug(count($this->module->settings['templates']));
+    }
+
+    /**
+     * Templates available
+     * @return array
+     */
+    public function templatesAvailable()
+    {
+        if (!isset($this->module->settings['templates']))
+            $this->loadTemplates();
+
+        return $this->module->settings['templates'];
     }
 
     public function validate()
@@ -117,7 +129,7 @@ class Ticker extends Module
 
         if ($this->widget->widgetId != 0) {
             // Make sure we have a number in here
-            if (!v::numeric()->validate($this->getOption('numItems')))
+            if (!v::numeric()->validate($this->getOption('numItems', 0)))
                 throw new \InvalidArgumentException(__('The value in Number of Items must be numeric.'));
 
             if (!v::numeric()->notEmpty()->min(0)->validate($this->getOption('updateInterval')))
@@ -134,16 +146,13 @@ class Ticker extends Module
         $this->setOption('xmds', true);
         $this->setOption('sourceId', Sanitize::getInt('sourceId'));
         $this->setOption('uri', Sanitize::getString('uri'));
-        $this->setOption('dataSetId', Sanitize::getInt('dataSetId'));
+        $this->setOption('dataSetId', Sanitize::getInt('dataSetId', 0));
         $this->setOption('updateInterval', 120);
         $this->setOption('speed', 2);
 
         // New tickers have template override set to 0 by add.
         // the edit form can then default to 1 when the element doesn't exist (for legacy)
         $this->setOption('overrideTemplate', 0);
-
-        $this->setRawNode('template', null);
-        $this->setRawNode('css', null);
 
         // Save the widget
         $this->validate();
@@ -160,7 +169,6 @@ class Ticker extends Module
         $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
         $this->setOption('xmds', true);
         $this->setOption('uri', Sanitize::getString('uri'));
-        $this->setOption('dataSetId', Sanitize::getInt('dataSetId'));
         $this->setOption('updateInterval', Sanitize::getInt('updateInterval', 120));
         $this->setOption('speed', Sanitize::getInt('speed', 2));
         $this->setOption('name', Sanitize::getString('name'));
@@ -170,8 +178,8 @@ class Ticker extends Module
         $this->setOption('takeItemsFrom', Sanitize::getString('takeItemsFrom'));
         $this->setOption('durationIsPerItem', Sanitize::getCheckbox('durationIsPerItem'));
         $this->setOption('itemsSideBySide', Sanitize::getCheckbox('itemsSideBySide'));
-        $this->setOption('upperLimit', Sanitize::getInt('upperLimit'));
-        $this->setOption('lowerLimit', Sanitize::getInt('lowerLimit'));
+        $this->setOption('upperLimit', Sanitize::getInt('upperLimit', 0));
+        $this->setOption('lowerLimit', Sanitize::getInt('lowerLimit', 0));
         $this->setOption('filter', Sanitize::getString('filter'));
         $this->setOption('ordering', Sanitize::getString('ordering'));
         $this->setOption('itemsPerPage', Sanitize::getInt('itemsPerPage'));
