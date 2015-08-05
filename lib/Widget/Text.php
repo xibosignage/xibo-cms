@@ -44,7 +44,7 @@ class Text extends Module
         if ($this->getOption('text') == '')
             throw new \InvalidArgumentException(__('Please enter some text'));
 
-        if ($this->getOption('duration') == 0)
+        if ($this->getDuration() == 0)
             throw new \InvalidArgumentException(__('You must enter a duration.'));
     }
 

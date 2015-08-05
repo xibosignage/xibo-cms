@@ -5,17 +5,6 @@
  * (${FILE_NAME})
  */
 
-
-        // Handle older layouts that have a direction node but no effect node
-        $oldDirection = $this->GetOption('direction', 'none');
-        if ($oldDirection != 'none')
-            $oldDirection = 'marquee' . ucfirst($oldDirection);
-
-   
-
-        $formFields['options'][] = Form::AddNumber('duration', __('Duration'), $this->getDuration(),
-            __('The duration in seconds this counter should be displayed'), 'd', 'required', '', ($this->auth->modifyPermissions));
-
         // Handle the substitutions as RAW items
         $subs = array(
             array('Substitute' => 'Clock'),
@@ -25,26 +14,7 @@
         );
         Theme::Set('substitutions', $subs);
 
-        $textNode = $this->getRawNode('text', null);
 
-
-        $formFields['general'][] = Form::AddRaw(Theme::RenderReturn('media_form_text_edit'));
-
-        Theme::Set('form_fields_general', $formFields['general']);
-        Theme::Set('form_fields_options', $formFields['options']);
-
-        // Add a dependency
-        $response->AddFieldAction('effect', 'init', 'none', array('.effect-controls' => array('display' => 'none')));
-        $response->AddFieldAction('effect', 'change', 'none', array('.effect-controls' => array('display' => 'none')));
-        $response->AddFieldAction('effect', 'init', 'none', array('.effect-controls' => array('display' => 'block')), 'not');
-        $response->AddFieldAction('effect', 'change', 'none', array('.effect-controls' => array('display' => 'block')), 'not');
-
-        $response->html = Theme::RenderReturn('form_render');
-        $response->callBack = 'text_callback';
-        $response->dialogSize = 'large';
-        $this->configureFormButtons($response);
-        $response->dialogTitle = __('Edit Text');
-        $this->response->AddButton(__('Apply'), 'XiboDialogApply("#ModuleForm")');
 #}
 
 {% extends "form-base.twig" %}
@@ -57,40 +27,80 @@
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Apply" %}, XiboDialogApply("#textEditForm")
     {% trans "Save" %}, $("#textEditForm").submit()
 {% endblock %}
 
-{% block callBack %}forecastIoFormSetup{% endblock %}
+{% block callBack %}text_callback{% endblock %}
+
+{% block formFieldActions %}
+    [{
+    "field": "effect",
+    "trigger": "init",
+    "value": "",
+    "operation": "equals",
+    "actions": {
+    ".effect-controls": { "display": "none" }
+    }
+    },{
+    "field": "effect",
+    "trigger": "change",
+    "value": "",
+    "operation": "equals",
+    "actions": {
+    ".effect-controls": { "display": "none" }
+    }
+    },{
+    "field": "effect",
+    "trigger": "init",
+    "value": "",
+    "operation": "not",
+    "actions": {
+    ".effect-controls": { "display": "block" }
+    }
+    },{
+    "field": "effect",
+    "trigger": "change",
+    "value": "",
+    "operation": "not",
+    "actions": {
+    ".effect-controls": { "display": "block" }
+    }
+    }]
+{% endblock %}
 
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-                <ul class="nav nav-tabs" role="tablist">
+            <ul class="nav nav-tabs" role="tablist">
                 <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
                 <li><a href="#options" role="tab" data-toggle="tab"><span>{% trans "Options" %}</span></a></li>
-                </ul>
+            </ul>
             <form id="textEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
-                {# old layouts handler #}
-                <div class="tab-pane active" id="general">
-                      {# RAW item subs
-
-                        <?php foreach(Theme::Get('substitutions') as $column) { ?>
-                        <li class="ckeditor_snippits" linkedto="ta_text"><?php echo $column['Substitute']; ?></li>
-                        <?php } ?>
-
-                       #}
+                <div class="tab-content">
+                    <div class="tab-pane active" id="general">
+                        <div class="well">
+                            <div class="text-center text-info">{% trans "Available Substitutions" %}</div>
+                            <ul id="TickerDataSetColumns">
+                                <li class="ckeditor_snippits" linkedto="ta_text">Clock</li>
+                                <li class="ckeditor_snippits" linkedto="ta_text">Clock|HH:mm</li>
+                                <li class="ckeditor_snippits" linkedto="ta_text">Date</li>
+                                <li class="ckeditor_snippits" linkedto="ta_text">Clock|DD/MM/YYYY</li>
+                            </ul>
+                        </div>
 
                         {% set helpText %}{% trans "Enter the text to display. Please note that the background colour has automatically coloured to your layout background colour." %}{% endset %}
-                        {{ forms.textarea("ta_text", "", "", helpText, "", 10) }}
-                </div>
+                        {{ forms.textarea("ta_text", "", module.getOption("text"), helpText, "", 10) }}
+                    </div>
 
-                 <div class="tab-pane" id="options">
+                    <div class="tab-pane" id="options">
                         {% set title %}{% trans "Name" %}{% endset %}
                         {% set helpText %}{% trans "An optional name for this media" %}{% endset %}
                         {{ forms.text("name", title, module.getOption("name"), helpText) }}
 
                         {% set title %}{% trans "Effect" %}{% endset %}
                         {% set helpText %}{% trans "Please select the effect that will be used to transition between items. If all items should be output, select None. Marquee effects are CPU intensive and may not be suitable for lower power displays." %}{% endset %}
+                        {% set noneOption %}{% trans "None" %}{% endset %}
                         {% set fade %}{% trans "Fade" %}{% endset %}
                         {% set fadeout %}{% trans "Fade Out" %}{% endset %}
                         {% set scrollHorz %}{% trans "Scroll Horizontal" %}{% endset %}
@@ -105,36 +115,36 @@
                         {% set marqueeUp %}{% trans "Marquee Up" %}{% endset %}
                         {% set marqueeDown %}{% trans "Marquee Down" %}{% endset %}
                         {% set options = [
-                        { effectid: "", effect: none },
-                        { effectid: fade, effect: fade },
-                        { effectid: fadeout, effect: fadeout},
-                        { effectid: scrollHorz, effect: scrollHorz},
-                        { effectid: scrollVert, effect: scrollVert},
-                        { effectid: flipHorz, effect: flipHorz},
-                        { effectid: flipVert, effect: flipVert},
-                        { effectid: shuffle, effect: shuffle},
-                        { effectid: tileSlide, effect: tileSlide},
-                        { effectid: tileBlind, effect: tileBlind},
-                        { effectid: marqueeLeft, effect: marqueeLeft},
-                        { effectid: marqueeRight, effect: marqueeRight},
-                        { effectid: marqueeUp, effect: marqueeUp},
-                        { effectid: marqueeDown, effect: marqueeDown}
+                        { effectid: "", effect: noneOption },
+                        { effectid: "fade", effect: fade },
+                        { effectid: "fadeout", effect: fadeout},
+                        { effectid: "scrollHorz", effect: scrollHorz},
+                        { effectid: "scrollVert", effect: scrollVert},
+                        { effectid: "flipHorz", effect: flipHorz},
+                        { effectid: "flipVert", effect: flipVert},
+                        { effectid: "shuffle", effect: shuffle},
+                        { effectid: "tileSlide", effect: tileSlide},
+                        { effectid: "tileBlind", effect: tileBlind},
+                        { effectid: "marqueeLeft", effect: marqueeLeft},
+                        { effectid: "marqueeRight", effect: marqueeRight},
+                        { effectid: "marqueeUp", effect: marqueeUp},
+                        { effectid: "marqueeDown", effect: marqueeDown}
                         ] %}
-                        {{ forms.dropdown("effect", "single", title, module.getOption("effect"), "effectid", "effect", helpText) }}
+                        {{ forms.dropdown("effect", "single", title, module.getOption("effect"), options, "effectid", "effect", helpText) }}
 
                         {% set title %}{% trans "Speed" %}{% endset %}
                         {% set helpText %}{% trans "The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1)." %}{% endset %}
-                        {{ forms.number("speed", title, module.getOption("speed"), helpText, "", "effect-controls") }}
+                        {{ forms.number("speed", title, module.getOption("speed"), helpText, "effect-controls") }}
 
                         {% set title %}{% trans "Background Colour" %}{% endset %}
                         {% set helpText %}{% trans "The selected effect works best with a background colour. Optionally add one here." %}{% endset %}
-                        {{ forms.text("backgroundColor", title, module.getOption("backgroundColor"), helpText, "", "effect-controls") }}
+                        {{ forms.text("backgroundColor", title, module.getOption("backgroundColor"), helpText, "effect-controls") }}
 
                         {% set title %}{% trans "Duration" %}{% endset %}
                         {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
                         {{ forms.number("duration", title, module.getDuration(), helpText, "", "required") }}
+                    </div>
                 </div>
-                {# // Add a dependency #}
             </form>
         </div>
     </div>
