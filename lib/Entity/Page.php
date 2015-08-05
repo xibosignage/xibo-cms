@@ -22,10 +22,24 @@
 
 namespace Xibo\Entity;
 
-
+/**
+ * Class Page
+ * @package Xibo\Entity
+ *
+ * @SWG\Definition()
+ */
 class Page
 {
+    /**
+     * @SWG\Property(description="The ID of the Page")
+     * @var int
+     */
     public $pageId;
+
+    /**
+     * @SWG\Property(description="A code name for the page")
+     * @var string
+     */
     public $page;
 
     public function getOwnerId()

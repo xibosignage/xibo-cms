@@ -25,20 +25,62 @@ use Respect\Validation\Validator as v;
 use Xibo\Helper\Log;
 use Xibo\Storage\PDOConnect;
 
+/**
+ * Class Resolution
+ * @package Xibo\Entity
+ *
+ * @SWG\Definition()
+ */
 class Resolution implements \JsonSerializable
 {
     use EntityTrait;
+
+    /**
+     * @SWG\Property(description="The ID of this Resolution")
+     * @var int
+     */
     public $resolutionId;
 
+    /**
+     * @SWG\Property(description="The resolution name")
+     * @var string
+     */
     public $resolution;
 
+    /**
+     * @SWG\Property(description="The display width of the resolution")
+     * @var double
+     */
     public $width;
+
+    /**
+     * @SWG\Property(description="The display height of the resolution")
+     * @var double
+     */
     public $height;
 
+    /**
+     * @SWG\Property(description="The designer width of the resolution")
+     * @var double
+     */
     public $designerWidth;
+
+    /**
+     * @SWG\Property(description="The designer height of the resolution")
+     * @var double
+     */
     public $designerHeight;
 
+    /**
+     * @SWG\Property(description="The layout schema version")
+     * @var int
+     */
     public $version = 2;
+
+    /**
+     * @SWG\Property(description="A flag indicating whether this resolution is enabled or not")
+     * @var int
+     */
     public $enabled = 1;
 
     public function getId()

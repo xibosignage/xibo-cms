@@ -12,22 +12,114 @@ use Respect\Validation\Validator as v;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Storage\PDOConnect;
 
+/**
+ * Class Schedule
+ * @package Xibo\Entity
+ *
+ * @SWG\Definition()
+ */
 class Schedule implements \JsonSerializable
 {
     use EntityTrait;
+
+    /**
+     * @SWG\Property(
+     *  description="The ID of this Event"
+     * )
+     * @var int
+     */
     public $eventId;
+
+    /**
+     * @SWG\Property(
+     *  description="The CampaignID this event is for"
+     * )
+     * @var int
+     */
     public $campaignId;
+
+    /**
+     * @SWG\Property(
+     *  description="Display Groups assigned to this Scheduled Event.",
+     *  type="array",
+     *  @SWG\Items(ref="#/definitions/DisplayGroup")
+     * )
+     * @var DisplayGroup[]
+     */
     public $displayGroups = [];
+
+    /**
+     * @SWG\Property(
+     *  description="The userId that owns this event."
+     * )
+     * @var int
+     */
     public $userId;
+
+    /**
+     * @SWG\Property(
+     *  description="A Unix timestamp representing the from date of this event in CMS time."
+     * )
+     * @var int
+     */
     public $fromDt;
+
+    /**
+     * @SWG\Property(
+     *  description="A Unix timestamp representing the to date of this event in CMS time."
+     * )
+     * @var int
+     */
     public $toDt;
+
+    /**
+     * @SWG\Property(
+     *  description="Flag indicating whether the event should be considered priority or not."
+     * )
+     * @var int
+     */
     public $isPriority;
+
+    /**
+     * @SWG\Property(
+     *  description="The display order for this event."
+     * )
+     * @var int
+     */
     public $displayOrder;
 
+    /**
+     * @SWG\Property(
+     *  description="If this event recurs when what is the recurrence period.",
+     *  enum={"Minute", "Hour", "Day", "Week", "Month", "Year"}
+     * )
+     * @var string
+     */
     public $recurrenceType;
+
+    /**
+     * @SWG\Property(
+     *  description="If this event recurs when what is the recurrence frequency.",
+     * )
+     * @var int
+     */
     public $recurrenceDetail;
+
+    /**
+     * @SWG\Property(
+     *  description="A Unix timestamp indicating the end time of the recurring events."
+     * )
+     * @var int
+     */
     public $recurrenceRange;
 
+    /**
+     * @SWG\Property(
+     *  description="The Campaign/Layout Name",
+     *  readOnly=true
+     * )
+     * @var string
+     */
     public $campaign;
 
     public function getId()

@@ -54,7 +54,8 @@
     "phpmailer/phpmailer": "dev-master"
   },
   "require-dev": {
-    "phpunit/phpunit": "~4.0"
+    "phpunit/phpunit": "~4.0",
+    "zircote/swagger-php": "~2.0"
   },
   "autoload": {
     "psr-4": { "Xibo\\" : "lib/" }

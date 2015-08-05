@@ -54,6 +54,34 @@ class Stats extends Base
 
     /**
      * Shows the stats grid
+     *
+     * @SWG\Get(
+     *  path="/stats",
+     *  operationId="statsSearch",
+     *  tags={"statistics"},
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(
+     *              @SWG\Schema(
+     *                  type="object",
+     *                  additionalProperties={
+     *                      "type": "string",
+     *                      "display": "string",
+     *                      "layout": "string",
+     *                      "media": "string",
+     *                      "numberPlays": "integer",
+     *                      "duration": "integer",
+     *                      "minStart": "string",
+     *                      "maxEnd": "string"
+     *                  }
+     *              )
+     *          )
+     *      )
+     *  )
+     * )
      */
     public function grid()
     {

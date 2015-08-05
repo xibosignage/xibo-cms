@@ -43,7 +43,25 @@ class DisplayGroup extends Base
     }
 
     /**
-     * Shows the Display groups
+     * @SWG\Get(
+     *  path="/displaygroup",
+     *  summary="Get Display Groups",
+     *  tags={"displayGroup"},
+     *  operationId="displayGroupSearch",
+     *  @SWG\Response(
+     *      response=200,
+     *      description="a successful response",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(ref="#/definitions/DisplayGroup")
+     *      ),
+     *      @SWG\Header(
+     *          header="X-Total-Count",
+     *          description="The total number of records",
+     *          type="integer"
+     *      )
+     *  )
+     * )
      */
     public function grid()
     {
@@ -217,6 +235,37 @@ class DisplayGroup extends Base
 
     /**
      * Adds a Display Group
+     * @SWG\Post(
+     *  path="/displaygroup",
+     *  operationId="displayGroupAdd",
+     *  tags={"displayGroup"},
+     *  summary="Add a Display Group",
+     *  description="Add a new Display Group to the CMS",
+     *  @SWG\Parameter(
+     *      name="displayGroup",
+     *      in="formData",
+     *      description="The Display Group Name",
+     *      type="string",
+     *      required=true
+     *  ),
+     *  @SWG\Parameter(
+     *      name="description",
+     *      in="formData",
+     *      description="The Display Group Description",
+     *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/DisplayGroup"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new DisplayGroup",
+     *          type="string"
+     *      )
+     *  )
+     * )
      */
     public function add()
     {
@@ -232,15 +281,50 @@ class DisplayGroup extends Base
 
         // Return
         $this->getState()->hydrate([
+            'httpState' => 201,
             'message' => sprintf(__('Added %s'), $displayGroup->displayGroup),
             'id' => $displayGroup->displayGroupId,
-            'data' => [$displayGroup]
+            'data' => $displayGroup
         ]);
     }
 
     /**
      * Edits a Display Group
      * @param int $displayGroupId
+     *
+     * @SWG\Put(
+     *  path="/displaygroup/{displayGroupId}",
+     *  operationId="displayGroupEdit",
+     *  tags={"displayGroup"},
+     *  summary="Edit a Display Group",
+     *  description="Edit an existing Display Group identified by its Id",
+     *  @SWG\Parameter(
+     *      name="displayGroupId",
+     *      type="integer",
+     *      in="path",
+     *      description="The displayGroupId to edit.",
+     *      required=true
+     *  ),
+     *  @SWG\Parameter(
+     *      name="displayGroup",
+     *      in="formData",
+     *      description="The Display Group Name",
+     *      type="string",
+     *      required=true
+     *  ),
+     *  @SWG\Parameter(
+     *      name="description",
+     *      in="formData",
+     *      description="The Display Group Description",
+     *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/DisplayGroup")
+     *  )
+     * )
      */
     public function edit($displayGroupId)
     {
@@ -257,13 +341,32 @@ class DisplayGroup extends Base
         $this->getState()->hydrate([
             'message' => sprintf(__('Edited %s'), $displayGroup->displayGroup),
             'id' => $displayGroup->displayGroupId,
-            'data' => [$displayGroup]
+            'data' => $displayGroup
         ]);
     }
 
     /**
      * Deletes a Group
      * @param int $displayGroupId
+     *
+     * @SWG\Delete(
+     *  path="/displaygroup/{displayGroupId}",
+     *  operationId="displayGroupDelete",
+     *  tags={"displayGroup"},
+     *  summary="Delete a Display Group",
+     *  description="Delete an existing Display Group identified by its Id",
+     *  @SWG\Parameter(
+     *      name="displayGroupId",
+     *      type="integer",
+     *      in="path",
+     *      description="The displayGroupId to delete",
+     *      required=true
+     *  ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
      */
     function delete($displayGroupId)
     {
@@ -276,6 +379,7 @@ class DisplayGroup extends Base
 
         // Return
         $this->getState()->hydrate([
+            'httpStatus' => 204,
             'message' => sprintf(__('Deleted %s'), $displayGroup->displayGroup)
         ]);
     }
@@ -283,6 +387,35 @@ class DisplayGroup extends Base
     /**
      * Sets the Members of a group
      * @param int $displayGroupId
+     *
+     * @SWG\Post(
+     *  path="/displaygroup/{displayGroupId}/display/assign",
+     *  operationId="displayGroupDisplayAssign",
+     *  tags={"displayGroup"},
+     *  summary="Assign one or more Displays to a Display Group",
+     *  description="Adds the provided Displays to the Display Group",
+     *  @SWG\Parameter(
+     *      name="displayGroupId",
+     *      type="integer",
+     *      in="path",
+     *      description="The Display Group to assign to",
+     *      required="true"
+     *  ),
+     *  @SWG\Parameter(
+     *      name="displayId",
+     *      type="array",
+     *      in="formData",
+     *      description="The Display Ids to assign",
+     *      required="true",
+     *      @SWG\Items(
+     *          type="integer"
+     *      )
+     *  ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
      */
     public function assignDisplay($displayGroupId)
     {
@@ -306,6 +439,7 @@ class DisplayGroup extends Base
 
         // Return
         $this->getState()->hydrate([
+            'httpStatus' => 204,
             'message' => sprintf(__('Displays assigned to %s'), $displayGroup->displayGroup),
             'id' => $displayGroup->displayGroupId
         ]);
@@ -314,6 +448,35 @@ class DisplayGroup extends Base
     /**
      * Unassign displays from a Display Group
      * @param int $displayGroupId
+     *
+     * @SWG\Post(
+     *  path="/displaygroup/{displayGroupId}/display/unassign",
+     *  operationId="displayGroupDisplayUnassign",
+     *  tags={"displayGroup"},
+     *  summary="Unassigns one or more Displays to a Display Group",
+     *  description="Removes the provided Displays from the Display Group",
+     *  @SWG\Parameter(
+     *      name="displayGroupId",
+     *      type="integer",
+     *      in="path",
+     *      description="The Display Group to unassign from",
+     *      required="true"
+     *  ),
+     *  @SWG\Parameter(
+     *      name="displayId",
+     *      type="array",
+     *      in="formData",
+     *      description="The Display Ids to unassign",
+     *      required="true",
+     *      @SWG\Items(
+     *          type="integer"
+     *      )
+     *  ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
      */
     public function unassignDisplay($displayGroupId)
     {
@@ -332,6 +495,7 @@ class DisplayGroup extends Base
 
         // Return
         $this->getState()->hydrate([
+            'httpStatus' => 204,
             'message' => sprintf(__('Displays unassigned from %s'), $displayGroup->displayGroup),
             'id' => $displayGroup->displayGroupId
         ]);
@@ -363,6 +527,35 @@ class DisplayGroup extends Base
     /**
      * Assign Media
      * @param int $displayGroupId
+     *
+     * @SWG\Post(
+     *  path="/displaygroup/{displayGroupId}/media/assign",
+     *  operationId="displayGroupMediaAssign",
+     *  tags={"displayGroup"},
+     *  summary="Assign one or more Media items to a Display Group",
+     *  description="Adds the provided Media to the Display Group",
+     *  @SWG\Parameter(
+     *      name="displayGroupId",
+     *      type="integer",
+     *      in="path",
+     *      description="The Display Group to assign to",
+     *      required="true"
+     *  ),
+     *  @SWG\Parameter(
+     *      name="mediaId",
+     *      type="array",
+     *      in="formData",
+     *      description="The Media Ids to assign",
+     *      required="true",
+     *      @SWG\Items(
+     *          type="integer"
+     *      )
+     *  ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
      */
     public function assignMedia($displayGroupId)
     {
@@ -391,6 +584,7 @@ class DisplayGroup extends Base
 
         // Return
         $this->getState()->hydrate([
+            'httpStatus' => 204,
             'message' => sprintf(__('Files assigned to %s'), $displayGroup->displayGroup),
             'id' => $displayGroup->displayGroupId
         ]);
@@ -399,6 +593,35 @@ class DisplayGroup extends Base
     /**
      * Unassign Media
      * @param int $displayGroupId
+     *
+     * @SWG\Post(
+     *  path="/displaygroup/{displayGroupId}/media/unassign",
+     *  operationId="displayGroupMediaUnassign",
+     *  tags={"displayGroup"},
+     *  summary="Unassign one or more Media items from a Display Group",
+     *  description="Removes the provided from the Display Group",
+     *  @SWG\Parameter(
+     *      name="displayGroupId",
+     *      type="integer",
+     *      in="path",
+     *      description="The Display Group to unassign from",
+     *      required="true"
+     *  ),
+     *  @SWG\Parameter(
+     *      name="mediaId",
+     *      type="array",
+     *      in="formData",
+     *      description="The Media Ids to unassign",
+     *      required="true",
+     *      @SWG\Items(
+     *          type="integer"
+     *      )
+     *  ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
      */
     public function unassignMedia($displayGroupId)
     {
@@ -422,6 +645,7 @@ class DisplayGroup extends Base
 
         // Return
         $this->getState()->hydrate([
+            'httpStatus' => 204,
             'message' => sprintf(__('Files unassigned from %s'), $displayGroup->displayGroup),
             'id' => $displayGroup->displayGroupId
         ]);
@@ -456,6 +680,32 @@ class DisplayGroup extends Base
     /**
      * Version Update
      * @param int $displayGroupId
+     *
+     * @SWG\Post(
+     *  path="/displaygroup/{displayGroupId}/version",
+     *  operationId="displayGroupDisplayVersion",
+     *  tags={"displayGroup"},
+     *  summary="Set the Version for this Display",
+     *  description="Sets the version instructions on all Displays in the Group",
+     *  @SWG\Parameter(
+     *      name="displayGroupId",
+     *      type="integer",
+     *      in="path",
+     *      description="The Display Group ID",
+     *      required="true"
+     *  ),
+     *  @SWG\Parameter(
+     *      name="mediaId",
+     *      type="integer",
+     *      in="formData",
+     *      description="The Media Id of the Installer File",
+     *      required="true"
+     *  ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
      */
     public function version($displayGroupId)
     {
@@ -481,6 +731,7 @@ class DisplayGroup extends Base
 
         // Return
         $this->getState()->hydrate([
+            'httpStatus' => 204,
             'message' => sprintf(__('Version set for %s'), $displayGroup->displayGroup),
             'id' => $displayGroup->displayGroupId
         ]);

@@ -22,6 +22,7 @@ namespace Xibo\Helper;
 
 class ApplicationState
 {
+    public $httpStatus = 200;
     public $template;
     public $message;
     public $success;
@@ -149,11 +150,11 @@ class ApplicationState
 
     /**
      * Get Data
-     * @return array
+     * @return array|mixed
      */
     public function getData()
     {
-        if (!is_array($this->data))
+        if ($this->data == null)
             $this->data = [];
 
         return $this->data;

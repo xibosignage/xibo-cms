@@ -99,7 +99,7 @@ class Transition extends Base
         $this->getState()->hydrate([
             'message' => sprintf(__('Edited %s'), $transition->transition),
             'id' => $transition->transitionId,
-            'data' => [$transition]
+            'data' => $transition
         ]);
     }
 }

@@ -71,6 +71,21 @@ class User extends Base
     /**
      * Prints the user information in a table based on a check box selection
      *
+     * @SWG\Get(
+     *  path="/user",
+     *  operationId="userSearch",
+     *  tags={"user"},
+     *  summary="User Search",
+     *  description="Search users",
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(ref="#/definitions/User")
+     *      )
+     *  )
+     * )
      */
     function grid()
     {
@@ -129,6 +144,73 @@ class User extends Base
 
     /**
      * Adds a user
+     *
+     * @SWG\Post(
+     *  path="/user",
+     *  operationId="userAdd",
+     *  tags={"user"},
+     *  summary="Add User",
+     *  description="Add a new User",
+     *  @SWG\Parameter(
+     *      name="userName",
+     *      in="formData",
+     *      description="The User Name",
+     *      type="string",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="email",
+     *      in="formData",
+     *      description="The user email address",
+     *      type="string",
+     *      required="false"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="userTypeId",
+     *      in="formData",
+     *      description="The user type ID",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="homePageId",
+     *      in="formData",
+     *      description="The homepage to use for this User",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="libraryQuota",
+     *      in="formData",
+     *      description="The users library quota in kilobytes",
+     *      type="integer",
+     *      required="false"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="password",
+     *      in="formData",
+     *      description="The users password",
+     *      type="string",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="groupId",
+     *      in="formData",
+     *      description="The inital user group for this User",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/User"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new record",
+     *          type="string"
+     *      )
+     *  )
+     * )
      */
     public function add()
     {
@@ -153,9 +235,10 @@ class User extends Base
 
         // Return
         $this->getState()->hydrate([
+            'httpStatus' => 201,
             'message' => sprintf(__('Added %s'), $user->userName),
             'id' => $user->userId,
-            'data' => [$user]
+            'data' => $user
         ]);
     }
 
@@ -201,7 +284,7 @@ class User extends Base
         $this->getState()->hydrate([
             'message' => sprintf(__('Edited %s'), $user->userName),
             'id' => $user->userId,
-            'data' => [$user]
+            'data' => $user
         ]);
     }
 
@@ -332,7 +415,7 @@ class User extends Base
         $this->getState()->hydrate([
             'message' => __('Password Changed'),
             'id' => $user->userId,
-            'data' => [$user]
+            'data' => $user
         ]);
     }
 

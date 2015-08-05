@@ -22,23 +22,84 @@
 
 namespace Xibo\Entity;
 
-
+/**
+ * Class Permission
+ * @package Xibo\Entity
+ *
+ * @SWG\Definition()
+ */
 class Permission
 {
+    /**
+     * @SWG\Property(description="The ID of this Permission Record")
+     * @var int
+     */
     public $permissionId;
+
+    /**
+     * @SWG\Property(description="The Entity ID that this Permission refers to")
+     * @var int
+     */
     public $entityId;
+
+    /**
+     * @SWG\Property(description="The User Group ID that this permission refers to")
+     * @var int
+     */
     public $groupId;
+
+    /**
+     * @SWG\Property(description="The object ID that this permission refers to")
+     * @var int
+     */
     public $objectId;
+
+    /**
+     * @SWG\Property(description="A flag indicating whether the groupId refers to a user specific group")
+     * @var int
+     */
     public $isUser;
 
+    /**
+     * @SWG\Property(description="The entity name that this refers to")
+     * @var string
+     */
     public $entity;
+
+    /**
+     * @SWG\Property(description="Legacy for when the Object ID is a string")
+     * @var string
+     */
     public $objectIdString;
+
+    /**
+     * @SWG\Property(description="The group name that this refers to")
+     * @var string
+     */
     public $group;
 
+    /**
+     * @SWG\Property(description="A flag indicating whether view permission is granted")
+     * @var int
+     */
     public $view;
+
+    /**
+     * @SWG\Property(description="A flag indicating whether edit permission is granted")
+     * @var int
+     */
     public $edit;
+
+    /**
+     * @SWG\Property(description="A flag indicating whether delete permission is granted")
+     * @var int
+     */
     public $delete;
 
+    /**
+     * @SWG\Property(description="A flag indicating whether modify permission permission is granted.")
+     * @var int
+     */
     public $modifyPermissions;
 
     public function __clone()

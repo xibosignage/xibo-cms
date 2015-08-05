@@ -30,53 +30,251 @@ use Xibo\Helper\Config;
 use Xibo\Helper\Log;
 use Xibo\Storage\PDOConnect;
 
+/**
+ * Class Display
+ * @package Xibo\Entity
+ *
+ * @SWG\Definition()
+ */
 class Display
 {
     private $_config;
     use EntityTrait;
 
+    /**
+     * @SWG\Property(description="The ID of this Display")
+     * @var int
+     */
     public $displayId;
+
+    /**
+     * @SWG\Property(description="Flag indicating whether this Display is recording Auditing Information from XMDS")
+     * @var int
+     */
     public $isAuditing;
+
+    /**
+     * @SWG\Property(description="The Name of this Display")
+     * @var string
+     */
     public $display;
+
+    /**
+     * @SWG\Property(description="The Description of this Display")
+     * @var string
+     */
     public $description;
+
+    /**
+     * @SWG\Property(description="The ID of the Default Layout")
+     * @var int
+     */
     public $defaultLayoutId = 4;
+
+    /**
+     * @SWG\Property(description="The Display Unique Identifier also called hardware key")
+     * @var string
+     */
     public $license;
+
+    /**
+     * @SWG\Property(description="A flag indicating whether this Display is licensed or not")
+     * @var int
+     */
     public $licensed;
-    public $currentlyLicensed;
+    private $currentlyLicensed;
+
+    /**
+     * @SWG\Property(description="A flag indicating whether this Display is currently logged in")
+     * @var int
+     */
     public $loggedIn;
+
+    /**
+     * @SWG\Property(description="A timestamp in CMS time for the last time the Display accessed XMDS")
+     * @var int
+     */
     public $lastAccessed;
+
+    /**
+     * @SWG\Property(description="A flag indicating whether the default layout is interleaved with the Schedule")
+     * @var int
+     */
     public $incSchedule;
+
+    /**
+     * @SWG\Property(description="A flag indicating whether the Display will send email alerts.")
+     * @var int
+     */
     public $emailAlert;
+
+    /**
+     * @SWG\Property(description="A timeout in seconds for the Display to send email alerts.")
+     * @var int
+     */
     public $alertTimeout;
+
+    /**
+     * @SWG\Property(description="The MAC Address of the Display")
+     * @var string
+     */
     public $clientAddress;
+
+    /**
+     * @SWG\Property(description="The media inventory status of the Display")
+     * @var int
+     */
     public $mediaInventoryStatus;
+
+    /**
+     * @SWG\Property(description="The last submitted Media Inventory XML from the Player")
+     * @var string
+     */
     public $mediaInventoryXml;
-    public $currentMacAddress;
+
+    private $currentMacAddress;
+    /**
+     * @SWG\Property(description="The current Mac Address of the Player")
+     * @var string
+     */
     public $macAddress;
+
+    /**
+     * @SWG\Property(description="A timestamp indicating the last time the Mac Address changed")
+     * @var int
+     */
     public $lastChanged;
+
+    /**
+     * @SWG\Property(description="A count of Mac Address changes")
+     * @var int
+     */
     public $numberOfMacAddressChanges;
+
+    /**
+     * @SWG\Property(description="A timestamp indicating the last time a WOL command was sent")
+     * @var int
+     */
     public $lastWakeOnLanCommandSent;
+
+    /**
+     * @SWG\Property(description="A flag indicating whether Wake On Lan is enabled")
+     * @var int
+     */
     public $wakeOnLanEnabled;
+
+    /**
+     * @SWG\Property(description="A h:i string indicating the time to send a WOL command")
+     * @var string
+     */
     public $wakeOnLanTime;
+
+    /**
+     * @SWG\Property(description="The broad cast address for this Display")
+     * @var string
+     */
     public $broadCastAddress;
+
+    /**
+     * @SWG\Property(description="The secureOn WOL settings for this display.")
+     * @var string
+     */
     public $secureOn;
+
+    /**
+     * @SWG\Property(description="The CIDR WOL settings for this display")
+     * @var string
+     */
     public $cidr;
+
+    /**
+     * @SWG\Property(description="The display Latitude")
+     * @var double
+     */
     public $latitude;
+
+    /**
+     * @SWG\Property(description="The display longitude")
+     * @var double
+     */
     public $longitude;
+
+    /**
+     * @SWG\Property(description="A JSON string representing the player installer that should be installed")
+     * @var string
+     */
     public $versionInstructions;
+
+    /**
+     * @SWG\Property(description="A string representing the player type")
+     * @var string
+     */
     public $clientType;
+
+    /**
+     * @SWG\Property(description="A string representing the player version")
+     * @var string
+     */
     public $clientVersion;
+
+    /**
+     * @SWG\Property(description="A number representing the Player version code")
+     * @var int
+     */
     public $clientCode;
+
+    /**
+     * @SWG\Property(description="The display settings profile ID for this Display")
+     * @var int
+     */
     public $displayProfileId;
+
+    /**
+     * @SWG\Property(description="The current layout ID reported via XMDS")
+     * @var int
+     */
     public $currentLayoutId;
+
+    /**
+     * @SWG\Property(description="A flag indicating that a screen shot should be taken by the Player")
+     * @var int
+     */
     public $screenShotRequested;
+
+    /**
+     * @SWG\Property(description="The number of bytes of storage available on the device.")
+     * @var int
+     */
     public $storageAvailableSpace;
+
+    /**
+     * @SWG\Property(description="The number of bytes of storage in total on the device")
+     * @var int
+     */
     public $storageTotalSpace;
 
+    /**
+     * @SWG\Property(description="The ID of the Display Group for this Device")
+     * @var int
+     */
     public $displayGroupId;
+
+    /**
+     * @SWG\Property(description="The current layout")
+     * @var string
+     */
     public $currentLayout;
+
+    /**
+     * @SWG\Property(description="The default layout")
+     * @var string
+     */
     public $defaultLayout;
 
+    /**
+     * @SWG\Property(description="The Display Groups this Display belongs to")
+     * @var DisplayGroup[]
+     */
     public $displayGroups = [];
 
     public function __construct()

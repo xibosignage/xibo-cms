@@ -52,7 +52,7 @@ if (isset($_GET['wsdl']) || isset($_GET['WSDL'])) {
 
 // We create a Slim Object ONLY for logging
 // Create a logger
-$logger = new \Flynsarmy\SlimMonolog\Log\MonologWriter(array(
+$logger = new \Xibo\Helper\AccessibleMonologWriter(array(
     'name' => 'XMDS',
     'handlers' => array(
         new \Xibo\Helper\DatabaseLogHandler()

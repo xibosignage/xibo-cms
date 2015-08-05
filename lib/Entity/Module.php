@@ -25,24 +25,98 @@ namespace Xibo\Entity;
 use Respect\Validation\Validator as v;
 use Xibo\Storage\PDOConnect;
 
+/**
+ * Class Module
+ * @package Xibo\Entity
+ *
+ * @SWG\Definition()
+ */
 class Module
 {
     use EntityTrait;
+
+    /**
+     * @SWG\Property(description="The ID of this Module")
+     * @var int
+     */
     public $moduleId;
 
+    /**
+     * @SWG\Property(description="Module Name")
+     * @var string
+     */
     public $name;
+
+    /**
+     * @SWG\Property(description="Description of the Module")
+     * @var string
+     */
     public $description;
+
+    /**
+     * @SWG\Property(description="A comma separated list of Valid Extensions")
+     * @var string
+     */
     public $validExtensions;
+
+    /**
+     * @SWG\Property(description="The file uri of an image to represent this Module")
+     * @var string
+     */
     public $imageUri;
+
+    /**
+     * @SWG\Property(description="The type code for this module")
+     * @var string
+     */
     public $type;
 
+    /**
+     * @SWG\Property(description="A flag indicating whether this module is enabled")
+     * @var int
+     */
     public $enabled;
+
+    /**
+     * @SWG\Property(description="A flag indicating whether this module is specific to a Layout or can be uploaded to the Library")
+     * @var int
+     */
     public $regionSpecific;
+
+    /**
+     * @SWG\Property(description="A flag indicating whether the Layout designer should render a preview of this module")
+     * @var int
+     */
     public $previewEnabled;
+
+    /**
+     * @SWG\Property(description="A flag indicating whether the module is assignable to a Layout")
+     * @var int
+     */
     public $assignable;
+
+    /**
+     * @SWG\Property(description="A flag indicating whether the module should be rendered natively by the Player or via the CMS (native|html)")
+     * @var string
+     */
     public $renderAs;
+
+    /**
+     * @SWG\Property(description="An array of additional module specific settings")
+     * @var string[]
+     */
     public $settings = [];
+
+    /**
+     * @SWG\Property(description="The schema version of the module")
+     * @var int
+     */
     public $schemaVersion;
+
+    /**
+     * @SWG\Property(description="The Twig View path for module specific templates")
+     * @var string
+     */
     public $viewPath = '../modules';
 
     public function __toString()

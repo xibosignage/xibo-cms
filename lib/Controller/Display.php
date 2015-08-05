@@ -129,11 +129,25 @@ class Display extends Base
 
     /**
      * Grid of Displays
+     *
+     * @SWG\Get(
+     *  path="/display",
+     *  operationId="displaySearch",
+     *  tags={"display"},
+     *  summary="Display Search",
+     *  description="Search Displays for this User",
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(ref="#/definitions/Display")
+     *      )
+     *  )
+     * )
      */
     function grid()
     {
-        $user = $this->getUser();
-
         // Filter by Name
         $filter_display = Sanitize::getString('filter_display');
         $this->getSession()->set('display', 'filter_display', $filter_display);
@@ -379,6 +393,138 @@ class Display extends Base
     /**
      * Display Edit
      * @param int $displayId
+     *
+     * @SWG\Put(
+     *  path="/display/{displayId}",
+     *  operationId="displayEdit",
+     *  tags={"display"},
+     *  summary="Display Edit",
+     *  description="Edit a Display",
+     *  @SWG\Parameter(
+     *      name="displayId",
+     *      in="path",
+     *      description="The Display ID",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="display",
+     *      in="formData",
+     *      description="The Display Name",
+     *      type="string",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="description",
+     *      in="formData",
+     *      description="A description of the Display",
+     *      type="string",
+     *      required="false"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="isAuditing",
+     *      in="formData",
+     *      description="Flag indicating whether this Display records auditing information.",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="defaultLayoutId",
+     *      in="formData",
+     *      description="A Layout ID representing the Default Layout for this Display.",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="licensed",
+     *      in="formData",
+     *      description="Flag indicating whether this display is licensed.",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="incSchedule",
+     *      in="formData",
+     *      description="Flag indicating whether the Default Layout should be included in the Schedule",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="emailAlert",
+     *      in="formData",
+     *      description="Flag indicating whether the Display generates up/down email alerts.",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="alertTimeout",
+     *      in="formData",
+     *      description="How long in seconds should this display wait before alerting when it hasn't connected. Override for the collection interval.",
+     *      type="integer",
+     *      required="false"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="wakeOnLanEnabled",
+     *      in="formData",
+     *      description="Flag indicating if Wake On LAN is enabled for this Display",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="wakeOnLanTime",
+     *      in="formData",
+     *      description="A h:i string representing the time that the Display should receive its Wake on LAN command",
+     *      type="string",
+     *      required="false"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="broadCastAddress",
+     *      in="formData",
+     *      description="The BroadCast Address for this Display - used by Wake On LAN",
+     *      type="string",
+     *      required="false"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="secureOn",
+     *      in="formData",
+     *      description="The secure on configuration for this Display",
+     *      type="string",
+     *      required="false"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="cidr",
+     *      in="formData",
+     *      description="The CIDR configuration for this Display",
+     *      type="int",
+     *      required="false"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="latitude",
+     *      in="formData",
+     *      description="The Latitude of this Display",
+     *      type="double",
+     *      required="false"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="longitude",
+     *      in="formData",
+     *      description="The Longitude of this Display",
+     *      type="double",
+     *      required="false"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="displayProfileId",
+     *      in="formData",
+     *      description="The Display Settings Profile ID",
+     *      type="int",
+     *      required="false"
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Display")
+     *  )
+     * )
      */
     function edit($displayId)
     {
@@ -411,13 +557,32 @@ class Display extends Base
         $this->getState()->hydrate([
             'message' => sprintf(__('Edited %s'), $display->display),
             'id' => $display->displayId,
-            'data' => [$display]
+            'data' => $display
         ]);
     }
 
     /**
      * Delete a display
      * @param int $displayId
+     *
+     * @SWG\Delete(
+     *  path="/display/{displayId}",
+     *  operationId="displayDelete",
+     *  tags={"display"},
+     *  summary="Display Delete",
+     *  description="Delete a Display",
+     *  @SWG\Parameter(
+     *      name="displayId",
+     *      in="path",
+     *      description="The Display ID",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
      */
     function delete($displayId)
     {
@@ -430,9 +595,10 @@ class Display extends Base
 
         // Return
         $this->getState()->hydrate([
+            'httpStatus' => 204,
             'message' => sprintf(__('Deleted %s'), $display->display),
             'id' => $display->displayId,
-            'data' => [$display]
+            'data' => $display
         ]);
     }
 
@@ -532,7 +698,7 @@ class Display extends Base
                 unset($displayGroups[$row->displayGroupId]);
             } else {
                 // It isn't therefore needs to be removed
-                $row->unassignDisplay($display->displayId);
+                $row->unassignDisplay($display);
                 $row->save(false);
             }
         }
@@ -541,7 +707,7 @@ class Display extends Base
         foreach ($displayGroups as $displayGroupId) {
             // Add any that are missing
             $group = DisplayGroupFactory::getById($displayGroupId);
-            $group->assignDisplay($display->displayId);
+            $group->assignDisplay($display);
             $group->save(false);
         }
 
@@ -555,6 +721,8 @@ class Display extends Base
     /**
      * Output a screen shot
      * @param int $displayId
+     *
+     *
      */
     public function screenShot($displayId)
     {
@@ -607,6 +775,26 @@ class Display extends Base
     /**
      * Request ScreenShot
      * @param int $displayId
+     *
+     * @SWG\Put(
+     *  path="/display/requestscreenshot/{displayId}",
+     *  operationId="displayRequestScreenshot",
+     *  tags={"display"},
+     *  summary="Request Screen Shot",
+     *  description="Notify the display that the CMS would like a screen shot to be sent.",
+     *  @SWG\Parameter(
+     *      name="displayId",
+     *      in="path",
+     *      description="The Display ID",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Display")
+     *  )
+     * )
      */
     public function requestScreenShot($displayId)
     {
@@ -649,6 +837,25 @@ class Display extends Base
     /**
      * Wake this display using a WOL command
      * @param int $displayId
+     *
+     * @SWG\Get(
+     *  path="/display/wol/{displayId}",
+     *  operationId="displayWakeOnLan",
+     *  tags={"display"},
+     *  summary="Issue WOL",
+     *  description="Send a Wake On LAN packet to this Display",
+     *  @SWG\Parameter(
+     *      name="displayId",
+     *      in="path",
+     *      description="The Display ID",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
      */
     public function wakeOnLan($displayId)
     {

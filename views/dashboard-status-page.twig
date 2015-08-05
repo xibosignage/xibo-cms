@@ -127,11 +127,18 @@
                             </thead>
                             <tbody>
                             {% for row in displays %}
-                            <tr class="{{ row.mediainventorystatus }}">
-                                <td>{{ row.display }}</td>
-                                <td><span class="glyphicon {% if row.loggedin == 1 %}glyphicon-ok{% else %}glyphicon-remove{% endif %}"></span></td>
-                                <td><span class="glyphicon {% if row.licensed == 1 %}glyphicon-ok{% else %}glyphicon-remove{% endif %}"></span></td>
-                            </tr>
+                                {% if row.mediaInventoryStatus == 1 %}
+                                    {% set class = "success" %}
+                                {% elseif row.mediaInventoryStatus == 2 %}
+                                    {% set class = "danger" %}
+                                {% else %}
+                                    {% set class = "warning" %}
+                                {% endif %}
+                                <tr class="{{ class }}">
+                                    <td>{{ row.display }}</td>
+                                    <td><span class="glyphicon {% if row.loggedin == 1 %}glyphicon-ok{% else %}glyphicon-remove{% endif %}"></span></td>
+                                    <td><span class="glyphicon {% if row.licensed == 1 %}glyphicon-ok{% else %}glyphicon-remove{% endif %}"></span></td>
+                                </tr>
                             {% endfor %}
                             </tbody>
                         </table>

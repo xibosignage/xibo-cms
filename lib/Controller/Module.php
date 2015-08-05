@@ -170,7 +170,7 @@ class Module extends Base
         $this->getState()->hydrate([
             'message' => sprintf(__('Edited %s'), $module->getModule()->name),
             'id' => $module->getModule()->moduleId,
-            'data' => [$module->getModule()]
+            'data' => $module->getModule()
         ]);
     }
 
@@ -244,7 +244,7 @@ class Module extends Base
         // Excellent... capital... success
         $this->getState()->hydrate([
             'message' => sprintf(__('Installed %s'), $module->getModuleType()),
-            'data' => [$module]
+            'data' => $module
         ]);
     }
 
@@ -296,7 +296,7 @@ class Module extends Base
         $this->getState()->hydrate([
             'message' => sprintf(__('Added %s'), $module->getName()),
             'id' => $module->widget->widgetId,
-            'data' => [$module]
+            'data' => $module
         ]);
     }
 
@@ -339,7 +339,7 @@ class Module extends Base
         $this->getState()->hydrate([
             'message' => sprintf(__('Edited %s'), $module->getName()),
             'id' => $module->widget->widgetId,
-            'data' => [$module]
+            'data' => $module
         ]);
     }
 
@@ -462,7 +462,7 @@ class Module extends Base
         $this->getState()->hydrate([
             'message' => sprintf(__('Edited Transition')),
             'id' => $widget->widgetId,
-            'data' => [$widget]
+            'data' => $widget
         ]);
     }
 

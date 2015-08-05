@@ -30,16 +30,44 @@ use Xibo\Factory\ScheduleFactory;
 use Xibo\Helper\Log;
 use Xibo\Storage\PDOConnect;
 
+/**
+ * Class Campaign
+ * @package Xibo\Entity
+ *
+ * @SWG\Definition()
+ */
 class Campaign implements \JsonSerializable
 {
     use EntityTrait;
+
+    /**
+     * @SWG\Property(description="The Campaign Id")
+     * @var int
+     */
     public $campaignId;
+
+    /**
+     * @SWG\Property(description="The userId of the User that owns this Campaign")
+     * @var int
+     */
     public $ownerId;
 
+    /**
+     * @SWG\Property(description="The name of the Campaign")
+     * @var string
+     */
     public $campaign;
 
+    /**
+     * @SWG\Property(description="A 0|1 flag to indicate whether this is a Layout specific Campaign or not.")
+     * @var int
+     */
     public $isLayoutSpecific = 0;
 
+    /**
+     * @SWG\Property(description="The number of Layouts associated with this Campaign")
+     * @var int
+     */
     public $numberLayouts;
 
     private $layouts = [];

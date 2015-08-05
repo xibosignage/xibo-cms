@@ -27,6 +27,19 @@ class Clock extends Base
 {
     /**
      * Gets the Time
+     *
+     * @SWG\Get(
+     *  path="/clock",
+     *  operationId="clock",
+     *  tags={"misc"},
+     *  @SWG\Response(
+     *      response=200,
+     *      @SWG\Schema(
+     *          type="object",
+     *          additionalProperties={"time":"string"}
+     *      )
+     *  )
+     * )
      */
     function clock()
     {
@@ -36,6 +49,6 @@ class Clock extends Base
         $this->getState()->setData(array('time' => $output));
         $this->getState()->html = $output;
         $this->getState()->clockUpdate = true;
-        $this->getState()->success = false;
+        $this->getState()->success = true;
     }
 }

@@ -603,7 +603,7 @@ class Twitter extends Module
             $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-cycle-2.1.6.min.js') . '"></script>';
 
         // Need the marquee plugin?
-        if (stripos($this->GetSetting('effect'), 'marquee'))
+        if (stripos($this->GetSetting('effect'), 'marquee') !== false)
             $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery.marquee.min.js') . '"></script>';
 
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';

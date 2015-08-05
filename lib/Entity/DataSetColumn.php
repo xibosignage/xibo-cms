@@ -11,20 +11,74 @@ namespace Xibo\Entity;
 
 use Xibo\Storage\PDOConnect;
 
-class DataSetColumn
+/**
+ * Class DataSetColumn
+ * @package Xibo\Entity
+ *
+ * @SWG\Definition()
+ */
+class DataSetColumn implements \JsonSerializable
 {
     use EntityTrait;
 
+    /**
+     * @SWG\Property(description="The ID of this DataSetColumn")
+     * @var int
+     */
     public $dataSetColumnId;
+
+    /**
+     * @SWG\Property(description="The ID of the DataSet that this Column belongs to")
+     * @var int
+     */
     public $dataSetId;
+
+    /**
+     * @SWG\Property(description="The Column Heading")
+     * @var string
+     */
     public $heading;
+
+    /**
+     * @SWG\Property(description="The ID of the DataType for this Column")
+     * @var int
+     */
     public $dataTypeId;
+
+    /**
+     * @SWG\Property(description="The ID of the ColumnType for this Column")
+     * @var int
+     */
     public $dataSetColumnTypeId;
+
+    /**
+     * @SWG\Property(description="Comma separated list of valid content for drop down columns")
+     * @var string
+     */
     public $listContent;
+
+    /**
+     * @SWG\Property(description="The order this column should be displayed")
+     * @var int
+     */
     public $columnOrder;
+
+    /**
+     * @SWG\Property(description="A MySQL formula for this column")
+     * @var string
+     */
     public $formula;
 
+    /**
+     * @SWG\Property(description="The data type for this Column")
+     * @var string
+     */
     public $dataType;
+
+    /**
+     * @SWG\Property(description="The column type for this Column")
+     * @var string
+     */
     public $dataSetColumnType;
 
     /**

@@ -22,12 +22,30 @@
 
 namespace Xibo\Entity;
 
-
+/**
+ * Class RegionOption
+ * @package Xibo\Entity
+ *
+ * @SWG\Definition()
+ */
 class RegionOption
 {
+    /**
+     * @SWG\Property(description="The regionId that this Option applies to")
+     * @var
+     */
     public $regionId;
 
+    /**
+     * @SWG\Property(description="The option name")
+     * @var string
+     */
     public $option;
+
+    /**
+     * @SWG\Property(description="The option value")
+     * @var string
+     */
     public $value;
 
     public function save()

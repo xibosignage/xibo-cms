@@ -24,6 +24,29 @@ class Playlist extends Base
 {
     /**
      * Grid
+     *
+     * @SWG\Get(
+     *  path="/playlist/widget",
+     *  operationId="playlistSearch",
+     *  tags={"playlist"},
+     *  summary="Playlist Widget Search",
+     *  description="Search widgets on a Playlist",
+     *  @SWG\Parameter(
+     *      name="playlistId",
+     *      in="formData",
+     *      description="The Playlist ID to Search",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(ref="#/definitions/Widget")
+     *      )
+     *  )
+     * )
      */
     public function widgetGrid()
     {
@@ -118,6 +141,34 @@ class Playlist extends Base
     /**
      * Add Library items to a Playlist
      * @param int $playlistId
+     *
+     * @SWG\Post(
+     *  path="/playlist/library/assign/{playlistId}",
+     *  operationId="playlistLibraryAssign",
+     *  tags={"playlist"},
+     *  summary="Assign Library Items",
+     *  description="Assign Media from the Library to this Playlist",
+     *  @SWG\Parameter(
+     *      name="playlistId",
+     *      in="path",
+     *      description="The Playlist ID to assign to",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="media",
+     *      in="formData",
+     *      description="Array of Media IDs to assign",
+     *      type="array",
+     *      required="true",
+     *      @SWG\Items(type="int")
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Playlist")
+     *  )
+     * )
      */
     public function libraryAssign($playlistId)
     {
@@ -160,6 +211,37 @@ class Playlist extends Base
     /**
      * Order a playlist and its widgets
      * @param int $playlistId
+     *
+     * @SWG\Post(
+     *  path="/playlist/order/{playlistId}",
+     *  operationId="playlistOrder",
+     *  tags={"playlist"},
+     *  summary="Order Widgets",
+     *  description="Set the order of widgets in the Playlist",
+     *  @SWG\Parameter(
+     *      name="playlistId",
+     *      in="path",
+     *      description="The Playlist ID to Order",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="widgets",
+     *      in="formData",
+     *      description="Array of widgetIds and positions",
+     *      type="array",
+     *      required="true",
+     *      @SWG\Schema(
+     *          type="object",
+     *          additionalProperties={"widgetId":"integer", "position":"integer"}
+     *      )
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Playlist")
+     *  )
+     * )
      */
     function order($playlistId)
     {

@@ -103,7 +103,59 @@ class Region extends Base
     /**
      * Add a region
      * @param int $layoutId
-     * @throws \Xibo\Exception\NotFoundException
+     *
+     * @SWG\Post(
+     *  path="/region/{layoutId}",
+     *  operationId="regionAdd",
+     *  tags={"layout"},
+     *  summary="Add Region",
+     *  description="Add a Region to a Layout",
+     *  @SWG\Parameter(
+     *      name="layoutId",
+     *      in="path",
+     *      description="The Layout ID to add the Region to",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="width",
+     *      in="formData",
+     *      description="The Width, default 250",
+     *      type="integer",
+     *      required="false"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="height",
+     *      in="formData",
+     *      description="The Height",
+     *      type="integer",
+     *      required="false"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="top",
+     *      in="formData",
+     *      description="The Top Coordinate",
+     *      type="integer",
+     *      required="false"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="left",
+     *      in="formData",
+     *      description="The Left Coordinate",
+     *      type="integer",
+     *      required="false"
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Region"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new record",
+     *          type="string"
+     *      )
+     *  )
+     * )
      */
     public function add($layoutId)
     {
@@ -113,21 +165,106 @@ class Region extends Base
             throw new AccessDeniedException();
 
         // Add a new region
-        $region = RegionFactory::create($this->getUser()->userId, $layout->layout . '-' . (count($layout->regions) + 1), 250, 250, 50, 50);
+        $region = RegionFactory::create($this->getUser()->userId, $layout->layout . '-' . (count($layout->regions) + 1),
+            Sanitize::getInt('width', 250), Sanitize::getInt('height', 250), Sanitize::getInt('top', 50), Sanitize::getInt('left', 50));
 
         $layout->regions[] = $region;
         $layout->save();
 
         // Return
         $this->getState()->hydrate([
+            'httpStatus' => 201,
             'message' => sprintf(__('Added %s'), $region->name),
             'id' => $region->regionId,
-            'data' => [$region]
+            'data' => $region
         ]);
     }
 
     /**
      * @param int $regionId
+     *
+     * @SWG\Put(
+     *  path="/region/{regionId}",
+     *  operationId="regionEdit",
+     *  tags={"layout"},
+     *  summary="Edit Region",
+     *  description="Edit Region",
+     *  @SWG\Parameter(
+     *      name="regionId",
+     *      in="path",
+     *      description="The Region ID to Edit",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="width",
+     *      in="formData",
+     *      description="The Width, default 250",
+     *      type="integer",
+     *      required="false"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="height",
+     *      in="formData",
+     *      description="The Height",
+     *      type="integer",
+     *      required="false"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="top",
+     *      in="formData",
+     *      description="The Top Coordinate",
+     *      type="integer",
+     *      required="false"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="left",
+     *      in="formData",
+     *      description="The Left Coordinate",
+     *      type="integer",
+     *      required="false"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="zIndex",
+     *      in="formData",
+     *      description="The Layer for this Region",
+     *      type="integer",
+     *      required="false"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="transitionType",
+     *      in="formData",
+     *      description="The Transition Type. Must be a valid transition code as returned by /transition",
+     *      type="string",
+     *      required="false"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="transitionDuration",
+     *      in="formData",
+     *      description="The transition duration in milliseconds if required by the transition type",
+     *      type="integer",
+     *      required="false"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="transitionDirection",
+     *      in="formData",
+     *      description="The transition direction if required by the transition type.",
+     *      type="string",
+     *      required="false"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="loop",
+     *      in="formData",
+     *      description="Flag indicating whether this region should loop if there is only 1 media item in the timeline",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Region")
+     *  )
+     * )
      */
     public function edit($regionId)
     {
@@ -158,14 +295,32 @@ class Region extends Base
         $this->getState()->hydrate([
             'message' => sprintf(__('Edited %s'), $region->name),
             'id' => $region->regionId,
-            'data' => [$region]
+            'data' => $region
         ]);
     }
 
     /**
      * Delete a region
      * @param int $regionId
-     * @throws \Xibo\Exception\NotFoundException
+     *
+     * @SWG\Delete(
+     *  path="/region/{regionId}",
+     *  operationId="regionDelete",
+     *  tags={"layout"},
+     *  summary="Region Delete",
+     *  description="Delete an existing region",
+     *  @SWG\Parameter(
+     *      name="regionId",
+     *      in="path",
+     *      description="The Region ID to Delete",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
      */
     public function delete($regionId)
     {
@@ -178,6 +333,7 @@ class Region extends Base
 
         // Return
         $this->getState()->hydrate([
+            'httpStatus' => 204,
             'message' => sprintf(__('Deleted %s'), $region->name)
         ]);
     }
@@ -185,6 +341,37 @@ class Region extends Base
     /**
      * Update Positions
      * @param int $layoutId
+     *
+     * @SWG\Put(
+     *  path="/region/position/all/{layoutId}",
+     *  operationId="regionPositionAll",
+     *  tags={"layout"},
+     *  summary="Position Regions",
+     *  description="Position all regions for a Layout",
+     *  @SWG\Parameter(
+     *      name="layoutId",
+     *      in="path",
+     *      description="The Layout ID",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="regions",
+     *      in="formData",
+     *      description="Array of regions and their new positions",
+     *      type="array",
+     *      required="true",
+     *      @SWG\Schema(
+     *          type="object",
+     *          additionalProperties={"regionId":"integer", "top":"double", "left":"double", "width":"double", "height":"double"}
+     *      )
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Layout")
+     *  )
+     * )
      */
     function positionAll($layoutId)
     {
@@ -229,7 +416,7 @@ class Region extends Base
         $this->getState()->hydrate([
             'message' => sprintf(__('Edited %s'), $layout->layout),
             'id' => $layout->layoutId,
-            'data' => [$layout]
+            'data' => $layout
         ]);
     }
 

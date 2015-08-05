@@ -11,6 +11,10 @@ namespace Xibo\Entity;
 
 use Xibo\Storage\PDOConnect;
 
+/**
+ * Class Setting
+ * @package Xibo\Entity
+ */
 class Setting
 {
     use EntityTrait;

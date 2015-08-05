@@ -13,16 +13,62 @@ use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
 use Xibo\Storage\PDOConnect;
 
+/**
+ * Class DisplayProfile
+ * @package Xibo\Entity
+ *
+ * @SWG\Definition()
+ */
 class DisplayProfile
 {
     use EntityTrait;
+
+    /**
+     * @SWG\Property(description="The ID of this Display Profile")
+     * @var int
+     */
     public $displayProfileId;
+
+    /**
+     * @SWG\Property(description="The name of this Display Profile")
+     * @var string
+     */
     public $name;
+
+    /**
+     * @SWG\Property(description="The player type that this Display Profile is for")
+     * @var string
+     */
     public $type;
+
+    /**
+     * @SWG\Property(description="The configuration options for this Profile")
+     * @var string[]
+     */
     public $config;
+
+    /**
+     * @SWG\Property(description="A flag indicating if this profile should be used as the Default for the client type")
+     * @var int
+     */
     public $isDefault;
+
+    /**
+     * @SWG\Property(description="The userId of the User that owns this profile")
+     * @var int
+     */
     public $userId;
+
+    /**
+     * @SWG\Property(description="The default configuration options for this Profile")
+     * @var string[]
+     */
     public $configDefault;
+
+    /**
+     * @SWG\Property(description="Array of tab names to logically group the configuration options")
+     * @var string[]
+     */
     public $configTabs;
 
     public function getId()

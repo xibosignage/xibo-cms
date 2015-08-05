@@ -137,7 +137,7 @@ class Help extends Base
         $this->getState()->hydrate([
             'message' => sprintf(__('Added %s'), $help->topic),
             'id' => $help->helpId,
-            'data' => [$help]
+            'data' => $help
         ]);
     }
 
@@ -161,7 +161,7 @@ class Help extends Base
         $this->getState()->hydrate([
             'message' => sprintf(__('Edited %s'), $help->topic),
             'id' => $help->helpId,
-            'data' => [$help]
+            'data' => $help
         ]);
     }
 

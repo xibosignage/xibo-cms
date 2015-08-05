@@ -11,16 +11,56 @@ namespace Xibo\Entity;
 
 use Xibo\Storage\PDOConnect;
 
+/**
+ * Class Transition
+ * @package Xibo\Entity
+ *
+ * @SWG\Definition()
+ */
 class Transition
 {
     use EntityTrait;
 
+    /**
+     * @SWG\Property(description="The transition ID")
+     * @var int
+     */
     public $transitionId;
+
+    /**
+     * @SWG\Property(description="The transition name")
+     * @var string
+     */
     public $transition;
+
+    /**
+     * @SWG\Property(description="Code for transition")
+     * @var string
+     */
     public $code;
+
+    /**
+     * @SWG\Property(description="Flag indicating whether this is a directional transition")
+     * @var int
+     */
     public $hasDirection;
+
+    /**
+     * @SWG\Property(description="Flag indicating whether this transition has a duration option")
+     * @var int
+     */
     public $hasDuration;
+
+    /**
+     * @SWG\Property(description="Flag indicating whether this transition should be available for IN assignments")
+     * @var int
+     */
     public $availableAsIn;
+
+    /**
+     * @SWG\Property(description="Flag indicating whether this transition should be available for OUT assignments")
+     * @var int
+     */
     public $availableAsOut;
 
     public function getId()

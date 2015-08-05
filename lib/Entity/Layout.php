@@ -33,27 +33,140 @@ use Xibo\Helper\Date;
 use Xibo\Helper\Log;
 use Xibo\Storage\PDOConnect;
 
+/**
+ * Class Layout
+ * @package Xibo\Entity
+ *
+ * @SWG\Definition()
+ */
 class Layout implements \JsonSerializable
 {
     use EntityTrait;
+
+    /**
+     * @SWG\Property(
+     *  description="The layoutId"
+     * )
+     * @var int
+     */
     public $layoutId;
+
+    /**
+     * @var int
+     * @SWG\Property(
+     *  description="The userId of the Layout Owner"
+     * )
+     */
     public $ownerId;
+
+    /**
+     * @var int
+     * @SWG\Property(
+     *  description="The id of the Layout's dedicated Campaign"
+     * )
+     */
     public $campaignId;
+
+    /**
+     * @var int
+     * @SWG\Property(
+     *  description="The id of the image media set as the background"
+     * )
+     */
     public $backgroundImageId;
+
+    /**
+     * @var int
+     * @SWG\Property(
+     *  description="The XLF schema version"
+     * )
+     */
     public $schemaVersion;
 
+    /**
+     * @var string
+     * @SWG\Property(
+     *  description="The name of the Layout"
+     * )
+     */
     public $layout;
+
+    /**
+     * @var string
+     * @SWG\Property(
+     *  description="The description of the Layout"
+     * )
+     */
     public $description;
+
+    /**
+     * @var string
+     * @SWG\Property(
+     *  description="A HEX string representing the Layout background color"
+     * )
+     */
     public $backgroundColor;
+
+    /**
+     * Legacy XML
+     * @var string
+     */
     public $legacyXml;
 
+    /**
+     * @var string
+     * @SWG\Property(
+     *  description="The datetime the Layout was created"
+     * )
+     */
     public $createdDt;
+
+    /**
+     * @var string
+     * @SWG\Property(
+     *  description="The datetime the Layout was last modified"
+     * )
+     */
     public $modifiedDt;
+
+    /**
+     * @var int
+     * @SWG\Property(
+     *  description="Flag indicating the Layout status"
+     * )
+     */
     public $status;
+
+    /**
+     * @var int
+     * @SWG\Property(
+     *  description="Flag indicating whether the Layout is retired"
+     * )
+     */
     public $retired;
+
+    /**
+     * @var int
+     * @SWG\Property(
+     *  description="The Layer that the background should occupy"
+     * )
+     */
     public $backgroundzIndex;
 
+    /**
+     * @var double
+     * @SWG\Property(
+     *  description="The Layout Width"
+     * )
+     */
     public $width;
+
+    /**
+     * @var double
+     * @SWG\Property(
+     *  description="The Layout Height"
+     * )
+     */
     public $height;
 
     // Child items

@@ -62,6 +62,22 @@ class Template extends Base
 
     /**
      * Data grid
+     *
+     * @SWG\Get(
+     *  path="/template",
+     *  operationId="templateSearch",
+     *  tags={"template"},
+     *  summary="Template Search",
+     *  description="Search templates this user has access to",
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(ref="#/definitions/Layout")
+     *      )
+     *  )
+     * )
      */
     function grid()
     {
