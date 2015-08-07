@@ -7,39 +7,6 @@
 // Dropdown list for DataType and DataColumnType
         Theme::Set('datatype_field_list', $db->GetArray('SELECT datatypeid, datatype FROM datatype'));
         Theme::Set('datasetcolumntype_field_list', $db->GetArray('SELECT datasetcolumntypeid, datasetcolumntype FROM datasetcolumntype'));
-
-        $formFields = array();
-        $formFields[] = Form::AddText('heading', __('Heading'), Sanitize::string($row['Heading']),
-            __('The heading for this Column'), 'h', 'required');
-
-        $formFields[] = Form::AddCombo(
-            'datasetcolumntypeid',
-            __('Column Type'),
-            Sanitize::int($row['DataSetColumnTypeID']),
-            $db->GetArray('SELECT datasetcolumntypeid, datasetcolumntype FROM datasetcolumntype'),
-            'datasetcolumntypeid',
-            'datasetcolumntype',
-            __('Whether this column is a value or a formula'),
-            't');
-
-        $formFields[] = Form::AddCombo(
-            'datatypeid',
-            __('Data Type'),
-            Sanitize::int($row['DataTypeID']),
-            $db->GetArray('SELECT datatypeid, datatype FROM datatype'),
-            'datatypeid',
-            'datatype',
-            __('The DataType of the Intended Data'),
-            'd');
-
-        $formFields[] = Form::AddText('listcontent', __('List Content'), Sanitize::string($row['ListContent']),
-            __('A comma separated list of items to present in a combo box'), 'l', '');
-
-        $formFields[] = Form::AddNumber('columnorder', __('Column Order'), Sanitize::int($row['ColumnOrder']),
-            __('The order this column should be displayed in when entering data'), 'o', '');
-
-        $formFields[] = Form::AddText('formula', __('Formula'), Sanitize::string($row['Formula']),
-            __('A formula to use as a calculation for formula column types'), 'f', '');
 #}
 
 {% extends "form-base.twig" %}
@@ -52,14 +19,36 @@
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, $("#<<id>>").submit()    
+    {% trans "Save" %}, $("#dataSetColumnEditForm").submit()    
 {% endblock %}
 
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="<<id>>" class="XiboForm form-horizontal" method="put" action="{{ urlFor("dataSet.column.edit", {id: dataSet.dataSetId, colId: dataSetColumn.dataSetColumnId}) }}">
+            <form id="dataSetColumnEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("dataSet.column.edit", {id: dataSet.dataSetId, colId: dataSetColumn.dataSetColumnId}) }}">
+                    {% set title %}{% trans "Heading" %}{% endset %}
+                    {% set helpText %}{% trans "The heading for this Column" %}{% endset %}
+                    {{ forms.text("heading", title, {{ heading }}, helpText, "", "required") }}
 
+                    {% set title %}{% trans "Column Type" %}{% endset %}
+                    {% set helpText %}{% trans "Whether this column is a value or a formula" %}{% endset %}
+                    {{ forms.dropdown("dataSetColumnTypeId", "single", title, {{ dataSetColumnTypeId }}, dataSetColumnTypes, "datasetcolumntypeid", "datasetcolumntype", helpText) }}
+
+                    {% set title %}{% trans "Data Type" %}{% endset %}
+                    {% set helpText %}{% trans "The DataType of the Intended Data" %}{% endset %}
+                    {{ forms.dropdown("dataTypeId", "single", title, {{ dataTypeId }}, dataTypes, "datatypeid", "datatype", helpText) }}
+
+                    {% set title %}{% trans "List Content" %}{% endset %}
+                    {% set helpText %}{% trans "A comma separated list of items to present in a combo box" %}{% endset %}
+                    {{ forms.text("listContent", title, {{ listContent }}, helpText) }}
+
+                    {% set title %}{% trans "Column Order" %}{% endset %}
+                    {% set helpText %}{% trans "The order this column should be displayed in when entering data" %}{% endset %}
+                    {{ forms.number("columnOrder", title, {{ columnOrder }}, helpText) }}
+
+                    {% set title %}{% trans "Formula" %}{% endset %}
+                    {% set helpText %}{% trans "A formula to use as a calculation for formula column types" %}{% endset %}
+                    {{ forms.text("formula", title, {{ formula }}, helpText) }}
             </form>
         </div>
     </div>
