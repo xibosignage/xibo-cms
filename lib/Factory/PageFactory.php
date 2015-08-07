@@ -75,7 +75,7 @@ class PageFactory extends BaseFactory
             $params['name'] = Sanitize::getString('name', $filterBy);
             $sql .= ' AND `name` = :name';
         }
-        if (Sanitize::getInt('pageId', $filterBy) != null) {
+        if (Sanitize::getInt('pageId', $filterBy) !== null) {
             $params['pageId'] = Sanitize::getString('pageId', $filterBy);
             $sql .= ' AND `pageId` = :pageId';
         }

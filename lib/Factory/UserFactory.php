@@ -204,7 +204,7 @@ class UserFactory extends BaseFactory
         }
 
         // Retired users?
-        if (Sanitize::getInt('retired', $filterBy) != null) {
+        if (Sanitize::getInt('retired', $filterBy) !== null) {
             $body .= " AND user.retired = :retired ";
             $params['retired'] = Sanitize::getInt('retired', $filterBy);
         }

@@ -144,7 +144,7 @@ class RegionFactory extends BaseFactory
               `region`.zIndex
         ';
 
-        if (Sanitize::getInt('playlistId', $filterBy) != null) {
+        if (Sanitize::getInt('playlistId', $filterBy) !== null) {
             $sql .= ', `lkregionplaylist`.displayOrder ';
         }
 
@@ -152,7 +152,7 @@ class RegionFactory extends BaseFactory
             FROM `region`
         ';
 
-        if (Sanitize::getInt('playlistId', $filterBy) != null) {
+        if (Sanitize::getInt('playlistId', $filterBy) !== null) {
             // Restrict to assigned playlists
             $sql .= '
                 INNER JOIN `lkregionplaylist`

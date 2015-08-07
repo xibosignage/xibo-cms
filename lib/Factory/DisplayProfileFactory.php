@@ -71,7 +71,7 @@ class DisplayProfileFactory extends BaseFactory
 
             $body = ' FROM `displayprofile` WHERE 1 = 1 ';
 
-            if (Sanitize::getInt('displayProfileId', $filterBy) != null) {
+            if (Sanitize::getInt('displayProfileId', $filterBy) !== null) {
                 $body .= ' AND displayProfileId = :displayProfileId ';
                 $params['displayProfileId'] = Sanitize::getInt('displayProfileId', $filterBy);
             }

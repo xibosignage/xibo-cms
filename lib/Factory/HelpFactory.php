@@ -50,7 +50,7 @@ class HelpFactory extends BaseFactory
          WHERE 1 = 1
         ';
 
-        if (Sanitize::getInt('helpId', $filterBy) != null) {
+        if (Sanitize::getInt('helpId', $filterBy) !== null) {
             $body .= ' AND help.helpId = :helpId ';
             $params['helpId'] = Sanitize::getInt('helpId', $filterBy);
         }

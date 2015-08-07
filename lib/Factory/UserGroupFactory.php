@@ -118,7 +118,7 @@ class UserGroupFactory extends BaseFactory
             }
 
             // Filter by Group Id
-            if (Sanitize::getInt('groupId', $filterBy) != null) {
+            if (Sanitize::getInt('groupId', $filterBy) !== null) {
                 $body .= ' AND `group`.groupId = :groupId ';
                 $params['groupId'] = Sanitize::getInt('groupId', $filterBy);
             }
@@ -130,7 +130,7 @@ class UserGroupFactory extends BaseFactory
             }
 
             // Filter by User Id
-            if (Sanitize::getInt('userId', $filterBy) != null) {
+            if (Sanitize::getInt('userId', $filterBy) !== null) {
                 $body .= ' AND `group`.groupId IN (SELECT groupId FROM `lkusergroup` WHERE userId = :userId) ';
                 $params['userId'] = Sanitize::getInt('userId', $filterBy);
             }

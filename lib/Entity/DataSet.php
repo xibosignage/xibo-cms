@@ -171,7 +171,8 @@ class DataSet implements \JsonSerializable
         }
 
         // Filter by ID
-        if (Sanitize::getInt('id', $filterBy) != null) {
+        if (
+            Sanitize::getInt('id', $filterBy) !== null) {
             $sql .= ' AND id = :id ';
             $params['id'] = Sanitize::getInt('id', $filterBy);
         }

@@ -119,7 +119,7 @@ class WidgetFactory extends BaseFactory
             FROM `widget`
         ';
 
-        if (Sanitize::getInt('mediaId', $filterBy) != null) {
+        if (Sanitize::getInt('mediaId', $filterBy) !== null) {
             $sql .= '
                 INNER JOIN `lkwidgetmedia`
                 ON `lkwidgetmedia`.widgetId = widget.widgetId
@@ -133,12 +133,12 @@ class WidgetFactory extends BaseFactory
         // Permissions
         self::viewPermissionSql('Xibo\Entity\Widget', $sql, $params, 'widget.widgetId', 'widget.ownerId', $filterBy);
 
-        if (Sanitize::getInt('playlistId', $filterBy) != null) {
+        if (Sanitize::getInt('playlistId', $filterBy) !== null) {
             $sql .= ' AND playlistId = :playlistId';
             $params['playlistId'] = Sanitize::getInt('playlistId', $filterBy);
         }
 
-        if (Sanitize::getInt('widgetId', $filterBy) != null) {
+        if (Sanitize::getInt('widgetId', $filterBy) !== null) {
             $sql .= ' AND widgetId = :widgetId';
             $params['widgetId'] = Sanitize::getInt('widgetId', $filterBy);
         }

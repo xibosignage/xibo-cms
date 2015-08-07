@@ -231,7 +231,7 @@ class MediaFactory extends BaseFactory
             $body .= " LEFT OUTER JOIN tag ON tag.tagId = lktagmedia.tagId";
         }
 
-        if (Sanitize::getInt('displayGroupId', $filterBy) != null) {
+        if (Sanitize::getInt('displayGroupId', $filterBy) !== null) {
             $body .= '
                 INNER JOIN `lkmediadisplaygroup`
                 ON lkmediadisplaygroup.mediaid = media.mediaid
@@ -251,7 +251,7 @@ class MediaFactory extends BaseFactory
         }
 
         // Unused only?
-        if (Sanitize::getInt('unusedOnly', $filterBy) != null) {
+        if (Sanitize::getInt('unusedOnly', $filterBy) !== null) {
             $body .= '
                 AND media.mediaId NOT IN (SELECT mediaId FROM `lkwidgetmedia`)
                 AND media.mediaId NOT IN (SELECT mediaId FROM `lkmediadisplaygroup`)
@@ -293,7 +293,7 @@ class MediaFactory extends BaseFactory
             $params['storedAs'] = Sanitize::getString('storedAs', $filterBy);
         }
 
-        if (Sanitize::getInt('ownerId', $filterBy) != null) {
+        if (Sanitize::getInt('ownerId', $filterBy) !== null) {
             $body .= " AND media.userid = :ownerId ";
             $params['ownerId'] = Sanitize::getInt('ownerId', $filterBy);
         }
@@ -310,7 +310,7 @@ class MediaFactory extends BaseFactory
             $params['expires'] = Sanitize::getInt('expires', $filterBy);
         }
 
-        if (Sanitize::getInt('layoutId', $filterBy) != null) {
+        if (Sanitize::getInt('layoutId', $filterBy) !== null) {
             $body .= '
                 AND media.mediaId IN (
                     SELECT `lkwidgetmedia`.mediaId

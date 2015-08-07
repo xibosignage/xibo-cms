@@ -80,13 +80,13 @@ class PlaylistFactory extends BaseFactory
         $params = array();
         $select = 'SELECT playlist.* ';
 
-        if (Sanitize::getInt('regionId', $filterBy) != null) {
+        if (Sanitize::getInt('regionId', $filterBy) !== null) {
             $select .= ' , lkregionplaylist.displayOrder ';
         }
 
         $body = '  FROM `playlist` ';
 
-        if (Sanitize::getInt('regionId', $filterBy) != null) {
+        if (Sanitize::getInt('regionId', $filterBy) !== null) {
             $body .= '
                 INNER JOIN `lkregionplaylist`
                 ON lkregionplaylist.playlistId = playlist.playlistId
