@@ -25,9 +25,9 @@
                 <tbody>
                     {% for item in forecast %}
                         <tr>
-                            <td>item.forecast</td>
-                            <td>item.key</td>
-                            <td>item.value</td>
+                            <td>{{ item.forecast }}</td>
+                            <td>{{ item.key }}</td>
+                            <td>{{ item.value }}</td>
                         </tr>
                     {% endfor %}
                 </tbody>

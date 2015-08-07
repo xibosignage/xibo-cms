@@ -301,6 +301,9 @@ class Base
         // Render the view manually with Twig, parse it and pull out various bits
         $view = $app->view()->getInstance()->render($state->template . '.twig', $data);
 
+        // Log Rendered View
+        // Log::debug('%s View: %s', $state->template, $view);
+
         if (!$view = json_decode($view, true)) {
             Log::error('Problem with Template: View = %s ', $state->template);
             throw new ControllerNotImplemented(__('Problem with Form Template'));
@@ -309,6 +312,7 @@ class Base
         $state->html = $view['html'];
         $state->dialogTitle = trim($view['title']);
         $state->callBack = $view['callBack'];
+        $state->extra = $view['extra'];
 
         // Process the buttons
         // Expect each button on a new line
@@ -325,14 +329,13 @@ class Base
                 $button = explode(',', trim($button));
 
                 for ($i = 0; $i < count($button); $i++) {
-                    $state->buttons[trim($button[$i])] = trim($button[$i + 1]);
+                    $state->buttons[trim($button[$i])] = str_replace('|', ',', trim($button[$i + 1]));
                     $i++;
                 }
             }
         }
 
         // Process the fieldActions
-        // Expect each fieldAction on a new line
         if (trim($view['fieldActions']) == '') {
             $state->fieldActions = [];
         } else {

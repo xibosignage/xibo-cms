@@ -32,7 +32,7 @@ class LocalVideo extends Module
     public function validate()
     {
         // Validate
-        if (!v::string()->notEmpty()->url()->validate($this->getOption('uri')))
+        if (!v::string()->notEmpty()->validate($this->getOption('uri')))
             throw new InvalidArgumentException(__('Please enter a full path name giving the location of this video on the client'));
 
         if (!v::int()->min(1)->validate($this->getDuration()))

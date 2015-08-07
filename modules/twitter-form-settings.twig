@@ -4,29 +4,9 @@
  * Copyright (C) 2015 Spring Signage Ltd
  * (${FILE_NAME})
  */
-// API Key
-        $formFields[] = Form::AddText('apiKey', __('API Key'), $this->GetSetting('apiKey'),
-            __('Enter your API Key from Twitter.'), 'a', 'required');
-
-        // API Secret
-        $formFields[] = Form::AddText('apiSecret', __('API Secret'), $this->GetSetting('apiSecret'),
-            __('Enter your API Secret from Twitter.'), 's', 'required');
-
-        // Cache Period
-        $formFields[] = Form::AddText('cachePeriod', __('Cache Period'), $this->GetSetting('cachePeriod', 300),
-            __('Enter the number of seconds you would like to cache twitter search results.'), 'c', 'required');
-
-        // Cache Period Images
-        $formFields[] = Form::AddText('cachePeriodImages', __('Cache Period for Images'), $this->GetSetting('cachePeriodImages', 24),
-            __('Enter the number of hours you would like to cache twitter images.'), 'i', 'required');
-
-        // Present an error message if we don't have the required extension enabled. Don't prevent further configuration.
-        if (!extension_loaded('curl')) {
-            $formFields[] = Form::AddMessage(__('The php-curl extension is required for the Twitter Module and it does not appear to be enabled on this CMS. Please enable it before using this module.'), 'alert alert-danger');
-        }
 #}
 
-{% extends "module-settings-form.twig" %}
+{% extends "module-form-settings.twig" %}
 {% import "forms.twig" as forms %}
 
 {% block moduleFormFields %}
@@ -46,5 +26,4 @@
     {% set helpText %}{% trans "Enter the number of hours you would like to cache twitter images." %}{% endset %}
     {{ forms.text("cachePeriodImages", title, module.getSetting("cachePeriodImages", 24), helpText, "", "required") }}
 
-    {# error message it is in widget.twitter.php #}
 {% endblock %}

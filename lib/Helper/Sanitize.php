@@ -36,16 +36,22 @@ class Sanitize
             $app = Slim::getInstance();
             switch ($app->request->getMethod()) {
                 case 'GET':
-                    return $app->request->get($param, $default);
+                    $return = $app->request->get($param, $default);
+                    break;
                 case 'POST':
-                    return $app->request->post($param, $default);
+                    $return = $app->request->post($param, $default);
+                    break;
                 case 'PUT':
-                    return $app->request->put($param, $default);
+                    $return = $app->request->put($param, $default);
+                    break;
                 case 'DELETE':
-                    return $app->request->delete($param, $default);
+                    $return = $app->request->delete($param, $default);
+                    break;
                 default:
-                    return $default;
+                    $return = $default;
             }
+
+            return ($return === null || $return === '') ? $default : $return;
         }
         else
             return isset($source[$param]) ? $source[$param] : $default;

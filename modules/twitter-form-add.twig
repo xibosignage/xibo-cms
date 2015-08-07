@@ -42,7 +42,7 @@
 
         // Present an error message if the module has not been configured. Don't prevent further configuration.
         if (!extension_loaded('curl') || $this->GetSetting('apiKey') == '' || $this->GetSetting('apiSecret') == '') {
-            $formFields['general'][] = Form::AddMessage(__('The Twitter Widget has not been configured yet, please ask your CMS Administrator to look at it for you.'), 'alert alert-danger');
+            $formFields['general'][] = Form::AddMessage(__(''), 'alert alert-danger');
         }
 
         // Modules should be rendered using the theme engine.
@@ -78,12 +78,89 @@
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Save" %}, $("#twitterAddForm").submit()
 {% endblock %}
 
 {% block callBack %}text_callback{% endblock %}
+
+{% block extra %}{{ module.templatesAvailable()|json_encode|raw }}{% endblock %}
+
+{% block formFieldActions %}
+    [{
+    "field": "overrideTemplate",
+    "trigger": "init",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".template-override-controls": { "display": "none" },
+    ".template-selector-control": { "display": "block" }
+    }
+    },{
+    "field": "overrideTemplate",
+    "trigger": "change",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".template-override-controls": { "display": "none" },
+    ".template-selector-control": { "display": "block" }
+    }
+    },{
+    "field": "overrideTemplate",
+    "trigger": "init",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".template-override-controls": { "display": "block" },
+    ".template-selector-control": { "display": "none" }
+    }
+    },{
+    "field": "overrideTemplate",
+    "trigger": "change",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".template-override-controls": { "display": "block" },
+    ".template-selector-control": { "display": "none" }
+    }
+    },{
+    "field": "effect",
+    "trigger": "init",
+    "value": "",
+    "operation": "equals",
+    "actions": {
+    ".effect-controls": { "display": "none" },
+    ".background-color-group": { "display": "none" }
+    }
+    },{
+    "field": "effect",
+    "trigger": "change",
+    "value": "",
+    "operation": "equals",
+    "actions": {
+    ".effect-controls": { "display": "none" },
+    ".background-color-group": { "display": "none" }
+    }
+    },{
+    "field": "effect",
+    "trigger": "init",
+    "value": "",
+    "operation": "not",
+    "actions": {
+    ".effect-controls": { "display": "block" },
+    ".background-color-group": { "display": "block" }
+    }
+    },{
+    "field": "effect",
+    "trigger": "change",
+    "value": "",
+    "operation": "not",
+    "actions": {
+    ".effect-controls": { "display": "block" },
+    ".background-color-group": { "display": "block" }
+    }
+    }]
+{% endblock %}
 
 {% block formHtml %}
     <div class="row">
@@ -91,12 +168,17 @@
             <ul class="nav nav-tabs" role="tablist">
                 <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
                 <li><a href="#template" role="tab" data-toggle="tab"><span>{% trans "Template" %}</span></a></li>
-                <li><a href="#effect" role="tab" data-toggle="tab"><span>{% trans "Effect" %}</span></a></li>
+                <li><a href="#effectTab" role="tab" data-toggle="tab"><span>{% trans "Effect" %}</span></a></li>
                 <li><a href="#advanced" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
             </ul>
             <form id="twitterAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("module.widget.add", {type: module.widget.type, id: playlist.playlistId}) }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
+                        {% if module.getSetting("apiKey") == "" or module.getSetting("apiSecret") == "" %}
+                            {% set message %}{% trans "The Twitter Widget has not been configured yet, please ask your CMS Administrator to look at it for you." %}{% endset %}
+                            {{ forms.message(message, "alert alert-danger") }}
+                        {% endif %}
+
                         {% set title %}{% trans "Name" %}{% endset %}
                         {% set helpText %}{% trans "An optional name for this media" %}{% endset %}
                         {{ forms.text("name", title, "", helpText) }}
@@ -107,7 +189,7 @@
 
                         {% set title %}{% trans "Search Term" %}{% endset %}
                         {% set helpText %}{% trans "Search term. You can test your search term in the twitter.com search box first." %}{% endset %}
-                        {{ forms.text("searchTerm", title, "", helpText), "", "required" }}
+                        {{ forms.text("searchTerm", title, "", helpText, "", "required") }}
 
                         {% set title %}{% trans "Type" %}{% endset %}
                         {% set helpText %}{% trans "Recent shows only the most recent tweets, Popular the most popular and Mixed includes both popular and recent results." %}{% endset %}
@@ -131,38 +213,36 @@
                     </div>
 
                     <div class="tab-pane" id="template">
-                        {#
+
                         {% set title %}{% trans "Template" %}{% endset %}
                         {% set helpText %}{% trans "Select the template you would like to apply. This can be overridden using the check box below." %}{% endset %}
-                        {{ forms.dropdown("templateId", title, module.getOption("templateId", "tweet-only"), module.,"id", "value", helptext, "", "template-selector-control") }}
-                        
-                        $this->module->settings['templates'] is in twitter.php, not sure how to refrence it here
-                        #}
+                        {{ forms.dropdown("templateId", "single", title, module.getOption("templateId", "tweet-only"), module.templatesAvailable(),"id", "value", helptext, "template-selector-control") }}
 
                         {% set title %}{% trans "Override the template?" %}{% endset %}
                         {% set helpText %}{% trans "Tick if you would like to override the template." %}{% endset %}
                         {{ forms.checkbox("overrideTemplate", title, module.getOption("overrideTemplate", 0), helpText) }}
 
                         {% set helpText %}{% trans "Enter the template. Please note that the background colour has automatically coloured to your layout background colour." %}{% endset %}
-                        {{ forms.textarea("ta_text", "", "", helpText, "", 10, "", "template-override-controls") }}
+                        {{ forms.textarea("ta_text", "", "", helpText, "template-override-controls", "", 10) }}
 
                         {% set title %}{% trans "Optional Stylesheet" %}{% endset %}
-                        {{ forms.textarea("ta_css", "", "", title, "", 10, "", "template-override-controls") }}
+                        {{ forms.textarea("ta_css", "", "", title, "template-override-controls", "", 10) }}
 
 
                     </div>
 
-                    <div class="tab-pane" id="effect">
+                    <div class="tab-pane" id="effectTab">
 
                         {% set title %}{% trans "Effect" %}{% endset %}
                         {% set helpText %}{% trans "Please select the effect that will be used to transition between items. If all items should be output, select None. Marquee effects are CPU intensive and may not be suitable for lower power displays." %}{% endset %}
+                        {% set noneOption %}{% trans "None" %}{% endset %}
                         {% set fade %}{% trans "Fade" %}{% endset %}
                         {% set fadeout %}{% trans "Fade Out" %}{% endset %}
                         {% set scrollHorz %}{% trans "Scroll Horizontal" %}{% endset %}
                         {% set scrollVert %}{% trans "Scroll Vertical" %}{% endset %}
                         {% set flipHorz %}{% trans "Flip Horizontal" %}{% endset %}
                         {% set flipVert %}{% trans "Flip Vertical" %}{% endset %}
-                        {% set shuffle %}{% trans "shuffle" %}{% endset %}
+                        {% set shuffle %}{% trans "Shuffle" %}{% endset %}
                         {% set tileSlide %}{% trans "Tile Slide" %}{% endset %}
                         {% set tileBlind %}{% trans "Tile Blind" %}{% endset %}
                         {% set marqueeLeft %}{% trans "Marquee Left" %}{% endset %}
@@ -170,33 +250,33 @@
                         {% set marqueeUp %}{% trans "Marquee Up" %}{% endset %}
                         {% set marqueeDown %}{% trans "Marquee Down" %}{% endset %}
                         {% set options = [
-                        { effectid: "", effect: none },
-                        { effectid: fade, effect: fade },
-                        { effectid: fadeout, effect: fadeout},
-                        { effectid: scrollHorz, effect: scrollHorz},
-                        { effectid: scrollVert, effect: scrollVert},
-                        { effectid: flipHorz, effect: flipHorz},
-                        { effectid: flipVert, effect: flipVert},
-                        { effectid: shuffle, effect: shuffle},
-                        { effectid: tileSlide, effect: tileSlide},
-                        { effectid: tileBlind, effect: tileBlind},
-                        { effectid: marqueeLeft, effect: marqueeLeft},
-                        { effectid: marqueeRight, effect: marqueeRight},
-                        { effectid: marqueeUp, effect: marqueeUp},
-                        { effectid: marqueeDown, effect: marqueeDown}
+                        { effectid: "none", effect: noneOption },
+                        { effectid: "fade", effect: fade },
+                        { effectid: "fadeout", effect: fadeout},
+                        { effectid: "scrollHorz", effect: scrollHorz},
+                        { effectid: "scrollVert", effect: scrollVert},
+                        { effectid: "flipHorz", effect: flipHorz},
+                        { effectid: "flipVert", effect: flipVert},
+                        { effectid: "shuffle", effect: shuffle},
+                        { effectid: "tileSlide", effect: tileSlide},
+                        { effectid: "tileBlind", effect: tileBlind},
+                        { effectid: "marqueeLeft", effect: marqueeLeft},
+                        { effectid: "marqueeRight", effect: marqueeRight},
+                        { effectid: "marqueeUp", effect: marqueeUp},
+                        { effectid: "marqueeDown", effect: marqueeDown}
                         ] %}
-                        {{ forms.dropdown("effect", "single", title, module.getOption("effect"), "effectid", "effect", helpText) }}
+                        {{ forms.dropdown("effect", "single", title, module.getOption("effect"), options, "effectid", "effect", helpText) }}
 
                         {% set title %}{% trans "Speed" %}{% endset %}
                         {% set helpText %}{% trans "The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1)." %}{% endset %}
-                        {{ forms.number("speed", title, "", helpText, "", "effect-controls") }}
+                        {{ forms.number("speed", title, "", helpText, "effect-controls") }}
                     </div>
 
                     <div class="tab-pane" id="advanced">
 
                         {% set title %}{% trans "Background Colour" %}{% endset %}
                         {% set helpText %}{% trans "The selected effect works best with a background colour. Optionally add one here." %}{% endset %}
-                        {{ forms.text("backgroundColor", title, "", helpText, "", "", "background-color-group") }}
+                        {{ forms.text("backgroundColor", title, "", helpText, "background-color-group") }}
                         
                         {% set title %}{% trans "No tweets" %}{% endset %}
                         {% set helpText %}{% trans "A message to display when there are no tweets returned by the search query" %}{% endset %}

@@ -72,6 +72,7 @@ class DataSet extends Base
             if ($this->isApi())
                 break;
 
+            $dataSet->includeProperty('buttons');
             $dataSet->buttons = [];
             $dataSet->importColumns = [];
 
