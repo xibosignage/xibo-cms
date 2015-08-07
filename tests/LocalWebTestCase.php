@@ -40,7 +40,7 @@ class LocalWebTestCase extends WebTestCase
                 new \Xibo\Helper\LogProcessor(),
                 new \Monolog\Processor\UidProcessor(7)
             )
-        ));
+        ), false);
 
         $app = new Slim(array(
             'mode' => 'phpunit',

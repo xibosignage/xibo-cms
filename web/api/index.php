@@ -44,7 +44,7 @@ $logger = new \Flynsarmy\SlimMonolog\Log\MonologWriter(array(
         new \Xibo\Helper\LogProcessor(),
         new \Monolog\Processor\UidProcessor(7)
     )
-));
+), false);
 
 $app = new \Slim\Slim(array(
     'mode' => Config::GetSetting('SERVER_MODE'),
