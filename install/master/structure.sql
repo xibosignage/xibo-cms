@@ -1019,7 +1019,7 @@ CREATE TABLE IF NOT EXISTS `widgetoption` (
   `widgetId` int(11) NOT NULL,
   `type` varchar(50) NOT NULL,
   `option` varchar(254) NOT NULL,
-  `value` text NOT NULL,
+  `value` text NULL,
   PRIMARY KEY (`widgetId`,`type`,`option`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 

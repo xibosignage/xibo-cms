@@ -151,10 +151,6 @@ abstract class Module implements ModuleInterface
      */
     final protected function setOption($name, $value)
     {
-        // Never any point setting a null value
-        if ($value === null)
-            return;
-
         $this->widget->setOptionValue($name, 'attrib', $value);
     }
 

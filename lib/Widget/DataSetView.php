@@ -24,6 +24,7 @@ use InvalidArgumentException;
 use Respect\Validation\Validator as v;
 use Xibo\Entity\DataSetColumn;
 use Xibo\Exception\NotFoundException;
+use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Helper\Log;
@@ -50,6 +51,18 @@ class DataSetView extends Module
     public function dataSets()
     {
         return DataSetFactory::query();
+    }
+
+    /**
+     * Get Data Set Columns
+     * @return array[DataSetColumn]
+     */
+    public function dataSetColumns()
+    {
+        if ($this->getOption('dataSetId') == 0)
+            throw new \InvalidArgumentException(__('DataSet not selected'));
+
+        return DataSetColumnFactory::getByDataSetId($this->getOption('dataSetId'));
     }
 
     /**

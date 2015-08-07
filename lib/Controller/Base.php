@@ -302,7 +302,7 @@ class Base
         $view = $app->view()->getInstance()->render($state->template . '.twig', $data);
 
         // Log Rendered View
-        Log::debug('%s View: %s', $state->template, $view);
+        // Log::debug('%s View: %s', $state->template, $view);
 
         if (!$view = json_decode($view, true)) {
             Log::error('Problem with Template: View = %s ', $state->template);

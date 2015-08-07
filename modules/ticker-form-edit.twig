@@ -4,70 +4,6 @@
  * Copyright (C) 2015 Spring Signage Ltd
  * (${FILE_NAME})
  */
-
-        // Data Set Source
-
-            Theme::Set('columns', \Xibo\Storage\PDOConnect::select(sprintf("SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetID = %d ", $dataSetId), array()));
-
-            $formFields['template'][] = Form::AddRaw(Theme::RenderReturn('media_form_ticker_dataset_edit'));
-        } else {
-
-            $subs = array(
-                array('Substitute' => 'Name'),
-                array('Substitute' => 'Title'),
-                array('Substitute' => 'Description'),
-                array('Substitute' => 'Date'),
-                array('Substitute' => 'Content'),
-                array('Substitute' => 'Copyright'),
-                array('Substitute' => 'Link'),
-                array('Substitute' => 'PermaLink'),
-                array('Substitute' => 'Tag|Namespace')
-            );
-            Theme::Set('substitutions', $subs);
-
-            $formFieldSubs = Form::AddRaw(Theme::RenderReturn('media_form_ticker_edit'));
-
-
-
-            // Encode up the template
-            //$formFields['advanced'][] = Form::AddMessage('<pre>' . htmlentities(json_encode(array('id' => 'media-rss-with-title', 'value' => 'Image overlaid with the Title', 'template' => '<div class="image">[Link|image]<div class="cycle-overlay"><p style="font-family: Arial, Verdana, sans-serif; font-size:48px;">[Title]</p></div></div>', 'css' => '.image img { width:100%;}.cycle-overlay {color: white;background: black;opacity: .6;filter: alpha(opacity=60);position: absolute;bottom: 0;width: 100%;padding: 15px;text-align:center;}'))) . '</pre>');
-        }
-
-
-        // Dependencies and stuff
-
-
-        if ($this->GetOption('sourceId') == 1) {
-
-            // Append the templates to the response
-            $response->extra = $this->module->settings['templates'];
-
-            $formFields['template'][] = $formFieldSubs;
-
-            // Add some field dependencies
-            // When the override template check box is ticked, we want to expose the advanced controls and we want to hide the template selector
-            
-            $response->AddFieldAction('overrideTemplate', 'init', false,
-                array(
-                    '.template-override-controls' => array('display' => 'none'),
-                    '.template-selector-control' => array('display' => 'block')
-                ), 'is:checked');
-            $response->AddFieldAction('overrideTemplate', 'change', false,
-                array(
-                    '.template-override-controls' => array('display' => 'none'),
-                    '.template-selector-control' => array('display' => 'block')
-                ), 'is:checked');
-            $response->AddFieldAction('overrideTemplate', 'init', true,
-                array(
-                    '.template-override-controls' => array('display' => 'block'),
-                    '.template-selector-control' => array('display' => 'none')
-                ), 'is:checked');
-            $response->AddFieldAction('overrideTemplate', 'change', true,
-                array(
-                    '.template-override-controls' => array('display' => 'block'),
-                    '.template-selector-control' => array('display' => 'none')
-                ), 'is:checked');
-        }
 #}
 
 {% extends "form-base.twig" %}
@@ -167,7 +103,7 @@
                 {% set marqueeUp %}{% trans "Marquee Up" %}{% endset %}
                 {% set marqueeDown %}{% trans "Marquee Down" %}{% endset %}
                 {% set options = [
-                { effectid: "", effect: noneOption },
+                { effectid: "none", effect: noneOption },
                 { effectid: "fade", effect: fade },
                 { effectid: "fadeout", effect: fadeout},
                 { effectid: "scrollHorz", effect: scrollHorz},
@@ -209,10 +145,10 @@
                 {% set fieldItemsSideBySide %}{{ forms.checkbox("itemsSideBySide", title, module.getOption("itemsSideBySide"), helpText) }}{% endset %}
 
                 {% set helpText %}{% trans "Enter the template. Please note that the background colour has automatically coloured to your layout background colour." %}{% endset %}
-                {% set fieldTemplate %}{{ forms.textarea("ta_text", "", module.getRawMode("template"), helpText, "template-override-controls", "", 10) }}{% endset %}
+                {% set fieldTemplate %}{{ forms.textarea("ta_text", "", module.getRawNode("template"), helpText, "template-override-controls", "", 10) }}{% endset %}
 
                 {% set title %}{% trans "Optional Stylesheet" %}{% endset %}
-                {% set fieldStyleSheet %}{{ forms.textarea("ta_css", "", module.getRawMode("styleSheet"), title, "template-override-controls", "", 10) }}{% endset %}
+                {% set fieldStyleSheet %}{{ forms.textarea("ta_css", "", module.getRawNode("styleSheet"), title, "template-override-controls", "", 10) }}{% endset %}
 
                 {# Different fields for each type of Ticker #}
                 {% if module.getOption("sourceId") == 1 %}
@@ -227,16 +163,32 @@
                         {{ fieldEffect }}
                     </div>
                     <div class="tab-pane" id="template">
-                        {{ fieldTemplate }}
-                        {{ fieldStyleSheet }}
+
+                        {% set title %}{% trans "Template" %}{% endset %}
+                        {% set helpText %}{% trans "Select the template you would like to apply. This can be overridden using the check box below." %}{% endset %}
+                        {{ forms.dropdown("templateId", "single", title, module.getOption("templateId", "tweet-only"), module.templatesAvailable(), "id", "value", helptext, "template-selector-control") }}
 
                         {% set title %}{% trans "Override the template?" %}{% endset %}
                         {% set helpText %}{% trans "Tick if you would like to override the template." %}{% endset %}
                         {{ forms.checkbox("overrideTemplate", title, module.getOption("overrideTemplate", 0), helpText) }}
 
-                        {% set title %}{% trans "Template" %}{% endset %}
-                        {% set helpText %}{% trans "Select the template you would like to apply. This can be overridden using the check box below." %}{% endset %}
-                        {{ forms.dropdown("templateId", "single", title, module.getOption("templateId", "tweet-only"), module.templatesAvailable(), "id", "value", helptext, "template-selector-control") }}
+                        <div class="well template-override-controls">
+                            <div class="text-center text-info">{% trans "Available Substitutions" %}</div>
+                            <ul id="TickerDataSetColumns">
+                                <li class="ckeditor_snippits" linkedto="ta_text">Name</li>
+                                <li class="ckeditor_snippits" linkedto="ta_text">Title</li>
+                                <li class="ckeditor_snippits" linkedto="ta_text">Description</li>
+                                <li class="ckeditor_snippits" linkedto="ta_text">Date</li>
+                                <li class="ckeditor_snippits" linkedto="ta_text">Content</li>
+                                <li class="ckeditor_snippits" linkedto="ta_text">Copyright</li>
+                                <li class="ckeditor_snippits" linkedto="ta_text">Link</li>
+                                <li class="ckeditor_snippits" linkedto="ta_text">PermaLink</li>
+                                <li class="ckeditor_snippits" linkedto="ta_text">Tag|Namespace</li>
+                            </ul>
+                        </div>
+
+                        {{ fieldTemplate }}
+                        {{ fieldStyleSheet }}
                     </div>
                     <div class="tab-pane" id="format">
                         {{ fieldSpeed }}
@@ -312,6 +264,14 @@
                         {{ forms.text("filter", title, module.getOption("filter"), helpText) }}
                     </div>
                     <div class="tab-pane" id="template">
+                        <div class="well">
+                            <div class="text-center text-info">{% trans "Available Substitutions" %}</div>
+                            <ul id="TickerDataSetColumns">
+                                {% for column in module.dataSetColumns() %}
+                                <li class="ckeditor_snippits" linkedto="ta_text" datasetcolumnid="{{ column.dataSetColumnId }}">{{ column.heading }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
                         {{ fieldTemplate }}
                         {{ fieldStyleSheet }}
                     </div>

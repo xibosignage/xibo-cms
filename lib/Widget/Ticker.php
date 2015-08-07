@@ -24,6 +24,7 @@ use Respect\Validation\Validator as v;
 use Xibo\Controller\Library;
 use Xibo\Entity\DataSetColumn;
 use Xibo\Exception\NotFoundException;
+use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Helper\Date;
@@ -53,6 +54,18 @@ class Ticker extends Module
     public function dataSets()
     {
         return DataSetFactory::query();
+    }
+
+    /**
+     * Get Data Set Columns
+     * @return array[DataSetColumn]
+     */
+    public function dataSetColumns()
+    {
+        if ($this->getOption('dataSetId') == 0)
+            throw new \InvalidArgumentException(__('DataSet not selected'));
+
+       return DataSetColumnFactory::getByDataSetId($this->getOption('dataSetId'));
     }
 
     /**
@@ -164,6 +177,7 @@ class Ticker extends Module
      */
     public function edit()
     {
+        Log::error('Num Items ' . Sanitize::getInt('numItems'));
         // Source is selected during add() and cannot be edited.
         // Other properties
         $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
@@ -645,9 +659,9 @@ class Ticker extends Module
                     $replace = $row[$header];
 
                     // Check in the columns array to see if this is a special one
-                    if ($mappings[$header]['dataTypeID'] == 4) {
+                    if ($mappings[$header]['dataTypeId'] == 4) {
                         // Download the image, alter the replace to wrap in an image tag
-                        $file = MediaFactory::createModuleFile('ticker_dataset_' . md5($dataSetId . $mappings[$header]['dataSetColumnID'] . $replace), str_replace(' ', '%20', htmlspecialchars_decode($replace)));
+                        $file = MediaFactory::createModuleFile('ticker_dataset_' . md5($dataSetId . $mappings[$header]['dataSetColumnId'] . $replace), str_replace(' ', '%20', htmlspecialchars_decode($replace)));
                         $file->isRemote = true;
                         $file->expires = $expires;
                         $file->save();
