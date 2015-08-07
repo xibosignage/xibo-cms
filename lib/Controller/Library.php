@@ -156,6 +156,10 @@ class Library extends Base
                 $media->thumbnail = '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' . $download . '"><img src="' . $download . '&width=100&height=56" /></i></a>';
             }
 
+            if ($this->isApi())
+                    break;
+
+            $media->includeProperty('buttons');
             $media->buttons = array();
 
             // Buttons

@@ -56,7 +56,7 @@
                     <span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu">
-                    <li><a class="XiboAjaxSubmit" href="{{ urlFor("region.add", {id: layout.layoutId}) }}"><span>{% trans "Add Region" %}</span></a></li>
+                    <li><a id="regionAddButton" href="{{ urlFor("region.add", {id: layout.layoutId}) }}"><span>{% trans "Add Region" %}</span></a></li>
                     <li><a class="XiboFormButton" href="{{ urlFor("layout.edit.form", {id: layout.layoutId}) }}" title="{% trans "Edit the Layout Properties" %}"><span>{% trans "Background Properties" %}</span></a></li>
                     <li class="divider"></li>
                     <li><a href="{{ urlFor("layout.preview", {id: layout.layoutId}) }}" target="_blank"><span>{% trans "Preview Layout" %}</span></a></li>
@@ -361,5 +361,49 @@
             timelineWidgetTabel.on('draw', dataTableDraw);
             timelineWidgetTabel.on('processing.dt', dataTableProcessing);
         }
+
+        function DeleteRegion(form, regionId) {
+            $.ajax({
+                type: form.attr("method"),
+                url: form.attr("action"),
+                cache: false,
+                dataType: "json",
+                data: form.serialize(),
+                success: function(xhr, textStatus, error) {
+
+                    XiboSubmitResponse(xhr, form);
+
+                    if (xhr.success)
+                        $("#region_" + regionId).remove();
+                },
+                error: function(xhr, textStatus, errorThrown) {
+                    SystemMessage(xhr.responseText, false);
+                }
+            });
+        }
+
+        // Bind to the add button when we load
+        $(document).ready(function() {
+
+            // Add region button
+            $("#regionAddButton").click(function(e) {
+                e.preventDefault();
+                $.ajax({
+                    type: "post",
+                    url: $(this).attr("href"),
+                    cache:false,
+                    dataType:"json",
+                    success: function(xhr, textStatus, error) {
+
+                        XiboSubmitResponse(xhr);
+
+                        if (xhr.success) {
+                            // Reload the designer
+                            window.location.reload();
+                        }
+                    }
+                });
+            });
+        });
     </script>
 {% endblock %}

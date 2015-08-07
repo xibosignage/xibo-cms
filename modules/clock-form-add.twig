@@ -127,7 +127,7 @@
                 {{ forms.dropdown("themeId", "single", title, "", options, "id", "value", helpText, "analogue-control-group") }}
 
                 {% set message %}{% trans "Enter a format for the Digital Clock below. e.g. [HH:mm] or [DD/MM/YYYY]. See the manual for more information." %}{% endset %}
-                {{ forms.message(message, "digital-control-group") }}
+                {{ forms.message(message, "digital-control-group", "[HH:mm]") }}
 
                 {% set helpText %}{% trans "Enter a format for the clock" %}{% endset %}
                 {{ forms.textarea("ta_text", "", "", helpText, "digital-control-group") }}

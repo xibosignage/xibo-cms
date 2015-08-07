@@ -164,6 +164,13 @@ class Region extends Base
         if (!$this->getUser()->checkEditable($layout))
             throw new AccessDeniedException();
 
+        $layout->load([
+            'loadPlaylists' => false,
+            'loadTags' => false,
+            'loadPermissions' => false,
+            'loadCampaigns' => false
+        ]);
+
         // Add a new region
         $region = RegionFactory::create($this->getUser()->userId, $layout->layout . '-' . (count($layout->regions) + 1),
             Sanitize::getInt('width', 250), Sanitize::getInt('height', 250), Sanitize::getInt('top', 50), Sanitize::getInt('left', 50));
