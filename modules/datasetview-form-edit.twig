@@ -4,69 +4,6 @@
  * Copyright (C) 2015 Spring Signage Ltd
  * (${FILE_NAME})
  */
-// We want 2 tabs
-        $tabs = array();
-        $tabs[] = Form::AddTab('general', __('General'));
-        $tabs[] = Form::AddTab('advanced', __('Advanced'));
-        Theme::Set('form_tabs', $tabs);
-
-        $formFields = array();
-
-
-        // Handle the columns
-        $columns = $this->GetOption('columns');
-
-        if ($columns != '') {
-            // Query for more info about the selected and available columns
-            $notColumns = \Xibo\Storage\PDOConnect::select(sprintf("SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetID = %d AND DataSetColumnID NOT IN (%s)", $this->GetOption('datasetid'), $columns), array());
-
-            // These columns need to be in order
-            $columnIds = explode(',', $columns);
-            $headings = array();
-
-            foreach ($columnIds as $col) {
-                $heading = \Xibo\Storage\PDOConnect::select(sprintf('SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetColumnID = %d', $col), array());
-                $headings[] = $heading[0]['Heading'];
-            }
-
-            $columns = $headings;
-        } else {
-            $columns = array();
-            $notColumns = \Xibo\Storage\PDOConnect::select(sprintf("SELECT DataSetColumnID, Heading FROM datasetcolumn WHERE DataSetID = %d ", $this->GetOption('datasetid')), array());
-        }
-
-        // Build the two lists
-        $columnsSelected = '<ul id="columnsIn" class="connectedSortable">';
-        $columnsNotSelected = '<ul id="columnsOut" class="connectedSortable">';
-
-        foreach ($columns as $col)
-            $columnsSelected .= '<li id="DataSetColumnId_' . $col['DataSetColumnID'] . '" class="li-sortable">' . $col['Heading'] . '</li>';
-
-        $columnsSelected .= '</ul>';
-
-        foreach ($notColumns as $notCol)
-            $columnsNotSelected .= '<li id="DataSetColumnId_' . $notCol['DataSetColumnID'] . '" class="li-sortable">' . $notCol['Heading'] . '</li>';
-
-        $columnsNotSelected .= '</ul>';
-
-        Theme::Set('columns_selected_list', $columnsSelected);
-        Theme::Set('columns_available_list', $columnsNotSelected);
-
-        // Add the columns in as a RAW message
-        $formFields[] = Form::AddRaw(Theme::RenderReturn('media_form_datasetview_edit'));
-
-        Theme::Set('form_fields_general', $formFields);
-
-        // Advanced Tab
-        $formFields = array();
-        
-
-        Theme::Set('form_fields_advanced', $formFields);
-
-        $response->SetFormRequestResponse(NULL, 'Edit DataSet View for DataSet', '650px', '575px');
-
-        $this->configureFormButtons($response);
-        $response->callBack = 'datasetview_callback';
 #}
 
 {% extends "form-base.twig" %}
@@ -77,12 +14,12 @@
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, $("#tickerEditForm").submit()
+    {% trans "Apply" %}, DataSetViewSubmit()
+    {% trans "Save" %}, DataSetViewSubmit()
 {% endblock %}
 
-{% block callBack %}forecastIoFormSetup{% endblock %}
+{% block callBack %}datasetview_callback{% endblock %}
 
 {% block formHtml %}
     <div class="row">
@@ -90,28 +27,42 @@
             <ul class="nav nav-tabs" role="tablist">
                 <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
                 <li><a href="#advanced" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
-
             </ul>
-            <form id="tickerEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
+            <form id="dataSetViewEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
-                        {{ forms.hidden("dataSetId", module.getOption("datasetid")) }}
-                        
                         {% set title %}{% trans "Duration" %}{% endset %}
                         {% set helpText %}{% trans "The duration in seconds this item should be displayed" %}{% endset %}
-                        {{ forms.number("duration", title, module.getDuration(), helpText, "", "required", "", $this->auth->modifyPermissions) ) }}
+                        {{ forms.number("duration", title, module.getDuration(), helpText, "", "required") }}
 
-                        {% set title %}{% trans "Order" %{% endset %}}
+                        {% set title %}{% trans "Order" %}{% endset %}
                         {% set helpText %}{% trans "Please enter a SQL clause for how this dataset should be ordered" %}{% endset %}
-                        {{ forms.text("ordering", title, module.getoption("ordering"), helpText)}}
+                        {{ forms.text("ordering", title, module.getoption("ordering"), helpText) }}
 
-                        {% set title %}{% trans "Filter" %{% endset %}}
+                        {% set title %}{% trans "Filter" %}{% endset %}
                         {% set helpText %}{% trans "Please enter a SQL clause to filter this DataSet." %}{% endset %}
-                        {{ forms.text("filter", title, module.getoption("filter"), helpText)}}
+                        {{ forms.text("filter", title, module.getoption("filter"), helpText) }}
 
-                        {% set title %}{% trans "Show the table headings?" %{% endset %}}
+                        {% set title %}{% trans "Show the table headings?" %}{% endset %}
                         {% set helpText %}{% trans "Should the Table headings be shown?" %}{% endset %}
-                        {{ forms.checkbox("showHeadings", title, module.getoption("showHeadings"), helpText)}}      
+                        {{ forms.checkbox("showHeadings", title, module.getoption("showHeadings"), helpText) }}
+
+                        <div class="connectedlist col-sm-6">
+                            <p class="text-info">{% trans "Columns Selected" %}</p>
+                            <ul id="columnsIn" class="connectedSortable">
+                                {% for column in module.dataSetColumnsSelected() %}
+                                    <li id="{{ column.dataSetColumnId }}" class="li-sortable">{{ column.heading }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        <div class="connectedlist col-sm-6">
+                            <p class="text-info">{% trans "Columns Available" %}</p>
+                            <ul id="columnsOut" class="connectedSortable">
+                                {% for column in module.dataSetColumnsNotSelected() %}
+                                    <li id="{{ column.dataSetColumnId }}" class="li-sortable">{{ column.heading }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
                     </div>
 
                     <div class="tab-pane" id="advanced">
@@ -132,7 +83,7 @@
                         {{ forms.number("rowsPerPage", title, module.getOption("rowsPerPage"), helpText) }}
 
                         {% set title %}{% trans "Enter a style sheet for the table" %}{% endset %}
-                        {{ forms.textarea("stylesheet", "", module.getRawMode("styleSheet", module.defaultStyleSheet() $this->DefaultStyleSheet()), title, "", 10) }}
+                        {{ forms.textarea("stylesheet", "", module.getRawMode("styleSheet", module.defaultStyleSheet()), title, "", 10) }}
                     </div>
                 </div>
             </form>

@@ -57,12 +57,45 @@ class DataSetView extends Module
      * Get Data Set Columns
      * @return array[DataSetColumn]
      */
-    public function dataSetColumns()
+    public function dataSetColumnsSelected()
     {
         if ($this->getOption('dataSetId') == 0)
             throw new \InvalidArgumentException(__('DataSet not selected'));
 
-        return DataSetColumnFactory::getByDataSetId($this->getOption('dataSetId'));
+        $columns = DataSetColumnFactory::getByDataSetId($this->getOption('dataSetId'));
+        $columnsSelected = [];
+        $colIds = explode(',', $this->getOption('columns'));
+
+        foreach ($columns as $column) {
+            /* @var DataSetColumn $column */
+            if (in_array($column->dataSetColumnId, $colIds))
+                $columnsSelected[] = $column;
+        }
+
+        return $columnsSelected;
+    }
+
+    /**
+     * Get Data Set Columns
+     * @return array[DataSetColumn]
+     */
+    public function dataSetColumnsNotSelected()
+    {
+        if ($this->getOption('dataSetId') == 0)
+            throw new \InvalidArgumentException(__('DataSet not selected'));
+
+        $columns = DataSetColumnFactory::getByDataSetId($this->getOption('dataSetId'));
+
+        $columnsNotSelected = [];
+        $colIds = explode(',', $this->getOption('columns'));
+
+        foreach ($columns as $column) {
+            /* @var DataSetColumn $column */
+            if (!in_array($column->dataSetColumnId, $colIds))
+                $columnsNotSelected[] = $column;
+        }
+
+        return $columnsNotSelected;
     }
 
     /**
@@ -84,11 +117,15 @@ class DataSetView extends Module
 
         if ($this->getWidgetId() != 0) {
 
-            if (!v::int()->notEmpty()->min(0)->validate($this->getOption('upperLimit')))
-                throw new InvalidArgumentException(__('Upper Limit must be a number greater than or equal to 0.'));
+            if (!is_numeric($this->getOption('upperLimit')) || !is_numeric($this->getOption('lowerLimit')))
+                throw new \InvalidArgumentException(__('Limits must be numbers'));
 
-            if (!v::int()->notEmpty()->min(0)->validate($this->getOption('lowerLimit')))
-                throw new InvalidArgumentException(__('Lower Limit must be a number greater than or equal to 0.'));
+            if ($this->getOption('upperLimit') < 0 || $this->getOption('lowerLimit') < 0)
+                throw new \InvalidArgumentException(__('Limits cannot be lower than 0'));
+
+            // Check the bounds of the limits
+            if ($this->getOption('upperLimit') < $this->getOption('lowerLimit'))
+                throw new \InvalidArgumentException(__('Upper limit must be higher than lower limit'));
 
             if (!v::int()->notEmpty()->min(0)->validate($this->getOption('updateInterval')))
                 throw new InvalidArgumentException(__('Update Interval must be greater than or equal to 0'));
@@ -130,8 +167,8 @@ class DataSetView extends Module
         $this->setOption('name', Sanitize::getString('name'));
         $this->setOption('rowsPerPage', Sanitize::getInt('rowsPerPage'));
         $this->setOption('showHeadings', Sanitize::getCheckbox('showHeadings'));
-        $this->setOption('upperLimit', Sanitize::getInt('upperLimit'));
-        $this->setOption('lowerLimit', Sanitize::getInt('lowerLimit'));
+        $this->setOption('upperLimit', Sanitize::getInt('upperLimit', 0));
+        $this->setOption('lowerLimit', Sanitize::getInt('lowerLimit', 0));
         $this->setOption('filter', Sanitize::getString('filter'));
         $this->setOption('ordering', Sanitize::getString('ordering'));
 

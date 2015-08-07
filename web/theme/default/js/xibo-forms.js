@@ -108,9 +108,14 @@ var datasetview_callback = function(dialog)
 }
 
 var DataSetViewSubmit = function() {
-    var form = $("#ModuleForm");
-    // Get the two lists
-    form.attr('action', form.attr('action') + "&ajax=true&" + $("#columnsIn").sortable('serialize')).submit();
+    var form = $("#dataSetViewEditForm");
+
+    $($("#columnsIn").sortable('toArray')).each(function() {
+        form.append('<input type="hidden" name="dataSetColumnId[]" value="' + this + '" />');
+    });
+
+    // Submit the form
+    form.submit();
 };
 
 /**
