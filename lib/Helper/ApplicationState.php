@@ -30,6 +30,7 @@ class ApplicationState
     public $buttons;
     public $fieldActions;
     public $dialogTitle;
+    public $callBack;
 
     public $login;
     public $clockUpdate;
@@ -93,6 +94,7 @@ class ApplicationState
         $response['buttons'] = $this->buttons;
         $response['fieldActions'] = $this->fieldActions;
         $response['dialogTitle'] = $this->dialogTitle;
+        $response['callBack'] = $this->callBack;
 
         $response['success'] = $this->success;
         $response['message'] = $this->message;

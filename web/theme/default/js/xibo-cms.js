@@ -453,6 +453,11 @@ function XiboFormRender(formUrl, data) {
                         });
                 }
 
+                // Do we have to call any functions due to this success?
+                if (response.callBack != "" && response.callBack != undefined) {
+                    eval(response.callBack)(dialog);
+                }
+
                 $('input[type=text]', dialog).eq(0).focus();
 
                 // Set up dependencies between controls
