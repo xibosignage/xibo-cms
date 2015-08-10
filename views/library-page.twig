@@ -38,10 +38,6 @@
                             {% set values = [{id: 1, value: "Yes"}, {id: 0, value: "No"}] %}
                             {{ inline.dropdown("filter_retired", "single", "Retired", defaults.retired, values, "id", "value") }}
 
-                            {{ inline.checkbox("filter_duration_in_seconds", "Duration in Seconds", defaults.durationInSeconds) }}
-                            {{ inline.checkbox("showTags", "Show Tags", defaults.showTags) }}
-                            {{ inline.checkbox("filter_showThumbnail", "Show Thumbnails", defaults.showThumbnail) }}
-
                             {{ inline.checkbox("XiboFilterPinned", "Keep Open", defaults.filterPinned) }}
                         </form>
                     </div>
@@ -56,7 +52,9 @@
                                 <th>{% trans "Tag" %}</th>
                                 <th>{% trans "Thumbnail" %}</th>
                                 <th>{% trans "Duration" %}</th>
+                                <th>{% trans "Duration (seconds)" %}</th>
                                 <th>{% trans "Size" %}</th>
+                                <th>{% trans "Size (bytes)" %}</th>
                                 <th>{% trans "Owner" %}</th>
                                 <th>{% trans "Permissions" %}</th>
                                 <th>{% trans "Revised" %}</th>
@@ -91,13 +89,22 @@
                 { "data": "mediaId"},
                 { "data": "name"},
                 { "data": "mediaType"},
-                { "data": "tags"},
+                { "data": "tags", "visible": false},
                 { "data": "thumbnail"},
-                { "data": "duration"},
-                { "data": "fileSize"},
+                {   "name": "duration",
+                    "data": function(data, type) {
+                        if (type != "display")
+                            return data.duration;
+
+                        return moment().startOf("day").seconds(data.duration).format("H:mm:ss");
+                    }
+                },
+                { "data": "duration", "visible": false},
+                { "data": "fileSizeFormatted"},
+                { "data": "fileSize", "visible": false},
                 { "data": "owner"},
                 { "data": "groupsWithPermissions"},
-                { "data": "revised"},
+                { "data": "revised", "render": dataTableTickCrossColumn, "visible": false },
                 { "data": "fileName"},
                 {
                     "orderable": false,
@@ -108,6 +115,7 @@
 
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
+        dataTableAddColVis(table, $('#libraryItems_wrapper').find('.col-sm-6').eq(1));
 
         $("#libraryUploadForm").click(function() {
 

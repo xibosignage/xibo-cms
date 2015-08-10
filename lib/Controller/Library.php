@@ -121,17 +121,11 @@ class Library extends Base
         $filter_name = Sanitize::getString('filter_name');
         $filter_userid = Sanitize::getInt('filter_owner');
         $filter_retired = Sanitize::getInt('filter_retired');
-        $filter_duration_in_seconds = Sanitize::getCheckbox('filter_showThumbnail');
-        $filter_showThumbnail = Sanitize::getCheckbox('filter_showThumbnail');
-        $showTags = Sanitize::getCheckbox('showTags');
 
         $this->getSession()->set('content', 'filter_type', $filter_type);
         $this->getSession()->set('content', 'filter_name', $filter_name);
         $this->getSession()->set('content', 'filter_owner', $filter_userid);
         $this->getSession()->set('content', 'filter_retired', $filter_retired);
-        $this->getSession()->set('content', 'filter_duration_in_seconds', $filter_duration_in_seconds);
-        $this->getSession()->set('content', 'filter_showThumbnail', $filter_showThumbnail);
-        $this->getSession()->set('content', 'showTags', $showTags);
         $this->getSession()->set('content', 'Filter', Sanitize::getCheckbox('XiboFilterPinned'));
 
         // Construct the SQL
@@ -139,8 +133,7 @@ class Library extends Base
             'type' => $filter_type,
             'name' => $filter_name,
             'ownerId' => $filter_userid,
-            'retired' => $filter_retired,
-            'showTags' => $showTags
+            'retired' => $filter_retired
         ]));
 
         // Add some additional row content
@@ -156,8 +149,10 @@ class Library extends Base
                 $media->thumbnail = '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' . $download . '"><img src="' . $download . '&width=100&height=56" /></i></a>';
             }
 
+            $media->fileSizeFormatted = ByteFormatter::format($media->fileSize);
+
             if ($this->isApi())
-                    break;
+                break;
 
             $media->includeProperty('buttons');
             $media->buttons = array();
@@ -449,7 +444,7 @@ class Library extends Base
         $media = MediaFactory::query(null, ['unusedOnly' => 1, 'ownerId' => $this->getUser()->userId]);
 
         $size = ByteFormatter::format(array_sum(array_map(function ($element) {
-            return $element['fileSize'];
+            return $element->fileSize;
         }, $media)));
 
         $this->getState()->template = 'library-form-tidy';

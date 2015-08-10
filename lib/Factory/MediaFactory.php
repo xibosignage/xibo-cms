@@ -202,11 +202,7 @@ class MediaFactory extends BaseFactory
                IFNULL((SELECT parentmedia.mediaid FROM media parentmedia WHERE parentmedia.editedmediaid = media.mediaid),0) AS parentId,
         ';
 
-        if (Sanitize::getInt('showTags', $filterBy) == 1)
-            $select .= " tag.tag AS tags, ";
-        else
-            $select .= " (SELECT GROUP_CONCAT(DISTINCT tag) FROM tag INNER JOIN lktagmedia ON lktagmedia.tagId = tag.tagId WHERE lktagmedia.mediaId = media.mediaID GROUP BY lktagmedia.mediaId) AS tags, ";
-
+        $select .= " (SELECT GROUP_CONCAT(DISTINCT tag) FROM tag INNER JOIN lktagmedia ON lktagmedia.tagId = tag.tagId WHERE lktagmedia.mediaId = media.mediaID GROUP BY lktagmedia.mediaId) AS tags, ";
         $select .= "        `user`.UserName AS owner, ";
         $select .= "     (SELECT GROUP_CONCAT(DISTINCT `group`.group)
                               FROM `permission`
@@ -225,11 +221,6 @@ class MediaFactory extends BaseFactory
         $body .= "   LEFT OUTER JOIN media parentmedia ";
         $body .= "   ON parentmedia.MediaID = media.MediaID ";
         $body .= "   INNER JOIN `user` ON `user`.userId = `media`.userId ";
-
-        if (Sanitize::getInt('showTags', $filterBy) == 1) {
-            $body .= " LEFT OUTER JOIN lktagmedia ON lktagmedia.mediaId = media.mediaId ";
-            $body .= " LEFT OUTER JOIN tag ON tag.tagId = lktagmedia.tagId";
-        }
 
         if (Sanitize::getInt('displayGroupId', $filterBy) !== null) {
             $body .= '
