@@ -59,9 +59,7 @@ class TransitionFactory extends BaseFactory
 
         if ($type == 'in') {
             $filter['availableAsIn'] = 1;
-            $filter['availableAsOut'] = 0;
         } else {
-            $filter['availableAsIn'] = 0;
             $filter['availableAsOut'] = 1;
         }
 

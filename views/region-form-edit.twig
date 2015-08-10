@@ -4,16 +4,6 @@
  * Copyright (C) 2015 Spring Signage Ltd
  * (${FILE_NAME})
  */
-
-            In theory fine, missing:
-
-            // Add some dependencies
-            $response->AddFieldAction('transitionType', 'init', '', array('.transition-group' => array('display' => 'none')));
-            $response->AddFieldAction('transitionType', 'init', '', array('.transition-group' => array('display' => 'block')), 'not');
-            $response->AddFieldAction('transitionType', 'change', '', array('.transition-group' => array('display' => 'none')));
-            $response->AddFieldAction('transitionType', 'change', '', array('.transition-group' => array('display' => 'block')), 'not');
-        }
-
 #}
 
 {% extends "form-base.twig" %}
@@ -25,9 +15,45 @@
 
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Set Full Screen" %}, setFullScreenLayout({{ layout.width }}| {{ layout.height }})
     {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Save" %}, $("#regionEditForm").submit()
-    {% trans "Set Full Screen" %}, setFullScreenLayout()
+{% endblock %}
+
+{% block formFieldActions %}
+    [{
+    "field": "transitionType",
+    "trigger": "init",
+    "value": "",
+    "operation": "equals",
+    "actions": {
+    ".transition-group": { "display": "none" }
+    }
+    },{
+    "field": "transitionType",
+    "trigger": "change",
+    "value": "",
+    "operation": "equals",
+    "actions": {
+    ".transition-group": { "display": "none" }
+    }
+    },{
+    "field": "transitionType",
+    "trigger": "init",
+    "value": "",
+    "operation": "not",
+    "actions": {
+    ".transition-group": { "display": "block" }
+    }
+    },{
+    "field": "transitionType",
+    "trigger": "change",
+    "value": "",
+    "operation": "not",
+    "actions": {
+    ".transition-group": { "display": "block" }
+    }
+    }]
 {% endblock %}
 
 {% block formHtml %}
@@ -48,26 +74,21 @@
                 {{ forms.number("height", "Height", region.height, "Height of the Region") }}
 
                 {# Transitions #}
-
                 {% set title %}{% trans "Exit Transition" %}{% endset %}
                 {% set helpText %}{% trans "What transition should be applied when this region is finished?" %}{% endset %}
-                {{ forms.dropdown("transitionType", "single", title, region.transitionType, transitions, "code", "transition", helpText) }}
+                {{ forms.dropdown("transitionType", "single", title, region.transitionType, transitions.out|merge({code: null, transition: ""}), "code", "transition", helpText) }}
 
-                {{ forms.number("transitionDuration", "Duration", region.transitionDuration, "The duration for this transition, in milliseconds.", "", "", "transition-group") }}
+                {{ forms.number("transitionDuration", "Duration", region.transitionDuration, "The duration for this transition, in milliseconds.", "transition-group") }}
 
                 {% set title %}{% trans "Direction" %}{% endset %}
                 {% set helpText %}{% trans "The direction for this transition. Only appropriate for transitions that move, such as Fly." %}{% endset %}
-                {{ forms.dropdown("transitionDirection", "single", title, region.transitionsDirection, compassPoints, "id", "name", helpText,"", "transition-group transition-direction") }}
-                
-                {# Dependencies #}
+                {{ forms.dropdown("transitionDirection", "single", title, region.transitionsDirection, compassPoints, "id", "name", helpText, "transition-group transition-direction") }}
 
                 {% set title %}{% trans "Loop?" %}{% endset %}
                 {% set helpText %}{% trans "If there is only one item in this region should it loop? Not currently available for Windows Players" %}{% endset %}
                 {{ forms.checkbox("loop", title, region.loop, helpText) }}
 
                 {{ forms.number("zIndex", "Layer", region.zIndex, "The layering order of this region (z-index). Advanced use only.") }}
-
-                {# hard to test - 'Options' is not working at the moment.#}
             </form>
         </div>
     </div>

@@ -62,9 +62,9 @@
                                 {% elseif field.fieldType == "checkbox" %}
                                     {{ forms.checkbox(field.name, field.title, field.value, field.helpText) }}
                                 {% elseif field.fieldType == "dropdown" %}
-                                    {{ forms.dropdown(field.name, "single", field.title, field.value, field.options, "id", "value") }}
+                                    {{ forms.dropdown(field.name, "single", field.title, field.value, field.options, "id", "value", field.helpText) }}
                                 {% elseif field.fieldType == "timezone" %}
-                                    {{ forms.dropdown(field.name, "single", field.title, field.value, field.options, "id", "value") }}
+                                    {{ forms.dropdown(field.name, "single", field.title, field.value, field.options, "id", "value", field.helpText) }}
                                 {% endif %}
                             {% endfor %}
                         </div>

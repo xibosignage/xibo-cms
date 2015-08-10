@@ -193,10 +193,9 @@ function savePositions() {
 /**
  * Sets the layout to full screen
  */
-function setFullScreenLayout() {
-    var layoutInformation = $('.bootbox').data().extra.layoutInformation;
-    $('#width', '.XiboForm').val(layoutInformation.width);
-    $('#height', '.XiboForm').val(layoutInformation.height);
+function setFullScreenLayout(width, height) {
+    $('#width', '.XiboForm').val(width);
+    $('#height', '.XiboForm').val(height);
     $('#top', '.XiboForm').val('0');
     $('#left', '.XiboForm').val('0');
 }
