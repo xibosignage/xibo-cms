@@ -38,14 +38,16 @@
     </div>
     <div class="row">
         <div class="col-md-12">
-            <div class="XiboGrid" id="{{ random() }}">
-                <div>
-                    {% set title %}{% trans "Name" %}{% endset %}
-                    {{ inline.text("filter_name", title) }}
+            <div id="libraryAssignFilterOptions">
+                <form onsubmit="false">
+                {% set title %}{% trans "Name" %}{% endset %}
+                {{ inline.text("filter_name", title) }}
 
-                    {% set title %}{% trans "Type" %}{% endset %}
-                    {{ inline.dropdown("filter_type", "single", title, "", modules, "moduleId", "name") }}
-                </div>
+                {% set title %}{% trans "Type" %}{% endset %}
+                {{ inline.dropdown("filter_type", "single", title, "", modules|merge({type: null, name: ""}), "type", "name") }}
+                </form>
+            </div>
+            <div class="XiboGrid" id="{{ random() }}">
                 <div class="XiboData">
                     <table id="mediaAssignments" class="table table-striped">
                         <thead>

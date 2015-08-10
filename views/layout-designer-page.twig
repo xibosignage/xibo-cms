@@ -190,12 +190,12 @@
             var mediaTable = $("#mediaAssignments").DataTable({
                 serverSide: true,
                 searchDelay: 3000,
-                "order": [[ 1, "asc"]],
+                "order": [[ 0, "asc"]],
                 "filter": false,
                 ajax: {
                     url: "{{ urlFor("library.search") }}",
                     "data": function(d) {
-                        $.extend(d, $("#mediaAssignments").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                        $.extend(d, $("#libraryAssignFilterOptions").find("form").serializeObject());
                     }
                 },
                 "columns": [
@@ -247,6 +247,11 @@
 
             // Make our little list sortable
             $("#LibraryAssignSortable").sortable();
+
+            // Bind the filter form
+            $("#libraryAssignFilterOptions").find("input, select").change(function() {
+                mediaTable.ajax.reload();
+            });
         }
 
         // Click Handler for Library Upload Buttons (image, video, powerpoint, flash)
@@ -330,7 +335,7 @@
             });
         }
 
-        function timelineGridCallback(dialog) {
+        function timelineGridCallback(dialog, playlistId) {
 
             dialog.addClass("modal-big");
 
@@ -340,7 +345,7 @@
                 searchDelay: 3000,
                 "order": [[ 0, "asc"]],
                 ajax: {
-                    url: "{{ urlFor("playlist.widget.search") }}",
+                    url: "{{ urlFor("playlist.widget.search") }}?playlistId=" + playlistId,
                     "data": function(d) {
                         $.extend(d, $("#timelineWidgets").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                     }

@@ -284,12 +284,12 @@ class MediaFactory extends BaseFactory
         }
 
         if (Sanitize::getString('type', $filterBy) != '') {
-            $body .= 'AND media.type = :type';
+            $body .= 'AND media.type = :type ';
             $params['type'] = Sanitize::getString('type', $filterBy);
         }
 
         if (Sanitize::getString('storedAs', $filterBy) != '') {
-            $body .= 'AND media.storedAs = :storedAs';
+            $body .= 'AND media.storedAs = :storedAs ';
             $params['storedAs'] = Sanitize::getString('storedAs', $filterBy);
         }
 
