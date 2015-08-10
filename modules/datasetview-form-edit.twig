@@ -83,7 +83,7 @@
                         {{ forms.number("rowsPerPage", title, module.getOption("rowsPerPage"), helpText) }}
 
                         {% set title %}{% trans "Enter a style sheet for the table" %}{% endset %}
-                        {{ forms.textarea("stylesheet", "", module.getRawMode("styleSheet", module.defaultStyleSheet()), title, "", 10) }}
+                        {{ forms.textarea("stylesheet", "", module.getRawNode("styleSheet", module.defaultStyleSheet()), title, "", "", 10) }}
                     </div>
                 </div>
             </form>

@@ -814,15 +814,6 @@ function XiboSubmitResponse(response, form) {
 
     // Check the apply flag
     var apply = $(form).data("apply");
-    if (apply != undefined && apply) {
-        response.keepOpen = true;
-        response.refresh = false;
-    }
-
-    // Check the refresh flag
-    var refresh = $(form).data("refresh");
-    if (refresh != undefined && refresh)
-        response.refresh = true;
 
     // Remove the apply flag
     $(form).data("apply", false);
@@ -834,7 +825,13 @@ function XiboSubmitResponse(response, form) {
             SystemMessage(response.message, true);
 
         // We might need to keep the form open
-        bootbox.hideAll();
+        if (apply == undefined || !apply) {
+            bootbox.hideAll();
+        }
+        else {
+            // Focus in the first input
+            $('input[type=text]', form).eq(0).focus();
+        }
 
         // Should we refresh the window or refresh the Grids?
         XiboRefreshAllGrids();
