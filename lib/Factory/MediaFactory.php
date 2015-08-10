@@ -202,11 +202,7 @@ class MediaFactory extends BaseFactory
                IFNULL((SELECT parentmedia.mediaid FROM media parentmedia WHERE parentmedia.editedmediaid = media.mediaid),0) AS parentId,
         ';
 
-        if (Sanitize::getInt('showTags', $filterBy) == 1)
-            $select .= " tag.tag AS tags, ";
-        else
-            $select .= " (SELECT GROUP_CONCAT(DISTINCT tag) FROM tag INNER JOIN lktagmedia ON lktagmedia.tagId = tag.tagId WHERE lktagmedia.mediaId = media.mediaID GROUP BY lktagmedia.mediaId) AS tags, ";
-
+        $select .= " (SELECT GROUP_CONCAT(DISTINCT tag) FROM tag INNER JOIN lktagmedia ON lktagmedia.tagId = tag.tagId WHERE lktagmedia.mediaId = media.mediaID GROUP BY lktagmedia.mediaId) AS tags, ";
         $select .= "        `user`.UserName AS owner, ";
         $select .= "     (SELECT GROUP_CONCAT(DISTINCT `group`.group)
                               FROM `permission`
@@ -226,12 +222,7 @@ class MediaFactory extends BaseFactory
         $body .= "   ON parentmedia.MediaID = media.MediaID ";
         $body .= "   INNER JOIN `user` ON `user`.userId = `media`.userId ";
 
-        if (Sanitize::getInt('showTags', $filterBy) == 1) {
-            $body .= " LEFT OUTER JOIN lktagmedia ON lktagmedia.mediaId = media.mediaId ";
-            $body .= " LEFT OUTER JOIN tag ON tag.tagId = lktagmedia.tagId";
-        }
-
-        if (Sanitize::getInt('displayGroupId', $filterBy) != null) {
+        if (Sanitize::getInt('displayGroupId', $filterBy) !== null) {
             $body .= '
                 INNER JOIN `lkmediadisplaygroup`
                 ON lkmediadisplaygroup.mediaid = media.mediaid
@@ -251,7 +242,7 @@ class MediaFactory extends BaseFactory
         }
 
         // Unused only?
-        if (Sanitize::getInt('unusedOnly', $filterBy) != null) {
+        if (Sanitize::getInt('unusedOnly', $filterBy) !== null) {
             $body .= '
                 AND media.mediaId NOT IN (SELECT mediaId FROM `lkwidgetmedia`)
                 AND media.mediaId NOT IN (SELECT mediaId FROM `lkmediadisplaygroup`)
@@ -284,16 +275,16 @@ class MediaFactory extends BaseFactory
         }
 
         if (Sanitize::getString('type', $filterBy) != '') {
-            $body .= 'AND media.type = :type';
+            $body .= 'AND media.type = :type ';
             $params['type'] = Sanitize::getString('type', $filterBy);
         }
 
         if (Sanitize::getString('storedAs', $filterBy) != '') {
-            $body .= 'AND media.storedAs = :storedAs';
+            $body .= 'AND media.storedAs = :storedAs ';
             $params['storedAs'] = Sanitize::getString('storedAs', $filterBy);
         }
 
-        if (Sanitize::getInt('ownerId', $filterBy) != null) {
+        if (Sanitize::getInt('ownerId', $filterBy) !== null) {
             $body .= " AND media.userid = :ownerId ";
             $params['ownerId'] = Sanitize::getInt('ownerId', $filterBy);
         }
@@ -310,7 +301,7 @@ class MediaFactory extends BaseFactory
             $params['expires'] = Sanitize::getInt('expires', $filterBy);
         }
 
-        if (Sanitize::getInt('layoutId', $filterBy) != null) {
+        if (Sanitize::getInt('layoutId', $filterBy) !== null) {
             $body .= '
                 AND media.mediaId IN (
                     SELECT `lkwidgetmedia`.mediaId

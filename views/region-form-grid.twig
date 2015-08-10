@@ -10,6 +10,9 @@
 {% extends "form-base.twig" %}
 {% import "forms.twig" as forms %}
 
+{# TODO: We will need to design a playlist selector #}
+{% set playlist = region.playlists[0] %}
+
 {% block formTitle %}
     {% trans "Region Timeline" %}
 {% endblock %}
@@ -23,8 +26,6 @@
 {% block callBack %}timelineGridCallback{% endblock %}
 
 {% block formHtml %}
-    {# TODO: We will need to design a playlist selector #}
-    {% set playlist = region.playlists[0] %}
     <div class="container-fluid">
         <div class="row">
             <div class="col-md-2">

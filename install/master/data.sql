@@ -341,3 +341,14 @@ INSERT INTO `tag` (`tagId`, `tag`) VALUES
 
 INSERT INTO `displayprofile` (`name`, `type`, `config`, `isdefault`, `userid`)
 VALUES ('Windows', 'windows', '[]', '1', '1'), ('Android', 'android', '[]', '1', '1');
+
+INSERT INTO `permissionentity` (`entityId`, `entity`) VALUES
+(1, 'Xibo\\Entity\\Page'),
+(2, 'Xibo\\Entity\\Menu'),
+(3, 'Xibo\\Entity\\DisplayGroup'),
+(4, 'Xibo\\Entity\\Media'),
+(5, 'Xibo\\Entity\\Campaign'),
+(6, 'Xibo\\Entity\\Widget'),
+(7, 'Xibo\\Entity\\Region'),
+(8, 'Xibo\\Entity\\Playlist'),
+(9, 'Xibo\\Entity\\DataSet');

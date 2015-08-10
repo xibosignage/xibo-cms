@@ -90,17 +90,17 @@ class TransitionFactory extends BaseFactory
          WHERE 1 = 1
         ';
 
-        if (Sanitize::getInt('transitionId', $filterBy) != null) {
+        if (Sanitize::getInt('transitionId', $filterBy) !== null) {
             $sql .= ' AND transition.transitionId = :transitionId ';
             $params['transitionId'] = Sanitize::getInt('transitionId', $filterBy);
         }
 
-        if (Sanitize::getInt('availableAsIn', $filterBy) != null) {
+        if (Sanitize::getInt('availableAsIn', $filterBy) !== null) {
             $sql .= ' AND transition.availableAsIn = :availableAsIn ';
             $params['availableAsIn'] = Sanitize::getInt('availableAsIn', $filterBy);
         }
 
-        if (Sanitize::getInt('availableAsOut', $filterBy) != null) {
+        if (Sanitize::getInt('availableAsOut', $filterBy) !== null) {
             $sql .= ' AND transition.availableAsOut = :availableAsOut ';
             $params['availableAsOut'] = Sanitize::getInt('availableAsOut', $filterBy);
         }

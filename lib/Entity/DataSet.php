@@ -171,7 +171,8 @@ class DataSet implements \JsonSerializable
         }
 
         // Filter by ID
-        if (Sanitize::getInt('id', $filterBy) != null) {
+        if (
+            Sanitize::getInt('id', $filterBy) !== null) {
             $sql .= ' AND id = :id ';
             $params['id'] = Sanitize::getInt('id', $filterBy);
         }
@@ -393,7 +394,7 @@ class DataSet implements \JsonSerializable
         foreach (DisplayFactory::getByDataSetId($this->dataSetId) as $display) {
             /* @var \Xibo\Entity\Display $display */
             $display->setMediaIncomplete();
-            $display->save(false);
+            $display->save(false, false);
         }
     }
 

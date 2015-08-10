@@ -9,6 +9,7 @@
 namespace Xibo\Entity;
 
 
+use Xibo\Helper\Log;
 use Xibo\Storage\PDOConnect;
 
 /**
@@ -186,6 +187,10 @@ class DataSetColumn implements \JsonSerializable
      */
     private function edit()
     {
+        // Get the current heading
+        $currentHeading = PDOConnect::select('SELECT heading FROM `datasetcolumn` WHERE dataSetColumnId = :dataSetColumnId', ['dataSetColumnId' => $this->dataSetColumnId]);
+        $currentHeading = $currentHeading[0]['heading'];
+
         PDOConnect::update('
           UPDATE `datasetcolumn` SET
             dataSetId = :dataSetId,
@@ -207,8 +212,10 @@ class DataSetColumn implements \JsonSerializable
             'dataSetColumnId' => $this->dataSetColumnId
         ]);
 
-        if ($this->dataSetColumnTypeId == 1) {
-            PDOConnect::update('ALTER TABLE `dataset_' . $this->dataSetId . '` CHANGE `' . $this->heading . '` ' . $this->sqlDataType() . ' NULL DEFAULT NULL', []);
+        if ($this->dataSetColumnTypeId == 1 && $currentHeading != $this->heading) {
+            $sql = 'ALTER TABLE `dataset_' . $this->dataSetId . '` CHANGE `' . $currentHeading . '` `' . $this->heading . '` ' . $this->sqlDataType() . ' NULL DEFAULT NULL';
+            Log::debug($sql);
+            PDOConnect::update($sql, []);
         }
     }
 

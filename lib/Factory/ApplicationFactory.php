@@ -34,7 +34,7 @@ class ApplicationFactory extends BaseFactory
                 ON `oauth_client_redirect_uris`.client_id = `oauth_clients`.id
         ';
 
-        if (Sanitize::getInt('userId', $filterBy) != null) {
+        if (Sanitize::getInt('userId', $filterBy) !== null) {
 
             $select .= '
                 , `oauth_auth_codes`.expire_time AS expires

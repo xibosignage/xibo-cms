@@ -43,7 +43,7 @@ $logger = new \Flynsarmy\SlimMonolog\Log\MonologWriter(array(
         new \Xibo\Helper\LogProcessor(),
         new \Monolog\Processor\UidProcessor(7)
     )
-));
+), false);
 
 // Installer is its own little Slim application
 $app = new \Slim\Slim(array(

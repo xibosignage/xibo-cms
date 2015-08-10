@@ -282,7 +282,12 @@ class Layout implements \JsonSerializable
      */
     public function load($options = [])
     {
-        $options = array_merge(['loadPlaylists' => true], $options);
+        $options = array_merge([
+            'loadPlaylists' => true,
+            'loadTags' => true,
+            'loadPermissions' => true,
+            'loadCampaigns' => true
+        ], $options);
 
         if ($this->loaded)
             return;
@@ -290,7 +295,8 @@ class Layout implements \JsonSerializable
         Log::debug('Loading Layout %d with options %s', $this->layoutId, json_encode($options));
 
         // Load permissions
-        $this->permissions = PermissionFactory::getByObjectId('campaign', $this->campaignId);
+        if ($options['loadPermissions'])
+            $this->permissions = PermissionFactory::getByObjectId('campaign', $this->campaignId);
 
         // Load all regions
         $this->regions = RegionFactory::getByLayoutId($this->layoutId);
@@ -299,10 +305,12 @@ class Layout implements \JsonSerializable
             $this->loadPlaylists();
 
         // Load all tags
-        $this->tags = TagFactory::loadByLayoutId($this->layoutId);
+        if ($options['loadTags'])
+            $this->tags = TagFactory::loadByLayoutId($this->layoutId);
 
         // Load Campaigns
-        $this->campaigns = CampaignFactory::getByLayoutId($this->layoutId);
+        if ($options['loadCampaigns'])
+            $this->campaigns = CampaignFactory::getByLayoutId($this->layoutId);
 
         // Set the hash
         $this->hash = $this->hash();

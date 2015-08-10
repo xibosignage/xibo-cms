@@ -90,17 +90,17 @@ class ResolutionFactory extends BaseFactory
             $params['enabled'] = Sanitize::getInt('enabled', $filterBy);
         }
 
-        if (Sanitize::getInt('resolutionId', $filterBy) != null) {
+        if (Sanitize::getInt('resolutionId', $filterBy) !== null) {
             $body .= ' AND resolutionId = :resolutionId';
             $params['resolutionId'] = Sanitize::getInt('resolutionId', $filterBy);
         }
 
-        if (Sanitize::getInt('width', $filterBy) != null) {
+        if (Sanitize::getInt('width', $filterBy) !== null) {
             $body .= ' AND intended_width = :width';
             $params['width'] = Sanitize::getInt('width', $filterBy);
         }
 
-        if (Sanitize::getInt('height', $filterBy) != null) {
+        if (Sanitize::getInt('height', $filterBy) !== null) {
             $body .= ' AND intended_height = :height';
             $params['height'] = Sanitize::getInt('height', $filterBy);
         }

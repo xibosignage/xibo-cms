@@ -190,27 +190,6 @@ function savePositions() {
     });
 }
 
-function XiboAssignToLayout(layoutId, regionId) {
-
-    var mediaitems = Array();
-
-    $("#fileupload .files .name").each(function() {
-
-        // Is this item in error?
-        if ($(this).attr("status") != "error")
-            mediaitems.push($(this).attr("id"));
-    });
-
-    $.ajax({
-        type: "post",
-        url: "index.php?p=timeline&q=AddFromLibrary&layoutid="+layoutId+"&regionid="+regionId+"&ajax=true",
-        cache: false,
-        dataType: "json",
-        data: { MediaID: mediaitems },
-        success: XiboSubmitResponse
-    });
-}
-
 /**
  * Sets the layout to full screen
  */
@@ -292,8 +271,7 @@ var XiboTimelineSaveOrder = function(timelineDiv) {
     });
 };
 
-var LibraryAssignSubmit = function(layoutId, regionId)
-{
+var LibraryAssignSubmit = function() {
     // Collect our media
     var media = [];
     $("#LibraryAssignSortable > li").each(function() {
@@ -303,8 +281,7 @@ var LibraryAssignSubmit = function(layoutId, regionId)
     assignMediaToPlaylist($("#LibraryAssign").data().url, media);
 };
 
-var assignMediaToPlaylist = function(url, media)
-{
+var assignMediaToPlaylist = function(url, media) {
     toastr.info(media, "Assign Media to Playlist");
 
     $.ajax({

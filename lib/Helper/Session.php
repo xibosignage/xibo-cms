@@ -320,7 +320,7 @@ class Session
      */
     public static function set($key, $secondKey, $value = null)
     {
-        if ($value === null) {
+        if (func_num_args() == 2) {
             $_SESSION[$key] = $secondKey;
             return $secondKey;
         } else {
