@@ -51,7 +51,7 @@ class User extends Base
         }
 
         $userTypes = PDOConnect::select("SELECT userTypeId, userType FROM usertype ORDER BY usertype", []);
-        array_unshift($userTypes, array('userTypeId' => 0, 'userType' => 'All'));
+        array_unshift($userTypes, array('userTypeId' => '', 'userType' => 'All'));
 
         $data = [
             'defaults' => [
