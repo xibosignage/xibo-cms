@@ -446,9 +446,14 @@ abstract class Module implements ModuleInterface
             return __('None');
 
         // Look up the real transition name
-        $transition = TransitionFactory::getByCode($code);
-
-        return __($transition->transition);
+        try {
+            $transition = TransitionFactory::getByCode($code);
+            return __($transition->transition);
+        }
+        catch (NotFoundException $e) {
+            Log::error('Transition not found with code %s.', $code);
+            return 'None';
+        }
     }
 
     /**

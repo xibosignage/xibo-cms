@@ -26,29 +26,29 @@
     <div class="row">
         <div class="col-md-12">
             <form id="dataSetColumnEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("dataSet.column.edit", {id: dataSet.dataSetId, colId: dataSetColumn.dataSetColumnId}) }}">
-                    {% set title %}{% trans "Heading" %}{% endset %}
-                    {% set helpText %}{% trans "The heading for this Column" %}{% endset %}
-                    {{ forms.text("heading", title, dataSetColumn.heading, helpText, "", "required") }}
+                {% set title %}{% trans "Heading" %}{% endset %}
+                {% set helpText %}{% trans "The heading for this Column" %}{% endset %}
+                {{ forms.text("heading", title, dataSetColumn.heading, helpText, "", "required") }}
 
-                    {% set title %}{% trans "Column Type" %}{% endset %}
-                    {% set helpText %}{% trans "Whether this column is a value or a formula" %}{% endset %}
-                    {{ forms.dropdown("dataSetColumnTypeId", "single", title, dataSetColumn.dataSetColumnTypeId, dataSetColumnTypes, "dataSetColumnTypeId", "dataSetColumnType", helpText) }}
+                {% set title %}{% trans "Column Type" %}{% endset %}
+                {% set helpText %}{% trans "Whether this column is a value or a formula" %}{% endset %}
+                {{ forms.dropdown("dataSetColumnTypeId", "single", title, dataSetColumn.dataSetColumnTypeId, dataSetColumnTypes, "dataSetColumnTypeId", "dataSetColumnType", helpText) }}
 
-                    {% set title %}{% trans "Data Type" %}{% endset %}
-                    {% set helpText %}{% trans "The DataType of the Intended Data" %}{% endset %}
-                    {{ forms.dropdown("dataTypeId", "single", title, dataSetColumn.dataTypeId, dataTypes, "dataTypeId", "dataType", helpText) }}
+                {% set title %}{% trans "Data Type" %}{% endset %}
+                {% set helpText %}{% trans "The DataType of the Intended Data" %}{% endset %}
+                {{ forms.dropdown("dataTypeId", "single", title, dataSetColumn.dataTypeId, dataTypes, "dataTypeId", "dataType", helpText) }}
 
-                    {% set title %}{% trans "List Content" %}{% endset %}
-                    {% set helpText %}{% trans "A comma separated list of items to present in a combo box" %}{% endset %}
-                    {{ forms.text("listContent", title, dataSetColumn.listContent, helpText) }}
+                {% set title %}{% trans "List Content" %}{% endset %}
+                {% set helpText %}{% trans "A comma separated list of items to present in a combo box" %}{% endset %}
+                {{ forms.text("listContent", title, dataSetColumn.listContent, helpText) }}
 
-                    {% set title %}{% trans "Column Order" %}{% endset %}
-                    {% set helpText %}{% trans "The order this column should be displayed in when entering data" %}{% endset %}
-                    {{ forms.number("columnOrder", title, dataSetColumn.columnOrder, helpText) }}
+                {% set title %}{% trans "Column Order" %}{% endset %}
+                {% set helpText %}{% trans "The order this column should be displayed in when entering data" %}{% endset %}
+                {{ forms.number("columnOrder", title, dataSetColumn.columnOrder, helpText) }}
 
-                    {% set title %}{% trans "Formula" %}{% endset %}
-                    {% set helpText %}{% trans "A formula to use as a calculation for formula column types" %}{% endset %}
-                    {{ forms.text("formula", title, dataSetColumn.formula, helpText) }}
+                {% set title %}{% trans "Formula" %}{% endset %}
+                {% set helpText %}{% trans "A formula to use as a calculation for formula column types" %}{% endset %}
+                {{ forms.text("formula", title, dataSetColumn.formula, helpText) }}
             </form>
         </div>
     </div>
