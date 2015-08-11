@@ -439,10 +439,7 @@ class LayoutFactory extends BaseFactory
         $select .= "        layout.retired, ";
         $select .= "        layout.createdDt, ";
         $select .= "        layout.modifiedDt, ";
-        if (Sanitize::getInt('showTags', $filterBy) == 1)
-            $select .= " tag.tag AS tags, ";
-        else
-            $select .= " (SELECT GROUP_CONCAT(DISTINCT tag) FROM tag INNER JOIN lktaglayout ON lktaglayout.tagId = tag.tagId WHERE lktaglayout.layoutId = layout.LayoutID GROUP BY lktaglayout.layoutId) AS tags, ";
+        $select .= " (SELECT GROUP_CONCAT(DISTINCT tag) FROM tag INNER JOIN lktaglayout ON lktaglayout.tagId = tag.tagId WHERE lktaglayout.layoutId = layout.LayoutID GROUP BY lktaglayout.layoutId) AS tags, ";
         $select .= "        layout.backgroundImageId, ";
         $select .= "        layout.backgroundColor, ";
         $select .= "        layout.backgroundzIndex, ";
@@ -465,10 +462,8 @@ class LayoutFactory extends BaseFactory
         $body .= "       AND campaign.IsLayoutSpecific = 1";
         $body .= "   INNER JOIN `user` ON `user`.userId = `campaign`.userId ";
 
-        if (Sanitize::getInt('showTags', $filterBy) == 1) {
-            $body .= " LEFT OUTER JOIN lktaglayout ON lktaglayout.layoutId = layout.layoutId ";
-            $body .= " LEFT OUTER JOIN tag ON tag.tagId = lktaglayout.tagId ";
-        }
+        $body .= " LEFT OUTER JOIN lktaglayout ON lktaglayout.layoutId = layout.layoutId ";
+        $body .= " LEFT OUTER JOIN tag ON tag.tagId = lktaglayout.tagId ";
 
         if (Sanitize::getInt('campaignId', 0, $filterBy) != 0) {
             // Join Campaign back onto it again

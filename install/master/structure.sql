@@ -792,7 +792,7 @@ CREATE TABLE IF NOT EXISTS `region` (
 CREATE TABLE IF NOT EXISTS `regionoption` (
   `regionId` int(11) NOT NULL,
   `option` varchar(50) NOT NULL,
-  `value` text NOT NULL,
+  `value` text NULL,
   PRIMARY KEY (`regionId`,`option`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 

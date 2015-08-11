@@ -55,8 +55,6 @@ class Layout extends Base
             $owner = $this->getSession()->get('layout', 'filter_userid');
             $filterLayoutStatusId = $this->getSession()->get('layout', 'filterLayoutStatusId');
             $showDescriptionId = $this->getSession()->get('layout', 'showDescriptionId');
-            $showThumbnail = $this->getSession()->get('layout', 'showThumbnail');
-            $showTags = $this->getSession()->get('layout', 'showTags');
             $pinned = 1;
 
         } else {
@@ -68,8 +66,6 @@ class Layout extends Base
             $filterLayoutStatusId = 1;
             $showDescriptionId = 2;
             $pinned = 0;
-            $showThumbnail = 1;
-            $showTags = 0;
         }
 
         $data = [
@@ -82,8 +78,6 @@ class Layout extends Base
                 'retired' => $retired,
                 'filterLayoutStatusId' => $filterLayoutStatusId,
                 'showDescriptionId' => $showDescriptionId,
-                'showTags' => $showTags,
-                'showThumbnail' => $showThumbnail,
                 'filterPinned' => $pinned
             ]
         ];
@@ -490,14 +484,6 @@ class Layout extends Base
         $showDescriptionId = Sanitize::getInt('showDescriptionId');
         $this->getSession()->set('layout', 'showDescriptionId', $showDescriptionId);
 
-        // Show filter_showThumbnail
-        $showTags = Sanitize::getCheckbox('showTags');
-        $this->getSession()->set('layout', 'showTags', $showTags);
-
-        // Show filter_showThumbnail
-        $showThumbnail = Sanitize::getCheckbox('showThumbnail');
-        $this->getSession()->set('layout', 'showThumbnail', $showThumbnail);
-
         // Tags list
         $filter_tags = Sanitize::getString('filter_tags');
         $this->getSession()->set('layout', 'filter_tags', $filter_tags);
@@ -511,8 +497,7 @@ class Layout extends Base
             'userId' => $filter_userid,
             'retired' => $filter_retired,
             'tags' => $filter_tags,
-            'filterLayoutStatusId' => $filterLayoutStatusId,
-            'showTags' => $showTags
+            'filterLayoutStatusId' => $filterLayoutStatusId
         ]));
 
         foreach ($layouts as $layout) {
