@@ -32,7 +32,7 @@ It is done, I mean this twig is probably fine, the 'name' in the settings at the
                 <li><a href="#wol" role="tab" data-toggle="tab"><span>{% trans "Wake on LAN" %}</span></a></li>
                 <li><a href="#advanced" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
             </ul>
-            <form id="displayEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("display.edit") }}">
+            <form id="displayEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("display.edit", {id: display.displayId}) }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
 
@@ -42,7 +42,7 @@ It is done, I mean this twig is probably fine, the 'name' in the settings at the
                 
                         {% set title %}{% trans "Display's Hardware Key" %}{% endset %}
                         {% set helpText %}{% trans "A unique identifier for this display." %}{% endset %}
-                        {{ forms.text("hardwareKey", title, display.license, helpText, "", "required", "", false) }}
+                        {{ forms.text("license", title, display.license, helpText, "", "required", "", false) }}
 
                         {% set title %}{% trans "Description" %}{% endset %}
                         {% set helpText %}{% trans "A description - (1 - 254 characters)." %}{% endset %}
@@ -56,11 +56,11 @@ It is done, I mean this twig is probably fine, the 'name' in the settings at the
                         { licensedid: 1, licensed: yes },
                         { licensedid: 0, licensed: no }
                         ] %}
-                        {{ forms.dropdown("licensed", "single", title, "", options, "licensedid", "licensed", helpText) }}
+                        {{ forms.dropdown("licensed", "single", title, display.licensed, options, "licensedid", "licensed", helpText) }}
 
                         {% set title %}{% trans "Default Layout" %}{% endset %}
                         {% set helpText %}{% trans "The Default Layout to Display where there is no other content." %}{% endset %}
-                        {{ forms.dropdown("defaultLayoutId", "single", title, "", layouts, "layoutid", "layout", helpText) }}
+                        {{ forms.dropdown("defaultLayoutId", "single", title, display.defaultLayoutId, layouts, "layoutId", "layout", helpText) }}
                     </div>
                     <div class="tab-pane" id="location">
                         {% set title %}{% trans "Latitude" %}{% endset %}
@@ -115,7 +115,7 @@ It is done, I mean this twig is probably fine, the 'name' in the settings at the
 
                         {% set title %}{% trans "Settings Profile?" %}{% endset %}
                         {% set helpText %}{% trans "What display profile should this display use?" %}{% endset %}
-                        {{ forms.dropdown("displayProfileId", "single", title, "", profiles, "displayprofileid", "name", helpText) }}
+                        {{ forms.dropdown("displayProfileId", "single", title, "", [{displayProfileId: null, name: ""}]|merge(profiles), "displayProfileId", "name", helpText) }}
  
 
                         {% set title %}{% trans "Interleave Default" %}{% endset %}
