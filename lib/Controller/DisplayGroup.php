@@ -429,7 +429,7 @@ class DisplayGroup extends Base
         foreach ($displays as $displayId) {
             $display = DisplayFactory::getById($displayId);
 
-            if (!$this->getUser()->checkViewable($displayId))
+            if (!$this->getUser()->checkViewable(DisplayGroupFactory::getById($display->displayGroupId)))
                 throw new AccessDeniedException(__('Access Denied to Display'));
 
             $displayGroup->assignDisplay($display);
