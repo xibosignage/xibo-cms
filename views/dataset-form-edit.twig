@@ -22,15 +22,14 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="dataSetEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("dataSet.edit") }}">
-                    {# in old code this edit form was exactly like add form - ie without dataSet.dataSet and dataSet.description, I added this here, 'cause it should be here? Or....? #}
-                    {% set title %}{% trans "Name" %}{% endset %}
-                    {% set helpText %}{% trans "A name for this DataSet" %}{% endset %}
-                    {{ forms.text("dataSet", title, dataSet.dataSet, helpText, "", "required") }}
+            <form id="dataSetEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("dataSet.edit", {id: dataSet.dataSetId}) }}">
+                {% set title %}{% trans "Name" %}{% endset %}
+                {% set helpText %}{% trans "A name for this DataSet" %}{% endset %}
+                {{ forms.text("dataSet", title, dataSet.dataSet, helpText, "", "required") }}
 
-                    {% set title %}{% trans "Description" %}{% endset %}
-                    {% set helpText %}{% trans "An optional description" %}{% endset %}
-                    {{ forms.text("description", title, dataSet.description, helpText) }}
+                {% set title %}{% trans "Description" %}{% endset %}
+                {% set helpText %}{% trans "An optional description" %}{% endset %}
+                {{ forms.text("description", title, dataSet.description, helpText) }}
             </form>
         </div>
     </div>

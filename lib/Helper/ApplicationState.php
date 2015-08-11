@@ -27,25 +27,13 @@ class ApplicationState
     public $message;
     public $success;
     public $html;
-    public $callBack;
     public $buttons;
     public $fieldActions;
-
     public $dialogTitle;
-    public $keepOpen;
-    public $hideMessage;
-    public $loadForm;
-    public $loadFormUri;
-    public $refresh;
-    public $refreshLocation;
-    public $focusInFirstInput;
-    public $appendHiddenSubmit;
-    public $modal;
+    public $callBack;
 
     public $login;
     public $clockUpdate;
-
-    public $uniqueReference;
 
     public $id;
     private $data;
@@ -57,10 +45,6 @@ class ApplicationState
     {
         // Assume success
         $this->success = true;
-        $this->clockUpdate = false;
-        $this->focusInFirstInput = true;
-        $this->appendHiddenSubmit = true;
-        $this->uniqueReference = '';
         $this->buttons = '';
         $this->fieldActions = '';
         $this->extra = array();
@@ -109,24 +93,12 @@ class ApplicationState
         $response['html'] = $this->html;
         $response['buttons'] = $this->buttons;
         $response['fieldActions'] = $this->fieldActions;
-        $response['uniqueReference'] = $this->uniqueReference;
+        $response['dialogTitle'] = $this->dialogTitle;
+        $response['callBack'] = $this->callBack;
 
         $response['success'] = $this->success;
-        $response['callBack'] = $this->callBack;
         $response['message'] = $this->message;
         $response['clockUpdate'] = $this->clockUpdate;
-
-        // Dialogs
-        $response['dialogTitle'] = $this->dialogTitle;
-
-        // Form Submits
-        $response['keepOpen'] = $this->keepOpen;
-        $response['hideMessage'] = $this->hideMessage;
-        $response['loadForm'] = $this->loadForm;
-        $response['loadFormUri'] = $this->loadFormUri;
-        $response['refresh'] = $this->refresh;
-        $response['refreshLocation'] = $this->refreshLocation;
-        $response['focusInFirstInput'] = $this->focusInFirstInput;
 
         // Login
         $response['login'] = $this->login;

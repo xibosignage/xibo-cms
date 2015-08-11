@@ -102,7 +102,7 @@ class UserGroupFactory extends BaseFactory
             // Permissions
             if (Sanitize::getCheckbox('disableUserCheck', 0, $filterBy) == 0) {
                 // Normal users can only see their group
-                if (self::getUser()->userTypeId != 3) {
+                if (self::getUser()->userTypeId != 1) {
                     $body .= '
                     AND `group`.groupId IN (
                         SELECT `group`.groupId
@@ -118,7 +118,7 @@ class UserGroupFactory extends BaseFactory
             }
 
             // Filter by Group Id
-            if (Sanitize::getInt('groupId', $filterBy) != null) {
+            if (Sanitize::getInt('groupId', $filterBy) !== null) {
                 $body .= ' AND `group`.groupId = :groupId ';
                 $params['groupId'] = Sanitize::getInt('groupId', $filterBy);
             }
@@ -130,17 +130,17 @@ class UserGroupFactory extends BaseFactory
             }
 
             // Filter by User Id
-            if (Sanitize::getInt('userId', $filterBy) != null) {
+            if (Sanitize::getInt('userId', $filterBy) !== null) {
                 $body .= ' AND `group`.groupId IN (SELECT groupId FROM `lkusergroup` WHERE userId = :userId) ';
                 $params['userId'] = Sanitize::getInt('userId', $filterBy);
             }
 
-            if (Sanitize::getInt('isUserSpecific', 0, $filterBy) != -1) {
+            if (Sanitize::getInt('isUserSpecific', $filterBy) !== null) {
                 $body .= ' AND isUserSpecific = :isUserSpecific ';
                 $params['isUserSpecific'] = Sanitize::getInt('isUserSpecific', 0, $filterBy);
             }
 
-            if (Sanitize::getInt('isEveryone', 0, $filterBy) != -1) {
+            if (Sanitize::getInt('isEveryone', $filterBy) !== null) {
                 $body .= ' AND isEveryone = :isEveryone ';
                 $params['isEveryone'] = Sanitize::getInt('isEveryone', 0, $filterBy);
             }

@@ -36,12 +36,12 @@ class LogFactory extends BaseFactory
              WHERE 1 = 1
         ';
 
-        if (Sanitize::getInt('fromDt', $filterBy) != null) {
+        if (Sanitize::getInt('fromDt', $filterBy) !== null) {
             $body .= ' AND logdate > :fromDt ';
             $params['fromDt'] = date("Y-m-d H:i:s", Sanitize::getInt('fromDt', $filterBy));
         }
 
-        if (Sanitize::getInt('toDt', $filterBy) != null) {
+        if (Sanitize::getInt('toDt', $filterBy) !== null) {
             $body .= ' AND logdate <= :toDt ';
             $params['toDt'] = date("Y-m-d H:i:s", Sanitize::getInt('toDt', $filterBy));
         }

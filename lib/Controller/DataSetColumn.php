@@ -78,6 +78,11 @@ class DataSetColumn extends Base
             $column->dataType = __($column->dataType);
             $column->dataSetColumnType = __($column->dataSetColumnType);
 
+            if ($this->isApi())
+                break;
+
+            $column->includeProperty('buttons');
+
             // Edit
             $column->buttons[] = array(
                 'id' => 'dataset_button_edit',

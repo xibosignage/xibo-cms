@@ -223,7 +223,7 @@ class DisplayFactory extends BaseFactory
         }
 
         // Only ones with a particular active campaign
-        if (Sanitize::getInt('activeCampaignId', $filterBy) != null) {
+        if (Sanitize::getInt('activeCampaignId', $filterBy) !== null) {
             // Which displays does a change to this layout effect?
             $body .= '
               AND display.displayId IN (

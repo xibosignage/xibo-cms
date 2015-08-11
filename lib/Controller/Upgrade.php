@@ -32,58 +32,47 @@ class Upgrade extends Base
 
     public function displayPage()
     {
-
-        if (DBVERSION == WEBSITE_VERSION) {
-            Theme::Set('message', sprintf(__('Sorry you have arrived at this page in error, please try to navigate away.'), Theme::getConfig('app_name')));
-
-            $this->getState()->html .= Theme::RenderReturn('message_box');
+        if (DBVERSION === WEBSITE_VERSION) {
+            $this->getState()->template = 'upgrade-not-required-page';
             return;
         }
 
         if ($this->getUser()->userTypeId != 1) {
-            // Make sure we actually need to do an upgrade
-            Theme::Set('message', sprintf(__('The CMS is temporarily off-line as an upgrade is in progress. Please check with your system administrator for updates or refresh your page in a few minutes.'), Theme::getConfig('app_name')));
-
-            $this->getState()->html .= Theme::RenderReturn('message_box');
+            $this->getState()->template = 'upgrade-in-progress-page';
             return;
         }
-        else {
-            // We want a static form (traditional rather than ajax)
-            Theme::Set('form_class', 'StaticForm');
 
-            // What step are we on
-            $xibo_step = \Kit::GetParam('step', _REQUEST, _INT, 1);
+        $this->getState()->template = 'upgrade-page';
+        return;
 
-            $content = '';
+        // What step are we on
+        $xibo_step = \Kit::GetParam('step', _REQUEST, _INT, 1);
 
-            switch ($xibo_step) {
+        $content = '';
 
-                case 1:
-                    // Checks environment
-                    $content = $this->Step1();
-                    break;
+        switch ($xibo_step) {
 
-                case 2:
-                    // Collect upgrade details
+            case 1:
+                // Checks environment
+                $content = $this->Step1();
+                break;
+
+            case 2:
+                // Collect upgrade details
+                $content = $this->Step2();
+                break;
+
+            case 3:
+                // Execute upgrade
+                try {
+                    $content = $this->Step3();
+                } catch (Exception $e) {
+                    $this->errorMessage = $e->getMessage();
+
+                    // Reload step 2
                     $content = $this->Step2();
-                    break;
-
-                case 3:
-                    // Execute upgrade
-                    try {
-                        $content = $this->Step3();
-                    } catch (Exception $e) {
-                        $this->errorMessage = $e->getMessage();
-
-                        // Reload step 2
-                        $content = $this->Step2();
-                    }
-                    break;
-            }
-
-            Theme::Set('step', $xibo_step);
-            Theme::Set('page_content', $content);
-            $this->getState()->html .= Theme::RenderReturn('upgrade_page');
+                }
+                break;
         }
     }
 

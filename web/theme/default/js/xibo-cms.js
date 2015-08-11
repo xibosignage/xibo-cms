@@ -146,7 +146,7 @@ function XiboInitialise(scope) {
         
         $.ajax({
             type: "post",
-            url: $(this).attr("href") + "&ajax=true",
+            url: $(this).attr("href"),
             cache:false,
             dataType:"json",
             success: XiboSubmitResponse
@@ -418,12 +418,14 @@ function XiboFormRender(formUrl, data) {
                     dialog.find(".modal-content").append(footer);
 
                     var i = 0;
+                    var count = Object.keys(response.buttons).length;
                     $.each(
                         response.buttons,
                         function(index, value) {
+                            i++;
                             var extrabutton = $('<button class="btn">').html(index);
 
-                            if (value.indexOf("submit()") > -1 || value.indexOf("XiboDialogApply(") > -1) {
+                            if (i == count) {
                                 extrabutton.addClass('btn-primary save-button');
                             }
                             else {
@@ -456,10 +458,7 @@ function XiboFormRender(formUrl, data) {
                     eval(response.callBack)(dialog);
                 }
 
-                // Focus in the first form element
-                if (response.focusInFirstInput) {
-                    $('input[type=text]', dialog).eq(0).focus();
-                }
+                $('input[type=text]', dialog).eq(0).focus();
 
                 // Set up dependencies between controls
                 if (response.fieldActions != '') {
@@ -523,9 +522,6 @@ function XiboFormRender(formUrl, data) {
                         }
                     });
                 }
-
-                if (response.dialogSize === "large")
-                    $(dialog).addClass("modal-big");
 
                 // Check to see if there are any tab actions
                 $('a[data-toggle="tab"]', dialog).on('shown.bs.tab', function (e) {
@@ -809,6 +805,7 @@ function XiboFormSubmit(form) {
 /**
  * Handles the submit response from an AJAX call
  * @param {Object} response
+ * @param
  */
 function XiboSubmitResponse(response, form) {
     
@@ -833,40 +830,16 @@ function XiboSubmitResponse(response, form) {
     // Did we actually succeed
     if (response.success) {
         // Success - what do we do now?
+        if (response.message != '')
+            SystemMessage(response.message, true);
 
         // We might need to keep the form open
-        if (!response.keepOpen) {
-            bootbox.hideAll();
-        }
-
-        // Should we display the message?
-        if (!response.hideMessage) {
-            if (response.message != '')
-                SystemMessage(response.message, true);
-        }
-
-        // Do we need to fire a callback function?
-        if (response.callBack != null && response.callBack != "") {
-            eval(response.callBack)(response);
-        }
+        bootbox.hideAll();
 
         // Should we refresh the window or refresh the Grids?
-        if (response.refresh) {
-            // We need to refresh - check to see if there is a new location provided
-            if (response.refreshLocation == undefined || response.refreshLocation == "") {
-                // If not refresh the current location
-                window.location.reload();
-            }
-            else {
-                // Refresh to the new location
-                window.location = response.refreshLocation;
-            }
-        }
-        else {
-            XiboRefreshAllGrids();
-        }
+        XiboRefreshAllGrids();
 
-        if (!response.keepOpen && (lastForm != undefined && (lastForm.indexOf("module/form") > -1 || lastForm.indexOf("playlist/form/library/assign") > -1)) && timelineForm != null) {
+        if ((lastForm != undefined && (lastForm.indexOf("module/form") > -1 || lastForm.indexOf("playlist/form/library/assign") > -1)) && timelineForm != null) {
             // Close button
             // We might want to go back to the prior form
             XiboFormRender(timelineForm.url, timelineForm.value);

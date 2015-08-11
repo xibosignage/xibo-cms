@@ -72,12 +72,12 @@ class DataSetColumnFactory extends BaseFactory
                ON datasetcolumntype.DataSetColumnTypeID = datasetcolumn.DataSetColumnTypeID
              WHERE 1 = 1 ';
 
-        if (Sanitize::getInt('dataSetColumnId', $filterBy) != null) {
+        if (Sanitize::getInt('dataSetColumnId', $filterBy) !== null) {
             $body .= ' AND dataSetColumnId = :dataSetColumnId ';
             $params['dataSetColumnId'] = Sanitize::getInt('dataSetColumnId', $filterBy);
         }
 
-        if (Sanitize::getInt('dataSetId', $filterBy) != null) {
+        if (Sanitize::getInt('dataSetId', $filterBy) !== null) {
             $body .= ' AND DataSetID = :dataSetId ';
             $params['dataSetId'] = Sanitize::getInt('dataSetId', $filterBy);
         }

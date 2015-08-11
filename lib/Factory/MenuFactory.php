@@ -72,7 +72,7 @@ class MenuFactory extends BaseFactory
             $params['menu'] = Sanitize::getString('menu', $filterBy);
         }
 
-        if (Sanitize::getInt('menuItemId', $filterBy) != null) {
+        if (Sanitize::getInt('menuItemId', $filterBy) !== null) {
             $SQL .= ' AND menuItem.menuItemId = :menuItemId ';
             $params['menuItemId'] = Sanitize::getInt('menuItemId', $filterBy);
         }

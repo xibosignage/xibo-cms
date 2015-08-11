@@ -91,7 +91,7 @@ class DataSetFactory extends BaseFactory
             // View Permissions
             self::viewPermissionSql('Xibo\Entity\DataSet', $body, $params, '`dataset`.dataSetId', '`dataset`.userId', $filterBy);
 
-            if (Sanitize::getInt('dataSetId', $filterBy) != null) {
+            if (Sanitize::getInt('dataSetId', $filterBy) !== null) {
                 $body .= ' AND dataset.dataSetId = :dataSetId ';
                 $params['dataSetId'] = Sanitize::getInt('dataSetId', $filterBy);
             }
@@ -125,8 +125,6 @@ class DataSetFactory extends BaseFactory
                 $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
                 self::$_countLast = intval($results[0]['total']);
             }
-
-            Log::debug(json_encode($entries));
 
             return $entries;
 

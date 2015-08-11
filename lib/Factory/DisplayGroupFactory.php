@@ -79,7 +79,7 @@ class DisplayGroupFactory extends BaseFactory
               FROM `displaygroup`
         ';
 
-        if (Sanitize::getInt('mediaId', $filterBy) != null) {
+        if (Sanitize::getInt('mediaId', $filterBy) !== null) {
             $body .= '
                 INNER JOIN lkmediadisplaygroup
                 ON lkmediadisplaygroup.displayGroupId = `displaygroup`.displayGroupId
@@ -88,7 +88,7 @@ class DisplayGroupFactory extends BaseFactory
             $params['mediaId'] = Sanitize::getInt('mediaId', $filterBy);
         }
 
-        if (Sanitize::getInt('eventId', $filterBy) != null) {
+        if (Sanitize::getInt('eventId', $filterBy) !== null) {
             $body .= '
                 INNER JOIN `lkscheduledisplaygroup`
                 ON `lkscheduledisplaygroup`.displayGroupId = `displaygroup`.displayGroupId
@@ -102,7 +102,7 @@ class DisplayGroupFactory extends BaseFactory
         // View Permissions
         self::viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, '`displaygroup`.displayGroupId', null, $filterBy);
 
-        if (Sanitize::getInt('displayGroupId', $filterBy) != null) {
+        if (Sanitize::getInt('displayGroupId', $filterBy) !== null) {
             $body .= ' AND displaygroup.displayGroupId = :displayGroupId ';
             $params['displayGroupId'] = Sanitize::getInt('displayGroupId', $filterBy);
         }

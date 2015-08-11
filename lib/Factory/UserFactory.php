@@ -25,6 +25,7 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
+use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
@@ -123,7 +124,7 @@ class UserFactory extends BaseFactory
 
         // Default sort order
         if (count($sortOrder) <= 0)
-            $sortOrder = array('username');
+            $sortOrder = array('userName');
 
         $params = array();
         $select = '
@@ -179,7 +180,7 @@ class UserFactory extends BaseFactory
         }
 
         // User Id Provided?
-        if (Sanitize::getInt('userId', $filterBy) != 0) {
+        if (Sanitize::getInt('userId', $filterBy) !== null) {
             $body .= " AND user.userId = :userId ";
             $params['userId'] = Sanitize::getInt('userId', $filterBy);
         }
@@ -192,19 +193,19 @@ class UserFactory extends BaseFactory
         }
 
         // User Type Provided
-        if (Sanitize::getInt('userTypeId', $filterBy) != 0) {
+        if (Sanitize::getInt('userTypeId', $filterBy) !== null) {
             $body .= " AND user.userTypeId = :userTypeId ";
             $params['userTypeId'] = Sanitize::getInt('userTypeId', $filterBy);
         }
 
         // User Name Provided
-        if (Sanitize::getString('userName', $filterBy) != '') {
+        if (Sanitize::getString('userName', $filterBy) != null) {
             $body .= " AND user.userName = :userName ";
             $params['userName'] = Sanitize::getString('userName', $filterBy);
         }
 
         // Retired users?
-        if (Sanitize::getInt('retired', $filterBy) != null) {
+        if (Sanitize::getInt('retired', $filterBy) !== null) {
             $body .= " AND user.retired = :retired ";
             $params['retired'] = Sanitize::getInt('retired', $filterBy);
         }
@@ -214,7 +215,7 @@ class UserFactory extends BaseFactory
             $params['clientId'] = Sanitize::getString('clientId', $filterBy);
         }
 
-        if (Sanitize::getString('displayGroupId', $filterBy) != null) {
+        if (Sanitize::getInt('displayGroupId', $filterBy) !== null) {
             $body .= ' AND user.userId IN (
                 SELECT DISTINCT user.userId, user.userName, user.email
                   FROM `user`
@@ -227,7 +228,7 @@ class UserFactory extends BaseFactory
                         AND `permissionentity`.entity = \'Xibo\\Entity\\DisplayGroup\'
                  WHERE `permission`.objectId = :displayGroupId
             ) ';
-            $params['displayGroupId'] = Sanitize::getString('displayGroupId', $filterBy);
+            $params['displayGroupId'] = Sanitize::getInt('displayGroupId', $filterBy);
         }
 
         // Sorting?
@@ -243,7 +244,7 @@ class UserFactory extends BaseFactory
 
         $sql = $select . $body . $order . $limit;
 
-        // Log::sql($SQL, $params);
+        //Log::sql($sql, $params);
 
         foreach (PDOConnect::select($sql, $params) as $row) {
             $entries[] = (new User())->hydrate($row);

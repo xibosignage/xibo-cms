@@ -314,7 +314,7 @@ class ModuleFactory extends BaseFactory
                  WHERE 1 = 1
             ';
 
-            if (Sanitize::getInt('moduleId', $filterBy) != null) {
+            if (Sanitize::getInt('moduleId', $filterBy) !== null) {
                 $params['moduleId'] = Sanitize::getInt('moduleId', $filterBy);
                 $body .= ' AND ModuleID = :moduleId ';
             }
