@@ -114,20 +114,6 @@ INSERT INTO `module` (`ModuleID`, `Module`, `Name`, `Enabled`, `RegionSpecific`,
 (15, 'clock', 'Clock', 1, 1, 'Display a Clock', 'forms/library.gif', 1, NULL, 1, 1, 'html', NULL),
 (16, 'font', 'Font', 1, 0, 'A font to use in other Modules', 'forms/library.gif', 1, 'ttf,otf,eot,svg,woff', 0, 0, NULL, NULL);
 
-INSERT INTO `pagegroup` (`pagegroupID`, `pagegroup`) VALUES
-(1, 'Schedule'),
-(2, 'Homepage and Login'),
-(3, 'Layouts'),
-(4, 'Content'),
-(7, 'Displays'),
-(8, 'Users and Groups'),
-(9, 'Reports'),
-(10, 'License and Settings'),
-(11, 'Updates'),
-(12, 'Templates'),
-(13, 'Web Services'),
-(14, 'DataSets');
-
 INSERT INTO `pages` (`pageID`, `name`) VALUES
   (1, 'dashboard'),
   (2, 'schedule'),
@@ -285,22 +271,8 @@ INSERT INTO `usertype` (`usertypeid`, `usertype`) VALUES
 (2, 'Group Admin'),
 (3, 'User');
 
-INSERT INTO `user` (`UserID`, `usertypeid`, `UserName`, `UserPassword`, `loggedin`, `lastaccessed`, `email`, `homepage`, `Retired`) VALUES
-(1, 1, 'xibo_admin', '21232f297a57a5a743894a0e4a801fc3', 1, NOW(), '', 'statusdashboard', 0);
-
-INSERT INTO `lkmenuitemgroup` (`LkMenuItemGroupID`, `GroupID`, `MenuItemID`) VALUES
-(1, 1, 33),
-(2, 1, 14),
-(3, 1, 15),
-(4, 1, 16),
-(5, 1, 20),
-(6, 1, 24),
-(7, 1, 1),
-(8, 1, 2),
-(9, 1, 3),
-(10, 1, 29),
-(11, 1, 30),
-(12, 1, 26);
+INSERT INTO `user` (`UserID`, `usertypeid`, `UserName`, `UserPassword`, `loggedin`, `lastaccessed`, `email`, `homepageId`, `Retired`) VALUES
+(1, 1, 'xibo_admin', '21232f297a57a5a743894a0e4a801fc3', 1, NOW(), '', 42, 0);
 
 INSERT INTO `lkusergroup` (`LkUserGroupID`, `GroupID`, `UserID`) VALUES
 (1, 3, 1);

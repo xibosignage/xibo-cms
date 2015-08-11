@@ -29,11 +29,11 @@
 
                     {% set title %}{% trans "Column Type" %}{% endset %}
                     {% set helpText %}{% trans "Whether this column is a value or a formula" %}{% endset %}
-                    {{ forms.dropdown("dataSetColumnTypeId", "single", title, "", dataSetColumnTypes, "datasetcolumntypeid", "datasetcolumntype", helpText) }}
+                    {{ forms.dropdown("dataSetColumnTypeId", "single", title, "", dataSetColumnTypes, "dataSetColumnTypeId", "dataSetColumnType", helpText) }}
 
                     {% set title %}{% trans "Data Type" %}{% endset %}
                     {% set helpText %}{% trans "The DataType of the Intended Data" %}{% endset %}
-                    {{ forms.dropdown("dataTypeId", "single", title, "", dataTypes, "datatypeid", "datatype", helpText) }}
+                    {{ forms.dropdown("dataTypeId", "single", title, "", dataTypes, "dataTypeId", "dataType", helpText) }}
 
                     {% set title %}{% trans "List Content" %}{% endset %}
                     {% set helpText %}{% trans "A comma separated list of items to present in a combo box" %}{% endset %}
