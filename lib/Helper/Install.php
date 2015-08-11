@@ -181,11 +181,11 @@ class Install
                 }
             }
         } catch (\PDOException $e) {
-            throw new InstallationError(sprintf(__('An error occurred populating the database. Statement number: %d. Error Message = [%s]. File = [%s]. SQL = [%s].'), $sqlStatementCount, $e->getMessage(), $sql_file, $sql));
+            throw new InstallationError(sprintf(__('An error occurred populating the database. Statement number: %d. Error Message = [%s]. File = [%s]. SQL = [%s].'), $sqlStatementCount, $e->getMessage(), $filename, $sql));
         }
 
         // Write out a new settings.php
-        $fh = fopen('settings.php', 'wt');
+        $fh = fopen(PROJECT_ROOT . '/web/settings.php', 'wt');
 
         if (!$fh)
             throw new InstallationError(__('Unable to write to settings.php. We already checked this was possible earlier, so something changed.'));
