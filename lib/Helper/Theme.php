@@ -20,11 +20,6 @@
  */
 namespace Xibo\Helper;
 use Exception;
-use Extra;
-use ID;
-use Key;
-use MenuManager;
-use Select;
 use Slim\Slim;
 use Xibo\Entity\Menu;
 use Xibo\Factory\MenuFactory;

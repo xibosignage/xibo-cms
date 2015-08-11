@@ -299,7 +299,7 @@ class Base
         $data['currentUser'] = $this->getUser();
 
         // Render the view manually with Twig, parse it and pull out various bits
-        $view = $app->view()->getInstance()->render($state->template . '.twig', $data);
+        $view = $app->view()->render($state->template . '.twig', $data);
 
         // Log Rendered View
         // Log::debug('%s View: %s', $state->template, $view);
