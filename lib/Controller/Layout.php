@@ -817,11 +817,11 @@ class Layout extends Base
                 break;
 
             case 3:
-                $status = '<span title="' . __('This Layout is invalid and should not be scheduled') . '" class="glyphicon glyphicon-remove-sign"></span>';
+                $status = '<span title="' . __('This Layout has not been built yet') . '" class="fa fa-cogs"></span>';
                 break;
 
             default:
-                $status = '<span title="' . __('The Status of this Layout is not known') . '" class="glyphicon glyphicon-warning-sign"></span>';
+                $status = '<span title="' . __('This Layout is invalid and should not be scheduled') . '" class="glyphicon glyphicon-warning-sign"></span>';
         }
 
         // Keep things tidy

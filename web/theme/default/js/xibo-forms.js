@@ -447,4 +447,32 @@ var backGroundFormSetup = function() {
     backgroundImageList.change(backgroundImageChange);
 
     backgroundImageChange();
+
+    $("#layoutEditForm").submit(function(e) {
+        e.preventDefault();
+
+        var form = $(this);
+
+        // Submit via ajax - change the background color on success
+        $.ajax({
+            type: form.attr("method"),
+            url: form.attr("action"),
+            cache: false,
+            dataType: "json",
+            data: $(form).serialize(),
+            success: function(xhr, textStatus, error) {
+
+                XiboSubmitResponse(xhr, form);
+
+                if (xhr.success) {
+                    var color = form.find("#backgroundColor").val();
+                    $("#layout").data().backgroundColor = color;
+                    $("#layout").css("background-color", color);
+                }
+            },
+            error: function(xhr, textStatus, errorThrown) {
+                SystemMessage(xhr.responseText, false);
+            }
+        });
+    })
 };

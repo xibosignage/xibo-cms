@@ -29,7 +29,7 @@
                 <li><a href="#description" role="tab" data-toggle="tab"><span>{% trans "Description" %}</span></a></li>
                 <li><a href="#background" role="tab" data-toggle="tab"><span>{% trans "Background" %}</span></a></li>
             </ul>
-            <form id="layoutEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("layout.edit", {id: layout.layoutId}) }}">
+            <form id="layoutEditForm" class="form-horizontal" method="put" action="{{ urlFor("layout.edit", {id: layout.layoutId}) }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
                         {% set title %}{% trans "Name" %}{% endset %}

@@ -60,6 +60,7 @@ $(document).ready(function(){
         });
 
         // Set an interval
+        XiboPing($(this).data('statusUrl'), '.layout-status');
         setInterval("XiboPing('" + $(this).data('statusUrl') + "', '.layout-status')", 1000 * 60); // Every minute
     });
 
