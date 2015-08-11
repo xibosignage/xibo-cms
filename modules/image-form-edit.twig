@@ -74,7 +74,7 @@
 
                 {% set title %}{% trans "Scale type" %}{% endset %}
                 {% set helpText %}{% trans "How should this image be scaled?" %}{% endset %}
-                {% set center %}{% trans "Center" %}{% endset %}
+                {% set center %}{% trans "Centre" %}{% endset %}
                 {% set stretch %}{% trans "Stretch" %}{% endset %}
                 {% set options = [
                 { scaleTypeId: "center", scaleType: center },
@@ -88,9 +88,9 @@
                 {% set center %}{% trans "Centre" %}{% endset %}
                 {% set right %}{% trans "Right" %}{% endset %}
                 {% set options = [
-                { alignId: left, align: left },
-                { alignId: center, align: center },
-                { alignId: right, align: right }
+                { alignId: "left", align: left },
+                { alignId: "center", align: center },
+                { alignId: "right", align: right }
                 ] %}
                 {{ forms.dropdown("alignId", "single", title, module.getOption("align","center"), options, "alignId", "align", helpText, "align-fields") }}
 
@@ -100,9 +100,9 @@
                 {% set middle %}{% trans "Middle" %}{% endset %}
                 {% set bottom %}{% trans "Bottom" %}{% endset %}
                 {% set options = [
-                { valignId: top, valign: top },
-                { valignId: middle, valign: middle },
-                { valignId: bottom, valign: bottom }
+                { valignId: "top", valign: top },
+                { valignId: "middle", valign: middle },
+                { valignId: "bottom", valign: bottom }
                 ] %}
                 {{ forms.dropdown("valignId", "single", title, module.getoption("valign", "middle"), options, "valignId", "valign", helpText, "align-fields") }}
             </form>

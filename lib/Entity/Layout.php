@@ -179,6 +179,20 @@ class Layout implements \JsonSerializable
     public $owner;
     public $groupsWithPermissions;
 
+    public static $loadOptionsMinimum = [
+        'loadPlaylists' => false,
+        'loadTags' => false,
+        'loadPermissions' => false,
+        'loadCampaigns' => false
+    ];
+
+    public static $saveOptionsMinimum = [
+        'saveLayout' => true,
+        'saveRegions' => false,
+        'saveTags' => false,
+        'setBuildRequired' => true
+    ];
+
     public function __clone()
     {
         // Clear the layout id

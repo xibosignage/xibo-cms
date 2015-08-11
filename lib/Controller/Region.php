@@ -9,6 +9,7 @@
 namespace Xibo\Controller;
 
 
+use Xibo\Entity\Layout;
 use Xibo\Entity\Playlist;
 use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
@@ -280,6 +281,9 @@ class Region extends Base
         if (!$this->getUser()->checkEditable($region))
             throw new AccessDeniedException();
 
+        // Load before we save
+        $region->load();
+
         $region->name = Sanitize::getString('name');
         $region->width = Sanitize::getDouble('width');
         $region->height = Sanitize::getDouble('height');
@@ -297,6 +301,12 @@ class Region extends Base
 
         // Save
         $region->save();
+
+        // Mark the layout as needing rebuild
+        $layout = LayoutFactory::getById($region->layoutId);
+        $layout->load(Layout::$loadOptionsMinimum);
+        $layout->setBuildRequired();
+        $layout->save(Layout::$saveOptionsMinimum);
 
         // Return
         $this->getState()->hydrate([
