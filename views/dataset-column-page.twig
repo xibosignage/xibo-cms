@@ -11,7 +11,7 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li><a class="XiboFormButton" title="{% trans "Add Column" %}" href="{{ urlFor("dataSet.column.add.form") }}">{% trans "Add Column" %}</a></li>
+        <li><a class="XiboFormButton" title="{% trans "Add Column" %}" href="{{ urlFor("dataSet.column.add.form", {id: dataSet.dataSetId}) }}">{% trans "Add Column" %}</a></li>
     </ul>
 {% endblock %}
 
