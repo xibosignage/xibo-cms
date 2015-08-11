@@ -101,6 +101,7 @@ class Layout extends Base
         // Set up any JavaScript translations
         $data = [
             'layout' => $layout,
+            'resolution' => ResolutionFactory::getByDimensions($layout->width, $layout->height),
             'layouts' => LayoutFactory::query(),
             'zoom' => Sanitize::getDouble('zoom', 1)
         ];

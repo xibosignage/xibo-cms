@@ -10,20 +10,8 @@
 {% import "inline.twig" as inline %}
 
 {% block pageContent %}
-    {#
-    Get the display width / height
-        Version 1 layouts had the designer resolution in the XLF and therefore did not need anything scaling in the designer.
-        Version 2+ layouts have the layout resolution in the XLF and therefore need to be scaled back by the designer.
-    #}
-    {% if layout.width < layout.height %}
-        {# Portrait #}
-        {% set displayWidth = 800 %}
-        {% set designerScale = 800 / layout.width %}
-    {% else %}
-        {# Landscape #}
-        {% set displayHeight = 450 %}
-        {% set designerScale = 450 / layout.height %}
-    {% endif %}
+    {# Get the display width / height #}
+    {% set designerScale = min((resolution.designerWidth / layout.width), (resolution.designerHeight / layout.height)) %}
 
     {# Version 2 layout can support zooming? #}
     {% if layout.schemaVersion > 1 %}
