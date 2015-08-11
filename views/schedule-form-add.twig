@@ -43,8 +43,8 @@
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Next" %}, XiboDialogApply("#scheduleAddForm")
     {% trans "Save" %}, $("#scheduleAddForm").submit()
-    {% trans "Next" %}, $("#<<id>>").submit()
 {% endblock %}
 
 {% block formHtml %}
@@ -57,125 +57,67 @@
             <form id="scheduleAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("schedule.add") }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
-                {# display groups and stuff 
-
-            $formFields['general'][] = Form::AddMultiCombo(
-            'DisplayGroupIDs[]',
-            __('Display'),
-            $displayGroupIds,
-            array('group' => $groups, 'display' => $displays),
-            'displaygroupid',
-            'displaygroup',
-            __('Please select one or more displays / groups for this event to be shown on.'),
-            'd', '', true, '', '', '', $optionGroups, array(array('name' => 'data-live-search', 'value' => "true"), array('name' => 'data-selected-text-format', 'value' => "count > 4")));
-
-            THIS IS WRONG not sure how wrong.
-                #}
-                    {% set title %}{% trans "Display" %}{% endset %}
-                    {% set helpText %}{% trans "Please select one or more displays / groups for this event to be shown on." %}{% endset %}
-                    {# how the hell set it to just displayGroups and displays variables and not as string #}
-                    {% set group = displayGroups %}    
-                    {% set display = displays %}
-                    {% set options = [
-                    { displaygroupid: group , displaygroup: group },
-                    { displaygroupid: display , displaygroup: display }
-                    ] %}
-                    {% set groups %}{% trans "Groups" %}{% endset %}
-                    {% set displays %}{% trans "Displays" %}{% endset %}
-                    {% set optionGroups = [
-                    {id: group, label: groups},
-                    {id: display, label: diplays}
-                    ] %}
-                    {% set optionss = [
-                    { name: data-live-search, value: true },
-                    { name: data-selected-text-format, value: count > 4 }
-                    ] %}  
-                    {{ forms.dropdown("displayGroupIds", "dropdownmulti", title, displayGroupIDs, options, "displaygroupid", "displaygroup", helpText, "", "", true, "", "", "", optionGroups, optionss) }}
-                
-                {# start/end time #}
-
-                    {% set title %}{% trans "Start Time" %}{% endset %}
-                    {% set helpText %}{% trans "Select the start time for this event" %}{% endset %}
-                    {{ forms.text("fromDt", title, "", helpText,"", "required") }}
-
-                    {% set title %}{% trans "End Time" %}{% endset %}
-                    {% set helpText %}{% trans "Select the end time for this event" %}{% endset %}
-                    {{ forms.text("toDt", title, "", helpText, "", "required") }}
-
-                    {{ forms.hidden("starttime", "") }}
-                    {{ forms.hidden("endtime", "") }}
-
-                {# 
-
-            $formFields['general'][] = Form::AddCombo(
-            'CampaignID',
-            __('Layout / Campaign'),
-            NULL,
-            array('campaign' => $campaignOptions, 'layout' => $layoutOptions),
-            'id',
-            'value',
-            __('Please select a Layout or Campaign for this Event to show'),
-            'l', '', true, '', '', '', $optionGroups);
-
-        twig = campaigns variable
-        for item in campaigns
-            item.isLayoutSpecific == 1
-
-        foreach ($layouts as $layout) {
-
-            if ($layout['islayoutspecific'] == 1) {
-                $layoutOptions[] = array(
-                    'id' => $layout['campaignid'],
-                    'value' => $layout['campaign']
-                );
-            } else {
-                $campaignOptions[] = array(
-                    'id' => $layout['campaignid'],
-                    'value' => $layout['campaign']
-                );
-
-        );
-
-                            #}
-
-{# Assuming that this for loop is ok( spoiler alert - it isn't ok), same problem as above with multidropdown how to assign it - campaignOpions and layoutOptions as variable to array and then to dropdown 
-
-                {% for item in campaigns %}
-                    {% if item.isLayoutSpecific == 1 %}
-                        {% set layoutOptions = [
-                        id: item.campaignid, value: item.campaign
+                        {% set title %}{% trans "Display" %}{% endset %}
+                        {% set helpText %}{% trans "Please select one or more displays / groups for this event to be shown on." %}{% endset %}
+                        {% set attributes = [
+                            { name: "data-live-search", value: "true" },
+                            { name: "data-selected-text-format", value: "count > 4" }
                         ] %}
-                    {% else %}
-                        {% set campaignOptions = [
-                        id: item.campaignid, value: item.campaign
+                        {% set transGroups %}{% trans "Groups" %}{% endset %}
+                        {% set transDisplays %}{% trans "Display" %}{% endset %}
+                        {% set optionGroups = [
+                            {id: "group", label: transGroups},
+                            {id: "display", label: transDisplays}
                         ] %}
-                    {% endif %}
-                {% endfor %}
-#}
-                    {% set campaign %}{% trans "Campaigns" %}{% endset %}
-                    {% set layouts %}{% trans "Layouts" %}{% endset %}
-                    {% set optionGroups = [
-                    {id: campaign, label: campaigns},
-                    {id: layout, label: layouts}
-                    ] %}
-                    {% set title %}{% trans "Layout / Campaign" %}{% endset %}
-                    {% set helpText %}{% trans "Please select a Layout or Campaign for this Event to show" %}{% endset %}
-                    {{ forms.dropdown("campaignId", "single", title, "", "id", "value", helpText,"","", true, "", "", "", optionGroups) }}
+                        {{ forms.dropdown("displayGroupIds[]", "dropdownmulti", title, displayGroupIds, {group: displayGroups, display: displays}, "displayGroupId", "displayGroup", helpText, "", "", "", "", attributes, optionGroups) }}
 
-                    {% set title %}{% trans "Display Order" %}{% endset %}
-                    {% set helpText %}{% trans "Please select the order this event should appear in relation to others when there is more than one event scheduled" %}{% endset %}
-                    {{ forms.number("displayOrder", title, displayOrder, helpText) }}
-                
-                    {% set title %}{% trans "Priority" %}{% endset %}
-                    {% set helpText %}{% trans "Sets whether or not this event has priority. If set the event will be show in preference to other events." %}{% endset %}
-                    {{ forms.checkbox("isPriority", title, isPriority, helpText) }}
+                        {% set title %}{% trans "Start Time" %}{% endset %}
+                        {% set helpText %}{% trans "Select the start time for this event" %}{% endset %}
+                        {{ forms.text("starttimeControl", title, "", helpText, "", "required") }}
+
+                        {% set title %}{% trans "End Time" %}{% endset %}
+                        {% set helpText %}{% trans "Select the end time for this event" %}{% endset %}
+                        {{ forms.text("endtimeControl", title, "", helpText, "", "required") }}
+
+                        {{ forms.hidden("fromDt", "") }}
+                        {{ forms.hidden("toDt", "") }}
+
+                        {# Campaign / Layout list. We want to build two arrays for us to use. #}
+                        {% set layoutOptions = [] %}
+                        {% set campaignOptions = [] %}
+
+                        {% for item in campaigns %}
+                            {% if item.isLayoutSpecific == 1 %}
+                                {% set layoutOptions = [{id: item.campaignId, value: item.campaign}]|merge(layoutOptions) %}
+                            {% else %}
+                                {% set campaignOptions = [{id: item.campaignId, value: item.campaign}]|merge(campaignOptions) %}
+                            {% endif %}
+                        {% endfor %}
+
+                        {% set campaigns %}{% trans "Campaigns" %}{% endset %}
+                        {% set layouts %}{% trans "Layouts" %}{% endset %}
+                        {% set optionGroups = [
+                        {id: "campaign", label: campaigns},
+                        {id: "layout", label: layouts}
+                        ] %}
+                        {% set title %}{% trans "Layout / Campaign" %}{% endset %}
+                        {% set helpText %}{% trans "Please select a Layout or Campaign for this Event to show" %}{% endset %}
+                        {{ forms.dropdown("campaignId", "single", title, "", {campaign: campaignOptions, layout: layoutOptions}, "id", "value", helpText, "", "", "", "", "", optionGroups) }}
+
+                        {% set title %}{% trans "Display Order" %}{% endset %}
+                        {% set helpText %}{% trans "Please select the order this event should appear in relation to others when there is more than one event scheduled" %}{% endset %}
+                        {{ forms.number("displayOrder", title, "", helpText) }}
+
+                        {% set title %}{% trans "Priority" %}{% endset %}
+                        {% set helpText %}{% trans "Sets whether or not this event has priority. If set the event will be show in preference to other events." %}{% endset %}
+                        {{ forms.checkbox("isPriority", title, "", helpText) }}
 
                     </div>
                     
                     <div class="tab-pane" id="repeats">
-                    {# ask about none! date search etc #}
                         {% set title %}{% trans "Repeats" %}{% endset %}
                         {% set helpText %}{% trans "What type of repeat is required?" %}{% endset %}
+                        {% set noneOption %}{% trans "None" %}{% endset %}
                         {% set perminute %}{% trans "Per Minute" %}{% endset %}
                         {% set hourly %}{% trans "Hourly" %}{% endset %}
                         {% set daily %}{% trans "Daily" %}{% endset %}
@@ -183,25 +125,26 @@
                         {% set monthly %}{% trans "Monthly" %}{% endset %}
                         {% set yearly %}{% trans "Yearly" %}{% endset %}
                         {% set options = [
-                        { id: "", name: none },
-                        { id: Minute, name: perminute },
-                        { id: Hour, name: hourly},
-                        { id: Day, name: daily},
-                        { id: Week, name: weekly},
-                        { id: Month, name: monthly},
-                        { id: Year, name: yearly}
+                        { id: "", name: noneOption },
+                        { id: "Minute", name: minute },
+                        { id: "Hour", name: hourly},
+                        { id: "Day", name: daily},
+                        { id: "Week", name: weekly},
+                        { id: "Month", name: monthly},
+                        { id: "Year", name: yearly}
                         ] %}
-                        {{ forms.dropdown("reccurenceType", "single", title, "", options, "id", "name", helpText) }}
+                        {{ forms.dropdown("recurrenceType", "single", title, "", options, "id", "name", helpText) }}
                     
                         {% set title %}{% trans "Repeat every" %}{% endset %}
                         {% set helpText %}{% trans "How often does this event repeat?" %}{% endset %}
-                        {{ forms.number("reccurenceDetail", title, reccurenceDetail, helpText) }}
+                        {{ forms.number("recurrenceDetail", title, recurrenceDetail, helpText) }}
 
                         {% set title %}{% trans "Until" %}{% endset %}
                         {% set helpText %}{% trans "When should this event stop repeating?" %}{% endset %}
-                        {{ forms.text("reccurenceRange", title, "", helpText) }}
-                        {{ forms.hidden("rec_range", "") }}
+                        {{ forms.text("rec_rangeControl", title, "", helpText) }}
+                        {{ forms.hidden("recurrenceRange", "") }}
                     </div>
+                </div>
             </form>
         </div>
     </div>

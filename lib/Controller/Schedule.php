@@ -225,7 +225,7 @@ class Schedule extends Base
         $displays = array();
         $scheduleWithView = (Config::GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
 
-        foreach (DisplayGroupFactory::query() as $displayGroup) {
+        foreach (DisplayGroupFactory::query(['displayGroup'], ['isDisplaySpecific' => -1]) as $displayGroup) {
             /* @var DisplayGroup $displayGroup */
 
             // Can't schedule with view, but no edit permissions
@@ -243,7 +243,7 @@ class Schedule extends Base
         $this->getState()->setData([
             'displays' => $displays,
             'displayGroups' => $groups,
-            'campaigns' => CampaignFactory::query(),
+            'campaigns' => CampaignFactory::query(null, ['isLayoutSpecific' => -1]),
             'displayGroupIds' => $this->getSession()->get('displayGroupIds'),
             'help' => Help::Link('Schedule', 'Add')
         ]);
@@ -311,7 +311,7 @@ class Schedule extends Base
      *      enum={"", "Minute", "Hour", "Day", "Week", "Month", "Year"}
      *   ),
      *   @SWG\Parameter(
-     *      name="recurrentDetail",
+     *      name="recurrenceDetail",
      *      in="formData",
      *      description="The interval for the recurrence.",
      *      type="int",

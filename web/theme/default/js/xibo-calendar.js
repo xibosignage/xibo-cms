@@ -137,8 +137,8 @@ function CallGenerateCalendar() {
 var setupScheduleForm = function(form) {
 
     // Select lists
-    $('#CampaignID', form).selectpicker();
-    $('select[name="DisplayGroupIDs[]"]', form).selectpicker();
+    $('#campaignId', form).selectpicker();
+    $('select[name="displayGroupIds[]"]', form).selectpicker();
 
     // Set up any date fields we have with the date picker
     $('#starttimeControl', form).datetimepicker({
@@ -163,7 +163,7 @@ var setupScheduleForm = function(form) {
 
     $('#rec_rangeControl', form).datetimepicker({
         format: "dd MM yyyy - hh:ii",
-        linkField: "rec_range",
+        linkField: "recurrenceRange",
         linkFormat: "yyyy-mm-dd hh:ii",
         minuteStep: 5,
         autoClose: true,
