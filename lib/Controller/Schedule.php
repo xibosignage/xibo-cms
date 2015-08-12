@@ -19,8 +19,6 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
-use baseDAO;
-use Kit;
 use Xibo\Entity\DisplayGroup;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\CampaignFactory;
@@ -28,7 +26,6 @@ use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Date;
-use Xibo\Helper\Form;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
@@ -39,15 +36,12 @@ class Schedule extends Base
     function displayPage()
     {
         // We need to provide a list of displays
-        $displayGroupIds = Sanitize::getIntArray('displayGroupIds');
+        $displayGroupIds = $this->getSession()->get('displayGroupIds');
         $groups = array();
         $displays = array();
 
-        foreach (DisplayGroupFactory::query() as $display) {
+        foreach (DisplayGroupFactory::query(null, ['isDisplaySpecific' => -1]) as $display) {
             /* @var DisplayGroup $display */
-
-            $display->selected = (in_array($display->displayGroupId, $displayGroupIds));
-
             if ($display->isDisplaySpecific == 1) {
                 $displays[] = $display;
             } else {
@@ -56,7 +50,7 @@ class Schedule extends Base
         }
 
         $data = [
-            'allSelected' => in_array(-1, $displayGroupIds),
+            'selectedDisplayGroupIds' => $displayGroupIds,
             'groups' => $groups,
             'displays' => $displays
         ];
@@ -110,12 +104,12 @@ class Schedule extends Base
         $this->getApp()->response()->header('Content-Type', 'application/json');
         $this->setNoOutput();
 
-        $displayGroupIds = Sanitize::getIntArray('DisplayGroupIDs');
+        $displayGroupIds = Sanitize::getIntArray('displayGroupIds');
         $start = Sanitize::getInt('from', 1000) / 1000;
         $end = Sanitize::getInt('to', 1000) / 1000;
 
-        // if we have some displaygroupids then add them to the session info so we can default everything else.
-        $this->getSession()->set('DisplayGroupIDs', $displayGroupIds);
+        // if we have some displayGroupIds then add them to the session info so we can default everything else.
+        $this->getSession()->set('displayGroupIds', $displayGroupIds);
 
         if (count($displayGroupIds) <= 0) {
             $this->getApp()->response()->body(json_encode(array('success' => 1, 'result' => [])));
@@ -344,7 +338,7 @@ class Schedule extends Base
         $schedule = new \Xibo\Entity\Schedule();
         $schedule->userId = $this->getUser()->userId;
         $schedule->campaignId = Sanitize::getInt('campaignId');
-        $schedule->displayOrder = Sanitize::getInt('displayOrder');
+        $schedule->displayOrder = Sanitize::getInt('displayOrder', 0);
         $schedule->isPriority = Sanitize::getCheckbox('isPriority');
         $schedule->recurrenceType = Sanitize::getString('recurrenceType');
         $schedule->recurrenceDetail = Sanitize::getString('recurrenceDetail');

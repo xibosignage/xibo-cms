@@ -29,16 +29,21 @@
                 </button>
             </div>
             <div class="xibo-calendar-controls dropdown pull-right">
-                <select id="DisplayList" class="form-control" name="DisplayGroupIDs[]" data-live-search="true" data-selected-text-format="count > 4" title="{% trans "Nothing Selected" %}" multiple>
+                {% if -1 in selectedDisplayGroupIds %}
+                    {% set allSelected = "selected" %}
+                {% else %}
+                    {% set allSelected = "" %}
+                {% endif %}
+                <select id="DisplayList" class="form-control" name="displayGroupIds[]" data-live-search="true" data-selected-text-format="count > 4" title="{% trans "Nothing Selected" %}" multiple>
                     <option value="-1" {{ allSelected }}>{% trans "All" %}</option>
                     <optgroup label="{% trans "Groups" %}">
                         {% for group in groups %}
-                        <option value="{{ group.displayGroupId }}" {% if group.checked %}checked{% endif %}>{{ group.displayGroup }}</option>
+                        <option value="{{ group.displayGroupId }}" {% if group.displayGroupId in selectedDisplayGroupIds %}selected{% endif %}>{{ group.displayGroup }}</option>
                         {% endfor %}
                     </optgroup>
                     <optgroup label="{% trans "Displays" %}">
                         {% for display in displays %}
-                        <option value="{{ display.displayGroupId }}" {% if display.checked %}checked{% endif %}>{{ display.displayGroup }}</option>
+                        <option value="{{ display.displayGroupId }}" {% if display.displayGroupId in selectedDisplayGroupIds %}selected="" {% endif %}>{{ display.displayGroup }}</option>
                         {% endfor %}
                     </optgroup>
                 </select>

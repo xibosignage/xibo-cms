@@ -143,7 +143,7 @@ var setupScheduleForm = function(form) {
     // Set up any date fields we have with the date picker
     $('#starttimeControl', form).datetimepicker({
         format: "dd MM yyyy - hh:ii",
-        linkField: "starttime",
+        linkField: "fromDt",
         linkFormat: "yyyy-mm-dd hh:ii",
         minuteStep: 5,
         autoClose: true,
@@ -153,7 +153,7 @@ var setupScheduleForm = function(form) {
 
     $('#endtimeControl', form).datetimepicker({
         format: "dd MM yyyy - hh:ii",
-        linkField: "endtime",
+        linkField: "toDt",
         linkFormat: "yyyy-mm-dd hh:ii",
         minuteStep: 5,
         autoClose: true,
@@ -170,6 +170,28 @@ var setupScheduleForm = function(form) {
         language: language,
         calendarType: calendarType
     });
+
+    // Bind to the form submit
+    $("#scheduleAddForm, #scheduleEditForm").submit(function(e) {
+        e.preventDefault();
+
+        $.ajax({
+            type: $(this).attr("method"),
+            url: $(this).attr("action"),
+            data: $(this).serialize(),
+            cache: false,
+            dataType: "json",
+            success: function(xhr, textStatus, error) {
+
+                XiboSubmitResponse(xhr);
+
+                if (xhr.success) {
+                    // Reload the Calendar
+                    CallGenerateCalendar();
+                }
+            }
+        });
+    });
 };
 
 /**
@@ -179,5 +201,5 @@ var setupScheduleNowForm = function(form) {
     
     // We submit this form ourselves (outside framework)
     $('#CampaignID', form).selectpicker();
-    $('select[name="DisplayGroupIDs[]"]', form).selectpicker();
+    $('select[name="displayGroupIds[]"]', form).selectpicker();
 };
