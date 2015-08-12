@@ -18,8 +18,8 @@
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Next" %}, XiboDialogApply("#scheduleAddForm")
-    {% trans "Save" %}, $("#scheduleAddForm").submit()
+    {% trans "Next" %}, XiboDialogApply("#scheduleEditForm")
+    {% trans "Save" %}, $("#scheduleEditForm").submit()
 {% endblock %}
 
 {% block formFieldActions %}
@@ -65,7 +65,7 @@
                 <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
                 <li><a href="#repeats" role="tab" data-toggle="tab"><span>{% trans "Repeats" %}</span></a></li>
             </ul>
-            <form id="scheduleAddForm" class="form-horizontal" method="post" action="{{ urlFor("schedule.add") }}">
+            <form id="scheduleEditForm" class="form-horizontal" method="post" action="{{ urlFor("schedule.edit", {id: event.eventId}) }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
                         {% set title %}{% trans "Display" %}{% endset %}
@@ -84,11 +84,11 @@
 
                         {% set title %}{% trans "Start Time" %}{% endset %}
                         {% set helpText %}{% trans "Select the start time for this event" %}{% endset %}
-                        {{ forms.dateTime("fromDt", title, "", helpText, "", "required", "", settings.DATE_FORMAT_BOOTSTRAP) }}
+                        {{ forms.dateTime("fromDt", title, event.fromDt|date(settings.DATE_FORMAT), helpText, "", "required", "", settings.DATE_FORMAT_BOOTSTRAP) }}
 
                         {% set title %}{% trans "End Time" %}{% endset %}
                         {% set helpText %}{% trans "Select the end time for this event" %}{% endset %}
-                        {{ forms.dateTime("toDt", title, "", helpText, "", "required", "", settings.DATE_FORMAT_BOOTSTRAP) }}
+                        {{ forms.dateTime("toDt", title, event.toDt|date(settings.DATE_FORMAT), helpText, "", "required", "", settings.DATE_FORMAT_BOOTSTRAP) }}
 
                         {# Campaign / Layout list. We want to build two arrays for us to use. #}
                         {% set layoutOptions = [] %}
@@ -110,15 +110,15 @@
                         ] %}
                         {% set title %}{% trans "Layout / Campaign" %}{% endset %}
                         {% set helpText %}{% trans "Please select a Layout or Campaign for this Event to show" %}{% endset %}
-                        {{ forms.dropdown("campaignId", "single", title, "", {campaign: campaignOptions, layout: layoutOptions}, "id", "value", helpText, "", "", "", "", "", optionGroups) }}
+                        {{ forms.dropdown("campaignId", "single", title, event.campaignId, {campaign: campaignOptions, layout: layoutOptions}, "id", "value", helpText, "", "", "", "", "", optionGroups) }}
 
                         {% set title %}{% trans "Display Order" %}{% endset %}
                         {% set helpText %}{% trans "Please select the order this event should appear in relation to others when there is more than one event scheduled" %}{% endset %}
-                        {{ forms.number("displayOrder", title, "", helpText) }}
+                        {{ forms.number("displayOrder", title, event.displayOrder, helpText) }}
 
                         {% set title %}{% trans "Priority" %}{% endset %}
                         {% set helpText %}{% trans "Sets whether or not this event has priority. If set the event will be show in preference to other events." %}{% endset %}
-                        {{ forms.checkbox("isPriority", title, "", helpText) }}
+                        {{ forms.checkbox("isPriority", title, event.isPriority, helpText) }}
 
                     </div>
                     
@@ -141,15 +141,15 @@
                         { id: "Month", name: monthly},
                         { id: "Year", name: yearly}
                         ] %}
-                        {{ forms.dropdown("recurrenceType", "single", title, "", options, "id", "name", helpText) }}
+                        {{ forms.dropdown("recurrenceType", "single", title, event.recurrenceType, options, "id", "name", helpText) }}
                     
                         {% set title %}{% trans "Repeat every" %}{% endset %}
                         {% set helpText %}{% trans "How often does this event repeat?" %}{% endset %}
-                        {{ forms.number("recurrenceDetail", title, recurrenceDetail, helpText, "repeat-control-group") }}
+                        {{ forms.number("recurrenceDetail", title, event.recurrenceDetail, helpText, "repeat-control-group") }}
 
                         {% set title %}{% trans "Until" %}{% endset %}
                         {% set helpText %}{% trans "When should this event stop repeating?" %}{% endset %}
-                        {{ forms.dateTime("recurrenceRange", title, "", helpText, "repeat-control-group", "", "", settings.DATE_FORMAT_BOOTSTRAP) }}
+                        {{ forms.dateTime("recurrenceRange", title, event.recurrenceRange|date(settings.DATE_FORMAT), helpText, "repeat-control-group", "", "", settings.DATE_FORMAT_BOOTSTRAP) }}
                     </div>
                 </div>
             </form>

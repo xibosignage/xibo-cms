@@ -117,20 +117,28 @@ class Date
     /**
      * Gets a Unix Timestamp from a textual date time string
      * @param string $date
+     * @param string $format
      * @return int
      */
-    public static function getTimestampFromString($date)
+    public static function getTimestampFromString($date, $format = null)
     {
-        return Date::fromString($date)->format('U');
+        if ($format == null)
+            $format = Date::getDefaultFormat();
+
+        return Date::fromString($date, $format)->format('U');
     }
 
     /**
      * Get Date from String
-     * @param $string
+     * @param string $string
+     * @param string $format
      * @return \Jenssegers\Date\Date
      */
-    public static function fromString($string)
+    public static function fromString($string, $format = null)
     {
+        if ($format == null)
+            $format = Date::getDefaultFormat();
+
         if (Date::getCalendarType() == 'Jalali') {
             // If we are Jalali, then we want to convert from Jalali back to Gregorian.
             // Split the time stamp into its component parts and pass it to the conversion.
@@ -147,7 +155,7 @@ class Date
             return \Jenssegers\Date\Date::create($date[0], $date[1], $date[2], $timeSplit[0], $timeSplit[1]);
         }
         else {
-            return new \Jenssegers\Date\Date($string);
+            return \Jenssegers\Date\Date::createFromFormat($format, $string);
         }
     }
 
@@ -169,6 +177,108 @@ class Date
     public static function getDateFromGregorianString($date)
     {
         return strtotime($date);
+    }
+
+    /**
+     * Converts a format to moment
+     *  inspired by http://stackoverflow.com/questions/30186611/php-dateformat-to-moment-js-format
+     * @param $format
+     * @return string
+     */
+    public static function convertPhpToMomentFormat($format)
+    {
+        $replacements = [
+            'd' => 'DD',
+            'D' => 'ddd',
+            'j' => 'D',
+            'l' => 'dddd',
+            'N' => 'E',
+            'S' => 'o',
+            'w' => 'e',
+            'z' => 'DDD',
+            'W' => 'W',
+            'F' => 'MMMM',
+            'm' => 'MM',
+            'M' => 'MMM',
+            'n' => 'M',
+            't' => '', // no equivalent
+            'L' => '', // no equivalent
+            'o' => 'YYYY',
+            'Y' => 'YYYY',
+            'y' => 'YY',
+            'a' => 'a',
+            'A' => 'A',
+            'B' => '', // no equivalent
+            'g' => 'h',
+            'G' => 'H',
+            'h' => 'hh',
+            'H' => 'HH',
+            'i' => 'mm',
+            's' => 'ss',
+            'u' => 'SSS',
+            'e' => 'zz', // deprecated since version 1.6.0 of moment.js
+            'I' => '', // no equivalent
+            'O' => '', // no equivalent
+            'P' => '', // no equivalent
+            'T' => '', // no equivalent
+            'Z' => '', // no equivalent
+            'c' => '', // no equivalent
+            'r' => '', // no equivalent
+            'U' => 'X',
+        ];
+        $momentFormat = strtr($format, $replacements);
+        return $momentFormat;
+    }
+
+    /**
+     * Converts a format to bootstrap date picker
+     *  inspired by http://stackoverflow.com/questions/30186611/php-dateformat-to-moment-js-format
+     * @param $format
+     * @return string
+     */
+    public static function convertPhpToBootstrapFormat($format)
+    {
+        $replacements = [
+            'd' => 'dd',
+            'D' => '',
+            'j' => 'd',
+            'l' => '',
+            'N' => '',
+            'S' => '',
+            'w' => '',
+            'z' => '',
+            'W' => '',
+            'F' => 'mm',
+            'm' => 'mm',
+            'M' => 'm',
+            'n' => 'i',
+            't' => '', // no equivalent
+            'L' => '', // no equivalent
+            'o' => 'yyyy',
+            'Y' => 'yyyy',
+            'y' => 'yy',
+            'a' => 'p',
+            'A' => 'P',
+            'B' => '', // no equivalent
+            'g' => 'H',
+            'G' => 'h',
+            'h' => 'HH',
+            'H' => 'hh',
+            'i' => 'ii',
+            's' => 'ss',
+            'u' => '',
+            'e' => '', // deprecated since version 1.6.0 of moment.js
+            'I' => '', // no equivalent
+            'O' => '', // no equivalent
+            'P' => '', // no equivalent
+            'T' => '', // no equivalent
+            'Z' => '', // no equivalent
+            'c' => '', // no equivalent
+            'r' => '', // no equivalent
+            'U' => '',
+        ];
+        $momentFormat = strtr($format, $replacements);
+        return $momentFormat;
     }
 
 

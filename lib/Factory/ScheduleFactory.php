@@ -94,6 +94,11 @@ class ScheduleFactory extends BaseFactory
           WHERE 1 = 1
         ';
 
+        if (Sanitize::getInt('eventId', $filterBy) !== null) {
+            $sql .= ' AND `schedule`.eventId = :eventId ';
+            $params['eventId'] = Sanitize::getInt('eventId', $filterBy);
+        }
+
         if (Sanitize::getInt('fromDt', $filterBy) !== null) {
             $sql .= ' AND schedule_detail.fromDt > :fromDt ';
             $params['fromDt'] = Sanitize::getInt('fromDt', $filterBy);

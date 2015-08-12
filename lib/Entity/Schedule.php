@@ -91,7 +91,7 @@ class Schedule implements \JsonSerializable
     /**
      * @SWG\Property(
      *  description="If this event recurs when what is the recurrence period.",
-     *  enum={"Minute", "Hour", "Day", "Week", "Month", "Year"}
+     *  enum={"None", "Minute", "Hour", "Day", "Week", "Month", "Year"}
      * )
      * @var string
      */

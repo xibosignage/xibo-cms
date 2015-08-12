@@ -140,37 +140,6 @@ var setupScheduleForm = function(form) {
     $('#campaignId', form).selectpicker();
     $('select[name="displayGroupIds[]"]', form).selectpicker();
 
-    // Set up any date fields we have with the date picker
-    $('#starttimeControl', form).datetimepicker({
-        format: "dd MM yyyy - hh:ii",
-        linkField: "fromDt",
-        linkFormat: "yyyy-mm-dd hh:ii",
-        minuteStep: 5,
-        autoClose: true,
-        language: language,
-        calendarType: calendarType
-    });
-
-    $('#endtimeControl', form).datetimepicker({
-        format: "dd MM yyyy - hh:ii",
-        linkField: "toDt",
-        linkFormat: "yyyy-mm-dd hh:ii",
-        minuteStep: 5,
-        autoClose: true,
-        language: language,
-        calendarType: calendarType
-    });
-
-    $('#rec_rangeControl', form).datetimepicker({
-        format: "dd MM yyyy - hh:ii",
-        linkField: "recurrenceRange",
-        linkFormat: "yyyy-mm-dd hh:ii",
-        minuteStep: 5,
-        autoClose: true,
-        language: language,
-        calendarType: calendarType
-    });
-
     // Bind to the form submit
     $("#scheduleAddForm, #scheduleEditForm").submit(function(e) {
         e.preventDefault();

@@ -395,7 +395,7 @@ class Schedule extends Base
         $displays = array();
         $scheduleWithView = (Config::GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
 
-        foreach (DisplayGroupFactory::query() as $displayGroup) {
+        foreach (DisplayGroupFactory::query(null, ['isDisplaySpecific' => -1]) as $displayGroup) {
             /* @var DisplayGroup $displayGroup */
 
             // Can't schedule with view, but no edit permissions
@@ -414,8 +414,10 @@ class Schedule extends Base
             'event' => $schedule,
             'displays' => $displays,
             'displayGroups' => $groups,
-            'campaigns' => CampaignFactory::query(),
-            'displayGroupIds' => $this->getSession()->get('displayGroupIds'),
+            'campaigns' => CampaignFactory::query(null, ['isLayoutSpecific' => -1]),
+            'displayGroupIds' => array_map(function($element) {
+                return $element->displayGroupId;
+            }, $schedule->displayGroups),
             'help' => Help::Link('Schedule', 'Edit')
         ]);
     }
