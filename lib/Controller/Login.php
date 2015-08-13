@@ -22,6 +22,7 @@ namespace Xibo\Controller;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\UserFactory;
+use Xibo\Helper\Help;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 
@@ -103,6 +104,15 @@ class Login extends Base
     public function userWelcome()
     {
         $this->getState()->template = 'user-welcome-page';
+        $this->getState()->setData([
+            'help' => [
+                'dashboard' => Help::Link('Dashboard', 'General'),
+                'display' => Help::Link('Display', 'General'),
+                'layout' => Help::Link('Layout', 'General'),
+                'schedule' => Help::Link('Schedule', 'General'),
+                'windows' => Help::rawLink('install_windows_client')
+            ]
+        ]);
     }
 
     /**
