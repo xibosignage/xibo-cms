@@ -141,7 +141,7 @@ var setupScheduleForm = function(form) {
     $('select[name="displayGroupIds[]"]', form).selectpicker();
 
     // Bind to the form submit
-    $("#scheduleAddForm, #scheduleEditForm").submit(function(e) {
+    $("#scheduleAddForm, #scheduleEditForm, #scheduleDeleteForm").submit(function(e) {
         e.preventDefault();
 
         $.ajax({
