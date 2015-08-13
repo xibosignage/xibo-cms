@@ -22,7 +22,7 @@
                             {{ inline.text("filter_tags", "Tags", defaults.tags) }}
 
                             {% set title %}{% trans "Owner" %}{% endset %}
-                            {{ inline.dropdown("filter_userid", "single", title, defaults.owner, users|merge({userId:null, userName:""}), "userId", "userName") }}
+                            {{ inline.dropdown("filter_userid", "single", title, defaults.owner, [{userId:null, userName:""}]|merge(users), "userId", "userName") }}
 
                             {% set title %}{% trans "Retired" %}{% endset %}
                             {% set values = [{id: 1, value: "Yes"}, {id: 0, value: "No"}] %}
