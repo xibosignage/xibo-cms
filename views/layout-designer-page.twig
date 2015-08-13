@@ -270,6 +270,12 @@
                 }),
                 title: "{% trans "Upload media" %}",
                 buttons: {
+                    library: {
+                        label: "{% trans "View Library" %}",
+                        callback: function() {
+                            XiboFormRender("{{ urlFor("playlist.library.assign.form") }}".replace(":id", playlistId));
+                        }
+                    },
                     main: {
                         label: "{% trans "Done" %}",
                         className: "btn-primary",
