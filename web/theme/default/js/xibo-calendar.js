@@ -169,6 +169,40 @@ var setupScheduleForm = function(form) {
 var setupScheduleNowForm = function(form) {
     
     // We submit this form ourselves (outside framework)
-    $('#CampaignID', form).selectpicker();
+    $('#campaignId', form).selectpicker();
     $('select[name="displayGroupIds[]"]', form).selectpicker();
+
+    // Bind to the form submit
+    $("#scheduleNowForm").submit(function(e) {
+        e.preventDefault();
+
+        var hours = $(form).find("#hours").val();
+        var minutes = $(form).find("#minutes").val();
+        var seconds = $(form).find("#seconds").val();
+
+        var now = moment();
+
+        // Use Hours, Minutes and Seconds to generate a from date to send to the API
+        $(this).append("<input type=\"hidden\" name=\"fromDt\" value=\"" + now.format(jsDateFormat) + "\" />");
+
+        if (hours != "")
+            now.add(hours, "hours");
+
+        if (minutes != "")
+            now.add(minutes, "minutes");
+
+        if (seconds != "")
+            now.add(seconds, "seconds");
+
+        $(this).append("<input type=\"hidden\" name=\"toDt\" value=\"" + now.format(jsDateFormat) + "\" />");
+
+        $.ajax({
+            type: $(this).attr("method"),
+            url: $(this).attr("action"),
+            data: $(this).serialize(),
+            cache: false,
+            dataType: "json",
+            success: XiboSubmitResponse
+        });
+    });
 };

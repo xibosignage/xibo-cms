@@ -4,96 +4,6 @@
  * Copyright (C) 2015 Spring Signage Ltd
  * (${FILE_NAME})
  */
-// Generate a list of layouts.
-        $layouts = $user->CampaignList(NULL, false /* isRetired */, false /* show Empty */);
-
-        $optionGroups = array(
-            array('id' => 'campaign', 'label' => __('Campaigns')),
-            array('id' => 'layout', 'label' => __('Layouts'))
-        );
-
-        $layoutOptions = array();
-        $campaignOptions = array();
-
-        foreach ($layouts as $layout) {
-
-            if ($layout['islayoutspecific'] == 1) {
-                $layoutOptions[] = array(
-                    'id' => $layout['campaignid'],
-                    'value' => $layout['campaign']
-                );
-            } else {
-                $campaignOptions[] = array(
-                    'id' => $layout['campaignid'],
-                    'value' => $layout['campaign']
-                );
-            }
-        }
-
-        $formFields[] = Form::AddCombo(
-            'CampaignID',
-            __('Layout'),
-            $campaignId,
-            array('campaign' => $campaignOptions, 'layout' => $layoutOptions), 
-            'id',
-            'value',
-            __('Please select a Layout or Campaign for this Event to show'),
-            'l', '', true, '', '', '', $optionGroups);
-
-        $formFields[] = Form::AddText('hours', __('Hours'), NULL,
-            __('Hours this event should be scheduled for'), 'h', '');
-
-        $formFields[] = Form::AddText('minutes', __('Minutes'), NULL,
-            __('Minutes this event should be scheduled for'), 'h', '');
-
-        $formFields[] = Form::AddText('seconds', __('Seconds'), NULL,
-            __('Seconds this event should be scheduled for'), 'h', '');
-
-        // List of Display Groups
-        $optionGroups = array(
-            array('id' => 'group', 'label' => __('Groups')),
-            array('id' => 'display', 'label' => __('Displays'))
-        );
-
-        $groups = array();
-        $displays = array();
-        $scheduleWithView = (Config::GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
-
-        foreach ($this->getUser()->DisplayGroupList(-1 /*IsDisplaySpecific*/) as $display) {
-
-            // Can schedule with view, but no view permissions
-            if ($scheduleWithView && $display['view'] != 1)
-                continue;
-
-            // Can't schedule with view, but no edit permissions
-            if (!$scheduleWithView && $display['edit'] != 1)
-                continue;
-
-            $display['checked_text'] = (in_array($display['displaygroupid'], $displayGroupIds)) ? ' selected' : '';
-
-            if ($display['isdisplayspecific'] == 1) {
-                $displays[] = $display;
-            } else {
-                $groups[] = $display;
-            }
-        }
-
-        $formFields[] = Form::AddMultiCombo(
-            'DisplayGroupIDs[]',
-            __('Display'),
-            $displayGroupIds,
-            array('group' => $groups, 'display' => $displays),
-            'displaygroupid',
-            'displaygroup',
-            __('Please select one or more displays / groups for this event to be shown on.'),
-            'd', '', true, '', '', '', $optionGroups, array(array('name' => 'data-live-search', 'value' => "true"), array('name' => 'data-selected-text-format', 'value' => "count > 4")));
-
-        $formFields[] = Form::AddNumber('DisplayOrder', __('Display Order'), 0,
-            __('Should this event have an order?'), 'o', '');
-
-        $formFields[] = Form::AddCheckbox('is_priority', __('Priority?'),
-            NULL, __('Sets whether or not this event has priority. If set the event will be show in preference to other events.'),
-            'p');
 #}
 
 {% extends "form-base.twig" %}
@@ -109,19 +19,34 @@
     {% trans "Save" %}, $("#scheduleNowForm").submit()
 {% endblock %}
 
+{% block callBack %}setupScheduleNowForm{% endblock %}
+
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="scheduleNowForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("schedule.add") }}">
+            <form id="scheduleNowForm" class="form-horizontal" method="post" action="{{ urlFor("schedule.add") }}">
 
-            {# not copy pasted, but same stuff as in scheduleAddForm.#}
+                {# Campaign / Layout list. We want to build two arrays for us to use. #}
+                {% set layoutOptions = [] %}
+                {% set campaignOptions = [] %}
+
+                {% for item in campaigns %}
+                    {% if item.isLayoutSpecific == 1 %}
+                        {% set layoutOptions = [{id: item.campaignId, value: item.campaign}]|merge(layoutOptions) %}
+                    {% else %}
+                        {% set campaignOptions = [{id: item.campaignId, value: item.campaign}]|merge(campaignOptions) %}
+                    {% endif %}
+                {% endfor %}
+
+                {% set campaigns %}{% trans "Campaigns" %}{% endset %}
+                {% set layouts %}{% trans "Layouts" %}{% endset %}
+                {% set optionGroups = [
+                {id: "campaign", label: campaigns},
+                {id: "layout", label: layouts}
+                ] %}
                 {% set title %}{% trans "Layout / Campaign" %}{% endset %}
                 {% set helpText %}{% trans "Please select a Layout or Campaign for this Event to show" %}{% endset %}
-                {% set options = [
-                { id: campaign, value: campaignOptions },
-                { id: layout, value: layoutOptions }
-                ] %}
-                {{ forms.dropdown("campaignId", "single", title, "", options, "id", "value", helpText, "", optionGroups) }}
+                {{ forms.dropdown("campaignId", "single", title, campaignId, {campaign: campaignOptions, layout: layoutOptions}, "id", "value", helpText, "", "", "", "", "", optionGroups) }}
 
                 {% set title %}{% trans "Hours" %}{% endset %}
                 {% set helpText %}{% trans "Hours this event should be scheduled for" %}{% endset %}
@@ -134,8 +59,21 @@
                 {% set title %}{% trans "Seconds" %}{% endset %}
                 {% set helpText %}{% trans "Seconds this event should be scheduled for" %}{% endset %}
                 {{ forms.text("seconds", title, "", helpText) }}
-            
-            {# multi dropdown will have same issue as in scheduleAddForm #}
+
+                {% set title %}{% trans "Display" %}{% endset %}
+                {% set helpText %}{% trans "Please select one or more displays / groups for this event to be shown on." %}{% endset %}
+                {% set attributes = [
+                { name: "data-live-search", value: "true" },
+                { name: "data-selected-text-format", value: "count > 4" }
+                ] %}
+                {% set transGroups %}{% trans "Groups" %}{% endset %}
+                {% set transDisplays %}{% trans "Display" %}{% endset %}
+                {% set optionGroups = [
+                {id: "group", label: transGroups},
+                {id: "display", label: transDisplays}
+                ] %}
+                {{ forms.dropdown("displayGroupIds[]", "dropdownmulti", title, [displayGroupId], {group: displayGroups, display: displays}, "displayGroupId", "displayGroup", helpText, "", "", "", "", attributes, optionGroups) }}
+
                 {% set title %}{% trans "Display Order" %}{% endset %}
                 {% set helpText %}{% trans "Should this event have an order?" %}{% endset %}
                 {{ forms.number("displayOrder", title, displayOrder, helpText) }}
