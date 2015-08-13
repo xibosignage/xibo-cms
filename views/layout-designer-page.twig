@@ -49,7 +49,7 @@
                     <li class="divider"></li>
                     <li><a href="{{ urlFor("layout.preview", {id: layout.layoutId}) }}" target="_blank"><span>{% trans "Preview Layout" %}</span></a></li>
                     <li><a class="XiboFormButton" href="{{ urlFor("schedule.now.form", {id: layout.layoutId, from: "Layout"}) }}"><span>{% trans "Schedule Now" %}</span></a></li>
-                    <li><a class="XiboFormButton" href="{{ urlFor("layout.template.form", {id: layout.layoutId}) }}"><span>{% trans "Save Template" %}</span></a></li>
+                    <li><a class="XiboFormButton" href="{{ urlFor("template.from.layout.form", {id: layout.layoutId}) }}"><span>{% trans "Save Template" %}</span></a></li>
                     {% if layout.schemaVersion >= 2 %}
                     <li class="divider"></li>
                     <li><a href="{{ urlFor("layout.designer", {id: layout.layoutId}) }}?zoom={{ zoom - 0.3 }}"><span>{% trans "Shrink Designer" %}</span></a></li>
@@ -323,7 +323,7 @@
             });
         }
 
-        function timelineGridCallback(dialog, playlistId) {
+        function timelineGridCallback(dialog) {
 
             dialog.addClass("modal-big");
 
@@ -333,7 +333,7 @@
                 searchDelay: 3000,
                 "order": [[ 0, "asc"]],
                 ajax: {
-                    url: "{{ urlFor("playlist.widget.search") }}?playlistId=" + playlistId,
+                    url: "{{ urlFor("playlist.widget.search") }}",
                     "data": function(d) {
                         $.extend(d, $("#timelineWidgets").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                     }

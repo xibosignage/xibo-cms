@@ -37,7 +37,7 @@ class Region extends Base
             throw new AccessDeniedException();
 
         // Set the view we have requested
-        $this->getSession()->set('timeLineView', Sanitize::getString('view'));
+        $this->getSession()->set('timeLineView', Sanitize::getString('view', $this->getSession()->get('timeLineView')));
 
         // Load the region
         $region->load(['playlistIncludeRegionAssignments' => false]);

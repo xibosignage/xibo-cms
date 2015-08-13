@@ -143,6 +143,7 @@ $app->post('/campaign/layout/unassign/:id', '\Xibo\Controller\Campaign:unassignL
  * )
  */
 $app->get('/template', '\Xibo\Controller\Template:grid')->name('template.search');
+$app->post('/template/:id', '\Xibo\Controller\Template:add')->name('template.add.from.layout');
 
 /**
  * Resolutions
