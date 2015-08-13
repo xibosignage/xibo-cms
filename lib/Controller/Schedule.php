@@ -118,6 +118,7 @@ class Schedule extends Base
 
         $events = array();
         $filter = [
+            'useDetail' => 1,
             'fromDt' => $start,
             'toDt' => $end,
             'displayGroupIds' => array_diff($displayGroupIds, [-1])
@@ -341,7 +342,7 @@ class Schedule extends Base
         $schedule->displayOrder = Sanitize::getInt('displayOrder', 0);
         $schedule->isPriority = Sanitize::getCheckbox('isPriority');
         $schedule->recurrenceType = Sanitize::getString('recurrenceType');
-        $schedule->recurrenceDetail = Sanitize::getString('recurrenceDetail');
+        $schedule->recurrenceDetail = Sanitize::getInt('recurrenceDetail');
 
         foreach (Sanitize::getIntArray('displayGroupIds') as $displayGroupId) {
             $schedule->assignDisplayGroup(DisplayGroupFactory::getById($displayGroupId));
@@ -526,7 +527,7 @@ class Schedule extends Base
         $schedule->displayOrder = Sanitize::getInt('displayOrder');
         $schedule->isPriority = Sanitize::getCheckbox('isPriority');
         $schedule->recurrenceType = Sanitize::getString('recurrenceType');
-        $schedule->recurrenceDetail = Sanitize::getString('recurrenceDetail');
+        $schedule->recurrenceDetail = Sanitize::getInt('recurrenceDetail');
         $schedule->displayGroups = [];
 
         foreach (Sanitize::getIntArray('displayGroupIds') as $displayGroupId) {

@@ -10,7 +10,7 @@
 {% import "forms.twig" as forms %}
 
 {% block formTitle %}
-    {% trans "Schedule Event" %}
+    {% trans "Edit Event" %}
 {% endblock %}
 
 {% block callBack %}setupScheduleForm{% endblock %}
@@ -18,7 +18,7 @@
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Next" %}, XiboDialogApply("#scheduleEditForm")
+    {% trans "Delete" %}, XiboSwapDialog("{{ urlFor("schedule.delete.form", {id: event.eventId}) }}")
     {% trans "Save" %}, $("#scheduleEditForm").submit()
 {% endblock %}
 

@@ -115,7 +115,7 @@ It is done, I mean this twig is probably fine, the 'name' in the settings at the
 
                         {% set title %}{% trans "Settings Profile?" %}{% endset %}
                         {% set helpText %}{% trans "What display profile should this display use?" %}{% endset %}
-                        {{ forms.dropdown("displayProfileId", "single", title, "", [{displayProfileId: null, name: ""}]|merge(profiles), "displayProfileId", "name", helpText) }}
+                        {{ forms.dropdown("displayProfileId", "single", title, display.displayProfileId, [{displayProfileId: null, name: ""}]|merge(profiles), "displayProfileId", "name", helpText) }}
  
 
                         {% set title %}{% trans "Interleave Default" %}{% endset %}

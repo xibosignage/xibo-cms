@@ -213,7 +213,6 @@ function XiboInitialise(scope) {
         calendarType: calendarType
     });
     $(scope + ' .datePicker').datetimepicker({
-        format: "yyyy-mm-dd",
         autoClose: true,
         language: language,
         calendarType: calendarType,
@@ -221,7 +220,6 @@ function XiboInitialise(scope) {
         todayHighlight: true
     });
     $(scope + ' .timePicker').datetimepicker({
-        format: "hh:ii",
         autoClose: true,
         language: language,
         calendarType: calendarType,

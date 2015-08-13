@@ -27,9 +27,9 @@
                 <div class="XiboFilter">
                     <div class="FilterDiv" id="bandwidthFilter">
                         <form class="form-inline">
-                            {{ inline.date("fromdt", "From Date", defaults.fromDate) }}
-                            {{ inline.date("todt", "To Date", defaults.toDate) }}
-                            {{ inline.dropdown("displayid", "single", "Display", "", displayFilterOptions, "displayId", "display") }}
+                            {{ inline.date("fromDt", "From Date", defaults.fromDate, "", "", "", "", settings.DATE_FORMAT_BOOTSTRAP) }}
+                            {{ inline.date("toDt", "To Date", defaults.toDate, "", "", "", "", settings.DATE_FORMAT_BOOTSTRAP) }}
+                            {{ inline.dropdown("displayId", "single", "Display", "", displayFilterOptions, "displayId", "display") }}
                         </form>
                     </div>
                 </div>
@@ -46,9 +46,9 @@
                 <div class="XiboFilter">
                     <div class="FilterDiv" id="availabilityFilter">
                         <form class="form-inline">
-                            {{ inline.date("fromdt", "From Date", defaults.fromDate) }}
-                            {{ inline.date("todt", "To Date", defaults.toDate) }}
-                            {{ inline.dropdown("displayid", "single", "Display", "", displayFilterOptions, "displayId", "display") }}
+                            {{ inline.date("fromDt", "From Date", defaults.fromDate, "", "", "", "", settings.DATE_FORMAT_BOOTSTRAP) }}
+                            {{ inline.date("toTt", "To Date", defaults.toDate, "", "", "", "", settings.DATE_FORMAT_BOOTSTRAP) }}
+                            {{ inline.dropdown("displayId", "single", "Display", "", displayFilterOptions, "displayId", "display") }}
                         </form>
                     </div>
                 </div>
@@ -65,12 +65,12 @@
                 <div class="XiboFilter">
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
-                            {{ inline.date("fromdt", "From Date", defaults.fromDateOneDay) }}
-                            {{ inline.date("todt", "To Date", defaults.toDate) }}
-                            {{ inline.dropdown("displayid", "single", "Display", "", displayFilterOptions, "displayId", "display") }}
+                            {{ inline.date("fromDt", "From Date", defaults.fromDateOneDay, "", "", "", "", settings.DATE_FORMAT_BOOTSTRAP) }}
+                            {{ inline.date("toDt", "To Date", defaults.toDate, "", "", "", "", settings.DATE_FORMAT_BOOTSTRAP) }}
+                            {{ inline.dropdown("displayId", "single", "Display", "", displayFilterOptions, "displayId", "display") }}
 
                             {% set mediaFilterOptions = media|merge({mediaId: null, name: ""}) %}
-                            {{ inline.dropdown("mediaid", "single", "Media", "", mediaFilterOptions, "mediaId", "name") }}
+                            {{ inline.dropdown("mediaId", "single", "Media", "", mediaFilterOptions, "mediaId", "name") }}
                         </form>
                     </div>
                 </div>
