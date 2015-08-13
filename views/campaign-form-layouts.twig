@@ -12,13 +12,14 @@
 {% import "inline.twig" as inline %}
 
 {% block formTitle %}
-    {% trans "Layouts on Campaign" %}
+    {% set campaignName = campaign.campaign %}
+    {% trans %}Layouts on {{ campaignName }}{% endtrans %}
 {% endblock %}
 
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, $("#").submit()
+    {% trans "Save" %}, layoutAssignSubmit()
 {% endblock %}
 
 {% block callBack %}layoutFormCallBack{% endblock %}
@@ -26,11 +27,11 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <div id="LayoutAssign" class="well">
+            <div id="LayoutAssign" class="well" data-url="{{ urlFor("campaign.assign.layout", {id: campaign.campaignId}) }}">
                 <div>
                     <ul id="LayoutAssignSortable">
                         {% for item in layouts %}
-                        <li id="layoutId_{{ item.layoutId }}" class="li-sortable">{{ item.layout }}<span class="glyphicon glyphicon-minus-sign"></span></li>
+                        <li id="layoutId_{{ item.layoutId }}" class="btn btn-sm btn-default">{{ item.layout }}<span class="glyphicon glyphicon-minus-sign"></span></li>
                         {% endfor %}
                     </ul>
                 </div>
@@ -40,9 +41,14 @@
     <div class="row">
         <div class="col-md-12">
             <div class="XiboGrid" id="{{ random() }}">
-                <div>
+                <div class="layoutAssignFilterOptions">
+                    <form onsubmit="false">
                     {% set title %}{% trans "Name" %}{% endset %}
                     {{ inline.text("filter_layout", title) }}
+
+                    {% set title %}{% trans "Tags" %}{% endset %}
+                    {{ inline.text("filter_tags", title) }}
+                    </form>
                 </div>
                 <div class="XiboData">
                     <table id="layoutAssignments" class="table table-striped">
