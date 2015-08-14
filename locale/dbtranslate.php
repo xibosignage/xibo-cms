@@ -22,6 +22,8 @@
 
 /* Translations from the Database that need to be registered with Gettext */
 
+echo __('Dashboard');
+echo __('Media Dashboard');
 echo __('Schedule');
 echo __('Layout');
 echo __('Library');
@@ -44,7 +46,6 @@ echo __('Edit your Display');
 echo __('Report Fault');
 echo __('Statistics');
 echo __('Display Groups');
-echo __('Content');
 echo __('Default');
 echo __('Error');
 echo __('General');
@@ -58,6 +59,7 @@ echo __('User Groups');
 echo __('Display Settings');
 echo __('Help Links');
 echo __('Audit Trail');
+echo __('Update');
 
 // Settings translations
 echo __('Media Permissions');

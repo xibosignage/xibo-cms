@@ -718,8 +718,10 @@ CREATE TABLE IF NOT EXISTS `oauth_session_scopes` (
 CREATE TABLE IF NOT EXISTS `pages` (
   `pageID` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(50) NOT NULL,
+  `title` varchar(50) NOT NULL,
+  `asHome` tinyint(4) NOT NULL DEFAULT '0',
   PRIMARY KEY (`pageID`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='Available Pages' AUTO_INCREMENT=50 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='Available Pages' AUTO_INCREMENT=36 ;
 
 -- --------------------------------------------------------
 

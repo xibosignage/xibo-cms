@@ -104,6 +104,12 @@ class User extends Base
         foreach ($users as $user) {
             /* @var \Xibo\Entity\User $user */
 
+            if ($this->isApi())
+                continue;
+
+            $user->includeProperty('buttons');
+            $user->homePage = __($user->homePage);
+
             // Super admins have some buttons
             if ($this->getUser()->userTypeId == 1) {
 
@@ -325,7 +331,7 @@ class User extends Base
         $this->getState()->template = 'user-form-add';
         $this->getState()->setData([
             'options' => [
-                'homepage' => PageFactory::query(),
+                'homepage' => PageFactory::query(null, ['asHome' => 1]),
                 'groups' => UserGroupFactory::query(),
                 'userTypes' => UserTypeFactory::query()
             ],

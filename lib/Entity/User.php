@@ -55,7 +55,7 @@ define("HASH_PBKDF2_INDEX", 3);
  *
  * @SWG\Definition()
  */
-class User
+class User implements \JsonSerializable
 {
     use EntityTrait;
 
