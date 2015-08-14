@@ -984,7 +984,7 @@ function XiboRefreshAllGrids() {
 }
 
 function XiboRedirect(url) {
-    windows.location = url;
+    window.location.href = url;
 }
 
 /**
