@@ -158,7 +158,7 @@ class DisplayFactory extends BaseFactory
 
         self::viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, 'display.displayId', null, $filterBy);
 
-        if (Sanitize::getInt('displayGroupId', $filterBy) != 0) {
+        if (Sanitize::getInt('displayGroupId', $filterBy) !== null) {
             // Restrict to a specific display group
             $body .= ' AND displaygroup.displaygroupid = :displayGroupId ';
             $params['displayGroupId'] = Sanitize::getInt('displayGroupId', $filterBy);
@@ -168,13 +168,13 @@ class DisplayFactory extends BaseFactory
         }
 
         // Filter by Display ID?
-        if (Sanitize::getInt('displayId', $filterBy) != 0) {
+        if (Sanitize::getInt('displayId', $filterBy) !== null) {
             $body .= ' AND display.displayid = :displayId ';
             $params['displayId'] = Sanitize::getInt('displayId', $filterBy);
         }
 
         // Filter by Wake On LAN
-        if (Sanitize::getInt('wakeOnLan', $filterBy) != 0) {
+        if (Sanitize::getInt('wakeOnLan', $filterBy) !== null) {
             $body .= ' AND display.wakeOnLan = :wakeOnLan ';
             $params['wakeOnLan'] = Sanitize::getInt('wakeOnLan', $filterBy);
         }
@@ -211,7 +211,7 @@ class DisplayFactory extends BaseFactory
         }
 
         // Exclude a group?
-        if (Sanitize::getInt('exclude_displaygroupid', $filterBy) != 0) {
+        if (Sanitize::getInt('exclude_displaygroupid', $filterBy) !== null) {
             $body .= " AND display.DisplayID NOT IN ";
             $body .= "       (SELECT display.DisplayID ";
             $body .= "       FROM    display ";

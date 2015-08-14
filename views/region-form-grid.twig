@@ -8,7 +8,7 @@
 #}
 
 {% extends "form-base.twig" %}
-{% import "forms.twig" as forms %}
+{% import "inline.twig" as inline %}
 
 {# TODO: We will need to design a playlist selector #}
 {% set playlist = region.playlists[0] %}
@@ -45,12 +45,11 @@
             </div>
             <div class="col-md-10">
                 <div class="XiboGrid" id="{{ random() }}">
-                    <div class="XiboFilter">
-                        <div class="FilterDiv" id="Filter">
+                    <div class="">
+                        <div class="FilterDiv" id="">
                             <form class="form-inline">
                                 {% set title %}{% trans "Playlist" %}{% endset %}
                                 {{ inline.dropdown("playlistId", "single", title, playlist.playlistId, region.playlists, "playlistId", "name") }}
-                                {{ inline.checkbox("XiboFilterPinned", "Keep Open", defaults.filterPinned) }}
                             </form>
                         </div>
                     </div>

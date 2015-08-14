@@ -17,4 +17,8 @@ class AccessibleMonologWriter extends MonologWriter
     {
         return $this->resource;
     }
+
+    public function addProcessor($processor) {
+        $this->settings['processors'][] = $processor;
+    }
 }

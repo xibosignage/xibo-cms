@@ -109,18 +109,21 @@ class WidgetFactory extends BaseFactory
         $entries = array();
 
         $params = array();
-        $sql = '
+        $select = '
           SELECT widget.widgetId,
               widget.playlistId,
               widget.ownerId,
               widget.type,
               widget.duration,
               widget.displayOrder
-            FROM `widget`
+        ';
+
+        $body = '
+          FROM `widget`
         ';
 
         if (Sanitize::getInt('mediaId', $filterBy) !== null) {
-            $sql .= '
+            $body .= '
                 INNER JOIN `lkwidgetmedia`
                 ON `lkwidgetmedia`.widgetId = widget.widgetId
                     AND `lkwidgetmedia`.mediaId = :mediaId
@@ -128,30 +131,45 @@ class WidgetFactory extends BaseFactory
             $params['mediaId'] = Sanitize::getInt('mediaId', $filterBy);
         }
 
-        $sql .= ' WHERE 1 = 1 ';
+        $body .= ' WHERE 1 = 1 ';
 
         // Permissions
-        self::viewPermissionSql('Xibo\Entity\Widget', $sql, $params, 'widget.widgetId', 'widget.ownerId', $filterBy);
+        self::viewPermissionSql('Xibo\Entity\Widget', $body, $params, 'widget.widgetId', 'widget.ownerId', $filterBy);
 
         if (Sanitize::getInt('playlistId', $filterBy) !== null) {
-            $sql .= ' AND playlistId = :playlistId';
+            $body .= ' AND playlistId = :playlistId';
             $params['playlistId'] = Sanitize::getInt('playlistId', $filterBy);
         }
 
         if (Sanitize::getInt('widgetId', $filterBy) !== null) {
-            $sql .= ' AND widgetId = :widgetId';
+            $body .= ' AND widgetId = :widgetId';
             $params['widgetId'] = Sanitize::getInt('widgetId', $filterBy);
         }
 
         // Sorting?
+        $order = '';
         if (is_array($sortOrder))
-            $sql .= ' ORDER BY ' . implode(',', $sortOrder);
+            $order .= ' ORDER BY ' . implode(',', $sortOrder);
 
+        $limit = '';
+        // Paging
+        if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
+        }
+
+        // The final statements
+        $sql = $select . $body . $order . $limit;
 
         Log::sql($sql, $params);
 
         foreach (PDOConnect::select($sql, $params) as $row) {
             $entries[] = (new Widget())->hydrate($row, ['intProperties' => ['duration']]);
+        }
+
+        // Paging
+        if ($limit != '' && count($entries) > 0) {
+            $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
+            self::$_countLast = intval($results[0]['total']);
         }
 
         return $entries;

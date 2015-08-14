@@ -32,7 +32,15 @@
                 {% for check in config.CheckEnvironment() %}
                     <tr>
                         <td>{{ check.item }}</td>
-                        <td>{{ check.status }}</td>
+                        <td>
+                            {% if check.status == 0 %}
+                                <span class="fa fa-times"></span>
+                            {% elseif check.status == 1 %}
+                                <span class="fa fa-check"></span>
+                            {% else %}
+                                <span class="fa fa-exclamation"></span>
+                            {% endif %}
+                        </td>
                         <td>{{ check.advice }}</td>
                     </tr>
                 {% endfor %}

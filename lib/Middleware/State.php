@@ -52,6 +52,10 @@ class State extends Middleware
                 $settings[$setting['setting']] = $setting['value'];
             }
 
+            // Date format
+            $settings['DATE_FORMAT_JS'] = \Xibo\Helper\Date::convertPhpToMomentFormat($settings['DATE_FORMAT']);
+            $settings['DATE_FORMAT_BOOTSTRAP'] = \Xibo\Helper\Date::convertPhpToBootstrapFormat($settings['DATE_FORMAT']);
+
             // Configure some things in the theme
             if ($app->getName() == 'web') {
                 $app->view()->appendData(array(

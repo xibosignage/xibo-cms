@@ -72,13 +72,13 @@
                     {% set transDuration = module.getOption("transOutDuration") %}
                     {% set transDirection = module.getOption("transOutDirection") %}
                 {% else %}
-                    {% set message %}{% trans "Unknown Transition Type Requested" %}
+                    {% set message %}{% trans "Unknown Transition Type Requested" %}{% endset %}
                     {{ forms.message(message) }}
                 {% endif %}
 
                 {% set title %}{% trans "Transition" %}{% endset %}
                 {% set helpText %}{% trans "What transition should be applied when this item is finished?" %}{% endset %}
-                {{ forms.dropdown("transitionType", "single", title, trans, transitionsWithEmpty, "transitionId", "transition", helpText) }}
+                {{ forms.dropdown("transitionType", "single", title, trans, transitionsWithEmpty, "code", "transition", helpText) }}
 
                 {% set title %}{% trans "Duration" %}{% endset %}
                 {% set helpText %}{% trans "The duration for this transition, in milliseconds." %}{% endset %}
@@ -86,7 +86,7 @@
 
                 {% set title %}{% trans "Direction" %}{% endset %}
                 {% set helpText %}{% trans "The direction for this transition. Only appropriate for transitions that move, such as Fly." %}{% endset %}
-                {{ forms.dropdown("transitionDirection", "single", title, transDirection, transitions.compassPoints, "transitionId", "transition", helpText, "transition-group transition-direction") }}
+                {{ forms.dropdown("transitionDirection", "single", title, transDirection, transitions.compassPoints, "code", "transition", helpText, "transition-group transition-direction") }}
             </form>
         </div>
     </div>

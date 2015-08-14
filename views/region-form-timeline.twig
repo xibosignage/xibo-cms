@@ -61,7 +61,9 @@
                                 {% endif %}
                                 <li class="timelineMediaListItem" widgetid="{{ widget.widgetId }}">
                                     <div class="timelineMediaInTransition">
-                                        <span>{{ widget.module.getTransition("in") }}</span>
+                                        {% if widget.module.getTransition("in") != "None" %}
+                                            <span>{{ widget.module.getTransition("in") }}</span>
+                                        {% endif %}
                                     </div>
                                     <div class="timelineMediaItem">
                                         <ul class="timelineMediaItemLinks">
@@ -88,7 +90,9 @@
                                             {{ widget.module.hoverPreview()|raw }}
                                         </div>
                                         <div class="timelineMediaOutTransition">
+                                            {% if widget.module.getTransition("out") != "None" %}
                                             <span>{{ widget.module.getTransition("out") }}</span>
+                                            {% endif %}
                                         </div>
                                     </div>
                                 </li>

@@ -443,6 +443,13 @@ class Display extends Base
      *      required="true"
      *   ),
      *  @SWG\Parameter(
+     *      name="license",
+     *      in="formData",
+     *      description="The hardwareKey to use as the licence key for this Display",
+     *      type="string",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
      *      name="incSchedule",
      *      in="formData",
      *      description="Flag indicating whether the Default Layout should be included in the Schedule",
@@ -539,6 +546,7 @@ class Display extends Base
         $display->isAuditing = Sanitize::getInt('isAuditing');
         $display->defaultLayoutId = Sanitize::getInt('defaultLayoutId');
         $display->licensed = Sanitize::getInt('licensed');
+        $display->license = Sanitize::getString('license');
         $display->incSchedule = Sanitize::getInt('incSchedule');
         $display->emailAlert = Sanitize::getInt('emailAlert');
         $display->alertTimeout = Sanitize::getCheckbox('alertTimeout');

@@ -308,4 +308,22 @@ class Playlist implements \JsonSerializable
             'name' => $this->name
         ));
     }
+
+    /**
+     * Notify all Layouts of a change to this playlist
+     */
+    public function notifyLayouts()
+    {
+        PDOConnect::update('
+            UPDATE `layout` SET `status` = 3 WHERE layoutId IN (
+              SELECT `region`.layoutId
+                FROM `lkregionplaylist`
+                  INNER JOIN `region`
+                  ON region.regionId = `lkregionplaylist`.regionId
+               WHERE `lkregionplaylist`.playlistId = :playlistId
+            )
+        ', [
+           'playlistId' => $this->playlistId
+        ]);
+    }
 }

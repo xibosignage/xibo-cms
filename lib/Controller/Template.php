@@ -20,7 +20,9 @@
  */
 namespace Xibo\Controller;
 
+use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\TagFactory;
 use Xibo\Helper\Help;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
@@ -81,8 +83,6 @@ class Template extends Base
      */
     function grid()
     {
-        $response = $this->getState();
-
         $filter_name = Sanitize::getString('filter_name');
         $filter_tags = Sanitize::getString('filter_tags');
 
@@ -152,40 +152,112 @@ class Template extends Base
     }
 
     /**
-     * Displays the TemplateForm (for adding)
+     * Template Form
+     * @param int $layoutId
      */
-    function TemplateForm()
+    function addTemplateForm($layoutId)
     {
-        $response = $this->getState();
-
         // Get the layout
-        $layout = \Xibo\Factory\LayoutFactory::getById(Kit::GetParam('layoutid', _GET, _INT));
+        $layout = LayoutFactory::getById($layoutId);
 
         // Check Permissions
         if (!$this->getUser()->checkViewable($layout))
-            trigger_error(__('You do not have permissions to view this layout'), E_USER_ERROR);
+            throw new AccessDeniedException(__('You do not have permissions to view this layout'));
 
-        Theme::Set('form_id', 'TemplateAddForm');
-        Theme::Set('form_action', 'index.php?p=template&q=AddTemplate');
-        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layout->layoutId . '">');
+        $this->getState()->template = 'template-form-add-from-layout';
+        $this->getState()->setData([
+            'layout' => $layout,
+            'help' => Help::Link('Template', 'Add')
+        ]);
+    }
 
-        $formFields = array();
-        $formFields[] = Form::AddText('template', __('Name'), NULL,
-            __('The Name of the Template - (1 - 50 characters)'), 'n', 'maxlength="50" required');
+    /**
+     * Add template
+     * @param int $layoutId
+     *
+     * @SWG\Post(
+     *  path="/template/{layoutId}
+     *  operationId="template.add.from.layout",
+     *  tags={"template"},
+     *  summary="Add a template from a Layout",
+     *  description="Use the provided layout as a base for a new template",
+     *  @SWG\Parameter(
+     *      name="layoutId",
+     *      in="path",
+     *      description="The Layout ID",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="includeWidgets",
+     *      in="formData",
+     *      description="Flag indicating whether to include the widgets in the Template",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="The Template Name",
+     *      type="string",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="tags",
+     *      in="formData",
+     *      description="Comma separated list of Tags for the template",
+     *      type="string",
+     *      required="false"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="description",
+     *      in="formData",
+     *      description="A description of the Template",
+     *      type="string",
+     *      required="false"
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Layout"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new record",
+     *          type="string"
+     *      )
+     *  )
+     * )
+     */
+    function add($layoutId)
+    {
+        // Get the layout
+        $layout = LayoutFactory::getById($layoutId);
 
-        $formFields[] = Form::AddText('tags', __('Tags'), NULL,
-            __('Tags for this Template - used when searching for it. Comma delimited. (1 - 250 characters)'), 't', 'maxlength="250"');
+        // Check Permissions
+        if (!$this->getUser()->checkViewable($layout))
+            throw new AccessDeniedException(__('You do not have permissions to view this layout'));
 
-        $formFields[] = Form::AddMultiText('description', __('Description'), NULL,
-            __('An optional description of the Template. (1 - 250 characters)'), 'd', 5, 'maxlength="250"');
+        if (Sanitize::getCheckbox('includeWidgets') == 1) {
+            $layout->load();
+        }
 
-        Theme::Set('form_fields', $formFields);
+        $layout = clone $layout;
 
-        $response->SetFormRequestResponse(NULL, __('Save this Layout as a Template?'), '550px', '230px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Template', 'Add') . '")');
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Save'), '$("#TemplateAddForm").submit()');
+        $layout->layout = Sanitize::getString('name');
+        $layout->tags = TagFactory::tagsFromString(Sanitize::getString('tags'));
+        $layout->tags[] = TagFactory::getByTag('template');
+        $layout->description = Sanitize::getString('description');
 
+        $layout->validate();
+        $layout->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 201,
+            'message' => sprintf(__('Saved %s'), $layout->layout),
+            'id' => $layout->layoutId,
+            'data' => $layout
+        ]);
     }
 
     function EditForm()
@@ -193,7 +265,7 @@ class Template extends Base
         $response = $this->getState();
 
         // Get the layout
-        $layout = \Xibo\Factory\LayoutFactory::getById(Kit::GetParam('layoutid', _GET, _INT));
+        $layout = LayoutFactory::getById(Kit::GetParam('layoutid', _GET, _INT));
 
         // Check Permissions
         if (!$this->getUser()->checkEditable($layout))
@@ -241,30 +313,6 @@ class Template extends Base
 
     }
 
-    /**
-     * Adds a template
-     */
-    function AddTemplate()
-    {
-
-
-        $response = $this->getState();
-
-        // Get the layout
-        $layout = clone \Xibo\Factory\LayoutFactory::getById(Kit::GetParam('layoutid', _POST, _INT));
-
-        $layout->layout = \Xibo\Helper\Sanitize::getString('template');
-        $layout->tags = \Xibo\Factory\TagFactory::tagsFromString(Kit::GetParam('tags', _POST, _STRING));
-        $layout->tags[] = \Xibo\Factory\TagFactory::getByTag('template');
-        $layout->description = \Xibo\Helper\Sanitize::getString('description');
-
-        $layout->validate();
-        $layout->save();
-
-        $response->SetFormSubmitResponse('Template Added.');
-
-    }
-
     function Edit()
     {
 
@@ -272,16 +320,16 @@ class Template extends Base
         $response = $this->getState();
 
         // Get the layout
-        $layout = \Xibo\Factory\LayoutFactory::getById(Kit::GetParam('layoutid', _POST, _INT));
+        $layout = LayoutFactory::getById(Kit::GetParam('layoutid', _POST, _INT));
 
         // Check Permissions
         if (!$this->getUser()->checkEditable($layout))
             trigger_error(__('You do not have permissions to view this layout'), E_USER_ERROR);
 
-        $layout->layout = \Xibo\Helper\Sanitize::getString('layout');
-        $layout->tags = \Xibo\Factory\TagFactory::tagsFromString(Kit::GetParam('tags', _POST, _STRING));
-        $layout->tags[] = \Xibo\Factory\TagFactory::getByTag('template');
-        $layout->description = \Xibo\Helper\Sanitize::getString('description');
+        $layout->layout = Sanitize::getString('layout');
+        $layout->tags = TagFactory::tagsFromString(Kit::GetParam('tags', _POST, _STRING));
+        $layout->tags[] = TagFactory::getByTag('template');
+        $layout->description = Sanitize::getString('description');
         $layout->retired = \Kit::GetParam('retired', _POST, _INT, 0);
 
         $layout->validate();
@@ -301,7 +349,7 @@ class Template extends Base
         $response = $this->getState();
 
         // Get the layout
-        $layout = \Xibo\Factory\LayoutFactory::getById(Kit::GetParam('layoutid', _POST, _INT));
+        $layout = LayoutFactory::getById(Kit::GetParam('layoutid', _POST, _INT));
 
         // Check Permissions
         if (!$this->getUser()->checkDeleteable($layout))
@@ -321,7 +369,7 @@ class Template extends Base
         $response = $this->getState();
 
         // Get the layout
-        $layout = \Xibo\Factory\LayoutFactory::getById(Kit::GetParam('layoutid', _GET, _INT));
+        $layout = LayoutFactory::getById(Kit::GetParam('layoutid', _GET, _INT));
 
         // Check Permissions
         if (!$this->getUser()->checkDeleteable($layout))

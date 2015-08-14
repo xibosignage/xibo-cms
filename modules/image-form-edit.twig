@@ -24,6 +24,42 @@
     {% trans "Save" %}, $("#imageEditForm").submit()
 {% endblock %}
 
+{% block formFieldActions %}
+    [{
+    "field": "scaleTypeId",
+    "trigger": "init",
+    "value": "center",
+    "operation": "equals",
+    "actions": {
+    ".align-fields": { "display": "block" }
+    }
+    },{
+    "field": "scaleTypeId",
+    "trigger": "change",
+    "value": "center",
+    "operation": "equals",
+    "actions": {
+    ".align-fields": { "display": "block" }
+    }
+    },{
+    "field": "scaleTypeId",
+    "trigger": "init",
+    "value": "center",
+    "operation": "not",
+    "actions": {
+    ".align-fields": { "display": "none" }
+    }
+    },{
+    "field": "scaleTypeId",
+    "trigger": "change",
+    "value": "center",
+    "operation": "not",
+    "actions": {
+    ".align-fields": { "display": "none" }
+    }
+    }]
+{% endblock %}
+
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
@@ -38,11 +74,11 @@
 
                 {% set title %}{% trans "Scale type" %}{% endset %}
                 {% set helpText %}{% trans "How should this image be scaled?" %}{% endset %}
-                {% set center %}{% trans "Center" %}{% endset %}
+                {% set center %}{% trans "Centre" %}{% endset %}
                 {% set stretch %}{% trans "Stretch" %}{% endset %}
                 {% set options = [
-                { scaleTypeId: center, scaleType: center },
-                { scaleTypeId: stretch, scaleType: stretch }
+                { scaleTypeId: "center", scaleType: center },
+                { scaleTypeId: "stretch", scaleType: stretch }
                 ] %}
                 {{ forms.dropdown("scaleTypeId", "single", title, module.getOption("scaleType"), options, "scaleTypeId", "scaleType", helpText) }}
 
@@ -52,11 +88,11 @@
                 {% set center %}{% trans "Centre" %}{% endset %}
                 {% set right %}{% trans "Right" %}{% endset %}
                 {% set options = [
-                { alignId: left, align: left },
-                { alignId: center, align: center },
-                { alignId: right, align: right }
+                { alignId: "left", align: left },
+                { alignId: "center", align: center },
+                { alignId: "right", align: right }
                 ] %}
-                {{ forms.dropdown("alignId", "single", title, module.getOption("align","center"), options, "alignId", "align", helpText, "", "align-fields") }}
+                {{ forms.dropdown("alignId", "single", title, module.getOption("align","center"), options, "alignId", "align", helpText, "align-fields") }}
 
                 {% set title %}{% trans "Vertical Align" %}{% endset %}
                 {% set helpText %}{% trans "How should this image be vertically aligned?" %}{% endset %}
@@ -64,11 +100,11 @@
                 {% set middle %}{% trans "Middle" %}{% endset %}
                 {% set bottom %}{% trans "Bottom" %}{% endset %}
                 {% set options = [
-                { valignId: top, valign: top },
-                { valignId: middle, valign: middle },
-                { valignId: bottom, valign: bottom }
+                { valignId: "top", valign: top },
+                { valignId: "middle", valign: middle },
+                { valignId: "bottom", valign: bottom }
                 ] %}
-                {{ forms.dropdown("valignId", "single", title, module.getoption("valign", "middle"), options, "valignId", "valign", helpText, "", "align-fields") }}
+                {{ forms.dropdown("valignId", "single", title, module.getoption("valign", "middle"), options, "valignId", "valign", helpText, "align-fields") }}
             </form>
         </div>
     </div>

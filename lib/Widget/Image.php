@@ -39,6 +39,8 @@ class Image extends Module
         $this->setOption('scaleType', Sanitize::getString('scaleTypeId', 'center'));
         $this->setOption('align', Sanitize::getString('alignId', 'center'));
         $this->setOption('valign', Sanitize::getString('valignId', 'middle'));
+
+        $this->saveWidget();
     }
 
     /**
@@ -53,7 +55,7 @@ class Image extends Module
         if ($this->module->previewEnabled == 0)
             return parent::preview($width, $height);
 
-        $proportional = ($this->getOption('scaleType') == 'stretch') ? 'false' : 'true';
+        $proportional = ($this->getOption('scaleType') == 'stretch') ? 0 : 1;
         $align = $this->getOption('align', 'center');
         $vAlign = $this->getOption('valign', 'middle');
 
@@ -68,6 +70,21 @@ class Image extends Module
     }
 
     /**
+     * Hover preview
+     * @return string
+     */
+    public function hoverPreview()
+    {
+        // Default Hover window contains a thumbnail, media type and duration
+        $output = parent::HoverPreview();
+        $output .= '<div class="hoverPreview">';
+        $output .= '    <img src="' . $this->getApp()->urlFor('library.download', ['id' => $this->getMediaId()]) . '?preview=1&width=200&height=200&proportional=1" alt="Hover Preview">';
+        $output .= '</div>';
+
+        return $output;
+    }
+
+    /**
      * Get Resource
      * @param int $displayId
      * @return mixed
@@ -79,6 +96,7 @@ class Image extends Module
         $media = MediaFactory::getById($this->getMediaId());
         $libraryLocation = Config::GetSetting('LIBRARY_LOCATION');
         $filePath = $libraryLocation . $media->storedAs;
+        $proportional = Sanitize::getInt('proportional', 1) == 1;
 
         // Preview or download?
         if (Sanitize::getInt('preview', 0) == 1) {
@@ -102,7 +120,10 @@ class Image extends Module
 
                     // Create the thumbnail here
                     if (!file_exists($thumbPath)) {
-                        $img = Img::make($filePath)->fit($width, $height)->save($thumbPath);
+                        $img = Img::make($filePath)->resize($width, $height, function($constraint) use ($proportional) {
+                            if ($proportional)
+                                $constraint->aspectRatio();
+                        })->save($thumbPath);
                     } else {
                         $img = Img::make($thumbPath);
                     }
@@ -110,7 +131,10 @@ class Image extends Module
                 else {
                     $eTag = md5($media->md5 . $width . $height);
 
-                    $img = Img::make($filePath)->fit($width, $height);
+                    $img = Img::make($filePath)->resize($width, $height, function($constraint) use ($proportional) {
+                        if ($proportional)
+                            $constraint->aspectRatio();
+                    });
                 }
             }
             else {

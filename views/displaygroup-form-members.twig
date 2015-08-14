@@ -23,7 +23,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="MembersForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("displayGroup.members", {id: displayGroup.displayGroupId}) }}">
+            <form id="MembersForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("displayGroup.assign.display", {id: displayGroup.displayGroupId}) }}">
                 {% set helpText %}{% trans %}Check or un-check the options against each user to control whether they are a member of not.{% endtrans %}{% endset %}
                 {{ forms.message(helpText) }}
                 <table class="table table-bordered">

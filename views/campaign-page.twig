@@ -53,7 +53,7 @@ This is the template for the campaign page
             serverSide: true,
             "filter": false,
             searchDelay: 3000,
-            "order": [[ 1, "asc"]],
+            "order": [[ 0, "asc"]],
             ajax: {
                 url: "{{ urlFor("campaign.search") }}",
                 "data": function(d) {
@@ -78,17 +78,91 @@ This is the template for the campaign page
             var layoutTable = $("#layoutAssignments").DataTable({
                 serverSide: true,
                 searchDelay: 3000,
-                "order": [[ 1, "asc"]],
+                "order": [[ 0, "asc"]],
                 "filter": false,
-                ajax: "{{ urlFor("layout.search") }}",
+                ajax: {
+                    url: "{{ urlFor("layout.search") }}",
+                    "data": function(d) {
+                        $.extend(d, $("#layoutAssignments").closest(".XiboGrid").find(".layoutAssignFilterOptions form").serializeObject());
+                    }
+                },
                 "columns": [
                     { "data": "layoutId" },
-                    { "data": "layout" }
+                    { "data": "layout" },
+                    {
+                        "sortable": false,
+                        "data": function(data, type, row, meta) {
+                            if (type != "display")
+                                return "";
+
+                            // Create a click-able span
+                            return "<a href=\"#\" class=\"assignItem\"><span class=\"glyphicon glyphicon-plus-sign\"></a>";
+                        }
+                    }
                 ]
             });
 
-            layoutTable.on('draw', dataTableDraw);
+            layoutTable.on('draw', function(e, settings) {
+                dataTableDraw(e, settings);
+
+                // Clicky on the +spans
+                $(".assignItem", "#layoutAssignments").click(function() {
+                    // Get the row that this is in.
+                    var data = layoutTable.row($(this).closest("tr")).data();
+
+                    // Construct a new list item for the lower list and append it.
+                    var newItem = $("<li/>", {
+                        "text": data.layout,
+                        "data-layout-id": data.layoutId,
+                        "class": "btn btn-sm btn-default",
+                        "dblclick": function(){
+                            $(this).remove();
+                        }
+                    });
+
+                    newItem.appendTo("#LayoutAssignSortable");
+
+                    // Add a span to that new item
+                    $("<span/>", {
+                        "class": "glyphicon glyphicon-minus-sign",
+                        click: function(){
+                            $(this).parent().remove();
+                        }
+                    }).appendTo(newItem);
+                });
+            });
             layoutTable.on('processing.dt', dataTableProcessing);
+
+            // Make our little list sortable
+            $("#LayoutAssignSortable").sortable();
+
+            // Bind the filter form
+            $(".layoutAssignFilterOptions").find("input, select").change(function() {
+                layoutTable.ajax.reload();
+            });
         }
+
+        function layoutAssignSubmit() {
+            // Collect our media
+            var layout = [];
+            $("#LayoutAssignSortable > li").each(function() {
+                layout.push($(this).data().layoutId);
+            });
+
+            assignLayoutsToCampaign($("#LayoutAssign").data().url, layout);
+        }
+
+        var assignLayoutsToCampaign = function(url, layout) {
+            toastr.info(layout, "Assign Layouts to Campaign");
+
+            $.ajax({
+                type: "post",
+                url: url,
+                cache: false,
+                dataType: "json",
+                data: {layoutIds: layout},
+                success: XiboSubmitResponse
+            });
+        };
     </script>
 {% endblock %}

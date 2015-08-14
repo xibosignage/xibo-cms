@@ -124,7 +124,6 @@ $app->get('/layout/form/copy/:id', '\Xibo\Controller\Layout:copyForm')->name('la
 $app->get('/layout/form/delete/:id', '\Xibo\Controller\Layout:deleteForm')->name('layout.delete.form');
 $app->get('/layout/form/retire/:id', '\Xibo\Controller\Layout:retireForm')->name('layout.retire.form');
 $app->get('/layout/form/upgrade/:id', '\Xibo\Controller\Layout:upgradeForm')->name('layout.upgrade.form');
-$app->get('/layout/form/template/:id', '\Xibo\Controller\Layout:templateForm')->name('layout.template.form');
 
 //
 // regions
@@ -191,6 +190,7 @@ $app->get('/campaign/form/layouts/:id', '\Xibo\Controller\Campaign:layoutsForm')
 // template
 //
 $app->get('/template/view', '\Xibo\Controller\Template:displayPage')->name('template.view');
+$app->get('/template/form/layout/:id', '\Xibo\Controller\Template:addTemplateForm')->name('template.from.layout.form');
 
 //
 // resolution

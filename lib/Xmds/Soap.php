@@ -60,7 +60,7 @@ class Soap
         // Set
         if (!$app->logWriter->getWriter()) {
             // Append to settings
-            $app->logWriter->settings['processors'][] = $this->logProcessor;
+            $app->logWriter->addProcessor($this->logProcessor);
         }
         else {
             $app->logWriter->getWriter()->pushProcessor($this->logProcessor);

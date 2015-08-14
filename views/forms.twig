@@ -122,7 +122,7 @@
         <div class="col-sm-10">
             <select class="form-control" {% if type == "dropdownmulti" %}multiple{% endif %} name="{{ name }}" id="{{ name }}" {{ callBack }}
                 {% if dataAttributes|length > 0 %}
-                    {% for attritube in dataAttributes %}
+                    {% for attribute in dataAttributes %}
                         {{ attribute.name }}="{{ attribute.value }}"
                     {% endfor %}
                 {% endif %}>
@@ -135,10 +135,12 @@
             {% for group in optionGroups %}
                 {% if hasGroups %}
                     <optgroup label="{{ group.label }}">
-                    {% set options = attribute(options, group.label) %}
+                    {% set tempOptions = attribute(options, group.id) %}
+                {% else %}
+                    {% set tempOptions = options %}
                 {% endif %}
 
-                {% for option in options %}
+                {% for option in tempOptions %}
 
                     {% set itemOptionId = attribute(option, optionId) %}
                     {% set itemOptionValue = attribute(option, optionValue) %}
@@ -182,21 +184,31 @@
     </table>
 {% endmacro %}
 
-{% macro date(name, title, value, helpText, groupClass, validation, accessKey) %}
+{% macro dateTime(name, title, value, helpText, groupClass, validation, accessKey, dateFormat) %}
     <div class="form-group {{ groupClass }}">
         <label class="col-sm-2 control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
         <div class="col-sm-10">
-            <input class="form-control datePicker" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" {{ validation }} readonly/>
+            <input class="form-control dateTimePicker" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" {{ validation }} data-date-format="{{ dateFormat }}" />
             <span class="help-block">{{ helpText }}</span>
         </div>
     </div>
 {% endmacro %}
 
-{% macro time(name, title, value, helpText, groupClass, validation, accessKey) %}
+{% macro date(name, title, value, helpText, groupClass, validation, accessKey, dateFormat) %}
     <div class="form-group {{ groupClass }}">
         <label class="col-sm-2 control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
         <div class="col-sm-10">
-            <input class="form-control timePicker" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" {{ validation }} readonly/>
+            <input class="form-control datePicker" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" {{ validation }} data-date-format="{{ dateFormat }}" readonly/>
+            <span class="help-block">{{ helpText }}</span>
+        </div>
+    </div>
+{% endmacro %}
+
+{% macro time(name, title, value, helpText, groupClass, validation, accessKey, dateFormat) %}
+    <div class="form-group {{ groupClass }}">
+        <label class="col-sm-2 control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
+        <div class="col-sm-10">
+            <input class="form-control timePicker" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" {{ validation }} data-data-format="{{ dateFormat }}" readonly/>
             <span class="help-block">{{ helpText }}</span>
         </div>
     </div>

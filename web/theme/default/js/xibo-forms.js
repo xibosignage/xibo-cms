@@ -427,10 +427,52 @@ var settingsUpdated = function(response) {
 
 var backGroundFormSetup = function() {
     $('#backgroundColor').colorpicker({format: "hex"});
-    $('#backgroundImageId').change(function() {
-        //Want to attach an onchange event to the drop down for the bg-image
-        var id = $('#backgroundImageId').val();
 
-        $('#bg_image_image').attr("src", "index.php?p=content&q=getFile&mediaid=" + id + "&width=200&height=200&dynamic");
+    var backgroundImageList = $('#backgroundImageId');
+    var backgroundImage = $('#bg_image_image');
+
+    function backgroundImageChange() {
+        // Want to attach an onchange event to the drop down for the bg-image
+        var id = backgroundImageList.val();
+
+        var src;
+        if (id == 0)
+            src = backgroundImage.data().notFoundUrl;
+        else
+            src = backgroundImage.data().url.replace(":id", id);
+
+        backgroundImage.attr("src", src);
+    }
+
+    backgroundImageList.change(backgroundImageChange);
+
+    backgroundImageChange();
+
+    $("#layoutEditForm").submit(function(e) {
+        e.preventDefault();
+
+        var form = $(this);
+
+        // Submit via ajax - change the background color on success
+        $.ajax({
+            type: form.attr("method"),
+            url: form.attr("action"),
+            cache: false,
+            dataType: "json",
+            data: $(form).serialize(),
+            success: function(xhr, textStatus, error) {
+
+                XiboSubmitResponse(xhr, form);
+
+                if (xhr.success) {
+                    var color = form.find("#backgroundColor").val();
+                    $("#layout").data().backgroundColor = color;
+                    $("#layout").css("background-color", color);
+                }
+            },
+            error: function(xhr, textStatus, errorThrown) {
+                SystemMessage(xhr.responseText, false);
+            }
+        });
     })
 };

@@ -84,10 +84,7 @@ class Library extends Base
 
         // Users we have permission to see
         $data['users'] = UserFactory::query();
-
-        $types = ModuleFactory::query(['module'], ['regionSpecific' => 0, 'enabled' => 1]);
-        array_unshift($types, array('moduleid' => '', 'module' => 'All'));
-        $data['modules'] = $types;
+        $data['modules'] = ModuleFactory::query(['module'], ['regionSpecific' => 0, 'enabled' => 1]);
 
         $this->getState()->template = 'library-page';
         $this->getState()->setData($data);

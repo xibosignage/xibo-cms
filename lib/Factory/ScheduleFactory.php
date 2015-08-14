@@ -78,28 +78,69 @@ class ScheduleFactory extends BaseFactory
         $entries = [];
         $params = [];
 
+        $useDetail = Sanitize::getInt('useDetail', $filterBy) == 1;
+
         $sql = '
-        SELECT `schedule`.eventId,
+        SELECT `schedule`.eventId, ';
+
+        if ($useDetail) {
+            $sql .= '
             `schedule_detail`.fromDt,
             `schedule_detail`.toDt,
+            ';
+        } else {
+            $sql .= '
+            `schedule`.fromDt,
+            `schedule`.toDt,
+            ';
+        }
+
+        $sql .= '
+            `schedule`.userId,
+            `schedule`.displayOrder,
             `schedule`.is_priority AS isPriority,
             `schedule`.recurrence_type AS recurrenceType,
+            `schedule`.recurrence_detail AS recurrenceDetail,
+            `schedule`.recurrence_range AS recurrenceRange,
             campaign.campaignId,
             campaign.campaign
-          FROM `schedule_detail`
-            INNER JOIN `schedule`
-            ON schedule_detail.EventID = `schedule`.EventID
+          FROM `schedule`
             INNER JOIN campaign
             ON campaign.CampaignID = `schedule`.CampaignID
+        ';
+
+        if ($useDetail) {
+            $sql .= '
+            INNER JOIN `schedule_detail`
+            ON schedule_detail.EventID = `schedule`.EventID
+            ';
+        }
+
+        $sql .= '
           WHERE 1 = 1
         ';
 
-        if (Sanitize::getInt('fromDt', $filterBy) !== null) {
+        if (Sanitize::getInt('eventId', $filterBy) !== null) {
+            $sql .= ' AND `schedule`.eventId = :eventId ';
+            $params['eventId'] = Sanitize::getInt('eventId', $filterBy);
+        }
+
+        if (!$useDetail && Sanitize::getInt('fromDt', $filterBy) !== null) {
+            $sql .= ' AND schedule.fromDt > :fromDt ';
+            $params['fromDt'] = Sanitize::getInt('fromDt', $filterBy);
+        }
+
+        if (!$useDetail && Sanitize::getInt('toDt', $filterBy) !== null) {
+            $sql .= ' AND schedule.toDt <= :toDt ';
+            $params['toDt'] = Sanitize::getInt('toDt', $filterBy);
+        }
+
+        if ($useDetail && Sanitize::getInt('fromDt', $filterBy) !== null) {
             $sql .= ' AND schedule_detail.fromDt > :fromDt ';
             $params['fromDt'] = Sanitize::getInt('fromDt', $filterBy);
         }
 
-        if (Sanitize::getInt('toDt', $filterBy) !== null) {
+        if ($useDetail && Sanitize::getInt('toDt', $filterBy) !== null) {
             $sql .= ' AND schedule_detail.toDt <= :toDt ';
             $params['toDt'] = Sanitize::getInt('toDt', $filterBy);
         }
