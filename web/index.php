@@ -41,13 +41,16 @@ if (!file_exists('settings.php')) {
 // Load the config
 Config::Load('settings.php');
 
+// Log handlers
+$handlers = [new \Xibo\Helper\DatabaseLogHandler()];
+
+if (strtolower(Config::GetSetting('SERVER_MODE')) == 'test')
+    $handlers[] = new \Monolog\Handler\ChromePHPHandler(\Monolog\Logger::INFO);
+
 // Create a logger
 $logger = new \Flynsarmy\SlimMonolog\Log\MonologWriter(array(
     'name' => 'WEB',
-    'handlers' => array(
-        new \Monolog\Handler\ChromePHPHandler(\Monolog\Logger::INFO),
-        new \Xibo\Helper\DatabaseLogHandler()
-    ),
+    'handlers' => $handlers,
     'processors' => array(
         new \Xibo\Helper\LogProcessor(),
         new \Monolog\Processor\UidProcessor(7)

@@ -42,7 +42,7 @@ class Page implements \JsonSerializable
      * @SWG\Property(description="A code name for the page")
      * @var string
      */
-    public $page;
+    public $name;
 
     /**
      * @SWG\Property(description="A user friendly title for this page")
@@ -68,6 +68,6 @@ class Page implements \JsonSerializable
 
     public function getName()
     {
-        return $this->page;
+        return $this->name;
     }
 }

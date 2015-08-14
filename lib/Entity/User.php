@@ -505,7 +505,7 @@ class User implements \JsonSerializable
         $page = PageFactory::getByRoute($route);
 
         if (!$this->checkViewable($page)) {
-            Log::debug('Blocked assess to unrecognised page: ' . $page->page . '.', 'index', 'PageAuth');
+            Log::debug('Blocked assess to unrecognised page: ' . $page->name . '.', 'index', 'PageAuth');
             throw new AccessDeniedException();
         }
     }
