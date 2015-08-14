@@ -159,7 +159,7 @@ class Twitter extends Module
         $this->setOption('dateFormat', Sanitize::getString('dateFormat'));
         $this->setOption('resultType', Sanitize::getString('resultType'));
         $this->setOption('tweetDistance', Sanitize::getInt('tweetDistance'));
-        $this->setOption('tweetCount', Sanitize::int('tweetCount'));
+        $this->setOption('tweetCount', Sanitize::getInt('tweetCount'));
         $this->setOption('removeUrls', Sanitize::getCheckbox('removeUrls'));
         $this->setOption('overrideTemplate', Sanitize::getCheckbox('overrideTemplate'));
         $this->setOption('updateInterval', Sanitize::getInt('updateInterval', 60));
@@ -188,7 +188,7 @@ class Twitter extends Module
         $this->setOption('dateFormat', Sanitize::getString('dateFormat'));
         $this->setOption('resultType', Sanitize::getString('resultType'));
         $this->setOption('tweetDistance', Sanitize::getInt('tweetDistance'));
-        $this->setOption('tweetCount', Sanitize::int('tweetCount'));
+        $this->setOption('tweetCount', Sanitize::getInt('tweetCount'));
         $this->setOption('removeUrls', Sanitize::getCheckbox('removeUrls'));
         $this->setOption('overrideTemplate', Sanitize::getCheckbox('overrideTemplate'));
         $this->setOption('updateInterval', Sanitize::getInt('updateInterval', 60));
@@ -269,7 +269,6 @@ class Twitter extends Module
         if ($outHeaders['http_code'] != 200) {
             Log::error('Twitter API returned ' . $result . ' status. Unable to proceed. Headers = ' . var_export($outHeaders, true));
 
-            $body = substr($result, $outHeaders['header_size']);
             // See if we can parse the error.
             $body = json_decode($result);
 
@@ -278,9 +277,8 @@ class Twitter extends Module
             return false;
         }
 
-        $body = substr($result, $outHeaders['header_size']);
         // See if we can parse the body as JSON.
-        $body = json_decode($body);
+        $body = json_decode($result);
 
         // We have a 200 - therefore we want to think about caching the bearer token
         // First, lets check its a bearer token
@@ -503,8 +501,8 @@ class Twitter extends Module
                             // Tag this layout with this file
                             $this->assignMedia($file->mediaId);
 
-                            $url = $this->getApp()->urlFor('library.download', ['id' => $file->mediaId]);
-                            $replace = ($isPreview) ? '<img src="' . $url . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" />' : '<img src="' . $file->storedAs . '"  />';
+                            $url = $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']);
+                            $replace = ($isPreview) ? '<img src="' . $url . '?preview=1&width=170&height=150" />' : '<img src="' . $file->storedAs . '"  />';
                         }
                         break;
 
@@ -523,7 +521,7 @@ class Twitter extends Module
                                 // Tag this layout with this file
                                 $this->assignMedia($file->mediaId);
 
-                                $url = $this->getApp()->urlFor('library.download', ['id' => $file->mediaId]);
+                                $url = $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']);
                                 $replace = ($isPreview) ? '<img src="' . $url . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" />' : '<img src="' . $file->storedAs . '"  />';
                             }
                         }

@@ -4,70 +4,6 @@
  * Copyright (C) 2015 Spring Signage Ltd
  * (${FILE_NAME})
  */
-// Augment settings with templates
-        $this->loadTemplates();
-
-
-        // Template - for standard stuff
-        $formFields['template'][] = Form::AddCombo('templateId', __('Template'), $this->GetOption('templateId', 'tweet-only'),
-            $this->module->settings['templates'],
-            'id',
-            'value',
-            __('Select the template you would like to apply. This can be overridden using the check box below.'), 't', 'template-selector-control');
-
-        Lots of dependencies missing, otherwise probably fine
-
-        // Add some field dependencies
-        // When the override template check box is ticked, we want to expose the advanced controls and we want to hide the template selector
-        $response->AddFieldAction('overrideTemplate', 'init', false,
-            array(
-                '.template-override-controls' => array('display' => 'none'),
-                '.template-selector-control' => array('display' => 'block')
-            ), 'is:checked');
-        $response->AddFieldAction('overrideTemplate', 'change', false,
-            array(
-                '.template-override-controls' => array('display' => 'none'),
-                '.template-selector-control' => array('display' => 'block')
-            ), 'is:checked');
-        $response->AddFieldAction('overrideTemplate', 'init', true,
-            array(
-                '.template-override-controls' => array('display' => 'block'),
-                '.template-selector-control' => array('display' => 'none')
-            ), 'is:checked');
-        $response->AddFieldAction('overrideTemplate', 'change', true,
-            array(
-                '.template-override-controls' => array('display' => 'block'),
-                '.template-selector-control' => array('display' => 'none')
-            ), 'is:checked');
-
-        // Present an error message if the module has not been configured. Don't prevent further configuration.
-        if (!extension_loaded('curl') || $this->GetSetting('apiKey') == '' || $this->GetSetting('apiSecret') == '') {
-            $formFields['general'][] = Form::AddMessage(__(''), 'alert alert-danger');
-        }
-
-        // Modules should be rendered using the theme engine.
-        Theme::Set('form_fields_general', $formFields['general']);
-        Theme::Set('form_fields_template', $formFields['template']);
-        Theme::Set('form_fields_effect', $formFields['effect']);
-        Theme::Set('form_fields_advanced', $formFields['advanced']);
-
-        // Set the field dependencies
-        $this->setFieldDepencencies($response);
-        $response->html = Theme::RenderReturn('form_render');
-
-        $response->callBack = 'text_callback';
-        // Append the templates to the response
-        $response->extra = $this->module->settings['templates'];
-        $this->configureFormButtons($response);
-
-        // The response must be returned.
-        return $response;
-
-        // Add a dependency
-        $response->AddFieldAction('effect', 'init', 'none', array('.effect-controls' => array('display' => 'none'), '.background-color-group' => array('display' => 'none')));
-        $response->AddFieldAction('effect', 'change', 'none', array('.effect-controls' => array('display' => 'none'), '.background-color-group' => array('display' => 'none')));
-        $response->AddFieldAction('effect', 'init', 'none', array('.effect-controls' => array('display' => 'block'), '.background-color-group' => array('display' => 'block')), 'not');
-        $response->AddFieldAction('effect', 'change', 'none', array('.effect-controls' => array('display' => 'block'), '.background-color-group' => array('display' => 'block')), 'not');
 #}
 
 {% extends "form-base.twig" %}
@@ -166,7 +102,7 @@
     <div class="row">
         <div class="col-md-12">
             <ul class="nav nav-tabs" role="tablist">
-                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                <li class="active"><a href="#general" role="tab" data-toggle="tab" data-enlarge="1"><span>{% trans "General" %}</span></a></li>
                 <li><a href="#template" role="tab" data-toggle="tab"><span>{% trans "Template" %}</span></a></li>
                 <li><a href="#effectTab" role="tab" data-toggle="tab"><span>{% trans "Effect" %}</span></a></li>
                 <li><a href="#advanced" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
@@ -286,13 +222,15 @@
                         {% set helpText %}{% trans "The format to apply to all dates returned by the ticker. In PHP date format: http://uk3.php.net/manual/en/function.date.php" %}{% endset %}
                         {{ forms.text("dateFormat", title, "d M", helpText) }}
 
+                        {% set title %}{% trans "Remove URLs?" %}{% endset %}
+                        {% set helpText %}{% trans "Should URLs be removed from the Tweet Text. Most URLs do not compliment digital signage." %}{% endset %}
+                        {{ forms.checkbox("removeUrls", title, 0, helpText) }}
+
                         {% set title %}{% trans "Update Interval (mins)" %}{% endset %}
                         {% set helpText %}{% trans "Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60." %}{% endset %}
                         {{ forms.number("updateInterval", title, 60, helpText, "", "required") }}
-                    <div>
+                    </div>
                 </div>
-
-
             </form>
         </div>
     </div>

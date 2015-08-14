@@ -1,6 +1,5 @@
-var text_callback = function(dialog)
-{
-    dialog.addClass("modal-big");
+var text_callback = function(dialog) {
+
     // Set the text template based on the selected template id
     if ($("#ta_text").val() == "" && !$("#overrideTemplate").is(":checked")) {
         // Set something sensible based on the color of the layout background

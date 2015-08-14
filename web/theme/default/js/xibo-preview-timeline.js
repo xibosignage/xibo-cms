@@ -1,6 +1,6 @@
 /**
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2013 Daniel Garner
+ * Copyright (C) 2006-2015 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -101,7 +101,7 @@ Preview.prototype.SetSequence = function(seq)
 		
 			if (response.success) {
 				// Success - what do we do now?
-				$(previewContent).html("<div class=\"regionPreviewOverlay\"></div>" + response.html);
+				$(previewContent).html("<div class=\"regionPreviewOverlay\"></div>" + ((response.html == null) ? "" : response.html));
 
 				// Get the extra
 				$('.preview-media-information', previewElement)
