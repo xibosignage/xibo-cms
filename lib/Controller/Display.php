@@ -76,7 +76,7 @@ class Display extends Base
             ]
         ];
 
-        $data['displayGroup'] = DisplayGroupFactory::query();
+        $data['displayGroups'] = DisplayGroupFactory::query();
 
         // Call to render the template
         $this->getState()->template = 'display-page';

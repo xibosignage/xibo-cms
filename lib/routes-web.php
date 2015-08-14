@@ -140,6 +140,14 @@ $app->get('/region/form/timeline/:id', '\Xibo\Controller\Region:timelineForm')->
 // playlists
 //
 $app->get('/playlist/form/library/assign/:id', '\Xibo\Controller\Playlist:libraryAssignForm')->name('playlist.library.assign.form');
+// Module functions
+$app->get('/playlist/widget/form/add/:type/:id', '\Xibo\Controller\Module:addWidgetForm')->name('module.widget.add.form');
+$app->get('/playlist/widget/form/edit/:id', '\Xibo\Controller\Module:editWidgetForm')->name('module.widget.edit.form');
+$app->get('/playlist/widget/form/delete/:id', '\Xibo\Controller\Module:deleteWidgetForm')->name('module.widget.delete.form');
+$app->get('/playlist/widget/form/transition/edit/:type/:id', '\Xibo\Controller\Module:editWidgetTransitionForm')->name('module.widget.transition.edit.form');
+// Outputs
+$app->get('/playlist/widget/tab/:tab/:id', '\Xibo\Controller\Module:getTab')->name('module.widget.tab.form');
+$app->get('/playlist/widget/resource/:regionId/:id', '\Xibo\Controller\Module:getResource')->name('module.getResource');
 
 //
 // library
@@ -279,14 +287,6 @@ $app->post('/module/install/:name', '\Xibo\Controller\Module:install')->name('mo
 $app->get('/module/form/install/:name', '\Xibo\Controller\Module:installForm')->name('module.install.form');
 $app->get('/module/form/verify', '\Xibo\Controller\Module:verifyForm')->name('module.verify.form');
 $app->get('/module/form/settings/:id', '\Xibo\Controller\Module:settingsForm')->name('module.settings.form');
-// Module functions
-$app->get('/module/form/add/:type/:id', '\Xibo\Controller\Module:addWidgetForm')->name('module.widget.add.form');
-$app->get('/module/form/edit/:id', '\Xibo\Controller\Module:editWidgetForm')->name('module.widget.edit.form');
-$app->get('/module/form/delete/:id', '\Xibo\Controller\Module:deleteWidgetForm')->name('module.widget.delete.form');
-$app->get('/module/form/transition/edit/:type/:id', '\Xibo\Controller\Module:editWidgetTransitionForm')->name('module.widget.transition.edit.form');
-// Outputs
-$app->get('/module/tab/:tab/:id', '\Xibo\Controller\Module:getTab')->name('module.widget.tab.form');
-$app->get('/module/resource/:regionId/:id', '\Xibo\Controller\Module:getResource')->name('module.getResource');
 
 //
 // transition
