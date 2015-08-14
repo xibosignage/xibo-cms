@@ -23,9 +23,11 @@ use baseDAO;
 use database;
 use JSON;
 use Kit;
+use Xibo\Entity\Page;
 use Xibo\Entity\Permission;
 use Xibo\Entity\User;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Factory\PageFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
@@ -106,15 +108,8 @@ class UserGroup extends Base
                 // Page Security
                 $group->buttons[] = array(
                     'id' => 'usergroup_button_page_security',
-                    'url' => $this->urlFor('group.acl.form', ['entity' => 'Page', 'id' => $group->groupId]),
+                    'url' => $this->urlFor('group.acl.form', ['id' => $group->groupId]),
                     'text' => __('Page Security')
-                );
-
-                // Menu Security
-                $group->buttons[] = array(
-                    'id' => 'usergroup_button_menu_security',
-                    'url' => $this->urlFor('group.acl.form', ['entity' => 'Menu', 'id' => $group->groupId]),
-                    'text' => __('Menu Security')
                 );
             }
         }
@@ -246,30 +241,17 @@ class UserGroup extends Base
     }
 
     /**
-     * ACL Form for the provided Entity and GroupId
-     * @param string $entity
+     * ACL Form for the provided GroupId
      * @param int $groupId
      */
-    public function aclForm($entity, $groupId)
+    public function aclForm($groupId)
     {
         // Check permissions to this function
         if ($this->getUser()->userTypeId != 1)
             throw new AccessDeniedException();
 
-        // Show a form with a list of entities, checked or unchecked based on the current assignment
-        if ($entity == '')
-            throw new \InvalidArgumentException(__('ACL form requested without an entity'));
-
-        $requestEntity = $entity;
-
-        // Check to see that we can resolve the entity
-        $entity = 'Xibo\Factory\\' . $entity . 'Factory';
-
-        if (!class_exists($entity) || !method_exists($entity, 'getById'))
-            throw new \InvalidArgumentException(__('ACL form requested with an invalid entity'));
-
         // Use the factory to get all the entities
-        $entities = $entity::query();
+        $entities = PageFactory::query();
 
         // Load the Group we are working on
         // Get the object
@@ -279,13 +261,12 @@ class UserGroup extends Base
         $group = UserGroupFactory::getById($groupId);
 
         // Get all permissions for this user and this object
-        $permissions = PermissionFactory::getByGroupId($requestEntity, $groupId);
-
-        Log::debug('Entity: %s, GroupId: %d. ' . var_export($permissions, true), $requestEntity, $groupId);
+        $permissions = PermissionFactory::getByGroupId('Xibo\Entity\Page', $groupId);
 
         $checkboxes = array();
 
         foreach ($entities as $entity) {
+            /* @var Page $entity */
             // Check to see if this entity is set or not
             $entityId = $entity->getId();
             $viewChecked = 0;
@@ -310,7 +291,6 @@ class UserGroup extends Base
         }
 
         $data = [
-            'entity' => $requestEntity,
             'title' => sprintf(__('ACL for %s'), $group->group),
             'groupId' => $groupId,
             'group' => $group->group,

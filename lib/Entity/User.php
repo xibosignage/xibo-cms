@@ -501,13 +501,29 @@ class User implements \JsonSerializable
      */
     public function routeAuthentication($route)
     {
-        // Look at the route and see if we are permission for it.
-        $page = PageFactory::getByRoute($route);
-
-        if (!$this->checkViewable($page)) {
-            Log::debug('Blocked assess to unrecognised page: ' . $page->name . '.', 'index', 'PageAuth');
+        if (!$this->routeViewable($route)) {
+            Log::debug('Blocked assess to unrecognised page: ' . $route . '.');
             throw new AccessDeniedException();
         }
+    }
+
+    /**
+     * Authenticates the route given against the user credentials held
+     * @param $route string
+     * @return bool
+     */
+    public function routeViewable($route)
+    {
+        // Look at the route and see if we are permission for it.
+        try {
+            $page = PageFactory::getByRoute($route);
+        }
+        catch (NotFoundException $e) {
+            Log::error('Request for unknown route: %s', $route);
+            return false;
+        }
+
+        return $this->checkViewable($page);
     }
 
     /**

@@ -206,7 +206,7 @@ $app->get('/resolution/form/delete/:id', '\Xibo\Controller\Resolution:deleteForm
 //
 // dataset
 //
-$app->get('/dataset/view', '\Xibo\Controller\DataSet:displayPage')->name('dataset.view');
+$app->get('/dataset/view', '\Xibo\Controller\DataSet:displayPage')->name('dataSet.view');
 $app->get('/dataset/data/view/:id', '\Xibo\Controller\DataSetData:displayPage')->name('dataSet.view.data');
 $app->get('/dataset/form/add', '\Xibo\Controller\DataSet:addForm')->name('dataSet.add.form');
 $app->get('/dataset/form/edit/:id', '\Xibo\Controller\DataSet:editForm')->name('dataSet.edit.form');
@@ -225,7 +225,7 @@ $app->get('/dataset/data/form/delete/:id/:rowId', '\Xibo\Controller\DataSetData:
 //
 // displaygroup
 //
-$app->get('/displaygroup/view', '\Xibo\Controller\DisplayGroup:displayPage')->name('displaygroup.view');
+$app->get('/displaygroup/view', '\Xibo\Controller\DisplayGroup:displayPage')->name('displayGroup.view');
 $app->get('/displaygroup/form/add', '\Xibo\Controller\DisplayGroup:addForm')->name('displayGroup.add.form');
 $app->get('/displaygroup/form/edit/:id', '\Xibo\Controller\DisplayGroup:editForm')->name('displayGroup.edit.form');
 $app->get('/displaygroup/form/delete/:id', '\Xibo\Controller\DisplayGroup:deleteForm')->name('displayGroup.delete.form');
@@ -236,7 +236,7 @@ $app->get('/displaygroup/form/version/:id', '\Xibo\Controller\DisplayGroup:versi
 //
 // displayprofile
 //
-$app->get('/displayprofile/view', '\Xibo\Controller\DisplayProfile:displayPage')->name('displayprofile.view');
+$app->get('/displayprofile/view', '\Xibo\Controller\DisplayProfile:displayPage')->name('displayProfile.view');
 $app->get('/displayprofile/form/add', '\Xibo\Controller\DisplayProfile:addForm')->name('displayProfile.add.form');
 $app->get('/displayprofile/form/edit/:id', '\Xibo\Controller\DisplayProfile:editForm')->name('displayProfile.edit.form');
 $app->get('/displayprofile/form/delete/:id', '\Xibo\Controller\DisplayProfile:deleteForm')->name('displayProfile.delete.form');
@@ -248,7 +248,7 @@ $app->get('/group/view', '\Xibo\Controller\UserGroup:displayPage')->name('group.
 $app->get('/group/form/add', '\Xibo\Controller\UserGroup:addForm')->name('group.add.form');
 $app->get('/group/form/edit/:id', '\Xibo\Controller\UserGroup:editForm')->name('group.edit.form');
 $app->get('/group/form/delete/:id', '\Xibo\Controller\UserGroup:deleteForm')->name('group.delete.form');
-$app->get('/group/form/acl/:entity/:id', '\Xibo\Controller\UserGroup:aclForm')->name('group.acl.form');
+$app->get('/group/form/acl/:id', '\Xibo\Controller\UserGroup:aclForm')->name('group.acl.form');
 $app->get('/group/form/members/:id', '\Xibo\Controller\UserGroup:membersForm')->name('group.members.form');
 
 //
@@ -327,5 +327,5 @@ $app->get('/stats/form/export', '\Xibo\Controller\Stats:exportForm')->name('stat
 //
 // Audit Log
 //
-$app->get('/audit/view', '\Xibo\Controller\AuditLog:displayPage')->name('auditlog.view');
+$app->get('/audit/view', '\Xibo\Controller\AuditLog:displayPage')->name('auditLog.view');
 $app->get('/audit/form/export', '\Xibo\Controller\AuditLog:exportForm')->name('auditLog.export.form');

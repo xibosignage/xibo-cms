@@ -383,6 +383,8 @@ UPDATE  `pages` SET  `name` =  'application' WHERE  `pages`.`pageID` =33;
 ALTER TABLE  `pages` ADD  `title` VARCHAR( 50 ) NOT NULL;
 ALTER TABLE  `pages` ADD  `asHome` TINYINT NOT NULL DEFAULT '0';
 
+DROP TABLE `menuitem`, `menu`;
+
 UPDATE `setting` SET options = 'Emergency|Alert|Critical|Error|Warning|Notice|Info|Debug', value = 'Error' WHERE setting = 'audit';
 
 UPDATE `version` SET `app_ver` = '1.8.0-alpha', `XmdsVersion` = 4, `XlfVersion` = 2;

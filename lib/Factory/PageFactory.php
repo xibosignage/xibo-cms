@@ -39,7 +39,7 @@ class PageFactory extends BaseFactory
      */
     public static function getById($pageId)
     {
-        $pages = PageFactory::query(null, array('pageId' => $pageId));
+        $pages = PageFactory::query(null, array('pageId' => $pageId, 'disableUserCheck' => 1));
 
         if (count($pages) <= 0)
             throw new NotFoundException('Unknown Route');
@@ -57,7 +57,7 @@ class PageFactory extends BaseFactory
     {
         Log::debug('Checking access for route ' . $route);
         $route = explode('/', ltrim($route, '/'));
-        $pages = PageFactory::query(null, array('name' => $route[0]));
+        $pages = PageFactory::query(null, array('name' => $route[0], 'disableUserCheck' => 1));
 
         if (count($pages) <= 0)
             throw new NotFoundException('Unknown Route');
@@ -73,6 +73,9 @@ class PageFactory extends BaseFactory
         $entries = array();
         $params = array();
         $sql = 'SELECT pageId, name, title, asHome FROM `pages` WHERE 1 = 1 ';
+
+        // Logged in user view permissions
+        self::viewPermissionSql('Xibo\Entity\Page', $sql, $params, 'pageId', null, $filterBy);
 
         if (Sanitize::getString('name', $filterBy) != null) {
             $params['name'] = Sanitize::getString('name', $filterBy);

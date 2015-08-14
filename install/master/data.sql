@@ -89,15 +89,6 @@ INSERT INTO `help` (`HelpID`, `Topic`, `Category`, `Link`) VALUES
 (83, 'DisplayProfile', 'Edit', 'displays_settings.html#edit'),
 (84, 'DisplayProfile', 'Delete', 'displays_settings.html#delete');
 
-INSERT INTO `menu` (`MenuID`, `Menu`) VALUES
-(8, 'Administration Menu'),
-(9, 'Advanced Menu'),
-(2, 'Dashboard'),
-(6, 'Design Menu'),
-(7, 'Display Menu'),
-(5, 'Library Menu'),
-(1, 'Top Nav');
-
 INSERT INTO `module` (`ModuleID`, `Module`, `Name`, `Enabled`, `RegionSpecific`, `Description`, `ImageUri`, `SchemaVersion`, `ValidExtensions`, `PreviewEnabled`, `assignable`, `render_as`, `settings`) VALUES
 (1, 'Image', 'Image', 1, 0, 'Images. PNG, JPG, BMP, GIF', 'forms/image.gif', 1, 'jpg,jpeg,png,bmp,gif', 1, 1, NULL, NULL),
 (2, 'Video', 'Video', 1, 0, 'Videos - support varies depending on the client hardware you are using.', 'forms/video.gif', 1, 'wmv,avi,mpg,mpeg,webm,mp4', 1, 1, NULL, NULL),
@@ -150,44 +141,6 @@ INSERT INTO `pages` (`pageID`, `name`, `title`, `asHome`) VALUES
   (33, 'playlist', 'Playlist', 0),
   (34, 'audit', 'Audit', 0),
   (35, 'maintenance', 'Maintenance', 0);
-
-INSERT INTO `menuitem` (`MenuItemID`, `MenuID`, `PageID`, `Args`, `Text`, `Class`, `Img`, `Sequence`, `External`) VALUES
-(1, 1, 2, NULL, 'Schedule', NULL, NULL, 1, 0),
-(2, 1, 5, NULL, 'Design', NULL, NULL, 2, 0),
-(3, 1, 7, NULL, 'Library', NULL, NULL, 3, 0),
-(4, 1, 17, NULL, 'Administration', NULL, NULL, 5, 0),
-(7, 7, 11, NULL, 'Displays', NULL, NULL, 1, 0),
-(8, 8, 15, NULL, 'User Groups', NULL, NULL, 2, 0),
-(9, 8, 17, NULL, 'Users', NULL, NULL, 1, 0),
-(10, 9, 16, NULL, 'Log', NULL, NULL, 1, 0),
-(11, 9, 18, NULL, 'About', NULL, NULL, 4, 0),
-(12, 9, 40, NULL, 'Sessions', NULL, NULL, 2, 0),
-(13, 8, 14, NULL, 'Settings', NULL, NULL, 3, 0),
-(14, 2, 2, 'sp=month', 'Schedule', 'schedule_button', 'dashboard/scheduleview.png', 1, 0),
-(15, 2, 5, NULL, 'Layouts', 'playlist_button', 'dashboard/presentations.png', 2, 0),
-(16, 2, 7, NULL, 'Library', 'content_button', 'dashboard/content.png', 3, 0),
-(17, 2, 25, NULL, 'Templates', 'layout_button', 'dashboard/layouts.png', 4, 0),
-(18, 2, 17, NULL, 'Users', 'user_button', 'dashboard/users.png', 5, 0),
-(19, 2, 14, NULL, 'Settings', 'settings_button', 'dashboard/settings.png', 6, 0),
-(20, 2, 18, NULL, 'About', 'license_button', 'dashboard/license.png', 7, 0),
-(22, 9, 26, NULL, 'Report Fault', NULL, NULL, 3, 0),
-(23, 7, 27, NULL, 'Statistics', NULL, NULL, 3, 0),
-(24, 2, 28, 'manual/index.php', 'Manual', 'help_button', 'dashboard/help.png', 10, 1),
-(25, 6, 29, NULL, 'Resolutions', NULL, NULL, 4, 0),
-(26, 6, 25, NULL, 'Templates', NULL, NULL, 3, 0),
-(27, 7, 32, NULL, 'Display Groups', NULL, NULL, 2, 0),
-(28, 8, 33, NULL, 'Applications', NULL, NULL, 4, 0),
-(29, 5, 36, NULL, 'DataSets', NULL, NULL, 2, 0),
-(30, 5, 7, NULL, 'Media', NULL, NULL, 1, 0),
-(33, 6, 5, NULL, 'Layouts', NULL, NULL, 2, 0),
-(34, 1, 11, NULL, 'Displays', NULL, NULL, 4, 0),
-(35, 1, 16, NULL, 'Advanced', NULL, NULL, 6, 0),
-(36, 8, 24, NULL, 'Modules', NULL, NULL, 5, 0),
-(37, 6, 37, NULL, 'Campaigns', NULL, NULL, 1, 0),
-(38, 8, 38, NULL, 'Transitions', NULL, NULL, 6, 0),
-(39, 9, 30, NULL, 'Help Links', NULL, NULL, 6, 0),
-(40, 7, 43, NULL, 'Display Settings', NULL, NULL, 4, 0),
-(41, 9, 44, NULL, 'Audit Trail', NULL, NULL, 2, 0);
 
 
 INSERT INTO `resolution` (`resolutionID`, `resolution`, `width`, `height`, `intended_width`, `intended_height`, `version`, `enabled`) VALUES

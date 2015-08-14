@@ -290,7 +290,7 @@ $app->delete('/group/:id', '\Xibo\Controller\UserGroup:delete')->name('group.del
 $app->post('/group/members/assign/:id', '\Xibo\Controller\UserGroup:assignUser')->name('group.members.assign');
 $app->post('/group/members/unassign/:id', '\Xibo\Controller\UserGroup:unassignUser')->name('group.members.unassign');
 
-$app->post('/group/acl/:entity/:id', '\Xibo\Controller\UserGroup:acl')->name('group.acl');
+$app->post('/group/acl/:id', '\Xibo\Controller\UserGroup:acl')->name('group.acl');
 
 //
 // Applications

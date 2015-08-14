@@ -130,15 +130,8 @@ class User extends Base
                 // Page Security
                 $user->buttons[] = array(
                     'id' => 'user_button_page_security',
-                    'url' => $this->urlFor('group.acl.form', ['entity' => 'Page', 'id' => $user->groupId]),
+                    'url' => $this->urlFor('group.acl.form', ['id' => $user->groupId]),
                     'text' => __('Page Security')
-                );
-
-                // Menu Security
-                $user->buttons[] = array(
-                    'id' => 'user_button_menu_security',
-                    'url' => $this->urlFor('group.acl.form', ['entity' => 'Menu', 'id' => $user->groupId]),
-                    'text' => __('Menu Security')
                 );
             }
         }
