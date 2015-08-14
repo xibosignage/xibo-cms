@@ -965,7 +965,7 @@ class Rest
 
         // Create the module
         try {
-            $module = ModuleFactory::load($type, $layoutId, $regionId, $mediaId);
+            $module = ModuleFactory::load($type, $layoutId, $regionId, $mediaId, NULL, NULL, $this->user);
         }
         catch (Exception $e) {
             return $this->Error($e->getMessage());
