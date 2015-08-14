@@ -487,8 +487,9 @@ class User
      */
     public function touch()
     {
-        PDOConnect::update('UPDATE `user` SET lastAccessed = :time WHERE userId = :userId', [
+        PDOConnect::update('UPDATE `user` SET lastAccessed = :time, loggedIn = 1, newUserWizard = :newUserWizard WHERE userId = :userId', [
             'userId' => $this->userId,
+            'newUserWizard' => $this->newUserWizard,
             'time' => date("Y-m-d H:i:s")
         ]);
     }
