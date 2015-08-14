@@ -149,6 +149,7 @@ class Soap4 extends Soap
         $display->clientType = $clientType;
         $display->clientVersion = $clientVersion;
         $display->clientCode = $clientCode;
+        //$display->operatingSystem = $operatingSystem;
         $display->save(false);
 
         // Log Bandwidth
