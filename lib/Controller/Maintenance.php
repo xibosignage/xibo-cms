@@ -293,6 +293,7 @@ class Maintenance extends Base
 
                 // Keep tidy
                 Library::removeExpiredFiles();
+                Library::removeTempFiles();
 
                 // Install module files
                 if (!$quick) {
@@ -339,18 +340,10 @@ class Maintenance extends Base
 
         // Also run a script to tidy up orphaned media in the library
         $library = Config::GetSetting('LIBRARY_LOCATION');
-
         Log::debug('Library Location: ' . $library);
 
-        // Dump the files in the temp folder
-        foreach (scandir($library . 'temp') as $item) {
-            if ($item == '.' || $item == '..')
-                continue;
-
-            Log::debug('Deleting temp file: ' . $item);
-
-            unlink($library . 'temp' . DIRECTORY_SEPARATOR . $item);
-        }
+        // Remove temporary files
+        Library::removeTempFiles();
 
         $media = array();
         $unusedMedia = array();
