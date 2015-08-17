@@ -31,6 +31,10 @@
             <form id="dataSetViewEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
+                        {% set title %}{% trans "Name" %}{% endset %}
+                        {% set helpText %}{% trans "An optional name for this media" %}{% endset %}
+                        {{ forms.text("name", title, "", helpText) }}
+
                         {% set title %}{% trans "Duration" %}{% endset %}
                         {% set helpText %}{% trans "The duration in seconds this item should be displayed" %}{% endset %}
                         {{ forms.number("duration", title, module.getDuration(), helpText, "", "required") }}

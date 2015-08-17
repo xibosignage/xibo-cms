@@ -141,6 +141,7 @@ class DataSetView extends Module
      */
     public function add()
     {
+        $this->setOption('name', Sanitize::getString('name'));
         $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
         $this->setOption('dataSetId', Sanitize::getInt('dataSetId'));
 
@@ -162,6 +163,7 @@ class DataSetView extends Module
             $this->SetOption('columns', implode(',', $columns));
 
         // Other properties
+        $this->setOption('name', Sanitize::getString('name', $this->getOption('name')));
         $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
         $this->setOption('updateInterval', Sanitize::getInt('updateInterval', 120));
         $this->setOption('name', Sanitize::getString('name'));

@@ -96,6 +96,10 @@
         <div class="col-md-12">
             <form id="clockFormEdit" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
 
+                {% set title %}{% trans "Name" %}{% endset %}
+                {% set helpText %}{% trans "An optional name for this media" %}{% endset %}
+                {{ forms.text("name", title, "", helpText) }}
+
                 {% set title %}{% trans "Clock Type" %}{% endset %}
                 {% set helpText %}{% trans "Please select the type of clock to display." %}{% endset %}
                 {% set analog %}{% trans "Analog" %}{% endset %}
