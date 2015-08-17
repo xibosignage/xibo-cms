@@ -23,6 +23,7 @@
 namespace Xibo\Entity;
 
 
+use Xibo\Helper\Log;
 use Xibo\Storage\PDOConnect;
 
 /**
@@ -31,8 +32,10 @@ use Xibo\Storage\PDOConnect;
  *
  * @SWG\Definition()
  */
-class Tag
+class Tag implements \JsonSerializable
 {
+    use EntityTrait;
+
     /**
      * @SWG\Property(description="The Tag ID")
      * @var int
@@ -68,6 +71,9 @@ class Tag
      */
     public function assignLayout($layoutId)
     {
+        if (!$this->loaded)
+            $this->load();
+
         if (!in_array($layoutId, $this->layoutIds))
             $this->layoutIds[] = $layoutId;
     }
@@ -78,6 +84,9 @@ class Tag
      */
     public function unassignLayout($layoutId)
     {
+        if (!$this->loaded)
+            $this->load();
+
         $this->layoutIds = array_diff($this->layoutIds, [$layoutId]);
     }
 
@@ -87,6 +96,9 @@ class Tag
      */
     public function assignMedia($mediaId)
     {
+        if (!$this->loaded)
+            $this->load();
+
         if (!in_array($mediaId, $this->mediaIds))
             $this->mediaIds[] = $mediaId;
     }
@@ -97,7 +109,31 @@ class Tag
      */
     public function unassignMedia($mediaId)
     {
+        if (!$this->loaded)
+            $this->load();
+
         $this->mediaIds = array_diff($this->mediaIds, [$mediaId]);
+    }
+
+    /**
+     * Load
+     */
+    public function load()
+    {
+        if ($this->tagId == null)
+            return;
+
+        $this->layoutIds = [];
+        foreach (PDOConnect::select('SELECT layoutId FROM `lktaglayout` WHERE tagId = :tagId', ['tagId' => $this->tagId]) as $row) {
+            $this->layoutIds[] = $row['layoutId'];
+        }
+
+        $this->mediaIds = [];
+        foreach (PDOConnect::select('SELECT mediaId FROM `lktagmedia` WHERE tagId = :tagId', ['tagId' => $this->tagId]) as $row) {
+            $this->mediaIds[] = $row['mediaId'];
+        }
+
+        $this->loaded = true;
     }
 
     /**
@@ -130,7 +166,7 @@ class Tag
      */
     private function add()
     {
-        $this->tagId = \Xibo\Storage\PDOConnect::insert('INSERT INTO `tag` (tag) VALUES (:tag) ON DUPLICATE KEY UPDATE tag = tag', array('tag' => $this->tag));
+        $this->tagId = PDOConnect::insert('INSERT INTO `tag` (tag) VALUES (:tag) ON DUPLICATE KEY UPDATE tag = tag', array('tag' => $this->tag));
     }
 
     /**
@@ -139,7 +175,7 @@ class Tag
     private function linkLayouts()
     {
         foreach ($this->layoutIds as $layoutId) {
-            \Xibo\Storage\PDOConnect::update('INSERT INTO `lktaglayout` (tagId, layoutId) VALUES (:tagId, :layoutId) ON DUPLICATE KEY UPDATE layoutId = layoutId', array(
+            PDOConnect::update('INSERT INTO `lktaglayout` (tagId, layoutId) VALUES (:tagId, :layoutId) ON DUPLICATE KEY UPDATE layoutId = layoutId', array(
                 'tagId' => $this->tagId,
                 'layoutId' => $layoutId
             ));
@@ -168,6 +204,8 @@ class Tag
 
         $sql .= ')';
 
+        Log::sql($sql, $params);
+
         PDOConnect::update($sql, $params);
     }
 
@@ -177,7 +215,7 @@ class Tag
     private function linkMedia()
     {
         foreach ($this->mediaIds as $mediaId) {
-            \Xibo\Storage\PDOConnect::update('INSERT INTO `lktagmedia` (tagId, mediaId) VALUES (:tagId, :mediaId) ON DUPLICATE KEY UPDATE mediaId = mediaId', array(
+            PDOConnect::update('INSERT INTO `lktagmedia` (tagId, mediaId) VALUES (:tagId, :mediaId) ON DUPLICATE KEY UPDATE mediaId = mediaId', array(
                 'tagId' => $this->tagId,
                 'mediaId' => $mediaId
             ));
@@ -205,6 +243,8 @@ class Tag
         }
 
         $sql .= ')';
+
+        Log::sql($sql, $params);
 
         PDOConnect::update($sql, $params);
     }

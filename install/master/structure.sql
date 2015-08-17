@@ -419,7 +419,8 @@ CREATE TABLE IF NOT EXISTS `lktaglayout` (
   `lkTagLayoutId` int(11) NOT NULL AUTO_INCREMENT,
   `tagId` int(11) NOT NULL,
   `layoutId` int(11) NOT NULL,
-  PRIMARY KEY (`lkTagLayoutId`)
+  PRIMARY KEY (`lkTagLayoutId`),
+  UNIQUE KEY `tagId` (`tagId`,`layoutId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 -- --------------------------------------------------------
@@ -432,7 +433,8 @@ CREATE TABLE IF NOT EXISTS `lktagmedia` (
   `lkTagMediaId` int(11) NOT NULL AUTO_INCREMENT,
   `tagId` int(11) NOT NULL,
   `mediaId` int(11) NOT NULL,
-  PRIMARY KEY (`lkTagMediaId`)
+  PRIMARY KEY (`lkTagMediaId`),
+  UNIQUE KEY `tagId` (`tagId`,`mediaId`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 -- --------------------------------------------------------

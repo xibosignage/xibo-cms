@@ -462,9 +462,6 @@ class LayoutFactory extends BaseFactory
         $body .= "       AND campaign.IsLayoutSpecific = 1";
         $body .= "   INNER JOIN `user` ON `user`.userId = `campaign`.userId ";
 
-        $body .= " LEFT OUTER JOIN lktaglayout ON lktaglayout.layoutId = layout.layoutId ";
-        $body .= " LEFT OUTER JOIN tag ON tag.tagId = lktaglayout.tagId ";
-
         if (Sanitize::getInt('campaignId', 0, $filterBy) != 0) {
             // Join Campaign back onto it again
             $body .= " INNER JOIN `lkcampaignlayout` lkcl ON lkcl.layoutid = layout.layoutid AND lkcl.CampaignID = :campaignId ";
