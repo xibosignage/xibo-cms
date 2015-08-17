@@ -572,10 +572,12 @@ class Twitter extends Module
         if (count($items) == 0)
             return '';
 
+        $marqueeEffect = (stripos($this->getOption('effect'), 'marquee') !== false);
+
         $options = array(
             'type' => $this->getModuleType(),
             'fx' => $this->getOption('effect', 'none'),
-            'speed' => $this->getOption('speed', 500),
+            'speed' => $this->getOption('speed', (($marqueeEffect) ? 1 : 500)),
             'duration' => $duration,
             'durationIsPerItem' => ($this->getOption('durationIsPerItem', 0) == 1),
             'numItems' => count($items),
@@ -615,11 +617,11 @@ class Twitter extends Module
         $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
 
         // Need the cycle plugin?
-        if ($this->getSetting('effect') != 'none')
+        if ($this->getOption('effect') != 'none')
             $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-cycle-2.1.6.min.js') . '"></script>';
 
         // Need the marquee plugin?
-        if (stripos($this->getSetting('effect'), 'marquee') !== false)
+        if ($marqueeEffect)
             $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery.marquee.min.js') . '"></script>';
 
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
