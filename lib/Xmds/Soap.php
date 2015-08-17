@@ -173,6 +173,11 @@ class Soap
         try {
             $dbh = PDOConnect::init();
 
+
+
+            // TODO: Handle the Background Image (in 1.7 it was linked to the layout with lklayoutmedia).
+            // lklayoutmedia has gone now, so I suppose it will have to be handled in requiredfiles.
+
             // Add file nodes to the $fileElements
             $SQL = "
                     SELECT 1 AS DownloadOrder, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize

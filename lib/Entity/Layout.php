@@ -397,9 +397,6 @@ class Layout implements \JsonSerializable
             }
         }
 
-        // TODO: Handle the Background Image (in 1.7 it was linked to the layout with lklayoutmedia).
-        // lklayoutmedia has gone now, so I suppose it will have to be handled in requiredfiles.
-
         Log::debug('Save finished for %s', $this);
     }
 

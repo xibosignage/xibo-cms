@@ -166,7 +166,7 @@ class Region extends Base
             throw new AccessDeniedException();
 
         $layout->load([
-            'loadPlaylists' => false,
+            'loadPlaylists' => true,
             'loadTags' => false,
             'loadPermissions' => false,
             'loadCampaigns' => false
@@ -177,7 +177,9 @@ class Region extends Base
             Sanitize::getInt('width', 250), Sanitize::getInt('height', 250), Sanitize::getInt('top', 50), Sanitize::getInt('left', 50));
 
         $layout->regions[] = $region;
-        $layout->save();
+        $layout->save([
+            'saveTags' => false
+        ]);
 
         // Return
         $this->getState()->hydrate([
