@@ -16,8 +16,8 @@
 
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
-    {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, $("#displayProfileDeleteForm").submit()
+    {% trans "No" %}, XiboDialogClose()
+    {% trans "Yes" %}, $("#displayProfileDeleteForm").submit()
 {% endblock %}
 
 {% block formHtml %}

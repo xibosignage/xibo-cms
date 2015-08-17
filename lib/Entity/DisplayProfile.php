@@ -99,8 +99,9 @@ class DisplayProfile
         for ($i = 0; $i < count($this->configDefault); $i++) {
             // Does this setting exist in our store?
             for ($j = 0; $j < count($this->config); $j++) {
-                if ($this->config[$j]['name'] == $this->config[$i]['name']) {
-                    $this->config[$i]['value'] = $this->config[$j]['value'];
+                // If we have found our default config setting
+                if ($this->configDefault[$i]['name'] == $this->config[$j]['name']) {
+                    // Override the the default with our setting
                     $this->configDefault[$i]['value'] = $this->config[$j]['value'];
                     break;
                 }
@@ -158,8 +159,8 @@ class DisplayProfile
             'name' => $this->name,
             'type' => $this->type,
             'config' => ($this->config == '') ? '[]' : json_encode($this->config),
-            'isdefault' => $this->isDefault,
-            'userid' => $this->userId
+            'isDefault' => $this->isDefault,
+            'userId' => $this->userId
         ]);
     }
 

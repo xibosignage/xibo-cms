@@ -35,11 +35,10 @@ In theory it is fine, although  it may be better to user clientTypes from contro
                 {% set windows %}{% trans "Windows" %}{% endset %}
                 {% set android %}{% trans "Android" %}{% endset %}
                 {% set options = [
-                { typeid: windows, type: windows },
-                { typeid: android, type: android }
+                { typeid: "windows", type: windows },
+                { typeid: "android", type: android }
                 ] %}
                 {{ forms.dropdown("type", "single", title,"", options, "typeid","type", helpText) }} 
-                {#this is giving me "Unexpected Error, please contact support.""  not sure whats wrong, tried different things without 'set clientTypes' too because it is set in controller, but well probably some obvious mistake#}
 
                 {% set title %}{% trans "Default Profile?" %}{% endset %}
                 {% set helpText %}{% trans "Is this the default profile for all Displays of this type? Only 1 profile can be the default." %}{% endset %}
