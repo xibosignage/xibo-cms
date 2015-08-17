@@ -140,7 +140,7 @@ class UserGroupFactory extends BaseFactory
                 $params['isUserSpecific'] = Sanitize::getInt('isUserSpecific', 0, $filterBy);
             }
 
-            if (Sanitize::getInt('isEveryone', $filterBy) !== null) {
+            if (Sanitize::getInt('isEveryone', $filterBy) != -1) {
                 $body .= ' AND isEveryone = :isEveryone ';
                 $params['isEveryone'] = Sanitize::getInt('isEveryone', 0, $filterBy);
             }
