@@ -176,6 +176,12 @@ class User implements \JsonSerializable
      */
     private $permissionCache = array();
 
+    /**
+     * Cached Page Permissions
+     * @var array[Page]
+     */
+    private $pagePermissionCache = null;
+
     public function __toString()
     {
         return sprintf('User %s. userId: %d, UserTypeId: %d, homePageId: %d, email = %s', $this->userName, $this->userId, $this->userTypeId, $this->homePageId, $this->email);
@@ -514,16 +520,26 @@ class User implements \JsonSerializable
      */
     public function routeViewable($route)
     {
-        // Look at the route and see if we are permission for it.
-        try {
-            $page = PageFactory::getByRoute($route);
-        }
-        catch (NotFoundException $e) {
-            Log::error('Request for unknown route: %s', $route);
-            return false;
+        if ($this->userTypeId == 1)
+            return true;
+
+        if ($this->pagePermissionCache == null) {
+            // Load all viewable pages into the permissions cache
+            $this->pagePermissionCache = PageFactory::query();
         }
 
-        return $this->checkViewable($page);
+        Log::debug('Checking access for route ' . $route);
+        $route = explode('/', ltrim($route, '/'));
+
+        // See if our route is in the page permission cache
+        foreach ($this->pagePermissionCache as $page) {
+            /* @var Page $page */
+            if ($page->name == $route[0])
+                return true;
+        }
+
+        Log::error('Request for unknown route: %s', $route[0]);
+        return false;
     }
 
     /**
