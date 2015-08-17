@@ -442,7 +442,7 @@ function XiboFormRender(formUrl, data) {
                                 if ($(this).hasClass("save-button"))
                                     $(this).append(' <span class="saving fa fa-cog fa-spin"></span>');
 
-                                if (value.indexOf("DialogClose") > -1 && (lastForm.indexOf("module/form") > -1 || lastForm.indexOf("playlist/form/library/assign") > -1) && timelineForm != null) {
+                                if (value.indexOf("DialogClose") > -1 && (lastForm.indexOf("playlist/widget/form") > -1 || lastForm.indexOf("playlist/form/library/assign") > -1) && timelineForm != null) {
                                     // Close button
                                     // We might want to go back to the prior form
                                     XiboFormRender(timelineForm.url, timelineForm.value);
@@ -846,7 +846,7 @@ function XiboSubmitResponse(response, form) {
         // Should we refresh the window or refresh the Grids?
         XiboRefreshAllGrids();
 
-        if ((lastForm != undefined && (lastForm.indexOf("module/form") > -1 || lastForm.indexOf("playlist/form/library/assign") > -1)) && timelineForm != null) {
+        if ((lastForm != undefined && (lastForm.indexOf("playlist/widget/form") > -1 || lastForm.indexOf("playlist/form/library/assign") > -1)) && timelineForm != null) {
             // Close button
             // We might want to go back to the prior form
             XiboFormRender(timelineForm.url, timelineForm.value);
@@ -1018,7 +1018,7 @@ function SystemMessage(messageText, success) {
             buttons: [{
                 label: 'Close',
                 callback: function() {
-                    if (lastForm.indexOf("module/form") > -1 && timelineForm != null) {
+                    if (lastForm.indexOf("playlist/widget/form") > -1 && timelineForm != null) {
                         // Close button
                         // We might want to go back to the prior form
                         XiboFormRender(timelineForm.url, timelineForm.value);
