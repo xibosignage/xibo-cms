@@ -257,6 +257,15 @@ class Template extends Base
         if (Sanitize::getCheckbox('includeWidgets') == 1) {
             $layout->load();
         }
+        else {
+            // Load without anything
+            $layout->load([
+                'loadPlaylists' => false,
+                'loadTags' => false,
+                'loadPermissions' => false,
+                'loadCampaigns' => false
+            ]);
+        }
 
         $layout = clone $layout;
 
