@@ -538,6 +538,12 @@ function XiboFormRender(formUrl, data) {
                     }
                 });
 
+                // Check to see if the current tab has the enlarge action
+                $('a[data-toggle="tab"]', dialog).each(function() {
+                    if ($(this).data().enlarge === 1 && $(this).closest("li").hasClass("active"))
+                        $(this).closest(".modal").addClass("modal-big");
+                });
+
                 // Call Xibo Init for this form
                 XiboInitialise("#"+dialog.attr("id"));
             }
@@ -978,7 +984,7 @@ function XiboRefreshAllGrids() {
 }
 
 function XiboRedirect(url) {
-    windows.location = url;
+    window.location.href = url;
 }
 
 /**

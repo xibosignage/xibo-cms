@@ -28,7 +28,7 @@
                             {{ inline.text("filter_display", "Name", defaults.display) }}
                             {{ inline.text("filterMacAddress", "Mac Address", defaults.macAddress) }}
 
-                            {{ inline.dropdown("filter_displaygroup", "single", "Display Group", defaults.displayGroup, values, "displayGroupId", "displayGroup") }}
+                            {{ inline.dropdown("filter_displaygroup", "single", "Display Group", defaults.displayGroup, [{displayGroupId:null, displayGroup:""}]|merge(displayGroups), "displayGroupId", "displayGroup") }}
 
                             {{ inline.number("filter_autoRefresh", "Auto Refresh", defaults.filterAutoRefresh) }}
 

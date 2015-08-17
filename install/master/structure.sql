@@ -512,40 +512,6 @@ CREATE TABLE IF NOT EXISTS `media` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `menu`
---
-
-CREATE TABLE IF NOT EXISTS `menu` (
-  `MenuID` smallint(6) NOT NULL AUTO_INCREMENT,
-  `Menu` varchar(50) NOT NULL,
-  PRIMARY KEY (`MenuID`),
-  UNIQUE KEY `Menu` (`Menu`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='A Menu (or collection of links)' AUTO_INCREMENT=10 ;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `menuitem`
---
-
-CREATE TABLE IF NOT EXISTS `menuitem` (
-  `MenuItemID` int(11) NOT NULL AUTO_INCREMENT,
-  `MenuID` smallint(6) NOT NULL,
-  `PageID` int(11) NOT NULL,
-  `Args` varchar(254) DEFAULT NULL,
-  `Text` varchar(20) NOT NULL,
-  `Class` varchar(50) DEFAULT NULL,
-  `Img` varchar(254) DEFAULT NULL,
-  `Sequence` smallint(6) NOT NULL DEFAULT '1',
-  `External` tinyint(4) NOT NULL DEFAULT '0',
-  PRIMARY KEY (`MenuItemID`),
-  KEY `PageID` (`PageID`),
-  KEY `MenuID` (`MenuID`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=42 ;
-
--- --------------------------------------------------------
-
---
 -- Table structure for table `module`
 --
 
@@ -718,8 +684,10 @@ CREATE TABLE IF NOT EXISTS `oauth_session_scopes` (
 CREATE TABLE IF NOT EXISTS `pages` (
   `pageID` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(50) NOT NULL,
+  `title` varchar(50) NOT NULL,
+  `asHome` tinyint(4) NOT NULL DEFAULT '0',
   PRIMARY KEY (`pageID`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='Available Pages' AUTO_INCREMENT=50 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='Available Pages' AUTO_INCREMENT=36 ;
 
 -- --------------------------------------------------------
 

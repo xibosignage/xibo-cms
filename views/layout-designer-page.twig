@@ -48,7 +48,7 @@
                     <li><a class="XiboFormButton" href="{{ urlFor("layout.edit.form", {id: layout.layoutId}) }}" title="{% trans "Edit the Layout Properties" %}"><span>{% trans "Background Properties" %}</span></a></li>
                     <li class="divider"></li>
                     <li><a href="{{ urlFor("layout.preview", {id: layout.layoutId}) }}" target="_blank"><span>{% trans "Preview Layout" %}</span></a></li>
-                    <li><a class="XiboFormButton" href="{{ urlFor("schedule.now.form", {id: layout.layoutId, from: "Layout"}) }}"><span>{% trans "Schedule Now" %}</span></a></li>
+                    <li><a class="XiboFormButton" href="{{ urlFor("schedule.now.form", {id: layout.campaignId, from: "Campaign"}) }}"><span>{% trans "Schedule Now" %}</span></a></li>
                     <li><a class="XiboFormButton" href="{{ urlFor("template.from.layout.form", {id: layout.layoutId}) }}"><span>{% trans "Save Template" %}</span></a></li>
                     {% if layout.schemaVersion >= 2 %}
                     <li class="divider"></li>

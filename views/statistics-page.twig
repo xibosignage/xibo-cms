@@ -18,7 +18,7 @@
 
 {% block pageContent %}
 
-    {% set displayFilterOptions = displays|merge({displayId: null, display: ""}) %}
+    {% set displayFilterOptions = [{displayId: null, display: ""}]|merge(displays) %}
 
     <div class="widget">
         <div class="widget-title">{% trans "Bandwidth" %}</div>
@@ -69,7 +69,7 @@
                             {{ inline.date("toDt", "To Date", defaults.toDate, "", "", "", "", settings.DATE_FORMAT_BOOTSTRAP) }}
                             {{ inline.dropdown("displayId", "single", "Display", "", displayFilterOptions, "displayId", "display") }}
 
-                            {% set mediaFilterOptions = media|merge({mediaId: null, name: ""}) %}
+                            {% set mediaFilterOptions = [{mediaId: null, name: ""}]|merge(media) %}
                             {{ inline.dropdown("mediaId", "single", "Media", "", mediaFilterOptions, "mediaId", "name") }}
                         </form>
                     </div>

@@ -26,7 +26,6 @@ use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Helper\Date;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
-use Xibo\Helper\Theme;
 
 /**
  * Class Base
@@ -226,7 +225,6 @@ class Base
                 throw new ControllerNotImplemented(__('Template Missing'));
 
             // Append the side bar content
-            $data['navigation'] = Theme::getConsolidatedMenu();
             $data['clock'] = Date::GetClock();
             $data['currentUser'] = $this->getUser();
 

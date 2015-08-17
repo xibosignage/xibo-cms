@@ -2,7 +2,9 @@
 Xibo - Digital Signage - http://www.xibo.org.uk
 Copyright (C) 2006-2015 Daniel Garner and Contributors.
 
-This is the 1.8.0-alpha development branch and represents the next generation of the Xibo CMS. The CMS has been rewritten using the Slim Framework with Twig Middleware.
+This is the **1.8.0-alpha development branch** and represents the next generation of the Xibo CMS.
+
+At present you cannot upgrade an earlier version to this release.
 
 ## Licence
 Xibo is free software: you can redistribute it and/or modify
@@ -23,22 +25,27 @@ The Xibo CMS now follows MVC and is PSR-4 compliant.
 
 The folder structure is as follows:
  
+ - install - Files related to install/upgrade
  - lib/Controller - Controllers
  - lib/Entity - Models
+ - lib/Exception - Exceptions
  - lib/Factory - Factories for creating Models
+ - lib/Helper - Helper Classes
+ - lib/Middleware - Slim Application Middleware
+ - lib/Storage - Storage Interfaces
  - lib/Widget - Controllers for Modules
- - views/ - Twig Views
+ - lib/Xmds - Xibo Media Distribution SOAP Service
+ - locale - Translations
  - modules/ - Twig Views for Modules and other Module resources
+ - tests/ - PHPUnit Tests
+ - views - Twig Views
  - web/ - Web Document Root
  - web/index.php - Entry point for the WEB GUI
  - web/api/index.php - Entry point for the API
  - web/maintenance/index.php - Entry point for Maintenance
- - web/modules/ - Web Serviceable Resources for modules
- - web/theme/ - GUI theme files
- - web/xmds/xmds.php - XMDS SOAP Service
- - tests/ - PHPUnit Tests
-
-The CMS is currently in heavy development and is not suitable for installation.
+ - web/modules - Web Serviceable Resources for modules
+ - web/theme - GUI theme files
+ - web/xmds.php - XMDS SOAP Service
 
 # Contributing
 The standard licence for Xibo is the [AGPLv3](LICENSE). For more information please see [CONTRIBUTING.md](CONTRIBUTING.md).

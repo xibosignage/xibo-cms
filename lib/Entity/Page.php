@@ -28,8 +28,10 @@ namespace Xibo\Entity;
  *
  * @SWG\Definition()
  */
-class Page
+class Page implements \JsonSerializable
 {
+    use EntityTrait;
+
     /**
      * @SWG\Property(description="The ID of the Page")
      * @var int
@@ -40,7 +42,19 @@ class Page
      * @SWG\Property(description="A code name for the page")
      * @var string
      */
-    public $page;
+    public $name;
+
+    /**
+     * @SWG\Property(description="A user friendly title for this page")
+     * @var string
+     */
+    public $title;
+
+    /**
+     * @SWG\Property(description="Flag indicating if the page can be used as a homepage")
+     * @var int
+     */
+    public $asHome;
 
     public function getOwnerId()
     {
@@ -54,6 +68,6 @@ class Page
 
     public function getName()
     {
-        return $this->page;
+        return $this->name;
     }
 }

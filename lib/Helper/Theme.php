@@ -30,7 +30,6 @@ class Theme
     private static $instance = null;
 
     private $name = '';
-    private $pageName = '';
     private $config = null;
 
     public function __construct($theme = NULL)
@@ -84,57 +83,6 @@ class Theme
             return $theme->config[$settingName];
         else
             return $default;
-    }
-
-    /**
-     * Get Menu
-     * @param string $menu The Name of the Menu
-     * @return array Array containing menu items (page, args, class, title, link, li)
-     */
-    public static function getMenu($menu)
-    {
-        $theme = Theme::getInstance();
-        $array = array();
-
-        foreach (MenuFactory::getByMenu($menu) as $menuItem) {
-            /* @var Menu $menuItem */
-            $item = array();
-            $item['page'] = $menuItem->page;
-            $item['args'] = $menuItem->args;
-            $item['class'] = $menuItem->class;
-            $item['title'] = __($menuItem->title);
-            $item['img'] = $menuItem->img;
-            $item['external'] = $menuItem->external;
-
-            $item['selected'] = ($item['page'] == $theme->pageName);
-
-            if ($item['external'] == 0) {
-                $item['link'] = $item['page'] . '.view';
-            } else {
-                $item['link'] = $item['args'];
-            }
-
-            $array[] = $item;
-        }
-
-        return $array;
-    }
-
-    /**
-     * Get a consolidated menu for the side bar
-     * @return array
-     */
-    public static function getConsolidatedMenu()
-    {
-        $menus = [];
-        $menus['top'] = Theme::getMenu('Top Nav');
-        $menus['design'] = Theme::getMenu('Design Menu');
-        $menus['library'] = Theme::getMenu('Library Menu');
-        $menus['display'] = Theme::getMenu('Display Menu');
-        $menus['admin'] = Theme::getMenu('Administration Menu');
-        $menus['advanced'] = Theme::getMenu('Advanced Menu');
-
-        return $menus;
     }
 
     /**

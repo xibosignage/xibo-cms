@@ -45,7 +45,7 @@
 
                 {% set title %}{% trans "Homepage" %}{% endset %}
                 {% set helpText %}{% trans "Homepage for this user. This is the page they will be taken to when they login." %}{% endset %}
-                {{ forms.dropdown("homePageId", "single", title, user.homePageId, options.homepage, "pageId", "page", helpText) }}
+                {{ forms.dropdown("homePageId", "single", title, user.homePageId, options.homepage, "pageId", "title", helpText) }}
 
                 {% set title %}{% trans "User Type" %}{% endset %}
                 {% set helpText %}{% trans "What is this users type?" %}{% endset %}

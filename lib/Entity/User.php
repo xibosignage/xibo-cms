@@ -55,7 +55,7 @@ define("HASH_PBKDF2_INDEX", 3);
  *
  * @SWG\Definition()
  */
-class User
+class User implements \JsonSerializable
 {
     use EntityTrait;
 
@@ -487,8 +487,9 @@ class User
      */
     public function touch()
     {
-        PDOConnect::update('UPDATE `user` SET lastAccessed = :time WHERE userId = :userId', [
+        PDOConnect::update('UPDATE `user` SET lastAccessed = :time, loggedIn = 1, newUserWizard = :newUserWizard WHERE userId = :userId', [
             'userId' => $this->userId,
+            'newUserWizard' => $this->newUserWizard,
             'time' => date("Y-m-d H:i:s")
         ]);
     }
@@ -500,13 +501,29 @@ class User
      */
     public function routeAuthentication($route)
     {
-        // Look at the route and see if we are permission for it.
-        $page = PageFactory::getByRoute($route);
-
-        if (!$this->checkViewable($page)) {
-            Log::debug('Blocked assess to unrecognised page: ' . $page->page . '.', 'index', 'PageAuth');
+        if (!$this->routeViewable($route)) {
+            Log::debug('Blocked assess to unrecognised page: ' . $route . '.');
             throw new AccessDeniedException();
         }
+    }
+
+    /**
+     * Authenticates the route given against the user credentials held
+     * @param $route string
+     * @return bool
+     */
+    public function routeViewable($route)
+    {
+        // Look at the route and see if we are permission for it.
+        try {
+            $page = PageFactory::getByRoute($route);
+        }
+        catch (NotFoundException $e) {
+            Log::error('Request for unknown route: %s', $route);
+            return false;
+        }
+
+        return $this->checkViewable($page);
     }
 
     /**

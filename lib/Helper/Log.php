@@ -68,7 +68,8 @@ class Log
     public static function sql($sql, $params)
     {
         $app = Slim::getInstance();
-        $app->log->debug(sprintf('SQL = %s. Params = %s.', $sql, var_export($params, true)));
+        if (strtolower($app->getMode()) == 'test')
+            $app->log->debug(sprintf('SQL = %s. Params = %s.', $sql, var_export($params, true)));
     }
 
     public static function debug($object)
@@ -134,5 +135,43 @@ class Log
         }
 
         return $object;
+    }
+
+    /**
+     * Resolve the log level
+     * @param string $level
+     * @return int
+     */
+    public static function resolveLogLevel($level)
+    {
+        switch (strtolower($level)) {
+
+            case 'emergency':
+                return \Slim\Log::EMERGENCY;
+
+            case 'alert':
+                return \Slim\Log::ALERT;
+
+            case 'critical':
+                return \Slim\Log::CRITICAL;
+
+            case 'error':
+                return \Slim\Log::ERROR;
+
+            case 'warning':
+                return \Slim\Log::WARN;
+
+            case 'notice':
+                return \Slim\Log::NOTICE;
+
+            case 'info':
+                return \Slim\Log::INFO;
+
+            case 'debug':
+                return \Slim\Log::DEBUG;
+
+            default:
+                return \Slim\Log::ERROR;
+        }
     }
 }

@@ -37,10 +37,14 @@ class ApiAuthenticationOAuth extends Middleware
             /* @var ResourceServer $server */
             $server = $this->app->server;
 
-            //$app->server->isValidRequest();
-            //$this->app->user = UserFactory::loadByClientId($server->getAccessToken()->getSession()->getOwnerId());
+            $app->server->isValidRequest();
+            $this->app->user = UserFactory::loadByClientId($server->getAccessToken()->getSession()->getOwnerId());
 
-            $this->app->user = UserFactory::getById(1);
+            // Get the current route pattern
+            $resource = $app->router->getCurrentRoute()->getPattern();
+
+            // Do they have permission?
+            $this->app->user->routeAuthentication($resource);
         };
 
         $app->hook('slim.before.dispatch', $isAuthorised);

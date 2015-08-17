@@ -118,6 +118,10 @@ $app->put('/region/position/all/:id', '\Xibo\Controller\Region:positionAll')->na
 $app->get('/playlist/widget', '\Xibo\Controller\Playlist:widgetGrid')->name('playlist.widget.search');
 $app->post('/playlist/order/:id', '\Xibo\Controller\Playlist:order')->name('playlist.order');
 $app->post('/playlist/library/assign/:id', '\Xibo\Controller\Playlist:libraryAssign')->name('playlist.library.assign');
+$app->post('/playlist/widget/:type/:id', '\Xibo\Controller\Module:addWidget')->name('module.widget.add');
+$app->put('/playlist/widget/:id', '\Xibo\Controller\Module:editWidget')->name('module.widget.edit');
+$app->delete('/playlist/widget/:id', '\Xibo\Controller\Module:deleteWidget')->name('module.widget.delete');
+$app->put('/playlist/widget/transition/:type/:id', '\Xibo\Controller\Module:editWidgetTransition')->name('module.widget.transition.edit');
 
 /**
  * Campaign
@@ -290,7 +294,7 @@ $app->delete('/group/:id', '\Xibo\Controller\UserGroup:delete')->name('group.del
 $app->post('/group/members/assign/:id', '\Xibo\Controller\UserGroup:assignUser')->name('group.members.assign');
 $app->post('/group/members/unassign/:id', '\Xibo\Controller\UserGroup:unassignUser')->name('group.members.unassign');
 
-$app->post('/group/acl/:entity/:id', '\Xibo\Controller\UserGroup:acl')->name('group.acl');
+$app->post('/group/acl/:id', '\Xibo\Controller\UserGroup:acl')->name('group.acl');
 
 //
 // Applications
@@ -308,10 +312,6 @@ $app->post('/application', '\Xibo\Controller\Applications:add')->name('applicati
 $app->get('/module', '\Xibo\Controller\Module:grid')->name('module.search');
 $app->put('/module/settings/:id', '\Xibo\Controller\Module:settings')->name('module.settings');
 $app->put('/module/verify', '\Xibo\Controller\Module:verify')->name('module.verify');
-$app->post('/module/:type/:id', '\Xibo\Controller\Module:addWidget')->name('module.widget.add');
-$app->put('/module/:id', '\Xibo\Controller\Module:editWidget')->name('module.widget.edit');
-$app->delete('/module/:id', '\Xibo\Controller\Module:deleteWidget')->name('module.widget.delete');
-$app->put('/module/transition/:type/:id', '\Xibo\Controller\Module:editWidgetTransition')->name('module.widget.transition.edit');
 
 //
 // Transition

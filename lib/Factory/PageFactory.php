@@ -39,7 +39,7 @@ class PageFactory extends BaseFactory
      */
     public static function getById($pageId)
     {
-        $pages = PageFactory::query(null, array('pageId' => $pageId));
+        $pages = PageFactory::query(null, array('pageId' => $pageId, 'disableUserCheck' => 1));
 
         if (count($pages) <= 0)
             throw new NotFoundException('Unknown Route');
@@ -57,7 +57,7 @@ class PageFactory extends BaseFactory
     {
         Log::debug('Checking access for route ' . $route);
         $route = explode('/', ltrim($route, '/'));
-        $pages = PageFactory::query(null, array('name' => $route[0]));
+        $pages = PageFactory::query(null, array('name' => $route[0], 'disableUserCheck' => 1));
 
         if (count($pages) <= 0)
             throw new NotFoundException('Unknown Route');
@@ -65,33 +65,40 @@ class PageFactory extends BaseFactory
         return $pages[0];
     }
 
-    public static function query($sortOrder = ['name'], $filterBy = [])
+    public static function query($sortOrder = null, $filterBy = [])
     {
+        if ($sortOrder == null)
+            $sortOrder = ['name'];
+
         $entries = array();
         $params = array();
-        $sql = 'SELECT pageId, name FROM `pages` WHERE 1 = 1 ';
+        $sql = 'SELECT pageId, name, title, asHome FROM `pages` WHERE 1 = 1 ';
 
-        if (Sanitize::getString('name', $filterBy) != '') {
+        // Logged in user view permissions
+        self::viewPermissionSql('Xibo\Entity\Page', $sql, $params, 'pageId', null, $filterBy);
+
+        if (Sanitize::getString('name', $filterBy) != null) {
             $params['name'] = Sanitize::getString('name', $filterBy);
-            $sql .= ' AND `name` = :name';
+            $sql .= ' AND `name` = :name ';
         }
+
         if (Sanitize::getInt('pageId', $filterBy) !== null) {
             $params['pageId'] = Sanitize::getString('pageId', $filterBy);
-            $sql .= ' AND `pageId` = :pageId';
+            $sql .= ' AND `pageId` = :pageId ';
+        }
+
+        if (Sanitize::getInt('asHome', $filterBy) !== null) {
+            $params['asHome'] = Sanitize::getString('asHome', $filterBy);
+            $sql .= ' AND `asHome` = :asHome ';
         }
 
         // Sorting?
-        if (is_array($sortOrder))
-            $sql .= 'ORDER BY ' . implode(',', $sortOrder);
+        $sql .= 'ORDER BY ' . implode(',', $sortOrder);
 
         Log::sql($sql, $params);
 
         foreach (PDOConnect::select($sql, $params) as $row) {
-            $page = new Page();
-            $page->pageId = $row['pageId'];
-            $page->page = Sanitize::string($row['name']);
-
-            $entries[] = $page;
+            $entries[] = (new Page())->hydrate($row);
         }
 
         return $entries;

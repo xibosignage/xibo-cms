@@ -19,9 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 namespace Xibo\Middleware;
-
 
 use Jenssegers\Date\Date;
 use Slim\Middleware;
@@ -32,7 +30,6 @@ use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\Config;
 use Xibo\Helper\NullSession;
 use Xibo\Helper\Session;
-use Xibo\Helper\Theme;
 use Xibo\Helper\Translate;
 
 class State extends Middleware
@@ -61,7 +58,7 @@ class State extends Middleware
                 $app->view()->appendData(array(
                     'baseUrl' => $app->urlFor('home'),
                     'route' => $app->router()->getCurrentRoute()->getName(),
-                    'theme' => Theme::getInstance(),
+                    'theme' => \Xibo\Helper\Theme::getInstance(),
                     'settings' => $settings,
                     'translate' => [
                         'jsLocale' => Translate::GetJsLocale(),
@@ -132,8 +129,7 @@ class State extends Middleware
             $app->config('log.level', \Slim\Log::DEBUG);
         }
         else {
-            // TODO: Use the log levels defined in the config
-            $app->config('log.level', \Slim\Log::ERROR);
+            $app->config('log.level', \Xibo\Helper\Log::resolveLogLevel(Config::GetSetting('audit', 'error')));
         }
     }
 }

@@ -159,7 +159,7 @@ class Twitter extends Module
         $this->setOption('dateFormat', Sanitize::getString('dateFormat'));
         $this->setOption('resultType', Sanitize::getString('resultType'));
         $this->setOption('tweetDistance', Sanitize::getInt('tweetDistance'));
-        $this->setOption('tweetCount', Sanitize::int('tweetCount'));
+        $this->setOption('tweetCount', Sanitize::getInt('tweetCount'));
         $this->setOption('removeUrls', Sanitize::getCheckbox('removeUrls'));
         $this->setOption('overrideTemplate', Sanitize::getCheckbox('overrideTemplate'));
         $this->setOption('updateInterval', Sanitize::getInt('updateInterval', 60));
@@ -188,7 +188,7 @@ class Twitter extends Module
         $this->setOption('dateFormat', Sanitize::getString('dateFormat'));
         $this->setOption('resultType', Sanitize::getString('resultType'));
         $this->setOption('tweetDistance', Sanitize::getInt('tweetDistance'));
-        $this->setOption('tweetCount', Sanitize::int('tweetCount'));
+        $this->setOption('tweetCount', Sanitize::getInt('tweetCount'));
         $this->setOption('removeUrls', Sanitize::getCheckbox('removeUrls'));
         $this->setOption('overrideTemplate', Sanitize::getCheckbox('overrideTemplate'));
         $this->setOption('updateInterval', Sanitize::getInt('updateInterval', 60));
@@ -212,7 +212,7 @@ class Twitter extends Module
         $url = 'https://api.twitter.com/oauth2/token';
 
         // Prepare the consumer key and secret
-        $key = base64_encode(urlencode($this->GetSetting('apiKey')) . ':' . urlencode($this->GetSetting('apiSecret')));
+        $key = base64_encode(urlencode($this->getSetting('apiKey')) . ':' . urlencode($this->getSetting('apiSecret')));
 
         // Check to see if we have the bearer token already cached
         if (Cache::has('bearer_' . $key)) {
@@ -269,7 +269,6 @@ class Twitter extends Module
         if ($outHeaders['http_code'] != 200) {
             Log::error('Twitter API returned ' . $result . ' status. Unable to proceed. Headers = ' . var_export($outHeaders, true));
 
-            $body = substr($result, $outHeaders['header_size']);
             // See if we can parse the error.
             $body = json_decode($result);
 
@@ -278,7 +277,6 @@ class Twitter extends Module
             return false;
         }
 
-        $body = substr($result, $outHeaders['header_size']);
         // See if we can parse the body as JSON.
         $body = json_decode($result);
 
@@ -404,7 +402,7 @@ class Twitter extends Module
                 return false;
 
             // Cache it
-            Cache::put($key, $data, $this->GetSetting('cachePeriod'));
+            Cache::put($key, $data, $this->getSetting('cachePeriod'));
         } else {
             Log::debug('Served from Cache');
             $data = Cache::get($key);
@@ -421,7 +419,7 @@ class Twitter extends Module
         $return = array();
 
         // Expiry time for any media that is downloaded
-        $expires = time() + ($this->GetSetting('cachePeriodImages') * 60 * 60);
+        $expires = time() + ($this->getSetting('cachePeriodImages') * 60 * 60);
 
         // Remove URL setting
         $removeUrls = $this->getOption('removeUrls', 1);
@@ -503,8 +501,8 @@ class Twitter extends Module
                             // Tag this layout with this file
                             $this->assignMedia($file->mediaId);
 
-                            $url = $this->getApp()->urlFor('library.download', ['id' => $file->mediaId]);
-                            $replace = ($isPreview) ? '<img src="' . $url . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" />' : '<img src="' . $file->storedAs . '"  />';
+                            $url = $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']);
+                            $replace = ($isPreview) ? '<img src="' . $url . '?preview=1&width=170&height=150" />' : '<img src="' . $file->storedAs . '"  />';
                         }
                         break;
 
@@ -523,7 +521,7 @@ class Twitter extends Module
                                 // Tag this layout with this file
                                 $this->assignMedia($file->mediaId);
 
-                                $url = $this->getApp()->urlFor('library.download', ['id' => $file->mediaId]);
+                                $url = $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']);
                                 $replace = ($isPreview) ? '<img src="' . $url . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" />' : '<img src="' . $file->storedAs . '"  />';
                             }
                         }
@@ -553,7 +551,7 @@ class Twitter extends Module
     public function getResource($displayId = 0)
     {
         // Make sure we are set up correctly
-        if ($this->GetSetting('apiKey') == '' || $this->GetSetting('apiSecret') == '') {
+        if ($this->getSetting('apiKey') == '' || $this->getSetting('apiSecret') == '') {
             Log::error('Twitter Module not configured. Missing API Keys');
             return '';
         }
@@ -617,11 +615,11 @@ class Twitter extends Module
         $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
 
         // Need the cycle plugin?
-        if ($this->GetSetting('effect') != 'none')
+        if ($this->getSetting('effect') != 'none')
             $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-cycle-2.1.6.min.js') . '"></script>';
 
         // Need the marquee plugin?
-        if (stripos($this->GetSetting('effect'), 'marquee') !== false)
+        if (stripos($this->getSetting('effect'), 'marquee') !== false)
             $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery.marquee.min.js') . '"></script>';
 
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';

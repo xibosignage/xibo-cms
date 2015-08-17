@@ -25,7 +25,6 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
@@ -134,7 +133,7 @@ class UserFactory extends BaseFactory
                 loggedIn,
                 email,
                 `user`.homePageId,
-                pages.name AS homePage,
+                pages.title AS homePage,
                 lastAccessed,
                 newUserWizard,
                 retired,
