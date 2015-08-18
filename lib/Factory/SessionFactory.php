@@ -41,7 +41,7 @@ class SessionFactory extends BaseFactory
 
             if (Sanitize::getString('fromDt', $filterBy) != '') {
                 $body .= ' AND session.LastAccessed < :lastAccessed ';
-                $params['lastAccessed'] = Date::getMidnightSystemDate(Date::getTimestampFromString(Sanitize::getString('fromDt', $filterBy)));
+                $params['lastAccessed'] = Date::getLocalDate(Sanitize::getDate('fromDt', $filterBy)->setTime(0, 0, 0));
             }
 
             if (Sanitize::getString('type', $filterBy) == 'active') {

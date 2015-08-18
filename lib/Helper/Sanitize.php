@@ -23,6 +23,7 @@
 namespace Xibo\Helper;
 
 
+use Jenssegers\Date\Date;
 use Slim\Slim;
 
 class Sanitize
@@ -176,5 +177,31 @@ class Sanitize
             return [];
 
         return array_map('intval', $array);
+    }
+
+    /**
+     * Get a date from input.
+     * @param $param
+     * @param mixed[Optional] $default
+     * @param mixed[Optional] $source
+     * @return Date
+     */
+    public static function getDate($param, $default = null, $source = null)
+    {
+        $date = self::getString($param, $default, $source);
+
+        if ($date === null)
+            return null;
+
+        // $date should be a ISO formatted date string.
+        try {
+            if ($date instanceof Date)
+                return $date;
+
+            return \Xibo\Helper\Date::fromString($date);
+        }
+        catch (\Exception $e) {
+            throw new \InvalidArgumentException(__('Expecting a date in %s but received %s.', $param, $date));
+        }
     }
 }

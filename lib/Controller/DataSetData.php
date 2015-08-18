@@ -12,7 +12,6 @@ namespace Xibo\Controller;
 use Xibo\Entity\DataSetColumn;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\DataSetFactory;
-use Xibo\Helper\Date;
 use Xibo\Helper\Sanitize;
 
 class DataSetData extends Base
@@ -151,7 +150,7 @@ class DataSetData extends Base
                 }
                 else if ($column->dataTypeId == 3) {
                     // Date
-                    $value = Date::getTimestampFromString(Sanitize::getString('dataSetColumnId_' . $column->dataSetColumnId));
+                    $value = Sanitize::getDate('dataSetColumnId_' . $column->dataSetColumnId)->format('U');
                 }
                 else {
                     // String
@@ -261,7 +260,7 @@ class DataSetData extends Base
                 }
                 else if ($column->dataTypeId == 3) {
                     // Date
-                    $value = Date::getTimestampFromString(Sanitize::getString('dataSetColumnId_' . $column->dataSetColumnId, $existingValue));
+                    $value = Sanitize::getDate('dataSetColumnId_' . $column->dataSetColumnId, $existingValue)->format('U');
                 }
                 else {
                     // String

@@ -103,7 +103,6 @@ class AuditLog extends Base
         // Do some post processing
         foreach ($rows as $row) {
             /* @var \Xibo\Entity\AuditLog $row */
-            $row->logDate = Date::getLocalDate($row->logDate);
             $row->objectAfter = json_decode($row->objectAfter);
         }
 
@@ -129,17 +128,12 @@ class AuditLog extends Base
     public function export()
     {
         // We are expecting some parameters
-        $filterFromDt = Sanitize::getString('filterFromDt');
-        $filterToDt = Sanitize::getString('filterToDt');
-
-        $fromTimestamp = Date::fromString($filterFromDt);
-        $fromTimestamp->setTime(0, 0, 0);
-        $toTimestamp = Date::fromString($filterToDt);
-        $toTimestamp->setTime(0, 0, 0);
+        $filterFromDt = Sanitize::getDate('filterFromDt');
+        $filterToDt = Sanitize::getDate('filterToDt');
 
         $search = [
-            ['fromTimeStamp', $fromTimestamp->format('U')],
-            ['toTimeStamp', $toTimestamp->format('U')]
+            ['fromTimeStamp', $filterFromDt->setTime(0, 0, 0)->format('U')],
+            ['toTimeStamp', $filterToDt->setTime(0, 0, 0)->format('U')]
         ];
 
         // Build the search string

@@ -677,7 +677,7 @@ class Layout implements \JsonSerializable
         $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, status, width, height, schemaVersion, backgroundImageId, backgroundColor, backgroundzIndex)
                   VALUES (:layout, :description, :userid, :createddt, :modifieddt, :status, :width, :height, 3, :backgroundImageId, :backgroundColor, :backgroundzIndex)';
 
-        $time = Date::getSystemDate(null, 'Y-m-d h:i:s');
+        $time = Date::getLocalDate();
 
         $this->layoutId = PDOConnect::insert($sql, array(
             'layout' => $this->layout,
@@ -728,7 +728,7 @@ class Layout implements \JsonSerializable
          WHERE layoutID = :layoutid
         ';
 
-        $time = Date::getSystemDate(null, 'Y-m-d h:i:s');
+        $time = Date::getLocalDate();
 
         PDOConnect::update($sql, array(
             'layoutid' => $this->layoutId,

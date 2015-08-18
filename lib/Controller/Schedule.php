@@ -349,24 +349,18 @@ class Schedule extends Base
         }
 
         // Handle the dates
-        $fromDt = Sanitize::getString('fromDt');
-        $toDt = Sanitize::getString('toDt');
-        $recurrenceRange = Sanitize::getString('recurrenceRange');
+        $fromDt = Sanitize::getDate('fromDt');
+        $toDt = Sanitize::getDate('toDt');
+        $recurrenceRange = Sanitize::getDate('recurrenceRange');
 
-        Log::debug('Times received are: FromDt=' . $fromDt . '. ToDt=' . $toDt . '. recurrenceRange=' . $recurrenceRange);
+        Log::debug('Times received are: FromDt=' . Date::getLocalDate($fromDt) . '. ToDt=' . Date::getLocalDate($toDt) . '. recurrenceRange=' . Date::getLocalDate($recurrenceRange));
 
-        // Convert our dates
-        $fromDt = Date::getTimestampFromString($fromDt);
-        $toDt = Date::getTimestampFromString($toDt);
+        // Set on schedule object
+        $schedule->fromDt = $fromDt->setTime($fromDt->hour, $fromDt->minute, 0)->format('U');
+        $schedule->toDt = $toDt->setTime($fromDt->hour, $fromDt->minute, 0)->format('U');
 
-        if ($recurrenceRange != '')
-            $recurrenceRange = Date::getTimestampFromString($recurrenceRange);
-
-        Log::debug('Converted Times received are: FromDt=' . $fromDt . '. ToDt=' . $toDt . '. recurrenceRange=' . $recurrenceRange);
-
-        $schedule->fromDt = $fromDt;
-        $schedule->toDt = $toDt;
-        $schedule->recurrenceRange = $recurrenceRange;
+        if ($recurrenceRange != null)
+            $schedule->recurrenceRange = $recurrenceRange->setTime($fromDt->hour, $fromDt->minute, 0)->format('U');
 
         // Ready to do the add
         $schedule->save();
@@ -391,6 +385,13 @@ class Schedule extends Base
 
         if (!$this->isEventEditable($schedule->displayGroups))
             throw new AccessDeniedException();
+
+        // Fix the event dates for display
+        $schedule->fromDt = Date::getLocalDate($schedule->fromDt);
+        $schedule->toDt = Date::getLocalDate($schedule->toDt);
+
+        if ($schedule->recurrenceRange != null)
+            $schedule->recurrenceRange = Date::getLocalDate($schedule->recurrenceRange);
 
         $groups = array();
         $displays = array();
@@ -535,24 +536,18 @@ class Schedule extends Base
         }
 
         // Handle the dates
-        $fromDt = Sanitize::getString('fromDt');
-        $toDt = Sanitize::getString('toDt');
-        $recurrenceRange = Sanitize::getString('recurrenceRange');
+        $fromDt = Sanitize::getDate('fromDt');
+        $toDt = Sanitize::getDate('toDt');
+        $recurrenceRange = Sanitize::getDate('recurrenceRange');
 
-        Log::debug('Times received are: FromDt=' . $fromDt . '. ToDt=' . $toDt . '. recurrenceRange=' . $recurrenceRange);
+        Log::debug('Times received are: FromDt=' . Date::getLocalDate($fromDt) . '. ToDt=' . Date::getLocalDate($toDt) . '. recurrenceRange=' . Date::getLocalDate($recurrenceRange));
 
-        // Convert our dates
-        $fromDt = Date::getTimestampFromString($fromDt);
-        $toDt = Date::getTimestampFromString($toDt);
+        // Set on schedule object
+        $schedule->fromDt = $fromDt->setTime($fromDt->hour, $fromDt->minute, 0)->format('U');
+        $schedule->toDt = $toDt->setTime($fromDt->hour, $fromDt->minute, 0)->format('U');
 
-        if ($recurrenceRange != '')
-            $recurrenceRange = Date::getTimestampFromString($recurrenceRange);
-
-        Log::debug('Converted Times received are: FromDt=' . $fromDt . '. ToDt=' . $toDt . '. recurrenceRange=' . $recurrenceRange);
-
-        $schedule->fromDt = $fromDt;
-        $schedule->toDt = $toDt;
-        $schedule->recurrenceRange = $recurrenceRange;
+        if ($recurrenceRange != null)
+            $schedule->recurrenceRange = $recurrenceRange->setTime($fromDt->hour, $fromDt->minute, 0)->format('U');
 
         // Ready to do the add
         $schedule->save();

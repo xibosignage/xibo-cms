@@ -206,20 +206,34 @@ function XiboInitialise(scope) {
     });
 
     // Date time controls
-    $(scope + ' .dateTimePicker').datetimepicker({
-        minuteStep: 5,
-        autoClose: true,
-        language: language,
-        calendarType: calendarType
+    $(scope + ' .dateTimePicker').each(function(){
+
+        // Get the linked field and use it to set the time
+        var preset = $("#" + $(this).prop("id").replace("Link", "")).val();
+
+        if (preset != "")
+            $(this).val(moment().format(jsDateFormat));
+
+        $(this).datetimepicker({
+            format: bootstrapDateFormat,
+            minuteStep: 5,
+            autoClose: true,
+            language: language,
+            calendarType: calendarType
+        });
     });
+
     $(scope + ' .datePicker').datetimepicker({
+        format: bootstrapDateFormat,
         autoClose: true,
         language: language,
         calendarType: calendarType,
         minView: 2,
         todayHighlight: true
     });
+
     $(scope + ' .timePicker').datetimepicker({
+        format: bootstrapDateFormat,
         autoClose: true,
         language: language,
         calendarType: calendarType,
@@ -328,6 +342,22 @@ function dataTableTickCrossInverseColumn(data, type, row) {
         icon = "fa-exclamation";
 
     return "<span class='fa " + icon + "'></span>";
+}
+
+function dataTableDateFromIso(data, type, row) {
+    if (type != "display")
+        return data;
+
+    return moment(data).format(jsDateFormat);
+}
+
+function dataTableDateFromUnix(data, type, row) {
+    if (type != "display")
+        return data;
+
+    if (data == null)
+
+    return moment(data, "X").format(jsDateFormat);
 }
 
 /**

@@ -43,7 +43,7 @@ class Clock extends Base
      */
     function clock()
     {
-        $output = Date::GetClock();
+        $output = Date::getLocalDate(null, 'H:i T');
         $this->getApp()->session->refreshExpiry = false;
 
         $this->getState()->setData(array('time' => $output));

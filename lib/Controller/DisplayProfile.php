@@ -21,7 +21,6 @@
 namespace Xibo\Controller;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\DisplayProfileFactory;
-use Xibo\Helper\Date;
 use Xibo\Helper\Help;
 use Xibo\Helper\Sanitize;
 
@@ -267,7 +266,7 @@ class DisplayProfile extends Base
 
             // If we are a time picker, then process the received time
             if ($setting['fieldType'] == 'timePicker') {
-                $value = ($value == '00:00') ? '0' : Date::getTimestampFromTimeString($value . ' GMT') * 1000;
+                $value = ($value == '00:00') ? '0' : strtotime($value . ' GMT') * 1000;
             }
 
             // Add to the combined array

@@ -225,7 +225,7 @@ class Base
                 throw new ControllerNotImplemented(__('Template Missing'));
 
             // Append the side bar content
-            $data['clock'] = Date::GetClock();
+            $data['clock'] = Date::getLocalDate(null, 'H:i T');
             $data['currentUser'] = $this->getUser();
 
             $this->app->render($state->template . '.twig', $data, $state->httpStatus);

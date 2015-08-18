@@ -170,21 +170,21 @@
     </table>
 {% endmacro %}
 
-{% macro date(name, title, value, helpText, groupClass, validation, accessKey, dateFormat) %}
+{% macro date(name, title, value, helpText, groupClass, validation, accessKey) %}
     <div class="form-group {{ groupClass }}">
         <label class="control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
         <div class="">
-            <input class="form-control datePicker" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" {{ validation }} data-date-format="{{ dateFormat }}" readonly/>
+            <input class="form-control datePicker" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" {{ validation }} readonly/>
             <span class="help-block">{{ helpText }}</span>
         </div>
     </div>
 {% endmacro %}
 
-{% macro time(name, title, value, helpText, groupClass, validation, accessKey, dateFormat) %}
+{% macro time(name, title, value, helpText, groupClass, validation, accessKey) %}
     <div class="form-group {{ groupClass }}">
         <label class="control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
         <div class="">
-            <input class="form-control timePicker" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" {{ validation }} data-date-format="{{ dateFormat }}" readonly/>
+            <input class="form-control timePicker" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" {{ validation }} readonly/>
             <span class="help-block">{{ helpText }}</span>
         </div>
     </div>
