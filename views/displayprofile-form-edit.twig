@@ -60,16 +60,10 @@
                         {{ forms.email(field.name, field.title, field.value, field.helpText) }}
                     {% elseif field.fieldType == "checkbox" %}
                         {{ forms.checkbox(field.name, field.title, field.value, field.helpText) }}
+                    {% elseif field.fieldType == "timePicker" %}
+                        {{ forms.time(field.name, field.title, field.value, field.helpText) }}
                     {% elseif field.fieldType == "dropdown" %}
                         {{ forms.dropdown(field.name, "single", field.title, field.value, field.options, "id", "value") }}
-                    {% elseif field.fieldType == "timezone" %}
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label" for="{{ field.name }}" title="{{ field.helpText }}">{{ field.title }}</label>
-                            <div class="col-sm-10">
-                                <select class="form-control" name="{{ field.name }}">{{ field.options|raw }}</select>
-                                <span class="help-block">{{ field.helpText }}</span>
-                            </div>
-                        </div>
                     {% endif %}
                 {% endfor %}
                 </div>

@@ -209,9 +209,9 @@ function XiboInitialise(scope) {
     $(scope + ' .dateTimePicker').each(function(){
 
         // Get the linked field and use it to set the time
-        var preset = $(this).closest("form").find(scope + " #" + $(this).data().linkField).val();
+        var preset = $(this).closest("form").find("#" + $(this).data().linkField).val();
 
-        if (preset != "")
+        if (preset != undefined && preset != "")
             $(this).val(moment(preset).format(jsDateFormat));
 
         $(this).datetimepicker({
@@ -225,9 +225,9 @@ function XiboInitialise(scope) {
 
     $(scope + ' .datePicker').each(function() {
         // Get the linked field and use it to set the time
-        var preset = $(this).closest("form").find(scope + " #" + $(this).data().linkField).val();
+        var preset = $(this).closest("form").find("#" + $(this).data().linkField).val();
 
-        if (preset != "")
+        if (preset != undefined && preset != "")
             $(this).val(moment(preset).format(jsDateFormat));
 
         $(this).datetimepicker({
@@ -243,9 +243,9 @@ function XiboInitialise(scope) {
     $(scope + ' .timePicker').each(function() {
 
         // Get the linked field and use it to set the time
-        var preset = $(this).closest("form").find(scope + " #" + $(this).data().linkField).val();
+        var preset = $(this).closest("form").find("#" + $(this).data().linkField).val();
 
-        if (preset != "")
+        if (preset != undefined && preset != "")
             $(this).val(moment(preset).format(jsDateFormat));
 
         $(this).datetimepicker({
