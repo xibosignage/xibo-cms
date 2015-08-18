@@ -32,7 +32,7 @@
                         {% if col.dataTypeId == 2 %}
                             {{ forms.number(fieldId, col.heading, heading) }}
                         {% elseif col.dataTypeId == 3 %}
-                            {{ forms.date(fieldId, col.heading, heading) }}
+                            {{ forms.dateTime(fieldId, col.heading, heading) }}
                         {% else %}
                             {{ forms.text(fieldId, col.heading, heading) }}
                         {% endif %}

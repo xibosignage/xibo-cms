@@ -56,7 +56,11 @@
         var cols = [];
         cols.push({ "name": "id", "data": "id" });
         {% for col in dataSet.getColumn() %}
-        cols.push({ "data": "{{ col.heading }}" });
+            {% if col.dataTypeId == 3 %}
+                cols.push({ "data": "{{ col.heading }}", "render": dataTableDateFromIso });
+            {% else %}
+                cols.push({ "data": "{{ col.heading }}" });
+            {% endif %}
         {% endfor %}
 
         cols.push({

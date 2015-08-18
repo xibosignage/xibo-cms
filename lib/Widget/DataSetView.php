@@ -390,8 +390,8 @@ END;
                         $table .= '<thead>';
                         $table .= ' <tr class="HeaderRow">';
 
-                        foreach (array_keys($row) as $col)
-                            $table .= '<th class="DataSetColumnHeaderCell">' . $col . '</th>';
+                        foreach ($mappings as $mapping)
+                            $table .= '<th class="DataSetColumnHeaderCell">' . $mapping['heading'] . '</th>';
 
                         $table .= ' </tr>';
                         $table .= '</thead>';
