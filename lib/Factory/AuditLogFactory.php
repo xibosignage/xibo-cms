@@ -31,58 +31,37 @@ class AuditLogFactory extends BaseFactory
 {
     public static function query($sortOrder = null, $filterBy = null)
     {
+        Log::debug('AuditLog Factory with filter: %s', var_export($filterBy, true));
+
         $entries = array();
         $params = [];
 
         $select = ' SELECT logId, logDate, user.userName, message, objectAfter, entity, entityId, auditlog.userId ';
         $body = 'FROM `auditlog` LEFT OUTER JOIN user ON user.userId = auditlog.userId WHERE 1 = 1 ';
 
-        if (Sanitize::getString('search', $filterBy) != null) {
-            // tokenize
-            $i = 0;
-            foreach (explode(' ', Sanitize::getString('search', $filterBy)) as $searchTerm) {
-                $i++;
+        if (Sanitize::getInt('fromTimeStamp', $filterBy) !== null) {
+            $body .= ' AND `auditlog`.logDate >= :fromTimeStamp ';
+            $params['fromTimeStamp'] = Sanitize::getInt('fromTimeStamp', $filterBy);
+        }
 
-                if (stripos($searchTerm, '|') > -1) {
-                    $complexTerm = explode('|', $searchTerm);
+        if (Sanitize::getInt('toTimeStamp', $filterBy) !== null) {
+            $body .= ' AND `auditlog`.logDate < :toTimeStamp ';
+            $params['toTimeStamp'] = Sanitize::getInt('toTimeStamp', $filterBy);
+        }
 
-                    if (!isset($complexTerm[1]) || $complexTerm[1] == '')
-                        continue;
+        if (Sanitize::getString('entity', $filterBy) != null) {
+            $body .= ' AND `auditlog`.entity LIKE :entity ';
+            $params['entity'] = '%' . Sanitize::getString('entity', $filterBy) . '%';
+        }
 
-                    $like = false;
+        if (Sanitize::getString('userName', $filterBy) != null) {
+            $body .= ' AND `auditlog`.userName LIKE :userName ';
+            $params['userName'] = '%' . Sanitize::getString('userName', $filterBy) . '%';
+        }
 
-                    switch (strtolower($complexTerm[0])) {
-                        case 'fromtimestamp':
-                            $body .= ' AND auditlog.logDate >= :search' . $i;
-                            break;
-
-                        case 'totimestamp':
-                            $body .= ' AND auditlog.logDate < :search' . $i;
-                            break;
-
-                        case 'entity':
-                            $like = true;
-                            $body .= ' AND auditlog.entity LIKE :search' . $i;
-                            break;
-
-                        case 'username':
-                            $like = true;
-                            $body .= ' AND user.userName LIKE :search' . $i;
-                            break;
-
-                        default:
-                            $like = true;
-                            $body .= ' AND auditlog.message LIKE :search' . $i;
-                    }
-
-                    $params['search' . $i] = (($like) ? '%' . $complexTerm[1] . '%' : $complexTerm[1]);
-                }
-                else {
-                    $body .= ' AND auditlog.message LIKE :search' . $i;
-                    $params['search' . $i] = '%' . $searchTerm . '%';
-                }
-            }
-            $body .= ' ';
+        if (Sanitize::getString('message', $filterBy) != null) {
+            $body .= ' AND `auditlog`.message LIKE :message ';
+            $params['message'] = '%' . Sanitize::getString('message', $filterBy) . '%';
         }
 
         $order = '';
@@ -107,17 +86,7 @@ class AuditLogFactory extends BaseFactory
         $sth->execute($params);
 
         foreach ($sth->fetchAll() as $row) {
-            $auditLog = new AuditLog();
-            $auditLog->logId = $row['logId'];
-            $auditLog->logDate = $row['logDate'];
-            $auditLog->entity = $row['entity'];
-            $auditLog->userId = $row['userId'];
-            $auditLog->userName = $row['userName'];
-            $auditLog->message = $row['message'];
-            $auditLog->entityId = $row['entityId'];
-            $auditLog->objectAfter = $row['objectAfter'];
-
-            $entries[] = $auditLog;
+            $entries[] = (new AuditLog())->hydrate($row);
         }
 
         // Paging

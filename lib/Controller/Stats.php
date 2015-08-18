@@ -195,10 +195,10 @@ class Stats extends Base
 
         $params = array(
             'type' => 'displaydown',
-            'start' => date('Y-m-d h:i:s', $fromDt),
-            'boundaryStart' => date('Y-m-d h:i:s', $fromDt),
-            'end' => date('Y-m-d h:i:s', $toDt),
-            'boundaryEnd' => date('Y-m-d h:i:s', $toDt)
+            'start' => Date::getLocalDate($fromDt),
+            'boundaryStart' => Date::getLocalDate($fromDt),
+            'end' => Date::getLocalDate($toDt),
+            'boundaryEnd' => Date::getLocalDate($toDt)
         );
 
         $SQL = '

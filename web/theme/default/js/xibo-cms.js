@@ -85,7 +85,7 @@ function XiboInitialise(scope) {
 
         // Bind the filter form
         $(this).find(".XiboFilter form input, .XiboFilter form select").change(function() {
-            $(this).closest(".XiboGrid").find("table").DataTable().ajax.reload();
+            $(this).closest(".XiboGrid").find("table[role='grid']").DataTable().ajax.reload();
         });
     });
 
@@ -209,10 +209,10 @@ function XiboInitialise(scope) {
     $(scope + ' .dateTimePicker').each(function(){
 
         // Get the linked field and use it to set the time
-        var preset = $("#" + $(this).prop("id").replace("Link", "")).val();
+        var preset = $(this).closest("form").find(scope + " #" + $(this).data().linkField).val();
 
         if (preset != "")
-            $(this).val(moment().format(jsDateFormat));
+            $(this).val(moment(preset).format(jsDateFormat));
 
         $(this).datetimepicker({
             format: bootstrapDateFormat,
@@ -223,24 +223,41 @@ function XiboInitialise(scope) {
         });
     });
 
-    $(scope + ' .datePicker').datetimepicker({
-        format: bootstrapDateFormat,
-        autoClose: true,
-        language: language,
-        calendarType: calendarType,
-        minView: 2,
-        todayHighlight: true
+    $(scope + ' .datePicker').each(function() {
+        // Get the linked field and use it to set the time
+        var preset = $(this).closest("form").find(scope + " #" + $(this).data().linkField).val();
+
+        if (preset != "")
+            $(this).val(moment(preset).format(jsDateFormat));
+
+        $(this).datetimepicker({
+            format: bootstrapDateFormat,
+            autoClose: true,
+            language: language,
+            calendarType: calendarType,
+            minView: 2,
+            todayHighlight: true
+        });
     });
 
-    $(scope + ' .timePicker').datetimepicker({
-        format: bootstrapDateFormat,
-        autoClose: true,
-        language: language,
-        calendarType: calendarType,
-        maxView: 1,
-        startView: 1,
-        todayHighlight: true,
-        minuteStep: 10
+    $(scope + ' .timePicker').each(function() {
+
+        // Get the linked field and use it to set the time
+        var preset = $(this).closest("form").find(scope + " #" + $(this).data().linkField).val();
+
+        if (preset != "")
+            $(this).val(moment(preset).format(jsDateFormat));
+
+        $(this).datetimepicker({
+            format: bootstrapDateFormat,
+            autoClose: true,
+            language: language,
+            calendarType: calendarType,
+            maxView: 1,
+            startView: 1,
+            todayHighlight: true,
+            minuteStep: 10
+        });
     });
 }
 
@@ -348,6 +365,9 @@ function dataTableDateFromIso(data, type, row) {
     if (type != "display")
         return data;
 
+    if (data == null)
+        return "";
+
     return moment(data).format(jsDateFormat);
 }
 
@@ -356,6 +376,7 @@ function dataTableDateFromUnix(data, type, row) {
         return data;
 
     if (data == null)
+        return "";
 
     return moment(data, "X").format(jsDateFormat);
 }

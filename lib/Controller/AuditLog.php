@@ -19,8 +19,6 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
-use DateInterval;
-use DateTime;
 use Xibo\Factory\AuditLogFactory;
 use Xibo\Helper\Date;
 use Xibo\Helper\Help;
@@ -39,8 +37,8 @@ class AuditLog extends Base
             $filterEntity = $this->getSession()->get('auditlog', 'filterEntity');
         } else {
             $filter_pinned = 0;
-            $filterFromDt = NULL;
-            $filterToDt = NULL;
+            $filterFromDt = Date::getLocalDate(Date::fromString()->sub('1 day'));
+            $filterToDt = Date::getLocalDate();
             $filterUser = NULL;
             $filterEntity = NULL;
         }
@@ -62,43 +60,30 @@ class AuditLog extends Base
     function grid()
     {
         $this->getSession()->set('auditlog', 'Filter', Sanitize::getCheckbox('XiboFilterPinned'));
-        $filterFromDt = $this->getSession()->set('auditlog', 'filterFromDt', Sanitize::getString('filterFromDt'));
-        $filterToDt = $this->getSession()->set('auditlog', 'filterToDt', Sanitize::getString('filterToDt'));
+        $filterFromDt = $this->getSession()->set('auditlog', 'filterFromDt', Sanitize::getDate('filterFromDt'));
+        $filterToDt = $this->getSession()->set('auditlog', 'filterToDt', Sanitize::getDate('filterToDt'));
         $filterUser = $this->getSession()->set('auditlog', 'filterUser', Sanitize::getString('filterUser'));
         $filterEntity = $this->getSession()->set('auditlog', 'filterEntity', Sanitize::getString('filterEntity'));
 
         $search = [];
 
         // Get the dates and times
-        if ($filterFromDt == '') {
-            $fromTimestamp = (new DateTime())->sub(new DateInterval("P1D"));
-        } else {
-            $fromTimestamp = DateTime::createFromFormat('Y-m-d', $filterFromDt);
-            $fromTimestamp->setTime(0, 0, 0);
-        }
+        if ($filterFromDt == null)
+            $filterFromDt = Date::fromString()->sub('1 day');
 
-        if ($filterToDt == '') {
-            $toTimestamp = (new DateTime());
-        } else {
-            $toTimestamp = DateTime::createFromFormat('Y-m-d', $filterToDt);
-            $toTimestamp->setTime(0, 0, 0);
-        }
+        if ($filterToDt == null)
+            $filterToDt = Date::fromString();
 
-        $search[] = ['fromTimeStamp', $fromTimestamp->format('U')];
-        $search[] = ['toTimeStamp', $toTimestamp->format('U')];
+        $search['fromTimeStamp'] = $filterFromDt->format('U');
+        $search['toTimeStamp'] = $filterToDt->format('U');
 
         if ($filterUser != '')
-            $search[] = ['userName', $filterUser];
+            $search['userName'] = $filterUser;
 
         if ($filterEntity != '')
-            $search[] = ['entity', $filterEntity];
+            $search['entity'] = $filterEntity;
 
-        // Build the search string
-        $search = implode(' ', array_map(function ($element) {
-            return implode('|', $element);
-        }, $search));
-
-        $rows = AuditLogFactory::query($this->gridRenderSort(), $this->gridRenderFilter(['search' => $search]));
+        $rows = AuditLogFactory::query($this->gridRenderSort(), $this->gridRenderFilter($search));
 
         // Do some post processing
         foreach ($rows as $row) {

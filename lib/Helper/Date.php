@@ -97,8 +97,11 @@ class Date
      * @param string $format
      * @return \Jenssegers\Date\Date
      */
-    public static function fromString($string, $format = null)
+    public static function fromString($string = null, $format = null)
     {
+        if ($string == null)
+            $string = Date::getLocalDate();
+
         if ($format == null)
             $format = Date::getSystemFormat();
 
