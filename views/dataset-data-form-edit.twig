@@ -15,6 +15,7 @@
 {% endblock %}
 
 {% block formButtons %}
+    {% trans "Delete" %}, XiboSwapDialog("{{ urlFor("dataSet.data.delete.form", {id: dataSet.dataSetId, rowId: row.id}) }}")
     {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Save" %}, $("#dataSetEditData").submit()
 {% endblock %}
