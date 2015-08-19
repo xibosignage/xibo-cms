@@ -487,7 +487,7 @@ class DataSet implements \JsonSerializable
     {
         $this->lastDataEdit = time();
 
-        PDOConnect::update('DELETE FROM `' . $this->dataSetId . '` WHERE id = :id', [
+        PDOConnect::update('DELETE FROM `dataset_' . $this->dataSetId . '` WHERE id = :id', [
             'id' => $rowId
         ]);
     }
