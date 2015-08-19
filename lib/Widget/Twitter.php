@@ -447,6 +447,9 @@ class Twitter extends Module
         $emoji->sprites = true;
         $emoji->imagePathSVGSprites = $this->getResourceUrl('emojione/emojione.sprites.svg');
 
+        // Get the date format to apply
+        $dateFormat = $this->getOption('dateFormat', Config::GetSetting('DATE_FORMAT'));
+
         // This should return the formatted items.
         foreach ($data->statuses as $tweet) {
             // Substitute for all matches in the template
@@ -486,7 +489,7 @@ class Twitter extends Module
                         break;
 
                     case '[Date]':
-                        $replace = Date::getLocalDate(strtotime($tweet->created_at), $this->getOption('dateFormat', Config::GetSetting('DATE_FORMAT')));
+                        $replace = Date::getLocalDate(strtotime($tweet->created_at), $dateFormat);
                         break;
 
                     case '[ProfileImage]':

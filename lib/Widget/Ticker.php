@@ -27,6 +27,7 @@ use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\MediaFactory;
+use Xibo\Helper\Config;
 use Xibo\Helper\Date;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
@@ -419,7 +420,8 @@ class Ticker extends Module
         // Init
         $feed->init();
 
-        $dateFormat = $this->getOption('dateFormat');
+        // Date format for the feed items
+        $dateFormat = $this->getOption('dateFormat', Config::GetSetting('DATE_FORMAT'));
 
         if ($feed->error()) {
             Log::notice('Feed Error: ' . $feed->error());
