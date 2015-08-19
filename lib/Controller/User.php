@@ -44,10 +44,12 @@ class User extends Base
             $pinned = 1;
             $userName = $this->getSession()->get('user_admin', 'userName');
             $userTypeId = $this->getSession()->get('user_admin', 'userTypeId');
+            $retired = $this->getSession()->get('user_admin', 'retired');
         } else {
             $pinned = 0;
             $userName = NULL;
             $userTypeId = NULL;
+            $retired = 0;
         }
 
         $userTypes = PDOConnect::select("SELECT userTypeId, userType FROM usertype ORDER BY usertype", []);
@@ -57,7 +59,8 @@ class User extends Base
             'defaults' => [
                 'filterPinned' => $pinned,
                 'userName' => $userName,
-                'userType' => $userTypeId
+                'userType' => $userTypeId,
+                'retired' => $retired
             ],
             'options' => [
                 'userTypes' => $userTypes
@@ -95,7 +98,8 @@ class User extends Base
         // Filter our users?
         $filterBy = [
             'userTypeId' => $this->getSession()->set('user_admin', 'userTypeId', Sanitize::getInt('userTypeId')),
-            'userName' => $this->getSession()->set('user_admin', 'userName', Sanitize::getString('userName'))
+            'userName' => $this->getSession()->set('user_admin', 'userName', Sanitize::getString('userName')),
+            'retired' => $this->getSession()->set('user_admin', 'retired', Sanitize::getInt('retired'))
         ];
 
         // Load results into an array
