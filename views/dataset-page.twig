@@ -8,6 +8,7 @@
 #}
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
+{% import "forms.twig" as forms %}
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
@@ -87,7 +88,7 @@
                 bootbox.dialog({
                     message: template({
                         trans: {
-                            addFiles: "{% trans "Add ZIP Files" %}",
+                            addFiles: "{% trans "Add CSV Files" %}",
                             startUpload: "{% trans "Start upload" %}",
                             cancelUpload: "{% trans "Cancel upload" %}"
                         },
@@ -164,7 +165,7 @@
     {% raw %}
 
     <script type="text/x-handlebars-template" id="template-dataset-upload">
-        <form method="post" enctype="multipart/form-data" data-max-file-size="{{ upload.maxSize }}" data-accept-file-types="/(\.|\/)csv/i">
+        <form class="form-horizontal" method="post" enctype="multipart/form-data" data-max-file-size="{{ upload.maxSize }}" data-accept-file-types="/(\.|\/)csv/i">
             <div class="row fileupload-buttonbar">
                 <div class="col-md-7">
                     <div class="well">
@@ -200,27 +201,31 @@
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-6">
-                    <label for="overwrite" title="Erase all content in this DataSet and overwrite it with the new content in this import.">
-                        <input type="checkbox" id="overwrite" name="overwrite">
-                        Overwrite existing data?
-                    </label>
-                </div>
-                <div class="col-md-6">
-                    <label for="ignorefirstrow" title="Ignore the first row? Useful if the CSV has headings.">
-                        <input type="checkbox" id="ignorefirstrow" name="ignorefirstrow">
-                        Ignore first row?
-                    </label>
+                <div class="col-md-12">
+        {% endraw %}
+                    {% set title %}{% trans "Overwrite existing data?" %}{% endset %}
+                    {% set helpText %}{% trans "Erase all content in this DataSet and overwrite it with the new content in this import." %}{% endset %}
+                    {{ forms.checkbox("overwrite", title, "", helpText) }}
+
+                    {% set title %}{% trans "Ignore first row?" %}{% endset %}
+                    {% set helpText %}{% trans "Ignore the first row? Useful if the CSV has headings." %}{% endset %}
+                    {{ forms.checkbox("ignorefirstrow", title, "", helpText) }}
+
+                    {% set message %}{% trans "In the fields below please enter the column number in the CSV file that corresponds to the Column Heading listed. This should be done before Adding the file." %}{% endset %}
+                    {{ forms.message(message) }}
+
+        {% raw %}
+                    {{#each columns}}
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label" for="csvImport_{{dataSetColumnId}}">{{heading}}</label>
+                        <div class="col-sm-10">
+                            <input class="form-control" name="csvImport_{{dataSetColumnId}}" type="number" id="csvImport_{{dataSetColumnId}}" value="" />
+                        </div>
+                    </div>
+                    {{/each}}
                 </div>
             </div>
-            {{#each columns}}
-            <div class="form-group">
-                <label class="col-sm-2 control-label" for="csvImport_{{dataSetColumnId}}">{{heading}}</label>
-                <div class="col-sm-10">
-                    <input class="form-control" name="csvImport_{{dataSetColumnId}}" type="number" id="csvImport_{{dataSetColumnId}}" value="" />
-                </div>
-            </div>
-            {{/each}}
+
             <!-- The table listing the files available for upload/download -->
             <table role="presentation" class="table table-striped"><tbody class="files"></tbody></table>
         </form>

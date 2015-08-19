@@ -1030,7 +1030,7 @@ function XiboRefreshAllGrids() {
     // We should refresh the grids (this is a global refresh)
     $(" .XiboGrid table").each(function() {
         // Render
-        $(this).DataTable().ajax.reload();
+        $(this).DataTable().ajax.reload(null, false);
     });
 }
 
