@@ -19,14 +19,13 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
-use baseDAO;
-use Maintenance;
-use Setting;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Helper\Config;
 use Xibo\Helper\Date;
 use Xibo\Helper\Form;
+use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
+use Xibo\Helper\Theme;
 
 
 class Settings extends Base
@@ -40,6 +39,9 @@ class Settings extends Base
         $categories = array();
         $formFields = array();
 
+        // Should we hide other themes?
+        $hideThemes = Theme::getConfig('hide_others');
+
         // Go through each setting, validate it and add it to the array
         foreach ($settings as $setting) {
 
@@ -48,12 +50,43 @@ class Settings extends Base
                 $categories[] = array('tabId' => $setting['cat'], 'tabName' => ucfirst($setting['cat']));
             }
 
-            // Are there any options
-            $options = NULL;
-            if (!empty($setting['options'])) {
-                // Change to an id=>value array
-                foreach (explode('|', $setting['options']) as $tempOption)
-                    $options[] = array('id' => $tempOption, 'value' => $tempOption);
+            // Special handling for the theme selector
+            if (!$hideThemes && $setting['setting'] == 'GLOBAL_THEME_NAME') {
+                // Convert to a drop down containing the theme names that are available
+                $setting['fieldType'] = 'dropdown';
+
+                $directory = new \RecursiveDirectoryIterator(PROJECT_ROOT . '/web/theme', \FilesystemIterator::SKIP_DOTS);
+                $filter = new \RecursiveCallbackFilterIterator($directory, function($current, $key, $iterator) {
+
+                    if ($current->isDir()) {
+                        return true;
+                    }
+
+                    return strpos($current->getFilename(), 'config.php') === 0;
+                });
+
+                $iterator = new \RecursiveIteratorIterator($filter);
+
+                // Add options for all themes installed
+                $options = [];
+                foreach($iterator as $file) {
+                    /* @var \SplFileInfo $file */
+                    Log::debug('Found %s', $file->getPath());
+
+                    // Include the config file
+                    include $file->getPath() . '/' . $file->getFilename();
+
+                    $options[] = ['id' => basename($file->getPath()), 'value' => $config['theme_name']];
+                }
+
+            } else {
+                // Are there any options
+                $options = NULL;
+                if (!empty($setting['options'])) {
+                    // Change to an id=>value array
+                    foreach (explode('|', $setting['options']) as $tempOption)
+                        $options[] = array('id' => $tempOption, 'value' => $tempOption);
+                }
             }
 
             // Validate the current setting

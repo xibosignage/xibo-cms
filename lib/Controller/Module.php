@@ -45,7 +45,7 @@ class Module extends Base
         // Do we have any modules to install?!
         if (Config::GetSetting('MODULE_CONFIG_LOCKED_CHECKB') != 'Checked') {
             // Get a list of matching files in the modules folder
-            $files = glob('../modules/*.json');
+            $files = glob(PROJECT_ROOT . '/modules/*.json');
 
             // Get a list of all currently installed modules
             $installed = [];

@@ -21,9 +21,13 @@ class Theme extends Middleware
         // Inject our Theme into the Twig View (if it exists)
         $app = $this->getApplication();
 
-        $twig = $app->view()->getInstance()->getLoader();
-        /* @var \Twig_Loader_Filesystem $twig */
-        $twig->prependPath(\Xibo\Helper\Theme::getConfig('view_path'));
+        // Does this theme provide an alternative view path?
+        if (\Xibo\Helper\Theme::getConfig('view_path') != '') {
+            // Provide the view path to Twig
+            $twig = $app->view()->getInstance()->getLoader();
+            /* @var \Twig_Loader_Filesystem $twig */
+            $twig->prependPath(\Xibo\Helper\Theme::getConfig('view_path'));
+        }
 
         // Call Next
         $this->next->call();
