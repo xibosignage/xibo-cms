@@ -775,6 +775,7 @@ function XiboHelpRender(url) {
 /**
  * Xibo Ping
  * @param {String} url
+ * @param {String} updateDiv
  */
 function XiboPing(url, updateDiv) {
 
@@ -810,9 +811,6 @@ function XiboPing(url, updateDiv) {
             return false;
         }
     });
-
-    // Dont then submit the link/button
-    return false;
 }
 
 /**
