@@ -34,7 +34,7 @@ require PROJECT_ROOT . '/vendor/autoload.php';
 new Theme('default');
 
 // Create a logger
-$logger = new \Flynsarmy\SlimMonolog\Log\MonologWriter(array(
+$logger = new \Xibo\Helper\AccessibleMonologWriter(array(
     'name' => 'INSTALL',
     'handlers' => array(
         new \Monolog\Handler\StreamHandler(PROJECT_ROOT . '/install/install_log.txt')

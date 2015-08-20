@@ -48,7 +48,7 @@ if (strtolower(Config::GetSetting('SERVER_MODE')) == 'test')
     $handlers[] = new \Monolog\Handler\ChromePHPHandler(\Monolog\Logger::INFO);
 
 // Create a logger
-$logger = new \Flynsarmy\SlimMonolog\Log\MonologWriter(array(
+$logger = new \Xibo\Helper\AccessibleMonologWriter(array(
     'name' => 'WEB',
     'handlers' => $handlers,
     'processors' => array(

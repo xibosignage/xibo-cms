@@ -56,15 +56,7 @@ class Soap
 
         // Create a log processor
         $this->logProcessor = new LogProcessor();
-
-        // Set
-        if (!$app->logWriter->getWriter()) {
-            // Append to settings
-            $app->logWriter->addProcessor($this->logProcessor);
-        }
-        else {
-            $app->logWriter->getWriter()->pushProcessor($this->logProcessor);
-        }
+        $app->logWriter->addProcessor($this->logProcessor);
     }
 
     /**

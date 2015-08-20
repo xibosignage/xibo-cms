@@ -19,9 +19,9 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */ 
 
-//
-// Theme Configuration Object
-//
+/*
+ * Theme Configuration Object
+ */
 $config = array(
         'view_path' => '../views',
 		'theme_name' => 'Xibo Default Theme',
@@ -31,5 +31,9 @@ $config = array(
 		'cms_source_url' => 'https://github.com/xibosignage/xibo/',
 		'cms_install_url' => 'http://xibo.org.uk/manual/en/install_windows_client.html',
 		'cms_release_notes_url' => 'http://xibo.org.uk/manual/en/release_notes.html',
-		'latest_news_url' => 'http://xibo.org.uk/feed/'
+		'latest_news_url' => 'http://xibo.org.uk/feed/',
+        /* Additional Monolog handlers/processors to be registered
+        'logHandlers' => [],
+        'logProcessors' => []
+        */
 	);
