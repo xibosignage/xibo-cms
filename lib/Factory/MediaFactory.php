@@ -212,6 +212,7 @@ class MediaFactory extends BaseFactory
                                 ON `group`.groupId = `permission`.groupId
                              WHERE entity = :entity
                                 AND objectId = media.mediaId
+                                AND view = 1
                             ) AS groupsWithPermissions, ";
         $params['entity'] = 'Xibo\\Entity\\Media';
 
