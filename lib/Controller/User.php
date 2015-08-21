@@ -424,8 +424,38 @@ class User extends Base
     }
 
     /**
-     * @param $entity
-     * @param $objectId
+     * @SWG\Get(
+     *  path="/user/permissions/{entity}/{objectId}
+     *  operationId="userPermissionsSearch",
+     *  tags={"user"},
+     *  summary="Permission Data"
+     *  description="Permission data for the Entity and Object Provided.",
+     *  @SWG\Parameter(
+     *      name="entity",
+     *      in="path",
+     *      description="The Entity",
+     *      type="string",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="objectId",
+     *      in="path",
+     *      description="The ID of the Object to return permissions for",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(ref="#/definitions/Permission")
+     *      )
+     *  )
+     * )
+     *
+     * @param string $entity
+     * @param int $objectId
      */
     public function permissionsGrid($entity, $objectId)
     {
@@ -489,7 +519,40 @@ class User extends Base
     }
 
     /**
-     * Set Permissions to users for the provided entity
+     * @SWG\Post(
+     *  path="/user/permissions/{entity}/{objectId}
+     *  operationId="userPermissionsSet",
+     *  tags={"user"},
+     *  summary="Permission Set"
+     *  description="Set Permissions to users/groups for the provided entity.",
+     *  @SWG\Parameter(
+     *      name="entity",
+     *      in="path",
+     *      description="The Entity",
+     *      type="string",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="objectId",
+     *      in="path",
+     *      description="The ID of the Object to set permissions on",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="groupIds",
+     *      in="formData",
+     *      description="Array of permissions with groupId as the key",
+     *      type="array",
+     *      required="true",
+     *      @SWG\Items(type="string")
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
+     *
      * @param string $entity
      * @param int $objectId
      */
@@ -535,6 +598,7 @@ class User extends Base
 
         // Return
         $this->getState()->hydrate([
+            'httpCode' => 204,
             'message' => __('Permissions Updated')
         ]);
     }

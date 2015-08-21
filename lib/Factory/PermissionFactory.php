@@ -154,7 +154,27 @@ SELECT `permissionId`, `groupId`, `view`, `edit`, `delete`, permissionentity.ent
         $body = '  FROM (
                 SELECT `group`.*
                   FROM `group`
-                 WHERE IsUserSpecific = 0
+                 WHERE IsUserSpecific = 0 ';
+
+        // Permissions for the group section
+        if (Sanitize::getCheckbox('disableUserCheck', 0, $filterBy) == 0) {
+            // Normal users can only see their group
+            if (self::getUser()->userTypeId != 1) {
+                $body .= '
+                    AND `group`.groupId IN (
+                        SELECT `group`.groupId
+                          FROM `lkusergroup`
+                            INNER JOIN `group`
+                            ON `group`.groupId = `lkusergroup`.groupId
+                                AND `group`.isUserSpecific = 0
+                         WHERE `lkusergroup`.userId = :currentUserId
+                    )
+                    ';
+                $params['currentUserId'] = self::getUser()->userId;
+            }
+        }
+
+        $body .= '
                 UNION ALL
                 SELECT `group`.*
                   FROM `group`
@@ -163,7 +183,33 @@ SELECT `permissionId`, `groupId`, `view`, `edit`, `delete`, permissionentity.ent
                         AND IsUserSpecific = 1
                     INNER JOIN `user`
                     ON lkusergroup.UserID = user.UserID
-                        AND retired = 0
+                        AND retired = 0 ';
+
+        // Permissions for the user section
+        if (Sanitize::getCheckbox('disableUserCheck', 0, $filterBy) == 0) {
+            // Normal users can only see themselves
+            if (self::getUser()->userTypeId == 3) {
+                $filterBy['userId'] = self::getUser()->userId;
+            }
+            // Group admins can only see users from their groups.
+            else if (self::getUser()->userTypeId == 2) {
+                $body .= '
+                    AND user.userId IN (
+                        SELECT `otherUserLinks`.userId
+                          FROM `lkusergroup`
+                            INNER JOIN `group`
+                            ON `group`.groupId = `lkusergroup`.groupId
+                                AND `group`.isUserSpecific = 0
+                            INNER JOIN `lkusergroup` `otherUserLinks`
+                            ON `otherUserLinks`.groupId = `group`.groupId
+                         WHERE `lkusergroup`.userId = :currentUserId
+                    )
+                ';
+                $params['currentUserId'] = self::getUser()->userId;
+            }
+        }
+
+        $body .= '
             ) joinedGroup
             LEFT OUTER JOIN `permission`
             ON `permission`.groupId = joinedGroup.groupId
