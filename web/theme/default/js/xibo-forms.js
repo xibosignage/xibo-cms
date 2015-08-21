@@ -492,7 +492,18 @@ function permissionsFormOpen(dialog) {
             }
         },
         "columns": [
-            { "data": "group" },
+            {
+                "data": "group",
+                "render": function (data, type, row, meta) {
+                    if (type != "display")
+                        return data;
+
+                    if (row.isUser == 1)
+                        return data;
+                    else
+                        return '<strong>' + data + '</strong>';
+                }
+            },
             { "data": "view", "render": function (data, type, row, meta) {
                     if (type != "display")
                         return data;

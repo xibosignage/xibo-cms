@@ -225,7 +225,7 @@ SELECT `permissionId`, `groupId`, `view`, `edit`, `delete`, permissionentity.ent
 
         $order = '';
         if ($sortOrder == null)
-            $order = 'ORDER BY joinedGroup.IsEveryone DESC, joinedGroup.IsUserSpecific, joinedGroup.`Group`';
+            $order = 'ORDER BY joinedGroup.isEveryone DESC, joinedGroup.isUserSpecific, joinedGroup.`group`';
         else if (is_array($sortOrder))
             $order = 'ORDER BY ' . implode(',', $sortOrder);
 
