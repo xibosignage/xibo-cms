@@ -274,10 +274,12 @@ $app->delete('/log', '\Xibo\Controller\Log:truncate')->name('log.truncate');
  */
 $app->get('/user', '\Xibo\Controller\User:grid')->name('user.search');
 $app->post('/user', '\Xibo\Controller\User:add')->name('user.add');
-$app->post('/user/permissions/:entity/:id', '\Xibo\Controller\User:permissions')->name('user.permissions');
 $app->put('/user/password/change', '\Xibo\Controller\User:changePassword')->name('user.change.password');
 $app->put('/user/:id', '\Xibo\Controller\User:edit')->name('user.edit');
 $app->delete('/user/:id', '\Xibo\Controller\User:delete')->name('user.delete');
+// permissions
+$app->get('/user/permissions/:entity/:id', '\Xibo\Controller\User:permissionsGrid')->name('user.permissions');
+$app->post('/user/permissions/:entity/:id', '\Xibo\Controller\User:permissions');
 
 /**
  * User Group

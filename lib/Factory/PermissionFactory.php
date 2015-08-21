@@ -26,6 +26,7 @@ namespace Xibo\Factory;
 use Xibo\Entity\Permission;
 use Xibo\Exception\NotFoundException;
 use Xibo\Helper\Log;
+use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
 class PermissionFactory extends BaseFactory
@@ -129,10 +130,12 @@ SELECT `permissionId`, `groupId`, `view`, `edit`, `delete`, permissionentity.ent
      * Get All Permissions by Entity ObjectId
      * @param string $entity
      * @param int $objectId
+     * @param array[string] $sortOrder
+     * @param array[mixed] $filterBy
      * @return array[Permission]
      * @throws NotFoundException
      */
-    public static function getAllByObjectId($entity, $objectId)
+    public static function getAllByObjectId($entity, $objectId, $sortOrder = null, $filterBy = null)
     {
         // Look up the entityId for any add operation that might occur
         $entityId = PDOConnect::select('SELECT entityId FROM permissionentity WHERE entity = :entity', array('entity' => $entity));
@@ -143,36 +146,54 @@ SELECT `permissionId`, `groupId`, `view`, `edit`, `delete`, permissionentity.ent
         $entityId = $entityId[0]['entityId'];
 
         $permissions = array();
+        $params = array('entityId' => $entityId, 'objectId' => $objectId);
 
         // SQL gets all Groups/User Specific Groups for non-retired users
         // then it joins them to the permission table for the object specified
-        $sql = '
-SELECT `permissionId`, joinedGroup.`groupId`, `view`, `edit`, `delete`, joinedGroup.isuserspecific, joinedGroup.group
-  FROM (
-        SELECT `group`.*
-          FROM `group`
-         WHERE IsUserSpecific = 0
-        UNION ALL
-        SELECT `group`.*
-          FROM `group`
-            INNER JOIN lkusergroup
-            ON lkusergroup.GroupID = group.GroupID
-                AND IsUserSpecific = 1
-            INNER JOIN `user`
-            ON lkusergroup.UserID = user.UserID
-                AND retired = 0
-    ) joinedGroup
-    LEFT OUTER JOIN `permission`
-    ON `permission`.groupId = joinedGroup.groupId
-      AND objectId = :objectId
-      AND entityId = :entityId
-ORDER BY joinedGroup.IsEveryone DESC, joinedGroup.IsUserSpecific, joinedGroup.`Group`
-';
-        $params = array('entityId' => $entityId, 'objectId' => $objectId);
+        $select = 'SELECT `permissionId`, joinedGroup.`groupId`, `view`, `edit`, `delete`, joinedGroup.isuserspecific, joinedGroup.group ';
+        $body = '  FROM (
+                SELECT `group`.*
+                  FROM `group`
+                 WHERE IsUserSpecific = 0
+                UNION ALL
+                SELECT `group`.*
+                  FROM `group`
+                    INNER JOIN lkusergroup
+                    ON lkusergroup.GroupID = group.GroupID
+                        AND IsUserSpecific = 1
+                    INNER JOIN `user`
+                    ON lkusergroup.UserID = user.UserID
+                        AND retired = 0
+            ) joinedGroup
+            LEFT OUTER JOIN `permission`
+            ON `permission`.groupId = joinedGroup.groupId
+              AND objectId = :objectId
+              AND entityId = :entityId
+         WHERE 1 = 1
+        ';
 
-        \Xibo\Helper\Log::sql($sql, $params);
+        if (Sanitize::getString('name', $filterBy) != null) {
+            $body .= ' AND joinedGroup.group LIKE :name ';
+            $params['name'] = '%' . Sanitize::getString('name', $filterBy) . '%';
+        }
 
-        foreach (\Xibo\Storage\PDOConnect::select($sql, $params) as $row) {
+        $order = '';
+        if ($sortOrder == null)
+            $order = 'ORDER BY joinedGroup.IsEveryone DESC, joinedGroup.IsUserSpecific, joinedGroup.`Group`';
+        else if (is_array($sortOrder))
+            $order = 'ORDER BY ' . implode(',', $sortOrder);
+
+        $limit = '';
+        // Paging
+        if (Sanitize::getInt('start', $filterBy) !== null && Sanitize::getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . intval(Sanitize::getInt('start'), 0) . ', ' . Sanitize::getInt('length', 10);
+        }
+
+        $sql = $select . $body . $order . $limit;
+
+        Log::sql($sql, $params);
+
+        foreach (PDOConnect::select($sql, $params) as $row) {
             $permission = new Permission();
             $permission->permissionId = $row['permissionId'];
             $permission->groupId = $row['groupId'];
@@ -186,6 +207,12 @@ ORDER BY joinedGroup.IsEveryone DESC, joinedGroup.IsUserSpecific, joinedGroup.`G
             $permission->group = \Xibo\Helper\Sanitize::string($row['group']);
 
             $permissions[] = $permission;
+        }
+
+        // Paging
+        if ($limit != '' && count($permissions) > 0) {
+            $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
+            self::$_countLast = intval($results[0]['total']);
         }
 
         return $permissions;

@@ -20,6 +20,7 @@
  */
 namespace Xibo\Controller;
 
+use Xibo\Entity\Permission;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\ApplicationFactory;
 use Xibo\Factory\PageFactory;
@@ -423,27 +424,12 @@ class User extends Base
     }
 
     /**
-     * Permissions to users for the provided entity
      * @param $entity
      * @param $objectId
-     * @throws \Xibo\Exception\NotFoundException
      */
-    public function permissionsForm($entity, $objectId)
+    public function permissionsGrid($entity, $objectId)
     {
-        if ($entity == '')
-            throw new \InvalidArgumentException(__('Permissions form requested without an entity'));
-
-        $requestEntity = $entity;
-
-        // Check to see that we can resolve the entity
-        $entity = 'Xibo\\Factory\\' . $entity . 'Factory';
-
-        if (!class_exists($entity) || !method_exists($entity, 'getById'))
-            throw new \InvalidArgumentException(__('Permissions form requested with an invalid entity'));
-
-        // Get the object
-        if ($objectId == 0)
-            throw new \InvalidArgumentException(__('Permissions form requested without an object'));
+        $entity = $this->parsePermissionsEntity($entity, $objectId);
 
         // Load our object
         $object = $entity::getById($objectId);
@@ -453,34 +439,46 @@ class User extends Base
             throw new AccessDeniedException(__('You do not have permission to edit these permissions.'));
 
         // List of all Groups with a view / edit / delete check box
-        $permissions = PermissionFactory::getAllByObjectId(get_class($object), $objectId);
+        $permissions = PermissionFactory::getAllByObjectId(get_class($object), $objectId, $this->gridRenderSort(), $this->gridRenderFilter(['name' => Sanitize::getString('name')]));
 
-        $checkboxes = array();
+        $this->getState()->template = 'grid';
+        $this->getState()->setData($permissions);
+        $this->getState()->recordsTotal = PermissionFactory::countLast();
+    }
 
-        foreach ($permissions as $row) {
-            /* @var \Xibo\Entity\Permission $row */
-            $groupId = $row->groupId;
-            $rowClass = ($row->isUser == 0) ? 'strong_text' : '';
+    /**
+     * Permissions to users for the provided entity
+     * @param $entity
+     * @param $objectId
+     * @throws \Xibo\Exception\NotFoundException
+     */
+    public function permissionsForm($entity, $objectId)
+    {
+        $requestEntity = $entity;
 
-            $checkbox = array(
-                'id' => $groupId,
-                'name' => $row->group,
-                'class' => $rowClass,
-                'value_view' => $groupId . '_view',
-                'value_view_checked' => (($row->view == 1) ? 'checked' : ''),
-                'value_edit' => $groupId . '_edit',
-                'value_edit_checked' => (($row->edit == 1) ? 'checked' : ''),
-                'value_del' => $groupId . '_del',
-                'value_del_checked' => (($row->delete == 1) ? 'checked' : ''),
-            );
+        $entity = $this->parsePermissionsEntity($entity, $objectId);
 
-            $checkboxes[] = $checkbox;
+        // Load our object
+        $object = $entity::getById($objectId);
+
+        // Does this user have permission to edit the permissions?!
+        if (!$this->getUser()->checkPermissionsModifyable($object))
+            throw new AccessDeniedException(__('You do not have permission to edit these permissions.'));
+
+        $currentPermissions = [];
+        foreach (PermissionFactory::getAllByObjectId(get_class($object), $objectId) as $permission) {
+            /* @var Permission $permission */
+            $currentPermissions[$permission->groupId] = [
+                'view' => ($permission->view == null) ? 0 : $permission->view,
+                'edit' => ($permission->edit == null) ? 0 : $permission->edit,
+                'delete' => ($permission->delete == null) ? 0 : $permission->delete
+            ];
         }
 
         $data = [
             'entity' => $requestEntity,
             'objectId' => $objectId,
-            'permissions' => $checkboxes,
+            'permissions' => $currentPermissions,
             'help' => [
                 'permissions' => Help::Link('Campaign', 'Permissions')
             ]
@@ -497,18 +495,7 @@ class User extends Base
      */
     public function permissions($entity, $objectId)
     {
-        if ($entity == '')
-            throw new \InvalidArgumentException(__('Permissions requested without an entity'));
-
-        // Check to see that we can resolve the entity
-        $entity = 'Xibo\\Factory\\' . $entity . 'Factory';
-
-        if (!class_exists($entity) || !method_exists($entity, 'getById'))
-            throw new \InvalidArgumentException(__('Permissions form requested with an invalid entity'));
-
-        // Get the object
-        if ($objectId == 0)
-            throw new \InvalidArgumentException(__('Permissions form requested without an object'));
+        $entity = $this->parsePermissionsEntity($entity, $objectId);
 
         // Load our object
         $object = $entity::getById($objectId);
@@ -522,33 +509,26 @@ class User extends Base
 
         // Get the provided permissions
         $groupIds = Sanitize::getStringArray('groupIds');
-        $newPermissions = array();
-        array_map(function ($string) use (&$newPermissions) {
-            $array = explode('_', $string);
-            return $newPermissions[$array[0]][$array[1]] = 1;
-        }, $groupIds);
 
-        Log::debug('New Permissions: %s', var_export($newPermissions, true));
+        Log::debug('Received Permissions Array to update: %s', var_export($groupIds, true));
 
         // List of groupIds with view, edit and del assignments
         foreach ($permissions as $row) {
             /* @var \Xibo\Entity\Permission $row */
 
             // Check and see what permissions we have been provided for this selection
-            if (array_key_exists($row->groupId, $newPermissions)) {
-                $row->view = (array_key_exists('view', $newPermissions[$row->groupId]) ? 1 : 0);
-                $row->edit = (array_key_exists('edit', $newPermissions[$row->groupId]) ? 1 : 0);
-                $row->delete = (array_key_exists('del', $newPermissions[$row->groupId]) ? 1 : 0);
+            // If all permissions are 0, then the record is deleted
+            if (array_key_exists($row->groupId, $groupIds)) {
+                $row->view = (array_key_exists('view', $groupIds[$row->groupId]) ? $groupIds[$row->groupId]['view'] : 0);
+                $row->edit = (array_key_exists('edit', $groupIds[$row->groupId]) ? $groupIds[$row->groupId]['edit'] : 0);
+                $row->delete = (array_key_exists('delete', $groupIds[$row->groupId]) ? $groupIds[$row->groupId]['delete'] : 0);
                 $row->save();
-            } else {
-                $row->delete();
             }
         }
 
-        $cascade = Sanitize::getCheckbox('cascade');
-
-        if ($cascade) {
-            Log::debug('Permissions to push down: ' . var_export($newPermissions, true));
+        // Cascade permissions
+        if (Sanitize::getCheckbox('cascade') == 1) {
+            Log::debug('Cascade permissions down');
 
             // TODO: Cascade permissions
         }
@@ -559,6 +539,33 @@ class User extends Base
         ]);
     }
 
+    /**
+     * Parse the Permissions Entity
+     * @param string $entity
+     * @param int $objectId
+     * @return string
+     */
+    private function parsePermissionsEntity($entity, $objectId)
+    {
+        if ($entity == '')
+            throw new \InvalidArgumentException(__('Permissions requested without an entity'));
+
+        // Check to see that we can resolve the entity
+        $entity = 'Xibo\\Factory\\' . $entity . 'Factory';
+
+        if (!class_exists($entity) || !method_exists($entity, 'getById'))
+            throw new \InvalidArgumentException(__('Permissions form requested with an invalid entity'));
+
+        // Get the object
+        if ($objectId == 0)
+            throw new \InvalidArgumentException(__('Permissions form requested without an object'));
+
+        return $entity;
+    }
+
+    /**
+     * User Applications
+     */
     public function myApplications()
     {
         $this->getState()->template = 'user-applications-form';

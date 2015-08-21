@@ -165,25 +165,6 @@
     </div>
 {% endmacro %}
 
-{% macro permissions(name, options) %}
-    <table class="table table-bordered">
-        <tr>
-            <th>{% trans "Group" %}</th>
-            <th>{% trans "View" %}</th>
-            <th>{% trans "Edit" %}</th>
-            <th>{% trans "Delete" %}</th>
-        </tr>
-        {% for item in options %}
-        <tr>
-            <td>{{ item.name }}</td>
-            <td><input type="checkbox" name="{{ name }}" value="{{ item.value_view }}" {{ item.value_view_checked }}></td>
-            <td><input type="checkbox" name="{{ name }}" value="{{ item.value_edit }}" {{ item.value_edit_checked }}></td>
-            <td><input type="checkbox" name="{{ name }}" value="{{ item.value_del }}" {{ item.value_del_checked }}></td>
-        </tr>
-        {% endfor %}
-    </table>
-{% endmacro %}
-
 {% macro dateTime(name, title, value, helpText, groupClass, validation, accessKey) %}
     <div class="form-group {{ groupClass }}">
         <label class="col-sm-2 control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>

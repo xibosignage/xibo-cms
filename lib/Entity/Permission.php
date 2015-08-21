@@ -21,6 +21,7 @@
 
 
 namespace Xibo\Entity;
+use Xibo\Helper\Log;
 
 /**
  * Class Permission
@@ -109,10 +110,16 @@ class Permission
 
     public function save()
     {
+        Log::debug('Saving Permission for %s, %d. GroupId: %d - View = %d, Edit = %d, Delete = %d', $this->entity, $this->objectId, $this->groupId, $this->view, $this->edit, $this->delete);
         if ($this->permissionId == null || $this->permissionId == 0)
             $this->add();
-        else
-            $this->update();
+        else {
+            // Are we all 0 permissions
+            if ($this->view == 0 && $this->edit == 0 && $this->delete == 0)
+                $this->delete();
+            else
+                $this->update();
+        }
     }
 
     private function add()
