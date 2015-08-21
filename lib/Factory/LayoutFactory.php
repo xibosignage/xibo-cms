@@ -478,7 +478,7 @@ class LayoutFactory extends BaseFactory
         $body .= " WHERE 1 = 1 ";
 
         // Logged in user view permissions
-        self::viewPermissionSql('Xibo\Entity\Campaign', $body, $params, 'layout.layoutId', 'layout.userId', $filterBy);
+        self::viewPermissionSql('Xibo\Entity\Campaign', $body, $params, 'campaign.campaignId', 'layout.userId', $filterBy);
 
         // Layout Like
         if (Sanitize::getString('layout', $filterBy) != '') {

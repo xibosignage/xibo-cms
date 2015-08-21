@@ -20,9 +20,15 @@
  */
 namespace Xibo\Controller;
 
+use Xibo\Entity\Campaign;
+use Xibo\Entity\Layout;
 use Xibo\Entity\Permission;
+use Xibo\Entity\Playlist;
+use Xibo\Entity\Region;
+use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\ApplicationFactory;
+use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\PageFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\UserFactory;
@@ -558,6 +564,7 @@ class User extends Base
      */
     public function permissions($entity, $objectId)
     {
+        $requestEntity = $entity;
         $entity = $this->parsePermissionsEntity($entity, $objectId);
 
         // Load our object
@@ -573,27 +580,40 @@ class User extends Base
         // Get the provided permissions
         $groupIds = Sanitize::getStringArray('groupIds');
 
-        Log::debug('Received Permissions Array to update: %s', var_export($groupIds, true));
-
-        // List of groupIds with view, edit and del assignments
-        foreach ($permissions as $row) {
-            /* @var \Xibo\Entity\Permission $row */
-
-            // Check and see what permissions we have been provided for this selection
-            // If all permissions are 0, then the record is deleted
-            if (array_key_exists($row->groupId, $groupIds)) {
-                $row->view = (array_key_exists('view', $groupIds[$row->groupId]) ? $groupIds[$row->groupId]['view'] : 0);
-                $row->edit = (array_key_exists('edit', $groupIds[$row->groupId]) ? $groupIds[$row->groupId]['edit'] : 0);
-                $row->delete = (array_key_exists('delete', $groupIds[$row->groupId]) ? $groupIds[$row->groupId]['delete'] : 0);
-                $row->save();
-            }
-        }
+        // Run the update
+        $this->updatePermissions($permissions, $groupIds);
 
         // Cascade permissions
-        if (Sanitize::getCheckbox('cascade') == 1) {
+        if ($requestEntity == 'Campaign' && Sanitize::getCheckbox('cascade') == 1) {
+            /* @var Campaign $object */
             Log::debug('Cascade permissions down');
 
-            // TODO: Cascade permissions
+            foreach (LayoutFactory::getByCampaignId($object->campaignId) as $layout) {
+                /* @var Layout $layout */
+                // Assign the same permissions to the Layout
+                $this->updatePermissions(PermissionFactory::getAllByObjectId(get_class($object), $layout->campaignId), $groupIds);
+
+                // Load the layout
+                $layout->load();
+
+                // Regions
+                foreach ($layout->regions as $region) {
+                    /* @var Region $region */
+                    $this->updatePermissions(PermissionFactory::getAllByObjectId(get_class($region), $region->getId()), $groupIds);
+
+                    // Playlists
+                    foreach ($region->playlists as $playlist) {
+                        /* @var Playlist $playlist */
+                        $this->updatePermissions(PermissionFactory::getAllByObjectId(get_class($playlist), $playlist->getId()), $groupIds);
+
+                        // Widgets
+                        foreach ($playlist->widgets as $widget) {
+                            /* @var Widget $widget */
+                            $this->updatePermissions(PermissionFactory::getAllByObjectId(get_class($widget), $widget->getId()), $groupIds);
+                        }
+                    }
+                }
+            }
         }
 
         // Return
@@ -625,6 +645,30 @@ class User extends Base
             throw new \InvalidArgumentException(__('Permissions form requested without an object'));
 
         return $entity;
+    }
+
+    /**
+     * Updates a set of permissions from a set of groupIds
+     * @param array[Permission] $permissions
+     * @param array $groupIds
+     */
+    private function updatePermissions($permissions, $groupIds)
+    {
+        Log::debug('Received Permissions Array to update: %s', var_export($groupIds, true));
+
+        // List of groupIds with view, edit and del assignments
+        foreach ($permissions as $row) {
+            /* @var \Xibo\Entity\Permission $row */
+
+            // Check and see what permissions we have been provided for this selection
+            // If all permissions are 0, then the record is deleted
+            if (array_key_exists($row->groupId, $groupIds)) {
+                $row->view = (array_key_exists('view', $groupIds[$row->groupId]) ? $groupIds[$row->groupId]['view'] : 0);
+                $row->edit = (array_key_exists('edit', $groupIds[$row->groupId]) ? $groupIds[$row->groupId]['edit'] : 0);
+                $row->delete = (array_key_exists('delete', $groupIds[$row->groupId]) ? $groupIds[$row->groupId]['delete'] : 0);
+                $row->save();
+            }
+        }
     }
 
     /**

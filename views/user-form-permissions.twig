@@ -54,6 +54,7 @@
             </div>
         </div>
     </div>
+    {% if entity == "Campaign" %}
     <div class="row">
         <div class="col-md-12">
             {% set title %}{% trans %}Cascade permissions to all items underneath this one.{% endtrans %}{% endset %}
@@ -61,4 +62,5 @@
             {{ forms.checkbox("cascade", title, 0, helpText) }}
         </div>
     </div>
+    {% endif %}
 {% endblock %}
