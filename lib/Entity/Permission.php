@@ -110,10 +110,14 @@ class Permission
 
     public function save()
     {
-        Log::debug('Saving Permission for %s, %d. GroupId: %d - View = %d, Edit = %d, Delete = %d', $this->entity, $this->objectId, $this->groupId, $this->view, $this->edit, $this->delete);
-        if ($this->permissionId == null || $this->permissionId == 0)
-            $this->add();
-        else {
+        if ($this->permissionId == 0) {
+            // Check there is something to add
+            if ($this->view != 0 || $this->edit != 0 || $this->delete != 0) {
+                Log::debug('Adding Permission for %s, %d. GroupId: %d - View = %d, Edit = %d, Delete = %d', $this->entity, $this->objectId, $this->groupId, $this->view, $this->edit, $this->delete);
+                $this->add();
+            }
+        } else {
+            Log::debug('Editing Permission for %s, %d. GroupId: %d - View = %d, Edit = %d, Delete = %d', $this->entity, $this->objectId, $this->groupId, $this->view, $this->edit, $this->delete);
             // Are we all 0 permissions
             if ($this->view == 0 && $this->edit == 0 && $this->delete == 0)
                 $this->delete();
@@ -148,6 +152,7 @@ class Permission
 
     public function delete()
     {
+        Log::debug('Deleting Permission for %s, %d', $this->entity, $this->objectId);
         \Xibo\Storage\PDOConnect::update('DELETE FROM `permission` WHERE entityId = :entityId AND objectId = :objectId AND groupId = :groupId', array(
             'entityId' => $this->entityId,
             'objectId' => $this->objectId,

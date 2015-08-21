@@ -545,7 +545,7 @@ function permissionsFormSubmit(id) {
     var form = $("#" + id);
     var permissions = {
         "groupIds": $(form).data().permissions,
-        "cascade": $("#cascade").val()
+        "cascade": $("#cascade").is(":checked")
     };
     var data = $.param(permissions);
 

@@ -193,6 +193,11 @@ class Layout implements \JsonSerializable
         'setBuildRequired' => true
     ];
 
+    public function __construct()
+    {
+        $this->setPermissionsClass('Xibo\Entity\Campaign');
+    }
+
     public function __clone()
     {
         // Clear the layout id

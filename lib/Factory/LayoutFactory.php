@@ -450,9 +450,11 @@ class LayoutFactory extends BaseFactory
                             ON `permissionentity`.entityId = permission.entityId
                             INNER JOIN `group`
                             ON `group`.groupId = `permission`.groupId
-                         WHERE entity = 'Xibo\\Entity\\Campaign'
+                         WHERE entity = :permissionEntityForGroup
                             AND objectId = campaign.CampaignID
+                            AND view = 1
                         ) AS groupsWithPermissions ";
+        $params['permissionEntityForGroup'] = 'Xibo\\Entity\\Campaign';
 
         $body  = "   FROM layout ";
         $body .= "  INNER JOIN `lkcampaignlayout` ";
@@ -602,13 +604,14 @@ class LayoutFactory extends BaseFactory
             if (Sanitize::int('showLegacyXml', $filterBy) == 1)
                 $layout->legacyXml = $row['legacyXml'];
 
-            $layout->groupsWithPermissions = Sanitize::string($row['groupsWithPermissions']);
+            $layout->groupsWithPermissions = $row['groupsWithPermissions'];
 
             $entries[] = $layout;
         }
 
         // Paging
         if ($limit != '' && count($entries) > 0) {
+            unset($params['permissionEntityForGroup']);
             $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
             self::$_countLast = intval($results[0]['total']);
         }

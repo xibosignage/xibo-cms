@@ -557,7 +557,17 @@ class User implements \JsonSerializable
             // Turn it into a ID keyed array
             foreach (PermissionFactory::getByUserId($entity, $this->userId) as $permission) {
                 /* @var \Xibo\Entity\Permission $permission */
-                $this->permissionCache[$entity][$permission->objectId] = $permission;
+                // Always take the max
+                if (array_key_exists($permission->objectId, $this->permissionCache[$entity])) {
+                    $old = $this->permissionCache[$entity][$permission->objectId];
+                    // Create a new permission record with the max of current and new
+                    $new = new Permission();
+                    $new->view = max($permission->view, $old->view);
+                    $new->edit = max($permission->view, $old->view);
+                    $new->delete = max($permission->view, $old->view);
+                }
+                else
+                    $this->permissionCache[$entity][$permission->objectId] = $permission;
             }
         }
 
@@ -638,7 +648,7 @@ class User implements \JsonSerializable
             return true;
 
         // Get the permissions for that entity
-        $permissions = $this->loadPermissions(get_class($object));
+        $permissions = $this->loadPermissions($object->permissionsClass());
 
         // Check to see if our object is in the list
         if (array_key_exists($object->getId(), $permissions))
