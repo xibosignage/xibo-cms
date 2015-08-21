@@ -272,6 +272,10 @@ class User extends Base
         $user->libraryQuota = Sanitize::getInt('libraryQuota');
         $user->retired = Sanitize::getCheckbox('retired');
 
+        // Make sure the user has permission to access this page.
+        if (!$user->checkViewable(PageFactory::getById($user->homePageId)))
+            throw new \InvalidArgumentException(__('User does not have permission for this homepage'));
+
         // If we are a super admin
         if ($this->getUser()->userTypeId == 1) {
             $newPassword = Sanitize::getString('newPassword');

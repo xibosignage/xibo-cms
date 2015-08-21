@@ -528,6 +528,10 @@ class User implements \JsonSerializable
             $this->pagePermissionCache = PageFactory::query();
         }
 
+        // Home route
+        if ($route === '/')
+            return true;
+
         $route = explode('/', ltrim($route, '/'));
 
         // See if our route is in the page permission cache
