@@ -59,6 +59,12 @@ class UserGroup
     // Users
     private $users = [];
 
+    public function __clone()
+    {
+        // Clear the groupId
+        $this->groupId = null;
+    }
+
     public function __toString()
     {
         return sprintf('ID = %d, Group = %s, IsUserSpecific = %d', $this->groupId, $this->group, $this->isUserSpecific);
@@ -148,14 +154,20 @@ class UserGroup
 
     /**
      * Load this User Group
+     * @param array $options
      */
-    public function load()
+    public function load($options = [])
     {
+        $options = array_merge([
+            'loadUsers' => true
+        ], $options);
+
         if ($this->loaded || $this->groupId == 0)
             return;
 
-        // Load all assigned users
-        $this->users = UserFactory::getByGroupId($this->groupId);
+        if ($options['loadUsers'])
+            // Load all assigned users
+            $this->users = UserFactory::getByGroupId($this->groupId);
 
         // Set the hash
         $this->hash = $this->hash();
