@@ -29,6 +29,7 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\XmdsNonceFactory;
 use Xibo\Helper\Config;
+use Xibo\Helper\Date;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 
@@ -79,6 +80,10 @@ class Soap4 extends Soap
         // Check in the database for this hardwareKey
         try {
             $display = DisplayFactory::getByLicence($hardwareKey);
+
+            // Append the time
+            $displayElement->setAttribute('date', Date::getLocalDate());
+            $displayElement->setAttribute('timezone', Config::GetSetting('defaultTimezone'));
 
             // Determine if we are licensed or not
             if ($display->licensed == 0) {
