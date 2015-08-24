@@ -56,15 +56,7 @@ class Soap
 
         // Create a log processor
         $this->logProcessor = new LogProcessor();
-
-        // Set
-        if (!$app->logWriter->getWriter()) {
-            // Append to settings
-            $app->logWriter->addProcessor($this->logProcessor);
-        }
-        else {
-            $app->logWriter->getWriter()->pushProcessor($this->logProcessor);
-        }
+        $app->logWriter->addProcessor($this->logProcessor);
     }
 
     /**
@@ -172,6 +164,11 @@ class Soap
 
         try {
             $dbh = PDOConnect::init();
+
+
+
+            // TODO: Handle the Background Image (in 1.7 it was linked to the layout with lklayoutmedia).
+            // lklayoutmedia has gone now, so I suppose it will have to be handled in requiredfiles.
 
             // Add file nodes to the $fileElements
             $SQL = "

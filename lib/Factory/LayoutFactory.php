@@ -450,9 +450,11 @@ class LayoutFactory extends BaseFactory
                             ON `permissionentity`.entityId = permission.entityId
                             INNER JOIN `group`
                             ON `group`.groupId = `permission`.groupId
-                         WHERE entity = 'Xibo\\Entity\\Campaign'
+                         WHERE entity = :permissionEntityForGroup
                             AND objectId = campaign.CampaignID
+                            AND view = 1
                         ) AS groupsWithPermissions ";
+        $params['permissionEntityForGroup'] = 'Xibo\\Entity\\Campaign';
 
         $body  = "   FROM layout ";
         $body .= "  INNER JOIN `lkcampaignlayout` ";
@@ -461,9 +463,6 @@ class LayoutFactory extends BaseFactory
         $body .= "   ON lkcampaignlayout.CampaignID = campaign.CampaignID ";
         $body .= "       AND campaign.IsLayoutSpecific = 1";
         $body .= "   INNER JOIN `user` ON `user`.userId = `campaign`.userId ";
-
-        $body .= " LEFT OUTER JOIN lktaglayout ON lktaglayout.layoutId = layout.layoutId ";
-        $body .= " LEFT OUTER JOIN tag ON tag.tagId = lktaglayout.tagId ";
 
         if (Sanitize::getInt('campaignId', 0, $filterBy) != 0) {
             // Join Campaign back onto it again
@@ -481,7 +480,7 @@ class LayoutFactory extends BaseFactory
         $body .= " WHERE 1 = 1 ";
 
         // Logged in user view permissions
-        self::viewPermissionSql('Xibo\Entity\Campaign', $body, $params, 'layout.layoutId', 'layout.userId', $filterBy);
+        self::viewPermissionSql('Xibo\Entity\Campaign', $body, $params, 'campaign.campaignId', 'layout.userId', $filterBy);
 
         // Layout Like
         if (Sanitize::getString('layout', $filterBy) != '') {
@@ -605,13 +604,14 @@ class LayoutFactory extends BaseFactory
             if (Sanitize::int('showLegacyXml', $filterBy) == 1)
                 $layout->legacyXml = $row['legacyXml'];
 
-            $layout->groupsWithPermissions = Sanitize::string($row['groupsWithPermissions']);
+            $layout->groupsWithPermissions = $row['groupsWithPermissions'];
 
             $entries[] = $layout;
         }
 
         // Paging
         if ($limit != '' && count($entries) > 0) {
+            unset($params['permissionEntityForGroup']);
             $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
             self::$_countLast = intval($results[0]['total']);
         }

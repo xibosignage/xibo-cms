@@ -261,7 +261,7 @@ class UserGroup extends Base
         $group = UserGroupFactory::getById($groupId);
 
         // Get all permissions for this user and this object
-        $permissions = PermissionFactory::getByGroupId('Xibo\Entity\Page', $groupId);
+        $permissions = PermissionFactory::getByGroupId('Page', $groupId);
 
         $checkboxes = array();
 
@@ -282,7 +282,7 @@ class UserGroup extends Base
             // Store this checkbox
             $checkbox = array(
                 'id' => $entityId,
-                'name' => $entity->getName(),
+                'name' => $entity->title,
                 'value_view' => $entityId . '_view',
                 'value_view_checked' => (($viewChecked == 1) ? 'checked' : '')
             );
@@ -304,25 +304,13 @@ class UserGroup extends Base
 
     /**
      * ACL update
-     * @param string $entity
      * @param int $groupId
      */
-    public function acl($entity, $groupId)
+    public function acl($groupId)
     {
         // Check permissions to this function
         if ($this->getUser()->userTypeId != 1)
             throw new AccessDeniedException();
-
-        if ($entity == '')
-            throw new \InvalidArgumentException(__('ACL form requested without an entity'));
-
-        $requestEntity = $entity;
-
-        // Check to see that we can resolve the entity
-        $entity = 'Xibo\\Factory\\' . $entity . 'Factory';
-
-        if (!class_exists($entity) || !method_exists($entity, 'getById'))
-            throw new \InvalidArgumentException(__('ACL form requested with an invalid entity'));
 
         // Load the Group we are working on
         // Get the object
@@ -332,10 +320,10 @@ class UserGroup extends Base
         $group = UserGroupFactory::getById($groupId);
 
         // Use the factory to get all the entities
-        $entities = $entity::query();
+        $entities = PageFactory::query();
 
         // Get all permissions for this user and this object
-        $permissions = PermissionFactory::getByGroupId($requestEntity, $groupId);
+        $permissions = PermissionFactory::getByGroupId('Page', $groupId);
         $objectIds = $this->getApp()->request()->params('objectId');
 
         if (!is_array($objectIds))
@@ -349,9 +337,10 @@ class UserGroup extends Base
 
         Log::debug(var_export($newAcl, true));
 
-        foreach ($entities as $entity) {
+        foreach ($entities as $page) {
+            /* @var Page $page */
             // Check to see if this entity is set or not
-            $objectId = $entity->getId();
+            $objectId = $page->getId();
             $permission = null;
             $view = (array_key_exists($objectId, $newAcl));
 
@@ -367,12 +356,12 @@ class UserGroup extends Base
             if ($permission == null) {
                 if ($view) {
                     // Not currently assigned and needs to be
-                    $permission = PermissionFactory::create($groupId, $requestEntity, $objectId, 1, 0, 0);
+                    $permission = PermissionFactory::create($groupId, 'Page', $objectId, 1, 0, 0);
                     $permission->save();
                 }
             }
             else {
-                Log::debug('Permission Exists for %s, and has been set to %d.', $entity->getName(), $view);
+                Log::debug('Permission Exists for %s, and has been set to %d.', $page->getName(), $view);
                 // Currently assigned
                 if ($view) {
                     $permission->view = 1;

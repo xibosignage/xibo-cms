@@ -56,6 +56,7 @@ class Clock extends Module
     public function add()
     {
         // You must also provide a duration (all media items must provide this field)
+        $this->setOption('name', Sanitize::getString('name'));
         $this->setDuration(Sanitize::getInt('duration'));
         $this->setOption('theme', Sanitize::getInt('themeId', 0));
         $this->setOption('clockTypeId', Sanitize::getInt('clockTypeId', 1));
@@ -74,6 +75,7 @@ class Clock extends Module
     public function edit()
     {
         // You must also provide a duration (all media items must provide this field)
+        $this->setOption('name', Sanitize::getString('name', $this->getOption('name')));
         $this->setDuration(Sanitize::getInt('duration'));
         $this->setOption('theme', Sanitize::getInt('themeId', 0));
         $this->setOption('clockTypeId', Sanitize::getInt('clockTypeId', 1));

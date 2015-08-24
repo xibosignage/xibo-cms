@@ -165,50 +165,37 @@
     </div>
 {% endmacro %}
 
-{% macro permissions(name, options) %}
-    <table class="table table-bordered">
-        <tr>
-            <th>{% trans "Group" %}</th>
-            <th>{% trans "View" %}</th>
-            <th>{% trans "Edit" %}</th>
-            <th>{% trans "Delete" %}</th>
-        </tr>
-        {% for item in options %}
-        <tr>
-            <td>{{ item.name }}</td>
-            <td><input type="checkbox" name="{{ name }}" value="{{ item.value_view }}" {{ item.value_view_checked }}></td>
-            <td><input type="checkbox" name="{{ name }}" value="{{ item.value_edit }}" {{ item.value_edit_checked }}></td>
-            <td><input type="checkbox" name="{{ name }}" value="{{ item.value_del }}" {{ item.value_del_checked }}></td>
-        </tr>
-        {% endfor %}
-    </table>
-{% endmacro %}
-
-{% macro dateTime(name, title, value, helpText, groupClass, validation, accessKey, dateFormat) %}
+{% macro dateTime(name, title, value, helpText, groupClass, validation, accessKey) %}
     <div class="form-group {{ groupClass }}">
         <label class="col-sm-2 control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
         <div class="col-sm-10">
-            <input class="form-control dateTimePicker" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" {{ validation }} data-date-format="{{ dateFormat }}" />
+            <input type="hidden" name="{{ name }}" id="{{ name }}" value="{{ value }}" />
+            {% set linkedName %}{{ name }}Link{% endset %}
+            <input class="form-control dateTimePicker dateControl" name="{{ linkedName }}" type="text" id="{{ linkedName }}" {{ validation }} data-link-field="{{ name }}" data-link-format="yyyy-mm-dd hh:ii:ss" />
             <span class="help-block">{{ helpText }}</span>
         </div>
     </div>
 {% endmacro %}
 
-{% macro date(name, title, value, helpText, groupClass, validation, accessKey, dateFormat) %}
+{% macro date(name, title, value, helpText, groupClass, validation, accessKey) %}
     <div class="form-group {{ groupClass }}">
         <label class="col-sm-2 control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
         <div class="col-sm-10">
-            <input class="form-control datePicker" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" {{ validation }} data-date-format="{{ dateFormat }}" readonly/>
+            <input type="hidden" name="{{ name }}" id="{{ name }}" value="{{ value }}" />
+            {% set linkedName %}{{ name }}Link{% endset %}
+            <input class="form-control datePicker dateControl" name="{{ linkedName }}" type="text" id="{{ linkedName }}" {{ validation }} data-link-field="{{ name }}" data-link-format="yyyy-mm-dd hh:ii:ss" readonly/>
             <span class="help-block">{{ helpText }}</span>
         </div>
     </div>
 {% endmacro %}
 
-{% macro time(name, title, value, helpText, groupClass, validation, accessKey, dateFormat) %}
+{% macro time(name, title, value, helpText, groupClass, validation, accessKey) %}
     <div class="form-group {{ groupClass }}">
         <label class="col-sm-2 control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
         <div class="col-sm-10">
-            <input class="form-control timePicker" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" {{ validation }} data-data-format="{{ dateFormat }}" readonly/>
+            <input type="hidden" name="{{ name }}" id="{{ name }}" value="{{ value }}" />
+            {% set linkedName %}{{ name }}Link{% endset %}
+            <input class="form-control timePicker dateControl" name="{{ linkedName }}" type="text" id="{{ linkedName }}" {{ validation }} data-link-field="{{ name }}" data-link-format="yyyy-mm-dd hh:ii:ss" readonly/>
             <span class="help-block">{{ helpText }}</span>
         </div>
     </div>

@@ -93,35 +93,29 @@ class Log extends Base
         $type = Sanitize::getInt('filter_type', 0);
         $function = Sanitize::getString('filter_function');
         $page = Sanitize::getString('filter_page');
-        $fromdt = Sanitize::getString('filter_fromdt');
-        $displayid = Sanitize::getInt('filter_display');
+        $displayId = Sanitize::getInt('filter_display');
         $seconds = Sanitize::getInt('filter_seconds', 120);
         $filter_intervalTypeId = Sanitize::getInt('filter_intervalTypeId', 1);
+
+        // Get the provided date, or go from today
+        $fromDt = Sanitize::getDate('filter_fromdt', Date::getLocalDate());
 
         $this->getSession()->set('log', 'Filter', Sanitize::getCheckbox('XiboFilterPinned'));
         $this->getSession()->set('log', 'filter_type', $type);
         $this->getSession()->set('log', 'filter_function', $function);
         $this->getSession()->set('log', 'filter_page', $page);
-        $this->getSession()->set('log', 'filter_fromdt', $fromdt);
-        $this->getSession()->set('log', 'filter_display', $displayid);
+        $this->getSession()->set('log', 'filter_fromdt', Date::getLocalDate($fromDt));
+        $this->getSession()->set('log', 'filter_display', $displayId);
         $this->getSession()->set('log', 'filter_seconds', $seconds);
         $this->getSession()->set('log', 'filter_intervalTypeId', $filter_intervalTypeId);
 
-        // get the dates and times
-        if ($fromdt == '') {
-            $starttime_timestamp = time();
-        } else {
-            $start_date = Date::getTimestampFromString($fromdt);
-            $starttime_timestamp = strtotime($start_date[1] . "/" . $start_date[0] . "/" . $start_date[2] . ' ' . date("H", time()) . ":" . date("i", time()) . ':59');
-        }
-
         $logs = LogFactory::query($this->gridRenderSort(), $this->gridRenderFilter([
-            'fromDt' => $starttime_timestamp - ($seconds * $filter_intervalTypeId),
-            'toDt' => $starttime_timestamp,
+            'fromDt' => $fromDt->format('U') - ($seconds * $filter_intervalTypeId),
+            'toDt' => $fromDt->format('U'),
             'type' => $type,
             'page' => $page,
             'function' => $function,
-            'displayId' => $displayid,
+            'displayId' => $displayId,
             'excludeLog' => 1,
             'runNo' => Sanitize::getString('runNo')
         ]));

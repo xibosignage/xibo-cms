@@ -475,3 +475,102 @@ var backGroundFormSetup = function() {
         });
     })
 };
+
+function permissionsFormOpen(dialog) {
+
+    var grid = $("#permissionsTable").closest(".XiboGrid");
+
+    var table = $("#permissionsTable").DataTable({
+        serverSide: true,
+        "filter": false,
+        searchDelay: 3000,
+        "order": [[ 0, "asc"]],
+        ajax: {
+            url: grid.data().url,
+            "data": function(d) {
+                $.extend(d, grid.find(".permissionsTableFilter form").serializeObject());
+            }
+        },
+        "columns": [
+            {
+                "data": "group",
+                "render": function (data, type, row, meta) {
+                    if (type != "display")
+                        return data;
+
+                    if (row.isUser == 1)
+                        return data;
+                    else
+                        return '<strong>' + data + '</strong>';
+                }
+            },
+            { "data": "view", "render": function (data, type, row, meta) {
+                    if (type != "display")
+                        return data;
+
+                    return "<input type=\"checkbox\" data-permission=\"view\" data-group-id=\"" + row.groupId + "\" " + ((data == 1) ? "checked" : "") + " />";
+                }
+            },
+            { "data": "edit", "render": function (data, type, row, meta) {
+                    if (type != "display")
+                        return data;
+
+                    return "<input type=\"checkbox\" data-permission=\"edit\" data-group-id=\"" + row.groupId + "\" " + ((data == 1) ? "checked" : "") + " />";
+                }
+            },
+            { "data": "delete", "render": function (data, type, row, meta) {
+                    if (type != "display")
+                        return data;
+
+                    return "<input type=\"checkbox\" data-permission=\"delete\" data-group-id=\"" + row.groupId + "\" " + ((data == 1) ? "checked" : "") + " />";
+                }
+            }
+        ]
+    });
+
+    table.on('draw', function (e, settings) {
+        dataTableDraw(e, settings);
+
+        // Bind to the checkboxes change event
+        var target = $("#" + e.target.id);
+        target.find("input[type=checkbox]").change(function() {
+            // Update our global permissions data with this
+            var groupId = $(this).data().groupId;
+            var permission = $(this).data().permission;
+            var value = $(this).is(":checked");
+            //console.log("Setting permissions on groupId: " + groupId + ". Permission " + permission + ". Value: " + value);
+
+            grid.data().permissions[groupId][permission] = (value) ? 1 : 0;
+        })
+    });
+    table.on('processing.dt', dataTableProcessing);
+
+    // Bind our filter
+    grid.find(".permissionsTableFilter form input, .permissionsTableFilter form select").change(function() {
+        table.ajax.reload();
+    });
+}
+
+function permissionsFormSubmit(id) {
+
+    var form = $("#" + id);
+    var permissions = {
+        "groupIds": $(form).data().permissions,
+        "cascade": $("#cascade").is(":checked")
+    };
+    var data = $.param(permissions);
+
+    $.ajax({
+        type: "POST",
+        url: form.data().url,
+        cache: false,
+        dataType: "json",
+        data: data,
+        success: function(xhr, textStatus, error) {
+            XiboSubmitResponse(xhr, form);
+        },
+        error: function(xhr, textStatus, errorThrown) {
+            SystemMessage(xhr.responseText, false);
+        }
+    });
+}

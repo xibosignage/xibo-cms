@@ -70,10 +70,19 @@ class DataSetData extends Base
 
         $sorting = $this->gridRenderSort();
 
+        // Work out the limits
+        $limits = $this->gridRenderFilter();
+
         $this->getState()->template = 'grid';
         $this->getState()->setData($dataSet->getData([
-            'order' => implode(',', $sorting)
+            'order' => implode(',', $sorting),
+            'start' => $limits['start'],
+            'size' => $limits['length']
         ]));
+
+        // Output the count of records for paging purposes
+        if ($dataSet->countLast() != 0)
+            $this->getState()->recordsTotal = $dataSet->countLast();
     }
 
     /**
@@ -151,7 +160,7 @@ class DataSetData extends Base
                 }
                 else if ($column->dataTypeId == 3) {
                     // Date
-                    $value = Date::getTimestampFromString(Sanitize::getString('dataSetColumnId_' . $column->dataSetColumnId));
+                    $value = Date::getLocalDate(Sanitize::getDate('dataSetColumnId_' . $column->dataSetColumnId));
                 }
                 else {
                     // String
@@ -261,7 +270,7 @@ class DataSetData extends Base
                 }
                 else if ($column->dataTypeId == 3) {
                     // Date
-                    $value = Date::getTimestampFromString(Sanitize::getString('dataSetColumnId_' . $column->dataSetColumnId, $existingValue));
+                    $value = Date::getLocalDate(Sanitize::getDate('dataSetColumnId_' . $column->dataSetColumnId, $existingValue));
                 }
                 else {
                     // String

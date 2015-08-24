@@ -61,7 +61,7 @@
 
                         {% set title %}{% trans "Template" %}{% endset %}
                         {% set helpText %}{% trans "Optionally choose a template you have saved before." %}{% endset %}
-                        {% set layouts = layouts|merge({layoutId: null, layout: ""}) %}
+                        {% set layouts = [{layoutId: null, layout: ""}]|merge(layouts) %}
                         {{ forms.dropdown("layoutId", "single", title, "", layouts, "layoutId", "layout", helpText) }}
 
                         {% set title %}{% trans "Resolution" %}{% endset %}

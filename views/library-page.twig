@@ -150,6 +150,7 @@
                 // Configure the upload form
                 var url = "{{ urlFor("library.add") }}";
                 var form = $(this).find("form");
+                var refreshSessionInterval;
 
                 // Initialize the jQuery File Upload widget:
                 form.fileupload({
@@ -187,6 +188,14 @@
                     data.formData = inputs.serializeArray().concat(form.serializeArray());
 
                     inputs.filter("input").prop("disabled", true);
+                }).bind('fileuploadstart', function (e, data) {
+                    if (form.fileupload("active") <= 0)
+                        refreshSessionInterval = setInterval("XiboPing('" + pingUrl + "?refreshSession=true')", 1000 * 60 * 3);
+
+                    return true;
+                }).bind('fileuploaddone', function (e, data) {
+                    if (refreshSessionInterval != null && form.fileupload("active") <= 0)
+                        clearInterval(refreshSessionInterval);
                 });
             });
         });

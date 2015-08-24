@@ -588,7 +588,7 @@ class Layout extends Base
                 // Copy Button
                 $layout->buttons[] = array(
                     'id' => 'layout_button_copy',
-                    'url' => $this->urlFor('layout.copy.form', ['id' => $layout->layoutId]) . '?oldlayout=' . urlencode($layout->layout),
+                    'url' => $this->urlFor('layout.copy.form', ['id' => $layout->layoutId]),
                     'text' => __('Copy')
                 );
 

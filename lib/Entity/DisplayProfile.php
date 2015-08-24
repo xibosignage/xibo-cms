@@ -99,8 +99,9 @@ class DisplayProfile
         for ($i = 0; $i < count($this->configDefault); $i++) {
             // Does this setting exist in our store?
             for ($j = 0; $j < count($this->config); $j++) {
-                if ($this->config[$j]['name'] == $this->config[$i]['name']) {
-                    $this->config[$i]['value'] = $this->config[$j]['value'];
+                // If we have found our default config setting
+                if ($this->configDefault[$i]['name'] == $this->config[$j]['name']) {
+                    // Override the the default with our setting
                     $this->configDefault[$i]['value'] = $this->config[$j]['value'];
                     break;
                 }
@@ -158,8 +159,8 @@ class DisplayProfile
             'name' => $this->name,
             'type' => $this->type,
             'config' => ($this->config == '') ? '[]' : json_encode($this->config),
-            'isdefault' => $this->isDefault,
-            'userid' => $this->userId
+            'isDefault' => $this->isDefault,
+            'userId' => $this->userId
         ]);
     }
 
@@ -766,6 +767,22 @@ class DisplayProfile
                         ),
                         'default' => 'DEMAND',
                         'helpText' => __('What plugin state should be used when starting a web view.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'hardwareAccelerateWebViewMode',
+                        'tabId' => 'advanced',
+                        'title' => __('Hardware Accelerate Web Content'),
+                        'type' => 'string',
+                        'fieldType' => 'dropdown',
+                        'options' => array(
+                            array('id' => '0', 'value' => __('Off')),
+                            array('id' => '2', 'value' => __('Off when transparent')),
+                            array('id' => '1', 'value' => __('On'))
+                        ),
+                        'default' => '2',
+                        'helpText' => __('Mode for hardware acceleration of web based content.'),
                         'enabled' => true,
                         'groupClass' => NULL
                     )

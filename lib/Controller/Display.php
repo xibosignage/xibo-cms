@@ -189,9 +189,6 @@ class Display extends Base
 
             /* @var \Xibo\Entity\Display $display */
 
-            // Format last accessed
-            $display->lastAccessed = Date::getLocalDate($display->lastAccessed);
-
             // Set some text for the display status
             switch ($display->mediaInventoryStatus) {
                 case 1:

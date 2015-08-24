@@ -673,6 +673,24 @@ class Library extends Base
     }
 
     /**
+     * Remove temporary files
+     */
+    public static function removeTempFiles()
+    {
+        $library = Config::GetSetting('LIBRARY_LOCATION');
+
+        // Dump the files in the temp folder
+        foreach (scandir($library . 'temp') as $item) {
+            if ($item == '.' || $item == '..')
+                continue;
+
+            Log::debug('Deleting temp file: ' . $item);
+
+            unlink($library . 'temp' . DIRECTORY_SEPARATOR . $item);
+        }
+    }
+
+    /**
      * Removes all expired media files
      */
     public static function removeExpiredFiles()

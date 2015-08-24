@@ -40,19 +40,16 @@ class Template extends Base
             $pinned = 1;
             $name = $this->getSession()->get('template', 'filter_name');
             $tags = $this->getSession()->get('template', 'filter_tags');
-            $showThumbnail = $this->getSession()->get('template', 'showThumbnail');
         } else {
             $pinned = 0;
             $name = '';
             $tags = '';
-            $showThumbnail = 1;
         }
 
         $data = [
             'defaults' => [
                 'name' => $name,
                 'tags' => $tags,
-                'showThumbnail' => $showThumbnail,
                 'filterPinned' => $pinned
             ]
         ];
@@ -90,21 +87,22 @@ class Template extends Base
         $this->getSession()->set('template', 'filter_tags', $filter_tags);
         $this->getSession()->set('template', 'Filter', Sanitize::getCheckbox('XiboFilterPinned'));
 
-        // Show filter_showThumbnail
-        $showThumbnail = Sanitize::getCheckbox('showThumbnail');
-        $this->getSession()->set('layout', 'showThumbnail', $showThumbnail);
-
-        $templates = LayoutFactory::query(null, ['excludeTemplates' => 0, 'tags' => 'template', 'name' => $filter_name]);
+        $templates = LayoutFactory::query($this->gridRenderSort(), $this->gridRenderFilter(['excludeTemplates' => 0, 'tags' => 'template', 'layout' => $filter_name]));
 
         foreach ($templates as $template) {
             /* @var \Xibo\Entity\Layout $template */
 
+            if ($this->isApi())
+                break;
+
+            $template->includeProperty('buttons');
+
             $template->thumbnail = '';
 
-            if ($template->backgroundImageId != 0)
-                $template->thumbnail = '<a class="img-replace" data-toggle="lightbox" data-type="image" data-img-src="index.php?p=content&q=getFile&mediaid=' . $template->backgroundImageId . '&width=100&height=100&dynamic=true&thumb=true" href="index.php?p=content&q=getFile&mediaid=' . $template->backgroundImageId . '"><i class="fa fa-file-image-o"></i></a>';
-
-            $template->buttons = array();
+            if ($template->backgroundImageId != 0) {
+                $download = $this->urlFor('library.download', ['id' => $template->backgroundImageId]) . '?preview=1';
+                $template->thumbnail = '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' . $download . '"><img src="' . $download . '&width=100&height=56" /></i></a>';
+            }
 
             // Parse down for description
             $template->descriptionWithMarkup = \Parsedown::instance()->text($template->description);
@@ -112,26 +110,45 @@ class Template extends Base
             if ($this->getUser()->checkEditable($template)) {
                 // Edit Button
                 $template->buttons[] = array(
-                    'id' => 'template_button_edit',
-                    'url' => 'index.php?p=template&q=EditForm&modify=true&layoutid=' . $template->layoutId,
+                    'id' => 'layout_button_edit',
+                    'url' => $this->urlFor('layout.edit.form', ['id' => $template->layoutId]),
                     'text' => __('Edit')
+                );
+
+                // Copy Button
+                $template->buttons[] = array(
+                    'id' => 'layout_button_copy',
+                    'url' => $this->urlFor('layout.copy.form', ['id' => $template->layoutId]),
+                    'text' => __('Copy')
                 );
             }
 
+            // Extra buttons if have delete permissions
             if ($this->getUser()->checkDeleteable($template)) {
                 // Delete Button
                 $template->buttons[] = array(
                     'id' => 'layout_button_delete',
-                    'url' => 'index.php?p=template&q=DeleteTemplateForm&layoutid=' . $template->layoutId,
-                    'text' => __('Delete')
+                    'url' => $this->urlFor('layout.delete.form', ['id' => $template->layoutId]),
+                    'text' => __('Delete'),
+                    'multi-select' => true,
+                    'dataAttributes' => array(
+                        array('name' => 'multiselectlink', 'value' => 'index.php?p=layout&q=delete'),
+                        array('name' => 'id', 'value' => 'layout_button_delete'),
+                        array('name' => 'text', 'value' => __('Delete')),
+                        array('name' => 'rowtitle', 'value' => $template->layout),
+                        array('name' => 'layoutid', 'value' => $template->layoutId)
+                    )
                 );
             }
 
+            $template->buttons[] = ['divider' => true];
+
+            // Extra buttons if we have modify permissions
             if ($this->getUser()->checkPermissionsModifyable($template)) {
-                // Permissions Button
+                // Permissions button
                 $template->buttons[] = array(
-                    'id' => 'layout_button_delete',
-                    'url' => 'index.php?p=user&q=permissionsForm&entity=Campaign&objectId=' . $template->campaignId,
+                    'id' => 'layout_button_permissions',
+                    'url' => $this->urlFor('user.permissions.form', ['entity' => 'Campaign', 'id' => $template->campaignId]),
                     'text' => __('Permissions')
                 );
             }
@@ -142,7 +159,7 @@ class Template extends Base
             $template->buttons[] = array(
                 'id' => 'layout_button_export',
                 'linkType' => '_self', 'external' => true,
-                'url' => 'index.php?p=layout&q=Export&layoutid=' . $template->layoutId,
+                'url' => $this->urlFor('layout.export', ['id' => $template->layoutId]),
                 'text' => __('Export')
             );
         }
@@ -239,6 +256,15 @@ class Template extends Base
 
         if (Sanitize::getCheckbox('includeWidgets') == 1) {
             $layout->load();
+        }
+        else {
+            // Load without anything
+            $layout->load([
+                'loadPlaylists' => false,
+                'loadTags' => false,
+                'loadPermissions' => false,
+                'loadCampaigns' => false
+            ]);
         }
 
         $layout = clone $layout;

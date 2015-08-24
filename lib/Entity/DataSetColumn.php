@@ -229,16 +229,16 @@ class DataSetColumn implements \JsonSerializable
 
         switch ($this->dataTypeId) {
 
-            case 'number':
+            case 2:
                 $dataType = 'FLOAT';
                 break;
 
-            case 'date':
-                $dataType = 'TIMESTAMP';
+            case 3:
+                $dataType = 'DATETIME';
                 break;
 
-            case 'string':
-            case 'image':
+            case 1:
+            case 4:
             default:
                 $dataType = 'VARCHAR(1000)';
         }

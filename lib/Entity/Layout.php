@@ -193,6 +193,11 @@ class Layout implements \JsonSerializable
         'setBuildRequired' => true
     ];
 
+    public function __construct()
+    {
+        $this->setPermissionsClass('Xibo\Entity\Campaign');
+    }
+
     public function __clone()
     {
         // Clear the layout id
@@ -396,9 +401,6 @@ class Layout implements \JsonSerializable
                 }
             }
         }
-
-        // TODO: Handle the Background Image (in 1.7 it was linked to the layout with lklayoutmedia).
-        // lklayoutmedia has gone now, so I suppose it will have to be handled in requiredfiles.
 
         Log::debug('Save finished for %s', $this);
     }
@@ -680,7 +682,7 @@ class Layout implements \JsonSerializable
         $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, status, width, height, schemaVersion, backgroundImageId, backgroundColor, backgroundzIndex)
                   VALUES (:layout, :description, :userid, :createddt, :modifieddt, :status, :width, :height, 3, :backgroundImageId, :backgroundColor, :backgroundzIndex)';
 
-        $time = Date::getSystemDate(null, 'Y-m-d h:i:s');
+        $time = Date::getLocalDate();
 
         $this->layoutId = PDOConnect::insert($sql, array(
             'layout' => $this->layout,
@@ -731,7 +733,7 @@ class Layout implements \JsonSerializable
          WHERE layoutID = :layoutid
         ';
 
-        $time = Date::getSystemDate(null, 'Y-m-d h:i:s');
+        $time = Date::getLocalDate();
 
         PDOConnect::update($sql, array(
             'layoutid' => $this->layoutId,

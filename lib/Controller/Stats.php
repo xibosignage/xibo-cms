@@ -85,8 +85,8 @@ class Stats extends Base
      */
     public function grid()
     {
-        $fromDt = Date::getTimestampFromString(Sanitize::getString('fromDt'));
-        $toDt = Date::getTimestampFromString(Sanitize::getString('toDt'));
+        $fromDt = Sanitize::getDate('fromDt');
+        $toDt = Sanitize::getDate('toDt');
         $displayId = Sanitize::getInt('displayId');
         $mediaId = Sanitize::getInt('mediaId');
 
@@ -164,8 +164,8 @@ class Stats extends Base
             $row['media'] = Sanitize::string($row['Name']);
             $row['numberPlays'] = Sanitize::int($row['NumberPlays']);
             $row['duration'] = Sanitize::int($row['Duration']);
-            $row['minStart'] = Date::getLocalDate(Date::getTimestampFromTimeString(Sanitize::getString($row['MinStart'])));
-            $row['maxEnd'] = Date::getLocalDate(Date::getTimestampFromTimeString(Sanitize::getString($row['MaxEnd'])));
+            $row['minStart'] = Date::getLocalDate(Sanitize::getDate($row['MinStart']));
+            $row['maxEnd'] = Date::getLocalDate(Sanitize::getDate($row['MaxEnd']));
 
             $rows[] = $row;
         }
@@ -176,8 +176,8 @@ class Stats extends Base
 
     public function availabilityData()
     {
-        $fromDt = Date::getTimestampFromString(Sanitize::getString('fromDt'));
-        $toDt = Date::getTimestampFromString(Sanitize::getString('toDt'));
+        $fromDt = Sanitize::getDate('fromDt');
+        $toDt = Sanitize::getDate('toDt');
         $displayId = Sanitize::getInt('displayId');
 
         // Get an array of display id this user has access to.
@@ -195,10 +195,10 @@ class Stats extends Base
 
         $params = array(
             'type' => 'displaydown',
-            'start' => date('Y-m-d h:i:s', $fromDt),
-            'boundaryStart' => date('Y-m-d h:i:s', $fromDt),
-            'end' => date('Y-m-d h:i:s', $toDt),
-            'boundaryEnd' => date('Y-m-d h:i:s', $toDt)
+            'start' => Date::getLocalDate($fromDt),
+            'boundaryStart' => Date::getLocalDate($fromDt),
+            'end' => Date::getLocalDate($toDt),
+            'boundaryEnd' => Date::getLocalDate($toDt)
         );
 
         $SQL = '
@@ -247,8 +247,8 @@ class Stats extends Base
      */
     public function bandwidthData()
     {
-        $fromDt = Date::getTimestampFromString(Sanitize::getString('fromDt'));
-        $toDt = Date::getTimestampFromString(Sanitize::getString('toDt'));
+        $fromDt = Sanitize::getDate('fromDt');
+        $toDt = Sanitize::getDate('toDt');
 
         // Get an array of display id this user has access to.
         $displayIds = array();
@@ -357,13 +357,9 @@ class Stats extends Base
     public function export()
     {
         // We are expecting some parameters
-        $fromDt = Date::getIsoDateFromString(Sanitize::getString('fromDt'));
-        $toDt = Date::getIsoDateFromString(Sanitize::getString('toDt'));
+        $fromDt = Sanitize::getDate('fromDt');
+        $toDt = Sanitize::getDate('toDt');
         $displayId = Sanitize::getInt('displayId');
-
-        if ($fromDt == $toDt) {
-            $toDt = date("Y-m-d", strtotime($toDt) + 86399);
-        }
 
         // Get an array of display id this user has access to.
         $displayIds = array();
@@ -391,8 +387,8 @@ class Stats extends Base
         ';
 
         $params = [
-            'fromDt' => $fromDt,
-            'toDt' => $toDt
+            'fromDt' => Date::getLocalDate($fromDt),
+            'toDt' => Date::getLocalDate($toDt)
         ];
 
         if ($displayId != 0) {

@@ -47,24 +47,6 @@ class PageFactory extends BaseFactory
         return $pages[0];
     }
 
-    /**
-     * Get by Route
-     * @param $route
-     * @return Page
-     * @throws NotFoundException if the page cannot be resolved from the provided route
-     */
-    public static function getByRoute($route)
-    {
-        Log::debug('Checking access for route ' . $route);
-        $route = explode('/', ltrim($route, '/'));
-        $pages = PageFactory::query(null, array('name' => $route[0], 'disableUserCheck' => 1));
-
-        if (count($pages) <= 0)
-            throw new NotFoundException('Unknown Route');
-
-        return $pages[0];
-    }
-
     public static function query($sortOrder = null, $filterBy = [])
     {
         if ($sortOrder == null)

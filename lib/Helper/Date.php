@@ -27,29 +27,22 @@ class Date
 {
     private static $timezones = null;
 
-    public static function getClock()
-    {
-        return Date::getLocalDate(null, 'H:i T');
-    }
-
-    public static function getSystemClock()
-    {
-        return Date::getSystemDate(null, 'H:i T');
-    }
-
     /**
      * Get a local date
-     * @param int $timestamp
+     * @param int|\Jenssegers\Date\Date $timestamp
      * @param string $format
      * @return string
      */
     public static function getLocalDate($timestamp = NULL, $format = NULL)
     {
+        if ($format == NULL)
+            $format = Date::getSystemFormat();
+
+        if ($timestamp instanceof \Jenssegers\Date\Date)
+            return $timestamp->format($format);
+
         if ($timestamp == NULL)
             $timestamp = time();
-
-        if ($format == NULL)
-            $format = Date::getDefaultFormat();
 
         if (Date::getCalendarType() == 'Jalali') {
             return JDateTime::date($format, $timestamp, false);
@@ -61,46 +54,30 @@ class Date
 
     /**
      * Get a system date
-     * @param null $timestamp
-     * @param null $format
+     * @param string|\Jenssegers\Date\Date $timestamp
+     * @param string $format
      * @return string
      */
     public static function getSystemDate($timestamp = NULL, $format = NULL)
     {
+        if ($format == NULL)
+            $format = Date::getSystemFormat();
+
+        if ($timestamp instanceof \Jenssegers\Date\Date)
+            return $timestamp->format($format);
+
         if ($timestamp == NULL)
             $timestamp = time();
-
-        if ($format == NULL)
-            $format = 'Y-m-d H:i:s';
 
         // Always return ISO formatted dates
         return gmdate($format, $timestamp);
     }
 
     /**
-     * Get midnight system date
-     * @param string $timestamp
-     * @param string $format
-     * @return string
-     */
-    public static function getMidnightSystemDate($timestamp = NULL, $format = NULL)
-    {
-        if ($timestamp == NULL)
-            $timestamp = time();
-
-        // Get the timestamp and Trim the hours off it.
-        $dateTime = new DateTime();
-        $dateTime->setTimestamp($timestamp);
-        $dateTime->setTime(0, 0, 0);
-
-        return self::getSystemDate($dateTime->getTimestamp(), $format);
-    }
-
-    /**
      * Get the Calendar Type
      * @return string
      */
-    public static function getCalendarType()
+    private static function getCalendarType()
     {
         return Config::GetSetting('CALENDAR_TYPE');
     }
@@ -109,23 +86,9 @@ class Date
      * Get the default date format
      * @return string
      */
-    public static function getDefaultFormat()
+    private static function getSystemFormat()
     {
-        return Config::GetSetting('DATE_FORMAT');
-    }
-
-    /**
-     * Gets a Unix Timestamp from a textual date time string
-     * @param string $date
-     * @param string $format
-     * @return int
-     */
-    public static function getTimestampFromString($date, $format = null)
-    {
-        if ($format == null)
-            $format = Date::getDefaultFormat();
-
-        return Date::fromString($date, $format)->format('U');
+        return 'Y-m-d H:i:s';
     }
 
     /**
@@ -134,10 +97,13 @@ class Date
      * @param string $format
      * @return \Jenssegers\Date\Date
      */
-    public static function fromString($string, $format = null)
+    public static function fromString($string = null, $format = null)
     {
+        if ($string == null)
+            $string = Date::getLocalDate();
+
         if ($format == null)
-            $format = Date::getDefaultFormat();
+            $format = Date::getSystemFormat();
 
         if (Date::getCalendarType() == 'Jalali') {
             // If we are Jalali, then we want to convert from Jalali back to Gregorian.
@@ -157,26 +123,6 @@ class Date
         else {
             return \Jenssegers\Date\Date::createFromFormat($format, $string);
         }
-    }
-
-    public static function getTimestampFromTimeString($time)
-    {
-        return strtotime($time);
-    }
-
-    public static function getIsoDateFromString($date)
-    {
-        return date('Y-m-d H:i:s', self::getTimestampFromString($date));
-    }
-
-    /**
-     * Gets a Unix Timestamp from a textual UTC date time string
-     * @param $date
-     * @return int
-     */
-    public static function getDateFromGregorianString($date)
-    {
-        return strtotime($date);
     }
 
     /**
@@ -248,9 +194,9 @@ class Date
             'w' => '',
             'z' => '',
             'W' => '',
-            'F' => 'mm',
+            'F' => 'MM',
             'm' => 'mm',
-            'M' => 'm',
+            'M' => 'M',
             'n' => 'i',
             't' => '', // no equivalent
             'L' => '', // no equivalent
@@ -280,7 +226,6 @@ class Date
         $momentFormat = strtr($format, $replacements);
         return $momentFormat;
     }
-
 
     /**
      * Timezone identifiers

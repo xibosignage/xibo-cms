@@ -20,6 +20,31 @@ GNU Affero General Public License for more details.
 You should have received a copy of the GNU Affero General Public License
 along with Xibo.  If not, see <http://www.gnu.org/licenses/>. 
 
+# Installation from the Repository
+The Xibo CMS can be installed from the repository using Composer.
+
+Navigate to the folder where you want to install the CMS, ideally below your web root:
+
+```
+cd /var
+```
+
+Then clone the repository:
+
+```
+git clone git@github.com:xibosignage/xibo-cms.git xibo-cms
+```
+
+Install the external dependencies with Composer (visit [getcomposer.org](http://getcomposer.org) for instructions):
+
+```
+php composer.phar install
+```
+
+Configure your web-server to serve from the Xibo `web` folder.
+
+Visit Xibo in the browser and follow the installation instructions.
+
 # Development
 The Xibo CMS now follows MVC and is PSR-4 compliant.
 

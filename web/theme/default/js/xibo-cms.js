@@ -85,7 +85,7 @@ function XiboInitialise(scope) {
 
         // Bind the filter form
         $(this).find(".XiboFilter form input, .XiboFilter form select").change(function() {
-            $(this).closest(".XiboGrid").find("table").DataTable().ajax.reload();
+            $(this).closest(".XiboGrid").find("table[role='grid']").DataTable().ajax.reload();
         });
     });
 
@@ -206,27 +206,58 @@ function XiboInitialise(scope) {
     });
 
     // Date time controls
-    $(scope + ' .dateTimePicker').datetimepicker({
-        minuteStep: 5,
-        autoClose: true,
-        language: language,
-        calendarType: calendarType
+    $(scope + ' .dateTimePicker').each(function(){
+
+        // Get the linked field and use it to set the time
+        var preset = $(this).closest("form").find("#" + $(this).data().linkField).val();
+
+        if (preset != undefined && preset != "")
+            $(this).val(moment(preset).format(jsDateFormat));
+
+        $(this).datetimepicker({
+            format: bootstrapDateFormat,
+            minuteStep: 5,
+            autoClose: true,
+            language: language,
+            calendarType: calendarType
+        });
     });
-    $(scope + ' .datePicker').datetimepicker({
-        autoClose: true,
-        language: language,
-        calendarType: calendarType,
-        minView: 2,
-        todayHighlight: true
+
+    $(scope + ' .datePicker').each(function() {
+        // Get the linked field and use it to set the time
+        var preset = $(this).closest("form").find("#" + $(this).data().linkField).val();
+
+        if (preset != undefined && preset != "")
+            $(this).val(moment(preset).format(jsDateFormat));
+
+        $(this).datetimepicker({
+            format: bootstrapDateFormat,
+            autoClose: true,
+            language: language,
+            calendarType: calendarType,
+            minView: 2,
+            todayHighlight: true
+        });
     });
-    $(scope + ' .timePicker').datetimepicker({
-        autoClose: true,
-        language: language,
-        calendarType: calendarType,
-        maxView: 1,
-        startView: 1,
-        todayHighlight: true,
-        minuteStep: 10
+
+    $(scope + ' .timePicker').each(function() {
+
+        // Get the linked field and use it to set the time
+        var preset = $(this).closest("form").find("#" + $(this).data().linkField).val();
+
+        if (preset != undefined && preset != "")
+            $(this).val(moment(preset).format(jsDateFormat));
+
+        $(this).datetimepicker({
+            format: bootstrapDateFormat,
+            autoClose: true,
+            language: language,
+            calendarType: calendarType,
+            maxView: 1,
+            startView: 1,
+            todayHighlight: true,
+            minuteStep: 10
+        });
     });
 }
 
@@ -328,6 +359,26 @@ function dataTableTickCrossInverseColumn(data, type, row) {
         icon = "fa-exclamation";
 
     return "<span class='fa " + icon + "'></span>";
+}
+
+function dataTableDateFromIso(data, type, row) {
+    if (type != "display")
+        return data;
+
+    if (data == null)
+        return "";
+
+    return moment(data).format(jsDateFormat);
+}
+
+function dataTableDateFromUnix(data, type, row) {
+    if (type != "display")
+        return data;
+
+    if (data == null)
+        return "";
+
+    return moment(data, "X").format(jsDateFormat);
 }
 
 /**
@@ -442,7 +493,7 @@ function XiboFormRender(formUrl, data) {
                                 if ($(this).hasClass("save-button"))
                                     $(this).append(' <span class="saving fa fa-cog fa-spin"></span>');
 
-                                if (value.indexOf("DialogClose") > -1 && (lastForm.indexOf("module/form") > -1 || lastForm.indexOf("playlist/form/library/assign") > -1) && timelineForm != null) {
+                                if (value.indexOf("DialogClose") > -1 && (lastForm.indexOf("playlist/widget/form") > -1 || lastForm.indexOf("playlist/form/library/assign") > -1) && timelineForm != null) {
                                     // Close button
                                     // We might want to go back to the prior form
                                     XiboFormRender(timelineForm.url, timelineForm.value);
@@ -724,6 +775,7 @@ function XiboHelpRender(url) {
 /**
  * Xibo Ping
  * @param {String} url
+ * @param {String} updateDiv
  */
 function XiboPing(url, updateDiv) {
 
@@ -759,9 +811,6 @@ function XiboPing(url, updateDiv) {
             return false;
         }
     });
-
-    // Dont then submit the link/button
-    return false;
 }
 
 /**
@@ -846,7 +895,7 @@ function XiboSubmitResponse(response, form) {
         // Should we refresh the window or refresh the Grids?
         XiboRefreshAllGrids();
 
-        if ((lastForm != undefined && (lastForm.indexOf("module/form") > -1 || lastForm.indexOf("playlist/form/library/assign") > -1)) && timelineForm != null) {
+        if ((lastForm != undefined && (lastForm.indexOf("playlist/widget/form") > -1 || lastForm.indexOf("playlist/form/library/assign") > -1)) && timelineForm != null) {
             // Close button
             // We might want to go back to the prior form
             XiboFormRender(timelineForm.url, timelineForm.value);
@@ -979,7 +1028,7 @@ function XiboRefreshAllGrids() {
     // We should refresh the grids (this is a global refresh)
     $(" .XiboGrid table").each(function() {
         // Render
-        $(this).DataTable().ajax.reload();
+        $(this).DataTable().ajax.reload(null, false);
     });
 }
 
@@ -1018,7 +1067,7 @@ function SystemMessage(messageText, success) {
             buttons: [{
                 label: 'Close',
                 callback: function() {
-                    if (lastForm.indexOf("module/form") > -1 && timelineForm != null) {
+                    if (lastForm.indexOf("playlist/widget/form") > -1 && timelineForm != null) {
                         // Close button
                         // We might want to go back to the prior form
                         XiboFormRender(timelineForm.url, timelineForm.value);

@@ -12,6 +12,7 @@
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
         <li><a class="XiboFormButton" title="{% trans "Add a row to the end of this DataSet" %}" href="{{ urlFor("dataSet.data.add.form", {"id": dataSet.dataSetId}) }}">{% trans "Add Row" %}</a></li>
+        <li><a href="{{ urlFor("dataSet.column.view", {"id": dataSet.dataSetId}) }}">{% trans "View Columns" %}</a></li>
     </ul>
 {% endblock %}
 
@@ -56,7 +57,11 @@
         var cols = [];
         cols.push({ "name": "id", "data": "id" });
         {% for col in dataSet.getColumn() %}
-        cols.push({ "data": "{{ col.heading }}" });
+            {% if col.dataTypeId == 3 %}
+                cols.push({ "data": "{{ col.heading }}", "render": dataTableDateFromIso });
+            {% else %}
+                cols.push({ "data": "{{ col.heading }}" });
+            {% endif %}
         {% endfor %}
 
         cols.push({

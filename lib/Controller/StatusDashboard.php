@@ -26,6 +26,7 @@ use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\Config;
 use Xibo\Helper\Date;
 use Xibo\Helper\Log;
+use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 use Xibo\Storage\PDOConnect;
 
@@ -70,7 +71,7 @@ class StatusDashboard extends Base
                 $size = ((double)$row['size']) / (pow(1024, $base));
                 $remaining = $xmdsLimit - $size;
                 $output[] = array(
-                    'label' => Date::getLocalDate(Date::getDateFromGregorianString($row['month']), 'F'),
+                    'label' => Date::getLocalDate(Sanitize::getDate($row['month']), 'F'),
                     'value' => round($size, 2),
                     'limit' => round($remaining, 2)
                 );

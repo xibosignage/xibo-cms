@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2013 Daniel Garner
+ * Copyright (C) 2006-2015 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -21,13 +21,12 @@
 
 
 $config = array(
-                'theme_name' => 'Xibo Compact Theme',
-                'theme_title' => 'Xibo Digital Signage',
-                'app_name' => 'Xibo',
-                'theme_url' => 'http://xibo.org.uk',
-                'cms_source_url' => 'https://github.com/xibosignage/xibo/',
-                'cms_install_url' => 'http://xibo.org.uk/manual/en/install_windows_client.html',
-                'cms_release_notes_url' => 'http://xibo.org.uk/manual/en/release_notes.html',
-                'latest_news_url' => 'http://xibo.org.uk/feed/'
-        );
-?>
+    'theme_name' => 'Xibo Compact Theme',
+    'theme_title' => 'Xibo Digital Signage',
+    'app_name' => 'Xibo',
+    'theme_url' => 'http://xibo.org.uk',
+    'cms_source_url' => 'https://github.com/xibosignage/xibo/',
+    'cms_install_url' => 'http://xibo.org.uk/manual/en/install_windows_client.html',
+    'cms_release_notes_url' => 'http://xibo.org.uk/manual/en/release_notes.html',
+    'latest_news_url' => 'http://xibo.org.uk/feed/'
+);

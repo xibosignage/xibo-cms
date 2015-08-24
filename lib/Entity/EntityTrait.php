@@ -17,6 +17,7 @@ trait EntityTrait
     private $hash = null;
     private $loaded = false;
     private $deleting = false;
+    private $permissionsClass = null;
 
     public $buttons = [];
     private $jsonExclude = ['buttons', 'jsonExclude'];
@@ -86,5 +87,23 @@ trait EntityTrait
     public function includeProperty($property)
     {
         $this->jsonExclude = array_diff($this->jsonExclude, [$property]);
+    }
+
+    /**
+     * Get the Permissions Class
+     * @return string
+     */
+    public function permissionsClass()
+    {
+        return ($this->permissionsClass == null) ? get_class($this) : $this->permissionsClass;
+    }
+
+    /**
+     * Set the Permissions Class
+     * @param string $class
+     */
+    protected function setPermissionsClass($class)
+    {
+        $this->permissionsClass = $class;
     }
 }

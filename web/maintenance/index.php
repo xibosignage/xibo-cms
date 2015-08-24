@@ -35,7 +35,7 @@ if (!file_exists(PROJECT_ROOT . '/web/settings.php'))
 Config::Load(PROJECT_ROOT . '/web/settings.php');
 
 // Create a logger
-$logger = new \Flynsarmy\SlimMonolog\Log\MonologWriter(array(
+$logger = new \Xibo\Helper\AccessibleMonologWriter(array(
     'name' => 'MAINT',
     'handlers' => array(
         new \Xibo\Helper\DatabaseLogHandler()

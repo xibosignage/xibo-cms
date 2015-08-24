@@ -4,7 +4,6 @@
  * Copyright (C) 2015 Spring Signage Ltd
  * (${FILE_NAME})
  */
-
 #}
 
 {% extends "form-base.twig" %}
@@ -16,8 +15,8 @@
 
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
-    {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, $("#displayProfileDeleteForm").submit()
+    {% trans "No" %}, XiboDialogClose()
+    {% trans "Yes" %}, $("#displayProfileDeleteForm").submit()
 {% endblock %}
 
 {% block formHtml %}

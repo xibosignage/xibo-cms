@@ -37,6 +37,7 @@ class ShellCommand extends Module
     public function add()
     {
         // Any Options (we need to encode shell commands, as they sit on the options rather than the raw
+        $this->setOption('name', Sanitize::getString('name'));
         $this->setDuration(1);
         $this->SetOption('windowsCommand', urlencode(Sanitize::getString('windowsCommand')));
         $this->SetOption('linuxCommand', urlencode(Sanitize::getString('linuxCommand')));
@@ -53,6 +54,7 @@ class ShellCommand extends Module
     {
         // Any Options (we need to encode shell commands, as they sit on the options rather than the raw
         $this->setDuration(1);
+        $this->setOption('name', Sanitize::getString('name', $this->getOption('name')));
         $this->SetOption('windowsCommand', urlencode(Sanitize::getString('windowsCommand')));
         $this->SetOption('linuxCommand', urlencode(Sanitize::getString('linuxCommand')));
 

@@ -35,7 +35,7 @@ if (!file_exists(PROJECT_ROOT . '/web/settings.php'))
 Config::Load(PROJECT_ROOT . '/web/settings.php');
 
 // Create a logger
-$logger = new \Flynsarmy\SlimMonolog\Log\MonologWriter(array(
+$logger = new \Xibo\Helper\AccessibleMonologWriter(array(
     'name' => 'AUTH',
     'handlers' => array(
         new \Xibo\Helper\DatabaseLogHandler()
@@ -54,6 +54,7 @@ $app = new \Slim\Slim(array(
 $app->setName('auth');
 
 $app->add(new \Xibo\Middleware\Storage());
+$app->add(new \Xibo\Middleware\Theme());
 $app->add(new \Xibo\Middleware\State());
 $app->view(new \Xibo\Middleware\ApiView());
 

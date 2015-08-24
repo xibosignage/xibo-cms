@@ -84,11 +84,11 @@
 
                         {% set title %}{% trans "Start Time" %}{% endset %}
                         {% set helpText %}{% trans "Select the start time for this event" %}{% endset %}
-                        {{ forms.dateTime("fromDt", title, event.fromDt|date(settings.DATE_FORMAT), helpText, "", "required", "", settings.DATE_FORMAT_BOOTSTRAP) }}
+                        {{ forms.dateTime("fromDt", title, event.fromDt, helpText, "", "required", "") }}
 
                         {% set title %}{% trans "End Time" %}{% endset %}
                         {% set helpText %}{% trans "Select the end time for this event" %}{% endset %}
-                        {{ forms.dateTime("toDt", title, event.toDt|date(settings.DATE_FORMAT), helpText, "", "required", "", settings.DATE_FORMAT_BOOTSTRAP) }}
+                        {{ forms.dateTime("toDt", title, event.toDt, helpText, "", "required", "") }}
 
                         {# Campaign / Layout list. We want to build two arrays for us to use. #}
                         {% set layoutOptions = [] %}
@@ -149,7 +149,7 @@
 
                         {% set title %}{% trans "Until" %}{% endset %}
                         {% set helpText %}{% trans "When should this event stop repeating?" %}{% endset %}
-                        {{ forms.dateTime("recurrenceRange", title, event.recurrenceRange|date(settings.DATE_FORMAT), helpText, "repeat-control-group", "", "", settings.DATE_FORMAT_BOOTSTRAP) }}
+                        {{ forms.dateTime("recurrenceRange", title, event.recurrenceRange, helpText, "repeat-control-group", "", "") }}
                     </div>
                 </div>
             </form>

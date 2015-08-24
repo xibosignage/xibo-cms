@@ -120,7 +120,7 @@ class Login extends Base
      */
     public function PingPong()
     {
-        $this->getApp()->session->refreshExpiry = false;
+        $this->getApp()->session->refreshExpiry = (Sanitize::getCheckbox('refreshSession') == 1);
         $this->getState()->success = true;
     }
 

@@ -74,6 +74,8 @@ class DataSet implements \JsonSerializable
     private $permissions = [];
     private $columns = [];
 
+    private $countLast = 0;
+
     public function getId()
     {
         return $this->dataSetId;
@@ -82,6 +84,15 @@ class DataSet implements \JsonSerializable
     public function getOwnerId()
     {
         return $this->userId;
+    }
+
+    /**
+     * Get the Count of Records in the last getData()
+     * @return int
+     */
+    public function countLast()
+    {
+        return $this->countLast;
     }
 
     /**
@@ -140,7 +151,7 @@ class DataSet implements \JsonSerializable
         // Build a SQL statement, based on the columns for this dataset
         $this->load();
 
-        $sql = 'SELECT id';
+        $select = 'SELECT id';
 
         // Keep track of the columns we are allowed to order by
         $allowedOrderCols = ['id'];
@@ -160,24 +171,25 @@ class DataSet implements \JsonSerializable
                 $heading = '`' . $column->heading . '`';
             }
 
-            $sql .= ', ' . $heading;
+            $select .= ', ' . $heading;
         }
 
-        $sql .= ' FROM `dataset_' . $this->dataSetId . '` WHERE 1 = 1 ';
+        $body = ' FROM `dataset_' . $this->dataSetId . '` WHERE 1 = 1 ';
 
         // Filtering
         if ($filter != '') {
-            $sql .= ' AND ' . str_replace($blackList, '', $filter);
+            $body .= ' AND ' . str_replace($blackList, '', $filter);
         }
 
         // Filter by ID
         if (
             Sanitize::getInt('id', $filterBy) !== null) {
-            $sql .= ' AND id = :id ';
+            $body .= ' AND id = :id ';
             $params['id'] = Sanitize::getInt('id', $filterBy);
         }
 
         // Ordering
+        $order = '';
         if ($ordering != '') {
             $order = ' ORDER BY ';
 
@@ -202,21 +214,30 @@ class DataSet implements \JsonSerializable
                 }
             }
 
-            $sql .= trim($order, ',');
+            $order = trim($order, ',');
         }
         else {
-            $sql .= ' ORDER BY id ';
+            $order = ' ORDER BY id ';
         }
 
         // Limit
+        $limit = '';
         if ($start != 0 || $size != 0) {
             // Substitute in
-            $sql .= sprintf(' LIMIT %d, %d ', $start, $size);
+            $limit = sprintf(' LIMIT %d, %d ', $start, $size);
         }
+
+        $sql = $select . $body . $order . $limit;
 
         Log::sql($sql, $params);
 
-        return PDOConnect::select($sql, $params);
+        $data = PDOConnect::select($sql, $params);
+
+        // If there are limits run some SQL to work out the full payload of rows
+        $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
+        $this->countLast = intval($results[0]['total']);
+
+        return $data;
     }
 
     /**
@@ -248,10 +269,10 @@ class DataSet implements \JsonSerializable
      */
     public function validate()
     {
-        if (!v::string()->notEmpty()->length(1, 50)->validate($this->dataSet))
+        if (!v::string()->notEmpty()->length(null, 50)->validate($this->dataSet))
             throw new \InvalidArgumentException(__('Name must be between 1 and 50 characters'));
 
-        if (!v::string()->length(null, 254)->validate($this->description))
+        if ($this->description != null && !v::string()->length(null, 254)->validate($this->description))
             throw new \InvalidArgumentException(__('Description can not be longer than 254 characters'));
 
         try {
@@ -466,7 +487,7 @@ class DataSet implements \JsonSerializable
     {
         $this->lastDataEdit = time();
 
-        PDOConnect::update('DELETE FROM `' . $this->dataSetId . '` WHERE id = :id', [
+        PDOConnect::update('DELETE FROM `dataset_' . $this->dataSetId . '` WHERE id = :id', [
             'id' => $rowId
         ]);
     }

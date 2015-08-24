@@ -29,7 +29,6 @@
         <link href="{{ theme.uri("css/override.css") }}" rel="stylesheet" media="screen">
         <link href="{{ baseUrl }}modules/fonts.css" rel="stylesheet">
         <!-- Copyright 2006-2015 Daniel Garner. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
-        <!-- NOT FOUND {{ theme.uri("img/forms/filenotfound.gif") }} -->
         {% block headContent %}{% endblock %}
     </head>
     <body>
@@ -80,8 +79,10 @@
         <script src="{{ theme.uri("libraries/jquery-serialize-object/jquery.serialize-object.min.js") }}"></script>
 
         {% if translate.jsLocale != 'en-GB' %}
-        <script src="{{ theme.uri("libraries/calendar/js/language/{{ translate.jsLocale }}.js") }}"></script>
-        <script src="{{ theme.uri("libraries/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.{{ translate.jsShortLocale }}.js") }}"></script>
+            {% set calendarTranslation %}libraries/calendar/js/language/{{ translate.calendarLanguage }}.js{% endset %}
+            <script src="{{ theme.uri(calendarTranslation) }}"></script>
+            {% set datePickerTranslation %}libraries/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.{{ translate.jsShortLocale }}.js{% endset %}
+            <script src="{{ theme.uri(datePickerTranslation) }}"></script>
         {% endif %}
 
         <script type="text/javascript">
@@ -101,10 +102,13 @@
             var language = "{{ translate.jsLocale }}";
             var dateFormat = "{{ settings.DATE_FORMAT }}";
             var jsDateFormat = "{{ settings.DATE_FORMAT_JS }}";
+            var bootstrapDateFormat = "{{ settings.DATE_FORMAT_BOOTSTRAP }}";
             var calendarType = "{{ settings.CALENDAR_TYPE }}";
             var clockUrl = "{{ urlFor("clock") }}";
             var calendarLanguage = "{{ translate.calendarLanguage }}";
             var pingUrl = "{{ urlFor("ping") }}";
+
+            moment.locale("{{ translate.jsLocale }}");
 
             $(function() {
                 var csrf_token = $('meta[name="token"]').attr('content');
