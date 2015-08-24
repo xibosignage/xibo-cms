@@ -284,8 +284,18 @@ function dataTableDraw(e, settings) {
     var target = $("#" + e.target.id);
 
     // Check to see if we have any buttons that are multi-select
-    var enabledButtons = target.find("ul.dropdown-menu li[data-multiselectlink]");
+    var enabledButtons = target.find("ul.dropdown-menu li[data-commit-url]");
     if (enabledButtons.length > 0) {
+        var searchByKey = function(array, item, key) {
+            // return Object from array where array[object].item matches key
+            for (var i in array) {
+                if (array[i][item] == key) {
+                    return true;
+                }
+            }
+            return false;
+        };
+
         // Bind a click event to our table
         target.find("tbody").on("click", "tr", function() {
             $(this).toggleClass("selected");
@@ -297,7 +307,8 @@ function dataTableDraw(e, settings) {
 
         // Get every enabled button
         $(enabledButtons).each(function () {
-            buttons.push({id: $(this).data("id"), gridId: e.target.id, text: $(this).data("text")})
+            if (!searchByKey(buttons, "id", $(this).data("id")))
+                buttons.push({id: $(this).data("id"), gridId: e.target.id, text: $(this).data("text")})
         });
 
         var output = template({withSelected: translations.withselected, buttons: buttons});
@@ -630,7 +641,6 @@ function XiboFormRender(formUrl, data) {
 function XiboMultiSelectFormRender(button) {
 
     var buttonId = $(button).data().buttonId;
-    var gridId = $(button).data().gridId;
     var matches = [];
 
     $("." + buttonId).each(function() {
@@ -681,19 +691,17 @@ function XiboMultiSelectFormRender(button) {
                 // continue processing the queue once the AJAX request's callback executes.
                 callback: function( item ) {
                     var data = $(item).data();
-                    data.token = token;
 
                     // Make an AJAX call
                     $.ajax({
-                        type: "post",
-                        url: data.multiselectlink + "&ajax=true",
+                        type: data.commitMethod,
+                        url: data.commitUrl,
                         cache: false,
                         dataType: "json",
                         data: data,
                         success: function(response, textStatus, error) {
 
                             if (response.success) {
-                                token = $(response.nextToken).val();
 
                                 dialogContent.append($("<div>").html(data.rowtitle + ": " + translations.success));
 
@@ -727,13 +735,7 @@ function XiboMultiSelectFormRender(button) {
 
                     // Refresh the grids
                     // (this is a global refresh)
-                    $(" .XiboGrid").each(function(){
-
-                        var gridId = $(this).attr("id");
-
-                        // Render
-                        XiboGridRender(gridId);
-                    });
+                    XiboRefreshAllGrids();
                 }
             });
 
