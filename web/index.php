@@ -88,10 +88,10 @@ $twig->twigTemplateDirs = array_merge(\Xibo\Factory\ModuleFactory::getViewPaths(
 $app->view($twig);
 
 // Middleware (onion, outside inwards and then out again - i.e. the last one is first and last)
+$app->add(new \Xibo\Middleware\Actions());
 $app->add(new \Xibo\Middleware\WebAuthentication());
 $app->add(new \Xibo\Middleware\CsrfGuard());
 $app->add(new \Xibo\Middleware\Theme());
-$app->add(new \Xibo\Middleware\Actions());
 $app->add(new \Xibo\Middleware\State());
 $app->add(new \Xibo\Middleware\Storage());
 

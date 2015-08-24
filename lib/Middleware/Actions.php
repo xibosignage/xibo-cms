@@ -34,6 +34,18 @@ class Actions extends Middleware
 {
     public function call()
     {
+        $app = $this->app;
+
+        // Handle if we are an upgrade
+        // Get the current route pattern
+        $resource = $app->router->getCurrentRoute()->getPattern();
+
+        // Does the version in the DB match the version of the code?
+        // If not then we need to run an upgrade.
+        if (DBVERSION != WEBSITE_VERSION && $resource != '/upgrade') {
+            $app->redirectTo('upgrade.view');
+        }
+
         // Process Actions
         if (Config::GetSetting('DEFAULTS_IMPORTED') == 0) {
 
@@ -53,8 +65,6 @@ class Actions extends Middleware
         }
 
         // Process notifications
-        $app = $this->app;
-
         // Attach a hook to log the route
         $app->hook('slim.before.dispatch', function() use ($app) {
             if ($app->user->userTypeId == 1 && file_exists('install.php')) {
