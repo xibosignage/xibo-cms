@@ -278,9 +278,11 @@ class Display extends Base
                     'text' => __('Request Screen Shot'),
                     'multi-select' => true,
                     'dataAttributes' => array(
-                        array('name' => 'multiselectlink', 'value' => $this->urlFor('display.screenshot.form')),
-                        array('name' => 'rowtitle', 'value' => $display->display),
-                        array('name' => 'displayId', 'value' => $display->displayId)
+                        array('name' => 'commit-url', 'value' => $this->urlFor('display.requestscreenshot', ['id' => $display->displayId])),
+                        array('name' => 'commit-method', 'value' => 'put'),
+                        array('name' => 'id', 'value' => 'display_button_requestScreenShot'),
+                        array('name' => 'text', 'value' => __('Request Screen Shot')),
+                        array('name' => 'rowtitle', 'value' => $display->display)
                     )
                 );
 

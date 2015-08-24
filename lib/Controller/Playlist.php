@@ -87,7 +87,10 @@ class Playlist extends Base
                     'text' => __('Delete'),
                     'multi-select' => true,
                     'dataAttributes' => array(
-                        array('name' => 'multiselectlink', 'value' => $this->urlFor('module.widget.delete', ['id' => $widget->widgetId])),
+                        array('name' => 'commit-url', 'value' => $this->urlFor('module.widget.delete', ['id' => $widget->widgetId])),
+                        array('name' => 'commit-method', 'value' => 'put'),
+                        array('name' => 'id', 'value' => 'timeline_button_delete'),
+                        array('name' => 'text', 'value' => __('Delete')),
                         array('name' => 'rowtitle', 'value' => $widget->module->getName()),
                         array('name' => 'options', 'value' => 'unassign')
                     )

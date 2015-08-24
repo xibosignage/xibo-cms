@@ -132,11 +132,11 @@ class Template extends Base
                     'text' => __('Delete'),
                     'multi-select' => true,
                     'dataAttributes' => array(
-                        array('name' => 'multiselectlink', 'value' => 'index.php?p=layout&q=delete'),
+                        array('name' => 'commit-url', 'value' => $this->urlFor('layout.delete', ['id' => $template->layoutId])),
+                        array('name' => 'commit-method', 'value' => 'delete'),
                         array('name' => 'id', 'value' => 'layout_button_delete'),
                         array('name' => 'text', 'value' => __('Delete')),
-                        array('name' => 'rowtitle', 'value' => $template->layout),
-                        array('name' => 'layoutid', 'value' => $template->layoutId)
+                        array('name' => 'rowtitle', 'value' => $template->layout)
                     )
                 );
             }
