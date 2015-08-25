@@ -222,6 +222,14 @@ global \$dbname;
 
 define('SECRET_KEY', '$secretKey');
 
+// Additional Monolog handlers/processors to be registered
+// \$logHandlers = [];
+// \$logProcessors = [];
+
+// Additional Middleware
+// \$middleware = [];
+// \$authentication = ;
+
 END;
 
         if (!fwrite($fh, $settings))

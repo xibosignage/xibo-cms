@@ -131,5 +131,21 @@ class State extends Middleware
         else {
             $app->config('log.level', \Xibo\Helper\Log::resolveLogLevel(Config::GetSetting('audit', 'error')));
         }
+
+        // Configure any extra log handlers
+        if (Config::$logHandlers != null && is_array(Config::$logHandlers)) {
+            \Xibo\Helper\Log::debug('Configuring %d additional log handlers from Config', count(Config::$logHandlers));
+            foreach (Config::$logHandlers as $handler) {
+                $app->logWriter->addHandler($handler);
+            }
+        }
+
+        // Configure any extra log processors
+        if (Config::$logProcessors != null && is_array(Config::$logProcessors)) {
+            \Xibo\Helper\Log::debug('Configuring %d additional log processors from Config', count(Config::$logProcessors));
+            foreach (Config::$logProcessors as $processor) {
+                $app->logWriter->addProcessor($processor);
+            }
+        }
     }
 }
