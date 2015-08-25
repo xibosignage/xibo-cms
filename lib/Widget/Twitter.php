@@ -140,6 +140,9 @@ class Twitter extends Module
 
     public function validate()
     {
+        if ($this->getDuration() == 0)
+            throw new \InvalidArgumentException(__('Please enter a duration'));
+
         if (!v::string()->notEmpty()->validate($this->getOption('searchTerm')))
             throw new \InvalidArgumentException(__('Please enter a search term'));
     }
