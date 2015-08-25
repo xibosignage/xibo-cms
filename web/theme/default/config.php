@@ -36,4 +36,8 @@ $config = array(
         'logHandlers' => [],
         'logProcessors' => []
         */
+        /*
+         * Additional Middleware
+         'middleware' => []
+         */
 	);
