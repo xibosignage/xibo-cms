@@ -424,7 +424,8 @@ class ForecastIo extends Module
             return '';
 
         // Do we need to override the language?
-        if ($this->getOption('lang', 'en') != 'en') {
+        // TODO: I don't like this date fix, the library should really check the file exists?
+        if ($this->getOption('lang', 'en') != 'en' && file_exists(PROJECT_ROOT . '/vendor/jenssegers/date/src/Lang/' . $this->getOption('lang') . '.php')) {
             \Jenssegers\Date\Date::setLocale($this->getOption('lang'));
         }
 
