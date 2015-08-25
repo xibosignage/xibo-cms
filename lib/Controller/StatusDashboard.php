@@ -53,17 +53,17 @@ class StatusDashboard extends Base
             // Get some data for a bandwidth chart
             $dbh = PDOConnect::init();
 
-            $sth = $dbh->prepare('
+            $sql = '
               SELECT FROM_UNIXTIME(month) AS month,
                   IFNULL(SUM(Size), 0) AS size
                 FROM `bandwidth`
                WHERE month > :month AND displayId IN (' . implode(',', $displayIds) . ')
               GROUP BY FROM_UNIXTIME(month) ORDER BY MIN(month);
-              ');
+              ';
+            $params = array('month' => time() - (86400 * 365));
 
-            $sth->execute(array('month' => time() - (86400 * 365)));
-
-            $results = $sth->fetchAll();
+            Log::sql($sql, $params);
+            $results = PDOConnect::select($sql, $params);
 
             // Monthly bandwidth - optionally tested against limits
             $xmdsLimit = Config::GetSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB');
@@ -118,11 +118,14 @@ class StatusDashboard extends Base
 
             // Library Size in Bytes
             $params = [];
-            $sql = 'SELECT IFNULL(SUM(FileSize), 0) AS SumSize, type FROM `media`';
+            $sql = 'SELECT IFNULL(SUM(FileSize), 0) AS SumSize, type FROM `media` WHERE 1 = 1 ';
             BaseFactory::viewPermissionSql('Xibo\Entity\Media', $sql, $params, '`media`.mediaId', '`media`.userId');
             $sql .= ' GROUP BY type ';
-            $sth = $dbh->prepare($sql, $params);
-            $sth->execute();
+
+            Log::sql($sql, $params);
+
+            $sth = $dbh->prepare($sql);
+            $sth->execute($params);
 
             $results = $sth->fetchAll();
 
@@ -187,8 +190,13 @@ class StatusDashboard extends Base
             // Add an empty one
             $displayGroupIds[] = -1;
 
-            $sth = $dbh->prepare('SELECT IFNULL(COUNT(*), 0) AS count_scheduled FROM `schedule_detail` WHERE :now BETWEEN FromDT AND ToDT AND eventId IN (SELECT eventId FROM `lkscheduledisplaygroup` WHERE displayGroupId IN (' . implode(',', $displayGroupIds) . '))');
-            $sth->execute(array('now' => time()));
+            $sql = 'SELECT IFNULL(COUNT(*), 0) AS count_scheduled FROM `schedule_detail` WHERE :now BETWEEN FromDT AND ToDT AND eventId IN (SELECT eventId FROM `lkscheduledisplaygroup` WHERE displayGroupId IN (' . implode(',', $displayGroupIds) . '))';
+            $params = array('now' => time());
+
+            Log::sql($sql, $params);
+
+            $sth = $dbh->prepare($sql);
+            $sth->execute($params);
 
             $data['nowShowing'] = $sth->fetchColumn(0);
 
