@@ -43,7 +43,8 @@ class WebAuthentication extends Middleware
         // Create a user
         $app->user = new \Xibo\Entity\User();
 
-        // Initialise a theme
+        // Create a function which we will call should the request be for a protected page
+        // and the user not yet be logged in.
         $redirectToLogin = function () use ($app) {
             Log::debug('Request to redirect to login. Ajax = %d', $app->request->isAjax());
             if ($app->request->isAjax()) {
@@ -61,18 +62,16 @@ class WebAuthentication extends Middleware
             }
         };
 
-        // Define a callable to run our hook - curry in the $app object
+        // Define a callable to check the route requested in before.dispatch
         $isAuthorised = function () use ($app, $redirectToLogin) {
             $user = $app->user;
             /* @var \Xibo\Entity\User $user */
-
-            $publicRoutes = array('/login', '/logout', '/clock', '/about', '/login/ping');
 
             // Get the current route pattern
             $resource = $app->router->getCurrentRoute()->getPattern();
 
             // Check to see if this is a public resource (there are only a few, so we have them in an array)
-            if (!in_array($resource, $publicRoutes)) {
+            if (!in_array($resource, $app->publicRoutes)) {
                 $app->public = false;
                 // Need to check
                 if ($user->hasIdentity() && $app->session->isExpired == 0) {

@@ -54,7 +54,6 @@ $app = new \Slim\Slim(array(
 $app->setName('api');
 
 $app->add(new \Xibo\Middleware\Storage());
-$app->add(new \Xibo\Middleware\Theme());
 $app->add(new \Xibo\Middleware\State());
 $app->add(new \Xibo\Middleware\ApiAuthenticationOAuth());
 $app->view(new \Xibo\Middleware\ApiView());
@@ -63,6 +62,12 @@ $app->view(new \Xibo\Middleware\ApiView());
 $app->error(function (\Exception $e) use ($app) {
     $controller = new \Xibo\Controller\Error();
     $controller->handler($e);
+});
+
+// Configure a not found handler
+$app->notFound(function () use ($app) {
+    $controller = new \Xibo\Controller\Error();
+    $controller->notFound();
 });
 
 // oAuth Resource
@@ -83,6 +88,8 @@ $app->server = $server;
 
 // All routes
 require PROJECT_ROOT . '/lib/routes.php';
+
+$app->get('/', '\Xibo\Controller\Login:About');
 
 // Run app
 $app->run();

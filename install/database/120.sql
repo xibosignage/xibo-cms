@@ -387,6 +387,9 @@ DROP TABLE `menuitem`, `menu`;
 
 UPDATE `setting` SET options = 'Emergency|Alert|Critical|Error|Warning|Notice|Info|Debug', value = 'Error' WHERE setting = 'audit';
 
+/* Module classnames */
+ALTER TABLE  `module` ADD  `class` VARCHAR( 254 ) NOT NULL;
+
 UPDATE `version` SET `app_ver` = '1.8.0-alpha', `XmdsVersion` = 4, `XlfVersion` = 2;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';
 UPDATE `version` SET `DBVersion` = '120';

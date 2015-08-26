@@ -47,6 +47,7 @@ class Twitter extends Module
             $module = new \Xibo\Entity\Module();
             $module->name = 'Twitter';
             $module->type = 'twitter';
+            $module->class = 'Xibo\Widget\Twitter';
             $module->description = 'Twitter Search Module';
             $module->imageUri = 'forms/library.gif';
             $module->enabled = 1;

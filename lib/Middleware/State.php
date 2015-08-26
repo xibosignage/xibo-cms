@@ -91,6 +91,9 @@ class State extends Middleware
      */
     public static function setState($app)
     {
+        // Set some public routes
+        $app->publicRoutes = array('/login', '/logout', '/clock', '/about', '/login/ping');
+
         // Setup the translations for gettext
         Translate::InitLocale();
 
@@ -146,6 +149,32 @@ class State extends Middleware
             foreach (Config::$logProcessors as $processor) {
                 $app->logWriter->addProcessor($processor);
             }
+        }
+
+        // Set the root Uri
+        $app->rootUri = $app->request->getRootUri() . '/';
+
+        // Static source, so remove index.php from the path
+        // this should only happen if rewrite is disabled
+        $app->rootUri = str_replace('/index.php', '', $app->rootUri);
+
+        switch ($app->getName()) {
+
+            case 'install':
+                $app->rootUri = str_replace('/install', '', $app->rootUri);
+                break;
+
+            case 'api':
+                $app->rootUri = str_replace('/api', '', $app->rootUri);
+                break;
+
+            case 'auth':
+                $app->rootUri = str_replace('/api/authorize', '', $app->rootUri);
+                break;
+
+            case 'maintenance':
+                $app->rootUri = str_replace('/maintenance', '', $app->rootUri);
+                break;
         }
     }
 }

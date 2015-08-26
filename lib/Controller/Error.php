@@ -17,6 +17,60 @@ use Xibo\Helper\Log;
 
 class Error extends Base
 {
+    public function notFound()
+    {
+        $app = $this->getApp();
+
+        Log::debug('Requested an unknown page');
+
+        $message = __('Page not found');
+
+        // Different action depending on the app name
+        switch ($app->getName()) {
+
+            case 'web':
+
+                if ($this->getApp()->request()->isAjax()) {
+                    $this->getState()->hydrate([
+                        'success' => false,
+                        'message' => $message,
+                        'template' => ''
+                    ]);
+                }
+                else {
+                    $app->flashNow('globalError', $message);
+                    $this->getState()->template = 'not-found';
+                }
+
+                $this->render();
+
+                break;
+
+            case 'auth':
+            case 'api':
+            case 'test':
+
+                $this->getState()->hydrate([
+                    'httpStatus' => 404,
+                    'success' => false,
+                    'message' => $message
+                ]);
+
+                $this->render();
+
+                break;
+
+            case 'console':
+            case 'maint':
+
+                // Render the error page.
+                echo $message;
+
+                $app->stop();
+                break;
+        }
+    }
+
     public function handler(\Exception $e)
     {
         $app = $this->getApp();

@@ -93,36 +93,9 @@ class Theme
      */
     public static function uri($uri, $local = false)
     {
-        $app = Slim::getInstance();
+        $rootUri = ($local) ? '' : Slim::getInstance()->rootUri;
 
-        $rootUri = '';
-
-        if (!$local) {
-            $rootUri = $app->request->getScriptName();
-
-            switch ($app->getName()) {
-
-                case 'install':
-                    $rootUri = str_replace('/install', '', $rootUri);
-                    break;
-
-                case 'api':
-                    $rootUri = str_replace('/api', '', $rootUri);
-                    break;
-
-                case 'auth':
-                    $rootUri = str_replace('/api/authorize', '', $rootUri);
-                    break;
-
-                case 'maintenance':
-                    $rootUri = str_replace('/maintenance', '', $rootUri);
-                    break;
-            }
-        }
-
-        if (!$local)
-            $rootUri .= '/';
-
+        // Serve the appropriate theme file
         if (is_dir(PROJECT_ROOT . '/web/theme/' . self::getInstance()->name . '/' . $uri)) {
             return $rootUri . 'theme/' . self::getInstance()->name . '/' . $uri;
         }

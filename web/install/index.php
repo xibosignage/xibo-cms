@@ -61,6 +61,12 @@ $app->error(function (\Exception $e) use ($app) {
     $app->halt(500, 'Sorry there has been an unexpected error. ' . $e->getMessage());
 });
 
+// Configure a not found handler
+$app->notFound(function () use ($app) {
+    $controller = new \Xibo\Controller\Error();
+    $controller->notFound();
+});
+
 // Twig templating
 $twig = new \Slim\Views\Twig();
 $twig->parserOptions = array(
