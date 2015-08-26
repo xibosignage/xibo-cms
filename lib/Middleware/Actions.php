@@ -67,8 +67,8 @@ class Actions extends Middleware
                 $app->redirectTo('upgrade.view');
             }
 
-            if ($app->user->userTypeId == 1 && file_exists('install.php')) {
-                Log::info('Install.php exists and shouldnt');
+            if ($app->user->userTypeId == 1 && file_exists(PROJECT_ROOT . '/web/install/index.php')) {
+                Log::info('Install.php exists and shouldn\'t');
 
                 $app->view()->appendData(['notifications' => [__('There is a problem with this installation. "install.php" should be deleted.')]]);
             }
