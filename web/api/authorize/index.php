@@ -54,7 +54,6 @@ $app = new \Slim\Slim(array(
 $app->setName('auth');
 
 $app->add(new \Xibo\Middleware\Storage());
-$app->add(new \Xibo\Middleware\Theme());
 $app->add(new \Xibo\Middleware\State());
 $app->view(new \Xibo\Middleware\ApiView());
 

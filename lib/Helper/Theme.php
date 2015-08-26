@@ -98,7 +98,15 @@ class Theme
         $rootUri = '';
 
         if (!$local) {
-            $rootUri = $app->request->getScriptName();
+            $rootUri = $app->request->getRootUri();
+
+            // If the root uri is empty, then assume we're at base.
+            if ($rootUri == '')
+                $rootUri = '/';
+
+            // Static source, so remove index.php from the path
+            // this should only happen if rewrite is disabled
+            $rootUri = str_replace('index.php', '', $rootUri);
 
             switch ($app->getName()) {
 
@@ -120,12 +128,7 @@ class Theme
             }
         }
 
-        // Static source, so remove index.php from the path
-        $rootUri = str_replace('index.php', '', $rootUri);
-
-        if (!$local)
-            $rootUri .= '/';
-
+        // Serve the appropriate theme file
         if (is_dir(PROJECT_ROOT . '/web/theme/' . self::getInstance()->name . '/' . $uri)) {
             return $rootUri . 'theme/' . self::getInstance()->name . '/' . $uri;
         }
