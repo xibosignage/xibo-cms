@@ -1,0 +1,11 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+#}
+
+{# This should be improved to output a nicer not found page #}
+<h1>{{ flash.globalError }} {{ flash.message }}</h1>
+<p>{% trans "Sorry we could not find that page. Please check your URL or press back in your browser" %}</p>

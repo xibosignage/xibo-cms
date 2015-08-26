@@ -150,5 +150,35 @@ class State extends Middleware
                 $app->logWriter->addProcessor($processor);
             }
         }
+
+        // Set the root Uri
+        $app->rootUri = $app->request->getRootUri();
+
+        // If the root uri is empty, then assume we're at base.
+        if ($app->rootUri == '')
+            $app->rootUri = '/';
+
+        // Static source, so remove index.php from the path
+        // this should only happen if rewrite is disabled
+        $app->rootUri = str_replace('index.php', '', $app->rootUri);
+
+        switch ($app->getName()) {
+
+            case 'install':
+                $app->rootUri = str_replace('/install', '', $app->rootUri);
+                break;
+
+            case 'api':
+                $app->rootUri = str_replace('/api', '', $app->rootUri);
+                break;
+
+            case 'auth':
+                $app->rootUri = str_replace('/api/authorize', '', $app->rootUri);
+                break;
+
+            case 'maintenance':
+                $app->rootUri = str_replace('/maintenance', '', $app->rootUri);
+                break;
+        }
     }
 }

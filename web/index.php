@@ -62,12 +62,6 @@ $app = new \Slim\Slim(array(
 ));
 $app->setName('web');
 
-// Configure the Slim error handler
-$app->error(function (\Exception $e) use ($app) {
-    $controller = new \Xibo\Controller\Error();
-    $controller->handler($e);
-});
-
 // Twig templates
 $twig = new \Slim\Views\Twig();
 $twig->parserOptions = array(
@@ -104,6 +98,18 @@ $app->add(new \Xibo\Middleware\CsrfGuard());
 $app->add(new \Xibo\Middleware\Theme());
 $app->add(new \Xibo\Middleware\State());
 $app->add(new \Xibo\Middleware\Storage());
+
+// Configure the Slim error handler
+$app->error(function (\Exception $e) use ($app) {
+    $controller = new \Xibo\Controller\Error();
+    $controller->handler($e);
+});
+
+// Configure a not found handler
+$app->notFound(function () use ($app) {
+    $controller = new \Xibo\Controller\Error();
+    $controller->notFound();
+});
 
 // All application routes
 require PROJECT_ROOT . '/lib/routes-web.php';

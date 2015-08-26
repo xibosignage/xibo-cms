@@ -64,6 +64,12 @@ $app->error(function (\Exception $e) use ($app) {
     $controller->handler($e);
 });
 
+// Configure a not found handler
+$app->notFound(function () use ($app) {
+    $controller = new \Xibo\Controller\Error();
+    $controller->notFound();
+});
+
 // oAuth Resource
 $sessionStorage = new \Xibo\Storage\ApiSessionStorage();
 $accessTokenStorage = new \Xibo\Storage\ApiAccessTokenStorage();
@@ -82,6 +88,8 @@ $app->server = $server;
 
 // All routes
 require PROJECT_ROOT . '/lib/routes.php';
+
+$app->get('/', '\Xibo\Controller\Login:About');
 
 // Run app
 $app->run();

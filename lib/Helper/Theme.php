@@ -93,40 +93,7 @@ class Theme
      */
     public static function uri($uri, $local = false)
     {
-        $app = Slim::getInstance();
-
-        $rootUri = '';
-
-        if (!$local) {
-            $rootUri = $app->request->getRootUri();
-
-            // If the root uri is empty, then assume we're at base.
-            if ($rootUri == '')
-                $rootUri = '/';
-
-            // Static source, so remove index.php from the path
-            // this should only happen if rewrite is disabled
-            $rootUri = str_replace('index.php', '', $rootUri);
-
-            switch ($app->getName()) {
-
-                case 'install':
-                    $rootUri = str_replace('/install', '', $rootUri);
-                    break;
-
-                case 'api':
-                    $rootUri = str_replace('/api', '', $rootUri);
-                    break;
-
-                case 'auth':
-                    $rootUri = str_replace('/api/authorize', '', $rootUri);
-                    break;
-
-                case 'maintenance':
-                    $rootUri = str_replace('/maintenance', '', $rootUri);
-                    break;
-            }
-        }
+        $rootUri = ($local) ? '' : Slim::getInstance()->rootUri;
 
         // Serve the appropriate theme file
         if (is_dir(PROJECT_ROOT . '/web/theme/' . self::getInstance()->name . '/' . $uri)) {

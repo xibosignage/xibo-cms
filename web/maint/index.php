@@ -63,6 +63,12 @@ $app->error(function (\Exception $e) use ($app) {
     $controller->handler($e);
 });
 
+// Configure a not found handler
+$app->notFound(function () use ($app) {
+    $controller = new \Xibo\Controller\Error();
+    $controller->notFound();
+});
+
 // All routes
 $app->get('/', '\Xibo\Controller\Maintenance:run');
 
