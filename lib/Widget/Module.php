@@ -407,7 +407,7 @@ abstract class Module implements ModuleInterface
         $isPreview = (Sanitize::getCheckbox('preview') == 1);
 
         if ($isPreview)
-            $uri = $this->getApp()->urlFor('home') . 'modules/' . $uri;
+            $uri = str_replace('index.php', '', $this->getApp()->urlFor('home')) . 'modules/' . $uri;
         else
             $uri = basename($uri);
 
