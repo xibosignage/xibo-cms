@@ -91,6 +91,9 @@ class State extends Middleware
      */
     public static function setState($app)
     {
+        // Set some public routes
+        $app->publicRoutes = array('/login', '/logout', '/clock', '/about', '/login/ping');
+
         // Setup the translations for gettext
         Translate::InitLocale();
 

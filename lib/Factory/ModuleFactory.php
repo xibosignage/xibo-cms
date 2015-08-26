@@ -34,6 +34,22 @@ use Xibo\Storage\PDOConnect;
 class ModuleFactory extends BaseFactory
 {
     /**
+     * Instantiate
+     * @param Module $module
+     * @return \Xibo\Widget\Module
+     */
+    private static function instantiate($module)
+    {
+        $className = $module->class;
+
+        /* @var \Xibo\Widget\Module $object */
+        $object = new $className();
+        $object->setModule($module);
+
+        return $object;
+    }
+
+    /**
      * Create a Module
      * @param string $type
      * @return \Xibo\Widget\Module
@@ -47,15 +63,7 @@ class ModuleFactory extends BaseFactory
             throw new NotFoundException(sprintf(__('Unknown type %s'), $type));
 
         // Create a module
-        $module = $modules[0];
-
-        $type = 'Xibo\Widget\\' . $module->type;
-
-        $type = new $type();
-        /* @var \Xibo\Widget\Module $type */
-        $type->setModule($module);
-
-        return $type;
+        return self::instantiate($modules[0]);
     }
 
     /**
@@ -80,16 +88,7 @@ class ModuleFactory extends BaseFactory
      */
     public static function createById($moduleId)
     {
-        // Create a module
-        $module = ModuleFactory::getById($moduleId);
-
-        $moduleId = 'Xibo\Widget\\' . $module->type;
-
-        $moduleId = new $moduleId();
-        /* @var \Xibo\Widget\Module $moduleId */
-        $moduleId->setModule($module);
-
-        return $moduleId;
+        return self::instantiate(ModuleFactory::getById($moduleId));
     }
 
     /**
@@ -110,19 +109,12 @@ class ModuleFactory extends BaseFactory
         $widget->assignMedia($media->mediaId);
 
         // Create a module
+        /* @var \Xibo\Widget\Module $object */
         $module = $modules[0];
+        $object = self::instantiate($module);
+        $object->setWidget($widget);
 
-        // TODO: move this into the module itself (i.e. all modules have a namespace)
-        $type = 'Xibo\Widget\\' . ucfirst($module->type);
-
-        Log::debug('Creating module with type %s', $type);
-        $type = new $type();
-
-        /* @var \Xibo\Widget\Module $type */
-        $type->setModule($module);
-        $type->setWidget($widget);
-
-        return $type;
+        return $object;
     }
 
     /**
@@ -307,7 +299,8 @@ class ModuleFactory extends BaseFactory
                    PreviewEnabled,
                    assignable,
                    SchemaVersion,
-                   viewPath ';
+                   viewPath,
+                   `class` ';
 
             $body = '
                   FROM `module`
@@ -375,12 +368,15 @@ class ModuleFactory extends BaseFactory
                 $module->validExtensions = Sanitize::string($row['ValidExtensions']);
                 $module->imageUri = Sanitize::string($row['ImageUri']);
                 $module->renderAs = Sanitize::string($row['render_as']);
-                $module->type = strtolower(Sanitize::string($row['Module']));
                 $module->enabled = Sanitize::int($row['Enabled']);
                 $module->regionSpecific = Sanitize::int($row['RegionSpecific']);
                 $module->previewEnabled = Sanitize::int($row['PreviewEnabled']);
                 $module->assignable = Sanitize::int($row['assignable']);
                 $module->schemaVersion = Sanitize::int($row['SchemaVersion']);
+
+                // Identification
+                $module->class = Sanitize::string($row['class']);
+                $module->type = Sanitize::string($row['Module']);
                 $module->viewPath = Sanitize::string($row['viewPath']);
 
                 $settings = $row['settings'];

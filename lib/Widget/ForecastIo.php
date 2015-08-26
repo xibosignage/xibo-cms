@@ -56,6 +56,7 @@ class ForecastIo extends Module
             $module = new \Xibo\Entity\Module();
             $module->name = 'Forecast IO';
             $module->type = 'forecastio';
+            $module->class = 'Xibo\Widget\ForecastIo';
             $module->description = 'Weather forecasting from Forecast IO';
             $module->imageUri = 'forms/library.gif';
             $module->enabled = 1;

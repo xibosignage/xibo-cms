@@ -120,6 +120,9 @@ class Theme
             }
         }
 
+        // Static source, so remove index.php from the path
+        $rootUri = str_replace('index.php', '', $rootUri);
+
         if (!$local)
             $rootUri .= '/';
 

@@ -114,6 +114,12 @@ class Module implements \JsonSerializable
     public $schemaVersion;
 
     /**
+     * @SWG\Property(description="Class Name including namespace")
+     * @var string
+     */
+    public $class;
+
+    /**
      * @SWG\Property(description="The Twig View path for module specific templates")
      * @var string
      */
@@ -144,9 +150,9 @@ class Module implements \JsonSerializable
     {
         $this->moduleId = PDOConnect::insert('
           INSERT INTO `module` (`Module`, `Name`, `Enabled`, `RegionSpecific`, `Description`,
-                `ImageUri`, `SchemaVersion`, `ValidExtensions`, `PreviewEnabled`, `assignable`, `render_as`, `settings`, `viewPath`)
+                `ImageUri`, `SchemaVersion`, `ValidExtensions`, `PreviewEnabled`, `assignable`, `render_as`, `settings`, `viewPath`, `class`)
             VALUES (:module, :name, :enabled, :region_specific, :description,
-                :image_uri, :schema_version, :valid_extensions, :preview_enabled, :assignable, :render_as, :settings, :viewPath)
+                :image_uri, :schema_version, :valid_extensions, :preview_enabled, :assignable, :render_as, :settings, :viewPath, :class)
         ', [
             'module' => $this->type,
             'name' => $this->name,
@@ -160,7 +166,8 @@ class Module implements \JsonSerializable
             'assignable' => $this->assignable,
             'render_as' => $this->renderAs,
             'settings' => json_encode($this->settings),
-            'viewPath' => $this->viewPath
+            'viewPath' => $this->viewPath,
+            'class' => $this->class
         ]);
     }
 
