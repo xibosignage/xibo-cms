@@ -152,15 +152,11 @@ class State extends Middleware
         }
 
         // Set the root Uri
-        $app->rootUri = $app->request->getRootUri();
-
-        // If the root uri is empty, then assume we're at base.
-        if ($app->rootUri == '')
-            $app->rootUri = '/';
+        $app->rootUri = $app->request->getRootUri() . '/';
 
         // Static source, so remove index.php from the path
         // this should only happen if rewrite is disabled
-        $app->rootUri = str_replace('index.php', '', $app->rootUri);
+        $app->rootUri = str_replace('/index.php', '', $app->rootUri);
 
         switch ($app->getName()) {
 
