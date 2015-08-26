@@ -134,6 +134,12 @@ class ForecastIo extends Module
         return $this->module->settings['templates'];
     }
 
+    public function validate()
+    {
+        if ($this->getDuration() == 0)
+            throw new \InvalidArgumentException(__('Please enter a duration'));
+    }
+
     /**
      * Add Media to the Database
      */
@@ -159,6 +165,7 @@ class ForecastIo extends Module
         $this->setRawNode('dailyTemplate', Sanitize::getParam('dailyTemplate', null));
 
         // Save the widget
+        $this->validate();
         $this->saveWidget();
     }
 
@@ -187,6 +194,7 @@ class ForecastIo extends Module
         $this->setRawNode('dailyTemplate', Sanitize::getParam('dailyTemplate', null));
 
         // Save the widget
+        $this->validate();
         $this->saveWidget();
     }
 
@@ -278,7 +286,7 @@ class ForecastIo extends Module
         $defaultLat = Config::getSetting('DEFAULT_LAT');
         $defaultLong = Config::getSetting('DEFAULT_LONG');
 
-        if ($this->GetOption('useDisplayLocation') == 1) {
+        if ($this->getOption('useDisplayLocation') == 1) {
             // Use the display ID or the default.
             if ($displayId != 0) {
 
@@ -287,8 +295,8 @@ class ForecastIo extends Module
                 $defaultLong = $display->longitude;
             }
         } else {
-            $defaultLat = $this->GetOption('latitude', $defaultLat);
-            $defaultLong = $this->GetOption('longitude', $defaultLong);
+            $defaultLat = $this->getOption('latitude', $defaultLat);
+            $defaultLong = $this->getOption('longitude', $defaultLong);
         }
 
         $apiKey = $this->getSetting('apiKey');
@@ -296,7 +304,7 @@ class ForecastIo extends Module
             die(__('Incorrectly configured module'));
 
         // Query the API and Dump the Results.
-        $apiOptions = array('units' => $this->GetOption('units', 'auto'), 'lang' => $this->GetOption('lang', 'en'), 'exclude' => 'flags,minutely,hourly');
+        $apiOptions = array('units' => $this->getOption('units', 'auto'), 'lang' => $this->getOption('lang', 'en'), 'exclude' => 'flags,minutely,hourly');
         $key = md5($defaultLat . $defaultLong . 'null' . implode('.', $apiOptions));
 
         if (!Cache::has($key)) {
@@ -335,14 +343,14 @@ class ForecastIo extends Module
         // Temperature Unit Mappings
         $temperatureUnit = '';
         foreach ($this->unitsAvailable() as $unit) {
-            if ($unit['id'] == $this->GetOption('units', 'auto')) {
+            if ($unit['id'] == $this->getOption('units', 'auto')) {
                 $temperatureUnit = $unit['tempUnit'];
                 break;
             }
         }
 
         // Are we set to only show daytime weather conditions?
-        if ($this->GetOption('dayConditionsOnly') == 1) {
+        if ($this->getOption('dayConditionsOnly') == 1) {
             if ($data->currently->icon == 'partly-cloudy-night')
                 $data->currently->icon = 'clear-day';
         }
@@ -359,7 +367,7 @@ class ForecastIo extends Module
         // Process the icon for each day
         for ($i = 0; $i < 7; $i++) {
             // Are we set to only show daytime weather conditions?
-            if ($this->GetOption('dayConditionsOnly') == 1) {
+            if ($this->getOption('dayConditionsOnly') == 1) {
                 if ($data['daily']['data'][$i]['icon'] == 'partly-cloudy-night')
                     $data['daily']['data'][$i]['icon'] = 'clear-day';
             }
@@ -390,6 +398,8 @@ class ForecastIo extends Module
 
                 $time = Date::getLocalDate($data['time'], $timeSplit[1]);
 
+                Log::info('Time: ' . $time);
+
                 // Pull time out of the array
                 $source = str_replace($sub, $time, $source);
             } else {
@@ -413,6 +423,12 @@ class ForecastIo extends Module
         if (!$foreCast = $this->getForecastData($displayId))
             return '';
 
+        // Do we need to override the language?
+        // TODO: I don't like this date fix, the library should really check the file exists?
+        if ($this->getOption('lang', 'en') != 'en' && file_exists(PROJECT_ROOT . '/vendor/jenssegers/date/src/Lang/' . $this->getOption('lang') . '.php')) {
+            \Jenssegers\Date\Date::setLocale($this->getOption('lang'));
+        }
+
         $data = [];
         $isPreview = (Sanitize::getCheckbox('preview') == 1);
 
@@ -422,8 +438,8 @@ class ForecastIo extends Module
         $headContent = '
             <link href="' . $this->getResourceUrl('forecastio/weather-icons.min.css') . '" rel="stylesheet" media="screen">
             <style type="text/css">
-                .container { color: ' . $this->GetOption('color', '000') . '; }
-                #content { zoom: ' . $this->GetOption('size', 1) . '; }
+                .container { color: ' . $this->getOption('color', '000') . '; }
+                #content { zoom: ' . $this->getOption('size', 1) . '; }
                 ' . $this->getRawNode('styleSheet', null) . '
             </style>
         ';
@@ -433,7 +449,7 @@ class ForecastIo extends Module
         $headContent .= '<style type="text/css">' . file_get_contents(Theme::uri('css/client.css', true)) . '</style>';
 
         // Replace any icon sets
-        $data['head'] = str_replace('[[ICONS]]', $this->getResourceUrl('forecastio/' . $this->GetOption('icons')), $headContent);
+        $data['head'] = str_replace('[[ICONS]]', $this->getResourceUrl('forecastio/' . $this->getOption('icons')), $headContent);
 
         // Make some body content
         $body = $this->getRawNode('currentTemplate', null);

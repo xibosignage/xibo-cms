@@ -292,6 +292,7 @@ $app->get('/group', '\Xibo\Controller\UserGroup:grid')->name('group.search');
 $app->post('/group', '\Xibo\Controller\UserGroup:add')->name('group.add');
 $app->put('/group/:id', '\Xibo\Controller\UserGroup:edit')->name('group.edit');
 $app->delete('/group/:id', '\Xibo\Controller\UserGroup:delete')->name('group.delete');
+$app->post('/group/:id/copy', '\Xibo\Controller\UserGroup:copy')->name('group.copy');
 
 $app->post('/group/members/assign/:id', '\Xibo\Controller\UserGroup:assignUser')->name('group.members.assign');
 $app->post('/group/members/unassign/:id', '\Xibo\Controller\UserGroup:unassignUser')->name('group.members.unassign');

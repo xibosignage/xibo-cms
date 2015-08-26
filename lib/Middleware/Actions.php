@@ -36,16 +36,6 @@ class Actions extends Middleware
     {
         $app = $this->app;
 
-        // Handle if we are an upgrade
-        // Get the current route pattern
-        $resource = $app->router->getCurrentRoute()->getPattern();
-
-        // Does the version in the DB match the version of the code?
-        // If not then we need to run an upgrade.
-        if (DBVERSION != WEBSITE_VERSION && $resource != '/upgrade') {
-            $app->redirectTo('upgrade.view');
-        }
-
         // Process Actions
         if (Config::GetSetting('DEFAULTS_IMPORTED') == 0) {
 
@@ -67,8 +57,18 @@ class Actions extends Middleware
         // Process notifications
         // Attach a hook to log the route
         $app->hook('slim.before.dispatch', function() use ($app) {
-            if ($app->user->userTypeId == 1 && file_exists('install.php')) {
-                Log::info('Install.php exists and shouldnt');
+            // Handle if we are an upgrade
+            // Get the current route pattern
+            $resource = $app->router->getCurrentRoute()->getPattern();
+
+            // Does the version in the DB match the version of the code?
+            // If not then we need to run an upgrade.
+            if (DBVERSION != WEBSITE_VERSION && $resource != '/upgrade') {
+                $app->redirectTo('upgrade.view');
+            }
+
+            if ($app->user->userTypeId == 1 && file_exists(PROJECT_ROOT . '/web/install/index.php')) {
+                Log::info('Install.php exists and shouldn\'t');
 
                 $app->view()->appendData(['notifications' => [__('There is a problem with this installation. "install.php" should be deleted.')]]);
             }

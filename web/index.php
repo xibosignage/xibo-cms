@@ -44,9 +44,6 @@ Config::Load('settings.php');
 // Log handlers
 $handlers = [new \Xibo\Helper\DatabaseLogHandler()];
 
-if (strtolower(Config::GetSetting('SERVER_MODE')) == 'test')
-    $handlers[] = new \Monolog\Handler\ChromePHPHandler(\Monolog\Logger::INFO);
-
 // Create a logger
 $logger = new \Xibo\Helper\AccessibleMonologWriter(array(
     'name' => 'WEB',
@@ -87,9 +84,22 @@ $twig->twigTemplateDirs = array_merge(\Xibo\Factory\ModuleFactory::getViewPaths(
 
 $app->view($twig);
 
-// Middleware (onion, outside inwards and then out again - i.e. the last one is first and last)
+// Middleware (onion, outside inwards and then out again - i.e. the last one is first and last);
+if (Config::$middleware != null && is_array(Config::$middleware)) {
+    foreach (Config::$middleware as $object) {
+        $app->add($object);
+    }
+}
+
 $app->add(new \Xibo\Middleware\Actions());
-$app->add(new \Xibo\Middleware\WebAuthentication());
+
+// Authentication middleware
+if (Config::$authentication != null && Config::$authentication instanceof \Slim\Middleware)
+    $app->add(Config::$authentication);
+else
+    $app->add(new \Xibo\Middleware\WebAuthentication());
+
+// Standard Xibo middleware
 $app->add(new \Xibo\Middleware\CsrfGuard());
 $app->add(new \Xibo\Middleware\Theme());
 $app->add(new \Xibo\Middleware\State());

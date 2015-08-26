@@ -98,6 +98,17 @@ class UserGroup extends Base
                     'text' => __('Delete')
                 );
 
+                $group->buttons[] = ['divider' => true];
+
+                // Copy
+                $group->buttons[] = array(
+                    'id' => 'usergroup_button_copy',
+                    'url' => $this->urlFor('group.copy.form', ['id' => $group->groupId]),
+                    'text' => __('Copy')
+                );
+
+                $group->buttons[] = ['divider' => true];
+
                 // Members
                 $group->buttons[] = array(
                     'id' => 'usergroup_button_members',
@@ -489,6 +500,97 @@ class UserGroup extends Base
         $this->getState()->hydrate([
             'message' => sprintf(__('Membership set for %s'), $group->group),
             'id' => $group->groupId
+        ]);
+    }
+
+    /**
+     * Form to Copy Group
+     * @param int $groupId
+     */
+    function copyForm($groupId)
+    {
+        $group = UserGroupFactory::getById($groupId);
+
+        if (!$this->getUser()->checkViewable($group))
+            throw new AccessDeniedException();
+
+        $this->getState()->template = 'usergroup-form-copy';
+        $this->getState()->setData([
+            'group' => $group
+        ]);
+    }
+
+    /**
+     * @SWG\Post(
+     *  path="/group/{userGroupId}/copy",
+     *  operationId="userGroupCopy",
+     *  tags={"usergroup"},
+     *  summary="Copy User Group",
+     *  description="Copy an user group, optionally copying the group members",
+     *  @SWG\Parameter(
+     *      name="userGroupId",
+     *      in="path",
+     *      description="The User Group ID to Copy",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="group",
+     *      in="formData",
+     *      description="The Group Name",
+     *      type="string",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="copyMembers",
+     *      in="formData",
+     *      description="Flag indicating whether to copy group members",
+     *      type="integer",
+     *      required="false"
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/UserGroup"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new record",
+     *          type="string"
+     *      )
+     *  )
+     * )
+     *
+     * @param int $userGroupId
+     */
+    public function copy($userGroupId)
+    {
+        $group = UserGroupFactory::getById($userGroupId);
+
+        // Check we have permission to view this group
+        if (!$this->getUser()->checkViewable($group))
+            throw new AccessDeniedException();
+
+        // Clone the group
+        $group->load([
+            'loadUsers' => (Sanitize::getCheckbox('copyMembers') == 1)
+        ]);
+        $newGroup = clone $group;
+        $newGroup->group = Sanitize::getString('group');
+        $newGroup->save();
+
+        // Copy permissions
+        foreach (PermissionFactory::getByGroupId('Page', $group->groupId) as $permission) {
+            /* @var Permission $permission */
+            $permission = clone $permission;
+            $permission->groupId = $newGroup->groupId;
+            $permission->save();
+        }
+
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('Copied %s'), $group->group),
+            'id' => $newGroup->groupId,
+            'data' => $newGroup
         ]);
     }
 }

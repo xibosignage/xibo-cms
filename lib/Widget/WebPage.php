@@ -174,11 +174,6 @@ class WebPage extends Module
         return $this->renderTemplate($data);
     }
 
-    public function getName()
-    {
-        return $this->getOption('name');
-    }
-
     public function IsValid()
     {
         // Can't be sure because the client does the rendering

@@ -599,11 +599,11 @@ class Layout extends Base
                     'text' => __('Retire'),
                     'multi-select' => true,
                     'dataAttributes' => array(
-                        array('name' => 'multiselectlink', 'value' => 'index.php?p=layout&q=Retire'),
+                        array('name' => 'commit-url', 'value' => $this->urlFor('layout.retire', ['id' => $layout->layoutId])),
+                        array('name' => 'commit-method', 'value' => 'put'),
                         array('name' => 'id', 'value' => 'layout_button_retire'),
                         array('name' => 'text', 'value' => __('Retire')),
-                        array('name' => 'rowtitle', 'value' => $layout->layout),
-                        array('name' => 'layoutid', 'value' => $layout->layoutId)
+                        array('name' => 'rowtitle', 'value' => $layout->layout)
                     )
                 );
 
@@ -616,11 +616,11 @@ class Layout extends Base
                         'text' => __('Delete'),
                         'multi-select' => true,
                         'dataAttributes' => array(
-                            array('name' => 'multiselectlink', 'value' => 'index.php?p=layout&q=delete'),
+                            array('name' => 'commit-url', 'value' => $this->urlFor('layout.delete', ['id' => $layout->layoutId])),
+                            array('name' => 'commit-method', 'value' => 'delete'),
                             array('name' => 'id', 'value' => 'layout_button_delete'),
                             array('name' => 'text', 'value' => __('Delete')),
-                            array('name' => 'rowtitle', 'value' => $layout->layout),
-                            array('name' => 'layoutid', 'value' => $layout->layoutId)
+                            array('name' => 'rowtitle', 'value' => $layout->layout)
                         )
                     );
                 }

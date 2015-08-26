@@ -21,7 +21,10 @@
 namespace Xibo\Controller;
 use Exception;
 use SimplePie;
+use Xibo\Factory\BaseFactory;
 use Xibo\Factory\DisplayFactory;
+use Xibo\Factory\DisplayGroupFactory;
+use Xibo\Factory\UserFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\Config;
 use Xibo\Helper\Date;
@@ -39,14 +42,28 @@ class StatusDashboard extends Base
         // Set up some suffixes
         $suffixes = array('bytes', 'k', 'M', 'G', 'T');
 
-        // Get some data for a bandwidth chart
         try {
+            // Displays this user has access to
+            $displays = DisplayFactory::query(['display']);
+            $displayIds = array_map(function($element) {
+                return $element->displayId;
+            }, $displays);
+            $displayIds[] = -1;
+
+            // Get some data for a bandwidth chart
             $dbh = PDOConnect::init();
 
-            $sth = $dbh->prepare('SELECT FROM_UNIXTIME(month) AS month, IFNULL(SUM(Size), 0) AS size FROM `bandwidth` WHERE month > :month GROUP BY FROM_UNIXTIME(month) ORDER BY MIN(month);');
-            $sth->execute(array('month' => time() - (86400 * 365)));
+            $sql = '
+              SELECT FROM_UNIXTIME(month) AS month,
+                  IFNULL(SUM(Size), 0) AS size
+                FROM `bandwidth`
+               WHERE month > :month AND displayId IN (' . implode(',', $displayIds) . ')
+              GROUP BY FROM_UNIXTIME(month) ORDER BY MIN(month);
+              ';
+            $params = array('month' => time() - (86400 * 365));
 
-            $results = $sth->fetchAll();
+            Log::sql($sql, $params);
+            $results = PDOConnect::select($sql, $params);
 
             // Monthly bandwidth - optionally tested against limits
             $xmdsLimit = Config::GetSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB');
@@ -92,12 +109,23 @@ class StatusDashboard extends Base
             $data['bandwidthWidget'] = json_encode($output);
 
             // We would also like a library usage pie chart!
-            $libraryLimit = Config::GetSetting('LIBRARY_SIZE_LIMIT_KB');
-            $libraryLimit = $libraryLimit * 1024;
+            if ($this->getUser()->libraryQuota != 0) {
+                $libraryLimit = $this->getUser()->libraryQuota * 1024;
+            }
+            else {
+                $libraryLimit = Config::GetSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
+            }
 
             // Library Size in Bytes
-            $sth = $dbh->prepare('SELECT IFNULL(SUM(FileSize), 0) AS SumSize, type FROM media GROUP BY type;');
-            $sth->execute();
+            $params = [];
+            $sql = 'SELECT IFNULL(SUM(FileSize), 0) AS SumSize, type FROM `media` WHERE 1 = 1 ';
+            BaseFactory::viewPermissionSql('Xibo\Entity\Media', $sql, $params, '`media`.mediaId', '`media`.userId');
+            $sql .= ' GROUP BY type ';
+
+            Log::sql($sql, $params);
+
+            $sth = $dbh->prepare($sql);
+            $sth->execute($params);
 
             $results = $sth->fetchAll();
 
@@ -149,17 +177,26 @@ class StatusDashboard extends Base
             $data['libraryWidget'] = json_encode($output);
 
             // Also a display widget
-            $data['displays'] = DisplayFactory::query(['display']);
+            $data['displays'] = $displays;
 
             // Get a count of users
-            $sth = $dbh->prepare('SELECT IFNULL(COUNT(*), 0) AS count_users FROM `user`');
-            $sth->execute();
+            $data['countUsers'] = count(UserFactory::query());
 
-            $data['countUsers'] = $sth->fetchColumn(0);
+            // Get a count of active layouts, only for display groups we have permission for
+            $displayGroups = DisplayGroupFactory::query(null, ['isDisplaySpecific' => -1]);
+            $displayGroupIds = array_map(function($element) {
+                return $element->displayGroupId;
+            }, $displayGroups);
+            // Add an empty one
+            $displayGroupIds[] = -1;
 
-            // Get a count of active layouts
-            $sth = $dbh->prepare('SELECT IFNULL(COUNT(*), 0) AS count_scheduled FROM `schedule_detail` WHERE :now BETWEEN FromDT AND ToDT');
-            $sth->execute(array('now' => time()));
+            $sql = 'SELECT IFNULL(COUNT(*), 0) AS count_scheduled FROM `schedule_detail` WHERE :now BETWEEN FromDT AND ToDT AND eventId IN (SELECT eventId FROM `lkscheduledisplaygroup` WHERE displayGroupId IN (' . implode(',', $displayGroupIds) . '))';
+            $params = array('now' => time());
+
+            Log::sql($sql, $params);
+
+            $sth = $dbh->prepare($sql);
+            $sth->execute($params);
 
             $data['nowShowing'] = $sth->fetchColumn(0);
 

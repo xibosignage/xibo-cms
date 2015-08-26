@@ -33,6 +33,11 @@ class Config
     public $envFault;
     public $envWarning;
 
+    public static $logHandlers = null;
+    public static $logProcessors = null;
+    public static $middleware = null;
+    public static $authentication = null;
+
     public function __construct()
     {
         // Populate an array of loaded extensions just in case we need it for something.
@@ -54,6 +59,16 @@ class Config
         include ($settings);
 
         Config::Version();
+
+        // Pull in other settings
+        if (isset($logHandlers))
+            Config::$logHandlers = $logHandlers;
+        if (isset($logProcessors))
+            Config::$logProcessors = $logProcessors;
+        if (isset($middleware))
+            Config::$middleware = $middleware;
+        if (isset($authentication))
+            Config::$authentication = $authentication;
 
         // Configure the timezone information
         date_default_timezone_set(Config::GetSetting("defaultTimezone"));
