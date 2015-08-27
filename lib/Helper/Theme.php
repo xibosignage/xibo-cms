@@ -106,4 +106,9 @@ class Theme
             return $rootUri . 'theme/default/' . $uri;
         }
     }
+
+    public static function rootUri()
+    {
+        return Slim::getInstance()->rootUri;
+    }
 }
