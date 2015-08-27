@@ -336,11 +336,19 @@ class Campaign extends Base
      *      required="true"
      *   ),
      *  @SWG\Parameter(
-     *      name="layoutIds",
+     *      name="layoutId",
      *      in="formData",
      *      description="Array of Layout IDs to Assign",
      *      type="array",
      *      required="true",
+     *      @SWG\Items(type="integer")
+     *   ),
+     *  @SWG\Parameter(
+     *      name="unassignLayoutId",
+     *      in="formData",
+     *      description="Array of Layout IDs to unassign",
+     *      type="array",
+     *      required="false",
      *      @SWG\Items(type="integer")
      *   ),
      *  @SWG\Response(
@@ -358,13 +366,8 @@ class Campaign extends Base
         if (!$this->getUser()->checkEditable($campaign))
             throw new AccessDeniedException();
 
-        $layouts = Sanitize::getIntArray('layoutIds');
-
-        if (count($layouts) <= 0)
-            throw new \InvalidArgumentException(__('Layouts not provided'));
-
         // Check our permissions to see each one
-        foreach ($layouts as $layoutId) {
+        foreach (Sanitize::getIntArray('layoutId') as $layoutId) {
 
             $layout = LayoutFactory::getById($layoutId);
 
@@ -375,6 +378,19 @@ class Campaign extends Base
             $campaign->assignLayout($layout);
         }
 
+        // Run through the layouts to unassign
+        foreach (Sanitize::getIntArray('unassignLayoutId') as $layoutId) {
+
+            $layout = LayoutFactory::getById($layoutId);
+
+            if (!$this->getUser()->checkViewable($layout))
+                throw new AccessDeniedException(__('You do not have permission to assign the provided Layout'));
+
+            // Assign it
+            $campaign->unassignLayout($layout);
+        }
+
+        // Save the campaign
         $campaign->save(false);
 
         // Return

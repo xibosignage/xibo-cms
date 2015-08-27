@@ -573,7 +573,7 @@ function mediaFormCallBack() {
             var newItem = $("<li/>", {
                 "text": data.name,
                 "data-media-id": data.mediaId,
-                "class": "li-sortable"
+                "class": "btn btn-sm btn-default"
             });
 
             newItem.appendTo("#FileAssociationsSortable");
@@ -582,8 +582,8 @@ function mediaFormCallBack() {
             $("<span/>", {
                 "class": "glyphicon glyphicon-minus-sign",
                 click: function(){
-                    $(this).parent().remove();
                     container.data().media[$(this).parent().data().mediaId] = 0;
+                    $(this).parent().remove();
                 }
             }).appendTo(newItem);
         });
