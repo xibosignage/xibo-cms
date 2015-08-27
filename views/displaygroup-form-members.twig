@@ -32,7 +32,7 @@
                     data-param-unassign="unassignDisplayId"
                     data-url="{{ urlFor("displayGroup.assign.display", {id: displayGroup.displayGroupId}) }}"
                     >
-                {% set helpText %}{% trans %}Check or un-check the options against each user to control whether they are a member of not.{% endtrans %}{% endset %}
+                {% set helpText %}{% trans %}Check or un-check the options against each display to control whether they are a member of not.{% endtrans %}{% endset %}
                 {{ forms.message(helpText) }}
                 <table class="table table-bordered membersTable">
                     <tr>

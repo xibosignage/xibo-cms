@@ -7,6 +7,8 @@
 
 #}
 
+{% set randomId = random() %}
+
 {% extends "form-base.twig" %}
 {% import "forms.twig" as forms %}
 
@@ -17,16 +19,22 @@
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help.permissions }}")
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, $("#MembersForm").submit()
+    {% trans "Save" %}, membersFormSubmit("{{ randomId }}")
 {% endblock %}
+
+{% block callBack %}membersFormOpen{% endblock %}
 
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="MembersForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("group.members.assign", {id: group.groupId}) }}">
+            <div id="{{ randomId }}" class="div-horizontal"
+                 data-param="userId"
+                 data-param-unassign="unassignUserId"
+                 data-url="{{ urlFor("group.members.assign", {id: group.groupId}) }}"
+                    >
                 {% set helpText %}{% trans %}Check or un-check the options against each user to control whether they are a member of not.{% endtrans %}{% endset %}
                 {{ forms.message(helpText) }}
-                <table class="table table-bordered">
+                <table class="table table-bordered membersTable">
                     <tr>
                         <th>{{ group.group }}</th>
                         <th>{% trans "Member" %}</th>
@@ -34,11 +42,11 @@
                     {% for item in checkboxes %}
                         <tr>
                             <td>{{ item.name }}</td>
-                            <td><input type="checkbox" name="userId[]" value="{{ item.id }}" {{ item.value_checked }}></td>
+                            <td><input type="checkbox" data-member-id="{{ item.id }}" {{ item.value_checked }}></td>
                         </tr>
                     {% endfor %}
                 </table>
-            </form>
+            </div>
         </div>
     </div>
 {% endblock %}
