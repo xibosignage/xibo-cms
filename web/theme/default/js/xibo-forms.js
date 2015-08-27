@@ -475,7 +475,7 @@ function membersFormOpen(dialog) {
         var memberId = $(this).data().memberId;
         var value = $(this).is(":checked");
 
-        console.log("Setting memberId: " + memberId + ". Value: " + value);
+        //console.log("Setting memberId: " + memberId + ". Value: " + value);
 
         table.data().members[memberId] = (value) ? 1 : 0;
     });
@@ -523,3 +523,115 @@ function membersFormSubmit(id) {
         }
     });
 }
+
+// Callback for the media form
+function mediaFormCallBack() {
+
+    var container = $("#FileAssociationsAssign");
+    if (container.data().media == undefined)
+        container.data().media = {};
+
+    var mediaTable = $("#mediaAssignments").DataTable({
+            serverSide: true,
+            searchDelay: 3000,
+            "order": [[ 0, "asc"]],
+            "filter": false,
+            ajax: {
+                "url": $("#mediaAssignments").data().url,
+            "data": function(d) {
+                $.extend(d, $("#mediaAssignments").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+            }
+        },
+        "columns": [
+            { "data": "name" },
+            { "data": "mediaType" },
+            {
+                "sortable": false,
+                "data": function(data, type, row, meta) {
+                    if (type != "display")
+                        return "";
+
+                    // Create a click-able span
+                    return "<a href=\"#\" class=\"assignItem\"><span class=\"glyphicon glyphicon-plus-sign\"></a>";
+                }
+            }
+        ]
+    });
+
+    mediaTable.on('draw', function (e, settings) {
+        dataTableDraw(e, settings);
+
+        // Clicky on the +spans
+        $(".assignItem", "#mediaAssignments").click(function() {
+            // Get the row that this is in.
+            var data = mediaTable.row($(this).closest("tr")).data();
+
+            // Append to our media list
+            container.data().media[data.mediaId] = 1;
+
+            // Construct a new list item for the lower list and append it.
+            var newItem = $("<li/>", {
+                "text": data.name,
+                "data-media-id": data.mediaId,
+                "class": "li-sortable"
+            });
+
+            newItem.appendTo("#FileAssociationsSortable");
+
+            // Add a span to that new item
+            $("<span/>", {
+                "class": "glyphicon glyphicon-minus-sign",
+                click: function(){
+                    $(this).parent().remove();
+                    container.data().media[$(this).parent().data().mediaId] = 0;
+                }
+            }).appendTo(newItem);
+        });
+    });
+    mediaTable.on('processing.dt', dataTableProcessing);
+
+    // Make our little list sortable
+    $("#FileAssociationsSortable").sortable();
+
+    // Bind to the existing items in the list
+    $("#FileAssociationsSortable").find('li span').click(function () {
+        container.data().media[$(this).parent().data().mediaId] = 0;
+        $(this).parent().remove();
+    });
+
+    // Bind to the filter
+    $("#mediaAssignments").closest(".XiboGrid").find(".FilterDiv input, .FilterDiv select").change(function() {
+        mediaTable.ajax.reload();
+    });
+}
+
+function mediaAssignSubmit() {
+    // Collect our media
+    var container = $("#FileAssociationsAssign");
+
+    // Build an array of id's to assign and an array to unassign
+    var assign = [];
+    var unassign = [];
+
+    $.each(container.data().media, function(name, value) {
+        if (value == 1)
+            assign.push(name);
+        else
+            unassign.push(name);
+    });
+
+    assignMediaToCampaign(container.data().url, assign, unassign);
+}
+
+var assignMediaToCampaign = function(url, media, unassignMedia) {
+    toastr.info("Assign Media", media);
+
+    $.ajax({
+        type: "post",
+        url: url,
+        cache: false,
+        dataType: "json",
+        data: {mediaId: media, unassignMediaId: unassignMedia},
+        success: XiboSubmitResponse
+    });
+};

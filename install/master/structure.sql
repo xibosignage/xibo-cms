@@ -363,7 +363,8 @@ CREATE TABLE IF NOT EXISTS `lkmediadisplaygroup` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `mediaid` int(11) NOT NULL,
   `displaygroupid` int(11) NOT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `mediaid` (`mediaid`,`displaygroupid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='File associations directly to Display Groups' AUTO_INCREMENT=1 ;
 
 -- --------------------------------------------------------

@@ -572,6 +572,16 @@ class DisplayGroup extends Base
      *          type="integer"
      *      )
      *  ),
+     *  @SWG\Parameter(
+     *      name="unassignMediaId",
+     *      type="array",
+     *      in="formData",
+     *      description="Optional array of Media Id to unassign",
+     *      required="false",
+     *      @SWG\Items(
+     *          type="integer"
+     *      )
+     *  ),
      *  @SWG\Response(
      *      response=204,
      *      description="successful operation"
@@ -588,7 +598,7 @@ class DisplayGroup extends Base
         // Load the groups details
         $displayGroup->load();
 
-        $mediaIds = Sanitize::getIntArray('mediaIds');
+        $mediaIds = Sanitize::getIntArray('mediaId');
 
         // Loop through all the media
         foreach ($mediaIds as $mediaId) {
@@ -599,6 +609,17 @@ class DisplayGroup extends Base
                 throw new AccessDeniedException(__('You have selected media that you no longer have permission to use. Please reload the form.'));
 
             $displayGroup->assignMedia($media);
+        }
+
+        // Check for unassign
+        foreach (Sanitize::getIntArray('unassignMediaId') as $mediaId) {
+            // Get the media record
+            $media = MediaFactory::getById($mediaId);
+
+            if (!$this->getUser()->checkViewable($media))
+                throw new AccessDeniedException(__('You have selected media that you no longer have permission to use. Please reload the form.'));
+
+            $displayGroup->unassignMedia($media);
         }
 
         $displayGroup->save(false);
