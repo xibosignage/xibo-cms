@@ -135,6 +135,34 @@
 
             // Make our little list sortable
             $("#FileAssociationsSortable").sortable();
+
+            // Bind to the filter
+            $("#mediaAssignments").closest(".XiboGrid").find(".FilterDiv input, .FilterDiv select").change(function() {
+                mediaTable.ajax.reload();
+            });
         }
+
+        function mediaAssignSubmit() {
+            // Collect our media
+            var media = [];
+            $("#FileAssociationsSortable > li").each(function() {
+                media.push($(this).data().mediaId);
+            });
+
+            assignMediaToCampaign($("#FileAssociationsAssign").data().url, media);
+        }
+
+        var assignMediaToCampaign = function(url, media) {
+            toastr.info("Assign Media", media);
+
+            $.ajax({
+                type: "post",
+                url: url,
+                cache: false,
+                dataType: "json",
+                data: {mediaIds: media},
+                success: XiboSubmitResponse
+            });
+        };
     </script>
 {% endblock %}

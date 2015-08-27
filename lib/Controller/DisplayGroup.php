@@ -82,7 +82,7 @@ class DisplayGroup extends Base
                 $group->buttons[] = array(
                     'id' => 'displaygroup_button_group_members',
                     'url' => $this->urlFor('displayGroup.members.form', ['id' => $group->displayGroupId]),
-                    'text' => __('Group Members')
+                    'text' => __('Displays')
                 );
 
                 // Edit
@@ -411,6 +411,14 @@ class DisplayGroup extends Base
      *          type="integer"
      *      )
      *  ),
+     *  @SWG\Parameter(
+     *      name="unassignDisplayId",
+     *      in="formData",
+     *      description="An optional array of Display IDs to unassign",
+     *      type="array",
+     *      required="false",
+     *      @SWG\Items(type="integer")
+     *   ),
      *  @SWG\Response(
      *      response=204,
      *      description="successful operation"
@@ -435,6 +443,19 @@ class DisplayGroup extends Base
             $displayGroup->assignDisplay($display);
         }
 
+        // Have we been provided with unassign id's as well?
+        $displays = Sanitize::getIntArray('unassignDisplayId');
+
+        foreach ($displays as $displayId) {
+            $display = DisplayFactory::getById($displayId);
+
+            if (!$this->getUser()->checkViewable(DisplayGroupFactory::getById($display->displayGroupId)))
+                throw new AccessDeniedException(__('Access Denied to Display'));
+
+            $displayGroup->unassignDisplay($display);
+        }
+
+        // Save the result
         $displayGroup->save(false);
 
         // Return

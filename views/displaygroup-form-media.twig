@@ -18,7 +18,7 @@
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, $("#FileAssociationsAssign").submit()    
+    {% trans "Save" %}, mediaAssignSubmit()
 {% endblock %}
 
 {% block callBack %}mediaFormCallBack{% endblock %}
@@ -26,7 +26,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <div id="FileAssociationsAssign" class="well">
+            <div id="FileAssociationsAssign" class="well" data-url="{{ urlFor("displayGroup.assign.media", {id: displayGroup.displayGroupId}) }}">
                 <div>
                     <ul id="FileAssociationsSortable">
                         {% for item in media %}
@@ -40,8 +40,10 @@
     <div class="row">
         <div class="col-md-12">
             <div class="XiboGrid" id="{{ random() }}">
-                <div>
-                    {{ inline.dropdown("filter_type", "single", "Type", "", modules, "moduleId", "name") }}
+                <div class="FilterDiv">
+                    <form onsubmit="false">
+                    {{ inline.dropdown("filter_type", "single", "Type", "", [{type: null, module: ""}]|merge(modules), "type", "name") }}
+                    </form>
                 </div>
                 <div class="XiboData">
                     <table id="mediaAssignments" class="table table-striped">
