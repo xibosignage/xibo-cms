@@ -112,6 +112,11 @@ class DisplayGroupFactory extends BaseFactory
             $params['isDisplaySpecific'] = Sanitize::getInt('isDisplaySpecific', 0, $filterBy);
         }
 
+        if (Sanitize::getInt('displayId', $filterBy) !== null) {
+            $body .= ' AND displaygroup.displayGroupId IN (SELECT displayGroupId FROM lkdisplaydg WHERE displayId = :displayId) ';
+            $params['displayId'] = Sanitize::getInt('displayId', $filterBy);
+        }
+
         /*if ($name != '') {
             // convert into a space delimited array
             $names = explode(' ', $name);

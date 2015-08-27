@@ -617,7 +617,7 @@ class Display extends Base
     {
         $display = DisplayFactory::getById($displayId);
 
-        if (!$this->getUser()->checkPermissionsModifyable($display))
+        if (!$this->getUser()->checkEditable($display))
             throw new AccessDeniedException();
 
         // Groups we are assigned to
@@ -660,67 +660,43 @@ class Display extends Base
     }
 
     /**
-     * Sets the Members of a group
+     * Assign Display to Display Groups
      * @param int $displayId
+     * @throws \Xibo\Exception\NotFoundException
      */
-    public function membership($displayId)
+    public function assignDisplayGroup($displayId)
     {
         $display = DisplayFactory::getById($displayId);
 
-        if (!$this->getUser()->checkPermissionsModifyable($display))
+        if (!$this->getUser()->checkEditable($display))
             throw new AccessDeniedException();
 
-        // Load the groups details
-        $display->load();
+        // Go through each ID to assign
+        foreach (Sanitize::getIntArray('displayGroupId') as $displayGroupId) {
+            $displayGroup = DisplayGroupFactory::getById($displayGroupId);
 
-        $displayGroups = $this->getApp()->request()->params('displayGroupId');
+            if (!$this->getUser()->checkEditable($displayGroup))
+                throw new AccessDeniedException(__('Access Denied to DisplayGroup'));
 
-        // We will receive a list of displayGroups from the UI which are in the "assign column" at the time the form is
-        // submitted.
-        // We want to go through and unlink any displayGroups that are NOT in that list, but that the current user has access
-        // to edit.
-        // We want to add any displayGroups that are in that list (but aren't already assigned)
-
-        // All users that this session has access to
-        $allGroups = DisplayGroupFactory::query(['displayGroup']);
-
-        // Convert to an array of ID's for convenience
-        $allGroupIds = array_map(function ($group) {
-            return $group->displayGroupId;
-        }, $allGroups);
-
-        // Groups assigned to Display
-        $groupsAssigned = DisplayGroupFactory::getByDisplayId($display->displayId);
-
-        foreach ($groupsAssigned as $row) {
-            /* @var DisplayGroup $row */
-            // Did this session have permission to do anything to this displayGroup?
-            // If not, move on
-            if (!in_array($row->displayGroupId, $allGroupIds))
-                continue;
-
-            // Is this displayGroup in the provided list of displayGroups?
-            if (in_array($row->displayGroupId, $displayGroups)) {
-                // This displayGroup is already assigned, so we remove it from the $displayGroups array
-                unset($displayGroups[$row->displayGroupId]);
-            } else {
-                // It isn't therefore needs to be removed
-                $row->unassignDisplay($display);
-                $row->save(false);
-            }
+            $displayGroup->assignDisplay($display);
+            $displayGroup->save(false);
         }
 
-        // Add any displayGroups that are still missing after that assignment process
-        foreach ($displayGroups as $displayGroupId) {
-            // Add any that are missing
-            $group = DisplayGroupFactory::getById($displayGroupId);
-            $group->assignDisplay($display);
-            $group->save(false);
+        // Have we been provided with unassign id's as well?
+        foreach (Sanitize::getIntArray('unassignDisplayGroupId') as $displayGroupId) {
+            $displayGroup = DisplayGroupFactory::getById($displayGroupId);
+
+            if (!$this->getUser()->checkEditable($displayGroup))
+                throw new AccessDeniedException(__('Access Denied to DisplayGroup'));
+
+            $displayGroup->unassignDisplay($display);
+            $displayGroup->save(false);
         }
 
         // Return
         $this->getState()->hydrate([
-            'message' => sprintf(__('Membership set for %s'), $display->display),
+            'httpStatus' => 204,
+            'message' => sprintf(__('%s assigned to Display Groups'), $display->display),
             'id' => $display->displayId
         ]);
     }
@@ -728,8 +704,6 @@ class Display extends Base
     /**
      * Output a screen shot
      * @param int $displayId
-     *
-     *
      */
     public function screenShot($displayId)
     {
