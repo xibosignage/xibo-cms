@@ -95,6 +95,10 @@ class XMDSSoap4
         $displayElement = $return->createElement('display');
         $return->appendChild($displayElement);
 
+        // Append the time
+        $displayElement->setAttribute('date', date('Y-m-d H:i:s'));
+        $displayElement->setAttribute('timezone', Config::GetSetting('defaultTimezone'));
+
         // Is it there?
         if (count($result) == 0) {
 

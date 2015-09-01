@@ -608,6 +608,17 @@ $CLIENT_CONFIG = array(
                         'helpText' => __('What plugin state should be used when starting a web view.'),
                         'enabled' => true,
                         'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'timeSyncFromCms',
+                        'tabId' => 'advanced',
+                        'title' => __('Use CMS time?'),
+                        'type' => _CHECKBOX,
+                        'fieldType' => 'checkbox',
+                        'default' => 0,
+                        'helpText' => __('Set the device time using the CMS. Only available on rooted devices or system signed players.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
                     )
                 )
             )
