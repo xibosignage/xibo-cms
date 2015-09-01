@@ -425,6 +425,9 @@ class LayoutFactory extends BaseFactory
         $entries = array();
         $params = array();
 
+        if ($sortOrder === null)
+            $sortOrder = ['layout'];
+
         $select  = "";
         $select .= "SELECT layout.layoutID, ";
         $select .= "        layout.layout, ";
@@ -444,6 +447,14 @@ class LayoutFactory extends BaseFactory
         $select .= "        layout.backgroundColor, ";
         $select .= "        layout.backgroundzIndex, ";
         $select .= "        layout.schemaVersion, ";
+
+        if (Sanitize::getInt('campaignId', 0, $filterBy) != 0) {
+            $select .= ' lkcl.displayOrder, ';
+        }
+        else {
+            $select .= ' NULL as displayOrder, ';
+        }
+
         $select .= "     (SELECT GROUP_CONCAT(DISTINCT `group`.group)
                           FROM `permission`
                             INNER JOIN `permissionentity`
@@ -600,6 +611,7 @@ class LayoutFactory extends BaseFactory
             $layout->height = Sanitize::double($row['height']);
             $layout->createdDt = $row['createdDt'];
             $layout->modifiedDt = $row['modifiedDt'];
+            $layout->displayOrder = $row['displayOrder'];
 
             if (Sanitize::int('showLegacyXml', $filterBy) == 1)
                 $layout->legacyXml = $row['legacyXml'];

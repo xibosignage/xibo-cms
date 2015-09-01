@@ -302,6 +302,7 @@ CREATE TABLE IF NOT EXISTS `lkcampaignlayout` (
   `LayoutID` int(11) NOT NULL,
   `DisplayOrder` int(11) NOT NULL,
   PRIMARY KEY (`LkCampaignLayoutID`),
+  UNIQUE KEY `CampaignID_2` (`CampaignID`,`LayoutID`,`DisplayOrder`),
   KEY `CampaignID` (`CampaignID`),
   KEY `LayoutID` (`LayoutID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
