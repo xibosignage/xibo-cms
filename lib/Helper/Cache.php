@@ -31,6 +31,8 @@ class Cache
 
     public static function put($key, $value, $expires)
     {
+        Log::debug('Saving %s to the cache, expires in %d seconds', $key, $expires);
+
         // If the data store isn't there, then create it
         if (!self::$_data)
             self::$_data = array();
@@ -68,7 +70,7 @@ class Cache
         if ((isset(self::$_data[$key]) && self::$_data[$key] != null)) {
             // If the key has expired remove it
             if (self::$_data[$key]['expires'] < time()) {
-                Log::debug($key . ' Expired: ' . self::$_data[$key]['expires']);
+                Log::debug($key . ' Expired: ' . Date::getLocalDate(self::$_data[$key]['expires']));
 
                 // Remove it
                 self::remove($key);

@@ -285,8 +285,8 @@ $app->post('/application/authorize', '\Xibo\Controller\Applications:authorize')-
 // module
 //
 $app->get('/module/view', '\Xibo\Controller\Module:displayPage')->name('module.view');
-$app->post('/module/install/:name', '\Xibo\Controller\Module:install')->name('module.install');
-$app->get('/module/form/install/:name', '\Xibo\Controller\Module:installForm')->name('module.install.form');
+$app->post('/module/inst/:name', '\Xibo\Controller\Module:install')->name('module.install');
+$app->get('/module/form/inst/:name', '\Xibo\Controller\Module:installForm')->name('module.install.form');
 $app->get('/module/form/verify', '\Xibo\Controller\Module:verifyForm')->name('module.verify.form');
 $app->get('/module/form/settings/:id', '\Xibo\Controller\Module:settingsForm')->name('module.settings.form');
 
