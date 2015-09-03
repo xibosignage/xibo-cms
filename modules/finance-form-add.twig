@@ -118,10 +118,6 @@
                         {% set title %}{% trans "Duration" %}{% endset %}
                         {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
                         {{ forms.number("duration", title, "", helpText, "", "required") }}
-
-                        {% set title %}{% trans "Count" %}{% endset %}
-                        {% set helpText %}{% trans "The number of records to return." %}{% endset %}
-                        {{ forms.number("recordCount", title, "", helpText) }}
                     </div>
 
                     <div class="tab-pane" id="template">

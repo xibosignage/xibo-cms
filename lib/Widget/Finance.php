@@ -24,6 +24,7 @@ namespace Xibo\Widget;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\MediaFactory;
 use Xibo\Helper\Cache;
+use Xibo\Helper\Config;
 use Xibo\Helper\Date;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
@@ -140,7 +141,6 @@ class Finance extends Module
         $this->setOption('backgroundColor', Sanitize::getString('backgroundColor'));
         $this->setOption('noRecordsMessage', Sanitize::getString('noRecordsMessage'));
         $this->setOption('dateFormat', Sanitize::getString('dateFormat'));
-        $this->setOption('recordCount', Sanitize::getInt('recordCount'));
         $this->setOption('overrideTemplate', Sanitize::getCheckbox('overrideTemplate'));
         $this->setOption('updateInterval', Sanitize::getInt('updateInterval', 60));
         $this->setOption('templateId', Sanitize::getString('templateId'));
@@ -168,7 +168,6 @@ class Finance extends Module
         $this->setOption('backgroundColor', Sanitize::getString('backgroundColor'));
         $this->setOption('noRecordsMessage', Sanitize::getString('noRecordsMessage'));
         $this->setOption('dateFormat', Sanitize::getString('dateFormat'));
-        $this->setOption('recordCount', Sanitize::getInt('recordCount'));
         $this->setOption('overrideTemplate', Sanitize::getCheckbox('overrideTemplate'));
         $this->setOption('updateInterval', Sanitize::getInt('updateInterval', 60));
         $this->setOption('templateId', Sanitize::getString('templateId'));
@@ -248,6 +247,15 @@ class Finance extends Module
         // Encode the YQL and make the request
         $url = 'https://query.yahooapis.com/v1/public/yql?q=' . urlencode($yql) . '&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys';
         //$url = 'https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20yahoo.finance.quote%20where%20symbol%20in%20(%22TEC.PA%22)&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=';
+
+        // TODO Proxy support
+        if (Config::getSetting('PROXY_HOST') != '' && !Config::isProxyException($url)) {
+            $httpOptions[CURLOPT_PROXY] = Config::getSetting('PROXY_HOST');
+            $httpOptions[CURLOPT_PROXYPORT] = Config::getSetting('PROXY_PORT');
+
+            if (Config::getSetting('PROXY_AUTH') != '')
+                $httpOptions[CURLOPT_PROXYUSERPWD] = Config::getSetting('PROXY_AUTH');
+        }
 
         $return = \Requests::get($url);
 
@@ -329,7 +337,7 @@ class Finance extends Module
         }
 
         // Run through each item and substitute with the template
-        $template = $this->getOption('template');
+        $template = $this->getRawNode('template');
         $renderedItems = [];
 
         foreach ($items as $item) {
