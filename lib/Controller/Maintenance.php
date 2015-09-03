@@ -76,12 +76,8 @@ class Maintenance extends Base
                 $alwaysAlert = (Config::GetSetting("MAINTENANCE_ALWAYS_ALERT") == 'On');
                 $alertForViewUsers = (Config::GetSetting('MAINTENANCE_ALERTS_FOR_VIEW_USERS') == 1);
 
-                // The time in the past that the last connection must be later than globally.
-                $globalTimeout = time() - (60 * Sanitize::int(Config::GetSetting("MAINTENANCE_ALERT_TOUT")));
-
                 $msgTo = Config::GetSetting("mail_to");
                 $msgFrom = Config::GetSetting("mail_from");
-
 
                 foreach (Display::validateDisplays(DisplayFactory::query()) as $display) {
                     /* @var \Xibo\Entity\Display $display */

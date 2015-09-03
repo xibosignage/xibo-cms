@@ -231,16 +231,37 @@ class Campaign implements \JsonSerializable
      */
     private function linkLayouts()
     {
-        // TODO: Make this more efficient by storing the prepared SQL statement
         $sql = 'INSERT INTO `lkcampaignlayout` (CampaignID, LayoutID, DisplayOrder) VALUES (:campaignId, :layoutId, :displayOrder) ON DUPLICATE KEY UPDATE layoutId = :layoutId2';
 
-        $i = 0;
+        // Get the Max display order
+        $displayOrders = array_map(function ($element) {
+            return $element->displayOrder;
+        }, $this->layouts);
+
+        $maxDisplayOrder = max($displayOrders);
+
+        // Fill in empty display orders
         foreach ($this->layouts as $layout) {
-            $i++;
+            if ($layout->displayOrder == null) {
+                $maxDisplayOrder++;
+                $layout->displayOrder = $maxDisplayOrder;
+            }
+        }
+
+        // Organise the Layouts Array by display order.
+        usort($this->layouts, function($a, $b) {
+            /**
+             * @var Layout $a
+             * @var Layout $b
+             */
+            return ($a->displayOrder < $b->displayOrder) ? -1 : 1;
+        });
+
+        foreach ($this->layouts as $layout) {
 
             PDOConnect::insert($sql, array(
                 'campaignId' => $this->campaignId,
-                'displayOrder' => $i,
+                'displayOrder' => $layout->displayOrder,
                 'layoutId' => $layout->layoutId,
                 'layoutId2' => $layout->layoutId
             ));

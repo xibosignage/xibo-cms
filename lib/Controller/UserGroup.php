@@ -468,6 +468,21 @@ class UserGroup extends Base
             $group->assignUser($user);
         }
 
+        // Check to see if unassign has been provided.
+        $users = Sanitize::getIntArray('unassignUserId');
+
+        foreach ($users as $userId) {
+
+            Log::debug('Unassign User %d for groupId %d', $userId, $groupId);
+
+            $user = UserFactory::getById($userId);
+
+            if (!$this->getUser()->checkViewable($user))
+                throw new AccessDeniedException(__('Access Denied to User'));
+
+            $group->unassignUser($user);
+        }
+
         $group->save(false);
 
         // Return

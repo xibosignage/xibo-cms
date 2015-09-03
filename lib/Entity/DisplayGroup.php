@@ -335,7 +335,7 @@ class DisplayGroup implements \JsonSerializable
         // Unlink any media that is NOT in the collection
         $params = ['displayGroupId' => $this->displayGroupId];
 
-        $sql = 'DELETE FROM lkmediadisplaygroup WHERE DisplayGroupID = :displayGroupId AND mediaId NOT IN (0';
+        $sql = 'DELETE FROM `lkmediadisplaygroup` WHERE DisplayGroupID = :displayGroupId AND mediaId NOT IN (0';
 
         $i = 0;
         foreach ($this->media as $media) {

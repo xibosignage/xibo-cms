@@ -785,6 +785,28 @@ class DisplayProfile
                         'helpText' => __('Mode for hardware acceleration of web based content.'),
                         'enabled' => true,
                         'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'timeSyncFromCms',
+                        'tabId' => 'advanced',
+                        'title' => __('Use CMS time?'),
+                        'type' => 'checkbox',
+                        'fieldType' => 'checkbox',
+                        'default' => 0,
+                        'helpText' => __('Set the device time using the CMS. Only available on rooted devices or system signed players.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'statsEnabled',
+                        'tabId' => 'general',
+                        'title' => __('Enable stats reporting?'),
+                        'type' => 'checkbox',
+                        'fieldType' => 'checkbox',
+                        'default' => 1,
+                        'helpText' => __('Should the application send proof of play stats to the CMS.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
                     )
                 )
             )

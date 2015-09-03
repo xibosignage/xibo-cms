@@ -169,6 +169,14 @@ class Layout implements \JsonSerializable
      */
     public $height;
 
+    /**
+     * @var int
+     * @SWG\Property(
+     *  description="If this Layout has been requested by Campaign, then this is the display order of the Layout within the Campaign"
+     * )
+     */
+    public $displayOrder;
+
     // Child items
     public $regions = [];
     public $tags = [];

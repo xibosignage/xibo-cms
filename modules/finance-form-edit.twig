@@ -10,12 +10,13 @@
 {% import "forms.twig" as forms %}
 
 {% block formTitle %}
-    {% trans "Edit Twitter" %}
+    {% trans "Edit Finance" %}
 {% endblock %}
 
 {% block formButtons %}
+    {% trans "Get Results" %}, requestTab("results"| "{{ urlFor("module.widget.tab.form", {tab: "results", id: module.widget.widgetId}) }}")
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, $("#twitterEditForm").submit()
+    {% trans "Save" %}, $("#financeEditForm").submit()
 {% endblock %}
 
 {% block callBack %}text_callback{% endblock %}
@@ -106,8 +107,9 @@
                 <li><a href="#template" role="tab" data-toggle="tab" data-enlarge="1"><span>{% trans "Apperance" %}</span></a></li>
                 <li><a href="#effectTab" role="tab" data-toggle="tab"><span>{% trans "Effect" %}</span></a></li>
                 <li><a href="#advanced" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
+                <li><a href="#results" role="tab" data-toggle="tab"><span>{% trans "Results" %}</span></a></li>
             </ul>
-            <form id="twitterEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
+            <form id="financeEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
                  <div class="tab-content">
                     <div class="tab-pane active" id="general">
                         {% set title %}{% trans "Name" %}{% endset %}
@@ -118,29 +120,9 @@
                         {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
                         {{ forms.number("duration", title, module.getDuration(), helpText, "", "required") }}
 
-                        {% set title %}{% trans "Search Term" %}{% endset %}
-                        {% set helpText %}{% trans "Search term. You can test your search term in the twitter.com search box first." %}{% endset %}
-                        {{ forms.text("searchTerm", title, module.getOption("searchTerm"), helpText, "", "required") }}
-
-                        {% set title %}{% trans "Type" %}{% endset %}
-                        {% set helpText %}{% trans "Recent shows only the most recent tweets, Popular the most popular and Mixed includes both popular and recent results." %}{% endset %}
-                        {% set mixed %}{% trans "Mixed" %}{% endset %}
-                        {% set recent %}{% trans "Recent" %}{% endset %}
-                        {% set popular %}{% trans "Popular" %}{% endset %}
-                        {% set options = [
-                        { typeid: 1, type: mixed },
-                        { typeid: 2, type: recent },
-                        { typeid: 3, type: popular }
-                        ] %}
-                        {{ forms.dropdown("resultType", "single", title, module.getOption("resultType"), options, "typeid", "type", helpText,"", "required") }}
-
-                        {% set title %}{% trans "Distance" %}{% endset %}
-                        {% set helpText %}{% trans "Distance in miles that the tweets should be returned from. Set to 0 for no restrictions." %}{% endset %}
-                        {{ forms.number("tweetDistance", title, module.getOption("tweetDistance"), helpText) }}
-
                         {% set title %}{% trans "Count" %}{% endset %}
-                        {% set helpText %}{% trans "The number of Tweets to return." %}{% endset %}
-                        {{ forms.number("tweetCount", title, module.getOption("tweetCount"), helpText) }}
+                        {% set helpText %}{% trans "The number of records to return." %}{% endset %}
+                        {{ forms.number("recordCount", title, module.getOption("recordCount"), helpText) }}
                     </div>
 
                     <div class="tab-pane" id="template">
@@ -151,6 +133,10 @@
                         {% set title %}{% trans "Override the template?" %}{% endset %}
                         {% set helpText %}{% trans "Tick if you would like to override the template." %}{% endset %}
                         {{ forms.checkbox("overrideTemplate", title, module.getOption("overrideTemplate", 0), helpText) }}
+
+                        {% set title %}{% trans "Query" %}{% endset %}
+                        {% set helpText %}{% trans "The YQL query to use for data" %}{% endset %}
+                        {{ forms.text("yql", title, module.getOption("yql"), helpText, "template-override-controls", "required") }}
 
                         {% set helpText %}{% trans "Enter the template. Please note that the background colour has automatically coloured to your layout background colour." %}{% endset %}
                         {{ forms.textarea("ta_text", "", module.getRawNode("template"), helpText, "template-override-controls", "", 10) }}
@@ -205,22 +191,20 @@
                         {% set helpText %}{% trans "The selected effect works best with a background colour. Optionally add one here." %}{% endset %}
                         {{ forms.text("backgroundColor", title, module.getOption("backgroundColor"), helpText, "background-color-group") }}
                         
-                        {% set title %}{% trans "No tweets" %}{% endset %}
-                        {% set helpText %}{% trans "A message to display when there are no tweets returned by the search query" %}{% endset %}
-                        {{ forms.text("noTweetsMessage", title, module.getOption("noTweetsMessage"), helpText) }}
-                        
+                        {% set title %}{% trans "No records" %}{% endset %}
+                        {% set helpText %}{% trans "A message to display when there are no records returned by the search query" %}{% endset %}
+                        {{ forms.text("noRecordsMessage", title, module.getOption("noTweetsMessage"), helpText) }}
+
                         {% set title %}{% trans "Date Format" %}{% endset %}
                         {% set helpText %}{% trans "The format to apply to all dates returned by the ticker. In PHP date format: http://uk3.php.net/manual/en/function.date.php" %}{% endset %}
                         {{ forms.text("dateFormat", title, module.getOption("dateFormat"), helpText) }}
-
-                        {% set title %}{% trans "Remove URLs?" %}{% endset %}
-                        {% set helpText %}{% trans "Should URLs be removed from the Tweet Text. Most URLs do not compliment digital signage." %}{% endset %}
-                        {{ forms.checkbox("removeUrls", title, module.GetOption("removeUrls", 1), helpText) }}
 
                         {% set title %}{% trans "Update Interval (mins)" %}{% endset %}
                         {% set helpText %}{% trans "Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60." %}{% endset %}
                         {{ forms.number("updateInterval", title, module.getOption("updateInterval", 60), helpText, "", "required") }}
                     </div>
+
+                     <div class="tab-pane" id="results"></div>
                 </div>
             </form>
         </div>

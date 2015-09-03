@@ -105,7 +105,7 @@ var datasetview_callback = function(dialog)
     }).disableSelection();
 
     return false; //prevent submit
-}
+};
 
 var DataSetViewSubmit = function() {
     var form = $("#dataSetViewEditForm");
@@ -117,120 +117,6 @@ var DataSetViewSubmit = function() {
     // Submit the form
     form.submit();
 };
-
-/**
- * Layout Assignment Form Callback
- */
-var LayoutAssignCallback = function(gridId)
-{
-    // Attach a click handler to all of the little pointers in the grid.
-    $("#" + gridId).find(".layout_assign_list_select").click(function(){
-        // Get the row that this is in.
-        var row = $(this).closest("tr");
-
-        // Construct a new list item for the lower list and append it.
-        var newItem = $("<li/>", {
-            text: row.data().litext,
-            id: row.data().rowid,
-            "class": "btn btn-sm btn-default",
-            dblclick: function(){
-                $(this).remove();
-            }
-        });
-
-        newItem.appendTo("#LayoutAssignSortable");
-
-        // Add a span to that new item
-        $("<span/>", {
-            "class": "glyphicon glyphicon-minus-sign",
-            click: function(){
-                $(this).parent().remove();
-            }
-        })
-        .appendTo(newItem);
-
-    });
-
-    // There could be some existing items...
-    $("#LayoutAssignSortable li span").click(function() {
-        $(this).parent().remove();
-    });
-
-    $("#LayoutAssignSortable").sortable().disableSelection();
-};
-
-function LayoutsSubmit(campaignId) {
-    // Serialise the form and then submit it via Ajax.
-    var layouts = $("#LayoutAssignSortable").sortable('serialize');
-
-    layouts = layouts + "&CampaignID=" + campaignId + "&assign_token=" + $("#LayoutAssignSortable input[name='assign_token']").val();
-    
-    $.ajax({
-        type: "post",
-        url: "index.php?p=campaign&q=SetMembers&ajax=true",
-        cache: false,
-        dataType: "json",
-        data: layouts,
-        success: XiboSubmitResponse
-    });
-    
-    return;
-}
-
-function fileFormSubmit() {
-    // Update the UI to say its submitting
-    $('#uploadProgress').fadeIn("slow");
-    $('#file_upload').hide();
-}
-
-/**
- * 
- * @param {Object} fileName
- * @param {Object} fileId
- * @param {Object} errorCode
- */
-function fileUploadReport(fileName, fileId, errorCode) {
-    
-    var uploadProgress = $('#uploadProgress');
-    
-    if (errorCode == 0)
-    {
-        $('#txtFileName').val(fileName);
-        $('#hidFileID').val(fileId);
-        
-        uploadProgress.html("File upload complete.");
-    }
-    else
-    {
-        uploadProgress.hide();
-        $('#file_upload').show();
-        
-        if (errorCode == 1)
-        {
-            SystemMessage("The file exceeds the maximum allowed file size. [Code 1]");
-        }
-        else if (errorCode == 2)
-        {
-            SystemMessage("The file exceeds the maximum allowed file size. [Code 2]");
-        }
-        else if (errorCode == 3)
-        {
-            SystemMessage("The file upload was interrupted, please retry. [Code 3]");
-        }
-        else if (errorCode == 25000)
-        {
-            SystemMessage("Could not encrypt this file. [Code 25000]");
-        }
-        else if (errorCode == 25001)
-        {
-            SystemMessage("Could not save this file after encryption. [Code 25001]");
-        }
-        else
-        {
-            SystemMessage("There was an error uploading this file [Code " + errorCode + "]");
-        }
-    }
-}
 
 /**
  * Switches an item between 2 connected lists.
@@ -574,3 +460,178 @@ function permissionsFormSubmit(id) {
         }
     });
 }
+
+function membersFormOpen(dialog) {
+
+    // Get our table
+    var table = $(dialog).find(".membersTable");
+
+    if (table.data().members == undefined)
+        table.data().members = {};
+
+    // Bind to the checkboxes change event
+    table.find("input[type=checkbox]").change(function() {
+        // Update our global members data with this
+        var memberId = $(this).data().memberId;
+        var value = $(this).is(":checked");
+
+        //console.log("Setting memberId: " + memberId + ". Value: " + value);
+
+        table.data().members[memberId] = (value) ? 1 : 0;
+    });
+}
+
+function membersFormSubmit(id) {
+
+    var form = $("#" + id);
+    var members = form.find(".membersTable").data().members;
+
+    // There may not have been any changes
+    if (members == undefined) {
+        // No changes
+        XiboDialogClose();
+        return;
+    }
+
+    // Build an array of id's to assign and an array to unassign
+    var assign = [];
+    var unassign = [];
+
+    $.each(members, function(name, value) {
+        if (value == 1)
+            assign.push(name);
+        else
+            unassign.push(name);
+    });
+
+    var error = false;
+    var data = {};
+    data[form.data().param] = assign;
+    data[form.data().paramUnassign] = unassign;
+
+    $.ajax({
+        type: "POST",
+        url: form.data().url,
+        cache: false,
+        dataType: "json",
+        data: $.param(data),
+        success: function(xhr, textStatus, error) {
+            XiboSubmitResponse(xhr, form);
+        },
+        error: function(xhr, textStatus, errorThrown) {
+            SystemMessage(xhr.responseText, false);
+        }
+    });
+}
+
+// Callback for the media form
+function mediaFormCallBack() {
+
+    var container = $("#FileAssociationsAssign");
+    if (container.data().media == undefined)
+        container.data().media = {};
+
+    var mediaTable = $("#mediaAssignments").DataTable({
+            serverSide: true,
+            searchDelay: 3000,
+            "order": [[ 0, "asc"]],
+            "filter": false,
+            ajax: {
+                "url": $("#mediaAssignments").data().url,
+            "data": function(d) {
+                $.extend(d, $("#mediaAssignments").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+            }
+        },
+        "columns": [
+            { "data": "name" },
+            { "data": "mediaType" },
+            {
+                "sortable": false,
+                "data": function(data, type, row, meta) {
+                    if (type != "display")
+                        return "";
+
+                    // Create a click-able span
+                    return "<a href=\"#\" class=\"assignItem\"><span class=\"glyphicon glyphicon-plus-sign\"></a>";
+                }
+            }
+        ]
+    });
+
+    mediaTable.on('draw', function (e, settings) {
+        dataTableDraw(e, settings);
+
+        // Clicky on the +spans
+        $(".assignItem", "#mediaAssignments").click(function() {
+            // Get the row that this is in.
+            var data = mediaTable.row($(this).closest("tr")).data();
+
+            // Append to our media list
+            container.data().media[data.mediaId] = 1;
+
+            // Construct a new list item for the lower list and append it.
+            var newItem = $("<li/>", {
+                "text": data.name,
+                "data-media-id": data.mediaId,
+                "class": "btn btn-sm btn-default"
+            });
+
+            newItem.appendTo("#FileAssociationsSortable");
+
+            // Add a span to that new item
+            $("<span/>", {
+                "class": "glyphicon glyphicon-minus-sign",
+                click: function(){
+                    container.data().media[$(this).parent().data().mediaId] = 0;
+                    $(this).parent().remove();
+                }
+            }).appendTo(newItem);
+        });
+    });
+    mediaTable.on('processing.dt', dataTableProcessing);
+
+    // Make our little list sortable
+    $("#FileAssociationsSortable").sortable();
+
+    // Bind to the existing items in the list
+    $("#FileAssociationsSortable").find('li span').click(function () {
+        container.data().media[$(this).parent().data().mediaId] = 0;
+        $(this).parent().remove();
+    });
+
+    // Bind to the filter
+    $("#mediaAssignments").closest(".XiboGrid").find(".FilterDiv input, .FilterDiv select").change(function() {
+        mediaTable.ajax.reload();
+    });
+}
+
+function mediaAssignSubmit() {
+    // Collect our media
+    var container = $("#FileAssociationsAssign");
+
+    // Build an array of id's to assign and an array to unassign
+    var assign = [];
+    var unassign = [];
+
+    $.each(container.data().media, function(name, value) {
+        if (value == 1)
+            assign.push(name);
+        else
+            unassign.push(name);
+    });
+
+    assignMediaToCampaign(container.data().url, assign, unassign);
+}
+
+var assignMediaToCampaign = function(url, media, unassignMedia) {
+    toastr.info("Assign Media", media);
+
+    $.ajax({
+        type: "post",
+        url: url,
+        cache: false,
+        dataType: "json",
+        data: {mediaId: media, unassignMediaId: unassignMedia},
+        success: XiboSubmitResponse
+    });
+};

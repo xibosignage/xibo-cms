@@ -82,7 +82,7 @@ class DisplayGroup extends Base
                 $group->buttons[] = array(
                     'id' => 'displaygroup_button_group_members',
                     'url' => $this->urlFor('displayGroup.members.form', ['id' => $group->displayGroupId]),
-                    'text' => __('Group Members')
+                    'text' => __('Displays')
                 );
 
                 // Edit
@@ -411,6 +411,14 @@ class DisplayGroup extends Base
      *          type="integer"
      *      )
      *  ),
+     *  @SWG\Parameter(
+     *      name="unassignDisplayId",
+     *      in="formData",
+     *      description="An optional array of Display IDs to unassign",
+     *      type="array",
+     *      required="false",
+     *      @SWG\Items(type="integer")
+     *   ),
      *  @SWG\Response(
      *      response=204,
      *      description="successful operation"
@@ -435,6 +443,19 @@ class DisplayGroup extends Base
             $displayGroup->assignDisplay($display);
         }
 
+        // Have we been provided with unassign id's as well?
+        $displays = Sanitize::getIntArray('unassignDisplayId');
+
+        foreach ($displays as $displayId) {
+            $display = DisplayFactory::getById($displayId);
+
+            if (!$this->getUser()->checkViewable(DisplayGroupFactory::getById($display->displayGroupId)))
+                throw new AccessDeniedException(__('Access Denied to Display'));
+
+            $displayGroup->unassignDisplay($display);
+        }
+
+        // Save the result
         $displayGroup->save(false);
 
         // Return
@@ -551,6 +572,16 @@ class DisplayGroup extends Base
      *          type="integer"
      *      )
      *  ),
+     *  @SWG\Parameter(
+     *      name="unassignMediaId",
+     *      type="array",
+     *      in="formData",
+     *      description="Optional array of Media Id to unassign",
+     *      required="false",
+     *      @SWG\Items(
+     *          type="integer"
+     *      )
+     *  ),
      *  @SWG\Response(
      *      response=204,
      *      description="successful operation"
@@ -567,7 +598,7 @@ class DisplayGroup extends Base
         // Load the groups details
         $displayGroup->load();
 
-        $mediaIds = Sanitize::getIntArray('mediaIds');
+        $mediaIds = Sanitize::getIntArray('mediaId');
 
         // Loop through all the media
         foreach ($mediaIds as $mediaId) {
@@ -578,6 +609,17 @@ class DisplayGroup extends Base
                 throw new AccessDeniedException(__('You have selected media that you no longer have permission to use. Please reload the form.'));
 
             $displayGroup->assignMedia($media);
+        }
+
+        // Check for unassign
+        foreach (Sanitize::getIntArray('unassignMediaId') as $mediaId) {
+            // Get the media record
+            $media = MediaFactory::getById($mediaId);
+
+            if (!$this->getUser()->checkViewable($media))
+                throw new AccessDeniedException(__('You have selected media that you no longer have permission to use. Please reload the form.'));
+
+            $displayGroup->unassignMedia($media);
         }
 
         $displayGroup->save(false);

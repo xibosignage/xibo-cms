@@ -75,6 +75,11 @@ This is the template for the campaign page
 
         // Callback for the media form
         function layoutFormCallBack() {
+
+            var container = $("#LayoutAssign");
+            if (container.data().layouts == undefined)
+                container.data().layouts = {};
+
             var layoutTable = $("#layoutAssignments").DataTable({
                 serverSide: true,
                 searchDelay: 3000,
@@ -110,14 +115,14 @@ This is the template for the campaign page
                     // Get the row that this is in.
                     var data = layoutTable.row($(this).closest("tr")).data();
 
+                    // Append to our layouts list
+                    container.data().layouts[data.layoutId] = 1;
+
                     // Construct a new list item for the lower list and append it.
                     var newItem = $("<li/>", {
                         "text": data.layout,
                         "data-layout-id": data.layoutId,
-                        "class": "btn btn-sm btn-default",
-                        "dblclick": function(){
-                            $(this).remove();
-                        }
+                        "class": "btn btn-sm btn-default"
                     });
 
                     newItem.appendTo("#LayoutAssignSortable");
@@ -126,6 +131,7 @@ This is the template for the campaign page
                     $("<span/>", {
                         "class": "glyphicon glyphicon-minus-sign",
                         click: function(){
+                            container.data().layouts[$(this).parent().data().layoutId] = 0;
                             $(this).parent().remove();
                         }
                     }).appendTo(newItem);
@@ -136,6 +142,12 @@ This is the template for the campaign page
             // Make our little list sortable
             $("#LayoutAssignSortable").sortable();
 
+            // Bind to the existing items in the list
+            $("#LayoutAssignSortable").find('li span').click(function () {
+                container.data().layouts[$(this).parent().data().layoutId] = 0;
+                $(this).parent().remove();
+            });
+
             // Bind the filter form
             $(".layoutAssignFilterOptions").find("input, select").change(function() {
                 layoutTable.ajax.reload();
@@ -144,15 +156,23 @@ This is the template for the campaign page
 
         function layoutAssignSubmit() {
             // Collect our media
-            var layout = [];
-            $("#LayoutAssignSortable > li").each(function() {
-                layout.push($(this).data().layoutId);
+            var container = $("#LayoutAssign");
+
+            // Build an array of id's to assign and an array to unassign
+            var assign = [];
+            var unassign = [];
+
+            $.each(container.data().layouts, function(name, value) {
+                if (value == 1)
+                    assign.push(name);
+                else
+                    unassign.push(name);
             });
 
-            assignLayoutsToCampaign($("#LayoutAssign").data().url, layout);
+            assignLayoutsToCampaign(container.data().url, assign, unassign);
         }
 
-        var assignLayoutsToCampaign = function(url, layout) {
+        var assignLayoutsToCampaign = function(url, layout, unassign) {
             toastr.info(layout, "Assign Layouts to Campaign");
 
             $.ajax({
@@ -160,7 +180,7 @@ This is the template for the campaign page
                 url: url,
                 cache: false,
                 dataType: "json",
-                data: {layoutIds: layout},
+                data: {layoutId: layout, unassignLayoutId: unassign},
                 success: XiboSubmitResponse
             });
         };

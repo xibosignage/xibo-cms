@@ -41,9 +41,18 @@ Install the external dependencies with Composer (visit [getcomposer.org](http://
 php composer.phar install
 ```
 
-Configure your web-server to serve from the Xibo `web` folder.
+## Web Server Configuration
+It is highly recommended to use Xibo with URL re-writing enabled. A `.htaccess` file has been provided in `web/.htaccess`.
+This file assumes that Xibo is being served from the web server document root or from a virtual host.
 
+If an alias is required then the `.htaccess` file will need to be modified to include a `RewriteBase` directive that matches
+the alias.
+
+For example, if the alias is `/xibo` the `.htaccess` should have: `RewriteBase /xibo`.
+
+## Installation Wizard
 Visit Xibo in the browser and follow the installation instructions.
+
 
 # Development
 The Xibo CMS now follows MVC and is PSR-4 compliant.
@@ -79,4 +88,5 @@ The standard licence for Xibo is the [AGPLv3](LICENSE). For more information ple
 This folder contains the Xibo CMS application.
 
 # Vagrant
-A VagrantFile is included to ease set up and configuration of a development environment. The VagrantFile expects a "library" folder to exist one level up the folder tree to be used as the location of the CMS library.
+A VagrantFile is included to ease set up and configuration of a development environment. After `vagrant up` completes 
+it is necessary to ssh to the box and adjust the `DocumentRoot` of the `000-default.conf` virtual host to be `/var/www/web`. 
