@@ -88,7 +88,7 @@ class StatusDashboard extends Base
                 $size = ((double)$row['size']) / (pow(1024, $base));
                 $remaining = $xmdsLimit - $size;
                 $output[] = array(
-                    'label' => Date::getLocalDate(Sanitize::getDate($row['month']), 'F'),
+                    'label' => Date::getLocalDate(Sanitize::getDate('month', $row), 'F'),
                     'value' => round($size, 2),
                     'limit' => round($remaining, 2)
                 );

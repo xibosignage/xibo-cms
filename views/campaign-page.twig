@@ -148,7 +148,56 @@ This is the template for the campaign page
             layoutTable.on('processing.dt', dataTableProcessing);
 
             // Make our little list sortable
-            $("#LayoutAssignSortable").sortable();
+            var startPosition = 0;
+            $("#LayoutAssignSortable").sortable({
+                start: function (event, ui) {
+                    startPosition = ui.item.index();
+                },
+                update: function (event, ui) {
+                    // Update the layouts container according to this change
+                    var position = ui.item.index();
+
+                    // Unassign from current position
+                    container.data().layouts[ui.item.data().layoutId + "_" + ui.item.data().displayOrder] = 0;
+
+                    // Shuffle others
+                    var shuffle = (startPosition < position) ? -1 : 1;
+
+                    // All items
+                    var allItems = $("#LayoutAssignSortable").find("li");
+
+                    // Set the display order on ours
+                    if (position == 0) {
+                        // One to the right
+                        var rightOne = allItems.eq(1).data().displayOrder;
+                        if (rightOne > 1)
+                            rightOne--;
+
+                        ui.item.data().displayOrder = rightOne;
+                    }
+                    else {
+                        // One to the left
+                        ui.item.data().displayOrder = allItems.eq(position - 1).data().displayOrder + 1;
+                    }
+
+                    // Assign to the new position
+                    container.data().layouts[ui.item.data().layoutId + "_" + ui.item.data().displayOrder] = 1;
+
+                    // Shuffle
+                    $.each(allItems, function (index) {
+                        if ((shuffle == 1 && index > position) || (shuffle == -1 && index < position)) {
+                            // Add shuffle to each item, remove and assign
+                            container.data().layouts[$(this).data().layoutId + "_" + $(this).data().displayOrder] = 0;
+
+                            // Shuffle
+                            $(this).data().displayOrder = $(this).data().displayOrder + shuffle;
+
+                            // Assign
+                            container.data().layouts[$(this).data().layoutId + "_" + $(this).data().displayOrder] = 1;
+                        }
+                    });
+                }
+            });
 
             // Bind to the existing items in the list
             $("#LayoutAssignSortable").find('li span').click(function () {
