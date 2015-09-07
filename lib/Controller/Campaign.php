@@ -338,18 +338,24 @@ class Campaign extends Base
      *  @SWG\Parameter(
      *      name="layoutId",
      *      in="formData",
-     *      description="Array of Layout IDs to Assign",
+     *      description="Array of Layout ID/Display Orders to Assign",
      *      type="array",
      *      required="true",
-     *      @SWG\Items(type="integer")
+     *      @SWG\Schema(
+     *          type="object",
+     *          additionalProperties={"layoutId":"integer", "displayOrder":"integer"}
+     *      )
      *   ),
      *  @SWG\Parameter(
      *      name="unassignLayoutId",
      *      in="formData",
-     *      description="Array of Layout IDs to unassign",
+     *      description="Array of Layout ID/Display Orders to unassign",
      *      type="array",
      *      required="false",
-     *      @SWG\Items(type="integer")
+     *      @SWG\Schema(
+     *          type="object",
+     *          additionalProperties={"layoutId":"integer", "displayOrder":"integer"}
+     *      )
      *   ),
      *  @SWG\Response(
      *      response=204,
@@ -359,7 +365,7 @@ class Campaign extends Base
      */
     public function assignLayout($campaignId)
     {
-        Log::debug('assignLayout with campaignId' . $campaignId);
+        Log::debug('assignLayout with campaignId ' . $campaignId);
 
         $campaign = CampaignFactory::getById($campaignId);
 
@@ -367,26 +373,36 @@ class Campaign extends Base
             throw new AccessDeniedException();
 
         // Check our permissions to see each one
-        foreach (Sanitize::getIntArray('layoutId') as $layoutId) {
+        $layouts = Sanitize::getParam('layoutId', null);
+        $layouts = is_array($layouts) ? $layouts : [];
+        foreach ($layouts as $object) {
 
-            $layout = LayoutFactory::getById($layoutId);
+            $layout = LayoutFactory::getById(Sanitize::getInt('layoutId', $object));
 
             if (!$this->getUser()->checkViewable($layout))
                 throw new AccessDeniedException(__('You do not have permission to assign the provided Layout'));
+
+            // Set the Display Order
+            $layout->displayOrder = Sanitize::getInt('displayOrder', $object);
 
             // Assign it
             $campaign->assignLayout($layout);
         }
 
         // Run through the layouts to unassign
-        foreach (Sanitize::getIntArray('unassignLayoutId') as $layoutId) {
+        $layouts = Sanitize::getParam('unassignLayoutId', null);
+        $layouts = is_array($layouts) ? $layouts : [];
+        foreach ($layouts as $object) {
 
-            $layout = LayoutFactory::getById($layoutId);
+            $layout = LayoutFactory::getById(Sanitize::getInt('layoutId', $object));
 
             if (!$this->getUser()->checkViewable($layout))
                 throw new AccessDeniedException(__('You do not have permission to assign the provided Layout'));
 
-            // Assign it
+            // Set the Display Order
+            $layout->displayOrder = Sanitize::getInt('displayOrder', $object);
+
+            // Unassign it
             $campaign->unassignLayout($layout);
         }
 
@@ -423,7 +439,10 @@ class Campaign extends Base
      *      description="Array of Layout IDs to Unassign",
      *      type="array",
      *      required="true",
-     *      @SWG\Items(type="integer")
+     *      @SWG\Schema(
+     *          type="object",
+     *          additionalProperties={"layoutId":"integer", "displayOrder":"integer"}
+     *      )
      *   ),
      *  @SWG\Response(
      *      response=204,
@@ -444,9 +463,19 @@ class Campaign extends Base
             throw new \InvalidArgumentException(__('Layouts not provided'));
 
         // Check our permissions to see each one
-        foreach ($layouts as $layoutId) {
-            // Assign it
-            $campaign->unassignLayout(LayoutFactory::getById($layoutId));
+        $layouts = Sanitize::getParam('layoutId', null);
+        $layouts = is_array($layouts) ? $layouts : [];
+        foreach ($layouts as $object) {
+            $layout = LayoutFactory::getById(Sanitize::getInt('layoutId', $object));
+
+            if (!$this->getUser()->checkViewable($layout))
+                throw new AccessDeniedException(__('You do not have permission to assign the provided Layout'));
+
+            // Set the Display Order
+            $layout->displayOrder = Sanitize::getInt('displayOrder', $object);
+
+            // Unassign it
+            $campaign->unassignLayout($layout);
         }
 
         $campaign->save(false);

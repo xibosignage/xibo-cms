@@ -49,6 +49,7 @@ This is the template for the campaign page
 
 {% block javaScript %}
     <script type="text/javascript">
+        // Configure the DataTable
         var table = $("#campaigns").DataTable({
             serverSide: true,
             "filter": false,
@@ -70,16 +71,20 @@ This is the template for the campaign page
             ]
         });
 
+        // Data Table events
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
 
         // Callback for the media form
+        // Fired when the media form opens
         function layoutFormCallBack() {
 
+            // Hold a container for the layouts we have assigned already
             var container = $("#LayoutAssign");
             if (container.data().layouts == undefined)
                 container.data().layouts = {};
 
+            // Layout DataTable
             var layoutTable = $("#layoutAssignments").DataTable({
                 serverSide: true,
                 searchDelay: 3000,
@@ -116,12 +121,15 @@ This is the template for the campaign page
                     var data = layoutTable.row($(this).closest("tr")).data();
 
                     // Append to our layouts list
-                    container.data().layouts[data.layoutId] = 1;
+                    // We are adding a new layout, so the display order should be the highest display order
+                    var order = nextDisplayOrder();
+                    container.data().layouts[data.layoutId + "_" + order] = 1;
 
-                    // Construct a new list item for the lower list and append it.
+                    // Construct a new item for the assigned box
                     var newItem = $("<li/>", {
                         "text": data.layout,
                         "data-layout-id": data.layoutId,
+                        "data-display-order": order,
                         "class": "btn btn-sm btn-default"
                     });
 
@@ -131,7 +139,7 @@ This is the template for the campaign page
                     $("<span/>", {
                         "class": "glyphicon glyphicon-minus-sign",
                         click: function(){
-                            container.data().layouts[$(this).parent().data().layoutId] = 0;
+                            container.data().layouts[$(this).parent().data().layoutId + "_" + order] = 0;
                             $(this).parent().remove();
                         }
                     }).appendTo(newItem);
@@ -144,7 +152,7 @@ This is the template for the campaign page
 
             // Bind to the existing items in the list
             $("#LayoutAssignSortable").find('li span').click(function () {
-                container.data().layouts[$(this).parent().data().layoutId] = 0;
+                container.data().layouts[$(this).parent().data().layoutId + "_" + $(this).parent().data().displayOrder] = 0;
                 $(this).parent().remove();
             });
 
@@ -163,16 +171,22 @@ This is the template for the campaign page
             var unassign = [];
 
             $.each(container.data().layouts, function(name, value) {
+                var item = name.split("_");
+                var layout = {
+                    layoutId: item[0],
+                    displayOrder: item[1]
+                };
+
                 if (value == 1)
-                    assign.push(name);
+                    assign.push(layout);
                 else
-                    unassign.push(name);
+                    unassign.push(layout);
             });
 
             assignLayoutsToCampaign(container.data().url, assign, unassign);
         }
 
-        var assignLayoutsToCampaign = function(url, layout, unassign) {
+        function assignLayoutsToCampaign(url, layout, unassign) {
             toastr.info(layout, "Assign Layouts to Campaign");
 
             $.ajax({
@@ -183,6 +197,18 @@ This is the template for the campaign page
                 data: {layoutId: layout, unassignLayoutId: unassign},
                 success: XiboSubmitResponse
             });
-        };
+        }
+
+        function nextDisplayOrder() {
+            // Look through the assignment list and get the next display order
+            var high = 0;
+            $("#LayoutAssign li").each(function() {
+                var itemOrder = $(this).data().displayOrder;
+                if (itemOrder > high)
+                    high = itemOrder;
+            });
+
+            return high + 1;
+        }
     </script>
 {% endblock %}
