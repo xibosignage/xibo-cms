@@ -2,29 +2,29 @@
 /*
  * Spring Signage Ltd - http://www.springsignage.com
  * Copyright (C) 2015 Spring Signage Ltd
- * (XmdsNonceFactory.php)
+ * (RequiredFileFactory.php)
  */
 
 
 namespace Xibo\Factory;
 
 
-use Xibo\Entity\XmdsNonce;
+use Xibo\Entity\RequiredFile;
 use Xibo\Exception\NotFoundException;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
-class XmdsNonceFactory extends BaseFactory
+class RequiredFileFactory extends BaseFactory
 {
     /**
      * @param string $nonce
-     * @return XmdsNonce
+     * @return RequiredFile
      * @throws NotFoundException
      */
     public static function getByNonce($nonce)
     {
-        $nonce = XmdsNonceFactory::query(null, ['nonce' => $nonce]);
+        $nonce = RequiredFileFactory::query(null, ['nonce' => $nonce]);
 
         if (count($nonce) <= 0)
             throw new NotFoundException();
@@ -35,21 +35,33 @@ class XmdsNonceFactory extends BaseFactory
     /**
      * @param int $displayId
      * @param int $layoutId
-     * @return array[XmdsNonce]
+     * @return RequiredFile
+     * @throws NotFoundException
      */
     public static function getByDisplayAndLayout($displayId, $layoutId)
     {
-        return XmdsNonceFactory::query(null, ['displayId' => $displayId, 'layoutId' => $layoutId]);
+        $files = RequiredFileFactory::query(null, ['displayId' => $displayId, 'layoutId' => $layoutId]);
+
+        if (count($files) <= 0)
+            throw new NotFoundException();
+
+        return $files[0];
     }
 
     /**
      * @param int $displayId
      * @param int $mediaId
-     * @return array[XmdsNonce]
+     * @return RequiredFile
+     * @throws NotFoundException
      */
     public static function getByDisplayAndMedia($displayId, $mediaId)
     {
-        return XmdsNonceFactory::query(null, ['displayId' => $displayId, 'mediaId' => $mediaId]);
+        $files = RequiredFileFactory::query(null, ['displayId' => $displayId, 'mediaId' => $mediaId]);
+
+        if (count($files) <= 0)
+            throw new NotFoundException();
+
+        return $files[0];
     }
 
     /**
@@ -57,25 +69,41 @@ class XmdsNonceFactory extends BaseFactory
      * @param int $layoutId
      * @param int $regionId
      * @param int $mediaId
-     * @return array[XmdsNonce]
+     * @return RequiredFile
+     * @throws NotFoundException
      */
     public static function getByDisplayAndResource($displayId, $layoutId, $regionId, $mediaId)
     {
-        return XmdsNonceFactory::query(null, ['displayId' => $displayId, 'layoutId' => $layoutId, 'regionId' => $regionId, 'mediaId' => $mediaId]);
+        $files = RequiredFileFactory::query(null, ['displayId' => $displayId, 'layoutId' => $layoutId, 'regionId' => $regionId, 'mediaId' => $mediaId]);
+
+        if (count($files) <= 0)
+            throw new NotFoundException();
+
+        return $files[0];
     }
 
     /**
      * Create for layout
      * @param $displayId
+     * @param $requestKey
      * @param $layoutId
      * @param $size
      * @param $path
-     * @return XmdsNonce
+     * @return RequiredFile
      */
-    public static function createForLayout($displayId, $layoutId, $size, $path)
+    public static function createForLayout($displayId, $requestKey, $layoutId, $size, $path)
     {
-        $nonce = new XmdsNonce();
+        $files = RequiredFileFactory::getByDisplayAndLayout($displayId, $layoutId);
+
+        try {
+            $nonce = new RequiredFile();
+        }
+        catch (NotFoundException $e) {
+            $nonce = $files[0];
+        }
+
         $nonce->displayId = $displayId;
+        $nonce->requestKey = $requestKey;
         $nonce->layoutId = $layoutId;
         $nonce->size = $size;
         $nonce->storedAs = $path;
@@ -85,15 +113,25 @@ class XmdsNonceFactory extends BaseFactory
     /**
      * Create for Get Resource
      * @param $displayId
+     * @param $requestKey
      * @param $layoutId
      * @param $regionId
      * @param $mediaId
-     * @return XmdsNonce
+     * @return RequiredFile
      */
-    public static function createForGetResource($displayId, $layoutId, $regionId, $mediaId)
+    public static function createForGetResource($displayId, $requestKey, $layoutId, $regionId, $mediaId)
     {
-        $nonce = new XmdsNonce();
+        $files = RequiredFileFactory::getByDisplayAndResource($displayId, $layoutId, $regionId, $mediaId);
+
+        try {
+            $nonce = new RequiredFile();
+        }
+        catch (NotFoundException $e) {
+            $nonce = $files[0];
+        }
+
         $nonce->displayId = $displayId;
+        $nonce->requestKey = $requestKey;
         $nonce->layoutId = $layoutId;
         $nonce->regionId = $regionId;
         $nonce->mediaId = $mediaId;
@@ -103,15 +141,25 @@ class XmdsNonceFactory extends BaseFactory
     /**
      * Create for Media
      * @param $displayId
+     * @param $requestKey
      * @param $mediaId
      * @param $size
      * @param $path
-     * @return XmdsNonce
+     * @return RequiredFile
      */
-    public static function createForMedia($displayId, $mediaId, $size, $path)
+    public static function createForMedia($displayId, $requestKey, $mediaId, $size, $path)
     {
-        $nonce = new XmdsNonce();
+        $files = RequiredFileFactory::getByDisplayAndMedia($displayId, $mediaId);
+
+        try {
+            $nonce = new RequiredFile();
+        }
+        catch (NotFoundException $e) {
+            $nonce = $files[0];
+        }
+
         $nonce->displayId = $displayId;
+        $nonce->requestKey = $requestKey;
         $nonce->mediaId = $mediaId;
         $nonce->size = $size;
         $nonce->storedAs = $path;
@@ -123,43 +171,43 @@ class XmdsNonceFactory extends BaseFactory
         $entries = [];
         $params = [];
         $sql = '
-            SELECT nonceId,
+            SELECT rfId,
+                requestKey,
                 nonce,
                 expiry,
                 lastUsed,
                 displayId,
-                fileId,
                 size,
                 storedAs,
                 layoutId,
                 regionId,
                 mediaId
-             FROM `xmdsnonce`
+             FROM `requiredfile`
             WHERE 1 = 1
         ';
 
         if (Sanitize::getString('nonce', $filterBy) !== null) {
-            $sql .= ' AND xmdsnonce.nonce = :nonce';
+            $sql .= ' AND requiredfile.nonce = :nonce';
             $params['nonce'] = Sanitize::getString('nonce', $filterBy);
         }
 
         if (Sanitize::getInt('displayId', $filterBy) !== null) {
-            $sql .= ' AND xmdsnonce.displayId = :displayId';
+            $sql .= ' AND requiredfile.displayId = :displayId';
             $params['displayId'] = Sanitize::getInt('displayId', $filterBy);
         }
 
         if (Sanitize::getInt('layoutId', $filterBy) !== null) {
-            $sql .= ' AND xmdsnonce.layoutId = :layoutId';
+            $sql .= ' AND requiredfile.layoutId = :layoutId';
             $params['layoutId'] = Sanitize::getInt('layoutId', $filterBy);
         }
 
         if (Sanitize::getInt('regionId', $filterBy) !== null) {
-            $sql .= ' AND xmdsnonce.regionId = :regionId';
+            $sql .= ' AND requiredfile.regionId = :regionId';
             $params['regionId'] = Sanitize::getInt('regionId', $filterBy);
         }
 
         if (Sanitize::getInt('mediaId', $filterBy) !== null) {
-            $sql .= ' AND xmdsnonce.mediaId = :mediaId';
+            $sql .= ' AND requiredfile.mediaId = :mediaId';
             $params['mediaId'] = Sanitize::getInt('mediaId', $filterBy);
         }
 
@@ -170,7 +218,7 @@ class XmdsNonceFactory extends BaseFactory
         Log::sql($sql, $params);
 
         foreach (PDOConnect::select($sql, $params) as $row) {
-            $entries[] = (new XmdsNonce())->hydrate($row, ['intProperties' => ['expires', 'lastUsed', 'size']]);
+            $entries[] = (new RequiredFile())->hydrate($row, ['intProperties' => ['expires', 'lastUsed', 'size']]);
         }
 
         return $entries;

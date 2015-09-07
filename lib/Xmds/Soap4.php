@@ -27,7 +27,7 @@ use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
-use Xibo\Factory\XmdsNonceFactory;
+use Xibo\Factory\RequiredFileFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Date;
 use Xibo\Helper\Log;
@@ -224,8 +224,8 @@ class Soap4 extends Soap
                 $fileId = Sanitize::int($fileId);
 
                 // Validate the nonce
-                if (count(XmdsNonceFactory::getByDisplayAndLayout($this->display->displayId, $fileId)) <= 0)
-                    throw new NotFoundException('Invalid Nonce for ' . $fileId);
+                $requiredFile = RequiredFileFactory::getByDisplayAndLayout($this->display->displayId, $fileId);
+                $requiredFile->markUsed();
 
                 // Load the layout
                 $layout = LayoutFactory::getById($fileId);
@@ -236,8 +236,8 @@ class Soap4 extends Soap
 
             } else if ($fileType == "media") {
                 // Validate the nonce
-                if (count(XmdsNonceFactory::getByDisplayAndMedia($this->display->displayId, $fileId)) <= 0)
-                    throw new NotFoundException('Invalid Nonce for ' . $fileId);
+                $requiredFile = RequiredFileFactory::getByDisplayAndMedia($this->display->displayId, $fileId);
+                $requiredFile->markUsed();
 
                 $media = MediaFactory::getById($fileId);
 

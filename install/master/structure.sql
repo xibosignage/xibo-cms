@@ -222,18 +222,6 @@ CREATE TABLE IF NOT EXISTS `displayprofile` (
 
 -- --------------------------------------------------------
 
---
--- Table structure for table `file`
---
-
-CREATE TABLE IF NOT EXISTS `file` (
-  `FileID` int(11) NOT NULL AUTO_INCREMENT,
-  `CreatedDT` int(11) NOT NULL,
-  `UserID` int(11) NOT NULL,
-  PRIMARY KEY (`FileID`),
-  KEY `UserID` (`UserID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
-
 -- --------------------------------------------------------
 
 --

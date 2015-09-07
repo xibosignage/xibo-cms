@@ -401,7 +401,17 @@ ALTER TABLE  `lkcampaignlayout` ADD UNIQUE (
   `DisplayOrder`
 );
 
-/* CLASS column on Module table */
+/* TODO CLASS column on Module table */
+
+
+RENAME TABLE `xmdsnonce` TO `requiredfile` ;
+ALTER TABLE  `requiredfiles` CHANGE  `nonceId`  `rfId` BIGINT( 20 ) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `requiredfiles` DROP `fileId`;
+ALTER TABLE  `requiredfiles` CHANGE  `regionId`  `regionId` INT NULL;
+ALTER TABLE  `requiredfile` ADD  `requestKey` VARCHAR( 10 ) NOT NULL;
+
+
+DROP TABLE  `file`;
 
 
 UPDATE `version` SET `app_ver` = '1.8.0-alpha', `XmdsVersion` = 4, `XlfVersion` = 2;

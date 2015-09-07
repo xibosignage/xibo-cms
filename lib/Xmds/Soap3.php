@@ -24,7 +24,7 @@ use Xibo\Entity\Bandwidth;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\XmdsNonceFactory;
+use Xibo\Factory\RequiredFileFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
@@ -144,8 +144,8 @@ class Soap3 extends Soap
                 $fileId = Sanitize::int($filePath);
 
                 // Validate the nonce
-                if (count(XmdsNonceFactory::getByDisplayAndLayout($this->display->displayId, $fileId)) <= 0)
-                    throw new NotFoundException('Invalid Nonce for ' . $fileId);
+                $requiredFile = RequiredFileFactory::getByDisplayAndLayout($this->display->displayId, $fileId);
+                $requiredFile->markUsed();
 
                 // Load the layout
                 $layout = LayoutFactory::getById($fileId);
@@ -162,8 +162,8 @@ class Soap3 extends Soap
                 $fileId = explode('.', $filePath);
 
                 // Validate the nonce
-                if (count(XmdsNonceFactory::getByDisplayAndMedia($this->display->displayId, $fileId[0])) <= 0)
-                    throw new NotFoundException('Invalid Nonce for ' . $filePath);
+                $requiredFile = RequiredFileFactory::getByDisplayAndMedia($this->display->displayId, $fileId[0]);
+                $requiredFile->markUsed();
 
                 // Return the Chunk size specified
                 $f = fopen($libraryLocation . $filePath, 'r');
