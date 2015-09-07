@@ -235,6 +235,10 @@ class Campaign implements \JsonSerializable
      */
     private function linkLayouts()
     {
+        // Don't do anything if we don't have any layouts
+        if (count($this->layouts) <= 0)
+            return;
+
         $sql = 'INSERT INTO `lkcampaignlayout` (CampaignID, LayoutID, DisplayOrder) VALUES (:campaignId, :layoutId, :displayOrder) ON DUPLICATE KEY UPDATE layoutId = :layoutId2';
 
         // Get the Max display order
@@ -303,6 +307,9 @@ class Campaign implements \JsonSerializable
             $ids = array_map(function ($element) {
                 return $element['lkCampaignLayoutId'];
             }, $ids);
+
+            if (count($ids) <= 0)
+                $ids[] = 0;
 
             $sql = '
               DELETE FROM `lkcampaignlayout`
