@@ -145,7 +145,6 @@ class Soap3 extends Soap
 
                 // Validate the nonce
                 $requiredFile = RequiredFileFactory::getByDisplayAndLayout($this->display->displayId, $fileId);
-                $requiredFile->markUsed();
 
                 // Load the layout
                 $layout = LayoutFactory::getById($fileId);
@@ -153,6 +152,9 @@ class Soap3 extends Soap
 
                 $file = file_get_contents($path);
                 $chunkSize = filesize($path);
+
+                $requiredFile->bytesRequested = $requiredFile->bytesRequested + $chunkSize;
+                $requiredFile->markUsed();
 
             } else if ($fileType == "media") {
                 // Get the ID
@@ -163,7 +165,6 @@ class Soap3 extends Soap
 
                 // Validate the nonce
                 $requiredFile = RequiredFileFactory::getByDisplayAndMedia($this->display->displayId, $fileId[0]);
-                $requiredFile->markUsed();
 
                 // Return the Chunk size specified
                 $f = fopen($libraryLocation . $filePath, 'r');
@@ -174,6 +175,9 @@ class Soap3 extends Soap
 
                 // Store file size for bandwidth log
                 $chunkSize = strlen($file);
+
+                $requiredFile->bytesRequested = $requiredFile->bytesRequested + $chunkSize;
+                $requiredFile->markUsed();
 
             } else {
                 throw new NotFoundException('Unknown FileType Requested.');

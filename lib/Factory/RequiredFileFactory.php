@@ -93,13 +93,11 @@ class RequiredFileFactory extends BaseFactory
      */
     public static function createForLayout($displayId, $requestKey, $layoutId, $size, $path)
     {
-        $files = RequiredFileFactory::getByDisplayAndLayout($displayId, $layoutId);
-
         try {
-            $nonce = new RequiredFile();
+            $nonce = RequiredFileFactory::getByDisplayAndLayout($displayId, $layoutId);
         }
         catch (NotFoundException $e) {
-            $nonce = $files[0];
+            $nonce = new RequiredFile();
         }
 
         $nonce->displayId = $displayId;
@@ -121,13 +119,11 @@ class RequiredFileFactory extends BaseFactory
      */
     public static function createForGetResource($displayId, $requestKey, $layoutId, $regionId, $mediaId)
     {
-        $files = RequiredFileFactory::getByDisplayAndResource($displayId, $layoutId, $regionId, $mediaId);
-
         try {
-            $nonce = new RequiredFile();
+            $nonce = RequiredFileFactory::getByDisplayAndResource($displayId, $layoutId, $regionId, $mediaId);
         }
         catch (NotFoundException $e) {
-            $nonce = $files[0];
+            $nonce = new RequiredFile();
         }
 
         $nonce->displayId = $displayId;
@@ -149,13 +145,11 @@ class RequiredFileFactory extends BaseFactory
      */
     public static function createForMedia($displayId, $requestKey, $mediaId, $size, $path)
     {
-        $files = RequiredFileFactory::getByDisplayAndMedia($displayId, $mediaId);
-
         try {
-            $nonce = new RequiredFile();
+            $nonce = RequiredFileFactory::getByDisplayAndMedia($displayId, $mediaId);
         }
         catch (NotFoundException $e) {
-            $nonce = $files[0];
+            $nonce = new RequiredFile();
         }
 
         $nonce->displayId = $displayId;
@@ -172,16 +166,18 @@ class RequiredFileFactory extends BaseFactory
         $params = [];
         $sql = '
             SELECT rfId,
-                requestKey,
-                nonce,
-                expiry,
-                lastUsed,
-                displayId,
-                size,
-                storedAs,
-                layoutId,
-                regionId,
-                mediaId
+                `requiredfile`.requestKey,
+                `requiredfile`.nonce,
+                `requiredfile`.expiry,
+                `requiredfile`.lastUsed,
+                `requiredfile`.displayId,
+                `requiredfile`.size,
+                `requiredfile`.storedAs,
+                `requiredfile`.layoutId,
+                `requiredfile`.regionId,
+                `requiredfile`.mediaId,
+                `requiredfile`.bytesRequested,
+                `requiredfile`.complete
              FROM `requiredfile`
             WHERE 1 = 1
         ';

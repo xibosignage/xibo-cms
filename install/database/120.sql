@@ -409,8 +409,9 @@ ALTER TABLE  `requiredfiles` CHANGE  `nonceId`  `rfId` BIGINT( 20 ) NOT NULL AUT
 ALTER TABLE `requiredfiles` DROP `fileId`;
 ALTER TABLE  `requiredfiles` CHANGE  `regionId`  `regionId` INT NULL;
 ALTER TABLE  `requiredfile` ADD  `requestKey` VARCHAR( 10 ) NOT NULL;
-
-
+ALTER TABLE  `requiredfile` ADD  `bytesRequested` BIGINT NOT NULL;
+ALTER TABLE  `requiredfile` ADD  `complete` TINYINT NOT NULL;
+ALTER TABLE `display` DROP `MediaInventoryXml`
 DROP TABLE  `file`;
 
 

@@ -106,6 +106,7 @@ if (isset($_GET['file'])) {
     // Check nonce, output appropriate headers, log bandwidth and stop.
     try {
         $file = \Xibo\Factory\RequiredFileFactory::getByNonce($_REQUEST['file']);
+        $file->bytesRequested = $file->bytesRequested + $file->size;
         $file->isValid();
 
         // Issue magic packet

@@ -126,12 +126,6 @@ class Display
      */
     public $mediaInventoryStatus;
 
-    /**
-     * @SWG\Property(description="The last submitted Media Inventory XML from the Player")
-     * @var string
-     */
-    public $mediaInventoryXml;
-
     private $currentMacAddress;
     /**
      * @SWG\Property(description="The current Mac Address of the Player")
@@ -445,7 +439,6 @@ class Display
                     loggedin = :loggedIn,
                     ClientAddress = :clientAddress,
                     MediaInventoryStatus = :mediaInventoryStatus,
-                    MediaInventoryXml = :mediaInventoryXml,
                     client_type = :clientType,
                     client_version = :clientVersion,
                     client_code = :clientCode,
@@ -478,7 +471,6 @@ class Display
             'loggedIn' => $this->loggedIn,
             'clientAddress' => $this->clientAddress,
             'mediaInventoryStatus' => $this->mediaInventoryStatus,
-            'mediaInventoryXml' => $this->mediaInventoryXml,
             'clientType' => $this->clientType,
             'clientVersion' => $this->clientVersion,
             'clientCode' => $this->clientCode,

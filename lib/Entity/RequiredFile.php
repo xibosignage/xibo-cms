@@ -27,6 +27,8 @@ class RequiredFile implements \JsonSerializable
     public $layoutId;
     public $regionId;
     public $mediaId;
+    public $bytesRequested;
+    public $complete;
 
     public function save($options = [])
     {
@@ -93,7 +95,9 @@ class RequiredFile implements \JsonSerializable
                 storedAs = :storedAs,
                 layoutId = :layoutId,
                 regionId = :regionId,
-                mediaId = :mediaId
+                mediaId = :mediaId,
+                bytesRequested = :bytesRequested,
+                complete = :complete
              WHERE rfId = :rfId
         ', [
             'rfId' => $this->rfId,
@@ -106,7 +110,9 @@ class RequiredFile implements \JsonSerializable
             'storedAs' => $this->storedAs,
             'layoutId' => $this->layoutId,
             'regionId' => $this->regionId,
-            'mediaId' => $this->mediaId
+            'mediaId' => $this->mediaId,
+            'bytesRequested' => $this->bytesRequested,
+            'complete' => $this->complete
         ]);
     }
 

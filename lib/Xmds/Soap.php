@@ -284,7 +284,7 @@ class Soap
             $layout->loadPlaylists();
 
             // Make sure its XLF is up to date
-            $path = basename($layout->xlfToDisk());
+            $path = $layout->xlfToDisk();
 
             // For layouts the MD5 column is the layout xml
             $fileSize = filesize($path);
@@ -295,7 +295,7 @@ class Soap
                 Log::debug('MD5 for layoutid ' . $layoutId . ' is: [' . $md5 . ']');
 
             // Add nonce
-            $layoutNonce = RequiredFileFactory::createForLayout($this->display->displayId, $requestKey, $layoutId, $fileSize, $path);
+            $layoutNonce = RequiredFileFactory::createForLayout($this->display->displayId, $requestKey, $layoutId, $fileSize, basename($path));
             $layoutNonce->save();
 
             // Add the Layout file element
@@ -896,12 +896,30 @@ class Soap
 
         foreach ($fileNodes as $node) {
             /* @var \DOMElement $node */
-            $mediaId = $node->getAttribute('id');
-            $complete = $node->getAttribute('complete');
-            $md5 = $node->getAttribute('md5');
-            $lastChecked = $node->getAttribute('lastChecked');
 
-            // TODO: Check the MD5?
+            // What type of file?
+            switch ($node->getAttribute('type')) {
+
+                case 'media':
+                    $requiredFile = RequiredFileFactory::getByDisplayAndMedia($this->display->displayId, $node->getAttribute('id'));
+                    break;
+
+                case 'layout':
+                    $requiredFile = RequiredFileFactory::getByDisplayAndMedia($this->display->displayId, $node->getAttribute('id'));
+                    break;
+
+                case 'resource':
+                    $requiredFile = RequiredFileFactory::getByDisplayAndMedia($this->display->displayId, $node->getAttribute('id'));
+                    break;
+
+                default:
+                    Log::debug('Skipping unknown node in media inventory: %s.', $node->getAttribute('type'));
+                    continue;
+            }
+
+            // File complete?
+            $complete = $node->getAttribute('complete');
+            $requiredFile->complete = $complete;
 
             // If this item is a 0 then set not complete
             if ($complete == 0)
@@ -909,7 +927,6 @@ class Soap
         }
 
         $this->display->mediaInventoryStatus = $mediaInventoryComplete;
-        $this->display->mediaInventoryXml = $inventory;
         $this->display->save(false, false);
 
         $this->LogBandwidth($this->display->displayId, Bandwidth::$MEDIAINVENTORY, strlen($inventory));
@@ -952,10 +969,12 @@ class Soap
         // The MediaId is actually the widgetId
         try {
             $requiredFile = RequiredFileFactory::getByDisplayAndResource($this->display->displayId, $layoutId, $regionId, $mediaId);
-            $requiredFile->markUsed();
 
             $module = ModuleFactory::createWithWidget(WidgetFactory::getById($mediaId), RegionFactory::getById($regionId));
             $resource = $module->GetResource($this->display->displayId);
+
+            $requiredFile->bytesRequested = $requiredFile->bytesRequested + strlen($resource);
+            $requiredFile->markUsed();
 
             if ($resource == '')
                 throw new ControllerNotImplemented();

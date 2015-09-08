@@ -19,8 +19,6 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
-use DOMDocument;
-use DOMXPath;
 use finfo;
 use Xibo\Entity\DisplayGroup;
 use Xibo\Entity\Stat;
@@ -36,6 +34,7 @@ use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 use Xibo\Helper\WakeOnLan;
+use Xibo\Storage\PDOConnect;
 
 
 class Display extends Base
@@ -95,35 +94,32 @@ class Display extends Base
         if (!$this->getUser()->checkViewable($display))
             throw new AccessDeniedException();
 
-        // Load the XML into a DOMDocument
-        $document = new DOMDocument("1.0");
-
-        if (!$document->loadXML($display->mediaInventoryXml))
-            throw new \InvalidArgumentException(__('Invalid Media Inventory'));
-
-        // Need to parse the XML and return a set of rows
-        $xpath = new DOMXPath($document);
-        $fileNodes = $xpath->query("//file");
-
-        $rows = array();
-
-        foreach ($fileNodes as $node) {
-            /* @var \DOMElement $node */
-            $row = array();
-            $row['type'] = $node->getAttribute('type');
-            $row['id'] = $node->getAttribute('id');
-            $row['complete'] = ($node->getAttribute('complete') == 0) ? __('No') : __('Yes');
-            $row['lastChecked'] = $node->getAttribute('lastChecked');
-            $row['md5'] = $node->getAttribute('md5');
-
-            $rows[] = $row;
-        }
+        // Show 3 widgets
+        $layouts = PDOConnect::select('
+            SELECT `layout`.layout,
+                `requiredfile`.*
+              FROM `requiredfile`
+                INNER JOIN `layout`
+                ON layout.layoutId = `requiredfile`.layoutId
+             WHERE `requiredfile`.displayId = :displayId
+              AND IFNULL(`requiredfile`.mediaId, 0) = 0
+        ', [
+            'displayId' => $display->displayId
+        ]);
 
         // Call to render the template
         $this->getState()->template = 'display-page-manage';
         $this->getState()->setData([
-            'inventory' => $rows,
-            'display' => $display
+            'requiredFiles' => [],
+            'display' => $display,
+            'inventory' => [
+                'layouts' => $layouts
+            ],
+            'defaults' => [
+                'fromDate' => Date::getLocalDate(time() - (86400 * 35)),
+                'fromDateOneDay' => Date::getLocalDate(time() - 86400),
+                'toDate' => Date::getLocalDate()
+            ]
         ]);
     }
 

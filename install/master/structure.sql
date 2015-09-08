@@ -166,7 +166,6 @@ CREATE TABLE IF NOT EXISTS `display` (
   `alert_timeout` int(11) NOT NULL DEFAULT '0',
   `ClientAddress` varchar(100) DEFAULT NULL,
   `MediaInventoryStatus` tinyint(4) NOT NULL DEFAULT '0',
-  `MediaInventoryXml` longtext,
   `MacAddress` varchar(254) DEFAULT NULL COMMENT 'Mac Address of the Client',
   `LastChanged` int(11) DEFAULT NULL COMMENT 'Last time this Mac Address changed',
   `NumberOfMacAddressChanges` int(11) NOT NULL DEFAULT '0',
