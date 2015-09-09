@@ -106,7 +106,7 @@ class Display extends Base
         // Widget for file status
         $status = PDOConnect::select('
             SELECT IFNULL(SUM(size), 0) AS sizeTotal,
-                (CASE WHEN complete = 1 THEN size ELSE 0 END) AS sizeComplete,
+                SUM(CASE WHEN complete = 1 THEN size ELSE 0 END) AS sizeComplete,
                 COUNT(*) AS countTotal,
                 IFNULL(SUM(complete), 0) AS countComplete
               FROM `requiredfile`

@@ -197,6 +197,11 @@ class Finance extends Module
 
         Log::debug('Finance module with YQL = . Looking for %s in response', $yql, $items);
 
+        if ($yql == '' || $items == '') {
+            Log::error('Missing YQL/Items for Finance Module with WidgetId %d', $this->getWidgetId());
+            return false;
+        }
+
         if (strstr($items, ','))
             $items = explode(',', $items);
         else

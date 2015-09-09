@@ -979,7 +979,7 @@ class Soap
         try {
             $requiredFile = RequiredFileFactory::getByDisplayAndResource($this->display->displayId, $layoutId, $regionId, $mediaId);
 
-            $module = ModuleFactory::createWithWidget(WidgetFactory::getById($mediaId), RegionFactory::getById($regionId));
+            $module = ModuleFactory::createWithWidget(WidgetFactory::loadByWidgetId($mediaId), RegionFactory::getById($regionId));
             $resource = $module->GetResource($this->display->displayId);
 
             $requiredFile->bytesRequested = $requiredFile->bytesRequested + strlen($resource);
