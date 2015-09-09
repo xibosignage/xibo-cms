@@ -138,12 +138,13 @@ class Module implements \JsonSerializable
 
     public function save()
     {
+        $this->validate();
+
         if ($this->moduleId == null || $this->moduleId == 0)
             $this->add();
         else
             $this->edit();
 
-        $this->validate();
     }
 
     private function add()
@@ -175,10 +176,22 @@ class Module implements \JsonSerializable
     {
         $dbh = PDOConnect::init();
 
-        $sth = $dbh->prepare('UPDATE module SET settings = :settings WHERE moduleid = :moduleId');
+        $sth = $dbh->prepare('
+          UPDATE module SET
+              enabled = :enabled,
+              previewEnabled = :previewEnabled,
+              validExtensions = :validExtensions,
+              imageUri = :imageUri,
+              settings = :settings
+           WHERE moduleid = :moduleId
+        ');
 
         $sth->execute(array(
             'moduleId' => $this->moduleId,
+            'enabled' => $this->enabled,
+            'previewEnabled' => $this->previewEnabled,
+            'validExtensions' => $this->validExtensions,
+            'imageUri' => $this->imageUri,
             'settings' => json_encode($this->settings)
         ));
     }

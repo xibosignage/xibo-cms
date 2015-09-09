@@ -25,7 +25,6 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Helper\Help;
 use Xibo\Helper\Sanitize;
-use Xibo\Helper\Theme;
 
 
 class Template extends Base
@@ -273,8 +272,6 @@ class Template extends Base
         $layout->tags = TagFactory::tagsFromString(Sanitize::getString('tags'));
         $layout->tags[] = TagFactory::getByTag('template');
         $layout->description = Sanitize::getString('description');
-
-        $layout->validate();
         $layout->save();
 
         // Return
@@ -284,136 +281,5 @@ class Template extends Base
             'id' => $layout->layoutId,
             'data' => $layout
         ]);
-    }
-
-    function EditForm()
-    {
-        $response = $this->getState();
-
-        // Get the layout
-        $layout = LayoutFactory::getById(Kit::GetParam('layoutid', _GET, _INT));
-
-        // Check Permissions
-        if (!$this->getUser()->checkEditable($layout))
-            trigger_error(__('You do not have permissions to view this layout'), E_USER_ERROR);
-
-        Theme::Set('form_id', 'TemplateEditForm');
-
-        // Two tabs
-        $tabs = array();
-        $tabs[] = Form::AddTab('general', __('General'));
-        $tabs[] = Form::AddTab('description', __('Description'));
-
-        Theme::Set('form_tabs', $tabs);
-
-        $formFields = array();
-        $formFields['general'][] = Form::AddText('layout', __('Name'), $layout->layout, __('The Name of the Layout - (1 - 50 characters)'), 'n', 'required');
-
-        $formFields['description'][] = Form::AddMultiText('description', __('Description'), $layout->description,
-            __('An optional description of the Layout. (1 - 250 characters)'), 'd', 5, 'maxlength="250"');
-
-        // We are editing
-        Theme::Set('form_action', 'index.php?p=template&q=Edit');
-        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layout->layoutId . '">');
-
-        $formFields['general'][] = Form::AddCombo(
-            'retired',
-            __('Retired'),
-            $layout->retired,
-            array(array('retiredid' => '1', 'retired' => 'Yes'), array('retiredid' => '0', 'retired' => 'No')),
-            'retiredid',
-            'retired',
-            __('Retire this template or not? It will no longer be visible in lists'),
-            'r');
-
-        Theme::Set('form_fields_general', $formFields['general']);
-        Theme::Set('form_fields_description', $formFields['description']);
-
-        // Initialise the template and capture the output
-        $form = Theme::RenderReturn('form_render');
-
-        $response->SetFormRequestResponse($form, __('Edit Template'), '350px', '275px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Template', 'Edit') . '")');
-        $response->AddButton(__('Cancel'), 'XiboDialogClose()');
-        $response->AddButton(__('Save'), '$("#TemplateEditForm").submit()');
-
-    }
-
-    function Edit()
-    {
-
-
-        $response = $this->getState();
-
-        // Get the layout
-        $layout = LayoutFactory::getById(Kit::GetParam('layoutid', _POST, _INT));
-
-        // Check Permissions
-        if (!$this->getUser()->checkEditable($layout))
-            trigger_error(__('You do not have permissions to view this layout'), E_USER_ERROR);
-
-        $layout->layout = Sanitize::getString('layout');
-        $layout->tags = TagFactory::tagsFromString(Kit::GetParam('tags', _POST, _STRING));
-        $layout->tags[] = TagFactory::getByTag('template');
-        $layout->description = Sanitize::getString('description');
-        $layout->retired = \Kit::GetParam('retired', _POST, _INT, 0);
-
-        $layout->validate();
-        $layout->save();
-
-        $response->SetFormSubmitResponse(__('Template Details Changed.'));
-
-    }
-
-    /**
-     * Deletes a template
-     */
-    function DeleteTemplate()
-    {
-
-
-        $response = $this->getState();
-
-        // Get the layout
-        $layout = LayoutFactory::getById(Kit::GetParam('layoutid', _POST, _INT));
-
-        // Check Permissions
-        if (!$this->getUser()->checkDeleteable($layout))
-            trigger_error(__('You do not have permissions to view this layout'), E_USER_ERROR);
-
-        $layout->delete();
-
-        $response->SetFormSubmitResponse(__('The Template has been Deleted'));
-
-    }
-
-    /**
-     * Shows the form to delete a template
-     */
-    public function DeleteTemplateForm()
-    {
-        $response = $this->getState();
-
-        // Get the layout
-        $layout = LayoutFactory::getById(Kit::GetParam('layoutid', _GET, _INT));
-
-        // Check Permissions
-        if (!$this->getUser()->checkDeleteable($layout))
-            trigger_error(__('You do not have permissions to view this layout'), E_USER_ERROR);
-
-        Theme::Set('form_id', 'DeleteForm');
-        Theme::Set('form_action', 'index.php?p=template&q=DeleteTemplate');
-        Theme::Set('form_meta', '<input type="hidden" name="layoutid" value="' . $layout->layoutId . '">');
-        Theme::Set('form_fields', array(
-            Form::AddMessage(__('Are you sure you want to delete this template?'))
-        ));
-
-        $form = Theme::RenderReturn('form_render');
-
-        $response->SetFormRequestResponse($form, __('Delete Template'), '300px', '200px');
-        $response->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Template', 'Delete') . '")');
-        $response->AddButton(__('No'), 'XiboDialogClose()');
-        $response->AddButton(__('Yes'), '$("#DeleteForm").submit()');
-
     }
 }

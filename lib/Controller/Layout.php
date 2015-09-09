@@ -171,9 +171,6 @@ class Layout extends Base
         else
             $layout = LayoutFactory::createFromResolution($resolutionId, $this->getUser()->userId, $name, $description, Sanitize::getString('tags'));
 
-        // Validate
-        $layout->validate();
-
         // Save
         $layout->save();
 
@@ -293,9 +290,6 @@ class Layout extends Base
             $layout->width = $resolution->width;
             $layout->height = $resolution->height;
         }
-
-        // Validate
-        $layout->validate();
 
         // Save
         $layout->save([
@@ -776,9 +770,6 @@ class Layout extends Base
 
         $layout->layout = Sanitize::getString('name');
         $layout->description = Sanitize::getString('description');
-
-        // Validate the new layout
-        $layout->validate();
 
         // TODO: Copy the media on the layout and change the assignments.
         if (Sanitize::getCheckbox('copyMediaFiles') == 1) {

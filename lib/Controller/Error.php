@@ -8,13 +8,13 @@
 
 namespace Xibo\Controller;
 
-
 use League\OAuth2\Server\Exception\OAuthException;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\FormExpiredException;
 use Xibo\Exception\InstanceSuspendedException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Helper\Log;
+use Xibo\Helper\Translate;
 
 class Error extends Base
 {
@@ -22,7 +22,12 @@ class Error extends Base
     {
         $app = $this->getApp();
 
-        Log::debug('Requested an unknown page');
+        // Not found controller happens outside the normal middleware stack for some reason
+        // Setup the translations for gettext
+        Translate::InitLocale();
+
+        // Configure the locale for date/time
+        \Jenssegers\Date\Date::setLocale(Translate::GetLocale(2));
 
         $message = __('Page not found');
 
