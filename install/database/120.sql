@@ -411,7 +411,7 @@ ALTER TABLE  `requiredfiles` CHANGE  `regionId`  `regionId` INT NULL;
 ALTER TABLE  `requiredfile` ADD  `requestKey` VARCHAR( 10 ) NOT NULL;
 ALTER TABLE  `requiredfile` ADD  `bytesRequested` BIGINT NOT NULL;
 ALTER TABLE  `requiredfile` ADD  `complete` TINYINT NOT NULL;
-ALTER TABLE `display` DROP `MediaInventoryXml`
+ALTER TABLE `display` DROP `MediaInventoryXml`;
 DROP TABLE  `file`;
 
 
