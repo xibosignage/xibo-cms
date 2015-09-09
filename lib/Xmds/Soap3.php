@@ -42,6 +42,8 @@ class Soap3 extends Soap
      */
     public function RegisterDisplay($serverKey, $hardwareKey, $displayName, $version)
     {
+        $this->logProcessor->setRoute('RegisterDisplay');
+
         // Sanitize
         $serverKey = Sanitize::string($serverKey);
         $hardwareKey = Sanitize::string($hardwareKey);
@@ -57,6 +59,8 @@ class Soap3 extends Soap
         // Check in the database for this hardwareKey
         try {
             $display = DisplayFactory::getByLicence($hardwareKey);
+
+            $this->logProcessor->setDisplay($this->display->displayId);
 
             if ($display->licensed == 0) {
                 $active = 'Display is awaiting licensing approval from an Administrator.';

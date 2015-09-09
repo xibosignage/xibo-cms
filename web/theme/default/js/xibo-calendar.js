@@ -183,7 +183,7 @@ var setupScheduleNowForm = function(form) {
         var now = moment();
 
         // Use Hours, Minutes and Seconds to generate a from date to send to the API
-        $(this).append("<input type=\"hidden\" name=\"fromDt\" value=\"" + now.format(jsDateFormat) + "\" />");
+        $(this).append("<input type=\"hidden\" name=\"fromDt\" value=\"" + now.format("YYYY-MM-DD HH:mm:ss") + "\" />");
 
         if (hours != "")
             now.add(hours, "hours");
@@ -194,7 +194,7 @@ var setupScheduleNowForm = function(form) {
         if (seconds != "")
             now.add(seconds, "seconds");
 
-        $(this).append("<input type=\"hidden\" name=\"toDt\" value=\"" + now.format(jsDateFormat) + "\" />");
+        $(this).append("<input type=\"hidden\" name=\"toDt\" value=\"" + now.format("YYYY-MM-DD HH:mm:ss") + "\" />");
 
         $.ajax({
             type: $(this).attr("method"),

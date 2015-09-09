@@ -118,6 +118,10 @@ class Display extends Base
         // Decide what our units are going to be, based on the size
         $suffixes = array('bytes', 'k', 'M', 'G', 'T');
         $base = (int)floor(log($status[0]['sizeTotal']) / log(1024));
+
+        if ($base < 0)
+            $base = 0;
+
         $units = (isset($suffixes[$base]) ? $suffixes[$base] : '');
         Log::debug('Base for size is %d and suffix is %s', $base, $units);
 

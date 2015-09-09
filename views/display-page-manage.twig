@@ -49,7 +49,7 @@
                             <tr>
                                 <td>{{ item.logId }}</td>
                                 <td><span class="isoDate">{{ item.logDate }}</span></td>
-                                <td>{{ item.message }}</td>
+                                <td>{{ item.message[:250] }}</td>
                             </tr>
                         {% endfor %}
                         </tbody>

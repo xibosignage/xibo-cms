@@ -32,7 +32,8 @@
                         <form class="form-inline">
                             <div class="tab-content">
                                 <div class="tab-pane active" id="general">
-                                    {{ inline.dropdown("filter_type", "single", "Type", defaults.type, options.type, "id", "value") }}
+                                    {% set title %}{% trans "Level" %}{% endset %}
+                                    {{ inline.text("filter_type", title, defaults.type) }}
                                     {{ inline.dropdown("filter_intervalTypeId", "single", "Interval", defaults.intervalType, options.intervalType, "id", "value") }}
                                     {{ inline.number("filter_seconds", "Duration back", defaults.seconds) }}
                                     {{ inline.text("runNo", "Run") }}
@@ -63,7 +64,7 @@
                                 <th>{% trans "Level" %}</th>
                                 <th>{% trans "Display" %}</th>
                                 <th>{% trans "Page" %}</th>
-                                <th>{% trans "Message" %}</th>
+                                <th style="width: 50%">{% trans "Message" %}</th>
                             </tr>
                         </thead>
                         <tbody>

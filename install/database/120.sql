@@ -405,9 +405,9 @@ ALTER TABLE  `lkcampaignlayout` ADD UNIQUE (
 
 
 RENAME TABLE `xmdsnonce` TO `requiredfile` ;
-ALTER TABLE  `requiredfiles` CHANGE  `nonceId`  `rfId` BIGINT( 20 ) NOT NULL AUTO_INCREMENT;
-ALTER TABLE `requiredfiles` DROP `fileId`;
-ALTER TABLE  `requiredfiles` CHANGE  `regionId`  `regionId` INT NULL;
+ALTER TABLE  `requiredfile` CHANGE  `nonceId`  `rfId` BIGINT( 20 ) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `requiredfile` DROP `fileId`;
+ALTER TABLE  `requiredfile` CHANGE  `regionId`  `regionId` INT NULL;
 ALTER TABLE  `requiredfile` ADD  `requestKey` VARCHAR( 10 ) NOT NULL;
 ALTER TABLE  `requiredfile` ADD  `bytesRequested` BIGINT NOT NULL;
 ALTER TABLE  `requiredfile` ADD  `complete` TINYINT NOT NULL;

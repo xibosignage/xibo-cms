@@ -51,6 +51,8 @@ class Soap4 extends Soap
      */
     public function RegisterDisplay($serverKey, $hardwareKey, $displayName, $clientType, $clientVersion, $clientCode, $operatingSystem, $macAddress)
     {
+        $this->logProcessor->setRoute('RegisterDisplay');
+
         // Sanitize
         $serverKey = Sanitize::string($serverKey);
         $hardwareKey = Sanitize::string($hardwareKey);
@@ -81,6 +83,8 @@ class Soap4 extends Soap
         try {
             $display = DisplayFactory::getByLicence($hardwareKey);
 
+            $this->logProcessor->setDisplay($this->display->displayId);
+
             // Append the time
             $displayElement->setAttribute('date', Date::getLocalDate());
             $displayElement->setAttribute('timezone', Config::GetSetting('defaultTimezone'));
@@ -110,12 +114,12 @@ class Soap4 extends Soap
                 }
 
                 // Add some special settings
-                $nodeName = ($display->clientType == 'windows') ? 'DisplayName' : 'displayName';
+                $nodeName = ($clientType == 'windows') ? 'DisplayName' : 'displayName';
                 $node = $return->createElement($nodeName, $display->display);
                 $node->setAttribute('type', 'string');
                 $displayElement->appendChild($node);
 
-                $nodeName = ($display->clientType == 'windows') ? 'ScreenShotRequested' : 'screenShotRequested';
+                $nodeName = ($clientType == 'windows') ? 'ScreenShotRequested' : 'screenShotRequested';
                 $node = $return->createElement($nodeName, $display->screenShotRequested);
                 $node->setAttribute('type', 'checkbox');
                 $displayElement->appendChild($node);

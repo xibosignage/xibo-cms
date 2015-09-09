@@ -898,23 +898,29 @@ class Soap
             /* @var \DOMElement $node */
 
             // What type of file?
-            switch ($node->getAttribute('type')) {
+            try {
+                switch ($node->getAttribute('type')) {
 
-                case 'media':
-                    $requiredFile = RequiredFileFactory::getByDisplayAndMedia($this->display->displayId, $node->getAttribute('id'));
-                    break;
+                    case 'media':
+                        $requiredFile = RequiredFileFactory::getByDisplayAndMedia($this->display->displayId, $node->getAttribute('id'));
+                        break;
 
-                case 'layout':
-                    $requiredFile = RequiredFileFactory::getByDisplayAndMedia($this->display->displayId, $node->getAttribute('id'));
-                    break;
+                    case 'layout':
+                        $requiredFile = RequiredFileFactory::getByDisplayAndMedia($this->display->displayId, $node->getAttribute('id'));
+                        break;
 
-                case 'resource':
-                    $requiredFile = RequiredFileFactory::getByDisplayAndMedia($this->display->displayId, $node->getAttribute('id'));
-                    break;
+                    case 'resource':
+                        $requiredFile = RequiredFileFactory::getByDisplayAndMedia($this->display->displayId, $node->getAttribute('id'));
+                        break;
 
-                default:
-                    Log::debug('Skipping unknown node in media inventory: %s.', $node->getAttribute('type'));
-                    continue;
+                    default:
+                        Log::debug('Skipping unknown node in media inventory: %s - %s.', $node->getAttribute('type'), $node->getAttribute('id'));
+                        continue;
+                }
+            }
+            catch (NotFoundException $e) {
+                Log::info('Unable to find file in media inventory: %s', $node->getAttribute('type'));
+                continue;
             }
 
             // File complete?
