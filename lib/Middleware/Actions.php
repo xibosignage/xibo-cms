@@ -57,6 +57,7 @@ class Actions extends Middleware
         // Process notifications
         // Attach a hook to log the route
         $app->hook('slim.before.dispatch', function() use ($app) {
+
             // Handle if we are an upgrade
             // Get the current route pattern
             $resource = $app->router->getCurrentRoute()->getPattern();

@@ -27,7 +27,7 @@ use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
-use Xibo\Factory\XmdsNonceFactory;
+use Xibo\Factory\RequiredFileFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Date;
 use Xibo\Helper\Log;
@@ -51,6 +51,8 @@ class Soap4 extends Soap
      */
     public function RegisterDisplay($serverKey, $hardwareKey, $displayName, $clientType, $clientVersion, $clientCode, $operatingSystem, $macAddress)
     {
+        $this->logProcessor->setRoute('RegisterDisplay');
+
         // Sanitize
         $serverKey = Sanitize::string($serverKey);
         $hardwareKey = Sanitize::string($hardwareKey);
@@ -81,6 +83,8 @@ class Soap4 extends Soap
         try {
             $display = DisplayFactory::getByLicence($hardwareKey);
 
+            $this->logProcessor->setDisplay($this->display->displayId);
+
             // Append the time
             $displayElement->setAttribute('date', Date::getLocalDate());
             $displayElement->setAttribute('timezone', Config::GetSetting('defaultTimezone'));
@@ -110,12 +114,12 @@ class Soap4 extends Soap
                 }
 
                 // Add some special settings
-                $nodeName = ($display->clientType == 'windows') ? 'DisplayName' : 'displayName';
+                $nodeName = ($clientType == 'windows') ? 'DisplayName' : 'displayName';
                 $node = $return->createElement($nodeName, $display->display);
                 $node->setAttribute('type', 'string');
                 $displayElement->appendChild($node);
 
-                $nodeName = ($display->clientType == 'windows') ? 'ScreenShotRequested' : 'screenShotRequested';
+                $nodeName = ($clientType == 'windows') ? 'ScreenShotRequested' : 'screenShotRequested';
                 $node = $return->createElement($nodeName, $display->screenShotRequested);
                 $node->setAttribute('type', 'checkbox');
                 $displayElement->appendChild($node);
@@ -224,8 +228,7 @@ class Soap4 extends Soap
                 $fileId = Sanitize::int($fileId);
 
                 // Validate the nonce
-                if (count(XmdsNonceFactory::getByDisplayAndLayout($this->display->displayId, $fileId)) <= 0)
-                    throw new NotFoundException('Invalid Nonce for ' . $fileId);
+                $requiredFile = RequiredFileFactory::getByDisplayAndLayout($this->display->displayId, $fileId);
 
                 // Load the layout
                 $layout = LayoutFactory::getById($fileId);
@@ -234,10 +237,12 @@ class Soap4 extends Soap
                 $file = file_get_contents($path);
                 $chunkSize = filesize($path);
 
+                $requiredFile->bytesRequested = $requiredFile->bytesRequested + $chunkSize;
+                $requiredFile->markUsed();
+
             } else if ($fileType == "media") {
                 // Validate the nonce
-                if (count(XmdsNonceFactory::getByDisplayAndMedia($this->display->displayId, $fileId)) <= 0)
-                    throw new NotFoundException('Invalid Nonce for ' . $fileId);
+                $requiredFile = RequiredFileFactory::getByDisplayAndMedia($this->display->displayId, $fileId);
 
                 $media = MediaFactory::getById($fileId);
 
@@ -250,6 +255,9 @@ class Soap4 extends Soap
 
                 // Store file size for bandwidth log
                 $chunkSize = strlen($file);
+
+                $requiredFile->bytesRequested = $requiredFile->bytesRequested + $chunkSize;
+                $requiredFile->markUsed();
 
             } else {
                 throw new NotFoundException('Unknown FileType Requested.');

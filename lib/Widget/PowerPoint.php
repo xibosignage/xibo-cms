@@ -21,7 +21,7 @@
 namespace Xibo\Widget;
 
 
-class PowerPoint extends Module
+class PowerPoint extends ModuleWidget
 {
     public function isValid()
     {

@@ -28,7 +28,7 @@ use Xibo\Factory\WidgetMediaFactory;
 use Xibo\Factory\WidgetOptionFactory;
 use Xibo\Helper\Log;
 use Xibo\Storage\PDOConnect;
-use Xibo\Widget\Module;
+use Xibo\Widget\ModuleWidget;
 
 /**
  * Class Widget
@@ -96,7 +96,7 @@ class Widget implements \JsonSerializable
 
     /**
      * @SWG\Property(description="The Module Object for this Widget")
-     * @var Module $module A widget can contain a module which is useful for getting accessing module methods
+     * @var ModuleWidget $module A widget can contain a module which is useful for getting accessing module methods
      */
     public $module;
 

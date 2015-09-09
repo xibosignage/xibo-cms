@@ -20,7 +20,7 @@
  */
 namespace Xibo\Widget;
 
-class GenericFile extends Module
+class GenericFile extends ModuleWidget
 {
     /**
      * Preview code for a module

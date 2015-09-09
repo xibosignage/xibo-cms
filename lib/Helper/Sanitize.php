@@ -198,7 +198,7 @@ class Sanitize
             if ($date instanceof Date)
                 return $date;
 
-            return \Xibo\Helper\Date::fromString($date);
+            return \Xibo\Helper\Date::parse($date);
         }
         catch (\Exception $e) {
             throw new \InvalidArgumentException(__('Expecting a date in %s but received %s.', $param, $date));

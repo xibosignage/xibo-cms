@@ -53,9 +53,9 @@ $app = new \Slim\Slim(array(
 ));
 $app->setName('api');
 
-$app->add(new \Xibo\Middleware\Storage());
-$app->add(new \Xibo\Middleware\State());
 $app->add(new \Xibo\Middleware\ApiAuthenticationOAuth());
+$app->add(new \Xibo\Middleware\State());
+$app->add(new \Xibo\Middleware\Storage());
 $app->view(new \Xibo\Middleware\ApiView());
 
 // Configure the Slim error handler

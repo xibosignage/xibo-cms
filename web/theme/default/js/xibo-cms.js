@@ -208,12 +208,6 @@ function XiboInitialise(scope) {
     // Date time controls
     $(scope + ' .dateTimePicker').each(function(){
 
-        // Get the linked field and use it to set the time
-        var preset = $(this).closest("form").find("#" + $(this).data().linkField).val();
-
-        if (preset != undefined && preset != "")
-            $(this).val(moment(preset).format(jsDateFormat));
-
         $(this).datetimepicker({
             format: bootstrapDateFormat,
             minuteStep: 5,
@@ -221,14 +215,15 @@ function XiboInitialise(scope) {
             language: language,
             calendarType: calendarType
         });
-    });
 
-    $(scope + ' .datePicker').each(function() {
         // Get the linked field and use it to set the time
         var preset = $(this).closest("form").find("#" + $(this).data().linkField).val();
 
         if (preset != undefined && preset != "")
-            $(this).val(moment(preset).format(jsDateFormat));
+            $(this).datetimepicker('update', preset);
+    });
+
+    $(scope + ' .datePicker').each(function() {
 
         $(this).datetimepicker({
             format: bootstrapDateFormat,
@@ -238,15 +233,15 @@ function XiboInitialise(scope) {
             minView: 2,
             todayHighlight: true
         });
-    });
-
-    $(scope + ' .timePicker').each(function() {
 
         // Get the linked field and use it to set the time
         var preset = $(this).closest("form").find("#" + $(this).data().linkField).val();
 
         if (preset != undefined && preset != "")
-            $(this).val(moment(preset).format(jsDateFormat));
+            $(this).datetimepicker('update', preset);
+    });
+
+    $(scope + ' .timePicker').each(function() {
 
         $(this).datetimepicker({
             format: bootstrapDateFormat,
@@ -258,6 +253,12 @@ function XiboInitialise(scope) {
             todayHighlight: true,
             minuteStep: 10
         });
+
+        // Get the linked field and use it to set the time
+        var preset = $(this).closest("form").find("#" + $(this).data().linkField).val();
+
+        if (preset != undefined && preset != "")
+            $(this).datetimepicker('update', preset);
     });
 }
 

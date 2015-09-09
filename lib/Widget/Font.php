@@ -21,7 +21,7 @@
 namespace Xibo\Widget;
 
 
-class Font extends Module
+class Font extends ModuleWidget
 {
     /*
      * Installs any files specific to this module

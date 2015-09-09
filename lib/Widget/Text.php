@@ -24,7 +24,7 @@ use Xibo\Factory\MediaFactory;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 
-class Text extends Module
+class Text extends ModuleWidget
 {
     /**
      * Install Files

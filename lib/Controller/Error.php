@@ -12,6 +12,7 @@ namespace Xibo\Controller;
 use League\OAuth2\Server\Exception\OAuthException;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\FormExpiredException;
+use Xibo\Exception\InstanceSuspendedException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Helper\Log;
 
@@ -101,8 +102,16 @@ class Error extends Base
                     ]);
                 }
                 else {
+                    // Template depending on whether one exists for the type of exception
+                    // get the exception class
+                    $exceptionClass = 'error-' . strtolower(str_replace('\\', '-', get_class($e)));
+
+                    if (file_exists(PROJECT_ROOT . '/views/' . $exceptionClass . '.twig'))
+                        $this->getState()->template = $exceptionClass;
+                    else
+                        $this->getState()->template = 'error';
+
                     $app->flashNow('globalError', $message);
-                    $this->getState()->template = 'error';
                 }
 
                 $this->render();
@@ -124,6 +133,9 @@ class Error extends Base
                 }
                 else if ($e instanceof \InvalidArgumentException) {
                     $status = 422;
+                }
+                else if (property_exists(get_class($e), 'httpStatusCode')) {
+                    $status = $e->httpStatusCode;
                 }
 
                 $this->getState()->hydrate([
@@ -158,6 +170,7 @@ class Error extends Base
             || $e instanceof FormExpiredException
             || $e instanceof AccessDeniedException
             || $e instanceof NotFoundException
+            || $e instanceof InstanceSuspendedException
         );
     }
 }

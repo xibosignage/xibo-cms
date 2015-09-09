@@ -24,7 +24,7 @@ use Xibo\Entity\Bandwidth;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\XmdsNonceFactory;
+use Xibo\Factory\RequiredFileFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
@@ -42,6 +42,8 @@ class Soap3 extends Soap
      */
     public function RegisterDisplay($serverKey, $hardwareKey, $displayName, $version)
     {
+        $this->logProcessor->setRoute('RegisterDisplay');
+
         // Sanitize
         $serverKey = Sanitize::string($serverKey);
         $hardwareKey = Sanitize::string($hardwareKey);
@@ -57,6 +59,8 @@ class Soap3 extends Soap
         // Check in the database for this hardwareKey
         try {
             $display = DisplayFactory::getByLicence($hardwareKey);
+
+            $this->logProcessor->setDisplay($this->display->displayId);
 
             if ($display->licensed == 0) {
                 $active = 'Display is awaiting licensing approval from an Administrator.';
@@ -144,8 +148,7 @@ class Soap3 extends Soap
                 $fileId = Sanitize::int($filePath);
 
                 // Validate the nonce
-                if (count(XmdsNonceFactory::getByDisplayAndLayout($this->display->displayId, $fileId)) <= 0)
-                    throw new NotFoundException('Invalid Nonce for ' . $fileId);
+                $requiredFile = RequiredFileFactory::getByDisplayAndLayout($this->display->displayId, $fileId);
 
                 // Load the layout
                 $layout = LayoutFactory::getById($fileId);
@@ -153,6 +156,9 @@ class Soap3 extends Soap
 
                 $file = file_get_contents($path);
                 $chunkSize = filesize($path);
+
+                $requiredFile->bytesRequested = $requiredFile->bytesRequested + $chunkSize;
+                $requiredFile->markUsed();
 
             } else if ($fileType == "media") {
                 // Get the ID
@@ -162,8 +168,7 @@ class Soap3 extends Soap
                 $fileId = explode('.', $filePath);
 
                 // Validate the nonce
-                if (count(XmdsNonceFactory::getByDisplayAndMedia($this->display->displayId, $fileId[0])) <= 0)
-                    throw new NotFoundException('Invalid Nonce for ' . $filePath);
+                $requiredFile = RequiredFileFactory::getByDisplayAndMedia($this->display->displayId, $fileId[0]);
 
                 // Return the Chunk size specified
                 $f = fopen($libraryLocation . $filePath, 'r');
@@ -174,6 +179,9 @@ class Soap3 extends Soap
 
                 // Store file size for bandwidth log
                 $chunkSize = strlen($file);
+
+                $requiredFile->bytesRequested = $requiredFile->bytesRequested + $chunkSize;
+                $requiredFile->markUsed();
 
             } else {
                 throw new NotFoundException('Unknown FileType Requested.');

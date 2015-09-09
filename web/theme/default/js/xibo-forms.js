@@ -16,6 +16,15 @@ var text_callback = function(dialog) {
                 // Substitute the #Color# references with the suggested complimentary color
                 $("#ta_text").val(value.template.replace(/#Color#/g, color));
                 $("#ta_css").val(value.css);
+
+                // Go through each property
+                $.each(value, function (key, value) {
+
+                    if (key != "template" && key != "css") {
+                        // Try to match a field
+                        $("#" + key).val(value);
+                    }
+                });
             }
         });
     }
@@ -32,6 +41,15 @@ var text_callback = function(dialog) {
                 if (value.id == templateId) {
                     CKEDITOR.instances["ta_text"].setData(value.template.replace(/#Color#/g, color));
                     $("#ta_css").val(value.css);
+
+                    // Go through each property
+                    $.each(value, function (key, value) {
+
+                        if (key != "template" && key != "css") {
+                            // Try to match a field
+                            $("#" + key).val(value);
+                        }
+                    });
                 }
             });
         }

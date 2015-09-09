@@ -263,10 +263,10 @@ class Stats extends Base
         // Get some data for a bandwidth chart
         $dbh = PDOConnect::init();
 
-        $displayId = Sanitize::getInt('displayid');
+        $displayId = Sanitize::getInt('displayId');
         $params = array(
-            'month' => $fromDt,
-            'month2' => $toDt
+            'month' => Date::getLocalDate($fromDt->setDateTime($fromDt->year, $fromDt->month, 1, 0, 0), 'U'),
+            'month2' => Date::getLocalDate($toDt->addMonth(1)->setDateTime($toDt->year, $toDt->month, 1, 0, 0), 'U')
         );
 
         $SQL = 'SELECT display.display, IFNULL(SUM(Size), 0) AS size ';
@@ -300,7 +300,7 @@ class Stats extends Base
 
         $SQL .= 'ORDER BY display.display';
 
-        //Log::debug($SQL . '. Params = ' . var_export($params, true), get_class(), __FUNCTION__);
+        Log::sql($SQL, $params);
 
         $sth = $dbh->prepare($SQL);
 

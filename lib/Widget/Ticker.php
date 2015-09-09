@@ -33,7 +33,7 @@ use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 
-class Ticker extends Module
+class Ticker extends ModuleWidget
 {
     /**
      * Install Files

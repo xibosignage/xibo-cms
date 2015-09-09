@@ -16,10 +16,10 @@ use Xibo\Entity\Bandwidth;
 use Xibo\Entity\Display;
 use Xibo\Entity\Playlist;
 use Xibo\Entity\Region;
+use Xibo\Entity\RequiredFile;
 use Xibo\Entity\Stat;
 use Xibo\Entity\User;
 use Xibo\Entity\Widget;
-use Xibo\Entity\XmdsNonce;
 use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\BandwidthFactory;
@@ -28,11 +28,12 @@ use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\RegionFactory;
+use Xibo\Factory\RequiredFileFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\WidgetFactory;
-use Xibo\Factory\XmdsNonceFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Log;
+use Xibo\Helper\Random;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 use Xibo\Storage\PDOConnect;
@@ -93,8 +94,8 @@ class Soap
         if ($this->display->isAuditing == 1)
             Log::debug('[IN] with hardware key: ' . $hardwareKey);
 
-        // Remove all Nonces for this display
-        XmdsNonce::removeAllForDisplay($this->display->displayId);
+        // Generate a new Request Key which we will sign our Required Files with
+        $requestKey = Random::generateString(10);
 
         // Build a new RF
         $requiredFilesXml = new \DOMDocument("1.0");
@@ -236,7 +237,7 @@ class Soap
                 }
 
                 // Add nonce
-                $mediaNonce = XmdsNonceFactory::createForMedia($this->display->displayId, $id, $fileSize, $path);
+                $mediaNonce = RequiredFileFactory::createForMedia($this->display->displayId, $requestKey, $id, $fileSize, $path);
                 $mediaNonce->save();
 
                 // Add the file node
@@ -264,6 +265,7 @@ class Soap
             }
         } catch (\Exception $e) {
             Log::error('Unable to get a list of required files. ' . $e->getMessage());
+            Log::debug($e->getTraceAsString());
             return new \SoapFault('Sender', 'Unable to get a list of files');
         }
 
@@ -293,7 +295,7 @@ class Soap
                 Log::debug('MD5 for layoutid ' . $layoutId . ' is: [' . $md5 . ']');
 
             // Add nonce
-            $layoutNonce = XmdsNonceFactory::createForLayout($this->display->displayId, $layoutId, $fileSize, $path);
+            $layoutNonce = RequiredFileFactory::createForLayout($this->display->displayId, $requestKey, $layoutId, $fileSize, basename($path));
             $layoutNonce->save();
 
             // Add the Layout file element
@@ -337,7 +339,7 @@ class Soap
                             $modules[$widget->type]->renderAs == 'html'
                         ) {
                             // Add nonce
-                            XmdsNonceFactory::createForGetResource($this->display->displayId, $layoutId, $region->regionId, $widget->widgetId)->save();
+                            RequiredFileFactory::createForGetResource($this->display->displayId, $requestKey, $layoutId, $region->regionId, $widget->widgetId)->save();
 
                             // Does the media provide a modified Date?
                             $widgetModifiedDt = $layoutModifiedDt->getTimestamp();
@@ -407,6 +409,9 @@ class Soap
         // Return the results of requiredFiles()
         $requiredFilesXml->formatOutput = true;
         $output = $requiredFilesXml->saveXML();
+
+        // Remove unused required files
+        RequiredFile::removeUnusedForDisplay($this->display->displayId, $requestKey);
 
         // Log Bandwidth
         $this->logBandwidth($this->display->displayId, Bandwidth::$RF, strlen($output));
@@ -879,6 +884,8 @@ class Soap
         if ($inventory == '')
             throw new \SoapFault('Receiver', 'Inventory Cannot be Empty');
 
+        Log::debug($inventory);
+
         // Load the XML into a DOMDocument
         $document = new \DOMDocument("1.0");
         $document->loadXML($inventory);
@@ -891,12 +898,37 @@ class Soap
 
         foreach ($fileNodes as $node) {
             /* @var \DOMElement $node */
-            $mediaId = $node->getAttribute('id');
-            $complete = $node->getAttribute('complete');
-            $md5 = $node->getAttribute('md5');
-            $lastChecked = $node->getAttribute('lastChecked');
 
-            // TODO: Check the MD5?
+            // What type of file?
+            try {
+                switch ($node->getAttribute('type')) {
+
+                    case 'media':
+                        $requiredFile = RequiredFileFactory::getByDisplayAndMedia($this->display->displayId, $node->getAttribute('id'));
+                        break;
+
+                    case 'layout':
+                        $requiredFile = RequiredFileFactory::getByDisplayAndLayout($this->display->displayId, $node->getAttribute('id'));
+                        break;
+
+                    case 'resource':
+                        $requiredFile = RequiredFileFactory::getByDisplayAndMedia($this->display->displayId, $node->getAttribute('id'));
+                        break;
+
+                    default:
+                        Log::debug('Skipping unknown node in media inventory: %s - %s.', $node->getAttribute('type'), $node->getAttribute('id'));
+                        continue;
+                }
+            }
+            catch (NotFoundException $e) {
+                Log::info('Unable to find file in media inventory: %s', $node->getAttribute('type'), $node->getAttribute('id'));
+                continue;
+            }
+
+            // File complete?
+            $complete = $node->getAttribute('complete');
+            $requiredFile->complete = $complete;
+            $requiredFile->save(['refreshNonce' => false]);
 
             // If this item is a 0 then set not complete
             if ($complete == 0)
@@ -904,7 +936,6 @@ class Soap
         }
 
         $this->display->mediaInventoryStatus = $mediaInventoryComplete;
-        $this->display->mediaInventoryXml = $inventory;
         $this->display->save(false, false);
 
         $this->LogBandwidth($this->display->displayId, Bandwidth::$MEDIAINVENTORY, strlen($inventory));
@@ -944,17 +975,21 @@ class Soap
         if (!$this->AuthDisplay($hardwareKey))
             throw new \SoapFault('Receiver', "This display client is not licensed");
 
-        // Validate the nonce
-        if (count(XmdsNonceFactory::getByDisplayAndResource($this->display->displayId, $layoutId, $regionId, $mediaId)) <= 0)
-            throw new \SoapFault('Receiver', 'Requested an invalid file.');
-
         // The MediaId is actually the widgetId
         try {
-            $module = ModuleFactory::createWithWidget(WidgetFactory::getById($mediaId), RegionFactory::getById($regionId));
+            $requiredFile = RequiredFileFactory::getByDisplayAndResource($this->display->displayId, $layoutId, $regionId, $mediaId);
+
+            $module = ModuleFactory::createWithWidget(WidgetFactory::loadByWidgetId($mediaId), RegionFactory::getById($regionId));
             $resource = $module->GetResource($this->display->displayId);
+
+            $requiredFile->bytesRequested = $requiredFile->bytesRequested + strlen($resource);
+            $requiredFile->markUsed();
 
             if ($resource == '')
                 throw new ControllerNotImplemented();
+        }
+        catch (NotFoundException $notEx) {
+            throw new \SoapFault('Receiver', 'Requested an invalid file.');
         }
         catch (ControllerNotImplemented $e) {
             throw new \SoapFault('Receiver', 'Unable to get the media resource');

@@ -19,8 +19,6 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
-use DOMDocument;
-use DOMXPath;
 use finfo;
 use Xibo\Entity\DisplayGroup;
 use Xibo\Entity\Stat;
@@ -29,6 +27,7 @@ use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\DisplayProfileFactory;
 use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\LogFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Date;
 use Xibo\Helper\Help;
@@ -36,6 +35,7 @@ use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 use Xibo\Helper\WakeOnLan;
+use Xibo\Storage\PDOConnect;
 
 
 class Display extends Base
@@ -95,35 +95,110 @@ class Display extends Base
         if (!$this->getUser()->checkViewable($display))
             throw new AccessDeniedException();
 
-        // Load the XML into a DOMDocument
-        $document = new DOMDocument("1.0");
+        // Errors in the last 24 hours
+        $errors = LogFactory::query(null, [
+            'displayId' => $display->displayId,
+            'type' => 'ERROR',
+            'fromDt' => Date::getLocalDate(Date::parse()->subHours(24), 'U'),
+            'toDt' => Date::getLocalDate(null, 'U')
+        ]);
 
-        if (!$document->loadXML($display->mediaInventoryXml))
-            throw new \InvalidArgumentException(__('Invalid Media Inventory'));
+        // Widget for file status
+        $status = PDOConnect::select('
+            SELECT IFNULL(SUM(size), 0) AS sizeTotal,
+                SUM(CASE WHEN complete = 1 THEN size ELSE 0 END) AS sizeComplete,
+                COUNT(*) AS countTotal,
+                IFNULL(SUM(complete), 0) AS countComplete
+              FROM `requiredfile`
+             WHERE `requiredfile`.displayId = :displayId
+        ', [
+            'displayId' => $display->displayId
+        ]);
 
-        // Need to parse the XML and return a set of rows
-        $xpath = new DOMXPath($document);
-        $fileNodes = $xpath->query("//file");
+        // Decide what our units are going to be, based on the size
+        $suffixes = array('bytes', 'k', 'M', 'G', 'T');
+        $base = (int)floor(log($status[0]['sizeTotal']) / log(1024));
 
-        $rows = array();
+        if ($base < 0)
+            $base = 0;
 
-        foreach ($fileNodes as $node) {
-            /* @var \DOMElement $node */
-            $row = array();
-            $row['type'] = $node->getAttribute('type');
-            $row['id'] = $node->getAttribute('id');
-            $row['complete'] = ($node->getAttribute('complete') == 0) ? __('No') : __('Yes');
-            $row['lastChecked'] = $node->getAttribute('lastChecked');
-            $row['md5'] = $node->getAttribute('md5');
+        $units = (isset($suffixes[$base]) ? $suffixes[$base] : '');
+        Log::debug('Base for size is %d and suffix is %s', $base, $units);
 
-            $rows[] = $row;
-        }
+        // Show 3 widgets
+        $layouts = PDOConnect::select('
+            SELECT `layout`.layout,
+                `requiredfile`.*
+              FROM `requiredfile`
+                INNER JOIN `layout`
+                ON layout.layoutId = `requiredfile`.layoutId
+             WHERE `requiredfile`.displayId = :displayId
+              AND IFNULL(`requiredfile`.mediaId, 0) = 0
+            ORDER BY `layout`.layout
+        ', [
+            'displayId' => $display->displayId
+        ]);
+
+        // Media
+        $media = PDOConnect::select('
+            SELECT `media`.name,
+                `media`.type,
+                `requiredfile`.*
+              FROM `requiredfile`
+                INNER JOIN `media`
+                ON media.mediaId = `requiredfile`.mediaId
+             WHERE `requiredfile`.displayId = :displayId
+              AND IFNULL(`requiredfile`.layoutId, 0) = 0
+            ORDER BY `media`.name
+        ', [
+            'displayId' => $display->displayId
+        ]);
+
+        // Widgets
+        $widgets = PDOConnect::select('
+            SELECT `widget`.type,
+                `widgetoption`.value AS widgetName,
+                `requiredfile`.*
+              FROM `requiredfile`
+                INNER JOIN `layout`
+                ON layout.layoutId = `requiredfile`.layoutId
+                INNER JOIN `widget`
+                ON widget.widgetId = `requiredfile`.mediaId
+                LEFT OUTER JOIN `widgetoption`
+                ON `widgetoption`.widgetId = `widget`.widgetId
+                  AND `widgetoption`.option = \'name\'
+             WHERE `requiredfile`.displayId = :displayId
+              AND IFNULL(`requiredfile`.layoutId, 0) <> 0
+              AND IFNULL(`requiredfile`.regionId, 0) <> 0
+              AND IFNULL(`requiredfile`.mediaId, 0) <> 0
+            ORDER BY IFNULL(`widgetoption`.value, `widget`.type)
+        ', [
+            'displayId' => $display->displayId
+        ]);
 
         // Call to render the template
         $this->getState()->template = 'display-page-manage';
         $this->getState()->setData([
-            'inventory' => $rows,
-            'display' => $display
+            'requiredFiles' => [],
+            'display' => $display,
+            'errors' => $errors,
+            'inventory' => [
+                'layouts' => $layouts,
+                'media' => $media,
+                'widgets' => $widgets
+            ],
+            'status' => [
+                'units' => $units,
+                'countComplete' => $status[0]['countComplete'],
+                'countRemaining' => $status[0]['countTotal'] - $status[0]['countComplete'],
+                'sizeComplete' => round((double)$status[0]['sizeComplete'] / (pow(1024, $base)), 2),
+                'sizeRemaining' => round((double)($status[0]['sizeTotal'] - $status[0]['sizeComplete']) / (pow(1024, $base)), 2),
+            ],
+            'defaults' => [
+                'fromDate' => Date::getLocalDate(time() - (86400 * 35)),
+                'fromDateOneDay' => Date::getLocalDate(time() - 86400),
+                'toDate' => Date::getLocalDate()
+            ]
         ]);
     }
 

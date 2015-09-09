@@ -99,6 +99,9 @@ class DisplayFactory extends BaseFactory
      */
     public static function query($sortOrder = null, $filterBy = null)
     {
+        if ($sortOrder === null)
+            $sortOrder = ['display'];
+
         $entries = array();
         $params = array();
         $select = '
@@ -117,7 +120,6 @@ class DisplayFactory extends BaseFactory
                   display.alert_timeout AS alertTimeout,
                   display.clientAddress,
                   display.mediaInventoryStatus,
-                  display.mediaInventoryXml,
                   display.macAddress,
                   display.macAddress AS currentMacAddress,
                   display.lastChanged,

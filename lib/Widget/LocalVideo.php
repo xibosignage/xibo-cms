@@ -24,7 +24,7 @@ use InvalidArgumentException;
 use Respect\Validation\Validator as v;
 use Xibo\Helper\Sanitize;
 
-class LocalVideo extends Module
+class LocalVideo extends ModuleWidget
 {
     /**
      * Validate

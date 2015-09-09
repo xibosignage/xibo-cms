@@ -21,6 +21,7 @@
 namespace Xibo\Controller;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\DisplayProfileFactory;
+use Xibo\Helper\Date;
 use Xibo\Helper\Help;
 use Xibo\Helper\Sanitize;
 
@@ -266,7 +267,16 @@ class DisplayProfile extends Base
 
             // If we are a time picker, then process the received time
             if ($setting['fieldType'] == 'timePicker') {
-                $value = ($value == '00:00') ? '0' : strtotime($value . ' GMT') * 1000;
+                $date = Sanitize::getDate($setting['name'], $setting['default']);
+
+                if ($date->hour == 0 && $date->minute == 0)
+                    $value = 0;
+                else {
+                    // Take only the hours and minutes and construct a new date
+                    $now = Date::parse();
+                    $date->setDate($now->year, $now->month, $now->day, $date->hour, $date->minute, 0);
+                    $value = Date::getLocalDate($date, 'U') * 1000;
+                }
             }
 
             // Add to the combined array

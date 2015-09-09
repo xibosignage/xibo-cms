@@ -25,7 +25,7 @@ use Respect\Validation\Validator as v;
 use Xibo\Factory\MediaFactory;
 use Xibo\Helper\Sanitize;
 
-class WebPage extends Module
+class WebPage extends ModuleWidget
 {
     /**
      * Install Files

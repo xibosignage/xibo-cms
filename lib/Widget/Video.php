@@ -23,7 +23,7 @@ namespace Xibo\Widget;
 
 use Xibo\Helper\Sanitize;
 
-class Video extends Module
+class Video extends ModuleWidget
 {
     /**
      * Edit Media in the Database

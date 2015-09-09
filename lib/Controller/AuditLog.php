@@ -37,7 +37,7 @@ class AuditLog extends Base
             $filterEntity = $this->getSession()->get('auditlog', 'filterEntity');
         } else {
             $filter_pinned = 0;
-            $filterFromDt = Date::getLocalDate(Date::fromString()->sub('1 day'));
+            $filterFromDt = Date::getLocalDate(Date::parse()->sub('1 day'));
             $filterToDt = Date::getLocalDate();
             $filterUser = NULL;
             $filterEntity = NULL;
@@ -69,10 +69,10 @@ class AuditLog extends Base
 
         // Get the dates and times
         if ($filterFromDt == null)
-            $filterFromDt = Date::fromString()->sub('1 day');
+            $filterFromDt = Date::parse()->sub('1 day');
 
         if ($filterToDt == null)
-            $filterToDt = Date::fromString();
+            $filterToDt = Date::parse();
 
         $search['fromTimeStamp'] = $filterFromDt->format('U');
         $search['toTimeStamp'] = $filterToDt->format('U');

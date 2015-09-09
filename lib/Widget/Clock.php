@@ -27,7 +27,7 @@ use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 use Xibo\Helper\Translate;
 
-class Clock extends Module
+class Clock extends ModuleWidget
 {
     public $codeSchemaVersion = 1;
 

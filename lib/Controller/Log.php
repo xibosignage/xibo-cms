@@ -38,18 +38,20 @@ class Log extends Base
     public function displayPage()
     {
         // Construct Filter Form
-        if ($this->getSession()->get(get_class(), 'Filter') == 1) {
+        if ($this->getSession()->get('log', 'Filter') == 1) {
             $filter_pinned = 1;
             $filter_type = $this->getSession()->get('log', 'filter_type');
             $filter_page = $this->getSession()->get('log', 'filter_page');
             $filter_function = $this->getSession()->get('log', 'filter_function');
             $filter_display = $this->getSession()->get('log', 'filter_display');
-            $filter_fromdt = $this->getSession()->get('log', 'filter_fromdt');
             $filter_seconds = $this->getSession()->get('log', 'filter_seconds');
             $filter_intervalTypeId = $this->getSession()->get('log', 'filter_intervalTypeId');
+
+            // Never remember the fromDt
+            $filter_fromdt = NULL;
         } else {
             $filter_pinned = 0;
-            $filter_type = 0;
+            $filter_type = NULL;
             $filter_page = NULL;
             $filter_function = NULL;
             $filter_display = 0;
@@ -75,11 +77,6 @@ class Log extends Base
                     array('id' => 60, 'value' => __('Minutes')),
                     array('id' => 3600, 'value' => __('Hours'))
                 ),
-                'type' => array(
-                    array('id' => 0, 'value' => __('All')),
-                    array('id' => 2, 'value' => __('Audit')),
-                    array('id' => 1, 'value' => __('Error'))
-                ),
                 'displays' => DisplayFactory::query()
             ]
         ];
@@ -90,7 +87,7 @@ class Log extends Base
 
     function grid()
     {
-        $type = Sanitize::getInt('filter_type', 0);
+        $type = Sanitize::getString('filter_type');
         $function = Sanitize::getString('filter_function');
         $page = Sanitize::getString('filter_page');
         $displayId = Sanitize::getInt('filter_display');

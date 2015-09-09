@@ -186,17 +186,21 @@ class Campaign implements \JsonSerializable
      */
     public function unassignLayout($layout)
     {
-        Log::debug('Unassigning Layout %s from Campaign %s', $layout, $this);
-
         $this->load();
+
+        Log::debug('Unassigning Layout [%s] from Campaign [%s]. Display Order %d. Count before assign = %d', $layout, $this, $layout->displayOrder, count($this->layouts));
 
         $this->layouts = array_udiff($this->layouts, [$layout], function ($a, $b) {
             /**
              * @var Layout $a
              * @var Layout $b
              */
-            return $a->getId() - $b->getId();
+            $return = ($a->getId() - $b->getId()) + ($a->displayOrder - $b->displayOrder);
+            Log::debug('Comparing a [%d, %d] with b [%d, %d]. Return = %d', $a->layoutId, $a->displayOrder, $b->layoutId, $b->displayOrder, $return);
+            return $return;
         });
+
+        Log::debug('Count after unassign = %d', count($this->layouts));
     }
 
     private function add()
@@ -222,8 +226,8 @@ class Campaign implements \JsonSerializable
     private function manageAssignments()
     {
         Log::debug('Managing Assignments on %s', $this);
-        $this->linkLayouts();
         $this->unlinkLayouts();
+        $this->linkLayouts();
     }
 
     /**
@@ -231,6 +235,10 @@ class Campaign implements \JsonSerializable
      */
     private function linkLayouts()
     {
+        // Don't do anything if we don't have any layouts
+        if (count($this->layouts) <= 0)
+            return;
+
         $sql = 'INSERT INTO `lkcampaignlayout` (CampaignID, LayoutID, DisplayOrder) VALUES (:campaignId, :layoutId, :displayOrder) ON DUPLICATE KEY UPDATE layoutId = :layoutId2';
 
         // Get the Max display order
@@ -247,15 +255,6 @@ class Campaign implements \JsonSerializable
                 $layout->displayOrder = $maxDisplayOrder;
             }
         }
-
-        // Organise the Layouts Array by display order.
-        usort($this->layouts, function($a, $b) {
-            /**
-             * @var Layout $a
-             * @var Layout $b
-             */
-            return ($a->displayOrder < $b->displayOrder) ? -1 : 1;
-        });
 
         foreach ($this->layouts as $layout) {
 
@@ -276,17 +275,53 @@ class Campaign implements \JsonSerializable
         // Unlink any layouts that are NOT in the collection
         $params = ['campaignId' => $this->campaignId];
 
-        $sql = 'DELETE FROM `lkcampaignlayout` WHERE campaignId = :campaignId AND layoutId NOT IN (0';
+        if (count($this->layouts) <= 0) {
+            $sql = ' DELETE FROM `lkcampaignlayout` WHERE campaignId = :campaignId ';
+        }
+        else {
 
-        $i = 0;
-        foreach ($this->layouts as $layout) {
-            $i++;
-            $sql .= ',:layoutId' . $i;
-            $params['layoutId' . $i] = $layout->layoutId;
+            $sql = '
+                  SELECT lkCampaignLayoutId
+                    FROM `lkcampaignlayout`
+                   WHERE campaignId = :campaignId AND (
+            ';
+
+            $i = 0;
+            foreach ($this->layouts as $layout) {
+                $i++;
+
+                if ($i > 1)
+                    $sql .= ' OR ';
+
+                $sql .= ' (layoutId = :layoutId' . $i . ' AND displayOrder = :displayOrder' . $i . ') ';
+                $params['layoutId' . $i] = $layout->layoutId;
+                $params['displayOrder' . $i] = $layout->displayOrder;
+            }
+
+            $sql .= ')';
+
+            // Get the lkid's for the delete
+            Log::sql($sql, $params);
+            $ids = PDOConnect::select($sql, $params);
+
+            $ids = array_map(function ($element) {
+                return $element['lkCampaignLayoutId'];
+            }, $ids);
+
+            if (count($ids) <= 0)
+                $ids[] = 0;
+
+            $sql = '
+              DELETE FROM `lkcampaignlayout`
+               WHERE campaignId = :campaignId
+                AND lkCampaignLayoutId NOT IN (' . implode(',', $ids) . ') ';
+
+            // Reset params to just be the campaign id
+            $params = ['campaignId' => $this->campaignId];
         }
 
-        $sql .= ')';
 
+        Log::sql($sql, $params);
         PDOConnect::update($sql, $params);
     }
 

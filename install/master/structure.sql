@@ -166,7 +166,6 @@ CREATE TABLE IF NOT EXISTS `display` (
   `alert_timeout` int(11) NOT NULL DEFAULT '0',
   `ClientAddress` varchar(100) DEFAULT NULL,
   `MediaInventoryStatus` tinyint(4) NOT NULL DEFAULT '0',
-  `MediaInventoryXml` longtext,
   `MacAddress` varchar(254) DEFAULT NULL COMMENT 'Mac Address of the Client',
   `LastChanged` int(11) DEFAULT NULL COMMENT 'Last time this Mac Address changed',
   `NumberOfMacAddressChanges` int(11) NOT NULL DEFAULT '0',
@@ -221,18 +220,6 @@ CREATE TABLE IF NOT EXISTS `displayprofile` (
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=2 ;
 
 -- --------------------------------------------------------
-
---
--- Table structure for table `file`
---
-
-CREATE TABLE IF NOT EXISTS `file` (
-  `FileID` int(11) NOT NULL AUTO_INCREMENT,
-  `CreatedDT` int(11) NOT NULL,
-  `UserID` int(11) NOT NULL,
-  PRIMARY KEY (`FileID`),
-  KEY `UserID` (`UserID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 -- --------------------------------------------------------
 
@@ -998,21 +985,24 @@ CREATE TABLE IF NOT EXISTS `widgetoption` (
 
 -- --------------------------------------------------------
 
+
 --
--- Table structure for table `xmdsnonce`
+-- Table structure for table `requiredfile`
 --
 
-CREATE TABLE IF NOT EXISTS `xmdsnonce` (
-  `nonceId` bigint(20) NOT NULL AUTO_INCREMENT,
+CREATE TABLE IF NOT EXISTS `requiredfile` (
+  `rfId` bigint(20) NOT NULL AUTO_INCREMENT,
   `nonce` varchar(100) NOT NULL,
   `expiry` int(11) NOT NULL,
   `lastUsed` int(11) DEFAULT NULL,
   `displayId` int(11) NOT NULL,
-  `fileId` int(11) DEFAULT NULL,
   `size` bigint(20) DEFAULT NULL,
   `storedAs` varchar(100) DEFAULT NULL,
   `layoutId` int(11) DEFAULT NULL,
-  `regionId` varchar(100) DEFAULT NULL,
-  `mediaId` varchar(100) DEFAULT NULL,
-  PRIMARY KEY (`nonceId`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+  `regionId` int(11) DEFAULT NULL,
+  `mediaId` int(11) DEFAULT NULL,
+  `requestKey` varchar(10) NOT NULL,
+  `bytesRequested` bigint(20) NOT NULL,
+  `complete` tinyint(4) NOT NULL,
+  PRIMARY KEY (`rfId`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;

@@ -24,12 +24,13 @@ namespace Xibo\Widget;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\MediaFactory;
 use Xibo\Helper\Cache;
+use Xibo\Helper\Config;
 use Xibo\Helper\Date;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 
-class Finance extends Module
+class Finance extends ModuleWidget
 {
     public $codeSchemaVersion = 1;
 
@@ -133,12 +134,13 @@ class Finance extends Module
         $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
         $this->setOption('name', Sanitize::getString('name'));
         $this->setOption('yql', Sanitize::getString('yql'));
+        $this->setOption('item', Sanitize::getString('item'));
+        $this->setOption('resultIdentifier', Sanitize::getString('resultIdentifier'));
         $this->setOption('effect', Sanitize::getString('effect'));
         $this->setOption('speed', Sanitize::getInt('speed'));
         $this->setOption('backgroundColor', Sanitize::getString('backgroundColor'));
         $this->setOption('noRecordsMessage', Sanitize::getString('noRecordsMessage'));
         $this->setOption('dateFormat', Sanitize::getString('dateFormat'));
-        $this->setOption('recordCount', Sanitize::getInt('recordCount'));
         $this->setOption('overrideTemplate', Sanitize::getCheckbox('overrideTemplate'));
         $this->setOption('updateInterval', Sanitize::getInt('updateInterval', 60));
         $this->setOption('templateId', Sanitize::getString('templateId'));
@@ -159,12 +161,13 @@ class Finance extends Module
         $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
         $this->setOption('name', Sanitize::getString('name'));
         $this->setOption('yql', Sanitize::getString('yql'));
+        $this->setOption('item', Sanitize::getString('item'));
+        $this->setOption('resultIdentifier', Sanitize::getString('resultIdentifier'));
         $this->setOption('effect', Sanitize::getString('effect'));
         $this->setOption('speed', Sanitize::getInt('speed'));
         $this->setOption('backgroundColor', Sanitize::getString('backgroundColor'));
         $this->setOption('noRecordsMessage', Sanitize::getString('noRecordsMessage'));
         $this->setOption('dateFormat', Sanitize::getString('dateFormat'));
-        $this->setOption('recordCount', Sanitize::getInt('recordCount'));
         $this->setOption('overrideTemplate', Sanitize::getCheckbox('overrideTemplate'));
         $this->setOption('updateInterval', Sanitize::getInt('updateInterval', 60));
         $this->setOption('templateId', Sanitize::getString('templateId'));
@@ -183,18 +186,42 @@ class Finance extends Module
 
     /**
      * Get YQL Data
-     * @return array|bool|null
+     * @return array|bool an array of results according to the key specified by result identifier. false if an invalid value is returned.
      */
     protected function getYql()
     {
+        // Construct the YQL
+        // process items
+        $yql = $this->getOption('yql');
+        $items = $this->getOption('item');
+
+        Log::debug('Finance module with YQL = . Looking for %s in response', $yql, $items);
+
+        if ($yql == '' || $items == '') {
+            Log::error('Missing YQL/Items for Finance Module with WidgetId %d', $this->getWidgetId());
+            return false;
+        }
+
+        if (strstr($items, ','))
+            $items = explode(',', $items);
+        else
+            $items = [$items];
+
+        // quote each item
+        $items = array_map(function ($element) {
+            return '\'' . trim($element) . '\'';
+        }, $items);
+
+        $yql = str_replace('[Item]', implode(',', $items), $yql);
+
         // Fire off a request for the data
-        $key = md5($this->getOption('yql') . uniqid());
+        $key = md5($yql);
 
         if (!Cache::has($key) || Cache::get($key) == '') {
 
-            Log::debug('Querying API for ' . $this->getOption('yql'));
+            Log::debug('Querying API for ' . $yql);
 
-            if (!$data = $this->request($this->getOption('yql'))) {
+            if (!$data = $this->request($yql)) {
                 return false;
             }
 
@@ -206,7 +233,16 @@ class Finance extends Module
             $data = Cache::get($key);
         }
 
-        return $data;
+        Log::debug('Finance data returned: %s', var_export($data, true));
+
+        // Pull out the results according to the resultIdentifier
+        // If the element to return is an array and we aren't, then box.
+        $results = $data[$this->getOption('resultIdentifier')];
+
+        if (array_key_exists(0, $results))
+            return $results;
+        else
+            return [$results];
     }
 
     /**
@@ -217,14 +253,26 @@ class Finance extends Module
     private function request($yql)
     {
         // Encode the YQL and make the request
-        //$return = \Requests::get('https://query.yahooapis.com/v1/public/yql?q=' . urlencode('select * from yahoo.finance.quote where symbol in (\'TEC.PA\')' . '&format=json'));
-        $return = \Requests::get('https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20yahoo.finance.quote%20where%20symbol%20in%20(%22TEC.PA%22)&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=');
+        $url = 'https://query.yahooapis.com/v1/public/yql?q=' . urlencode($yql) . '&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys';
+        //$url = 'https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20yahoo.finance.quote%20where%20symbol%20in%20(%22TEC.PA%22)&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=';
+
+        // TODO Proxy support
+        if (Config::getSetting('PROXY_HOST') != '' && !Config::isProxyException($url)) {
+            $httpOptions[CURLOPT_PROXY] = Config::getSetting('PROXY_HOST');
+            $httpOptions[CURLOPT_PROXYPORT] = Config::getSetting('PROXY_PORT');
+
+            if (Config::getSetting('PROXY_AUTH') != '')
+                $httpOptions[CURLOPT_PROXYUSERPWD] = Config::getSetting('PROXY_AUTH');
+        }
+
+        $return = \Requests::get($url);
 
         if ($return->status_code == 200) {
-            return json_decode($return->body)->query->results->quote;
+            return json_decode($return->body, true)['query']['results'];
         }
         else {
             Log::info('Invalid response from Yahoo. %s', $return->raw);
+            return false;
         }
     }
 
@@ -272,9 +320,8 @@ class Finance extends Module
         if (!$data = $this->getYql())
             throw new NotFoundException(__('No data returned, please check error log.'));
 
-        return ['results' => (array)$data];
+        return ['results' => $data[0]];
     }
-
 
     /**
      * Get Resource
@@ -298,7 +345,7 @@ class Finance extends Module
         }
 
         // Run through each item and substitute with the template
-        $template = $this->getOption('template');
+        $template = $this->getRawNode('template');
         $renderedItems = [];
 
         foreach ($items as $item) {

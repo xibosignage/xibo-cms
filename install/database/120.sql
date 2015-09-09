@@ -395,6 +395,27 @@ ALTER TABLE  `lkmediadisplaygroup` ADD UNIQUE (
   `displaygroupid`
 );
 
+ALTER TABLE  `lkcampaignlayout` ADD UNIQUE (
+  `CampaignID` ,
+  `LayoutID` ,
+  `DisplayOrder`
+);
+
+/* TODO CLASS column on Module table */
+
+
+RENAME TABLE `xmdsnonce` TO `requiredfile` ;
+ALTER TABLE  `requiredfile` CHANGE  `nonceId`  `rfId` BIGINT( 20 ) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `requiredfile` DROP `fileId`;
+ALTER TABLE  `requiredfile` CHANGE  `regionId`  `regionId` INT NULL;
+ALTER TABLE  `requiredfile` ADD  `requestKey` VARCHAR( 10 ) NOT NULL;
+ALTER TABLE  `requiredfile` ADD  `bytesRequested` BIGINT NOT NULL;
+ALTER TABLE  `requiredfile` ADD  `complete` TINYINT NOT NULL;
+ALTER TABLE `display` DROP `MediaInventoryXml`;
+DROP TABLE  `file`;
+
+INSERT INTO `setting` (`settingid`, `setting`, `value`, `fieldType`, `helptext`, `options`, `cat`, `userChange`, `title`, `validation`, `ordering`, `default`, `userSee`, `type`)
+VALUES (NULL, 'INSTANCE_SUSPENDED', '0', 'checkbox', 'Is this instance suspended?', NULL, 'general', '0', 'Instance Suspended', '', '120', '0', '0', 'checkbox');
 
 UPDATE `version` SET `app_ver` = '1.8.0-alpha', `XmdsVersion` = 4, `XlfVersion` = 2;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';

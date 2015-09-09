@@ -184,7 +184,7 @@ class LayoutFactory extends BaseFactory
      */
     public static function getByCampaignId($campaignId)
     {
-        return LayoutFactory::query(null, array('campaignId' => $campaignId, 'retired' => -1));
+        return LayoutFactory::query(['displayOrder'], array('campaignId' => $campaignId, 'retired' => -1));
     }
 
     /**
