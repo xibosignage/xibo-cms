@@ -31,7 +31,7 @@ use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 
-class DataSetView extends Module
+class DataSetView extends ModuleWidget
 {
     /**
      * Install Modules Files

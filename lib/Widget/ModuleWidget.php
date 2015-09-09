@@ -33,7 +33,7 @@ use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 
 
-abstract class Module implements ModuleInterface
+abstract class ModuleWidget implements ModuleInterface
 {
     /**
      * @var Slim

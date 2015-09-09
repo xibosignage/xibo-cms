@@ -26,7 +26,7 @@ use Xibo\Helper\Config;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 
-class Image extends Module
+class Image extends ModuleWidget
 {
     /**
      * Edit Media

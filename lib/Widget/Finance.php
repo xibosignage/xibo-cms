@@ -30,7 +30,7 @@ use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 
-class Finance extends Module
+class Finance extends ModuleWidget
 {
     public $codeSchemaVersion = 1;
 

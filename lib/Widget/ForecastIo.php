@@ -32,7 +32,7 @@ use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 
-class ForecastIo extends Module
+class ForecastIo extends ModuleWidget
 {
     const API_ENDPOINT = 'https://api.forecast.io/forecast/';
 

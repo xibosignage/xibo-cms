@@ -36,13 +36,13 @@ class ModuleFactory extends BaseFactory
     /**
      * Instantiate
      * @param Module $module
-     * @return \Xibo\Widget\Module
+     * @return \Xibo\Widget\ModuleWidget
      */
     private static function instantiate($module)
     {
         $className = $module->class;
 
-        /* @var \Xibo\Widget\Module $object */
+        /* @var \Xibo\Widget\ModuleWidget $object */
         $object = new $className();
         $object->setModule($module);
 
@@ -52,7 +52,7 @@ class ModuleFactory extends BaseFactory
     /**
      * Create a Module
      * @param string $type
-     * @return \Xibo\Widget\Module
+     * @return \Xibo\Widget\ModuleWidget
      * @throws NotFoundException
      */
     public static function create($type)
@@ -69,13 +69,13 @@ class ModuleFactory extends BaseFactory
     /**
      * Create a Module
      * @param string $class
-     * @return \Xibo\Widget\Module
+     * @return \Xibo\Widget\ModuleWidget
      * @throws NotFoundException
      */
     public static function createForInstall($class)
     {
         $type = new $class();
-        /* @var \Xibo\Widget\Module $type */
+        /* @var \Xibo\Widget\ModuleWidget $type */
 
         return $type;
     }
@@ -83,7 +83,7 @@ class ModuleFactory extends BaseFactory
     /**
      * Create a Module
      * @param string $moduleId
-     * @return \Xibo\Widget\Module
+     * @return \Xibo\Widget\ModuleWidget
      * @throws NotFoundException
      */
     public static function createById($moduleId)
@@ -94,7 +94,7 @@ class ModuleFactory extends BaseFactory
     /**
      * Create a Module with a Media Record
      * @param Media $media
-     * @return \Xibo\Widget\Module
+     * @return \Xibo\Widget\ModuleWidget
      * @throws NotFoundException
      */
     public static function createWithMedia($media)
@@ -109,7 +109,7 @@ class ModuleFactory extends BaseFactory
         $widget->assignMedia($media->mediaId);
 
         // Create a module
-        /* @var \Xibo\Widget\Module $object */
+        /* @var \Xibo\Widget\ModuleWidget $object */
         $module = $modules[0];
         $object = self::instantiate($module);
         $object->setWidget($widget);
@@ -124,7 +124,7 @@ class ModuleFactory extends BaseFactory
      * @param int $ownerId
      * @param int $playlistId
      * @param int $regionId
-     * @return \Xibo\Widget\Module
+     * @return \Xibo\Widget\ModuleWidget
      * @throws NotFoundException
      */
     public static function createForWidget($type, $widgetId = 0, $ownerId = 0, $playlistId = 0, $regionId = 0)
@@ -166,7 +166,7 @@ class ModuleFactory extends BaseFactory
      * Create a Module using a Widget
      * @param Widget $widget
      * @param Region[optional] $region
-     * @return \Xibo\Widget\Module
+     * @return \Xibo\Widget\ModuleWidget
      */
     public static function createWithWidget($widget, $region = null)
     {

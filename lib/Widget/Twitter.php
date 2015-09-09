@@ -33,7 +33,7 @@ use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 
-class Twitter extends Module
+class Twitter extends ModuleWidget
 {
     public $codeSchemaVersion = 1;
 

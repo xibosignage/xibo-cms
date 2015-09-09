@@ -23,7 +23,7 @@ namespace Xibo\Widget;
 use InvalidArgumentException;
 use Xibo\Helper\Sanitize;
 
-class ShellCommand extends Module
+class ShellCommand extends ModuleWidget
 {
     public function validate()
     {

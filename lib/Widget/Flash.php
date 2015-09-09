@@ -21,7 +21,7 @@
 namespace Xibo\Widget;
 
 
-class Flash extends Module
+class Flash extends ModuleWidget
 {
     /**
      * Preview code for a module
