@@ -21,8 +21,11 @@ class LogFactory extends BaseFactory
      * @param array $filterBy
      * @return array[\Xibo\Entity\Log]
      */
-    public static function query($sortOrder, $filterBy)
+    public static function query($sortOrder = null, $filterBy = null)
     {
+        if ($sortOrder == null)
+            $sortOrder = ['logId DESC'];
+
         $entries = [];
         $params = [];
         $order = ''; $limit = '';
@@ -51,9 +54,9 @@ class LogFactory extends BaseFactory
             $params['runNo'] = Sanitize::getString('runNo', $filterBy);
         }
 
-        if (Sanitize::getInt('type', $filterBy) != 0) {
-            $body .= ' AND type <= :type ';
-            $params['type'] = (Sanitize::getInt('type', $filterBy) == 1 ? 'error' : 'audit');
+        if (Sanitize::getString('type', $filterBy) != null) {
+            $body .= ' AND type = :type ';
+            $params['type'] = Sanitize::getString('type', $filterBy);
         }
 
         if (Sanitize::getString('page', $filterBy) != null) {
@@ -66,7 +69,7 @@ class LogFactory extends BaseFactory
             $params['function'] = '%' . Sanitize::getString('function', $filterBy) . '%';
         }
 
-        if (Sanitize::getInt('displayId', $filterBy) != 0) {
+        if (Sanitize::getInt('displayId', $filterBy) !== null) {
             $body .= ' AND log.displayId = :displayId ';
             $params['displayId'] = Sanitize::getInt('displayId', $filterBy);
         }
