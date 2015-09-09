@@ -24,6 +24,7 @@ namespace Xibo\Middleware;
 use Jenssegers\Date\Date;
 use Slim\Middleware;
 use Slim\Slim;
+use Xibo\Exception\InstanceSuspendedException;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\ByteFormatter;
@@ -73,6 +74,10 @@ class State extends Middleware
                     ]
                 ));
             }
+
+            // Check to see if the instance has been suspended, if so call the special route
+            if (Config::GetSetting('INSTANCE_SUSPENDED') == 1)
+                throw new InstanceSuspendedException();
         });
 
         // Attach a hook to be called after the route has been dispatched
