@@ -376,7 +376,7 @@ class ModuleFactory extends BaseFactory
 
                 // Identification
                 $module->class = Sanitize::string($row['class']);
-                $module->type = Sanitize::string($row['Module']);
+                $module->type = strtolower(Sanitize::string($row['Module']));
                 $module->viewPath = Sanitize::string($row['viewPath']);
 
                 $settings = $row['settings'];

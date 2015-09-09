@@ -368,8 +368,12 @@ class Layout implements \JsonSerializable
             'saveLayout' => true,
             'saveRegions' => true,
             'saveTags' => true,
-            'setBuildRequired' => true
+            'setBuildRequired' => true,
+            'validate' => true
         ], $options);
+
+        if ($options['validate'])
+            $this->validate();
 
         if ($options['setBuildRequired'])
             $this->setBuildRequired();

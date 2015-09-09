@@ -244,9 +244,13 @@ class LayoutFactory extends BaseFactory
                 $widget->duration = $mediaNode->getAttribute('duration');
                 $xlfMediaId = $mediaNode->getAttribute('id');
 
-                // Is this stored media?
-                if (!array_key_exists($widget->type, $modules))
+                Log::debug('Adding Widget to object model. %s', $widget);
+
+                // Does this module type exist?
+                if (!array_key_exists($widget->type, $modules)) {
+                    Log::info('Module Type [%s] in imported Layout does not exist. Allowable types: %s', $widget->type, json_encode(array_keys($modules)));
                     continue;
+                }
 
                 $module = $modules[$widget->type];
                 /* @var \Xibo\Entity\Module $module */
