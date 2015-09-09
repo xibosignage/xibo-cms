@@ -35,7 +35,7 @@
         <div class="col-lg-6">
             <div class="widget">
                 <div class="widget-title">{% trans "Errors in the Last 12 hours" %}</div>
-                <div class="widget-body no-padding">
+                <div class="widget-body medium no-padding">
                     <table class="table table-striped">
                         <thead>
                         <tr>
@@ -61,7 +61,7 @@
         <div class="col-lg-6">
             <div class="widget">
                 <div class="widget-title">{% trans "Layouts" %}</div>
-                <div class="widget-body no-padding">
+                <div class="widget-body medium no-padding">
                     <table class="table table-striped">
                         <thead>
                         <tr>
@@ -78,7 +78,7 @@
                                     <td>{{ item.layoutId }}</td>
                                     <td>{{ item.layout }}</td>
                                     <td>{{ item.size|byteFormat }}</td>
-                                    <td><span class="fa {% if item.complete == 1 %}fa-tick{% else %}fa-download{% endif %}"></span></td>
+                                    <td><span class="fa {% if item.complete == 1 %}fa-check{% else %}fa-download{% endif %}"></span></td>
                                     <td>{% if item.lastUsed == 0 %}<span class="fa fa-times"></span>{% else %}<span class="unixDate">{{ item.lastUsed }}</span>{% endif %}</td>
                                 </tr>
                             {% endfor %}
@@ -92,7 +92,7 @@
         <div class="col-lg-6">
             <div class="widget">
                 <div class="widget-title">{% trans "Media" %}</div>
-                <div class="widget-body no-padding">
+                <div class="widget-body medium no-padding">
                     <table class="table table-striped">
                         <thead>
                         <tr>
@@ -113,7 +113,7 @@
                                     <td>{{ item.type }}</td>
                                     <td>{{ item.storedAs }}</td>
                                     <td>{{ item.size|byteFormat }}</td>
-                                    <td><span class="fa {% if item.complete == 1 %}fa-tick{% else %}fa-download{% endif %}"></span></td>
+                                    <td><span class="fa {% if item.complete == 1 %}fa-check{% else %}fa-download{% endif %}"></span></td>
                                     <td>{% if item.lastUsed == 0 %}<span class="fa fa-times"></span>{% else %}<span class="unixDate">{{ item.lastUsed }}</span>{% endif %}</td>
                                 </tr>
                             {% endfor %}
@@ -125,7 +125,7 @@
         <div class="col-lg-6">
             <div class="widget">
                 <div class="widget-title">{% trans "Widgets" %}</div>
-                <div class="widget-body no-padding">
+                <div class="widget-body medium no-padding">
                     <table class="table table-striped">
                         <thead>
                         <tr>
@@ -142,7 +142,7 @@
                                     <td>{{ item.mediaId }}</td>
                                     <td>{{ item.widgetName }}</td>
                                     <td>{{ item.type }}</td>
-                                    <td><span class="fa {% if item.complete == 1 %}fa-tick{% else %}fa-download{% endif %}"></span></td>
+                                    <td><span class="fa {% if item.complete == 1 %}fa-check{% else %}fa-download{% endif %}"></span></td>
                                     <td>{% if item.lastUsed == 0 %}<span class="fa fa-times"></span>{% else %}<span class="unixDate">{{ item.lastUsed }}</span>{% endif %}</td>
                                 </tr>
                             {% endfor %}

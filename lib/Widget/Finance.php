@@ -192,7 +192,10 @@ class Finance extends Module
     {
         // Construct the YQL
         // process items
+        $yql = $this->getOption('yql');
         $items = $this->getOption('item');
+
+        Log::debug('Finance module with YQL = . Looking for %s in response', $yql, $items);
 
         if (strstr($items, ','))
             $items = explode(',', $items);
@@ -204,7 +207,7 @@ class Finance extends Module
             return '\'' . trim($element) . '\'';
         }, $items);
 
-        $yql = str_replace('[Item]', implode(',', $items), $this->getOption('yql'));
+        $yql = str_replace('[Item]', implode(',', $items), $yql);
 
         // Fire off a request for the data
         $key = md5($yql);

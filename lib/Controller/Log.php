@@ -44,9 +44,11 @@ class Log extends Base
             $filter_page = $this->getSession()->get('log', 'filter_page');
             $filter_function = $this->getSession()->get('log', 'filter_function');
             $filter_display = $this->getSession()->get('log', 'filter_display');
-            $filter_fromdt = $this->getSession()->get('log', 'filter_fromdt');
             $filter_seconds = $this->getSession()->get('log', 'filter_seconds');
             $filter_intervalTypeId = $this->getSession()->get('log', 'filter_intervalTypeId');
+
+            // Never remember the fromDt
+            $filter_fromdt = NULL;
         } else {
             $filter_pinned = 0;
             $filter_type = NULL;

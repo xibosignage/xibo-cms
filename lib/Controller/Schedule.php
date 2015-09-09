@@ -357,10 +357,10 @@ class Schedule extends Base
 
         // Set on schedule object
         $schedule->fromDt = $fromDt->setTime($fromDt->hour, $fromDt->minute, 0)->format('U');
-        $schedule->toDt = $toDt->setTime($fromDt->hour, $fromDt->minute, 0)->format('U');
+        $schedule->toDt = $toDt->setTime($toDt->hour, $toDt->minute, 0)->format('U');
 
         if ($recurrenceRange != null)
-            $schedule->recurrenceRange = $recurrenceRange->setTime($fromDt->hour, $fromDt->minute, 0)->format('U');
+            $schedule->recurrenceRange = $recurrenceRange->setTime($recurrenceRange->hour, $recurrenceRange->minute, 0)->format('U');
 
         // Ready to do the add
         $schedule->save();
@@ -544,10 +544,10 @@ class Schedule extends Base
 
         // Set on schedule object
         $schedule->fromDt = $fromDt->setTime($fromDt->hour, $fromDt->minute, 0)->format('U');
-        $schedule->toDt = $toDt->setTime($fromDt->hour, $fromDt->minute, 0)->format('U');
+        $schedule->toDt = $toDt->setTime($toDt->hour, $toDt->minute, 0)->format('U');
 
         if ($recurrenceRange != null)
-            $schedule->recurrenceRange = $recurrenceRange->setTime($fromDt->hour, $fromDt->minute, 0)->format('U');
+            $schedule->recurrenceRange = $recurrenceRange->setTime($recurrenceRange->hour, $recurrenceRange->minute, 0)->format('U');
 
         // Ready to do the add
         $schedule->save();

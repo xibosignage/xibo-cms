@@ -884,6 +884,8 @@ class Soap
         if ($inventory == '')
             throw new \SoapFault('Receiver', 'Inventory Cannot be Empty');
 
+        Log::debug($inventory);
+
         // Load the XML into a DOMDocument
         $document = new \DOMDocument("1.0");
         $document->loadXML($inventory);
@@ -906,7 +908,7 @@ class Soap
                         break;
 
                     case 'layout':
-                        $requiredFile = RequiredFileFactory::getByDisplayAndMedia($this->display->displayId, $node->getAttribute('id'));
+                        $requiredFile = RequiredFileFactory::getByDisplayAndLayout($this->display->displayId, $node->getAttribute('id'));
                         break;
 
                     case 'resource':
@@ -919,13 +921,14 @@ class Soap
                 }
             }
             catch (NotFoundException $e) {
-                Log::info('Unable to find file in media inventory: %s', $node->getAttribute('type'));
+                Log::info('Unable to find file in media inventory: %s', $node->getAttribute('type'), $node->getAttribute('id'));
                 continue;
             }
 
             // File complete?
             $complete = $node->getAttribute('complete');
             $requiredFile->complete = $complete;
+            $requiredFile->save(['refreshNonce' => false]);
 
             // If this item is a 0 then set not complete
             if ($complete == 0)
