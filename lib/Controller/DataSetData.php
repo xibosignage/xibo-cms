@@ -56,8 +56,7 @@ class DataSetData extends Base
      *   ),
      *  @SWG\Response(
      *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(type="array")
+     *      description="successful operation"
      *  )
      * )
      */

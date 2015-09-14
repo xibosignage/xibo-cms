@@ -537,10 +537,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "successful operation",
-                        "schema": {
-                            "type": "array"
-                        }
+                        "description": "successful operation"
                     }
                 }
             },
