@@ -118,7 +118,15 @@
                 { "data": "layout" },
                 { "data": "media" },
                 { "data": "numberPlays" },
-                { "data": "durationSec" },
+                {
+                    "data": "duration",
+                    "render": function(data, type, row, meta) {
+                        if (type != "display")
+                            return "";
+
+                        return moment().startOf("day").seconds(data).format("H:mm:ss")
+                    }
+                },
                 { "data": "duration" },
                 { "data": "minStart" },
                 { "data": "maxEnd" }

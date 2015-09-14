@@ -16,7 +16,7 @@
     {% if display.loggedIn == 1 %}
         {% set title %}{% trans %}Display {{ displayName }} is currently logged-in{% endtrans %}{% endset %}
     {% else %}
-        {% set title %}{% trans %}Display {{ displayName }} is not logged in at the moment and last accessed at <span class="unixTime">{{ displayLastAccessed }}</span>{% endtrans %}{% endset %}
+        {% set title %}{% trans %}Display {{ displayName }} is not logged in at the moment and last accessed at <span class="unixDate">{{ displayLastAccessed }}</span>{% endtrans %}{% endset %}
     {% endif %}
     <h1>{{ title }}</h1>
     <div class="row">

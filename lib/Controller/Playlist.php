@@ -36,7 +36,7 @@ class Playlist extends Base
      *      in="formData",
      *      description="The Playlist ID to Search",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Response(
      *      response=200,
@@ -157,15 +157,15 @@ class Playlist extends Base
      *      in="path",
      *      description="The Playlist ID to assign to",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="media",
      *      in="formData",
      *      description="Array of Media IDs to assign",
      *      type="array",
-     *      required="true",
-     *      @SWG\Items(type="int")
+     *      required=true,
+     *      @SWG\Items(type="integer")
      *   ),
      *  @SWG\Response(
      *      response=200,
@@ -216,34 +216,33 @@ class Playlist extends Base
      * Order a playlist and its widgets
      * @param int $playlistId
      *
-     * @SWG\Post(
+     * SWG\Post(
      *  path="/playlist/order/{playlistId}",
      *  operationId="playlistOrder",
      *  tags={"playlist"},
      *  summary="Order Widgets",
      *  description="Set the order of widgets in the Playlist",
-     *  @SWG\Parameter(
+     *  SWG\Parameter(
      *      name="playlistId",
      *      in="path",
      *      description="The Playlist ID to Order",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
-     *  @SWG\Parameter(
+     *  SWG\Parameter(
      *      name="widgets",
      *      in="formData",
      *      description="Array of widgetIds and positions",
      *      type="array",
-     *      required="true",
-     *      @SWG\Schema(
-     *          type="object",
-     *          additionalProperties={"widgetId":"integer", "position":"integer"}
+     *      required=true,
+     *      SWG\Items(
+     *          ref="#/definitions/PlaylistWidgetList"
      *      )
      *   ),
-     *  @SWG\Response(
+     *  SWG\Response(
      *      response=200,
      *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Playlist")
+     *      SWG\Schema(ref="#/definitions/Playlist")
      *  )
      * )
      */

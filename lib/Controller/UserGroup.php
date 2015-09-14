@@ -547,21 +547,21 @@ class UserGroup extends Base
      *      in="path",
      *      description="The User Group ID to Copy",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="group",
      *      in="formData",
      *      description="The Group Name",
      *      type="string",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="copyMembers",
      *      in="formData",
      *      description="Flag indicating whether to copy group members",
      *      type="integer",
-     *      required="false"
+     *      required=false
      *   ),
      *  @SWG\Response(
      *      response=201,

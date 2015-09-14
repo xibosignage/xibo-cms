@@ -51,7 +51,7 @@ class DataSetColumn extends Base
      *      in="path",
      *      description="The DataSet ID",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Response(
      *      response=200,
@@ -139,49 +139,49 @@ class DataSetColumn extends Base
      *      in="path",
      *      description="The DataSet ID",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="heading",
      *      in="formData",
      *      description="The heading for the Column",
      *      type="string",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="listContent",
      *      in="formData",
      *      description="A comma separated list of content for drop downs",
      *      type="string",
-     *      required="false"
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="columnOrder",
      *      in="formData",
      *      description="The display order for this column",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="dataTypeId",
      *      in="formData",
      *      description="The data type ID for this column",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="dataSetColumnTypeId",
      *      in="formData",
      *      description="The column type for this column",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="formula",
      *      in="formData",
      *      description="MySQL SELECT syntax formula for this Column if the column type is formula",
      *      type="string",
-     *      required="false"
+     *      required=false
      *   ),
      *  @SWG\Response(
      *      response=201,
@@ -261,56 +261,56 @@ class DataSetColumn extends Base
      *      in="path",
      *      description="The DataSet ID",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="dataSetColumnId",
      *      in="path",
      *      description="The Column ID",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="heading",
      *      in="formData",
      *      description="The heading for the Column",
      *      type="string",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="listContent",
      *      in="formData",
      *      description="A comma separated list of content for drop downs",
      *      type="string",
-     *      required="false"
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="columnOrder",
      *      in="formData",
      *      description="The display order for this column",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="dataTypeId",
      *      in="formData",
      *      description="The data type ID for this column",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="dataSetColumnTypeId",
      *      in="formData",
      *      description="The column type for this column",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="formula",
      *      in="formData",
      *      description="MySQL SELECT syntax formula for this Column if the column type is formula",
      *      type="string",
-     *      required="false"
+     *      required=false
      *   ),
      *  @SWG\Response(
      *      response=201,
@@ -387,14 +387,14 @@ class DataSetColumn extends Base
      *      in="path",
      *      description="The DataSet ID",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="dataSetColumnId",
      *      in="path",
      *      description="The Column ID",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Response(
      *      response=204,

@@ -175,14 +175,14 @@ class DataSet extends Base
      *      in="formData",
      *      description="The DataSet Name",
      *      type="string",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="description",
      *      in="formData",
      *      description="A description of this DataSet",
      *      type="string",
-     *      required="false"
+     *      required=false
      *   ),
      *  @SWG\Response(
      *      response=201,
@@ -260,21 +260,21 @@ class DataSet extends Base
      *      in="path",
      *      description="The DataSet ID",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="dataSet",
      *      in="formData",
      *      description="The DataSet Name",
      *      type="string",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="description",
      *      in="formData",
      *      description="A description of this DataSet",
      *      type="string",
-     *      required="false"
+     *      required=false
      *   ),
      *  @SWG\Response(
      *      response=200,
@@ -336,7 +336,7 @@ class DataSet extends Base
      *      in="path",
      *      description="The DataSet ID",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Response(
      *      response=204,
@@ -375,20 +375,19 @@ class DataSet extends Base
      *  tags={"dataset"},
      *  summary="Import CSV",
      *  description="Import a CSV into a DataSet",
-     *  consumes="multipart/form-data",
      *  @SWG\Parameter(
      *      name="dataSetId",
      *      in="path",
      *      description="The DataSet ID to import into.",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="file",
      *      in="formData",
      *      description="The file",
      *      type="file",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Response(
      *      response=200,

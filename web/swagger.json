@@ -53,7 +53,7 @@
                         "name": "name",
                         "in": "formData",
                         "description": "Name for this Campaign",
-                        "required": "true",
+                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -86,14 +86,14 @@
                         "name": "campaignId",
                         "in": "path",
                         "description": "The Campaign ID to Edit",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "name",
                         "in": "formData",
                         "description": "Name for this Campaign",
-                        "required": "true",
+                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -118,76 +118,8 @@
                         "name": "campaignId",
                         "in": "path",
                         "description": "The Campaign ID to Delete",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "successful operation"
-                    }
-                }
-            }
-        },
-        "/campaign/layout/assign/{layoutId}": {
-            "post": {
-                "tags": [
-                    "campaign"
-                ],
-                "summary": "Assign Layouts",
-                "description": "Assign Layouts to a Campaign",
-                "operationId": "campaignAssignLayout",
-                "parameters": [
-                    {
-                        "name": "campaignId",
-                        "in": "path",
-                        "description": "The Campaign ID",
-                        "required": "true",
-                        "type": "integer"
-                    },
-                    {
-                        "name": "layoutIds",
-                        "in": "formData",
-                        "description": "Array of Layout IDs to Assign",
-                        "required": "true",
-                        "type": "array",
-                        "items": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "successful operation"
-                    }
-                }
-            }
-        },
-        "/campaign/layout/unassign/{layoutId}": {
-            "post": {
-                "tags": [
-                    "campaign"
-                ],
-                "summary": "Unassign Layouts",
-                "description": "Unassign Layouts from a Campaign",
-                "operationId": "campaignUnassignLayout",
-                "parameters": [
-                    {
-                        "name": "campaignId",
-                        "in": "path",
-                        "description": "The Campaign ID",
-                        "required": "true",
-                        "type": "integer"
-                    },
-                    {
-                        "name": "layoutIds",
-                        "in": "formData",
-                        "description": "Array of Layout IDs to Unassign",
-                        "required": "true",
-                        "type": "array",
-                        "items": {
-                            "type": "integer"
-                        }
                     }
                 ],
                 "responses": {
@@ -202,13 +134,17 @@
                 "tags": [
                     "misc"
                 ],
+                "summary": "The current CMS time",
+                "description": "The Time",
                 "operationId": "clock",
                 "responses": {
                     "200": {
+                        "description": "successful response",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
-                                "time": "string"
+                                "title": "time",
+                                "type": "string"
                             }
                         }
                     }
@@ -247,14 +183,14 @@
                         "name": "dataSet",
                         "in": "formData",
                         "description": "The DataSet Name",
-                        "required": "true",
+                        "required": true,
                         "type": "string"
                     },
                     {
                         "name": "description",
                         "in": "formData",
                         "description": "A description of this DataSet",
-                        "required": "false",
+                        "required": false,
                         "type": "string"
                     }
                 ],
@@ -287,21 +223,21 @@
                         "name": "dataSetId",
                         "in": "path",
                         "description": "The DataSet ID",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "dataSet",
                         "in": "formData",
                         "description": "The DataSet Name",
-                        "required": "true",
+                        "required": true,
                         "type": "string"
                     },
                     {
                         "name": "description",
                         "in": "formData",
                         "description": "A description of this DataSet",
-                        "required": "false",
+                        "required": false,
                         "type": "string"
                     }
                 ],
@@ -326,7 +262,7 @@
                         "name": "dataSetId",
                         "in": "path",
                         "description": "The DataSet ID",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     }
                 ],
@@ -345,20 +281,19 @@
                 "summary": "Import CSV",
                 "description": "Import a CSV into a DataSet",
                 "operationId": "dataSetImport",
-                "consumes": "multipart/form-data",
                 "parameters": [
                     {
                         "name": "dataSetId",
                         "in": "path",
                         "description": "The DataSet ID to import into.",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "file",
                         "in": "formData",
                         "description": "The file",
-                        "required": "true",
+                        "required": true,
                         "type": "file"
                     }
                 ],
@@ -382,7 +317,7 @@
                         "name": "dataSetId",
                         "in": "path",
                         "description": "The DataSet ID",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     }
                 ],
@@ -410,49 +345,49 @@
                         "name": "dataSetId",
                         "in": "path",
                         "description": "The DataSet ID",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "heading",
                         "in": "formData",
                         "description": "The heading for the Column",
-                        "required": "true",
+                        "required": true,
                         "type": "string"
                     },
                     {
                         "name": "listContent",
                         "in": "formData",
                         "description": "A comma separated list of content for drop downs",
-                        "required": "false",
+                        "required": false,
                         "type": "string"
                     },
                     {
                         "name": "columnOrder",
                         "in": "formData",
                         "description": "The display order for this column",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "dataTypeId",
                         "in": "formData",
                         "description": "The data type ID for this column",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "dataSetColumnTypeId",
                         "in": "formData",
                         "description": "The column type for this column",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "formula",
                         "in": "formData",
                         "description": "MySQL SELECT syntax formula for this Column if the column type is formula",
-                        "required": "false",
+                        "required": false,
                         "type": "string"
                     }
                 ],
@@ -485,56 +420,56 @@
                         "name": "dataSetId",
                         "in": "path",
                         "description": "The DataSet ID",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "dataSetColumnId",
                         "in": "path",
                         "description": "The Column ID",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "heading",
                         "in": "formData",
                         "description": "The heading for the Column",
-                        "required": "true",
+                        "required": true,
                         "type": "string"
                     },
                     {
                         "name": "listContent",
                         "in": "formData",
                         "description": "A comma separated list of content for drop downs",
-                        "required": "false",
+                        "required": false,
                         "type": "string"
                     },
                     {
                         "name": "columnOrder",
                         "in": "formData",
                         "description": "The display order for this column",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "dataTypeId",
                         "in": "formData",
                         "description": "The data type ID for this column",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "dataSetColumnTypeId",
                         "in": "formData",
                         "description": "The column type for this column",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "formula",
                         "in": "formData",
                         "description": "MySQL SELECT syntax formula for this Column if the column type is formula",
-                        "required": "false",
+                        "required": false,
                         "type": "string"
                     }
                 ],
@@ -565,14 +500,14 @@
                         "name": "dataSetId",
                         "in": "path",
                         "description": "The DataSet ID",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "dataSetColumnId",
                         "in": "path",
                         "description": "The Column ID",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     }
                 ],
@@ -596,16 +531,13 @@
                         "name": "dataSetId",
                         "in": "formData",
                         "description": "The DataSet ID",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "successful operation",
-                        "schema": {
-                            "type": "array"
-                        }
+                        "description": "successful operation"
                     }
                 }
             },
@@ -621,14 +553,14 @@
                         "name": "dataSetId",
                         "in": "path",
                         "description": "The DataSet ID",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "dataSetColumnId_ID",
                         "in": "formData",
                         "description": "Parameter for each dataSetColumnId in the DataSet",
-                        "required": "true",
+                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -658,21 +590,21 @@
                         "name": "dataSetId",
                         "in": "path",
                         "description": "The DataSet ID",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "rowId",
                         "in": "path",
                         "description": "The Row ID of the Data to Edit",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "dataSetColumnId_ID",
                         "in": "formData",
                         "description": "Parameter for each dataSetColumnId in the DataSet",
-                        "required": "true",
+                        "required": true,
                         "type": "string"
                     }
                 ],
@@ -694,14 +626,14 @@
                         "name": "dataSetId",
                         "in": "path",
                         "description": "The DataSet ID",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "rowId",
                         "in": "path",
                         "description": "The Row ID of the Data to Delete",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     }
                 ],
@@ -746,120 +678,127 @@
                         "name": "displayId",
                         "in": "path",
                         "description": "The Display ID",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "display",
                         "in": "formData",
                         "description": "The Display Name",
-                        "required": "true",
+                        "required": true,
                         "type": "string"
                     },
                     {
                         "name": "description",
                         "in": "formData",
                         "description": "A description of the Display",
-                        "required": "false",
+                        "required": false,
                         "type": "string"
                     },
                     {
                         "name": "isAuditing",
                         "in": "formData",
                         "description": "Flag indicating whether this Display records auditing information.",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "defaultLayoutId",
                         "in": "formData",
                         "description": "A Layout ID representing the Default Layout for this Display.",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "licensed",
                         "in": "formData",
                         "description": "Flag indicating whether this display is licensed.",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
+                    },
+                    {
+                        "name": "license",
+                        "in": "formData",
+                        "description": "The hardwareKey to use as the licence key for this Display",
+                        "required": true,
+                        "type": "string"
                     },
                     {
                         "name": "incSchedule",
                         "in": "formData",
                         "description": "Flag indicating whether the Default Layout should be included in the Schedule",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "emailAlert",
                         "in": "formData",
                         "description": "Flag indicating whether the Display generates up/down email alerts.",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "alertTimeout",
                         "in": "formData",
                         "description": "How long in seconds should this display wait before alerting when it hasn't connected. Override for the collection interval.",
-                        "required": "false",
+                        "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "wakeOnLanEnabled",
                         "in": "formData",
                         "description": "Flag indicating if Wake On LAN is enabled for this Display",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "wakeOnLanTime",
                         "in": "formData",
                         "description": "A h:i string representing the time that the Display should receive its Wake on LAN command",
-                        "required": "false",
+                        "required": false,
                         "type": "string"
                     },
                     {
                         "name": "broadCastAddress",
                         "in": "formData",
                         "description": "The BroadCast Address for this Display - used by Wake On LAN",
-                        "required": "false",
+                        "required": false,
                         "type": "string"
                     },
                     {
                         "name": "secureOn",
                         "in": "formData",
                         "description": "The secure on configuration for this Display",
-                        "required": "false",
+                        "required": false,
                         "type": "string"
                     },
                     {
                         "name": "cidr",
                         "in": "formData",
                         "description": "The CIDR configuration for this Display",
-                        "required": "false",
-                        "type": "int"
+                        "required": false,
+                        "type": "integer"
                     },
                     {
                         "name": "latitude",
                         "in": "formData",
                         "description": "The Latitude of this Display",
-                        "required": "false",
-                        "type": "double"
+                        "required": false,
+                        "type": "number"
                     },
                     {
                         "name": "longitude",
                         "in": "formData",
                         "description": "The Longitude of this Display",
-                        "required": "false",
-                        "type": "double"
+                        "required": false,
+                        "type": "number"
                     },
                     {
                         "name": "displayProfileId",
                         "in": "formData",
                         "description": "The Display Settings Profile ID",
-                        "required": "false",
-                        "type": "int"
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -883,7 +822,7 @@
                         "name": "displayId",
                         "in": "path",
                         "description": "The Display ID",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     }
                 ],
@@ -907,7 +846,7 @@
                         "name": "displayId",
                         "in": "path",
                         "description": "The Display ID",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     }
                 ],
@@ -934,7 +873,7 @@
                         "name": "displayId",
                         "in": "path",
                         "description": "The Display ID",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     }
                 ],
@@ -1085,14 +1024,24 @@
                         "name": "displayGroupId",
                         "in": "path",
                         "description": "The Display Group to assign to",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "displayId",
                         "in": "formData",
                         "description": "The Display Ids to assign",
-                        "required": "true",
+                        "required": true,
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "unassignDisplayId",
+                        "in": "formData",
+                        "description": "An optional array of Display IDs to unassign",
+                        "required": false,
                         "type": "array",
                         "items": {
                             "type": "integer"
@@ -1119,14 +1068,14 @@
                         "name": "displayGroupId",
                         "in": "path",
                         "description": "The Display Group to unassign from",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "displayId",
                         "in": "formData",
                         "description": "The Display Ids to unassign",
-                        "required": "true",
+                        "required": true,
                         "type": "array",
                         "items": {
                             "type": "integer"
@@ -1153,14 +1102,24 @@
                         "name": "displayGroupId",
                         "in": "path",
                         "description": "The Display Group to assign to",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "mediaId",
                         "in": "formData",
                         "description": "The Media Ids to assign",
-                        "required": "true",
+                        "required": true,
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "unassignMediaId",
+                        "in": "formData",
+                        "description": "Optional array of Media Id to unassign",
+                        "required": false,
                         "type": "array",
                         "items": {
                             "type": "integer"
@@ -1187,14 +1146,14 @@
                         "name": "displayGroupId",
                         "in": "path",
                         "description": "The Display Group to unassign from",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "mediaId",
                         "in": "formData",
                         "description": "The Media Ids to unassign",
-                        "required": "true",
+                        "required": true,
                         "type": "array",
                         "items": {
                             "type": "integer"
@@ -1221,14 +1180,14 @@
                         "name": "displayGroupId",
                         "in": "path",
                         "description": "The Display Group ID",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "mediaId",
                         "in": "formData",
                         "description": "The Media Id of the Installer File",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     }
                 ],
@@ -1271,22 +1230,22 @@
                         "name": "name",
                         "in": "formData",
                         "description": "The Name of the Display Profile",
-                        "required": "true",
+                        "required": true,
                         "type": "string"
                     },
                     {
                         "name": "type",
                         "in": "formData",
                         "description": "The Client Type this Profile will apply to",
-                        "required": "true",
+                        "required": true,
                         "type": "string"
                     },
                     {
                         "name": "isDefault",
                         "in": "formData",
                         "description": "Flag indicating if this is the default profile for the client type",
-                        "required": "true",
-                        "type": "int"
+                        "required": true,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -1318,29 +1277,29 @@
                         "name": "displayProfileId",
                         "in": "formData",
                         "description": "The Display Profile ID",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "name",
                         "in": "formData",
                         "description": "The Name of the Display Profile",
-                        "required": "true",
+                        "required": true,
                         "type": "string"
                     },
                     {
                         "name": "type",
                         "in": "formData",
                         "description": "The Client Type this Profile will apply to",
-                        "required": "true",
+                        "required": true,
                         "type": "string"
                     },
                     {
                         "name": "isDefault",
                         "in": "formData",
                         "description": "Flag indicating if this is the default profile for the client type",
-                        "required": "true",
-                        "type": "int"
+                        "required": true,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -1370,7 +1329,7 @@
                         "name": "displayProfileId",
                         "in": "path",
                         "description": "The Display Profile ID",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     }
                 ],
@@ -1473,56 +1432,56 @@
                         "name": "name",
                         "in": "formData",
                         "description": "The Layout Name",
-                        "required": "true",
+                        "required": true,
                         "type": "string"
                     },
                     {
                         "name": "description",
                         "in": "formData",
                         "description": "The Layout Description",
-                        "required": "false",
+                        "required": false,
                         "type": "string"
                     },
                     {
                         "name": "tags",
                         "in": "formData",
                         "description": "A comma separated list of Tags",
-                        "required": "false",
+                        "required": false,
                         "type": "string"
                     },
                     {
                         "name": "retired",
                         "in": "formData",
                         "description": "A flag indicating whether this Layout is retired.",
-                        "required": "false",
+                        "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "backgroundColor",
                         "in": "formData",
                         "description": "A HEX color to use as the background color of this Layout.",
-                        "required": "true",
+                        "required": true,
                         "type": "string"
                     },
                     {
                         "name": "backgroundImageId",
                         "in": "formData",
                         "description": "A media ID to use as the background image for this Layout.",
-                        "required": "false",
+                        "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "backgroundzIndex",
                         "in": "formData",
                         "description": "The Layer Number to use for the background.",
-                        "required": "false",
+                        "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "resolutionId",
                         "in": "formData",
                         "description": "The Resolution ID to use on this Layout.",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     }
                 ],
@@ -1547,7 +1506,7 @@
                         "name": "layoutId",
                         "in": "path",
                         "description": "The Layout ID to Delete",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     }
                 ],
@@ -1571,7 +1530,7 @@
                         "name": "layoutId",
                         "in": "path",
                         "description": "The Layout ID",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     }
                 ],
@@ -1595,28 +1554,28 @@
                         "name": "layoutId",
                         "in": "path",
                         "description": "The Layout ID to Copy",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "name",
                         "in": "formData",
                         "description": "The name for the new Layout",
-                        "required": "true",
+                        "required": true,
                         "type": "string"
                     },
                     {
                         "name": "description",
                         "in": "formData",
                         "description": "The Description for the new Layout",
-                        "required": "false",
+                        "required": false,
                         "type": "string"
                     },
                     {
                         "name": "copyMediaFiles",
                         "in": "formData",
                         "description": "Flag indicating whether to make new Copies of all Media Files assigned to the Layout being Copied",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     }
                 ],
@@ -1634,26 +1593,6 @@
                         }
                     }
                 }
-            }
-        },
-        "/layout/import": {
-            "post": {
-                "tags": [
-                    "layout"
-                ],
-                "summary": "Import Layout",
-                "description": "Upload and Import a Layout",
-                "operationId": "layoutImport",
-                "consumes": "multipart/form-data",
-                "parameters": [
-                    {
-                        "name": "file",
-                        "in": "formData",
-                        "description": "The file",
-                        "required": "true",
-                        "type": "file"
-                    }
-                ]
             }
         },
         "/library": {
@@ -1688,10 +1627,15 @@
                         "name": "file",
                         "in": "formData",
                         "description": "The Uploaded File",
-                        "required": "true",
+                        "required": true,
                         "type": "file"
                     }
-                ]
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation"
+                    }
+                }
             }
         },
         "/library/{mediaId}": {
@@ -1707,42 +1651,42 @@
                         "name": "mediaId",
                         "in": "path",
                         "description": "The Media ID to Edit",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "name",
                         "in": "formData",
                         "description": "Media Item Name",
-                        "required": "true",
+                        "required": true,
                         "type": "string"
                     },
                     {
                         "name": "duration",
                         "in": "formData",
                         "description": "The duration in seconds for this Media Item",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "retired",
                         "in": "formData",
                         "description": "Flag indicating if this Layout is retired",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "tags",
                         "in": "formData",
                         "description": "Comma separated list of Tags",
-                        "required": "false",
+                        "required": false,
                         "type": "string"
                     },
                     {
                         "name": "updateInLayouts",
                         "in": "formData",
                         "description": "Flag indicating whether to update the duration in all Layouts the Media is assigned to",
-                        "required": "false",
+                        "required": false,
                         "type": "integer"
                     }
                 ],
@@ -1767,7 +1711,7 @@
                         "name": "mediaId",
                         "in": "path",
                         "description": "The Media ID to Delete",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     }
                 ],
@@ -1793,63 +1737,22 @@
                 }
             }
         },
-        "/library/download/{mediaId}/{type}": {
-            "get": {
-                "tags": [
-                    "library"
-                ],
-                "summary": "Download Media",
-                "description": "Download a Media file from the Library",
-                "operationId": "libraryDownload",
-                "produces": "application/octet-stream",
-                "parameters": [
-                    {
-                        "name": "mediaId",
-                        "in": "path",
-                        "description": "The Media ID to Download",
-                        "required": "true",
-                        "type": "integer"
-                    },
-                    {
-                        "name": "type",
-                        "in": "path",
-                        "description": "The Module Type of the Download",
-                        "required": "true",
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "successful operation",
-                        "schema": {
-                            "type": "file"
-                        },
-                        "headers": {
-                            "X-Sendfile": {
-                                "description": "Apache Send file header - if enabled.",
-                                "type": "string"
-                            },
-                            "X-Accel-Redirect": {
-                                "description": "nginx send file header - if enabled.",
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "/about": {
             "get": {
                 "tags": [
                     "misc"
                 ],
+                "summary": "About",
+                "description": "Information about this API, such as Version code, etc",
                 "operationId": "about",
                 "responses": {
                     "200": {
+                        "description": "successful response",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
-                                "version": "string"
+                                "title": "version",
+                                "type": "string"
                             }
                         }
                     }
@@ -1869,7 +1772,7 @@
                         "name": "playlistId",
                         "in": "formData",
                         "description": "The Playlist ID to Search",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     }
                 ],
@@ -1899,59 +1802,18 @@
                         "name": "playlistId",
                         "in": "path",
                         "description": "The Playlist ID to assign to",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "media",
                         "in": "formData",
                         "description": "Array of Media IDs to assign",
-                        "required": "true",
+                        "required": true,
                         "type": "array",
                         "items": {
-                            "type": "int"
+                            "type": "integer"
                         }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "successful operation",
-                        "schema": {
-                            "$ref": "#/definitions/Playlist"
-                        }
-                    }
-                }
-            }
-        },
-        "/playlist/order/{playlistId}": {
-            "post": {
-                "tags": [
-                    "playlist"
-                ],
-                "summary": "Order Widgets",
-                "description": "Set the order of widgets in the Playlist",
-                "operationId": "playlistOrder",
-                "parameters": [
-                    {
-                        "name": "playlistId",
-                        "in": "path",
-                        "description": "The Playlist ID to Order",
-                        "required": "true",
-                        "type": "integer"
-                    },
-                    {
-                        "name": "widgets",
-                        "in": "formData",
-                        "description": "Array of widgetIds and positions",
-                        "required": "true",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "widgetId": "integer",
-                                "position": "integer"
-                            }
-                        },
-                        "type": "array"
                     }
                 ],
                 "responses": {
@@ -1977,35 +1839,35 @@
                         "name": "layoutId",
                         "in": "path",
                         "description": "The Layout ID to add the Region to",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "width",
                         "in": "formData",
                         "description": "The Width, default 250",
-                        "required": "false",
+                        "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "height",
                         "in": "formData",
                         "description": "The Height",
-                        "required": "false",
+                        "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "top",
                         "in": "formData",
                         "description": "The Top Coordinate",
-                        "required": "false",
+                        "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "left",
                         "in": "formData",
                         "description": "The Left Coordinate",
-                        "required": "false",
+                        "required": false,
                         "type": "integer"
                     }
                 ],
@@ -2038,70 +1900,70 @@
                         "name": "regionId",
                         "in": "path",
                         "description": "The Region ID to Edit",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "width",
                         "in": "formData",
                         "description": "The Width, default 250",
-                        "required": "false",
+                        "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "height",
                         "in": "formData",
                         "description": "The Height",
-                        "required": "false",
+                        "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "top",
                         "in": "formData",
                         "description": "The Top Coordinate",
-                        "required": "false",
+                        "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "left",
                         "in": "formData",
                         "description": "The Left Coordinate",
-                        "required": "false",
+                        "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "zIndex",
                         "in": "formData",
                         "description": "The Layer for this Region",
-                        "required": "false",
+                        "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "transitionType",
                         "in": "formData",
                         "description": "The Transition Type. Must be a valid transition code as returned by /transition",
-                        "required": "false",
+                        "required": false,
                         "type": "string"
                     },
                     {
                         "name": "transitionDuration",
                         "in": "formData",
                         "description": "The transition duration in milliseconds if required by the transition type",
-                        "required": "false",
+                        "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "transitionDirection",
                         "in": "formData",
                         "description": "The transition direction if required by the transition type.",
-                        "required": "false",
+                        "required": false,
                         "type": "string"
                     },
                     {
                         "name": "loop",
                         "in": "formData",
                         "description": "Flag indicating whether this region should loop if there is only 1 media item in the timeline",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     }
                 ],
@@ -2126,57 +1988,13 @@
                         "name": "regionId",
                         "in": "path",
                         "description": "The Region ID to Delete",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     }
                 ],
                 "responses": {
                     "204": {
                         "description": "successful operation"
-                    }
-                }
-            }
-        },
-        "/region/position/all/{layoutId}": {
-            "put": {
-                "tags": [
-                    "layout"
-                ],
-                "summary": "Position Regions",
-                "description": "Position all regions for a Layout",
-                "operationId": "regionPositionAll",
-                "parameters": [
-                    {
-                        "name": "layoutId",
-                        "in": "path",
-                        "description": "The Layout ID",
-                        "required": "true",
-                        "type": "integer"
-                    },
-                    {
-                        "name": "regions",
-                        "in": "formData",
-                        "description": "Array of regions and their new positions",
-                        "required": "true",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "regionId": "integer",
-                                "top": "double",
-                                "left": "double",
-                                "width": "double",
-                                "height": "double"
-                            }
-                        },
-                        "type": "array"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "successful operation",
-                        "schema": {
-                            "$ref": "#/definitions/Layout"
-                        }
                     }
                 }
             }
@@ -2213,21 +2031,21 @@
                         "name": "resolution",
                         "in": "formData",
                         "description": "A name for the Resolution",
-                        "required": "true",
+                        "required": true,
                         "type": "string"
                     },
                     {
                         "name": "width",
                         "in": "formData",
                         "description": "The Display Width of the Resolution",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "height",
                         "in": "formData",
                         "description": "The Display Height of the Resolution",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     }
                 ],
@@ -2260,28 +2078,28 @@
                         "name": "resolutionId",
                         "in": "path",
                         "description": "The Resolution ID to Edit",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "resolution",
                         "in": "formData",
                         "description": "A name for the Resolution",
-                        "required": "true",
+                        "required": true,
                         "type": "string"
                     },
                     {
                         "name": "width",
                         "in": "formData",
                         "description": "The Display Width of the Resolution",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "height",
                         "in": "formData",
                         "description": "The Display Height of the Resolution",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     }
                 ],
@@ -2306,7 +2124,7 @@
                         "name": "resolutionId",
                         "in": "path",
                         "description": "The Resolution ID to Delete",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     }
                 ],
@@ -2350,6 +2168,7 @@
                 ],
                 "responses": {
                     "200": {
+                        "description": "successful response",
                         "schema": {
                             "type": "array",
                             "items": {
@@ -2373,28 +2192,28 @@
                         "name": "campaignId",
                         "in": "formData",
                         "description": "The Campaign ID to use for this Event. If a Layout is needed then the Campaign specific ID for that Layout should be used.",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "displayOrder",
                         "in": "formData",
                         "description": "The display order for this event. ",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "isPriority",
                         "in": "formData",
                         "description": "A 0|1 flag indicating whether this event should be considered priority",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "displayGroupIds",
                         "in": "formData",
                         "description": "The Display Group IDs for this event. Display specific Group IDs should be used to schedule on single displays.",
-                        "required": "true",
+                        "required": true,
                         "type": "array",
                         "items": {
                             "type": "integer"
@@ -2404,7 +2223,7 @@
                         "name": "fromDt",
                         "in": "formData",
                         "description": "The from date for this event.",
-                        "required": "true",
+                        "required": true,
                         "type": "string",
                         "format": "date-time"
                     },
@@ -2412,7 +2231,7 @@
                         "name": "toDt",
                         "in": "formData",
                         "description": "The to date for this event.",
-                        "required": "true",
+                        "required": true,
                         "type": "string",
                         "format": "date-time"
                     },
@@ -2420,7 +2239,7 @@
                         "name": "recurrenceType",
                         "in": "formData",
                         "description": "The type of recurrence to apply to this event.",
-                        "required": "false",
+                        "required": false,
                         "type": "string",
                         "enum": [
                             "",
@@ -2433,17 +2252,17 @@
                         ]
                     },
                     {
-                        "name": "recurrentDetail",
+                        "name": "recurrenceDetail",
                         "in": "formData",
                         "description": "The interval for the recurrence.",
-                        "required": "false",
-                        "type": "int"
+                        "required": false,
+                        "type": "integer"
                     },
                     {
                         "name": "recurrenceRange",
                         "in": "formData",
                         "description": "The end date for this events recurrence.",
-                        "required": "false",
+                        "required": false,
                         "type": "string",
                         "format": "date-time"
                     }
@@ -2477,35 +2296,35 @@
                         "name": "eventID",
                         "in": "path",
                         "description": "The Scheduled Event ID",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "campaignId",
                         "in": "formData",
                         "description": "The Campaign ID to use for this Event. If a Layout is needed then the Campaign specific ID for that Layout should be used.",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "displayOrder",
                         "in": "formData",
                         "description": "The display order for this event. ",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "isPriority",
                         "in": "formData",
                         "description": "A 0|1 flag indicating whether this event should be considered priority",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "displayGroupIds",
                         "in": "formData",
                         "description": "The Display Group IDs for this event. Display specific Group IDs should be used to schedule on single displays.",
-                        "required": "true",
+                        "required": true,
                         "type": "array",
                         "items": {
                             "type": "integer"
@@ -2515,7 +2334,7 @@
                         "name": "fromDt",
                         "in": "formData",
                         "description": "The from date for this event.",
-                        "required": "true",
+                        "required": true,
                         "type": "string",
                         "format": "date-time"
                     },
@@ -2523,7 +2342,7 @@
                         "name": "toDt",
                         "in": "formData",
                         "description": "The to date for this event.",
-                        "required": "true",
+                        "required": true,
                         "type": "string",
                         "format": "date-time"
                     },
@@ -2531,7 +2350,7 @@
                         "name": "recurrenceType",
                         "in": "formData",
                         "description": "The type of recurrence to apply to this event.",
-                        "required": "false",
+                        "required": false,
                         "type": "string",
                         "enum": [
                             "",
@@ -2547,14 +2366,14 @@
                         "name": "recurrentDetail",
                         "in": "formData",
                         "description": "The interval for the recurrence.",
-                        "required": "false",
-                        "type": "int"
+                        "required": false,
+                        "type": "integer"
                     },
                     {
                         "name": "recurrenceRange",
                         "in": "formData",
                         "description": "The end date for this events recurrence.",
-                        "required": "false",
+                        "required": false,
                         "type": "string",
                         "format": "date-time"
                     }
@@ -2580,7 +2399,7 @@
                         "name": "eventId",
                         "in": "path",
                         "description": "The Scheduled Event ID",
-                        "required": "true",
+                        "required": true,
                         "type": "integer"
                     }
                 ],
@@ -2603,7 +2422,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-
+                                "$ref": "#/definitions/StatisticsData"
                             }
                         }
                     }
@@ -2631,6 +2450,67 @@
                 }
             }
         },
+        "/template/{layoutId}": {
+            "post": {
+                "tags": [
+                    "template"
+                ],
+                "summary": "Add a template from a Layout",
+                "description": "Use the provided layout as a base for a new template",
+                "operationId": "template.add.from.layout",
+                "parameters": [
+                    {
+                        "name": "layoutId",
+                        "in": "path",
+                        "description": "The Layout ID",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "includeWidgets",
+                        "in": "formData",
+                        "description": "Flag indicating whether to include the widgets in the Template",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "The Template Name",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "tags",
+                        "in": "formData",
+                        "description": "Comma separated list of Tags for the template",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "description",
+                        "in": "formData",
+                        "description": "A description of the Template",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Layout"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new record",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/user": {
             "get": {
                 "tags": [
@@ -2646,6 +2526,202 @@
                             "type": "array",
                             "items": {
                                 "$ref": "#/definitions/User"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "user"
+                ],
+                "summary": "Add User",
+                "description": "Add a new User",
+                "operationId": "userAdd",
+                "parameters": [
+                    {
+                        "name": "userName",
+                        "in": "formData",
+                        "description": "The User Name",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "email",
+                        "in": "formData",
+                        "description": "The user email address",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "userTypeId",
+                        "in": "formData",
+                        "description": "The user type ID",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "homePageId",
+                        "in": "formData",
+                        "description": "The homepage to use for this User",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "libraryQuota",
+                        "in": "formData",
+                        "description": "The users library quota in kilobytes",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "password",
+                        "in": "formData",
+                        "description": "The users password",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "groupId",
+                        "in": "formData",
+                        "description": "The inital user group for this User",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/User"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new record",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/user/permissions/{entity}/{objectId}": {
+            "get": {
+                "tags": [
+                    "user"
+                ],
+                "summary": "Permission Data",
+                "description": "Permission data for the Entity and Object Provided.",
+                "operationId": "userPermissionsSearch",
+                "parameters": [
+                    {
+                        "name": "entity",
+                        "in": "path",
+                        "description": "The Entity",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "objectId",
+                        "in": "path",
+                        "description": "The ID of the Object to return permissions for",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Permission"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "user"
+                ],
+                "summary": "Permission Set",
+                "description": "Set Permissions to users/groups for the provided entity.",
+                "operationId": "userPermissionsSet",
+                "parameters": [
+                    {
+                        "name": "entity",
+                        "in": "path",
+                        "description": "The Entity",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "objectId",
+                        "in": "path",
+                        "description": "The ID of the Object to set permissions on",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "groupIds",
+                        "in": "formData",
+                        "description": "Array of permissions with groupId as the key",
+                        "required": true,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/group/{userGroupId}/copy": {
+            "post": {
+                "tags": [
+                    "usergroup"
+                ],
+                "summary": "Copy User Group",
+                "description": "Copy an user group, optionally copying the group members",
+                "operationId": "userGroupCopy",
+                "parameters": [
+                    {
+                        "name": "userGroupId",
+                        "in": "path",
+                        "description": "The User Group ID to Copy",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "group",
+                        "in": "formData",
+                        "description": "The Group Name",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "copyMembers",
+                        "in": "formData",
+                        "description": "Flag indicating whether to copy group members",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/UserGroup"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new record",
+                                "type": "string"
                             }
                         }
                     }
@@ -2666,6 +2742,34 @@
                 },
                 "event": {
                     "$ref": "#/definitions/Schedule"
+                }
+            }
+        },
+        "StatisticsData": {
+            "properties": {
+                "type": {
+                    "type": "string"
+                },
+                "display": {
+                    "type": "string"
+                },
+                "layout": {
+                    "type": "string"
+                },
+                "media": {
+                    "type": "string"
+                },
+                "numberPlays": {
+                    "type": "integer"
+                },
+                "duration": {
+                    "type": "integer"
+                },
+                "minStart": {
+                    "type": "string"
+                },
+                "maxEnd": {
+                    "type": "string"
                 }
             }
         },
@@ -2906,10 +3010,6 @@
                 "mediaInventoryStatus": {
                     "description": "The media inventory status of the Display",
                     "type": "integer"
-                },
-                "mediaInventoryXml": {
-                    "description": "The last submitted Media Inventory XML from the Player",
-                    "type": "string"
                 },
                 "macAddress": {
                     "description": "The current Mac Address of the Player",
@@ -3162,6 +3262,10 @@
                     "description": "The Layout Height",
                     "type": "number",
                     "format": "double"
+                },
+                "displayOrder": {
+                    "description": "If this Layout has been requested by Campaign, then this is the display order of the Layout within the Campaign",
+                    "type": "integer"
                 }
             }
         },
@@ -3345,6 +3449,10 @@
                     "description": "The schema version of the module",
                     "type": "integer"
                 },
+                "class": {
+                    "description": "Class Name including namespace",
+                    "type": "string"
+                },
                 "viewPath": {
                     "description": "The Twig View path for module specific templates",
                     "type": "string"
@@ -3357,9 +3465,17 @@
                     "description": "The ID of the Page",
                     "type": "integer"
                 },
-                "page": {
+                "name": {
                     "description": "A code name for the page",
                     "type": "string"
+                },
+                "title": {
+                    "description": "A user friendly title for this page",
+                    "type": "string"
+                },
+                "asHome": {
+                    "description": "Flag indicating if the page can be used as a homepage",
+                    "type": "integer"
                 }
             }
         },
@@ -3535,7 +3651,8 @@
         "RegionOption": {
             "properties": {
                 "regionId": {
-                    "description": "The regionId that this Option applies to"
+                    "description": "The regionId that this Option applies to",
+                    "type": "integer"
                 },
                 "option": {
                     "description": "The option name",
@@ -3628,6 +3745,7 @@
                     "description": "If this event recurs when what is the recurrence period.",
                     "type": "string",
                     "enum": [
+                        "None",
                         "Minute",
                         "Hour",
                         "Day",
@@ -3871,7 +3989,8 @@
                     }
                 },
                 "module": {
-                    "description": "The Module Object for this Widget"
+                    "description": "The Module Object for this Widget",
+                    "$ref": "#/definitions/ModuleWidget"
                 }
             }
         },
@@ -3894,6 +4013,19 @@
                     "type": "string"
                 }
             }
+        },
+        "ModuleWidget": {
+            "properties": {
+                "widget": {
+                    "description": "The Widget",
+                    "$ref": "#/definitions/Widget"
+                }
+            }
+        }
+    },
+    "responses": {
+        "200": {
+            "description": "successful operation"
         }
     },
     "securityDefinitions": {

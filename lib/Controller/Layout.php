@@ -207,56 +207,56 @@ class Layout extends Base
      *      in="formData",
      *      description="The Layout Name",
      *      type="string",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="description",
      *      in="formData",
      *      description="The Layout Description",
      *      type="string",
-     *      required="false"
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="tags",
      *      in="formData",
      *      description="A comma separated list of Tags",
      *      type="string",
-     *      required="false"
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="retired",
      *      in="formData",
      *      description="A flag indicating whether this Layout is retired.",
      *      type="integer",
-     *      required="false"
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="backgroundColor",
      *      in="formData",
      *      description="A HEX color to use as the background color of this Layout.",
      *      type="string",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="backgroundImageId",
      *      in="formData",
      *      description="A media ID to use as the background image for this Layout.",
      *      type="integer",
-     *      required="false"
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="backgroundzIndex",
      *      in="formData",
      *      description="The Layer Number to use for the background.",
      *      type="integer",
-     *      required="false"
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="resolutionId",
      *      in="formData",
      *      description="The Resolution ID to use on this Layout.",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Response(
      *      response=200,
@@ -367,7 +367,7 @@ class Layout extends Base
      *      in="path",
      *      description="The Layout ID to Delete",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Response(
      *      response=204,
@@ -406,7 +406,7 @@ class Layout extends Base
      *      in="path",
      *      description="The Layout ID",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Response(
      *      response=204,
@@ -720,28 +720,28 @@ class Layout extends Base
      *      in="path",
      *      description="The Layout ID to Copy",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="name",
      *      in="formData",
      *      description="The name for the new Layout",
      *      type="string",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="description",
      *      in="formData",
      *      description="The Description for the new Layout",
      *      type="string",
-     *      required="false"
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="copyMediaFiles",
      *      in="formData",
      *      description="Flag indicating whether to make new Copies of all Media Files assigned to the Layout being Copied",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Response(
      *      response=201,
@@ -867,20 +867,24 @@ class Layout extends Base
 
     /**
      * TODO: Not sure how to document this.
-     * @SWG\Post(
+     * SWG\Post(
      *  path="/layout/import",
      *  operationId="layoutImport",
      *  tags={"layout"},
      *  summary="Import Layout",
      *  description="Upload and Import a Layout",
      *  consumes="multipart/form-data",
-     *  @SWG\Parameter(
+     *  SWG\Parameter(
      *      name="file",
      *      in="formData",
      *      description="The file",
      *      type="file",
-     *      required="true"
-     *   )
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation"
+     *  )
      * )
      */
     public function import()

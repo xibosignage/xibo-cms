@@ -223,7 +223,7 @@ INSERT INTO `usertype` (`usertypeid`, `usertype`) VALUES
 (3, 'User');
 
 INSERT INTO `user` (`UserID`, `usertypeid`, `UserName`, `UserPassword`, `loggedin`, `lastaccessed`, `email`, `homepageId`, `Retired`) VALUES
-(1, 1, 'xibo_admin', '21232f297a57a5a743894a0e4a801fc3', 1, NOW(), '', 42, 0);
+(1, 1, 'xibo_admin', '21232f297a57a5a743894a0e4a801fc3', 1, NOW(), '', 29, 0);
 
 INSERT INTO `lkusergroup` (`LkUserGroupID`, `GroupID`, `UserID`) VALUES
 (1, 3, 1);

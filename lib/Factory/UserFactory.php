@@ -150,7 +150,7 @@ class UserFactory extends BaseFactory
                 INNER JOIN `group`
                 ON `group`.groupId = lkusergroup.groupId
                   AND isUserSpecific = 1
-                INNER JOIN `pages`
+                LEFT OUTER JOIN `pages`
                 ON pages.pageId = `user`.homePageId
              WHERE 1 = 1
          ';

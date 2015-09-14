@@ -32,7 +32,7 @@ class RegionOption
 {
     /**
      * @SWG\Property(description="The regionId that this Option applies to")
-     * @var
+     * @var int
      */
     public $regionId;
 
