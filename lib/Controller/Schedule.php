@@ -92,6 +92,7 @@ class Schedule extends Base
      *  ),
      *  @SWG\Response(
      *      response=200,
+     *      description="successful response",
      *      @SWG\Schema(
      *          type="array",
      *          @SWG\Items(ref="#/definitions/ScheduleCalendarData")
@@ -257,28 +258,28 @@ class Schedule extends Base
      *      in="formData",
      *      description="The Campaign ID to use for this Event. If a Layout is needed then the Campaign specific ID for that Layout should be used.",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *  ),
      *  @SWG\Parameter(
      *      name="displayOrder",
      *      in="formData",
      *      description="The display order for this event. ",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *  ),
      *  @SWG\Parameter(
      *      name="isPriority",
      *      in="formData",
      *      description="A 0|1 flag indicating whether this event should be considered priority",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *   @SWG\Parameter(
      *      name="displayGroupIds",
      *      in="formData",
      *      description="The Display Group IDs for this event. Display specific Group IDs should be used to schedule on single displays.",
      *      type="array",
-     *      required="true",
+     *      required=true,
      *      @SWG\Items(type="integer")
      *   ),
      *   @SWG\Parameter(
@@ -287,7 +288,7 @@ class Schedule extends Base
      *      description="The from date for this event.",
      *      type="string",
      *      format="date-time",
-     *      required="true"
+     *      required=true
      *   ),
      *   @SWG\Parameter(
      *      name="toDt",
@@ -295,22 +296,22 @@ class Schedule extends Base
      *      description="The to date for this event.",
      *      type="string",
      *      format="date-time",
-     *      required="true"
+     *      required=true
      *   ),
      *   @SWG\Parameter(
      *      name="recurrenceType",
      *      in="formData",
      *      description="The type of recurrence to apply to this event.",
      *      type="string",
-     *      required="false",
+     *      required=false,
      *      enum={"", "Minute", "Hour", "Day", "Week", "Month", "Year"}
      *   ),
      *   @SWG\Parameter(
      *      name="recurrenceDetail",
      *      in="formData",
      *      description="The interval for the recurrence.",
-     *      type="int",
-     *      required="false"
+     *      type="integer",
+     *      required=false
      *   ),
      *   @SWG\Parameter(
      *      name="recurrenceRange",
@@ -318,7 +319,7 @@ class Schedule extends Base
      *      description="The end date for this events recurrence.",
      *      type="string",
      *      format="date-time",
-     *      required="false"
+     *      required=false
      *   ),
      *   @SWG\Response(
      *      response=201,
@@ -439,35 +440,35 @@ class Schedule extends Base
      *      in="path",
      *      description="The Scheduled Event ID",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *  ),
      *  @SWG\Parameter(
      *      name="campaignId",
      *      in="formData",
      *      description="The Campaign ID to use for this Event. If a Layout is needed then the Campaign specific ID for that Layout should be used.",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *  ),
      *  @SWG\Parameter(
      *      name="displayOrder",
      *      in="formData",
      *      description="The display order for this event. ",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *  ),
      *  @SWG\Parameter(
      *      name="isPriority",
      *      in="formData",
      *      description="A 0|1 flag indicating whether this event should be considered priority",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *   @SWG\Parameter(
      *      name="displayGroupIds",
      *      in="formData",
      *      description="The Display Group IDs for this event. Display specific Group IDs should be used to schedule on single displays.",
      *      type="array",
-     *      required="true",
+     *      required=true,
      *      @SWG\Items(type="integer")
      *   ),
      *   @SWG\Parameter(
@@ -476,7 +477,7 @@ class Schedule extends Base
      *      description="The from date for this event.",
      *      type="string",
      *      format="date-time",
-     *      required="true"
+     *      required=true
      *   ),
      *   @SWG\Parameter(
      *      name="toDt",
@@ -484,22 +485,22 @@ class Schedule extends Base
      *      description="The to date for this event.",
      *      type="string",
      *      format="date-time",
-     *      required="true"
+     *      required=true
      *   ),
      *   @SWG\Parameter(
      *      name="recurrenceType",
      *      in="formData",
      *      description="The type of recurrence to apply to this event.",
      *      type="string",
-     *      required="false",
+     *      required=false,
      *      enum={"", "Minute", "Hour", "Day", "Week", "Month", "Year"}
      *   ),
      *   @SWG\Parameter(
      *      name="recurrentDetail",
      *      in="formData",
      *      description="The interval for the recurrence.",
-     *      type="int",
-     *      required="false"
+     *      type="integer",
+     *      required=false
      *   ),
      *   @SWG\Parameter(
      *      name="recurrenceRange",
@@ -507,7 +508,7 @@ class Schedule extends Base
      *      description="The end date for this events recurrence.",
      *      type="string",
      *      format="date-time",
-     *      required="false"
+     *      required=false
      *   ),
      *   @SWG\Response(
      *      response=200,
@@ -594,7 +595,7 @@ class Schedule extends Base
      *      in="path",
      *      description="The Scheduled Event ID",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Response(
      *      response=204,

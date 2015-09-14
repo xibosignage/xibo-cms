@@ -116,35 +116,35 @@ class Region extends Base
      *      in="path",
      *      description="The Layout ID to add the Region to",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="width",
      *      in="formData",
      *      description="The Width, default 250",
      *      type="integer",
-     *      required="false"
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="height",
      *      in="formData",
      *      description="The Height",
      *      type="integer",
-     *      required="false"
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="top",
      *      in="formData",
      *      description="The Top Coordinate",
      *      type="integer",
-     *      required="false"
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="left",
      *      in="formData",
      *      description="The Left Coordinate",
      *      type="integer",
-     *      required="false"
+     *      required=false
      *   ),
      *  @SWG\Response(
      *      response=201,
@@ -204,70 +204,70 @@ class Region extends Base
      *      in="path",
      *      description="The Region ID to Edit",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="width",
      *      in="formData",
      *      description="The Width, default 250",
      *      type="integer",
-     *      required="false"
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="height",
      *      in="formData",
      *      description="The Height",
      *      type="integer",
-     *      required="false"
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="top",
      *      in="formData",
      *      description="The Top Coordinate",
      *      type="integer",
-     *      required="false"
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="left",
      *      in="formData",
      *      description="The Left Coordinate",
      *      type="integer",
-     *      required="false"
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="zIndex",
      *      in="formData",
      *      description="The Layer for this Region",
      *      type="integer",
-     *      required="false"
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="transitionType",
      *      in="formData",
      *      description="The Transition Type. Must be a valid transition code as returned by /transition",
      *      type="string",
-     *      required="false"
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="transitionDuration",
      *      in="formData",
      *      description="The transition duration in milliseconds if required by the transition type",
      *      type="integer",
-     *      required="false"
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="transitionDirection",
      *      in="formData",
      *      description="The transition direction if required by the transition type.",
      *      type="string",
-     *      required="false"
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="loop",
      *      in="formData",
      *      description="Flag indicating whether this region should loop if there is only 1 media item in the timeline",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Response(
      *      response=200,
@@ -333,7 +333,7 @@ class Region extends Base
      *      in="path",
      *      description="The Region ID to Delete",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Response(
      *      response=204,
@@ -372,17 +372,21 @@ class Region extends Base
      *      in="path",
      *      description="The Layout ID",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="regions",
      *      in="formData",
      *      description="Array of regions and their new positions",
      *      type="array",
-     *      required="true",
+     *      required=true,
      *      @SWG\Schema(
      *          type="object",
-     *          additionalProperties={"regionId":"integer", "top":"double", "left":"double", "width":"double", "height":"double"}
+     *          additionalProperties={[{"title":"regionId", "type":"integer"},
+     *          additionalProperties={"title":"top", "type":"number"},
+     *          additionalProperties={"title":"left", "type":"number"},
+     *          additionalProperties={"title":"width", "type":"number"},
+     *          additionalProperties={"title":"height", "type":"number"}]}
      *      )
      *   ),
      *  @SWG\Response(

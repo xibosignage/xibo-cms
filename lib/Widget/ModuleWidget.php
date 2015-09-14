@@ -32,7 +32,12 @@ use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 
-
+/**
+ * Class ModuleWidget
+ * @package Xibo\Widget
+ *
+ * @SWG\Definition()
+ */
 abstract class ModuleWidget implements ModuleInterface
 {
     /**
@@ -46,6 +51,7 @@ abstract class ModuleWidget implements ModuleInterface
     protected $module;
 
     /**
+     * @SWG\Property(description="The Widget")
      * @var \Xibo\Entity\Widget $widget Widget
      */
     public $widget;

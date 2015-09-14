@@ -32,11 +32,14 @@ class Clock extends Base
      *  path="/clock",
      *  operationId="clock",
      *  tags={"misc"},
+     *  description="The Time",
+     *  summary="The current CMS time",
      *  @SWG\Response(
      *      response=200,
+     *      description="successful response",
      *      @SWG\Schema(
      *          type="object",
-     *          additionalProperties={"time":"string"}
+     *          additionalProperties={"title":"time", "type":"string"}
      *      )
      *  )
      * )

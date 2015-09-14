@@ -109,21 +109,21 @@ class DisplayProfile extends Base
      *      in="formData",
      *      description="The Name of the Display Profile",
      *      type="string",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="type",
      *      in="formData",
      *      description="The Client Type this Profile will apply to",
      *      type="string",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="isDefault",
      *      in="formData",
      *      description="Flag indicating if this is the default profile for the client type",
-     *      type="int",
-     *      required="true"
+     *      type="integer",
+     *      required=true
      *   ),
      *  @SWG\Response(
      *      response=201,
@@ -191,28 +191,28 @@ class DisplayProfile extends Base
      *      in="formData",
      *      description="The Display Profile ID",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="name",
      *      in="formData",
      *      description="The Name of the Display Profile",
      *      type="string",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="type",
      *      in="formData",
      *      description="The Client Type this Profile will apply to",
      *      type="string",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="isDefault",
      *      in="formData",
      *      description="Flag indicating if this is the default profile for the client type",
-     *      type="int",
-     *      required="true"
+     *      type="integer",
+     *      required=true
      *   ),
      *  @SWG\Response(
      *      response=201,
@@ -335,7 +335,7 @@ class DisplayProfile extends Base
      *      in="path",
      *      description="The Display Profile ID",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Response(
      *      response=204,

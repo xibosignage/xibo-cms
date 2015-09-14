@@ -53,6 +53,43 @@ class Stats extends Base
     }
 
     /**
+     * @SWG\Definition(
+     *  definition="StatisticsData",
+     *  @SWG\Property(
+     *      property="type",
+     *      type="string"
+     *  ),
+     *  @SWG\Property(
+     *      property="display",
+     *      type="string"
+     *  ),
+     *  @SWG\Property(
+     *      property="layout",
+     *      type="string"
+     *  ),
+     *  @SWG\Property(
+     *      property="media",
+     *      type="string"
+     *  ),
+     *  @SWG\Property(
+     *      property="numberPlays",
+     *      type="integer"
+     *  ),
+     *  @SWG\Property(
+     *      property="duration",
+     *      type="integer"
+     *  ),
+     *  @SWG\Property(
+     *      property="minStart",
+     *      type="string"
+     *  ),
+     *  @SWG\Property(
+     *      property="maxEnd",
+     *      type="string"
+     *  )
+     * )
+     *
+     *
      * Shows the stats grid
      *
      * @SWG\Get(
@@ -65,19 +102,7 @@ class Stats extends Base
      *      @SWG\Schema(
      *          type="array",
      *          @SWG\Items(
-     *              @SWG\Schema(
-     *                  type="object",
-     *                  additionalProperties={
-     *                      "type": "string",
-     *                      "display": "string",
-     *                      "layout": "string",
-     *                      "media": "string",
-     *                      "numberPlays": "integer",
-     *                      "duration": "integer",
-     *                      "minStart": "string",
-     *                      "maxEnd": "string"
-     *                  }
-     *              )
+     *              ref="#/definitions/StatisticsData"
      *          )
      *      )
      *  )

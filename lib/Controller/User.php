@@ -166,49 +166,49 @@ class User extends Base
      *      in="formData",
      *      description="The User Name",
      *      type="string",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="email",
      *      in="formData",
      *      description="The user email address",
      *      type="string",
-     *      required="false"
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="userTypeId",
      *      in="formData",
      *      description="The user type ID",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="homePageId",
      *      in="formData",
      *      description="The homepage to use for this User",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="libraryQuota",
      *      in="formData",
      *      description="The users library quota in kilobytes",
      *      type="integer",
-     *      required="false"
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="password",
      *      in="formData",
      *      description="The users password",
      *      type="string",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="groupId",
      *      in="formData",
      *      description="The inital user group for this User",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Response(
      *      response=201,
@@ -435,24 +435,24 @@ class User extends Base
 
     /**
      * @SWG\Get(
-     *  path="/user/permissions/{entity}/{objectId}
+     *  path="/user/permissions/{entity}/{objectId}",
      *  operationId="userPermissionsSearch",
      *  tags={"user"},
-     *  summary="Permission Data"
+     *  summary="Permission Data",
      *  description="Permission data for the Entity and Object Provided.",
      *  @SWG\Parameter(
      *      name="entity",
      *      in="path",
      *      description="The Entity",
      *      type="string",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="objectId",
      *      in="path",
      *      description="The ID of the Object to return permissions for",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Response(
      *      response=200,
@@ -530,31 +530,31 @@ class User extends Base
 
     /**
      * @SWG\Post(
-     *  path="/user/permissions/{entity}/{objectId}
+     *  path="/user/permissions/{entity}/{objectId}",
      *  operationId="userPermissionsSet",
      *  tags={"user"},
-     *  summary="Permission Set"
+     *  summary="Permission Set",
      *  description="Set Permissions to users/groups for the provided entity.",
      *  @SWG\Parameter(
      *      name="entity",
      *      in="path",
      *      description="The Entity",
      *      type="string",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="objectId",
      *      in="path",
      *      description="The ID of the Object to set permissions on",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="groupIds",
      *      in="formData",
      *      description="Array of permissions with groupId as the key",
      *      type="array",
-     *      required="true",
+     *      required=true,
      *      @SWG\Items(type="string")
      *   ),
      *  @SWG\Response(

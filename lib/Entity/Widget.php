@@ -96,7 +96,7 @@ class Widget implements \JsonSerializable
 
     /**
      * @SWG\Property(description="The Module Object for this Widget")
-     * @var ModuleWidget $module A widget can contain a module which is useful for getting accessing module methods
+     * @var ModuleWidget $module
      */
     public $module;
 

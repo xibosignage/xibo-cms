@@ -175,21 +175,21 @@ class Resolution extends Base
      *      in="formData",
      *      description="A name for the Resolution",
      *      type="string",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="width",
      *      in="formData",
      *      description="The Display Width of the Resolution",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="height",
      *      in="formData",
      *      description="The Display Height of the Resolution",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Response(
      *      response=201,
@@ -235,28 +235,28 @@ class Resolution extends Base
      *      in="path",
      *      description="The Resolution ID to Edit",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="resolution",
      *      in="formData",
      *      description="A name for the Resolution",
      *      type="string",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="width",
      *      in="formData",
      *      description="The Display Width of the Resolution",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="height",
      *      in="formData",
      *      description="The Display Height of the Resolution",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Response(
      *      response=200,
@@ -301,7 +301,7 @@ class Resolution extends Base
      *      in="path",
      *      description="The Resolution ID to Delete",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Response(
      *      response=204,

@@ -479,126 +479,126 @@ class Display extends Base
      *      in="path",
      *      description="The Display ID",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="display",
      *      in="formData",
      *      description="The Display Name",
      *      type="string",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="description",
      *      in="formData",
      *      description="A description of the Display",
      *      type="string",
-     *      required="false"
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="isAuditing",
      *      in="formData",
      *      description="Flag indicating whether this Display records auditing information.",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="defaultLayoutId",
      *      in="formData",
      *      description="A Layout ID representing the Default Layout for this Display.",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="licensed",
      *      in="formData",
      *      description="Flag indicating whether this display is licensed.",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="license",
      *      in="formData",
      *      description="The hardwareKey to use as the licence key for this Display",
      *      type="string",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="incSchedule",
      *      in="formData",
      *      description="Flag indicating whether the Default Layout should be included in the Schedule",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="emailAlert",
      *      in="formData",
      *      description="Flag indicating whether the Display generates up/down email alerts.",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="alertTimeout",
      *      in="formData",
      *      description="How long in seconds should this display wait before alerting when it hasn't connected. Override for the collection interval.",
      *      type="integer",
-     *      required="false"
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="wakeOnLanEnabled",
      *      in="formData",
      *      description="Flag indicating if Wake On LAN is enabled for this Display",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="wakeOnLanTime",
      *      in="formData",
      *      description="A h:i string representing the time that the Display should receive its Wake on LAN command",
      *      type="string",
-     *      required="false"
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="broadCastAddress",
      *      in="formData",
      *      description="The BroadCast Address for this Display - used by Wake On LAN",
      *      type="string",
-     *      required="false"
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="secureOn",
      *      in="formData",
      *      description="The secure on configuration for this Display",
      *      type="string",
-     *      required="false"
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="cidr",
      *      in="formData",
      *      description="The CIDR configuration for this Display",
-     *      type="int",
-     *      required="false"
+     *      type="integer",
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="latitude",
      *      in="formData",
      *      description="The Latitude of this Display",
-     *      type="double",
-     *      required="false"
+     *      type="number",
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="longitude",
      *      in="formData",
      *      description="The Longitude of this Display",
-     *      type="double",
-     *      required="false"
+     *      type="number",
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="displayProfileId",
      *      in="formData",
      *      description="The Display Settings Profile ID",
-     *      type="int",
-     *      required="false"
+     *      type="integer",
+     *      required=false
      *   ),
      *  @SWG\Response(
      *      response=200,
@@ -658,7 +658,7 @@ class Display extends Base
      *      in="path",
      *      description="The Display ID",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Response(
      *      response=204,
@@ -843,7 +843,7 @@ class Display extends Base
      *      in="path",
      *      description="The Display ID",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Response(
      *      response=200,
@@ -905,7 +905,7 @@ class Display extends Base
      *      in="path",
      *      description="The Display ID",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Response(
      *      response=204,

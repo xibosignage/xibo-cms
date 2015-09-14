@@ -131,12 +131,16 @@ class Login extends Base
      *  path="/about",
      *  operationId="about",
      *  tags={"misc"},
+     *  summary="About",
+     *  description="Information about this API, such as Version code, etc",
      *  @SWG\Response(
      *      response=200,
+     *      description="successful response",
      *      @SWG\Schema(
      *          type="object",
      *          additionalProperties={
-     *              "version"="string"
+     *              "title"="version",
+     *              "type"="string"
      *          }
      *      )
      *  )

@@ -192,7 +192,7 @@ class Template extends Base
      * @param int $layoutId
      *
      * @SWG\Post(
-     *  path="/template/{layoutId}
+     *  path="/template/{layoutId}",
      *  operationId="template.add.from.layout",
      *  tags={"template"},
      *  summary="Add a template from a Layout",
@@ -202,35 +202,35 @@ class Template extends Base
      *      in="path",
      *      description="The Layout ID",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="includeWidgets",
      *      in="formData",
      *      description="Flag indicating whether to include the widgets in the Template",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="name",
      *      in="formData",
      *      description="The Template Name",
      *      type="string",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="tags",
      *      in="formData",
      *      description="Comma separated list of Tags for the template",
      *      type="string",
-     *      required="false"
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="description",
      *      in="formData",
      *      description="A description of the Template",
      *      type="string",
-     *      required="false"
+     *      required=false
      *   ),
      *  @SWG\Response(
      *      response=201,

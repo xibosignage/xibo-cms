@@ -229,7 +229,7 @@ class Library extends Base
      *      in="path",
      *      description="The Media ID to Delete",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Response(
      *      response=204,
@@ -270,8 +270,12 @@ class Library extends Base
      *      in="formData",
      *      description="The Uploaded File",
      *      type="file",
-     *      required="true"
-     *   )
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation"
+     *  )
      * )
      */
     public function add()
@@ -354,42 +358,42 @@ class Library extends Base
      *      in="path",
      *      description="The Media ID to Edit",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="name",
      *      in="formData",
      *      description="Media Item Name",
      *      type="string",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="duration",
      *      in="formData",
      *      description="The duration in seconds for this Media Item",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="retired",
      *      in="formData",
      *      description="Flag indicating if this Layout is retired",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="tags",
      *      in="formData",
      *      description="Comma separated list of Tags",
      *      type="string",
-     *      required="false"
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="updateInLayouts",
      *      in="formData",
      *      description="Flag indicating whether to update the duration in all Layouts the Media is assigned to",
      *      type="integer",
-     *      required="false"
+     *      required=false
      *   ),
      *  @SWG\Response(
      *      response=200,
@@ -543,20 +547,20 @@ class Library extends Base
      *  tags={"library"},
      *  summary="Download Media",
      *  description="Download a Media file from the Library",
-     *  produces="application/octet-stream",
+     *  produces=["application/octet-stream"],
      *  @SWG\Parameter(
      *      name="mediaId",
      *      in="path",
      *      description="The Media ID to Download",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="type",
      *      in="path",
      *      description="The Module Type of the Download",
      *      type="string",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Response(
      *      response=200,

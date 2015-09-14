@@ -52,7 +52,7 @@ class DataSetData extends Base
      *      in="formData",
      *      description="The DataSet ID",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Response(
      *      response=200,
@@ -119,14 +119,14 @@ class DataSetData extends Base
      *      in="path",
      *      description="The DataSet ID",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="dataSetColumnId_ID",
      *      in="formData",
      *      description="Parameter for each dataSetColumnId in the DataSet",
      *      type="string",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Response(
      *      response=201,
@@ -223,21 +223,21 @@ class DataSetData extends Base
      *      in="path",
      *      description="The DataSet ID",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="rowId",
      *      in="path",
      *      description="The Row ID of the Data to Edit",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="dataSetColumnId_ID",
      *      in="formData",
      *      description="Parameter for each dataSetColumnId in the DataSet",
      *      type="string",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Response(
      *      response=200,
@@ -331,14 +331,14 @@ class DataSetData extends Base
      *      in="path",
      *      description="The DataSet ID",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="rowId",
      *      in="path",
      *      description="The Row ID of the Data to Delete",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Response(
      *      response=204,

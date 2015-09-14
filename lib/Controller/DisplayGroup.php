@@ -399,14 +399,14 @@ class DisplayGroup extends Base
      *      type="integer",
      *      in="path",
      *      description="The Display Group to assign to",
-     *      required="true"
+     *      required=true
      *  ),
      *  @SWG\Parameter(
      *      name="displayId",
      *      type="array",
      *      in="formData",
      *      description="The Display Ids to assign",
-     *      required="true",
+     *      required=true,
      *      @SWG\Items(
      *          type="integer"
      *      )
@@ -416,7 +416,7 @@ class DisplayGroup extends Base
      *      in="formData",
      *      description="An optional array of Display IDs to unassign",
      *      type="array",
-     *      required="false",
+     *      required=false,
      *      @SWG\Items(type="integer")
      *   ),
      *  @SWG\Response(
@@ -481,14 +481,14 @@ class DisplayGroup extends Base
      *      type="integer",
      *      in="path",
      *      description="The Display Group to unassign from",
-     *      required="true"
+     *      required=true
      *  ),
      *  @SWG\Parameter(
      *      name="displayId",
      *      type="array",
      *      in="formData",
      *      description="The Display Ids to unassign",
-     *      required="true",
+     *      required=true,
      *      @SWG\Items(
      *          type="integer"
      *      )
@@ -560,14 +560,14 @@ class DisplayGroup extends Base
      *      type="integer",
      *      in="path",
      *      description="The Display Group to assign to",
-     *      required="true"
+     *      required=true
      *  ),
      *  @SWG\Parameter(
      *      name="mediaId",
      *      type="array",
      *      in="formData",
      *      description="The Media Ids to assign",
-     *      required="true",
+     *      required=true,
      *      @SWG\Items(
      *          type="integer"
      *      )
@@ -577,7 +577,7 @@ class DisplayGroup extends Base
      *      type="array",
      *      in="formData",
      *      description="Optional array of Media Id to unassign",
-     *      required="false",
+     *      required=false,
      *      @SWG\Items(
      *          type="integer"
      *      )
@@ -647,14 +647,14 @@ class DisplayGroup extends Base
      *      type="integer",
      *      in="path",
      *      description="The Display Group to unassign from",
-     *      required="true"
+     *      required=true
      *  ),
      *  @SWG\Parameter(
      *      name="mediaId",
      *      type="array",
      *      in="formData",
      *      description="The Media Ids to unassign",
-     *      required="true",
+     *      required=true,
      *      @SWG\Items(
      *          type="integer"
      *      )
@@ -734,14 +734,14 @@ class DisplayGroup extends Base
      *      type="integer",
      *      in="path",
      *      description="The Display Group ID",
-     *      required="true"
+     *      required=true
      *  ),
      *  @SWG\Parameter(
      *      name="mediaId",
      *      type="integer",
      *      in="formData",
      *      description="The Media Id of the Installer File",
-     *      required="true"
+     *      required=true
      *  ),
      *  @SWG\Response(
      *      response=204,
