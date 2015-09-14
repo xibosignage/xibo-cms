@@ -53,6 +53,7 @@ $app->get('/', function () use ($app) {
 $app->get('/dashboard/status', '\Xibo\Controller\StatusDashboard:displayPage')->name('statusdashboard.view');
 $app->get('/dashboard/icon', '\Xibo\Controller\IconDashboard:displayPage')->name('dashboard.view');
 $app->get('/dashboard/media', '\Xibo\Controller\MediaManager:displayPage')->name('mediamanager.view');
+$app->get('/dashboard/media/data', '\Xibo\Controller\MediaManager:grid')->name('mediaManager.search');
 
 // Login Form
 $app->get('/login', '\Xibo\Controller\Login:loginForm')->name('login');
