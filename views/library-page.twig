@@ -117,24 +117,80 @@
         table.on('processing.dt', dataTableProcessing);
         dataTableAddColVis(table, $('#libraryItems_wrapper').find('.col-sm-6').eq(1));
 
-        $("#libraryUploadForm").click(function() {
+        $("#libraryUploadForm").click(function(e) {
+            e.preventDefault();
+
+            openUploadForm({
+                trans: {
+                    addFiles: "{% trans "Add files" %}",
+                    startUpload: "{% trans "Start upload" %}",
+                    cancelUpload: "{% trans "Cancel upload" %}"
+                },
+                upload: {
+                    maxSize: {{ libraryUpload.maxSize }},
+                    maxSizeMessage: "{{ libraryUpload.maxSizeMessage  }}",
+                    validExt: "{{ libraryUpload.validExt }}"
+                }
+            });
+        });
+
+        /**
+         * Media Edit form
+         */
+        function mediaEditFormOpen(dialog) {
+            // Create a new button
+            var footer = dialog.find(".modal-footer");
+            var mediaId = dialog.find("#mediaEditForm").data().mediaId;
+            var validExtensions = dialog.find("#mediaEditForm").data().validExtensions;
+
+            // Append
+            var replaceButton = $('<button class="btn btn-warning">').html("{% trans "Replace" %}");
+            replaceButton.click(function(e) {
+                e.preventDefault();
+
+                // Open the upload dialog with our options.
+                openUploadForm({
+                    oldMediaId: mediaId,
+                    {% if config.LIBRARY_MEDIA_UPDATEINALL_CHECKB == "Checked" %}
+                    updateInAllChecked: true,
+                    {% else %}
+                    updateInAllChecked: false,
+                    {% endif %}
+                    trans: {
+                        addFiles: "{% trans "Add Replacement" %}",
+                        startUpload: "{% trans "Start Replace" %}",
+                        cancelUpload: "{% trans "Cancel Replace" %}",
+                        updateInLayouts: {
+                            title: "{% trans "Update this media in all layouts it is assigned to?" %}",
+                            helpText: "{% trans "Note: It will only be updated in layouts you have permission to edit." %}"
+                        },
+                        deleteOldRevisions: {
+                            title: "{% trans "Delete the old version?" %}",
+                            helpText: "{% trans "Completely remove the old version of this media item if a new file is being uploaded." %}"
+                        }
+                    },
+                    upload: {
+                        maxSize: {{ libraryUpload.maxSize }},
+                        maxSizeMessage: "{{ libraryUpload.maxSizeMessage  }}",
+                        validExt: validExtensions
+                    }
+                });
+            });
+
+            footer.find(".btn-primary").before(replaceButton);
+        }
+
+        /**
+         * Opens the upload form
+         * @param templateOptions
+         */
+        function openUploadForm(templateOptions) {
 
             var template = Handlebars.compile($("#template-file-upload").html());
 
             // Handle bars and open a dialog
             bootbox.dialog({
-                message: template({
-                    trans: {
-                        addFiles: "{% trans "Add files" %}",
-                        startUpload: "{% trans "Start upload" %}",
-                        cancelUpload: "{% trans "Cancel upload" %}"
-                    },
-                    upload: {
-                        maxSize: {{ libraryUpload.maxSize }},
-                        maxSizeMessage: "{{ libraryUpload.maxSizeMessage  }}",
-                        validExt: "{{ libraryUpload.validExt }}"
-                    }
-                }),
+                message: template(templateOptions),
                 title: "{% trans "Upload media" %}",
                 buttons: {
                     main: {
@@ -198,6 +254,6 @@
                         clearInterval(refreshSessionInterval);
                 });
             });
-        });
+        }
     </script>
 {% endblock %}

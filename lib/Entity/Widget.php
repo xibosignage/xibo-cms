@@ -24,6 +24,7 @@ namespace Xibo\Entity;
 
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\PermissionFactory;
+use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\WidgetMediaFactory;
 use Xibo\Factory\WidgetOptionFactory;
 use Xibo\Helper\Log;
@@ -223,7 +224,7 @@ class Widget implements \JsonSerializable
     {
         $this->load();
 
-        unset($this->mediaIds[$mediaId]);
+        $this->mediaIds = array_diff($this->mediaIds, [$mediaId]);
     }
 
     /**
@@ -255,7 +256,8 @@ class Widget implements \JsonSerializable
     {
         // Default options
         $options = array_merge([
-            'saveWidgetOptions' => true
+            'saveWidgetOptions' => true,
+            'notify' => true
         ], $options);
 
         // Add/Edit
@@ -277,10 +279,21 @@ class Widget implements \JsonSerializable
 
         // Manage the assigned media
         $this->linkMedia();
+        $this->unlinkMedia();
+
+        if ($options['notify']) {
+            // Notify the Layout
+            $playlist = PlaylistFactory::getById($this->playlistId);
+            $playlist->notifyLayouts();
+        }
     }
 
-    public function delete()
+    public function delete($options = [])
     {
+        $options = array_merge([
+            'notify' => true
+        ], $options);
+
         // We must ensure everything is loaded before we delete
         if ($this->hash == null)
             $this->load();
@@ -301,10 +314,17 @@ class Widget implements \JsonSerializable
         }
 
         // Unlink Media
+        $this->mediaIds = [];
         $this->unlinkMedia();
 
         // Delete this
         PDOConnect::update('DELETE FROM `widget` WHERE widgetId = :widgetId', array('widgetId' => $this->widgetId));
+
+        if ($options['notify']) {
+            // Notify the Layout
+            $playlist = PlaylistFactory::getById($this->playlistId);
+            $playlist->notifyLayouts();
+        }
     }
 
     private function add()
@@ -346,6 +366,8 @@ class Widget implements \JsonSerializable
 
         foreach ($this->mediaIds as $mediaId) {
 
+            Log::debug('Inserting %d', $mediaId);
+
             PDOConnect::insert($sql, array(
                 'widgetId' => $this->widgetId,
                 'mediaId' => $mediaId,
@@ -359,11 +381,25 @@ class Widget implements \JsonSerializable
      */
     private function unlinkMedia()
     {
+        // Unlink any media that isn't in the collection
+        if (count($this->mediaIds) <= 0)
+            $this->mediaIds = [0];
+
+        $params = ['widgetId' => $this->widgetId];
+
+        $sql = 'DELETE FROM `lkwidgetmedia` WHERE widgetId = :widgetId AND mediaId NOT IN (0';
+
+        $i = 0;
         foreach ($this->mediaIds as $mediaId) {
-            PDOConnect::update('DELETE FROM `lkwidgetmedia` WHERE widgetId = :widgetId AND mediaId = :mediaId', array(
-                'widgetId' => $this->widgetId,
-                'mediaId' => $mediaId
-            ));
+            $i++;
+            $sql .= ',:mediaId' . $i;
+            $params['mediaId' . $i] = $mediaId;
         }
+
+        $sql .= ')';
+
+        Log::sql($sql, $params);
+
+        PDOConnect::update($sql, $params);
     }
 }

@@ -25,7 +25,9 @@ namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
 use Xibo\Exception\ConfigurationException;
+use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DisplayGroupFactory;
+use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\TagFactory;
@@ -200,8 +202,9 @@ class Media implements \JsonSerializable
 
     /**
      * Validate
+     * @param array $options
      */
-    public function validate()
+    public function validate($options)
     {
         if (!v::string()->notEmpty()->validate($this->mediaType))
             throw new \InvalidArgumentException(__('Unknown Module Type'));
@@ -217,9 +220,14 @@ class Media implements \JsonSerializable
             $checkSQL .= ' AND mediaId <> :mediaId AND IsEdited = 0 ';
             $params['mediaId'] = $this->mediaId;
         }
+        else if ($options['oldMedia'] != null && $this->name == $options['oldMedia']->name) {
+            $checkSQL .= ' AND IsEdited = 0 ';
+        }
 
         $params['name'] = $this->name;
         $params['userId'] = $this->ownerId;
+
+        Log::sql($checkSQL, $params);
 
         $result = PDOConnect::select($checkSQL, $params);
 
@@ -252,15 +260,20 @@ class Media implements \JsonSerializable
 
     /**
      * Save this media
-     * @param bool $validate
+     * @param array $options
      */
-    public function save($validate = true)
+    public function save($options = [])
     {
+        $options = array_merge([
+            'validate' => true,
+            'oldMedia' => null
+        ], $options);
+
         if (!$this->loaded)
             $this->load();
 
-        if ($validate && $this->mediaType != 'module')
-            $this->validate();
+        if ($options['validate'] && $this->mediaType != 'module')
+            $this->validate($options);
 
         // Add or edit
         if ($this->mediaId == null || $this->mediaId == 0) {
@@ -296,6 +309,19 @@ class Media implements \JsonSerializable
         $this->deleting = true;
         $this->load();
 
+        // If there is a parent, bring it back
+        try {
+            $parentMedia = MediaFactory::getParentById($this->mediaId);
+            $parentMedia->isEdited = 0;
+            $parentMedia->parentId = null;
+            $parentMedia->save(['validate' => false]);
+        }
+        catch (NotFoundException $e) {
+            // This is fine, no parent
+            $parentMedia = null;
+        }
+
+
         foreach ($this->permissions as $permission) {
             /* @var Permission $permission */
             $permission->delete();
@@ -310,12 +336,24 @@ class Media implements \JsonSerializable
         foreach ($this->widgets as $widget) {
             /* @var \Xibo\Entity\Widget $widget */
             $widget->unassignMedia($this->mediaId);
-            $widget->save(['saveWidgetOptions' => false]);
+
+            if ($parentMedia != null)
+                $widget->assignMedia($parentMedia->mediaId);
+
+            // This action might result in us deleting a widget
+            if (count($widget->mediaIds) <= 0)
+                $widget->delete();
+            else
+                $widget->save(['saveWidgetOptions' => false]);
         }
 
         foreach ($this->displayGroups as $displayGroup) {
             /* @var \Xibo\Entity\DisplayGroup $displayGroup */
-            $displayGroup->unassignMedia($this->mediaId);
+            $displayGroup->unassignMedia($this);
+
+            if ($parentMedia != null)
+                $displayGroup->assignMedia($parentMedia);
+
             $displayGroup->save(false);
         }
 
@@ -323,12 +361,16 @@ class Media implements \JsonSerializable
 
         $this->deleteFile();
 
-        // If there is a parent, bring it back
-        if ($this->parentId != 0) {
-            $media = MediaFactory::getById($this->parentId);
-            $media->isEdited = 0;
-            $media->parentId = null;
-            $media->save(false);
+        // Update any background images
+        if ($this->mediaType == 'image' && $parentMedia != null) {
+            Log::debug('Updating layouts with the old media %d as the background image.', $this->mediaId);
+            // Get all Layouts with this as the background image
+            foreach (LayoutFactory::query(null, ['backgroundImageId' => $this->mediaId]) as $layout) {
+                /* @var Layout $layout */
+                Log::debug('Found layout that needs updating. ID = %d. Setting background image id to %d', $layout->layoutId, $parentMedia->mediaId);
+                $layout->backgroundImageId = $parentMedia->mediaId;
+                $layout->save();
+            }
         }
     }
 

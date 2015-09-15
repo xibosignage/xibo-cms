@@ -286,13 +286,19 @@ class Library extends Base
         $this->ensureLibraryExists();
 
         // Get Valid Extensions
-        $validExt = ModuleFactory::getValidExtensions();
+        if (Sanitize::getInt('oldMediaId') !== null) {
+            $media = MediaFactory::getById(Sanitize::getInt('oldMediaId'));
+            $validExt = ModuleFactory::getValidExtensions(['type' => $media->mediaType]);
+        }
+        else
+            $validExt = ModuleFactory::getValidExtensions();
 
         $options = array(
             'userId' => $this->getUser()->userId,
             'controller' => $this,
             'oldMediaId' => Sanitize::getInt('oldMediaId'),
-            'replaceInAllLayouts' => Sanitize::getCheckbox('replaceInAllLayouts'),
+            'widgetId' => Sanitize::getInt('widgetId'),
+            'updateInLayouts' => Sanitize::getCheckbox('updateInLayouts'),
             'deleteOldRevisions' => Sanitize::getCheckbox('deleteOldRevisions'),
             'playlistId' => Sanitize::getInt('playlistId'),
             'upload_dir' => $libraryFolder . 'temp/',
@@ -311,18 +317,15 @@ class Library extends Base
 
         // Check for a user quota
         $this->getUser()->isQuotaFullByUser();
+        $this->setNoOutput(true);
 
         try {
             // Hand off to the Upload Handler provided by jquery-file-upload
             new XiboUploadHandler($options);
-
-        } catch (\Exception $e) {
-            // We must not issue an error, the file upload return should have the error object already
-            //TODO: for some reason this commits... it shouldn't
-            $this->app->commit = false;
         }
-
-        $this->setNoOutput(true);
+        catch (\Exception $e) {
+            // We must not issue an error, the file upload return should have the error object already
+        }
     }
 
     /**
@@ -339,6 +342,7 @@ class Library extends Base
         $this->getState()->template = 'library-form-edit';
         $this->getState()->setData([
             'media' => $media,
+            'validExtensions' => implode('|', ModuleFactory::getValidExtensions(['type' => $media->mediaType])),
             'help' => Help::Link('Library', 'Edit')
         ]);
     }

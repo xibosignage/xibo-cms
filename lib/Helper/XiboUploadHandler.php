@@ -3,8 +3,10 @@
 namespace Xibo\Helper;
 
 use Exception;
+use Xibo\Entity\Layout;
 use Xibo\Entity\Permission;
 use Xibo\Entity\Widget;
+use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
@@ -20,13 +22,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
         $fileName = $file->name;
         $name = $_REQUEST['name'][$index];
 
-        // The media name might be empty here, because the user isn't forced to select it
-        $name = ($name == '') ? $fileName : $name;
-
-        // Set the name to the one we have selected
-        $file->name = $name;
-
-        Log::debug('Upload complete for name: ' . $fileName . '. Name: ' . $name . '.');
+        Log::debug('Upload complete for name: ' . $fileName . '. Options [%s]', json_encode($this->options));
 
         // Upload and Save
         try {
@@ -35,25 +31,29 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
             Log::debug('Module Type = %s', $module);
 
-            // Add the Media
-            $media = MediaFactory::create($name, $fileName, $module->type, $this->options['userId']);
-
             // Old Media Id or not?
             if ($this->options['oldMediaId'] != 0) {
+
+                Log::debug('Replacing old with new');
+
                 // Load old media
                 $oldMedia = MediaFactory::getById($this->options['oldMediaId']);
-
                 // Set the old record to edited
                 $oldMedia->isEdited = 1;
-                $oldMedia->save(false);
+                $oldMedia->save(['validate' => false]);
 
-                // Reset the name
-                $media->name = $oldMedia->name;
+                // The media name might be empty here, because the user isn't forced to select it
+                $name = ($name == '') ? $oldMedia->name : $name;
+
+                // Add the Media
+                $media = MediaFactory::create($name, $fileName, $module->type, $this->options['userId']);
 
                 // Save
-                $media->save();
+                $media->save(['oldMedia' => $oldMedia]);
 
-                foreach (PermissionFactory::getAllByObjectId('Media', $oldMedia->mediaId) as $permission) {
+                Log::debug('Copying permissions to new media');
+
+                foreach (PermissionFactory::getAllByObjectId(get_class($oldMedia), $oldMedia->mediaId) as $permission) {
                     /* @var Permission $permission */
                     $permission = clone $permission;
                     $permission->objectId = $media->mediaId;
@@ -61,26 +61,60 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 }
 
                 // Do we want to replace this in all layouts?
-                if ($this->options['replaceInAllLayouts'] == 1) {
-                    foreach (WidgetFactory::getByMediaId($media->mediaId) as $widget) {
+                if ($this->options['updateInLayouts'] == 1) {
+                    Log::debug('Replace in all Layouts selected. Getting associated widgets');
+
+                    foreach (WidgetFactory::getByMediaId($oldMedia->mediaId) as $widget) {
                         /* @var Widget $widget */
+                        Log::debug('Found widget that needs updating. ID = %d. Linking %d', $widget->getId(), $media->mediaId);
                         $widget->unassignMedia($oldMedia->mediaId);
                         $widget->assignMedia($media->mediaId);
                         $widget->save();
                     }
+
+                    // Update any background images
+                    if ($media->mediaType == 'image') {
+                        Log::debug('Updating layouts with the old media %d as the background image.', $oldMedia->mediaId);
+                        // Get all Layouts with this as the background image
+                        foreach (LayoutFactory::query(null, ['backgroundImageId' => $oldMedia->mediaId]) as $layout) {
+                            /* @var Layout $layout */
+                            Log::debug('Found layout that needs updating. ID = %d. Setting background image id to %d', $layout->layoutId, $media->mediaId);
+                            $layout->backgroundImageId = $media->mediaId;
+                            $layout->save();
+                        }
+                    }
+
+                } else if ($this->options['widgetId'] != 0) {
+                    Log::debug('Swapping a specific widget only.');
+                    // swap this one
+                    $widget = WidgetFactory::getById($this->options['widgetId']);
+                    $widget->unassignMedia($oldMedia->mediaId);
+                    $widget->assignMedia($media->mediaId);
+                    $widget->save();
                 }
 
                 // We either want to Link the old record to this one, or delete it
-                if ($this->options['replaceInAllLayouts'] == 1 && $this->options['deleteOldRevisions'] == 1) {
+                if ($this->options['updateInLayouts'] == 1 && $this->options['deleteOldRevisions'] == 1) {
                     $oldMedia->delete();
                 } else {
                     $oldMedia->parentId = $media->mediaId;
-                    $oldMedia->save(false);
+                    $oldMedia->save(['validate' => false]);
                 }
+
             } else {
+
+                // The media name might be empty here, because the user isn't forced to select it
+                $name = ($name == '') ? $fileName : $name;
+
+                // Add the Media
+                $media = MediaFactory::create($name, $fileName, $module->type, $this->options['userId']);
+
                 // Save
                 $media->save();
             }
+
+            // Set the name to the one we have selected
+            $file->name = $name;
 
             // Get the storedAs valid for return
             $file->storedas = $media->storedAs;
@@ -93,7 +127,8 @@ class XiboUploadHandler extends BlueImpUploadHandler
             }
 
             // Are we assigning to a Playlist?
-            if ($this->options['playlistId'] != 0) {
+            if ($this->options['playlistId'] != 0 && $this->options['widgetId'] == 0) {
+
                 Log::debug('Assigning uploaded media to playlistId ' . $this->options['playlistId']);
 
                 // Get the Playlist
@@ -110,7 +145,12 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 $playlist->save();
             }
         } catch (Exception $e) {
+            Log::error('Error uploading media: %s', $e->getMessage());
+            Log::debug($e->getTraceAsString());
+
             $file->error = $e->getMessage();
+
+            $this->options['controller']->getApp()->commit = false;
         }
     }
 }

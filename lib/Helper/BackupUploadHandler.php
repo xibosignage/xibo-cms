@@ -31,7 +31,12 @@ class BackupUploadHandler extends BlueImpUploadHandler
             unlink($destination);
 
         } catch (Exception $e) {
+            Log::error('Error uploading media: %s', $e->getMessage());
+            Log::debug($e->getTraceAsString());
+
             $file->error = $e->getMessage();
+
+            $this->options['controller']->getApp()->commit = false;
         }
     }
 }

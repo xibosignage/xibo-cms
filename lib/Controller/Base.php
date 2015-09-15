@@ -79,7 +79,7 @@ class Base
      * Get the App
      * @return Slim
      */
-    protected function getApp()
+    public function getApp()
     {
         return $this->app;
     }
