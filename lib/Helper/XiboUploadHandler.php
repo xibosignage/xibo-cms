@@ -6,6 +6,7 @@ use Exception;
 use Xibo\Entity\Layout;
 use Xibo\Entity\Permission;
 use Xibo\Entity\Widget;
+use Xibo\Exception\NotFoundException;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
@@ -95,7 +96,19 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                 // We either want to Link the old record to this one, or delete it
                 if ($this->options['updateInLayouts'] == 1 && $this->options['deleteOldRevisions'] == 1) {
+
+                    try {
+                        // Join the prior revision up with the new media.
+                        $priorMedia = MediaFactory::getParentById($oldMedia->mediaId);
+                        $priorMedia->parentId = $media->mediaId;
+                        $priorMedia->save(['validate' => false]);
+                    }
+                    catch (NotFoundException $e) {
+                        // Nothing to do then
+                    }
+
                     $oldMedia->delete();
+
                 } else {
                     $oldMedia->parentId = $media->mediaId;
                     $oldMedia->save(['validate' => false]);

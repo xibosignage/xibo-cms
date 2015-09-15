@@ -543,8 +543,10 @@ abstract class ModuleWidget implements ModuleInterface
      * @return int
      * @throws NotFoundException
      */
-    protected function getMediaId()
+    public function getMediaId()
     {
+        Log::debug('Getting first MediaID for Widget: %d', $this->getWidgetId());
+
         if (count($this->widget->mediaIds) <= 0)
             throw new NotFoundException(__('No file to return'));
 

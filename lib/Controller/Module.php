@@ -21,6 +21,7 @@
 namespace Xibo\Controller;
 
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\RegionFactory;
@@ -314,7 +315,8 @@ class Module extends Base
         // Pass to view
         $this->getState()->template = $module->getModuleType() . '-form-edit';
         $this->getState()->setData([
-            'module' => $module
+            'module' => $module,
+            'validExtensions' => str_replace(',', '|', $module->getModule()->validExtensions)
         ]);
     }
 
@@ -373,6 +375,9 @@ class Module extends Base
         if (!$this->getUser()->checkDeleteable($module->widget))
             throw new AccessDeniedException();
 
+        $moduleName = $module->getName();
+        $widgetMedia = $module->widget->mediaIds;
+
         // Inject the Current User
         $module->setUser($this->getUser());
 
@@ -382,9 +387,17 @@ class Module extends Base
         // Call Widget Delete
         $module->widget->delete();
 
+        // Delete Media?
+        if (Sanitize::getCheckbox('deleteMedia') == 1) {
+            foreach ($widgetMedia as $mediaId) {
+                $media = MediaFactory::getById($mediaId);
+                $media->delete();
+            }
+        }
+
         // Successful
         $this->getState()->hydrate([
-            'message' => sprintf(__('Deleted %s'), $module->getName())
+            'message' => sprintf(__('Deleted %s'), $moduleName)
         ]);
     }
 

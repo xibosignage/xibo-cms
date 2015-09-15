@@ -242,11 +242,10 @@
             });
         }
 
-        // Click Handler for Library Upload Buttons (image, video, powerpoint, flash)
-        function libraryUploadClick() {
-
-            var validExt = $(this).data().validExt.replace(/,/g, "|");
-            var playlistId = $(this).data().playlistId;
+        /**
+         * Open Upload Form
+         */
+        function openUploadForm(templateOptions) {
 
             // Close the current dialog
             XiboDialogClose();
@@ -254,20 +253,8 @@
             var template = Handlebars.compile($("#template-file-upload").html());
 
             // Handle bars and open a dialog
-            var fileUploadDialog = bootbox.dialog({
-                message: template({
-                    trans: {
-                        addFiles: "{% trans "Add files" %}",
-                        startUpload: "{% trans "Start upload" %}",
-                        cancelUpload: "{% trans "Cancel upload" %}"
-                    },
-                    upload: {
-                        maxSize: {{ libraryUpload.maxSize }},
-                        maxSizeMessage: "{{ libraryUpload.maxSizeMessage  }}",
-                        validExt: validExt
-                    },
-                    playlistId: playlistId
-                }),
+            bootbox.dialog({
+                message: template(templateOptions),
                 title: "{% trans "Upload media" %}",
                 buttons: {
                     library: {
@@ -327,6 +314,76 @@
                     inputs.filter("input").prop("disabled", true);
                 });
             });
+        }
+
+        // Click Handler for Library Upload Buttons (image, video, powerpoint, flash)
+        function libraryUploadClick(e) {
+            e.preventDefault();
+
+            var validExt = $(this).data().validExt.replace(/,/g, "|");
+            var playlistId = $(this).data().playlistId;
+
+            openUploadForm({
+                trans: {
+                    addFiles: "{% trans "Add files" %}",
+                    startUpload: "{% trans "Start upload" %}",
+                    cancelUpload: "{% trans "Cancel upload" %}"
+                },
+                upload: {
+                    maxSize: {{ libraryUpload.maxSize }},
+                    maxSizeMessage: "{{ libraryUpload.maxSizeMessage  }}",
+                    validExt: validExt
+                },
+                playlistId: playlistId
+            })
+        }
+
+        /**
+         * Media Edit form
+         */
+        function mediaEditFormOpen(dialog) {
+            // Create a new button
+            var footer = dialog.find(".modal-footer");
+            var mediaId = dialog.find("form").data().mediaId;
+            var widgetId = dialog.find("form").data().widgetId;
+            var validExtensions = dialog.find("form").data().validExtensions;
+
+            // Append
+            var replaceButton = $('<button class="btn btn-warning">').html("{% trans "Replace" %}");
+            replaceButton.click(function(e) {
+                e.preventDefault();
+
+                // Open the upload dialog with our options.
+                openUploadForm({
+                    oldMediaId: mediaId,
+                    widgetId: widgetId,
+                    {% if config.LIBRARY_MEDIA_UPDATEINALL_CHECKB == "Checked" %}
+                    updateInAllChecked: true,
+                    {% else %}
+                    updateInAllChecked: false,
+                    {% endif %}
+                    trans: {
+                        addFiles: "{% trans "Add Replacement" %}",
+                        startUpload: "{% trans "Start Replace" %}",
+                        cancelUpload: "{% trans "Cancel Replace" %}",
+                        updateInLayouts: {
+                            title: "{% trans "Update this media in all layouts it is assigned to?" %}",
+                            helpText: "{% trans "Note: It will only be updated in layouts you have permission to edit." %}"
+                        },
+                        deleteOldRevisions: {
+                            title: "{% trans "Delete the old version?" %}",
+                            helpText: "{% trans "Completely remove the old version of this media item if a new file is being uploaded." %}"
+                        }
+                    },
+                    upload: {
+                        maxSize: {{ libraryUpload.maxSize }},
+                        maxSizeMessage: "{{ libraryUpload.maxSizeMessage  }}",
+                        validExt: validExtensions
+                    }
+                });
+            });
+
+            footer.find(".btn-primary").before(replaceButton);
         }
 
         function timelineGridCallback(dialog) {

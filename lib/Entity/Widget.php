@@ -295,8 +295,7 @@ class Widget implements \JsonSerializable
         ], $options);
 
         // We must ensure everything is loaded before we delete
-        if ($this->hash == null)
-            $this->load();
+        $this->load();
 
         // Delete Permissions
         foreach ($this->permissions as $permission) {
@@ -321,10 +320,15 @@ class Widget implements \JsonSerializable
         PDOConnect::update('DELETE FROM `widget` WHERE widgetId = :widgetId', array('widgetId' => $this->widgetId));
 
         if ($options['notify']) {
+
+            Log::debug('Notifying upstream playlist');
+
             // Notify the Layout
             $playlist = PlaylistFactory::getById($this->playlistId);
             $playlist->notifyLayouts();
         }
+
+        Log::debug('Delete Widget Complete');
     }
 
     private function add()
