@@ -25,7 +25,6 @@ use Xibo\Entity\User;
 use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\MediaFactory;
-use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Log;
@@ -271,10 +270,6 @@ abstract class ModuleWidget implements ModuleInterface
     final protected function saveWidget()
     {
         $this->widget->save();
-
-        // Notify the Layout
-        $playlist = PlaylistFactory::getById($this->getPlaylistId());
-        $playlist->notifyLayouts();
     }
 
     /**
@@ -548,8 +543,10 @@ abstract class ModuleWidget implements ModuleInterface
      * @return int
      * @throws NotFoundException
      */
-    protected function getMediaId()
+    public function getMediaId()
     {
+        Log::debug('Getting first MediaID for Widget: %d', $this->getWidgetId());
+
         if (count($this->widget->mediaIds) <= 0)
             throw new NotFoundException(__('No file to return'));
 

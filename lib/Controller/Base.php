@@ -79,7 +79,7 @@ class Base
      * Get the App
      * @return Slim
      */
-    protected function getApp()
+    public function getApp()
     {
         return $this->app;
     }
@@ -317,19 +317,25 @@ class Base
         if (trim($view['buttons']) == '') {
             $state->buttons = [];
         } else {
-            // Convert to an array
-            $buttons = explode(PHP_EOL, $view['buttons']);
+            try {
+                // Convert to an array
+                $buttons = explode(PHP_EOL, $view['buttons']);
 
-            foreach ($buttons as $button) {
-                if ($button == '')
-                    continue;
+                foreach ($buttons as $button) {
+                    if ($button == '')
+                        continue;
 
-                $button = explode(',', trim($button));
+                    $button = explode(',', trim($button));
 
-                for ($i = 0; $i < count($button); $i++) {
-                    $state->buttons[trim($button[$i])] = str_replace('|', ',', trim($button[$i + 1]));
-                    $i++;
+                    for ($i = 0; $i < count($button); $i++) {
+                        $state->buttons[trim($button[$i])] = str_replace('|', ',', trim($button[$i + 1]));
+                        $i++;
+                    }
                 }
+            }
+            catch (\ErrorException $e) {
+                Log::error('There is a problem with the buttons in the template: %s. Buttons: ', $state->template, var_export($view['buttons'], true));
+                throw new ControllerNotImplemented(__('Problem with Form Template'));
             }
         }
 

@@ -20,10 +20,12 @@
     {% trans "Save" %}, $("#mediaEditForm").submit()
 {% endblock %}
 
+{% block callBack %}mediaEditFormOpen{% endblock %}
+
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="mediaEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("library.edit", {"id": media.mediaId}) }}">
+            <form id="mediaEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("library.edit", {"id": media.mediaId}) }}" data-media-id="{{ media.mediaId }}" data-valid-extensions="{{ validExtensions }}">
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "The Name of this item - Leave blank to use the file name" %}{% endset %}
                 {{ forms.text("name", title, media.name, helpText) }}
@@ -40,23 +42,12 @@
                 {% set helpText %}{% trans "Retired media remains on existing Layouts but is not available to assign to new Layouts." %}{% endset %}
                 {{ forms.checkbox("retired", title, media.retired, helpText) }}
 
-                {% set title %}{% trans "Replace background images?" %}{% endset %}
-                {% set helpText %}{% trans "If the current image is used as a background, should the new image replace it?" %}{% endset %}
-                {{ forms.checkbox("replaceBackgroundImages", title, media.replaceBackgroundImages, helpText) }}
-
                 {% set title %}{% trans "Update this media in all layouts it is assigned to?" %}{% endset %}
                 {% set helpText %}{% trans "Note: It will only be updated in layouts you have permission to edit." %}{% endset %}
                 {% if config.LIBRARY_MEDIA_UPDATEINALL_CHECKB == "Checked" %}
                     {% set checked = 1 %}
                 {% endif %}
                 {{ forms.checkbox("updateInLayouts", title, checked, helpText) }}
-
-                {% set title %}{% trans "Delete the old version?" %}{% endset %}
-                {% set helpText %}{% trans "Completely remove the old version of this media item if a new file is being uploaded." %}{% endset %}
-                {% if config.LIBRARY_MEDIA_UPDATEINALL_CHECKB == "Checked" %}
-                    {% set checked = 1 %}
-                {% endif %}
-                {{ forms.checkbox("deleteOldVersion", title, checked, helpText) }}
             </form>
         </div>
     </div>

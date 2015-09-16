@@ -527,6 +527,12 @@ class LayoutFactory extends BaseFactory
             $params['layoutId'] = Sanitize::getInt('layoutId', 0, $filterBy);
         }
 
+        // Background Image
+        if (Sanitize::getInt('backgroundImageId', $filterBy) !== null) {
+            $body .= " AND layout.backgroundImageId = :backgroundImageId ";
+            $params['backgroundImageId'] = Sanitize::getInt('backgroundImageId', 0, $filterBy);
+        }
+
         // Not Layout
         if (Sanitize::getInt('notLayoutId', 0, $filterBy) != 0) {
             $body .= " AND layout.layoutId <> :notLayoutId ";

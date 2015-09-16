@@ -238,17 +238,27 @@
             {{#if playlistId}}
                 <input type="hidden" name="playlistId" value="{{ playlistId }}" />
             {{/if}}
+            {{#if widgetId}}
+                <input type="hidden" name="widgetId" value="{{ widgetId }}" />
+            {{/if}}
+            {{#if oldMediaId}}
+                <input type="hidden" name="oldMediaId" value="{{ oldMediaId }}" />
+            {{/if}}
             <div class="row fileupload-buttonbar">
                 <div class="col-md-7">
                     <div class="well">
                         {{ upload.maxSizeMessage }}
                     </div>
                     <!-- The fileinput-button span is used to style the file input field as button -->
-                <span class="btn btn-success fileinput-button">
-                    <i class="glyphicon glyphicon-plus glyphicon glyphicon-white"></i>
-                    <span>{{ trans.addFiles }}</span>
-                    <input type="file" name="files[]" multiple>
-                </span>
+                    <span class="btn btn-success fileinput-button">
+                        <i class="glyphicon glyphicon-plus glyphicon glyphicon-white"></i>
+                        <span>{{ trans.addFiles }}</span>
+                        {{#if oldMediaId }}
+                        <input type="file" name="files[]">
+                        {{else}}
+                        <input type="file" name="files[]" multiple>
+                        {{/if}}
+                    </span>
                     <button type="submit" class="btn btn-primary start">
                         <i class="glyphicon glyphicon-upload glyphicon glyphicon-white"></i>
                         <span>{{ trans.startUpload }}</span>
@@ -272,6 +282,22 @@
                     <div class="progress-extended">&nbsp;</div>
                 </div>
             </div>
+            {{#if oldMediaId}}
+            <div class="row">
+                <div class="col-md-6">
+                    <label for="updateInLayouts" title="{{ trans.updateInLayouts.helpText }}">
+                        <input type="checkbox" id="updateInLayouts" name="updateInLayouts" {{#if updateInAllChecked}}checked{{/if}}>
+                        {{ trans.updateInLayouts.title }}
+                    </label>
+                </div>
+                <div class="col-md-6">
+                    <label for="deleteOldRevisions" title="{{ trans.deleteOldRevisions.helpText }}">
+                        <input type="checkbox" id="deleteOldRevisions" name="deleteOldRevisions" {{#if updateInAllChecked}}checked{{/if}}>
+                        {{ trans.deleteOldRevisions.title }}
+                    </label>
+                </div>
+            </div>
+            {{/if}}
             <!-- The table listing the files available for upload/download -->
             <table role="presentation" class="table table-striped"><tbody class="files"></tbody></table>
         </form>
@@ -288,8 +314,9 @@
                 {% if (file.error) { %}
                     <div><span class="label label-danger">{%=file.error%}</span></div>
                 {% } %}
+
                 {% if (!file.error) { %}
-                <label for="name[]"><input name="name[]" type="text" id="name" value="{%=file.name%}" /></label>
+                    <label for="name[]"><input name="name[]" type="text" id="name" value="" /></label>
                 {% } %}
             </td>
             <td>

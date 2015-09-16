@@ -1,0 +1,88 @@
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block actionMenu %}
+    <ul class="nav nav-pills pull-right">
+        <li><a title="{% trans "Open the Filter Form" %}" href="#" onclick="ToggleFilterView('Filter')">{% trans "Filter" %}</a></li>
+    </ul>
+{% endblock %}
+
+
+{% block pageContent %}
+    <div class="widget">
+        <div class="widget-title">{% trans "All Layouts and Media" %}</div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}">
+                <div class="XiboFilter">
+                    <div class="FilterDiv" id="Filter">
+                        <form class="form-inline">
+                            {{ inline.text("layout", "Layout", defaults.layout) }}
+                            {{ inline.text("region", "Region", defaults.region) }}
+                            {{ inline.text("media", "Media", defaults.media) }}
+
+                            {% set title %}{% trans "Module" %}{% endset %}
+                            {{ inline.dropdown("type", "single", title, defaults.owner, [{type:null, name:""}]|merge(modules), "type", "name") }}
+
+                            {% set title %}{% trans "Keep Open" %}{% endset %}
+                            {{ inline.checkbox("XiboFilterPinned", title, defaults.filterPinned) }}
+
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData">
+                    <table id="entries" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Layout" %}</th>
+                                <th>{% trans "Region" %}</th>
+                                <th>{% trans "Playlist" %}</th>
+                                <th>{% trans "Widget" %}</th>
+                                <th>{% trans "Type" %}</th>
+                                <th>{% trans "Display Order" %}</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        var table = $("#entries").DataTable({
+            serverSide: true,
+            filter: false,
+            searchDelay: 3000,
+            "order": [[ 1, "asc"]],
+            ajax: {
+                url: "{{ urlFor("mediaManager.search") }}",
+                "data": function(d) {
+                    $.extend(d, $("#entries").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                }
+            },
+            "columns": [
+                { "data": "layout.layout" },
+                { "data": "region" },
+                { "data": "playlist" },
+                { "data": "widget" },
+                { "data": "type" },
+                { "data": "displayOrder" },
+                {
+                    "orderable": false,
+                    "data": dataTableButtonsColumn
+                }
+            ]
+        });
+
+        table.on('draw', dataTableDraw);
+        table.on('processing.dt', dataTableProcessing);
+        dataTableAddColVis(table, $('#entries_wrapper').find('.col-sm-6').eq(1));
+
+    </script>
+{% endblock %}
+

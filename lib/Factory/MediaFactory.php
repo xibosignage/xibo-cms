@@ -124,6 +124,22 @@ class MediaFactory extends BaseFactory
     }
 
     /**
+     * Get by Parent Media Id
+     * @param int $mediaId
+     * @return Media
+     * @throws NotFoundException
+     */
+    public static function getParentById($mediaId)
+    {
+        $media = MediaFactory::query(null, array('disableUserCheck' => 1, 'parentMediaId' => $mediaId, 'allModules' => 1));
+
+        if (count($media) <= 0)
+            throw new NotFoundException(__('Cannot find media'));
+
+        return $media[0];
+    }
+
+    /**
      * Get by Media Name
      * @param string $name
      * @return Media
@@ -233,7 +249,7 @@ class MediaFactory extends BaseFactory
             $params['displayGroupId'] = Sanitize::getInt('displayGroupId', $filterBy);
         }
 
-        $body .= " WHERE media.isEdited = 0 ";
+        $body .= " WHERE 1 = 1 ";
 
         // View Permissions
         self::viewPermissionSql('Xibo\Entity\Media', $body, $params, '`media`.mediaId', '`media`.userId', $filterBy);
@@ -273,6 +289,11 @@ class MediaFactory extends BaseFactory
         if (Sanitize::getInt('mediaId', -1, $filterBy) != -1) {
             $body .= " AND media.mediaId = :mediaId ";
             $params['mediaId'] = Sanitize::getInt('mediaId', $filterBy);
+        } else if (Sanitize::getInt('parentMediaId', $filterBy) !== null) {
+            $body .= ' AND media.editedMediaId = :mediaId ';
+            $params['mediaId'] = Sanitize::getInt('parentMediaId', $filterBy);
+        } else {
+            $body .= ' AND media.isEdited = 0 ';
         }
 
         if (Sanitize::getString('type', $filterBy) != '') {
