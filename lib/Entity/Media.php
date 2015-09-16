@@ -321,7 +321,6 @@ class Media implements \JsonSerializable
             $parentMedia = null;
         }
 
-
         foreach ($this->permissions as $permission) {
             /* @var Permission $permission */
             $permission->delete();

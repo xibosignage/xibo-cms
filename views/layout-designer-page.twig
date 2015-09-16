@@ -342,6 +342,10 @@
          * Media Edit form
          */
         function mediaEditFormOpen(dialog) {
+
+            if (dialog.find("form").data().mediaEditable != 1)
+                return;
+
             // Create a new button
             var footer = dialog.find(".modal-footer");
             var mediaId = dialog.find("form").data().mediaId;

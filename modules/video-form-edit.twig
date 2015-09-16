@@ -17,7 +17,7 @@ Fine, missing:
 {% import "forms.twig" as forms %}
 
 {% block formTitle %}
-    {% trans "Title" %}
+    {% trans "Edit Video" %}
 {% endblock %}
 
 {% block formButtons %}
@@ -25,6 +25,8 @@ Fine, missing:
     {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Save" %}, $("#videoEditForm").submit()
 {% endblock %}
+
+{% block callBack %}mediaEditFormOpen{% endblock %}
 
 {% block formHtml %}
     <div class="row">

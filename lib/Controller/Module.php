@@ -391,6 +391,11 @@ class Module extends Base
         if (Sanitize::getCheckbox('deleteMedia') == 1) {
             foreach ($widgetMedia as $mediaId) {
                 $media = MediaFactory::getById($mediaId);
+
+                // Check we have permissions to delete
+                if (!$this->getUser()->checkDeleteable($media))
+                    throw new AccessDeniedException();
+
                 $media->delete();
             }
         }
