@@ -26,6 +26,8 @@
             <form id="libraryDeleteForm" class="XiboForm form-horizontal" method="delete" action="{{ urlFor("library.delete", {"id": media.mediaId}) }}">
                  {% set message %}{% trans "Are you sure you want to delete this file?" %}{% endset %}
                  {{ forms.message(message) }}
+                    {% set message %}{% trans "This will delete the file from the Library and all Layouts." %}{% endset %}
+                 {{ forms.message(message) }}
             </form>
         </div>
     </div>
