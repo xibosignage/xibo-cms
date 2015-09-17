@@ -300,6 +300,8 @@ class Playlist extends Base
         if (count($media) <= 0)
             throw new \InvalidArgumentException(__('Please provide Media to Assign'));
 
+        $newWidgets = [];
+
         // Loop through all the media
         foreach ($media as $mediaId) {
             /* @var int $mediaId */
@@ -313,10 +315,31 @@ class Playlist extends Base
 
             // Assign the widget to the playlist
             $playlist->assignWidget($widget);
+
+            // Add to a list of new widgets
+            $newWidgets[] = $widget;
         }
 
         // Save the playlist
         $playlist->save();
+
+        // Handle permissions
+        foreach ($newWidgets as $widget) {
+            /* @var Widget $widget */
+            if (Config::GetSetting('INHERIT_PARENT_PERMISSIONS' == 1)) {
+                // Apply permissions from the Parent
+                foreach ($playlist->permissions as $permission) {
+                    /* @var Permission $permission */
+                    $permission = PermissionFactory::create($permission->groupId, get_class($widget), $widget->getId(), $permission->view, $permission->edit, $permission->delete);
+                    $permission->save();
+                }
+            } else {
+                foreach (PermissionFactory::createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), Config::GetSetting('LAYOUT_DEFAULT')) as $permission) {
+                    /* @var Permission $permission */
+                    $permission->save();
+                }
+            }
+        }
 
         // Success
         $this->getState()->hydrate([
