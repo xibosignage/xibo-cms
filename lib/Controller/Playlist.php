@@ -9,13 +9,17 @@
 namespace Xibo\Controller;
 
 
+use Xibo\Entity\Permission;
 use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
+use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
+use Xibo\Factory\RegionFactory;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\WidgetFactory;
+use Xibo\Helper\Config;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
@@ -23,7 +27,116 @@ use Xibo\Helper\Sanitize;
 class Playlist extends Base
 {
     /**
-     * Grid
+     * Search
+     */
+    public function grid()
+    {
+        $this->getState()->template = 'grid';
+
+        $playlists = [];
+
+        $this->getState()->setData($playlists);
+    }
+
+    /**
+     * Add
+     */
+    public function add()
+    {
+        $playlist = new \Xibo\Entity\Playlist();
+        $playlist->name = Sanitize::getString('name');
+        $playlist->displayOrder = Sanitize::getInt('displayOrder');
+        $playlist->save();
+
+        // Assign to a region?
+        if (Sanitize::getInt('regionId') !== null) {
+            $region = RegionFactory::getById(Sanitize::getInt('regionId'));
+            $region->assignPlaylist($playlist);
+            $region->save();
+
+            if (Config::GetSetting('INHERIT_PARENT_PERMISSIONS' == 1)) {
+                // Apply permissions from the Parent
+                foreach ($region->permissions as $permission) {
+                    /* @var Permission $permission */
+                    $permission = PermissionFactory::create($permission->groupId, get_class($region), $region->getId(), $permission->view, $permission->edit, $permission->delete);
+                    $permission->save();
+                }
+            }
+        }
+
+        // Notify
+        $playlist->notifyLayouts();
+
+        // Permissions
+        if (Config::GetSetting('INHERIT_PARENT_PERMISSIONS' == 0)) {
+            // Default permissions
+            foreach (PermissionFactory::createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), Config::GetSetting('LAYOUT_DEFAULT')) as $permission) {
+                /* @var Permission $permission */
+                $permission->save();
+            }
+        }
+
+        // Success
+        $this->getState()->hydrate([
+            'httpStatus' => 201,
+            'message' => sprintf(__('Added %s'), $playlist->name),
+            'id' => $playlist->playlistId,
+            'data' => $playlist
+        ]);
+    }
+
+    /**
+     * Edit
+     * @param $playlistId
+     * @throws \Xibo\Exception\NotFoundException
+     *
+     *
+     */
+    public function edit($playlistId)
+    {
+        $playlist = PlaylistFactory::getById($playlistId);
+
+        if (!$this->getUser()->checkEditable($playlist))
+            throw new AccessDeniedException();
+
+        $playlist->name = Sanitize::getString('name');
+        $playlist->displayOrder = Sanitize::getInt('displayOrder');
+        $playlist->save();
+
+        // Success
+        $this->getState()->hydrate([
+            'httpStatus' => 200,
+            'message' => sprintf(__('Edited %s'), $playlist->name),
+            'id' => $playlist->playlistId,
+            'data' => $playlist
+        ]);
+    }
+
+
+    /**
+     * Delete
+     * @param $playlistId
+     * @throws \Xibo\Exception\NotFoundException
+     */
+    public function delete($playlistId)
+    {
+        $playlist = PlaylistFactory::getById($playlistId);
+
+        if (!$this->getUser()->checkDeleteable($playlist))
+            throw new AccessDeniedException();
+
+        // Issue the delete
+        $playlist->delete();
+
+        // Success
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('Deleted %s'), $playlist->name)
+        ]);
+    }
+
+    /**
+     * Widget Grid
      *
      * @SWG\Get(
      *  path="/playlist/widget",

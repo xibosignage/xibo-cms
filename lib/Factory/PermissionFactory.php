@@ -114,6 +114,9 @@ class PermissionFactory extends BaseFactory
                 }
                 break;
 
+            case 'private':
+                break;
+
             default:
                 throw new \InvalidArgumentException(__('Unknown Permissions Level: ' . $level));
         }

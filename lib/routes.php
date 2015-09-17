@@ -115,6 +115,11 @@ $app->put('/region/position/all/:id', '\Xibo\Controller\Region:positionAll')->na
  *  description="Playlists"
  * )
  */
+$app->get('/playlist', '\Xibo\Controller\Playlist:grid')->name('playlist.search');
+$app->post('/playlist', '\Xibo\Controller\Playlist:add')->name('playlist.add');
+$app->put('/playlist/:id', '\Xibo\Controller\Playlist:edit')->name('playlist.edit');
+$app->delete('/playlist/:id', '\Xibo\Controller\Playlist:delete')->name('playlist.delete');
+// Widgets
 $app->get('/playlist/widget', '\Xibo\Controller\Playlist:widgetGrid')->name('playlist.widget.search');
 $app->post('/playlist/order/:id', '\Xibo\Controller\Playlist:order')->name('playlist.order');
 $app->post('/playlist/library/assign/:id', '\Xibo\Controller\Playlist:libraryAssign')->name('playlist.library.assign');
