@@ -357,7 +357,11 @@ class MediaFactory extends BaseFactory
         Log::sql($sql, $params);
 
         foreach (PDOConnect::select($sql, $params) as $row) {
-            $entries[] = (new Media())->hydrate($row);
+            $entries[] = (new Media())->hydrate($row, [
+                'intProperties' => [
+                    'duration', 'size'
+                ]
+            ]);
         }
 
         // Paging

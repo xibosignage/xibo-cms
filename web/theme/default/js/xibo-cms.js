@@ -418,10 +418,14 @@ function dataTableConfigureRefresh(gridId, table, refresh) {
     });
 }
 
-function dataTableAddColVis(table, filter) {
-    var colVis = new $.fn.dataTable.ColVis( table );
+function dataTableAddButtons(table, filter) {
+    var colVis = new $.fn.dataTable.Buttons(table, {
+        buttons: [
+            'colvis', 'print', 'csv'
+        ]
+    });
 
-    $(colVis.button()).insertAfter(filter);
+    table.buttons( 0, null ).container().prependTo(filter);
     $(".ColVis_MasterButton").addClass("btn");
 }
 

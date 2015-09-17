@@ -100,7 +100,7 @@
                     }
                 },
                 { "data": "duration", "visible": false},
-                { "data": "fileSizeFormatted"},
+                { "data": "fileSizeFormatted" },
                 { "data": "fileSize", "visible": false},
                 { "data": "owner"},
                 { "data": "groupsWithPermissions"},
@@ -115,7 +115,7 @@
 
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
-        dataTableAddColVis(table, $('#libraryItems_wrapper').find('.col-sm-6').eq(1));
+        dataTableAddButtons(table, $('#libraryItems_wrapper').find('.col-sm-6').eq(1));
 
         $("#libraryUploadForm").click(function(e) {
             e.preventDefault();
