@@ -20,9 +20,12 @@
  */
 namespace Xibo\Controller;
 
+use Xibo\Entity\Permission;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\PermissionFactory;
+use Xibo\Helper\Config;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
@@ -165,6 +168,12 @@ class Campaign extends Base
         $campaign->ownerId = $this->getUser()->userId;
         $campaign->campaign = Sanitize::getString('name');
         $campaign->save();
+
+        // Permissions
+        foreach (PermissionFactory::createForNewEntity($this->getUser(), get_class($campaign), $campaign->getId(), Config::GetSetting('LAYOUT_DEFAULT')) as $permission) {
+            /* @var Permission $permission */
+            $permission->save();
+        }
 
         // Return
         $this->getState()->hydrate([
