@@ -10,14 +10,17 @@ namespace Xibo\Controller;
 
 
 use Xibo\Entity\Layout;
+use Xibo\Entity\Permission;
 use Xibo\Entity\Playlist;
 use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\ModuleFactory;
+use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\TransitionFactory;
+use Xibo\Helper\Config;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
@@ -168,7 +171,7 @@ class Region extends Base
         $layout->load([
             'loadPlaylists' => true,
             'loadTags' => false,
-            'loadPermissions' => false,
+            'loadPermissions' => true,
             'loadCampaigns' => false
         ]);
 
@@ -180,6 +183,37 @@ class Region extends Base
         $layout->save([
             'saveTags' => false
         ]);
+
+        // Permissions
+        if (Config::GetSetting('INHERIT_PARENT_PERMISSIONS' == 1)) {
+            // Apply permissions from the Parent
+            foreach ($layout->permissions as $permission) {
+                /* @var Permission $permission */
+                $permission = PermissionFactory::create($permission->groupId, get_class($region), $region->getId(), $permission->view, $permission->edit, $permission->delete);
+                $permission->save();
+
+                foreach ($region->playlists as $playlist) {
+                    /* @var Playlist $playlist */
+                    $permission = PermissionFactory::create($permission->groupId, get_class($playlist), $playlist->getId(), $permission->view, $permission->edit, $permission->delete);
+                    $permission->save();
+                }
+            }
+        }
+        else {
+            // Apply the default permissions
+            foreach (PermissionFactory::createForNewEntity($this->getUser(), get_class($region), $region->getId(), Config::GetSetting('LAYOUT_DEFAULT')) as $permission) {
+                /* @var Permission $permission */
+                $permission->save();
+            }
+
+            foreach ($region->playlists as $playlist) {
+                /* @var Playlist $playlist */
+                foreach (PermissionFactory::createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), Config::GetSetting('LAYOUT_DEFAULT')) as $permission) {
+                    /* @var Permission $permission */
+                    $permission->save();
+                }
+            }
+        }
 
         // Return
         $this->getState()->hydrate([

@@ -152,8 +152,8 @@ INSERT INTO `resolution` (`resolutionID`, `resolution`, `width`, `height`, `inte
 (14, 'Common PC Monitor 4:3', 800, 600, 1024, 768, 2, 1);
 
 INSERT INTO `setting` (`settingid`, `setting`, `value`, `fieldType`, `helptext`, `options`, `cat`, `userChange`, `title`, `validation`, `ordering`, `default`, `userSee`, `type`) VALUES
-(1, 'MEDIA_DEFAULT', 'private', 'dropdown', 'Media will be created with these settings. If public everyone will be able to view and use this media.', 'private|public', 'permissions', 1, 'Media Permissions', '', 20, 'private', 1, 'word'),
-(2, 'LAYOUT_DEFAULT', 'private', 'dropdown', 'New layouts will be created with these settings. If public everyone will be able to view and use this layout.', 'private|public', 'permissions', 1, 'Layout Permissions', '', 10, 'private', 1, 'word'),
+(1, 'MEDIA_DEFAULT', 'private', 'dropdown', 'Media will be created with these settings. If public everyone will be able to view and use this media.', 'private|group|public', 'permissions', 1, 'Media Permissions', '', 20, 'private', 1, 'word'),
+(2, 'LAYOUT_DEFAULT', 'private', 'dropdown', 'New layouts will be created with these settings. If public everyone will be able to view and use this layout.', 'private|group|public', 'permissions', 1, 'Layout Permissions', '', 10, 'private', 1, 'word'),
 (3, 'defaultUsertype', 'User', 'dropdown', 'Sets the default user type selected when creating a user.\r\n<br />\r\nWe recommend that this is set to "User"', 'User|Group Admin|Super Admin', 'users', 1, 'Default User Type', '', 10, 'User', 1, 'string'),
 (7, 'userModule', 'module_user_general.php', 'dirselect', 'This sets which user authentication module is currently being used.', NULL, 'users', 0, 'User Module', '', 0, 'module_user_general.php', 0, 'string'),
 (11, 'defaultTimezone', 'Europe/London', 'timezone', 'Set the default timezone for the application', 'Europe/London', 'regional', 1, 'Timezone', '', 20, 'Europe/London', 1, 'string'),
@@ -215,7 +215,8 @@ INSERT INTO `setting` (`settingid`, `setting`, `value`, `fieldType`, `helptext`,
 (82, 'DASHBOARD_LATEST_NEWS_ENABLED', '1', 'checkbox', 'Should the Dashboard show latest news? The address is provided by the theme.', '', 'general', 1, 'Enable Latest News?', '', 110, '1', 1, 'checkbox'),
 (83, 'LIBRARY_MEDIA_DELETEOLDVER_CHECKB','Unchecked','dropdown','Default the checkbox for Deleting Old Version of media when a new file is being uploaded to the library.','Checked|Unchecked','defaults',1,'Default for "Delete old version of Media" checkbox. Shown when Editing Library Media.', '', 50, 'Unchecked', 1, 'dropdown'),
 (84, 'PROXY_EXCEPTIONS', '', 'text', 'Hosts and Keywords that should not be loaded via the Proxy Specified. These should be comma separated.', '', 'network', 1, 'Proxy Exceptions', '', 32, '', 1, 'text'),
-(85, 'INSTANCE_SUSPENDED', '0', 'checkbox', 'Is this instance suspended?', NULL, 'general', 0, 'Instance Suspended', '', 120, '0', 0, 'checkbox');
+(85, 'INSTANCE_SUSPENDED', '0', 'checkbox', 'Is this instance suspended?', NULL, 'general', 0, 'Instance Suspended', '', 120, '0', 0, 'checkbox'),
+(86, 'INHERIT_PARENT_PERMISSIONS', '1', 'checkbox', 'Inherit permissions from Parent when adding a new item?', NULL, 'permissions', 1, 'Inherit permissions', '', 50, '1', 1, 'checkbox');
 
 INSERT INTO `usertype` (`usertypeid`, `usertype`) VALUES
 (1, 'Super Admin'),

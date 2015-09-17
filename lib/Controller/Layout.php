@@ -21,10 +21,15 @@
 namespace Xibo\Controller;
 
 use Parsedown;
+use Xibo\Entity\Permission;
+use Xibo\Entity\Playlist;
+use Xibo\Entity\Region;
+use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\LibraryFullException;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
+use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\ResolutionFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\UserFactory;
@@ -174,8 +179,37 @@ class Layout extends Base
         // Save
         $layout->save();
 
+        // Permissions
+        foreach (PermissionFactory::createForNewEntity($this->getUser(), 'Xibo\\Entity\\Campaign', $layout->getId(), Config::GetSetting('LAYOUT_DEFAULT')) as $permission) {
+            /* @var Permission $permission */
+            $permission->save();
+        }
+
+        foreach ($layout->regions as $region) {
+            /* @var Region $region */
+            foreach (PermissionFactory::createForNewEntity($this->getUser(), get_class($region), $region->getId(), Config::GetSetting('LAYOUT_DEFAULT')) as $permission) {
+                /* @var Permission $permission */
+                $permission->save();
+            }
+
+            foreach ($region->playlists as $playlist) {
+                /* @var Playlist $playlist */
+                foreach (PermissionFactory::createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), Config::GetSetting('LAYOUT_DEFAULT')) as $permission) {
+                    /* @var Permission $permission */
+                    $permission->save();
+                }
+
+                foreach ($playlist->widgets as $widget) {
+                    /* @var Widget $widget */
+                    foreach (PermissionFactory::createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), Config::GetSetting('LAYOUT_DEFAULT')) as $permission) {
+                        /* @var Permission $permission */
+                        $permission->save();
+                    }
+                }
+            }
+        }
+
         Log::debug('Layout Added');
-        // TODO: Set the default permissions on the regions
 
         // Return
         $this->getState()->hydrate([
@@ -778,6 +812,36 @@ class Layout extends Base
 
         // Save the new layout
         $layout->save();
+
+        // Permissions
+        foreach (PermissionFactory::createForNewEntity($this->getUser(), 'Xibo\\Entity\\Campaign', $layout->getId(), Config::GetSetting('LAYOUT_DEFAULT')) as $permission) {
+            /* @var Permission $permission */
+            $permission->save();
+        }
+
+        foreach ($layout->regions as $region) {
+            /* @var Region $region */
+            foreach (PermissionFactory::createForNewEntity($this->getUser(), get_class($region), $region->getId(), Config::GetSetting('LAYOUT_DEFAULT')) as $permission) {
+                /* @var Permission $permission */
+                $permission->save();
+            }
+
+            foreach ($region->playlists as $playlist) {
+                /* @var Playlist $playlist */
+                foreach (PermissionFactory::createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), Config::GetSetting('LAYOUT_DEFAULT')) as $permission) {
+                    /* @var Permission $permission */
+                    $permission->save();
+                }
+
+                foreach ($playlist->widgets as $widget) {
+                    /* @var Widget $widget */
+                    foreach (PermissionFactory::createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), Config::GetSetting('LAYOUT_DEFAULT')) as $permission) {
+                        /* @var Permission $permission */
+                        $permission->save();
+                    }
+                }
+            }
+        }
 
         // Return
         $this->getState()->hydrate([

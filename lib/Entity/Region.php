@@ -128,6 +128,7 @@ class Region implements \JsonSerializable
         // Clear the IDs and clone the playlist
         $this->regionId = null;
         $this->hash = null;
+        $this->permissions = [];
 
         $this->playlists = array_map(function ($object) { return clone $object; }, $this->playlists);
         $this->regionOptions = array_map(function ($object) { return clone $object; }, $this->regionOptions);

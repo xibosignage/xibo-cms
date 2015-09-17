@@ -159,6 +159,12 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                 // Save
                 $media->save();
+
+                // Permissions
+                foreach (PermissionFactory::createForNewEntity($controller->getUser(), get_class($media), $media->getId(), Config::GetSetting('MEDIA_DEFAULT')) as $permission) {
+                    /* @var Permission $permission */
+                    $permission->save();
+                }
             }
 
             // Set the name to the one we have selected

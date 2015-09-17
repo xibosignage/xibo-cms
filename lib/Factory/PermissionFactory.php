@@ -24,6 +24,7 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\Permission;
+use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
@@ -44,7 +45,7 @@ class PermissionFactory extends BaseFactory
     public static function create($groupId, $entity, $objectId, $view, $edit, $delete)
     {
         // Lookup the entityId
-        $results = PDOConnect::select('SELECT entityId FROM permissionentity WHERE entity = :entity', ['entity' => 'Xibo\Entity\\' . $entity]);
+        $results = PDOConnect::select('SELECT entityId FROM permissionentity WHERE entity = :entity', ['entity' => $entity]);
 
         if (count($results) <= 0)
             throw new \InvalidArgumentException('Entity not found: ' . $entity);
@@ -72,7 +73,7 @@ class PermissionFactory extends BaseFactory
     public static function createForEveryone($entity, $objectId, $view, $edit, $delete)
     {
         // Lookup the entityId
-        $results = PDOConnect::select('SELECT entityId FROM permissionentity WHERE entity = :entity', ['entity' => 'Xibo\Entity\\' . $entity]);
+        $results = PDOConnect::select('SELECT entityId FROM permissionentity WHERE entity = :entity', ['entity' => $entity]);
 
         if (count($results) <= 0)
             throw new \InvalidArgumentException('Entity not found: ' . $entity);
@@ -86,6 +87,38 @@ class PermissionFactory extends BaseFactory
         $permission->delete = $delete;
 
         return $permission;
+    }
+
+    /**
+     * Create Permissions for new Entity
+     * @param User $user
+     * @param string $entity
+     * @param int $objectId
+     * @param string $level
+     * @return array[Permission]
+     */
+    public static function createForNewEntity($user, $entity, $objectId, $level)
+    {
+        $permissions = [];
+
+        switch ($level) {
+
+            case 'public':
+                $permissions[] = PermissionFactory::createForEveryone($entity, $objectId, 1, 0, 0);
+                break;
+
+            case 'group':
+                foreach ($user->groups as $group) {
+                    $permission = PermissionFactory::create($group->groupId, $entity, $objectId, 1, 0, 0);
+                    $permission->save();
+                }
+                break;
+
+            default:
+                throw new \InvalidArgumentException(__('Unknown Permissions Level: ' . $level));
+        }
+
+        return $permissions;
     }
 
     /**

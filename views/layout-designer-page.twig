@@ -245,7 +245,7 @@
         /**
          * Open Upload Form
          */
-        function openUploadForm(templateOptions) {
+        function openUploadForm(templateOptions, buttons) {
 
             // Close the current dialog
             XiboDialogClose();
@@ -256,21 +256,7 @@
             bootbox.dialog({
                 message: template(templateOptions),
                 title: "{% trans "Upload media" %}",
-                buttons: {
-                    library: {
-                        label: "{% trans "View Library" %}",
-                        callback: function() {
-                            XiboFormRender("{{ urlFor("playlist.library.assign.form") }}".replace(":id", playlistId));
-                        }
-                    },
-                    main: {
-                        label: "{% trans "Done" %}",
-                        className: "btn-primary",
-                        callback: function() {
-                            XiboFormRender(timelineForm.url, timelineForm.value);
-                        }
-                    }
-                }
+                buttons: buttons
             }).on('shown.bs.modal', function() {
                 // Configure the upload form
                 var url = "{{ urlFor("library.add") }}";
@@ -335,7 +321,21 @@
                     validExt: validExt
                 },
                 playlistId: playlistId
-            })
+            },{
+                library: {
+                    label: "{% trans "View Library" %}",
+                            callback: function() {
+                        XiboFormRender("{{ urlFor("playlist.library.assign.form") }}".replace(":id", playlistId));
+                    }
+                },
+                main: {
+                    label: "{% trans "Done" %}",
+                            className: "btn-primary",
+                            callback: function() {
+                        XiboFormRender(timelineForm.url, timelineForm.value);
+                    }
+                }
+            });
         }
 
         /**
@@ -383,6 +383,14 @@
                         maxSize: {{ libraryUpload.maxSize }},
                         maxSizeMessage: "{{ libraryUpload.maxSizeMessage  }}",
                         validExt: validExtensions
+                    }
+                }, {
+                    main: {
+                        label: "{% trans "Done" %}",
+                        className: "btn-primary",
+                        callback: function() {
+                            XiboFormRender(timelineForm.url, timelineForm.value);
+                        }
                     }
                 });
             });

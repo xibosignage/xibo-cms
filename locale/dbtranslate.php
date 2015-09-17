@@ -132,6 +132,10 @@ echo __('Default for "Delete old version of Media" checkbox. Shown when Editing 
 echo __('Should the Dashboard show latest news? The address is provided by the theme.');
 echo __('Proxy Exceptions');
 echo __('Hosts and Keywords that should not be loaded via the Proxy Specified. These should be comma separated.');
+echo __('Instance Suspended');
+echo __('Is this instance suspended?');
+echo __('Inherit permissions');
+echo __('Inherit permissions from Parent when adding a new item?');
 
 // Transitions
 echo __('Fade In');

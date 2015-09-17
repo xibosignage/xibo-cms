@@ -212,6 +212,7 @@ class Layout implements \JsonSerializable
         $this->layoutId = null;
         $this->campaignId = null;
         $this->hash = null;
+        $this->permissions = [];
 
         // Clone the regions
         $this->regions = array_map(function ($object) { return clone $object; }, $this->regions);
