@@ -54,7 +54,7 @@ class Playlist extends Base
             $region->assignPlaylist($playlist);
             $region->save();
 
-            if (Config::GetSetting('INHERIT_PARENT_PERMISSIONS' == 1)) {
+            if (Config::GetSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
                 // Apply permissions from the Parent
                 foreach ($region->permissions as $permission) {
                     /* @var Permission $permission */
@@ -326,7 +326,7 @@ class Playlist extends Base
         // Handle permissions
         foreach ($newWidgets as $widget) {
             /* @var Widget $widget */
-            if (Config::GetSetting('INHERIT_PARENT_PERMISSIONS' == 1)) {
+            if (Config::GetSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
                 // Apply permissions from the Parent
                 foreach ($playlist->permissions as $permission) {
                     /* @var Permission $permission */

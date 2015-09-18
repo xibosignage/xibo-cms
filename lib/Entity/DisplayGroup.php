@@ -165,7 +165,7 @@ class DisplayGroup implements \JsonSerializable
         if ($this->loaded || $this->displayGroupId == null || $this->displayGroupId == 0)
             return;
 
-        $this->permissions = PermissionFactory::getByObjectId('displaygroup', $this->displayGroupId);
+        $this->permissions = PermissionFactory::getByObjectId(get_class($this), $this->displayGroupId);
 
         $this->displays = DisplayFactory::getByDisplayGroupId($this->displayGroupId);
 

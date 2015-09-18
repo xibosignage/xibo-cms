@@ -247,7 +247,7 @@ class Media implements \JsonSerializable
         // Are we loading for a delete? If so load the child models
         if ($this->deleting) {
             // Permissions
-            $this->permissions = PermissionFactory::getByObjectId('Media', $this->mediaId);
+            $this->permissions = PermissionFactory::getByObjectId(get_class($this), $this->mediaId);
 
             // Widgets
             $this->widgets = WidgetFactory::getByMediaId($this->mediaId);

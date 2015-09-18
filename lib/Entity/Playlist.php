@@ -185,18 +185,25 @@ class Playlist implements \JsonSerializable
             return;
 
         // Options
-        $options = array_merge(['playlistIncludeRegionAssignments' => true], $loadOptions);
+        $options = array_merge([
+            'playlistIncludeRegionAssignments' => true,
+            'loadPermissions' => true,
+            'loadWidgets' => true
+        ], $loadOptions);
 
         Log::debug('Load Playlist with %s', json_encode($options));
 
         // Load permissions
-        $this->permissions = PermissionFactory::getByObjectId(get_class(), $this->playlistId);
+        if ($options['loadPermissions'])
+            $this->permissions = PermissionFactory::getByObjectId(get_class(), $this->playlistId);
 
         // Load the widgets
-        foreach (WidgetFactory::getByPlaylistId($this->playlistId) as $widget) {
-            /* @var Widget $widget */
-            $widget->load();
-            $this->widgets[] = $widget;
+        if ($options['loadWidgets']) {
+            foreach (WidgetFactory::getByPlaylistId($this->playlistId) as $widget) {
+                /* @var Widget $widget */
+                $widget->load();
+                $this->widgets[] = $widget;
+            }
         }
 
         if ($options['playlistIncludeRegionAssignments']) {

@@ -298,7 +298,7 @@ class DataSet implements \JsonSerializable
         $this->columns = DataSetColumnFactory::getByDataSetId($this->dataSetId);
 
         // Load Permissions
-        $this->permissions = PermissionFactory::getByObjectId('DataSet', $this->getId());
+        $this->permissions = PermissionFactory::getByObjectId(get_class($this), $this->getId());
 
         $this->loaded = true;
     }

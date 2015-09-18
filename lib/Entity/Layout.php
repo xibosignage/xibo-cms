@@ -324,7 +324,7 @@ class Layout implements \JsonSerializable
 
         // Load permissions
         if ($options['loadPermissions'])
-            $this->permissions = PermissionFactory::getByObjectId('campaign', $this->campaignId);
+            $this->permissions = PermissionFactory::getByObjectId('Xibo\\Entity\\Campaign', $this->campaignId);
 
         // Load all regions
         $this->regions = RegionFactory::getByLayoutId($this->layoutId);

@@ -143,7 +143,7 @@ SELECT `permissionId`, `groupId`, `view`, `edit`, `delete`, permissionentity.ent
     AND objectId = :objectId
 ';
         $params = array('entity' => $entity, 'objectId' => $objectId);
-        //\Debug::sql($sql, $params);
+        Log::sql($sql, $params);
 
         foreach (PDOConnect::select($sql, $params) as $row) {
             $permission = new Permission();
