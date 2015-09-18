@@ -111,6 +111,7 @@ class Widget implements \JsonSerializable
         $this->hash = null;
         $this->widgetId = null;
         $this->widgetOptions = array_map(function ($object) { return clone $object; }, $this->widgetOptions);
+        $this->permissions = [];
 
         // No need to clone the media
     }

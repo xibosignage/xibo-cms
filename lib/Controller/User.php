@@ -613,23 +613,15 @@ class User extends Base
                 }
             };
 
-            // Are we a campaign?
-            if ($object->isLayoutSpecific == 0) {
-                // Yes, do all child layouts
-                foreach (LayoutFactory::getByCampaignId($object->campaignId) as $layout) {
-                    /* @var Layout $layout */
-                    // Assign the same permissions to the Layout
-                    $this->updatePermissions(PermissionFactory::getAllByObjectId(get_class($object), $layout->campaignId), $groupIds);
+            foreach (LayoutFactory::getByCampaignId($object->campaignId) as $layout) {
+                /* @var Layout $layout */
+                // Assign the same permissions to the Layout
+                $this->updatePermissions(PermissionFactory::getAllByObjectId(get_class($object), $layout->campaignId), $groupIds);
 
-                    // Load the layout
-                    $layout->load();
+                // Load the layout
+                $layout->load();
 
-                    $updatePermissionsOnLayout($layout);
-                }
-            }
-            else {
-                // Not a campaign, just do permissions on this layout
-                $updatePermissionsOnLayout($object);
+                $updatePermissionsOnLayout($layout);
             }
         }
 

@@ -397,9 +397,9 @@ class User implements \JsonSerializable
         }
 
         // Delete any Campaigns
-        foreach ($this->campaigns as $event) {
-            /* @var Campaign $event */
-            $event->delete();
+        foreach ($this->campaigns as $campaign) {
+            /* @var Campaign $campaign */
+            $campaign->delete();
         }
 
         // Delete any scheduled events

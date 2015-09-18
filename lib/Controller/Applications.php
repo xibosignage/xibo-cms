@@ -67,7 +67,6 @@ class Applications extends Base
         // Get, show page
         $this->getState()->template = 'applications-authorize-page';
         $this->getState()->setData([
-            'authServerAuthorizeUrl' => $this->getApp()->urlFor('home') . 'authorize',
             'authParams' => $authParams
         ]);
     }

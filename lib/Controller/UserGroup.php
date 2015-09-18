@@ -367,7 +367,7 @@ class UserGroup extends Base
             if ($permission == null) {
                 if ($view) {
                     // Not currently assigned and needs to be
-                    $permission = PermissionFactory::create($groupId, 'Page', $objectId, 1, 0, 0);
+                    $permission = PermissionFactory::create($groupId, get_class($page), $objectId, 1, 0, 0);
                     $permission->save();
                 }
             }

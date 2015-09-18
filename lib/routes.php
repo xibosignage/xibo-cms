@@ -115,9 +115,15 @@ $app->put('/region/position/all/:id', '\Xibo\Controller\Region:positionAll')->na
  *  description="Playlists"
  * )
  */
+$app->get('/playlist', '\Xibo\Controller\Playlist:grid')->name('playlist.search');
+$app->post('/playlist', '\Xibo\Controller\Playlist:add')->name('playlist.add');
+$app->put('/playlist/:id', '\Xibo\Controller\Playlist:edit')->name('playlist.edit');
+$app->delete('/playlist/:id', '\Xibo\Controller\Playlist:delete')->name('playlist.delete');
+// Widgets Order
 $app->get('/playlist/widget', '\Xibo\Controller\Playlist:widgetGrid')->name('playlist.widget.search');
 $app->post('/playlist/order/:id', '\Xibo\Controller\Playlist:order')->name('playlist.order');
 $app->post('/playlist/library/assign/:id', '\Xibo\Controller\Playlist:libraryAssign')->name('playlist.library.assign');
+// Widget Modules
 $app->post('/playlist/widget/:type/:id', '\Xibo\Controller\Module:addWidget')->name('module.widget.add');
 $app->put('/playlist/widget/:id', '\Xibo\Controller\Module:editWidget')->name('module.widget.edit');
 $app->delete('/playlist/widget/:id', '\Xibo\Controller\Module:deleteWidget')->name('module.widget.delete');
@@ -263,8 +269,8 @@ $app->get('/stats/export', '\Xibo\Controller\Stats:export')->name('stats.export'
  *  description="Logs"
  * )
  */
-$app->get('/log', '\Xibo\Controller\Log:grid')->name('log.search');
-$app->delete('/log', '\Xibo\Controller\Log:truncate')->name('log.truncate');
+$app->get('/log', '\Xibo\Controller\Logging:grid')->name('log.search');
+$app->delete('/log', '\Xibo\Controller\Logging:truncate')->name('log.truncate');
 
 /**
  * User

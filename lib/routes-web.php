@@ -185,8 +185,8 @@ $app->get('/user/permissions/form/:entity/:id', '\Xibo\Controller\User:permissio
 //
 // log
 //
-$app->get('/log/view', '\Xibo\Controller\Log:displayPage')->name('log.view');
-$app->get('/log/delete', '\Xibo\Controller\Log:truncateForm')->name('log.truncate.form');
+$app->get('/log/view', '\Xibo\Controller\Logging:displayPage')->name('log.view');
+$app->get('/log/delete', '\Xibo\Controller\Logging:truncateForm')->name('log.truncate.form');
 
 //
 // campaign

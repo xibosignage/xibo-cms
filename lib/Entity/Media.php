@@ -172,6 +172,7 @@ class Media implements \JsonSerializable
         $this->mediaId = null;
         $this->widgets = [];
         $this->displayGroups = [];
+        $this->permissions = [];
 
         // We need to do something with the name
         $this->name = sprintf(__('Copy of %s'), $this->name);
@@ -278,11 +279,6 @@ class Media implements \JsonSerializable
         // Add or edit
         if ($this->mediaId == null || $this->mediaId == 0) {
             $this->add();
-
-            if ($this->mediaType != 'module' && Config::GetSetting('MEDIA_DEFAULT') == 'public') {
-                $permission = PermissionFactory::createForEveryone('Media', $this->mediaId, 1, 0, 0);
-                $permission->save();
-            }
         }
         else {
             // If the media file is invalid, then force an update (only applies to module files)
@@ -320,7 +316,6 @@ class Media implements \JsonSerializable
             // This is fine, no parent
             $parentMedia = null;
         }
-
 
         foreach ($this->permissions as $permission) {
             /* @var Permission $permission */

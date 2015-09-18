@@ -55,7 +55,7 @@
 {% block javaScript %}
     <script type="text/javascript">
         var table = $("#entries").DataTable({
-            serverSide: true,
+            serverSide: false,
             filter: false,
             searchDelay: 3000,
             "order": [[ 1, "asc"]],
@@ -81,8 +81,128 @@
 
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
-        dataTableAddColVis(table, $('#entries_wrapper').find('.col-sm-6').eq(1));
+        dataTableAddButtons(table, $('#entries_wrapper').find('.col-sm-6').eq(1));
 
+        /**
+         * Open Upload Form
+         */
+        function openUploadForm(templateOptions) {
+
+            // Close the current dialog
+            XiboDialogClose();
+
+            var template = Handlebars.compile($("#template-file-upload").html());
+
+            // Handle bars and open a dialog
+            bootbox.dialog({
+                message: template(templateOptions),
+                title: "{% trans "Upload media" %}",
+                buttons: {
+                    main: {
+                        label: "{% trans "Done" %}",
+                        className: "btn-primary",
+                        callback: function() {
+                            table.ajax.reload();
+                            XiboDialogClose();
+                        }
+                    }
+                }
+            }).on('shown.bs.modal', function() {
+                // Configure the upload form
+                var url = "{{ urlFor("library.add") }}";
+                var form = $(this).find("form");
+
+                // Initialize the jQuery File Upload widget:
+                form.fileupload({
+                    url: url,
+                    disableImageResize: false
+                });
+
+                // Upload server status check for browsers with CORS support:
+                if ($.support.cors) {
+                    $.ajax({
+                        url: url,
+                        type: 'HEAD'
+                    }).fail(function () {
+                        $('<span class="alert alert-error"/>')
+                                .text('Upload server currently unavailable - ' + new Date())
+                                .appendTo(form);
+                    });
+                }
+
+                // Enable iframe cross-domain access via redirect option:
+                form.fileupload(
+                        'option',
+                        'redirect',
+                        window.location.href.replace(
+                                /\/[^\/]*$/,
+                                '/cors/result.html?%s'
+                        )
+                );
+
+                form.bind('fileuploadsubmit', function (e, data) {
+                    var inputs = data.context.find(':input');
+                    if (inputs.filter('[required][value=""]').first().focus().length) {
+                        return false;
+                    }
+                    data.formData = inputs.serializeArray().concat(form.serializeArray());
+
+                    inputs.filter("input").prop("disabled", true);
+                });
+            });
+        }
+
+        /**
+         * Media Edit form
+         */
+        function mediaEditFormOpen(dialog) {
+
+            if (dialog.find("form").data().mediaEditable != 1)
+                return;
+
+            // Create a new button
+            var footer = dialog.find(".modal-footer");
+            var mediaId = dialog.find("form").data().mediaId;
+            var widgetId = dialog.find("form").data().widgetId;
+            var validExtensions = dialog.find("form").data().validExtensions;
+
+            // Append
+            var replaceButton = $('<button class="btn btn-warning">').html("{% trans "Replace" %}");
+            replaceButton.click(function(e) {
+                e.preventDefault();
+
+                // Open the upload dialog with our options.
+                openUploadForm({
+                    oldMediaId: mediaId,
+                    widgetId: widgetId,
+                    {% if config.LIBRARY_MEDIA_UPDATEINALL_CHECKB == "Checked" %}
+                    updateInAllChecked: true,
+                    {% else %}
+                    updateInAllChecked: false,
+                    {% endif %}
+                    trans: {
+                        addFiles: "{% trans "Add Replacement" %}",
+                        startUpload: "{% trans "Start Replace" %}",
+                        cancelUpload: "{% trans "Cancel Replace" %}",
+                        updateInLayouts: {
+                            title: "{% trans "Update this media in all layouts it is assigned to?" %}",
+                            helpText: "{% trans "Note: It will only be updated in layouts you have permission to edit." %}"
+                        },
+                        deleteOldRevisions: {
+                            title: "{% trans "Delete the old version?" %}",
+                            helpText: "{% trans "Completely remove the old version of this media item if a new file is being uploaded." %}"
+                        }
+                    },
+                    upload: {
+                        maxSize: {{ libraryUpload.maxSize }},
+                        maxSizeMessage: "{{ libraryUpload.maxSizeMessage  }}",
+                        validExt: validExtensions
+                    }
+                });
+            });
+
+            footer.find(".btn-primary").before(replaceButton);
+        }
     </script>
 {% endblock %}
 

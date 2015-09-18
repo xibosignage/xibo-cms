@@ -20,9 +20,11 @@
  */
 namespace Xibo\Controller;
 
+use Xibo\Entity\Permission;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
+use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\TransitionFactory;
@@ -293,6 +295,21 @@ class Module extends Base
         // Call module add
         $module->add();
 
+        // Permissions
+        if (Config::GetSetting('INHERIT_PARENT_PERMISSIONS' == 1)) {
+            // Apply permissions from the Parent
+            foreach ($playlist->permissions as $permission) {
+                /* @var Permission $permission */
+                $permission = PermissionFactory::create($permission->groupId, get_class($module->widget), $module->widget->getId(), $permission->view, $permission->edit, $permission->delete);
+                $permission->save();
+            }
+        } else {
+            foreach (PermissionFactory::createForNewEntity($this->getUser(), get_class($module->widget), $module->widget->getId(), Config::GetSetting('LAYOUT_DEFAULT')) as $permission) {
+                /* @var Permission $permission */
+                $permission->save();
+            }
+        }
+
         // Successful
         $this->getState()->hydrate([
             'message' => sprintf(__('Added %s'), $module->getName()),
@@ -391,6 +408,11 @@ class Module extends Base
         if (Sanitize::getCheckbox('deleteMedia') == 1) {
             foreach ($widgetMedia as $mediaId) {
                 $media = MediaFactory::getById($mediaId);
+
+                // Check we have permissions to delete
+                if (!$this->getUser()->checkDeleteable($media))
+                    throw new AccessDeniedException();
+
                 $media->delete();
             }
         }

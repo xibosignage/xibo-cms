@@ -276,7 +276,7 @@ class DisplayGroup extends Base
 
         // Add full permissions for this user to this group
         /* @var Permission $permission */
-        $permission = PermissionFactory::create($this->getUser()->groupId, 'DisplayGroup', $displayGroup->displayGroupId, 0, 0, 0);
+        $permission = PermissionFactory::create($this->getUser()->groupId, get_class($displayGroup), $displayGroup->displayGroupId, 1, 1, 1);
         $permission->save();
 
         // Return

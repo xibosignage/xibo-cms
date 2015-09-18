@@ -21,19 +21,17 @@
 namespace Xibo\Controller;
 
 use Exception;
-use Kit;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LogFactory;
 use Xibo\Helper\Date;
-use Xibo\Helper\Form;
 use Xibo\Helper\Help;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 use Xibo\Storage\PDOConnect;
 
 
-class Log extends Base
+class Logging extends Base
 {
     public function displayPage()
     {

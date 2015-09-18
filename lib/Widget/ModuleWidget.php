@@ -554,6 +554,16 @@ abstract class ModuleWidget implements ModuleInterface
     }
 
     /**
+     * Get Media
+     * @return \Xibo\Entity\Media
+     * @throws NotFoundException
+     */
+    public function getMedia()
+    {
+        return MediaFactory::getById($this->getMediaId());
+    }
+
+    /**
      * Return File
      */
     protected function download()
