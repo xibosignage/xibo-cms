@@ -79,6 +79,31 @@ class User extends Base
     }
 
     /**
+     * Me
+     *
+     * @SWG\Get(
+     *  path="/user/me",
+     *  operationId="userMe",
+     *  tags={"user"},
+     *  summary="Get Me",
+     *  description="Get my details",
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/User")
+     *  )
+     * )
+     */
+    public function myDetails()
+    {
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 200,
+            'data' => $this->getUser()
+        ]);
+    }
+
+    /**
      * Prints the user information in a table based on a check box selection
      *
      * @SWG\Get(

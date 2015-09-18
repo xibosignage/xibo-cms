@@ -74,6 +74,7 @@ $server = new \League\OAuth2\Server\AuthorizationServer;
 
 $server->setSessionStorage(new \Xibo\Storage\ApiSessionStorage());
 $server->setAccessTokenStorage(new \Xibo\Storage\ApiAccessTokenStorage());
+$server->setRefreshTokenStorage(new \Xibo\Storage\ApiRefreshTokenStorage());
 $server->setClientStorage(new \Xibo\Storage\ApiClientStorage());
 $server->setScopeStorage(new \Xibo\Storage\ApiScopeStorage());
 $server->setAuthCodeStorage(new \Xibo\Storage\ApiAuthCodeStorage());
@@ -103,8 +104,14 @@ $app->get('/', function() use ($app) {
 // Access Token
 $app->post('/access_token', function() use ($app) {
 
+    \Xibo\Helper\Log::debug('Request for access token');
+
+    $token = json_encode($app->server->issueAccessToken());
+
+    \Xibo\Helper\Log::debug('Issued token: %s', $token);
+
     // Issue an access token
-    $app->halt(200, json_encode($app->server->issueAccessToken()));
+    $app->halt(200, $token);
 
     // Exceptions are caught by our error controller automatically.
 });

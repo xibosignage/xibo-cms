@@ -87,21 +87,6 @@ class UserFactory extends BaseFactory
     }
 
     /**
-     * Load by client Id
-     * @param string $clientId
-     * @throws NotFoundException
-     */
-    public static function loadByClientId($clientId)
-    {
-        $users = UserFactory::query(null, array('disableUserCheck' => 1, 'clientId' => $clientId));
-
-        if (count($users) <= 0)
-            throw new NotFoundException(sprintf('User not found'));
-
-        return $users[0];
-    }
-
-    /**
      * Get users by Display Group
      * @param $displayGroupId
      * @return array
