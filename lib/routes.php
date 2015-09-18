@@ -269,8 +269,8 @@ $app->get('/stats/export', '\Xibo\Controller\Stats:export')->name('stats.export'
  *  description="Logs"
  * )
  */
-$app->get('/log', '\Xibo\Controller\Log:grid')->name('log.search');
-$app->delete('/log', '\Xibo\Controller\Log:truncate')->name('log.truncate');
+$app->get('/log', '\Xibo\Controller\Logging:grid')->name('log.search');
+$app->delete('/log', '\Xibo\Controller\Logging:truncate')->name('log.truncate');
 
 /**
  * User

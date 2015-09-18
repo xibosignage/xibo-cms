@@ -327,7 +327,7 @@ class Base
                 $button = explode(',', trim($button));
 
                 if (count($button) != 2) {
-                    Log::error('There is a problem with the buttons in the template: %s. Buttons: ', $state->template, var_export($view['buttons'], true));
+                    Log::error('There is a problem with the buttons in the template: %s. Buttons: %s.', $state->template, var_export($view['buttons'], true));
                     throw new ControllerNotImplemented(__('Problem with Form Template'));
                 }
 
