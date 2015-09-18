@@ -21,6 +21,8 @@
  */
 namespace Xibo\Widget;
 
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
 use Xibo\Entity\Media;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DisplayFactory;
@@ -509,7 +511,7 @@ class ForecastIo extends ModuleWidget
         return 1;
     }
 
-    private function request($latitude, $longitude, $time = null, $options = array())
+    public function get($latitude, $longitude, $time = null, $options = array())
     {
         $request_url = self::API_ENDPOINT
             . '[APIKEY]'
@@ -527,56 +529,32 @@ class ForecastIo extends ModuleWidget
 
         $request_url = str_replace('[APIKEY]', $this->getSetting('apiKey'), $request_url);
 
-        $httpOptions = array(
-            CURLOPT_TIMEOUT => 20,
-            CURLOPT_SSL_VERIFYPEER => true,
-            CURLOPT_USERAGENT => 'Xibo Digital Signage',
-            CURLOPT_HEADER => false,
-            CURLINFO_HEADER_OUT => true,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_URL => $request_url
-        );
+        // Request
+        $client = new Client();
 
-        // Proxy support
-        if (Config::getSetting('PROXY_HOST') != '' && !Config::isProxyException($request_url)) {
-            $httpOptions[CURLOPT_PROXY] = Config::getSetting('PROXY_HOST');
-            $httpOptions[CURLOPT_PROXYPORT] = Config::getSetting('PROXY_PORT');
+        try {
+            $response = $client->get($request_url, Config::getProxy(['connect_timeout' => 20]));
 
-            if (Config::getSetting('PROXY_AUTH') != '')
-                $httpOptions[CURLOPT_PROXYUSERPWD] = Config::getSetting('PROXY_AUTH');
+            // Success?
+            if ($response->getStatusCode() != 200) {
+                Log::error('ForecastIO API returned %d status. Unable to proceed. Headers = %s', $response->getStatusCode(), var_export($response->getHeaders(), true));
+
+                // See if we can parse the error.
+                $body = json_decode($response->getBody());
+
+                Log::error('ForecastIO Error: ' . ((isset($body->errors[0])) ? $body->errors[0]->message : 'Unknown Error'));
+
+                return false;
+            }
+
+            // Parse out header and body
+            $body = json_decode($response->getBody());
+
+            return $body;
         }
-
-        $curl = curl_init();
-        curl_setopt_array($curl, $httpOptions);
-        $result = curl_exec($curl);
-
-        // Get the response headers
-        $outHeaders = curl_getinfo($curl);
-
-        if ($outHeaders['http_code'] == 0) {
-            // Unable to connect
-            Log::error('Unable to reach Forecast API. No Host Found (HTTP Code 0). Curl Error = ' . curl_error($curl));
+        catch (RequestException $e) {
+            Log::error('Unable to reach Forecast API: %s', $e->getMessage());
             return false;
         }
-        else if ($outHeaders['http_code'] != 200) {
-            Log::error('ForecastIO API returned ' . $outHeaders['http_code'] . ' status. Unable to proceed. Headers = ' . var_export($outHeaders, true));
-
-            // See if we can parse the error.
-            $body = json_decode($result);
-
-            Log::error('ForecastIO Error: ' . ((isset($body->errors[0])) ? $body->errors[0]->message : 'Unknown Error'));
-
-            return false;
-        }
-
-        // Parse out header and body
-        $body = json_decode($result);
-
-        return $body;
-    }
-
-    public function get($latitude, $longitude, $time = null, $options = array())
-    {
-        return $this->request($latitude, $longitude, $time, $options);
     }
 }
