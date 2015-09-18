@@ -62,7 +62,8 @@ class Applications extends Base
     public function authorizeRequest()
     {
         // Pull authorize params from our session
-        $authParams = $this->getSession()->get('authParams');
+        if (!$authParams = $this->getSession()->get('authParams'))
+            throw new \InvalidArgumentException(__('Authorisation Parameters missing from session.'));
 
         // Get, show page
         $this->getState()->template = 'applications-authorize-page';
@@ -78,7 +79,8 @@ class Applications extends Base
     public function authorize()
     {
         // Pull authorize params from our session
-        $authParams = $this->getSession()->get('authParams');
+        if (!$authParams = $this->getSession()->get('authParams'))
+            throw new \InvalidArgumentException(__('Authorisation Parameters missing from session.'));
 
         // We are authorized
         if (Sanitize::getString('authorization') === 'Approve') {

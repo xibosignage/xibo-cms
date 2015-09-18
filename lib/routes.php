@@ -279,6 +279,7 @@ $app->delete('/log', '\Xibo\Controller\Logging:truncate')->name('log.truncate');
  *  description="Users"
  * )
  */
+$app->get('/user/me', '\Xibo\Controller\User:myDetails')->name('user.me');
 $app->get('/user', '\Xibo\Controller\User:grid')->name('user.search');
 $app->post('/user', '\Xibo\Controller\User:add')->name('user.add');
 $app->put('/user/password/change', '\Xibo\Controller\User:changePassword')->name('user.change.password');
