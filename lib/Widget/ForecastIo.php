@@ -247,6 +247,7 @@ class ForecastIo extends ModuleWidget
             array('id' => 'pt', 'value' => __('Portuguese')),
             array('id' => 'ru', 'value' => __('Russian')),
             array('id' => 'tet', 'value' => __('Tetum')),
+            array('id' => 'tr', 'value' => __('Turkish')),
             array('id' => 'x-pig-latin', 'value' => __('lgpay Atinlay'))
         );
     }
