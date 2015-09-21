@@ -23,6 +23,8 @@
 namespace Xibo\Entity;
 
 
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
 use Respect\Validation\Validator as v;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\NotFoundException;
@@ -535,23 +537,19 @@ class Media implements \JsonSerializable
 
         Log::debug('Downloading %s', $this->fileName);
 
-        // Proxy
-        $options = [];
-        if (Config::GetSetting('PROXY_HOST') != '' && !Config::isProxyException($this->fileName)) {
-            $options[] = Config::GetSetting('PROXY_HOST') . ':' . Config::GetSetting('PROXY_PORT');
-
-            if (Config::GetSetting('PROXY_AUTH') != '') {
-                $auth = explode(':', Config::GetSetting('PROXY_AUTH'));
-                $options[] = $auth[0];
-                $options[] = $auth[1];
-            }
-        }
-
-        // Download the file and save it. Fill in the "storedAs" with the temporary file name and then continue
-        $response = \Requests::get($this->fileName, [], $options);
-
+        // Open the temporary file
         $storedAs = Config::GetSetting('LIBRARY_LOCATION') . 'temp' . DIRECTORY_SEPARATOR . $this->name;
-        file_put_contents($storedAs, $response->body);
+
+        if (!$fileHandle = fopen($storedAs, 'w'))
+            throw new ConfigurationException(__('Temporary location not writable'));
+
+        try {
+            $client = new Client();
+            $client->get($this->fileName, Config::getProxy(['save_to' => $fileHandle]));
+        }
+        catch (RequestException $e) {
+            Log::error('Unable to get %s, %s', $this->fileName, $e->getMessage());
+        }
 
         // Change the filename to our temporary file
         $this->fileName = $storedAs;
