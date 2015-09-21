@@ -103,7 +103,8 @@ class State extends Middleware
         Translate::InitLocale();
 
         // Configure the locale for date/time
-        Date::setLocale(Translate::GetLocale(2));
+        if (Translate::GetLocale(2) != '')
+            Date::setLocale(Translate::GetLocale(2));
 
         // Inject
         // The state of the application response
