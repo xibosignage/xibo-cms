@@ -403,8 +403,22 @@ class LayoutFactory extends BaseFactory
                 // Keep the keys the same? Doesn't matter
                 foreach ($widgets as $widget) {
                     /* @var Widget $widget */
-                    $widget->unassignMedia($oldMediaId);
-                    $widget->assignMedia($newMediaId);
+
+                    Log::debug('Checking Widget for the old mediaID [%d] so we can replace it with the new mediaId [%d] and storedAs [%s]. Media assigned to widget %s.', $oldMediaId, $newMediaId, $media->storedAs, json_encode($widget->mediaIds));
+
+                    if (in_array($oldMediaId, $widget->mediaIds)) {
+
+                        Log::debug('Removing %d and replacing with %d', $oldMediaId, $newMediaId);
+
+                        // Unassign the old ID
+                        $widget->unassignMedia($oldMediaId);
+
+                        // Assign the new ID
+                        $widget->assignMedia($newMediaId);
+
+                        // Update the widget option with the new ID
+                        $widget->setOptionValue('uri', 'attrib', $media->storedAs);
+                    }
                 }
             }
         }

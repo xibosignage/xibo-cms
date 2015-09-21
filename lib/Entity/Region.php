@@ -311,9 +311,14 @@ class Region implements \JsonSerializable
 
     /**
      * Delete Region
+     * @param array $options
      */
-    public function delete()
+    public function delete($options = [])
     {
+        $options = array_merge([
+            'deleteOrphanedPlaylists' => true
+        ], $options);
+
         // We must ensure everything is loaded before we delete
         if ($this->hash == null)
             $this->load();
@@ -332,9 +337,29 @@ class Region implements \JsonSerializable
             $regionOption->delete();
         }
 
+        // Store the playlists locally for use after unlink
+        $playlists = $this->playlists;
+
         // Unlink playlists
         $this->playlists = [];
         $this->unlinkPlaylists();
+
+        // Should we delete orphaned playlists?
+        if ($options['deleteOrphanedPlaylists']) {
+            Log::debug('We should delete orphaned playlists, checking %d playlists.', count($playlists));
+
+            // Delete
+            foreach ($playlists as $playlist) {
+                /* @var Playlist $playlist */
+                if (!$playlist->hasLayouts()) {
+                    Log::debug('Deleting orphaned playlist: %d', $playlist->playlistId);
+                    $playlist->delete();
+                }
+                else {
+                    Log::debug('Playlist still linked to Layouts, skipping playlist delete');
+                }
+            }
+        }
 
         // Delete this region
         PDOConnect::update('DELETE FROM `region` WHERE regionId = :regionId', array('regionId' => $this->regionId));

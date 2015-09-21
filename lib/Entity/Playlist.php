@@ -334,4 +334,15 @@ class Playlist implements \JsonSerializable
            'playlistId' => $this->playlistId
         ]);
     }
+
+    /**
+     * Has layouts
+     * @return bool
+     */
+    public function hasLayouts()
+    {
+        $results = PDOConnect::select('SELECT COUNT(*) AS qty FROM `lkregionplaylist` WHERE playlistId = :playlistId', ['playlistId' => $this->playlistId]);
+
+        return ($results[0]['qty'] > 0);
+    }
 }

@@ -420,10 +420,15 @@ class Layout implements \JsonSerializable
 
     /**
      * Delete Layout
+     * @param array $options
      * @throws \Exception
      */
-    public function delete()
+    public function delete($options = [])
     {
+        $options = array_merge([
+            'deleteOrphanedPlaylists' => true
+        ], $options);
+
         Log::debug('Deleting %s', $this);
 
         // We must ensure everything is loaded before we delete
@@ -448,7 +453,7 @@ class Layout implements \JsonSerializable
         // Delete Regions
         foreach ($this->regions as $region) {
             /* @var Region $region */
-            $region->delete();
+            $region->delete($options);
         }
 
         // Unassign from all Campaigns
@@ -576,17 +581,17 @@ class Layout implements \JsonSerializable
                     $regionNode->appendChild($mediaNode);
                 }
             }
-
-            $tagsNode = $document->createElement('tags');
-
-            foreach ($this->tags as $tag) {
-                /* @var Tag $tag */
-                $tagNode = $document->createElement('tag', $tag->tag);
-                $tagsNode->appendChild($tagNode);
-            }
-
-            $layoutNode->appendChild($tagsNode);
         }
+
+        $tagsNode = $document->createElement('tags');
+
+        foreach ($this->tags as $tag) {
+            /* @var Tag $tag */
+            $tagNode = $document->createElement('tag', $tag->tag);
+            $tagsNode->appendChild($tagNode);
+        }
+
+        $layoutNode->appendChild($tagsNode);
 
         return $document->saveXML();
     }

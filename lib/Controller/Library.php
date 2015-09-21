@@ -21,7 +21,6 @@
 namespace Xibo\Controller;
 
 use Xibo\Entity\Media;
-use Xibo\Entity\Module;
 use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
@@ -672,7 +671,7 @@ class Library extends Base
     {
         // Do this for all enabled modules
         foreach (ModuleFactory::query() as $module) {
-            /* @var Module $module */
+            /* @var \Xibo\Entity\Module $module */
 
             // Install Files for this module
             $moduleObject = ModuleFactory::create($module->type);
