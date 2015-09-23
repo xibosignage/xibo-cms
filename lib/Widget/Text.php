@@ -94,12 +94,15 @@ class Text extends ModuleWidget
         $data = [];
         $isPreview = (Sanitize::getCheckbox('preview') == 1);
 
+        // Clear all linked media.
+        $this->clearMedia();
+
         // Replace the View Port Width?
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
 
         $duration = $this->getDuration();
 
-        $text = $this->getRawNode('text', null);
+        $text = $this->parseLibraryReferences($isPreview, $this->getRawNode('text', null));
 
         // Handle older layouts that have a direction node but no effect node
         $oldDirection = $this->GetOption('direction', 'none');
@@ -206,6 +209,10 @@ class Text extends ModuleWidget
         $headContent .= '<style type="text/css">' . file_get_contents(Theme::uri('css/client.css', true)) . '</style>';
 
         $data['head'] = $headContent;
+
+        // Update and save widget if we've changed our assignments.
+        if ($this->hasMediaChanged())
+            $this->widget->save(['saveWidgetOptions' => false]);
 
         return $this->renderTemplate($data);
     }

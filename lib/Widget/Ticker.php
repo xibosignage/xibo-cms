@@ -253,6 +253,9 @@ class Ticker extends ModuleWidget
         $data = [];
         $isPreview = (Sanitize::getCheckbox('preview') == 1);
 
+        // Clear all linked media.
+        $this->clearMedia();
+
         // Replace the View Port Width?
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
 
@@ -380,6 +383,10 @@ class Ticker extends ModuleWidget
         // Replace the Head Content with our generated javascript
         $data['javaScript'] = $javaScriptContent;
 
+        // Update and save widget if we've changed our assignments.
+        if ($this->hasMediaChanged())
+            $this->widget->save(['saveWidgetOptions' => false]);
+
         return $this->renderTemplate($data);
     }
 
@@ -387,10 +394,6 @@ class Ticker extends ModuleWidget
     {
         // Make sure we have the cache location configured
         Library::ensureLibraryExists();
-
-        // We might need to save the widget associated with this module
-        //  for example if we have assigned an image to it
-        $saveRequired = false;
 
         // Parse the text template
         $matches = '';
@@ -490,9 +493,6 @@ class Ticker extends ModuleWidget
                             // Tag this layout with this file
                             $this->assignMedia($file->mediaId);
 
-                            // We will need to save
-                            $saveRequired = true;
-
                             $url = $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']);
                             $replace = ($isPreview) ? '<img src="' . $url . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" ' . $attributes . '/>' : '<img src="' . $file->storedAs . '" ' . $attributes . ' />';
                         }
@@ -566,20 +566,12 @@ class Ticker extends ModuleWidget
             $items[] = '<span id="copyright">' . $this->getOption('copyright') . '</span>';
         }
 
-        // Should we save
-        if ($saveRequired)
-            $this->widget->save(['saveWidgetOptions' => false]);
-
         // Return the formatted items
         return $items;
     }
 
     private function getDataSetItems($displayId, $isPreview, $text)
     {
-        // We might need to save the widget associated with this module
-        //  for example if we have assigned an image to it
-        $saveRequired = false;
-
         // Extra fields for data sets
         $dataSetId = $this->getOption('dataSetId');
         $upperLimit = $this->getOption('upperLimit');
@@ -672,9 +664,6 @@ class Ticker extends ModuleWidget
                         // Tag this layout with this file
                         $this->assignMedia($file->mediaId);
 
-                        // We will need to save
-                        $saveRequired = true;
-
                         $url = $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']);
                         $replace = ($isPreview) ? '<img src="' . $url . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" />' : '<img src="' . $file->storedAs . '" />';
 
@@ -686,9 +675,6 @@ class Ticker extends ModuleWidget
                         // Tag this layout with this file
                         $this->assignMedia($file->mediaId);
 
-                        // We will need to save
-                        $saveRequired = true;
-
                         $url = $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']);
                         $replace = ($isPreview) ? '<img src="' . $url . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" />' : '<img src="' . $file->storedAs . '" />';
                     }
@@ -698,9 +684,6 @@ class Ticker extends ModuleWidget
 
                 $items[] = $rowString;
             }
-
-            if ($saveRequired)
-                $this->widget->save(['saveWidgetOptions' => false]);
 
             return $items;
         }

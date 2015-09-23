@@ -101,6 +101,12 @@ class Widget implements \JsonSerializable
      */
     public $module;
 
+    /**
+     * Hash Key of Media Assignments
+     * @var string
+     */
+    private $mediaHash = null;
+
     public function __construct()
     {
         $this->excludeProperty('module');
@@ -124,6 +130,11 @@ class Widget implements \JsonSerializable
     private function hash()
     {
         return md5($this->widgetId . $this->playlistId . $this->ownerId . $this->type . $this->duration . $this->displayOrder);
+    }
+
+    private function mediaHash()
+    {
+        return md5(implode(',', $this->mediaIds));
     }
 
     /**
@@ -234,6 +245,33 @@ class Widget implements \JsonSerializable
     }
 
     /**
+     * Count media
+     * @return int count of media
+     */
+    public function countMedia()
+    {
+        $this->load();
+        return count($this->mediaIds);
+    }
+
+    /**
+     * Clear Media
+     */
+    public function clearMedia()
+    {
+        $this->load();
+        $this->mediaIds = [];
+    }
+
+    /**
+     * Have the media assignments changed.
+     */
+    public function hasMediaChanged()
+    {
+        return ($this->mediaHash != $this->mediaHash());
+    }
+
+    /**
      * Load the Widget
      */
     public function load()
@@ -251,6 +289,7 @@ class Widget implements \JsonSerializable
         $this->mediaIds = WidgetMediaFactory::getByWidgetId($this->widgetId);
 
         $this->hash = $this->hash();
+        $this->mediaHash = $this->mediaHash();
         $this->loaded = true;
     }
 
