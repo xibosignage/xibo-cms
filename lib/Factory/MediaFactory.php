@@ -198,6 +198,9 @@ class MediaFactory extends BaseFactory
 
     public static function query($sortOrder = null, $filterBy = null)
     {
+        if ($sortOrder === null)
+            $sortOrder = ['name'];
+
         $entries = array();
 
         $params = array();

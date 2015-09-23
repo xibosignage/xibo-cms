@@ -33,6 +33,8 @@
                             {{ forms.number(fieldId, col.heading) }}
                         {% elseif col.dataTypeId == 3 %}
                             {{ forms.dateTime(fieldId, col.heading) }}
+                        {% elseif col.dataTypeId == 5 %}
+                            {{ forms.dropdown(fieldId, "single", col.heading, "", images, "mediaId", "name") }}
                         {% else %}
                             {{ forms.text(fieldId, col.heading) }}
                         {% endif %}

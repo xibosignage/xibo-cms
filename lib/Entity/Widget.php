@@ -180,7 +180,12 @@ class Widget implements \JsonSerializable
     {
         try {
             $widgetOption = $this->getOption($option);
-            return (($widgetOption->value) === null) ? $default : $widgetOption->value;
+            $widgetOption = (($widgetOption->value) === null) ? $default : $widgetOption->value;
+
+            if (is_integer($default))
+                $widgetOption = intval($widgetOption);
+
+            return $widgetOption;
         }
         catch (NotFoundException $e) {
             return $default;

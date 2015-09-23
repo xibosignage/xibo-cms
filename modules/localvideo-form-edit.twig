@@ -25,7 +25,7 @@
             <form id="localVideoEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
                 {% set title %}{% trans "Video Path" %}{% endset %}
                 {% set helpText %}{% trans "A local file path or URL to the video. This can be a RTSP stream." %}{% endset %}
-                {% set uri = module.getOption("uri") %}
+                {% set uri = module.getOption("uri")|url_decode %}
                 {{ forms.text("uri", title, uri, helpText, "", "required") }}
 
                 {% set title %}{% trans "Duration" %}{% endset %}

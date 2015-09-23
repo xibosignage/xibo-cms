@@ -286,6 +286,12 @@ class Module extends Base
         if (!$this->getUser()->checkEditable($playlist))
             throw new AccessDeniedException();
 
+        // Load some information about this playlist
+        $playlist->load([
+            'playlistIncludeRegionAssignments' => false,
+            'loadWidgets' => false
+        ]);
+
         // Create a module to use
         $module = ModuleFactory::createForWidget($type, null, $this->getUser()->userId, $playlistId);
 
@@ -296,7 +302,7 @@ class Module extends Base
         $module->add();
 
         // Permissions
-        if (Config::GetSetting('INHERIT_PARENT_PERMISSIONS' == 1)) {
+        if (Config::GetSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
             // Apply permissions from the Parent
             foreach ($playlist->permissions as $permission) {
                 /* @var Permission $permission */

@@ -185,7 +185,10 @@ class Region extends Base
         ]);
 
         // Permissions
-        if (Config::GetSetting('INHERIT_PARENT_PERMISSIONS' == 1)) {
+        if (Config::GetSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
+
+            Log::debug('Applying permissions from parent, there are %d', count($layout->permissions));
+
             // Apply permissions from the Parent
             foreach ($layout->permissions as $permission) {
                 /* @var Permission $permission */
@@ -200,6 +203,8 @@ class Region extends Base
             }
         }
         else {
+            Log::debug('Applying default permissions');
+
             // Apply the default permissions
             foreach (PermissionFactory::createForNewEntity($this->getUser(), get_class($region), $region->getId(), Config::GetSetting('LAYOUT_DEFAULT')) as $permission) {
                 /* @var Permission $permission */

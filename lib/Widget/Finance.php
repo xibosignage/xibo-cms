@@ -21,6 +21,8 @@
  */
 namespace Xibo\Widget;
 
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\MediaFactory;
 use Xibo\Helper\Cache;
@@ -256,22 +258,21 @@ class Finance extends ModuleWidget
         $url = 'https://query.yahooapis.com/v1/public/yql?q=' . urlencode($yql) . '&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys';
         //$url = 'https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20yahoo.finance.quote%20where%20symbol%20in%20(%22TEC.PA%22)&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=';
 
-        // TODO Proxy support
-        if (Config::getSetting('PROXY_HOST') != '' && !Config::isProxyException($url)) {
-            $httpOptions[CURLOPT_PROXY] = Config::getSetting('PROXY_HOST');
-            $httpOptions[CURLOPT_PROXYPORT] = Config::getSetting('PROXY_PORT');
+        $client = new Client();
 
-            if (Config::getSetting('PROXY_AUTH') != '')
-                $httpOptions[CURLOPT_PROXYUSERPWD] = Config::getSetting('PROXY_AUTH');
+        try {
+            $response = $client->get($url, Config::getProxy());
+
+            if ($response->getStatusCode() == 200) {
+                return json_decode($response->getBody(), true)['query']['results'];
+            }
+            else {
+                Log::info('Invalid response from Yahoo %d. %s', $response->getStatusCode(), $response->getBody());
+                return false;
+            }
         }
-
-        $return = \Requests::get($url);
-
-        if ($return->status_code == 200) {
-            return json_decode($return->body, true)['query']['results'];
-        }
-        else {
-            Log::info('Invalid response from Yahoo. %s', $return->raw);
+        catch (RequestException $e) {
+            Log::error('Unable to reach Yahoo API: %s', $e->getMessage());
             return false;
         }
     }

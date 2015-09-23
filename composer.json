@@ -33,7 +33,7 @@
     }
   ],
   "require": {
-    "php": ">=5.4",
+    "php": ">=5.5",
     "slim/slim": "~2.6",
     "erusev/parsedown": "~1.5",
     "league/oauth2-server": "~4.1",
@@ -47,10 +47,11 @@
     "twig/extensions": "~1.2",
     "respect/validation": "0.9.*",
     "intervention/imagecache": "~2.3",
-    "rmccue/requests": "^1.6",
     "emojione/emojione": "^1.4",
     "jenssegers/date": "^3.0",
-    "phpmailer/phpmailer": "dev-master"
+    "phpmailer/phpmailer": "dev-master",
+    "guzzlehttp/guzzle": "~6.0",
+    "league/oauth2-client": "~1.0"
   },
   "require-dev": {
     "phpunit/phpunit": "~4.0",

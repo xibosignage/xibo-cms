@@ -159,7 +159,7 @@ class Ticker extends ModuleWidget
         $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
         $this->setOption('xmds', true);
         $this->setOption('sourceId', Sanitize::getInt('sourceId'));
-        $this->setOption('uri', Sanitize::getString('uri'));
+        $this->setOption('uri', urlencode(Sanitize::getString('uri')));
         $this->setOption('dataSetId', Sanitize::getInt('dataSetId', 0));
         $this->setOption('updateInterval', 120);
         $this->setOption('speed', 2);
@@ -184,7 +184,7 @@ class Ticker extends ModuleWidget
         $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
         $this->setOption('xmds', true);
         $this->setOption('uri', Sanitize::getString('uri'));
-        $this->setOption('updateInterval', Sanitize::getInt('updateInterval', 120));
+        $this->setOption('updateInterval', urlencode(Sanitize::getInt('updateInterval', 120)));
         $this->setOption('speed', Sanitize::getInt('speed', 2));
         $this->setOption('name', Sanitize::getString('name'));
         $this->setOption('effect', Sanitize::getString('effect'));

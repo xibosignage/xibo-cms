@@ -318,7 +318,8 @@ class Base
             $state->buttons = [];
         } else {
             // Convert to an array
-            $buttons = explode(PHP_EOL, $view['buttons']);
+            $view['buttons'] = str_replace("\n\r", "\n", $view['buttons']);
+            $buttons = explode("\n", $view['buttons']);
 
             foreach ($buttons as $button) {
                 if ($button == '')

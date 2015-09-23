@@ -237,6 +237,10 @@ class DataSetColumn implements \JsonSerializable
                 $dataType = 'DATETIME';
                 break;
 
+            case 5:
+                $dataType = 'INT';
+                break;
+
             case 1:
             case 4:
             default:

@@ -97,6 +97,13 @@ class Image extends ModuleWidget
         $libraryLocation = Config::GetSetting('LIBRARY_LOCATION');
         $filePath = $libraryLocation . $media->storedAs;
         $proportional = Sanitize::getInt('proportional', 1) == 1;
+        $preview = Sanitize::getInt('preview', 0) == 1;
+        $width = intval(Sanitize::getDouble('width'));
+        $height = intval(Sanitize::getDouble('height'));
+
+        // Work out the eTag first
+        $this->getApp()->etag($media->md5 . $width . $height . $proportional . $preview);
+        $this->getApp()->expires('+1 week');
 
         // Preview or download?
         if (Sanitize::getInt('preview', 0) == 1) {
@@ -104,38 +111,15 @@ class Image extends ModuleWidget
             // Preview (we output the file to the browser with image headers
             Img::configure(array('driver' => 'gd'));
 
-            // Output a thumbnail?
-            $width = intval(Sanitize::getDouble('width'));
-            $height = intval(Sanitize::getDouble('height'));
-
             Log::debug('Preview Requested with Width and Height %d x %d', $width, $height);
 
+            // Output a thumbnail?
             if ($width != 0 || $height != 0) {
-
-                if (Sanitize::getInt('preview', 0) == 0) {
-                    // Save a thumbnail and output it
-                    $thumbPath = $libraryLocation . sprintf('tn_%dx%d_%s', $width, $height, $media->storedAs);
-
-                    $eTag = md5($media->md5 . $thumbPath);
-
-                    // Create the thumbnail here
-                    if (!file_exists($thumbPath)) {
-                        $img = Img::make($filePath)->resize($width, $height, function($constraint) use ($proportional) {
-                            if ($proportional)
-                                $constraint->aspectRatio();
-                        })->save($thumbPath);
-                    } else {
-                        $img = Img::make($thumbPath);
-                    }
-                }
-                else {
-                    $eTag = md5($media->md5 . $width . $height);
-
-                    $img = Img::make($filePath)->resize($width, $height, function($constraint) use ($proportional) {
-                        if ($proportional)
-                            $constraint->aspectRatio();
-                    });
-                }
+                // Make a thumb
+                $img = Img::make($filePath)->resize($width, $height, function($constraint) use ($proportional) {
+                    if ($proportional)
+                        $constraint->aspectRatio();
+                });
             }
             else {
                 // Load the whole image
@@ -147,8 +131,6 @@ class Image extends ModuleWidget
             Log::debug('Outputting Image Response');
 
             // Output the file
-            $this->getApp()->etag($eTag);
-            $this->getApp()->expires('+1 week');
             echo $img->response();
         }
         else {

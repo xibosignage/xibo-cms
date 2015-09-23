@@ -27,7 +27,8 @@ class Error extends Base
         Translate::InitLocale();
 
         // Configure the locale for date/time
-        \Jenssegers\Date\Date::setLocale(Translate::GetLocale(2));
+        if (Translate::GetLocale(2) != '')
+            \Jenssegers\Date\Date::setLocale(Translate::GetLocale(2));
 
         $message = __('Page not found');
 

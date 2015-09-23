@@ -55,7 +55,7 @@ class WebPage extends ModuleWidget
         $this->setDuration(Sanitize::getInt('duration'));
         $this->setOption('name', Sanitize::getString('name'));
         $this->setOption('transparency', Sanitize::getCheckbox('transparency'));
-        $this->setOption('uri', Sanitize::getString('uri'));
+        $this->setOption('uri', urlencode(Sanitize::getString('uri')));
         $this->setOption('scaling', Sanitize::getInt('scaling'));
         $this->setOption('offsetLeft', Sanitize::getInt('offsetLeft'));
         $this->setOption('offsetTop', Sanitize::getInt('offsetTop'));
@@ -77,7 +77,7 @@ class WebPage extends ModuleWidget
         $this->setDuration(Sanitize::getInt('duration'));
         $this->setOption('name', Sanitize::getString('name'));
         $this->setOption('transparency', Sanitize::getCheckbox('transparency'));
-        $this->setOption('uri', Sanitize::getString('uri'));
+        $this->setOption('uri', urlencode(Sanitize::getString('uri')));
         $this->setOption('scaling', Sanitize::getInt('scaling'));
         $this->setOption('offsetLeft', Sanitize::getInt('offsetLeft'));
         $this->setOption('offsetTop', Sanitize::getInt('offsetTop'));

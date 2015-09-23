@@ -98,6 +98,7 @@ $app->hook('slim.before.dispatch', function() use ($app) {
         Translate::InitLocale('en_GB');
     }
 
+    \Xibo\Middleware\State::setRootUri($app);
 });
 
 require PROJECT_ROOT . '/lib/routes-install.php';

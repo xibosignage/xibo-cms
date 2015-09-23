@@ -86,7 +86,7 @@ class Translate
         if ($foundLanguage == '') {
             // Check the default
             if (!in_array($default . '.mo', $supportedLanguages)) {
-                Log::Info('Resolved language ' . $default . ' not available.');
+                Log::Info('Resolved language [%s] not available, checked in %s and found %s.', $default, $localeDir, json_encode($supportedLanguages));
                 return;
             }
 

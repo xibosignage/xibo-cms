@@ -46,7 +46,7 @@ class LocalVideo extends ModuleWidget
     {
         // Set some options
         $this->setDuration(Sanitize::getInt('duration'));
-        $this->setOption('uri', Sanitize::getString('uri'));
+        $this->setOption('uri', urlencode(Sanitize::getString('uri')));
 
         $this->validate();
 
@@ -61,7 +61,7 @@ class LocalVideo extends ModuleWidget
     {
         // Set some options
         $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
-        $this->setOption('uri', Sanitize::getString('uri'));
+        $this->setOption('uri', urlencode(Sanitize::getString('uri')));
 
         $this->validate();
 

@@ -78,6 +78,11 @@ class State extends Middleware
             // Check to see if the instance has been suspended, if so call the special route
             if (Config::GetSetting('INSTANCE_SUSPENDED') == 1)
                 throw new InstanceSuspendedException();
+
+            // Reset the ETAGs for GZIP
+            if ($requestEtag = $app->request->headers->get('IF_NONE_MATCH')) {
+                $app->request->headers->set('IF_NONE_MATCH', str_replace('-gzip', '', $requestEtag));
+            }
         });
 
         // Attach a hook to be called after the route has been dispatched
@@ -103,7 +108,8 @@ class State extends Middleware
         Translate::InitLocale();
 
         // Configure the locale for date/time
-        Date::setLocale(Translate::GetLocale(2));
+        if (Translate::GetLocale(2) != '')
+            Date::setLocale(Translate::GetLocale(2));
 
         // Inject
         // The state of the application response
@@ -156,6 +162,15 @@ class State extends Middleware
             }
         }
 
+        State::setRootUri($app);
+    }
+
+    /**
+     * Set the Root URI
+     * @param Slim $app
+     */
+    public static function setRootUri($app)
+    {
         // Set the root Uri
         $app->rootUri = $app->request->getRootUri() . '/';
 

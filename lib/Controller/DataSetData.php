@@ -12,6 +12,7 @@ namespace Xibo\Controller;
 use Xibo\Entity\DataSetColumn;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\DataSetFactory;
+use Xibo\Factory\MediaFactory;
 use Xibo\Helper\Date;
 use Xibo\Helper\Sanitize;
 
@@ -99,7 +100,8 @@ class DataSetData extends Base
 
         $this->getState()->template = 'dataset-data-form-add';
         $this->getState()->setData([
-            'dataSet' => $dataSet
+            'dataSet' => $dataSet,
+            'images' => MediaFactory::query(null, ['type' => 'image'])
         ]);
     }
 
@@ -161,6 +163,10 @@ class DataSetData extends Base
                     // Date
                     $value = Date::getLocalDate(Sanitize::getDate('dataSetColumnId_' . $column->dataSetColumnId));
                 }
+                else if ($column->dataTypeId == 5) {
+                    // Media Id
+                    $value = Sanitize::getInt('dataSetColumnId_' . $column->dataSetColumnId);
+                }
                 else {
                     // String
                     $value = Sanitize::getString('dataSetColumnId_' . $column->dataSetColumnId);
@@ -202,7 +208,8 @@ class DataSetData extends Base
         $this->getState()->template = 'dataset-data-form-edit';
         $this->getState()->setData([
             'dataSet' => $dataSet,
-            'row' => $dataSet->getData(['id' => $rowId])[0]
+            'row' => $dataSet->getData(['id' => $rowId])[0],
+            'images' => MediaFactory::query(null, ['type' => 'image'])
         ]);
     }
 
@@ -270,6 +277,10 @@ class DataSetData extends Base
                 else if ($column->dataTypeId == 3) {
                     // Date
                     $value = Date::getLocalDate(Sanitize::getDate('dataSetColumnId_' . $column->dataSetColumnId, $existingValue));
+                }
+                else if ($column->dataTypeId == 5) {
+                    // Media Id
+                    $value = Sanitize::getInt('dataSetColumnId_' . $column->dataSetColumnId);
                 }
                 else {
                     // String

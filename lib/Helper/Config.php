@@ -195,7 +195,40 @@ class Config
         $proxyException = Config::GetSetting('PROXY_EXCEPTIONS');
         Log::debug($host . ' in ' . $proxyException . '. Pos = ' . stripos($host, $proxyException));
         return ($proxyException != '' && stripos($host, $proxyException) > -1);
-     }
+    }
+
+    /**
+     * Get Proxy Configuration
+     * @param array $httpOptions
+     * @return array
+     */
+    public static function getProxy($httpOptions = [])
+    {
+        // Proxy support
+        if (Config::GetSetting('PROXY_HOST') != '') {
+
+            $proxy = Config::GetSetting('PROXY_HOST') . ':' . Config::GetSetting('PROXY_PORT');
+
+            if (Config::GetSetting('PROXY_AUTH') != '') {
+                $scheme = explode('://', $proxy);
+
+                $proxy = $scheme[0] . Config::GetSetting('PROXY_AUTH') . '@' . $scheme[1];
+            }
+
+            $httpOptions['proxy'] = [
+                'http' => $proxy,
+                'https' => $proxy
+            ];
+
+            if (Config::GetSetting('PROXY_EXCEPTIONS') != '') {
+                $httpOptions['proxy']['no'] = explode(',', Config::GetSetting('PROXY_EXCEPTIONS'));
+            }
+
+            Log::debug('Completed Proxy Configuration: %s', json_encode($httpOptions));
+        }
+
+        return $httpOptions;
+    }
 
     /**
      * Checks the Environment and Determines if it is suitable
