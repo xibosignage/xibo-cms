@@ -238,7 +238,7 @@ INSERT INTO `datatype` (`DataTypeID`, `DataType`) VALUES
 (1, 'String'),
 (2, 'Number'),
 (3, 'Date'),
-(4, 'Image'),
+(4, 'External Image'),
 (5, 'Library Image');
 
 INSERT INTO `datasetcolumntype` (`DataSetColumnTypeID`, `DataSetColumnType`) VALUES
