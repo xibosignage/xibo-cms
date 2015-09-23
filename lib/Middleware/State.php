@@ -162,6 +162,15 @@ class State extends Middleware
             }
         }
 
+        State::setRootUri($app);
+    }
+
+    /**
+     * Set the Root URI
+     * @param Slim $app
+     */
+    public static function setRootUri($app)
+    {
         // Set the root Uri
         $app->rootUri = $app->request->getRootUri() . '/';
 
