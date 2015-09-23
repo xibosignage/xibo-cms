@@ -106,7 +106,7 @@ class Ticker extends ModuleWidget
         if ($sourceId == 1) {
             // Feed
             // Validate the URL
-            if (!v::url()->notEmpty()->validate($this->getOption('uri')))
+            if (!v::url()->notEmpty()->validate(urldecode($this->getOption('uri'))))
                 throw new \InvalidArgumentException(__('Please enter a Link for this Ticker'));
 
         } else if ($sourceId == 2) {
@@ -271,10 +271,10 @@ class Ticker extends ModuleWidget
         $itemsPerPage = $this->getOption('itemsPerPage', 0);
 
         // Get the text out of RAW
-        $text = $this->getRawNode('template', null);
+        $text = $this->parseLibraryReferences($isPreview, $this->getRawNode('template', null));
 
         // Get the CSS Node
-        $css = $this->getRawNode('css', '');
+        $css = $this->parseLibraryReferences($isPreview, $this->getRawNode('css', ''));
 
         // Handle older layouts that have a direction node but no effect node
         $oldDirection = $this->getOption('direction', 'none');

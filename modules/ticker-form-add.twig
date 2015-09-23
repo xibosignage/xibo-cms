@@ -4,22 +4,6 @@
  * Copyright (C) 2015 Spring Signage Ltd
  * (${FILE_NAME})
  */
-// Augment settings with templates
-        $this->loadTemplates();
-
-        $datasets = $this->getUser()->DataSetList();
-        array_unshift($datasets, array('datasetid' => '0', 'dataset' => 'None'));
-        Theme::Set('dataset_field_list', $datasets);
-
-        $formFields[] = Form::AddCombo(
-            'datasetid',
-            __('DataSet'),
-            NULL,
-            $datasets,
-            'datasetid',
-            'dataset',
-            __('Please select the DataSet to use as a source of data for this ticker.'),
-            'd', 'dataset-fields');
 #}
 
 {% extends "form-base.twig" %}
@@ -33,8 +17,6 @@
     {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Save" %}, $("#tickerAddForm").submit()
 {% endblock %}
-
-{% block callBack %}forecastIoFormSetup{% endblock %}
 
 {% block formFieldActions %}
     [{
@@ -79,7 +61,8 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="tickerAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("module.widget.add", {type: module.widget.type, id: playlist.playlistId}) }}">
+            <form id="tickerAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("module.widget.add", {type: module.widget.type, id: playlist.playlistId}) }}"
+                  data-next-form-url="{{ urlFor("module.widget.edit.form", {type: module.widget.type}) }}">
                 {% set title %}{% trans "Source Type" %}{% endset %}
                 {% set helpText %}{% trans "The source for this Ticker" %}{% endset %}
                 {% set feed %}{% trans "Feed" %}{% endset %}

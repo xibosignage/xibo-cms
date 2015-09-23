@@ -902,10 +902,17 @@ function XiboSubmitResponse(response, form) {
         // Should we refresh the window or refresh the Grids?
         XiboRefreshAllGrids();
 
-        if ((!apply && lastForm != undefined && (lastForm.indexOf("playlist/widget/form") > -1 || lastForm.indexOf("playlist/form/library/assign") > -1)) && timelineForm != null) {
-            // Close button
-            // We might want to go back to the prior form
-            XiboFormRender(timelineForm.url, timelineForm.value);
+        if (!apply) {
+            // Next form URL is provided
+            if ($(form).data().nextFormUrl != undefined) {
+                XiboFormRender($(form).data().nextFormUrl.replace(":id", response.id));
+            }
+            // Back to the timeline form
+            else if ((lastForm != undefined && (lastForm.indexOf("playlist/widget/form") > -1 || lastForm.indexOf("playlist/form/library/assign") > -1)) && timelineForm != null) {
+                // Close button
+                // We might want to go back to the prior form
+                XiboFormRender(timelineForm.url, timelineForm.value);
+            }
         }
     }
     else {
