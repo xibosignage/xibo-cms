@@ -902,7 +902,7 @@ function XiboSubmitResponse(response, form) {
         // Should we refresh the window or refresh the Grids?
         XiboRefreshAllGrids();
 
-        if ((lastForm != undefined && (lastForm.indexOf("playlist/widget/form") > -1 || lastForm.indexOf("playlist/form/library/assign") > -1)) && timelineForm != null) {
+        if ((!apply && lastForm != undefined && (lastForm.indexOf("playlist/widget/form") > -1 || lastForm.indexOf("playlist/form/library/assign") > -1)) && timelineForm != null) {
             // Close button
             // We might want to go back to the prior form
             XiboFormRender(timelineForm.url, timelineForm.value);

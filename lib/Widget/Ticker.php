@@ -662,11 +662,26 @@ class Ticker extends ModuleWidget
 
                     // Check in the columns array to see if this is a special one
                     if ($mappings[$header]['dataTypeId'] == 4) {
+                        // External Image
                         // Download the image, alter the replace to wrap in an image tag
                         $file = MediaFactory::createModuleFile('ticker_dataset_' . md5($dataSetId . $mappings[$header]['dataSetColumnId'] . $replace), str_replace(' ', '%20', htmlspecialchars_decode($replace)));
                         $file->isRemote = true;
                         $file->expires = $expires;
                         $file->save();
+
+                        // Tag this layout with this file
+                        $this->assignMedia($file->mediaId);
+
+                        // We will need to save
+                        $saveRequired = true;
+
+                        $url = $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']);
+                        $replace = ($isPreview) ? '<img src="' . $url . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" />' : '<img src="' . $file->storedAs . '" />';
+
+                    } else if ($mappings[$header]['dataTypeId'] == 5) {
+                        // Library Image
+                        // The content is the ID of the image
+                        $file = MediaFactory::getById($replace);
 
                         // Tag this layout with this file
                         $this->assignMedia($file->mediaId);

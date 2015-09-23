@@ -125,7 +125,7 @@ var datasetview_callback = function(dialog)
     return false; //prevent submit
 };
 
-var DataSetViewSubmit = function() {
+var DataSetViewSubmit = function(apply) {
     var form = $("#dataSetViewEditForm");
 
     $($("#columnsIn").sortable('toArray')).each(function() {
@@ -133,6 +133,9 @@ var DataSetViewSubmit = function() {
     });
 
     // Submit the form
+    if (apply == 1)
+        form.data("apply", true);
+
     form.submit();
 };
 

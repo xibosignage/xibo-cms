@@ -425,7 +425,21 @@ END;
                         $saveRequired = true;
 
                         $url = $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']);
-                        $replace = ($isPreview) ? '<img src="' . $url . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" />' : '<img src="' . $file->storedAs . '" />';
+                        $replace = ($isPreview) ? '<img src="' . $url . '?preview=1" />' : '<img src="' . $file->storedAs . '" />';
+
+                    } else if ($mapping['dataTypeId'] == 5) {
+                        // Library Image
+                        // The content is the ID of the image
+                        $file = MediaFactory::getById($replace);
+
+                        // Tag this layout with this file
+                        $this->assignMedia($file->mediaId);
+
+                        // We will need to save
+                        $saveRequired = true;
+
+                        $url = $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']);
+                        $replace = ($isPreview) ? '<img src="' . $url . '?preview=1" />' : '<img src="' . $file->storedAs . '" />';
                     }
 
                     $table .= '<td class="DataSetColumn" id="column_' . ($i + 1) . '"><span class="DataSetCellSpan" id="span_' . $rowCount . '_' . ($i + 1) . '">' . $replace . '</span></td>';

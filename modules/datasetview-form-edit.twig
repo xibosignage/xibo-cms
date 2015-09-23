@@ -29,8 +29,8 @@
 
 {% block formButtons %}
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Apply" %}, DataSetViewSubmit()
-    {% trans "Save" %}, DataSetViewSubmit()
+    {% trans "Apply" %}, DataSetViewSubmit(1)
+    {% trans "Save" %}, DataSetViewSubmit(0)
 {% endblock %}
 
 {% block callBack %}datasetview_callback{% endblock %}
@@ -101,7 +101,7 @@
                         {{ forms.number("rowsPerPage", title, module.getOption("rowsPerPage"), helpText) }}
 
                         {% set title %}{% trans "Enter a style sheet for the table" %}{% endset %}
-                        {{ forms.textarea("stylesheet", "", module.getRawNode("styleSheet", module.defaultStyleSheet()), title, "", "", 10) }}
+                        {{ forms.textarea("styleSheet", "", module.getRawNode("styleSheet", module.defaultStyleSheet()), title, "", "", 10) }}
                     </div>
                 </div>
             </form>

@@ -337,8 +337,8 @@ class Media implements \JsonSerializable
             if ($parentMedia != null)
                 $widget->assignMedia($parentMedia->mediaId);
 
-            // This action might result in us deleting a widget
-            if (count($widget->mediaIds) <= 0)
+            // This action might result in us deleting a widget (unless we are a temporary file with an expiry date)
+            if ($this->expires == 0 && count($widget->mediaIds) <= 0)
                 $widget->delete();
             else
                 $widget->save(['saveWidgetOptions' => false]);
