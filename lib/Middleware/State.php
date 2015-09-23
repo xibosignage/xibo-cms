@@ -78,6 +78,11 @@ class State extends Middleware
             // Check to see if the instance has been suspended, if so call the special route
             if (Config::GetSetting('INSTANCE_SUSPENDED') == 1)
                 throw new InstanceSuspendedException();
+
+            // Reset the ETAGs for GZIP
+            if ($requestEtag = $app->request->headers->get('IF_NONE_MATCH')) {
+                $app->request->headers->set('IF_NONE_MATCH', str_replace('-gzip', '', $requestEtag));
+            }
         });
 
         // Attach a hook to be called after the route has been dispatched

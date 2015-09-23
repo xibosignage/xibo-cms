@@ -156,7 +156,7 @@
                     <div class="tab-pane active" id="general">
                         {% set title %}{% trans "Feed URL" %}{% endset %}
                         {% set helpText %}{% trans "The Link for the RSS feed" %}{% endset %}
-                        {{ forms.text("uri", title, module.getOption("uri"), helpText, "feed-fields") }}
+                        {{ forms.text("uri", title, module.getOption("uri")|url_decode, helpText, "feed-fields") }}
 
                         {{ fieldName }}
                         {{ fieldDuration }}
