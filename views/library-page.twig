@@ -90,7 +90,7 @@
                 { "data": "name"},
                 { "data": "mediaType"},
                 { "data": "tags", "visible": false},
-                { "data": "thumbnail"},
+                { "name": "mediaId", "data": null, "render": {"_": "thumbnail", "display": "thumbnail", "sort": "mediaId" }},
                 {   "name": "duration",
                     "data": function(data, type) {
                         if (type != "display")
@@ -100,7 +100,7 @@
                     }
                 },
                 { "data": "duration", "visible": false},
-                { "data": "fileSizeFormatted" },
+                { "name": "fileSize", "data": null, "render": {"_": "fileSize", "display": "fileSizeFormatted", "sort": "fileSize" }},
                 { "data": "fileSize", "visible": false},
                 { "data": "owner"},
                 { "data": "groupsWithPermissions"},
