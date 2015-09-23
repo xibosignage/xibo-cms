@@ -904,7 +904,7 @@ function XiboSubmitResponse(response, form) {
 
         if (!apply) {
             // Next form URL is provided
-            if ($(form).data().nextFormUrl != undefined) {
+            if ($(form).data("nextFormUrl") != undefined) {
                 XiboFormRender($(form).data().nextFormUrl.replace(":id", response.id));
             }
             // Back to the timeline form
