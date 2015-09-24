@@ -220,7 +220,7 @@ class Layout implements \JsonSerializable
 
     public function __toString()
     {
-        return sprintf('Layout %s - %d x %d. Regions = %d, Tags = %d. layoutId = %d', $this->layout, $this->width, $this->height, count($this->regions), count($this->tags), $this->layoutId);
+        return sprintf('Layout %s - %d x %d. Regions = %d, Tags = %d. layoutId = %d. Status = %d', $this->layout, $this->width, $this->height, count($this->regions), count($this->tags), $this->layoutId, $this->status);
     }
 
     private function hash()
@@ -510,9 +510,6 @@ class Layout implements \JsonSerializable
     {
         $this->load(['loadPlaylists' => true]);
 
-        // Get an array of modules to use
-        $modules = ModuleFactory::get();
-
         $document = new \DOMDocument();
         $layoutNode = $document->createElement('layout');
         $layoutNode->setAttribute('width', $this->width);
@@ -529,6 +526,9 @@ class Layout implements \JsonSerializable
 
         $document->appendChild($layoutNode);
 
+        // Track module status within the layout
+        $status = 0;
+
         foreach ($this->regions as $region) {
             /* @var Region $region */
             $regionNode = $document->createElement('region');
@@ -544,11 +544,16 @@ class Layout implements \JsonSerializable
                 /* @var Playlist $playlist */
                 foreach ($playlist->widgets as $widget) {
                     /* @var Widget $widget */
+                    $module = ModuleFactory::createWithWidget($widget, $region);
+
+                    // Set the Layout Status
+                    $status = ($module->isValid() > $status) ? $module->isValid() : $status;
+
                     $mediaNode = $document->createElement('media');
                     $mediaNode->setAttribute('id', $widget->widgetId);
                     $mediaNode->setAttribute('duration', $widget->duration);
                     $mediaNode->setAttribute('type', $widget->type);
-                    $mediaNode->setAttribute('render', $modules[$widget->type]->renderAs);
+                    $mediaNode->setAttribute('render', $module->getModule()->renderAs);
 
                     // Create options nodes
                     $optionsNode = $document->createElement('options');
@@ -558,7 +563,7 @@ class Layout implements \JsonSerializable
                     $mediaNode->appendChild($rawNode);
 
                     // Inject the URI
-                    if ($modules[$widget->type]->regionSpecific == 0) {
+                    if ($module->getModule()->regionSpecific == 0) {
                         $media = MediaFactory::getById($widget->mediaIds[0]);
                         $optionNode = $document->createElement('uri', $media->storedAs);
                         $optionsNode->appendChild($optionNode);
@@ -592,6 +597,9 @@ class Layout implements \JsonSerializable
         }
 
         $layoutNode->appendChild($tagsNode);
+
+        // Update the layout status accordingly
+        $this->status = ($status < $this->status) ? $status : $this->status;
 
         return $document->saveXML();
     }
@@ -664,8 +672,14 @@ class Layout implements \JsonSerializable
         $path = $this->getCachePath();
 
         if ($this->status == 3 || !file_exists($path)) {
+
+            Log::debug('XLF needs building for Layout %d', $this->layoutId);
+
+            // Assume error
+            $this->status = 4;
+
+            // Save the resulting XLF
             file_put_contents($path, $this->toXlf());
-            $this->status = 1;
 
             $this->save([
                 'saveRegions' => false,
