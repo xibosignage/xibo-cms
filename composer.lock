@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "f479eddad970bfcd41164436755190bb",
+    "hash": "94a1cc8a2b44081ff5782b5ca3821085",
     "packages": [
         {
             "name": "danielstjules/stringy",
@@ -992,6 +992,42 @@
             "time": "2013-04-30 18:00:34"
         },
         {
+            "name": "james-heinrich/getid3",
+            "version": "v1.9.10",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/JamesHeinrich/getID3.git",
+                "reference": "835a0db62993cb1d85925f9a8aefe13e4ebe2b67"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/JamesHeinrich/getID3/zipball/835a0db62993cb1d85925f9a8aefe13e4ebe2b67",
+                "reference": "835a0db62993cb1d85925f9a8aefe13e4ebe2b67",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.0"
+            },
+            "type": "library",
+            "autoload": {
+                "classmap": [
+                    "getid3/getid3.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL"
+            ],
+            "description": "PHP script that extracts useful information from popular multimedia file formats",
+            "homepage": "http://www.getid3.org/",
+            "keywords": [
+                "codecs",
+                "php",
+                "tags"
+            ],
+            "time": "2015-09-14 05:42:21"
+        },
+        {
             "name": "jenssegers/date",
             "version": "v3.0.9",
             "source": {
@@ -1460,7 +1496,7 @@
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHPMailer/PHPMailer/zipball/d9b8d4a3714e9c303e8935da33401e08a5758889",
+                "url": "https://api.github.com/repos/PHPMailer/PHPMailer/zipball/40a0a1b160d91e9950e75b3e810e8e8124663183",
                 "reference": "d9b8d4a3714e9c303e8935da33401e08a5758889",
                 "shasum": ""
             },

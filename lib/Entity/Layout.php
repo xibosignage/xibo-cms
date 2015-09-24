@@ -177,6 +177,14 @@ class Layout implements \JsonSerializable
      */
     public $displayOrder;
 
+    /**
+     * @var int
+     * @SWG\Property(
+     *  description="A read-only estimate of this Layout's total duration in seconds. This is equal to the longest region duration and is valid when the layout status is 1 or 2."
+     * )
+     */
+    public $duration;
+
     // Child items
     public $regions = [];
     public $tags = [];
@@ -753,6 +761,7 @@ class Layout implements \JsonSerializable
         UPDATE layout
           SET layout = :layout,
               description = :description,
+              duration = :duration,
               modifiedDT = :modifieddt,
               retired = :retired,
               width = :width,
@@ -771,6 +780,7 @@ class Layout implements \JsonSerializable
             'layoutid' => $this->layoutId,
             'layout' => $this->layout,
             'description' => $this->description,
+            'duration' => $this->duration,
             'modifieddt' => $time,
             'retired' => $this->retired,
             'width' => $this->width,

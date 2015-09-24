@@ -37,6 +37,7 @@ use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Date;
 use Xibo\Helper\Log;
+use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
 /**
@@ -394,10 +395,11 @@ class Media implements \JsonSerializable
         $this->saveFile();
 
         // Update the MD5 and storedAs to suit
-        PDOConnect::update('UPDATE `media` SET md5 = :md5, fileSize = :fileSize, storedAs = :storedAs WHERE mediaId = :mediaId', [
+        PDOConnect::update('UPDATE `media` SET md5 = :md5, fileSize = :fileSize, storedAs = :storedAs, duration = :duration WHERE mediaId = :mediaId', [
             'fileSize' => $this->fileSize,
             'md5' => $this->md5,
             'storedAs' => $this->storedAs,
+            'duration' => $this->duration,
             'mediaId' => $this->mediaId
         ]);
     }
@@ -490,6 +492,9 @@ class Media implements \JsonSerializable
         // Work out the MD5
         $this->md5 = md5_file($libraryFolder . $this->storedAs);
         $this->fileSize = filesize($libraryFolder . $this->storedAs);
+
+        // Set the duration
+        $this->duration = $this->determineDuration();
     }
 
     /**
@@ -553,5 +558,38 @@ class Media implements \JsonSerializable
 
         // Change the filename to our temporary file
         $this->fileName = $storedAs;
+    }
+
+    /**
+     * Determine the duration of this media based on its type
+     *  - perhaps we should instantiate a WidgetModule for this?
+     */
+    public function determineDuration()
+    {
+        switch ($this->mediaType) {
+
+            case 'image':
+                $duration = Config::GetSetting('jpg_length');
+                break;
+
+            case 'flash':
+                $duration = Config::GetSetting('swf_length');
+                break;
+
+            case 'powerpoint':
+                $duration = Config::GetSetting('ppt_length');
+                break;
+
+            case 'video':
+                $info = new \getID3();
+                $file = $info->analyze(Config::GetSetting('LIBRARY_LOCATION') . $this->storedAs);
+                $duration = intval(Sanitize::getDouble('playtime_seconds', 0, $file));
+                break;
+
+            default:
+                $duration = 0;
+        }
+
+        return $duration;
     }
 }
