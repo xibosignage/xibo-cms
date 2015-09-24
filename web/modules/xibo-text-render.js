@@ -31,7 +31,8 @@ jQuery.fn.extend({
             "speed": "2",
             "previewWidth": 0,
             "previewHeight": 0,
-            "scaleOverride": 0
+            "scaleOverride": 0,
+            "marqueeInlineSelector": ".item, .item p"
         };
 
         options = $.extend({}, defaults, options);
@@ -167,7 +168,7 @@ jQuery.fn.extend({
                 options.speed = (options.speed == 0) ? 1 : options.speed;
                 
                 // Stack the articles up and move them across the screen
-                $('.item, .item p', this).css({
+                $(options.marqueeInlineSelector, this).css({
                     display: "inline",
                     "padding-left": "10px"
                 });
