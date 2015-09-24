@@ -45,12 +45,16 @@ class Playlist extends Base
     {
         $playlist = new \Xibo\Entity\Playlist();
         $playlist->name = Sanitize::getString('name');
-        $playlist->displayOrder = Sanitize::getInt('displayOrder');
         $playlist->save();
 
         // Assign to a region?
         if (Sanitize::getInt('regionId') !== null) {
             $region = RegionFactory::getById(Sanitize::getInt('regionId'));
+
+            // Assert the provided display order
+            $playlist->displayOrder = Sanitize::getInt('displayOrder');
+
+            // Assign to a region
             $region->assignPlaylist($playlist);
             $region->save();
 
@@ -100,7 +104,6 @@ class Playlist extends Base
             throw new AccessDeniedException();
 
         $playlist->name = Sanitize::getString('name');
-        $playlist->displayOrder = Sanitize::getInt('displayOrder');
         $playlist->save();
 
         // Success
@@ -240,6 +243,11 @@ class Playlist extends Base
         $this->getState()->setData($widgets);
     }
 
+    /**
+     * Form for assigning Library Items to a Playlist
+     * @param int $playlistId
+     * @throws \Xibo\Exception\NotFoundException
+     */
     public function libraryAssignForm($playlistId)
     {
         $playlist = PlaylistFactory::getById($playlistId);

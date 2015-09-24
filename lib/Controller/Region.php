@@ -539,6 +539,77 @@ class Region extends Base
         }
     }
 
+    /**
+     * Order a region and its playlists
+     * *** COMMENTED OUT - NOT SURE HOW TO DOCUMENT ***
+     * @param int $regionId
+     *
+     * SWG\Post(
+     *  path="/region/order/{regionId}",
+     *  operationId="regionOrder",
+     *  tags={"region"},
+     *  summary="Order Playlists",
+     *  description="Set the order of Playlists in a Region",
+     *  SWG\Parameter(
+     *      name="regionId",
+     *      in="path",
+     *      description="The Region ID to Order",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  SWG\Parameter(
+     *      name="playlists",
+     *      in="formData",
+     *      description="Array of playlistIds and positions",
+     *      type="array",
+     *      required=true,
+     *      SWG\Items(
+     *          ref="#/definitions/RegionPlaylistList"
+     *      )
+     *   ),
+     *  SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      SWG\Schema(ref="#/definitions/Region")
+     *  )
+     * )
+     */
+    function order($regionId)
+    {
+        $region = RegionFactory::getById($regionId);
+
+        if (!$this->getUser()->checkEditable($region))
+            throw new AccessDeniedException();
+
+        // Load the playlists
+        $region->load(['loadWidgets' => false]);
+
+        // Get our list of widget orders
+        $playlists = Sanitize::getParam('playlists', null);
+
+        // Go through each one and move it
+        foreach ($playlists as $playlistId => $position) {
+
+            // Find this item in the existing list and add it to our new order
+            foreach ($region->playlists as $playlist) {
+                /* @var \Xibo\Entity\Widget $playlist */
+                if ($playlist->getId() == $playlistId) {
+                    Log::debug('Setting Display Order ' . $position . ' on playlistId ' . $playlistId);
+                    $playlist->displayOrder = $position;
+                    break;
+                }
+            }
+        }
+
+        $region->save();
+
+        // Success
+        $this->getState()->hydrate([
+            'message' => __('Order Changed'),
+            'data' => $region
+        ]);
+    }
+
     private function transitionData()
     {
         return [
