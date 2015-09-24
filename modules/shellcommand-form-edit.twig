@@ -38,7 +38,7 @@
             <form id="shellCommandEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
 
                 {% set title %}{% trans "Name" %}{% endset %}
-                {% set helpText %}{% trans "An optional name for this media" %}{% endset %}
+                {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
                 {{ forms.text("name", title, "", helpText) }}
                 
                 {% set title %}{% trans "Windows Command" %}{% endset %}

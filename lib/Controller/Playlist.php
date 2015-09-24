@@ -300,6 +300,7 @@ class Playlist extends Base
         if (count($media) <= 0)
             throw new \InvalidArgumentException(__('Please provide Media to Assign'));
 
+        $defaultDuration = Config::GetSetting('jpg_length');
         $newWidgets = [];
 
         // Loop through all the media
@@ -310,7 +311,7 @@ class Playlist extends Base
             if (!$this->getUser()->checkViewable($item))
                 throw new AccessDeniedException(__('You do not have permissions to use this media'));
 
-            $widget = WidgetFactory::create($this->getUser()->userId, $playlistId, $item->mediaType, $item->duration);
+            $widget = WidgetFactory::create($this->getUser()->userId, $playlistId, $item->mediaType, (($item->duration) == 0 ? $defaultDuration : $item->duration));
             $widget->assignMedia($item->mediaId);
 
             // Assign the widget to the playlist

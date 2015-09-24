@@ -31,8 +31,21 @@ class Video extends ModuleWidget
     public function edit()
     {
         // Set the properties specific to this module
-        $this->setOption('loop', Sanitize::getCheckbox('loop'));
+        if (Sanitize::getCheckbox('playUntilEnd', 0) == 1)
+            $this->setDuration(0);
+        else
+            $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
+
+        $this->setOption('name', Sanitize::getString('name', $this->getOption('name')));
         $this->setOption('mute', Sanitize::getCheckbox('mute'));
+
+        // Only loop if the duration is > 0
+        if ($this->getDuration() == 0)
+            $this->setOption('loop', 0);
+        else
+            $this->setOption('loop', Sanitize::getCheckbox('loop'));
+
+        $this->saveWidget();
     }
 
     /**

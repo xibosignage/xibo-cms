@@ -328,6 +328,9 @@ abstract class ModuleWidget implements ModuleInterface
      */
     public function getName()
     {
+        if ($this->getOption('name') != '')
+            return $this->getOption('name');
+
         Log::debug('Media assigned: ' . count($this->widget->mediaIds));
 
         if ($this->getModule()->regionSpecific == 0 && count($this->widget->mediaIds) > 0) {
