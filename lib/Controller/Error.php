@@ -10,6 +10,7 @@ namespace Xibo\Controller;
 
 use League\OAuth2\Server\Exception\OAuthException;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\FormExpiredException;
 use Xibo\Exception\InstanceSuspendedException;
 use Xibo\Exception\NotFoundException;
@@ -134,7 +135,7 @@ class Error extends Base
                     $status = $e->httpStatusCode;
 
                     foreach ($e->getHttpHeaders() as $header) {
-                        $app->response()->headers($header);
+                        $app->response()->header($header);
                     }
                 }
                 else if ($e instanceof \InvalidArgumentException) {
@@ -177,6 +178,7 @@ class Error extends Base
             || $e instanceof AccessDeniedException
             || $e instanceof NotFoundException
             || $e instanceof InstanceSuspendedException
+            || $e instanceof ConfigurationException
         );
     }
 }
