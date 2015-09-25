@@ -405,7 +405,7 @@ class Layout implements \JsonSerializable
 
                 // Assert the Layout Id
                 $region->layoutId = $this->layoutId;
-                $region->save();
+                $region->save($options);
             }
         }
 
@@ -548,6 +548,9 @@ class Layout implements \JsonSerializable
 
             $layoutNode->appendChild($regionNode);
 
+            // Region Duration
+            $region->duration = 0;
+
             foreach ($region->playlists as $playlist) {
                 /* @var Playlist $playlist */
                 foreach ($playlist->widgets as $widget) {
@@ -557,6 +560,10 @@ class Layout implements \JsonSerializable
                     // Set the Layout Status
                     $status = ($module->isValid() > $status) ? $module->isValid() : $status;
 
+                    // Set the region duration
+                    $region->duration = $region->duration + $module->getDuration(['real' => true]);
+
+                    // Create media xml node for XLF.
                     $mediaNode = $document->createElement('media');
                     $mediaNode->setAttribute('id', $widget->widgetId);
                     $mediaNode->setAttribute('duration', $widget->duration);
@@ -594,6 +601,13 @@ class Layout implements \JsonSerializable
                     $regionNode->appendChild($mediaNode);
                 }
             }
+
+            // Track the max duration within the layout
+            // Test this duration against the layout duration
+            if ($this->duration < $region->duration)
+                $this->duration = $region->duration;
+
+            // End of region loop.
         }
 
         $tagsNode = $document->createElement('tags');
@@ -606,7 +620,7 @@ class Layout implements \JsonSerializable
 
         $layoutNode->appendChild($tagsNode);
 
-        // Update the layout status accordingly
+        // Update the layout status / duration accordingly
         $this->status = ($status < $this->status) ? $status : $this->status;
 
         return $document->saveXML();
@@ -690,7 +704,9 @@ class Layout implements \JsonSerializable
             file_put_contents($path, $this->toXlf());
 
             $this->save([
-                'saveRegions' => false,
+                'saveRegions' => true,
+                'saveRegionOptions' => false,
+                'manageRegionAssignments' => false,
                 'saveTags' => false,
                 'setBuildRequired' => false
             ]);

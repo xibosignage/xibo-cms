@@ -282,10 +282,26 @@ abstract class ModuleWidget implements ModuleInterface
 
     /**
      * Get the duration
+     * @param array $options
      * @return int
      */
-    final public function getDuration()
+    final public function getDuration($options = [])
     {
+        $options = array_merge([
+            'real' => false
+        ], $options);
+
+        if ($options['real'] && $this->widget->duration === 0) {
+            try {
+                // Get the duration from the parent media record.
+                return $this->getMedia()->duration;
+            }
+            catch (NotFoundException $e) {
+                Log::debug('Tried to get real duration from a widget without media. widgetId: %d', $this->getWidgetId());
+                // Do nothing - drop out
+            }
+        }
+
         return $this->widget->duration;
     }
 

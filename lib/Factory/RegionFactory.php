@@ -141,7 +141,8 @@ class RegionFactory extends BaseFactory
               `region`.height,
               `region`.top,
               `region`.left,
-              `region`.zIndex
+              `region`.zIndex,
+              `region`.duration
         ';
 
         if (Sanitize::getInt('playlistId', $filterBy) !== null) {

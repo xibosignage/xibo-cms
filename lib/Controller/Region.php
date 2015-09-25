@@ -527,8 +527,9 @@ class Region extends Base
             $this->getState()->extra['type'] = $widget->type;
             $this->getState()->extra['duration'] = $widget->duration;
             $this->getState()->extra['number_items'] = count($playlist->widgets);
-            $this->getState()->extra['text'] = $seqGiven . ' / ' . count($playlist->widgets) . ' ' . $module->getName() . ' lasting ' . $widget->duration . ' seconds';
             $this->getState()->extra['current_item'] = $seqGiven;
+            $this->getState()->extra['moduleName'] = $module->getName();
+            $this->getState()->extra['regionDuration'] = $region->duration;
 
         } catch (NotFoundException $e) {
             // Log it
