@@ -26,12 +26,6 @@
       "homepage": "https://github.com/xibosignage/xibo/tree/master/contributors"
     }
   ],
-  "repositories": [
-    {
-      "type": "vcs",
-      "url": "https://github.com/dasgarner/simplepie"
-    }
-  ],
   "require": {
     "php": ">=5.5",
     "slim/slim": "~2.6",
@@ -39,7 +33,6 @@
     "league/oauth2-server": "~4.1",
     "flynsarmy/slim-monolog": "~1.0",
     "ezyang/htmlpurifier": "dev-master",
-    "simplepie/simplepie": "dev-master",
     "sallar/jdatetime": "dev-master",
     "gettext/gettext": "~3.3",
     "slim/views": "0.1.*",
@@ -52,7 +45,8 @@
     "phpmailer/phpmailer": "dev-master",
     "guzzlehttp/guzzle": "~6.0",
     "league/oauth2-client": "~1.0",
-    "james-heinrich/getid3": "^1.9"
+    "james-heinrich/getid3": "^1.9",
+    "fguillot/picofeed": "@stable"
   },
   "require-dev": {
     "phpunit/phpunit": "~4.0",

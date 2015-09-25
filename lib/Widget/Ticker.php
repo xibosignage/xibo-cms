@@ -20,6 +20,9 @@
  */
 namespace Xibo\Widget;
 
+use PicoFeed\Parser\Item;
+use PicoFeed\PicoFeedException;
+use PicoFeed\Reader\Reader;
 use Respect\Validation\Validator as v;
 use Xibo\Controller\Library;
 use Xibo\Entity\DataSetColumn;
@@ -27,6 +30,7 @@ use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\MediaFactory;
+use Xibo\Helper\Cache;
 use Xibo\Helper\Config;
 use Xibo\Helper\Date;
 use Xibo\Helper\Log;
@@ -395,175 +399,221 @@ class Ticker extends ModuleWidget
         // Make sure we have the cache location configured
         Library::ensureLibraryExists();
 
-        // Parse the text template
-        $matches = '';
-        preg_match_all('/\[.*?\]/', $text, $matches);
+        // Create a key to use as a caching key for this item.
+        // the rendered feed will be cached, so it is important the key covers all options.
+        $key = md5(json_encode($this->widget->widgetOptions));
+        $feedUrl = urldecode($this->getOption('uri'));
 
-        Log::debug('Loading SimplePie to handle RSS parsing.' . urldecode($this->getOption('uri')) . '. Will substitute items with ' . $text);
+        Log::debug('Ticker with RSS source %s. Cache key: %s.', $feedUrl, $key);
 
-        $feed = new \SimplePie();
-        $feed->set_cache_location(Library::getLibraryCacheUri());
-        $feed->set_feed_url(urldecode($this->getOption('uri')));
-        $feed->force_feed(true);
-        $feed->set_cache_duration(($this->getOption('updateInterval', 3600) * 60));
-        $feed->handle_content_type();
-
-        // Get a list of allowed attributes
-        if ($this->getOption('allowedAttributes') != '') {
-            $attrsStrip = array_diff($feed->strip_attributes, explode(',', $this->getOption('allowedAttributes')));
-            //Debug::Audit(var_export($attrsStrip, true));
-            $feed->strip_attributes($attrsStrip);
+        // Check our cache to see if the key exists
+        if (Cache::has($key)) {
+            // Our local cache is valid
+            return Cache::get($key);
         }
 
-        // Disable date sorting?
-        if ($this->getOption('disableDateSort') == 1) {
-            $feed->enable_order_by_date(false);
+        // Our local cache is not valid
+        // Get from source
+        $clientOptions = null;
+        if (Config::GetSetting('PROXY_HOST') != '' && !Config::isProxyException($feedUrl)) {
+            $clientOptions = new \PicoFeed\Config\Config();
+            $clientOptions->setProxyHostname(Config::GetSetting('PROXY_HOST'));
+            $clientOptions->setProxyPort(Config::GetSetting('PROXY_PORT'));
+
+            $proxyAuth = Config::GetSetting('PROXY_AUTH');
+            if ($proxyAuth != '') {
+                $proxyAuth = explode(':', $proxyAuth);
+                $clientOptions->setProxyUsername($proxyAuth[0]);
+                $clientOptions->setProxyPassword($proxyAuth[1]);
+            }
         }
-
-        // Init
-        $feed->init();
-
-        // Date format for the feed items
-        $dateFormat = $this->getOption('dateFormat', Config::GetSetting('DATE_FORMAT'));
-
-        if ($feed->error()) {
-            Log::notice('Feed Error: ' . $feed->error());
-            return array();
-        }
-
-        // Set an expiry time for the media
-        $expires = time() + ($this->getOption('updateInterval', 3600) * 60);
 
         // Store our formatted items
-        $items = array();
+        $items = [];
 
-        foreach ($feed->get_items() as $item) {
-            /* @var \SimplePie_Item $item */
+        try {
+            $reader = new Reader($clientOptions);
+            $resource = $reader->download($feedUrl);
 
-            // Substitute for all matches in the template
-            $rowString = $text;
+            // Get the feed parser
+            $parser = $reader->getParser($resource->getUrl(), $resource->getContent(), $resource->getEncoding());
 
-            // Substitute
-            foreach ($matches[0] as $sub) {
-                $replace = '';
+            // Get a feed object
+            $feed = $parser->execute();
 
-                // Pick the appropriate column out
-                if (strstr($sub, '|') !== false) {
-                    // Use the provided name space to extract a tag
-                    $attributes = NULL;
-                    if (substr_count($sub, '|') > 1)
-                        list($tag, $namespace, $attributes) = explode('|', $sub);
-                    else
-                        list($tag, $namespace) = explode('|', $sub);
+            // Parse the text template
+            $matches = '';
+            preg_match_all('/\[.*?\]/', $text, $matches);
 
-                    // What are we looking at
-                    Log::debug('Namespace: ' . str_replace(']', '', $namespace) . '. Tag: ' . str_replace('[', '', $tag) . '. ');
-
-                    // Are we an image place holder?
-                    if (strstr($namespace, 'image') != false) {
-                        // Try to get a link for the image
-                        $link = null;
-
-                        switch (str_replace('[', '', $tag)) {
-                            case 'Link':
-                                if ($enclosure = $item->get_enclosure()) {
-                                    // Use the link to get the image
-                                    $link = $enclosure->get_link();
-                                }
-                                break;
-
-                            default:
-                                // Default behaviour just tries to get the content from the tag provided (without a name space).
-                                $tags = $item->get_item_tags('', str_replace('[', '', $tag));
-
-                                if ($tags != null) {
-                                    $link = (is_array($tags)) ? $tags[0]['data'] : '';
-                                }
-                        }
-
-                        // If we have managed to resolve a link, download it and replace the tag with the downloaded
-                        // image url
-                        if ($link != NULL) {
-                            // Grab the profile image
-                            $file = MediaFactory::createModuleFile('ticker_' . md5($this->getOption('url') . $link), $link);
-                            $file->isRemote = true;
-                            $file->expires = $expires;
-                            $file->save();
-
-                            // Tag this layout with this file
-                            $this->assignMedia($file->mediaId);
-
-                            $url = $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']);
-                            $replace = ($isPreview) ? '<img src="' . $url . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" ' . $attributes . '/>' : '<img src="' . $file->storedAs . '" ' . $attributes . ' />';
-                        }
-                    } else {
-                        $tags = $item->get_item_tags(str_replace(']', '', $namespace), str_replace('[', '', $tag));
-
-                        Log::notice('Tags:' . var_export($tags, true));
-
-                        // If we find some tags then do the business with them
-                        if ($tags != NULL) {
-                            if ($attributes != NULL)
-                                $replace = (is_array($tags)) ? $tags[0]['attribs'][''][str_replace(']', '', $attributes)] : '';
-                            else
-                                $replace = (is_array($tags)) ? $tags[0]['data'] : '';
-                        }
-                    }
-                } else {
-
-                    // Use the pool of standard tags
-                    switch ($sub) {
-                        case '[Name]':
-                            $replace = $this->getOption('name');
-                            break;
-
-                        case '[Title]':
-                            $replace = $item->get_title();
-                            break;
-
-                        case '[Description]':
-                            $replace = $item->get_description();
-                            break;
-
-                        case '[Content]':
-                            $replace = $item->get_content();
-                            break;
-
-                        case '[Copyright]':
-                            $replace = $item->get_copyright();
-                            break;
-
-                        case '[Date]':
-                            $replace = Date::getLocalDate($item->get_date('U'), $dateFormat);
-                            break;
-
-                        case '[PermaLink]':
-                            $replace = $item->get_permalink();
-                            break;
-
-                        case '[Link]':
-                            $replace = $item->get_link();
-                            break;
-                    }
-                }
-
-                if ($this->getOption('stripTags') != '') {
-                    $config = \HTMLPurifier_Config::createDefault();
-                    $config->set('HTML.ForbiddenElements', array_merge($feed->strip_htmltags, explode(',', $this->getOption('stripTags'))));
-                    $purifier = new \HTMLPurifier($config);
-                    $replace = $purifier->purify($replace);
-                }
-
-                // Substitute the replacement we have found (it might be '')
-                $rowString = str_replace($sub, $replace, $rowString);
+            // Get a list of allowed attributes
+            /*if ($this->getOption('allowedAttributes') != '') {
+                $attrsStrip = array_diff($feed->strip_attributes, explode(',', $this->getOption('allowedAttributes')));
+                //Debug::Audit(var_export($attrsStrip, true));
+                $feed->strip_attributes($attrsStrip);
             }
 
-            $items[] = $rowString;
-        }
+            // Disable date sorting?
+            if ($this->getOption('disableDateSort') == 1) {
+                $feed->enable_order_by_date(false);
+            }*/
 
-        // Copyright information?
-        if ($this->getOption('copyright', '') != '') {
-            $items[] = '<span id="copyright">' . $this->getOption('copyright') . '</span>';
+            // Date format for the feed items
+            $dateFormat = $this->getOption('dateFormat', Config::GetSetting('DATE_FORMAT'));
+
+            // Set an expiry time for the media
+            $expires = time() + ($this->getOption('updateInterval', 3600) * 60);
+
+            // Render the content now
+            foreach ($feed->getItems() as $item) {
+                /* @var Item $item */
+
+                // Substitute for all matches in the template
+                $rowString = $text;
+
+                // Run through all [] substitutes in $matches
+                foreach ($matches[0] as $sub) {
+                    $replace = '';
+
+                    // Does our [] have a | - if so we need to do some special parsing
+                    if (strstr($sub, '|') !== false) {
+                        // Use the provided name space to extract a tag
+                        $attribute = NULL;
+                        // Do we have more than 1 | - if we do then we are also interested in getting an attribute
+                        if (substr_count($sub, '|') > 1)
+                            list($tag, $namespace, $attribute) = explode('|', $sub);
+                        else
+                            list($tag, $namespace) = explode('|', $sub);
+
+                        // Replace some things so that we know what we are looking at
+                        $tag = str_replace('[', '', $tag);
+                        $namespace = str_replace(']', '', $namespace);
+
+                        // What are we looking at
+                        Log::debug('Namespace: %s, Tag: %s, Attribute: %s', $namespace, $tag, $attribute);
+                        Log::debug('Item content: %s', var_export($item, true));
+
+                        // Are we an image place holder? [tag|image]
+                        if ($namespace == 'image') {
+                            // Try to get a link for the image
+                            $link = null;
+
+                            switch ($tag) {
+                                case 'Link':
+                                    if ($item->getEnclosureType() == 'image') {
+                                        // Use the link to get the image
+                                        $link = $item->getEnclosureUrl();
+                                    }
+                                    break;
+
+                                default:
+                                    // Default behaviour just tries to get the content from the tag provided.
+                                    // it uses the attribute as a namespace if one has been provided
+                                    if ($attribute != null) {
+                                        // Use a namespace
+                                        if (array_key_exists($attribute, $item->namespaces)) {
+                                            $tags = $item->getTag($tag);
+                                            $link = $tags[0];
+                                        } else {
+                                            Log::info('Looking for image with namespace %s, but that namespace does not exist.', $attribute);
+                                        }
+                                    } else {
+                                        $tags = $item->getTag($tag);
+                                        $link = $tags[0];
+                                    }
+                            }
+
+                            // If we have managed to resolve a link, download it and replace the tag with the downloaded
+                            // image url
+                            if ($link != NULL) {
+                                // Grab the profile image
+                                $file = MediaFactory::createModuleFile('ticker_' . md5($this->getOption('url') . $link), $link);
+                                $file->isRemote = true;
+                                $file->expires = $expires;
+                                $file->save();
+
+                                // Tag this layout with this file
+                                $this->assignMedia($file->mediaId);
+
+                                $url = $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']);
+                                $replace = ($isPreview) ? '<img src="' . $url . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" ' . $attribute . '/>' : '<img src="' . $file->storedAs . '" ' . $attribute . ' />';
+                            }
+                        } else {
+                            // Our namespace is not "image". Which means we are a normal text substitution using a namespace/attribute
+                            if ($attribute != null)
+                                $tags = $item->getTag($tag, $attribute);
+                            else
+                                $tags = $item->getTag($tag);
+
+                            Log::debug('Tags:' . var_export($tags, true));
+
+                            // If we find some tags then do the business with them
+                            if ($tags != NULL) {
+                                $replace = $tags[0];
+                            }
+                        }
+                    } else {
+
+                        // Use the pool of standard tags
+                        switch ($sub) {
+                            case '[Name]':
+                                $replace = $this->getOption('name');
+                                break;
+
+                            case '[Title]':
+                                $replace = $item->getTitle();
+                                break;
+
+                            case '[Description]':
+                                $replace = $item->getContent();
+                                break;
+
+                            case '[Content]':
+                                $replace = $item->getContent();
+                                break;
+
+                            case '[Copyright]':
+                                $replace = $item->getAuthor();
+                                break;
+
+                            case '[Date]':
+                                $replace = Date::getLocalDate($item->getDate()->format('U'), $dateFormat);
+                                break;
+
+                            case '[PermaLink]':
+                                $replace = $item->getTag('permalink');
+                                break;
+
+                            case '[Link]':
+                                $replace = $item->getUrl();
+                                break;
+                        }
+                    }
+
+                    if ($this->getOption('stripTags') != '') {
+                        $config = \HTMLPurifier_Config::createDefault();
+                        $config->set('HTML.ForbiddenElements', array_merge(array('bgsound', 'class', 'expr', 'id', 'style', 'onclick', 'onerror', 'onfinish', 'onmouseover', 'onmouseout', 'onfocus', 'onblur', 'lowsrc', 'dynsrc'), explode(',', $this->getOption('stripTags'))));
+                        $purifier = new \HTMLPurifier($config);
+                        $replace = $purifier->purify($replace);
+                    }
+
+                    // Substitute the replacement we have found (it might be '')
+                    $rowString = str_replace($sub, $replace, $rowString);
+                }
+
+                $items[] = $rowString;
+            }
+
+            // Copyright information?
+            if ($this->getOption('copyright', '') != '') {
+                $items[] = '<span id="copyright">' . $this->getOption('copyright') . '</span>';
+            }
+
+            // Add this to the cache.
+            Cache::put($key, $items, $this->getOption('updateInterval', 360) * 60);
+        }
+        catch (PicoFeedException $e) {
+            Log::error('Unable to get feed: %s', $e->getMessage());
+            Log::debug($e->getTraceAsString());
         }
 
         // Return the formatted items
