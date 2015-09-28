@@ -20,6 +20,7 @@
  */
 namespace Xibo\Widget;
 
+use PicoFeed\Logging\Logger;
 use PicoFeed\Parser\Item;
 use PicoFeed\PicoFeedException;
 use PicoFeed\Reader\Reader;
@@ -182,7 +183,6 @@ class Ticker extends ModuleWidget
      */
     public function edit()
     {
-        Log::error('Num Items ' . Sanitize::getInt('numItems'));
         // Source is selected during add() and cannot be edited.
         // Other properties
         $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
@@ -413,26 +413,25 @@ class Ticker extends ModuleWidget
         }
 
         // Our local cache is not valid
-        // Get from source
-        $clientOptions = null;
-        if (Config::GetSetting('PROXY_HOST') != '' && !Config::isProxyException($feedUrl)) {
-            $clientOptions = new \PicoFeed\Config\Config();
-            $clientOptions->setProxyHostname(Config::GetSetting('PROXY_HOST'));
-            $clientOptions->setProxyPort(Config::GetSetting('PROXY_PORT'));
-
-            $proxyAuth = Config::GetSetting('PROXY_AUTH');
-            if ($proxyAuth != '') {
-                $proxyAuth = explode(':', $proxyAuth);
-                $clientOptions->setProxyUsername($proxyAuth[0]);
-                $clientOptions->setProxyPassword($proxyAuth[1]);
-            }
-        }
-
         // Store our formatted items
         $items = [];
 
         try {
-            $reader = new Reader($clientOptions);
+            $clientConfig = Config::getPicoFeedProxy($feedUrl);
+
+            // Allowable attributes
+            if ($this->getOption('allowedAttributes') != null) {
+                // need a sensible way to set this
+                // https://github.com/fguillot/picoFeed/issues/196
+                //$clientConfig->setFilterWhitelistedTags(explode(',', $this->getOption('allowedAttributes')));
+            }
+
+            // Enable logging if we need to
+            if (\Xibo\Helper\Log::resolveLogLevel(Config::GetSetting('audit', 'error')) == \Slim\Log::DEBUG) {
+                Logger::enable();
+            }
+
+            $reader = new Reader($clientConfig);
             $resource = $reader->download($feedUrl);
 
             // Get the feed parser
@@ -445,17 +444,19 @@ class Ticker extends ModuleWidget
             $matches = '';
             preg_match_all('/\[.*?\]/', $text, $matches);
 
-            // Get a list of allowed attributes
-            /*if ($this->getOption('allowedAttributes') != '') {
-                $attrsStrip = array_diff($feed->strip_attributes, explode(',', $this->getOption('allowedAttributes')));
-                //Debug::Audit(var_export($attrsStrip, true));
-                $feed->strip_attributes($attrsStrip);
-            }
+            // Get all items
+            $feedItems = $feed->getItems();
 
             // Disable date sorting?
-            if ($this->getOption('disableDateSort') == 1) {
-                $feed->enable_order_by_date(false);
-            }*/
+            if ($this->getOption('disableDateSort') == 0) {
+                // Sort the items array by date
+                usort($feedItems, function($a, $b) {
+                    /* @var Item $a */
+                    /* @var Item $b */
+
+                    return ($a->getDate() < $b->getDate());
+                });
+            }
 
             // Date format for the feed items
             $dateFormat = $this->getOption('dateFormat', Config::GetSetting('DATE_FORMAT'));
@@ -464,7 +465,7 @@ class Ticker extends ModuleWidget
             $expires = time() + ($this->getOption('updateInterval', 3600) * 60);
 
             // Render the content now
-            foreach ($feed->getItems() as $item) {
+            foreach ($feedItems as $item) {
                 /* @var Item $item */
 
                 // Substitute for all matches in the template
@@ -591,7 +592,7 @@ class Ticker extends ModuleWidget
 
                     if ($this->getOption('stripTags') != '') {
                         $config = \HTMLPurifier_Config::createDefault();
-                        $config->set('HTML.ForbiddenElements', array_merge(array('bgsound', 'class', 'expr', 'id', 'style', 'onclick', 'onerror', 'onfinish', 'onmouseover', 'onmouseout', 'onfocus', 'onblur', 'lowsrc', 'dynsrc'), explode(',', $this->getOption('stripTags'))));
+                        $config->set('HTML.ForbiddenElements', explode(',', $this->getOption('stripTags')));
                         $purifier = new \HTMLPurifier($config);
                         $replace = $purifier->purify($replace);
                     }
@@ -614,6 +615,10 @@ class Ticker extends ModuleWidget
         catch (PicoFeedException $e) {
             Log::error('Unable to get feed: %s', $e->getMessage());
             Log::debug($e->getTraceAsString());
+        }
+
+        if (\Xibo\Helper\Log::resolveLogLevel(Config::GetSetting('audit', 'error')) == \Slim\Log::DEBUG) {
+            Log::debug(json_encode(Logger::getMessages()));
         }
 
         // Return the formatted items

@@ -550,7 +550,7 @@ class Media implements \JsonSerializable
 
         try {
             $client = new Client();
-            $client->get($this->fileName, Config::getProxy(['save_to' => $fileHandle]));
+            $client->get($this->fileName, Config::getGuzzelProxy(['save_to' => $fileHandle]));
         }
         catch (RequestException $e) {
             Log::error('Unable to get %s, %s', $this->fileName, $e->getMessage());
