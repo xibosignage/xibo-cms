@@ -202,7 +202,7 @@ class Config
      * @param array $httpOptions
      * @return array
      */
-    public static function getProxy($httpOptions = [])
+    public static function getGuzzelProxy($httpOptions = [])
     {
         // Proxy support
         if (Config::GetSetting('PROXY_HOST') != '') {
@@ -228,6 +228,31 @@ class Config
         }
 
         return $httpOptions;
+    }
+
+    /**
+     * Get PicoFeed Proxy
+     * @param string $feedUrl
+     * @return null|\PicoFeed\Config\Config
+     */
+    public static function getPicoFeedProxy($feedUrl)
+    {
+        $clientOptions = null;
+
+        if (Config::GetSetting('PROXY_HOST') != '' && !Config::isProxyException($feedUrl)) {
+            $clientOptions = new \PicoFeed\Config\Config();
+            $clientOptions->setProxyHostname(Config::GetSetting('PROXY_HOST'));
+            $clientOptions->setProxyPort(Config::GetSetting('PROXY_PORT'));
+
+            $proxyAuth = Config::GetSetting('PROXY_AUTH');
+            if ($proxyAuth != '') {
+                $proxyAuth = explode(':', $proxyAuth);
+                $clientOptions->setProxyUsername($proxyAuth[0]);
+                $clientOptions->setProxyPassword($proxyAuth[1]);
+            }
+        }
+
+        return $clientOptions;
     }
 
     /**

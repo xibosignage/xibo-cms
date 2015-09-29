@@ -261,7 +261,7 @@ class Finance extends ModuleWidget
         $client = new Client();
 
         try {
-            $response = $client->get($url, Config::getProxy());
+            $response = $client->get($url, Config::getGuzzelProxy());
 
             if ($response->getStatusCode() == 200) {
                 return json_decode($response->getBody(), true)['query']['results'];

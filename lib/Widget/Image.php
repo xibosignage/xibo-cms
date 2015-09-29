@@ -21,6 +21,7 @@
 namespace Xibo\Widget;
 
 use Intervention\Image\ImageManagerStatic as Img;
+use Respect\Validation\Validator as v;
 use Xibo\Factory\MediaFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Log;
@@ -28,6 +29,16 @@ use Xibo\Helper\Sanitize;
 
 class Image extends ModuleWidget
 {
+    /**
+     * Validate
+     */
+    public function validate()
+    {
+        // Validate
+        if (!v::int()->min(1)->validate($this->getDuration()))
+            throw new \InvalidArgumentException(__('You must enter a duration.'));
+    }
+
     /**
      * Edit Media
      */
@@ -40,6 +51,7 @@ class Image extends ModuleWidget
         $this->setOption('align', Sanitize::getString('alignId', 'center'));
         $this->setOption('valign', Sanitize::getString('valignId', 'middle'));
 
+        $this->validate();
         $this->saveWidget();
     }
 

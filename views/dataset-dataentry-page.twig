@@ -99,5 +99,9 @@
             var editUrl = "{{ urlFor("dataSet.data.edit.form", {"id": dataSet.dataSetId}) }}".replace(":rowId", data.id);
             XiboFormRender(editUrl);
         });
+
+        function dataSetDataEntryOpen(dialog) {
+            $(dialog).find("select").selectpicker();
+        }
     </script>
 {% endblock %}

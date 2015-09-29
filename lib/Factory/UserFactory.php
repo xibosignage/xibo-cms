@@ -163,6 +163,11 @@ class UserFactory extends BaseFactory
             }
         }
 
+        if (Sanitize::getInt('notUserId', $filterBy) !== null) {
+            $body .= ' AND user.userId <> :notUserId ';
+            $params['notUserId'] = Sanitize::getInt('notUserId', $filterBy);
+        }
+
         // User Id Provided?
         if (Sanitize::getInt('userId', $filterBy) !== null) {
             $body .= " AND user.userId = :userId ";

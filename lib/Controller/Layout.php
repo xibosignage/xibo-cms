@@ -860,6 +860,7 @@ class Layout extends Base
     {
         // Get the layout
         $layout = LayoutFactory::getById($layoutId);
+        $layout->xlfToDisk();
 
         switch ($layout->status) {
 

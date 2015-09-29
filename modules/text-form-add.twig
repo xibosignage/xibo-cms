@@ -82,7 +82,7 @@
 
                     <div class="tab-pane" id="options">
                         {% set title %}{% trans "Name" %}{% endset %}
-                        {% set helpText %}{% trans "An optional name for this media" %}{% endset %}
+                        {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
                         {{ forms.text("name", title, "", helpText) }}
 
                         {% set title %}{% trans "Effect" %}{% endset %}
@@ -123,13 +123,19 @@
                         {% set helpText %}{% trans "The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1)." %}{% endset %}
                         {{ forms.number("speed", title, "", helpText, "effect-controls") }}
 
-                        {% set title %}{% trans "Background Colour" %}{% endset %}
-                        {% set helpText %}{% trans "The selected effect works best with a background colour. Optionally add one here." %}{% endset %}
-                        {{ forms.text("backgroundColor", title, "", helpText, "effect-controls") }}
-
                         {% set title %}{% trans "Duration" %}{% endset %}
                         {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
                         {{ forms.number("duration", title, "", helpText, "", "required") }}
+                    </div>
+
+                    <div class="tab-pane" id="advanced">
+                        {% set title %}{% trans "Background Colour" %}{% endset %}
+                        {% set helpText %}{% trans "The selected effect works best with a background colour. Optionally add one here." %}{% endset %}
+                        {{ forms.text("backgroundColor", title, module.getOption("backgroundColor"), helpText, "effect-controls") }}
+
+                        {% set title %}{% trans "Marquee Selector" %}{% endset %}
+                        {% set helpText %}{% trans "The selector to use for stacking marquee items in a line when scrolling Left/Right." %}{% endset %}
+                        {{ forms.text("marqueeInlineSelector", title, "", helpText, "effect-controls") }}
                     </div>
                 </div>
             </form>

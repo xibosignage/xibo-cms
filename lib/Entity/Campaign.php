@@ -97,6 +97,15 @@ class Campaign implements \JsonSerializable
         return $this->ownerId;
     }
 
+    /**
+     * Sets the Owner
+     * @param int $ownerId
+     */
+    public function setOwner($ownerId)
+    {
+        $this->ownerId = $ownerId;
+    }
+
     public function load()
     {
         // If we are already loaded, then don't do it again
@@ -214,9 +223,10 @@ class Campaign implements \JsonSerializable
 
     private function update()
     {
-        PDOConnect::update('UPDATE `campaign` SET campaign = :campaign WHERE CampaignID = :campaignId', [
+        PDOConnect::update('UPDATE `campaign` SET campaign = :campaign, userId = :userId WHERE CampaignID = :campaignId', [
             'campaignId' => $this->campaignId,
-            'campaign' => $this->campaign
+            'campaign' => $this->campaign,
+            'userId' => $this->ownerId
         ]);
     }
 

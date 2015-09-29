@@ -64,6 +64,7 @@
             <ul class="nav nav-tabs" role="tablist">
                 <li class="active"><a href="#general" role="tab" data-toggle="tab" data-enlarge="1"><span>{% trans "General" %}</span></a></li>
                 <li><a href="#options" role="tab" data-toggle="tab"><span>{% trans "Options" %}</span></a></li>
+                <li><a href="#advanced" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
             </ul>
             <form id="textEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
                 <div class="tab-content">
@@ -84,7 +85,7 @@
 
                     <div class="tab-pane" id="options">
                         {% set title %}{% trans "Name" %}{% endset %}
-                        {% set helpText %}{% trans "An optional name for this media" %}{% endset %}
+                        {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
                         {{ forms.text("name", title, module.getOption("name"), helpText) }}
 
                         {% set title %}{% trans "Effect" %}{% endset %}
@@ -125,13 +126,19 @@
                         {% set helpText %}{% trans "The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1)." %}{% endset %}
                         {{ forms.number("speed", title, module.getOption("speed"), helpText, "effect-controls") }}
 
+                        {% set title %}{% trans "Duration" %}{% endset %}
+                        {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
+                        {{ forms.number("duration", title, module.getDuration(), helpText, "", "required") }}
+                    </div>
+
+                    <div class="tab-pane" id="advanced">
                         {% set title %}{% trans "Background Colour" %}{% endset %}
                         {% set helpText %}{% trans "The selected effect works best with a background colour. Optionally add one here." %}{% endset %}
                         {{ forms.text("backgroundColor", title, module.getOption("backgroundColor"), helpText, "effect-controls") }}
 
-                        {% set title %}{% trans "Duration" %}{% endset %}
-                        {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
-                        {{ forms.number("duration", title, module.getDuration(), helpText, "", "required") }}
+                        {% set title %}{% trans "Marquee Selector" %}{% endset %}
+                        {% set helpText %}{% trans "The selector to use for stacking marquee items in a line when scrolling Left/Right." %}{% endset %}
+                        {{ forms.text("marqueeInlineSelector", title, module.getOption("marqueeInlineSelector"), helpText, "effect-controls") }}
                     </div>
                 </div>
             </form>

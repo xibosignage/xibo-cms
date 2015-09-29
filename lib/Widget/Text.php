@@ -59,6 +59,7 @@ class Text extends ModuleWidget
         $this->setOption('speed', Sanitize::getInt('speed'));
         $this->setOption('backgroundColor', Sanitize::getString('backgroundColor'));
         $this->setOption('name', Sanitize::getString('name'));
+        $this->setOption('marqueeInlineSelector', Sanitize::getString('marqueeInlineSelector'));
         $this->setRawNode('text', Sanitize::getParam('ta_text', null));
 
         // Save the widget
@@ -77,6 +78,7 @@ class Text extends ModuleWidget
         $this->setOption('speed', Sanitize::getInt('speed'));
         $this->setOption('backgroundColor', Sanitize::getString('backgroundColor'));
         $this->setOption('name', Sanitize::getString('name'));
+        $this->setOption('marqueeInlineSelector', Sanitize::getString('marqueeInlineSelector'));
         $this->setRawNode('text', Sanitize::getParam('ta_text', null));
 
         // Save the widget
@@ -94,12 +96,15 @@ class Text extends ModuleWidget
         $data = [];
         $isPreview = (Sanitize::getCheckbox('preview') == 1);
 
+        // Clear all linked media.
+        $this->clearMedia();
+
         // Replace the View Port Width?
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
 
         $duration = $this->getDuration();
 
-        $text = $this->getRawNode('text', null);
+        $text = $this->parseLibraryReferences($isPreview, $this->getRawNode('text', null));
 
         // Handle older layouts that have a direction node but no effect node
         $oldDirection = $this->GetOption('direction', 'none');
@@ -123,7 +128,8 @@ class Text extends ModuleWidget
             'originalHeight' => $this->region->height,
             'previewWidth' => Sanitize::getDouble('width', 0),
             'previewHeight' => Sanitize::getDouble('height', 0),
-            'scaleOverride' => Sanitize::getDouble('scale_override', 0)
+            'scaleOverride' => Sanitize::getDouble('scale_override', 0),
+            'marqueeInlineSelector' => $this->GetOption('marqueeInlineSelector', '.item, .item p')
         );
 
         // See if we need to replace out any [clock] or [date] tags
@@ -206,6 +212,10 @@ class Text extends ModuleWidget
         $headContent .= '<style type="text/css">' . file_get_contents(Theme::uri('css/client.css', true)) . '</style>';
 
         $data['head'] = $headContent;
+
+        // Update and save widget if we've changed our assignments.
+        if ($this->hasMediaChanged())
+            $this->widget->save(['saveWidgetOptions' => false]);
 
         return $this->renderTemplate($data);
     }

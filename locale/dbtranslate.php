@@ -146,7 +146,7 @@ echo __('Fly');
 echo __('String');
 echo __('Number');
 echo __('Date');
-echo __('Image');
+echo __('External Image');
 echo __('Library Image');
 
 echo __('Value');

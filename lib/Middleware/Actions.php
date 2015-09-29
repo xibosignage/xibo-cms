@@ -36,27 +36,27 @@ class Actions extends Middleware
     {
         $app = $this->app;
 
-        // Process Actions
-        if (Config::GetSetting('DEFAULTS_IMPORTED') == 0) {
-
-            $folder = Theme::uri('layouts', true);
-
-            foreach (array_diff(scandir($folder), array('..', '.')) as $file) {
-                if (stripos($file, '.zip')) {
-                    $layout = LayoutFactory::createFromZip($folder . '/' . $file, null, 1, false, false, true);
-                    $layout->save();
-                }
-            }
-
-            // Install files
-            Library::installAllModuleFiles();
-
-            Config::ChangeSetting('DEFAULTS_IMPORTED', 1);
-        }
-
         // Process notifications
         // Attach a hook to log the route
         $app->hook('slim.before.dispatch', function() use ($app) {
+
+            // Process Actions
+            if (Config::GetSetting('DEFAULTS_IMPORTED') == 0) {
+
+                $folder = Theme::uri('layouts', true);
+
+                foreach (array_diff(scandir($folder), array('..', '.')) as $file) {
+                    if (stripos($file, '.zip')) {
+                        $layout = LayoutFactory::createFromZip($folder . '/' . $file, null, 1, false, false, true);
+                        $layout->save();
+                    }
+                }
+
+                // Install files
+                Library::installAllModuleFiles();
+
+                Config::ChangeSetting('DEFAULTS_IMPORTED', 1);
+            }
 
             // Handle if we are an upgrade
             // Get the current route pattern

@@ -79,7 +79,7 @@
 
                 {# Common Fields #}
                 {% set title %}{% trans "Name" %}{% endset %}
-                {% set helpText %}{% trans "An optional name for this media" %}{% endset %}
+                {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
                 {% set fieldName %}{{ forms.text("name", title, module.getOption("name"), helpText) }}{% endset %}
 
                 {% set title %}{% trans "Duration" %}{% endset %}
@@ -148,7 +148,7 @@
                 {% set fieldTemplate %}{{ forms.textarea("ta_text", "", module.getRawNode("template"), helpText, "template-override-controls", "", 10) }}{% endset %}
 
                 {% set title %}{% trans "Optional Stylesheet" %}{% endset %}
-                {% set fieldStyleSheet %}{{ forms.textarea("ta_css", "", module.getRawNode("styleSheet"), title, "template-override-controls", "", 10) }}{% endset %}
+                {% set fieldStyleSheet %}{{ forms.textarea("ta_css", "", module.getRawNode("css"), title, "template-override-controls", "", 10) }}{% endset %}
 
                 {# Different fields for each type of Ticker #}
                 {% if module.getOption("sourceId") == 1 %}
@@ -232,7 +232,8 @@
                         {{ fieldItemsSideBySide }}
 
                         {% set title %}{% trans "Date Format" %}{% endset %}
-                        {% set helpText %}{% trans "The format to apply to all dates returned by the ticker. In PHP date format: http://uk3.php.net/manual/en/function.date.php" %}{% endset %}
+                        {% set manualUrl %}{{ settings.HELP_BASE }}advanced_dateFormat.md{% endset %}
+                        {% set helpText %}{% trans %}The format to apply to all dates returned by the ticker. See the <a href="{{ manualUrl }}">Manual</a> for allowed formats.{% endtrans %}{% endset %}
                         {{ forms.text("dateFormat", title, module.getOption("dateFormat"), helpText) }}
 
                         {% set title %}{% trans "Allowable Attributes" %}{% endset %}

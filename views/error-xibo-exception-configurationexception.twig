@@ -1,0 +1,14 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+#}
+{% extends "base.twig" %}
+
+{% block content %}
+    <h1>{% trans "Configuration Error" %}</h1>
+    {{ flash.globalError }}
+    {{ flash.message }}
+{% endblock %}

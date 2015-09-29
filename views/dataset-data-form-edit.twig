@@ -20,6 +20,8 @@
     {% trans "Save" %}, $("#dataSetEditData").submit()
 {% endblock %}
 
+{% block callBack %}dataSetDataEntryOpen{% endblock %}
+
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
@@ -35,7 +37,11 @@
                         {% elseif col.dataTypeId == 3 %}
                             {{ forms.dateTime(fieldId, col.heading, heading) }}
                         {% elseif col.dataTypeId == 5 %}
-                            {{ forms.dropdown(fieldId, "single", col.heading, heading, images, "mediaId", "name") }}
+                            {% set attributes = [
+                            { name: "data-live-search", value: "true" },
+                            { name: "data-selected-text-format", value: "count > 4" }
+                            ] %}
+                            {{ forms.dropdown(fieldId, "single", col.heading, heading, images, "mediaId", "name", "", "", "", "", "", attributes) }}
                         {% else %}
                             {{ forms.text(fieldId, col.heading, heading) }}
                         {% endif %}

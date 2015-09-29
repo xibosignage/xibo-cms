@@ -450,6 +450,7 @@ class LayoutFactory extends BaseFactory
         $select .= "SELECT layout.layoutID, ";
         $select .= "        layout.layout, ";
         $select .= "        layout.description, ";
+        $select .= "        layout.duration, ";
         $select .= "        layout.userID, ";
         $select .= "        `user`.UserName AS owner, ";
         $select .= "        campaign.CampaignID, ";
@@ -622,6 +623,7 @@ class LayoutFactory extends BaseFactory
             $layout->schemaVersion = Sanitize::int($row['schemaVersion']);
             $layout->layout = Sanitize::string($row['layout']);
             $layout->description = Sanitize::string($row['description']);
+            $layout->duration = Sanitize::int($row['duration']);
             $layout->tags = Sanitize::string($row['tags']);
             $layout->backgroundColor = Sanitize::string($row['backgroundColor']);
             $layout->owner = Sanitize::string($row['owner']);

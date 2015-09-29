@@ -98,7 +98,7 @@ class Install
             // Try to create the new database
             try {
                 $dbh = PDOConnect::init();
-                $dbh->exec(sprintf('CREATE DATABASE `%s`', $this->new_db_name));
+                $dbh->exec(sprintf('CREATE DATABASE `%s` CHARACTER SET utf8 COLLATE utf8_general_ci', $this->new_db_name));
             } catch (\PDOException $e) {
                 throw new InstallationError(sprintf(__('Could not create a new database with the administrator details [%s]. Please check and try again. Error Message = [%s]'), $this->db_admin_user, $e->getMessage()));
             }

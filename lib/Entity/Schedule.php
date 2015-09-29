@@ -132,6 +132,15 @@ class Schedule implements \JsonSerializable
         return $this->userId;
     }
 
+    /**
+     * Sets the Owner
+     * @param int $ownerId
+     */
+    public function setOwner($ownerId)
+    {
+        $this->userId = $ownerId;
+    }
+
     public function load()
     {
         // If we are already loaded, then don't do it again

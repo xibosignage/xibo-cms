@@ -195,6 +195,9 @@ class DataSetView extends ModuleWidget
         $data = [];
         $isPreview = (Sanitize::getCheckbox('preview') == 1);
 
+        // Clear all linked media.
+        $this->clearMedia();
+
         // Replace the View Port Width?
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
 
@@ -236,6 +239,10 @@ class DataSetView extends ModuleWidget
 
         // Replace the Head Content with our generated javascript
         $data['javaScript'] = $javaScriptContent;
+
+        // Update and save widget if we've changed our assignments.
+        if ($this->hasMediaChanged())
+            $this->widget->save(['saveWidgetOptions' => false]);
 
         return $this->renderTemplate($data);
     }
@@ -298,10 +305,6 @@ END;
      */
     public function dataSetTableHtml($displayId = 0, $isPreview = true)
     {
-        // We might need to save the widget associated with this module
-        //  for example if we have assigned an image to it
-        $saveRequired = false;
-
         // Show a preview of the data set table output.
         $dataSetId = $this->GetOption('dataSetId');
         $upperLimit = $this->GetOption('upperLimit');
@@ -372,6 +375,7 @@ END;
 
             $table = '<div id="DataSetTableContainer" totalRows="' . $totalRows . '" totalPages="' . $totalPages . '">';
 
+            // Parse each result and
             foreach ($dataSetResults as $row) {
                 if (($rowsPerPage > 0 && $rowCountThisPage >= $rowsPerPage) || $rowCount == 1) {
 
@@ -421,11 +425,19 @@ END;
                         // Tag this layout with this file
                         $this->assignMedia($file->mediaId);
 
-                        // We will need to save
-                        $saveRequired = true;
+                        $url = $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']);
+                        $replace = ($isPreview) ? '<img src="' . $url . '?preview=1" />' : '<img src="' . $file->storedAs . '" />';
+
+                    } else if ($mapping['dataTypeId'] == 5) {
+                        // Library Image
+                        // The content is the ID of the image
+                        $file = MediaFactory::getById($replace);
+
+                        // Tag this layout with this file
+                        $this->assignMedia($file->mediaId);
 
                         $url = $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']);
-                        $replace = ($isPreview) ? '<img src="' . $url . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" />' : '<img src="' . $file->storedAs . '" />';
+                        $replace = ($isPreview) ? '<img src="' . $url . '?preview=1" />' : '<img src="' . $file->storedAs . '" />';
                     }
 
                     $table .= '<td class="DataSetColumn" id="column_' . ($i + 1) . '"><span class="DataSetCellSpan" id="span_' . $rowCount . '_' . ($i + 1) . '">' . $replace . '</span></td>';
@@ -440,10 +452,6 @@ END;
             $table .= '</tbody>';
             $table .= '</table>';
             $table .= '</div>';
-
-            // Should we save
-            if ($saveRequired)
-                $this->widget->save(['saveWidgetOptions' => false]);
 
             return $table;
         }

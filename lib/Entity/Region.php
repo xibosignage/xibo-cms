@@ -117,6 +117,14 @@ class Region implements \JsonSerializable
      */
     public $displayOrder;
 
+    /**
+     * @var int
+     * @SWG\Property(
+     *  description="A read-only estimate of this Regions's total duration in seconds. This is valid when the parent layout status is 1 or 2."
+     * )
+     */
+    public $duration;
+
     public function __construct()
     {
         // Exclude properties that will cause recursion
@@ -136,12 +144,12 @@ class Region implements \JsonSerializable
 
     public function __toString()
     {
-        return sprintf('Region %s - %d x %d (%d, %d). RegionId = %d, LayoutId = %d. OwnerId = %d', $this->name, $this->width, $this->height, $this->top, $this->left, $this->regionId, $this->layoutId, $this->ownerId);
+        return sprintf('Region %s - %d x %d (%d, %d). RegionId = %d, LayoutId = %d. OwnerId = %d. Duration = %d', $this->name, $this->width, $this->height, $this->top, $this->left, $this->regionId, $this->layoutId, $this->ownerId, $this->duration);
     }
 
     private function hash()
     {
-        return md5($this->name . $this->width . $this->height . $this->top . $this->left . $this->regionId . $this->zIndex);
+        return md5($this->name . $this->width . $this->height . $this->top . $this->left . $this->regionId . $this->zIndex . $this->duration);
     }
 
     /**
@@ -289,24 +297,34 @@ class Region implements \JsonSerializable
 
     /**
      * Save
+     * @param array $options
      */
-    public function save()
+    public function save($options = [])
     {
-        Log::debug('Saving %s', $this);
+        $options = array_merge([
+            'saveRegionOptions' => true,
+            'manageRegionAssignments' => true
+        ], $options);
+
+        Log::debug('Saving %s. Options = %s', $this, json_encode($options, JSON_PRETTY_PRINT));
 
         if ($this->regionId == null || $this->regionId == 0)
             $this->add();
         else if ($this->hash != $this->hash())
             $this->update();
 
-        // Save all Options
-        foreach ($this->regionOptions as $regionOption) {
-            /* @var RegionOption $regionOption */
-            $regionOption->save();
+        if ($options['saveRegionOptions']) {
+            // Save all Options
+            foreach ($this->regionOptions as $regionOption) {
+                /* @var RegionOption $regionOption */
+                $regionOption->save();
+            }
         }
 
-        // Manage the assignments to regions
-        $this->manageAssignments();
+        if ($options['manageRegionAssignments']) {
+            // Manage the assignments to regions
+            $this->manageAssignments();
+        }
     }
 
     /**
@@ -394,7 +412,18 @@ class Region implements \JsonSerializable
     {
         Log::debug('Editing %s', $this);
 
-        $sql = 'UPDATE `region` SET `ownerId` = :ownerId, `name` = :name, `width` = :width, `height` = :height, `top` = :top, `left` = :left, zIndex = :zIndex WHERE `regionId` = :regionId';
+        $sql = '
+          UPDATE `region` SET
+            `ownerId` = :ownerId,
+            `name` = :name,
+            `width` = :width,
+            `height` = :height,
+            `top` = :top,
+            `left` = :left,
+            `zIndex` = :zIndex,
+            `duration` = :duration
+           WHERE `regionId` = :regionId
+        ';
 
         PDOConnect::update($sql, array(
             'ownerId' => $this->ownerId,
@@ -404,6 +433,7 @@ class Region implements \JsonSerializable
             'top' => $this->top,
             'left' => $this->left,
             'zIndex' => $this->zIndex,
+            'duration' => $this->duration,
             'regionId' => $this->regionId
         ));
     }

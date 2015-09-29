@@ -220,6 +220,31 @@ abstract class ModuleWidget implements ModuleInterface
     }
 
     /**
+     * Count Media
+     * @return int count of media
+     */
+    final protected function countMedia()
+    {
+        return $this->widget->countMedia();
+    }
+
+    /**
+     * Clear Media
+     */
+    final protected function clearMedia()
+    {
+        $this->widget->clearMedia();
+    }
+
+    /**
+     *
+     */
+    final protected function hasMediaChanged()
+    {
+        return $this->widget->hasMediaChanged();
+    }
+
+    /**
      * Get WidgetId
      * @return int
      */
@@ -257,10 +282,26 @@ abstract class ModuleWidget implements ModuleInterface
 
     /**
      * Get the duration
+     * @param array $options
      * @return int
      */
-    final public function getDuration()
+    final public function getDuration($options = [])
     {
+        $options = array_merge([
+            'real' => false
+        ], $options);
+
+        if ($options['real'] && $this->widget->duration === 0) {
+            try {
+                // Get the duration from the parent media record.
+                return $this->getMedia()->duration;
+            }
+            catch (NotFoundException $e) {
+                Log::debug('Tried to get real duration from a widget without media. widgetId: %d', $this->getWidgetId());
+                // Do nothing - drop out
+            }
+        }
+
         return $this->widget->duration;
     }
 
@@ -303,6 +344,9 @@ abstract class ModuleWidget implements ModuleInterface
      */
     public function getName()
     {
+        if ($this->getOption('name') != '')
+            return $this->getOption('name');
+
         Log::debug('Media assigned: ' . count($this->widget->mediaIds));
 
         if ($this->getModule()->regionSpecific == 0 && count($this->widget->mediaIds) > 0) {
@@ -600,4 +644,45 @@ abstract class ModuleWidget implements ModuleInterface
         }
     }
 
+    /**
+     * Parse for any library references
+     * @param bool $isPreview
+     * @param string $content containing media references in [].
+     * @param string $tokenRegEx
+     * @return string The Parsed Content
+     */
+    protected function parseLibraryReferences($isPreview, $content, $tokenRegEx = '/\[.*?\]/')
+    {
+        $parsedContent = $content;
+        $matches = '';
+        preg_match_all($tokenRegEx, $content, $matches);
+
+        foreach ($matches[0] as $sub) {
+            // Parse out the mediaId
+            $mediaId = str_replace(']', '', str_replace('[', '', $sub));
+
+            // Only proceed if the content is actually an ID
+            if (!is_numeric($mediaId))
+                continue;
+
+            // Check that this mediaId exists and get some information about it
+            try {
+                $entry = MediaFactory::getById($mediaId);
+
+                // Assign it
+                $this->assignMedia($entry->mediaId);
+
+                // We have a valid mediaId to substitute
+                $replace = ($isPreview) ? $this->getApp()->urlFor('library.download', ['id' => $entry->mediaId]) . '?preview=1' : $entry->storedAs;
+
+                // Substitute the replacement we have found (it might be '')
+                $parsedContent = str_replace($sub, $replace, $parsedContent);
+            }
+            catch (NotFoundException $e) {
+                Log::info('Reference to Unknown mediaId %d', $mediaId);
+            }
+        }
+
+        return $parsedContent;
+    }
 }

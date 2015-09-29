@@ -91,6 +91,9 @@ class Embedded extends ModuleWidget
         // Replace the View Port Width?
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
 
+        // Clear all linked media.
+        $this->clearMedia();
+
         // Embedded Html
         $html = $this->parseLibraryReferences($isPreview, $this->getRawNode('embedHtml', null));
 
@@ -143,42 +146,10 @@ class Embedded extends ModuleWidget
         // Replace the Body Content with our generated text
         $data['body'] = $html;
 
+        // Update and save widget if we've changed our assignments.
+        if ($this->hasMediaChanged())
+            $this->widget->save(['saveWidgetOptions' => false]);
+
         return $this->renderTemplate($data);
-    }
-
-    /**
-     * Parse for any library references
-     * @param $isPreview bool
-     * @param $content string
-     * @return mixed The Parsed Content
-     */
-    private function parseLibraryReferences($isPreview, $content)
-    {
-        $parsedContent = $content;
-        $matches = '';
-        preg_match_all('/\[.*?\]/', $content, $matches);
-
-        foreach ($matches[0] as $sub) {
-            // Parse out the mediaId
-            $mediaId = str_replace(']', '', str_replace('[', '', $sub));
-
-            // Only proceed if the content is actually an ID
-            if (!is_numeric($mediaId))
-                continue;
-
-            // Check that this mediaId exists and get some information about it
-            $entry = MediaFactory::query(null, array('mediaId' => $mediaId));
-
-            if (count($entry) <= 0)
-                continue;
-
-            // We have a valid mediaId to substitute
-            $replace = ($isPreview) ? $this->getApp()->urlFor('library.download', ['id' => $entry[0]->mediaId]) . '?preview=1' . $entry[0]->mediaId : $entry[0]->storedAs;
-
-            // Substitute the replacement we have found (it might be '')
-            $parsedContent = str_replace($sub, $replace, $parsedContent);
-        }
-
-        return $parsedContent;
     }
 }

@@ -177,6 +177,14 @@ class Layout implements \JsonSerializable
      */
     public $displayOrder;
 
+    /**
+     * @var int
+     * @SWG\Property(
+     *  description="A read-only estimate of this Layout's total duration in seconds. This is equal to the longest region duration and is valid when the layout status is 1 or 2."
+     * )
+     */
+    public $duration;
+
     // Child items
     public $regions = [];
     public $tags = [];
@@ -220,7 +228,7 @@ class Layout implements \JsonSerializable
 
     public function __toString()
     {
-        return sprintf('Layout %s - %d x %d. Regions = %d, Tags = %d. layoutId = %d', $this->layout, $this->width, $this->height, count($this->regions), count($this->tags), $this->layoutId);
+        return sprintf('Layout %s - %d x %d. Regions = %d, Tags = %d. layoutId = %d. Status = %d', $this->layout, $this->width, $this->height, count($this->regions), count($this->tags), $this->layoutId, $this->status);
     }
 
     private function hash()
@@ -253,6 +261,8 @@ class Layout implements \JsonSerializable
     public function setOwner($ownerId)
     {
         $this->ownerId = $ownerId;
+
+        $this->load();
 
         foreach ($this->regions as $region) {
             /* @var Region $region */
@@ -397,7 +407,7 @@ class Layout implements \JsonSerializable
 
                 // Assert the Layout Id
                 $region->layoutId = $this->layoutId;
-                $region->save();
+                $region->save($options);
             }
         }
 
@@ -510,9 +520,6 @@ class Layout implements \JsonSerializable
     {
         $this->load(['loadPlaylists' => true]);
 
-        // Get an array of modules to use
-        $modules = ModuleFactory::get();
-
         $document = new \DOMDocument();
         $layoutNode = $document->createElement('layout');
         $layoutNode->setAttribute('width', $this->width);
@@ -529,6 +536,9 @@ class Layout implements \JsonSerializable
 
         $document->appendChild($layoutNode);
 
+        // Track module status within the layout
+        $status = 0;
+
         foreach ($this->regions as $region) {
             /* @var Region $region */
             $regionNode = $document->createElement('region');
@@ -540,15 +550,27 @@ class Layout implements \JsonSerializable
 
             $layoutNode->appendChild($regionNode);
 
+            // Region Duration
+            $region->duration = 0;
+
             foreach ($region->playlists as $playlist) {
                 /* @var Playlist $playlist */
                 foreach ($playlist->widgets as $widget) {
                     /* @var Widget $widget */
+                    $module = ModuleFactory::createWithWidget($widget, $region);
+
+                    // Set the Layout Status
+                    $status = ($module->isValid() > $status) ? $module->isValid() : $status;
+
+                    // Set the region duration
+                    $region->duration = $region->duration + $module->getDuration(['real' => true]);
+
+                    // Create media xml node for XLF.
                     $mediaNode = $document->createElement('media');
                     $mediaNode->setAttribute('id', $widget->widgetId);
                     $mediaNode->setAttribute('duration', $widget->duration);
                     $mediaNode->setAttribute('type', $widget->type);
-                    $mediaNode->setAttribute('render', $modules[$widget->type]->renderAs);
+                    $mediaNode->setAttribute('render', $module->getModule()->renderAs);
 
                     // Create options nodes
                     $optionsNode = $document->createElement('options');
@@ -558,7 +580,7 @@ class Layout implements \JsonSerializable
                     $mediaNode->appendChild($rawNode);
 
                     // Inject the URI
-                    if ($modules[$widget->type]->regionSpecific == 0) {
+                    if ($module->getModule()->regionSpecific == 0) {
                         $media = MediaFactory::getById($widget->mediaIds[0]);
                         $optionNode = $document->createElement('uri', $media->storedAs);
                         $optionsNode->appendChild($optionNode);
@@ -581,6 +603,13 @@ class Layout implements \JsonSerializable
                     $regionNode->appendChild($mediaNode);
                 }
             }
+
+            // Track the max duration within the layout
+            // Test this duration against the layout duration
+            if ($this->duration < $region->duration)
+                $this->duration = $region->duration;
+
+            // End of region loop.
         }
 
         $tagsNode = $document->createElement('tags');
@@ -592,6 +621,9 @@ class Layout implements \JsonSerializable
         }
 
         $layoutNode->appendChild($tagsNode);
+
+        // Update the layout status / duration accordingly
+        $this->status = ($status < $this->status) ? $status : $this->status;
 
         return $document->saveXML();
     }
@@ -664,11 +696,19 @@ class Layout implements \JsonSerializable
         $path = $this->getCachePath();
 
         if ($this->status == 3 || !file_exists($path)) {
+
+            Log::debug('XLF needs building for Layout %d', $this->layoutId);
+
+            // Assume error
+            $this->status = 4;
+
+            // Save the resulting XLF
             file_put_contents($path, $this->toXlf());
-            $this->status = 1;
 
             $this->save([
-                'saveRegions' => false,
+                'saveRegions' => true,
+                'saveRegionOptions' => false,
+                'manageRegionAssignments' => false,
                 'saveTags' => false,
                 'setBuildRequired' => false
             ]);
@@ -739,6 +779,7 @@ class Layout implements \JsonSerializable
         UPDATE layout
           SET layout = :layout,
               description = :description,
+              duration = :duration,
               modifiedDT = :modifieddt,
               retired = :retired,
               width = :width,
@@ -747,7 +788,8 @@ class Layout implements \JsonSerializable
               backgroundColor = :backgroundColor,
               backgroundzIndex = :backgroundzIndex,
               `xml` = NULL,
-              `status` = :status
+              `status` = :status,
+              `userId` = :userId
          WHERE layoutID = :layoutid
         ';
 
@@ -757,6 +799,7 @@ class Layout implements \JsonSerializable
             'layoutid' => $this->layoutId,
             'layout' => $this->layout,
             'description' => $this->description,
+            'duration' => $this->duration,
             'modifieddt' => $time,
             'retired' => $this->retired,
             'width' => $this->width,
@@ -764,12 +807,14 @@ class Layout implements \JsonSerializable
             'backgroundImageId' => $this->backgroundImageId,
             'backgroundColor' => $this->backgroundColor,
             'backgroundzIndex' => $this->backgroundzIndex,
-            'status' => $this->status
+            'status' => $this->status,
+            'userId' => $this->ownerId
         ));
 
         // Update the Campaign
         $campaign = CampaignFactory::getById($this->campaignId);
         $campaign->campaign = $this->layout;
+        $campaign->ownerId = $this->ownerId;
         $campaign->save(false);
     }
 }

@@ -38,11 +38,11 @@
 
                 {% set title %}{% trans "Homepage" %}{% endset %}
                 {% set helpText %}{% trans "Homepage for this user. This is the page they will be taken to when they login." %}{% endset %}
-                {{ forms.dropdown("homePageId", "single", title, "", options.homepage, "pageId", "title", helpText) }}
+                {{ forms.dropdown("homePageId", "single", title, 1, options.homepage, "pageId", "title", helpText) }}
 
                 {% set title %}{% trans "User Type" %}{% endset %}
                 {% set helpText %}{% trans "What is this users type?" %}{% endset %}
-                {{ forms.dropdown("userTypeId", "single", title, "", options.userTypes, "userTypeId", "userType", helpText) }}
+                {{ forms.dropdown("userTypeId", "single", title, 3, options.userTypes, "userTypeId", "userType", helpText) }}
 
                 {% set title %}{% trans "Library Quota" %}{% endset %}
                 {% set helpText %}{% trans "The quota in Kb that should be applied. Enter 0 for no quota." %}{% endset %}

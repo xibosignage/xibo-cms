@@ -270,6 +270,7 @@ class Module extends Base
         $this->getState()->template = $module->getModuleType() . '-form-add';
         $this->getState()->setData([
             'playlist' => $playlist,
+            'media' => MediaFactory::query(),
             'module' => $module
         ]);
     }
@@ -339,6 +340,7 @@ class Module extends Base
         $this->getState()->template = $module->getModuleType() . '-form-edit';
         $this->getState()->setData([
             'module' => $module,
+            'media' => MediaFactory::query(),
             'validExtensions' => str_replace(',', '|', $module->getModule()->validExtensions)
         ]);
     }

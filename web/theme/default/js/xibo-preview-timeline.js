@@ -103,9 +103,13 @@ Preview.prototype.SetSequence = function(seq)
 				// Success - what do we do now?
 				$(previewContent).html("<div class=\"regionPreviewOverlay\"></div>" + ((response.html == null) ? "" : response.html));
 
+				var infoText = response.extra.current_item + " / " + response.extra.number_items + " "
+                    + response.extra.moduleName
+                    + " (" + moment().startOf("day").seconds(response.extra.duration).format("H:mm:ss") + " / " + moment().startOf("day").seconds(response.extra.regionDuration).format("H:mm:ss") + ")";
+
 				// Get the extra
 				$('.preview-media-information', previewElement)
-					.html(response.extra.text)
+					.html(infoText)
 					.data("maxSeq", response.extra.number_items);
 			}
 			else {

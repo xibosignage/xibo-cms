@@ -20,12 +20,14 @@
  */
 namespace Xibo\Controller;
 use Exception;
-use SimplePie;
+use PicoFeed\PicoFeedException;
+use PicoFeed\Reader\Reader;
 use Xibo\Factory\BaseFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Helper\ByteFormatter;
+use Xibo\Helper\Cache;
 use Xibo\Helper\Config;
 use Xibo\Helper\Date;
 use Xibo\Helper\Log;
@@ -205,30 +207,50 @@ class StatusDashboard extends Base
                 // Make sure we have the cache location configured
                 Library::ensureLibraryExists();
 
-                // Use SimplePie to get the feed
-                $feed = new SimplePie();
-                $feed->set_cache_location(Library::getLibraryCacheUri());
-                $feed->set_feed_url(Theme::getConfig('latest_news_url'));
-                $feed->set_cache_duration(86400);
-                $feed->handle_content_type();
-                $feed->init();
+                try {
+                    $feedUrl = Theme::getConfig('latest_news_url');
+                    $key = md5($feedUrl);
 
-                $latestNews = array();
+                    // Check the cache
+                    if (!Cache::has($key)) {
 
-                if ($feed->error()) {
-                    Log::notice('Feed Error: ' . $feed->error(), get_class(), __FUNCTION__);
-                } else {
-                    // Store our formatted items
-                    foreach ($feed->get_items() as $item) {
-                        $latestNews[] = array(
-                            'title' => $item->get_title(),
-                            'description' => $item->get_description(),
-                            'link' => $item->get_link()
-                        );
+                        // Get the feed
+                        $reader = new Reader(Config::getPicoFeedProxy($feedUrl));
+                        $resource = $reader->download($feedUrl);
+
+                        // Get the feed parser
+                        $parser = $reader->getParser($resource->getUrl(), $resource->getContent(), $resource->getEncoding());
+
+                        // Get a feed object
+                        $feed = $parser->execute();
+
+                        // Parse the items in the feed
+                        $latestNews = [];
+
+                        foreach ($feed->getItems() as $item) {
+                            /* @var \PicoFeed\Parser\Item $item */
+                            $latestNews[] = array(
+                                'title' => $item->getTitle(),
+                                'description' => $item->getContent(),
+                                'link' => $item->getUrl()
+                            );
+                        }
+
+                        // Store in the cache for 1 day
+                        Cache::put($key, $latestNews, 86400);
+
+                    } else {
+                        $latestNews = Cache::get($key);
                     }
-                }
 
-                $data['latestNews'] = $latestNews;
+                    $data['latestNews'] = $latestNews;
+                }
+                catch (PicoFeedException $e) {
+                    Log::error('Unable to get feed: %s', $e->getMessage());
+                    Log::debug($e->getTraceAsString());
+
+                    $data['latestNews'] = array(array('title' => __('Latest news not available.'), 'description' => '', 'link' => ''));
+                }
             }
             else {
                 $data['latestNews'] = array(array('title' => __('Latest news not enabled.'), 'description' => '', 'link' => ''));

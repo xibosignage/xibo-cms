@@ -21,9 +21,78 @@ Fine, missing:
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Save" %}, $("#videoEditForm").submit()
+{% endblock %}
+
+{% block formFieldActions %}
+    [{
+    "field": "duration",
+    "trigger": "init",
+    "value": "0",
+    "operation": "equals",
+    "actions": {
+    ".loop-fields": { "display": "none" }
+    }
+    },{
+    "field": "duration",
+    "trigger": "change",
+    "value": "0",
+    "operation": "equals",
+    "actions": {
+    ".loop-fields": { "display": "none" }
+    }
+    },{
+    "field": "duration",
+    "trigger": "init",
+    "value": "0",
+    "operation": "not",
+    "actions": {
+    ".loop-fields": { "display": "block" }
+    }
+    },{
+    "field": "duration",
+    "trigger": "change",
+    "value": "0",
+    "operation": "not",
+    "actions": {
+    ".loop-fields": { "display": "block" }
+    }
+    },{
+    "field": "playUntilEnd",
+    "trigger": "init",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "block" }
+    }
+    },{
+    "field": "playUntilEnd",
+    "trigger": "change",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "block" },
+    ".loop-fields": { "display": "block" }
+    }
+    },{
+    "field": "playUntilEnd",
+    "trigger": "init",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "none" }
+    }
+    },{
+    "field": "playUntilEnd",
+    "trigger": "change",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "none" },
+    ".loop-fields": { "display": "none" }
+    }
+    }]
 {% endblock %}
 
 {% block callBack %}mediaEditFormOpen{% endblock %}
@@ -31,14 +100,31 @@ Fine, missing:
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="videoEditForm" class="XiboForm form-horizontal" method="put" action="action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}"">
+            <form id="videoEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}" data-widget-id="{{ module.widget.widgetId }}" data-media-id="{{ module.getMediaId() }}" data-media-editable="{{ currentUser.checkEditable(module.getMedia()) }}" data-valid-extensions="{{ validExtensions }}">
+                {% set title %}{% trans "Name" %}{% endset %}
+                {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
+                {{ forms.text("name", title, module.getOption("name"), helpText) }}
+
+                {% set title %}{% trans "Play until the end?" %}{% endset %}
+                {% set helpText %}{% trans "The video plays through once and then finishes," %}{% endset %}
+                {% if module.getDuration() == 0 %}
+                    {% set value = 1 %}
+                {% else %}
+                    {% set value = 0 %}
+                {% endif %}
+                {{ forms.checkbox("playUntilEnd", title, value, helpText) }}
+
+                {% set title %}{% trans "Duration" %}{% endset %}
+                {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
+                {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
+
                 {% set title %}{% trans "Loop?" %}{% endset %}
                 {% set helpText %}{% trans "Should the video loop if it finishes before the provided duration?" %}{% endset %}
-                {{ forms.checkbox("loop", title, module.getOption("loop", 0), helpText, "", "loop-fields") }}
+                {{ forms.checkbox("loop", title, module.getOption("loop", 0), helpText, "loop-fields") }}
                 
                 {% set title %}{% trans "Mute?" %}{% endset %}
                 {% set helpText %}{% trans "Should the video be muted?" %}{% endset %}
-                {{ forms.checkbox("mute", title, module.getOption("mute", 1), helpText "", "mute-fields") }}
+                {{ forms.checkbox("mute", title, module.getOption("mute", 1), helpText, "mute-fields") }}
 
                 {# dependencies #}
 
