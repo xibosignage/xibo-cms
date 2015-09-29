@@ -262,6 +262,9 @@ class Display extends Base
 
         foreach ($displays as $display) {
 
+            if ($this->isApi())
+                break;
+
             /* @var \Xibo\Entity\Display $display */
 
             // Set some text for the display status
