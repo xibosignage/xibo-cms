@@ -60,12 +60,7 @@ class ScheduleFactory extends BaseFactory
      */
     public static function getByOwnerId($ownerId)
     {
-        $events = ScheduleFactory::query(null, ['disableUserCheck' => 1, 'ownerId' => $ownerId]);
-
-        if (count($events) <= 0)
-            throw new NotFoundException();
-
-        return $events;
+        return ScheduleFactory::query(null, ['disableUserCheck' => 1, 'ownerId' => $ownerId]);
     }
 
     /**

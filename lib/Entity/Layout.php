@@ -262,6 +262,8 @@ class Layout implements \JsonSerializable
     {
         $this->ownerId = $ownerId;
 
+        $this->load();
+
         foreach ($this->regions as $region) {
             /* @var Region $region */
             $region->setOwner($ownerId);
@@ -786,7 +788,8 @@ class Layout implements \JsonSerializable
               backgroundColor = :backgroundColor,
               backgroundzIndex = :backgroundzIndex,
               `xml` = NULL,
-              `status` = :status
+              `status` = :status,
+              `userId` = :userId
          WHERE layoutID = :layoutid
         ';
 
@@ -804,12 +807,14 @@ class Layout implements \JsonSerializable
             'backgroundImageId' => $this->backgroundImageId,
             'backgroundColor' => $this->backgroundColor,
             'backgroundzIndex' => $this->backgroundzIndex,
-            'status' => $this->status
+            'status' => $this->status,
+            'userId' => $this->ownerId
         ));
 
         // Update the Campaign
         $campaign = CampaignFactory::getById($this->campaignId);
         $campaign->campaign = $this->layout;
+        $campaign->ownerId = $this->ownerId;
         $campaign->save(false);
     }
 }

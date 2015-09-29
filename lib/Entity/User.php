@@ -311,10 +311,51 @@ class User implements \JsonSerializable
     {
         $this->load(true);
 
-        $count = count($this->campaigns) + count($this->layouts) + count($this->campaigns) + count($this->events);
+        $count = count($this->campaigns) + count($this->layouts) + count($this->media) + count($this->events);
         Log::debug('Counted Children on %d, there are %d', $this->userId, $count);
 
         return $count;
+    }
+
+    /**
+     * Reassign all
+     * @param User $user
+     */
+    public function reassignAllTo($user)
+    {
+        Log::debug('Reassign all to %s', $user->userName);
+
+        $this->load(true);
+
+        Log::debug('There are %d children', $this->countChildren());
+
+        // Go through each item and reassign the owner to the provided user.
+        foreach ($this->media as $media) {
+            /* @var Media $media */
+            $media->setOwner($user->getOwnerId());
+            $media->save();
+        }
+        foreach ($this->events as $event) {
+            /* @var Schedule $event */
+            $event->setOwner($user->getOwnerId());
+            $event->save();
+        }
+        foreach ($this->layouts as $layout) {
+            /* @var Layout $layout */
+            $layout->setOwner($user->getOwnerId());
+            $layout->save();
+        }
+        foreach ($this->campaigns as $campaign) {
+            /* @var Campaign $campaign */
+            $campaign->setOwner($user->getOwnerId());
+            $campaign->save();
+        }
+
+        // Load again
+        $this->loaded = false;
+        $this->load(true);
+
+        Log::debug('Reassign and reload complete, there are %d children', $this->countChildren());
     }
 
     /**

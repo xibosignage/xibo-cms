@@ -205,6 +205,15 @@ class Media implements \JsonSerializable
     }
 
     /**
+     * Sets the Owner
+     * @param int $ownerId
+     */
+    public function setOwner($ownerId)
+    {
+        $this->ownerId = $ownerId;
+    }
+
+    /**
      * Validate
      * @param array $options
      */
@@ -427,7 +436,8 @@ class Media implements \JsonSerializable
                 expires = :expires,
                 moduleSystemFile = :moduleSystemFile,
                 editedMediaId = :editedMediaId,
-                isEdited = :isEdited
+                isEdited = :isEdited,
+                userId = :userId
            WHERE mediaId = :mediaId
         ', [
             'name' => $this->name,
@@ -439,6 +449,7 @@ class Media implements \JsonSerializable
             'moduleSystemFile' => $this->moduleSystemFile,
             'editedMediaId' => $this->parentId,
             'isEdited' => $this->isEdited,
+            'userId' => $this->ownerId,
             'mediaId' => $this->mediaId
         ]);
     }

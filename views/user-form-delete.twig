@@ -20,6 +20,42 @@
     {% trans "Yes" %}, $("#userDeleteForm").submit()
 {% endblock %}
 
+{% block formFieldActions %}
+    [{
+    "field": "deleteAllItems",
+    "trigger": "init",
+    "value": 1,
+    "operation": "is:checked",
+    "actions": {
+    ".user-selector-group": { "display": "none" }
+    }
+    },{
+    "field": "deleteAllItems",
+    "trigger": "change",
+    "value": 1,
+    "operation": "is:checked",
+    "actions": {
+    ".user-selector-group": { "display": "none" }
+    }
+    },{
+    "field": "deleteAllItems",
+    "trigger": "init",
+    "value": 0,
+    "operation": "is:checked",
+    "actions": {
+    ".user-selector-group": { "display": "block" }
+    }
+    },{
+    "field": "deleteAllItems",
+    "trigger": "change",
+    "value": 0,
+    "operation": "is:checked",
+    "actions": {
+    ".user-selector-group": { "display": "block" }
+    }
+    }]
+{% endblock %}
+
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
@@ -30,6 +66,10 @@
                 {% set title %}{% trans "Delete all items owned by this User?" %}{% endset %}
                 {% set helpText %}{% trans "Check to delete all items owned by this user, including Layouts, Media, Schedules, etc." %}{% endset %}
                 {{ forms.checkbox("deleteAllItems", title, 0, helpText) }}
+
+                {% set title %}{% trans "Reassign items to another User" %}{% endset %}
+                {% set helpText %}{% trans "Reassign all items this User owns to the selected User." %}{% endset %}
+                {{ forms.dropdown("reassignUserId", "single", title, 0, [{userId:null, userName:""}]|merge(users), "userId", "userName", helpText, "user-selector-group") }}
             </form>
         </div>
     </div>

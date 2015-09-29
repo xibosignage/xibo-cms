@@ -339,14 +339,24 @@ class User extends Base
         if (!$this->getUser()->checkDeleteable($user))
             throw new AccessDeniedException();
 
-        // Child objects?
-        $children = $user->countChildren();
+        if (Sanitize::getCheckbox('deleteAllItems') != 1) {
 
-        if (Sanitize::getCheckbox('deleteAllItems') != 1 && $children > 0) {
-            // Check to see if we have any child data that would prevent us from deleting
-            throw new \InvalidArgumentException(sprintf(__('This user cannot be deleted as it has %d child items'), $children));
+            // Do we have a userId to reassign content to?
+            if (Sanitize::getInt('reassignUserId') != null) {
+                // Reassign all content owned by this user to the provided user
+                Log::debug('Reassigning content to new userId: %d', Sanitize::getInt('reassignUserId'));
+
+                $user->reassignAllTo(UserFactory::getById(Sanitize::getInt('reassignUserId')));
+            } else {
+                // Check to see if we have any child data that would prevent us from deleting
+                $children = $user->countChildren();
+
+                if ($children > 0)
+                    throw new \InvalidArgumentException(sprintf(__('This user cannot be deleted as it has %d child items'), $children));
+            }
         }
 
+        // Delete the user
         $user->delete();
 
         // Return
@@ -414,6 +424,7 @@ class User extends Base
         $this->getState()->template = 'user-form-delete';
         $this->getState()->setData([
             'user' => $user,
+            'users' => UserFactory::query(null, ['notUserId' => $userId]),
             'help' => [
                 'delete' => Help::Link('User', 'Delete')
             ]
