@@ -254,16 +254,36 @@ class Stats extends Base
 
         $output = array();
 
-        foreach ($sth->fetchAll() as $row) {
+        $rows = $sth->fetchAll();
+        $maxDuration = 0;
 
+        foreach ($rows as $row) {
+            $maxDuration = $maxDuration + Sanitize::double($row['duration']);
+        }
+
+        if ($maxDuration > 86400) {
+            $postUnits = __('Days');
+            $divisor = 86400;
+        }
+        else if ($maxDuration > 3600) {
+            $postUnits = __('Hours');
+            $divisor = 3600;
+        }
+        else {
+            $postUnits = __('Minutes');
+            $divisor = 60;
+        }
+
+        foreach ($rows as $row) {
             $output[] = array(
                 'label' => Sanitize::string($row['display']),
-                'value' => (Sanitize::double($row['duration']) / 60)
+                'value' => Sanitize::double($row['duration']) / $divisor
             );
         }
 
         $this->getState()->extra = [
-            'data' => $output
+            'data' => $output,
+            'postUnits' => $postUnits
         ];
     }
 
