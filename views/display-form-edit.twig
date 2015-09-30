@@ -126,7 +126,7 @@ It is done, I mean this twig is probably fine, the 'name' in the settings at the
                         { id: 0, value: no },
                         { id: 1, value: yes }
                         ] %}
-                        {{ forms.dropdown("incSchedule", "single", title, "", options, "id", "value", helpText) }}
+                        {{ forms.dropdown("incSchedule", "single", title, display.incSchedule, options, "id", "value", helpText) }}
 
                         {% set title %}{% trans "Auditing" %}{% endset %}
                         {% set helpText %}{% trans "Collect auditing from this client. Should only be used if there is a problem with the display." %}{% endset %}
@@ -136,7 +136,7 @@ It is done, I mean this twig is probably fine, the 'name' in the settings at the
                         { id: 0, value: no },
                         { id: 1, value: yes }
                         ] %}
-                        {{ forms.dropdown("isAuditing", "single", title, "", options, "id", "value", helpText) }}
+                        {{ forms.dropdown("isAuditing", "single", title, display.isAuditing, options, "id", "value", helpText) }}
 
                         {% set message %}{% trans "The settings for this display are shown below. They are taken from the active Display Profile for this Display, which can be changed in Display Settings. If you have altered the Settings Profile above, you will need to save and re-show the form." %}{% endset %}
                         {{ forms.message(message) }}

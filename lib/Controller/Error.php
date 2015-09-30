@@ -148,7 +148,7 @@ class Error extends Base
                 $this->getState()->hydrate([
                     'httpStatus' => $status,
                     'success' => false,
-                    'message' => (($handled) ? $e->getMessage() : __('Unexpected Error, please contact support.'))
+                    'message' => (($handled) ? __($e->getMessage()) : __('Unexpected Error, please contact support.'))
                 ]);
 
                 $this->render();

@@ -669,6 +669,8 @@ class Library extends Base
      */
     public static function installAllModuleFiles()
     {
+        Log::info('Installing all module files');
+
         // Do this for all enabled modules
         foreach (ModuleFactory::query() as $module) {
             /* @var \Xibo\Entity\Module $module */

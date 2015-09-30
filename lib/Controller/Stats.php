@@ -96,6 +96,34 @@ class Stats extends Base
      *  path="/stats",
      *  operationId="statsSearch",
      *  tags={"statistics"},
+     *  @SWG\Parameter(
+     *      name="fromDt",
+     *      in="formData",
+     *      description="The start date for the filter",
+     *      type="string",
+     *      required="false"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="toDt",
+     *      in="formData",
+     *      description="The end date for the filter",
+     *      type="string",
+     *      required="false"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="displayId",
+     *      in="formData",
+     *      description="An optional display Id to filter",
+     *      type="integer",
+     *      required="false"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="mediaId",
+     *      in="formData",
+     *      description="An optional media Id to filter",
+     *      type="integer",
+     *      required="false"
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -110,15 +138,15 @@ class Stats extends Base
      */
     public function grid()
     {
-        $fromDt = Sanitize::getDate('fromDt');
-        $toDt = Sanitize::getDate('toDt');
+        $fromDt = Sanitize::getDate('fromDt', Date::parse()->addDay(-1));
+        $toDt = Sanitize::getDate('toDt', Date::parse());
         $displayId = Sanitize::getInt('displayId');
         $mediaId = Sanitize::getInt('mediaId');
 
         // What if the fromdt and todt are exactly the same?
         // in this case assume an entire day from midnight on the fromdt to midnight on the todt (i.e. add a day to the todt)
         if ($fromDt == $toDt) {
-            $toDt = date("Y-m-d", strtotime($toDt) + 86399);
+            $toDt->addDay(1);
         }
 
         Log::debug('Converted Times received are: FromDt=' . $fromDt . '. ToDt=' . $toDt);
