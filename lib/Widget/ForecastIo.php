@@ -79,8 +79,8 @@ class ForecastIo extends ModuleWidget
 
     public function installFiles()
     {
-        MediaFactory::createModuleFile('modules/vendor/jquery-1.11.1.min.js')->save();
-        MediaFactory::createModuleFile('modules/xibo-layout-scaler.js')->save();
+        MediaFactory::createModuleSystemFile('modules/vendor/jquery-1.11.1.min.js')->save();
+        MediaFactory::createModuleSystemFile('modules/xibo-layout-scaler.js')->save();
 
         foreach (MediaFactory::createModuleFileFromFolder($this->resourceFolder) as $media) {
             /* @var Media $media */

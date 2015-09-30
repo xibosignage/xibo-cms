@@ -14,7 +14,7 @@
     {% set displayName = display.display %}
     {% set displayLastAccessed = display.lastAccessed %}
     {% if display.loggedIn == 1 %}
-        {% set title %}{% trans %}Display {{ displayName }} is currently logged-in{% endtrans %}{% endset %}
+        {% set title %}{% trans %}Display {{ displayName }} is currently logged-in, seen {{ timeAgo }}.{% endtrans %}{% endset %}
     {% else %}
         {% set title %}{% trans %}Display {{ displayName }} is not logged in at the moment and last accessed at <span class="unixDate">{{ displayLastAccessed }}</span>{% endtrans %}{% endset %}
     {% endif %}

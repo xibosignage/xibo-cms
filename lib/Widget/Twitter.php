@@ -71,10 +71,10 @@ class Twitter extends ModuleWidget
      */
     public function installFiles()
     {
-        MediaFactory::createModuleFile('modules/vendor/jquery-1.11.1.min.js')->save();
-        MediaFactory::createModuleFile('modules/xibo-text-render.js')->save();
-        MediaFactory::createModuleFile('modules/xibo-layout-scaler.js')->save();
-        MediaFactory::createModuleFile(PROJECT_ROOT . '/web/modules/emojione/emojione.sprites.svg')->save();
+        MediaFactory::createModuleSystemFile('modules/vendor/jquery-1.11.1.min.js')->save();
+        MediaFactory::createModuleSystemFile('modules/xibo-text-render.js')->save();
+        MediaFactory::createModuleSystemFile('modules/xibo-layout-scaler.js')->save();
+        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/emojione/emojione.sprites.svg')->save();
     }
 
     /**

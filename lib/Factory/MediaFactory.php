@@ -53,12 +53,25 @@ class MediaFactory extends BaseFactory
     }
 
     /**
-     * Create System Media File
+     * Create System Module File
+     * @param $name
+     * @param string $file
+     * @return Media
+     */
+    public static function createModuleSystemFile($name, $file = '')
+    {
+        $media = self::createModuleFile($name, $file, 1);
+        $media->moduleSystemFile = 1;
+        return $media;
+    }
+
+    /**
+     * Create Module File
      * @param $name
      * @param $file
      * @return Media
      */
-    public static function createModuleFile($name, $file = '')
+    public static function createModuleFile($name, $file = '', $systemFile = 0)
     {
         if ($file == '') {
             $file = $name;
@@ -79,6 +92,7 @@ class MediaFactory extends BaseFactory
             $media->expires = 0;
             $media->storedAs = $name;
             $media->ownerId = 1;
+            $media->moduleSystemFile = $systemFile;
         }
 
         return $media;
@@ -98,7 +112,7 @@ class MediaFactory extends BaseFactory
 
         foreach (array_diff(scandir($folder), array('..', '.')) as $file) {
 
-            $file = MediaFactory::createModuleFile($file, $folder . DIRECTORY_SEPARATOR . $file);
+            $file = MediaFactory::createModuleSystemFile($file, $folder . DIRECTORY_SEPARATOR . $file);
             $file->moduleSystemFile = true;
 
             $media[] = $file;
