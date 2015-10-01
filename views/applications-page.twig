@@ -33,7 +33,6 @@
                         <thead>
                             <tr>
                                 <th>{% trans "Name" %}</th>
-                                <th>{% trans "Key" %}</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -53,11 +52,10 @@
             serverSide: true,
             filter: false,
             searchDelay: 3000,
-            "order": [[ 1, "asc"]],
+            "order": [[ 0, "asc"]],
             ajax: "{{ urlFor("application.search") }}",
             "columns": [
                 { "data": "name" },
-                { "data": "key" },
                 {
                     "orderable": false,
                     "data": dataTableButtonsColumn

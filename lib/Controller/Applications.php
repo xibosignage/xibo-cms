@@ -23,7 +23,9 @@ namespace Xibo\Controller;
 use League\OAuth2\Server\AuthorizationServer;
 use League\OAuth2\Server\Grant\AuthCodeGrant;
 use League\OAuth2\Server\Util\RedirectUri;
-use League\OAuth2\Server\Util\SecureKey;
+use Xibo\Entity\Application;
+use Xibo\Entity\ApplicationRedirectUri;
+use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\ApplicationFactory;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
@@ -33,7 +35,6 @@ use Xibo\Storage\ApiAuthCodeStorage;
 use Xibo\Storage\ApiClientStorage;
 use Xibo\Storage\ApiScopeStorage;
 use Xibo\Storage\ApiSessionStorage;
-use Xibo\Storage\PDOConnect;
 
 
 class Applications extends Base
@@ -52,7 +53,32 @@ class Applications extends Base
     public function grid()
     {
         $this->getState()->template = 'grid';
-        $this->getState()->setData(ApplicationFactory::query($this->gridRenderSort(), $this->gridRenderFilter()));
+
+        $applications = ApplicationFactory::query($this->gridRenderSort(), $this->gridRenderFilter());
+
+        foreach ($applications as $application) {
+            /* @var Application $application */
+            if ($this->isApi())
+                return;
+
+            // Include the buttons property
+            $application->includeProperty('buttons');
+
+            // Add an Edit button (edit form also exposes the secret - not possible to get through the API)
+            $application->buttons = [];
+
+            if ($application->userId == $this->getUser()->userId || $this->getUser()->getUserTypeId() == 1) {
+
+                // Edit
+                $application->buttons[] = array(
+                    'id' => 'application_edit_button',
+                    'url' => $this->urlFor('application.edit.form', array('id' => $application->key)),
+                    'text' => __('Edit')
+                );
+            }
+        }
+
+        $this->getState()->setData($applications);
         $this->getState()->recordsTotal = ApplicationFactory::countLast();
     }
 
@@ -126,37 +152,86 @@ class Applications extends Base
         ]);
     }
 
+    public function editForm($clientId)
+    {
+        // Get the client
+        $client = ApplicationFactory::getById($clientId);
+
+        if ($client->userId != $this->getUser()->userId && $this->getUser()->getUserTypeId() != 1)
+            throw new AccessDeniedException();
+
+        // Load this clients details.
+        $client->load();
+
+        // Render the view
+        $this->getState()->template = 'applications-form-edit';
+        $this->getState()->setData([
+            'client' => $client,
+            'help' => Help::Link('Services', 'Register')
+        ]);
+    }
+
     /**
      * Register a new application with OAuth
      */
     public function add()
     {
-        // Make and ID/Secret
-        $id = SecureKey::generate();
-        $secret = SecureKey::generate(254);
-
-        // Simple Insert for now
-        PDOConnect::insert('
-            INSERT INTO `oauth_clients` (`id`, `secret`, `name`)
-              VALUES (:id, :secret, :name)
-        ', [
-            'id' => $id,
-            'secret' => $secret,
-            'name' => Sanitize::getString('name')
-        ]);
-
-        // Update the URI
-        PDOConnect::insert('INSERT INTO `oauth_client_redirect_uris` (client_id, redirect_uri) VALUES (:clientId, :redirectUri)', [
-            'clientId' => $id,
-            'redirectUri' => Sanitize::getString('redirectUri')
-        ]);
+        $application = ApplicationFactory::create();
+        $application->name = Sanitize::getString('name');
+        $application->save();
 
         // Return
         $this->getState()->hydrate([
-            'message' => sprintf(__('Added %s'), Sanitize::getString('name')),
-            'id' => $id
+            'message' => sprintf(__('Added %s'), $application->name),
+            'data' => $application,
+            'id' => $application->key
+        ]);
+    }
+
+    public function edit($clientId)
+    {
+        // Get the client
+        $client = ApplicationFactory::getById($clientId);
+
+        if ($client->userId != $this->getUser()->userId && $this->getUser()->getUserTypeId() != 1)
+            throw new AccessDeniedException();
+
+        $client->name = Sanitize::getString('name');
+        $client->authCode = Sanitize::getCheckbox('authCode');
+        $client->clientCredentials = Sanitize::getCheckbox('clientCredentials');
+
+        if (Sanitize::getCheckbox('resetKeys') == 1) {
+            $client->resetKeys();
+        }
+
+        // Delete all the redirect urls and add them again
+        $client->load();
+
+        foreach ($client->redirectUris as $uri) {
+            $uri->delete();
+        }
+
+        $client->redirectUris = [];
+
+        // Do we have a redirect?
+        $redirectUris = Sanitize::getStringArray('redirectUri');
+
+        foreach ($redirectUris as $redirectUri) {
+            if ($redirectUri == '')
+                continue;
+
+            $redirect = new ApplicationRedirectUri();
+            $redirect->redirectUri = $redirectUri;
+            $client->assignRedirectUri($redirect);
+        }
+
+        $client->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Edited %s'), $client->name),
+            'data' => $client,
+            'id' => $client->key
         ]);
     }
 }
-
-?>

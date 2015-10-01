@@ -38,7 +38,12 @@ class ApiAuthenticationOAuth extends Middleware
             $server = $this->app->server;
 
             $app->server->isValidRequest(false);
-            $this->app->user = UserFactory::loadById($server->getAccessToken()->getSession()->getOwnerId());
+
+            // What type of access has been requested?
+            if ($server->getAccessToken()->getSession()->getOwnerType() == 'user')
+                $this->app->user = UserFactory::loadById($server->getAccessToken()->getSession()->getOwnerId());
+            else
+                $this->app->user = UserFactory::loadByClientId($server->getAccessToken()->getSession()->getOwnerId());
 
             // Get the current route pattern
             $resource = $app->router->getCurrentRoute()->getPattern();

@@ -61,6 +61,21 @@ class UserFactory extends BaseFactory
     }
 
     /**
+     * Load by client Id
+     * @param string $clientId
+     * @throws NotFoundException
+     */
+    public static function loadByClientId($clientId)
+    {
+        $users = UserFactory::query(null, array('disableUserCheck' => 1, 'clientId' => $clientId));
+
+        if (count($users) <= 0)
+            throw new NotFoundException(sprintf('User not found'));
+
+        return $users[0];
+    }
+
+    /**
      * Get User by Name
      * @param string $userName
      * @return User
@@ -200,7 +215,7 @@ class UserFactory extends BaseFactory
         }
 
         if (Sanitize::getString('clientId', $filterBy) != null) {
-            $body .= ' AND user.userId = (SELECT DISTINCT owner_id FROM oauth_sessions WHERE client_id = :clientId) ';
+            $body .= ' AND user.userId = (SELECT userId FROM `oauth_clients` WHERE id = :clientId) ';
             $params['clientId'] = Sanitize::getString('clientId', $filterBy);
         }
 
@@ -233,7 +248,7 @@ class UserFactory extends BaseFactory
 
         $sql = $select . $body . $order . $limit;
 
-        //Log::sql($sql, $params);
+        \Xibo\Helper\Log::sql($sql, $params);
 
         foreach (PDOConnect::select($sql, $params) as $row) {
             $entries[] = (new User())->hydrate($row);

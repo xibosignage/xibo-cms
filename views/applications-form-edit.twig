@@ -1,0 +1,59 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Edit Application" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#applicationFormSubmit").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="applicationFormSubmit" class="XiboForm form-horizontal" method="put" action="{{ urlFor("application.edit", {id: client.key}) }}">
+                {% set title %}{% trans "Application Name" %}{% endset %}
+                {{ forms.text("name", title, client.name) }}
+
+                {% set title %}{% trans "Client Id" %}{% endset %}
+                {{ forms.disabled("clientId", title, client.key, "", "", "disabled") }}
+
+                {% set title %}{% trans "Client Secret" %}{% endset %}
+                {{ forms.text("clientSecret", title, client.secret, "", "", "disabled") }}
+
+                {% set title %}{% trans "Reset Secret?" %}{% endset %}
+                {% set helpText %}{% trans "Reset your client secret to prevent access from any existing application." %}{% endset %}
+                {{ forms.checkbox("resetKeys", title, 0, helpText) }}
+
+                {% set title %}{% trans "Authorization Code?" %}{% endset %}
+                {% set helpText %}{% trans "Allow the Authorization Code Grant for this Client?" %}{% endset %}
+                {{ forms.checkbox("authCode", title, client.authCode, helpText) }}
+
+                {% set title %}{% trans "Client Credentials?" %}{% endset %}
+                {% set helpText %}{% trans "Allow the Client Credentials Grant for this Client?" %}{% endset %}
+                {{ forms.checkbox("clientCredentials", title, client.clientCredentials, helpText) }}
+
+                {% set title %}{% trans "Redirect URI" %}{% endset %}
+                {% set helpText %}{% trans "White listed redirect URI's that will be allowed, only application for Authorization Code Grants" %}{% endset %}
+                {{ forms.text("redirectUri[]", title, "", helpText) }}
+
+                {% for url in client.redirectUris %}
+                    {% set title %}{% trans "Redirect URI" %}{% endset %}
+                    {{ forms.text("redirectUri[]", title, url.redirectUri) }}
+                {% endfor %}
+            </form>
+        </div>
+    </div>
+{% endblock %}

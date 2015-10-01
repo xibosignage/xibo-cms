@@ -79,8 +79,13 @@ $server->setClientStorage(new \Xibo\Storage\ApiClientStorage());
 $server->setScopeStorage(new \Xibo\Storage\ApiScopeStorage());
 $server->setAuthCodeStorage(new \Xibo\Storage\ApiAuthCodeStorage());
 
+// Allow auth code grant
 $authCodeGrant = new \League\OAuth2\Server\Grant\AuthCodeGrant();
 $server->addGrantType($authCodeGrant);
+
+// Allow client credentials grant
+$clientCredentialsGrant = new \League\OAuth2\Server\Grant\ClientCredentialsGrant();
+$server->addGrantType($clientCredentialsGrant);
 
 $refreshTokenGrant = new \League\OAuth2\Server\Grant\RefreshTokenGrant();
 $server->addGrantType($refreshTokenGrant);
@@ -104,7 +109,7 @@ $app->get('/', function() use ($app) {
 // Access Token
 $app->post('/access_token', function() use ($app) {
 
-    \Xibo\Helper\Log::debug('Request for access token');
+    \Xibo\Helper\Log::debug('Request for access token using grant_type: %s', $app->request()->post('grant_type'));
 
     $token = json_encode($app->server->issueAccessToken());
 

@@ -69,6 +69,25 @@ class ApiClientStorage extends AbstractStorage implements ClientInterface
                 'name'  =>  $result[0]['name'],
             ]);
 
+            // Check to see if this grant_type is allowed for this client
+            switch ($grantType) {
+
+                case 'authorization_code':
+                    if ($result[0]['authCode'] != 1)
+                        return false;
+
+                    break;
+
+                case 'client_credentials':
+                    if ($result[0]['clientCredentials'] != 1)
+                        return false;
+
+                    break;
+
+                default:
+                    return false;
+            }
+
             return $client;
         }
 

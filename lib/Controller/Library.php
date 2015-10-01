@@ -646,7 +646,7 @@ class Library extends Base
         file_put_contents(PROJECT_ROOT . '/web/modules/fonts.css', $css);
 
         // Install it (doesn't expire, isn't a system file, force update)
-        $media = MediaFactory::createModuleFile('fonts.css', PROJECT_ROOT . '/web/modules/fonts.css');
+        $media = MediaFactory::createModuleSystemFile('fonts.css', PROJECT_ROOT . '/web/modules/fonts.css');
         $media->expires = 0;
         $media->moduleSystemFile = true;
         $media->force = true;
@@ -669,6 +669,8 @@ class Library extends Base
      */
     public static function installAllModuleFiles()
     {
+        Log::info('Installing all module files');
+
         // Do this for all enabled modules
         foreach (ModuleFactory::query() as $module) {
             /* @var \Xibo\Entity\Module $module */

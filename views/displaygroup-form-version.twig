@@ -26,7 +26,7 @@
             <form id="displayGroupVersionForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("displayGroup.version", {id: displayGroup.displayGroupId}) }}">
                 {% set title %}{% trans "Installer File" %}{% endset %}
                 {% set helpText %}{% trans "Select the Installer File that should be pushed to the Players listed and installed." %}{% endset %}
-                {{ forms.dropdown("mediaId", "single", title, "", media, "mediaId", "media", helpText) }}
+                {{ forms.dropdown("mediaId", "single", title, "", media, "mediaId", "name", helpText) }}
             </form>
         </div>
     </div>

@@ -181,6 +181,7 @@ class Display extends Base
         $this->getState()->setData([
             'requiredFiles' => [],
             'display' => $display,
+            'timeAgo' => Date::parse($display->lastAccessed, 'U')->diffForHumans(),
             'errors' => $errors,
             'inventory' => [
                 'layouts' => $layouts,

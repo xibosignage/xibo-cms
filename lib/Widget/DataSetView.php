@@ -38,10 +38,10 @@ class DataSetView extends ModuleWidget
      */
     public function installFiles()
     {
-        MediaFactory::createModuleFile('modules/vendor/jquery-1.11.1.min.js')->save();
-        MediaFactory::createModuleFile('modules/vendor/jquery-cycle-2.1.6.min.js')->save();
-        MediaFactory::createModuleFile('modules/xibo-layout-scaler.js')->save();
-        MediaFactory::createModuleFile('modules/xibo-dataset-render.js')->save();
+        MediaFactory::createModuleSystemFile('modules/vendor/jquery-1.11.1.min.js')->save();
+        MediaFactory::createModuleSystemFile('modules/vendor/jquery-cycle-2.1.6.min.js')->save();
+        MediaFactory::createModuleSystemFile('modules/xibo-layout-scaler.js')->save();
+        MediaFactory::createModuleSystemFile('modules/xibo-dataset-render.js')->save();
     }
 
     /**

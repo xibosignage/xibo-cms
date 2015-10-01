@@ -9,13 +9,41 @@
 namespace Xibo\Factory;
 
 
+use League\OAuth2\Server\Util\SecureKey;
 use Xibo\Entity\Application;
+use Xibo\Exception\NotFoundException;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
 class ApplicationFactory extends BaseFactory
 {
+    public static function create()
+    {
+        $application = new Application();
+        // Make and ID/Secret
+        $application->secret = SecureKey::generate(254);
+        // Assign this user
+        $application->userId = self::getUser()->userId;
+        return $application;
+    }
+
+    /**
+     * Get by ID
+     * @param $clientId
+     * @return Application
+     * @throws NotFoundException
+     */
+    public static function getById($clientId)
+    {
+        $client = self::query(null, ['clientId' => $clientId]);
+
+        if (count($client) <= 0)
+            throw new NotFoundException();
+
+        return $client[0];
+    }
+
     public static function getByUserId($userId)
     {
         return ApplicationFactory::query(null, ['userId' => $userId]);
@@ -26,12 +54,16 @@ class ApplicationFactory extends BaseFactory
         $entries = array();
         $params = array();
 
-        $select = 'SELECT oauth_clients.id AS `key`, oauth_clients.secret, oauth_clients.name ';
+        $select = '
+            SELECT `oauth_clients`.id AS `key`,
+                `oauth_clients`.secret,
+                `oauth_clients`.name,
+                `oauth_clients`.authCode,
+                `oauth_clients`.clientCredentials,
+                `oauth_clients`.userId ';
 
         $body = '
               FROM `oauth_clients`
-                LEFT OUTER JOIN `oauth_client_redirect_uris`
-                ON `oauth_client_redirect_uris`.client_id = `oauth_clients`.id
         ';
 
         if (Sanitize::getInt('userId', $filterBy) !== null) {
@@ -52,6 +84,12 @@ class ApplicationFactory extends BaseFactory
         }
 
         $body .= ' WHERE 1 = 1 ';
+
+
+        if (Sanitize::getString('clientId', $filterBy) != null) {
+            $body .= ' AND `oauth_clients`.id = :clientId ';
+            $params['clientId'] = Sanitize::getString('clientId', $filterBy);
+        }
 
         // Sorting?
         $order = '';
