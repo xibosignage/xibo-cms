@@ -101,28 +101,28 @@ class Stats extends Base
      *      in="formData",
      *      description="The start date for the filter",
      *      type="string",
-     *      required="false"
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="toDt",
      *      in="formData",
      *      description="The end date for the filter",
      *      type="string",
-     *      required="false"
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="displayId",
      *      in="formData",
      *      description="An optional display Id to filter",
      *      type="integer",
-     *      required="false"
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="mediaId",
      *      in="formData",
      *      description="An optional media Id to filter",
      *      type="integer",
-     *      required="false"
+     *      required=false
      *   ),
      *  @SWG\Response(
      *      response=200,
