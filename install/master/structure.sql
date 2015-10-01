@@ -594,6 +594,9 @@ CREATE TABLE IF NOT EXISTS `oauth_clients` (
   `id` varchar(254) NOT NULL,
   `secret` varchar(254) NOT NULL,
   `name` varchar(254) NOT NULL,
+  `userId` int(11) NOT NULL,
+  `authCode` tinyint(4) NOT NULL,
+  `clientCredentials` tinyint(4) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 

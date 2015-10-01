@@ -130,7 +130,7 @@ class User implements \JsonSerializable
 
     /**
      * @SWG\Property(description="The users library quota in bytes")
-     * @var
+     * @var int
      */
     public $libraryQuota;
 

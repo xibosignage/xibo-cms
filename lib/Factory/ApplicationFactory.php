@@ -23,6 +23,8 @@ class ApplicationFactory extends BaseFactory
         $application = new Application();
         // Make and ID/Secret
         $application->secret = SecureKey::generate(254);
+        // Assign this user
+        $application->userId = self::getUser()->userId;
         return $application;
     }
 
@@ -52,12 +54,16 @@ class ApplicationFactory extends BaseFactory
         $entries = array();
         $params = array();
 
-        $select = 'SELECT oauth_clients.id AS `key`, oauth_clients.secret, oauth_clients.name, `oauth_clients`.userId ';
+        $select = '
+            SELECT `oauth_clients`.id AS `key`,
+                `oauth_clients`.secret,
+                `oauth_clients`.name,
+                `oauth_clients`.authCode,
+                `oauth_clients`.clientCredentials,
+                `oauth_clients`.userId ';
 
         $body = '
               FROM `oauth_clients`
-                LEFT OUTER JOIN `oauth_client_redirect_uris`
-                ON `oauth_client_redirect_uris`.client_id = `oauth_clients`.id
         ';
 
         if (Sanitize::getInt('userId', $filterBy) !== null) {

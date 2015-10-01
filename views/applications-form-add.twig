@@ -26,9 +26,6 @@
             <form id="applicationFormSubmit" class="XiboForm form-horizontal" method="post" action="{{ urlFor("application.add") }}">
                 {% set title %}{% trans "Application Name" %}{% endset %}
                 {{ forms.text("name", title) }}
-
-                {% set title %}{% trans "Redirect URI" %}{% endset %}
-                {{ forms.text("redirectUri", title) }}
             </form>
         </div>
     </div>

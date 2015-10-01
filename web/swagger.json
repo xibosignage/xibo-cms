@@ -3948,7 +3948,8 @@
                     "type": "integer"
                 },
                 "libraryQuota": {
-                    "description": "The users library quota in bytes"
+                    "description": "The users library quota in bytes",
+                    "type": "integer"
                 },
                 "groups": {
                     "description": "An array of user groups this user is assigned to",

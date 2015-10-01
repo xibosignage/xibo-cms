@@ -24,6 +24,7 @@ use League\OAuth2\Server\AuthorizationServer;
 use League\OAuth2\Server\Grant\AuthCodeGrant;
 use League\OAuth2\Server\Util\RedirectUri;
 use Xibo\Entity\Application;
+use Xibo\Entity\ApplicationRedirectUri;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\ApplicationFactory;
 use Xibo\Helper\Help;
@@ -159,6 +160,9 @@ class Applications extends Base
         if ($client->userId != $this->getUser()->userId && $this->getUser()->getUserTypeId() != 1)
             throw new AccessDeniedException();
 
+        // Load this clients details.
+        $client->load();
+
         // Render the view
         $this->getState()->template = 'applications-form-edit';
         $this->getState()->setData([
@@ -193,16 +197,39 @@ class Applications extends Base
             throw new AccessDeniedException();
 
         $client->name = Sanitize::getString('name');
+        $client->authCode = Sanitize::getCheckbox('authCode');
+        $client->clientCredentials = Sanitize::getCheckbox('clientCredentials');
 
         if (Sanitize::getCheckbox('resetKeys') == 1) {
             $client->resetKeys();
+        }
+
+        // Delete all the redirect urls and add them again
+        $client->load();
+
+        foreach ($client->redirectUris as $uri) {
+            $uri->delete();
+        }
+
+        $client->redirectUris = [];
+
+        // Do we have a redirect?
+        $redirectUris = Sanitize::getStringArray('redirectUri');
+
+        foreach ($redirectUris as $redirectUri) {
+            if ($redirectUri == '')
+                continue;
+
+            $redirect = new ApplicationRedirectUri();
+            $redirect->redirectUri = $redirectUri;
+            $client->assignRedirectUri($redirect);
         }
 
         $client->save();
 
         // Return
         $this->getState()->hydrate([
-            'message' => sprintf(__('Added %s'), $client->name),
+            'message' => sprintf(__('Edited %s'), $client->name),
             'data' => $client,
             'id' => $client->key
         ]);
