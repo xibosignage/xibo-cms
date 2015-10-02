@@ -884,8 +884,6 @@ class Soap
         if ($inventory == '')
             throw new \SoapFault('Receiver', 'Inventory Cannot be Empty');
 
-        Log::debug($inventory);
-
         // Load the XML into a DOMDocument
         $document = new \DOMDocument("1.0");
         $document->loadXML($inventory);
