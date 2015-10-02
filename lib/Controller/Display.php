@@ -864,7 +864,7 @@ class Display extends Base
             throw new AccessDeniedException();
 
         $display->screenShotRequested = 1;
-        $display->save(false);
+        $display->save(['validate' => false]);
 
         // Return
         $this->getState()->hydrate([
@@ -932,7 +932,7 @@ class Display extends Base
         WakeOnLan::TransmitWakeOnLan($display->macAddress, $display->secureOn, $display->broadCastAddress, $display->cidr, '9');
 
         $display->lastWakeOnLanCommandSent = time();
-        $display->save(false);
+        $display->save(['validate' => false]);
 
         // Return
         $this->getState()->hydrate([
@@ -976,7 +976,7 @@ class Display extends Base
 
                     // Update the display and set it as logged out
                     $display->loggedIn = 0;
-                    $display->save(false, false);
+                    $display->save(['validate' => false, 'audit' => false]);
 
                     // We put it back again (in memory only)
                     // this is then used to indicate whether or not this is the first time this display has gone

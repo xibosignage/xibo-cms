@@ -345,7 +345,7 @@ class Campaign implements \JsonSerializable
         foreach (DisplayFactory::getByActiveCampaignId($this->campaignId) as $display) {
             /* @var \Xibo\Entity\Display $display */
             $display->setMediaIncomplete();
-            $display->save(false);
+            $display->save(['validate' => false, 'audit' => false]);
         }
     }
 }

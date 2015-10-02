@@ -95,7 +95,7 @@ class DisplayGroup implements \JsonSerializable
         foreach (DisplayFactory::getByDisplayGroupId($this->displayGroupId) as $display) {
             /* @var Display $display */
             $display->setMediaIncomplete();
-            $display->save(false);
+            $display->save(['validate' => false, 'audit' => false]);
         }
     }
 
@@ -281,6 +281,8 @@ class DisplayGroup implements \JsonSerializable
 
     private function edit()
     {
+        Log::debug('Updating Display Group. %s, %d', $this->displayGroup, $this->displayGroupId);
+
         PDOConnect::update('UPDATE displaygroup SET DisplayGroup = :displayGroup, Description = :description WHERE DisplayGroupID = :displayGroupId', [
             'displayGroup' => $this->displayGroup,
             'description' => $this->description,

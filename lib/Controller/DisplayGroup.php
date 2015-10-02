@@ -768,7 +768,7 @@ class DisplayGroup extends Base
         foreach (DisplayFactory::getByDisplayGroupId($displayGroupId) as $display) {
             /* @var Display $display */
             $display->versionInstructions = json_encode(['id' => $media->mediaId, 'file' => $media->storedAs]);
-            $display->save(false);
+            $display->save(['validate' => false]);
         }
 
         // Return
