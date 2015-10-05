@@ -351,12 +351,16 @@ class Display
 
     /**
      * Save
-     * @param bool $validate
-     * @param bool $audit
+     * @param array $options
      */
-    public function save($validate = true, $audit = true)
+    public function save($options = [])
     {
-        if ($validate)
+        $options = array_merge([
+            'validate' => true,
+            'audit' => true
+        ], $options);
+
+        if ($options['validate'])
             $this->validate();
 
         if ($this->displayId == null || $this->displayId == 0)
@@ -364,7 +368,7 @@ class Display
         else
             $this->edit();
 
-        if ($audit)
+        if ($options['audit'])
             Log::audit('Display', $this->displayId, 'Display Saved', $this->jsonSerialize());
     }
 

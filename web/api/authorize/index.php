@@ -87,6 +87,7 @@ $server->addGrantType($authCodeGrant);
 $clientCredentialsGrant = new \League\OAuth2\Server\Grant\ClientCredentialsGrant();
 $server->addGrantType($clientCredentialsGrant);
 
+// Add refresh tokens
 $refreshTokenGrant = new \League\OAuth2\Server\Grant\RefreshTokenGrant();
 $server->addGrantType($refreshTokenGrant);
 

@@ -159,7 +159,7 @@ class Soap4 extends Soap
         $display->clientVersion = $clientVersion;
         $display->clientCode = $clientCode;
         //$display->operatingSystem = $operatingSystem;
-        $display->save(false);
+        $display->save(['validate' => false, 'audit' => false]);
 
         // Log Bandwidth
         $returnXml = $return->saveXML();
@@ -393,7 +393,7 @@ class Soap4 extends Soap
         $this->display->storageTotalSpace = Sanitize::getInt('totalSpace', $this->display->storageTotalSpace, $status);
 
         // Touch the display record
-        $this->display->save(false, false);
+        $this->display->save(['validate' => false, 'audit' => false]);
 
         return true;
     }
@@ -436,7 +436,7 @@ class Soap4 extends Soap
 
         // Touch the display record
         $this->display->screenShotRequested = 0;
-        $this->display->save(false, false);
+        $this->display->save(['validate' => false, 'audit' => false]);
 
         $this->LogBandwidth($this->display->displayId, Bandwidth::$SCREENSHOT, filesize($location));
 

@@ -267,7 +267,7 @@ class Maintenance extends Base
                                     print $display->display . ':Sent WOL Message. Previous WOL send time: ' . Date::getLocalDate($display->lastWakeOnLanCommandSent) . '<br/>\n';
 
                                     $display->lastWakeOnLanCommandSent = time();
-                                    $display->save(false);
+                                    $display->save(['validate' => false, 'audit' => true]);
                                 }
                                 catch (\Exception $e) {
                                     print $display->display . ':Error=' . $displayObject->GetErrorMessage() . '<br/>\n';

@@ -71,7 +71,7 @@ class Soap3 extends Soap
             // Touch
             $display->lastAccessed = time();
             $display->loggedIn = 1;
-            $display->save(false);
+            $display->save(['validate' => false, 'audit' => false]);
 
             // Log Bandwidth
             $this->logBandwidth($display->displayId, Bandwidth::$REGISTER, strlen($active));

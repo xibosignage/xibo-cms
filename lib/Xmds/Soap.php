@@ -884,8 +884,6 @@ class Soap
         if ($inventory == '')
             throw new \SoapFault('Receiver', 'Inventory Cannot be Empty');
 
-        Log::debug($inventory);
-
         // Load the XML into a DOMDocument
         $document = new \DOMDocument("1.0");
         $document->loadXML($inventory);
@@ -936,7 +934,7 @@ class Soap
         }
 
         $this->display->mediaInventoryStatus = $mediaInventoryComplete;
-        $this->display->save(false, false);
+        $this->display->save(['validate' => false, 'audit' => false]);
 
         $this->LogBandwidth($this->display->displayId, Bandwidth::$MEDIAINVENTORY, strlen($inventory));
 
@@ -1071,7 +1069,7 @@ class Soap
             $this->display->lastAccessed = time();
             $this->display->loggedIn = 1;
             $this->display->clientAddress = $this->getIp();
-            $this->display->save(false, false);
+            $this->display->save(['validate' => false, 'audit' => false]);
 
             // Configure our log processor
             $this->logProcessor->setDisplay($this->display->displayId);

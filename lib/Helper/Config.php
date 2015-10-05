@@ -26,7 +26,7 @@ define('WEBSITE_VERSION', 120);
 
 class Config
 {
-    public static $VERSION_REQUIRED = '5.3.3';
+    public static $VERSION_REQUIRED = '5.5';
 
     private $extensions;
     public $envTested;

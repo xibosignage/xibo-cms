@@ -56,11 +56,11 @@ class StatusDashboard extends Base
             $dbh = PDOConnect::init();
 
             $sql = '
-              SELECT FROM_UNIXTIME(month) AS month,
+              SELECT MAX(FROM_UNIXTIME(month)) AS month,
                   IFNULL(SUM(Size), 0) AS size
                 FROM `bandwidth`
                WHERE month > :month AND displayId IN (' . implode(',', $displayIds) . ')
-              GROUP BY FROM_UNIXTIME(month) ORDER BY MIN(month);
+              GROUP BY MONTH(FROM_UNIXTIME(month)) ORDER BY MIN(month);
               ';
             $params = array('month' => time() - (86400 * 365));
 
