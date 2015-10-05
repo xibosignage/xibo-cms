@@ -327,7 +327,7 @@ class Layout implements \JsonSerializable
             'loadCampaigns' => true
         ], $options);
 
-        if ($this->loaded)
+        if ($this->loaded || $this->layoutId == 0)
             return;
 
         Log::debug('Loading Layout %d with options %s', $this->layoutId, json_encode($options));
