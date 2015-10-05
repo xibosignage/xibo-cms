@@ -194,6 +194,8 @@ class LayoutFactory extends BaseFactory
      */
     public static function loadByXlf($layoutXlf)
     {
+        Log::debug('Loading Layout by XLF');
+
         // New Layout
         $layout = new Layout();
 
@@ -216,6 +218,8 @@ class LayoutFactory extends BaseFactory
         // Populate Region Nodes
         foreach ($document->getElementsByTagName('region') as $regionNode) {
             /* @var \DOMElement $regionNode */
+            Log::debug('Found Region');
+
             $region = RegionFactory::create(
                 (int)$regionNode->getAttribute('userId'),
                 $regionNode->getAttribute('name'),
@@ -248,7 +252,7 @@ class LayoutFactory extends BaseFactory
 
                 // Does this module type exist?
                 if (!array_key_exists($widget->type, $modules)) {
-                    Log::info('Module Type [%s] in imported Layout does not exist. Allowable types: %s', $widget->type, json_encode(array_keys($modules)));
+                    Log::error('Module Type [%s] in imported Layout does not exist. Allowable types: %s', $widget->type, json_encode(array_keys($modules)));
                     continue;
                 }
 
@@ -296,6 +300,8 @@ class LayoutFactory extends BaseFactory
 
             $layout->regions[] = $region;
         }
+
+        Log::debug('Finished loading layout - there are %d regions.', count($layout->regions));
 
         // TODO: Load any existing tags
 
