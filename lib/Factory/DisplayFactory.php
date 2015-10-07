@@ -143,7 +143,9 @@ class DisplayFactory extends BaseFactory
                   display.storageAvailableSpace,
                   display.storageTotalSpace,
                   displaygroup.displayGroupId,
-                  displaygroup.description ';
+                  displaygroup.description,
+                  `display`.xmrChannel,
+                  `display`.xmrPubKey ';
 
         $body = '
                 FROM `display`

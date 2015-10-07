@@ -23,13 +23,18 @@ namespace Xibo\Controller;
 use Xibo\Entity\Display;
 use Xibo\Entity\Permission;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\ConfigurationException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
+use Xibo\Helper\Config;
 use Xibo\Helper\Help;
+use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
+use Xibo\XMR\CollectNowAction;
+use Xibo\XMR\PlayerActionException;
 
 
 class DisplayGroup extends Base
@@ -775,6 +780,64 @@ class DisplayGroup extends Base
         $this->getState()->hydrate([
             'httpStatus' => 204,
             'message' => sprintf(__('Version set for %s'), $displayGroup->displayGroup),
+            'id' => $displayGroup->displayGroupId
+        ]);
+    }
+
+    /**
+     * Cause the player to collect now
+     * @param int $displayGroupId
+     * @throws ConfigurationException when the message cannot be sent
+     *
+     * @SWG\Post(
+     *  path="/displaygroup/{displayGroupId}/action/collectNow",
+     *  operationId="displayGroupActionCollectNow",
+     *  tags={"displaygroup"},
+     *  summary="Action: Collect Now",
+     *  description="Send the collect now action to this DisplayGroup",
+     *  @SWG\Parameter(
+     *      name="displayGroupId",
+     *      in="path",
+     *      description="The display group id",
+     *      type="integer",
+     *      required="true"
+     *   )
+     * )
+     */
+    public function collectNow($displayGroupId)
+    {
+        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
+
+        if (!$this->getUser()->checkEditable($displayGroup))
+            throw new AccessDeniedException();
+
+        // XMR network address
+        $xmrAddress = Config::GetSetting('XMR_ADDRESS');
+
+        if ($xmrAddress == '')
+            throw new \InvalidArgumentException(__('XMR address is not set'));
+
+        // Send a message to all displays
+        foreach (DisplayFactory::getByDisplayGroupId($displayGroupId) as $display) {
+            /* @var Display $display */
+            if ($display->xmrChannel == '' || $display->xmrPubKey == '')
+                throw new \InvalidArgumentException(__('This Player is not configured or ready to receive XMR commands'));
+
+            try {
+                // Assign the Layout to the Display
+                if (!(new CollectNowAction())->setIdentity($display->xmrChannel, $display->xmrPubKey)->send($xmrAddress))
+                    throw new ConfigurationException(__('This command has been refused'));
+            } catch (PlayerActionException $sockEx) {
+                Log::emergency('XMR Connection Failure: %s', $sockEx->getMessage());
+                Log::debug('XMR Connection Failure, trace: %s', $sockEx->getTraceAsString());
+                throw new ConfigurationException(__('Connection Failed'));
+            }
+        }
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('Command Sent to %s'), $displayGroup->displayGroup),
             'id' => $displayGroup->displayGroupId
         ]);
     }

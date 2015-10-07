@@ -271,6 +271,18 @@ class Display
      */
     public $displayGroups = [];
 
+    /**
+     * @SWG\Property(description="The Player Subscription Channel")
+     * @var string
+     */
+    public $xmrChannel;
+
+    /**
+     * @SWG\Property(description="The Player Public Key")
+     * @var string
+     */
+    public $xmrPubKey;
+
     public function __construct()
     {
         $this->excludeProperty('mediaInventoryXml');
@@ -452,7 +464,9 @@ class Display
                     currentLayoutId = :currentLayoutId,
                     screenShotRequested = :screenShotRequested,
                     storageAvailableSpace = :storageAvailableSpace,
-                    storageTotalSpace = :storageTotalSpace
+                    storageTotalSpace = :storageTotalSpace,
+                    xmrChannel = :xmrChannel,
+                    xmrPubKey = :xmrPubKey
              WHERE displayid = :displayId
         ', [
             'display' => $this->display,
@@ -485,6 +499,8 @@ class Display
             'screenShotRequested' => $this->screenShotRequested,
             'storageAvailableSpace' => $this->storageAvailableSpace,
             'storageTotalSpace' => $this->storageTotalSpace,
+            'xmrChannel' => $this->xmrChannel,
+            'xmrPubKey' => $this->xmrPubKey,
             'displayId' => $this->displayId
         ]);
 

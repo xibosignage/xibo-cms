@@ -185,6 +185,8 @@ CREATE TABLE IF NOT EXISTS `display` (
   `screenShotRequested` tinyint(4) NOT NULL DEFAULT '0',
   `storageAvailableSpace` int(11) DEFAULT NULL,
   `storageTotalSpace` int(11) DEFAULT NULL,
+  `xmrChannel` varchar(254) DEFAULT NULL,
+  `xmrPubKey` text,
   PRIMARY KEY (`displayid`),
   KEY `defaultplaylistid` (`defaultlayoutid`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;

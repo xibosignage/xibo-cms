@@ -136,6 +136,8 @@ echo __('Instance Suspended');
 echo __('Is this instance suspended?');
 echo __('Inherit permissions');
 echo __('Inherit permissions from Parent when adding a new item?');
+echo __('XMR Network Address');
+echo __('Please enter the network address for XMR.');
 
 // Transitions
 echo __('Fade In');

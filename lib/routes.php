@@ -214,6 +214,9 @@ $app->post('/displaygroup/:id/display/unassign', '\Xibo\Controller\DisplayGroup:
 $app->post('/displaygroup/:id/media/assign', '\Xibo\Controller\DisplayGroup:assignMedia')->name('displayGroup.assign.media');
 $app->post('/displaygroup/:id/media/unassign', '\Xibo\Controller\DisplayGroup:unassignMedia')->name('displayGroup.unassign.media');
 
+$app->post('/displaygroup/:id/action/collectNow', '\Xibo\Controller\DisplayGroup:collectNow')->name('displayGroup.action.collectNow');
+//$app->post('/displaygroup/:id/action/layoutChange', '\Xibo\Controller\DisplayGroup:layoutChange')->name('displayGroup.action.layoutChange');
+
 /**
  * Display Profile
  * @SWG\Tag(
