@@ -413,8 +413,8 @@ class Display
     private function add()
     {
         $this->displayId = PDOConnect::insert('
-            INSERT INTO display (display, isAuditing, defaultlayoutid, license, licensed, inc_schedule, email_alert, alert_timeout)
-              VALUES (:display, :isauditing, :defaultlayoutid, :license, :licensed, :inc_schedule, :email_alert, :alert_timeout)
+            INSERT INTO display (display, isAuditing, defaultlayoutid, license, licensed, inc_schedule, email_alert, alert_timeout, xmrChannel, xmrPubKey)
+              VALUES (:display, :isauditing, :defaultlayoutid, :license, :licensed, :inc_schedule, :email_alert, :alert_timeout, :xmrChannel, :xmrPubKey)
         ', [
             'display' => $this->display,
             'isauditing' => 0,
@@ -423,7 +423,9 @@ class Display
             'licensed' => 0,
             'inc_schedule' => 0,
             'email_alert' => 0,
-            'alert_timeout' => 0
+            'alert_timeout' => 0,
+            'xmrChannel' => $this->xmrChannel,
+            'xmrPubKey' => $this->xmrPubKey
         ]);
 
         $displayGroup = new DisplayGroup();

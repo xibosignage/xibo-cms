@@ -125,7 +125,7 @@ class Soap4 extends Soap
                 $displayElement->appendChild($node);
 
                 // Send Notification if required
-                $this->AlertDisplayUp($display->displayId, $display->display, $display->loggedIn, $display->emailAlert);
+                $this->AlertDisplayUp();
             }
 
         } catch (NotFoundException $e) {

@@ -434,8 +434,9 @@ ALTER TABLE  `display` ADD  `xmrChannel` VARCHAR( 254 ) NULL ,
 ADD  `xmrPubKey` TEXT NULL;
 
 INSERT INTO `setting` (`settingid`, `setting`, `value`, `fieldType`, `helptext`, `options`, `cat`, `userChange`, `title`, `validation`, `ordering`, `default`, `userSee`, `type`)
-VALUES (NULL, 'XMR_ADDRESS', 'tcp:://localhost:5555', 'text', 'Please enter the network address for XMR.', NULL, 'displays', '1', 'XMR Network Address', '', '5', 'tcp:://localhost:5555', '1', 'string');
+VALUES (NULL, 'XMR_ADDRESS', 'tcp:://localhost:5555', 'text', 'Please enter the private address for XMR.', NULL, 'displays', '1', 'XMR Private Address', '', '5', 'tcp:://localhost:5555', '1', 'string'),
+ (NULL, 'XMR_PUB_ADDRESS', 'tcp:://localhost:5556', 'text', 'Please enter the public address for XMR.', NULL, 'displays', '1', 'XMR Public Address', '', '6', 'tcp:://localhost:5556', '1', 'string');
 
-UPDATE `version` SET `app_ver` = '1.8.0-alpha', `XmdsVersion` = 4, `XlfVersion` = 2;
+UPDATE `version` SET `app_ver` = '1.8.0-alpha2', `XmdsVersion` = 5, `XlfVersion` = 2;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';
 UPDATE `version` SET `DBVersion` = '120';
