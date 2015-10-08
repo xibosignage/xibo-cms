@@ -117,32 +117,8 @@ class LayoutFactory extends BaseFactory
     {
         // Get the layout
         $layout = LayoutFactory::getById($layoutId);
-
-        // LEGACY: What happens if we have a legacy layout (a layout that still contains its own XML)
-        if ($layout->legacyXml != null && $layout->legacyXml != '') {
-            $layoutFromXml = LayoutFactory::loadByXlf($layout->legacyXml);
-
-            // Add the information we know from the layout we originally parsed from the DB
-            $layoutFromXml->layoutId = $layout->layoutId;
-            $layoutFromXml->layout = $layout->layout;
-            $layoutFromXml->description = $layout->description;
-            $layoutFromXml->status = $layout->status;
-            $layoutFromXml->campaignId = $layout->campaignId;
-            $layoutFromXml->backgroundImageId = $layout->backgroundImageId;
-            $layoutFromXml->ownerId = $layout->ownerId;
-            $layoutFromXml->schemaVersion = 3;
-
-            // TODO: Save this so that it gets converted to the DB format.
-            //$layoutFromXml->save();
-
-            // TODO: somehow we need to map the old permissions over to the new permissions model.
-
-            $layout = $layoutFromXml;
-        }
-        else {
-            // Load the layout
-            $layout->load();
-        }
+        // Load the layout
+        $layout->load();
 
         return $layout;
     }
@@ -210,7 +186,7 @@ class LayoutFactory extends BaseFactory
         $layout->width = $document->documentElement->getAttribute('width');
         $layout->height = $document->documentElement->getAttribute('height');
         $layout->backgroundColor = $document->documentElement->getAttribute('bgcolor');
-        $layout->backgroundzIndex = $document->documentElement->getAttribute('zindex');
+        $layout->backgroundzIndex = (int)$document->documentElement->getAttribute('zindex');
 
         // Xpath to use when getting media
         $xpath = new \DOMXPath($document);
@@ -460,7 +436,6 @@ class LayoutFactory extends BaseFactory
         $select .= "        layout.userID, ";
         $select .= "        `user`.UserName AS owner, ";
         $select .= "        campaign.CampaignID, ";
-        $select .= "        layout.xml AS legacyXml, ";
         $select .= "        layout.status, ";
         $select .= "        layout.width, ";
         $select .= "        layout.height, ";
@@ -644,9 +619,6 @@ class LayoutFactory extends BaseFactory
             $layout->createdDt = $row['createdDt'];
             $layout->modifiedDt = $row['modifiedDt'];
             $layout->displayOrder = $row['displayOrder'];
-
-            if (Sanitize::int('showLegacyXml', $filterBy) == 1)
-                $layout->legacyXml = $row['legacyXml'];
 
             $layout->groupsWithPermissions = $row['groupsWithPermissions'];
 
