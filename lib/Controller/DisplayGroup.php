@@ -762,7 +762,7 @@ class DisplayGroup extends Base
             throw new AccessDeniedException();
 
         // Assign the media file
-        $displayGroup->assignMedia($media->mediaId);
+        $displayGroup->assignMedia($media);
 
         // Update each display in the group with the new version
         foreach (DisplayFactory::getByDisplayGroupId($displayGroupId) as $display) {
