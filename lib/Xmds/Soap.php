@@ -117,7 +117,8 @@ class Soap
         try {
             $dbh = PDOConnect::init();
 
-            // Get a list of all layout ids in the schedule right now.
+            // Get a list of all layout ids in the schedule right now
+            // including any layouts that have been associated to our Display Group
             $SQL = '
                 SELECT layout.layoutID
                   FROM `campaign`
@@ -137,6 +138,12 @@ class Soap
                     AND schedule_detail.FromDT < :fromdt
                     AND schedule_detail.ToDT > :todt
                     AND layout.retired = 0
+                UNION
+                SELECT `lklayoutdisplaygroup`.layoutId
+                  FROM `lklayoutdisplaygroup`
+                    INNER JOIN `lkdisplaydg`
+                    ON lkdisplaydg.DisplayGroupID = `lklayoutdisplaygroup`.displayGroupId
+                 WHERE lkdisplaydg.DisplayID = :displayId
                 ORDER BY schedule.DisplayOrder, lkcampaignlayout.DisplayOrder, schedule_detail.eventID
             ';
 
@@ -171,12 +178,15 @@ class Soap
             // TODO: Handle the Background Image (in 1.7 it was linked to the layout with lklayoutmedia).
             // lklayoutmedia has gone now, so I suppose it will have to be handled in requiredfiles.
 
-            // Add file nodes to the $fileElements
+            // Module System Files
             $SQL = "
                     SELECT 1 AS DownloadOrder, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize
                        FROM `media`
                      WHERE media.type = 'font'
-                        OR (media.type = 'module' AND media.moduleSystemFile = 1)
+                        OR (media.type = 'module' AND media.moduleSystemFile = 1) ";
+
+            // Media linked to Widgets on Layouts
+            $SQL .= "
                     UNION
                     SELECT 3 AS DownloadOrder, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize
                       FROM media
@@ -191,6 +201,8 @@ class Soap
                        INNER JOIN layout
                        ON layout.LayoutID = region.layoutId ";
             $SQL .= sprintf(" WHERE layout.layoutid IN (%s)  ", $layoutIdList);
+
+            // Media associated with the display
             $SQL .= "
                     UNION
                     SELECT 2 AS DownloadOrder, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize
@@ -201,6 +213,8 @@ class Soap
                         ON lkdisplaydg.DisplayGroupID = lkmediadisplaygroup.DisplayGroupID
                     ";
             $SQL .= " WHERE lkdisplaydg.DisplayID = :displayId ";
+
+            // Order of download
             $SQL .= " ORDER BY DownloadOrder DESC";
 
             $sth = $dbh->prepare($SQL);
