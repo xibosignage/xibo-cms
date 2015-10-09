@@ -26,6 +26,7 @@ use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
+use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
@@ -115,6 +116,13 @@ class DisplayGroup extends Base
                     'id' => 'displaygroup_button_fileassociations',
                     'url' => $this->urlFor('displayGroup.media.form', ['id' => $group->displayGroupId]),
                     'text' => __('Assign Files')
+                );
+
+                // Layout Assignments
+                $group->buttons[] = array(
+                    'id' => 'displaygroup_button_layout_associations',
+                    'url' => $this->urlFor('displayGroup.layout.form', ['id' => $group->displayGroupId]),
+                    'text' => __('Assign Layouts')
                 );
             }
 
@@ -699,6 +707,177 @@ class DisplayGroup extends Base
     }
 
     /**
+     * Layouts Form (layouts linked to displays)
+     * @param int $displayGroupId
+     */
+    public function LayoutsForm($displayGroupId)
+    {
+        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
+
+        if (!$this->getUser()->checkEditable($displayGroup))
+            throw new AccessDeniedException();
+
+        // Load the groups details
+        $displayGroup->load();
+
+        $this->getState()->template = 'displaygroup-form-layouts';
+        $this->getState()->setData([
+            'displayGroup' => $displayGroup,
+            'modules' => ModuleFactory::query(null, ['regionSpecific' => 0]),
+            'layouts' => LayoutFactory::getByDisplayGroupId($displayGroup->displayGroupId),
+            'help' => Help::Link('DisplayGroup', 'FileAssociations')
+        ]);
+    }
+
+    /**
+     * Assign Layouts
+     * @param int $displayGroupId
+     *
+     * @SWG\Post(
+     *  path="/displaygroup/{displayGroupId}/media/assign",
+     *  operationId="displayGroupLayoutsAssign",
+     *  tags={"displayGroup"},
+     *  summary="Assign one or more Layouts items to a Display Group",
+     *  description="Adds the provided Layouts to the Display Group",
+     *  @SWG\Parameter(
+     *      name="displayGroupId",
+     *      type="integer",
+     *      in="path",
+     *      description="The Display Group to assign to",
+     *      required=true
+     *  ),
+     *  @SWG\Parameter(
+     *      name="layoutId",
+     *      type="array",
+     *      in="formData",
+     *      description="The Layouts Ids to assign",
+     *      required=true,
+     *      @SWG\Items(
+     *          type="integer"
+     *      )
+     *  ),
+     *  @SWG\Parameter(
+     *      name="unassignLayoutsId",
+     *      type="array",
+     *      in="formData",
+     *      description="Optional array of Layouts Id to unassign",
+     *      required=false,
+     *      @SWG\Items(
+     *          type="integer"
+     *      )
+     *  ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
+     */
+    public function assignLayouts($displayGroupId)
+    {
+        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
+
+        if (!$this->getUser()->checkEditable($displayGroup))
+            throw new AccessDeniedException();
+
+        // Load the groups details
+        $displayGroup->load();
+
+        $layoutIds = Sanitize::getIntArray('layoutId');
+
+        // Loop through all the media
+        foreach ($layoutIds as $layoutId) {
+
+            $layout = LayoutFactory::getById($layoutId);
+
+            if (!$this->getUser()->checkViewable($layout))
+                throw new AccessDeniedException(__('You have selected a layout that you no longer have permission to use. Please reload the form.'));
+
+            $displayGroup->assignLayout($layout);
+        }
+
+        // Check for unassign
+        foreach (Sanitize::getIntArray('unassignLayoutId') as $layoutId) {
+            // Get the layout record
+            $layout = LayoutFactory::getById($layoutId);
+
+            if (!$this->getUser()->checkViewable($layout))
+                throw new AccessDeniedException(__('You have selected a layout that you no longer have permission to use. Please reload the form.'));
+
+            $displayGroup->unassignLayout($layout);
+        }
+
+        $displayGroup->save(false);
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('Layouts assigned to %s'), $displayGroup->displayGroup),
+            'id' => $displayGroup->displayGroupId
+        ]);
+    }
+
+    /**
+     * Unassign Layout
+     * @param int $displayGroupId
+     *
+     * @SWG\Post(
+     *  path="/displaygroup/{displayGroupId}/layout/unassign",
+     *  operationId="displayGroupLayoutUnassign",
+     *  tags={"displayGroup"},
+     *  summary="Unassign one or more Layout items from a Display Group",
+     *  description="Removes the provided from the Display Group",
+     *  @SWG\Parameter(
+     *      name="displayGroupId",
+     *      type="integer",
+     *      in="path",
+     *      description="The Display Group to unassign from",
+     *      required=true
+     *  ),
+     *  @SWG\Parameter(
+     *      name="layoutId",
+     *      type="array",
+     *      in="formData",
+     *      description="The Layout Ids to unassign",
+     *      required=true,
+     *      @SWG\Items(
+     *          type="integer"
+     *      )
+     *  ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
+     */
+    public function unassignLayout($displayGroupId)
+    {
+        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
+
+        if (!$this->getUser()->checkEditable($displayGroup))
+            throw new AccessDeniedException();
+
+        // Load the groups details
+        $displayGroup->load();
+
+        $layoutIds = Sanitize::getIntArray('layoutIds');
+
+        // Loop through all the media
+        foreach ($layoutIds as $layoutId) {
+
+            $displayGroup->unassignLayout(LayoutFactory::getById($layoutId));
+        }
+
+        $displayGroup->save(false);
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('Layouts unassigned from %s'), $displayGroup->displayGroup),
+            'id' => $displayGroup->displayGroupId
+        ]);
+    }
+
+    /**
      * Version Form
      * @param int $displayGroupId
      */
@@ -713,7 +892,7 @@ class DisplayGroup extends Base
         $displays = DisplayFactory::getByDisplayGroupId($displayGroupId);
 
         // Possible media files to assign
-        $media = MediaFactory::query(['name'], ['type' => 'genericfile']);
+        $media = LayoutFactory::query(['name'], ['type' => 'genericfile']);
 
         $this->getState()->template = 'displaygroup-form-version';
         $this->getState()->setData([

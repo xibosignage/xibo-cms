@@ -11,6 +11,7 @@ namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
 use Xibo\Factory\DisplayFactory;
+use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\ScheduleFactory;
@@ -61,6 +62,7 @@ class DisplayGroup implements \JsonSerializable
 
     // Child Items the Display Group is linked to
     private $displays = [];
+    private $layouts = [];
     private $media = [];
     private $permissions = [];
     private $events = [];
@@ -158,6 +160,35 @@ class DisplayGroup implements \JsonSerializable
     }
 
     /**
+     * Assign Layout
+     * @param Layout $layout
+     */
+    public function assignLayout($layout)
+    {
+        $this->load();
+
+        if (!in_array($layout, $this->layouts))
+            $this->layouts[] = $layout;
+    }
+
+    /**
+     * Unassign Layout
+     * @param Layout $layout
+     */
+    public function unassignLayout($layout)
+    {
+        $this->load();
+
+        $this->layouts = array_udiff($this->layouts, [$layout], function($a, $b) {
+            /**
+             * @var Layout $a
+             * @var Layout $b
+             */
+            return $a->getId() - $b->getId();
+        });
+    }
+
+    /**
      * Load the contents for this display group
      */
     public function load()
@@ -168,6 +199,8 @@ class DisplayGroup implements \JsonSerializable
         $this->permissions = PermissionFactory::getByObjectId(get_class($this), $this->displayGroupId);
 
         $this->displays = DisplayFactory::getByDisplayGroupId($this->displayGroupId);
+
+        $this->layouts = LayoutFactory::getByDisplayGroupId($this->displayGroupId);
 
         $this->media = MediaFactory::getByDisplayGroupId($this->displayGroupId);
 
@@ -226,6 +259,10 @@ class DisplayGroup implements \JsonSerializable
             // Handle any changes in the media linked
             $this->linkMedia();
             $this->unlinkMedia();
+
+            // Handle any changes in the layouts linked
+            $this->linkLayouts();
+            $this->unlinkLayouts();
         }
     }
 
@@ -261,9 +298,11 @@ class DisplayGroup implements \JsonSerializable
     public function removeAssignments()
     {
         $this->displays = [];
+        $this->layouts = [];
         $this->media = [];
 
         $this->unlinkDisplays();
+        $this->unlinkLayouts();
         $this->unlinkMedia();
     }
 
@@ -345,6 +384,37 @@ class DisplayGroup implements \JsonSerializable
             $i++;
             $sql .= ',:mediaId' . $i;
             $params['mediaId' . $i] = $media->mediaId;
+        }
+
+        $sql .= ')';
+
+        PDOConnect::update($sql, $params);
+    }
+
+    private function linkLayouts()
+    {
+        foreach ($this->layouts as $layout) {
+            /* @var Layout $media */
+            PDOConnect::update('INSERT INTO `lklayoutdisplaygroup` (layoutid, displaygroupid) VALUES (:layoutId, :displayGroupId) ON DUPLICATE KEY UPDATE layoutid = layoutid', [
+                'displayGroupId' => $this->displayGroupId,
+                'layoutId' => $layout->layoutId
+            ]);
+        }
+    }
+
+    private function unlinkLayouts()
+    {
+        // Unlink any layout that is NOT in the collection
+        $params = ['displayGroupId' => $this->displayGroupId];
+
+        $sql = 'DELETE FROM `lklayoutdisplaygroup` WHERE DisplayGroupID = :displayGroupId AND layoutId NOT IN (0';
+
+        $i = 0;
+        foreach ($this->layouts as $layout) {
+            /* @var Layout $layout */
+            $i++;
+            $sql .= ',:layoutId' . $i;
+            $params['layoutId' . $i] = $layout->layoutId;
         }
 
         $sql .= ')';

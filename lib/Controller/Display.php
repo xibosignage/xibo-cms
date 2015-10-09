@@ -353,6 +353,13 @@ class Display extends Base
                     'text' => __('Assign Files')
                 );
 
+                // Layout Assignments
+                $display->buttons[] = array(
+                    'id' => 'displaygroup_button_layout_associations',
+                    'url' => $this->urlFor('displayGroup.layout.form', ['id' => $display->displayGroupId]),
+                    'text' => __('Assign Layouts')
+                );
+
                 // Screen Shot
                 $display->buttons[] = array(
                     'id' => 'display_button_requestScreenShot',

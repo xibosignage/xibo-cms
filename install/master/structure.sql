@@ -359,6 +359,14 @@ CREATE TABLE IF NOT EXISTS `lkmediadisplaygroup` (
 
 -- --------------------------------------------------------
 
+CREATE TABLE IF NOT EXISTS `lklayoutdisplaygroup` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `layoutId` int(11) NOT NULL,
+  `displayGroupId` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `layoutId` (`layoutId`,`displaygroupid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Layout associations directly to Display Groups' AUTO_INCREMENT=1 ;
+
 --
 -- Table structure for table `lkmediagroup`
 --
