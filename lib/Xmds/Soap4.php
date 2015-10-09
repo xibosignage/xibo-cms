@@ -198,6 +198,8 @@ class Soap4 extends Soap
      */
     function GetFile($serverKey, $hardwareKey, $fileId, $fileType, $chunkOffset, $chunkSize)
     {
+        $this->logProcessor->setRoute('GetFile');
+
         // Sanitize
         $serverKey = Sanitize::string($serverKey);
         $hardwareKey = Sanitize::string($hardwareKey);
@@ -365,6 +367,8 @@ class Soap4 extends Soap
      */
     public function NotifyStatus($serverKey, $hardwareKey, $status)
     {
+        $this->logProcessor->setRoute('NotifyStatus');
+
         // Sanitize
         $serverKey = Sanitize::string($serverKey);
         $hardwareKey = Sanitize::string($hardwareKey);
@@ -408,6 +412,8 @@ class Soap4 extends Soap
      */
     public function SubmitScreenShot($serverKey, $hardwareKey, $screenShot)
     {
+        $this->logProcessor->setRoute('SubmitScreenShot');
+
         // Sanitize
         $serverKey = Sanitize::string($serverKey);
         $hardwareKey = Sanitize::string($hardwareKey);

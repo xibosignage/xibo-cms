@@ -115,6 +115,8 @@ class Soap3 extends Soap
      */
     function GetFile($serverKey, $hardwareKey, $filePath, $fileType, $chunkOffset, $chunkSize, $version)
     {
+        $this->logProcessor->setRoute('GetFile');
+
         // Sanitize
         $serverKey = Sanitize::string($serverKey);
         $hardwareKey = Sanitize::string($hardwareKey);
