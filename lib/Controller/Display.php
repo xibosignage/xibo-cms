@@ -23,6 +23,7 @@ use finfo;
 use Xibo\Entity\DisplayGroup;
 use Xibo\Entity\Stat;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\ConfigurationException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\DisplayProfileFactory;
@@ -36,6 +37,8 @@ use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 use Xibo\Helper\WakeOnLan;
 use Xibo\Storage\PDOConnect;
+use Xibo\XMR\PlayerActionException;
+use Xibo\XMR\ScreenShotAction;
 
 
 class Display extends Base
@@ -835,6 +838,8 @@ class Display extends Base
     /**
      * Request ScreenShot
      * @param int $displayId
+     * @throws \InvalidArgumentException if XMR is not configured
+     * @throws ConfigurationException if XMR cannot be contacted
      *
      * @SWG\Put(
      *  path="/display/requestscreenshot/{displayId}",
@@ -864,7 +869,26 @@ class Display extends Base
             throw new AccessDeniedException();
 
         $display->screenShotRequested = 1;
-        $display->save(['validate' => false]);
+        $display->save(['validate' => false, 'audit' => false]);
+
+        // XMR the command
+        $xmrAddress = Config::GetSetting('XMR_ADDRESS');
+
+        if ($xmrAddress == '')
+            throw new \InvalidArgumentException(__('XMR address is not set'));
+
+        if ($display->xmrChannel == '' || $display->xmrPubKey == '')
+            throw new \InvalidArgumentException(__('This Player is not configured or ready to receive XMR commands'));
+
+        try {
+            // Send the screen shot action.
+            if (!(new ScreenShotAction())->setIdentity($display->xmrChannel, $display->xmrPubKey)->send($xmrAddress))
+                throw new ConfigurationException(__('This command has been refused'));
+        } catch (PlayerActionException $sockEx) {
+            Log::emergency('XMR Connection Failure: %s', $sockEx->getMessage());
+            Log::debug('XMR Connection Failure, trace: %s', $sockEx->getTraceAsString());
+            throw new ConfigurationException(__('Connection Failed'));
+        }
 
         // Return
         $this->getState()->hydrate([
