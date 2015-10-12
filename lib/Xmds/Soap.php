@@ -120,7 +120,7 @@ class Soap
             // Get a list of all layout ids in the schedule right now
             // including any layouts that have been associated to our Display Group
             $SQL = '
-                SELECT layout.layoutID
+                SELECT layout.layoutID, schedule.DisplayOrder, lkcampaignlayout.DisplayOrder AS LayoutDisplayOrder, schedule_detail.eventId
                   FROM `campaign`
                     INNER JOIN `schedule`
                     ON `schedule`.CampaignID = campaign.CampaignID
@@ -139,12 +139,12 @@ class Soap
                     AND schedule_detail.ToDT > :todt
                     AND layout.retired = 0
                 UNION
-                SELECT `lklayoutdisplaygroup`.layoutId
+                SELECT `lklayoutdisplaygroup`.layoutId, 0 AS DisplayOrder, 0 AS LayoutDisplayOrder, 0 AS eventId
                   FROM `lklayoutdisplaygroup`
                     INNER JOIN `lkdisplaydg`
                     ON lkdisplaydg.DisplayGroupID = `lklayoutdisplaygroup`.displayGroupId
                  WHERE lkdisplaydg.DisplayID = :displayId
-                ORDER BY schedule.DisplayOrder, lkcampaignlayout.DisplayOrder, schedule_detail.eventID
+                ORDER BY DisplayOrder, LayoutDisplayOrder, eventId
             ';
 
             $sth = $dbh->prepare($SQL);
