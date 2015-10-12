@@ -27,6 +27,8 @@ class User {
     public $usertypeid;
     public $userName;
     public $homePage;
+
+    private $_myGroups = null;
     
     public function __construct(database $db = NULL)
     {
@@ -303,14 +305,27 @@ class User {
         return $row[0];
     }
 
+    /**
+     * Get My Groups
+     * @return array[int]
+     */
+    public function myGroups()
+    {
+        if ($this->_myGroups === null) {
+            $this->_myGroups = $this->GetUserGroups($this->userid, true);
+        }
+
+        return $this->_myGroups;
+    }
+
         /**
          * Get an array of user groups for the given user id
-         * @param <type> $id User ID
-         * @param <type> $returnID Whether to return ID's or Names
+         * @param int $id User ID
+         * @param bool $returnID Whether to return ID's or Names
          * @return <array>
          */
         public function GetUserGroups($id, $returnID = false)
-    {
+        {
             $db =& $this->db;
 
             $groupIDs = array();
@@ -770,6 +785,17 @@ class User {
             return $auth;
         }
 
+        // If we are a group admin of the owners groups
+        if ($this->usertypeid == 2) {
+            // Are we in the same group as the owner.
+            $theirGroups = $this->GetUserGroups($ownerId, true);
+
+            if (count(array_intersect($this->myGroups(), $theirGroups))) {
+                $auth->FullAccess();
+                return $auth;
+            }
+        }
+
         // Permissions for groups the user is assigned to, and Everyone
         $SQL  = '';
         $SQL .= 'SELECT UserID, MAX(IFNULL(View, 0)) AS View, MAX(IFNULL(Edit, 0)) AS Edit, MAX(IFNULL(Del, 0)) AS Del ';
@@ -782,7 +808,7 @@ class User {
         $SQL .= '   AND (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
         $SQL .= 'GROUP BY media.UserID ';
 
-        $SQL = sprintf($SQL, $mediaId, implode(',', $this->GetUserGroups($this->userid, true)));
+        $SQL = sprintf($SQL, $mediaId, implode(',', $this->myGroups()));
         //Debug::LogEntry('audit', $SQL);
 
         if (!$row = $this->db->GetSingleRow($SQL))
@@ -812,6 +838,17 @@ class User {
             return $auth;
         }
 
+        // If we are a group admin of the owners groups
+        if ($this->usertypeid == 2) {
+            // Are we in the same group as the owner.
+            $theirGroups = $this->GetUserGroups($ownerId, true);
+
+            if (count(array_intersect($this->myGroups(), $theirGroups))) {
+                $auth->FullAccess();
+                return $auth;
+            }
+        }
+
         // Permissions for groups the user is assigned to, and Everyone
         $SQL  = '';
         $SQL .= 'SELECT MAX(IFNULL(View, 0)) AS View, MAX(IFNULL(Edit, 0)) AS Edit, MAX(IFNULL(Del, 0)) AS Del ';
@@ -821,7 +858,7 @@ class User {
         $SQL .= " WHERE lklayoutmediagroup.MediaID = '%s' AND lklayoutmediagroup.RegionID = '%s' AND lklayoutmediagroup.LayoutID = %d ";
         $SQL .= '   AND (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
 
-        $SQL = sprintf($SQL, $this->db->escape_string($mediaId), $this->db->escape_string($regionId), $layoutId, implode(',', $this->GetUserGroups($this->userid, true)));
+        $SQL = sprintf($SQL, $this->db->escape_string($mediaId), $this->db->escape_string($regionId), $layoutId, implode(',', $this->myGroups()));
         //Debug::LogEntry('audit', $SQL);
 
         if (!$row = $this->db->GetSingleRow($SQL))
@@ -847,6 +884,17 @@ class User {
             return $auth;
         }
 
+        // If we are a group admin of the owners groups
+        if ($this->usertypeid == 2) {
+            // Are we in the same group as the owner.
+            $theirGroups = $this->GetUserGroups($ownerId, true);
+
+            if (count(array_intersect($this->myGroups(), $theirGroups))) {
+                $auth->FullAccess();
+                return $auth;
+            }
+        }
+
         // Permissions for groups the user is assigned to, and Everyone
         $SQL  = '';
         $SQL .= 'SELECT MAX(IFNULL(View, 0)) AS View, MAX(IFNULL(Edit, 0)) AS Edit, MAX(IFNULL(Del, 0)) AS Del ';
@@ -856,7 +904,7 @@ class User {
         $SQL .= " WHERE lklayoutregiongroup.RegionID = '%s' AND lklayoutregiongroup.LayoutID = %d ";
         $SQL .= '   AND (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
 
-        $SQL = sprintf($SQL, $this->db->escape_string($regionId), $layoutId, implode(',', $this->GetUserGroups($this->userid, true)));
+        $SQL = sprintf($SQL, $this->db->escape_string($regionId), $layoutId, implode(',', $this->myGroups()));
         //Debug::LogEntry('audit', $SQL);
 
         if (!$row = $this->db->GetSingleRow($SQL))
@@ -1111,6 +1159,17 @@ class User {
             return $auth;
         }
 
+        // If we are a group admin of the owners groups
+        if ($this->usertypeid == 2) {
+            // Are we in the same group as the owner.
+            $theirGroups = $this->GetUserGroups($ownerId, true);
+
+            if (count(array_intersect($this->myGroups(), $theirGroups))) {
+                $auth->FullAccess();
+                return $auth;
+            }
+        }
+
         // Permissions for groups the user is assigned to, and Everyone
         $SQL  = '';
         $SQL .= 'SELECT UserID, MAX(IFNULL(View, 0)) AS View, MAX(IFNULL(Edit, 0)) AS Edit, MAX(IFNULL(Del, 0)) AS Del ';
@@ -1123,7 +1182,7 @@ class User {
         $SQL .= '   AND (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
         $SQL .= 'GROUP BY dataset.UserID ';
 
-        $SQL = sprintf($SQL, $dataSetId, implode(',', $this->GetUserGroups($this->userid, true)));
+        $SQL = sprintf($SQL, $dataSetId, implode(',', $this->myGroups()));
         //Debug::LogEntry('audit', $SQL);
 
         if (!$row = $this->db->GetSingleRow($SQL))
@@ -1219,7 +1278,7 @@ class User {
         $SQL .= ' WHERE displaygroup.DisplayGroupID = %d ';
         $SQL .= '   AND (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
 
-        $SQL = sprintf($SQL, $displayGroupId, implode(',', $this->GetUserGroups($this->userid, true)));
+        $SQL = sprintf($SQL, $displayGroupId, implode(',', $this->myGroups()));
         //Debug::LogEntry('audit', $SQL);
 
         if (!$row = $this->db->GetSingleRow($SQL))
@@ -1483,6 +1542,17 @@ class User {
             return $auth;
         }
 
+        // If we are a group admin of the owners groups
+        if ($this->usertypeid == 2) {
+            // Are we in the same group as the owner.
+            $theirGroups = $this->GetUserGroups($ownerId, true);
+
+            if (count(array_intersect($this->myGroups(), $theirGroups))) {
+                $auth->FullAccess();
+                return $auth;
+            }
+        }
+
         // Permissions for groups the user is assigned to, and Everyone
         $SQL  = '';
         $SQL .= 'SELECT UserID, MAX(IFNULL(View, 0)) AS View, MAX(IFNULL(Edit, 0)) AS Edit, MAX(IFNULL(Del, 0)) AS Del ';
@@ -1495,7 +1565,7 @@ class User {
         $SQL .= '   AND (`group`.IsEveryone = 1 OR `group`.GroupID IN (%s)) ';
         $SQL .= 'GROUP BY campaign.UserID ';
 
-        $SQL = sprintf($SQL, $campaignId, implode(',', $this->GetUserGroups($this->userid, true)));
+        $SQL = sprintf($SQL, $campaignId, implode(',', $this->myGroups()));
         //Debug::LogEntry('audit', $SQL);
 
         if (!$row = $this->db->GetSingleRow($SQL))
@@ -1721,7 +1791,7 @@ class User {
         }
         // Group admins can only see users from their groups.
         else if ($this->usertypeid == 2) {
-            $groups = $this->GetUserGroups($this->userid, true);
+            $groups = $this->myGroups();
             $filterBy['groupIds'] = (isset($filterBy['groupIds'])) ? array_merge($filterBy['groupIds'], $groups) : $groups;
         }
 
