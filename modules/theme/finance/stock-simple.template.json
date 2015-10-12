@@ -1,0 +1,9 @@
+{
+  "id":"stock-simple",
+  "value":"Stock Quote - Simple Text Output",
+  "template":"<p><span style=\"font-family:lucida sans unicode,lucida grande,sans-serif;\"><span style=\"font-size:62px;\">[symbol] [Change]<\/span><\/span><\/p>",
+  "css":"",
+  "yql": "select * from yahoo.finance.quote where symbol in ([Item])",
+  "item": "GOOGL",
+  "resultIdentifier": "quote"
+}
