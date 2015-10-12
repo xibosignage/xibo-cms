@@ -258,6 +258,17 @@ class DisplayProfile
                         'groupClass' => NULL
                     ),
                     array(
+                        'name' => 'XmrNetworkAddress',
+                        'tabId' => 'general',
+                        'title' => __('XMR Public Address'),
+                        'type' => 'string',
+                        'fieldType' => 'text',
+                        'default' => '',
+                        'helpText' => __('Please enter the public address for XMR.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
                         'name' => 'SizeX',
                         'tabId' => 'location',
                         'title' => __('Width'),
@@ -574,6 +585,17 @@ class DisplayProfile
                         'fieldType' => 'timePicker',
                         'default' => 0,
                         'helpText' => __('The end of the time window to connect to the CMS and download updates.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'xmrNetworkAddress',
+                        'tabId' => 'general',
+                        'title' => __('XMR Public Address'),
+                        'type' => 'string',
+                        'fieldType' => 'text',
+                        'default' => '',
+                        'helpText' => __('Please enter the public address for XMR.'),
                         'enabled' => true,
                         'groupClass' => NULL
                     ),

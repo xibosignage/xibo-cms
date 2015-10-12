@@ -100,6 +100,12 @@ class Soap5 extends Soap4
 
                 // Create the XML nodes
                 foreach ($settings as $arrayItem) {
+
+                    // Override the XMR address if empty
+                    if (strtolower($arrayItem['name']) == 'xmrnetworkaddress' && $arrayItem['value'] == '') {
+                        $arrayItem['value'] = Config::GetSetting('XMR_PUB_ADDRESS');
+                    }
+
                     $node = $return->createElement($arrayItem['name'], (isset($arrayItem['value']) ? $arrayItem['value'] : $arrayItem['default']));
                     $node->setAttribute('type', $arrayItem['type']);
                     $displayElement->appendChild($node);
@@ -108,11 +114,6 @@ class Soap5 extends Soap4
                 // Add some special settings
                 $nodeName = ($clientType == 'windows') ? 'DisplayName' : 'displayName';
                 $node = $return->createElement($nodeName, $display->display);
-                $node->setAttribute('type', 'string');
-                $displayElement->appendChild($node);
-
-                $nodeName = ($clientType == 'windows') ? 'XmrNetworkAddress' : 'xmrNetworkAddress';
-                $node = $return->createElement($nodeName, Config::GetSetting('XMR_PUB_ADDRESS'));
                 $node->setAttribute('type', 'string');
                 $displayElement->appendChild($node);
 
