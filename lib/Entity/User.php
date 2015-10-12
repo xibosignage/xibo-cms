@@ -644,6 +644,11 @@ class User implements \JsonSerializable
             return PermissionFactory::getFullPermissions();
         }
 
+        // Group Admins
+        if ($this->userTypeId == 2 && count(array_intersect($this->groups, UserGroupFactory::getByUserId($object->getOwnerId()))))
+            // Group Admin and in the same group as the owner.
+            return PermissionFactory::getFullPermissions();
+
         // Get the permissions for that entity
         $permissions = $this->loadPermissions(get_class($object));
 
@@ -666,6 +671,11 @@ class User implements \JsonSerializable
 
         // Admin users
         if ($this->userTypeId == 1 || $this->userId == $object->getOwnerId())
+            return true;
+
+        // Group Admins
+        if ($this->userTypeId == 2 && count(array_intersect($this->groups, UserGroupFactory::getByUserId($object->getOwnerId()))))
+            // Group Admin and in the same group as the owner.
             return true;
 
         // Get the permissions for that entity
@@ -692,6 +702,11 @@ class User implements \JsonSerializable
         if ($this->userTypeId == 1 || $this->userId == $object->getOwnerId())
             return true;
 
+        // Group Admins
+        if ($this->userTypeId == 2 && count(array_intersect($this->groups, UserGroupFactory::getByUserId($object->getOwnerId()))))
+            // Group Admin and in the same group as the owner.
+            return true;
+
         // Get the permissions for that entity
         $permissions = $this->loadPermissions($object->permissionsClass());
 
@@ -716,6 +731,11 @@ class User implements \JsonSerializable
         if ($this->userTypeId == 1 || $this->userId == $object->getOwnerId())
             return true;
 
+        // Group Admins
+        if ($this->userTypeId == 2 && count(array_intersect($this->groups, UserGroupFactory::getByUserId($object->getOwnerId()))))
+            // Group Admin and in the same group as the owner.
+            return true;
+
         // Get the permissions for that entity
         $permissions = $this->loadPermissions(get_class($object));
 
@@ -738,6 +758,10 @@ class User implements \JsonSerializable
 
         // Admin users
         if ($this->userTypeId == 1 || $this->userId == $object->getOwnerId())
+            return true;
+        // Group Admins
+        else if ($this->userTypeId == 2 && count(array_intersect($this->groups, UserGroupFactory::getByUserId($object->getOwnerId()))))
+            // Group Admin and in the same group as the owner.
             return true;
         else
             return false;
