@@ -336,7 +336,7 @@ class DisplayProfile
                             array('id' => 'off', 'value' => 'Off')
                         ),
                         'default' => 'error',
-                        'helpText' => __('The position of the cursor when the client starts up.'),
+                        'helpText' => __('The logging level that should be recorded by the Player.'),
                         'enabled' => true,
                         'groupClass' => NULL
                     ),
