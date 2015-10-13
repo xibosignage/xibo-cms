@@ -554,12 +554,16 @@ class LayoutFactory extends BaseFactory
                   FROM tag
                     INNER JOIN lktaglayout
                     ON lktaglayout.tagId = tag.tagId
-                 WHERE 1 = 1
                 ";
             $i = 0;
             foreach (explode(',', Sanitize::getString('tags', $filterBy)) as $tag) {
                 $i++;
-                $body .= " AND tag LIKE :tags$i ";
+
+                if ($i == 1)
+                    $body .= " WHERE tag LIKE :tags$i ";
+                else
+                    $body .= " OR tag LIKE :tags$i ";
+
                 $params['tags' . $i] =  '%' . $tag . '%';
             }
 
@@ -569,6 +573,9 @@ class LayoutFactory extends BaseFactory
         // Exclude templates by default
         if (Sanitize::getInt('excludeTemplates', 1, $filterBy) == 1) {
             $body .= " AND layout.layoutID NOT IN (SELECT layoutId FROM lktaglayout WHERE tagId = 1) ";
+        }
+        else {
+            $body .= " AND layout.layoutID IN (SELECT layoutId FROM lktaglayout WHERE tagId = 1) ";
         }
 
         // Show All, Used or UnUsed
