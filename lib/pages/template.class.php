@@ -105,7 +105,7 @@ class templateDAO extends baseDAO {
         $showThumbnail = Kit::GetParam('showThumbnail', _POST, _CHECKBOX);
         setSession('layout', 'showThumbnail', $showThumbnail);
     
-        $templates = $user->TemplateList($filter_name, $filter_tags);
+        $templates = $user->TemplateList(null, array('layout' => $filter_name, 'tags' => $filter_tags));
 
         if (!is_array($templates)) {
             trigger_error(__('Unable to get list of templates for this user'), E_USER_ERROR);
