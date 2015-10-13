@@ -143,12 +143,10 @@ class Layout extends Data
             }
             
             // Retired options
-            if (Kit::GetParam('retired', $filter_by, _INT, -1) != -1) {
+            if (Kit::GetParam('retired', $filter_by, _INT, 0) != -1) {
                 $SQL .= " AND layout.retired = :retired ";
                 $params['retired'] = Kit::GetParam('retired', $filter_by, _INT);
             }
-            else
-                $SQL .= " AND layout.retired = 0 ";
 
             // Tags
             if (Kit::GetParam('tags', $filter_by, _STRING) != '') {

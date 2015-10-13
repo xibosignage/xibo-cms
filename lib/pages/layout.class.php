@@ -740,7 +740,7 @@ class layoutDAO extends baseDAO
 
         // Get the layout
         if ($layoutId != 0) {
-            $layout = $user->LayoutList(NULL, array('layoutId' => Kit::GetParam('layoutid', _GET, _INT)));
+            $layout = $user->LayoutList(NULL, array('layoutId' => Kit::GetParam('layoutid', _GET, _INT), 'retired' => -1));
 
             if (count($layout) <= 0)
                 trigger_error(__('Unable to find Layout'), E_USER_ERROR);
