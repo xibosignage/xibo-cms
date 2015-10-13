@@ -50,9 +50,14 @@ $(function() {
             return false;
           },
           format: function(s, table, cell, cellIndex) {
-            return $(cell).html().toLowerCase()
-              .replace(/<span class="glyphicon glyphicon-ok"><\/span>/, 1)
-              .replace(/<span class="glyphicon glyphicon-remove"><\/span>/, 0);
+              var string = $(cell).html().toLowerCase();
+
+              if (string.indexOf("ok") > -1)
+                return 1;
+              else if (string.indexOf("remove") > -1)
+                return 3;
+              else
+                return 2;
           },
           type: 'numeric'
         });
