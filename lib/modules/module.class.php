@@ -655,7 +655,8 @@ END;
                         $options .= ',unassignall|' . __('Unassign from all Layouts');
                     }
 
-                    $options .= ',retire|' . __('Unassign from this region and retire');
+                    if ($regionid != '')
+                        $options .= ',retire|' . __('Unassign from this region and retire');
                 }
                 else
                 {
@@ -669,7 +670,8 @@ END;
                 }
 
                 // Always have the abilty to unassign from the region
-                $options .= ',unassign|' . __('Unassign from this region only');
+                if ($regionid != '')
+                    $options .= ',unassign|' . __('Unassign from this region only');
 
                 $options = ltrim($options, ',');
 
