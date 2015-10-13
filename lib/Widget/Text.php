@@ -23,6 +23,7 @@ namespace Xibo\Widget;
 use Xibo\Factory\MediaFactory;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
+use Xibo\Helper\Translate;
 
 class Text extends ModuleWidget
 {
@@ -188,7 +189,7 @@ class Text extends ModuleWidget
         $javaScriptContent .= '       $("#content").xiboTextRender(options, items); $("body").xiboLayoutScaler(options);';
 
         if ($clock)
-            $javaScriptContent .= ' updateClock(); setInterval(updateClock, 1000); ';
+            $javaScriptContent .= ' updateClock(); setInterval(updateClock, 1000); moment.locale("' . Translate::GetJsLocale() . '"); ';
 
         $javaScriptContent .= '   }); ';
 
