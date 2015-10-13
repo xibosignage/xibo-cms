@@ -453,6 +453,9 @@ class DataSet extends Data
                     if (strripos($orderPair, ' DESC')) {
                         $order .= sprintf(' `%s`  DESC,', $sanitized);
                     }
+                    else if (strripos($orderPair, ' ASC')) {
+                        $order .= sprintf(' `%s`  ASC,', $sanitized);
+                    }
                     else {
                         $order .= sprintf(' `%s`,', $sanitized);
                     }
