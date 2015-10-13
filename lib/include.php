@@ -20,7 +20,7 @@
  */
 defined('XIBO') or die("Sorry, you are not allowed to directly access this page.<br /> Please press the back button in your browser.");
 
-define('WEBSITE_VERSION', 89);
+define('WEBSITE_VERSION', 90);
 
 // No errors reported until we read the settings from the DB
 error_reporting(0);
@@ -157,7 +157,7 @@ $function = Kit::GetParam('q', _REQUEST, _WORD);
 
 // Does the version in the DB match the version of the code?
 // If not then we need to run an upgrade. Change the page variable to upgrade
-if (DBVERSION != WEBSITE_VERSION && !($page == 'index' && $function == 'login')) {
+if (DBVERSION != WEBSITE_VERSION && !(($page == 'index' && $function == 'login') || $page == 'error')) {
     require_once('install/upgradestep.class.php');
     $page = 'upgrade';
 
