@@ -86,7 +86,12 @@ class Template extends Base
         $this->getSession()->set('template', 'filter_tags', $filter_tags);
         $this->getSession()->set('template', 'Filter', Sanitize::getCheckbox('XiboFilterPinned'));
 
-        $templates = LayoutFactory::query($this->gridRenderSort(), $this->gridRenderFilter(['excludeTemplates' => 0, 'tags' => 'template', 'layout' => $filter_name]));
+        // Append our tags filter with the template tag (if its not already there)
+        if (!str_contains($filter_tags, 'template')) {
+            $filter_tags = rtrim('template,' . $filter_tags, ',');
+        }
+
+        $templates = LayoutFactory::query($this->gridRenderSort(), $this->gridRenderFilter(['excludeTemplates' => 0, 'tags' => $filter_tags, 'layout' => $filter_name]));
 
         foreach ($templates as $template) {
             /* @var \Xibo\Entity\Layout $template */

@@ -37,6 +37,7 @@
                                 <th>{% trans "Name" %}</th>
                                 <th>{% trans "Owner" %}</th>
                                 <th>{% trans "Description" %}</th>
+                                <th>{% trans "Tags" %}</th>
                                 <th>{% trans "Thumbnail" %}</th>
                                 <th>{% trans "Permissions" %}</th>
                                 <th></th>
@@ -69,6 +70,7 @@
                 { "data": "layout"},
                 { "data": "owner"},
                 { "data": "descriptionWithMarkup"},
+                { "data": "tags", "visible": false },
                 { "data": "thumbnail"},
                 { "data": "permissions"},
                 {
@@ -80,5 +82,6 @@
 
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
+        dataTableAddButtons(table, $('#templates_wrapper').find('.col-sm-6').eq(1));
     </script>
 {% endblock %}

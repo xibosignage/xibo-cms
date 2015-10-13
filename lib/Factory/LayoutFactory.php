@@ -554,9 +554,16 @@ class LayoutFactory extends BaseFactory
                   FROM tag
                     INNER JOIN lktaglayout
                     ON lktaglayout.tagId = tag.tagId
-                WHERE tag LIKE :tags
-                ) ";
-            $params['tags'] =  '%' . Sanitize::getString('tags', $filterBy) . '%';
+                 WHERE 1 = 1
+                ";
+            $i = 0;
+            foreach (explode(',', Sanitize::getString('tags', $filterBy)) as $tag) {
+                $i++;
+                $body .= " AND tag LIKE :tags$i ";
+                $params['tags' . $i] =  '%' . $tag . '%';
+            }
+
+            $body .= " ) ";
         }
 
         // Exclude templates by default
