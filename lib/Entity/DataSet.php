@@ -197,7 +197,7 @@ class DataSet implements \JsonSerializable
 
             foreach ($ordering as $orderPair) {
                 // Sanitize the clause
-                $sanitized = str_replace('`', '', str_replace(' DESC', '', $orderPair));
+                $sanitized = str_replace('`', '', str_replace(' ASC', '', str_replace(' DESC', '', $orderPair)));
 
                 // Check allowable
                 if (!in_array($sanitized, $allowedOrderCols)) {
