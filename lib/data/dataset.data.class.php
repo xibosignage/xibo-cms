@@ -441,7 +441,7 @@ class DataSet extends Data
                 foreach ($ordering as $orderPair)
                 {
                     // Sanitize the clause
-                    $sanitized = str_replace(' DESC', '', $orderPair);
+                    $sanitized = str_replace(' ASC', '', str_replace(' DESC', '', $orderPair));
 
                     // Check allowable
                     if (!in_array($sanitized, $allowedOrderCols)) {
