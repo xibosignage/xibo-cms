@@ -131,7 +131,7 @@ class LayoutFactory extends BaseFactory
      */
     public static function getById($layoutId)
     {
-        $layouts = LayoutFactory::query(null, array('disableUserCheck' => 1, 'layoutId' => $layoutId, 'retired' => -1));
+        $layouts = LayoutFactory::query(null, array('disableUserCheck' => 1, 'layoutId' => $layoutId, 'excludeTemplates' => -1, 'retired' => -1));
 
         if (count($layouts) <= 0) {
             throw new NotFoundException(\__('Layout not found'));
@@ -149,7 +149,7 @@ class LayoutFactory extends BaseFactory
      */
     public static function getByOwnerId($ownerId)
     {
-        return LayoutFactory::query(null, array('userId' => $ownerId, 'retired' => -1));
+        return LayoutFactory::query(null, array('userId' => $ownerId, 'excludeTemplates' => -1, 'retired' => -1));
     }
 
     /**
@@ -160,7 +160,7 @@ class LayoutFactory extends BaseFactory
      */
     public static function getByCampaignId($campaignId)
     {
-        return LayoutFactory::query(['displayOrder'], array('campaignId' => $campaignId, 'retired' => -1));
+        return LayoutFactory::query(['displayOrder'], array('campaignId' => $campaignId, 'excludeTemplates' => -1, 'retired' => -1));
     }
 
     /**
@@ -571,11 +571,12 @@ class LayoutFactory extends BaseFactory
         }
 
         // Exclude templates by default
-        if (Sanitize::getInt('excludeTemplates', 1, $filterBy) == 1) {
-            $body .= " AND layout.layoutID NOT IN (SELECT layoutId FROM lktaglayout WHERE tagId = 1) ";
-        }
-        else {
-            $body .= " AND layout.layoutID IN (SELECT layoutId FROM lktaglayout WHERE tagId = 1) ";
+        if (Sanitize::getInt('excludeTemplates', 1, $filterBy) != -1) {
+            if (Sanitize::getInt('excludeTemplates', 1, $filterBy) == 1) {
+                $body .= " AND layout.layoutID NOT IN (SELECT layoutId FROM lktaglayout WHERE tagId = 1) ";
+            } else {
+                $body .= " AND layout.layoutID IN (SELECT layoutId FROM lktaglayout WHERE tagId = 1) ";
+            }
         }
 
         // Show All, Used or UnUsed
