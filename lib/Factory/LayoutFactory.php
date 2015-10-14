@@ -131,7 +131,7 @@ class LayoutFactory extends BaseFactory
      */
     public static function getById($layoutId)
     {
-        $layouts = LayoutFactory::query(null, array('disableUserCheck' => 1, 'layoutId' => $layoutId, 'excludeTemplates' => 0, 'retired' => -1));
+        $layouts = LayoutFactory::query(null, array('disableUserCheck' => 1, 'layoutId' => $layoutId, 'retired' => -1));
 
         if (count($layouts) <= 0) {
             throw new NotFoundException(\__('Layout not found'));
@@ -149,7 +149,7 @@ class LayoutFactory extends BaseFactory
      */
     public static function getByOwnerId($ownerId)
     {
-        return LayoutFactory::query(null, array('userId' => $ownerId, 'excludeTemplates' => 0, 'retired' => -1));
+        return LayoutFactory::query(null, array('userId' => $ownerId, 'retired' => -1));
     }
 
     /**
