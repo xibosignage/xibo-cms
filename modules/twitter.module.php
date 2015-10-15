@@ -1038,12 +1038,12 @@ class Twitter extends Module
         $javaScriptContent  = '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
 
         // Need the cycle plugin?
-        if ($this->GetSetting('effect') != 'none') {
+        if ($this->GetOption('effect') != 'none') {
             $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-cycle-2.1.6.min.js"></script>';
         }
 
         // Need the marquee plugin?
-        if (stripos($this->GetSetting('effect'), 'marquee') !== false)
+        if (stripos($this->GetOption('effect'), 'marquee') !== false)
             $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery.marquee.min.js"></script>';
         
         $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-layout-scaler.js"></script>';
