@@ -61,7 +61,7 @@ class Soap4 extends Soap
         $clientVersion = Sanitize::string($clientVersion);
         $clientCode = Sanitize::int($clientCode);
         $macAddress = Sanitize::string($macAddress);
-        $clientAddress = Sanitize::getString('REMOTE_ADDR');
+        $clientAddress = $this->getIp();
 
         // Audit in
         Log::debug('serverKey: ' . $serverKey . ', hardwareKey: ' . $hardwareKey . ', displayName: ' . $displayName);
