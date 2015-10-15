@@ -302,8 +302,18 @@ class templateDAO extends baseDAO {
         if (!$layoutId = $layoutObject->Copy($templateLayoutId, $template, $description, $user->userid, true))
             trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);
 
-        // Tag it with the template tag
-        $layoutObject->tag('template', $layoutId);
+        // Tag it
+        if ($tags != '') {
+            // Create an array out of the tags
+            $tagsArray = explode(',', $tags);
+            $tagsArray[] = 'template';
+        }
+        else {
+            $tagsArray = array('template');
+        }
+
+        // Add the tags XML to the layout
+        $layoutObject->EditTags($layoutId, $tagsArray);
         
         $response->SetFormSubmitResponse('Template Added.');
         $response->Respond();
