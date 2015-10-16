@@ -195,6 +195,9 @@ class Layout implements \JsonSerializable
     public $owner;
     public $groupsWithPermissions;
 
+    // Private
+    private $unassignTags = [];
+
     public static $loadOptionsMinimum = [
         'loadPlaylists' => false,
         'loadTags' => false,
@@ -206,7 +209,8 @@ class Layout implements \JsonSerializable
         'saveLayout' => true,
         'saveRegions' => false,
         'saveTags' => false,
-        'setBuildRequired' => true
+        'setBuildRequired' => true,
+        'validate' => false
     ];
 
     public function __construct()
@@ -423,6 +427,15 @@ class Layout implements \JsonSerializable
                     $tag->save();
                 }
             }
+
+            // Remove unwanted ones
+            if (is_array($this->unassignTags)) {
+                foreach ($this->unassignTags as $tag) {
+                    /* @var Tag $tag */
+                    $tag->unassignLayout($this->layoutId);
+                    $tag->save();
+                }
+            }
         }
 
         Log::debug('Save finished for %s', $this);
@@ -469,7 +482,7 @@ class Layout implements \JsonSerializable
         // Unassign from all Campaigns
         foreach ($this->campaigns as $campaign) {
             /* @var Campaign $campaign */
-            $campaign->unassignLayout($this->layoutId);
+            $campaign->unassignLayout($this);
             $campaign->save(false);
         }
 
@@ -510,6 +523,34 @@ class Layout implements \JsonSerializable
 
         if (count($duplicates) > 0)
             throw new \InvalidArgumentException(sprintf(__("You already own a layout called '%s'. Please choose another name."), $this->layout));
+    }
+
+    /**
+     * @param array[Tag] $tags
+     */
+    public function replaceTags($tags = [])
+    {
+        if (!is_array($this->tags) || count($this->tags) <= 0)
+            $this->tags = TagFactory::loadByLayoutId($this->layoutId);
+
+        $diff = array_udiff($this->tags, $tags, function($a, $b) {
+            /* @var Tag $a */
+            /* @var Tag $b */
+            return $a->tagId - $b->tagId;
+        });
+
+        Log::debug('Tags removed: %s', json_encode($diff));
+
+        foreach ($diff as $tag) {
+            /* @var Tag $tag */
+            $tag->unassignLayout($this->layoutId);
+            $tag->save();
+        }
+
+        // Replace the arrays
+        $this->tags = $tags;
+
+        Log::debug('Tags remaining: %s', json_encode($this->tags));
     }
 
     /**
