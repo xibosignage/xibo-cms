@@ -119,7 +119,7 @@ class Soap
 
             // Get a list of all layout ids in the schedule right now.
             $SQL = '
-                SELECT layout.layoutID
+                SELECT DISTINCT layout.layoutID
                   FROM `campaign`
                     INNER JOIN `schedule`
                     ON `schedule`.CampaignID = campaign.CampaignID
@@ -166,44 +166,52 @@ class Soap
         try {
             $dbh = PDOConnect::init();
 
-
-
-            // TODO: Handle the Background Image (in 1.7 it was linked to the layout with lklayoutmedia).
-            // lklayoutmedia has gone now, so I suppose it will have to be handled in requiredfiles.
-
-            // Add file nodes to the $fileElements
+            // Run a query to get all required files for this display.
+            // Include the following:
+            // DownloadOrder:
+            //  1 - Module System Files and fonts
+            //  2 - Media Linked to Displays
+            //  3 - Media Linked to Widgets in the Scheduled Layouts
+            //  4 - Background Images for all Scheduled Layouts
             $SQL = "
-                    SELECT 1 AS DownloadOrder, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize
-                       FROM `media`
-                     WHERE media.type = 'font'
-                        OR (media.type = 'module' AND media.moduleSystemFile = 1)
-                    UNION
-                    SELECT 3 AS DownloadOrder, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize
-                      FROM media
-                       INNER JOIN `lkwidgetmedia`
-                       ON `lkwidgetmedia`.mediaID = media.MediaID
-                       INNER JOIN `widget`
-                       ON `widget`.widgetId = `lkwidgetmedia`.widgetId
-                       INNER JOIN `lkregionplaylist`
-                       ON `lkregionplaylist`.playlistId = `widget`.playlistId
-                       INNER JOIN `region`
-                       ON `region`.regionId = `lkregionplaylist`.regionId
-                       INNER JOIN layout
-                       ON layout.LayoutID = region.layoutId ";
-            $SQL .= sprintf(" WHERE layout.layoutid IN (%s)  ", $layoutIdList);
-            $SQL .= "
-                    UNION
-                    SELECT 2 AS DownloadOrder, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize
-                       FROM `media`
-                        INNER JOIN `lkmediadisplaygroup`
-                        ON lkmediadisplaygroup.mediaid = media.MediaID
-                        INNER JOIN lkdisplaydg
-                        ON lkdisplaydg.DisplayGroupID = lkmediadisplaygroup.DisplayGroupID
-                    ";
-            $SQL .= " WHERE lkdisplaydg.DisplayID = :displayId ";
-            $SQL .= " ORDER BY DownloadOrder DESC";
+                SELECT 1 AS DownloadOrder, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize
+                   FROM `media`
+                 WHERE media.type = 'font'
+                    OR (media.type = 'module' AND media.moduleSystemFile = 1)
+                UNION ALL
+                SELECT 2 AS DownloadOrder, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize
+                   FROM `media`
+                    INNER JOIN `lkmediadisplaygroup`
+                    ON lkmediadisplaygroup.mediaid = media.MediaID
+                    INNER JOIN lkdisplaydg
+                    ON lkdisplaydg.DisplayGroupID = lkmediadisplaygroup.DisplayGroupID
+                 WHERE lkdisplaydg.DisplayID = :displayId
+                UNION ALL
+                SELECT 3 AS DownloadOrder, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize
+                  FROM media
+                   INNER JOIN `lkwidgetmedia`
+                   ON `lkwidgetmedia`.mediaID = media.MediaID
+                   INNER JOIN `widget`
+                   ON `widget`.widgetId = `lkwidgetmedia`.widgetId
+                   INNER JOIN `lkregionplaylist`
+                   ON `lkregionplaylist`.playlistId = `widget`.playlistId
+                   INNER JOIN `region`
+                   ON `region`.regionId = `lkregionplaylist`.regionId
+                   INNER JOIN layout
+                   ON layout.LayoutID = region.layoutId
+                 WHERE layout.layoutId IN (%s)
+                UNION ALL
+                SELECT 4 AS DownloadOrder, storedAs AS path, media.mediaId AS id, media.`MD5`, media.FileSize
+                  FROM `media`
+                 WHERE `media`.mediaID IN (
+                    SELECT backgroundImageId
+                      FROM `layout`
+                     WHERE layoutId IN (%s)
+                 )
+                ORDER BY DownloadOrder
+            ";
 
-            $sth = $dbh->prepare($SQL);
+            $sth = $dbh->prepare(sprintf($SQL, $layoutIdList, $layoutIdList));
             $sth->execute(array(
                 'displayId' => $this->display->displayId
             ));
@@ -269,6 +277,9 @@ class Soap
             return new \SoapFault('Sender', 'Unable to get a list of files');
         }
 
+        // Get an array of modules to use
+        $modules = ModuleFactory::get();
+
         // Reset the paths added array to start again with layouts
         $pathsAdded = [];
 
@@ -317,9 +328,6 @@ class Soap
             }
 
             $fileElements->appendChild($file);
-
-            // Get an array of modules to use
-            $modules = ModuleFactory::get();
 
             // Get the Layout Modified Date
             $layoutModifiedDt = new \DateTime($layout->modifiedDt);
