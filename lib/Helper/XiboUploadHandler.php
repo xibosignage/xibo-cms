@@ -23,7 +23,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
         // Link the file to the module
         $fileName = $file->name;
 
-        Log::debug('Upload complete for name: ' . $fileName . '.');
+        Log::debug('Upload complete for name: ' . $fileName . '. Index is %s.', $index);
 
         $controller = $this->options['controller'];
         /* @var \Xibo\Controller\Library $controller */
@@ -31,7 +31,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
         // Upload and Save
         try {
             // Get some parameters
-            if ($index == null) {
+            if ($index === null) {
                 if (!isset($_REQUEST['name']))
                     throw new \InvalidArgumentException(__('Missing Name Parameter'));
 

@@ -74,4 +74,16 @@ class LocalVideo extends ModuleWidget
         // Client dependant
         return 2;
     }
+
+    /**
+     * Override previewAsClient
+     * @param float $width
+     * @param float $height
+     * @param int $scaleOverride
+     * @return string
+     */
+    public function previewAsClient($width, $height, $scaleOverride = 0)
+    {
+        return $this->previewIcon();
+    }
 }
