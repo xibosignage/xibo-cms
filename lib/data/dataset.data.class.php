@@ -441,7 +441,7 @@ class DataSet extends Data
                 foreach ($ordering as $orderPair)
                 {
                     // Sanitize the clause
-                    $sanitized = str_replace(' DESC', '', $orderPair);
+                    $sanitized = str_replace(' ASC', '', str_replace(' DESC', '', $orderPair));
 
                     // Check allowable
                     if (!in_array($sanitized, $allowedOrderCols)) {
@@ -452,6 +452,9 @@ class DataSet extends Data
                     // Substitute
                     if (strripos($orderPair, ' DESC')) {
                         $order .= sprintf(' `%s`  DESC,', $sanitized);
+                    }
+                    else if (strripos($orderPair, ' ASC')) {
+                        $order .= sprintf(' `%s`  ASC,', $sanitized);
                     }
                     else {
                         $order .= sprintf(' `%s`,', $sanitized);

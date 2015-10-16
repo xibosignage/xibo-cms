@@ -187,12 +187,14 @@ class image extends Module
         $thumb = Kit::GetParam('thumb', _GET, _BOOL, false);
         $dynamic = isset($_REQUEST['dynamic']);
         $file = $this->storedAs;
-        $width = Kit::GetParam('width', _REQUEST, _INT, 80);
-        $height = Kit::GetParam('height', _REQUEST, _INT, 80);
+        $width = intval(Kit::GetParam('width', _REQUEST, _DOUBLE, 80));
+        $height = intval(Kit::GetParam('height', _REQUEST, _DOUBLE, 80));
 
         // File upload directory.. get this from the settings object
         $library = Config::GetSetting("LIBRARY_LOCATION");
         $fileName = $library . $file;
+
+        Debug::Audit(sprintf('Image Request %dx%d %s. Thumb: %s', $width, $height, $fileName, $thumb));
 
         // If we are a thumb request then output the cached thumbnail
         if ($thumb) {
@@ -211,14 +213,15 @@ class image extends Module
         
         // Get the info for this new temporary file
         if (!$info = getimagesize($fileName)) {
-            echo $fileName . ' is not an image';
+            $fileName = 'theme/default/img/forms/filenotfound.png';
+            $this->ReturnFile($fileName);
             exit;
         }
 
         if ($dynamic && !$thumb && $info[2])
         {
-            $width  = Kit::GetParam('width', _GET, _INT);
-            $height = Kit::GetParam('height', _GET, _INT);
+            $width = intval(Kit::GetParam('width', _REQUEST, _DOUBLE, 80));
+            $height = intval(Kit::GetParam('height', _REQUEST, _DOUBLE, 80));
 
             // dynamically create an image of the correct size - used for previews
             ResizeImage($fileName, '', $width, $height, $proportional, 'browser');

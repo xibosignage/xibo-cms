@@ -1075,7 +1075,6 @@ class User {
     public function TemplateList($sort_order = array('layout'), $filter_by = array())
     {
         $filter_by['excludeTemplates'] = 0;
-        $filter_by['tags'] = 'template';
 
         return $this->LayoutList($sort_order, $filter_by);
     }

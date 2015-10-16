@@ -101,7 +101,7 @@ class Stat extends data
             $params['type'] = 'displaydown';
             $params['displayid'] = $displayId;
             $params['statdate'] = date('Y-m-d H:i:s');
-            $params['start'] = $lastAccessed;
+            $params['start'] = date('Y-m-d H:i:s', $lastAccessed);
             $params['scheduleid'] = 0;
 
             $sth->execute($params);

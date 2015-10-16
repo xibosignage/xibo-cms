@@ -207,7 +207,7 @@ class displayprofileDAO extends baseDAO {
                 if ($setting['value'] == 0)
                     $validated = '00:00';
                 else {
-                    $validated = DateManager::getSystemDate($setting['value'] / 1000, 'H:i');
+                    $validated = DateManager::getLocalDate($setting['value'] / 1000, 'H:i');
                 }
             }
             else if (isset($setting['value']))
@@ -285,7 +285,7 @@ class displayprofileDAO extends baseDAO {
 
             // If we are a time picker, then process the received time
             if ($setting['fieldType'] == 'timePicker') {
-                $value = ($value == '00:00') ? '0' : DateManager::getTimestampFromTimeString($value . ' GMT') * 1000;
+                $value = ($value == '00:00') ? '0' : DateManager::getTimestampFromTimeString($value) * 1000;
             }
 
             // Add to the combined array

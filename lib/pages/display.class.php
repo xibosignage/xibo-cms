@@ -342,7 +342,7 @@ class displayDAO extends baseDAO
                 }
             }
             else if ($profile[$i]['fieldType'] == 'timePicker') {
-                $profile[$i]['valueString'] = DateManager::getSystemDate($profile[$i]['value'] / 1000, 'H:i');
+                $profile[$i]['valueString'] = DateManager::getLocalDate($profile[$i]['value'] / 1000, 'H:i');
             }
         }
 

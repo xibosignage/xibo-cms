@@ -105,7 +105,7 @@ class templateDAO extends baseDAO {
         $showThumbnail = Kit::GetParam('showThumbnail', _POST, _CHECKBOX);
         setSession('layout', 'showThumbnail', $showThumbnail);
     
-        $templates = $user->TemplateList($filter_name, $filter_tags);
+        $templates = $user->TemplateList(null, array('layout' => $filter_name, 'tags' => $filter_tags));
 
         if (!is_array($templates)) {
             trigger_error(__('Unable to get list of templates for this user'), E_USER_ERROR);
@@ -302,8 +302,18 @@ class templateDAO extends baseDAO {
         if (!$layoutId = $layoutObject->Copy($templateLayoutId, $template, $description, $user->userid, true))
             trigger_error($layoutObject->GetErrorMessage(), E_USER_ERROR);
 
-        // Tag it with the template tag
-        $layoutObject->tag('template', $layoutId);
+        // Tag it
+        if ($tags != '') {
+            // Create an array out of the tags
+            $tagsArray = explode(',', $tags);
+            $tagsArray[] = 'template';
+        }
+        else {
+            $tagsArray = array('template');
+        }
+
+        // Add the tags XML to the layout
+        $layoutObject->EditTags($layoutId, $tagsArray);
         
         $response->SetFormSubmitResponse('Template Added.');
         $response->Respond();

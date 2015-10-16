@@ -55,7 +55,7 @@ class XMDSSoap4
         $clientVersion = Kit::ValidateParam($clientVersion, _STRING);
         $clientCode = Kit::ValidateParam($clientCode, _INT);
         $macAddress = Kit::ValidateParam($macAddress, _STRING);
-        $clientAddress = Kit::GetParam('REMOTE_ADDR', $_SERVER, _STRING);
+        $clientAddress = $this->getIp();
 
         // Audit in
         Debug::Audit('serverKey: ' . $serverKey . ', hardwareKey: ' . $hardwareKey . ', displayName: ' . $displayName);
@@ -1352,7 +1352,7 @@ class XMDSSoap4
 
             // Last accessed date on the display
             $displayObject = new Display();
-            $displayObject->Touch($this->displayId, array('clientAddress' => Kit::GetParam('REMOTE_ADDR', $_SERVER, _STRING)));
+            $displayObject->Touch($this->displayId, array('clientAddress' => $this->getIp()));
 
             return true;
         }
@@ -1442,6 +1442,25 @@ class XMDSSoap4
     {
         $bandwidth = new Bandwidth();
         $bandwidth->Log($displayId, $type, $sizeInBytes);
+    }
+
+    /**
+     * Get the Client IP Address
+     * @return string
+     */
+    protected function getIp()
+    {
+        $clientIp = '';
+
+        $keys = array('X_FORWARDED_FOR', 'HTTP_X_FORWARDED_FOR', 'CLIENT_IP', 'REMOTE_ADDR');
+        foreach ($keys as $key) {
+            if (isset($_SERVER[$key])) {
+                $clientIp = $_SERVER[$key];
+                break;
+            }
+        }
+
+        return $clientIp;
     }
 }
 ?>
