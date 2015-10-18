@@ -92,6 +92,20 @@ class UserFactory extends BaseFactory
     }
 
     /**
+     * Get by email
+     * @param string $email
+     * @return User
+     * @throws NotFoundException if the user cannot be found
+     */
+    public static function getByEmail($email) {
+        $users = UserFactory::query(null, array('disableUserCheck' => 1, 'email' => $email));
+
+        if (count($users) <= 0)
+            throw new NotFoundException(__('User not found'));
+        return $users[0];
+    }
+
+    /**
      * Get by groupId
      * @param int $groupId
      * @return array[User]
@@ -206,6 +220,12 @@ class UserFactory extends BaseFactory
         if (Sanitize::getString('userName', $filterBy) != null) {
             $body .= " AND user.userName = :userName ";
             $params['userName'] = Sanitize::getString('userName', $filterBy);
+        }
+
+        // Email Provided
+        if (Sanitize::getString('email', $filterBy) != null) {
+            $body .= " AND user.email = :email ";
+            $params['email'] = Sanitize::getString('email', $filterBy);
         }
 
         // Retired users?
