@@ -25,7 +25,9 @@ namespace Xibo\Middleware;
 
 use Slim\Middleware;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Factory\PageFactory;
 use Xibo\Factory\UserFactory;
+use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Config;
 use Xibo\Helper\Log;
@@ -185,18 +187,36 @@ class SAMLAuthentication extends Middleware
                             $user->userTypeId = 3;
                         }
 
+                        // Xibo requires a password, generate a random one (it won't ever be used by SAML)
                         $password = Random::generateString(20);
                         $user->setNewPassword($password);
 
-                        $user->homePageId = 1;
+                        // Home page
+                        if (isset(Config::$samlSettings['workflow']['homePage'])) {
+                            $user->homePageId = PageFactory::getByName(Config::$samlSettings['workflow']['homePage'])->pageId;
+                        } else {
+                            $user->homePageId = PageFactory::getByName('dashboard')->pageId;
+                        }
 
+                        // Library Quota
                         if (isset(Config::$samlSettings['workflow']['libraryQuota'])) {
                             $user->libraryQuota = Config::$samlSettings['workflow']['libraryQuota'];
                         } else {
                             $user->libraryQuota = 0;
                         }
 
+                        // Save the user
                         $user->save();
+
+                        // Assign the initial group
+                        if (isset(Config::$samlSettings['workflow']['group'])) {
+                            $group = UserGroupFactory::getByName(Config::$samlSettings['workflow']['group']);
+                        } else {
+                            $group = UserGroupFactory::getByName('Users');
+                        }
+
+                        $group->assignUser($user);
+                        $group->save(false);
                     }
                 }
 
