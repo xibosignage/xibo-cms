@@ -81,13 +81,15 @@ class CsrfGuard extends Middleware
 
         // Validate the CSRF token.
         if (in_array($this->app->request()->getMethod(), array('POST', 'PUT', 'DELETE'))) {
-            $userToken = $this->app->request()->headers('X-XSRF-TOKEN');
-            if ($userToken == '') {
-                $userToken = $this->app->request()->params($this->key);
-            }
+            if (!in_array($this->app->request()->getPath(), SAMLAuthentication::samlRoutes())) {
+                $userToken = $this->app->request()->headers('X-XSRF-TOKEN');
+                if ($userToken == '') {
+                    $userToken = $this->app->request()->params($this->key);
+                }
 
-            if ($token !== $userToken) {
-                throw new TokenExpiredException('Sorry the form has expired. Please refresh.');
+                if ($token !== $userToken) {
+                    throw new TokenExpiredException('Sorry the form has expired. Please refresh.');
+                }
             }
         }
 
