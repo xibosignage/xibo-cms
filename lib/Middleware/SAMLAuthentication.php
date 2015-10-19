@@ -24,15 +24,23 @@ namespace Xibo\Middleware;
 
 
 use Slim\Middleware;
+use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\UserFactory;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Config;
 use Xibo\Helper\Log;
+use Xibo\Helper\Random;
 
-
+/**
+ * Class SAMLAuthentication
+ * @package Xibo\Middleware
+ *
+ * Provide SAML authentication to Xibo configured via settings.php.
+ */
 class SAMLAuthentication extends Middleware
 {
-    public static function samlRoutes() {
+    public static function samlRoutes()
+    {
         return array(
             '/saml/metadata',
             '/saml/login',
@@ -42,31 +50,13 @@ class SAMLAuthentication extends Middleware
         );
     }
 
-    private static function random_str($length) {
-        $keyspace = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        $str = '';
-        $max = mb_strlen($keyspace, '8bit') - 1;
-        if ($max < 1) {
-            throw new Exception('$keyspace must be at least two characters long');
-        }
-        for ($i = 0; $i < $length; ++$i) {
-            if (function_exists('random_int')) {
-                $number = random_int(0, $max);
-            } else {
-                $number = rand(0, $max);
-            }
-
-            $str .= $keyspace[$number];
-        }
-        return $str;
-    }
-
-    public function samlLogout() {
-        if (isset(Config::$saml_settings['workflow']) &&
-          isset(Config::$saml_settings['workflow']['slo']) && 
-              Config::$saml_settings['workflow']['slo'] == true) {
+    public function samlLogout()
+    {
+        if (isset(Config::$samlSettings['workflow']) &&
+          isset(Config::$samlSettings['workflow']['slo']) &&
+              Config::$samlSettings['workflow']['slo'] == true) {
             // Initiate SAML SLO
-            $auth = new \OneLogin_Saml2_Auth(Config::$saml_settings);
+            $auth = new \OneLogin_Saml2_Auth(Config::$samlSettings);
             $auth->logout();
         } else {
             $this->app->redirect($this->app->urlFor('logout'));
@@ -86,15 +76,18 @@ class SAMLAuthentication extends Middleware
         // Create a user
         $app->user = new \Xibo\Entity\User();
 
+        // Register SAML routes.
+        $app->excludedCsrfRoutes = SAMLAuthentication::samlRoutes();
+
         $app->get('/saml/metadata', function () {
-            $settings = new \OneLogin_Saml2_Settings(Config::$saml_settings, true);
+            $settings = new \OneLogin_Saml2_Settings(Config::$samlSettings, true);
             $metadata = $settings->getSPMetadata();
             $errors = $settings->validateMetadata($metadata);
             if (empty($errors)) {
                 header('Content-Type: text/xml');
                 echo $metadata;
             } else {
-                throw new \Xibo\Exception\Configuration(
+                throw new \Xibo\Exception\ConfigurationException(
                     'Invalid SP metadata: '.implode(', ', $errors),
                     \OneLogin_Saml2_Error::METADATA_SP_INVALID
                 );
@@ -103,7 +96,7 @@ class SAMLAuthentication extends Middleware
 
         $app->get('/saml/login', function () {
             // Initiate SAML SSO
-            $auth = new \OneLogin_Saml2_Auth(Config::$saml_settings);
+            $auth = new \OneLogin_Saml2_Auth(Config::$samlSettings);
             $auth->login();
         });
 
@@ -117,7 +110,7 @@ class SAMLAuthentication extends Middleware
             // Inject the POST parameters required by the SAML toolkit
             $_POST = $this->app->request->post();
 
-            $auth = new \OneLogin_Saml2_Auth(Config::$saml_settings);
+            $auth = new \OneLogin_Saml2_Auth(Config::$samlSettings);
             $auth->processResponse();
 
             $errors = $auth->getErrors();
@@ -130,12 +123,12 @@ class SAMLAuthentication extends Middleware
                 $samlAttrs = $auth->getAttributes();
 
                 if (empty($samlAttrs)) {
-                    throw new \Xibo\Exception\NotFoundException("No attributes retrieved from the IdP");
+                    throw new AccessDeniedException(__('No attributes retrieved from the IdP'));
                 }
 
                 $userData = array();
-                if (isset(Config::$saml_settings['workflow']) && isset(Config::$saml_settings['workflow']['mapping']) ) {
-                    foreach (Config::$saml_settings['workflow']['mapping'] as $key => $value) {
+                if (isset(Config::$samlSettings['workflow']) && isset(Config::$samlSettings['workflow']['mapping']) ) {
+                    foreach (Config::$samlSettings['workflow']['mapping'] as $key => $value) {
                         if (!empty($value) && isset($samlAttrs[$value]) ) {
                             $userData[$key] = $samlAttrs[$value];
                         }
@@ -143,21 +136,21 @@ class SAMLAuthentication extends Middleware
                 }
 
                 if (empty($userData)) {
-                    throw new \Xibo\Exception\NotFoundException("No attributes could be mapped");
+                    throw new AccessDeniedException(__('No attributes could be mapped'));
                 }
 
-                if (!isset(Config::$saml_settings['workflow']['field_to_identify'])) {
+                if (!isset(Config::$samlSettings['workflow']['field_to_identify'])) {
                     $identityField = 'UserName';
                 } else {
-                    $identityField = Config::$saml_settings['workflow']['field_to_identify'];
+                    $identityField = Config::$samlSettings['workflow']['field_to_identify'];
                 }
 
                 if (!isset($userData[$identityField]) || empty($userData[$identityField])) {
-                    throw new \Xibo\Exception\NotFoundException($identityField . " not retrieved from the IdP and required since is the field to identify the user");
+                    throw new AccessDeniedException(__('%s not retrieved from the IdP and required since is the field to identify the user', $identityField));
                 }
 
                 if (!in_array($identityField, array('UserID', 'UserName', 'email'))) {
-                    throw new \Xibo\Exception\NotFoundException("Invalid field_to_identify value. Review settings.php");
+                    throw new AccessDeniedException(__('Invalid field_to_identify value. Review settings.'));
                 }
 
                 try {
@@ -168,13 +161,13 @@ class SAMLAuthentication extends Middleware
                     } else {
                         $user = UserFactory::getByEmail($userData[$identityField][0]);
                     }
-                } catch (\Xibo\Exception\NotFoundException $e) {
+                } catch (AccessDeniedException $e) {
                     $user = null;
                 }
 
                 if (!isset($user)) {
-                    if (!isset(Config::$saml_settings['workflow']['jit']) || Config::$saml_settings['workflow']['jit'] == false) {
-                        throw new \Xibo\Exception\NotFoundException("User logged at the IdP but the account does not exists at Xibo and Just-In-Time provisioning is disabled");
+                    if (!isset(Config::$samlSettings['workflow']['jit']) || Config::$samlSettings['workflow']['jit'] == false) {
+                        throw new AccessDeniedException(__('User logged at the IdP but the account does not exist in the CMS and Just-In-Time provisioning is disabled'));
                     } else {
                         // Provision the user
                         $user = new \Xibo\Entity\User();
@@ -192,13 +185,13 @@ class SAMLAuthentication extends Middleware
                             $user->userTypeId = 3;
                         }
 
-                        $password = SAMLAuthentication::random_str(20);
+                        $password = Random::generateString(20);
                         $user->setNewPassword($password);
 
                         $user->homePageId = 1;
 
-                        if (isset(Config::$saml_settings['workflow']['libraryQuota'])) {
-                            $user->libraryQuota = Config::$saml_settings['workflow']['libraryQuota'];
+                        if (isset(Config::$samlSettings['workflow']['libraryQuota'])) {
+                            $user->libraryQuota = Config::$samlSettings['workflow']['libraryQuota'];
                         } else {
                             $user->libraryQuota = 0;
                         }
@@ -236,14 +229,14 @@ class SAMLAuthentication extends Middleware
             // Inject the GET parameters required by the SAML toolkit
             $_GET = $this->app->request->get();
 
-            $auth = new \OneLogin_Saml2_Auth(Config::$saml_settings);
+            $auth = new \OneLogin_Saml2_Auth(Config::$samlSettings);
             $auth->processSLO();
             $errors = $auth->getErrors();
 
             if (empty($errors)) {
                 $this->app->redirect($this->app->urlFor('logout'));
             } else {
-                throw new \Xibo\Exception\NotFoundException("SLO failed. ".implode(', ', $errors));
+                throw new AccessDeniedException("SLO failed. ".implode(', ', $errors));
             }
         });
 
@@ -262,7 +255,7 @@ class SAMLAuthentication extends Middleware
             }
             else {
                 // Initiate SAML SSO
-                $auth = new \OneLogin_Saml2_Auth(Config::$saml_settings);
+                $auth = new \OneLogin_Saml2_Auth(Config::$samlSettings);
                 $auth->login();
             }
         };

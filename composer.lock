@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "739965f53444ce8ab656ec6a3bec56ae",
-    "content-hash": "30b8f8aa2eec78b736b9bf8a2bbe57f5",
+    "hash": "1787331b2ba442e8e25d29da19ccbba4",
+    "content-hash": "db0f09e89aab25d5a62642897ca82540",
     "packages": [
         {
             "name": "danielstjules/stringy",
@@ -223,7 +223,7 @@
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ezyang/htmlpurifier/zipball/ae1828d955112356f7677c465f94f7deb7d27a40",
+                "url": "https://api.github.com/repos/ezyang/htmlpurifier/zipball/958ba655954ab5ad131a80231a90f9e74e425867",
                 "reference": "ae1828d955112356f7677c465f94f7deb7d27a40",
                 "shasum": ""
             },
@@ -1535,6 +1535,60 @@
             "time": "2015-09-19 14:15:08"
         },
         {
+            "name": "onelogin/php-saml",
+            "version": "2.6.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/onelogin/php-saml.git",
+                "reference": "9f3583c35339f185e114d148eac08d600a9360ef"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/onelogin/php-saml/zipball/9f3583c35339f185e114d148eac08d600a9360ef",
+                "reference": "9f3583c35339f185e114d148eac08d600a9360ef",
+                "shasum": ""
+            },
+            "require": {
+                "ext-dom": "*",
+                "ext-mcrypt": "*",
+                "ext-openssl": "*",
+                "php": ">=5.3.2"
+            },
+            "require-dev": {
+                "pdepend/pdepend": "1.1.0",
+                "phploc/phploc": "*",
+                "phpunit/phpunit": "3.7.31",
+                "satooshi/php-coveralls": "dev-master",
+                "sebastian/phpcpd": "*",
+                "squizlabs/php_codesniffer": "*"
+            },
+            "suggest": {
+                "ext-gettext": "Install gettext and php5-gettext libs to handle translations",
+                "ext-mcrypt": "Install mcrypt and php5-mcrypt libs in order to support encryption",
+                "lib-openssl": "Install openssl lib in order to handle with x509 certs (require to support sign and encryption)"
+            },
+            "type": "library",
+            "autoload": {
+                "classmap": [
+                    "extlib/xmlseclibs",
+                    "lib/Saml",
+                    "lib/Saml2"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "OneLogin PHP SAML Toolkit",
+            "homepage": "https://onelogin.zendesk.com/hc/en-us/sections/200245634-SAML-Toolkits",
+            "keywords": [
+                "SAML2",
+                "onelogin",
+                "saml"
+            ],
+            "time": "2015-09-09 14:18:12"
+        },
+        {
             "name": "phpmailer/phpmailer",
             "version": "dev-master",
             "source": {
@@ -1544,7 +1598,7 @@
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHPMailer/PHPMailer/zipball/e2a9ec16bdbef51efb81adf7fcc6d0bd507e09e1",
+                "url": "https://api.github.com/repos/PHPMailer/PHPMailer/zipball/881289ba6490c37cd7e9e9df98653c3cadcb81ed",
                 "reference": "e2a9ec16bdbef51efb81adf7fcc6d0bd507e09e1",
                 "shasum": ""
             },

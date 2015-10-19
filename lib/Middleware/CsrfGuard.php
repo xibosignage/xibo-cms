@@ -23,9 +23,7 @@
 namespace Xibo\Middleware;
 
 use Slim\Middleware;
-use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\TokenExpiredException;
-use Xibo\Helper\Theme;
 
 class CsrfGuard extends Middleware
 {
@@ -67,7 +65,8 @@ class CsrfGuard extends Middleware
     /**
      * Check CSRF token is valid.
      */
-    public function check() {
+    public function check()
+    {
         // Check sessions are enabled.
         if (session_id() === '') {
             throw new \Exception('Sessions are required to use the CSRF Guard middleware.');
@@ -81,7 +80,9 @@ class CsrfGuard extends Middleware
 
         // Validate the CSRF token.
         if (in_array($this->app->request()->getMethod(), array('POST', 'PUT', 'DELETE'))) {
-            if (!in_array($this->app->request()->getPath(), SAMLAuthentication::samlRoutes())) {
+            // Validate the token unless we are on an excluded route
+            if ($this->app->excludedCsrfRoutes == null || !in_array($this->app->request()->getPath(), $this->app->excludedCsrfRoutes)) {
+
                 $userToken = $this->app->request()->headers('X-XSRF-TOKEN');
                 if ($userToken == '') {
                     $userToken = $this->app->request()->params($this->key);
