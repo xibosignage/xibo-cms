@@ -52,6 +52,7 @@
     "guzzlehttp/guzzle": "~6.0",
     "league/oauth2-client": "~1.0",
     "james-heinrich/getid3": "^1.9",
+    "onelogin/php-saml": "^2.6.1",
     "fguillot/picofeed": "@stable"
   },
   "require-dev": {
