@@ -143,12 +143,10 @@ class Layout extends Data
             }
             
             // Retired options
-            if (Kit::GetParam('retired', $filter_by, _INT, -1) != -1) {
+            if (Kit::GetParam('retired', $filter_by, _INT, 0) != -1) {
                 $SQL .= " AND layout.retired = :retired ";
                 $params['retired'] = Kit::GetParam('retired', $filter_by, _INT);
             }
-            else
-                $SQL .= " AND layout.retired = 0 ";
 
             // Tags
             if (Kit::GetParam('tags', $filter_by, _STRING) != '') {
@@ -157,14 +155,29 @@ class Layout extends Data
                       FROM tag 
                         INNER JOIN lktaglayout 
                         ON lktaglayout.tagId = tag.tagId 
-                    WHERE tag LIKE :tags
-                    ) ";
-                $params['tags'] =  '%' . Kit::GetParam('tags', $filter_by, _STRING) . '%';
+                    ";
+
+                $i = 0;
+                foreach (explode(',', Kit::GetParam('tags', $filter_by, _STRING)) as $tag) {
+                    $i++;
+
+                    if ($i == 1)
+                        $SQL .= " WHERE tag LIKE :tags$i ";
+                    else
+                        $SQL .= " OR tag LIKE :tags$i ";
+
+                    $params['tags' . $i] =  '%' . $tag . '%';
+                }
+
+                $SQL .= ") ";
             }
             
             // Exclude templates by default
             if (Kit::GetParam('excludeTemplates', $filter_by, _INT, 1) == 1) {
                 $SQL .= " AND layout.layoutID NOT IN (SELECT layoutId FROM lktaglayout WHERE tagId = 1) ";
+            }
+            else {
+                $SQL .= " AND layout.layoutID IN (SELECT layoutId FROM lktaglayout WHERE tagId = 1) ";
             }
 
             // Show All, Used or UnUsed

@@ -251,7 +251,7 @@ $CLIENT_CONFIG = array(
                                 array('id' => 'off', 'value' => 'Off')
                             ),
                         'default' => 'error',
-                        'helpText' => __('The position of the cursor when the client starts up.'),
+                        'helpText' => __('The logging level that should be recorded by the Player.'),
                         'enabled' => true,
                         'groupClass' => NULL
                     ),
@@ -606,6 +606,17 @@ $CLIENT_CONFIG = array(
                         ),
                         'default' => 'DEMAND',
                         'helpText' => __('What plugin state should be used when starting a web view.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'timeSyncFromCms',
+                        'tabId' => 'advanced',
+                        'title' => __('Use CMS time?'),
+                        'type' => _CHECKBOX,
+                        'fieldType' => 'checkbox',
+                        'default' => 0,
+                        'helpText' => __('Set the device time using the CMS. Only available on rooted devices or system signed players.'),
                         'enabled' => true,
                         'groupClass' => NULL
                     )

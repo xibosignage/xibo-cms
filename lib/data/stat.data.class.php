@@ -101,7 +101,7 @@ class Stat extends data
             $params['type'] = 'displaydown';
             $params['displayid'] = $displayId;
             $params['statdate'] = date('Y-m-d H:i:s');
-            $params['start'] = $lastAccessed;
+            $params['start'] = date('Y-m-d H:i:s', $lastAccessed);
             $params['scheduleid'] = 0;
 
             $sth->execute($params);
@@ -125,9 +125,10 @@ class Stat extends data
 
             Debug::Audit('Display Up: ' . $displayId);
         
-            $sth = $dbh->prepare('UPDATE stat SET end = :toDt WHERE displayId = :displayId AND end IS NULL');
+            $sth = $dbh->prepare('UPDATE `stat` SET end = :toDt WHERE displayId = :displayId AND end IS NULL AND type = :type');
             $sth->execute(array(
                     'toDt' => date('Y-m-d H:i:s'),
+                    'type' => 'displaydown',
                     'displayId' => $displayId
                 ));
           

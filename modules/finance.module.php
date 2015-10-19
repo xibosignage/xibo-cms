@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2014 Daniel Garner
+ * Copyright (C) 2006-2015 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -18,15 +18,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  *
- */ 
-include_once('modules/3rdparty/emoji.php');
-
-class Twitter extends Module
+ */
+class Finance extends Module
 {
     public function __construct(database $db, user $user, $mediaid = '', $layoutid = '', $regionid = '', $lkid = '', $typeOverride = NULL) {
         // The Module Type must be set - this should be a unique text string of no more than 50 characters.
         // It is used to uniquely identify the module globally.
-        $this->type = ($typeOverride == NULL) ? 'twitter' : $typeOverride;
+        $this->type = ($typeOverride == NULL) ? 'finance' : $typeOverride;
 
         // This is the code schema version, it should be 1 for a new module and should be incremented each time the 
         // module data structure changes.
@@ -54,7 +52,7 @@ class Twitter extends Module
         
         if ($this->schemaVersion <= 1) {
             // Install
-            $this->InstallModule('Twitter', 'Twitter Search Module', 'forms/library.gif', 1, 1, array());
+            $this->InstallModule('Finance', 'Yahoo Finance', 'forms/library.gif', 1, 1, array());
         }
         else {
             // Update
@@ -74,8 +72,6 @@ class Twitter extends Module
         $media->addModuleFile('modules/preview/vendor/jquery-1.11.1.min.js');
         $media->addModuleFile('modules/preview/xibo-text-render.js');
         $media->addModuleFile('modules/preview/xibo-layout-scaler.js');
-        $media->addModuleFile('modules/theme/twitter/emoji.css');
-        $media->addModuleFile('modules/theme/twitter/emoji.png');
     }
 
     /** 
@@ -84,7 +80,7 @@ class Twitter extends Module
     public function loadTemplates()
     {
         // Scan the folder for template files
-        foreach (glob('modules/theme/twitter/*.template.json') as $template) {
+        foreach (glob('modules/theme/finance/*.template.json') as $template) {
             // Read the contents, json_decode and add to the array
             $this->settings['templates'][] = json_decode(file_get_contents($template), true);
         }
@@ -97,26 +93,9 @@ class Twitter extends Module
      */
     public function ModuleSettingsForm()
     {
-        // API Key
-        $formFields[] = FormManager::AddText('apiKey', __('API Key'), $this->GetSetting('apiKey'), 
-            __('Enter your API Key from Twitter.'), 'a', 'required');
-
-        // API Secret
-        $formFields[] = FormManager::AddText('apiSecret', __('API Secret'), $this->GetSetting('apiSecret'), 
-            __('Enter your API Secret from Twitter.'), 's', 'required');
-        
         // Cache Period
         $formFields[] = FormManager::AddText('cachePeriod', __('Cache Period'), $this->GetSetting('cachePeriod', 300), 
             __('Enter the number of seconds you would like to cache twitter search results.'), 'c', 'required');
-        
-        // Cache Period Images
-        $formFields[] = FormManager::AddText('cachePeriodImages', __('Cache Period for Images'), $this->GetSetting('cachePeriodImages', 24), 
-            __('Enter the number of hours you would like to cache twitter images.'), 'i', 'required');
-
-        // Present an error message if we don't have the required extension enabled. Don't prevent further configuration.
-        if (!extension_loaded('curl')) {
-            $formFields[] = FormManager::AddMessage(__('The php-curl extension is required for the Twitter Module and it does not appear to be enabled on this CMS. Please enable it before using this module.'), 'alert alert-danger');
-        }
         
         return $formFields;
     }
@@ -126,22 +105,7 @@ class Twitter extends Module
      */
     public function ModuleSettings()
     {
-        // Process any module settings you asked for.
-        $apiKey = Kit::GetParam('apiKey', _POST, _STRING, '');
-
-        if ($apiKey == '')
-            $this->ThrowError(__('Missing API Key'));
-
-        // Process any module settings you asked for.
-        $apiSecret = Kit::GetParam('apiSecret', _POST, _STRING, '');
-
-        if ($apiSecret == '')
-            $this->ThrowError(__('Missing API Secret'));
-
-        $this->settings['apiKey'] = $apiKey;
-        $this->settings['apiSecret'] = $apiSecret;
         $this->settings['cachePeriod'] = Kit::GetParam('cachePeriod', _POST, _INT, 300);
-        $this->settings['cachePeriodImages'] = Kit::GetParam('cachePeriodImages', _POST, _INT, 24);
 
         // Return an array of the processed settings.
         return $this->settings;
@@ -185,29 +149,6 @@ class Twitter extends Module
         $formFields['general'][] = FormManager::AddNumber('duration', __('Duration'), NULL, 
             __('The duration in seconds this item should be displayed.'), 'd', 'required');
 
-        // Any values for the form fields should be added to the theme here.
-        $formFields['general'][] = FormManager::AddText('searchTerm', __('Search Term'), NULL, 
-            __('Search term. You can test your search term in the twitter.com search box first.'), 's', 'required');
-
-        // Type
-        $formFields['general'][] = FormManager::AddCombo('resultType', __('Type'), 'mixed',
-            array(
-                array('typeid' => 'mixed', 'type' => __('Mixed')), 
-                array('typeid' => 'recent', 'type' => __('Recent')),
-                array('typeid' => 'popular', 'type' => __('Popular')),
-            ),
-            'typeid',
-            'type', 
-            __('Recent shows only the most recent tweets, Popular the most popular and Mixed includes both popular and recent results.'), 't', 'required');
-
-        // Distance
-        $formFields['general'][] = FormManager::AddNumber('tweetDistance', __('Distance'), NULL,
-            __('Distance in miles that the tweets should be returned from. Set to 0 for no restrictions.'), 'd');
-
-        // Distance
-        $formFields['general'][] = FormManager::AddNumber('tweetCount', __('Count'), 15, 
-            __('The number of Tweets to return.'), 'c');
-
         // Common fields
         $formFields['effect'][] = FormManager::AddCombo(
                 'effect', 
@@ -242,8 +183,8 @@ class Twitter extends Module
             __('The selected effect works best with a background colour. Optionally add one here.'), 'c', NULL, 'background-color-group');
 
         // Field empty
-        $formFields['advanced'][] = FormManager::AddText('noTweetsMessage', __('No tweets'), NULL, 
-            __('A message to display when there are no tweets returned by the search query'), 'n');
+        $formFields['advanced'][] = FormManager::AddText('noRecordsMessage', __('No Records'), NULL,
+            __('A message to display when there are no records returned by the search query'), 'n');
 
         // Date format
         $formFields['advanced'][] = FormManager::AddText('dateFormat', __('Date Format'), 'd M',
@@ -264,6 +205,15 @@ class Twitter extends Module
         // Default to 1 so that it will work correctly with old items (that didn't have a template selected at all)
         $formFields['template'][] = FormManager::AddCheckbox('overrideTemplate', __('Override the template?'), $this->GetOption('overrideTemplate', 0), 
         __('Tick if you would like to override the template.'), 'o');
+
+        $formFields['template'][] = FormManager::AddText('yql', __('Query'), NULL,
+            __('The YQL query to use for data'), '', '', 'template-override-controls');
+
+        $formFields['template'][] = FormManager::AddText('item', __('Item'), NULL,
+            __('The item wanted, can be comma separated.'), '');
+
+        $formFields['template'][] = FormManager::AddText('resultIdentifier', __('Result Identifier'), NULL,
+            __('The name of the result identifier returned by the YQL.'), '', '', 'template-override-controls');
         
         // Add a text template
         $formFields['template'][] = FormManager::AddMultiText('ta_text', NULL, $this->GetRawNode('template'), 
@@ -295,11 +245,6 @@ class Twitter extends Module
                 '.template-override-controls' => array('display' => 'block'),
                 '.template-selector-control' => array('display' => 'none')
             ), 'is:checked');
-
-        // Present an error message if the module has not been configured. Don't prevent further configuration.
-        if (!extension_loaded('curl') || $this->GetSetting('apiKey') == '' || $this->GetSetting('apiSecret') == '') {
-            $formFields['general'][] = FormManager::AddMessage(__('The Twitter Widget has not been configured yet, please ask your CMS Administrator to look at it for you.'), 'alert alert-danger');
-        }
 
         // Modules should be rendered using the theme engine.
         Theme::Set('form_fields_general', $formFields['general']);
@@ -343,23 +288,15 @@ class Twitter extends Module
         // You must also provide a duration (all media items must provide this field)
         $this->duration = Kit::GetParam('duration', _POST, _INT, 0, false);
 
-        // You should validate all form input using the Kit::GetParam helper classes
-        if (Kit::GetParam('searchTerm', _POST, _STRING) == '') {
-            $this->response->SetError(__('Please enter a search term'));
-            $this->response->keepOpen = true;
-            return $this->response;
-        }
-
         $this->SetOption('name', Kit::GetParam('name', _POST, _STRING));
-        $this->SetOption('searchTerm', Kit::GetParam('searchTerm', _POST, _STRING));
+        $this->SetOption('yql', Kit::GetParam('yql', _POST, _STRING));
+        $this->SetOption('item', Kit::GetParam('item', _POST, _STRING));
+        $this->SetOption('resultIdentifier', Kit::GetParam('resultIdentifier', _POST, _STRING));
         $this->SetOption('effect', Kit::GetParam('effect', _POST, _STRING));
         $this->SetOption('speed', Kit::GetParam('speed', _POST, _INT));
         $this->SetOption('backgroundColor', Kit::GetParam('backgroundColor', _POST, _STRING));
-        $this->SetOption('noTweetsMessage', Kit::GetParam('noTweetsMessage', _POST, _STRING));
+        $this->SetOption('noRecordsMessage', Kit::GetParam('noRecordsMessage', _POST, _STRING));
         $this->SetOption('dateFormat', Kit::GetParam('dateFormat', _POST, _STRING));
-        $this->SetOption('resultType', Kit::GetParam('resultType', _POST, _STRING));
-        $this->SetOption('tweetDistance', Kit::GetParam('tweetDistance', _POST, _INT));
-        $this->SetOption('tweetCount', Kit::GetParam('tweetCount', _POST, _INT));
         $this->SetRaw('<template><![CDATA[' . Kit::GetParam('ta_text', _POST, _HTMLSTRING) . ']]></template><styleSheet><![CDATA[' . Kit::GetParam('ta_css', _POST, _HTMLSTRING) . ']]></styleSheet>');
         $this->SetOption('overrideTemplate', Kit::GetParam('overrideTemplate', _POST, _CHECKBOX));
         $this->SetOption('templateId', Kit::GetParam('templateId', _POST, _WORD));
@@ -406,6 +343,7 @@ class Twitter extends Module
         $tabs[] = FormManager::AddTab('template', __('Appearance'), array(array('name' => 'enlarge', 'value' => true)));
         $tabs[] = FormManager::AddTab('effect', __('Effect'));
         $tabs[] = FormManager::AddTab('advanced', __('Advanced'));
+        $tabs[] = FormManager::AddTab('results', __('Results'));
         Theme::Set('form_tabs', $tabs);
 
         $formFields['general'][] = FormManager::AddText('name', __('Name'), $this->GetOption('name'), 
@@ -414,29 +352,6 @@ class Twitter extends Module
         // Duration
         $formFields['general'][] = FormManager::AddNumber('duration', __('Duration'), $this->duration, 
             __('The duration in seconds this item should be displayed.'), 'd', 'required');
-
-        // Search Term
-        $formFields['general'][] = FormManager::AddText('searchTerm', __('Search Term'), $this->GetOption('searchTerm'), 
-            __('Search term. You can test your search term in the twitter.com search box first.'), 's', 'required');
-
-        // Type
-        $formFields['general'][] = FormManager::AddCombo('resultType', __('Type'), $this->GetOption('resultType'),
-            array(
-                array('typeid' => 'mixed', 'type' => __('Mixed')), 
-                array('typeid' => 'recent', 'type' => __('Recent')),
-                array('typeid' => 'popular', 'type' => __('Popular')),
-            ),
-            'typeid',
-            'type', 
-            __('Recent shows only the most recent tweets, Popular the most popular and Mixed includes both popular and recent results.'), 't', 'required');
-
-        // Distance
-        $formFields['general'][] = FormManager::AddNumber('tweetDistance', __('Distance'), $this->GetOption('tweetDistance'), 
-            __('Distance in miles that the tweets should be returned from. Set to 0 for no restrictions.'), 'd');
-
-        // Distance
-        $formFields['general'][] = FormManager::AddNumber('tweetCount', __('Count'), $this->GetOption('tweetCount'), 
-            __('The number of Tweets to return.'), 'c');
 
         // Common fields
         $formFields['effect'][] = FormManager::AddCombo(
@@ -472,14 +387,11 @@ class Twitter extends Module
             __('The selected effect works best with a background colour. Optionally add one here.'), 'c', NULL, 'background-color-group');
 
         // Field empty
-        $formFields['advanced'][] = FormManager::AddText('noTweetsMessage', __('No tweets'), $this->GetOption('noTweetsMessage'), 
-            __('A message to display when there are no tweets returned by the search query'), 'n');
+        $formFields['advanced'][] = FormManager::AddText('noRecordsMessage', __('No records'), $this->GetOption('noRecordsMessage'),
+            __('A message to display when there are no records returned by the search query'), 'n');
 
         $formFields['advanced'][] = FormManager::AddText('dateFormat', __('Date Format'), $this->GetOption('dateFormat'),
             __('The format to apply to all dates returned by the ticker. In PHP date format: http://uk3.php.net/manual/en/function.date.php'), 'f');
-
-        $formFields['advanced'][] = FormManager::AddCheckbox('removeUrls', __('Remove URLs?'), $this->GetOption('removeUrls', 1), 
-            __('Should URLs be removed from the Tweet Text. Most URLs do not compliment digital signage.'), 'u');
 
         $formFields['advanced'][] = FormManager::AddNumber('updateInterval', __('Update Interval (mins)'), $this->GetOption('updateInterval', 60),
             __('Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60.'),
@@ -500,6 +412,15 @@ class Twitter extends Module
         // Default to 1 so that it will work correctly with old items (that didn't have a template selected at all)
         $formFields['template'][] = FormManager::AddCheckbox('overrideTemplate', __('Override the template?'), $this->GetOption('overrideTemplate', 0), 
         __('Tick if you would like to override the template.'), 'o');
+
+        $formFields['template'][] = FormManager::AddText('yql', __('Query'), $this->GetOption('yql'),
+            __('The YQL query to use for data'), '', '', 'template-override-controls');
+
+        $formFields['template'][] = FormManager::AddText('item', __('Item'), $this->GetOption('item'),
+            __('The item wanted, can be comma separated.'), '');
+
+        $formFields['template'][] = FormManager::AddText('resultIdentifier', __('Result Identifier'), $this->GetOption('resultIdentifier'),
+            __('The name of the result identifier returned by the YQL.'), '', '', 'template-override-controls');
         
         // Add a text template
         $formFields['template'][] = FormManager::AddMultiText('ta_text', NULL, $this->GetRawNode('template'), 
@@ -532,16 +453,12 @@ class Twitter extends Module
                 '.template-selector-control' => array('display' => 'none')
             ), 'is:checked');
 
-        // Present an error message if the module has not been configured. Don't prevent further configuration.
-        if (!extension_loaded('curl') || $this->GetSetting('apiKey') == '' || $this->GetSetting('apiSecret') == '') {
-            $formFields['general'][] = FormManager::AddMessage(__('The Twitter Widget has not been configured yet, please ask your CMS Administrator to look at it for you.'), 'alert alert-danger');
-        }
-
         // Modules should be rendered using the theme engine.
         Theme::Set('form_fields_general', $formFields['general']);
         Theme::Set('form_fields_template', $formFields['template']);
         Theme::Set('form_fields_effect', $formFields['effect']);
         Theme::Set('form_fields_advanced', $formFields['advanced']);
+        Theme::Set('form_fields_results', array());
 
         // Set the field dependencies
         $this->setFieldDepencencies();
@@ -553,6 +470,7 @@ class Twitter extends Module
         // which is then processed by the CMS JavaScript library (xibo-cms.js).
         // Append the templates to the response
         $this->response->extra = $this->settings['templates'];
+        $this->response->AddButton(__('Get Results'), 'requestTab("results", "index.php?p=module&q=exec&mod=' . $this->type . '&method=requestTab&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&mediaid=' . $this->mediaid . '")');
         $this->response->AddButton(__('Cancel'), 'XiboSwapDialog("index.php?p=timeline&layoutid=' . $this->layoutid . '&regionid=' . $this->regionid . '&q=RegionOptions")');
         $this->response->AddButton(__('Apply'), 'XiboDialogApply("#ModuleForm")');
         $this->response->AddButton(__('Save'), '$("#ModuleForm").submit()');
@@ -580,24 +498,15 @@ class Twitter extends Module
         if ($this->auth->modifyPermissions)
             $this->duration = Kit::GetParam('duration', _POST, _INT, 0, false);
 
-        // You should validate all form input using the Kit::GetParam helper classes
-        if (Kit::GetParam('searchTerm', _POST, _STRING) == '') {
-            $this->response->SetError(__('Please enter a search term'));
-            $this->response->keepOpen = true;
-            return $this->response;
-        }
-
         $this->SetOption('name', Kit::GetParam('name', _POST, _STRING));
-        $this->SetOption('searchTerm', Kit::GetParam('searchTerm', _POST, _STRING));
+        $this->SetOption('yql', Kit::GetParam('yql', _POST, _STRING));
+        $this->SetOption('item', Kit::GetParam('item', _POST, _STRING));
+        $this->SetOption('resultIdentifier', Kit::GetParam('resultIdentifier', _POST, _STRING));
         $this->SetOption('effect', Kit::GetParam('effect', _POST, _STRING));
         $this->SetOption('speed', Kit::GetParam('speed', _POST, _INT));
         $this->SetOption('backgroundColor', Kit::GetParam('backgroundColor', _POST, _STRING));
-        $this->SetOption('noTweetsMessage', Kit::GetParam('noTweetsMessage', _POST, _STRING));
+        $this->SetOption('noRecordsMessage', Kit::GetParam('noRecordsMessage', _POST, _STRING));
         $this->SetOption('dateFormat', Kit::GetParam('dateFormat', _POST, _STRING));
-        $this->SetOption('resultType', Kit::GetParam('resultType', _POST, _STRING));
-        $this->SetOption('tweetDistance', Kit::GetParam('tweetDistance', _POST, _INT));
-        $this->SetOption('tweetCount', Kit::GetParam('tweetCount', _POST, _INT));
-        $this->SetOption('removeUrls', Kit::GetParam('removeUrls', _POST, _CHECKBOX));
         $this->SetOption('overrideTemplate', Kit::GetParam('overrideTemplate', _POST, _CHECKBOX));
         $this->SetOption('templateId', Kit::GetParam('templateId', _POST, _WORD));
         $this->SetOption('updateInterval', Kit::GetParam('updateInterval', _POST, _INT, 60));
@@ -627,131 +536,88 @@ class Twitter extends Module
         $this->response->AddFieldAction('effect', 'change', 'none', array('.effect-controls' => array('display' => 'block'), '.background-color-group' => array('display' => 'block')), 'not');
     }
 
-    protected function getToken() {
+    /**
+     * Get YQL Data
+     * @return array|bool an array of results according to the key specified by result identifier. false if an invalid value is returned.
+     */
+    protected function getYql()
+    {
+        // Construct the YQL
+        // process items
+        $items = $this->getOption('item');
 
-        // Prepare the URL
-        $url = 'https://api.twitter.com/oauth2/token';
+        if (strstr($items, ','))
+            $items = explode(',', $items);
+        else
+            $items = array($items);
 
-        // Prepare the consumer key and secret
-        $key = base64_encode(urlencode($this->GetSetting('apiKey')) . ':' . urlencode($this->GetSetting('apiSecret')));
+        // quote each item
+        $items = array_map(function ($element) {
+            return '\'' . trim($element) . '\'';
+        }, $items);
 
-        // Check to see if we have the bearer token already cached
-        if (Cache::has('bearer_' . $key)) {
-            Debug::Audit('Bearer Token served from cache');
-            return Cache::get('bearer_' . $key);
+        $yql = str_replace('[Item]', implode(',', $items), $this->getOption('yql'));
+
+        // Fire off a request for the data
+        $key = md5($yql);
+
+        if (!Cache::has($key) || Cache::get($key) == '') {
+
+            Debug::Audit('Querying API for ' . $yql);
+
+            if (!$data = $this->request($yql)) {
+                return false;
+            }
+
+            // Cache it
+            Cache::put($key, $data, $this->getSetting('cachePeriod', 300));
+
+        } else {
+            Debug::Audit('Served from Cache');
+            $data = Cache::get($key);
         }
 
-        Debug::Audit('Bearer Token served from API');
+        Debug::Audit('Finance data returned: ' . var_export($data, true));
 
-        // Shame - we will need to get it.
-        // and store it.
-        $httpOptions = array(
-            CURLOPT_TIMEOUT => 20,
-            CURLOPT_SSL_VERIFYPEER => true,
-            CURLOPT_HTTPHEADER => array(
-                    'POST /oauth2/token HTTP/1.1',
-                    'Authorization: Basic ' . $key, 
-                    'Content-Type: application/x-www-form-urlencoded;charset=UTF-8',
-                    'Content-Length: 29'
-                ),
-            CURLOPT_USERAGENT => 'Xibo Twitter Module',
-            CURLOPT_HEADER => false,
-            CURLINFO_HEADER_OUT => true,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => http_build_query(array('grant_type' => 'client_credentials')),
-            CURLOPT_URL => $url,
-        );
+        // Pull out the results according to the resultIdentifier
+        // If the element to return is an array and we aren't, then box.
+        $results = $data[$this->getOption('resultIdentifier')];
 
-        // Proxy support
-        if (Config::GetSetting('PROXY_HOST') != '' && !Config::isProxyException($url)) {
-            $httpOptions[CURLOPT_PROXY] = Config::GetSetting('PROXY_HOST');
-            $httpOptions[CURLOPT_PROXYPORT] = Config::GetSetting('PROXY_PORT');
-
-            if (Config::GetSetting('PROXY_AUTH') != '')
-                $httpOptions[CURLOPT_PROXYUSERPWD] = Config::GetSetting('PROXY_AUTH');
-        }
-
-        $curl = curl_init();
-
-        // Set options
-        curl_setopt_array($curl, $httpOptions);
-
-        // Call exec
-        if (!$result = curl_exec($curl)) {
-            // Log the error
-            Debug::Error('Error contacting Twitter API: ' . curl_error($curl));
-            return false;
-        }
-
-        // We want to check for a 200
-        $outHeaders = curl_getinfo($curl);
-
-        if ($outHeaders['http_code'] != 200) {
-            Debug::Error('Twitter API returned ' . $result . ' status. Unable to proceed. Headers = ' . var_export($outHeaders, true));
-
-            // See if we can parse the error.
-            $body = json_decode($result);
-
-            Debug::Error('Twitter Error: ' . ((isset($body->errors[0])) ? $body->errors[0]->message : 'Unknown Error'));
-
-            return false;
-        }
-
-        // See if we can parse the body as JSON.
-        $body = json_decode($result);
-
-        // We have a 200 - therefore we want to think about caching the bearer token
-        // First, lets check its a bearer token
-        if ($body->token_type != 'bearer') {
-            Debug::Error('Twitter API returned OK, but without a bearer token. ' . var_export($body, true));
-            return false;
-        }
-
-        // It is, so lets cache it
-        // long times...
-        Cache::put('bearer_' . $key, $body->access_token, 100000);
-
-        return $body->access_token;
+        if (array_key_exists(0, $results))
+            return $results;
+        else
+            return array($results);
     }
 
-    protected function searchApi($token, $term, $resultType = 'mixed', $geoCode = '', $count = 15)
+    /**
+     * Request from Yahoo API
+     * @param $yql
+     * @return array|bool
+     */
+    private function request($yql)
     {
-        // Construct the URL to call
-        $url = 'https://api.twitter.com/1.1/search/tweets.json';
-        $queryString = '?q=' . urlencode(trim($term)) . 
-            '&result_type=' . $resultType . 
-            '&count=' . $count . 
-            '&include_entities=true';
-
-        if ($geoCode != '')
-            $queryString .= '&geocode=' . $geoCode;
+        // Encode the YQL and make the request
+        $url = 'https://query.yahooapis.com/v1/public/yql?q=' . urlencode($yql) . '&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys';
+        //$url = 'https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20yahoo.finance.quote%20where%20symbol%20in%20(%22TEC.PA%22)&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=';
 
         $httpOptions = array(
             CURLOPT_TIMEOUT => 20,
             CURLOPT_SSL_VERIFYPEER => true,
-            CURLOPT_HTTPHEADER => array(
-                    'GET /1.1/search/tweets.json' . $queryString . 'HTTP/1.1',
-                    'Host: api.twitter.com',
-                    'Authorization: Bearer ' . $token
-                ),
-            CURLOPT_USERAGENT => 'Xibo Twitter Module',
+            CURLOPT_USERAGENT => 'Xibo Digital Signage',
             CURLOPT_HEADER => false,
             CURLINFO_HEADER_OUT => true,
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_URL => $url . $queryString,
+            CURLOPT_URL => $url
         );
 
         // Proxy support
-        if (Config::GetSetting('PROXY_HOST') != '' && !Config::isProxyException($url)) {
-            $httpOptions[CURLOPT_PROXY] = Config::GetSetting('PROXY_HOST');
-            $httpOptions[CURLOPT_PROXYPORT] = Config::GetSetting('PROXY_PORT');
+        if (\Config::GetSetting('PROXY_HOST') != '' && !\Config::isProxyException($url)) {
+            $httpOptions[CURLOPT_PROXY] = \Config::GetSetting('PROXY_HOST');
+            $httpOptions[CURLOPT_PROXYPORT] = \Config::GetSetting('PROXY_PORT');
 
-            if (Config::GetSetting('PROXY_AUTH') != '')
-                $httpOptions[CURLOPT_PROXYUSERPWD] = Config::GetSetting('PROXY_AUTH');
+            if (\Config::GetSetting('PROXY_AUTH') != '')
+                $httpOptions[CURLOPT_PROXYUSERPWD] = \Config::GetSetting('PROXY_AUTH');
         }
-
-        Debug::Audit('Calling API with: ' . $url . $queryString);
 
         $curl = curl_init();
         curl_setopt_array($curl, $httpOptions);
@@ -762,202 +628,72 @@ class Twitter extends Module
 
         if ($outHeaders['http_code'] == 0) {
             // Unable to connect
-            Debug::Error('Unable to reach twitter api.');
+            \Debug::Error('Unable to reach API. No Host Found (HTTP Code 0). Curl Error = ' . curl_error($curl));
             return false;
         }
         else if ($outHeaders['http_code'] != 200) {
-            Debug::Error('Twitter API returned ' . $outHeaders['http_code'] . ' status. Unable to proceed. Headers = ' . var_export($outHeaders, true));
+            \Debug::Error('API returned ' . $outHeaders['http_code'] . ' status. Unable to proceed. Headers = ' . var_export($outHeaders, true));
 
             // See if we can parse the error.
             $body = json_decode($result);
 
-            Debug::Error('Twitter Error: ' . ((isset($body->errors[0])) ? $body->errors[0]->message : 'Unknown Error'));
+            \Debug::Error('Error: ' . ((isset($body->errors[0])) ? $body->errors[0]->message : 'Unknown Error'));
 
             return false;
         }
 
         // Parse out header and body
-        $body = json_decode($result);
+        $body = json_decode($result, true);
 
-        return $body;
+        return $body['query']['results'];
     }
 
-    protected function getTwitterFeed($displayId = 0, $isPreview = true)
+    /**
+     * Run through the data and substitute into the template
+     * @param $data
+     * @param $source
+     * @return mixed
+     */
+    private function makeSubstitutions($data, $source)
     {
-        if (!extension_loaded('curl')) {
-            trigger_error(__('cURL extension is required for Twitter'));
-            return false;
-        }
-
-        // Do we need to add a geoCode?
-        $geoCode = '';
-        $distance = $this->GetOption('tweetDistance');
-        if ($distance != 0) {
-            // Use the display ID or the default.
-            if ($displayId != 0) {
-                // Look up the lat/long
-                $display = new Display();
-                $display->displayId = $displayId;
-                $display->Load();
-
-                $defaultLat = $display->latitude;
-                $defaultLong = $display->longitude;
-            }
-            else {
-                $defaultLat = Config::GetSetting('DEFAULT_LAT');
-                $defaultLong = Config::GetSetting('DEFAULT_LONG');
-            }
-
-            // Built the geoCode string.
-            $geoCode = implode(',', array($defaultLat, $defaultLong, $distance)) . 'mi';
-        }
-
-        // Connect to twitter and get the twitter feed.
-        $key = md5($this->GetOption('searchTerm') . $this->GetOption('resultType') . $this->GetOption('tweetCount', 15) . $geoCode);
-        
-        if (!Cache::has($key) || Cache::get($key) == '') {
-
-            Debug::Audit('Querying API for ' . $this->GetOption('searchTerm'));
-
-            // We need to search for it
-            if (!$token = $this->getToken())
-                return false;
-
-            // We have the token, make a tweet
-            if (!$data = $this->searchApi($token, $this->GetOption('searchTerm'), $this->GetOption('resultType'), $geoCode, $this->GetOption('tweetCount', 15)))
-                return false;
-
-            // Cache it
-            Cache::put($key, $data, $this->GetSetting('cachePeriod'));
-        }
-        else {
-            Debug::Audit('Served from Cache');
-            $data = Cache::get($key);
-        }
-
-        Debug::Audit(var_export(json_encode($data), true));
-
-        // Get the template
-        $template = $this->GetRawNode('template');
-
-        // Parse the text template
+        // Replace all matches.
         $matches = '';
-        preg_match_all('/\[.*?\]/', $template, $matches);
+        preg_match_all('/\[.*?\]/', $source, $matches);
 
-        // Build an array to return
-        $return = array();
+        // Substitute
+        foreach ($matches[0] as $sub) {
+            $replace = str_replace('[', '', str_replace(']', '', $sub));
 
-        // Media Object to get profile images
-        $media = new Media();
-        $layout = new Layout();
-
-        // Expiry time for any media that is downloaded
-        $expires = time() + ($this->GetSetting('cachePeriodImages') * 60 * 60);
-        
-        // Remove URL setting
-        $removeUrls = $this->GetOption('removeUrls', 1);
-
-        // If we have nothing to show, display a no tweets message.
-        if (count($data->statuses) <= 0) {
-            // Create ourselves an empty tweet so that the rest of the code can continue as normal
-            $user = new stdClass();
-            $user->name = '';
-            $user->screen_name = '';
-            $user->profile_image_url = '';
-
-            $tweet = new stdClass();
-            $tweet->text = $this->GetOption('noTweetsMessage', __('There are no tweets to display'));
-            $tweet->created_at = date("Y-m-d H:i:s");
-            $tweet->user = $user;
-
-            // Append to our statuses
-            $data->statuses[] = $tweet;
+            // Match that in the array
+            if (isset($data[$replace]))
+                $source = str_replace($sub, $data[$replace], $source);
         }
 
-        // This should return the formatted items.
-        foreach ($data->statuses as $tweet) {
-            // Substitute for all matches in the template
-            $rowString = $template;
+        return $source;
+    }
 
-            foreach ($matches[0] as $sub) {
-                // Always clear the stored template replacement
-                $replace = '';
+    /**
+     * Get Tab
+     */
+    public function requestTab()
+    {
+        if (!$data = $this->getYql())
+            trigger_error(__('No data returned, please check error log.'), E_USER_ERROR);
 
-                // Maybe make this more generic?
-                switch ($sub) {
-                    case '[Tweet]':
-                        // Get the tweet text to operate on
-                        $tweetText = $tweet->text;
+        $cols = array(
+            array('name' => 'key', 'title' => __('Substitute')),
+            array('name' => 'value', 'title' => __('Value'))
+        );
+        Theme::Set('table_cols', $cols);
 
-                        // Replace URLs with their display_url before removal
-                        if (isset($tweet->entities->urls)) {
-                            foreach ($tweet->entities->urls as $url) {
-                                $tweetText = str_replace($url->url, $url->display_url, $tweetText);
-                            }
-                        }
-
-                        // Handle URL removal if requested
-                        if ($removeUrls == 1) {
-                            $tweetText = preg_replace("((https?|ftp|gopher|telnet|file|notes|ms-help):((\/\/)|(\\\\))+[\w\d:#\@%\/;$()~_?\+-=\\\.&]*)", '', $tweetText);
-                        }
-
-                        $replace = emoji_unified_to_html($tweetText);
-                        break;
-
-                    case '[User]':
-                        $replace = $tweet->user->name;
-                        break;
-
-                    case '[ScreenName]':
-                        $replace = $tweet->user->screen_name;
-                        break;
-
-                    case '[Date]':
-                        $replace = date($this->GetOption('dateFormat', Config::GetSetting('DATE_FORMAT')), DateManager::getDateFromGregorianString($tweet->created_at));
-                        break;
-
-                    case '[ProfileImage]':
-                        // Grab the profile image
-                        if ($tweet->user->profile_image_url != '') {
-                            $file = $media->addModuleFileFromUrl($tweet->user->profile_image_url, 'twitter_' . $tweet->user->id, $expires);
-
-                            // Tag this layout with this file
-                            $layout->AddLk($this->layoutid, 'module', $file['mediaId']);
-
-                            $replace = ($isPreview) ? '<img src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $file['mediaId'] . '" />' : '<img src="' . $file['storedAs'] . '" />';
-                        }
-                        break;
-
-                    case '[Photo]':
-                        // See if there are any photos associated with this tweet.
-                        if (isset($tweet->entities->media) && count($tweet->entities->media) > 0) {
-                            // Only take the first one
-                            $photoUrl = $tweet->entities->media[0]->media_url;
-
-                            if ($photoUrl != '') {
-                                $file = $media->addModuleFileFromUrl($photoUrl, 'twitter_photo_' . $tweet->user->id . '_' . $tweet->entities->media[0]->id_str, $expires);
-                                $replace = ($isPreview) ? '<img src="index.php?p=module&mod=image&q=Exec&method=GetResource&mediaid=' . $file['mediaId'] . '" />' : '<img src="' . $file['storedAs'] . '" />';
-
-                                // Tag this layout with this file
-                                $layout->AddLk($this->layoutid, 'module', $file['mediaId']);
-                            }
-                        }
-
-                        break;
-
-                    default:
-                        $replace = '';
-                }
-
-                $rowString = str_replace($sub, $replace, $rowString);
-            }
-
-            // Substitute the replacement we have found (it might be '')
-            $return[] = $rowString;
+        $rows = array();
+        foreach ($data[0] as $key => $value) {
+            $rows[] = array('key' => $key, 'value' => $value);
         }
-        
-        // Return the data array
-        return $return;
+
+        Theme::Set('table_rows', $rows);
+        Theme::Render('table_render');
+        exit();
     }
 
     /**
@@ -969,12 +705,6 @@ class Twitter extends Module
      */
     public function GetResource($displayId = 0)
     {
-        // Make sure we are set up correctly
-        if ($this->GetSetting('apiKey') == '' || $this->GetSetting('apiSecret') == '') {
-            Debug::Error('Twitter Module not configured. Missing API Keys');
-            return '';
-        }
-
         // Load in the template
         $template = file_get_contents('modules/preview/HtmlTemplate.html');
         $isPreview = (Kit::GetParam('preview', _REQUEST, _WORD, 'false') == 'true');
@@ -985,13 +715,22 @@ class Twitter extends Module
 
         // Information from the Module
         $duration = $this->duration;
-        
-        // Generate a JSON string of substituted items.
-        $items = $this->getTwitterFeed($displayId, $isPreview);
 
-        // Return empty string if there are no items to show.
-        if (count($items) == 0)
+        // Generate a JSON string of items.
+        if (!$items = $this->getYql($displayId, $isPreview)) {
             return '';
+        }
+
+        // Run through each item and substitute with the template
+        $itemTemplate = $this->GetRawNode('template');
+        $renderedItems = array();
+
+        foreach ($items as $item) {
+            $renderedItems[] = $this->makeSubstitutions($item, $itemTemplate);
+        }
+
+        Debug::Audit('Items: ' . var_export($items, true));
+        Debug::Audit('Rendered items: ' . var_export($renderedItems, true));
 
         $options = array(
             'type' => $this->type,
@@ -999,7 +738,7 @@ class Twitter extends Module
             'speed' => $this->GetOption('speed', 500),
             'duration' => $duration,
             'durationIsPerItem' => ($this->GetOption('durationIsPerItem', 0) == 1),
-            'numItems' => count($items),
+            'numItems' => count($renderedItems),
             'itemsPerPage' => 1,
             'originalWidth' => $this->width,
             'originalHeight' => $this->height,
@@ -1038,12 +777,12 @@ class Twitter extends Module
         $javaScriptContent  = '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-1.11.1.min.js"></script>';
 
         // Need the cycle plugin?
-        if ($this->GetOption('effect') != 'none') {
+        if ($this->GetSetting('effect') != 'none') {
             $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery-cycle-2.1.6.min.js"></script>';
         }
 
         // Need the marquee plugin?
-        if (stripos($this->GetOption('effect'), 'marquee') !== false)
+        if (stripos($this->GetSetting('effect'), 'marquee') !== false)
             $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/vendor/' : '') . 'jquery.marquee.min.js"></script>';
         
         $javaScriptContent .= '<script type="text/javascript" src="' . (($isPreview) ? 'modules/preview/' : '') . 'xibo-layout-scaler.js"></script>';
@@ -1051,7 +790,7 @@ class Twitter extends Module
 
         $javaScriptContent .= '<script type="text/javascript">';
         $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
-        $javaScriptContent .= '   var items = ' . Kit::jsonEncode($items) . ';';
+        $javaScriptContent .= '   var items = ' . Kit::jsonEncode($renderedItems) . ';';
         $javaScriptContent .= '   $(document).ready(function() { ';
         $javaScriptContent .= '       $("body").xiboLayoutScaler(options); $("#content").xiboTextRender(options, items); ';
         $javaScriptContent .= '   }); ';

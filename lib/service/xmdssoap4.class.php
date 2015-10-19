@@ -55,7 +55,7 @@ class XMDSSoap4
         $clientVersion = Kit::ValidateParam($clientVersion, _STRING);
         $clientCode = Kit::ValidateParam($clientCode, _INT);
         $macAddress = Kit::ValidateParam($macAddress, _STRING);
-        $clientAddress = Kit::GetParam('REMOTE_ADDR', $_SERVER, _STRING);
+        $clientAddress = $this->getIp();
 
         // Audit in
         Debug::Audit('serverKey: ' . $serverKey . ', hardwareKey: ' . $hardwareKey . ', displayName: ' . $displayName);
@@ -95,6 +95,10 @@ class XMDSSoap4
         $displayElement = $return->createElement('display');
         $return->appendChild($displayElement);
 
+        // Append the time
+        $displayElement->setAttribute('date', date('Y-m-d H:i:s'));
+        $displayElement->setAttribute('timezone', Config::GetSetting('defaultTimezone'));
+
         // Is it there?
         if (count($result) == 0) {
 
@@ -118,7 +122,6 @@ class XMDSSoap4
 
             $displayId = Kit::ValidateParam($row['displayid'], _INT);
             $display = Kit::ValidateParam($row['display'], _STRING);
-            $clientType = Kit::ValidateParam($row['client_type'], _WORD);
             $versionInstructions = Kit::ValidateParam($row['version_instructions'], _HTMLSTRING);
             $screenShotRequested = Kit::ValidateParam($row['screenShotRequested'], _INT);
             $emailAlert = Kit::ValidateParam($row['email_alert'], _INT);
@@ -1349,7 +1352,7 @@ class XMDSSoap4
 
             // Last accessed date on the display
             $displayObject = new Display();
-            $displayObject->Touch($this->displayId, array('clientAddress' => Kit::GetParam('REMOTE_ADDR', $_SERVER, _STRING)));
+            $displayObject->Touch($this->displayId, array('clientAddress' => $this->getIp()));
 
             return true;
         }
@@ -1439,6 +1442,25 @@ class XMDSSoap4
     {
         $bandwidth = new Bandwidth();
         $bandwidth->Log($displayId, $type, $sizeInBytes);
+    }
+
+    /**
+     * Get the Client IP Address
+     * @return string
+     */
+    protected function getIp()
+    {
+        $clientIp = '';
+
+        $keys = array('X_FORWARDED_FOR', 'HTTP_X_FORWARDED_FOR', 'CLIENT_IP', 'REMOTE_ADDR');
+        foreach ($keys as $key) {
+            if (isset($_SERVER[$key])) {
+                $clientIp = $_SERVER[$key];
+                break;
+            }
+        }
+
+        return $clientIp;
     }
 }
 ?>
