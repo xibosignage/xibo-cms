@@ -151,7 +151,8 @@ class DataSet implements \JsonSerializable
         // Build a SQL statement, based on the columns for this dataset
         $this->load();
 
-        $select = 'SELECT id';
+        $select  = 'SELECT * FROM ( ';
+        $body = 'SELECT id';
 
         // Keep track of the columns we are allowed to order by
         $allowedOrderCols = ['id'];
@@ -165,16 +166,16 @@ class DataSet implements \JsonSerializable
             if ($column->dataSetColumnTypeId == 2) {
                 $formula = str_replace($blackList, '', htmlspecialchars_decode($column->formula, ENT_QUOTES));
 
-                $heading = str_replace('[DisplayGeoLocation]', $displayGeoLocation, $formula) . ' AS \'' . $column->heading . '\'';
+                $heading = str_replace('[DisplayGeoLocation]', $displayGeoLocation, $formula) . ' AS `' . $column->heading . '`';
             }
             else {
                 $heading = '`' . $column->heading . '`';
             }
 
-            $select .= ', ' . $heading;
+            $body .= ', ' . $heading;
         }
 
-        $body = ' FROM `dataset_' . $this->dataSetId . '` WHERE 1 = 1 ';
+        $body .= ' FROM `dataset_' . $this->dataSetId . '`) dataset WHERE 1 = 1 ';
 
         // Filtering
         if ($filter != '') {
@@ -237,7 +238,7 @@ class DataSet implements \JsonSerializable
         $data = PDOConnect::select($sql, $params);
 
         // If there are limits run some SQL to work out the full payload of rows
-        $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
+        $results = PDOConnect::select('SELECT COUNT(*) AS total FROM (' . $body, $params);
         $this->countLast = intval($results[0]['total']);
 
         return $data;
