@@ -47,6 +47,7 @@ class LocalVideo extends ModuleWidget
         // Set some options
         $this->setDuration(Sanitize::getInt('duration'));
         $this->setOption('uri', urlencode(Sanitize::getString('uri')));
+        $this->setOption('scaleType', Sanitize::getString('scaleTypeId', 'aspect'));
 
         $this->validate();
 
@@ -62,6 +63,7 @@ class LocalVideo extends ModuleWidget
         // Set some options
         $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
         $this->setOption('uri', urlencode(Sanitize::getString('uri')));
+        $this->setOption('scaleType', Sanitize::getString('scaleTypeId', 'aspect'));
 
         $this->validate();
 
