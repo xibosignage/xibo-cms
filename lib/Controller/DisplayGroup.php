@@ -30,12 +30,11 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
-use Xibo\Helper\Config;
 use Xibo\Helper\Help;
-use Xibo\Helper\Log;
+use Xibo\Helper\PlayerActionHelper;
 use Xibo\Helper\Sanitize;
+use Xibo\XMR\ChangeLayoutAction;
 use Xibo\XMR\CollectNowAction;
-use Xibo\XMR\PlayerActionException;
 
 
 class DisplayGroup extends Base
@@ -990,28 +989,75 @@ class DisplayGroup extends Base
         if (!$this->getUser()->checkEditable($displayGroup))
             throw new AccessDeniedException();
 
-        // XMR network address
-        $xmrAddress = Config::GetSetting('XMR_ADDRESS');
+        PlayerActionHelper::sendAction(DisplayFactory::getByDisplayGroupId($displayGroupId), new CollectNowAction());
 
-        if ($xmrAddress == '')
-            throw new \InvalidArgumentException(__('XMR address is not set'));
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('Command Sent to %s'), $displayGroup->displayGroup),
+            'id' => $displayGroup->displayGroupId
+        ]);
+    }
 
-        // Send a message to all displays
-        foreach (DisplayFactory::getByDisplayGroupId($displayGroupId) as $display) {
-            /* @var Display $display */
-            if ($display->xmrChannel == '' || $display->xmrPubKey == '')
-                throw new \InvalidArgumentException(__('This Player is not configured or ready to receive XMR commands'));
+    /**
+     * Change to a new Layout
+     * @param $displayGroupId
+     * @throws ConfigurationException
+     * @throws \Xibo\Exception\NotFoundException
+     *
+     * @SWG\Post(
+     *  path="/displaygroup/{displayGroupId}/action/changeLayout",
+     *  operationId="displayGroupActionChangeLayout",
+     *  tags={"displayGroup"},
+     *  summary="Action: Change Layout",
+     *  description="Send the change layout action to this DisplayGroup",
+     *  @SWG\Parameter(
+     *      name="displayGroupId",
+     *      in="path",
+     *      description="The Display Group Id",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="layoutId",
+     *      in="formData",
+     *      description="The Layout Id",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="duration",
+     *      in="formData",
+     *      description="The duration in seconds for this Layout change to remain in effect",
+     *      type="integer",
+     *      required="false"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="downloadRequired",
+     *      in="formData",
+     *      description="Flag indicating whether the player should perform a collect before playing the Layout",
+     *      type="integer",
+     *      required="false"
+     *   )
+     * )
+     */
+    public function changeLayout($displayGroupId)
+    {
+        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
 
-            try {
-                // Assign the Layout to the Display
-                if (!(new CollectNowAction())->setIdentity($display->xmrChannel, $display->xmrPubKey)->send($xmrAddress))
-                    throw new ConfigurationException(__('This command has been refused'));
-            } catch (PlayerActionException $sockEx) {
-                Log::emergency('XMR Connection Failure: %s', $sockEx->getMessage());
-                Log::debug('XMR Connection Failure, trace: %s', $sockEx->getTraceAsString());
-                throw new ConfigurationException(__('Connection Failed'));
-            }
-        }
+        if (!$this->getUser()->checkEditable($displayGroup))
+            throw new AccessDeniedException();
+
+        // Get the layoutId
+        $layoutId = Sanitize::getInt('layoutId');
+
+        if ($layoutId == 0)
+            throw new \InvalidArgumentException(__('Please provide a Layout'));
+
+        PlayerActionHelper::sendAction(DisplayFactory::getByDisplayGroupId($displayGroupId), (new ChangeLayoutAction())->setLayoutDetails($layoutId,
+            Sanitize::getInt('duration'),
+            (Sanitize::getCheckbox('downloadRequired') == 1)
+        ));
 
         // Return
         $this->getState()->hydrate([

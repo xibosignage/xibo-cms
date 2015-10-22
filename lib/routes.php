@@ -217,7 +217,7 @@ $app->post('/displaygroup/:id/layout/assign', '\Xibo\Controller\DisplayGroup:ass
 $app->post('/displaygroup/:id/layout/unassign', '\Xibo\Controller\DisplayGroup:unassignLayouts')->name('displayGroup.unassign.layout');
 
 $app->post('/displaygroup/:id/action/collectNow', '\Xibo\Controller\DisplayGroup:collectNow')->name('displayGroup.action.collectNow');
-//$app->post('/displaygroup/:id/action/layoutChange', '\Xibo\Controller\DisplayGroup:layoutChange')->name('displayGroup.action.layoutChange');
+$app->post('/displaygroup/:id/action/changeLayout', '\Xibo\Controller\DisplayGroup:changeLayout')->name('displayGroup.action.changeLayout');
 
 /**
  * Display Profile
