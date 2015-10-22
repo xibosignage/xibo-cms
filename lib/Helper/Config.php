@@ -202,7 +202,7 @@ class Config
      * @param array $httpOptions
      * @return array
      */
-    public static function getGuzzelProxy($httpOptions = [])
+    public static function getGuzzleProxy($httpOptions = [])
     {
         // Proxy support
         if (Config::GetSetting('PROXY_HOST') != '') {

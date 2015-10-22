@@ -534,7 +534,7 @@ class ForecastIo extends ModuleWidget
         $client = new Client();
 
         try {
-            $response = $client->get($request_url, Config::getGuzzelProxy(['connect_timeout' => 20]));
+            $response = $client->get($request_url, Config::getGuzzleProxy(['connect_timeout' => 20]));
 
             // Success?
             if ($response->getStatusCode() != 200) {
