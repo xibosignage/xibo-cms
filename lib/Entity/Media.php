@@ -223,7 +223,7 @@ class Media implements \JsonSerializable
             throw new \InvalidArgumentException(__('Unknown Module Type'));
 
         if (!v::string()->notEmpty()->length(1, 100)->validate($this->name))
-            throw new \InvalidArgumentException(__('The name cannot be longer than 100 characters'));
+            throw new \InvalidArgumentException(__('The name must be between 1 and 100 characters'));
 
         // Check the naming of this item to ensure it doesn't conflict
         $params = array();
@@ -561,7 +561,7 @@ class Media implements \JsonSerializable
 
         try {
             $client = new Client();
-            $client->get($this->fileName, Config::getGuzzelProxy(['save_to' => $fileHandle]));
+            $client->get($this->fileName, Config::getGuzzleProxy(['save_to' => $fileHandle]));
         }
         catch (RequestException $e) {
             Log::error('Unable to get %s, %s', $this->fileName, $e->getMessage());

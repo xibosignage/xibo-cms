@@ -274,8 +274,8 @@ class DisplayProfile extends Base
                 else {
                     // Take only the hours and minutes and construct a new date
                     $now = Date::parse();
-                    $date->setDate($now->year, $now->month, $now->day, $date->hour, $date->minute, 0);
-                    $value = Date::getLocalDate($date, 'U') * 1000;
+                    $now->setTime($date->hour, $date->minute, 0);
+                    $value = Date::getLocalDate($now, 'U') * 1000;
                 }
             }
 

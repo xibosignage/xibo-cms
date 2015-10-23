@@ -61,7 +61,7 @@ class Soap4 extends Soap
         $clientVersion = Sanitize::string($clientVersion);
         $clientCode = Sanitize::int($clientCode);
         $macAddress = Sanitize::string($macAddress);
-        $clientAddress = Sanitize::getString('REMOTE_ADDR');
+        $clientAddress = $this->getIp();
 
         // Audit in
         Log::debug('serverKey: ' . $serverKey . ', hardwareKey: ' . $hardwareKey . ', displayName: ' . $displayName);
@@ -198,6 +198,8 @@ class Soap4 extends Soap
      */
     function GetFile($serverKey, $hardwareKey, $fileId, $fileType, $chunkOffset, $chunkSize)
     {
+        $this->logProcessor->setRoute('GetFile');
+
         // Sanitize
         $serverKey = Sanitize::string($serverKey);
         $hardwareKey = Sanitize::string($hardwareKey);
@@ -365,6 +367,8 @@ class Soap4 extends Soap
      */
     public function NotifyStatus($serverKey, $hardwareKey, $status)
     {
+        $this->logProcessor->setRoute('NotifyStatus');
+
         // Sanitize
         $serverKey = Sanitize::string($serverKey);
         $hardwareKey = Sanitize::string($hardwareKey);
@@ -408,6 +412,8 @@ class Soap4 extends Soap
      */
     public function SubmitScreenShot($serverKey, $hardwareKey, $screenShot)
     {
+        $this->logProcessor->setRoute('SubmitScreenShot');
+
         // Sanitize
         $serverKey = Sanitize::string($serverKey);
         $hardwareKey = Sanitize::string($hardwareKey);

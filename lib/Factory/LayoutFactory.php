@@ -117,32 +117,8 @@ class LayoutFactory extends BaseFactory
     {
         // Get the layout
         $layout = LayoutFactory::getById($layoutId);
-
-        // LEGACY: What happens if we have a legacy layout (a layout that still contains its own XML)
-        if ($layout->legacyXml != null && $layout->legacyXml != '') {
-            $layoutFromXml = LayoutFactory::loadByXlf($layout->legacyXml);
-
-            // Add the information we know from the layout we originally parsed from the DB
-            $layoutFromXml->layoutId = $layout->layoutId;
-            $layoutFromXml->layout = $layout->layout;
-            $layoutFromXml->description = $layout->description;
-            $layoutFromXml->status = $layout->status;
-            $layoutFromXml->campaignId = $layout->campaignId;
-            $layoutFromXml->backgroundImageId = $layout->backgroundImageId;
-            $layoutFromXml->ownerId = $layout->ownerId;
-            $layoutFromXml->schemaVersion = 3;
-
-            // TODO: Save this so that it gets converted to the DB format.
-            //$layoutFromXml->save();
-
-            // TODO: somehow we need to map the old permissions over to the new permissions model.
-
-            $layout = $layoutFromXml;
-        }
-        else {
-            // Load the layout
-            $layout->load();
-        }
+        // Load the layout
+        $layout->load();
 
         return $layout;
     }
@@ -155,7 +131,7 @@ class LayoutFactory extends BaseFactory
      */
     public static function getById($layoutId)
     {
-        $layouts = LayoutFactory::query(null, array('disableUserCheck' => 1, 'layoutId' => $layoutId, 'excludeTemplates' => 0, 'retired' => -1));
+        $layouts = LayoutFactory::query(null, array('disableUserCheck' => 1, 'layoutId' => $layoutId, 'excludeTemplates' => -1, 'retired' => -1));
 
         if (count($layouts) <= 0) {
             throw new NotFoundException(\__('Layout not found'));
@@ -173,7 +149,7 @@ class LayoutFactory extends BaseFactory
      */
     public static function getByOwnerId($ownerId)
     {
-        return LayoutFactory::query(null, array('userId' => $ownerId, 'excludeTemplates' => 0, 'retired' => -1));
+        return LayoutFactory::query(null, array('userId' => $ownerId, 'excludeTemplates' => -1, 'retired' => -1));
     }
 
     /**
@@ -184,7 +160,7 @@ class LayoutFactory extends BaseFactory
      */
     public static function getByCampaignId($campaignId)
     {
-        return LayoutFactory::query(['displayOrder'], array('campaignId' => $campaignId, 'retired' => -1));
+        return LayoutFactory::query(['displayOrder'], array('campaignId' => $campaignId, 'excludeTemplates' => -1, 'retired' => -1));
     }
 
     /**
@@ -220,7 +196,7 @@ class LayoutFactory extends BaseFactory
         $layout->width = $document->documentElement->getAttribute('width');
         $layout->height = $document->documentElement->getAttribute('height');
         $layout->backgroundColor = $document->documentElement->getAttribute('bgcolor');
-        $layout->backgroundzIndex = $document->documentElement->getAttribute('zindex');
+        $layout->backgroundzIndex = (int)$document->documentElement->getAttribute('zindex');
 
         // Xpath to use when getting media
         $xpath = new \DOMXPath($document);
@@ -470,7 +446,6 @@ class LayoutFactory extends BaseFactory
         $select .= "        layout.userID, ";
         $select .= "        `user`.UserName AS owner, ";
         $select .= "        campaign.CampaignID, ";
-        $select .= "        layout.xml AS legacyXml, ";
         $select .= "        layout.status, ";
         $select .= "        layout.width, ";
         $select .= "        layout.height, ";
@@ -599,14 +574,29 @@ class LayoutFactory extends BaseFactory
                   FROM tag
                     INNER JOIN lktaglayout
                     ON lktaglayout.tagId = tag.tagId
-                WHERE tag LIKE :tags
-                ) ";
-            $params['tags'] =  '%' . Sanitize::getString('tags', $filterBy) . '%';
+                ";
+            $i = 0;
+            foreach (explode(',', Sanitize::getString('tags', $filterBy)) as $tag) {
+                $i++;
+
+                if ($i == 1)
+                    $body .= " WHERE tag LIKE :tags$i ";
+                else
+                    $body .= " OR tag LIKE :tags$i ";
+
+                $params['tags' . $i] =  '%' . $tag . '%';
+            }
+
+            $body .= " ) ";
         }
 
         // Exclude templates by default
-        if (Sanitize::getInt('excludeTemplates', 1, $filterBy) == 1) {
-            $body .= " AND layout.layoutID NOT IN (SELECT layoutId FROM lktaglayout WHERE tagId = 1) ";
+        if (Sanitize::getInt('excludeTemplates', 1, $filterBy) != -1) {
+            if (Sanitize::getInt('excludeTemplates', 1, $filterBy) == 1) {
+                $body .= " AND layout.layoutID NOT IN (SELECT layoutId FROM lktaglayout WHERE tagId = 1) ";
+            } else {
+                $body .= " AND layout.layoutID IN (SELECT layoutId FROM lktaglayout WHERE tagId = 1) ";
+            }
         }
 
         // Show All, Used or UnUsed
@@ -664,9 +654,6 @@ class LayoutFactory extends BaseFactory
             $layout->createdDt = $row['createdDt'];
             $layout->modifiedDt = $row['modifiedDt'];
             $layout->displayOrder = $row['displayOrder'];
-
-            if (Sanitize::int('showLegacyXml', $filterBy) == 1)
-                $layout->legacyXml = $row['legacyXml'];
 
             $layout->groupsWithPermissions = $row['groupsWithPermissions'];
 

@@ -194,6 +194,7 @@ $app->put('/display/:id', '\Xibo\Controller\Display:edit')->name('display.edit')
 $app->delete('/display/:id', '\Xibo\Controller\Display:delete')->name('display.delete');
 $app->get('/display/wol/:id', '\Xibo\Controller\Display:wakeOnLan')->name('display.wol');
 $app->put('/display/requestscreenshot/:id', '\Xibo\Controller\Display:requestScreenShot')->name('display.requestscreenshot');
+$app->get('/display/screenshot/:id', '\Xibo\Controller\Display:screenShot')->name('display.screenShot');
 $app->post('/display/:id/displaygroup/assign', '\Xibo\Controller\Display:assignDisplayGroup')->name('display.assign.displayGroup');
 
 /**

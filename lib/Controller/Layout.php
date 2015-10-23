@@ -309,7 +309,7 @@ class Layout extends Base
 
         $layout->layout = Sanitize::getString('name');
         $layout->description = Sanitize::getString('description');
-        $layout->tags = TagFactory::tagsFromString(Sanitize::getString('tags'));
+        $layout->replaceTags(TagFactory::tagsFromString(Sanitize::getString('tags')));
         $layout->retired = Sanitize::getCheckbox('retired');
         $layout->backgroundColor = Sanitize::getString('backgroundColor');
         $layout->backgroundImageId = Sanitize::getInt('backgroundImageId');

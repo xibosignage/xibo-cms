@@ -261,7 +261,6 @@ CREATE TABLE IF NOT EXISTS `help` (
 CREATE TABLE IF NOT EXISTS `layout` (
   `layoutID` int(11) NOT NULL AUTO_INCREMENT,
   `layout` varchar(50) NOT NULL,
-  `xml` longtext NOT NULL,
   `userID` int(11) NOT NULL COMMENT 'The UserID that created this layout',
   `createdDT` datetime NOT NULL,
   `modifiedDT` datetime NOT NULL,

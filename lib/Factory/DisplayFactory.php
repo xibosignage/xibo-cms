@@ -199,11 +199,11 @@ class DisplayFactory extends BaseFactory
                 $i++;
                 // Not like, or like?
                 if (substr($searchName, 0, 1) == '-') {
-                    $body .= " AND  (display.display NOT LIKE :search$i ";
+                    $body .= " AND  display.display NOT LIKE :search$i ";
                     $params['search' . $i] = '%' . ltrim(($searchName), '-') . '%';
                 }
                 else {
-                    $body .= " AND  (display.display LIKE :search$i ";
+                    $body .= " AND  display.display LIKE :search$i ";
                     $params['search' . $i] = '%' . $searchName . '%';
                 }
             }

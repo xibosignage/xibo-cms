@@ -319,6 +319,7 @@ class Library extends Base
         $this->setNoOutput(true);
 
         try {
+            Log::debug('Hand off to Upload Handler with options: %s', json_encode($options));
             // Hand off to the Upload Handler provided by jquery-file-upload
             new XiboUploadHandler($options);
         }

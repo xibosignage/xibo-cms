@@ -211,16 +211,17 @@ class Stats extends Base
         $rows = array();
 
         foreach (PDOConnect::select($sql, $params) as $row) {
-            $row['type'] = Sanitize::string($row['type']);
-            $row['display'] = Sanitize::string($row['Display']);
-            $row['layout'] = Sanitize::string($row['Layout']);
-            $row['media'] = Sanitize::string($row['Name']);
-            $row['numberPlays'] = Sanitize::int($row['NumberPlays']);
-            $row['duration'] = Sanitize::int($row['Duration']);
-            $row['minStart'] = Date::getLocalDate(Sanitize::getDate($row['MinStart']));
-            $row['maxEnd'] = Date::getLocalDate(Sanitize::getDate($row['MaxEnd']));
+            $entry = [];
+            $entry['type'] = Sanitize::string($row['type']);
+            $entry['display'] = Sanitize::string($row['Display']);
+            $entry['layout'] = Sanitize::string($row['Layout']);
+            $entry['media'] = Sanitize::string($row['Name']);
+            $entry['numberPlays'] = Sanitize::int($row['NumberPlays']);
+            $entry['duration'] = Sanitize::int($row['Duration']);
+            $entry['minStart'] = Date::getLocalDate(Date::parse($row['MinStart']));
+            $entry['maxEnd'] = Date::getLocalDate(Date::parse($row['MaxEnd']));
 
-            $rows[] = $row;
+            $rows[] = $entry;
         }
 
         $this->getState()->template = 'grid';
