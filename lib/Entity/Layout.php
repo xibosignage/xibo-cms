@@ -828,7 +828,6 @@ class Layout implements \JsonSerializable
               backgroundImageId = :backgroundImageId,
               backgroundColor = :backgroundColor,
               backgroundzIndex = :backgroundzIndex,
-              `xml` = NULL,
               `status` = :status,
               `userId` = :userId
          WHERE layoutID = :layoutid
