@@ -1546,7 +1546,7 @@
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHPMailer/PHPMailer/zipball/45bb9a3636248c1bd6a614df173e5c38358a2883",
+                "url": "https://api.github.com/repos/PHPMailer/PHPMailer/zipball/a4b8b9102753ecc9106a3bb27e172a1f44ada0d9",
                 "reference": "881289ba6490c37cd7e9e9df98653c3cadcb81ed",
                 "shasum": ""
             },
@@ -4001,12 +4001,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/dasgarner/xibo-xmr.git",
-                "reference": "cec360f59946d668a5d5b0bcc33728659a82829c"
+                "reference": "7c8d4a0fac75a54f861d7fd49ad565005221b3e2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/dasgarner/xibo-xmr/zipball/cec360f59946d668a5d5b0bcc33728659a82829c",
-                "reference": "cec360f59946d668a5d5b0bcc33728659a82829c",
+                "url": "https://api.github.com/repos/dasgarner/xibo-xmr/zipball/7c8d4a0fac75a54f861d7fd49ad565005221b3e2",
+                "reference": "7c8d4a0fac75a54f861d7fd49ad565005221b3e2",
                 "shasum": ""
             },
             "require": {
@@ -4050,7 +4050,7 @@
             "support": {
                 "source": "https://github.com/dasgarner/xibo-xmr/tree/develop"
             },
-            "time": "2015-10-22 16:03:30"
+            "time": "2015-10-23 12:23:56"
         },
         {
             "name": "zircote/swagger-php",

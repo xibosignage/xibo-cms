@@ -1038,6 +1038,13 @@ class DisplayGroup extends Base
      *      description="Flag indicating whether the player should perform a collect before playing the Layout",
      *      type="integer",
      *      required="false"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="changeMode",
+     *      in="formData",
+     *      description="Whether to queue or replace with this action",
+     *      type="string",
+     *      required="true"
      *   )
      * )
      */
@@ -1050,13 +1057,30 @@ class DisplayGroup extends Base
 
         // Get the layoutId
         $layoutId = Sanitize::getInt('layoutId');
+        $downloadRequired = (Sanitize::getCheckbox('downloadRequired') == 1);
 
         if ($layoutId == 0)
             throw new \InvalidArgumentException(__('Please provide a Layout'));
 
-        PlayerActionHelper::sendAction(DisplayFactory::getByDisplayGroupId($displayGroupId), (new ChangeLayoutAction())->setLayoutDetails($layoutId,
+        // Check that this user has permissions to see this layout
+        $layout = LayoutFactory::getById($layoutId);
+
+        // Check to see if this layout is assigned to this display group.
+        if (count(LayoutFactory::query(null, ['disableUserCheck' => 1, 'layoutId' => $layoutId, 'displayGroupId' => $displayGroupId])) <= 0) {
+            // Assign
+            $displayGroup->load();
+            $displayGroup->assignLayout($layout);
+            $displayGroup->save(false);
+
+            // Convert into a download required
+            $downloadRequired = true;
+        }
+
+        PlayerActionHelper::sendAction(DisplayFactory::getByDisplayGroupId($displayGroupId), (new ChangeLayoutAction())->setLayoutDetails(
+            $layoutId,
             Sanitize::getInt('duration'),
-            (Sanitize::getCheckbox('downloadRequired') == 1)
+            $downloadRequired,
+            Sanitize::getString('changeMode', 'queue')
         ));
 
         // Return
