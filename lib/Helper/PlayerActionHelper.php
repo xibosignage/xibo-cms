@@ -26,6 +26,8 @@ class PlayerActionHelper
         if (!is_array($displays))
             $displays = [$displays];
 
+        Log::info('Sending %s to %d Displays.', get_class($action), count($displays));
+
         // XMR network address
         $xmrAddress = Config::GetSetting('XMR_ADDRESS');
 
@@ -37,6 +39,8 @@ class PlayerActionHelper
             /* @var Display $display */
             if ($display->xmrChannel == '' || $display->xmrPubKey == '')
                 throw new \InvalidArgumentException(__('This Player is not configured or ready to receive XMR commands'));
+
+            Log::debug('Sending %s to %s.', get_class($action), $display->display);
 
             try {
                 // Assign the Layout to the Display

@@ -35,6 +35,7 @@ use Xibo\Helper\PlayerActionHelper;
 use Xibo\Helper\Sanitize;
 use Xibo\XMR\ChangeLayoutAction;
 use Xibo\XMR\CollectNowAction;
+use Xibo\XMR\RevertToSchedule;
 
 
 class DisplayGroup extends Base
@@ -1082,6 +1083,43 @@ class DisplayGroup extends Base
             $downloadRequired,
             Sanitize::getString('changeMode', 'queue')
         ));
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('Command Sent to %s'), $displayGroup->displayGroup),
+            'id' => $displayGroup->displayGroupId
+        ]);
+    }
+
+    /**
+     * Cause the player to revert to its scheduled content
+     * @param int $displayGroupId
+     * @throws ConfigurationException when the message cannot be sent
+     *
+     * @SWG\Post(
+     *  path="/displaygroup/{displayGroupId}/action/revertToSchedule",
+     *  operationId="displayGroupActionRevertToSchedule",
+     *  tags={"displaygroup"},
+     *  summary="Action: Revert to Schedule",
+     *  description="Send the revert to schedule action to this DisplayGroup",
+     *  @SWG\Parameter(
+     *      name="displayGroupId",
+     *      in="path",
+     *      description="The display group id",
+     *      type="integer",
+     *      required="true"
+     *   )
+     * )
+     */
+    public function revertToSchedule($displayGroupId)
+    {
+        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
+
+        if (!$this->getUser()->checkEditable($displayGroup))
+            throw new AccessDeniedException();
+
+        PlayerActionHelper::sendAction(DisplayFactory::getByDisplayGroupId($displayGroupId), new RevertToSchedule());
 
         // Return
         $this->getState()->hydrate([
