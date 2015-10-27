@@ -31,7 +31,7 @@ class Error extends Base
         if (Translate::GetLocale(2) != '')
             \Jenssegers\Date\Date::setLocale(Translate::GetLocale(2));
 
-        Log::debug('Page Not Found. %s', $app->request()->getUrl());
+        Log::debug('Page Not Found. %s', $app->request()->getResourceUri());
 
         $message = __('Page not found');
 
