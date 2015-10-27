@@ -42,6 +42,9 @@
                                 </div>
                                 <div class="tab-pane" id="advanced">
                                     {{ inline.date("filter_fromdt", "From Date", defaults.fromDt) }}
+
+                                    {% set title %}{% trans "Channel" %}{% endset %}
+                                    {{ inline.text("channel", title, defaults.channel) }}
                                     {{ inline.text("filter_page", "Page", defaults.page) }}
                                     {{ inline.text("filter_function", "Function", defaults.function) }}
 

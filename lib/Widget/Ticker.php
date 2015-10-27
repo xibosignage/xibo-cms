@@ -212,8 +212,8 @@ class Ticker extends ModuleWidget
         $this->setOption('templateId', Sanitize::getString('templateId'));
 
         // Text Template
-        $this->setRawNode('template', Sanitize::getParam('ta_text', null));
-        $this->setRawNode('css', Sanitize::getParam('ta_css', null));
+        $this->setRawNode('template', Sanitize::getParam('ta_text', Sanitize::getParam('template', null)));
+        $this->setRawNode('css', Sanitize::getParam('ta_css', Sanitize::getParam('css', null)));
 
         // Save the widget
         $this->validate();

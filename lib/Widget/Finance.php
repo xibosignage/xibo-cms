@@ -147,8 +147,8 @@ class Finance extends ModuleWidget
         $this->setOption('updateInterval', Sanitize::getInt('updateInterval', 60));
         $this->setOption('templateId', Sanitize::getString('templateId'));
 
-        $this->setRawNode('template', Sanitize::getParam('ta_text', null));
-        $this->setRawNode('styleSheet', Sanitize::getParam('ta_css', null));
+        $this->setRawNode('template', Sanitize::getParam('ta_text', Sanitize::getParam('template', null)));
+        $this->setRawNode('styleSheet', Sanitize::getParam('ta_css', Sanitize::getParam('styleSheet', null)));
 
         // Save the widget
         $this->validate();
@@ -174,8 +174,8 @@ class Finance extends ModuleWidget
         $this->setOption('updateInterval', Sanitize::getInt('updateInterval', 60));
         $this->setOption('templateId', Sanitize::getString('templateId'));
 
-        $this->setRawNode('template', Sanitize::getParam('ta_text', null));
-        $this->setRawNode('styleSheet', Sanitize::getParam('ta_css', null));
+        $this->setRawNode('template', Sanitize::getParam('ta_text', Sanitize::getParam('template', null)));
+        $this->setRawNode('styleSheet', Sanitize::getParam('ta_css', Sanitize::getParam('styleSheet', null)));
 
         // Save the widget
         $this->validate();

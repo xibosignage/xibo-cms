@@ -7,3 +7,4 @@ settings.php
 library/
 cache/
 modules/fonts.css
+web/swagger-ui/

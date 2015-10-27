@@ -40,6 +40,7 @@ class Logging extends Base
             $filter_pinned = 1;
             $filter_type = $this->getSession()->get('log', 'filter_type');
             $filter_page = $this->getSession()->get('log', 'filter_page');
+            $channel = $this->getSession()->get('log', 'channel');
             $filter_function = $this->getSession()->get('log', 'filter_function');
             $filter_display = $this->getSession()->get('log', 'filter_display');
             $filter_seconds = $this->getSession()->get('log', 'filter_seconds');
@@ -51,6 +52,7 @@ class Logging extends Base
             $filter_pinned = 0;
             $filter_type = NULL;
             $filter_page = NULL;
+            $channel = NULL;
             $filter_function = NULL;
             $filter_display = 0;
             $filter_fromdt = NULL;
@@ -63,6 +65,7 @@ class Logging extends Base
                 'filterPinned' => $filter_pinned,
                 'type' => $filter_type,
                 'page' => $filter_page,
+                'channel' => $channel,
                 'function' => $filter_function,
                 'display' => $filter_display,
                 'fromDt' => $filter_fromdt,
@@ -88,6 +91,7 @@ class Logging extends Base
         $type = Sanitize::getString('filter_type');
         $function = Sanitize::getString('filter_function');
         $page = Sanitize::getString('filter_page');
+        $channel = Sanitize::getString('channel');
         $displayId = Sanitize::getInt('filter_display');
         $seconds = Sanitize::getInt('filter_seconds', 120);
         $filter_intervalTypeId = Sanitize::getInt('filter_intervalTypeId', 1);
@@ -99,6 +103,7 @@ class Logging extends Base
         $this->getSession()->set('log', 'filter_type', $type);
         $this->getSession()->set('log', 'filter_function', $function);
         $this->getSession()->set('log', 'filter_page', $page);
+        $this->getSession()->set('log', 'channel', $channel);
         $this->getSession()->set('log', 'filter_fromdt', Date::getLocalDate($fromDt));
         $this->getSession()->set('log', 'filter_display', $displayId);
         $this->getSession()->set('log', 'filter_seconds', $seconds);
@@ -109,6 +114,7 @@ class Logging extends Base
             'toDt' => $fromDt->format('U'),
             'type' => $type,
             'page' => $page,
+            'channel' => $channel,
             'function' => $function,
             'displayId' => $displayId,
             'excludeLog' => 1,

@@ -61,7 +61,7 @@ class Text extends ModuleWidget
         $this->setOption('backgroundColor', Sanitize::getString('backgroundColor'));
         $this->setOption('name', Sanitize::getString('name'));
         $this->setOption('marqueeInlineSelector', Sanitize::getString('marqueeInlineSelector'));
-        $this->setRawNode('text', Sanitize::getParam('ta_text', null));
+        $this->setRawNode('text', Sanitize::getParam('ta_text', Sanitize::getParam('text', null)));
 
         // Save the widget
         $this->validate();
@@ -80,7 +80,7 @@ class Text extends ModuleWidget
         $this->setOption('backgroundColor', Sanitize::getString('backgroundColor'));
         $this->setOption('name', Sanitize::getString('name'));
         $this->setOption('marqueeInlineSelector', Sanitize::getString('marqueeInlineSelector'));
-        $this->setRawNode('text', Sanitize::getParam('ta_text', null));
+        $this->setRawNode('text', Sanitize::getParam('ta_text', Sanitize::getParam('text', null)));
 
         // Save the widget
         $this->validate();
