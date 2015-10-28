@@ -91,9 +91,6 @@ class Soap
         if (!$this->authDisplay($hardwareKey))
             throw new \SoapFault('Sender', 'This display is not licensed.');
 
-        if ($this->display->isAuditing == 1)
-            Log::debug('[IN] with hardware key: ' . $hardwareKey);
-
         // Generate a new Request Key which we will sign our Required Files with
         $requestKey = Random::generateString(10);
 
@@ -1088,6 +1085,9 @@ class Soap
 
             // Configure our log processor
             $this->logProcessor->setDisplay($this->display->displayId);
+
+            if ($this->display->isAuditing == 1)
+                Log::info('IN');
 
             return true;
 
