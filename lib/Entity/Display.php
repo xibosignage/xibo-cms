@@ -323,7 +323,7 @@ class Display
         if ($maxDisplays > 0 && $this->currentlyLicensed != $this->licensed && $this->licensed == 1) {
             $countLicensed = PDOConnect::select('SELECT COUNT(DisplayID) AS CountLicensed FROM display WHERE licensed = 1', []);
 
-            if ($countLicensed[0] + 1 > $maxDisplays)
+            if (intval($countLicensed[0]) + 1 > $maxDisplays)
                 throw new \InvalidArgumentException(sprintf(__('You have exceeded your maximum number of licensed displays. %d'), $maxDisplays));
         }
 
