@@ -122,11 +122,11 @@ class Soap5 extends Soap4
                     Log::debug('xmrChannel: [' . $xmrChannel . ']. xmrPublicKey: [' . $xmrPubKey . ']');
                 }
 
-                if ($display->xmrPubKey == '') {
-                    // If they aren't then allow new ones.
-                    $display->xmrChannel = $xmrChannel;
+                // Update the Channel
+                $display->xmrChannel = $xmrChannel;
+                // Update the PUB Key only if it has been cleared
+                if ($display->xmrPubKey == '')
                     $display->xmrPubKey = $xmrPubKey;
-                }
 
                 // Send Notification if required
                 $this->AlertDisplayUp();
