@@ -752,10 +752,10 @@ function layoutAssignSubmit() {
             unassign.push(name);
     });
 
-    assignMediaToCampaign(container.data().url, assign, unassign);
+    assignLayoutToCampaign(container.data().url, assign, unassign);
 }
 
-var assignMediaToCampaign = function(url, layout, unassignLayout) {
+var assignLayoutToCampaign = function(url, layout, unassignLayout) {
     toastr.info("Assign Layout", layout);
 
     $.ajax({

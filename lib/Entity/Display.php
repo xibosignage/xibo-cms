@@ -28,7 +28,9 @@ use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\DisplayProfileFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Log;
+use Xibo\Helper\PlayerActionHelper;
 use Xibo\Storage\PDOConnect;
+use Xibo\XMR\CollectNowAction;
 
 /**
  * Class Display
@@ -283,6 +285,12 @@ class Display
      */
     public $xmrPubKey;
 
+    /**
+     * Collect required on save?
+     * @var bool
+     */
+    private $collectRequired = false;
+
     public function __construct()
     {
         $this->excludeProperty('mediaInventoryXml');
@@ -304,6 +312,16 @@ class Display
     public function setMediaIncomplete()
     {
         $this->mediaInventoryStatus = 3;
+        $this->setCollectRequired(true);
+    }
+
+    /**
+     * Set Collect Required
+     * @param bool|true $collectRequired
+     */
+    public function setCollectRequired($collectRequired = true)
+    {
+        $this->collectRequired = $collectRequired;
     }
 
     /**
@@ -382,6 +400,14 @@ class Display
 
         if ($options['audit'])
             Log::audit('Display', $this->displayId, 'Display Saved', $this->jsonSerialize());
+
+        if ($this->collectRequired) {
+            try {
+                PlayerActionHelper::sendAction($this, new CollectNowAction());
+            } catch (\Exception $e) {
+                Log::notice('Display Save would have triggered Player Action, but the action failed with message: %s', $e->getMessage());
+            }
+        }
     }
 
     /**

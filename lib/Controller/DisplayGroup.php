@@ -1071,6 +1071,8 @@ class DisplayGroup extends Base
             // Assign
             $displayGroup->load();
             $displayGroup->assignLayout($layout);
+            // Don't notify, this player action will cause a download.
+            $displayGroup->setCollectRequired(false);
             $displayGroup->save(false);
 
             // Convert into a download required

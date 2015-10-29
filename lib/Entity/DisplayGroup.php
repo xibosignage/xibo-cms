@@ -67,6 +67,18 @@ class DisplayGroup implements \JsonSerializable
     private $permissions = [];
     private $events = [];
 
+    /**
+     * Is notify required during save?
+     * @var bool
+     */
+    private $notifyRequired = false;
+
+    /**
+     * Is collect required?
+     * @var bool
+     */
+    private $collectRequired = true;
+
     public function getId()
     {
         return $this->displayGroupId;
@@ -75,6 +87,15 @@ class DisplayGroup implements \JsonSerializable
     public function getOwnerId()
     {
         return 1;
+    }
+
+    /**
+     * Set Notify Required
+     * @param bool|true $collectRequired
+     */
+    public function setCollectRequired($collectRequired = true)
+    {
+        $this->collectRequired = $collectRequired;
     }
 
     /**
@@ -97,6 +118,7 @@ class DisplayGroup implements \JsonSerializable
         foreach (DisplayFactory::getByDisplayGroupId($this->displayGroupId) as $display) {
             /* @var Display $display */
             $display->setMediaIncomplete();
+            $display->setCollectRequired($this->collectRequired);
             $display->save(['validate' => false, 'audit' => false]);
         }
     }
@@ -138,8 +160,12 @@ class DisplayGroup implements \JsonSerializable
     {
         $this->load();
 
-        if (!in_array($media, $this->media))
+        if (!in_array($media, $this->media)) {
             $this->media[] = $media;
+
+            // We should notify
+            $this->notifyRequired = true;
+        }
     }
 
     /**
@@ -167,8 +193,12 @@ class DisplayGroup implements \JsonSerializable
     {
         $this->load();
 
-        if (!in_array($layout, $this->layouts))
+        if (!in_array($layout, $this->layouts)) {
             $this->layouts[] = $layout;
+
+            // We should notify
+            $this->notifyRequired = true;
+        }
     }
 
     /**
@@ -264,6 +294,10 @@ class DisplayGroup implements \JsonSerializable
             $this->linkLayouts();
             $this->unlinkLayouts();
         }
+
+        // Set media incomplete if necessary
+        if ($this->notifyRequired)
+            $this->setMediaIncomplete();
     }
 
     /**
