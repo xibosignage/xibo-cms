@@ -171,7 +171,7 @@ class DataSetView extends ModuleWidget
         $this->setOption('showHeadings', Sanitize::getCheckbox('showHeadings'));
         $this->setOption('upperLimit', Sanitize::getInt('upperLimit', 0));
         $this->setOption('lowerLimit', Sanitize::getInt('lowerLimit', 0));
-        $this->setOption('filter', Sanitize::getString('filter'));
+        $this->setOption('filter', Sanitize::getParam('filter', null));
         $this->setOption('ordering', Sanitize::getString('ordering'));
 
         // Style Sheet
