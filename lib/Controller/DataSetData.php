@@ -74,7 +74,7 @@ class DataSetData extends Base
             $sorting = implode(',', $sorting);
 
         // Work out the limits
-        $filter = $this->gridRenderFilter(['filter' => Sanitize::getString('filter')]);
+        $filter = $this->gridRenderFilter(['filter' => Sanitize::getParam('filter', null)]);
 
         $this->getState()->template = 'grid';
         $this->getState()->setData($dataSet->getData([
