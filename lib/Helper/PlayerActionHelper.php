@@ -28,6 +28,10 @@ class PlayerActionHelper
 
         Log::info('Sending %s to %d Displays.', get_class($action), count($displays));
 
+        // Check ZMQ
+        if (!Config::checkZmq())
+            throw new ConfigurationException(__('ZeroMQ is required to send Player Actions. Please check your configuration.'));
+
         // XMR network address
         $xmrAddress = Config::GetSetting('XMR_ADDRESS');
 
