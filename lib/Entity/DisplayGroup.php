@@ -77,7 +77,7 @@ class DisplayGroup implements \JsonSerializable
      * Is collect required?
      * @var bool
      */
-    private $collectRequired = true;
+    private $collectRequired = false;
 
     public function getId()
     {

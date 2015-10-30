@@ -342,9 +342,12 @@ class Campaign implements \JsonSerializable
     {
         Log::debug('Checking for Displays to refresh on Campaign %d', $this->campaignId);
 
-        foreach (DisplayFactory::getByActiveCampaignId($this->campaignId) as $display) {
+        $displays = array_merge(DisplayFactory::getByActiveCampaignId($this->campaignId), DisplayFactory::getByAssignedCampaignId($this->campaignId));
+
+        foreach ($displays as $display) {
             /* @var \Xibo\Entity\Display $display */
             $display->setMediaIncomplete();
+            $display->setCollectRequired(false);
             $display->save(['validate' => false, 'audit' => false]);
         }
     }

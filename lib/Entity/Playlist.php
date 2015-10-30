@@ -319,6 +319,10 @@ class Playlist implements \JsonSerializable
 
     /**
      * Notify all Layouts of a change to this playlist
+     *  This only sets the Layout Status to require a build
+     *  once the build is triggered, either from the UI or maintenance it will assess the layout
+     *  and call save() if required.
+     *  Layout->save() will ultimately notify the interested display groups.
      */
     public function notifyLayouts()
     {
