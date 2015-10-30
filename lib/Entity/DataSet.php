@@ -129,7 +129,7 @@ class DataSet implements \JsonSerializable
     {
         $start = Sanitize::getInt('start', 0, $filterBy);
         $size = Sanitize::getInt('size', 0, $filterBy);
-        $filter = Sanitize::getString('filter', $filterBy);
+        $filter = Sanitize::getParam('filter', $filterBy);
         $ordering = Sanitize::getString('order', $filterBy);
         $displayId = Sanitize::getInt('displayId', 0, $filterBy);
 
@@ -419,6 +419,7 @@ class DataSet implements \JsonSerializable
         foreach (DisplayFactory::getByDataSetId($this->dataSetId) as $display) {
             /* @var \Xibo\Entity\Display $display */
             $display->setMediaIncomplete();
+            $display->setCollectRequired(false);
             $display->save(['validate' => false, 'audit' => false]);
         }
     }

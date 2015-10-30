@@ -164,6 +164,16 @@ class LayoutFactory extends BaseFactory
     }
 
     /**
+     * Get by Display Group Id
+     * @param int $displayGroupId
+     * @return array[Media]
+     */
+    public static function getByDisplayGroupId($displayGroupId)
+    {
+        return LayoutFactory::query(null, ['disableUserCheck' => 1, 'displayGroupId' => $displayGroupId]);
+    }
+
+    /**
      * Load a layout by its XLF
      * @param string $layoutXlf
      * @return Layout
@@ -486,6 +496,16 @@ class LayoutFactory extends BaseFactory
             $body .= " INNER JOIN `lklayoutmedia` ON lklayoutmedia.layoutid = layout.layoutid AND lklayoutmedia.mediaid = :mediaId";
             $body .= " INNER JOIN `media` ON lklayoutmedia.mediaid = media.mediaid ";
             $params['mediaId'] = Sanitize::getInt('mediaId', 0, $filterBy);
+        }
+
+        if (Sanitize::getInt('displayGroupId', $filterBy) !== null) {
+            $body .= '
+                INNER JOIN `lklayoutdisplaygroup`
+                ON lklayoutdisplaygroup.layoutId = `layout`.layoutId
+                    AND lklayoutdisplaygroup.displayGroupId = :displayGroupId
+            ';
+
+            $params['displayGroupId'] = Sanitize::getInt('displayGroupId', $filterBy);
         }
 
         $body .= " WHERE 1 = 1 ";

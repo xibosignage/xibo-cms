@@ -31,6 +31,8 @@ class Error extends Base
         if (Translate::GetLocale(2) != '')
             \Jenssegers\Date\Date::setLocale(Translate::GetLocale(2));
 
+        Log::debug('Page Not Found. %s', $app->request()->getResourceUri());
+
         $message = __('Page not found');
 
         // Different action depending on the app name

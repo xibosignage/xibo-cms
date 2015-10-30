@@ -91,9 +91,6 @@ class Soap
         if (!$this->authDisplay($hardwareKey))
             throw new \SoapFault('Sender', 'This display is not licensed.');
 
-        if ($this->display->isAuditing == 1)
-            Log::debug('[IN] with hardware key: ' . $hardwareKey);
-
         // Generate a new Request Key which we will sign our Required Files with
         $requestKey = Random::generateString(10);
 
@@ -117,9 +114,10 @@ class Soap
         try {
             $dbh = PDOConnect::init();
 
-            // Get a list of all layout ids in the schedule right now.
+            // Get a list of all layout ids in the schedule right now
+            // including any layouts that have been associated to our Display Group
             $SQL = '
-                SELECT DISTINCT layout.layoutID
+                SELECT layout.layoutID, schedule.DisplayOrder, lkcampaignlayout.DisplayOrder AS LayoutDisplayOrder, schedule_detail.eventId
                   FROM `campaign`
                     INNER JOIN `schedule`
                     ON `schedule`.CampaignID = campaign.CampaignID
@@ -137,7 +135,13 @@ class Soap
                     AND schedule_detail.FromDT < :fromdt
                     AND schedule_detail.ToDT > :todt
                     AND layout.retired = 0
-                ORDER BY schedule.DisplayOrder, lkcampaignlayout.DisplayOrder, schedule_detail.eventID
+                UNION
+                SELECT `lklayoutdisplaygroup`.layoutId, 0 AS DisplayOrder, 0 AS LayoutDisplayOrder, 0 AS eventId
+                  FROM `lklayoutdisplaygroup`
+                    INNER JOIN `lkdisplaydg`
+                    ON lkdisplaydg.DisplayGroupID = `lklayoutdisplaygroup`.displayGroupId
+                 WHERE lkdisplaydg.DisplayID = :displayId
+                ORDER BY DisplayOrder, LayoutDisplayOrder, eventId
             ';
 
             $sth = $dbh->prepare($SQL);
@@ -1081,6 +1085,9 @@ class Soap
 
             // Configure our log processor
             $this->logProcessor->setDisplay($this->display->displayId);
+
+            if ($this->display->isAuditing == 1)
+                Log::info('IN');
 
             return true;
 

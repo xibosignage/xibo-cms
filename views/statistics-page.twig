@@ -46,8 +46,8 @@
                 <div class="XiboFilter">
                     <div class="FilterDiv" id="availabilityFilter">
                         <form class="form-inline">
-                            {{ inline.date("fromDt", "From Date", defaults.fromDate, "", "", "", "") }}
-                            {{ inline.date("toTt", "To Date", defaults.toDate, "", "", "", "") }}
+                            {{ inline.date("availabilityFromDt", "From Date", defaults.fromDate, "", "", "", "") }}
+                            {{ inline.date("availabilityToDt", "To Date", defaults.toDate, "", "", "", "") }}
                             {{ inline.dropdown("displayId", "single", "Display", "", displayFilterOptions, "displayId", "display") }}
                         </form>
                     </div>
@@ -65,8 +65,8 @@
                 <div class="XiboFilter">
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
-                            {{ inline.date("fromDt", "From Date", defaults.fromDateOneDay, "", "", "", "") }}
-                            {{ inline.date("toDt", "To Date", defaults.toDate, "", "", "", "") }}
+                            {{ inline.date("statsFromDt", "From Date", defaults.fromDateOneDay, "", "", "", "") }}
+                            {{ inline.date("statsToDt", "To Date", defaults.toDate, "", "", "", "") }}
                             {{ inline.dropdown("displayId", "single", "Display", "", displayFilterOptions, "displayId", "display") }}
 
                             {% set mediaFilterOptions = [{mediaId: null, name: ""}]|merge(media) %}

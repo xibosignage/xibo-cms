@@ -70,14 +70,18 @@ class DataSetData extends Base
 
         $sorting = $this->gridRenderSort();
 
+        if ($sorting != null)
+            $sorting = implode(',', $sorting);
+
         // Work out the limits
-        $limits = $this->gridRenderFilter();
+        $filter = $this->gridRenderFilter(['filter' => Sanitize::getParam('filter', null)]);
 
         $this->getState()->template = 'grid';
         $this->getState()->setData($dataSet->getData([
-            'order' => implode(',', $sorting),
-            'start' => $limits['start'],
-            'size' => $limits['length']
+            'order' => $sorting,
+            'start' => $filter['start'],
+            'size' => $filter['length'],
+            'filter' => $filter['filter']
         ]));
 
         // Output the count of records for paging purposes

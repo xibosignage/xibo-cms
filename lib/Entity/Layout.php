@@ -344,7 +344,7 @@ class Layout implements \JsonSerializable
         $this->regions = RegionFactory::getByLayoutId($this->layoutId);
 
         if ($options['loadPlaylists'])
-            $this->loadPlaylists();
+            $this->loadPlaylists($options);
 
         // Load all tags
         if ($options['loadTags'])
@@ -364,11 +364,11 @@ class Layout implements \JsonSerializable
     /**
      * Load Playlists
      */
-    public function loadPlaylists()
+    public function loadPlaylists($options = [])
     {
         foreach ($this->regions as $region) {
             /* @var Region $region */
-            $region->load();
+            $region->load($options);
         }
     }
 

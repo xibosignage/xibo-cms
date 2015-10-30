@@ -61,7 +61,7 @@ class Clock extends ModuleWidget
         $this->setOption('theme', Sanitize::getInt('themeId', 0));
         $this->setOption('clockTypeId', Sanitize::getInt('clockTypeId', 1));
         $this->setOption('offset', Sanitize::getInt('offset', 0));
-        $this->setRawNode('format', Sanitize::getParam('ta_text', ''));
+        $this->setRawNode('format', Sanitize::getParam('ta_text', Sanitize::getParam('format', '')));
 
         $this->validate();
 
@@ -80,7 +80,7 @@ class Clock extends ModuleWidget
         $this->setOption('theme', Sanitize::getInt('themeId', 0));
         $this->setOption('clockTypeId', Sanitize::getInt('clockTypeId', 1));
         $this->setOption('offset', Sanitize::getInt('offset', 0));
-        $this->setRawNode('format', Sanitize::getParam('ta_text', ''));
+        $this->setRawNode('format', Sanitize::getParam('ta_text', Sanitize::getParam('format', '')));
 
         $this->validate();
 
