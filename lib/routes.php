@@ -376,3 +376,9 @@ $app->get('/audit/export', '\Xibo\Controller\AuditLog:export')->name('auditLog.e
 $app->put('/fault/debug/on', '\Xibo\Controller\Fault:debugOn')->name('fault.debug.on');
 $app->put('/fault/debug/off', '\Xibo\Controller\Fault:debugOff')->name('fault.debug.off');
 $app->get('/fault/collect', '\Xibo\Controller\Fault:collect')->name('fault.collect');
+
+//
+// Commands
+//
+$app->get('/command', '\Xibo\Controller\Command:grid')->name('command.search');
+$app->post('/command', '\Xibo\Controller\Command:add')->name('command.add');

@@ -55,7 +55,7 @@ class DisplayProfile extends Base
      */
     function grid()
     {
-        $profiles = DisplayProfileFactory::query();
+        $profiles = DisplayProfileFactory::query($this->gridRenderSort(), $this->gridRenderFilter());
 
         foreach ($profiles as $profile) {
             /* @var \Xibo\Entity\DisplayProfile $profile */

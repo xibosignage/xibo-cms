@@ -71,6 +71,16 @@ class DisplayProfile
      */
     public $configTabs;
 
+    /**
+     * Commands associated with this profile.
+     * @var array[Command]
+     */
+    public $commands = [];
+
+    /**
+     * Get Id
+     * @return int
+     */
     public function getId()
     {
         return $this->displayProfileId;
@@ -79,6 +89,45 @@ class DisplayProfile
     public function getOwnerId()
     {
         return $this->userId;
+    }
+
+    /**
+     * Assign Command
+     * @param Command $command
+     */
+    public function assignCommand($command)
+    {
+        $this->load();
+
+        $assigned = false;
+
+        foreach ($this->commands as $alreadyAssigned) {
+            /* @var Command $alreadyAssigned */
+            if ($alreadyAssigned->getId() == $command->getId()) {
+                $assigned = true;
+                break;
+            }
+        }
+
+        if (!$assigned)
+            $this->commands = $command;
+    }
+
+    /**
+     * Unassign Command
+     * @param Command $command
+     */
+    public function unassignCommand($command)
+    {
+        $this->load();
+
+        $this->commands = array_udiff($this->commands, [$command], function ($a, $b) {
+           /**
+            * @var Command $a
+            * @var Command $b
+            */
+            return $a->getId() - $b->getId();
+        });
     }
 
     public function load()

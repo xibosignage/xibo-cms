@@ -335,3 +335,11 @@ $app->get('/stats/form/export', '\Xibo\Controller\Stats:exportForm')->name('stat
 //
 $app->get('/audit/view', '\Xibo\Controller\AuditLog:displayPage')->name('auditLog.view');
 $app->get('/audit/form/export', '\Xibo\Controller\AuditLog:exportForm')->name('auditLog.export.form');
+
+//
+// Commands
+//
+$app->get('/command/view', '\Xibo\Controller\Command:displayPage')->name('command.view');
+$app->get('/command/form/add', '\Xibo\Controller\Command:addForm')->name('command.add.form');
+$app->get('/command/form/edit', '\Xibo\Controller\Command:editForm')->name('command.edit.form');
+$app->get('/command/form/delete', '\Xibo\Controller\Command:deleteForm')->name('command.delete.form');
