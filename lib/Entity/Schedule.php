@@ -10,6 +10,7 @@ namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
 use Xibo\Factory\DisplayGroupFactory;
+use Xibo\Helper\Config;
 use Xibo\Storage\PDOConnect;
 
 /**
@@ -122,6 +123,13 @@ class Schedule implements \JsonSerializable
      */
     public $campaign;
 
+    /**
+     * Is this event (as a whole) inside the schedule look ahead period?
+     * @var bool
+     */
+    private $isInScheduleLookAhead = false;
+
+
     public function getId()
     {
         return $this->eventId;
@@ -139,6 +147,21 @@ class Schedule implements \JsonSerializable
     public function setOwner($ownerId)
     {
         $this->userId = $ownerId;
+    }
+
+    /**
+     * Are the provided dates within the schedule look ahead
+     * @param $fromDt
+     * @param $toDt
+     * @return bool
+     */
+    private function datesInScheduleLookAhead($fromDt, $toDt)
+    {
+        // From Date and To Date are in UNIX format
+        $currentDate = time();
+        $rfLookAhead = intval($currentDate) + intval(Config::GetSetting('REQUIRED_FILES_LOOKAHEAD'));
+
+        return ($fromDt < $rfLookAhead && $toDt > $currentDate);
     }
 
     public function load()
@@ -215,13 +238,27 @@ class Schedule implements \JsonSerializable
         else
             $this->edit();
 
+        // Manage display assignments
         if ($this->loaded) {
             // Manage assignments
             $this->manageAssignments();
         }
 
+        // Check the main event dates to see if we are in the schedule look ahead
+        $this->isInScheduleLookAhead = $this->datesInScheduleLookAhead($this->fromDt, $this->toDt);
+
         // Generate the event instances
         $this->generate();
+
+        // Notify
+        // Only if the schedule effects the immediate future - i.e. within the RF Look Ahead
+        if ($this->isInScheduleLookAhead) {
+            foreach ($this->displayGroups as $displayGroup) {
+                /* @var DisplayGroup $displayGroup */
+                $displayGroup->setCollectRequired();
+                $displayGroup->setMediaIncomplete();
+            }
+        }
     }
 
     /**
@@ -356,6 +393,10 @@ class Schedule implements \JsonSerializable
                 break;
 
             $this->addDetail($t_start_temp, $t_end_temp);
+
+            // Check these dates
+            if (!$this->isInScheduleLookAhead)
+                $this->isInScheduleLookAhead = $this->datesInScheduleLookAhead($t_start_temp, $t_end_temp);
         }
     }
 
@@ -388,11 +429,6 @@ class Schedule implements \JsonSerializable
     {
         $this->linkDisplayGroups();
         $this->unlinkDisplayGroups();
-
-        foreach ($this->displayGroups as $displayGroup) {
-            /* @var DisplayGroup $displayGroup */
-            $displayGroup->setMediaIncomplete();
-        }
     }
 
     /**

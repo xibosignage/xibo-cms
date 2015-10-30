@@ -656,3 +656,114 @@ var assignMediaToCampaign = function(url, media, unassignMedia) {
         success: XiboSubmitResponse
     });
 };
+
+// Callback for the media form
+function layoutFormCallBack() {
+
+    var container = $("#FileAssociationsAssign");
+    if (container.data().layout == undefined)
+        container.data().layout = {};
+
+    var layoutTable = $("#layoutAssignments").DataTable({
+        serverSide: true,
+        searchDelay: 3000,
+        "order": [[ 0, "asc"]],
+        "filter": false,
+        ajax: {
+            "url": $("#layoutAssignments").data().url,
+            "data": function(d) {
+                $.extend(d, $("#layoutAssignments").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+            }
+        },
+        "columns": [
+            { "data": "layout" },
+            {
+                "sortable": false,
+                "data": function(data, type, row, meta) {
+                    if (type != "display")
+                        return "";
+
+                    // Create a click-able span
+                    return "<a href=\"#\" class=\"assignItem\"><span class=\"glyphicon glyphicon-plus-sign\"></a>";
+                }
+            }
+        ]
+    });
+
+    layoutTable.on('draw', function (e, settings) {
+        dataTableDraw(e, settings);
+
+        // Clicky on the +spans
+        $(".assignItem", "#layoutAssignments").click(function() {
+            // Get the row that this is in.
+            var data = layoutTable.row($(this).closest("tr")).data();
+
+            // Append to our layout list
+            container.data().layout[data.layoutId] = 1;
+
+            // Construct a new list item for the lower list and append it.
+            var newItem = $("<li/>", {
+                "text": data.layout,
+                "data-layout-id": data.layoutId,
+                "class": "btn btn-sm btn-default"
+            });
+
+            newItem.appendTo("#FileAssociationsSortable");
+
+            // Add a span to that new item
+            $("<span/>", {
+                "class": "glyphicon glyphicon-minus-sign",
+                click: function(){
+                    container.data().layout[$(this).parent().data().layoutId] = 0;
+                    $(this).parent().remove();
+                }
+            }).appendTo(newItem);
+        });
+    });
+    layoutTable.on('processing.dt', dataTableProcessing);
+
+    // Make our little list sortable
+    $("#FileAssociationsSortable").sortable();
+
+    // Bind to the existing items in the list
+    $("#FileAssociationsSortable").find('li span').click(function () {
+        container.data().layout[$(this).parent().data().layoutId] = 0;
+        $(this).parent().remove();
+    });
+
+    // Bind to the filter
+    $("#layoutAssignments").closest(".XiboGrid").find(".FilterDiv input, .FilterDiv select").change(function() {
+        layoutTable.ajax.reload();
+    });
+}
+
+function layoutAssignSubmit() {
+    // Collect our layout
+    var container = $("#FileAssociationsAssign");
+
+    // Build an array of id's to assign and an array to unassign
+    var assign = [];
+    var unassign = [];
+
+    $.each(container.data().layout, function(name, value) {
+        if (value == 1)
+            assign.push(name);
+        else
+            unassign.push(name);
+    });
+
+    assignLayoutToCampaign(container.data().url, assign, unassign);
+}
+
+var assignLayoutToCampaign = function(url, layout, unassignLayout) {
+    toastr.info("Assign Layout", layout);
+
+    $.ajax({
+        type: "post",
+        url: url,
+        cache: false,
+        dataType: "json",
+        data: {layoutId: layout, unassignLayoutId: unassignLayout},
+        success: XiboSubmitResponse
+    });
+};

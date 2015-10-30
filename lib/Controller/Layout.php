@@ -309,7 +309,7 @@ class Layout extends Base
 
         $layout->layout = Sanitize::getString('name');
         $layout->description = Sanitize::getString('description');
-        $layout->tags = TagFactory::tagsFromString(Sanitize::getString('tags'));
+        $layout->replaceTags(TagFactory::tagsFromString(Sanitize::getString('tags')));
         $layout->retired = Sanitize::getCheckbox('retired');
         $layout->backgroundColor = Sanitize::getString('backgroundColor');
         $layout->backgroundImageId = Sanitize::getInt('backgroundImageId');
@@ -479,6 +479,13 @@ class Layout extends Base
      *  tags={"layout"},
      *  summary="Search Layouts",
      *  description="Search for Layouts viewable by this user",
+     *  @SWG\Parameter(
+     *      name="embed",
+     *      in="formData",
+     *      description="Embed related data such as regions, playlists, tags, etc",
+     *      type="string",
+     *      required="false"
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -494,43 +501,56 @@ class Layout extends Base
         $this->getState()->template = 'grid';
 
         // Filter by Name
-        $name = Sanitize::getString('filter_layout');
-        $this->getSession()->set('layout', 'filter_layout', $name);
+        $name = Sanitize::getString('layout');
+        $this->getSession()->set('layout', 'layout', $name);
 
         // User ID
-        $filter_userid = Sanitize::getInt('filter_userid');
-        $this->getSession()->set('layout', 'filter_userid', $filter_userid);
+        $userId = Sanitize::getInt('userId');
+        $this->getSession()->set('layout', 'userId', $userId);
 
         // Show retired
-        $filter_retired = Sanitize::getInt('filter_retired');
-        $this->getSession()->set('layout', 'filter_retired', $filter_retired);
+        $retired = Sanitize::getInt('retired');
+        $this->getSession()->set('layout', 'retired', $retired);
 
         // Show filterLayoutStatusId
-        $filterLayoutStatusId = Sanitize::getInt('filterLayoutStatusId');
-        $this->getSession()->set('layout', 'filterLayoutStatusId', $filterLayoutStatusId);
+        $filterLayoutStatusId = Sanitize::getInt('layoutStatusId');
+        $this->getSession()->set('layout', 'layoutStatusId', $filterLayoutStatusId);
 
         // Show showDescriptionId
         $showDescriptionId = Sanitize::getInt('showDescriptionId');
         $this->getSession()->set('layout', 'showDescriptionId', $showDescriptionId);
 
         // Tags list
-        $filter_tags = Sanitize::getString('filter_tags');
-        $this->getSession()->set('layout', 'filter_tags', $filter_tags);
+        $tags = Sanitize::getString('tags');
+        $this->getSession()->set('layout', 'tags', $tags);
 
         // Pinned option?
         $this->getSession()->set('layout', 'LayoutFilter', Sanitize::getCheckbox('XiboFilterPinned'));
 
+        // Embed?
+        $embed = (Sanitize::getString('embed') != null) ? explode(',', Sanitize::getString('embed')) : [];
+
         // Get all layouts
         $layouts = LayoutFactory::query($this->gridRenderSort(), $this->gridRenderFilter([
             'layout' => $name,
-            'userId' => $filter_userid,
-            'retired' => $filter_retired,
-            'tags' => $filter_tags,
+            'userId' => $userId,
+            'retired' => $retired,
+            'tags' => $tags,
             'filterLayoutStatusId' => $filterLayoutStatusId
         ]));
 
         foreach ($layouts as $layout) {
             /* @var \Xibo\Entity\Layout $layout */
+
+            if (in_array('regions', $embed)) {
+                $layout->load([
+                    'loadPlaylists' => in_array('playlists', $embed),
+                    'loadCampaigns' => in_array('campaigns', $embed),
+                    'loadPermissions' => in_array('permissions', $embed),
+                    'loadTags' => in_array('tags', $embed),
+                    'loadWidgets' => in_array('widgets', $embed)
+                ]);
+            }
 
             if ($this->isApi())
                 break;

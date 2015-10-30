@@ -59,6 +59,11 @@ class LogFactory extends BaseFactory
             $params['type'] = Sanitize::getString('type', $filterBy);
         }
 
+        if (Sanitize::getString('channel', $filterBy) != null) {
+            $body .= ' AND channel LIKE :channel ';
+            $params['channel'] = '%' . Sanitize::getString('channel', $filterBy) . '%';
+        }
+
         if (Sanitize::getString('page', $filterBy) != null) {
             $body .= ' AND page LIKE :page ';
             $params['page'] = '%' . Sanitize::getString('page', $filterBy) . '%';

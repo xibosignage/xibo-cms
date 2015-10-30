@@ -30,6 +30,18 @@ class PowerPoint extends ModuleWidget
     }
 
     /**
+     * Override previewAsClient
+     * @param float $width
+     * @param float $height
+     * @param int $scaleOverride
+     * @return string
+     */
+    public function previewAsClient($width, $height, $scaleOverride = 0)
+    {
+        return $this->previewIcon();
+    }
+
+    /**
      * Get Resource
      * @param int $displayId
      * @return mixed

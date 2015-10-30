@@ -202,7 +202,7 @@ class Config
      * @param array $httpOptions
      * @return array
      */
-    public static function getGuzzelProxy($httpOptions = [])
+    public static function getGuzzleProxy($httpOptions = [])
     {
         // Proxy support
         if (Config::GetSetting('PROXY_HOST') != '') {
@@ -565,6 +565,22 @@ class Config
             'advice' => $advice
         );
 
+        // Check to see if ZMQ is installed
+        $advice = __('ZeroMQ is used to send messages to XMR which allows push communications with player');
+        if ($this->checkZmq()) {
+            $status = 1;
+        } else {
+            $this->envWarning = true;
+            $status = 2;
+            $advice .= __(' and is recommended.');
+        }
+
+        $rows[] = array(
+            'item' => __('ZeroMQ'),
+            'status' => $status,
+            'advice' => $advice
+        );
+
         $this->envTested = true;
 
         return $rows;
@@ -767,6 +783,15 @@ class Config
 
         // All passed
         return true;
+    }
+
+    /**
+     * Check ZeroMQ support
+     * @return bool
+     */
+    public static function checkZmq()
+    {
+        return class_exists('ZMQSocket');
     }
 
     /**

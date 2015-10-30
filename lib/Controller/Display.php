@@ -23,6 +23,7 @@ use finfo;
 use Xibo\Entity\DisplayGroup;
 use Xibo\Entity\Stat;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\ConfigurationException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\DisplayProfileFactory;
@@ -32,10 +33,12 @@ use Xibo\Helper\Config;
 use Xibo\Helper\Date;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
+use Xibo\Helper\PlayerActionHelper;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 use Xibo\Helper\WakeOnLan;
 use Xibo\Storage\PDOConnect;
+use Xibo\XMR\ScreenShotAction;
 
 
 class Display extends Base
@@ -292,7 +295,7 @@ class Display extends Base
             $display->thumbnail = '';
             // If we aren't logged in, and we are showThumbnail == 2, then show a circle
             if (file_exists(Config::GetSetting('LIBRARY_LOCATION') . 'screenshots/' . $display->displayId . '_screenshot.jpg')) {
-                $display->thumbnail = 'index.php?p=display&q=ScreenShot&DisplayId=' . $display->displayId;
+                $display->thumbnail = $this->urlFor('display.screenShot', ['id' => $display->displayId]);
             }
 
             // Format the storage available / total space
@@ -348,6 +351,13 @@ class Display extends Base
                     'id' => 'displaygroup_button_fileassociations',
                     'url' => $this->urlFor('displayGroup.media.form', ['id' => $display->displayGroupId]),
                     'text' => __('Assign Files')
+                );
+
+                // Layout Assignments
+                $display->buttons[] = array(
+                    'id' => 'displaygroup_button_layout_associations',
+                    'url' => $this->urlFor('displayGroup.layout.form', ['id' => $display->displayGroupId]),
+                    'text' => __('Assign Layouts')
                 );
 
                 // Screen Shot
@@ -835,6 +845,8 @@ class Display extends Base
     /**
      * Request ScreenShot
      * @param int $displayId
+     * @throws \InvalidArgumentException if XMR is not configured
+     * @throws ConfigurationException if XMR cannot be contacted
      *
      * @SWG\Put(
      *  path="/display/requestscreenshot/{displayId}",
@@ -864,7 +876,9 @@ class Display extends Base
             throw new AccessDeniedException();
 
         $display->screenShotRequested = 1;
-        $display->save(['validate' => false]);
+        $display->save(['validate' => false, 'audit' => false]);
+
+        PlayerActionHelper::sendAction($display, new ScreenShotAction());
 
         // Return
         $this->getState()->hydrate([

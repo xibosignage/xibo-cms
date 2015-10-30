@@ -23,13 +23,19 @@ namespace Xibo\Controller;
 use Xibo\Entity\Display;
 use Xibo\Entity\Permission;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\ConfigurationException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
+use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Helper\Help;
+use Xibo\Helper\PlayerActionHelper;
 use Xibo\Helper\Sanitize;
+use Xibo\XMR\ChangeLayoutAction;
+use Xibo\XMR\CollectNowAction;
+use Xibo\XMR\RevertToSchedule;
 
 
 class DisplayGroup extends Base
@@ -110,6 +116,13 @@ class DisplayGroup extends Base
                     'id' => 'displaygroup_button_fileassociations',
                     'url' => $this->urlFor('displayGroup.media.form', ['id' => $group->displayGroupId]),
                     'text' => __('Assign Files')
+                );
+
+                // Layout Assignments
+                $group->buttons[] = array(
+                    'id' => 'displaygroup_button_layout_associations',
+                    'url' => $this->urlFor('displayGroup.layout.form', ['id' => $group->displayGroupId]),
+                    'text' => __('Assign Layouts')
                 );
             }
 
@@ -694,6 +707,177 @@ class DisplayGroup extends Base
     }
 
     /**
+     * Layouts Form (layouts linked to displays)
+     * @param int $displayGroupId
+     */
+    public function LayoutsForm($displayGroupId)
+    {
+        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
+
+        if (!$this->getUser()->checkEditable($displayGroup))
+            throw new AccessDeniedException();
+
+        // Load the groups details
+        $displayGroup->load();
+
+        $this->getState()->template = 'displaygroup-form-layouts';
+        $this->getState()->setData([
+            'displayGroup' => $displayGroup,
+            'modules' => ModuleFactory::query(null, ['regionSpecific' => 0]),
+            'layouts' => LayoutFactory::getByDisplayGroupId($displayGroup->displayGroupId),
+            'help' => Help::Link('DisplayGroup', 'FileAssociations')
+        ]);
+    }
+
+    /**
+     * Assign Layouts
+     * @param int $displayGroupId
+     *
+     * @SWG\Post(
+     *  path="/displaygroup/{displayGroupId}/media/assign",
+     *  operationId="displayGroupLayoutsAssign",
+     *  tags={"displayGroup"},
+     *  summary="Assign one or more Layouts items to a Display Group",
+     *  description="Adds the provided Layouts to the Display Group",
+     *  @SWG\Parameter(
+     *      name="displayGroupId",
+     *      type="integer",
+     *      in="path",
+     *      description="The Display Group to assign to",
+     *      required=true
+     *  ),
+     *  @SWG\Parameter(
+     *      name="layoutId",
+     *      type="array",
+     *      in="formData",
+     *      description="The Layouts Ids to assign",
+     *      required=true,
+     *      @SWG\Items(
+     *          type="integer"
+     *      )
+     *  ),
+     *  @SWG\Parameter(
+     *      name="unassignLayoutsId",
+     *      type="array",
+     *      in="formData",
+     *      description="Optional array of Layouts Id to unassign",
+     *      required=false,
+     *      @SWG\Items(
+     *          type="integer"
+     *      )
+     *  ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
+     */
+    public function assignLayouts($displayGroupId)
+    {
+        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
+
+        if (!$this->getUser()->checkEditable($displayGroup))
+            throw new AccessDeniedException();
+
+        // Load the groups details
+        $displayGroup->load();
+
+        $layoutIds = Sanitize::getIntArray('layoutId');
+
+        // Loop through all the media
+        foreach ($layoutIds as $layoutId) {
+
+            $layout = LayoutFactory::getById($layoutId);
+
+            if (!$this->getUser()->checkViewable($layout))
+                throw new AccessDeniedException(__('You have selected a layout that you no longer have permission to use. Please reload the form.'));
+
+            $displayGroup->assignLayout($layout);
+        }
+
+        // Check for unassign
+        foreach (Sanitize::getIntArray('unassignLayoutId') as $layoutId) {
+            // Get the layout record
+            $layout = LayoutFactory::getById($layoutId);
+
+            if (!$this->getUser()->checkViewable($layout))
+                throw new AccessDeniedException(__('You have selected a layout that you no longer have permission to use. Please reload the form.'));
+
+            $displayGroup->unassignLayout($layout);
+        }
+
+        $displayGroup->save(false);
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('Layouts assigned to %s'), $displayGroup->displayGroup),
+            'id' => $displayGroup->displayGroupId
+        ]);
+    }
+
+    /**
+     * Unassign Layout
+     * @param int $displayGroupId
+     *
+     * @SWG\Post(
+     *  path="/displaygroup/{displayGroupId}/layout/unassign",
+     *  operationId="displayGroupLayoutUnassign",
+     *  tags={"displayGroup"},
+     *  summary="Unassign one or more Layout items from a Display Group",
+     *  description="Removes the provided from the Display Group",
+     *  @SWG\Parameter(
+     *      name="displayGroupId",
+     *      type="integer",
+     *      in="path",
+     *      description="The Display Group to unassign from",
+     *      required=true
+     *  ),
+     *  @SWG\Parameter(
+     *      name="layoutId",
+     *      type="array",
+     *      in="formData",
+     *      description="The Layout Ids to unassign",
+     *      required=true,
+     *      @SWG\Items(
+     *          type="integer"
+     *      )
+     *  ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
+     */
+    public function unassignLayout($displayGroupId)
+    {
+        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
+
+        if (!$this->getUser()->checkEditable($displayGroup))
+            throw new AccessDeniedException();
+
+        // Load the groups details
+        $displayGroup->load();
+
+        $layoutIds = Sanitize::getIntArray('layoutIds');
+
+        // Loop through all the media
+        foreach ($layoutIds as $layoutId) {
+
+            $displayGroup->unassignLayout(LayoutFactory::getById($layoutId));
+        }
+
+        $displayGroup->save(false);
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('Layouts unassigned from %s'), $displayGroup->displayGroup),
+            'id' => $displayGroup->displayGroupId
+        ]);
+    }
+
+    /**
      * Version Form
      * @param int $displayGroupId
      */
@@ -708,7 +892,7 @@ class DisplayGroup extends Base
         $displays = DisplayFactory::getByDisplayGroupId($displayGroupId);
 
         // Possible media files to assign
-        $media = MediaFactory::query(['name'], ['type' => 'genericfile']);
+        $media = LayoutFactory::query(['name'], ['type' => 'genericfile']);
 
         $this->getState()->template = 'displaygroup-form-version';
         $this->getState()->setData([
@@ -762,7 +946,7 @@ class DisplayGroup extends Base
             throw new AccessDeniedException();
 
         // Assign the media file
-        $displayGroup->assignMedia($media->mediaId);
+        $displayGroup->assignMedia($media);
 
         // Update each display in the group with the new version
         foreach (DisplayFactory::getByDisplayGroupId($displayGroupId) as $display) {
@@ -775,6 +959,174 @@ class DisplayGroup extends Base
         $this->getState()->hydrate([
             'httpStatus' => 204,
             'message' => sprintf(__('Version set for %s'), $displayGroup->displayGroup),
+            'id' => $displayGroup->displayGroupId
+        ]);
+    }
+
+    /**
+     * Cause the player to collect now
+     * @param int $displayGroupId
+     * @throws ConfigurationException when the message cannot be sent
+     *
+     * @SWG\Post(
+     *  path="/displaygroup/{displayGroupId}/action/collectNow",
+     *  operationId="displayGroupActionCollectNow",
+     *  tags={"displaygroup"},
+     *  summary="Action: Collect Now",
+     *  description="Send the collect now action to this DisplayGroup",
+     *  @SWG\Parameter(
+     *      name="displayGroupId",
+     *      in="path",
+     *      description="The display group id",
+     *      type="integer",
+     *      required="true"
+     *   )
+     * )
+     */
+    public function collectNow($displayGroupId)
+    {
+        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
+
+        if (!$this->getUser()->checkEditable($displayGroup))
+            throw new AccessDeniedException();
+
+        PlayerActionHelper::sendAction(DisplayFactory::getByDisplayGroupId($displayGroupId), new CollectNowAction());
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('Command Sent to %s'), $displayGroup->displayGroup),
+            'id' => $displayGroup->displayGroupId
+        ]);
+    }
+
+    /**
+     * Change to a new Layout
+     * @param $displayGroupId
+     * @throws ConfigurationException
+     * @throws \Xibo\Exception\NotFoundException
+     *
+     * @SWG\Post(
+     *  path="/displaygroup/{displayGroupId}/action/changeLayout",
+     *  operationId="displayGroupActionChangeLayout",
+     *  tags={"displayGroup"},
+     *  summary="Action: Change Layout",
+     *  description="Send the change layout action to this DisplayGroup",
+     *  @SWG\Parameter(
+     *      name="displayGroupId",
+     *      in="path",
+     *      description="The Display Group Id",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="layoutId",
+     *      in="formData",
+     *      description="The Layout Id",
+     *      type="integer",
+     *      required="true"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="duration",
+     *      in="formData",
+     *      description="The duration in seconds for this Layout change to remain in effect",
+     *      type="integer",
+     *      required="false"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="downloadRequired",
+     *      in="formData",
+     *      description="Flag indicating whether the player should perform a collect before playing the Layout",
+     *      type="integer",
+     *      required="false"
+     *   ),
+     *  @SWG\Parameter(
+     *      name="changeMode",
+     *      in="formData",
+     *      description="Whether to queue or replace with this action",
+     *      type="string",
+     *      required="true"
+     *   )
+     * )
+     */
+    public function changeLayout($displayGroupId)
+    {
+        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
+
+        if (!$this->getUser()->checkEditable($displayGroup))
+            throw new AccessDeniedException();
+
+        // Get the layoutId
+        $layoutId = Sanitize::getInt('layoutId');
+        $downloadRequired = (Sanitize::getCheckbox('downloadRequired') == 1);
+
+        if ($layoutId == 0)
+            throw new \InvalidArgumentException(__('Please provide a Layout'));
+
+        // Check that this user has permissions to see this layout
+        $layout = LayoutFactory::getById($layoutId);
+
+        // Check to see if this layout is assigned to this display group.
+        if (count(LayoutFactory::query(null, ['disableUserCheck' => 1, 'layoutId' => $layoutId, 'displayGroupId' => $displayGroupId])) <= 0) {
+            // Assign
+            $displayGroup->load();
+            $displayGroup->assignLayout($layout);
+            // Don't notify, this player action will cause a download.
+            $displayGroup->setCollectRequired(false);
+            $displayGroup->save(false);
+
+            // Convert into a download required
+            $downloadRequired = true;
+        }
+
+        PlayerActionHelper::sendAction(DisplayFactory::getByDisplayGroupId($displayGroupId), (new ChangeLayoutAction())->setLayoutDetails(
+            $layoutId,
+            Sanitize::getInt('duration'),
+            $downloadRequired,
+            Sanitize::getString('changeMode', 'queue')
+        ));
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('Command Sent to %s'), $displayGroup->displayGroup),
+            'id' => $displayGroup->displayGroupId
+        ]);
+    }
+
+    /**
+     * Cause the player to revert to its scheduled content
+     * @param int $displayGroupId
+     * @throws ConfigurationException when the message cannot be sent
+     *
+     * @SWG\Post(
+     *  path="/displaygroup/{displayGroupId}/action/revertToSchedule",
+     *  operationId="displayGroupActionRevertToSchedule",
+     *  tags={"displaygroup"},
+     *  summary="Action: Revert to Schedule",
+     *  description="Send the revert to schedule action to this DisplayGroup",
+     *  @SWG\Parameter(
+     *      name="displayGroupId",
+     *      in="path",
+     *      description="The display group id",
+     *      type="integer",
+     *      required="true"
+     *   )
+     * )
+     */
+    public function revertToSchedule($displayGroupId)
+    {
+        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
+
+        if (!$this->getUser()->checkEditable($displayGroup))
+            throw new AccessDeniedException();
+
+        PlayerActionHelper::sendAction(DisplayFactory::getByDisplayGroupId($displayGroupId), new RevertToSchedule());
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('Command Sent to %s'), $displayGroup->displayGroup),
             'id' => $displayGroup->displayGroupId
         ]);
     }

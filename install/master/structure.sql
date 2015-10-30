@@ -185,6 +185,8 @@ CREATE TABLE IF NOT EXISTS `display` (
   `screenShotRequested` tinyint(4) NOT NULL DEFAULT '0',
   `storageAvailableSpace` int(11) DEFAULT NULL,
   `storageTotalSpace` int(11) DEFAULT NULL,
+  `xmrChannel` varchar(254) DEFAULT NULL,
+  `xmrPubKey` text,
   PRIMARY KEY (`displayid`),
   KEY `defaultplaylistid` (`defaultlayoutid`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
@@ -355,6 +357,14 @@ CREATE TABLE IF NOT EXISTS `lkmediadisplaygroup` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='File associations directly to Display Groups' AUTO_INCREMENT=1 ;
 
 -- --------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS `lklayoutdisplaygroup` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `layoutId` int(11) NOT NULL,
+  `displayGroupId` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `layoutId` (`layoutId`,`displaygroupid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Layout associations directly to Display Groups' AUTO_INCREMENT=1 ;
 
 --
 -- Table structure for table `lkmediagroup`

@@ -258,6 +258,17 @@ class DisplayProfile
                         'groupClass' => NULL
                     ),
                     array(
+                        'name' => 'XmrNetworkAddress',
+                        'tabId' => 'general',
+                        'title' => __('XMR Public Address'),
+                        'type' => 'string',
+                        'fieldType' => 'text',
+                        'default' => '',
+                        'helpText' => __('Please enter the public address for XMR.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
                         'name' => 'SizeX',
                         'tabId' => 'location',
                         'title' => __('Width'),
@@ -336,7 +347,7 @@ class DisplayProfile
                             array('id' => 'off', 'value' => 'Off')
                         ),
                         'default' => 'error',
-                        'helpText' => __('The position of the cursor when the client starts up.'),
+                        'helpText' => __('The logging level that should be recorded by the Player.'),
                         'enabled' => true,
                         'groupClass' => NULL
                     ),
@@ -574,6 +585,17 @@ class DisplayProfile
                         'fieldType' => 'timePicker',
                         'default' => 0,
                         'helpText' => __('The end of the time window to connect to the CMS and download updates.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'xmrNetworkAddress',
+                        'tabId' => 'general',
+                        'title' => __('XMR Public Address'),
+                        'type' => 'string',
+                        'fieldType' => 'text',
+                        'default' => '',
+                        'helpText' => __('Please enter the public address for XMR.'),
                         'enabled' => true,
                         'groupClass' => NULL
                     ),

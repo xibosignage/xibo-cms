@@ -138,8 +138,8 @@ class Stats extends Base
      */
     public function grid()
     {
-        $fromDt = Sanitize::getDate('fromDt', Date::parse()->addDay(-1));
-        $toDt = Sanitize::getDate('toDt', Date::parse());
+        $fromDt = Sanitize::getDate('fromDt', Sanitize::getDate('statsFromDt', Date::parse()->addDay(-1)));
+        $toDt = Sanitize::getDate('toDt', Sanitize::getDate('statsToDt', Date::parse()));
         $displayId = Sanitize::getInt('displayId');
         $mediaId = Sanitize::getInt('mediaId');
 
@@ -166,7 +166,7 @@ class Stats extends Base
           SELECT stat.type,
               display.Display,
               layout.Layout,
-              IFNULL(widgetoption.value, widget.type) AS Name,
+              IFNULL(widgetoption.value, CONCAT(widget.type, \'-\', widget.widgetId)) AS Name,
               COUNT(StatID) AS NumberPlays,
               SUM(TIME_TO_SEC(TIMEDIFF(end, start))) AS Duration,
               MIN(start) AS MinStart,
@@ -176,11 +176,11 @@ class Stats extends Base
               ON stat.DisplayID = display.DisplayID
               INNER JOIN layout
               ON layout.LayoutID = stat.LayoutID
-              INNER JOIN `widget`
+              LEFT OUTER JOIN `widget`
               ON `widget`.widgetId = stat.MediaID
               LEFT OUTER JOIN `widgetoption`
               ON `widgetoption`.widgetId = `widget`.widgetId
-                AND `widgetoption`.type = \'attribute\'
+                AND `widgetoption`.type = \'attrib\'
                 AND `widgetoption`.option = \'name\'
            WHERE stat.type <> \'displaydown\'
                 AND stat.end > :fromDt
@@ -204,23 +204,26 @@ class Stats extends Base
         }
 
         $sql .= '
-            GROUP BY stat.type, display.Display, layout.Layout, IFNULL(widgetoption.value, widget.type)
-            ORDER BY stat.type, display.Display, layout.Layout, IFNULL(widgetoption.value, widget.type)
+            GROUP BY stat.type, display.Display, layout.Layout, CONCAT(widget.type, \'-\', widget.widgetId)
+            ORDER BY stat.type, display.Display, layout.Layout, Name
         ';
 
         $rows = array();
 
-        foreach (PDOConnect::select($sql, $params) as $row) {
-            $row['type'] = Sanitize::string($row['type']);
-            $row['display'] = Sanitize::string($row['Display']);
-            $row['layout'] = Sanitize::string($row['Layout']);
-            $row['media'] = Sanitize::string($row['Name']);
-            $row['numberPlays'] = Sanitize::int($row['NumberPlays']);
-            $row['duration'] = Sanitize::int($row['Duration']);
-            $row['minStart'] = Date::getLocalDate(Sanitize::getDate($row['MinStart']));
-            $row['maxEnd'] = Date::getLocalDate(Sanitize::getDate($row['MaxEnd']));
+        Log::sql($sql, $params);
 
-            $rows[] = $row;
+        foreach (PDOConnect::select($sql, $params) as $row) {
+            $entry = [];
+            $entry['type'] = Sanitize::string($row['type']);
+            $entry['display'] = Sanitize::string($row['Display']);
+            $entry['layout'] = Sanitize::string($row['Layout']);
+            $entry['media'] = Sanitize::string($row['Name']);
+            $entry['numberPlays'] = Sanitize::int($row['NumberPlays']);
+            $entry['duration'] = Sanitize::int($row['Duration']);
+            $entry['minStart'] = Date::getLocalDate(Date::parse($row['MinStart']));
+            $entry['maxEnd'] = Date::getLocalDate(Date::parse($row['MaxEnd']));
+
+            $rows[] = $entry;
         }
 
         $this->getState()->template = 'grid';
@@ -229,8 +232,8 @@ class Stats extends Base
 
     public function availabilityData()
     {
-        $fromDt = Sanitize::getDate('fromDt');
-        $toDt = Sanitize::getDate('toDt');
+        $fromDt = Sanitize::getDate('fromDt', Sanitize::getDate('availabilityFromDt'));
+        $toDt = Sanitize::getDate('toDt', Sanitize::getDate('availabilityToDt'));
         $displayId = Sanitize::getInt('displayId');
 
         // Get an array of display id this user has access to.

@@ -129,7 +129,7 @@ class DataSet implements \JsonSerializable
     {
         $start = Sanitize::getInt('start', 0, $filterBy);
         $size = Sanitize::getInt('size', 0, $filterBy);
-        $filter = Sanitize::getString('filter', $filterBy);
+        $filter = Sanitize::getParam('filter', $filterBy);
         $ordering = Sanitize::getString('order', $filterBy);
         $displayId = Sanitize::getInt('displayId', 0, $filterBy);
 
@@ -151,7 +151,8 @@ class DataSet implements \JsonSerializable
         // Build a SQL statement, based on the columns for this dataset
         $this->load();
 
-        $select = 'SELECT id';
+        $select  = 'SELECT * FROM ( ';
+        $body = 'SELECT id';
 
         // Keep track of the columns we are allowed to order by
         $allowedOrderCols = ['id'];
@@ -165,16 +166,16 @@ class DataSet implements \JsonSerializable
             if ($column->dataSetColumnTypeId == 2) {
                 $formula = str_replace($blackList, '', htmlspecialchars_decode($column->formula, ENT_QUOTES));
 
-                $heading = str_replace('[DisplayGeoLocation]', $displayGeoLocation, $formula) . ' AS \'' . $column->heading . '\'';
+                $heading = str_replace('[DisplayGeoLocation]', $displayGeoLocation, $formula) . ' AS `' . $column->heading . '`';
             }
             else {
                 $heading = '`' . $column->heading . '`';
             }
 
-            $select .= ', ' . $heading;
+            $body .= ', ' . $heading;
         }
 
-        $body = ' FROM `dataset_' . $this->dataSetId . '` WHERE 1 = 1 ';
+        $body .= ' FROM `dataset_' . $this->dataSetId . '`) dataset WHERE 1 = 1 ';
 
         // Filtering
         if ($filter != '') {
@@ -197,7 +198,7 @@ class DataSet implements \JsonSerializable
 
             foreach ($ordering as $orderPair) {
                 // Sanitize the clause
-                $sanitized = str_replace('`', '', str_replace(' DESC', '', $orderPair));
+                $sanitized = str_replace('`', '', str_replace(' ASC', '', str_replace(' DESC', '', $orderPair)));
 
                 // Check allowable
                 if (!in_array($sanitized, $allowedOrderCols)) {
@@ -208,6 +209,9 @@ class DataSet implements \JsonSerializable
                 // Substitute
                 if (strripos($orderPair, ' DESC')) {
                     $order .= sprintf(' `%s`  DESC,', $sanitized);
+                }
+                else if (strripos($orderPair, ' ASC')) {
+                    $order .= sprintf(' `%s`  ASC,', $sanitized);
                 }
                 else {
                     $order .= sprintf(' `%s`,', $sanitized);
@@ -234,7 +238,7 @@ class DataSet implements \JsonSerializable
         $data = PDOConnect::select($sql, $params);
 
         // If there are limits run some SQL to work out the full payload of rows
-        $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
+        $results = PDOConnect::select('SELECT COUNT(*) AS total FROM (' . $body, $params);
         $this->countLast = intval($results[0]['total']);
 
         return $data;
@@ -415,6 +419,7 @@ class DataSet implements \JsonSerializable
         foreach (DisplayFactory::getByDataSetId($this->dataSetId) as $display) {
             /* @var \Xibo\Entity\Display $display */
             $display->setMediaIncomplete();
+            $display->setCollectRequired(false);
             $display->save(['validate' => false, 'audit' => false]);
         }
     }

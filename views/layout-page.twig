@@ -18,19 +18,19 @@
                 <div class="XiboFilter">
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
-                            {{ inline.text("filter_layout", "Name", defaults.layout) }}
-                            {{ inline.text("filter_tags", "Tags", defaults.tags) }}
+                            {{ inline.text("layout", "Name", defaults.layout) }}
+                            {{ inline.text("tags", "Tags", defaults.tags) }}
 
                             {% set title %}{% trans "Owner" %}{% endset %}
-                            {{ inline.dropdown("filter_userid", "single", title, defaults.owner, [{userId:null, userName:""}]|merge(users), "userId", "userName") }}
+                            {{ inline.dropdown("userId", "single", title, defaults.owner, [{userId:null, userName:""}]|merge(users), "userId", "userName") }}
 
                             {% set title %}{% trans "Retired" %}{% endset %}
                             {% set values = [{id: 1, value: "Yes"}, {id: 0, value: "No"}] %}
-                            {{ inline.dropdown("filter_retired", "single", title, defaults.retired, values, "id", "value") }}
+                            {{ inline.dropdown("retired", "single", title, defaults.retired, values, "id", "value") }}
 
                             {% set title %}{% trans "Show" %}{% endset %}
                             {% set values = [{id: 1, value: "All"}, {id: 2, value: "Only Used"}, {id: 3, value: "Only Unused"}] %}
-                            {{ inline.dropdown("filterLayoutStatusId", "single", title, defaults.filterLayoutStatusId, values, "id", "value") }}
+                            {{ inline.dropdown("layoutStatusId", "single", title, defaults.filterLayoutStatusId, values, "id", "value") }}
 
                             {% set title %}{% trans "Description" %}{% endset %}
                             {% set values = [{id: 1, value: "All"}, {id: 2, value: "1st line"}] %}

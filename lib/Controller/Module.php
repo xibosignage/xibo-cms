@@ -157,8 +157,8 @@ class Module extends Base
         $module = ModuleFactory::createById($moduleId);
         $module->getModule()->validExtensions = Sanitize::getString('validExtensions');
         $module->getModule()->imageUri = Sanitize::getString('imageUri');
-        $module->getModule()->enabled = Sanitize::getString('enabled');
-        $module->getModule()->previewEnabled = Sanitize::getString('previewEnabled');
+        $module->getModule()->enabled = Sanitize::getCheckbox('enabled');
+        $module->getModule()->previewEnabled = Sanitize::getCheckbox('previewEnabled');
 
         // Install Files for this module
         $module->installFiles();

@@ -82,6 +82,16 @@ class DisplayFactory extends BaseFactory
     }
 
     /**
+     * Get displays by assigned campaignId
+     * @param $campaignId
+     * @return array[Display]
+     */
+    public static function getByAssignedCampaignId($campaignId)
+    {
+        return DisplayFactory::query(null, ['disableUserCheck' => 1, 'assignedCampaignId' => $campaignId]);
+    }
+
+    /**
      * Get displays by dataSetId
      * @param $dataSetId
      * @return array[Display]
@@ -143,7 +153,9 @@ class DisplayFactory extends BaseFactory
                   display.storageAvailableSpace,
                   display.storageTotalSpace,
                   displaygroup.displayGroupId,
-                  displaygroup.description ';
+                  displaygroup.description,
+                  `display`.xmrChannel,
+                  `display`.xmrPubKey ';
 
         $body = '
                 FROM `display`
@@ -197,11 +209,11 @@ class DisplayFactory extends BaseFactory
                 $i++;
                 // Not like, or like?
                 if (substr($searchName, 0, 1) == '-') {
-                    $body .= " AND  (display.display NOT LIKE :search$i ";
+                    $body .= " AND  display.display NOT LIKE :search$i ";
                     $params['search' . $i] = '%' . ltrim(($searchName), '-') . '%';
                 }
                 else {
-                    $body .= " AND  (display.display LIKE :search$i ";
+                    $body .= " AND  display.display LIKE :search$i ";
                     $params['search' . $i] = '%' . $searchName . '%';
                 }
             }
@@ -259,6 +271,23 @@ class DisplayFactory extends BaseFactory
             $params['toDt'] = $currentDate - 3600;
             $params['activeCampaignId'] = Sanitize::getInt('activeCampaignId', $filterBy);
             $params['activeCampaignId2'] = Sanitize::getInt('activeCampaignId', $filterBy);
+        }
+
+        // Only Display Groups with a Campaign containing particular Layout assigned to them
+        if (Sanitize::getInt('assignedCampaignId', $filterBy) !== null) {
+            $body .= '
+                AND display.displayId IN (
+                    SELECT `lkdisplaydg`.displayId
+                      FROM `lkdisplaydg`
+                        INNER JOIN `lklayoutdisplaygroup`
+                        ON `lklayoutdisplaygroup`.displayGroupId = `lkdisplaydg`.displayGroupId
+                        INNER JOIN `lkcampaignlayout`
+                        ON `lkcampaignlayout`.layoutId = `lklayoutdisplaygroup`.layoutId
+                     WHERE `lkcampaignlayout`.campaignId = :assignedCampaignId
+                )
+            ';
+
+            $params['assignedCampaignId'] = Sanitize::getInt('assignedCampaignId', $filterBy);
         }
 
         // Sorting?

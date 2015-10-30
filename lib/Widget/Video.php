@@ -37,6 +37,7 @@ class Video extends ModuleWidget
             $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
 
         $this->setOption('name', Sanitize::getString('name', $this->getOption('name')));
+        $this->setOption('scaleType', Sanitize::getString('scaleTypeId', 'aspect'));
         $this->setOption('mute', Sanitize::getCheckbox('mute'));
 
         // Only loop if the duration is > 0
@@ -46,6 +47,18 @@ class Video extends ModuleWidget
             $this->setOption('loop', Sanitize::getCheckbox('loop'));
 
         $this->saveWidget();
+    }
+
+    /**
+     * Override previewAsClient
+     * @param float $width
+     * @param float $height
+     * @param int $scaleOverride
+     * @return string
+     */
+    public function previewAsClient($width, $height, $scaleOverride = 0)
+    {
+        return $this->previewIcon();
     }
 
     /**

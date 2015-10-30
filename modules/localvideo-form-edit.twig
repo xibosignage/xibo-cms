@@ -31,6 +31,16 @@
                 {% set title %}{% trans "Duration" %}{% endset %}
                 {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
                 {{ forms.number("duration", title, module.getDuration(), helpText, "", "required") }}
+
+                {% set title %}{% trans "Scale type" %}{% endset %}
+                {% set helpText %}{% trans "How should this video be scaled?" %}{% endset %}
+                {% set aspect %}{% trans "Aspect" %}{% endset %}
+                {% set stretch %}{% trans "Stretch" %}{% endset %}
+                {% set options = [
+                { scaleTypeId: "aspect", scaleType: aspect },
+                { scaleTypeId: "stretch", scaleType: stretch }
+                ] %}
+                {{ forms.dropdown("scaleTypeId", "single", title, module.getOption("scaleType"), options, "scaleTypeId", "scaleType", helpText) }}
             </form>
         </div>
     </div>

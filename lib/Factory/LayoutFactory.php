@@ -131,7 +131,7 @@ class LayoutFactory extends BaseFactory
      */
     public static function getById($layoutId)
     {
-        $layouts = LayoutFactory::query(null, array('disableUserCheck' => 1, 'layoutId' => $layoutId, 'excludeTemplates' => 0, 'retired' => -1));
+        $layouts = LayoutFactory::query(null, array('disableUserCheck' => 1, 'layoutId' => $layoutId, 'excludeTemplates' => -1, 'retired' => -1));
 
         if (count($layouts) <= 0) {
             throw new NotFoundException(\__('Layout not found'));
@@ -149,7 +149,7 @@ class LayoutFactory extends BaseFactory
      */
     public static function getByOwnerId($ownerId)
     {
-        return LayoutFactory::query(null, array('userId' => $ownerId, 'excludeTemplates' => 0, 'retired' => -1));
+        return LayoutFactory::query(null, array('userId' => $ownerId, 'excludeTemplates' => -1, 'retired' => -1));
     }
 
     /**
@@ -160,7 +160,17 @@ class LayoutFactory extends BaseFactory
      */
     public static function getByCampaignId($campaignId)
     {
-        return LayoutFactory::query(['displayOrder'], array('campaignId' => $campaignId, 'retired' => -1));
+        return LayoutFactory::query(['displayOrder'], array('campaignId' => $campaignId, 'excludeTemplates' => -1, 'retired' => -1));
+    }
+
+    /**
+     * Get by Display Group Id
+     * @param int $displayGroupId
+     * @return array[Media]
+     */
+    public static function getByDisplayGroupId($displayGroupId)
+    {
+        return LayoutFactory::query(null, ['disableUserCheck' => 1, 'displayGroupId' => $displayGroupId]);
     }
 
     /**
@@ -488,6 +498,16 @@ class LayoutFactory extends BaseFactory
             $params['mediaId'] = Sanitize::getInt('mediaId', 0, $filterBy);
         }
 
+        if (Sanitize::getInt('displayGroupId', $filterBy) !== null) {
+            $body .= '
+                INNER JOIN `lklayoutdisplaygroup`
+                ON lklayoutdisplaygroup.layoutId = `layout`.layoutId
+                    AND lklayoutdisplaygroup.displayGroupId = :displayGroupId
+            ';
+
+            $params['displayGroupId'] = Sanitize::getInt('displayGroupId', $filterBy);
+        }
+
         $body .= " WHERE 1 = 1 ";
 
         // Logged in user view permissions
@@ -554,14 +574,29 @@ class LayoutFactory extends BaseFactory
                   FROM tag
                     INNER JOIN lktaglayout
                     ON lktaglayout.tagId = tag.tagId
-                WHERE tag LIKE :tags
-                ) ";
-            $params['tags'] =  '%' . Sanitize::getString('tags', $filterBy) . '%';
+                ";
+            $i = 0;
+            foreach (explode(',', Sanitize::getString('tags', $filterBy)) as $tag) {
+                $i++;
+
+                if ($i == 1)
+                    $body .= " WHERE tag LIKE :tags$i ";
+                else
+                    $body .= " OR tag LIKE :tags$i ";
+
+                $params['tags' . $i] =  '%' . $tag . '%';
+            }
+
+            $body .= " ) ";
         }
 
         // Exclude templates by default
-        if (Sanitize::getInt('excludeTemplates', 1, $filterBy) == 1) {
-            $body .= " AND layout.layoutID NOT IN (SELECT layoutId FROM lktaglayout WHERE tagId = 1) ";
+        if (Sanitize::getInt('excludeTemplates', 1, $filterBy) != -1) {
+            if (Sanitize::getInt('excludeTemplates', 1, $filterBy) == 1) {
+                $body .= " AND layout.layoutID NOT IN (SELECT layoutId FROM lktaglayout WHERE tagId = 1) ";
+            } else {
+                $body .= " AND layout.layoutID IN (SELECT layoutId FROM lktaglayout WHERE tagId = 1) ";
+            }
         }
 
         // Show All, Used or UnUsed

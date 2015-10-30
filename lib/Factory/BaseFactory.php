@@ -76,6 +76,17 @@ class BaseFactory
                 $params['currentUserId2'] = $user->userId;
             }
 
+            // Group Admin?
+            if ($user->userTypeId == 2) {
+                // OR the group admin and the owner of the media are in the same group
+                $sql .= '
+                    OR (SELECT COUNT(lkUserGroupId) FROM `lkusergroup` WHERE userId = ' . $ownerColumn . '
+                        AND groupId IN (SELECT groupId FROM `lkusergroup` WHERE userId = :currentUserId3)) > 0
+                ';
+
+                $params['currentUserId3'] = $user->userId;
+            }
+
             $sql .= ' )';
         }
     }
