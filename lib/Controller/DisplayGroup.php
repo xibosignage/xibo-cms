@@ -734,7 +734,7 @@ class DisplayGroup extends Base
      * @param int $displayGroupId
      *
      * @SWG\Post(
-     *  path="/displaygroup/{displayGroupId}/media/assign",
+     *  path="/displaygroup/{displayGroupId}/layout/assign",
      *  operationId="displayGroupLayoutsAssign",
      *  tags={"displayGroup"},
      *  summary="Assign one or more Layouts items to a Display Group",
@@ -971,7 +971,7 @@ class DisplayGroup extends Base
      * @SWG\Post(
      *  path="/displaygroup/{displayGroupId}/action/collectNow",
      *  operationId="displayGroupActionCollectNow",
-     *  tags={"displaygroup"},
+     *  tags={"displayGroup"},
      *  summary="Action: Collect Now",
      *  description="Send the collect now action to this DisplayGroup",
      *  @SWG\Parameter(
@@ -979,8 +979,12 @@ class DisplayGroup extends Base
      *      in="path",
      *      description="The display group id",
      *      type="integer",
-     *      required="true"
-     *   )
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
      * )
      */
     public function collectNow($displayGroupId)
@@ -1017,36 +1021,40 @@ class DisplayGroup extends Base
      *      in="path",
      *      description="The Display Group Id",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="layoutId",
      *      in="formData",
      *      description="The Layout Id",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="duration",
      *      in="formData",
      *      description="The duration in seconds for this Layout change to remain in effect",
      *      type="integer",
-     *      required="false"
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="downloadRequired",
      *      in="formData",
      *      description="Flag indicating whether the player should perform a collect before playing the Layout",
      *      type="integer",
-     *      required="false"
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="changeMode",
      *      in="formData",
      *      description="Whether to queue or replace with this action",
      *      type="string",
-     *      required="true"
-     *   )
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
      * )
      */
     public function changeLayout($displayGroupId)
@@ -1102,7 +1110,7 @@ class DisplayGroup extends Base
      * @SWG\Post(
      *  path="/displaygroup/{displayGroupId}/action/revertToSchedule",
      *  operationId="displayGroupActionRevertToSchedule",
-     *  tags={"displaygroup"},
+     *  tags={"displayGroup"},
      *  summary="Action: Revert to Schedule",
      *  description="Send the revert to schedule action to this DisplayGroup",
      *  @SWG\Parameter(
@@ -1110,8 +1118,12 @@ class DisplayGroup extends Base
      *      in="path",
      *      description="The display group id",
      *      type="integer",
-     *      required="true"
-     *   )
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
      * )
      */
     public function revertToSchedule($displayGroupId)

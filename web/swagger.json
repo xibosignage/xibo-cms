@@ -692,6 +692,15 @@
                 "summary": "Search Layouts",
                 "description": "Search for Layouts viewable by this user",
                 "operationId": "layoutSearch",
+                "parameters": [
+                    {
+                        "name": "embed",
+                        "in": "formData",
+                        "description": "Embed related data such as regions, playlists, tags, etc",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "successful operation",
@@ -1222,6 +1231,84 @@
                 }
             }
         },
+        "/displaygroup/{displayGroupId}/layout/assign": {
+            "post": {
+                "tags": [
+                    "displayGroup"
+                ],
+                "summary": "Assign one or more Layouts items to a Display Group",
+                "description": "Adds the provided Layouts to the Display Group",
+                "operationId": "displayGroupLayoutsAssign",
+                "parameters": [
+                    {
+                        "name": "displayGroupId",
+                        "in": "path",
+                        "description": "The Display Group to assign to",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "layoutId",
+                        "in": "formData",
+                        "description": "The Layouts Ids to assign",
+                        "required": true,
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "unassignLayoutsId",
+                        "in": "formData",
+                        "description": "Optional array of Layouts Id to unassign",
+                        "required": false,
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/displaygroup/{displayGroupId}/layout/unassign": {
+            "post": {
+                "tags": [
+                    "displayGroup"
+                ],
+                "summary": "Unassign one or more Layout items from a Display Group",
+                "description": "Removes the provided from the Display Group",
+                "operationId": "displayGroupLayoutUnassign",
+                "parameters": [
+                    {
+                        "name": "displayGroupId",
+                        "in": "path",
+                        "description": "The Display Group to unassign from",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "layoutId",
+                        "in": "formData",
+                        "description": "The Layout Ids to unassign",
+                        "required": true,
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
         "/displaygroup/{displayGroupId}/version": {
             "post": {
                 "tags": [
@@ -1242,6 +1329,106 @@
                         "name": "mediaId",
                         "in": "formData",
                         "description": "The Media Id of the Installer File",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/displaygroup/{displayGroupId}/action/collectNow": {
+            "post": {
+                "tags": [
+                    "displayGroup"
+                ],
+                "summary": "Action: Collect Now",
+                "description": "Send the collect now action to this DisplayGroup",
+                "operationId": "displayGroupActionCollectNow",
+                "parameters": [
+                    {
+                        "name": "displayGroupId",
+                        "in": "path",
+                        "description": "The display group id",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/displaygroup/{displayGroupId}/action/changeLayout": {
+            "post": {
+                "tags": [
+                    "displayGroup"
+                ],
+                "summary": "Action: Change Layout",
+                "description": "Send the change layout action to this DisplayGroup",
+                "operationId": "displayGroupActionChangeLayout",
+                "parameters": [
+                    {
+                        "name": "displayGroupId",
+                        "in": "path",
+                        "description": "The Display Group Id",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "layoutId",
+                        "in": "formData",
+                        "description": "The Layout Id",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "duration",
+                        "in": "formData",
+                        "description": "The duration in seconds for this Layout change to remain in effect",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "downloadRequired",
+                        "in": "formData",
+                        "description": "Flag indicating whether the player should perform a collect before playing the Layout",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "changeMode",
+                        "in": "formData",
+                        "description": "Whether to queue or replace with this action",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/displaygroup/{displayGroupId}/action/revertToSchedule": {
+            "post": {
+                "tags": [
+                    "displayGroup"
+                ],
+                "summary": "Action: Revert to Schedule",
+                "description": "Send the revert to schedule action to this DisplayGroup",
+                "operationId": "displayGroupActionRevertToSchedule",
+                "parameters": [
+                    {
+                        "name": "displayGroupId",
+                        "in": "path",
+                        "description": "The display group id",
                         "required": true,
                         "type": "integer"
                     }
@@ -3029,6 +3216,14 @@
                     "items": {
                         "$ref": "#/definitions/DisplayGroup"
                     }
+                },
+                "xmrChannel": {
+                    "description": "The Player Subscription Channel",
+                    "type": "string"
+                },
+                "xmrPubKey": {
+                    "description": "The Player Public Key",
+                    "type": "string"
                 }
             }
         },
@@ -3679,6 +3874,14 @@
                 },
                 "userId": {
                     "description": "The Owner of this Application",
+                    "type": "integer"
+                },
+                "authCode": {
+                    "description": "Flag indicating whether to allow the authorizationCode Grant Type",
+                    "type": "integer"
+                },
+                "clientCredentials": {
+                    "description": "Flag indicating whether to allow the clientCredentials Grant Type",
                     "type": "integer"
                 }
             }
