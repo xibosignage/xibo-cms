@@ -419,6 +419,7 @@ class DataSet implements \JsonSerializable
         foreach (DisplayFactory::getByDataSetId($this->dataSetId) as $display) {
             /* @var \Xibo\Entity\Display $display */
             $display->setMediaIncomplete();
+            $display->setCollectRequired(false);
             $display->save(['validate' => false, 'audit' => false]);
         }
     }
