@@ -377,8 +377,14 @@ $app->put('/fault/debug/on', '\Xibo\Controller\Fault:debugOn')->name('fault.debu
 $app->put('/fault/debug/off', '\Xibo\Controller\Fault:debugOff')->name('fault.debug.off');
 $app->get('/fault/collect', '\Xibo\Controller\Fault:collect')->name('fault.collect');
 
-//
-// Commands
-//
+/**
+ * Commands
+ * @SWG\Tag(
+ *  name="command",
+ *  description="Commands"
+ * )
+ */
 $app->get('/command', '\Xibo\Controller\Command:grid')->name('command.search');
 $app->post('/command', '\Xibo\Controller\Command:add')->name('command.add');
+$app->put('/command/:id', '\Xibo\Controller\Command:edit')->name('command.edit');
+$app->delete('/command/:id', '\Xibo\Controller\Command:delete')->name('command.delete');

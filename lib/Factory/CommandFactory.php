@@ -10,12 +10,29 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\Command;
+use Xibo\Exception\NotFoundException;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
 class CommandFactory extends BaseFactory
 {
+    /**
+     * Get by Id
+     * @param $commandId
+     * @return Command
+     * @throws NotFoundException
+     */
+    public static function getById($commandId)
+    {
+        $commands = CommandFactory::query(null, ['commandId' => $commandId]);
+
+        if (count($commands) <= 0)
+            throw new NotFoundException();
+
+        return $commands[0];
+    }
+
     public static function query($sortOrder = null, $filterBy = null)
     {
         $entries = array();

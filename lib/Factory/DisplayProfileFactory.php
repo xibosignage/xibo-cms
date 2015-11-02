@@ -94,7 +94,7 @@ class DisplayProfileFactory extends BaseFactory
 
             if (Sanitize::getInt('commandId', $filterBy) !== null) {
                 $body .= '
-                    AND `displayProfile`.displayProfileId IN (
+                    AND `displayprofile`.displayProfileId IN (
                         SELECT `lkcommanddisplayprofile`.displayProfileId
                           FROM `lkcommanddisplayprofile`
                          WHERE `lkcommanddisplayprofile`.commandId = :commandId

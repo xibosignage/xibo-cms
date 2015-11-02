@@ -341,5 +341,5 @@ $app->get('/audit/form/export', '\Xibo\Controller\AuditLog:exportForm')->name('a
 //
 $app->get('/command/view', '\Xibo\Controller\Command:displayPage')->name('command.view');
 $app->get('/command/form/add', '\Xibo\Controller\Command:addForm')->name('command.add.form');
-$app->get('/command/form/edit', '\Xibo\Controller\Command:editForm')->name('command.edit.form');
-$app->get('/command/form/delete', '\Xibo\Controller\Command:deleteForm')->name('command.delete.form');
+$app->get('/command/form/edit/:id', '\Xibo\Controller\Command:editForm')->name('command.edit.form');
+$app->get('/command/form/delete/:id', '\Xibo\Controller\Command:deleteForm')->name('command.delete.form');

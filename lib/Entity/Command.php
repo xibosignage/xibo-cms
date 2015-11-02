@@ -41,6 +41,12 @@ class Command implements \JsonSerializable
     public $description;
 
     /**
+     * User Id
+     * @var int
+     */
+    public $userId;
+
+    /**
      * Command String - when child of a Display Profile
      * @var string
      */
@@ -65,6 +71,15 @@ class Command implements \JsonSerializable
     public function getId()
     {
         return $this->commandId;
+    }
+
+    /**
+     * Get OwnerId
+     * @return int
+     */
+    public function getOwnerId()
+    {
+        return $this->userId;
     }
 
     /**
@@ -124,14 +139,17 @@ class Command implements \JsonSerializable
             /* @var \Xibo\Entity\DisplayProfile $profile */
             $profile->unassignCommand($this);
         }
+
+        PDOConnect::update('DELETE FROM `command` WHERE `commandId` = :commandId', ['commandId' => $this->commandId]);
     }
 
     private function add()
     {
-        $this->commandId = PDOConnect::insert('INSERT INTO `command` (`command`, `code`, `description`) VALUES (:command, :code:, :description)', [
+        $this->commandId = PDOConnect::insert('INSERT INTO `command` (`command`, `code`, `description`, `userId`) VALUES (:command, :code, :description, :userId)', [
             'command' => $this->command,
             'code' => $this->code,
-            'description' => $this->description
+            'description' => $this->description,
+            'userId' => $this->userId
         ]);
     }
 
@@ -141,11 +159,14 @@ class Command implements \JsonSerializable
             UPDATE `command` SET
               `command` = :command,
               `code` = :code,
-              `description` = :description
+              `description` = :description,
+              `userId` = :userId
+             WHERE `commandId` = :commandId
         ', [
             'command' => $this->command,
             'code' => $this->code,
             'description' => $this->description,
+            'userId' => $this->userId,
             'commandId' => $this->commandId
         ]);
     }

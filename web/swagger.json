@@ -261,6 +261,97 @@
                 }
             }
         },
+        "/command": {
+            "get": {
+                "tags": [
+                    "command"
+                ],
+                "summary": "Command Search",
+                "description": "Search this users Commands",
+                "operationId": "commandSearch",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Command"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/command/{commandId}": {
+            "post": {
+                "tags": [
+                    "command"
+                ],
+                "summary": "Edit Command",
+                "description": "Edit the provided command",
+                "operationId": "commandEdit",
+                "parameters": [
+                    {
+                        "name": "commandId",
+                        "in": "path",
+                        "description": "The Command Id to Edit",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "command",
+                        "in": "formData",
+                        "description": "The Command Name",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "description",
+                        "in": "formData",
+                        "description": "A description for the command",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "code",
+                        "in": "formData",
+                        "description": "A unique code for this command",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Command"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "command"
+                ],
+                "summary": "Delete Command",
+                "description": "Delete the provided command",
+                "operationId": "commandDelete",
+                "parameters": [
+                    {
+                        "name": "commandId",
+                        "in": "path",
+                        "description": "The Command Id to Delete",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
         "/library": {
             "get": {
                 "tags": [
@@ -4380,6 +4471,10 @@
         {
             "name": "module",
             "description": "Modules and Widgets"
+        },
+        {
+            "name": "command",
+            "description": "Commands"
         }
     ],
     "externalDocs": {
