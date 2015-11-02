@@ -138,6 +138,7 @@ class Command implements \JsonSerializable
         foreach ($this->displayProfiles as $profile) {
             /* @var \Xibo\Entity\DisplayProfile $profile */
             $profile->unassignCommand($this);
+            $profile->save(['validate' => false]);
         }
 
         PDOConnect::update('DELETE FROM `command` WHERE `commandId` = :commandId', ['commandId' => $this->commandId]);

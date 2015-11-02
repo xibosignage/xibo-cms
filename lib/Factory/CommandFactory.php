@@ -32,13 +32,22 @@ class CommandFactory extends BaseFactory
 
         return $commands[0];
     }
+    /**
+     * Get by Display Profile Id
+     * @param $displayProfileId
+     * @return array[Command]
+     */
+    public static function getByDisplayProfileId($displayProfileId)
+    {
+        return CommandFactory::query(null, ['displayProfileId' => $displayProfileId]);
+    }
 
     public static function query($sortOrder = null, $filterBy = null)
     {
         $entries = array();
 
         $params = array();
-        $select = 'SELECT commandId, command, code, description ';
+        $select = 'SELECT `command`.commandId, `command`.command, `command`.code, `command`.description, `command`.userId ';
 
         if (Sanitize::getInt('displayProfileId', $filterBy) !== null) {
             $select .= ', commandString, validationString ';
@@ -50,7 +59,7 @@ class CommandFactory extends BaseFactory
             $body .= '
                 INNER JOIN `lkcommanddisplayprofile`
                 ON `lkcommanddisplayprofile`.commandId = `command`.commandId
-                    AND `lkcommanddisplayprofile.displayProfileId = :displayProfileId
+                    AND `lkcommanddisplayprofile`.displayProfileId = :displayProfileId
             ';
 
             $params['displayProfileId'] = Sanitize::getInt('displayProfileId', $filterBy);

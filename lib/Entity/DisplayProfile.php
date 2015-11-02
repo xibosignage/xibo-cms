@@ -9,6 +9,7 @@
 namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
+use Xibo\Factory\CommandFactory;
 use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
 use Xibo\Storage\PDOConnect;
@@ -104,13 +105,15 @@ class DisplayProfile
         foreach ($this->commands as $alreadyAssigned) {
             /* @var Command $alreadyAssigned */
             if ($alreadyAssigned->getId() == $command->getId()) {
+                $alreadyAssigned->commandString = $command->commandString;
+                $alreadyAssigned->validationString = $command->validationString;
                 $assigned = true;
                 break;
             }
         }
 
         if (!$assigned)
-            $this->commands = $command;
+            $this->commands[] = $command;
     }
 
     /**
@@ -130,8 +133,14 @@ class DisplayProfile
         });
     }
 
+    /**
+     * Load
+     */
     public function load()
     {
+        if ($this->loaded)
+            return;
+
         $this->config = json_decode($this->config, true);
         Log::debug('Config loaded [%d]: %s', count($this->config), json_encode($this->config, JSON_PRETTY_PRINT));
 
@@ -156,6 +165,12 @@ class DisplayProfile
                 }
             }
         }
+
+        // Load any commands
+        $this->commands = CommandFactory::getByDisplayProfileId($this->displayProfileId);
+
+        // We are loaded
+        $this->loaded = true;
     }
 
     /**
@@ -192,11 +207,60 @@ class DisplayProfile
             $this->add();
         else
             $this->edit();
+
+        $this->manageAssignments();
     }
 
+    /**
+     * Delete
+     */
     public function delete()
     {
+        $this->commands = [];
+        $this->manageAssignments();
+
         PDOConnect::update('DELETE FROM `displayprofile` WHERE displayprofileid = :displayProfileId', ['displayProfileId' => $this->displayProfileId]);
+    }
+
+    /**
+     * Manage Assignments
+     */
+    private function manageAssignments()
+    {
+        Log::debug('Managing Assignment for Display Profile: %d. %d commands.', $this->displayProfileId, count($this->commands));
+
+        // Link
+        foreach ($this->commands as $command) {
+            /* @var Command $command */
+            PDOConnect::update('
+              INSERT INTO `lkcommanddisplayprofile` (`commandId`, `displayProfileId`, `commandString`, `validationString`) VALUES
+                (:commandId, :displayProfileId, :commandString, :validationString) ON DUPLICATE KEY UPDATE commandString = :commandString2, validationString = :validationString2
+            ', [
+                'commandId' => $command->commandId,
+                'displayProfileId' => $this->displayProfileId,
+                'commandString' => $command->commandString,
+                'validationString' => $command->validationString,
+                'commandString2' => $command->commandString,
+                'validationString2' => $command->validationString
+            ]);
+        }
+
+        // Unlink
+        $params = ['displayProfileId' => $this->displayProfileId];
+
+        $sql = 'DELETE FROM `lkcommanddisplayprofile` WHERE `displayProfileId` = :displayProfileId AND `commandId` NOT IN (0';
+
+        $i = 0;
+        foreach ($this->commands as $command) {
+            /* @var Command $command */
+            $i++;
+            $sql .= ',:commandId' . $i;
+            $params['commandId' . $i] = $command->commandId;
+        }
+
+        $sql .= ')';
+
+        PDOConnect::update($sql, $params);
     }
 
     private function add()
@@ -649,6 +713,17 @@ class DisplayProfile
                         'groupClass' => NULL
                     ),
                     array(
+                        'name' => 'statsEnabled',
+                        'tabId' => 'general',
+                        'title' => __('Enable stats reporting?'),
+                        'type' => 'checkbox',
+                        'fieldType' => 'checkbox',
+                        'default' => 1,
+                        'helpText' => __('Should the application send proof of play stats to the CMS.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
                         'name' => 'orientation',
                         'tabId' => 'location',
                         'title' => __('Orientation'),
@@ -865,17 +940,6 @@ class DisplayProfile
                         'fieldType' => 'checkbox',
                         'default' => 0,
                         'helpText' => __('Set the device time using the CMS. Only available on rooted devices or system signed players.'),
-                        'enabled' => true,
-                        'groupClass' => NULL
-                    ),
-                    array(
-                        'name' => 'statsEnabled',
-                        'tabId' => 'general',
-                        'title' => __('Enable stats reporting?'),
-                        'type' => 'checkbox',
-                        'fieldType' => 'checkbox',
-                        'default' => 1,
-                        'helpText' => __('Should the application send proof of play stats to the CMS.'),
                         'enabled' => true,
                         'groupClass' => NULL
                     )

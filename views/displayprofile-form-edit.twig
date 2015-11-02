@@ -28,6 +28,9 @@
                     <li{% if first %} class="active"{% endif %}><a href="#{{ tab.id }}" role="tab" data-toggle="tab">{{ tab.name }}</a></li>
                     {% set first = false %}
                 {% endfor %}
+                {% if commands|length > 0 %}
+                    <li><a href="#commands" role="tab" data-toggle="tab">{% trans "Commands" %}</a></li>
+                {% endif %}
             </ul>
             <form id="displayProfileForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("displayProfile.edit", {id: displayProfile.displayProfileId}) }}">
                 <div class="tab-content">
@@ -66,6 +69,25 @@
                         {{ forms.dropdown(field.name, "single", field.title, field.value, field.options, "id", "value") }}
                     {% endif %}
                 {% endfor %}
+                </div>
+                {% if commands|length > 0 %}
+                    <div class="tab-pane" id="commands">
+                        {% for field in commands %}
+                            {% set title %}{% trans "Name" %}{% endset %}
+                            {{ forms.disabled("command", title, field.command, field.description) }}
+
+                            {% set fieldId = "commandString_" ~ field.commandId %}
+                            {% set title %}{% trans "Command" %}{% endset %}
+                            {% set helpText %}{% trans "The Command String for this Command on this display" %}{% endset %}
+                            {{ forms.text(fieldId, title, field.commandString, helpText) }}
+
+                            {% set fieldId = "validationString_" ~ field.commandId %}
+                            {% set title %}{% trans "Validation" %}{% endset %}
+                            {% set helpText %}{% trans "The Validation String for this Command on this display" %}{% endset %}
+                            {{ forms.text(fieldId, title, field.validationString, helpText) }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
                 </div>
             </form>
         </div>
