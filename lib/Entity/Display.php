@@ -291,6 +291,12 @@ class Display
      */
     private $collectRequired = false;
 
+    /**
+     * Commands
+     * @var array[Command]
+     */
+    private $commands = null;
+
     public function __construct()
     {
         $this->excludeProperty('mediaInventoryXml');
@@ -548,6 +554,15 @@ class Display
         return $this->setConfig();
     }
 
+    public function getCommands()
+    {
+        if ($this->commands == null) {
+            $this->setConfig();
+        }
+
+        return $this->commands;
+    }
+
     /**
      * Get a particular setting
      * @param string $key
@@ -588,6 +603,7 @@ class Display
             }
 
             $this->_config = $displayProfile->getConfig();
+            $this->commands = $displayProfile->commands;
         }
 
         return $this->_config;
