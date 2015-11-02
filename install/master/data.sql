@@ -140,7 +140,8 @@ INSERT INTO `pages` (`pageID`, `name`, `title`, `asHome`) VALUES
   (32, 'region', 'Regions', 0),
   (33, 'playlist', 'Playlist', 0),
   (34, 'audit', 'Audit', 0),
-  (35, 'maintenance', 'Maintenance', 0);
+  (35, 'maintenance', 'Maintenance', 0),
+  (36, 'command', 'Commands', 0);
 
 
 INSERT INTO `resolution` (`resolutionID`, `resolution`, `width`, `height`, `intended_width`, `intended_height`, `version`, `enabled`) VALUES

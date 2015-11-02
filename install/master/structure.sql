@@ -159,7 +159,7 @@ CREATE TABLE IF NOT EXISTS `display` (
   `defaultlayoutid` int(8) NOT NULL,
   `license` varchar(40) DEFAULT NULL,
   `licensed` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'Is the Requested License Key Allowed',
-  `loggedin` tinyint(4) NOT NULL DEFAULT '0',
+  `loggedin` tinyint(4) NOT NULL DEFAU`LT '0',
   `lastaccessed` int(11) DEFAULT NULL,
   `inc_schedule` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'Will this default be used in the scheduling calcs',
   `email_alert` tinyint(1) NOT NULL DEFAULT '1',
@@ -187,6 +187,7 @@ CREATE TABLE IF NOT EXISTS `display` (
   `storageTotalSpace` int(11) DEFAULT NULL,
   `xmrChannel` varchar(254) DEFAULT NULL,
   `xmrPubKey` text,
+  `lastCommandSuccess` tinyint(4) NOT NULL DEFAULT '0',
   PRIMARY KEY (`displayid`),
   KEY `defaultplaylistid` (`defaultlayoutid`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
@@ -1019,3 +1020,20 @@ CREATE TABLE IF NOT EXISTS `requiredfile` (
   `complete` tinyint(4) NOT NULL,
   PRIMARY KEY (`rfId`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `command` (
+  `commandId` int(11) NOT NULL AUTO_INCREMENT,
+  `command` varchar(254) NOT NULL,
+  `code` varchar(50) NOT NULL,
+  `description` varchar(1000) DEFAULT NULL,
+  `userId` int(11) NOT NULL,
+  PRIMARY KEY (`commandId`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `lkcommanddisplayprofile` (
+  `commandId` int(11) NOT NULL,
+  `displayProfileId` int(11) NOT NULL,
+  `commandString` varchar(1000) NOT NULL,
+  `validationString` varchar(1000) DEFAULT NULL,
+  PRIMARY KEY (`commandId`,`displayProfileId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

@@ -453,6 +453,24 @@ CREATE TABLE IF NOT EXISTS `lklayoutdisplaygroup` (
 
 /* Commands Changes */
 INSERT INTO `pages` (`pageID`, `name`, `title`, `asHome`) VALUES (NULL, 'command', 'Commands', '1');
+ALTER TABLE  `display` ADD  `lastCommandSuccess` TINYINT NOT NULL;
+
+CREATE TABLE IF NOT EXISTS `command` (
+  `commandId` int(11) NOT NULL AUTO_INCREMENT,
+  `command` varchar(254) NOT NULL,
+  `code` varchar(50) NOT NULL,
+  `description` varchar(1000) DEFAULT NULL,
+  `userId` int(11) NOT NULL,
+  PRIMARY KEY (`commandId`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `lkcommanddisplayprofile` (
+  `commandId` int(11) NOT NULL,
+  `displayProfileId` int(11) NOT NULL,
+  `commandString` varchar(1000) NOT NULL,
+  `validationString` varchar(1000) DEFAULT NULL,
+  PRIMARY KEY (`commandId`,`displayProfileId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 UPDATE `version` SET `app_ver` = '1.8.0-alpha2', `XmdsVersion` = 5, `XlfVersion` = 2;
 UPDATE `setting` SET `value` = 0 WHERE `setting` = 'PHONE_HOME_DATE';

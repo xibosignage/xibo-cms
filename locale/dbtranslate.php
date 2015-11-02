@@ -60,6 +60,7 @@ echo __('Display Settings');
 echo __('Help Links');
 echo __('Audit Trail');
 echo __('Update');
+echo __('Commands');
 
 // Settings translations
 echo __('Media Permissions');
