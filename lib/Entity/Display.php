@@ -286,6 +286,12 @@ class Display
     public $xmrPubKey;
 
     /**
+     * @SWG\Property(description="The last command success, 0 = unknown, 1 = success, 2 = failure")
+     * @var int
+     */
+    public $lastCommandSuccess;
+
+    /**
      * Collect required on save?
      * @var bool
      */
@@ -500,7 +506,8 @@ class Display
                     storageAvailableSpace = :storageAvailableSpace,
                     storageTotalSpace = :storageTotalSpace,
                     xmrChannel = :xmrChannel,
-                    xmrPubKey = :xmrPubKey
+                    xmrPubKey = :xmrPubKey,
+                    `lastCommandSuccess` = :lastCommandSuccess
              WHERE displayid = :displayId
         ', [
             'display' => $this->display,
@@ -535,6 +542,7 @@ class Display
             'storageTotalSpace' => $this->storageTotalSpace,
             'xmrChannel' => $this->xmrChannel,
             'xmrPubKey' => $this->xmrPubKey,
+            'lastCommandSuccess' => $this->lastCommandSuccess,
             'displayId' => $this->displayId
         ]);
 

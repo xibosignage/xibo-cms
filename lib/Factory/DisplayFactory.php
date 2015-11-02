@@ -155,7 +155,8 @@ class DisplayFactory extends BaseFactory
                   displaygroup.displayGroupId,
                   displaygroup.description,
                   `display`.xmrChannel,
-                  `display`.xmrPubKey ';
+                  `display`.xmrPubKey,
+                  `display`.lastCommandSuccess ';
 
         $body = '
                 FROM `display`
