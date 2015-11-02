@@ -1213,8 +1213,16 @@ class DisplayGroup extends Base
             throw new AccessDeniedException();
 
         $command = CommandFactory::getById(Sanitize::getInt('commandId'));
+        $displays = DisplayFactory::getByDisplayGroupId($displayGroupId);
 
-        PlayerActionHelper::sendAction(DisplayFactory::getByDisplayGroupId($displayGroupId), (new CommandAction())->setCommandCode($command->code));
+        PlayerActionHelper::sendAction($displays, (new CommandAction())->setCommandCode($command->code));
+
+        // Update the flag
+        foreach ($displays as $display) {
+            /* @var \Xibo\Entity\Display $display */
+            $display->lastCommandSuccess = 0;
+            $display->save(['validate' => false, 'audit' => false]);
+        }
 
         // Return
         $this->getState()->hydrate([
