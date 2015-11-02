@@ -243,6 +243,7 @@ $app->get('/displaygroup/form/members/:id', '\Xibo\Controller\DisplayGroup:membe
 $app->get('/displaygroup/form/media/:id', '\Xibo\Controller\DisplayGroup:mediaForm')->name('displayGroup.media.form');
 $app->get('/displaygroup/form/layout/:id', '\Xibo\Controller\DisplayGroup:layoutsForm')->name('displayGroup.layout.form');
 $app->get('/displaygroup/form/version/:id', '\Xibo\Controller\DisplayGroup:versionForm')->name('displayGroup.version.form');
+$app->get('/displaygroup/form/command/:id', '\Xibo\Controller\DisplayGroup:commandForm')->name('displayGroup.command.form');
 
 //
 // displayprofile

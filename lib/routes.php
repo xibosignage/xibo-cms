@@ -220,6 +220,7 @@ $app->post('/displaygroup/:id/layout/unassign', '\Xibo\Controller\DisplayGroup:u
 $app->post('/displaygroup/:id/action/collectNow', '\Xibo\Controller\DisplayGroup:collectNow')->name('displayGroup.action.collectNow');
 $app->post('/displaygroup/:id/action/changeLayout', '\Xibo\Controller\DisplayGroup:changeLayout')->name('displayGroup.action.changeLayout');
 $app->post('/displaygroup/:id/action/revertToSchedule', '\Xibo\Controller\DisplayGroup:revertToSchedule')->name('displayGroup.action.revertToSchedule');
+$app->post('/displaygroup/:id/action/command', '\Xibo\Controller\DisplayGroup:command')->name('displayGroup.action.command');
 
 /**
  * Display Profile
