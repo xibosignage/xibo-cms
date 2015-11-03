@@ -796,13 +796,15 @@ CREATE TABLE IF NOT EXISTS `resolution` (
 
 CREATE TABLE IF NOT EXISTS `schedule` (
   `eventID` int(11) NOT NULL AUTO_INCREMENT,
-  `CampaignID` int(11) NOT NULL,
+  `eventTypeId` tinyint(4) NOT NULL,
+  `CampaignID` int(11) DEFAULT NULL,
+  `commandId` int(11) DEFAULT NULL,
   `recurrence_type` enum('Minute','Hour','Day','Week','Month','Year') DEFAULT NULL,
   `recurrence_detail` varchar(100) DEFAULT NULL,
   `userID` int(11) NOT NULL,
   `is_priority` tinyint(4) NOT NULL,
   `FromDT` bigint(20) NOT NULL DEFAULT '0',
-  `ToDT` bigint(20) NOT NULL DEFAULT '0',
+  `ToDT` bigint(20) DEFAULT NULL,
   `recurrence_range` bigint(20) DEFAULT NULL,
   `DisplayOrder` int(11) NOT NULL DEFAULT '0',
   PRIMARY KEY (`eventID`),
@@ -819,7 +821,7 @@ CREATE TABLE IF NOT EXISTS `schedule_detail` (
   `schedule_detailID` int(11) NOT NULL AUTO_INCREMENT,
   `eventID` int(11) DEFAULT NULL,
   `FromDT` bigint(20) NOT NULL DEFAULT '0',
-  `ToDT` bigint(20) NOT NULL DEFAULT '0',
+  `ToDT` bigint(20) DEFAULT NULL,
   PRIMARY KEY (`schedule_detailID`),
   KEY `scheduleID` (`eventID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='Replicated schedule across displays and recurrence' AUTO_INCREMENT=1 ;

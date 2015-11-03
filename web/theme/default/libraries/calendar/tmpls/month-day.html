@@ -15,6 +15,8 @@
 					icon = "fa-bullseye";
 				if (event['extra'] == "view-only")
 					icon = "fa-lock";
+				if (event['extra'] == "command")
+					icon = "fa-terminal";
 				%>
 				<a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>" data-event-class="<%= event['class'] %>"
 					class="pull-left event <%= event['class'] %>" data-toggle="tooltip"

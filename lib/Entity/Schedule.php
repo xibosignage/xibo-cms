@@ -23,6 +23,9 @@ class Schedule implements \JsonSerializable
 {
     use EntityTrait;
 
+    public static $LAYOUT_EVENT = 1;
+    public static $COMMAND_EVENT = 2;
+
     /**
      * @SWG\Property(
      *  description="The ID of this Event"
@@ -33,11 +36,27 @@ class Schedule implements \JsonSerializable
 
     /**
      * @SWG\Property(
+     *  description="The Event Type ID"
+     * )
+     * @var int
+     */
+    public $eventTypeId;
+
+    /**
+     * @SWG\Property(
      *  description="The CampaignID this event is for"
      * )
      * @var int
      */
     public $campaignId;
+
+    /**
+     * @SWG\Property(
+     *  description="The CommandId this event is for"
+     * )
+     * @var int
+     */
+    public $commandId;
 
     /**
      * @SWG\Property(
@@ -122,6 +141,15 @@ class Schedule implements \JsonSerializable
      * @var string
      */
     public $campaign;
+
+    /**
+     * @SWG\Property(
+     *  description="The Command Name",
+     *  readOnly=true
+     * )
+     * @var string
+     */
+    public $command;
 
     /**
      * Is this event (as a whole) inside the schedule look ahead period?
@@ -213,13 +241,28 @@ class Schedule implements \JsonSerializable
         if (count($this->displayGroups) <= 0)
             throw new \InvalidArgumentException(__('No display groups selected'));
 
-        // Validate layout
-        if (!v::int()->notEmpty()->min(1)->validate($this->campaignId))
-            throw new \InvalidArgumentException(__('No layout selected'));
+        if ($this->eventTypeId == Schedule::$LAYOUT_EVENT) {
+            // Validate layout
+            if (!v::int()->notEmpty()->min(1)->validate($this->campaignId))
+                throw new \InvalidArgumentException(__('Please select a Campaign/Layout for this event.'));
 
-        // validate the dates
-        if ($this->toDt < $this->fromDt)
-            throw new \InvalidArgumentException(__('Can not have an end time earlier than your start time'));
+            // validate the dates
+            if ($this->toDt < $this->fromDt)
+                throw new \InvalidArgumentException(__('Can not have an end time earlier than your start time'));
+
+            $this->commandId = null;
+
+        } else if ($this->eventTypeId == Schedule::$COMMAND_EVENT) {
+            // Validate command
+            if (!v::int()->notEmpty()->min(1)->validate($this->commandId))
+                throw new \InvalidArgumentException(__('Please select a Command for this event.'));
+
+            $this->campaignId = null;
+
+        } else {
+            // No event type selected
+            throw new \InvalidArgumentException(__('Please select the Event Type'));
+        }
     }
 
     /**
@@ -283,10 +326,12 @@ class Schedule implements \JsonSerializable
     private function add()
     {
         $this->eventId = PDOConnect::insert('
-          INSERT INTO `schedule` (CampaignId, userID, is_priority, FromDT, ToDT, DisplayOrder, recurrence_type, recurrence_detail, recurrence_range)
-            VALUES (:campaignId, :userId, :isPriority, :fromDt, :toDt, :displayOrder, :recurrenceType, :recurrenceDetail, :recurrenceRange)
+          INSERT INTO `schedule` (eventTypeId, CampaignId, commandId, userID, is_priority, FromDT, ToDT, DisplayOrder, recurrence_type, recurrence_detail, recurrence_range)
+            VALUES (:eventTypeId, :campaignId, :commandId, :userId, :isPriority, :fromDt, :toDt, :displayOrder, :recurrenceType, :recurrenceDetail, :recurrenceRange)
         ', [
+            'eventTypeId' => $this->eventTypeId,
             'campaignId' => $this->campaignId,
+            'commandId' => $this->commandId,
             'userId' => $this->userId,
             'isPriority' => $this->isPriority,
             'fromDt' => $this->fromDt,
@@ -305,7 +350,9 @@ class Schedule implements \JsonSerializable
     {
         PDOConnect::update('
           UPDATE `schedule` SET
+            eventTypeId = :eventTypeId,
             campaignId = :campaignId,
+            commandId = :commandId,
             is_priority = :isPriority,
             userId = :userId,
             fromDt = :fromDt,
@@ -316,7 +363,9 @@ class Schedule implements \JsonSerializable
             recurrence_range = :recurrenceRange
           WHERE eventId = :eventId
         ', [
+            'eventTypeId' => $this->eventTypeId,
             'campaignId' => $this->campaignId,
+            'commandId' => $this->commandId,
             'userId' => $this->userId,
             'isPriority' => $this->isPriority,
             'fromDt' => $this->fromDt,
