@@ -258,6 +258,7 @@ class Schedule implements \JsonSerializable
                 throw new \InvalidArgumentException(__('Please select a Command for this event.'));
 
             $this->campaignId = null;
+            $this->toDt = null;
 
         } else {
             // No event type selected

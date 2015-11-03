@@ -474,6 +474,7 @@ CREATE TABLE IF NOT EXISTS `lkcommanddisplayprofile` (
 
 ALTER TABLE  `schedule` CHANGE  `CampaignID`  `CampaignID` INT( 11 ) NULL;
 ALTER TABLE  `schedule` ADD  `eventTypeId` TINYINT NOT NULL AFTER  `eventID`;
+UPDATE `schedule` SET `eventTypeId` = 1;
 ALTER TABLE  `schedule` ADD  `commandId` INT NULL AFTER  `CampaignID`;
 ALTER TABLE  `schedule` CHANGE  `ToDT`  `ToDT` BIGINT( 20 ) NULL DEFAULT NULL;
 ALTER TABLE  `schedule_detail` CHANGE  `ToDT`  `ToDT` BIGINT( 20 ) NULL DEFAULT NULL;
