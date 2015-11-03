@@ -817,7 +817,6 @@ CREATE TABLE IF NOT EXISTS `schedule` (
 
 CREATE TABLE IF NOT EXISTS `schedule_detail` (
   `schedule_detailID` int(11) NOT NULL AUTO_INCREMENT,
-  `userID` int(8) NOT NULL DEFAULT '1' COMMENT 'Owner of the Event',
   `eventID` int(11) DEFAULT NULL,
   `FromDT` bigint(20) NOT NULL DEFAULT '0',
   `ToDT` bigint(20) NOT NULL DEFAULT '0',
