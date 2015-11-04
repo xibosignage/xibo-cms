@@ -286,7 +286,7 @@ class Display
     public $xmrPubKey;
 
     /**
-     * @SWG\Property(description="The last command success, 0 = unknown, 1 = success, 2 = failure")
+     * @SWG\Property(description="The last command success, 0 = failure, 1 = success, 2 = unknown")
      * @var int
      */
     public $lastCommandSuccess;

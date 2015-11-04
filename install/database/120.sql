@@ -453,7 +453,7 @@ CREATE TABLE IF NOT EXISTS `lklayoutdisplaygroup` (
 
 /* Commands Changes */
 INSERT INTO `pages` (`pageID`, `name`, `title`, `asHome`) VALUES (NULL, 'command', 'Commands', '1');
-ALTER TABLE  `display` ADD  `lastCommandSuccess` TINYINT NOT NULL;
+ALTER TABLE  `display` ADD  `lastCommandSuccess` TINYINT NOT NULL DEFAULT 2;
 
 CREATE TABLE IF NOT EXISTS `command` (
   `commandId` int(11) NOT NULL AUTO_INCREMENT,

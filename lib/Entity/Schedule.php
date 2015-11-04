@@ -189,6 +189,9 @@ class Schedule implements \JsonSerializable
         $currentDate = time();
         $rfLookAhead = intval($currentDate) + intval(Config::GetSetting('REQUIRED_FILES_LOOKAHEAD'));
 
+        if ($toDt == null)
+            $toDt = $fromDt;
+
         return ($fromDt < $rfLookAhead && $toDt > $currentDate);
     }
 
@@ -442,7 +445,10 @@ class Schedule implements \JsonSerializable
             if ($t_start_temp > $this->recurrenceRange)
                 break;
 
-            $this->addDetail($t_start_temp, $t_end_temp);
+            if ($this->toDt == null)
+                $this->addDetail($t_start_temp, null);
+            else
+                $this->addDetail($t_start_temp, $t_end_temp);
 
             // Check these dates
             if (!$this->isInScheduleLookAhead)
