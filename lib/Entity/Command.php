@@ -12,6 +12,12 @@ use Respect\Validation\Validator as v;
 use Xibo\Factory\DisplayProfileFactory;
 use Xibo\Storage\PDOConnect;
 
+/**
+ * Class Command
+ * @package Xibo\Entity
+ *
+ * @SWG\Definition()
+ */
 class Command implements \JsonSerializable
 {
     use EntityTrait;

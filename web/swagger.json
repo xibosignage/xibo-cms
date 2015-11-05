@@ -280,6 +280,51 @@
                         }
                     }
                 }
+            },
+            "post": {
+                "tags": [
+                    "command"
+                ],
+                "summary": "Command Add",
+                "description": "Add a Command",
+                "operationId": "commandAdd",
+                "parameters": [
+                    {
+                        "name": "command",
+                        "in": "formData",
+                        "description": "The Command Name",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "description",
+                        "in": "formData",
+                        "description": "A description for the command",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "code",
+                        "in": "formData",
+                        "description": "A unique code for this command",
+                        "required": true,
+                        "type": "strgin"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Command"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new record",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
             }
         },
         "/command/{commandId}": {
@@ -1531,6 +1576,37 @@
                 }
             }
         },
+        "/displaygroup/{displayGroupId}/action/command": {
+            "post": {
+                "tags": [
+                    "displayGroup"
+                ],
+                "summary": "Send Command",
+                "description": "Send a predefined command to this Group of Displays",
+                "operationId": "displayGroupActionCommand",
+                "parameters": [
+                    {
+                        "name": "displayGroupId",
+                        "in": "path",
+                        "description": "The display group id",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "commandId",
+                        "in": "formData",
+                        "description": "The Command Id",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
         "/template": {
             "get": {
                 "tags": [
@@ -2160,10 +2236,24 @@
                 "operationId": "scheduleAdd",
                 "parameters": [
                     {
+                        "name": "eventTypeId",
+                        "in": "formData",
+                        "description": "The Event Type Id to use for this Event. 1=Campaign, 2=Command",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
                         "name": "campaignId",
                         "in": "formData",
                         "description": "The Campaign ID to use for this Event. If a Layout is needed then the Campaign specific ID for that Layout should be used.",
-                        "required": true,
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "commandId",
+                        "in": "formData",
+                        "description": "The Command ID to use for this Event.",
+                        "required": false,
                         "type": "integer"
                     },
                     {
@@ -2202,7 +2292,7 @@
                         "name": "toDt",
                         "in": "formData",
                         "description": "The to date for this event.",
-                        "required": true,
+                        "required": false,
                         "type": "string",
                         "format": "date-time"
                     },
@@ -2271,10 +2361,24 @@
                         "type": "integer"
                     },
                     {
+                        "name": "eventTypeId",
+                        "in": "formData",
+                        "description": "The Event Type Id to use for this Event. 1=Campaign, 2=Command",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
                         "name": "campaignId",
                         "in": "formData",
                         "description": "The Campaign ID to use for this Event. If a Layout is needed then the Campaign specific ID for that Layout should be used.",
-                        "required": true,
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "commandId",
+                        "in": "formData",
+                        "description": "The Command ID to use for this Event.",
+                        "required": false,
                         "type": "integer"
                     },
                     {
@@ -2313,7 +2417,7 @@
                         "name": "toDt",
                         "in": "formData",
                         "description": "The to date for this event.",
-                        "required": true,
+                        "required": false,
                         "type": "string",
                         "format": "date-time"
                     },
@@ -3315,8 +3419,15 @@
                 "xmrPubKey": {
                     "description": "The Player Public Key",
                     "type": "string"
+                },
+                "lastCommandSuccess": {
+                    "description": "The last command success, 0 = failure, 1 = success, 2 = unknown",
+                    "type": "integer"
                 }
             }
+        },
+        "Command": {
+
         },
         "Permission": {
             "properties": {
@@ -3886,8 +3997,16 @@
                     "description": "The ID of this Event",
                     "type": "integer"
                 },
+                "eventTypeId": {
+                    "description": "The Event Type ID",
+                    "type": "integer"
+                },
                 "campaignId": {
                     "description": "The CampaignID this event is for",
+                    "type": "integer"
+                },
+                "commandId": {
+                    "description": "The CommandId this event is for",
                     "type": "integer"
                 },
                 "displayGroups": {
@@ -3940,6 +4059,11 @@
                 },
                 "campaign": {
                     "description": "The Campaign/Layout Name",
+                    "type": "string",
+                    "readOnly": true
+                },
+                "command": {
+                    "description": "The Command Name",
                     "type": "string",
                     "readOnly": true
                 }

@@ -83,7 +83,7 @@ class Soap4 extends Soap
         try {
             $display = DisplayFactory::getByLicence($hardwareKey);
 
-            $this->logProcessor->setDisplay($this->display->displayId);
+            $this->logProcessor->setDisplay($display->displayId);
 
             // Append the time
             $displayElement->setAttribute('date', Date::getLocalDate());

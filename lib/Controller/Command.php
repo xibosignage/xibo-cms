@@ -115,7 +115,7 @@ class Command extends Base
     /**
      * Add Command
      *
-     * @SWG\Get(
+     * @SWG\Post(
      *  path="/command",
      *  operationId="commandAdd",
      *  tags={"command"},

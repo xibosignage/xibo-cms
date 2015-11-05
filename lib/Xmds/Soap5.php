@@ -75,7 +75,7 @@ class Soap5 extends Soap4
         try {
             $display = DisplayFactory::getByLicence($hardwareKey);
 
-            $this->logProcessor->setDisplay($this->display->displayId);
+            $this->logProcessor->setDisplay($display->displayId);
 
             // Append the time
             $displayElement->setAttribute('date', Date::getLocalDate());
