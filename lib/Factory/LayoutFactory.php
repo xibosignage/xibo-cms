@@ -289,8 +289,11 @@ class LayoutFactory extends BaseFactory
 
         Log::debug('Finished loading layout - there are %d regions.', count($layout->regions));
 
-        // TODO: Load any existing tags
-
+        // Load any existing tags
+        foreach ($xpath->query('//tags/tag') as $tagNode) {
+            /* @var \DOMElement $tagNode */
+            $layout->tags[] = TagFactory::tagFromString($tagNode->textContent);
+        }
 
         // The parsed, finished layout
         return $layout;
@@ -327,12 +330,15 @@ class LayoutFactory extends BaseFactory
         // Construct the Layout
         $layout = LayoutFactory::loadByXlf($zip->getFromName('layout.xml'));
 
+        Log::debug('Layout Loaded: %s.', $layout);
+
         // Override the name/description
         $layout->layout = (($layoutName != '') ? $layoutName : $layoutDetails['layout']);
         $layout->description = (isset($layoutDetails['description']) ? $layoutDetails['description'] : '');
 
         // Remove the tags if necessary
         if (!$importTags) {
+            Log::debug('Removing tags from imported layout');
             $layout->tags = [];
         }
 
