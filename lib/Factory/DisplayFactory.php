@@ -99,7 +99,7 @@ class DisplayFactory extends BaseFactory
     public static function getByDataSetId($dataSetId)
     {
         //TODO
-        return DisplayFactory::query(null, ['disableUserCheck' => 1, 'dataSetUd' => $dataSetId]);
+        return DisplayFactory::query(null, ['disableUserCheck' => 1, 'dataSetId' => $dataSetId]);
     }
 
     /**

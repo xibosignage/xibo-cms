@@ -25,6 +25,7 @@
     <div class="row">
         <div class="col-md-12">
             <form id="scheduleNowForm" class="form-horizontal" method="post" action="{{ urlFor("schedule.add") }}">
+                {{ forms.hidden("eventTypeId", "1") }}
 
                 {# Campaign / Layout list. We want to build two arrays for us to use. #}
                 {% set layoutOptions = [] %}

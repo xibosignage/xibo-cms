@@ -39,7 +39,7 @@ class WebPage extends ModuleWidget
 
     public function validate()
     {
-        if (!v::url()->notEmpty()->validate($this->getOption('uri')))
+        if (!v::url()->notEmpty()->validate(urldecode($this->getOption('uri'))))
             throw new InvalidArgumentException(__('Please enter a link'));
 
         if ($this->getDuration() == 0)
