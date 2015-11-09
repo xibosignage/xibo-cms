@@ -24,6 +24,7 @@ use Xibo\Entity\Display;
 use Xibo\Entity\Permission;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
+use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
@@ -35,6 +36,7 @@ use Xibo\Helper\PlayerActionHelper;
 use Xibo\Helper\Sanitize;
 use Xibo\XMR\ChangeLayoutAction;
 use Xibo\XMR\CollectNowAction;
+use Xibo\XMR\CommandAction;
 use Xibo\XMR\RevertToSchedule;
 
 
@@ -139,6 +141,16 @@ class DisplayGroup extends Base
                     'id' => 'display_button_version_instructions',
                     'url' => $this->urlFor('displayGroup.version.form', ['id' => $group->displayGroupId]),
                     'text' => __('Version Information')
+                );
+            }
+
+            if ($this->getUser()->checkEditable($group)) {
+                $group->buttons[] = ['divider' => true];
+
+                $group->buttons[] = array(
+                    'id' => 'displaygroup_button_command',
+                    'url' => $this->urlFor('displayGroup.command.form', ['id' => $group->displayGroupId]),
+                    'text' => __('Send Command')
                 );
             }
         }
@@ -734,7 +746,7 @@ class DisplayGroup extends Base
      * @param int $displayGroupId
      *
      * @SWG\Post(
-     *  path="/displaygroup/{displayGroupId}/media/assign",
+     *  path="/displaygroup/{displayGroupId}/layout/assign",
      *  operationId="displayGroupLayoutsAssign",
      *  tags={"displayGroup"},
      *  summary="Assign one or more Layouts items to a Display Group",
@@ -971,7 +983,7 @@ class DisplayGroup extends Base
      * @SWG\Post(
      *  path="/displaygroup/{displayGroupId}/action/collectNow",
      *  operationId="displayGroupActionCollectNow",
-     *  tags={"displaygroup"},
+     *  tags={"displayGroup"},
      *  summary="Action: Collect Now",
      *  description="Send the collect now action to this DisplayGroup",
      *  @SWG\Parameter(
@@ -979,8 +991,12 @@ class DisplayGroup extends Base
      *      in="path",
      *      description="The display group id",
      *      type="integer",
-     *      required="true"
-     *   )
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
      * )
      */
     public function collectNow($displayGroupId)
@@ -1017,36 +1033,40 @@ class DisplayGroup extends Base
      *      in="path",
      *      description="The Display Group Id",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="layoutId",
      *      in="formData",
      *      description="The Layout Id",
      *      type="integer",
-     *      required="true"
+     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="duration",
      *      in="formData",
      *      description="The duration in seconds for this Layout change to remain in effect",
      *      type="integer",
-     *      required="false"
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="downloadRequired",
      *      in="formData",
      *      description="Flag indicating whether the player should perform a collect before playing the Layout",
      *      type="integer",
-     *      required="false"
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="changeMode",
      *      in="formData",
      *      description="Whether to queue or replace with this action",
      *      type="string",
-     *      required="true"
-     *   )
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
      * )
      */
     public function changeLayout($displayGroupId)
@@ -1102,7 +1122,7 @@ class DisplayGroup extends Base
      * @SWG\Post(
      *  path="/displaygroup/{displayGroupId}/action/revertToSchedule",
      *  operationId="displayGroupActionRevertToSchedule",
-     *  tags={"displaygroup"},
+     *  tags={"displayGroup"},
      *  summary="Action: Revert to Schedule",
      *  description="Send the revert to schedule action to this DisplayGroup",
      *  @SWG\Parameter(
@@ -1110,8 +1130,12 @@ class DisplayGroup extends Base
      *      in="path",
      *      description="The display group id",
      *      type="integer",
-     *      required="true"
-     *   )
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
      * )
      */
     public function revertToSchedule($displayGroupId)
@@ -1122,6 +1146,83 @@ class DisplayGroup extends Base
             throw new AccessDeniedException();
 
         PlayerActionHelper::sendAction(DisplayFactory::getByDisplayGroupId($displayGroupId), new RevertToSchedule());
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('Command Sent to %s'), $displayGroup->displayGroup),
+            'id' => $displayGroup->displayGroupId
+        ]);
+    }
+
+    /**
+     * Command Form
+     * @param int $displayGroupId
+     * @throws \Xibo\Exception\NotFoundException
+     */
+    public function commandForm($displayGroupId)
+    {
+        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
+
+        if (!$this->getUser()->checkEditable($displayGroup))
+            throw new AccessDeniedException();
+
+        $this->getState()->template = 'displaygroup-form-command';
+        $this->getState()->setData([
+            'displayGroup' => $displayGroup,
+            'commands' => CommandFactory::query()
+        ]);
+    }
+
+    /**
+     * @param $displayGroupId
+     * @throws ConfigurationException
+     * @throws \Xibo\Exception\NotFoundException
+     *
+     * @SWG\Post(
+     *  path="/displaygroup/{displayGroupId}/action/command",
+     *  operationId="displayGroupActionCommand",
+     *  tags={"displayGroup"},
+     *  summary="Send Command",
+     *  description="Send a predefined command to this Group of Displays",
+     *  @SWG\Parameter(
+     *      name="displayGroupId",
+     *      in="path",
+     *      description="The display group id",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="commandId",
+     *      in="formData",
+     *      description="The Command Id",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
+     */
+    public function command($displayGroupId)
+    {
+        $displayGroup = DisplayGroupFactory::getById($displayGroupId);
+
+        if (!$this->getUser()->checkEditable($displayGroup))
+            throw new AccessDeniedException();
+
+        $command = CommandFactory::getById(Sanitize::getInt('commandId'));
+        $displays = DisplayFactory::getByDisplayGroupId($displayGroupId);
+
+        PlayerActionHelper::sendAction($displays, (new CommandAction())->setCommandCode($command->code));
+
+        // Update the flag
+        foreach ($displays as $display) {
+            /* @var \Xibo\Entity\Display $display */
+            $display->lastCommandSuccess = 0;
+            $display->save(['validate' => false, 'audit' => false]);
+        }
 
         // Return
         $this->getState()->hydrate([

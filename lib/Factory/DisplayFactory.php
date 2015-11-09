@@ -99,7 +99,7 @@ class DisplayFactory extends BaseFactory
     public static function getByDataSetId($dataSetId)
     {
         //TODO
-        return DisplayFactory::query(null, ['disableUserCheck' => 1, 'dataSetUd' => $dataSetId]);
+        return DisplayFactory::query(null, ['disableUserCheck' => 1, 'dataSetId' => $dataSetId]);
     }
 
     /**
@@ -155,7 +155,8 @@ class DisplayFactory extends BaseFactory
                   displaygroup.displayGroupId,
                   displaygroup.description,
                   `display`.xmrChannel,
-                  `display`.xmrPubKey ';
+                  `display`.xmrPubKey,
+                  `display`.lastCommandSuccess ';
 
         $body = '
                 FROM `display`

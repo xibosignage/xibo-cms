@@ -484,7 +484,7 @@ class Layout extends Base
      *      in="formData",
      *      description="Embed related data such as regions, playlists, tags, etc",
      *      type="string",
-     *      required="false"
+     *      required=false
      *   ),
      *  @SWG\Response(
      *      response=200,

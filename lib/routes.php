@@ -220,6 +220,7 @@ $app->post('/displaygroup/:id/layout/unassign', '\Xibo\Controller\DisplayGroup:u
 $app->post('/displaygroup/:id/action/collectNow', '\Xibo\Controller\DisplayGroup:collectNow')->name('displayGroup.action.collectNow');
 $app->post('/displaygroup/:id/action/changeLayout', '\Xibo\Controller\DisplayGroup:changeLayout')->name('displayGroup.action.changeLayout');
 $app->post('/displaygroup/:id/action/revertToSchedule', '\Xibo\Controller\DisplayGroup:revertToSchedule')->name('displayGroup.action.revertToSchedule');
+$app->post('/displaygroup/:id/action/command', '\Xibo\Controller\DisplayGroup:command')->name('displayGroup.action.command');
 
 /**
  * Display Profile
@@ -376,3 +377,15 @@ $app->get('/audit/export', '\Xibo\Controller\AuditLog:export')->name('auditLog.e
 $app->put('/fault/debug/on', '\Xibo\Controller\Fault:debugOn')->name('fault.debug.on');
 $app->put('/fault/debug/off', '\Xibo\Controller\Fault:debugOff')->name('fault.debug.off');
 $app->get('/fault/collect', '\Xibo\Controller\Fault:collect')->name('fault.collect');
+
+/**
+ * Commands
+ * @SWG\Tag(
+ *  name="command",
+ *  description="Commands"
+ * )
+ */
+$app->get('/command', '\Xibo\Controller\Command:grid')->name('command.search');
+$app->post('/command', '\Xibo\Controller\Command:add')->name('command.add');
+$app->put('/command/:id', '\Xibo\Controller\Command:edit')->name('command.edit');
+$app->delete('/command/:id', '\Xibo\Controller\Command:delete')->name('command.delete');

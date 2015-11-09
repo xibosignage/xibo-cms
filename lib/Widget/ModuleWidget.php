@@ -685,4 +685,14 @@ abstract class ModuleWidget implements ModuleInterface
 
         return $parsedContent;
     }
+
+    /**
+     * Set template data
+     * @param array $data
+     * @return array
+     */
+    public function setTemplateData($data)
+    {
+        return $data;
+    }
 }

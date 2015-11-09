@@ -261,6 +261,142 @@
                 }
             }
         },
+        "/command": {
+            "get": {
+                "tags": [
+                    "command"
+                ],
+                "summary": "Command Search",
+                "description": "Search this users Commands",
+                "operationId": "commandSearch",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Command"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "command"
+                ],
+                "summary": "Command Add",
+                "description": "Add a Command",
+                "operationId": "commandAdd",
+                "parameters": [
+                    {
+                        "name": "command",
+                        "in": "formData",
+                        "description": "The Command Name",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "description",
+                        "in": "formData",
+                        "description": "A description for the command",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "code",
+                        "in": "formData",
+                        "description": "A unique code for this command",
+                        "required": true,
+                        "type": "strgin"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Command"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new record",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/command/{commandId}": {
+            "post": {
+                "tags": [
+                    "command"
+                ],
+                "summary": "Edit Command",
+                "description": "Edit the provided command",
+                "operationId": "commandEdit",
+                "parameters": [
+                    {
+                        "name": "commandId",
+                        "in": "path",
+                        "description": "The Command Id to Edit",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "command",
+                        "in": "formData",
+                        "description": "The Command Name",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "description",
+                        "in": "formData",
+                        "description": "A description for the command",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "code",
+                        "in": "formData",
+                        "description": "A unique code for this command",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Command"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "command"
+                ],
+                "summary": "Delete Command",
+                "description": "Delete the provided command",
+                "operationId": "commandDelete",
+                "parameters": [
+                    {
+                        "name": "commandId",
+                        "in": "path",
+                        "description": "The Command Id to Delete",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
         "/library": {
             "get": {
                 "tags": [
@@ -692,6 +828,15 @@
                 "summary": "Search Layouts",
                 "description": "Search for Layouts viewable by this user",
                 "operationId": "layoutSearch",
+                "parameters": [
+                    {
+                        "name": "embed",
+                        "in": "formData",
+                        "description": "Embed related data such as regions, playlists, tags, etc",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "successful operation",
@@ -1222,6 +1367,84 @@
                 }
             }
         },
+        "/displaygroup/{displayGroupId}/layout/assign": {
+            "post": {
+                "tags": [
+                    "displayGroup"
+                ],
+                "summary": "Assign one or more Layouts items to a Display Group",
+                "description": "Adds the provided Layouts to the Display Group",
+                "operationId": "displayGroupLayoutsAssign",
+                "parameters": [
+                    {
+                        "name": "displayGroupId",
+                        "in": "path",
+                        "description": "The Display Group to assign to",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "layoutId",
+                        "in": "formData",
+                        "description": "The Layouts Ids to assign",
+                        "required": true,
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "unassignLayoutsId",
+                        "in": "formData",
+                        "description": "Optional array of Layouts Id to unassign",
+                        "required": false,
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/displaygroup/{displayGroupId}/layout/unassign": {
+            "post": {
+                "tags": [
+                    "displayGroup"
+                ],
+                "summary": "Unassign one or more Layout items from a Display Group",
+                "description": "Removes the provided from the Display Group",
+                "operationId": "displayGroupLayoutUnassign",
+                "parameters": [
+                    {
+                        "name": "displayGroupId",
+                        "in": "path",
+                        "description": "The Display Group to unassign from",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "layoutId",
+                        "in": "formData",
+                        "description": "The Layout Ids to unassign",
+                        "required": true,
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
         "/displaygroup/{displayGroupId}/version": {
             "post": {
                 "tags": [
@@ -1242,6 +1465,137 @@
                         "name": "mediaId",
                         "in": "formData",
                         "description": "The Media Id of the Installer File",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/displaygroup/{displayGroupId}/action/collectNow": {
+            "post": {
+                "tags": [
+                    "displayGroup"
+                ],
+                "summary": "Action: Collect Now",
+                "description": "Send the collect now action to this DisplayGroup",
+                "operationId": "displayGroupActionCollectNow",
+                "parameters": [
+                    {
+                        "name": "displayGroupId",
+                        "in": "path",
+                        "description": "The display group id",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/displaygroup/{displayGroupId}/action/changeLayout": {
+            "post": {
+                "tags": [
+                    "displayGroup"
+                ],
+                "summary": "Action: Change Layout",
+                "description": "Send the change layout action to this DisplayGroup",
+                "operationId": "displayGroupActionChangeLayout",
+                "parameters": [
+                    {
+                        "name": "displayGroupId",
+                        "in": "path",
+                        "description": "The Display Group Id",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "layoutId",
+                        "in": "formData",
+                        "description": "The Layout Id",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "duration",
+                        "in": "formData",
+                        "description": "The duration in seconds for this Layout change to remain in effect",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "downloadRequired",
+                        "in": "formData",
+                        "description": "Flag indicating whether the player should perform a collect before playing the Layout",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "changeMode",
+                        "in": "formData",
+                        "description": "Whether to queue or replace with this action",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/displaygroup/{displayGroupId}/action/revertToSchedule": {
+            "post": {
+                "tags": [
+                    "displayGroup"
+                ],
+                "summary": "Action: Revert to Schedule",
+                "description": "Send the revert to schedule action to this DisplayGroup",
+                "operationId": "displayGroupActionRevertToSchedule",
+                "parameters": [
+                    {
+                        "name": "displayGroupId",
+                        "in": "path",
+                        "description": "The display group id",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/displaygroup/{displayGroupId}/action/command": {
+            "post": {
+                "tags": [
+                    "displayGroup"
+                ],
+                "summary": "Send Command",
+                "description": "Send a predefined command to this Group of Displays",
+                "operationId": "displayGroupActionCommand",
+                "parameters": [
+                    {
+                        "name": "displayGroupId",
+                        "in": "path",
+                        "description": "The display group id",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "commandId",
+                        "in": "formData",
+                        "description": "The Command Id",
                         "required": true,
                         "type": "integer"
                     }
@@ -1882,10 +2236,24 @@
                 "operationId": "scheduleAdd",
                 "parameters": [
                     {
+                        "name": "eventTypeId",
+                        "in": "formData",
+                        "description": "The Event Type Id to use for this Event. 1=Campaign, 2=Command",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
                         "name": "campaignId",
                         "in": "formData",
                         "description": "The Campaign ID to use for this Event. If a Layout is needed then the Campaign specific ID for that Layout should be used.",
-                        "required": true,
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "commandId",
+                        "in": "formData",
+                        "description": "The Command ID to use for this Event.",
+                        "required": false,
                         "type": "integer"
                     },
                     {
@@ -1924,7 +2292,7 @@
                         "name": "toDt",
                         "in": "formData",
                         "description": "The to date for this event.",
-                        "required": true,
+                        "required": false,
                         "type": "string",
                         "format": "date-time"
                     },
@@ -1993,10 +2361,24 @@
                         "type": "integer"
                     },
                     {
+                        "name": "eventTypeId",
+                        "in": "formData",
+                        "description": "The Event Type Id to use for this Event. 1=Campaign, 2=Command",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
                         "name": "campaignId",
                         "in": "formData",
                         "description": "The Campaign ID to use for this Event. If a Layout is needed then the Campaign specific ID for that Layout should be used.",
-                        "required": true,
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "commandId",
+                        "in": "formData",
+                        "description": "The Command ID to use for this Event.",
+                        "required": false,
                         "type": "integer"
                     },
                     {
@@ -2035,7 +2417,7 @@
                         "name": "toDt",
                         "in": "formData",
                         "description": "The to date for this event.",
-                        "required": true,
+                        "required": false,
                         "type": "string",
                         "format": "date-time"
                     },
@@ -3029,8 +3411,23 @@
                     "items": {
                         "$ref": "#/definitions/DisplayGroup"
                     }
+                },
+                "xmrChannel": {
+                    "description": "The Player Subscription Channel",
+                    "type": "string"
+                },
+                "xmrPubKey": {
+                    "description": "The Player Public Key",
+                    "type": "string"
+                },
+                "lastCommandSuccess": {
+                    "description": "The last command success, 0 = failure, 1 = success, 2 = unknown",
+                    "type": "integer"
                 }
             }
+        },
+        "Command": {
+
         },
         "Permission": {
             "properties": {
@@ -3600,8 +3997,16 @@
                     "description": "The ID of this Event",
                     "type": "integer"
                 },
+                "eventTypeId": {
+                    "description": "The Event Type ID",
+                    "type": "integer"
+                },
                 "campaignId": {
                     "description": "The CampaignID this event is for",
+                    "type": "integer"
+                },
+                "commandId": {
+                    "description": "The CommandId this event is for",
                     "type": "integer"
                 },
                 "displayGroups": {
@@ -3656,6 +4061,11 @@
                     "description": "The Campaign/Layout Name",
                     "type": "string",
                     "readOnly": true
+                },
+                "command": {
+                    "description": "The Command Name",
+                    "type": "string",
+                    "readOnly": true
                 }
             }
         },
@@ -3679,6 +4089,14 @@
                 },
                 "userId": {
                     "description": "The Owner of this Application",
+                    "type": "integer"
+                },
+                "authCode": {
+                    "description": "Flag indicating whether to allow the authorizationCode Grant Type",
+                    "type": "integer"
+                },
+                "clientCredentials": {
+                    "description": "Flag indicating whether to allow the clientCredentials Grant Type",
                     "type": "integer"
                 }
             }
@@ -4177,6 +4595,10 @@
         {
             "name": "module",
             "description": "Modules and Widgets"
+        },
+        {
+            "name": "command",
+            "description": "Commands"
         }
     ],
     "externalDocs": {

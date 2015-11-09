@@ -19,7 +19,9 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
+use Xibo\Entity\Command;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DisplayProfileFactory;
 use Xibo\Helper\Date;
 use Xibo\Helper\Help;
@@ -55,7 +57,7 @@ class DisplayProfile extends Base
      */
     function grid()
     {
-        $profiles = DisplayProfileFactory::query();
+        $profiles = DisplayProfileFactory::query($this->gridRenderSort(), $this->gridRenderFilter());
 
         foreach ($profiles as $profile) {
             /* @var \Xibo\Entity\DisplayProfile $profile */
@@ -168,16 +170,22 @@ class DisplayProfile extends Base
         if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $displayProfile->userId)
             throw new AccessDeniedException(__('You do not have permission to edit this profile'));
 
+        // Get a list of unassigned Commands
+        $unassignedCommands = array_udiff(CommandFactory::query(), $displayProfile->commands, function($a, $b) {
+            return $a->getId() - $b->getId();
+        });
+
         $this->getState()->template = 'displayprofile-form-edit';
         $this->getState()->setData([
             'displayProfile' => $displayProfile,
             'tabs' => $displayProfile->configTabs,
-            'config' => $displayProfile->configDefault
+            'config' => $displayProfile->configDefault,
+            'commands' => array_merge($displayProfile->commands, $unassignedCommands)
         ]);
     }
 
     /**
-     * Edit Form
+     * Edit
      * @param $displayProfileId
      * 
      * @SWG\Put(
@@ -290,6 +298,20 @@ class DisplayProfile extends Base
         // Recursively merge the arrays and update
         $displayProfile->config = $combined;
 
+        // Capture and update commands
+        foreach (CommandFactory::query() as $command) {
+            /* @var Command $command */
+            if (Sanitize::getString('commandString_' . $command->commandId) != null) {
+                // Set and assign the command
+                $command->commandString = Sanitize::getString('commandString_' . $command->commandId);
+                $command->validationString = Sanitize::getString('validationString_' . $command->commandId);
+                $displayProfile->assignCommand($command);
+            } else {
+                $displayProfile->unassignCommand($command);
+            }
+        }
+
+        // Save the changes
         $displayProfile->save();
 
         // Return

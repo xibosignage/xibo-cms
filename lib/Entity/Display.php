@@ -286,10 +286,22 @@ class Display
     public $xmrPubKey;
 
     /**
+     * @SWG\Property(description="The last command success, 0 = failure, 1 = success, 2 = unknown")
+     * @var int
+     */
+    public $lastCommandSuccess;
+
+    /**
      * Collect required on save?
      * @var bool
      */
     private $collectRequired = false;
+
+    /**
+     * Commands
+     * @var array[Command]
+     */
+    private $commands = null;
 
     public function __construct()
     {
@@ -494,7 +506,8 @@ class Display
                     storageAvailableSpace = :storageAvailableSpace,
                     storageTotalSpace = :storageTotalSpace,
                     xmrChannel = :xmrChannel,
-                    xmrPubKey = :xmrPubKey
+                    xmrPubKey = :xmrPubKey,
+                    `lastCommandSuccess` = :lastCommandSuccess
              WHERE displayid = :displayId
         ', [
             'display' => $this->display,
@@ -529,6 +542,7 @@ class Display
             'storageTotalSpace' => $this->storageTotalSpace,
             'xmrChannel' => $this->xmrChannel,
             'xmrPubKey' => $this->xmrPubKey,
+            'lastCommandSuccess' => $this->lastCommandSuccess,
             'displayId' => $this->displayId
         ]);
 
@@ -546,6 +560,15 @@ class Display
     public function getSettings()
     {
         return $this->setConfig();
+    }
+
+    public function getCommands()
+    {
+        if ($this->commands == null) {
+            $this->setConfig();
+        }
+
+        return $this->commands;
     }
 
     /**
@@ -588,6 +611,7 @@ class Display
             }
 
             $this->_config = $displayProfile->getConfig();
+            $this->commands = $displayProfile->commands;
         }
 
         return $this->_config;

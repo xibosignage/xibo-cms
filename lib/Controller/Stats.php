@@ -189,8 +189,8 @@ class Stats extends Base
         ';
 
         $params = [
-            'fromDt' => $fromDt,
-            'toDt' => $toDt
+            'fromDt' => Date::getLocalDate($fromDt),
+            'toDt' => Date::getLocalDate($toDt)
         ];
 
         if ($mediaId != 0) {

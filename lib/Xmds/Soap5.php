@@ -75,7 +75,7 @@ class Soap5 extends Soap4
         try {
             $display = DisplayFactory::getByLicence($hardwareKey);
 
-            $this->logProcessor->setDisplay($this->display->displayId);
+            $this->logProcessor->setDisplay($display->displayId);
 
             // Append the time
             $displayElement->setAttribute('date', Date::getLocalDate());
@@ -116,6 +116,28 @@ class Soap5 extends Soap4
                 $node = $return->createElement($nodeName, $display->display);
                 $node->setAttribute('type', 'string');
                 $displayElement->appendChild($node);
+
+                // Commands
+                $commands = $display->getCommands();
+
+                if (count($commands) > 0) {
+                    // Append a command element
+                    $commandElement = $return->createElement('commands');
+                    $displayElement->appendChild($commandElement);
+
+                    // Append each individual command
+                    foreach ($display->getCommands() as $command) {
+                        /* @var \Xibo\Entity\Command $command */
+                        $node = $return->createElement($command->code);
+                        $commandString = $return->createElement('commandString', $command->commandString);
+                        $validationString = $return->createElement('validationString', $command->validationString);
+
+                        $node->appendChild($commandString);
+                        $node->appendChild($validationString);
+
+                        $commandElement->appendChild($node);
+                    }
+                }
 
                 // Check to see if the channel/pubKey are already entered
                 if ($display->isAuditing == 1) {

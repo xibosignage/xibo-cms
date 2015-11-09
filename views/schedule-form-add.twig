@@ -55,6 +55,46 @@
     "actions": {
     ".repeat-control-group": { "display": "block" }
     }
+    },{
+    "field": "eventTypeId",
+    "trigger": "init",
+    "value": "1",
+    "operation": "equals",
+    "actions": {
+    ".layout-control": { "display": "block" },
+    ".endtime-control": { "display": "block" },
+    ".command-control": { "display": "none" }
+    }
+    },{
+    "field": "eventTypeId",
+    "trigger": "change",
+    "value": "1",
+    "operation": "equals",
+    "actions": {
+    ".layout-control": { "display": "block" },
+    ".endtime-control": { "display": "block" },
+    ".command-control": { "display": "none" }
+    }
+    },{
+    "field": "eventTypeId",
+    "trigger": "init",
+    "value": "1",
+    "operation": "not",
+    "actions": {
+    ".layout-control": { "display": "none" },
+    ".endtime-control": { "display": "none" },
+    ".command-control": { "display": "block" }
+    }
+    },{
+    "field": "eventTypeId",
+    "trigger": "change",
+    "value": "1",
+    "operation": "not",
+    "actions": {
+    ".layout-control": { "display": "none" },
+    ".endtime-control": { "display": "none" },
+    ".command-control": { "display": "block" }
+    }
     }]
 {% endblock %}
 
@@ -68,6 +108,17 @@
             <form id="scheduleAddForm" class="form-horizontal" method="post" action="{{ urlFor("schedule.add") }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
+
+                        {% set title %}{% trans "Event Type" %}{% endset %}
+                        {% set helpText %}{% trans "Select the type of event to schedule" %}{% endset %}
+                        {% set layoutEventType %}{% trans "Campaign/Layout" %}{% endset %}
+                        {% set commandEventType %}{% trans "Command" %}{% endset %}
+                        {% set eventTypes = [
+                        {id: 1, label: layoutEventType},
+                        {id: 2, label: commandEventType}
+                        ] %}
+                        {{ forms.dropdown("eventTypeId", "single", title, "", eventTypes, "id", "label", helpText) }}
+
                         {% set title %}{% trans "Display" %}{% endset %}
                         {% set helpText %}{% trans "Please select one or more displays / groups for this event to be shown on." %}{% endset %}
                         {% set attributes = [
@@ -84,11 +135,11 @@
 
                         {% set title %}{% trans "Start Time" %}{% endset %}
                         {% set helpText %}{% trans "Select the start time for this event" %}{% endset %}
-                        {{ forms.dateTime("fromDt", title, "", helpText, "", "required", "") }}
+                        {{ forms.dateTime("fromDt", title, "", helpText, "", "required") }}
 
                         {% set title %}{% trans "End Time" %}{% endset %}
                         {% set helpText %}{% trans "Select the end time for this event" %}{% endset %}
-                        {{ forms.dateTime("toDt", title, "", helpText, "", "required", "") }}
+                        {{ forms.dateTime("toDt", title, "", helpText, "endtime-control", "required") }}
 
                         {# Campaign / Layout list. We want to build two arrays for us to use. #}
                         {% set layoutOptions = [] %}
@@ -102,6 +153,9 @@
                             {% endif %}
                         {% endfor %}
 
+                        {# Add a blank layout record #}
+                        {% set layoutOptions = [{id: "", value: ""}]|merge(layoutOptions) %}
+
                         {% set campaigns %}{% trans "Campaigns" %}{% endset %}
                         {% set layouts %}{% trans "Layouts" %}{% endset %}
                         {% set optionGroups = [
@@ -110,7 +164,11 @@
                         ] %}
                         {% set title %}{% trans "Layout / Campaign" %}{% endset %}
                         {% set helpText %}{% trans "Please select a Layout or Campaign for this Event to show" %}{% endset %}
-                        {{ forms.dropdown("campaignId", "single", title, "", {campaign: campaignOptions, layout: layoutOptions}, "id", "value", helpText, "", "", "", "", "", optionGroups) }}
+                        {{ forms.dropdown("campaignId", "single", title, "", {campaign: campaignOptions, layout: layoutOptions}, "id", "value", helpText, "layout-control", "", "", "", "", optionGroups) }}
+
+                        {% set title %}{% trans "Command" %}{% endset %}
+                        {% set helpText %}{% trans "Please select a command for this Event." %}{% endset %}
+                        {{ forms.dropdown("commandId", "single", title, "", [{commandId: "", command: ""}]|merge(commands), "commandId", "command", helpText, "command-control") }}
 
                         {% set title %}{% trans "Display Order" %}{% endset %}
                         {% set helpText %}{% trans "Please select the order this event should appear in relation to others when there is more than one event scheduled" %}{% endset %}

@@ -83,7 +83,7 @@ class Soap4 extends Soap
         try {
             $display = DisplayFactory::getByLicence($hardwareKey);
 
-            $this->logProcessor->setDisplay($this->display->displayId);
+            $this->logProcessor->setDisplay($display->displayId);
 
             // Append the time
             $displayElement->setAttribute('date', Date::getLocalDate());
@@ -395,6 +395,7 @@ class Soap4 extends Soap
         $this->display->currentLayoutId = Sanitize::getInt('currentLayoutId', $this->display->currentLayoutId, $status);
         $this->display->storageAvailableSpace = Sanitize::getInt('availableSpace', $this->display->storageAvailableSpace, $status);
         $this->display->storageTotalSpace = Sanitize::getInt('totalSpace', $this->display->storageTotalSpace, $status);
+        $this->display->lastCommandSuccess = Sanitize::getInt('lastCommandSuccess', $this->display->lastCommandSuccess, $status);
 
         // Touch the display record
         $this->display->save(['validate' => false, 'audit' => false]);
