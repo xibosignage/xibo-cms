@@ -29,6 +29,7 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
+use Xibo\Helper\Translate;
 
 class Actions extends Middleware
 {
@@ -68,11 +69,20 @@ class Actions extends Middleware
                 $app->redirectTo('upgrade.view');
             }
 
+            $notifications = [];
+
             if ($app->user->userTypeId == 1 && file_exists(PROJECT_ROOT . '/web/install/index.php')) {
                 Log::info('Install.php exists and shouldn\'t');
 
-                $app->view()->appendData(['notifications' => [__('There is a problem with this installation. "install.php" should be deleted.')]]);
+                $notifications[] = __('There is a problem with this installation. "install.php" should be deleted.');
             }
+
+            // Language match?
+            if (Translate::getRequestedLanguage() != Translate::GetLocale()) {
+                $notifications[] = __('Your requested language %s could not be loaded.', Translate::getRequestedLanguage());
+            }
+
+            $app->view()->appendData(['notifications' => $notifications]);
         });
 
         $this->next->call();
