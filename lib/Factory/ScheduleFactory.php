@@ -76,7 +76,7 @@ class ScheduleFactory extends BaseFactory
         $useDetail = Sanitize::getInt('useDetail', $filterBy) == 1;
 
         $sql = '
-        SELECT `schedule`.eventId, ';
+        SELECT `schedule`.eventId, `schedule`.eventTypeId, ';
 
         if ($useDetail) {
             $sql .= '
@@ -98,10 +98,14 @@ class ScheduleFactory extends BaseFactory
             `schedule`.recurrence_detail AS recurrenceDetail,
             `schedule`.recurrence_range AS recurrenceRange,
             campaign.campaignId,
-            campaign.campaign
+            campaign.campaign,
+            `command`.commandId,
+            `command`.command
           FROM `schedule`
-            INNER JOIN campaign
+            LEFT OUTER JOIN `campaign`
             ON campaign.CampaignID = `schedule`.CampaignID
+            LEFT OUTER JOIN `command`
+            ON `command`.commandId = `schedule`.commandId
         ';
 
         if ($useDetail) {
@@ -126,7 +130,7 @@ class ScheduleFactory extends BaseFactory
         }
 
         if (!$useDetail && Sanitize::getInt('toDt', $filterBy) !== null) {
-            $sql .= ' AND schedule.toDt <= :toDt ';
+            $sql .= ' AND IFNULL(schedule.toDt, schedule.fromDt) <= :toDt ';
             $params['toDt'] = Sanitize::getInt('toDt', $filterBy);
         }
 
@@ -136,7 +140,7 @@ class ScheduleFactory extends BaseFactory
         }
 
         if ($useDetail && Sanitize::getInt('toDt', $filterBy) !== null) {
-            $sql .= ' AND schedule_detail.toDt <= :toDt ';
+            $sql .= ' AND IFNULL(schedule_detail.toDt, schedule_detail.fromDt) <= :toDt ';
             $params['toDt'] = Sanitize::getInt('toDt', $filterBy);
         }
 

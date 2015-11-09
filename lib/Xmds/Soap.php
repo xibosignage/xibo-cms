@@ -17,6 +17,7 @@ use Xibo\Entity\Display;
 use Xibo\Entity\Playlist;
 use Xibo\Entity\Region;
 use Xibo\Entity\RequiredFile;
+use Xibo\Entity\Schedule;
 use Xibo\Entity\Stat;
 use Xibo\Entity\User;
 use Xibo\Entity\Widget;
@@ -494,7 +495,7 @@ class Soap
             // Add file nodes to the $fileElements
             // Firstly get all the scheduled layouts
             $SQL = '
-                SELECT layout.layoutID, schedule_detail.FromDT, schedule_detail.ToDT, schedule.eventID, schedule.is_priority,
+                SELECT `schedule`.eventTypeId, layout.layoutId, `command`.code, schedule_detail.fromDt, schedule_detail.toDt, schedule.eventId, schedule.is_priority,
                   (
                     SELECT GROUP_CONCAT(DISTINCT StoredAs)
                       FROM media
@@ -503,53 +504,70 @@ class Soap
                       AND lklayoutmedia.regionID <> \'module\'
                     GROUP BY lklayoutmedia.LayoutID
                   ) AS Dependents
-                  FROM `campaign`
-                    INNER JOIN `schedule`
-                    ON `schedule`.CampaignID = campaign.CampaignID
+                  FROM `schedule`
                     INNER JOIN schedule_detail
                     ON schedule_detail.eventID = `schedule`.eventID
                     INNER JOIN `lkscheduledisplaygroup`
                     ON `lkscheduledisplaygroup`.eventId = `schedule`.eventId
-                    INNER JOIN `lkcampaignlayout`
-                    ON lkcampaignlayout.CampaignID = campaign.CampaignID
-                    INNER JOIN `layout`
-                    ON lkcampaignlayout.LayoutID = layout.LayoutID
                     INNER JOIN lkdisplaydg
                     ON lkdisplaydg.DisplayGroupID = `lkscheduledisplaygroup`.displayGroupId
+                    LEFT OUTER JOIN `campaign`
+                    ON `schedule`.CampaignID = campaign.CampaignID
+                    LEFT OUTER JOIN `lkcampaignlayout`
+                    ON lkcampaignlayout.CampaignID = campaign.CampaignID
+                    LEFT OUTER JOIN `layout`
+                    ON lkcampaignlayout.LayoutID = layout.LayoutID
+                      AND layout.retired = 0
+                    LEFT OUTER JOIN `command`
+                    ON `command`.commandId = `schedule`.commandId
                  WHERE lkdisplaydg.DisplayID = :displayId
-                    AND schedule_detail.FromDT < :fromdt
-                    AND schedule_detail.ToDT > :todt
-                    AND layout.retired = 0
-                ORDER BY schedule.DisplayOrder, lkcampaignlayout.DisplayOrder, schedule_detail.eventID
+                    AND schedule_detail.FromDT < :todt
+                    AND IFNULL(schedule_detail.ToDT, schedule_detail.FromDT) > :fromdt
+                ORDER BY schedule.DisplayOrder, IFNULL(lkcampaignlayout.DisplayOrder, 0), schedule_detail.FromDT
             ';
 
-            $sth = $dbh->prepare($SQL);
-            $sth->execute(array(
+            $params = array(
                 'displayId' => $this->display->displayId,
-                'fromdt' => $toFilter,
-                'todt' => $fromFilter
-            ));
+                'todt' => $toFilter,
+                'fromdt' => $fromFilter
+            );
+
+            if ($this->display->isAuditing)
+                Log::sql($SQL, $params);
+
+            $sth = $dbh->prepare($SQL);
+            $sth->execute($params);
 
             // We must have some results in here by this point
             foreach ($sth->fetchAll() as $row) {
-                $layoutId = $row[0];
-                $fromDt = date('Y-m-d H:i:s', $row[1]);
-                $toDt = date('Y-m-d H:i:s', $row[2]);
-                $scheduleId = $row[3];
-                $is_priority = Sanitize::int($row[4]);
-                $dependents = Sanitize::string($row[5]);
+                $eventTypeId = $row['eventTypeId'];
+                $layoutId = $row['layoutId'];
+                $commandCode = $row['code'];
+                $fromDt = date('Y-m-d H:i:s', $row['fromDt']);
+                $toDt = date('Y-m-d H:i:s', $row['toDt']);
+                $scheduleId = $row['eventId'];
+                $is_priority = Sanitize::int($row['is_priority']);
+                $dependents = Sanitize::string($row['Dependents']);
 
-                // Add a layout node to the schedule
-                $layout = $scheduleXml->createElement("layout");
+                if ($eventTypeId == Schedule::$LAYOUT_EVENT) {
+                    // Add a layout node to the schedule
+                    $layout = $scheduleXml->createElement("layout");
+                    $layout->setAttribute("file", $layoutId);
+                    $layout->setAttribute("fromdt", $fromDt);
+                    $layout->setAttribute("todt", $toDt);
+                    $layout->setAttribute("scheduleid", $scheduleId);
+                    $layout->setAttribute("priority", $is_priority);
+                    $layout->setAttribute("dependents", $dependents);
+                    $layoutElements->appendChild($layout);
 
-                $layout->setAttribute("file", $layoutId);
-                $layout->setAttribute("fromdt", $fromDt);
-                $layout->setAttribute("todt", $toDt);
-                $layout->setAttribute("scheduleid", $scheduleId);
-                $layout->setAttribute("priority", $is_priority);
-                $layout->setAttribute("dependents", $dependents);
-
-                $layoutElements->appendChild($layout);
+                } else if ($eventTypeId == Schedule::$COMMAND_EVENT) {
+                    // Add a command node to the schedule
+                    $command = $scheduleXml->createElement("command");
+                    $command->setAttribute("date", $fromDt);
+                    $command->setAttribute("scheduleid", $scheduleId);
+                    $command->setAttribute('code', $commandCode);
+                    $layoutElements->appendChild($command);
+                }
             }
         } catch (\Exception $e) {
             Log::error('Error getting a list of layouts for the schedule. ' . $e->getMessage());

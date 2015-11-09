@@ -59,6 +59,7 @@
                                 <th>{% trans "Mac Address" %}</th>
                                 <th>{% trans "Screen shot?" %}</th>
                                 <th>{% trans "Thumbnail" %}</th>
+                                <th>{% trans "Last Command" %}</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -154,6 +155,24 @@
                         else {
                             return "";
                         }
+                    },
+                    "visible": false
+                },
+                {
+                    "data": "lastCommandSuccess",
+                    "render": function (data, type, row) {
+                        if (type != "display")
+                            return data;
+
+                        var icon = "";
+                        if (data == 1)
+                            icon = "fa-check";
+                        else if (data == 0)
+                            icon = "fa-times";
+                        else
+                            icon = "fa-question";
+
+                        return "<span class='fa " + icon + "'></span>";
                     },
                     "visible": false
                 },

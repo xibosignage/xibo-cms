@@ -56,6 +56,17 @@ class DisplayProfileFactory extends BaseFactory
     }
 
     /**
+     * Get by Command Id
+     * @param $commandId
+     * @return array[DisplayProfile]
+     * @throws NotFoundException
+     */
+    public static function getByCommandId($commandId)
+    {
+        return DisplayProfileFactory::query(null, ['disableUserCheck' => 1, 'commandId' => $commandId]);
+    }
+
+    /**
      * @param array $sortOrder
      * @param array $filterBy
      * @return array[DisplayProfile]
@@ -79,6 +90,18 @@ class DisplayProfileFactory extends BaseFactory
             if (Sanitize::getString('type', $filterBy) != null) {
                 $body .= ' AND type = :type ';
                 $params['type'] = Sanitize::getString('type', $filterBy);
+            }
+
+            if (Sanitize::getInt('commandId', $filterBy) !== null) {
+                $body .= '
+                    AND `displayprofile`.displayProfileId IN (
+                        SELECT `lkcommanddisplayprofile`.displayProfileId
+                          FROM `lkcommanddisplayprofile`
+                         WHERE `lkcommanddisplayprofile`.commandId = :commandId
+                    )
+                ';
+
+                $params['commandId'] = Sanitize::getInt('commandId', $filterBy);
             }
 
             // Sorting?

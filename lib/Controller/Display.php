@@ -405,11 +405,20 @@ class Display extends Base
             }
 
             if ($this->getUser()->checkEditable($display)) {
+
+                $display->buttons[] = ['divider' => true];
+
                 // Wake On LAN
                 $display->buttons[] = array(
                     'id' => 'display_button_wol',
                     'url' => $this->urlFor('display.wol.form', ['id' => $display->displayId]),
                     'text' => __('Wake on LAN')
+                );
+
+                $display->buttons[] = array(
+                    'id' => 'displaygroup_button_command',
+                    'url' => $this->urlFor('displayGroup.command.form', ['id' => $display->displayGroupId]),
+                    'text' => __('Send Command')
                 );
             }
         }
