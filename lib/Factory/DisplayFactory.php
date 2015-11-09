@@ -96,10 +96,9 @@ class DisplayFactory extends BaseFactory
      * @param $dataSetId
      * @return array[Display]
      */
-    public static function getByDataSetId($dataSetId)
+    public static function getByActiveDataSetId($dataSetId)
     {
-        //TODO
-        return DisplayFactory::query(null, ['disableUserCheck' => 1, 'dataSetId' => $dataSetId]);
+        return DisplayFactory::query(null, ['disableUserCheck' => 1, 'activeDataSetId' => $dataSetId]);
     }
 
     /**
@@ -289,6 +288,84 @@ class DisplayFactory extends BaseFactory
             ';
 
             $params['assignedCampaignId'] = Sanitize::getInt('assignedCampaignId', $filterBy);
+        }
+
+        // Only Display Groups that are running Layouts that have the provided data set on them
+        if (Sanitize::getInt('activeDataSetId', $filterBy) !== null) {
+            // Which displays does a change to this layout effect?
+            $body .= '
+              AND display.displayId IN (
+                   SELECT DISTINCT display.DisplayID
+                     FROM `schedule`
+                       INNER JOIN `schedule_detail`
+                       ON schedule_detail.eventid = schedule.eventid
+                       INNER JOIN `lkscheduledisplaygroup`
+                       ON `lkscheduledisplaygroup`.eventId = `schedule`.eventId
+                       INNER JOIN `lkdisplaydg`
+                       ON lkdisplaydg.DisplayGroupID = `lkscheduledisplaygroup`.displayGroupId
+                       INNER JOIN `display`
+                       ON lkdisplaydg.DisplayID = display.displayID
+                       INNER JOIN `lkcampaignlayout`
+                       ON `lkcampaignlayout`.campaignId = `schedule`.campaignId
+                       INNER JOIN `region`
+                       ON `region`.layoutId = `lkcampaignlayout`.layoutId
+                       INNER JOIN `lkregionplaylist`
+                       ON `lkregionplaylist`.regionId = `region`.regionId
+                       INNER JOIN `widget`
+                       ON `widget`.playlistId = `lkregionplaylist`.playlistId
+                       INNER JOIN `widgetoption`
+                       ON `widgetoption`.widgetId = `widget`.widgetId
+                            AND `widgetoption`.type = \'attrib\'
+                            AND `widgetoption`.option = \'dataSetId\'
+                            AND `widgetoption`.value = :activeDataSetId
+                    WHERE `schedule_detail`.FromDT < :fromDt
+                      AND `schedule_detail`.ToDT > :toDt
+                   UNION
+                   SELECT DISTINCT display.DisplayID
+                     FROM `display`
+                       INNER JOIN `lkcampaignlayout`
+                       ON `lkcampaignlayout`.LayoutID = `display`.DefaultLayoutID
+                       INNER JOIN `region`
+                       ON `region`.layoutId = `lkcampaignlayout`.layoutId
+                       INNER JOIN `lkregionplaylist`
+                       ON `lkregionplaylist`.regionId = `region`.regionId
+                       INNER JOIN `widget`
+                       ON `widget`.playlistId = `lkregionplaylist`.playlistId
+                       INNER JOIN `widgetoption`
+                       ON `widgetoption`.widgetId = `widget`.widgetId
+                            AND `widgetoption`.type = \'attrib\'
+                            AND `widgetoption`.option = \'dataSetId\'
+                            AND `widgetoption`.value = :activeDataSetId2
+                   UNION
+                   SELECT `lkdisplaydg`.displayId
+                      FROM `lkdisplaydg`
+                        INNER JOIN `lklayoutdisplaygroup`
+                        ON `lklayoutdisplaygroup`.displayGroupId = `lkdisplaydg`.displayGroupId
+                        INNER JOIN `lkcampaignlayout`
+                        ON `lkcampaignlayout`.layoutId = `lklayoutdisplaygroup`.layoutId
+                        INNER JOIN `region`
+                        ON `region`.layoutId = `lkcampaignlayout`.layoutId
+                        INNER JOIN `lkregionplaylist`
+                       ON `lkregionplaylist`.regionId = `region`.regionId
+                        INNER JOIN `widget`
+                        ON `widget`.playlistId = `lkregionplaylist`.playlistId
+                        INNER JOIN `widgetoption`
+                        ON `widgetoption`.widgetId = `widget`.widgetId
+                            AND `widgetoption`.type = \'attrib\'
+                            AND `widgetoption`.option = \'dataSetId\'
+                            AND `widgetoption`.value = :activeDataSetId3
+              )
+            ';
+
+            $currentDate = time();
+            $rfLookAhead = Config::GetSetting('REQUIRED_FILES_LOOKAHEAD');
+            $rfLookAhead = intval($currentDate) + intval($rfLookAhead);
+
+            $params['fromDt'] = $rfLookAhead;
+            $params['toDt'] = $currentDate - 3600;
+            $params['activeDataSetId'] = Sanitize::getInt('activeDataSetId', $filterBy);
+            $params['activeDataSetId2'] = Sanitize::getInt('activeDataSetId', $filterBy);
+            $params['activeDataSetId3'] = Sanitize::getInt('activeDataSetId', $filterBy);
         }
 
         // Sorting?

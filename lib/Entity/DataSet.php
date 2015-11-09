@@ -416,7 +416,7 @@ class DataSet implements \JsonSerializable
     {
         Log::debug('Checking for Displays to refresh for DataSet %d', $this->dataSetId);
 
-        foreach (DisplayFactory::getByDataSetId($this->dataSetId) as $display) {
+        foreach (DisplayFactory::getByActiveDataSetId($this->dataSetId) as $display) {
             /* @var \Xibo\Entity\Display $display */
             $display->setMediaIncomplete();
             $display->setCollectRequired(false);
