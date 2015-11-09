@@ -6,8 +6,10 @@
  */
 
 
-namespace Xibo\Helper;
+namespace Xibo\Twig;
 
+
+use Xibo\Helper\ByteFormatter;
 
 class ByteFormatterTwigExtension extends \Twig_Extension
 {

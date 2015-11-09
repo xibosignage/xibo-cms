@@ -70,9 +70,9 @@ $twig->parserOptions = array(
 );
 $twig->parserExtensions = array(
     new \Slim\Views\TwigExtension(),
-    new Twig_Extensions_Extension_I18n(),
-    new \Xibo\Helper\ByteFormatterTwigExtension(),
-    new \Xibo\Helper\UrlDecodeTwigExtension()
+    new \Xibo\Twig\TransExtension(),
+    new \Xibo\Twig\ByteFormatterTwigExtension(),
+    new \Xibo\Twig\UrlDecodeTwigExtension()
 );
 
 // Configure the template folder

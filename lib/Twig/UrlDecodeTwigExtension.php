@@ -6,7 +6,7 @@
  */
 
 
-namespace Xibo\Helper;
+namespace Xibo\Twig;
 
 
 class UrlDecodeTwigExtension extends \Twig_Extension
