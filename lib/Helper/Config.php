@@ -22,7 +22,7 @@ namespace Xibo\Helper;
 
 use Xibo\Storage\PDOConnect;
 
-define('WEBSITE_VERSION', 120);
+define('WEBSITE_VERSION', 121);
 
 class Config
 {
@@ -183,6 +183,15 @@ class Config
             trigger_error($e->getMessage());
             throw new \Exception(__('No Version information - please contact technical support'));
         }
+    }
+
+    /**
+     * Is an upgrade pending?
+     * @return bool
+     */
+    public static function isUpgradePending()
+    {
+        return DBVERSION != WEBSITE_VERSION;
     }
 
     /**

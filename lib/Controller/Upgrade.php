@@ -21,6 +21,7 @@
 namespace Xibo\Controller;
 use Exception;
 use Media;
+use Xibo\Factory\UpgradeFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Form;
 use Xibo\Helper\Install;
@@ -32,48 +33,38 @@ class Upgrade extends Base
 
     public function displayPage()
     {
-        if (DBVERSION === WEBSITE_VERSION) {
-            $this->getState()->template = 'upgrade-not-required-page';
-            return;
-        }
-
-        if ($this->getUser()->userTypeId != 1) {
-            $this->getState()->template = 'upgrade-in-progress-page';
-            return;
-        }
-
+        // Assume we will show the upgrade page
         $this->getState()->template = 'upgrade-page';
-        return;
 
-        // What step are we on
-        $xibo_step = \Kit::GetParam('step', _REQUEST, _INT, 1);
+        // Is there a pending upgrade (i.e. are there any pending upgrade steps).
+        $steps = UpgradeFactory::getIncomplete();
 
-        $content = '';
+        if (count($steps) <= 0) {
+            // No pending steps, check to see if we need to insert them
+            if (DBVERSION === WEBSITE_VERSION) {
+                $this->getState()->template = 'upgrade-not-required-page';
+                return;
+            }
 
-        switch ($xibo_step) {
+            if ($this->getUser()->userTypeId != 1) {
+                $this->getState()->template = 'upgrade-in-progress-page';
+                return;
+            }
 
-            case 1:
-                // Checks environment
-                $content = $this->Step1();
-                break;
+            // Insert pending upgrade steps.
+            $steps = UpgradeFactory::createSteps(DBVERSION, WEBSITE_VERSION);
 
-            case 2:
-                // Collect upgrade details
-                $content = $this->Step2();
-                break;
+            foreach ($steps as $step) {
+                /* @var \Xibo\Entity\Upgrade $step */
+                $step->save();
+            }
 
-            case 3:
-                // Execute upgrade
-                try {
-                    $content = $this->Step3();
-                } catch (Exception $e) {
-                    $this->errorMessage = $e->getMessage();
-
-                    // Reload step 2
-                    $content = $this->Step2();
-                }
-                break;
         }
+
+        // We have pending steps to process, show them in a list
+        $this->getState()->setData([
+           'steps' => $steps
+        ]);
     }
 
     public function Step1()

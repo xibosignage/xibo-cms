@@ -14,6 +14,7 @@ use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\FormExpiredException;
 use Xibo\Exception\InstanceSuspendedException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Exception\UpgradePendingException;
 use Xibo\Helper\Log;
 use Xibo\Helper\Translate;
 
@@ -181,6 +182,7 @@ class Error extends Base
             || $e instanceof NotFoundException
             || $e instanceof InstanceSuspendedException
             || $e instanceof ConfigurationException
+            || $e instanceof UpgradePendingException
         );
     }
 }
