@@ -18,18 +18,6 @@ ALTER TABLE `datasetcolumn`
 ADD CONSTRAINT `datasetcolumn_ibfk_1` FOREIGN KEY (`DataSetID`) REFERENCES `dataset` (`DataSetID`);
 
 --
--- Constraints for table `datasetdata`
---
-ALTER TABLE `datasetdata`
-ADD CONSTRAINT `datasetdata_ibfk_1` FOREIGN KEY (`DataSetColumnID`) REFERENCES `datasetcolumn` (`DataSetColumnID`);
-
---
--- Constraints for table `file`
---
-ALTER TABLE `file`
-ADD CONSTRAINT `file_ibfk_1` FOREIGN KEY (`UserID`) REFERENCES `user` (`UserID`);
-
---
 -- Constraints for table `lkcampaignlayout`
 --
 ALTER TABLE `lkcampaignlayout`
@@ -43,19 +31,6 @@ ALTER TABLE `lkdisplaydg`
 ADD CONSTRAINT `lkdisplaydg_ibfk_1` FOREIGN KEY (`DisplayGroupID`) REFERENCES `displaygroup` (`DisplayGroupID`),
 ADD CONSTRAINT `lkdisplaydg_ibfk_2` FOREIGN KEY (`DisplayID`) REFERENCES `display` (`displayid`);
 
---
--- Constraints for table `lklayoutmedia`
---
-ALTER TABLE `lklayoutmedia`
-ADD CONSTRAINT `lklayoutmedia_ibfk_1` FOREIGN KEY (`mediaID`) REFERENCES `media` (`mediaID`),
-ADD CONSTRAINT `lklayoutmedia_ibfk_2` FOREIGN KEY (`layoutID`) REFERENCES `layout` (`layoutID`);
-
---
--- Constraints for table `lkmediagroup`
---
-ALTER TABLE `lkmediagroup`
-ADD CONSTRAINT `lkmediagroup_ibfk_1` FOREIGN KEY (`MediaID`) REFERENCES `media` (`mediaID`),
-ADD CONSTRAINT `lkmediagroup_ibfk_2` FOREIGN KEY (`GroupID`) REFERENCES `group` (`groupID`);
 
 --
 -- Constraints for table `lkusergroup`
@@ -64,12 +39,6 @@ ALTER TABLE `lkusergroup`
 ADD CONSTRAINT `lkusergroup_ibfk_1` FOREIGN KEY (`GroupID`) REFERENCES `group` (`groupID`),
 ADD CONSTRAINT `lkusergroup_ibfk_2` FOREIGN KEY (`UserID`) REFERENCES `user` (`UserID`);
 
---
--- Constraints for table `menuitem`
---
-ALTER TABLE `menuitem`
-ADD CONSTRAINT `menuitem_ibfk_1` FOREIGN KEY (`MenuID`) REFERENCES `menu` (`MenuID`),
-ADD CONSTRAINT `menuitem_ibfk_2` FOREIGN KEY (`PageID`) REFERENCES `pages` (`pageID`);
 
 --
 -- Constraints for table `oauth_access_tokens`

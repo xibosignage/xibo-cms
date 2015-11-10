@@ -51,6 +51,11 @@
       "action": "ALTER TABLE  `schedule` CHANGE  `ToDT`  `ToDT` BIGINT( 20 ) NULL DEFAULT NULL;"
     },
     {
+      "step": "Update all Videos with their real duration",
+      "type": "php",
+      "action": "Xibo\\Upgrade\\VideoDurationStep"
+    },
+    {
       "step": "Update XMDS Version to 5",
       "action": "UPDATE `version` SET `XmdsVersion` = 5;"
     }

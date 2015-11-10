@@ -497,13 +497,6 @@ class LayoutFactory extends BaseFactory
             $params['campaignId'] = Sanitize::getInt('campaignId', 0, $filterBy);
         }
 
-        // MediaID
-        if (Sanitize::getInt('mediaId', 0, $filterBy) != 0) {
-            $body .= " INNER JOIN `lklayoutmedia` ON lklayoutmedia.layoutid = layout.layoutid AND lklayoutmedia.mediaid = :mediaId";
-            $body .= " INNER JOIN `media` ON lklayoutmedia.mediaid = media.mediaid ";
-            $params['mediaId'] = Sanitize::getInt('mediaId', 0, $filterBy);
-        }
-
         if (Sanitize::getInt('displayGroupId', $filterBy) !== null) {
             $body .= '
                 INNER JOIN `lklayoutdisplaygroup`
@@ -619,6 +612,24 @@ class LayoutFactory extends BaseFactory
                 $body .= ' AND campaign.CampaignID NOT IN (SELECT DISTINCT schedule.CampaignID FROM schedule) '
                     . ' AND layout.layoutID NOT IN (SELECT DISTINCT defaultlayoutid FROM display) ';
             }
+        }
+
+        // MediaID
+        if (Sanitize::getInt('mediaId', 0, $filterBy) != 0) {
+            $body .= ' AND layout.layoutId IN (
+                SELECT DISTINCT `region`.layoutId
+                  FROM `lkwidgetmedia`
+                    INNER JOIN `widget`
+                    ON `widget`.widgetId = `lkwidgetmedia`.widgetId
+                    INNER JOIN `lkregionplaylist`
+                    ON `lkregionplaylist`.playlistId = `widget`.playlistId
+                    INNER JOIN `region`
+                    ON `region`.regionId = `lkregionplaylist`.regionId
+                 WHERE `lkwidgetmedia`.mediaId = :mediaId
+                )
+            ';
+
+            $params['mediaId'] = Sanitize::getInt('mediaId', 0, $filterBy);
         }
 
         // Sorting?
