@@ -128,6 +128,10 @@
       "action": "DROP TABLE `lklayoutmedia`;"
     },
     {
+      "step": "Upgrade Layouts - Clean up",
+      "action": "ALTER TABLE `layout` DROP `xml`;"
+    },
+    {
       "step": "Upgrade API - Part 1",
       "action": "DROP TABLE `oauth_log`, `oauth_server_nonce`, `oauth_server_token`, `oauth_server_registry`;"
     },

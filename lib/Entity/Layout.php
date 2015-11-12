@@ -108,12 +108,6 @@ class Layout implements \JsonSerializable
     public $backgroundColor;
 
     /**
-     * Legacy XML
-     * @var string
-     */
-    public $legacyXml;
-
-    /**
      * @var string
      * @SWG\Property(
      *  description="The datetime the Layout was created"

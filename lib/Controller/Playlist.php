@@ -302,6 +302,8 @@ class Playlist extends Base
         if (!$this->getUser()->checkEditable($playlist))
             throw new AccessDeniedException();
 
+        Log::debug(var_export($this->getApp()->request()->params(), true));
+
         // Expect a list of mediaIds
         $media = Sanitize::getIntArray('media');
 

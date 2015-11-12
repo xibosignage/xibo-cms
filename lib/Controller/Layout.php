@@ -553,7 +553,7 @@ class Layout extends Base
             }
 
             if ($this->isApi())
-                break;
+                continue;
 
             $layout->includeProperty('buttons');
 

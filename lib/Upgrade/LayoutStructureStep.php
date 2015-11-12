@@ -9,28 +9,112 @@
 namespace Xibo\Upgrade;
 
 
+use Xibo\Entity\Permission;
+use Xibo\Factory\LayoutFactory;
+use Xibo\Helper\Config;
+use Xibo\Helper\Install;
+use Xibo\Storage\PDOConnect;
+
 class LayoutStructureStep implements Step
 {
-    public function doStep()
+    public static function doStep()
     {
-        $doStep = <<<END
-        /* Take existing permissions and pull them into the permissions table */
-        INSERT INTO `permission` (`groupId`, `entityId`, `objectId`, `objectIdString`, `view`, `edit`, `delete`)
-        SELECT groupId, 4, NULL, CONCAT(LayoutId, '_', RegionID, '_', MediaID), view, edit, del
-        FROM `lklayoutmediagroup`;
+        // Create the new structure
+        $dbh = PDOConnect::init();
 
-        DROP TABLE `lklayoutmediagroup`;
+        // Run the SQL to create the necessary tables
+        $statements = Install::remove_remarks(self::$dbStructure);
+        $statements = Install::split_sql_file($statements, ';');
 
-        INSERT INTO `permission` (`groupId`, `entityId`, `objectId`, `objectIdString`, `view`, `edit`, `delete`)
-        SELECT groupId, 3, NULL, CONCAT(LayoutId, '_', RegionID), view, edit, del
-        FROM `lklayoutregiongroup`;
+        foreach ($statements as $sql) {
+            $dbh->exec($sql);
+        }
 
-        DROP TABLE `lklayoutregiongroup`;
-END;
+        // Build a keyed array of existing widget permissions
+        $mediaPermissions = [];
+        foreach (PDOConnect::select('SELECT groupId, layoutId, regionId, mediaId, `view`, `edit`, `delete` FROM `lklayoutmediagroup`', []) as $row) {
+            $permission = new Permission();
+            $permission->entityId = 6; // Widget
+            $permission->groupId = $row['groupId'];
+            $permission->objectId = $row['layoutId'];
+            $permission->objectIdString = $row['regionId'];
+            $permission->view = $row['view'];
+            $permission->edit = $row['edit'];
+            $permission->delete = $row['delete'];
 
+            $mediaPermissions[$row['mediaId']] = $permission;
+        }
+
+        // Build a keyed array of existing region permissions
+        $regionPermissions = [];
+        foreach (PDOConnect::select('SELECT groupId, layoutId, regionId, mediaId, `view`, `edit`, `delete` FROM `lklayoutregiongroup`', []) as $row) {
+            $permission = new Permission();
+            $permission->entityId = 7; // Widget
+            $permission->groupId = $row['groupId'];
+            $permission->objectId = $row['layoutId'];
+            $permission->view = $row['view'];
+            $permission->edit = $row['edit'];
+            $permission->delete = $row['delete'];
+
+            $regionPermissions[$row['regionId']] = $permission;
+        }
+
+        // Get the library location to store backups of existing XLF
+        $libraryLocation = Config::GetSetting('LIBRARY_LOCATION');
+
+        // We need to go through each layout, save the XLF as a backup in the library and then upgrade it.
+        foreach (PDOConnect::select('SELECT layoutId, xml FROM `layout` WHERE IFNULL(xml, \'\') <> \'\'', []) as $oldLayout) {
+            // Save off a copy of the XML in the library
+            file_put_contents($libraryLocation . 'oldXlf_' . $oldLayout['layoutId'], $oldLayout['xml']);
+
+            // Create a new layout from the XML
+            $layout = LayoutFactory::loadByXlf($oldLayout['xml'], $regionPermissions, $mediaPermissions);
+            $layout->layoutId = $oldLayout['layoutId'];
+
+            // Save the layout
+            $layout->save();
+
+            // Now that we have new ID's we need to cross reference them with the old IDs and recreate the permissions
+            foreach ($layout->regions as $region) {
+                /* @var \Xibo\Entity\Region $region */
+                if (array_key_exists($region->tempId, $regionPermissions)) {
+                    $permission = $regionPermissions[$region->tempId];
+                    /* @var \Xibo\Entity\Permission $permission */
+                    // Double check we are for the same layout
+                    if ($permission->objectId == $layout->layoutId) {
+                        $permission = clone $permission;
+                        $permission->objectId = $region->regionId;
+                        $permission->save();
+                    }
+                }
+
+                foreach ($region->playlists as $playlist) {
+                    /* @var \Xibo\Entity\Playlist $playlist */
+                    foreach ($playlist->widgets as $widget) {
+                        /* @var \Xibo\Entity\Widget $widget */
+                        if (array_key_exists($widget->tempId, $mediaPermissions)) {
+                            $permission = $mediaPermissions[$widget->tempId];
+                            /* @var \Xibo\Entity\Permission $permission */
+                            if ($permission->objectId == $layout->layoutId && $region->tempId == $permission->objectIdString) {
+                                $permission = clone $permission;
+                                $permission->objectId = $widget->widgetId;
+                                $permission->save();
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Clear the XML field (we do this in case we are interrupted and we need to process again
+            PDOConnect::update('UPDATE `layout` SET xml = NULL WHERE layoutId = :layoutId', ['layoutId' => $layout->layoutId]);
+        }
+
+        // Drop the permissions
+        $dbh->exec('DROP TABLE `lklayoutmediagroup`;');
+        $dbh->exec('DROP TABLE `lklayoutregiongroup`;');
     }
 
-    private $dbStructure = <<<END
+    private static $dbStructure = <<<END
 CREATE TABLE IF NOT EXISTS `lkregionplaylist` (
 `regionId` int(11) NOT NULL,
 `playlistId` int(11) NOT NULL,

@@ -125,6 +125,12 @@ class Region implements \JsonSerializable
      */
     public $duration;
 
+    /**
+     * Temporary Id used during import/upgrade
+     * @var string read only string
+     */
+    public $tempId = null;
+
     public function __construct()
     {
         // Exclude properties that will cause recursion

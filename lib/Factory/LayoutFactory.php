@@ -216,7 +216,7 @@ class LayoutFactory extends BaseFactory
                 );
 
             // Use the regionId locally to parse the rest of the XLF
-            $regionId = $regionNode->getAttribute('id');
+            $region->tempId = $regionNode->getAttribute('id');
 
             // Set the region name if empty
             if ($region->name == '')
@@ -226,13 +226,13 @@ class LayoutFactory extends BaseFactory
             $playlist = $region->playlists[0];
 
             // Get all widgets
-            foreach ($xpath->query('//region[@id="' . $regionId . '"]/media') as $mediaNode) {
+            foreach ($xpath->query('//region[@id="' . $region->tempId . '"]/media') as $mediaNode) {
                 /* @var \DOMElement $mediaNode */
                 $widget = new Widget();
                 $widget->type = $mediaNode->getAttribute('type');
                 $widget->ownerId = $mediaNode->getAttribute('userid');
                 $widget->duration = $mediaNode->getAttribute('duration');
-                $xlfMediaId = $mediaNode->getAttribute('id');
+                $widget->tempId = $mediaNode->getAttribute('id');
 
                 Log::debug('Adding Widget to object model. %s', $widget);
 
@@ -246,11 +246,11 @@ class LayoutFactory extends BaseFactory
                 /* @var \Xibo\Entity\Module $module */
 
                 if ($module->regionSpecific == 0) {
-                    $widget->assignMedia($xlfMediaId);
+                    $widget->assignMedia($widget->tempId);
                 }
 
                 // Get all widget options
-                foreach ($xpath->query('//region[@id="' . $regionId . '"]/media[@id="' . $xlfMediaId . '"]/options') as $optionsNode) {
+                foreach ($xpath->query('//region[@id="' . $region->tempId . '"]/media[@id="' . $widget->tempId . '"]/options') as $optionsNode) {
                     /* @var \DOMElement $optionsNode */
                     foreach ($optionsNode->childNodes as $mediaOption) {
                         /* @var \DOMElement $mediaOption */
@@ -264,7 +264,7 @@ class LayoutFactory extends BaseFactory
                 }
 
                 // Get all widget raw content
-                foreach ($xpath->query('//region[@id="' . $regionId . '"]/media[@id="' . $xlfMediaId . '"]/raw') as $rawNode) {
+                foreach ($xpath->query('//region[@id="' . $region->tempId . '"]/media[@id="' . $widget->tempId . '"]/raw') as $rawNode) {
                     /* @var \DOMElement $rawNode */
                     // Get children
                     foreach ($rawNode->childNodes as $mediaOption) {
