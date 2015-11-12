@@ -26,6 +26,11 @@ class Upgrade implements \JsonSerializable
     public $step;
     public $action;
 
+    public function doStep()
+    {
+
+    }
+
     public function save()
     {
         if ($this->stepId == 0)

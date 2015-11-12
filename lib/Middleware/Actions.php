@@ -64,11 +64,12 @@ class Actions extends Middleware
             $resource = $app->router->getCurrentRoute()->getPattern();
 
             // Get an array of excluded routes
-            $excludedRoutes = array_merge($app->publicRoutes, ['/update']);
+            $excludedRoutes = array_merge($app->publicRoutes, ['/update', '/update/step/:id']);
 
             // Does the version in the DB match the version of the code?
             // If not then we need to run an upgrade.
             if (Config::isUpgradePending() && !in_array($resource, $excludedRoutes)) {
+                Log::debug('%s not in excluded routes, redirecting. ', $resource);
                 $app->redirectTo('upgrade.view');
             }
 

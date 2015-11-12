@@ -10,6 +10,7 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\Upgrade;
+use Xibo\Exception\NotFoundException;
 use Xibo\Helper\Date;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
@@ -19,6 +20,26 @@ class UpgradeFactory extends BaseFactory
 {
     private static $provisioned = false;
 
+    /**
+     * Get by Step Id
+     * @param $stepId
+     * @return Upgrade
+     * @throws NotFoundException
+     */
+    public static function getByStepId($stepId)
+    {
+        $steps = UpgradeFactory::query(null, ['stepId' => $stepId]);
+
+        if (count($steps) <= 0)
+            throw new NotFoundException();
+
+        return $steps[0];
+    }
+
+    /**
+     * Get Incomplete Steps
+     * @return array[Upgrade]
+     */
     public static function getIncomplete()
     {
         return UpgradeFactory::query(null, ['complete' => 0]);
@@ -40,6 +61,11 @@ class UpgradeFactory extends BaseFactory
         $params = array();
         $select = 'SELECT * ';
         $body = ' FROM `upgrade` WHERE 1 = 1 ';
+
+        if (Sanitize::getInt('stepId', $filterBy) != null) {
+            $body .= ' AND `upgrade`.stepId = :stepId ';
+            $params['stepId'] = Sanitize::getInt('stepId', $filterBy);
+        }
 
         if (Sanitize::getInt('complete', $filterBy) != null) {
             $body .= ' AND `upgrade`.complete = :complete ';

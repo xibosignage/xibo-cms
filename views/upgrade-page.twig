@@ -33,18 +33,65 @@
                     </tr>
                 </thead>
                 <tbody>
+                    {% set priorComplete = true %}
                     {% for item in steps %}
-                        <tr>
-                            <td>{{ item.stepId  }}</td>
+                        <tr data-step-id="{{ item.stepId }}">
+                            <td>
+                                {% if not priorComplete %}
+                                {{ item.stepId  }}
+                                {% else %}
+                                <button class="doStep btn btn-sm" data-step-url="{{ urlFor("upgrade.doStep") }}">{{ item.stepId }}</button>
+                                {% endif %}
+                            </td>
                             <td>{{ item.appVersion  }}</td>
                             <td>{{ item.step  }}</td>
                             <td>{{ item.requestDate|date  }}</td>
-                            <td><span id="stepId_{{ item.stepId }}Result" class="fa {% if item.complete %}fa-check{% else %}fa-times{% endif %}"></span></td>
+                            <td><span class="stepResult fa {% if item.complete %}fa-check{% else %}fa-times{% endif %}"></span></td>
                             <td>{{ item.lastTryDate  }}</td>
                         </tr>
+                        {% set priorComplete = item.complete %}
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
+{% endblock %}
+
+{% block javaScript %}
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+
+            // Bind to the active do step button
+            $("button.doStep").click(function(e) {
+                e.preventDefault();
+
+                var url = $(this).data().stepUrl;
+                url.replace(":id", $(this).data().stepId);
+
+                // Fire off a POST to do this step.
+                $.ajax({
+                    method: "POST",
+                    url: url,
+                    dataType: "json",
+                    success: function (response) {
+                        if (response.success) {
+                            toastr.success(response.message);
+
+                            // We want to move down
+
+                        }
+                        else {
+                            toastr.error(response.message);
+                        }
+                    },
+                    error: function (response) {
+                        SystemMessage(response.responseText);
+                    }
+                });
+            });
+
+        });
+    </script>
+
 {% endblock %}

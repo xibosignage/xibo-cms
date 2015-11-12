@@ -102,6 +102,7 @@ $app->get('/login/ping', '\Xibo\Controller\Login:PingPong')->name('ping');
 // upgrade
 //
 $app->get('/update', '\Xibo\Controller\Upgrade:displayPage')->name('upgrade.view');
+$app->post('/update/step/:id', '\Xibo\Controller\Upgrade:doStep')->name('upgrade.doStep');
 
 //
 // schedule
