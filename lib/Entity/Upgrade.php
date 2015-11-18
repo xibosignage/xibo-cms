@@ -25,10 +25,16 @@ class Upgrade implements \JsonSerializable
     public $appVersion;
     public $step;
     public $action;
+    public $type;
 
     public function doStep()
     {
+        // SQL or not?
+        switch ($this->type) {
 
+            default:
+                throw new \InvalidArgumentException(__('Unknown Request Type'));
+        }
     }
 
     public function save()
@@ -42,13 +48,14 @@ class Upgrade implements \JsonSerializable
     private function add()
     {
         $this->stepId = PDOConnect::insert('
-            INSERT INTO `upgrade` (appVersion, dbVersion, step, `action`, `requestDate`)
-            VALUES (:appVersion, :dbVersion, :step, :action, :requestDate)
+            INSERT INTO `upgrade` (appVersion, dbVersion, step, `action`, `type`, `requestDate`)
+            VALUES (:appVersion, :dbVersion, :step, :action, :type, :requestDate)
         ', [
             'appVersion' => $this->appVersion,
             'dbVersion' => $this->dbVersion,
             'step' => $this->step,
             'action' => $this->action,
+            'type' => $this->type,
             'requestDate' => $this->requestDate
         ]);
     }
@@ -76,6 +83,7 @@ class Upgrade implements \JsonSerializable
                   `appVersion` varchar(20) NOT NULL,
                   `dbVersion` int(11) NOT NULL,
                   `step` varchar(254) NOT NULL,
+                  `type` varchar(50) NOT NULL,
                   `action` text NOT NULL,
                   `complete` tinyint(4) NOT NULL DEFAULT \'0\',
                   `requestDate` int(11) NULL,

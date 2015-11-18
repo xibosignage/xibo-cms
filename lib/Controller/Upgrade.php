@@ -21,6 +21,7 @@
 namespace Xibo\Controller;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\UpgradeFactory;
+use Xibo\Helper\Config;
 use Xibo\Helper\Date;
 use Xibo\Helper\Log;
 
@@ -38,7 +39,7 @@ class Upgrade extends Base
 
         if (count($steps) <= 0) {
             // No pending steps, check to see if we need to insert them
-            if (DBVERSION === WEBSITE_VERSION) {
+            if (!Config::isUpgradePending()) {
                 $this->getState()->template = 'upgrade-not-required-page';
                 return;
             }

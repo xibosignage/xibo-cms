@@ -127,6 +127,9 @@ class UpgradeFactory extends BaseFactory
                     if (isset($step['fixedIn']) && $step['fixedIn'] <= $from)
                         continue;
 
+                    if (!isset($step['type']))
+                        $step['type'] = 'sql';
+
                     $step['dbVersion'] = $config['dbVersion'];
                     $step['appVersion'] = $config['appVersion'];
                     $step['requestDate'] = $date->format('U');
@@ -136,12 +139,13 @@ class UpgradeFactory extends BaseFactory
 
             // Add the version bump
             if ($i == $to) {
-                $action = 'UPDATE `version` SET `app_ver` = \'' . VERSION . '\', `DBVersion` = ' . $to . '; UPDATE `setting` SET `value` = 0 WHERE `setting` = \'PHONE_HOME_DATE\';';
+                $action = 'UPDATE `version` SET `app_ver` = \'' . WEBSITE_VERSION . '\', `DBVersion` = ' . $to . '; UPDATE `setting` SET `value` = 0 WHERE `setting` = \'PHONE_HOME_DATE\';';
                 $steps[] = (new Upgrade())->hydrate([
                     'dbVersion' => $to,
-                    'appVersion' => VERSION,
+                    'appVersion' => WEBSITE_VERSION,
                     'step' => 'Finalise Upgrade',
-                    'action' => $action
+                    'action' => $action,
+                    'type' => 'sql'
                 ]);
             }
         }
