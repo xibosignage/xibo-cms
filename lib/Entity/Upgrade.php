@@ -63,7 +63,7 @@ class Upgrade implements \JsonSerializable
         ', [
             'stepId' => $this->stepId,
             'complete' => $this->complete,
-            'lastTyeDate' => $this->lastTryDate
+            'lastTryDate' => $this->lastTryDate
         ]);
     }
 

@@ -35,19 +35,19 @@
                 <tbody>
                     {% set priorComplete = true %}
                     {% for item in steps %}
-                        <tr data-step-id="{{ item.stepId }}">
+                        <tr data-step-id="{{ item.stepId }}" data-step-url="{{ urlFor("upgrade.doStep") }}">
                             <td>
-                                {% if not priorComplete %}
+                                {% if not priorComplete or item.complete %}
                                 {{ item.stepId  }}
                                 {% else %}
-                                <button class="doStep btn btn-sm" data-step-url="{{ urlFor("upgrade.doStep") }}">{{ item.stepId }}</button>
+                                <button class="doStep btn btn-sm">{{ item.stepId }}</button>
                                 {% endif %}
                             </td>
                             <td>{{ item.appVersion  }}</td>
                             <td>{{ item.step  }}</td>
                             <td>{{ item.requestDate|date  }}</td>
                             <td><span class="stepResult fa {% if item.complete %}fa-check{% else %}fa-times{% endif %}"></span></td>
-                            <td>{{ item.lastTryDate  }}</td>
+                            <td>{% if item.lastTryDate %}{{ item.lastTryDate|date  }}{% endif %}</td>
                         </tr>
                         {% set priorComplete = item.complete %}
                     {% endfor %}
@@ -63,35 +63,48 @@
         $(document).ready(function() {
 
             // Bind to the active do step button
-            $("button.doStep").click(function(e) {
-                e.preventDefault();
-
-                var url = $(this).data().stepUrl;
-                url.replace(":id", $(this).data().stepId);
-
-                // Fire off a POST to do this step.
-                $.ajax({
-                    method: "POST",
-                    url: url,
-                    dataType: "json",
-                    success: function (response) {
-                        if (response.success) {
-                            toastr.success(response.message);
-
-                            // We want to move down
-
-                        }
-                        else {
-                            toastr.error(response.message);
-                        }
-                    },
-                    error: function (response) {
-                        SystemMessage(response.responseText);
-                    }
-                });
-            });
+            $("button.doStep").click(clickStep);
 
         });
+
+        function clickStep(e) {
+            e.preventDefault();
+
+            var row = $(this).closest("tr");
+            var stepId = row.data().stepId;
+            var url = row.data().stepUrl;
+
+            // Fire off a POST to do this step.
+            $.ajax({
+                method: "POST",
+                url: url.replace(":id", stepId),
+                dataType: "json",
+                success: function (response) {
+                    if (response.success) {
+
+                        // Update the status
+                        row.find("button.doStep").parent().html(stepId);
+                        row.find("span.stepResult").removeClass("fa-times").addClass("fa-check").parent().next().html(moment().format(jsDateFormat));
+
+                        // We want to move down (see if there is another step)
+                        var subsequentStep = row.next();
+
+                        if (subsequentStep.length == 0)
+                            return;
+
+                        var button = $("<button/>").addClass("doStep").addClass("btn").addClass("btn-sm").click(clickStep).html(subsequentStep.data().stepId);
+
+                        subsequentStep.children().eq(0).html(button);
+                    }
+                    else {
+                        toastr.error(response.message);
+                    }
+                },
+                error: function (response) {
+                    SystemMessage(response.responseText);
+                }
+            });
+        }
     </script>
 
 {% endblock %}

@@ -72,20 +72,23 @@ class Upgrade extends Base
     public function doStep($stepId)
     {
         // Check we are a super admin
-        if ($this->getUser()->userTypeId == 1)
+        if (!$this->getUser()->userTypeId == 1)
             throw new AccessDeniedException();
 
         // Get upgrade step
         $upgradeStep = UpgradeFactory::getByStepId($stepId);
 
+        if ($upgradeStep->complete == 1)
+            throw new \InvalidArgumentException(__('Upgrade step already complete'));
+
         try {
             $upgradeStep->doStep();
             $upgradeStep->complete = 1;
-            $upgradeStep->lastTryDate = Date::getLocalDate();
+            $upgradeStep->lastTryDate = Date::parse()->format('U');
             $upgradeStep->save();
         }
         catch (\Exception $e) {
-            $upgradeStep->lastTryDate = Date::getLocalDate();
+            $upgradeStep->lastTryDate = Date::parse()->format('U');
             $upgradeStep->save();
             Log::error('Unable to run upgrade step. Message = %s', $e->getMessage());
 

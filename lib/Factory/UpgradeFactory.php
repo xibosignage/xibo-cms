@@ -62,12 +62,12 @@ class UpgradeFactory extends BaseFactory
         $select = 'SELECT * ';
         $body = ' FROM `upgrade` WHERE 1 = 1 ';
 
-        if (Sanitize::getInt('stepId', $filterBy) != null) {
+        if (Sanitize::getInt('stepId', $filterBy) !== null) {
             $body .= ' AND `upgrade`.stepId = :stepId ';
             $params['stepId'] = Sanitize::getInt('stepId', $filterBy);
         }
 
-        if (Sanitize::getInt('complete', $filterBy) != null) {
+        if (Sanitize::getInt('complete', $filterBy) !== null) {
             $body .= ' AND `upgrade`.complete = :complete ';
             $params['complete'] = Sanitize::getInt('complete', $filterBy);
         }
@@ -114,7 +114,7 @@ class UpgradeFactory extends BaseFactory
         $date = Date::parse();
 
         // Go from $from to $to and get the config file from the install folder.
-        for ($i = $from; $i <= $to; $i++) {
+        for ($i = $from + 1; $i <= $to; $i++) {
             $currentStep = PROJECT_ROOT . '/install/steps/' . $i . '.json';
             Log::debug('Checking for %s', $currentStep);
             // Get the file
