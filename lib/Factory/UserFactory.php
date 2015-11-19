@@ -143,6 +143,7 @@ class UserFactory extends BaseFactory
 
         if (DBVERSION >= 120) {
             $select .= '
+                ,
                 `pages`.pageId AS homePageId,
                 `pages`.title AS homePage
             ';

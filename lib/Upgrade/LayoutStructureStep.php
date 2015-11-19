@@ -144,6 +144,7 @@ CREATE TABLE IF NOT EXISTS `region` (
 `top` decimal(12,4) NOT NULL,
 `left` decimal(12,4) NOT NULL,
 `zIndex` smallint(6) NOT NULL,
+`duration` int(11) NOT NULL DEFAULT '0',
 PRIMARY KEY (`regionId`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 

@@ -60,7 +60,7 @@ class DataSetConvertStep implements Step
         $outerSelect = rtrim($outerSelect, ',');
 
         // We are ready to build the select and from part of the SQL
-        $SQL  = "SELECT * ";
+        $SQL  = "SELECT $outerSelect ";
         $SQL .= "  FROM ( ";
         $SQL .= "   SELECT $outerSelect ,";
         $SQL .= "           RowNumber ";
@@ -82,6 +82,6 @@ class DataSetConvertStep implements Step
         $sth = $dbh->prepare($SQL);
         $sth->execute($params);
 
-        return $sth->fetchAll();
+        return $sth->fetchAll(\PDO::FETCH_ASSOC);
     }
 }

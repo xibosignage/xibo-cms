@@ -420,7 +420,7 @@ class DataSet implements \JsonSerializable
 
     private function dropTable()
     {
-        PDOConnect::update('DROP TABLE dataset_' . $this->dataSetId, []);
+        PDOConnect::update('DROP TABLE IF EXISTS dataset_' . $this->dataSetId, []);
     }
 
     /**
@@ -477,7 +477,7 @@ class DataSet implements \JsonSerializable
         $values = array_values($row);
         $values[] = 'NULL';
 
-        $sql = 'INSERT INTO `dataset_' . $this->dataSetId . '` (' . implode(',', $keys) . ') VALUES (' . implode(',', array_fill(0, count($values), '?')) . ')';
+        $sql = 'INSERT INTO `dataset_' . $this->dataSetId . '` (`' . implode('`, `', $keys) . '`) VALUES (' . implode(',', array_fill(0, count($values), '?')) . ')';
 
         Log::sql($sql, $values);
 

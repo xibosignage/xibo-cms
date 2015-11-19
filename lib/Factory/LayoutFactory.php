@@ -297,6 +297,9 @@ class LayoutFactory extends BaseFactory
 
         foreach ($xpath->query('//tags/tag') as $tagNode) {
             /* @var \DOMElement $tagNode */
+            if (trim($tagNode->textContent) == '')
+                continue;
+
             $layout->tags[] = TagFactory::tagFromString($tagNode->textContent);
         }
 

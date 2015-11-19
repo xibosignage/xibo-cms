@@ -60,6 +60,9 @@ class TagFactory extends BaseFactory
      */
     public static function tagFromString($tagString)
     {
+        // Trim the tag
+        $tagString = trim($tagString);
+
         // Add to the list
         try {
             $tag = TagFactory::getByTag($tagString);

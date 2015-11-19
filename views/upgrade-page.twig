@@ -88,12 +88,18 @@
             var stepId = row.data().stepId;
             var url = row.data().stepUrl;
 
+            // Add a spinner
+            row.find("span.stepResult").addClass("fa-cog fa-spin").removeClass("fa-times fa-check");
+
             // Fire off a POST to do this step.
             $.ajax({
                 method: "POST",
                 url: url.replace(":id", stepId),
                 dataType: "json",
                 success: function (response) {
+
+                    row.find("span.stepResult").removeClass("fa-cog fa-spin");
+
                     if (response.success) {
 
                         // Update the status
@@ -120,6 +126,8 @@
                     }
                     else {
                         startButtonUsed = false;
+
+                        row.find("span.stepResult").addClass("fa-times").removeClass("fa-check");
 
                         toastr.error(response.message);
 

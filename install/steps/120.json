@@ -202,11 +202,15 @@
       "action": "DROP TABLE `lkdatasetlayout`;"
     },
     {
-      "step": "Add Unique Key to Campaign/Layout assignments",
-      "action": "ALTER TABLE  `lkmediadisplaygroup` ADD UNIQUE (`mediaid` ,`displaygroupid`);"
+      "step": "De-dupe any Media/Display Group Assignments",
+      "action": "CREATE TABLE `temp_lkmediadisplaygroup` AS SELECT * FROM `lkmediadisplaygroup` WHERE 1 GROUP BY `mediaid` ,`displaygroupid`; DROP TABLE `lkmediadisplaygroup`; RENAME TABLE `temp_lkmediadisplaygroup` TO `lkmediadisplaygroup`;"
     },
     {
       "step": "Add Unique Key to Media/Display Group Assignments",
+      "action": "ALTER TABLE  `lkmediadisplaygroup` ADD UNIQUE (`mediaid` ,`displaygroupid`);"
+    },
+    {
+      "step": "Add Unique Key to Campaign/Layout assignments",
       "action": "ALTER TABLE  `lkcampaignlayout` ADD UNIQUE (`CampaignID` ,`LayoutID` ,`DisplayOrder`);"
     },
     {
@@ -219,75 +223,84 @@
     },
     {
       "step": "Upgrade Schedule - Part 3",
-      "action": "ALTER TABLE `schedule_detail` DROP `DisplayGroupID`,`DisplayGroupIDs`;"
+      "action": "ALTER TABLE `schedule_detail` DROP `DisplayGroupID`;"
+    },
+    {
+      "step": "Upgrade Schedule - Part 4",
+      "type": "php",
+      "action": "Xibo\\Upgrade\\ScheduleConvertStep"
+    },
+    {
+      "step": "Upgrade Schedule - Part 5",
+      "action": "ALTER TABLE `schedule` DROP `DisplayGroupIDs`;"
     },
     {
       "step": "Upgrade Image Module",
-      "action": "UPDATE `module` SET `class` = '\\Xibo\\Widget\\Image' WHERE module = 'Image';"
+      "action": "UPDATE `module` SET `class` = '\\\\Xibo\\\\Widget\\\\Image' WHERE module = 'Image';"
     },
     {
       "step": "Upgrade Video Module",
-      "action": "UPDATE `module` SET `class` = '\\Xibo\\Widget\\Video' WHERE module = 'Video';"
+      "action": "UPDATE `module` SET `class` = '\\\\Xibo\\\\Widget\\\\Video' WHERE module = 'Video';"
     },
     {
       "step": "Upgrade Flash Module",
-      "action": "UPDATE `module` SET `class` = '\\Xibo\\Widget\\Flash' WHERE module = 'Flash';"
+      "action": "UPDATE `module` SET `class` = '\\\\Xibo\\\\Widget\\\\Flash' WHERE module = 'Flash';"
     },
     {
       "step": "Upgrade PowerPoint Module",
-      "action": "UPDATE `module` SET `class` = '\\Xibo\\Widget\\PowerPoint' WHERE module = 'PowerPoint';"
+      "action": "UPDATE `module` SET `class` = '\\\\Xibo\\\\Widget\\\\PowerPoint' WHERE module = 'PowerPoint';"
     },
     {
       "step": "Upgrade WebPage Module",
-      "action": "UPDATE `module` SET `class` = '\\Xibo\\Widget\\WebPage' WHERE module = 'Webpage';"
+      "action": "UPDATE `module` SET `class` = '\\\\Xibo\\\\Widget\\\\WebPage' WHERE module = 'Webpage';"
     },
     {
       "step": "Upgrade Ticker Module",
-      "action": "UPDATE `module` SET `class` = '\\Xibo\\Widget\\Ticker' WHERE module = 'Ticker';"
+      "action": "UPDATE `module` SET `class` = '\\\\Xibo\\\\Widget\\\\Ticker' WHERE module = 'Ticker';"
     },
     {
       "step": "Upgrade Text Module",
-      "action": "UPDATE `module` SET `class` = '\\Xibo\\Widget\\Text' WHERE module = 'Text';"
+      "action": "UPDATE `module` SET `class` = '\\\\Xibo\\\\Widget\\\\Text' WHERE module = 'Text';"
     },
     {
       "step": "Upgrade Embedded Module",
-      "action": "UPDATE `module` SET `class` = '\\Xibo\\Widget\\Embedded' WHERE module = 'Embedded';"
+      "action": "UPDATE `module` SET `class` = '\\\\Xibo\\\\Widget\\\\Embedded' WHERE module = 'Embedded';"
     },
     {
       "step": "Upgrade DataSet View Module",
-      "action": "UPDATE `module` SET `class` = '\\Xibo\\Widget\\DataSetView' WHERE module = 'datasetview';"
+      "action": "UPDATE `module` SET `class` = '\\\\Xibo\\\\Widget\\\\DataSetView' WHERE module = 'datasetview';"
     },
     {
       "step": "Upgrade Shell Command Module",
-      "action": "UPDATE `module` SET `class` = '\\Xibo\\Widget\\ShellCommand' WHERE module = 'shellcommand';"
+      "action": "UPDATE `module` SET `class` = '\\\\Xibo\\\\Widget\\\\ShellCommand' WHERE module = 'shellcommand';"
     },
     {
       "step": "Upgrade Local Video Module",
-      "action": "UPDATE `module` SET `class` = '\\Xibo\\Widget\\LocalVideo' WHERE module = 'localvideo';"
+      "action": "UPDATE `module` SET `class` = '\\\\Xibo\\\\Widget\\\\LocalVideo' WHERE module = 'localvideo';"
     },
     {
       "step": "Upgrade Generic File Module",
-      "action": "UPDATE `module` SET `class` = '\\Xibo\\Widget\\GenericFile' WHERE module = 'genericfile';"
+      "action": "UPDATE `module` SET `class` = '\\\\Xibo\\\\Widget\\\\GenericFile' WHERE module = 'genericfile';"
     },
     {
       "step": "Upgrade Clock Module",
-      "action": "UPDATE `module` SET `class` = '\\Xibo\\Widget\\Clock' WHERE module = 'Clock';"
+      "action": "UPDATE `module` SET `class` = '\\\\Xibo\\\\Widget\\\\Clock' WHERE module = 'Clock';"
     },
     {
       "step": "Upgrade Font Module",
-      "action": "UPDATE `module` SET `class` = '\\Xibo\\Widget\\Font' WHERE module = 'Font';"
+      "action": "UPDATE `module` SET `class` = '\\\\Xibo\\\\Widget\\\\Font' WHERE module = 'Font';"
     },
     {
       "step": "Upgrade Twitter Module",
-      "action": "UPDATE `module` SET `class` = '\\Xibo\\Widget\\Twitter' WHERE module = 'Twitter';"
+      "action": "UPDATE `module` SET `class` = '\\\\Xibo\\\\Widget\\\\Twitter' WHERE module = 'Twitter';"
     },
     {
       "step": "Upgrade Forecast Module",
-      "action": "UPDATE `module` SET `class` = '\\Xibo\\Widget\\ForecastIo' WHERE module = 'forecastio';"
+      "action": "UPDATE `module` SET `class` = '\\\\Xibo\\\\Widget\\\\ForecastIo' WHERE module = 'forecastio';"
     },
     {
       "step": "Upgrade Finance Module",
-      "action": "UPDATE `module` SET `class` = '\\Xibo\\Widget\\Finance' WHERE module = 'Finance';"
+      "action": "UPDATE `module` SET `class` = '\\\\Xibo\\\\Widget\\\\Finance' WHERE module = 'Finance';"
     }
   ]
 }

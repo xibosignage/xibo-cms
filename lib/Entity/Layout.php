@@ -418,6 +418,8 @@ class Layout implements \JsonSerializable
                 foreach ($this->tags as $tag) {
                     /* @var Tag $tag */
 
+                    Log::debug('Assigning tag %s', $tag->tag);
+
                     $tag->assignLayout($this->layoutId);
                     $tag->save();
                 }
@@ -427,6 +429,8 @@ class Layout implements \JsonSerializable
             if (is_array($this->unassignTags)) {
                 foreach ($this->unassignTags as $tag) {
                     /* @var Tag $tag */
+                    Log::debug('Unassigning tag %s', $tag->tag);
+
                     $tag->unassignLayout($this->layoutId);
                     $tag->save();
                 }
