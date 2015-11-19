@@ -88,6 +88,10 @@ class Upgrade extends Base
             $upgradeStep->complete = 1;
             $upgradeStep->lastTryDate = Date::parse()->format('U');
             $upgradeStep->save();
+
+            // Install all module files if we are on the last step
+            if (count(UpgradeFactory::getIncomplete()) <= 0)
+                Library::installAllModuleFiles();
         }
         catch (\Exception $e) {
             $upgradeStep->lastTryDate = Date::parse()->format('U');

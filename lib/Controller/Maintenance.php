@@ -17,6 +17,7 @@ use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Exception\LibraryFullException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\MediaFactory;
+use Xibo\Factory\UpgradeFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Helper\BackupUploadHandler;
 use Xibo\Helper\Config;
@@ -66,6 +67,45 @@ class Maintenance extends Base
             }
 
             if (($aKey == $key) || ($pKey == $key) || (Config::GetSetting("MAINTENANCE_ENABLED")=="On")) {
+
+                // Upgrade
+                // Is there a pending upgrade (i.e. are there any pending upgrade steps).
+                if (Config::isUpgradePending()) {
+                    $steps = UpgradeFactory::getIncomplete();
+
+                    if (count($steps) <= 0) {
+
+                        // Insert pending upgrade steps.
+                        $steps = UpgradeFactory::createSteps(DBVERSION, WEBSITE_VERSION);
+
+                        foreach ($steps as $step) {
+                            /* @var \Xibo\Entity\Upgrade $step */
+                            $step->save();
+                        }
+                    }
+
+                    // Cycle through the steps until done
+                    set_time_limit(0);
+
+                    foreach ($steps as $upgradeStep) {
+                        /* @var \Xibo\Entity\Upgrade $upgradeStep */
+                        try {
+                            $upgradeStep->doStep();
+                            $upgradeStep->complete = 1;
+                            $upgradeStep->lastTryDate = Date::parse()->format('U');
+                            $upgradeStep->save();
+                        }
+                        catch (\Exception $e) {
+                            $upgradeStep->lastTryDate = Date::parse()->format('U');
+                            $upgradeStep->save();
+                            Log::error('Unable to run upgrade step. Message = %s', $e->getMessage());
+                            Log::error($e->getTraceAsString());
+
+                            throw new ConfigurationException($e->getMessage());
+                        }
+                    }
+                }
+
                 // Email Alerts
                 // Note that email alerts for displays coming back online are triggered directly from
                 // the XMDS service.
