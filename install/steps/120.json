@@ -28,7 +28,7 @@
     },
     {
       "step": "Populate Permission Entities",
-      "action": "INSERT INTO `permissionentity` (`entityId`, `entity`) VALUES(5, 'Xibo\\Entity\\Campaign'),(9, 'Xibo\\Entity\\DataSet'),(3, 'Xibo\\Entity\\DisplayGroup'),(4, 'Xibo\\Entity\\Media'),(1, 'Xibo\\Entity\\Page'),(8, 'Xibo\\Entity\\Playlist'),(7, 'Xibo\\Entity\\Region'),(6, 'Xibo\\Entity\\Widget');"
+      "action": "INSERT INTO `permissionentity` (`entityId`, `entity`) VALUES(5, 'Xibo\\\\Entity\\\\Campaign'),(9, 'Xibo\\\\Entity\\\\DataSet'),(3, 'Xibo\\\\Entity\\\\DisplayGroup'),(4, 'Xibo\\\\Entity\\\\Media'),(1, 'Xibo\\\\Entity\\\\Page'),(8, 'Xibo\\\\Entity\\\\Playlist'),(7, 'Xibo\\\\Entity\\\\Region'),(6, 'Xibo\\\\Entity\\\\Widget');"
     },
     {
       "step": "Convert Page Permissions",
@@ -91,16 +91,48 @@
       "action": "INSERT INTO `pages` (`pageID`, `name`) VALUES (NULL, 'playlist'), (NULL, 'maintenance');"
     },
     {
+      "step": "Set Page Names",
+      "action": "UPDATE `pages` SET title = CONCAT(UCASE(LEFT(name, 1)), SUBSTRING(name, 2)), asHome = 1;"
+    },
+    {
+      "step": "Set Page Home Flag",
+      "action": "UPDATE `pages` SET asHome = 0 WHERE `name` IN ('update','admin','manual','help','clock','preview','region','playlist','maintenance');"
+    },
+    {
       "step": "Remove menu and menu items",
       "action": "DROP TABLE `menuitem`, `menu`, `pagegroup`;"
     },
     {
       "step": "Rename the Library page",
-      "action": "UPDATE  `pages` SET  `name` =  'library' WHERE  `pages`.`name` = 'content';"
+      "action": "UPDATE  `pages` SET  `name` =  'library', `title` = 'Library' WHERE  `pages`.`name` = 'content';"
     },
     {
       "step": "Rename the Applications page",
-      "action": "UPDATE  `pages` SET  `name` =  'applications' WHERE  `pages`.`name` = 'oauth';"
+      "action": "UPDATE  `pages` SET  `name` =  'applications', `title` = 'Applications' WHERE  `pages`.`name` = 'oauth';"
+    },
+    {
+      "step": "Rename the Media Dashboard page",
+      "action": "UPDATE  `pages` SET `title` = 'Media Dashboard' WHERE  `pages`.`name` = 'mediamanager';"
+    },
+    {
+      "step": "Rename the Status Dashboard page",
+      "action": "UPDATE  `pages` SET `title` = 'Status Dashboard' WHERE  `pages`.`name` = 'statusdashboard';"
+    },
+    {
+      "step": "Rename the Display Profile page",
+      "action": "UPDATE  `pages` SET `title` = 'Display Profiles' WHERE  `pages`.`name` = 'displayprofile';"
+    },
+    {
+      "step": "Rename the Display Group page",
+      "action": "UPDATE  `pages` SET `title` = 'Display Groups' WHERE  `pages`.`name` = 'displaygroup';"
+    },
+    {
+      "step": "Rename the Home page",
+      "action": "UPDATE  `pages` SET `title` = 'Home' WHERE  `pages`.`name` = 'index';"
+    },
+    {
+      "step": "Rename the Audit Trail page",
+      "action": "UPDATE  `pages` SET `title` = 'Audit Trail' WHERE  `pages`.`name` = 'auditlog';"
     },
     {
       "step": "Add new attributes to the Layout Structure",

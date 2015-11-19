@@ -103,10 +103,16 @@ class Layout extends Base
         if (!$this->getUser()->checkEditable($layout))
             throw new AccessDeniedException();
 
+        // Work out our resolution
+        if ($layout->schemaVersion < 2)
+            $resolution = ResolutionFactory::getByDesignerDimensions($layout->width, $layout->height);
+        else
+            $resolution = ResolutionFactory::getByDimensions($layout->width, $layout->height);
+
         // Set up any JavaScript translations
         $data = [
             'layout' => $layout,
-            'resolution' => ResolutionFactory::getByDimensions($layout->width, $layout->height),
+            'resolution' => $resolution,
             'layouts' => LayoutFactory::query(),
             'zoom' => Sanitize::getDouble('zoom', 1)
         ];
@@ -1012,5 +1018,112 @@ class Layout extends Base
         }
 
         $this->setNoOutput(true);
+    }
+
+    /**
+     * Upgrade Form
+     * @param int $layoutId
+     */
+    public function upgradeForm($layoutId)
+    {
+        $layout = LayoutFactory::getById($layoutId);
+
+        if (!$this->getUser()->checkEditable($layout))
+            throw new AccessDeniedException();
+
+        $this->getState()->template = 'layout-form-upgrade';
+        $this->getState()->setData([
+            'layout' => $layout,
+            'resolutions' => ResolutionFactory::query(null, ['enabled' => 1])
+        ]);
+    }
+
+    /**
+     * Upgrade Layout
+     * @param int $layoutId
+     * @throws \Xibo\Exception\NotFoundException
+     */
+    public function upgrade($layoutId)
+    {
+        $layout = LayoutFactory::loadById($layoutId);
+
+        if (!$this->getUser()->checkEditable($layout))
+            throw new AccessDeniedException();
+
+        // Resolution
+        $resolution = ResolutionFactory::getById(Sanitize::getInt('resolutionId'));
+        $scaleContent = (Sanitize::getCheckbox('scaleContent') == 1);
+
+        // Upgrade the Layout
+        $ratio = min($resolution->width / $layout->width, $resolution->height / $layout->height);
+
+        // Set the widget and height on layouts/regions
+        $layout->width = $layout->width * $ratio;
+        $layout->height = $layout->height * $ratio;
+
+        foreach ($layout->regions as $region) {
+            /* @var \Xibo\Entity\Region $region */
+            $region->width = $region->width * $ratio;
+            $region->height = $region->height * $ratio;
+            $region->top = $region->top * $ratio;
+            $region->left = $region->left * $ratio;
+
+            if ($scaleContent) {
+                // We need to get every widget that might have some date/time related stuff on it
+                // pull out the widget content
+                // run a regex over it to try and adjust its size
+                foreach ($region->playlists as $playlist) {
+                    $saveRequired = false;
+                    foreach ($playlist->widgets as $widget) {
+                        foreach ($widget->widgetOptions as $widgetOption) {
+
+                            if ($widgetOption->option == 'text' ||
+                                $widgetOption->option == 'styleSheet' ||
+                                $widgetOption->option == 'css' ||
+                                $widgetOption->option == 'embedHtml' ||
+                                $widgetOption->option == 'embedScript' ||
+                                $widgetOption->option == 'embedStyle'
+                            ) {
+
+                                // Replace widths
+                                $widgetOption->value = preg_replace_callback(
+                                    '/width:(.*?)/',
+                                    function ($matches) use ($ratio) {
+                                        return "width:" . $matches[1] * $ratio;
+                                    }, $widgetOption->value);
+
+                                // Replace heights
+                                $widgetOption->value = preg_replace_callback(
+                                    '/height:(.*?)/',
+                                    function ($matches) use ($ratio) {
+                                        return "height:" . $matches[1] * $ratio;
+                                    }, $widgetOption->value);
+
+                                // Replace fonts
+                                $widgetOption->value = preg_replace_callback(
+                                    '/font-size:(.*?)px;/',
+                                    function ($matches) use ($ratio) {
+                                        return "font-size:" . $matches[1] * $ratio . "px;";
+                                    }, $widgetOption->value);
+
+                                $saveRequired = true;
+                            }
+                        }
+                    }
+
+                    if ($saveRequired)
+                        $playlist->save();
+                }
+            }
+        }
+
+        $layout->schemaVersion = Config::Version('XlfVersion');
+        $layout->save(['validate' => false, 'notify' => $scaleContent]);
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('Upgraded %s'), $layout->layout)
+        ]);
     }
 }

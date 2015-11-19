@@ -833,7 +833,8 @@ class Layout implements \JsonSerializable
               backgroundColor = :backgroundColor,
               backgroundzIndex = :backgroundzIndex,
               `status` = :status,
-              `userId` = :userId
+              `userId` = :userId,
+              `schemaVersion` = :schemaVersion
          WHERE layoutID = :layoutid
         ';
 
@@ -852,7 +853,8 @@ class Layout implements \JsonSerializable
             'backgroundColor' => $this->backgroundColor,
             'backgroundzIndex' => $this->backgroundzIndex,
             'status' => $this->status,
-            'userId' => $this->ownerId
+            'userId' => $this->ownerId,
+            'schemaVersion' => $this->schemaVersion
         ));
 
         // Update the Campaign

@@ -356,7 +356,7 @@ abstract class ModuleWidget implements ModuleInterface
             $name = $this->module->name;
         }
 
-        return $this->getOption('name', $name);
+        return $name;
     }
 
     /**
