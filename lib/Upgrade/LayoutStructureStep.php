@@ -65,7 +65,7 @@ class LayoutStructureStep implements Step
         // We need to go through each layout, save the XLF as a backup in the library and then upgrade it.
         foreach (PDOConnect::select('SELECT layoutId, xml FROM `layout` WHERE IFNULL(xml, \'\') <> \'\'', []) as $oldLayout) {
             // Save off a copy of the XML in the library
-            file_put_contents($libraryLocation . 'oldXlf_' . $oldLayout['layoutId'], $oldLayout['xml']);
+            file_put_contents($libraryLocation . 'archive_' . $oldLayout['layoutId'] . '.xlf', $oldLayout['xml']);
 
             // Create a new layout from the XML
             $layout = LayoutFactory::loadByXlf($oldLayout['xml'], LayoutFactory::getById($oldLayout['layoutId']));
