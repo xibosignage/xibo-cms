@@ -430,7 +430,7 @@ class Campaign extends Base
         }
 
         // Save the campaign
-        $campaign->save(false);
+        $campaign->save(['validate' => false]);
 
         // Return
         $this->getState()->hydrate([
@@ -500,7 +500,7 @@ class Campaign extends Base
             $campaign->unassignLayout($layout);
         }
 
-        $campaign->save(false);
+        $campaign->save(['validate' => false]);
 
         // Return
         $this->getState()->hydrate([

@@ -139,10 +139,10 @@ class UpgradeFactory extends BaseFactory
 
             // Add the version bump
             if ($i == $to) {
-                $action = 'UPDATE `version` SET `app_ver` = \'' . WEBSITE_VERSION . '\', `DBVersion` = ' . $to . '; UPDATE `setting` SET `value` = 0 WHERE `setting` = \'PHONE_HOME_DATE\';';
+                $action = 'UPDATE `version` SET `app_ver` = \'' . WEBSITE_VERSION_NAME . '\', `DBVersion` = ' . $to . '; UPDATE `setting` SET `value` = 0 WHERE `setting` = \'PHONE_HOME_DATE\';';
                 $steps[] = (new Upgrade())->hydrate([
                     'dbVersion' => $to,
-                    'appVersion' => WEBSITE_VERSION,
+                    'appVersion' => WEBSITE_VERSION_NAME,
                     'step' => 'Finalise Upgrade',
                     'action' => $action,
                     'type' => 'sql'

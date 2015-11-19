@@ -378,7 +378,8 @@ class Layout implements \JsonSerializable
             'saveRegions' => true,
             'saveTags' => true,
             'setBuildRequired' => true,
-            'validate' => true
+            'validate' => true,
+            'notify' => true
         ], $options);
 
         if ($options['validate'])
@@ -393,7 +394,7 @@ class Layout implements \JsonSerializable
         if ($this->layoutId == null || $this->layoutId == 0) {
             $this->add();
         } else if ($this->hash() != $this->hash && $options['saveLayout']) {
-            $this->update();
+            $this->update($options);
         }
 
         if ($options['saveRegions']) {
@@ -477,7 +478,7 @@ class Layout implements \JsonSerializable
         foreach ($this->campaigns as $campaign) {
             /* @var Campaign $campaign */
             $campaign->unassignLayout($this);
-            $campaign->save(false);
+            $campaign->save(['validate' => false]);
         }
 
         // Delete our own Campaign
@@ -804,10 +805,15 @@ class Layout implements \JsonSerializable
 
     /**
      * Update
+     * @param array $options
      * NOTE: We set the XML to NULL during this operation as we will always convert old layouts to the new structure
      */
-    private function update()
+    private function update($options = [])
     {
+        $options = array_merge([
+            'notify' => true
+        ], $options);
+
         Log::debug('Editing Layout ' . $this->layout . '. Id = ' . $this->layoutId);
 
         $sql = '
@@ -849,6 +855,6 @@ class Layout implements \JsonSerializable
         $campaign = CampaignFactory::getById($this->campaignId);
         $campaign->campaign = $this->layout;
         $campaign->ownerId = $this->ownerId;
-        $campaign->save(false);
+        $campaign->save(['validate' => false, 'notify' => $options['notify']]);
     }
 }

@@ -15,6 +15,10 @@
       "action": "ALTER TABLE  `log` ADD  `channel` VARCHAR( 5 ) NOT NULL AFTER  `logdate`, ADD  `runNo` VARCHAR( 10 ) NOT NULL AFTER  `logid`;"
     },
     {
+      "step": "Alter the Module Table",
+      "action": "ALTER TABLE  `module` ADD  `viewPath` VARCHAR( 254 ) NOT NULL DEFAULT  '../modules', ADD  `class` VARCHAR( 254 ) NOT NULL;"
+    },
+    {
       "step": "Add Permissions Table",
       "action": "CREATE TABLE IF NOT EXISTS `permission` (`permissionId` int(11) NOT NULL AUTO_INCREMENT,`entityId` int(11) NOT NULL,`groupId` int(11) NOT NULL,`objectId` int(11) NOT NULL,`view` tinyint(4) NOT NULL,`edit` tinyint(4) NOT NULL,`delete` tinyint(4) NOT NULL,PRIMARY KEY (`permissionId`)) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;"
     },
@@ -56,7 +60,7 @@
     },
     {
       "step": "Convert DataSet Permissions",
-      "action": "INSERT INTO `permission` (`groupId`, `entityId`, `objectId`, `view`, `edit`, `delete`) SELECT groupId, 9, mediaId, view, edit, del FROM `lkdatasetgroup`;"
+      "action": "INSERT INTO `permission` (`groupId`, `entityId`, `objectId`, `view`, `edit`, `delete`) SELECT groupId, 9, dataSetId, view, edit, del FROM `lkdatasetgroup`;"
     },
     {
       "step": "Remove old DataSet Permissions table",
@@ -64,7 +68,7 @@
     },
     {
       "step": "Convert Display Group Permissions",
-      "action": "INSERT INTO `permission` (`groupId`, `entityId`, `objectId`, `view`, `edit`, `delete`) SELECT groupId, 3, mediaId, view, edit, del FROM `lkdisplaygroupgroup`;"
+      "action": "INSERT INTO `permission` (`groupId`, `entityId`, `objectId`, `view`, `edit`, `delete`) SELECT groupId, 3, displayGroupId, view, edit, del FROM `lkdisplaygroupgroup`;"
     },
     {
       "step": "Remove old Display Group Permissions table",
@@ -113,10 +117,6 @@
     {
       "step": "Remove the Counter Module",
       "action": "DELETE FROM module WHERE module = 'counter';"
-    },
-    {
-      "step": "Alter the Module Table",
-      "action": "ALTER TABLE  `module` ADD  `viewPath` VARCHAR( 254 ) NOT NULL DEFAULT  '../modules', ADD  `class` VARCHAR( 254 ) NOT NULL;"
     },
     {
       "step": "Upgrade Layouts",

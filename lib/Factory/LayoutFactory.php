@@ -176,14 +176,16 @@ class LayoutFactory extends BaseFactory
     /**
      * Load a layout by its XLF
      * @param string $layoutXlf
+     * @param Layout[Optional] $layout
      * @return Layout
      */
-    public static function loadByXlf($layoutXlf)
+    public static function loadByXlf($layoutXlf, $layout = null)
     {
         Log::debug('Loading Layout by XLF');
 
         // New Layout
-        $layout = new Layout();
+        if ($layout == null)
+            $layout = new Layout();
 
         // Get a list of modules for us to use
         $modules = ModuleFactory::get();
@@ -290,6 +292,9 @@ class LayoutFactory extends BaseFactory
         Log::debug('Finished loading layout - there are %d regions.', count($layout->regions));
 
         // Load any existing tags
+        if (!is_array($layout->tags))
+            $layout->tags = TagFactory::tagsFromString($layout->tags);
+
         foreach ($xpath->query('//tags/tag') as $tagNode) {
             /* @var \DOMElement $tagNode */
             $layout->tags[] = TagFactory::tagFromString($tagNode->textContent);

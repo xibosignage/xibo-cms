@@ -32,7 +32,7 @@ class LayoutStructureStep implements Step
 
         // Build a keyed array of existing widget permissions
         $mediaPermissions = [];
-        foreach (PDOConnect::select('SELECT groupId, layoutId, regionId, mediaId, `view`, `edit`, `delete` FROM `lklayoutmediagroup`', []) as $row) {
+        foreach (PDOConnect::select('SELECT groupId, layoutId, regionId, mediaId, `view`, `edit`, `del` FROM `lklayoutmediagroup`', []) as $row) {
             $permission = new Permission();
             $permission->entityId = 6; // Widget
             $permission->groupId = $row['groupId'];
@@ -40,21 +40,21 @@ class LayoutStructureStep implements Step
             $permission->objectIdString = $row['regionId'];
             $permission->view = $row['view'];
             $permission->edit = $row['edit'];
-            $permission->delete = $row['delete'];
+            $permission->delete = $row['del'];
 
             $mediaPermissions[$row['mediaId']] = $permission;
         }
 
         // Build a keyed array of existing region permissions
         $regionPermissions = [];
-        foreach (PDOConnect::select('SELECT groupId, layoutId, regionId, mediaId, `view`, `edit`, `delete` FROM `lklayoutregiongroup`', []) as $row) {
+        foreach (PDOConnect::select('SELECT groupId, layoutId, regionId, `view`, `edit`, `del` FROM `lklayoutregiongroup`', []) as $row) {
             $permission = new Permission();
             $permission->entityId = 7; // Widget
             $permission->groupId = $row['groupId'];
             $permission->objectId = $row['layoutId'];
             $permission->view = $row['view'];
             $permission->edit = $row['edit'];
-            $permission->delete = $row['delete'];
+            $permission->delete = $row['del'];
 
             $regionPermissions[$row['regionId']] = $permission;
         }
@@ -68,11 +68,10 @@ class LayoutStructureStep implements Step
             file_put_contents($libraryLocation . 'oldXlf_' . $oldLayout['layoutId'], $oldLayout['xml']);
 
             // Create a new layout from the XML
-            $layout = LayoutFactory::loadByXlf($oldLayout['xml'], $regionPermissions, $mediaPermissions);
-            $layout->layoutId = $oldLayout['layoutId'];
+            $layout = LayoutFactory::loadByXlf($oldLayout['xml'], LayoutFactory::getById($oldLayout['layoutId']));
 
             // Save the layout
-            $layout->save();
+            $layout->save(['notify' => false]);
 
             // Now that we have new ID's we need to cross reference them with the old IDs and recreate the permissions
             foreach ($layout->regions as $region) {

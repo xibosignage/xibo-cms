@@ -20,6 +20,7 @@
  */
 namespace Xibo\Controller;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\ConfigurationException;
 use Xibo\Factory\UpgradeFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Date;
@@ -92,8 +93,9 @@ class Upgrade extends Base
             $upgradeStep->lastTryDate = Date::parse()->format('U');
             $upgradeStep->save();
             Log::error('Unable to run upgrade step. Message = %s', $e->getMessage());
+            Log::error($e->getTraceAsString());
 
-            throw $e;
+            throw new ConfigurationException($e->getMessage());
         }
 
         $this->getState()->hydrate([

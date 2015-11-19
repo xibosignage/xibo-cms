@@ -23,6 +23,7 @@
             <p>{% trans "The steps involved in this upgrade have been listed below, clicking the start button will run through the steps one by one." %}
                 {% trans "Please read through the release notes before you begin as they contain important information about this new release." %}</p>
             <p>{% trans "If you encounter an error, please contact support providing a screenshot of this page, making sure you include the step that experienced the error." %}</p>
+            <p><button id="startButton" class="btn btn-default">{% trans "Start" %}</button></p>
             <table class="table">
                 <thead>
                     <tr>
@@ -63,11 +64,19 @@
 
     <script type="text/javascript">
         var finishedTemplate;
+        var startButtonUsed = false;
 
         $(document).ready(function() {
 
             // Bind to the active do step button
             $("button.doStep").click(clickStep);
+
+            // Bind the start button
+            $("#startButton").click(function() {
+                // Find and "click" the button on the next step
+                startButtonUsed = true;
+                $("button.doStep").click();
+            });
 
             finishedTemplate = Handlebars.compile($("#upgrade-finished").html());
         });
@@ -106,9 +115,12 @@
                         subsequentStep.children().eq(0).html(button);
 
                         // Do the next one
-                        button.click();
+                        if (startButtonUsed)
+                            button.click();
                     }
                     else {
+                        startButtonUsed = false;
+
                         toastr.error(response.message);
 
                         // Append the error message under the step description
