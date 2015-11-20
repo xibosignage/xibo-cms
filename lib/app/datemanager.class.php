@@ -53,7 +53,7 @@ class DateManager
         else {
             // Do we have the international date formatter?
             if ($allowInternational && Config::GetSetting('USE_INTL_DATEFORMAT') == 1 && Config::CheckIntlDateFormat()) {
-                $formatter = new IntlDateFormatter(Config::GetSetting('DEFAULT_LANGUAGE'), IntlDateFormatter::FULL, IntlDateFormatter::FULL, Config::GetSetting('DEFAULT_TIMEZONE'), IntlDateFormatter::GREGORIAN, $format);
+                $formatter = new IntlDateFormatter(Config::GetSetting('DEFAULT_LANGUAGE'), IntlDateFormatter::FULL, IntlDateFormatter::FULL, Config::GetSetting('defaultTimezone'), IntlDateFormatter::GREGORIAN, $format);
                 return $formatter->format($timestamp);
             }
             else {
