@@ -118,4 +118,9 @@ require PROJECT_ROOT . '/lib/routes-web.php';
 require PROJECT_ROOT . '/lib/routes.php';
 
 // Run App
-$app->run();
+try {
+    $app->run();
+}
+catch (Exception $e) {
+    echo $e->getMessage();
+}
