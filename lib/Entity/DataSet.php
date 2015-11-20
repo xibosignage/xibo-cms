@@ -361,9 +361,12 @@ class DataSet implements \JsonSerializable
         PDOConnect::update('DELETE FROM `dataset` WHERE dataSetId = :dataSetId', ['dataSetId' => $this->dataSetId]);
 
         // The last thing we do is drop the dataSet table
-        PDOConnect::update('DROP TABLE dataset_' . $this->dataSetId, []);
+        $this->dropTable();
     }
 
+    /**
+     * Delete all data
+     */
     public function deleteData()
     {
         // The last thing we do is drop the dataSet table
@@ -385,13 +388,8 @@ class DataSet implements \JsonSerializable
             'userId' => $this->userId
         ]);
 
-        // Create the data table for this dataset
-        PDOConnect::update('
-          CREATE TABLE `dataset_' . $this->dataSetId . '` (
-            `id` int(11) NOT NULL AUTO_INCREMENT,
-            PRIMARY KEY (`id`)
-          ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1
-        ', []);
+        // Create the data table for this dataSet
+        $this->createTable();
     }
 
     /**
@@ -407,6 +405,42 @@ class DataSet implements \JsonSerializable
             'description' => $this->description,
             'lastDataEdit' => $this->lastDataEdit
         ]);
+    }
+
+    private function createTable()
+    {
+        // Create the data table for this dataset
+        PDOConnect::update('
+          CREATE TABLE `dataset_' . $this->dataSetId . '` (
+            `id` int(11) NOT NULL AUTO_INCREMENT,
+            PRIMARY KEY (`id`)
+          ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1
+        ', []);
+    }
+
+    private function dropTable()
+    {
+        PDOConnect::update('DROP TABLE IF EXISTS dataset_' . $this->dataSetId, []);
+    }
+
+    /**
+     * Rebuild the dataSet table
+     */
+    public function rebuild()
+    {
+        $this->load();
+
+        // Drop the data table
+        $this->dropTable();
+
+        // Add the data table
+        $this->createTable();
+
+        foreach ($this->columns as $column) {
+            /* @var \Xibo\Entity\DataSetColumn $column */
+            $column->dataSetId = $this->dataSetId;
+            $column->save(['rebuilding' => true]);
+        }
     }
 
     /**
@@ -443,7 +477,7 @@ class DataSet implements \JsonSerializable
         $values = array_values($row);
         $values[] = 'NULL';
 
-        $sql = 'INSERT INTO `dataset_' . $this->dataSetId . '` (' . implode(',', $keys) . ') VALUES (' . implode(',', array_fill(0, count($values), '?')) . ')';
+        $sql = 'INSERT INTO `dataset_' . $this->dataSetId . '` (`' . implode('`, `', $keys) . '`) VALUES (' . implode(',', array_fill(0, count($values), '?')) . ')';
 
         Log::sql($sql, $values);
 

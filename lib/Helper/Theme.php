@@ -22,6 +22,7 @@ namespace Xibo\Helper;
 use Exception;
 use Slim\Slim;
 use Xibo\Entity\Menu;
+use Xibo\Exception\ConfigurationException;
 use Xibo\Factory\MenuFactory;
 
 
@@ -39,7 +40,7 @@ class Theme
 
         // Is this theme valid?
         if (!is_dir(PROJECT_ROOT . '/web/theme/' . $globalTheme))
-            throw new Exception(__('The theme "%s" does not exist', $globalTheme));
+            throw new ConfigurationException(__('The theme "%s" does not exist', $globalTheme));
 
         // Store the theme name for later
         $this->name = $globalTheme;

@@ -123,21 +123,6 @@ CREATE TABLE IF NOT EXISTS `datasetcolumntype` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `datasetdata`
---
-
-CREATE TABLE IF NOT EXISTS `datasetdata` (
-  `DataSetDataID` int(11) NOT NULL AUTO_INCREMENT,
-  `DataSetColumnID` int(11) NOT NULL,
-  `RowNumber` int(11) NOT NULL,
-  `Value` varchar(255) NOT NULL,
-  PRIMARY KEY (`DataSetDataID`),
-  KEY `DataColumnID` (`DataSetColumnID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
-
--- --------------------------------------------------------
-
---
 -- Table structure for table `datatype`
 --
 
@@ -299,21 +284,6 @@ CREATE TABLE IF NOT EXISTS `lkcampaignlayout` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `lkdatasetlayout`
---
-
-CREATE TABLE IF NOT EXISTS `lkdatasetlayout` (
-  `LkDataSetLayoutID` int(11) NOT NULL AUTO_INCREMENT,
-  `DataSetID` int(11) NOT NULL,
-  `LayoutID` int(11) NOT NULL,
-  `RegionID` varchar(50) NOT NULL,
-  `MediaID` varchar(50) NOT NULL,
-  PRIMARY KEY (`LkDataSetLayoutID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
-
--- --------------------------------------------------------
-
---
 -- Table structure for table `lkdisplaydg`
 --
 
@@ -326,22 +296,6 @@ CREATE TABLE IF NOT EXISTS `lkdisplaydg` (
   KEY `DisplayGroupID` (`DisplayGroupID`),
   KEY `DisplayID` (`DisplayID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `lklayoutmedia`
---
-
-CREATE TABLE IF NOT EXISTS `lklayoutmedia` (
-  `lklayoutmediaID` int(11) NOT NULL AUTO_INCREMENT COMMENT 'The ID',
-  `mediaID` int(11) NOT NULL,
-  `layoutID` int(11) NOT NULL,
-  `regionID` varchar(50) NOT NULL COMMENT 'Region ID in the XML',
-  PRIMARY KEY (`lklayoutmediaID`),
-  KEY `mediaID` (`mediaID`),
-  KEY `layoutID` (`layoutID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Creates a reference between Layout and Media' AUTO_INCREMENT=1 ;
 
 -- --------------------------------------------------------
 
@@ -367,23 +321,6 @@ CREATE TABLE IF NOT EXISTS `lklayoutdisplaygroup` (
   UNIQUE KEY `layoutId` (`layoutId`,`displaygroupid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Layout associations directly to Display Groups' AUTO_INCREMENT=1 ;
 
---
--- Table structure for table `lkmediagroup`
---
-
-CREATE TABLE IF NOT EXISTS `lkmediagroup` (
-  `LkMediaGroupID` int(11) NOT NULL AUTO_INCREMENT,
-  `MediaID` int(11) NOT NULL,
-  `GroupID` int(11) NOT NULL,
-  `View` tinyint(4) NOT NULL DEFAULT '0',
-  `Edit` tinyint(4) NOT NULL DEFAULT '0',
-  `Del` tinyint(4) NOT NULL DEFAULT '0',
-  PRIMARY KEY (`LkMediaGroupID`),
-  KEY `MediaID` (`MediaID`),
-  KEY `GroupID` (`GroupID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
-
--- --------------------------------------------------------
 
 --
 -- Table structure for table `lkregionplaylist`

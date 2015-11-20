@@ -99,6 +99,7 @@ $app->put('/layout/retire/:id', '\Xibo\Controller\Layout:retire')->name('layout.
 // Layout Import
 $app->map('/layout/import', '\Xibo\Controller\Library:add')->via('HEAD');
 $app->post('/layout/import', '\Xibo\Controller\Layout:import')->name('layout.import');
+$app->post('/layout/:id/upgrade', '\Xibo\Controller\Layout:upgrade')->name('layout.upgrade');
 
 /**
  * Region

@@ -134,7 +134,7 @@ class DataSetColumn implements \JsonSerializable
      */
     public function save($options = [])
     {
-        $options = array_merge(['validate' => true], $options);
+        $options = array_merge(['validate' => true, 'rebuilding' => false], $options);
 
         if ($options['validate'])
             $this->validate();
@@ -142,7 +142,7 @@ class DataSetColumn implements \JsonSerializable
         if ($this->dataSetColumnId == 0)
             $this->add();
         else
-            $this->edit();
+            $this->edit($options);
     }
 
     /**
@@ -184,8 +184,9 @@ class DataSetColumn implements \JsonSerializable
 
     /**
      * Edit
+     * @param array $options
      */
-    private function edit()
+    private function edit($options)
     {
         // Get the current heading
         $currentHeading = PDOConnect::select('SELECT heading FROM `datasetcolumn` WHERE dataSetColumnId = :dataSetColumnId', ['dataSetColumnId' => $this->dataSetColumnId]);
@@ -212,7 +213,10 @@ class DataSetColumn implements \JsonSerializable
             'dataSetColumnId' => $this->dataSetColumnId
         ]);
 
-        if ($this->dataSetColumnTypeId == 1 && $currentHeading != $this->heading) {
+        if ($options['rebuilding'] && $this->dataSetColumnTypeId == 1) {
+            PDOConnect::update('ALTER TABLE `dataset_' . $this->dataSetId . '` ADD `' . $this->heading . '` ' . $this->sqlDataType() . ' NULL', []);
+
+        } else if ($this->dataSetColumnTypeId == 1 && $currentHeading != $this->heading) {
             $sql = 'ALTER TABLE `dataset_' . $this->dataSetId . '` CHANGE `' . $currentHeading . '` `' . $this->heading . '` ' . $this->sqlDataType() . ' NULL DEFAULT NULL';
             Log::debug($sql);
             PDOConnect::update($sql, []);
