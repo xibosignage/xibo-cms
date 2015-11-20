@@ -199,4 +199,16 @@ class Soap5 extends Soap4
 
         return $returnXml;
     }
+
+    /**
+     * Returns the schedule for the hardware key specified
+     * @return string
+     * @param string $serverKey
+     * @param string $hardwareKey
+     * @throws \SoapFault
+     */
+    function Schedule($serverKey, $hardwareKey)
+    {
+        return $this->doSchedule($serverKey, $hardwareKey, ['dependentsAsNodes' => true]);
+    }
 }
