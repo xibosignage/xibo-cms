@@ -774,6 +774,17 @@ class DisplayProfile
                         'groupClass' => NULL
                     ),
                     array(
+                        'name' => 'useSurfaceVideoView',
+                        'tabId' => 'trouble',
+                        'title' => __('Use a SurfaceView for Video Rendering?'),
+                        'type' => 'checkbox',
+                        'fieldType' => 'checkbox',
+                        'default' => 0,
+                        'helpText' => __('If the device is having trouble playing video, it may be useful to switch to a Surface View for Video Rendering.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
                         'name' => 'startOnBoot',
                         'tabId' => 'advanced',
                         'title' => __('Start during device start up?'),

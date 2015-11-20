@@ -29,6 +29,7 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Log;
 use Xibo\Helper\Theme;
+use Xibo\Helper\Translate;
 
 class Actions extends Middleware
 {
@@ -62,17 +63,30 @@ class Actions extends Middleware
             // Get the current route pattern
             $resource = $app->router->getCurrentRoute()->getPattern();
 
+            // Get an array of excluded routes
+            $excludedRoutes = array_merge($app->publicRoutes, ['/update', '/update/step/:id']);
+
             // Does the version in the DB match the version of the code?
             // If not then we need to run an upgrade.
-            if (DBVERSION != WEBSITE_VERSION && $resource != '/upgrade') {
+            if (Config::isUpgradePending() && !in_array($resource, $excludedRoutes)) {
+                Log::debug('%s not in excluded routes, redirecting. ', $resource);
                 $app->redirectTo('upgrade.view');
             }
+
+            $notifications = [];
 
             if ($app->user->userTypeId == 1 && file_exists(PROJECT_ROOT . '/web/install/index.php')) {
                 Log::info('Install.php exists and shouldn\'t');
 
-                $app->view()->appendData(['notifications' => [__('There is a problem with this installation. "install.php" should be deleted.')]]);
+                $notifications[] = __('There is a problem with this installation. "install.php" should be deleted.');
             }
+
+            // Language match?
+            if (Translate::getRequestedLanguage() != Translate::GetLocale()) {
+                $notifications[] = __('Your requested language %s could not be loaded.', Translate::getRequestedLanguage());
+            }
+
+            $app->view()->appendData(['notifications' => $notifications]);
         });
 
         $this->next->call();

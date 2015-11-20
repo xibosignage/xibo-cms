@@ -355,7 +355,7 @@ class ModuleFactory extends BaseFactory
 
             $sql = $select . $body . $order . $limit;
 
-            Log::sql($sql, $params);
+            //Log::sql($sql, $params);
 
             $sth = $dbh->prepare($sql);
             $sth->execute($params);

@@ -1,5 +1,5 @@
 INSERT INTO `version` (`app_ver`, `XmdsVersion`, `XlfVersion`, `DBVersion`) VALUES
-('1.8.0-alpha', 5, 2, 120);
+('1.8.0-alpha2', 5, 2, 121);
 
 INSERT INTO `group` (`groupID`, `group`, `IsUserSpecific`, `IsEveryone`) VALUES
 (1, 'Users', 0, 0),
@@ -139,9 +139,9 @@ INSERT INTO `pages` (`pageID`, `name`, `title`, `asHome`) VALUES
   (31, 'auditlog', 'Audit Trail', 1),
   (32, 'region', 'Regions', 0),
   (33, 'playlist', 'Playlist', 0),
-  (34, 'audit', 'Audit', 0),
+  (34, 'audit', 'Audit', 1),
   (35, 'maintenance', 'Maintenance', 0),
-  (36, 'command', 'Commands', 0);
+  (36, 'command', 'Commands', 1);
 
 
 INSERT INTO `resolution` (`resolutionID`, `resolution`, `width`, `height`, `intended_width`, `intended_height`, `version`, `enabled`) VALUES
@@ -272,7 +272,6 @@ VALUES ('Windows', 'windows', '[]', '1', '1'), ('Android', 'android', '[]', '1',
 
 INSERT INTO `permissionentity` (`entityId`, `entity`) VALUES
 (1, 'Xibo\\Entity\\Page'),
-(2, 'Xibo\\Entity\\Menu'),
 (3, 'Xibo\\Entity\\DisplayGroup'),
 (4, 'Xibo\\Entity\\Media'),
 (5, 'Xibo\\Entity\\Campaign'),

@@ -132,8 +132,6 @@ class UserFactory extends BaseFactory
                 userTypeId,
                 loggedIn,
                 email,
-                `user`.homePageId,
-                pages.title AS homePage,
                 lastAccessed,
                 newUserWizard,
                 retired,
@@ -143,6 +141,14 @@ class UserFactory extends BaseFactory
                 group.group,
                 IFNULL(group.libraryQuota, 0) AS libraryQuota ';
 
+        if (DBVERSION >= 120) {
+            $select .= '
+                ,
+                `pages`.pageId AS homePageId,
+                `pages`.title AS homePage
+            ';
+        }
+
         $body = '
               FROM `user`
                 INNER JOIN lkusergroup
@@ -150,8 +156,16 @@ class UserFactory extends BaseFactory
                 INNER JOIN `group`
                 ON `group`.groupId = lkusergroup.groupId
                   AND isUserSpecific = 1
+        ';
+
+        if (DBVERSION >= 120) {
+            $body .= '
                 LEFT OUTER JOIN `pages`
                 ON pages.pageId = `user`.homePageId
+            ';
+        }
+
+        $body .= '
              WHERE 1 = 1
          ';
 

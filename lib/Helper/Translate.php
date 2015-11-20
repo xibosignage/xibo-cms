@@ -27,6 +27,7 @@ use gettext_reader;
 
 class Translate
 {
+    private static $requestedLanguage;
     private static $locale;
     private static $jsLocale;
 
@@ -40,7 +41,7 @@ class Translate
         $default = ($language == NULL) ? Config::GetSetting('DEFAULT_LANGUAGE') : $language;
 
         // Build an array of supported languages
-        $supportedLanguages = scandir($localeDir);
+        $supportedLanguages = array_map('basename', glob($localeDir . '/*.mo'));
 
         // Try to get the local firstly from _REQUEST (post then get)
         $requestedLanguage = Sanitize::getString('lang', $language);
@@ -82,12 +83,16 @@ class Translate
             }
         }
 
+        // Requested language
+        self::$requestedLanguage = ($foundLanguage == '') ? $default : $foundLanguage;
+
         // Are we still empty, then default language from settings
         if ($foundLanguage == '') {
             // Check the default
             if (!in_array($default . '.mo', $supportedLanguages)) {
-                Log::Info('Resolved language [%s] not available, checked in %s and found %s.', $default, $localeDir, json_encode($supportedLanguages));
-                return;
+                Log::Info('Resolved language [%s] not available, checked in %s and found %s.', $default, $localeDir, json_encode($supportedLanguages, JSON_PRETTY_PRINT));
+
+                $default = 'en_GB';
             }
 
             // The default is valid
@@ -117,6 +122,11 @@ class Translate
     public static function GetJsLocale()
     {
         return self::$jsLocale;
+    }
+
+    public static function getRequestedLanguage()
+    {
+        return self::$requestedLanguage;
     }
 
     /**

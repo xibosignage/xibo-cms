@@ -564,9 +564,17 @@ class User implements \JsonSerializable
         if ($this->userTypeId == 1)
             return true;
 
-        if ($this->pagePermissionCache == null) {
-            // Load all viewable pages into the permissions cache
-            $this->pagePermissionCache = PageFactory::query();
+        try {
+            if ($this->pagePermissionCache == null) {
+                // Load all viewable pages into the permissions cache
+                $this->pagePermissionCache = PageFactory::query();
+            }
+        }
+        catch (\PDOException $e) {
+            Log::error('SQL Error getting permissions.');
+            Log::error($e->getTraceAsString());
+
+            return false;
         }
 
         // Home route

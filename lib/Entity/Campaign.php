@@ -130,11 +130,20 @@ class Campaign implements \JsonSerializable
             throw new \InvalidArgumentException(__('Name cannot be empty'));
     }
 
-    public function save($validate = true)
+    /**
+     * Save this Campaign
+     * @param array $options
+     */
+    public function save($options = [])
     {
+        $options = array_merge([
+            'validate' => true,
+            'notify' => true
+        ], $options);
+
         Log::debug('Saving %s', $this);
 
-        if ($validate)
+        if ($options['validate'])
             $this->validate();
 
         if ($this->campaignId == null || $this->campaignId == 0) {
@@ -150,7 +159,8 @@ class Campaign implements \JsonSerializable
         }
 
         // Notify anyone interested of the changes
-        $this->notify();
+        if ($options['notify'])
+            $this->notify();
     }
 
     public function delete()

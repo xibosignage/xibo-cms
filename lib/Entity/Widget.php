@@ -107,6 +107,12 @@ class Widget implements \JsonSerializable
      */
     private $mediaHash = null;
 
+    /**
+     * Temporary Id used during import/upgrade
+     * @var string read only string
+     */
+    public $tempId = null;
+
     public function __construct()
     {
         $this->excludeProperty('module');

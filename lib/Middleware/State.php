@@ -25,6 +25,7 @@ use Jenssegers\Date\Date;
 use Slim\Middleware;
 use Slim\Slim;
 use Xibo\Exception\InstanceSuspendedException;
+use Xibo\Exception\UpgradePendingException;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\ByteFormatter;
@@ -78,6 +79,10 @@ class State extends Middleware
             // Check to see if the instance has been suspended, if so call the special route
             if (Config::GetSetting('INSTANCE_SUSPENDED') == 1)
                 throw new InstanceSuspendedException();
+
+            // Get to see if upgrade is pending
+            if (Config::isUpgradePending() && $app->getName() != 'web')
+                throw new UpgradePendingException();
 
             // Reset the ETAGs for GZIP
             if ($requestEtag = $app->request->headers->get('IF_NONE_MATCH')) {

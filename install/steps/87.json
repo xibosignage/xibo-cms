@@ -1,0 +1,15 @@
+{
+  "dbVersion": 87,
+  "appVersion": "1.7.3",
+  "steps": [
+    {
+      "step": "Update the storage fields on the display table to access larger values",
+      "fixedIn": 85,
+      "action": "ALTER TABLE  `display` CHANGE  `storageAvailableSpace`  `storageAvailableSpace` BIGINT NULL DEFAULT NULL ,CHANGE  `storageTotalSpace`  `storageTotalSpace` BIGINT NULL DEFAULT NULL;"
+    },
+    {
+      "step": "Add setting for proxy server exceptions",
+      "action": "INSERT INTO  `setting` (`setting` ,`value` ,`fieldType` ,`helptext` ,`options` ,`cat` ,`userChange` ,`title` ,`validation` ,`ordering` ,`default` ,`userSee` ,`type`)VALUES ('PROXY_EXCEPTIONS', '', 'text', 'Hosts and Keywords that should not be loaded via the Proxy Specified. These should be comma separated.', '', 'network', 1, 'Proxy Exceptions',  '',  '32',  '',  '1',  'text');"
+    }
+  ]
+}

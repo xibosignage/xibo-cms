@@ -14,6 +14,8 @@ use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\FormExpiredException;
 use Xibo\Exception\InstanceSuspendedException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Exception\UpgradePendingException;
+use Xibo\Helper\Config;
 use Xibo\Helper\Log;
 use Xibo\Helper\Translate;
 
@@ -115,6 +117,10 @@ class Error extends Base
                     // get the exception class
                     $exceptionClass = 'error-' . strtolower(str_replace('\\', '-', get_class($e)));
 
+                    // An upgrade might be pending
+                    if ($e instanceof AccessDeniedException && Config::isUpgradePending())
+                        $exceptionClass = 'upgrade-in-progress-page';
+
                     if (file_exists(PROJECT_ROOT . '/views/' . $exceptionClass . '.twig'))
                         $this->getState()->template = $exceptionClass;
                     else
@@ -181,6 +187,7 @@ class Error extends Base
             || $e instanceof NotFoundException
             || $e instanceof InstanceSuspendedException
             || $e instanceof ConfigurationException
+            || $e instanceof UpgradePendingException
         );
     }
 }
