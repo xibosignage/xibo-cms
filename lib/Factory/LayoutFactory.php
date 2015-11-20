@@ -174,6 +174,16 @@ class LayoutFactory extends BaseFactory
     }
 
     /**
+     * Get by Background Image Id
+     * @param int $backgroundImageId
+     * @return array[Media]
+     */
+    public static function getByBackgroundImageId($backgroundImageId)
+    {
+        return LayoutFactory::query(null, ['disableUserCheck' => 1, 'backgroundImageId' => $backgroundImageId]);
+    }
+
+    /**
      * Load a layout by its XLF
      * @param string $layoutXlf
      * @param Layout[Optional] $layout

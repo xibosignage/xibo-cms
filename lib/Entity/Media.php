@@ -99,10 +99,6 @@ class Media implements \JsonSerializable
      */
     public $tags = [];
 
-    private $widgets = [];
-    private $displayGroups = [];
-    private $permissions = [];
-
     /**
      * @SWG\Property(description="The file size in bytes")
      * @var int
@@ -169,12 +165,18 @@ class Media implements \JsonSerializable
     public $cloned = false;
     public $newExpiry;
 
+    private $widgets = [];
+    private $displayGroups = [];
+    private $layoutBackgroundImages = [];
+    private $permissions = [];
+
     public function __clone()
     {
         // Clear the ID's and all widget/displayGroup assignments
         $this->mediaId = null;
         $this->widgets = [];
         $this->displayGroups = [];
+        $this->layoutBackgroundImages = [];
         $this->permissions = [];
 
         // We need to do something with the name
@@ -214,6 +216,19 @@ class Media implements \JsonSerializable
     }
 
     /**
+     * Is this media used
+     * @return bool
+     * @throws ConfigurationException if media->load() hasn't been called.
+     */
+    public function isUsed()
+    {
+        if (!$this->loaded)
+            throw new ConfigurationException('Called isUsed before it has been loaded, please call load()');
+
+        return (count($this->widgets) > 0 || count($this->displayGroups) > 0 || count($this->layoutBackgroundImages) > 0);
+    }
+
+    /**
      * Validate
      * @param array $options
      */
@@ -250,19 +265,27 @@ class Media implements \JsonSerializable
 
     /**
      * Load
+     * @param array $options
      */
-    public function load()
+    public function load($options = [])
     {
+        $options = array_merge([
+            'deleting' => false
+        ], $options);
+
         // Tags
         $this->tags = TagFactory::loadByMediaId($this->mediaId);
 
         // Are we loading for a delete? If so load the child models
-        if ($this->deleting) {
+        if ($options['deleting']) {
             // Permissions
             $this->permissions = PermissionFactory::getByObjectId(get_class($this), $this->mediaId);
 
             // Widgets
             $this->widgets = WidgetFactory::getByMediaId($this->mediaId);
+
+            // Layout Background Images
+            $this->layoutBackgroundImages = LayoutFactory::getByBackgroundImageId($this->mediaId);
 
             // Display Groups
             $this->displayGroups = DisplayGroupFactory::getByMediaId($this->mediaId);
@@ -314,8 +337,7 @@ class Media implements \JsonSerializable
      */
     public function delete()
     {
-        $this->deleting = true;
-        $this->load();
+        $this->load(['deleting' => true]);
 
         // If there is a parent, bring it back
         try {
@@ -362,6 +384,12 @@ class Media implements \JsonSerializable
                 $displayGroup->assignMedia($parentMedia);
 
             $displayGroup->save(false);
+        }
+
+        foreach ($this->layoutBackgroundImages as $layout) {
+            /* @var Layout $layout */
+            $layout->backgroundImageId = null;
+            $layout->save(Layout::$saveOptionsMinimum);
         }
 
         PDOConnect::update('DELETE FROM media WHERE MediaID = :mediaId', ['mediaId' => $this->mediaId]);

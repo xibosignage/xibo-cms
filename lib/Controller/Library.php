@@ -206,6 +206,8 @@ class Library extends Base
         if (!$this->getUser()->checkDeleteable($media))
             throw new AccessDeniedException();
 
+        $media->load(['deleting' => true]);
+
         $this->getState()->template = 'library-form-delete';
         $this->getState()->setData([
             'media' => $media,
@@ -230,6 +232,13 @@ class Library extends Base
      *      type="integer",
      *      required=true
      *   ),
+     *  @SWG\Parameter(
+     *      name="forceDelete",
+     *      in="formData",
+     *      description="If the media item has been used should it be force removed from items that uses it?",
+     *      type="integer",
+     *      required=true
+     *   ),
      *  @SWG\Response(
      *      response=204,
      *      description="successful operation"
@@ -242,6 +251,12 @@ class Library extends Base
 
         if (!$this->getUser()->checkDeleteable($media))
             throw new AccessDeniedException();
+
+        // Check
+        $media->load(['deleting' => true]);
+
+        if ($media->isUsed() && Sanitize::getCheckbox('forceDelete') == 0)
+            throw new \InvalidArgumentException(__('This library item is in use.'));
 
         // Delete
         $media->delete();
