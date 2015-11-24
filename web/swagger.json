@@ -515,6 +515,13 @@
                         "description": "The Media ID to Delete",
                         "required": true,
                         "type": "integer"
+                    },
+                    {
+                        "name": "forceDelete",
+                        "in": "formData",
+                        "description": "If the media item has been used should it be force removed from items that uses it?",
+                        "required": true,
+                        "type": "integer"
                     }
                 ],
                 "responses": {

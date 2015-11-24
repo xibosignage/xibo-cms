@@ -377,7 +377,7 @@ class Schedule extends Base
         $recurrenceRange = Sanitize::getDate('recurrenceRange');
 
         if ($fromDt === null)
-            throw new \InvalidArgumentException(__('Please enter a from and to date'));
+            throw new \InvalidArgumentException(__('Please enter a from date'));
 
         Log::debug('Times received are: FromDt=' . Date::getLocalDate($fromDt) . '. ToDt=' . Date::getLocalDate($toDt) . '. recurrenceRange=' . Date::getLocalDate($recurrenceRange));
 
