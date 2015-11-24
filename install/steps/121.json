@@ -56,6 +56,10 @@
       "action": "Xibo\\Upgrade\\VideoDurationStep"
     },
     {
+      "step": "Update Users with additional fields",
+      "action": "ALTER TABLE  `user` ADD  `firstName` VARCHAR( 254 ) NULL ,ADD  `lastName` VARCHAR( 254 ) NULL ,ADD  `phone` VARCHAR( 254 ) NULL ,ADD  `ref1` VARCHAR( 254 ) NULL ,ADD  `ref2` VARCHAR( 254 ) NULL ,ADD  `ref3` VARCHAR( 254 ) NULL ,ADD  `ref4` VARCHAR( 254 ) NULL ,ADD  `ref5` VARCHAR( 254 ) NULL;"
+    },
+    {
       "step": "Update XMDS Version to 5",
       "action": "UPDATE `version` SET `XmdsVersion` = 5;"
     }

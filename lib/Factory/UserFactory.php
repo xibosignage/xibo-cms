@@ -139,7 +139,16 @@ class UserFactory extends BaseFactory
                 UserPassword AS password,
                 group.groupId,
                 group.group,
-                IFNULL(group.libraryQuota, 0) AS libraryQuota ';
+                IFNULL(group.libraryQuota, 0) AS libraryQuota,
+                `user`.firstName,
+                `user`.lastName,
+                `user`.phone,
+                `user`.ref1,
+                `user`.ref2,
+                `user`.ref3,
+                `user`.ref4,
+                `user`.ref5
+        ';
 
         if (DBVERSION >= 120) {
             $select .= '

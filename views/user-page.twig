@@ -51,6 +51,14 @@
                                 <th>{% trans "Email" %}</th>
                                 <th>{% trans "Library Quota" %}</th>
                                 <th>{% trans "Retired?" %}</th>
+                                <th>{% trans "First Name" %}</th>
+                                <th>{% trans "Last Name" %}</th>
+                                <th>{% trans "Phone" %}</th>
+                                <th>{% trans "Ref 1" %}</th>
+                                <th>{% trans "Ref 2" %}</th>
+                                <th>{% trans "Ref 3" %}</th>
+                                <th>{% trans "Ref 4" %}</th>
+                                <th>{% trans "Ref 5" %}</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -86,6 +94,14 @@
                     "data": "retired",
                     "render": dataTableTickCrossColumn
                 },
+                { "data": "firstName", "visible": false },
+                { "data": "lastName", "visible": false },
+                { "data": "phone", "visible": false },
+                { "data": "ref1", "visible": false },
+                { "data": "ref2", "visible": false },
+                { "data": "ref3", "visible": false },
+                { "data": "ref4", "visible": false },
+                { "data": "ref5", "visible": false },
                 {
                     "orderable": false,
                     "data": dataTableButtonsColumn
@@ -94,6 +110,7 @@
         });
 
         table.on('draw', dataTableDraw);
-        table.on('processing.dt', dataTableProcessing);
+        table.on('processing.dt', dataTableProcessing)
+        dataTableAddButtons(table, $('#users_wrapper').find('.col-sm-6').eq(1))
     </script>
 {% endblock %}

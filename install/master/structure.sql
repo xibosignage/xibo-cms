@@ -876,6 +876,14 @@ CREATE TABLE IF NOT EXISTS `user` (
   `Retired` tinyint(4) NOT NULL DEFAULT '0',
   `CSPRNG` tinyint(4) NOT NULL DEFAULT '0',
   `newUserWizard` tinyint(4) NOT NULL DEFAULT '0',
+  `firstName` varchar(254) DEFAULT NULL,
+  `lastName` varchar(254) DEFAULT NULL,
+  `phone` varchar(254) DEFAULT NULL,
+  `ref1` varchar(254) DEFAULT NULL,
+  `ref2` varchar(254) DEFAULT NULL,
+  `ref3` varchar(254) DEFAULT NULL,
+  `ref4` varchar(254) DEFAULT NULL,
+  `ref5` varchar(254) DEFAULT NULL,
   PRIMARY KEY (`UserID`),
   KEY `usertypeid` (`usertypeid`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=2 ;

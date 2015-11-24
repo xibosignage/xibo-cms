@@ -235,6 +235,62 @@ class User extends Base
      *      type="integer",
      *      required=true
      *   ),
+     *  @SWG\Parameter(
+     *      name="firstName",
+     *      in="formData",
+     *      description="The users first name",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="lastName",
+     *      in="formData",
+     *      description="The users last name",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="phone",
+     *      in="formData",
+     *      description="The users phone number",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ref1",
+     *      in="formData",
+     *      description="Reference 1",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ref2",
+     *      in="formData",
+     *      description="Reference 2",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ref3",
+     *      in="formData",
+     *      description="Reference 3",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ref4",
+     *      in="formData",
+     *      description="Reference 4",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ref5",
+     *      in="formData",
+     *      description="Reference 5",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -257,6 +313,15 @@ class User extends Base
         $user->homePageId = Sanitize::getInt('homePageId');
         $user->libraryQuota = Sanitize::getInt('libraryQuota');
         $user->setNewPassword(Sanitize::getString('password'));
+
+        $user->firstName = Sanitize::getString('firstName');
+        $user->lastName = Sanitize::getString('lastName');
+        $user->phone = Sanitize::getString('phone');
+        $user->ref1 = Sanitize::getString('ref1');
+        $user->ref2 = Sanitize::getString('ref2');
+        $user->ref3 = Sanitize::getString('ref3');
+        $user->ref4 = Sanitize::getString('ref4');
+        $user->ref5 = Sanitize::getString('ref5');
 
         // Initial user group
         $group = UserGroupFactory::getById(Sanitize::getInt('groupId'));
@@ -296,6 +361,15 @@ class User extends Base
         $user->homePageId = Sanitize::getInt('homePageId');
         $user->libraryQuota = Sanitize::getInt('libraryQuota');
         $user->retired = Sanitize::getCheckbox('retired');
+
+        $user->firstName = Sanitize::getString('firstName');
+        $user->lastName = Sanitize::getString('lastName');
+        $user->phone = Sanitize::getString('phone');
+        $user->ref1 = Sanitize::getString('ref1');
+        $user->ref2 = Sanitize::getString('ref2');
+        $user->ref3 = Sanitize::getString('ref3');
+        $user->ref4 = Sanitize::getString('ref4');
+        $user->ref5 = Sanitize::getString('ref5');
 
         // Make sure the user has permission to access this page.
         if (!$user->checkViewable(PageFactory::getById($user->homePageId)))
