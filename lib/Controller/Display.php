@@ -455,7 +455,7 @@ class Display extends Base
                         $profile[$i]['valueString'] = $option['value'];
                 }
             } else if ($profile[$i]['fieldType'] == 'timePicker') {
-                $profile[$i]['valueString'] = Date::getSystemDate($profile[$i]['value'] / 1000, 'H:i');
+                $profile[$i]['valueString'] = Date::parse($profile[$i]['value'], 'H:i')->format('H:i');
             }
         }
 

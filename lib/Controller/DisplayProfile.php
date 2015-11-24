@@ -23,7 +23,6 @@ use Xibo\Entity\Command;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DisplayProfileFactory;
-use Xibo\Helper\Date;
 use Xibo\Helper\Help;
 use Xibo\Helper\Sanitize;
 
@@ -271,20 +270,6 @@ class DisplayProfile extends Base
 
                 default:
                     $value = Sanitize::getParam($setting['name'], $setting['default']);
-            }
-
-            // If we are a time picker, then process the received time
-            if ($setting['fieldType'] == 'timePicker') {
-                $date = Sanitize::getDate($setting['name'], $setting['default']);
-
-                if ($date->hour == 0 && $date->minute == 0)
-                    $value = 0;
-                else {
-                    // Take only the hours and minutes and construct a new date
-                    $now = Date::parse();
-                    $now->setTime($date->hour, $date->minute, 0);
-                    $value = Date::getLocalDate($now, 'U') * 1000;
-                }
             }
 
             // Add to the combined array

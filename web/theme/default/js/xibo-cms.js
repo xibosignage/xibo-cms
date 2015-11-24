@@ -244,7 +244,7 @@ function XiboInitialise(scope) {
     $(scope + ' .timePicker').each(function() {
 
         $(this).datetimepicker({
-            format: bootstrapDateFormat,
+            format: "hh:ii",
             autoClose: true,
             language: language,
             calendarType: calendarType,
