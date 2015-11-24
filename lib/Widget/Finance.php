@@ -341,12 +341,12 @@ class Finance extends ModuleWidget
         $duration = $this->getDuration();
 
         // Generate a JSON string of items.
-        if (!$items = $this->getYql($displayId, $isPreview)) {
+        if (!$items = $this->getYql()) {
             return '';
         }
 
         // Run through each item and substitute with the template
-        $template = $this->getRawNode('template');
+        $template = $this->parseLibraryReferences($isPreview, $this->getRawNode('template'));
         $renderedItems = [];
 
         foreach ($items as $item) {
@@ -418,6 +418,10 @@ class Finance extends ModuleWidget
 
         // Replace the Head Content with our generated javascript
         $data['javaScript'] = $javaScriptContent;
+
+        // Update and save widget if we've changed our assignments.
+        if ($this->hasMediaChanged())
+            $this->widget->save(['saveWidgetOptions' => false]);
 
         return $this->renderTemplate($data);
     }

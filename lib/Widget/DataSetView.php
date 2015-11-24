@@ -202,7 +202,7 @@ class DataSetView extends ModuleWidget
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
 
         // Get the embedded HTML out of RAW
-        $styleSheet = $this->GetRawNode('styleSheet', $this->defaultStyleSheet());
+        $styleSheet = $this->parseLibraryReferences($isPreview, $this->GetRawNode('styleSheet', $this->defaultStyleSheet()));
 
         $options = array(
             'type' => $this->getModuleType(),
