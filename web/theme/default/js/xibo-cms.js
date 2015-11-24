@@ -834,9 +834,10 @@ function XiboClockUpdate(time)
 /**
  * Submits the Form
  * @param {Object} form
+ * @param e
  * @param callBack
  */
-function XiboFormSubmit(form, callBack) {
+function XiboFormSubmit(form, e, callBack) {
 
     // Get the URL from the action part of the form)
     var url = $(form).attr("action");
