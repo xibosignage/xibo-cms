@@ -55,7 +55,7 @@ class Soap5 extends Soap4
             $xmrPubKey = "-----BEGIN PUBLIC KEY-----\n" . $xmrPubKey . "\n-----END PUBLIC KEY-----\n";
         }
 
-            // Audit in
+        // Audit in
         Log::debug('serverKey: ' . $serverKey . ', hardwareKey: ' . $hardwareKey . ', displayName: ' . $displayName);
 
         // Check the serverKey matches
@@ -77,8 +77,11 @@ class Soap5 extends Soap4
 
             $this->logProcessor->setDisplay($display->displayId);
 
+            // Now
+            $dateNow = Date::parse();
+
             // Append the time
-            $displayElement->setAttribute('date', Date::getLocalDate());
+            $displayElement->setAttribute('date', Date::getLocalDate($dateNow));
             $displayElement->setAttribute('timezone', Config::GetSetting('defaultTimezone'));
 
             // Determine if we are licensed or not
@@ -104,6 +107,15 @@ class Soap5 extends Soap4
                     // Override the XMR address if empty
                     if (strtolower($arrayItem['name']) == 'xmrnetworkaddress' && $arrayItem['value'] == '') {
                         $arrayItem['value'] = Config::GetSetting('XMR_PUB_ADDRESS');
+                    }
+
+                    // Append Local Time to the root element
+                    if (strtolower($arrayItem['name']) == 'displaytimezone' && $arrayItem['value'] != '') {
+                        // Calculate local time
+                        $dateNow->timezone($arrayItem['value']);
+
+                        // Append Local Time
+                        $displayElement->setAttribute('localDate', Date::getLocalDate($dateNow));
                     }
 
                     $node = $return->createElement($arrayItem['name'], (isset($arrayItem['value']) ? $arrayItem['value'] : $arrayItem['default']));

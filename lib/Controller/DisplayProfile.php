@@ -23,6 +23,7 @@ use Xibo\Entity\Command;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DisplayProfileFactory;
+use Xibo\Helper\Date;
 use Xibo\Helper\Help;
 use Xibo\Helper\Sanitize;
 
@@ -174,12 +175,19 @@ class DisplayProfile extends Base
             return $a->getId() - $b->getId();
         });
 
+        // Get a list of timezones
+        $timeZones = [];
+        foreach (Date::timezoneList() as $key => $value) {
+            $timeZones[] = ['id' => $key, 'value' => $value];
+        }
+
         $this->getState()->template = 'displayprofile-form-edit';
         $this->getState()->setData([
             'displayProfile' => $displayProfile,
             'tabs' => $displayProfile->configTabs,
             'config' => $displayProfile->configDefault,
-            'commands' => array_merge($displayProfile->commands, $unassignedCommands)
+            'commands' => array_merge($displayProfile->commands, $unassignedCommands),
+            'timeZones' => $timeZones
         ]);
     }
 
