@@ -188,7 +188,7 @@
         <div class="">
             <input type="hidden" name="{{ name }}" id="{{ name }}" value="{{ value }}" />
             {% set linkedName %}{{ name }}Link{% endset %}
-            <input class="form-control timePicker dateControl" name="{{ linkedName }}" type="text" id="{{ linkedName }}" {{ validation }} data-link-field="{{ name }}" data-link-format="yyyy-mm-dd hh:ii:ss" readonly/>
+            <input class="form-control timePicker dateControl" name="{{ linkedName }}" type="text" id="{{ linkedName }}" {{ validation }} data-link-field="{{ name }}" data-link-format="hh:ii" readonly/>
             <span class="help-block">{{ helpText }}</span>
         </div>
     </div>
