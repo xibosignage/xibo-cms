@@ -267,7 +267,7 @@ class LayoutFactory extends BaseFactory
                     foreach ($optionsNode->childNodes as $mediaOption) {
                         /* @var \DOMElement $mediaOption */
                         $widgetOption = new WidgetOption();
-                        $widgetOption->type = 'attribute';
+                        $widgetOption->type = 'attrib';
                         $widgetOption->option = $mediaOption->nodeName;
                         $widgetOption->value = $mediaOption->textContent;
 

@@ -620,10 +620,12 @@ class Layout implements \JsonSerializable
                     $mediaNode->appendChild($rawNode);
 
                     // Inject the URI
+                    $uriInjected = false;
                     if ($module->getModule()->regionSpecific == 0) {
                         $media = MediaFactory::getById($widget->mediaIds[0]);
                         $optionNode = $document->createElement('uri', $media->storedAs);
                         $optionsNode->appendChild($optionNode);
+                        $uriInjected = true;
                     }
 
                     foreach ($widget->widgetOptions as $option) {
@@ -634,7 +636,11 @@ class Layout implements \JsonSerializable
                             $optionNode->appendChild($cdata);
                             $rawNode->appendChild($optionNode);
                         }
-                        else if ($option->type == 'attrib') {
+                        else if ($option->type == 'attrib' || $option->type == 'attribute') {
+
+                            if ($uriInjected && $option->option == 'uri')
+                                continue;
+
                             $optionNode = $document->createElement($option->option, $option->value);
                             $optionsNode->appendChild($optionNode);
                         }
