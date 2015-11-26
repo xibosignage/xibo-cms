@@ -28,15 +28,15 @@
                 <div class="XiboFilter">
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
-                            {{ inline.text("filter_name", "Name", defaults.layout) }}
-                            {{ inline.text("filter_tags", "Tags", defaults.tags) }}
+                            {{ inline.text("media", "Name", defaults.media) }}
+                            {{ inline.text("tags", "Tags", defaults.tags) }}
 
                             {% set users = [{userId: null, userName: ""}]|merge(users) %}
-                            {{ inline.dropdown("filter_owner", "single", "Owner", defaults.owner, users, "userId", "userName") }}
-                            {{ inline.dropdown("filter_type", "single", "Type", defaults.type, [{"type": none, "name": ""}]|merge(modules), "type", "name") }}
+                            {{ inline.dropdown("ownerId", "single", "Owner", defaults.owner, users, "userId", "userName") }}
+                            {{ inline.dropdown("type", "single", "Type", defaults.type, [{"type": none, "name": ""}]|merge(modules), "type", "name") }}
 
                             {% set values = [{id: 1, value: "Yes"}, {id: 0, value: "No"}] %}
-                            {{ inline.dropdown("filter_retired", "single", "Retired", defaults.retired, values, "id", "value") }}
+                            {{ inline.dropdown("retired", "single", "Retired", defaults.retired, values, "id", "value") }}
 
                             {{ inline.checkbox("XiboFilterPinned", "Keep Open", defaults.filterPinned) }}
                         </form>

@@ -200,7 +200,7 @@ class DisplayFactory extends BaseFactory
         }
 
         // Filter by Display Name?
-        if (Sanitize::getString('display', $filterBy) != '') {
+        if (Sanitize::getString('display', $filterBy) != null) {
             // convert into a space delimited array
             $names = explode(' ', Sanitize::getString('display', $filterBy));
 

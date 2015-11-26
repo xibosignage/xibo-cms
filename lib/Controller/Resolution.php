@@ -64,6 +64,27 @@ class Resolution extends Base
      *  tags={"resolution"},
      *  summary="Resolution Search",
      *  description="Search Resolutions this user has access to",
+     *  @SWG\Parameter(
+     *      name="resolutionId",
+     *      in="formData",
+     *      description="Filter by Resolution Id",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="resolution",
+     *      in="formData",
+     *      description="Filter by Resolution Name",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="enabled",
+     *      in="formData",
+     *      description="Filter by Enabled",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -80,8 +101,9 @@ class Resolution extends Base
 
         // Show enabled
         $filter = [
-            'enabled' => $this->getSession()->set('resolution', 'filterEnabled', Sanitize::getInt('filterEnabled', -1)),
-            'resolutionId' => Sanitize::getInt('resolutionId')
+            'enabled' => $this->getSession()->set('resolution', 'filterEnabled', Sanitize::getInt('enabled', -1)),
+            'resolutionId' => Sanitize::getInt('resolutionId'),
+            'resolution' => Sanitize::getString('resolution')
         ];
 
         $resolutions = ResolutionFactory::query($this->gridRenderSort(), $this->gridRenderFilter($filter));

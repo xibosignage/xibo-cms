@@ -72,6 +72,16 @@ class CommandFactory extends BaseFactory
             $params['commandId'] = Sanitize::getInt('commandId', $filterBy);
         }
 
+        if (Sanitize::getString('command', $filterBy) != null) {
+            $body .= ' AND `command`.command = :command ';
+            $params['command'] = Sanitize::getString('command', $filterBy);
+        }
+
+        if (Sanitize::getString('code', $filterBy) != null) {
+            $body .= ' AND `code`.code = :code ';
+            $params['code'] = Sanitize::getString('code', $filterBy);
+        }
+
         // Sorting?
         $order = '';
         if (is_array($sortOrder))

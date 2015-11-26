@@ -45,6 +45,27 @@ class DisplayProfile extends Base
      *  tags={"displayprofile"},
      *  summary="Display Profile Search",
      *  description="Search this users Display Profiles",
+     *  @SWG\Parameter(
+     *      name="displayProfileId",
+     *      in="formData",
+     *      description="Filter by DisplayProfile Id",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="displayProfile",
+     *      in="formData",
+     *      description="Filter by DisplayProfile Name",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="type",
+     *      in="formData",
+     *      description="Filter by DisplayProfile Type (windows|android)",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -57,7 +78,13 @@ class DisplayProfile extends Base
      */
     function grid()
     {
-        $profiles = DisplayProfileFactory::query($this->gridRenderSort(), $this->gridRenderFilter());
+        $filter = [
+            'displayProfileId' => Sanitize::getInt('displayProfileId'),
+            'displayProfile' => Sanitize::getString('displayProfile'),
+            'type' => Sanitize::getString('type')
+        ];
+
+        $profiles = DisplayProfileFactory::query($this->gridRenderSort(), $this->gridRenderFilter($filter));
 
         foreach ($profiles as $profile) {
             /* @var \Xibo\Entity\DisplayProfile $profile */

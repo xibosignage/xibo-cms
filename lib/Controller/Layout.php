@@ -486,6 +486,41 @@ class Layout extends Base
      *  summary="Search Layouts",
      *  description="Search for Layouts viewable by this user",
      *  @SWG\Parameter(
+     *      name="layoutId",
+     *      in="formData",
+     *      description="Filter by Layout Id",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="layout",
+     *      in="formData",
+     *      description="Filter by partial Layout name",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="userId",
+     *      in="formData",
+     *      description="Filter by user Id",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="retired",
+     *      in="formData",
+     *      description="Filter by retired flag",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *   @SWG\Parameter(
+     *      name="tags",
+     *      in="formData",
+     *      description="Filter by Tags",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="embed",
      *      in="formData",
      *      description="Embed related data such as regions, playlists, tags, etc",
@@ -506,29 +541,8 @@ class Layout extends Base
     {
         $this->getState()->template = 'grid';
 
-        // Filter by Name
-        $name = Sanitize::getString('layout');
-        $this->getSession()->set('layout', 'layout', $name);
-
-        // User ID
-        $userId = Sanitize::getInt('userId');
-        $this->getSession()->set('layout', 'userId', $userId);
-
-        // Show retired
-        $retired = Sanitize::getInt('retired');
-        $this->getSession()->set('layout', 'retired', $retired);
-
-        // Show filterLayoutStatusId
-        $filterLayoutStatusId = Sanitize::getInt('layoutStatusId');
-        $this->getSession()->set('layout', 'layoutStatusId', $filterLayoutStatusId);
-
-        // Show showDescriptionId
-        $showDescriptionId = Sanitize::getInt('showDescriptionId');
-        $this->getSession()->set('layout', 'showDescriptionId', $showDescriptionId);
-
-        // Tags list
-        $tags = Sanitize::getString('tags');
-        $this->getSession()->set('layout', 'tags', $tags);
+        // Should we parse the description into markdown
+        $showDescriptionId = $this->getSession()->set('layout', 'showDescriptionId', Sanitize::getInt('showDescriptionId'));
 
         // Pinned option?
         $this->getSession()->set('layout', 'LayoutFilter', Sanitize::getCheckbox('XiboFilterPinned'));
@@ -538,11 +552,12 @@ class Layout extends Base
 
         // Get all layouts
         $layouts = LayoutFactory::query($this->gridRenderSort(), $this->gridRenderFilter([
-            'layout' => $name,
-            'userId' => $userId,
-            'retired' => $retired,
-            'tags' => $tags,
-            'filterLayoutStatusId' => $filterLayoutStatusId
+            'layout' => $this->getSession()->set('layout', 'layout', Sanitize::getString('layout')),
+            'userId' => $this->getSession()->set('layout', 'userId', Sanitize::getInt('userId')),
+            'retired' => $this->getSession()->set('layout', 'retired', Sanitize::getInt('retired')),
+            'tags' => $this->getSession()->set('layout', 'tags', Sanitize::getString('tags')),
+            'filterLayoutStatusId' => $this->getSession()->set('layout', 'layoutStatusId', Sanitize::getInt('layoutStatusId')),
+            'layoutId' => Sanitize::getInt('layoutId')
         ]));
 
         foreach ($layouts as $layout) {

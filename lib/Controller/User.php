@@ -112,6 +112,34 @@ class User extends Base
      *  tags={"user"},
      *  summary="User Search",
      *  description="Search users",
+     *  @SWG\Parameter(
+     *      name="userId",
+     *      in="formData",
+     *      description="Filter by User Id",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="userName",
+     *      in="formData",
+     *      description="Filter by User Name",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="userTypeId",
+     *      in="formData",
+     *      description="Filter by UserType Id",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="retired",
+     *      in="formData",
+     *      description="Filter by Retired",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -129,6 +157,7 @@ class User extends Base
 
         // Filter our users?
         $filterBy = [
+            'userId' => Sanitize::getInt('userId'),
             'userTypeId' => $this->getSession()->set('user_admin', 'userTypeId', Sanitize::getInt('userTypeId')),
             'userName' => $this->getSession()->set('user_admin', 'userName', Sanitize::getString('userName')),
             'retired' => $this->getSession()->set('user_admin', 'retired', Sanitize::getInt('retired'))

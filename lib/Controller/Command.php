@@ -27,6 +27,27 @@ class Command extends Base
      *  tags={"command"},
      *  summary="Command Search",
      *  description="Search this users Commands",
+     *  @SWG\Parameter(
+     *      name="commandId",
+     *      in="formData",
+     *      description="Filter by Command Id",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="command",
+     *      in="formData",
+     *      description="Filter by Command Name",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="code",
+     *      in="formData",
+     *      description="Filter by Command Code",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -39,7 +60,13 @@ class Command extends Base
      */
     function grid()
     {
-        $commands = CommandFactory::query($this->gridRenderSort(), $this->gridRenderFilter());
+        $filter = [
+            'commandId' => Sanitize::getInt('commandId'),
+            'command' => Sanitize::getString('command'),
+            'code' => Sanitize::getString('code')
+        ];
+
+        $commands = CommandFactory::query($this->gridRenderSort(), $this->gridRenderFilter($filter));
 
         foreach ($commands as $command) {
             /* @var \Xibo\Entity\Command $command */
@@ -176,7 +203,7 @@ class Command extends Base
      * Edit Command
      * @param int $commandId
      *
-     * @SWG\Post(
+     * @SWG\Put(
      *  path="/command/{commandId}",
      *  operationId="commandEdit",
      *  tags={"command"},

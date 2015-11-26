@@ -50,6 +50,20 @@ class DataSet extends Base
      *  tags={"dataset"},
      *  summary="DataSet Search",
      *  description="Search this users DataSets",
+     *  @SWG\Parameter(
+     *      name="dataSetId",
+     *      in="formData",
+     *      description="Filter by DataSet Id",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dataSet",
+     *      in="formData",
+     *      description="Filter by DataSet Name",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -64,7 +78,12 @@ class DataSet extends Base
     {
         $user = $this->getUser();
 
-        $dataSets = DataSetFactory::query();
+        $filter = [
+            'dataSetId' => Sanitize::getInt('dataSetId'),
+            'dataSet' => Sanitize::getString('dataSet')
+        ];
+
+        $dataSets = DataSetFactory::query($this->gridRenderSort(), $this->gridRenderFilter($filter));
 
         foreach ($dataSets as $dataSet) {
             /* @var \Xibo\Entity\DataSet $dataSet */

@@ -215,6 +215,41 @@ class Display extends Base
      *  tags={"display"},
      *  summary="Display Search",
      *  description="Search Displays for this User",
+     *  @SWG\Parameter(
+     *      name="displayId",
+     *      in="formData",
+     *      description="Filter by Display Id",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="displayGroupId",
+     *      in="formData",
+     *      description="Filter by DisplayGroup Id",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="display",
+     *      in="formData",
+     *      description="Filter by Display Name",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="macAddress",
+     *      in="formData",
+     *      description="Filter by Mac Address",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="clientVersion",
+     *      in="formData",
+     *      description="Filter by Client Version",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -227,39 +262,22 @@ class Display extends Base
      */
     function grid()
     {
-        // Filter by Name
-        $filter_display = Sanitize::getString('filter_display');
-        $this->getSession()->set('display', 'filter_display', $filter_display);
-
-        // Filter by Name
-        $filterMacAddress = Sanitize::getString('filterMacAddress');
-        $this->getSession()->set('display', 'filterMacAddress', $filterMacAddress);
-
-        // Display Group
-        $filter_displaygroupid = Sanitize::getInt('filter_displaygroup');
-        $this->getSession()->set('display', 'filter_displaygroup', $filter_displaygroupid);
-
-        // Thumbnail?
-        $filter_showView = Sanitize::getInt('filter_showView');
-        $this->getSession()->set('display', 'filter_showView', $filter_showView);
-
-        $filterVersion = Sanitize::getString('filterVersion');
-        $this->getSession()->set('display', 'filterVersion', $filterVersion);
-
-        // filter_autoRefresh?
-        $filter_autoRefresh = Sanitize::getCheckbox('filter_autoRefresh', 0);
-        $this->getSession()->set('display', 'filter_autoRefresh', $filter_autoRefresh);
+        // Does this grid auto refresh? Just store in session
+        $this->getSession()->set('display', 'filter_autoRefresh', Sanitize::getCheckbox('filter_autoRefresh', 0));
 
         // Pinned option?
         $this->getSession()->set('display', 'DisplayFilter', Sanitize::getCheckbox('XiboFilterPinned'));
 
+        $filter = [
+            'displayId' => Sanitize::getInt('displayId'),
+            'display' => $this->getSession()->set('display', 'filter_display', Sanitize::getString('display')),
+            'macAddress' => $this->getSession()->set('display', 'filterMacAddress', Sanitize::getString('macAddress')),
+            'displayGroupId' => $this->getSession()->set('display', 'filter_displaygroup', Sanitize::getInt('displayGroupId')),
+            'clientVersion' => Sanitize::getString('clientVersion')
+        ];
+
         // Get a list of displays
-        $displays = DisplayFactory::query($this->gridRenderSort(), $this->gridRenderFilter(array(
-            'displaygroupid' => $filter_displaygroupid,
-            'display' => $filter_display,
-            'macAddress' => $filterMacAddress,
-            'clientVersion' => $filterVersion))
-        );
+        $displays = DisplayFactory::query($this->gridRenderSort(), $this->gridRenderFilter($filter));
 
         // validate displays so we get a realistic view of the table
         $this->validateDisplays($displays);

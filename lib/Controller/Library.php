@@ -98,6 +98,41 @@ class Library extends Base
      *  tags={"library"},
      *  summary="Library Search",
      *  description="Search the Library for this user",
+     *  @SWG\Parameter(
+     *      name="mediaId",
+     *      in="formData",
+     *      description="Filter by Media Id",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="media",
+     *      in="formData",
+     *      description="Filter by Media Name",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="type",
+     *      in="formData",
+     *      description="Filter by Media Type",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ownerId",
+     *      in="formData",
+     *      description="Filter by Owner Id",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="retired",
+     *      in="formData",
+     *      description="Filter by Retired",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -112,25 +147,18 @@ class Library extends Base
     {
         $user = $this->getUser();
 
-        //Get the input params and store them
-        $filter_type = Sanitize::getString('filter_type');
-        $filter_name = Sanitize::getString('filter_name');
-        $filter_userid = Sanitize::getInt('filter_owner');
-        $filter_retired = Sanitize::getInt('filter_retired');
-
-        $this->getSession()->set('content', 'filter_type', $filter_type);
-        $this->getSession()->set('content', 'filter_name', $filter_name);
-        $this->getSession()->set('content', 'filter_owner', $filter_userid);
-        $this->getSession()->set('content', 'filter_retired', $filter_retired);
         $this->getSession()->set('content', 'Filter', Sanitize::getCheckbox('XiboFilterPinned'));
 
+        $filter = [
+            'mediaId' => Sanitize::getInt('mediaId'),
+            'name' => $this->getSession()->set('content', 'filter_name', Sanitize::getString('media')),
+            'type' => $this->getSession()->set('content', 'filter_type', Sanitize::getString('type')),
+            'ownerId' => $this->getSession()->set('content', 'filter_owner', Sanitize::getInt('ownerId')),
+            'retired' => $this->getSession()->set('content', 'filter_retired', Sanitize::getInt('retired'))
+        ];
+
         // Construct the SQL
-        $mediaList = MediaFactory::query($this->gridRenderSort(), $this->gridRenderFilter([
-            'type' => $filter_type,
-            'name' => $filter_name,
-            'ownerId' => $filter_userid,
-            'retired' => $filter_retired
-        ]));
+        $mediaList = MediaFactory::query($this->gridRenderSort(), $this->gridRenderFilter($filter));
 
         // Add some additional row content
         foreach ($mediaList as $media) {
