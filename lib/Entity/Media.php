@@ -215,17 +215,21 @@ class Media implements \JsonSerializable
         $this->ownerId = $ownerId;
     }
 
+    private function countUsages()
+    {
+        $this->load(['fullInfo' => true]);
+
+        return count($this->widgets) + count($this->displayGroups) + count($this->layoutBackgroundImages);
+    }
+
     /**
      * Is this media used
+     * @param int $usages threshold
      * @return bool
-     * @throws ConfigurationException if media->load() hasn't been called.
      */
-    public function isUsed()
+    public function isUsed($usages = 0)
     {
-        if (!$this->loaded)
-            throw new ConfigurationException('Called isUsed before it has been loaded, please call load()');
-
-        return (count($this->widgets) > 0 || count($this->displayGroups) > 0 || count($this->layoutBackgroundImages) > 0);
+        return $this->countUsages() > $usages;
     }
 
     /**
@@ -270,14 +274,15 @@ class Media implements \JsonSerializable
     public function load($options = [])
     {
         $options = array_merge([
-            'deleting' => false
+            'deleting' => false,
+            'fullInfo' => false
         ], $options);
 
         // Tags
         $this->tags = TagFactory::loadByMediaId($this->mediaId);
 
         // Are we loading for a delete? If so load the child models
-        if ($options['deleting']) {
+        if ($options['deleting'] || $options['fullInfo']) {
             // Permissions
             $this->permissions = PermissionFactory::getByObjectId(get_class($this), $this->mediaId);
 
