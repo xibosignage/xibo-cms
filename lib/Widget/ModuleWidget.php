@@ -695,4 +695,23 @@ abstract class ModuleWidget implements ModuleInterface
     {
         return $data;
     }
+
+    /**
+     * Determine duration
+     * @param string|null $fileName
+     * @return int
+     */
+    public function determineDuration($fileName = null)
+    {
+        return 0;
+    }
+
+    /**
+     * Pre-processing
+     * @param string|null $fileName
+     */
+    public function preProcess($fileName = null)
+    {
+        Log::debug('No pre-processing rules for this module type');
+    }
 }

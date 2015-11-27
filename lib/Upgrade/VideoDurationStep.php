@@ -10,18 +10,22 @@ namespace Xibo\Upgrade;
 
 
 use Xibo\Factory\MediaFactory;
+use Xibo\Factory\ModuleFactory;
+use Xibo\Helper\Config;
 
 class VideoDurationStep implements Step
 {
     public static function doStep()
     {
+        $libraryLocation = Config::GetSetting('LIBRARY_LOCATION');
         $videos = MediaFactory::getByMediaType('video');
 
         foreach ($videos as $video) {
             /* @var \Xibo\Entity\Media $video */
             if ($video->duration == 0) {
                 // Update
-                $video->duration = $video->determineDuration();
+                $module = ModuleFactory::createWithMedia($video);
+                $video->duration = $module->determineDuration($libraryLocation . $video->storedAs);
                 $video->save(['validate' => false]);
             }
         }

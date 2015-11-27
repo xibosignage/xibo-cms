@@ -21,6 +21,7 @@
 namespace Xibo\Widget;
 
 
+use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 
 class Video extends ModuleWidget
@@ -59,6 +60,19 @@ class Video extends ModuleWidget
     public function previewAsClient($width, $height, $scaleOverride = 0)
     {
         return $this->previewIcon();
+    }
+
+    /**
+     * Determine duration
+     * @param $fileName
+     * @return int
+     */
+    public function determineDuration($fileName = null)
+    {
+        Log::debug('Determine Duration from %s', $fileName);
+        $info = new \getID3();
+        $file = $info->analyze($fileName);
+        return intval(Sanitize::getDouble('playtime_seconds', 0, $file));
     }
 
     /**
