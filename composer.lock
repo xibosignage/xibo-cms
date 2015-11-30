@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "1d9bd94e304e61f408f392005a4f9ea9",
-    "content-hash": "020d199b75285a815ac2f30f0779c615",
+    "hash": "d1243ca06193e74b2241c63a014f9b27",
+    "content-hash": "9efb004f9cc0ff400542e3925b546f82",
     "packages": [
         {
             "name": "danielstjules/stringy",
@@ -212,6 +212,52 @@
                 "parser"
             ],
             "time": "2015-10-04 16:44:32"
+        },
+        {
+            "name": "evenement/evenement",
+            "version": "v2.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/igorw/evenement.git",
+                "reference": "f6e843799fd4f4184d54d8fc7b5b3551c9fa803e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/igorw/evenement/zipball/f6e843799fd4f4184d54d8fc7b5b3551c9fa803e",
+                "reference": "f6e843799fd4f4184d54d8fc7b5b3551c9fa803e",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.4.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "2.0-dev"
+                }
+            },
+            "autoload": {
+                "psr-0": {
+                    "Evenement": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Igor Wiedler",
+                    "email": "igor@wiedler.ch",
+                    "homepage": "http://wiedler.ch/igor/"
+                }
+            ],
+            "description": "Événement is a very simple event dispatching library for PHP",
+            "keywords": [
+                "event-dispatcher",
+                "event-emitter"
+            ],
+            "time": "2012-11-02 14:49:47"
         },
         {
             "name": "ezyang/htmlpurifier",
@@ -1546,7 +1592,7 @@
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHPMailer/PHPMailer/zipball/37d355070657a52acaced277de977cb498c31b63",
+                "url": "https://api.github.com/repos/PHPMailer/PHPMailer/zipball/7c8b786228bb9e1561ff60a2d6f7f6ce91be6fee",
                 "reference": "37d355070657a52acaced277de977cb498c31b63",
                 "shasum": ""
             },
@@ -1683,6 +1729,94 @@
                 "psr-3"
             ],
             "time": "2012-12-21 11:40:51"
+        },
+        {
+            "name": "react/event-loop",
+            "version": "v0.4.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/reactphp/event-loop.git",
+                "reference": "18c5297087ca01de85518e2b55078f444144aa1b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/reactphp/event-loop/zipball/18c5297087ca01de85518e2b55078f444144aa1b",
+                "reference": "18c5297087ca01de85518e2b55078f444144aa1b",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.4.0"
+            },
+            "suggest": {
+                "ext-event": "~1.0",
+                "ext-libev": "*",
+                "ext-libevent": ">=0.1.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "0.4-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "React\\EventLoop\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Event loop abstraction layer that libraries can use for evented I/O.",
+            "keywords": [
+                "event-loop"
+            ],
+            "time": "2014-02-26 17:36:58"
+        },
+        {
+            "name": "react/zmq",
+            "version": "v0.3.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/reactphp/zmq.git",
+                "reference": "2865e3b23000751ed443d3f108da2735abf80716"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/reactphp/zmq/zipball/2865e3b23000751ed443d3f108da2735abf80716",
+                "reference": "2865e3b23000751ed443d3f108da2735abf80716",
+                "shasum": ""
+            },
+            "require": {
+                "evenement/evenement": "~2.0",
+                "ext-zmq": "*",
+                "php": ">=5.4.0",
+                "react/event-loop": "0.4.*"
+            },
+            "require-dev": {
+                "ext-pcntl": "*"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "0.4-dev"
+                }
+            },
+            "autoload": {
+                "psr-0": {
+                    "React\\ZMQ": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "ZeroMQ bindings for React.",
+            "keywords": [
+                "zeromq",
+                "zmq"
+            ],
+            "time": "2014-05-25 17:54:51"
         },
         {
             "name": "respect/validation",
@@ -2114,6 +2248,61 @@
                 "templating"
             ],
             "time": "2015-11-05 12:49:06"
+        },
+        {
+            "name": "xibosignage/xibo-xmr",
+            "version": "0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/xibosignage/xibo-xmr.git",
+                "reference": "dc1409f90c53f5a0473317f7e8e8a8af1e719933"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/xibosignage/xibo-xmr/zipball/dc1409f90c53f5a0473317f7e8e8a8af1e719933",
+                "reference": "dc1409f90c53f5a0473317f7e8e8a8af1e719933",
+                "shasum": ""
+            },
+            "require": {
+                "monolog/monolog": "^1.17",
+                "php": ">=5.5",
+                "react/zmq": "^0.3.0"
+            },
+            "bin": [
+                "bin/xmr.phar"
+            ],
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Xibo\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "AGPLv3 or later"
+            ],
+            "authors": [
+                {
+                    "name": "Daniel Garner",
+                    "homepage": "https://github.com/dasgarner"
+                },
+                {
+                    "name": "Spring Signage Ltd",
+                    "homepage": "http://springsignage.com"
+                },
+                {
+                    "name": "Xibo Contributors",
+                    "homepage": "https://github.com/xibosignage/xibo/tree/master/contributors"
+                }
+            ],
+            "description": "Xibo Message Relay",
+            "homepage": "http://xibo.org.uk",
+            "keywords": [
+                "digital signage",
+                "spring signage",
+                "xibo"
+            ],
+            "time": "2015-11-30 15:33:32"
         }
     ],
     "packages-dev": [
@@ -2292,52 +2481,6 @@
                 "parser"
             ],
             "time": "2014-09-09 13:34:57"
-        },
-        {
-            "name": "evenement/evenement",
-            "version": "v2.0.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/igorw/evenement.git",
-                "reference": "f6e843799fd4f4184d54d8fc7b5b3551c9fa803e"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/igorw/evenement/zipball/f6e843799fd4f4184d54d8fc7b5b3551c9fa803e",
-                "reference": "f6e843799fd4f4184d54d8fc7b5b3551c9fa803e",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=5.4.0"
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "2.0-dev"
-                }
-            },
-            "autoload": {
-                "psr-0": {
-                    "Evenement": "src"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Igor Wiedler",
-                    "email": "igor@wiedler.ch",
-                    "homepage": "http://wiedler.ch/igor/"
-                }
-            ],
-            "description": "Événement is a very simple event dispatching library for PHP",
-            "keywords": [
-                "event-dispatcher",
-                "event-emitter"
-            ],
-            "time": "2012-11-02 14:49:47"
         },
         {
             "name": "illuminate/container",
@@ -2976,94 +3119,6 @@
                 "xunit"
             ],
             "time": "2015-10-02 06:51:40"
-        },
-        {
-            "name": "react/event-loop",
-            "version": "v0.4.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/reactphp/event-loop.git",
-                "reference": "18c5297087ca01de85518e2b55078f444144aa1b"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/reactphp/event-loop/zipball/18c5297087ca01de85518e2b55078f444144aa1b",
-                "reference": "18c5297087ca01de85518e2b55078f444144aa1b",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=5.4.0"
-            },
-            "suggest": {
-                "ext-event": "~1.0",
-                "ext-libev": "*",
-                "ext-libevent": ">=0.1.0"
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "0.4-dev"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "React\\EventLoop\\": ""
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "Event loop abstraction layer that libraries can use for evented I/O.",
-            "keywords": [
-                "event-loop"
-            ],
-            "time": "2014-02-26 17:36:58"
-        },
-        {
-            "name": "react/zmq",
-            "version": "v0.3.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/reactphp/zmq.git",
-                "reference": "2865e3b23000751ed443d3f108da2735abf80716"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/reactphp/zmq/zipball/2865e3b23000751ed443d3f108da2735abf80716",
-                "reference": "2865e3b23000751ed443d3f108da2735abf80716",
-                "shasum": ""
-            },
-            "require": {
-                "evenement/evenement": "~2.0",
-                "ext-zmq": "*",
-                "php": ">=5.4.0",
-                "react/event-loop": "0.4.*"
-            },
-            "require-dev": {
-                "ext-pcntl": "*"
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "0.4-dev"
-                }
-            },
-            "autoload": {
-                "psr-0": {
-                    "React\\ZMQ": "src"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "ZeroMQ bindings for React.",
-            "keywords": [
-                "zeromq",
-                "zmq"
-            ],
-            "time": "2014-05-25 17:54:51"
         },
         {
             "name": "sebastian/comparator",
@@ -4138,63 +4193,6 @@
             "time": "2015-09-30 10:17:21"
         },
         {
-            "name": "xibosignage/xibo-xmr",
-            "version": "dev-develop",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/dasgarner/xibo-xmr.git",
-                "reference": "0f54aaab31bcc31bc1a0e409159a668149dbfe99"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/dasgarner/xibo-xmr/zipball/0f54aaab31bcc31bc1a0e409159a668149dbfe99",
-                "reference": "0f54aaab31bcc31bc1a0e409159a668149dbfe99",
-                "shasum": ""
-            },
-            "require": {
-                "monolog/monolog": "^1.17",
-                "php": ">=5.5",
-                "react/zmq": "^0.3.0"
-            },
-            "bin": [
-                "bin/xmr.phar"
-            ],
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Xibo\\": "src/"
-                }
-            },
-            "license": [
-                "AGPLv3 or later"
-            ],
-            "authors": [
-                {
-                    "name": "Daniel Garner",
-                    "homepage": "https://github.com/dasgarner"
-                },
-                {
-                    "name": "Spring Signage Ltd",
-                    "homepage": "http://springsignage.com"
-                },
-                {
-                    "name": "Xibo Contributors",
-                    "homepage": "https://github.com/xibosignage/xibo/tree/master/contributors"
-                }
-            ],
-            "description": "Xibo Message Relay",
-            "homepage": "http://xibo.org.uk",
-            "keywords": [
-                "digital signage",
-                "spring signage",
-                "xibo"
-            ],
-            "support": {
-                "source": "https://github.com/dasgarner/xibo-xmr/tree/develop"
-            },
-            "time": "2015-11-02 16:45:49"
-        },
-        {
             "name": "zircote/swagger-php",
             "version": "2.0.3",
             "source": {
@@ -4263,8 +4261,7 @@
         "phpmailer/phpmailer": 20,
         "fguillot/picofeed": 0,
         "umpirsky/twig-gettext-extractor": 20,
-        "there4/slim-test-helpers": 20,
-        "xibosignage/xibo-xmr": 20
+        "there4/slim-test-helpers": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,
