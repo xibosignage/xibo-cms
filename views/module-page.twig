@@ -69,7 +69,7 @@
 
 {% block javaScript %}
     <script type="text/javascript">
-        var table = $("#modules").DataTable({
+        var table = $("#modules").DataTable({ "language": dataTablesLanguage,
             serverSide: true,
             filter: false,
             searchDelay: 3000,

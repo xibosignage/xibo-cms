@@ -50,7 +50,7 @@ This is the template for the campaign page
 {% block javaScript %}
     <script type="text/javascript">
         // Configure the DataTable
-        var table = $("#campaigns").DataTable({
+        var table = $("#campaigns").DataTable({ "language": dataTablesLanguage,
             serverSide: true,
             "filter": false,
             searchDelay: 3000,
@@ -85,7 +85,7 @@ This is the template for the campaign page
                 container.data().layouts = {};
 
             // Layout DataTable
-            var layoutTable = $("#layoutAssignments").DataTable({
+            var layoutTable = $("#layoutAssignments").DataTable({ "language": dataTablesLanguage,
                 serverSide: true,
                 searchDelay: 3000,
                 "order": [[ 0, "asc"]],

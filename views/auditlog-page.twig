@@ -74,7 +74,7 @@
 
         var arrayViewer = Handlebars.compile($("#table-array-viewer").html());
 
-        var table = $("#logs").DataTable({
+        var table = $("#logs").DataTable({ "language": dataTablesLanguage,
             serverSide: true,
             filter: false,
             searchDelay: 3000,

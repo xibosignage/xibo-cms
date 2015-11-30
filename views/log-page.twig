@@ -83,7 +83,7 @@
 {% block javaScript %}
     <script type="text/javascript">
 
-        var table = $("#logs").DataTable({
+        var table = $("#logs").DataTable({ "language": dataTablesLanguage,
             serverSide: true,
             filter: false,
             searchDelay: 3000,

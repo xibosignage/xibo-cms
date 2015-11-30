@@ -54,7 +54,7 @@
 
 {% block javaScript %}
     <script type="text/javascript">
-        var table = $("#entries").DataTable({
+        var table = $("#entries").DataTable({ "language": dataTablesLanguage,
             serverSide: false,
             filter: false,
             searchDelay: 3000,

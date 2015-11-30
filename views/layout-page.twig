@@ -70,7 +70,7 @@
 
 {% block javaScript %}
     <script type="text/javascript">
-        var table = $("#layouts").DataTable({
+        var table = $("#layouts").DataTable({ "language": dataTablesLanguage,
             serverSide: true,
             filter: false,
             searchDelay: 3000,

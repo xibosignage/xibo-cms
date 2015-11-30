@@ -387,7 +387,7 @@ function permissionsFormOpen(dialog) {
 
     var grid = $("#permissionsTable").closest(".XiboGrid");
 
-    var table = $("#permissionsTable").DataTable({
+    var table = $("#permissionsTable").DataTable({ "language": dataTablesLanguage,
         serverSide: true,
         "filter": false,
         searchDelay: 3000,
@@ -552,7 +552,7 @@ function mediaFormCallBack() {
     if (container.data().media == undefined)
         container.data().media = {};
 
-    var mediaTable = $("#mediaAssignments").DataTable({
+    var mediaTable = $("#mediaAssignments").DataTable({ "language": dataTablesLanguage,
             serverSide: true,
             searchDelay: 3000,
             "order": [[ 0, "asc"]],
@@ -664,7 +664,7 @@ function layoutFormCallBack() {
     if (container.data().layout == undefined)
         container.data().layout = {};
 
-    var layoutTable = $("#layoutAssignments").DataTable({
+    var layoutTable = $("#layoutAssignments").DataTable({ "language": dataTablesLanguage,
         serverSide: true,
         searchDelay: 3000,
         "order": [[ 0, "asc"]],

@@ -49,7 +49,7 @@
 
 {% block javaScript %}
     <script type="text/javascript">
-        var table = $("#displaygroups").DataTable({
+        var table = $("#displaygroups").DataTable({ "language": dataTablesLanguage,
             serverSide: true,
             "filter": false,
             searchDelay: 3000,
