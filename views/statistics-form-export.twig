@@ -38,10 +38,10 @@ $formFields[] = Form::AddCombo(
         <div class="col-md-12">
             <form id="statisticsExportForm" class="XiboManualForm form-horizontal" method="get" action="{{ urlFor("stats.export") }}">
                     {% set title %}{% trans "From Date" %}{% endset %}
-                    {{ forms.text("fromDt", title) }}
+                    {{ forms.input("fromDt", title) }}
 
                     {% set title %}{% trans "To Date" %}{% endset %}
-                    {{ forms.text("toDt", title) }}
+                    {{ forms.input("toDt", title) }}
 
                     {% set title %}{% trans "Display" %}{% endset %}
                     {{ forms.dropdown("displayid", "single", title, "", module.dataSets(), "displayid", "displaygroup") }}

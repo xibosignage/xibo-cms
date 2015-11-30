@@ -75,7 +75,7 @@
 
                 {% set title %}{% trans "Feed URL" %}{% endset %}
                 {% set helpText %}{% trans "The Link for the RSS feed" %}{% endset %}
-                {{ forms.text("uri", title, "", helpText, "feed-fields")}}
+                {{ forms.input("uri", title, "", helpText, "feed-fields")}}
 
                 {% set title %}{% trans "DataSet" %}{% endset %}
                 {% set helpText %}{% trans "Please select the DataSet to use as a source of data for this ticker." %}{% endset %}

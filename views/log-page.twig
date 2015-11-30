@@ -33,10 +33,10 @@
                             <div class="tab-content">
                                 <div class="tab-pane active" id="general">
                                     {% set title %}{% trans "Level" %}{% endset %}
-                                    {{ inline.text("filter_type", title, defaults.type) }}
+                                    {{ inline.input("filter_type", title, defaults.type) }}
                                     {{ inline.dropdown("filter_intervalTypeId", "single", "Interval", defaults.intervalType, options.intervalType, "id", "value") }}
                                     {{ inline.number("filter_seconds", "Duration back", defaults.seconds) }}
-                                    {{ inline.text("runNo", "Run") }}
+                                    {{ inline.input("runNo", "Run") }}
 
                                     {{ inline.checkbox("XiboFilterPinned", "Keep Open", defaults.filterPinned) }}
                                 </div>
@@ -44,9 +44,9 @@
                                     {{ inline.date("filter_fromdt", "From Date", defaults.fromDt) }}
 
                                     {% set title %}{% trans "Channel" %}{% endset %}
-                                    {{ inline.text("channel", title, defaults.channel) }}
-                                    {{ inline.text("filter_page", "Page", defaults.page) }}
-                                    {{ inline.text("filter_function", "Function", defaults.function) }}
+                                    {{ inline.input("channel", title, defaults.channel) }}
+                                    {{ inline.input("filter_page", "Page", defaults.page) }}
+                                    {{ inline.input("filter_function", "Function", defaults.function) }}
 
                                     {% set displays = options.displays|merge({displayId: null, display: ""}) %}
                                     {{ inline.dropdown("filter_display", "single", "Display", defaults.display, displays, "displayId", "display") }}

@@ -47,7 +47,7 @@
                     <div class="tab-pane active" id="general">
                         {% set title %}{% trans "Name" %}{% endset %}
                         {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
-                        {{ forms.text("name", title, "", helpText) }}
+                        {{ forms.input("name", title, "", helpText) }}
 
                         {% set title %}{% trans "Duration" %}{% endset %}
                         {% set helpText %}{% trans "The duration in seconds this item should be displayed" %}{% endset %}
@@ -55,11 +55,11 @@
 
                         {% set title %}{% trans "Order" %}{% endset %}
                         {% set helpText %}{% trans "Please enter a SQL clause for how this dataset should be ordered" %}{% endset %}
-                        {{ forms.text("ordering", title, module.getoption("ordering"), helpText) }}
+                        {{ forms.input("ordering", title, module.getoption("ordering"), helpText) }}
 
                         {% set title %}{% trans "Filter" %}{% endset %}
                         {% set helpText %}{% trans "Please enter a SQL clause to filter this DataSet." %}{% endset %}
-                        {{ forms.text("filter", title, module.getoption("filter"), helpText) }}
+                        {{ forms.input("filter", title, module.getoption("filter"), helpText) }}
 
                         {% set title %}{% trans "Show the table headings?" %}{% endset %}
                         {% set helpText %}{% trans "Should the Table headings be shown?" %}{% endset %}
@@ -101,7 +101,7 @@
                         {{ forms.number("rowsPerPage", title, module.getOption("rowsPerPage"), helpText) }}
 
                         {% set title %}{% trans "Enter a style sheet for the table" %}{% endset %}
-                        {{ forms.textarea("styleSheet", "", module.getRawNode("styleSheet", module.defaultStyleSheet()), title, "", "", 10) }}
+                        {{ forms.inputarea("styleSheet", "", module.getRawNode("styleSheet", module.defaultStyleSheet()), title, "", "", 10) }}
                     </div>
                 </div>
             </form>

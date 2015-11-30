@@ -28,8 +28,8 @@
                 <div class="XiboFilter">
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
-                            {{ inline.text("media", "Name", defaults.media) }}
-                            {{ inline.text("tags", "Tags", defaults.tags) }}
+                            {{ inline.input("media", "Name", defaults.media) }}
+                            {{ inline.input("tags", "Tags", defaults.tags) }}
 
                             {% set users = [{userId: null, userName: ""}]|merge(users) %}
                             {{ inline.dropdown("ownerId", "single", "Owner", defaults.owner, users, "userId", "userName") }}

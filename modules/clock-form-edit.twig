@@ -106,7 +106,7 @@
 
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
-                {{ forms.text("name", title, "", helpText) }}
+                {{ forms.input("name", title, "", helpText) }}
 
                 {% set title %}{% trans "Clock Type" %}{% endset %}
                 {% set helpText %}{% trans "Please select the type of clock to display." %}{% endset %}
@@ -150,7 +150,7 @@
                 {{ forms.message(message, "digital-control-group") }}
 
                 {% set helpText %}{% trans "Enter a format for the clock" %}{% endset %}
-                {{ forms.textarea("ta_text", "", module.getRawNode("format"), helpText, "digital-control-group") }}
+                {{ forms.inputarea("ta_text", "", module.getRawNode("format"), helpText, "digital-control-group") }}
             </form>
         </div>
     </div>

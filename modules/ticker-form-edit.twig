@@ -80,7 +80,7 @@
                 {# Common Fields #}
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
-                {% set fieldName %}{{ forms.text("name", title, module.getOption("name"), helpText) }}{% endset %}
+                {% set fieldName %}{{ forms.input("name", title, module.getOption("name"), helpText) }}{% endset %}
 
                 {% set title %}{% trans "Duration" %}{% endset %}
                 {% set helpText %}{% trans "The duration in seconds this item should be displayed" %}{% endset %}
@@ -126,7 +126,7 @@
 
                 {% set title %}{% trans "Background Colour" %}{% endset %}
                 {% set helpText %}{% trans "The selected effect works best with a background colour. Optionally add one here." %}{% endset %}
-                {% set fieldBackgroundColor %}{{ forms.text("backgroundColor", title, module.getOption("backgroundColor"), helpText, "background-color-group") }}{% endset %}
+                {% set fieldBackgroundColor %}{{ forms.input("backgroundColor", title, module.getOption("backgroundColor"), helpText, "background-color-group") }}{% endset %}
 
                 {% set title %}{% trans "Items per page" %}{% endset %}
                 {% set helpText %}{% trans "When in single mode how many items per page should be shown." %}{% endset %}
@@ -145,10 +145,10 @@
                 {% set fieldItemsSideBySide %}{{ forms.checkbox("itemsSideBySide", title, module.getOption("itemsSideBySide"), helpText) }}{% endset %}
 
                 {% set helpText %}{% trans "Enter the template. Please note that the background colour has automatically coloured to your layout background colour." %}{% endset %}
-                {% set fieldTemplate %}{{ forms.textarea("ta_text", "", module.getRawNode("template"), helpText, "template-override-controls", "", 10) }}{% endset %}
+                {% set fieldTemplate %}{{ forms.inputarea("ta_text", "", module.getRawNode("template"), helpText, "template-override-controls", "", 10) }}{% endset %}
 
                 {% set title %}{% trans "Optional Stylesheet" %}{% endset %}
-                {% set fieldStyleSheet %}{{ forms.textarea("ta_css", "", module.getRawNode("css"), title, "template-override-controls", "", 10) }}{% endset %}
+                {% set fieldStyleSheet %}{{ forms.inputarea("ta_css", "", module.getRawNode("css"), title, "template-override-controls", "", 10) }}{% endset %}
 
                 {# Different fields for each type of Ticker #}
                 {% if module.getOption("sourceId") == 1 %}
@@ -156,7 +156,7 @@
                     <div class="tab-pane active" id="general">
                         {% set title %}{% trans "Feed URL" %}{% endset %}
                         {% set helpText %}{% trans "The Link for the RSS feed" %}{% endset %}
-                        {{ forms.text("uri", title, module.getOption("uri")|url_decode, helpText, "feed-fields") }}
+                        {{ forms.input("uri", title, module.getOption("uri")|url_decode, helpText, "feed-fields") }}
 
                         {{ fieldName }}
                         {{ fieldDuration }}
@@ -227,22 +227,22 @@
 
                         {% set title %}{% trans "Copyright" %}{% endset %}
                         {% set helpText %}{% trans "Copyright information to display as the last item in this feed. This can be styled with the #copyright CSS selector." %}{% endset %}
-                        {{ forms.text("copyright", title, module.getOption("copyright"), helpText) }}
+                        {{ forms.input("copyright", title, module.getOption("copyright"), helpText) }}
 
                         {{ fieldItemsSideBySide }}
 
                         {% set title %}{% trans "Date Format" %}{% endset %}
                         {% set manualUrl %}{{ settings.HELP_BASE }}advanced_dateFormat.md{% endset %}
                         {% set helpText %}{% trans %}The format to apply to all dates returned by the ticker. See the <a href="{{ manualUrl }}">Manual</a> for allowed formats.{% endtrans %}{% endset %}
-                        {{ forms.text("dateFormat", title, module.getOption("dateFormat"), helpText) }}
+                        {{ forms.input("dateFormat", title, module.getOption("dateFormat"), helpText) }}
 
                         {% set title %}{% trans "Allowable Attributes" %}{% endset %}
                         {% set helpText %}{% trans "A comma separated list of attributes that should not be stripped from the incoming feed." %}{% endset %}
-                        {{ forms.text("allowedAttributes", title, module.getOption("allowedAttributes"), helpText) }}
+                        {{ forms.input("allowedAttributes", title, module.getOption("allowedAttributes"), helpText) }}
 
                         {% set title %}{% trans "Strip Tags" %}{% endset %}
                         {% set helpText %}{% trans "A comma separated list of HTML tags that should be stripped from the feed in addition to the default ones." %}{% endset %}
-                        {{ forms.text("stripTags", title, module.getOption("stripTags"), helpText) }}
+                        {{ forms.input("stripTags", title, module.getOption("stripTags"), helpText) }}
 
                         {% set title %}{% trans "Disable Date Sort" %}{% endset %}
                         {% set helpText %}{% trans "Should the date sort applied to the feed be disabled?" %}{% endset %}
@@ -258,11 +258,11 @@
 
                         {% set title %}{% trans "Order" %}{% endset %}
                         {% set helpText %}{% trans "Please enter a SQL clause for how this dataset should be ordered" %}{% endset %}
-                        {{ forms.text("ordering", title, module.getOption("ordering"), helpText) }}
+                        {{ forms.input("ordering", title, module.getOption("ordering"), helpText) }}
 
                         {% set title %}{% trans "Filter" %}{% endset %}
                         {% set helpText %}{% trans "Please enter a SQL clause to filter this DataSet." %}{% endset %}
-                        {{ forms.text("filter", title, module.getOption("filter"), helpText) }}
+                        {{ forms.input("filter", title, module.getOption("filter"), helpText) }}
                     </div>
                     <div class="tab-pane" id="template">
                         <div class="well">

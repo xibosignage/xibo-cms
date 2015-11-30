@@ -25,9 +25,9 @@
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
 
-                            {{ inline.text("display", "Name", defaults.display) }}
+                            {{ inline.input("display", "Name", defaults.display) }}
 
-                            {{ inline.text("macAddress", "Mac Address", defaults.macAddress) }}
+                            {{ inline.input("macAddress", "Mac Address", defaults.macAddress) }}
 
                             {{ inline.dropdown("displayGroupId", "single", "Display Group", defaults.displayGroup, [{displayGroupId:null, displayGroup:""}]|merge(displayGroups), "displayGroupId", "displayGroup") }}
 

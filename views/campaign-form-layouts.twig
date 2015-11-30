@@ -44,10 +44,10 @@
                 <div class="layoutAssignFilterOptions">
                     <form onsubmit="false">
                     {% set title %}{% trans "Name" %}{% endset %}
-                    {{ inline.text("filter_layout", title) }}
+                    {{ inline.input("filter_layout", title) }}
 
                     {% set title %}{% trans "Tags" %}{% endset %}
-                    {{ inline.text("filter_tags", title) }}
+                    {{ inline.input("filter_tags", title) }}
                     </form>
                 </div>
                 <div class="XiboData">

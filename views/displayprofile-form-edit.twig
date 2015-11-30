@@ -43,7 +43,7 @@
                             {% if field.tabId == "general" %}
                                 {% set title %}{% trans "Name" %}{% endset %}
                                 {% set helpText %}{% trans "The Name of the Profile - (1 - 50 characters)" %}{% endset %}
-                                {{ forms.text("name", title, displayProfile.name, helpText) }}
+                                {{ forms.input("name", title, displayProfile.name, helpText) }}
 
                                 {% set title %}{% trans "Default Profile?" %}{% endset %}
                                 {% set helpText %}{% trans "Is this the default profile for all Displays of this type? Only 1 profile can be the default." %}{% endset %}
@@ -56,7 +56,7 @@
                     {% if field.enabled != 1 %}
                         {{ forms.disabled(field.name, field.title, field.value, field.helpText) }}
                     {% elseif field.fieldType == "text" %}
-                        {{ forms.text(field.name, field.title, field.value, field.helpText) }}
+                        {{ forms.input(field.name, field.title, field.value, field.helpText) }}
                     {% elseif field.fieldType == "number" %}
                         {{ forms.number(field.name, field.title, field.value, field.helpText) }}
                     {% elseif field.fieldType == "email" %}
@@ -81,12 +81,12 @@
                             {% set fieldId = "commandString_" ~ field.commandId %}
                             {% set title %}{% trans "Command" %}{% endset %}
                             {% set helpText %}{% trans "The Command String for this Command on this display" %}{% endset %}
-                            {{ forms.text(fieldId, title, field.commandString, helpText) }}
+                            {{ forms.input(fieldId, title, field.commandString, helpText) }}
 
                             {% set fieldId = "validationString_" ~ field.commandId %}
                             {% set title %}{% trans "Validation" %}{% endset %}
                             {% set helpText %}{% trans "The Validation String for this Command on this display" %}{% endset %}
-                            {{ forms.text(fieldId, title, field.validationString, helpText) }}
+                            {{ forms.input(fieldId, title, field.validationString, helpText) }}
                         {% endfor %}
                     </div>
                 {% endif %}

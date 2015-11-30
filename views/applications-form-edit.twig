@@ -25,13 +25,13 @@
         <div class="col-md-12">
             <form id="applicationFormSubmit" class="XiboForm form-horizontal" method="put" action="{{ urlFor("application.edit", {id: client.key}) }}">
                 {% set title %}{% trans "Application Name" %}{% endset %}
-                {{ forms.text("name", title, client.name) }}
+                {{ forms.input("name", title, client.name) }}
 
                 {% set title %}{% trans "Client Id" %}{% endset %}
                 {{ forms.disabled("clientId", title, client.key, "", "", "disabled") }}
 
                 {% set title %}{% trans "Client Secret" %}{% endset %}
-                {{ forms.text("clientSecret", title, client.secret, "", "", "disabled") }}
+                {{ forms.input("clientSecret", title, client.secret, "", "", "disabled") }}
 
                 {% set title %}{% trans "Reset Secret?" %}{% endset %}
                 {% set helpText %}{% trans "Reset your client secret to prevent access from any existing application." %}{% endset %}
@@ -47,11 +47,11 @@
 
                 {% set title %}{% trans "Redirect URI" %}{% endset %}
                 {% set helpText %}{% trans "White listed redirect URI's that will be allowed, only application for Authorization Code Grants" %}{% endset %}
-                {{ forms.text("redirectUri[]", title, "", helpText) }}
+                {{ forms.input("redirectUri[]", title, "", helpText) }}
 
                 {% for url in client.redirectUris %}
                     {% set title %}{% trans "Redirect URI" %}{% endset %}
-                    {{ forms.text("redirectUri[]", title, url.redirectUri) }}
+                    {{ forms.input("redirectUri[]", title, url.redirectUri) }}
                 {% endfor %}
             </form>
         </div>

@@ -53,11 +53,11 @@
                     <div class="tab-pane active" id="general">
                         {% set title %}{% trans "Name" %}{% endset %}
                         {% set helpText %}{% trans "The Name of the Layout - (1 - 50 characters)" %}{% endset %}
-                        {{ forms.text("name", title, "", helpText) }}
+                        {{ forms.input("name", title, "", helpText) }}
 
                         {% set title %}{% trans "Tags" %}{% endset %}
                         {% set helpText %}{% trans "Tags for this layout - used when searching for it. Comma delimited. (1 - 250 characters)" %}{% endset %}
-                        {{ forms.text("tags", title, "", helpText) }}
+                        {{ forms.input("tags", title, "", helpText) }}
 
                         {% set title %}{% trans "Template" %}{% endset %}
                         {% set helpText %}{% trans "Optionally choose a template you have saved before." %}{% endset %}
@@ -71,7 +71,7 @@
                     <div class="tab-pane" id="description">
                         {% set title %}{% trans "Description" %}{% endset %}
                         {% set helpText %}{% trans "An optional description of the Layout. (1 - 250 characters)" %}{% endset %}
-                        {{ forms.textarea("description", title, "", helpText) }}
+                        {{ forms.inputarea("description", title, "", helpText) }}
                     </div>
                 </div>
             </form>

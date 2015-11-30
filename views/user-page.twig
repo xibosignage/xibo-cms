@@ -28,7 +28,7 @@
                         <form class="form-inline">
 
                             {% set title %}{% trans "Name" %}{% endset %}
-                            {{ inline.text("userName", title, defaults.userName) }}
+                            {{ inline.input("userName", title, defaults.userName) }}
 
                             {% set title %}{% trans "User Type" %}{% endset %}
                             {{ inline.dropdown("userTypeId", "single", title, defaults.userType, options.userTypes, "userTypeId", "userType") }}

@@ -41,7 +41,7 @@
             <div id="libraryAssignFilterOptions">
                 <form onsubmit="false">
                 {% set title %}{% trans "Name" %}{% endset %}
-                {{ inline.text("filter_name", title) }}
+                {{ inline.input("filter_name", title) }}
 
                 {% set title %}{% trans "Type" %}{% endset %}
                 {{ inline.dropdown("filter_type", "single", title, "", modules|merge({type: null, name: ""}), "type", "name") }}
