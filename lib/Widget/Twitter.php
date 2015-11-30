@@ -413,7 +413,7 @@ class Twitter extends ModuleWidget
         }
 
         // Get the template
-        $template = $this->getRawNode('template', null);
+        $template = $this->parseLibraryReferences($isPreview, $this->getRawNode('template', null));
 
         // Parse the text template
         $matches = '';
@@ -605,7 +605,7 @@ class Twitter extends ModuleWidget
         // Add the CSS if it isn't empty
         $css = $this->getRawNode('styleSheet', null);
         if ($css != '') {
-            $headContent .= '<style type="text/css">' . $css . '</style>';
+            $headContent .= '<style type="text/css">' . $this->parseLibraryReferences($isPreview, $css) . '</style>';
         }
 
         $backgroundColor = $this->getOption('backgroundColor');
@@ -644,6 +644,10 @@ class Twitter extends ModuleWidget
 
         // Replace the Head Content with our generated javascript
         $data['javaScript'] = $javaScriptContent;
+
+        // Update and save widget if we've changed our assignments.
+        if ($this->hasMediaChanged())
+            $this->widget->save(['saveWidgetOptions' => false]);
 
         return $this->renderTemplate($data);
     }

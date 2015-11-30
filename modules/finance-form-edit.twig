@@ -114,7 +114,7 @@
                     <div class="tab-pane active" id="general">
                         {% set title %}{% trans "Name" %}{% endset %}
                         {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
-                        {{ forms.text("name", title, module.getOption("name"), helpText) }}
+                        {{ forms.input("name", title, module.getOption("name"), helpText) }}
 
                         {% set title %}{% trans "Duration" %}{% endset %}
                         {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
@@ -132,21 +132,21 @@
 
                         {% set title %}{% trans "Query" %}{% endset %}
                         {% set helpText %}{% trans "The YQL query to use for data" %}{% endset %}
-                        {{ forms.text("yql", title, module.getOption("yql"), helpText, "template-override-controls", "required") }}
+                        {{ forms.input("yql", title, module.getOption("yql"), helpText, "template-override-controls", "required") }}
 
                         {% set title %}{% trans "Item" %}{% endset %}
                         {% set helpText %}{% trans "The item wanted, can be comma separated." %}{% endset %}
-                        {{ forms.text("item", title, module.getOption("item"), helpText, "", "required") }}
+                        {{ forms.input("item", title, module.getOption("item"), helpText, "", "required") }}
 
                         {% set title %}{% trans "Result Identifier" %}{% endset %}
                         {% set helpText %}{% trans "The name of the result identifier returned by the YQL" %}{% endset %}
-                        {{ forms.text("resultIdentifier", title, module.getOption("resultIdentifier"), helpText, "template-override-controls", "required") }}
+                        {{ forms.input("resultIdentifier", title, module.getOption("resultIdentifier"), helpText, "template-override-controls", "required") }}
 
                         {% set helpText %}{% trans "Enter the template. Please note that the background colour has automatically coloured to your layout background colour." %}{% endset %}
-                        {{ forms.textarea("ta_text", "", module.getRawNode("template"), helpText, "template-override-controls", "", 10) }}
+                        {{ forms.inputarea("ta_text", "", module.getRawNode("template"), helpText, "template-override-controls", "", 10) }}
 
                         {% set title %}{% trans "Optional Stylesheet" %}{% endset %}
-                        {{ forms.textarea("ta_css", "", module.getRawNode("styleSheet"), title, "template-override-controls", "", 10) }}
+                        {{ forms.inputarea("ta_css", "", module.getRawNode("styleSheet"), title, "template-override-controls", "", 10) }}
 
                     </div>
 
@@ -193,15 +193,15 @@
                     <div class="tab-pane" id="advanced">
                         {% set title %}{% trans "Background Colour" %}{% endset %}
                         {% set helpText %}{% trans "The selected effect works best with a background colour. Optionally add one here." %}{% endset %}
-                        {{ forms.text("backgroundColor", title, module.getOption("backgroundColor"), helpText, "background-color-group") }}
+                        {{ forms.input("backgroundColor", title, module.getOption("backgroundColor"), helpText, "background-color-group") }}
                         
                         {% set title %}{% trans "No records" %}{% endset %}
                         {% set helpText %}{% trans "A message to display when there are no records returned by the search query" %}{% endset %}
-                        {{ forms.text("noRecordsMessage", title, module.getOption("noTweetsMessage"), helpText) }}
+                        {{ forms.input("noRecordsMessage", title, module.getOption("noTweetsMessage"), helpText) }}
 
                         {% set title %}{% trans "Date Format" %}{% endset %}
                         {% set helpText %}{% trans "The format to apply to all dates returned by the ticker. In PHP date format: http://uk3.php.net/manual/en/function.date.php" %}{% endset %}
-                        {{ forms.text("dateFormat", title, module.getOption("dateFormat"), helpText) }}
+                        {{ forms.input("dateFormat", title, module.getOption("dateFormat"), helpText) }}
 
                         {% set title %}{% trans "Update Interval (mins)" %}{% endset %}
                         {% set helpText %}{% trans "Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60." %}{% endset %}

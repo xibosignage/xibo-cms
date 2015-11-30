@@ -29,6 +29,43 @@
                 "summary": "Display Search",
                 "description": "Search Displays for this User",
                 "operationId": "displaySearch",
+                "parameters": [
+                    {
+                        "name": "displayId",
+                        "in": "formData",
+                        "description": "Filter by Display Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "displayGroupId",
+                        "in": "formData",
+                        "description": "Filter by DisplayGroup Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "display",
+                        "in": "formData",
+                        "description": "Filter by Display Name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "macAddress",
+                        "in": "formData",
+                        "description": "Filter by Mac Address",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "clientVersion",
+                        "in": "formData",
+                        "description": "Filter by Client Version",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "successful operation",
@@ -269,6 +306,29 @@
                 "summary": "Command Search",
                 "description": "Search this users Commands",
                 "operationId": "commandSearch",
+                "parameters": [
+                    {
+                        "name": "commandId",
+                        "in": "formData",
+                        "description": "Filter by Command Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "command",
+                        "in": "formData",
+                        "description": "Filter by Command Name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "code",
+                        "in": "formData",
+                        "description": "Filter by Command Code",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "successful operation",
@@ -328,7 +388,7 @@
             }
         },
         "/command/{commandId}": {
-            "post": {
+            "put": {
                 "tags": [
                     "command"
                 ],
@@ -405,6 +465,43 @@
                 "summary": "Library Search",
                 "description": "Search the Library for this user",
                 "operationId": "librarySearch",
+                "parameters": [
+                    {
+                        "name": "mediaId",
+                        "in": "formData",
+                        "description": "Filter by Media Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "media",
+                        "in": "formData",
+                        "description": "Filter by Media Name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "type",
+                        "in": "formData",
+                        "description": "Filter by Media Type",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "ownerId",
+                        "in": "formData",
+                        "description": "Filter by Owner Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "retired",
+                        "in": "formData",
+                        "description": "Filter by Retired",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "successful operation",
@@ -515,6 +612,13 @@
                         "description": "The Media ID to Delete",
                         "required": true,
                         "type": "integer"
+                    },
+                    {
+                        "name": "forceDelete",
+                        "in": "formData",
+                        "description": "If the media item has been used should it be force removed from items that uses it?",
+                        "required": true,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -547,6 +651,22 @@
                 "summary": "Search Campaigns",
                 "description": "Search all Campaigns this user has access to",
                 "operationId": "campaignSearch",
+                "parameters": [
+                    {
+                        "name": "campaignId",
+                        "in": "formData",
+                        "description": "Filter by Campaign Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Filter by Name",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "successful operation",
@@ -830,6 +950,41 @@
                 "operationId": "layoutSearch",
                 "parameters": [
                     {
+                        "name": "layoutId",
+                        "in": "formData",
+                        "description": "Filter by Layout Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "layout",
+                        "in": "formData",
+                        "description": "Filter by partial Layout name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "userId",
+                        "in": "formData",
+                        "description": "Filter by user Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "retired",
+                        "in": "formData",
+                        "description": "Filter by retired flag",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "tags",
+                        "in": "formData",
+                        "description": "Filter by Tags",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "embed",
                         "in": "formData",
                         "description": "Embed related data such as regions, playlists, tags, etc",
@@ -1091,6 +1246,22 @@
                 ],
                 "summary": "Get Display Groups",
                 "operationId": "displayGroupSearch",
+                "parameters": [
+                    {
+                        "name": "displayGroupId",
+                        "in": "formData",
+                        "description": "Filter by DisplayGroup Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "displayGroup",
+                        "in": "formData",
+                        "description": "Filter by DisplayGroup Name",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "a successful response",
@@ -1823,6 +1994,22 @@
                 "summary": "DataSet Search",
                 "description": "Search this users DataSets",
                 "operationId": "dataSetSearch",
+                "parameters": [
+                    {
+                        "name": "dataSetId",
+                        "in": "formData",
+                        "description": "Filter by DataSet Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "dataSet",
+                        "in": "formData",
+                        "description": "Filter by DataSet Name",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "successful operation",
@@ -2564,6 +2751,29 @@
                 "summary": "Display Profile Search",
                 "description": "Search this users Display Profiles",
                 "operationId": "displayProfileSearch",
+                "parameters": [
+                    {
+                        "name": "displayProfileId",
+                        "in": "formData",
+                        "description": "Filter by DisplayProfile Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "displayProfile",
+                        "in": "formData",
+                        "description": "Filter by DisplayProfile Name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "type",
+                        "in": "formData",
+                        "description": "Filter by DisplayProfile Type (windows|android)",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "successful operation",
@@ -2720,6 +2930,43 @@
                 }
             }
         },
+        "/usergroup": {
+            "get": {
+                "tags": [
+                    "usergroup"
+                ],
+                "summary": "UserGroup Search",
+                "description": "Search User Groups",
+                "operationId": "userGroupSearch",
+                "parameters": [
+                    {
+                        "name": "userGroupId",
+                        "in": "formData",
+                        "description": "Filter by UserGroup Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "userGroup",
+                        "in": "formData",
+                        "description": "Filter by UserGroup Name",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/UserGroup"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/group/{userGroupId}/copy": {
             "post": {
                 "tags": [
@@ -2860,6 +3107,36 @@
                 "summary": "User Search",
                 "description": "Search users",
                 "operationId": "userSearch",
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "formData",
+                        "description": "Filter by User Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "userName",
+                        "in": "formData",
+                        "description": "Filter by User Name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "userTypeId",
+                        "in": "formData",
+                        "description": "Filter by UserType Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "retired",
+                        "in": "formData",
+                        "description": "Filter by Retired",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "successful operation",
@@ -2928,6 +3205,62 @@
                         "description": "The inital user group for this User",
                         "required": true,
                         "type": "integer"
+                    },
+                    {
+                        "name": "firstName",
+                        "in": "formData",
+                        "description": "The users first name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "lastName",
+                        "in": "formData",
+                        "description": "The users last name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "phone",
+                        "in": "formData",
+                        "description": "The users phone number",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "ref1",
+                        "in": "formData",
+                        "description": "Reference 1",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "ref2",
+                        "in": "formData",
+                        "description": "Reference 2",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "ref3",
+                        "in": "formData",
+                        "description": "Reference 3",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "ref4",
+                        "in": "formData",
+                        "description": "Reference 4",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "ref5",
+                        "in": "formData",
+                        "description": "Reference 5",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -3030,6 +3363,29 @@
                 "summary": "Resolution Search",
                 "description": "Search Resolutions this user has access to",
                 "operationId": "resolutionSearch",
+                "parameters": [
+                    {
+                        "name": "resolutionId",
+                        "in": "formData",
+                        "description": "Filter by Resolution Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "resolution",
+                        "in": "formData",
+                        "description": "Filter by Resolution Name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "enabled",
+                        "in": "formData",
+                        "description": "Filter by Enabled",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "successful operation",
@@ -3427,7 +3783,36 @@
             }
         },
         "Command": {
-
+            "properties": {
+                "commandId": {
+                    "description": "Command Id",
+                    "type": "integer"
+                },
+                "command": {
+                    "description": "Command Name",
+                    "type": "string"
+                },
+                "code": {
+                    "description": "Unique Code",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "Description",
+                    "type": "string"
+                },
+                "userId": {
+                    "description": "User Id",
+                    "type": "integer"
+                },
+                "commandString": {
+                    "description": "Command String - when child of a Display Profile",
+                    "type": "string"
+                },
+                "validationString": {
+                    "description": "Validation String - when child of a Display Profile",
+                    "type": "string"
+                }
+            }
         },
         "Permission": {
             "properties": {
@@ -4368,6 +4753,38 @@
                 "libraryQuota": {
                     "description": "The users library quota in bytes",
                     "type": "integer"
+                },
+                "firstName": {
+                    "description": "First Name",
+                    "type": "string"
+                },
+                "lastName": {
+                    "description": "Last Name",
+                    "type": "string"
+                },
+                "phone": {
+                    "description": "Phone Number",
+                    "type": "string"
+                },
+                "ref1": {
+                    "description": "Reference field 1",
+                    "type": "string"
+                },
+                "ref2": {
+                    "description": "Reference field 2",
+                    "type": "string"
+                },
+                "ref3": {
+                    "description": "Reference field 3",
+                    "type": "string"
+                },
+                "ref4": {
+                    "description": "Reference field 4",
+                    "type": "string"
+                },
+                "ref5": {
+                    "description": "Reference field 5",
+                    "type": "string"
                 },
                 "groups": {
                     "description": "An array of user groups this user is assigned to",

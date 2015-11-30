@@ -115,6 +115,11 @@ class ResolutionFactory extends BaseFactory
             $params['resolutionId'] = Sanitize::getInt('resolutionId', $filterBy);
         }
 
+        if (Sanitize::getString('resolution', $filterBy) != null) {
+            $body .= ' AND resolution = :resolution ';
+            $params['resolution'] = Sanitize::getString('resolution', $filterBy);
+        }
+
         if (Sanitize::getInt('width', $filterBy) !== null) {
             $body .= ' AND intended_width = :width ';
             $params['width'] = Sanitize::getInt('width', $filterBy);

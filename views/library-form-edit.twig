@@ -28,7 +28,7 @@
             <form id="mediaEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("library.edit", {"id": media.mediaId}) }}" data-media-id="{{ media.mediaId }}" data-valid-extensions="{{ validExtensions }}">
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "The Name of this item - Leave blank to use the file name" %}{% endset %}
-                {{ forms.text("name", title, media.name, helpText) }}
+                {{ forms.input("name", title, media.name, helpText) }}
 
                 {% set title %}{% trans "Duration" %}{% endset %}
                 {% set helpText %}{% trans "The duration in seconds this item should be displayed" %}{% endset %}
@@ -36,7 +36,7 @@
 
                 {% set title %}{% trans "Tags" %}{% endset %}
                 {% set helpText %}{% trans "Tag this media. Comma Separated." %}{% endset %}
-                {{ forms.text("tags", title, media.tags, helpText) }}
+                {{ forms.input("tags", title, media.tags, helpText) }}
 
                 {% set title %}{% trans "Retire this media?" %}{% endset %}
                 {% set helpText %}{% trans "Retired media remains on existing Layouts but is not available to assign to new Layouts." %}{% endset %}

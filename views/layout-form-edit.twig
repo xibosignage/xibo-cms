@@ -34,11 +34,11 @@
                     <div class="tab-pane active" id="general">
                         {% set title %}{% trans "Name" %}{% endset %}
                         {% set helpText %}{% trans "The Name of the Layout - (1 - 50 characters)" %}{% endset %}
-                        {{ forms.text("name", title, layout.layout, helpText) }}
+                        {{ forms.input("name", title, layout.layout, helpText) }}
 
                         {% set title %}{% trans "Tags" %}{% endset %}
                         {% set helpText %}{% trans "Tags for this layout - used when searching for it. Comma delimited. (1 - 250 characters)" %}{% endset %}
-                        {{ forms.text("tags", title, layout.tags, helpText) }}
+                        {{ forms.input("tags", title, layout.tags, helpText) }}
 
                         {% set title %}{% trans "Retired" %}{% endset %}
                         {% set helpText %}{% trans "Retire this layout or not? It will no longer be visible in lists" %}{% endset %}
@@ -47,12 +47,12 @@
                     <div class="tab-pane" id="description">
                         {% set title %}{% trans "Description" %}{% endset %}
                         {% set helpText %}{% trans "An optional description of the Layout. (1 - 250 characters)" %}{% endset %}
-                        {{ forms.textarea("description", title, layout.description, helpText) }}
+                        {{ forms.inputarea("description", title, layout.description, helpText) }}
                     </div>
                     <div class="tab-pane" id="background">
                         {% set title %}{% trans "Background Colour" %}{% endset %}
                         {% set helpText %}{% trans "Use the colour picker to select the background colour" %}{% endset %}
-                        {{ forms.text("backgroundColor", title, layout.backgroundColor, helpText) }}
+                        {{ forms.input("backgroundColor", title, layout.backgroundColor, helpText) }}
 
                         {% set title %}{% trans "Background Image" %}{% endset %}
                         {% set helpText %}{% trans "Pick the background image from the library" %}{% endset %}
@@ -66,7 +66,7 @@
 
                         {% set title %}{% trans "Layer" %}{% endset %}
                         {% set helpText %}{% trans "The layering order of the background image (z-index). Advanced use only." %}{% endset %}
-                        {{ forms.text("backgroundzIndex", title, layout.backgroundzIndex, helpText) }}
+                        {{ forms.input("backgroundzIndex", title, layout.backgroundzIndex, helpText) }}
 
                         <div class="col-md-offset-2">
                             <img id="bg_image_image" data-url="{{ urlFor("library.download") }}?preview=1&width=100&height=56" data-not-found-url="{{ theme.uri("img/forms/filenotfound.gif") }}" alt="{% trans "Background thumbnail" %}" />

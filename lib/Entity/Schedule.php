@@ -11,6 +11,7 @@ namespace Xibo\Entity;
 use Respect\Validation\Validator as v;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Helper\Config;
+use Xibo\Helper\Log;
 use Xibo\Storage\PDOConnect;
 
 /**
@@ -244,9 +245,11 @@ class Schedule implements \JsonSerializable
         if (count($this->displayGroups) <= 0)
             throw new \InvalidArgumentException(__('No display groups selected'));
 
+        Log::debug('EventTypeId: %d. CampaignId: %d, CommandId: %d', $this->eventTypeId, $this->campaignId, $this->commandId);
+
         if ($this->eventTypeId == Schedule::$LAYOUT_EVENT) {
             // Validate layout
-            if (!v::int()->notEmpty()->min(1)->validate($this->campaignId))
+            if (!v::int()->notEmpty()->validate($this->campaignId))
                 throw new \InvalidArgumentException(__('Please select a Campaign/Layout for this event.'));
 
             // validate the dates
@@ -257,7 +260,7 @@ class Schedule implements \JsonSerializable
 
         } else if ($this->eventTypeId == Schedule::$COMMAND_EVENT) {
             // Validate command
-            if (!v::int()->notEmpty()->min(1)->validate($this->commandId))
+            if (!v::int()->notEmpty()->validate($this->commandId))
                 throw new \InvalidArgumentException(__('Please select a Command for this event.'));
 
             $this->campaignId = null;

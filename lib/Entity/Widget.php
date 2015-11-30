@@ -113,6 +113,12 @@ class Widget implements \JsonSerializable
      */
     public $tempId = null;
 
+    /**
+     * Flag to indicate whether the widget is newly added
+     * @var bool
+     */
+    public $isNew = false;
+
     public function __construct()
     {
         $this->excludeProperty('module');
@@ -385,6 +391,8 @@ class Widget implements \JsonSerializable
     private function add()
     {
         Log::debug('Adding Widget ' . $this->type . ' to PlaylistId ' . $this->playlistId);
+
+        $this->isNew = true;
 
         $sql = 'INSERT INTO `widget` (`playlistId`, `ownerId`, `type`, `duration`, `displayOrder`) VALUES (:playlistId, :ownerId, :type, :duration, :displayOrder)';
         $this->widgetId = PDOConnect::insert($sql, array(

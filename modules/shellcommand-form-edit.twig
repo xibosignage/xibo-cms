@@ -39,7 +39,7 @@
 
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
-                {{ forms.text("name", title, module.getOption("name"), helpText) }}
+                {{ forms.input("name", title, module.getOption("name"), helpText) }}
 
                 {% set title %}{% trans "Command" %}{% endset %}
                 {% set helpText %}{% trans "Pick a command" %}{% endset %}
@@ -47,11 +47,11 @@
                 
                 {% set title %}{% trans "Windows Command" %}{% endset %}
                 {% set helpText %}{% trans "Enter a Windows Command Line compatible command" %}{% endset %}
-                {{ forms.text("windowsCommand", title, module.getOption("windowsCommand")|url_decode, helpText) }}
+                {{ forms.input("windowsCommand", title, module.getOption("windowsCommand")|url_decode, helpText) }}
 
                 {% set title %}{% trans "Android / Linux Command" %}{% endset %}
                 {% set helpText %}{% trans "Enter an Android / Linux Command Line compatible command" %}{% endset %}
-                {{ forms.text("linuxCommand", title, module.getOption("linuxCommand")|url_decode, helpText) }}
+                {{ forms.input("linuxCommand", title, module.getOption("linuxCommand")|url_decode, helpText) }}
             </form>
         </div>
     </div>

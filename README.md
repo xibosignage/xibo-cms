@@ -2,7 +2,7 @@
 Xibo - Digital Signage - http://www.xibo.org.uk
 Copyright (C) 2006-2015 Daniel Garner and Contributors.
 
-This is the **1.8.0-alpha development branch** and represents the next generation of the Xibo CMS.
+This is the **development branch** and represents the next generation of the Xibo CMS.
 
 At present you cannot upgrade an earlier version to this release.
 

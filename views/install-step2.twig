@@ -24,11 +24,11 @@
 
                         {% set title %}{% trans "Host" %}{% endset %}
                         {% set helpText %}{% trans "Please enter the hostname for the MySQL server. This is usually localhost." %}{% endset %}
-                        {{ forms.text("host",  title, flash.new_db_host, helpText) }}
+                        {{ forms.input("host",  title, flash.new_db_host, helpText) }}
 
                         {% set title %}{% trans "Admin Username" %}{% endset %}
                         {% set helpText %}{% trans "Please enter the user name of an account that has administrator privileges on the MySQL server." %}{% endset %}
-                        {{ forms.text("admin_username",  title, flash.db_admin_user, helpText) }}
+                        {{ forms.input("admin_username",  title, flash.db_admin_user, helpText) }}
 
                         {% set title %}{% trans "Admin Password" %}{% endset %}
                         {% set helpText %}{% trans "Please enter password for the Admin account." %}{% endset %}
@@ -36,11 +36,11 @@
 
                         {% set title %}{% trans "Database Name" %}{% endset %}
                         {% set helpText %}{% trans "Please enter the name of the database that should be created." %}{% endset %}
-                        {{ forms.text("db_name",  title, flash.new_db_name, helpText) }}
+                        {{ forms.input("db_name",  title, flash.new_db_name, helpText) }}
 
                         {% set title %}{% trans "Database Username" %}{% endset %}
                         {% set helpText %}{% trans "Please enter the name of the database user that should be created." %}{% endset %}
-                        {{ forms.text("db_username",  title, flash.new_db_user, helpText) }}
+                        {{ forms.input("db_username",  title, flash.new_db_user, helpText) }}
 
                         {% set title %}{% trans "Database Password" %}{% endset %}
                         {% set helpText %}{% trans "Please enter a password for this user." %}{% endset %}
@@ -53,15 +53,15 @@
 
                         {% set title %}{% trans "Host" %}{% endset %}
                         {% set helpText %}{% trans "Please enter the hostname for the MySQL server. This is usually localhost." %}{% endset %}
-                        {{ forms.text("existing_host",  title, flash.existing_db_host, helpText) }}
+                        {{ forms.input("existing_host",  title, flash.existing_db_host, helpText) }}
 
                         {% set title %}{% trans "Database Name" %}{% endset %}
                         {% set helpText %}{% trans "Please enter the name of the database that should be used." %}{% endset %}
-                        {{ forms.text("existing_db_name",  title, flash.existing_db_name, helpText) }}
+                        {{ forms.input("existing_db_name",  title, flash.existing_db_name, helpText) }}
 
                         {% set title %}{% trans "Database Username" %}{% endset %}
                         {% set helpText %}{% trans "Please enter the name of the database user that should be used." %}{% endset %}
-                        {{ forms.text("existing_db_username",  title, flash.existing_db_user, helpText) }}
+                        {{ forms.input("existing_db_username",  title, flash.existing_db_user, helpText) }}
 
                         {% set title %}{% trans "Database Password" %}{% endset %}
                         {% set helpText %}{% trans "Please enter a password for this user." %}{% endset %}

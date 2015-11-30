@@ -16,9 +16,9 @@
                 <div class="XiboFilter">
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
-                            {{ inline.text("layout", "Layout", defaults.layout) }}
-                            {{ inline.text("region", "Region", defaults.region) }}
-                            {{ inline.text("media", "Media", defaults.media) }}
+                            {{ inline.input("layout", "Layout", defaults.layout) }}
+                            {{ inline.input("region", "Region", defaults.region) }}
+                            {{ inline.input("media", "Media", defaults.media) }}
 
                             {% set title %}{% trans "Module" %}{% endset %}
                             {{ inline.dropdown("type", "single", title, defaults.owner, [{type:null, name:""}]|merge(modules), "type", "name") }}
@@ -54,7 +54,7 @@
 
 {% block javaScript %}
     <script type="text/javascript">
-        var table = $("#entries").DataTable({
+        var table = $("#entries").DataTable({ "language": dataTablesLanguage,
             serverSide: false,
             filter: false,
             searchDelay: 3000,

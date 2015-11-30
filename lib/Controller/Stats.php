@@ -166,7 +166,7 @@ class Stats extends Base
           SELECT stat.type,
               display.Display,
               layout.Layout,
-              IFNULL(widgetoption.value, CONCAT(widget.type, \'-\', widget.widgetId)) AS Name,
+              IFNULL(`media`.name, IFNULL(`widgetoption`.value, CONCAT(`widget`.type, \'-\', `widget`.widgetId))) AS Name,
               COUNT(StatID) AS NumberPlays,
               SUM(TIME_TO_SEC(TIMEDIFF(end, start))) AS Duration,
               MIN(start) AS MinStart,
@@ -182,6 +182,11 @@ class Stats extends Base
               ON `widgetoption`.widgetId = `widget`.widgetId
                 AND `widgetoption`.type = \'attrib\'
                 AND `widgetoption`.option = \'name\'
+              LEFT OUTER JOIN `lkwidgetmedia`
+              ON `lkwidgetmedia`.widgetId = `widget`.widgetId
+              LEFT OUTER JOIN `media`
+              ON `media`.mediaId = `lkwidgetmedia`.mediaId
+                AND `media`.type <> \'module\'
            WHERE stat.type <> \'displaydown\'
                 AND stat.end > :fromDt
                 AND stat.start <= :toDt

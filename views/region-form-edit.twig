@@ -17,7 +17,7 @@
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Set Full Screen" %}, setFullScreenLayout({{ layout.width }}| {{ layout.height }})
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, $("#regionEditForm").submit()
+    {% trans "Save" %}, regionEditFormSubmit()
 {% endblock %}
 
 {% block formFieldActions %}
@@ -63,7 +63,7 @@
 
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "Name of the Region" %}{% endset %}
-                {{ forms.text("name", title, region.name, helpText) }}
+                {{ forms.input("name", title, region.name, helpText) }}
 
                 {{ forms.number("top", "Top", region.top, "Offset from the Top Corner") }}
 

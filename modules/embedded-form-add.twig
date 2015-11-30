@@ -26,7 +26,7 @@
 
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
-                {{ forms.text("name", title, "", helpText) }}
+                {{ forms.input("name", title, "", helpText) }}
 
                 {% set title %}{% trans "Duration" %}{% endset %}
                 {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
@@ -41,7 +41,7 @@
                 {{ forms.checkbox("scaleContent", title, 1, helpText) }}
 
                 {% set helpText %}{% trans "HTML to Embed" %}{% endset %}
-                {{ forms.textarea("embedHtml", "", "", helpText, "", "", 10) }}
+                {{ forms.inputarea("embedHtml", "", "", helpText, "", "", 10) }}
 
 {% set styleDefault %}
 <style type="text/css">
@@ -49,7 +49,7 @@
 </style>
 {% endset %}
                 {% set helpText %}{% trans "Custom Style Sheets" %}{% endset %}
-                {{ forms.textarea("embedStyle", "", styleDefault, helpText, "", "", 10) }}
+                {{ forms.inputarea("embedStyle", "", styleDefault, helpText, "", "", 10) }}
 
 {% set scriptDefault %}
 <script type="text/javascript">
@@ -62,7 +62,7 @@
 </script>
 {% endset %}
                 {% set helpText %}{% trans "HEAD content to Embed (including script tags)" %}{% endset %}
-                {{ forms.textarea("embedScript", "", scriptDefault, helpText, "", "", 10) }}
+                {{ forms.inputarea("embedScript", "", scriptDefault, helpText, "", "", 10) }}
             </form>
         </div>
     </div>

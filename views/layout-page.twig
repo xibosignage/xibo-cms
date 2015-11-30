@@ -18,8 +18,8 @@
                 <div class="XiboFilter">
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
-                            {{ inline.text("layout", "Name", defaults.layout) }}
-                            {{ inline.text("tags", "Tags", defaults.tags) }}
+                            {{ inline.input("layout", "Name", defaults.layout) }}
+                            {{ inline.input("tags", "Tags", defaults.tags) }}
 
                             {% set title %}{% trans "Owner" %}{% endset %}
                             {{ inline.dropdown("userId", "single", title, defaults.owner, [{userId:null, userName:""}]|merge(users), "userId", "userName") }}
@@ -70,7 +70,7 @@
 
 {% block javaScript %}
     <script type="text/javascript">
-        var table = $("#layouts").DataTable({
+        var table = $("#layouts").DataTable({ "language": dataTablesLanguage,
             serverSide: true,
             filter: false,
             searchDelay: 3000,

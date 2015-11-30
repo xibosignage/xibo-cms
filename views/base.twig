@@ -83,10 +83,13 @@
         <script src="{{ theme.uri("libraries/jquery-serialize-object/jquery.serialize-object.min.js") }}"></script>
 
         {% if translate.jsLocale != 'en-GB' %}
+            {# Handle the inclusion of i18n #}
             {% set calendarTranslation %}libraries/calendar/js/language/{{ translate.calendarLanguage }}.js{% endset %}
             <script src="{{ theme.uri(calendarTranslation) }}"></script>
             {% set datePickerTranslation %}libraries/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.{{ translate.jsShortLocale }}.js{% endset %}
             <script src="{{ theme.uri(datePickerTranslation) }}"></script>
+            {% set selectPickerTranslation %}libraries/bootstrap-select/js/i18n/defaults-{{ translate.locale }}.min.js{% endset %}
+            <script src="{{ theme.uri(selectPickerTranslation) }}"></script>
         {% endif %}
 
         <script type="text/javascript">
@@ -111,6 +114,30 @@
             var clockUrl = "{{ urlFor("clock") }}";
             var calendarLanguage = "{{ translate.calendarLanguage }}";
             var pingUrl = "{{ urlFor("ping") }}";
+            var dataTablesLanguage = {
+                "decimal":        "",
+                "emptyTable":     "{% trans "No data available in table" %}",
+                "info":           "{% trans "Showing _START_ to _END_ of _TOTAL_ entries" %}",
+                "infoEmpty":      "{% trans "Showing 0 to 0 of 0 entries" %}",
+                "infoFiltered":   "{% trans "(filtered from _MAX_ total entries)" %}",
+                "infoPostFix":    "",
+                "thousands":      ",",
+                "lengthMenu":     "{% trans "Show _MENU_ entries" %}",
+                "loadingRecords": "{% trans "Loading..." %}",
+                "processing":     "{% trans "Processing..." %}",
+                "search":         "{% trans "Search:" %}",
+                "zeroRecords":    "{% trans "No matching records found" %}",
+                "paginate": {
+                    "first":      "{% trans "First" %}",
+                    "last":       "{% trans "Last" %}",
+                    "next":       "{% trans "Next" %}",
+                    "previous":   "{% trans "Previous" %}"
+                },
+                "aria": {
+                    "sortAscending":  "{% trans ": activate to sort column ascending" %}",
+                    "sortDescending": "{% trans ": activate to sort column descending" %}"
+                }
+            };
 
             moment.locale("{{ translate.jsLocale }}");
 

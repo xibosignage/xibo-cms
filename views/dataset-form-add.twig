@@ -25,11 +25,11 @@
             <form id="dataSetAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("dataSet.add") }}">
                     {% set title %}{% trans "Name" %}{% endset %}
                     {% set helpText %}{% trans "A name for this DataSet" %}{% endset %}
-                    {{ forms.text("dataSet", title, "", helpText, "", "required") }}
+                    {{ forms.input("dataSet", title, "", helpText, "", "required") }}
 
                     {% set title %}{% trans "Description" %}{% endset %}
                     {% set helpText %}{% trans "An optional description" %}{% endset %}
-                    {{ forms.text("description", title, "", helpText) }}
+                    {{ forms.input("description", title, "", helpText) }}
             </form>
         </div>
     </div>

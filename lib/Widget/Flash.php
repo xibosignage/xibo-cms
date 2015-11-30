@@ -21,6 +21,8 @@
 namespace Xibo\Widget;
 
 
+use Xibo\Helper\Config;
+
 class Flash extends ModuleWidget
 {
     /**
@@ -50,6 +52,16 @@ class Flash extends ModuleWidget
                    wmode="transparent">
             </embed>
         </object>';
+    }
+
+    /**
+     * Determine duration
+     * @param $fileName
+     * @return int
+     */
+    public function determineDuration($fileName = null)
+    {
+        return Config::GetSetting('swf_length');
     }
 
     /**

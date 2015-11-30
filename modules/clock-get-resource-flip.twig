@@ -60,12 +60,23 @@
     var clock;
 
     $(document).ready(function() {
+        // Show Seconds: {{ showSeconds }}
+        // Offset: {{ offset }}
+
+        {% if clockFace == "TwelveHourClock" or clockFace == "TwentyFourHourClock" %}
         clock = $('#clock').FlipClock({
-            clockFace: 'TwentyFourHourClock',
-            includedSeconds: false
+            clockFace: '{{ clockFace }}',
+            showSeconds: {% if showSeconds == 1 %}true{% else %}false{% endif %}
         });
 
         clock.setTime(clock.getTime() + ({{ offset }} * 60 * 1000));
+        {% else %}
+        clock = $('#clock').FlipClock({{ duration }}, {
+            clockFace: '{{ clockFace }}',
+            showSeconds: {% if showSeconds == 1 %}true{% else %}false{% endif %},
+            countdown: true
+        });
+        {% endif %}
     });
 </script>
 </html>

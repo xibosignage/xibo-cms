@@ -87,6 +87,26 @@ class DisplayProfileFactory extends BaseFactory
                 $params['displayProfileId'] = Sanitize::getInt('displayProfileId', $filterBy);
             }
 
+            // Filter by DisplayProfile Name?
+            if (Sanitize::getString('displayProfile', $filterBy) != null) {
+                // convert into a space delimited array
+                $names = explode(' ', Sanitize::getString('displayProfile', $filterBy));
+
+                $i = 0;
+                foreach ($names as $searchName) {
+                    $i++;
+                    // Not like, or like?
+                    if (substr($searchName, 0, 1) == '-') {
+                        $body .= " AND  `displayprofile`.name NOT LIKE :search$i ";
+                        $params['search' . $i] = '%' . ltrim(($searchName), '-') . '%';
+                    }
+                    else {
+                        $body .= " AND  `displayprofile`.name LIKE :search$i ";
+                        $params['search' . $i] = '%' . $searchName . '%';
+                    }
+                }
+            }
+
             if (Sanitize::getString('type', $filterBy) != null) {
                 $body .= ' AND type = :type ';
                 $params['type'] = Sanitize::getString('type', $filterBy);

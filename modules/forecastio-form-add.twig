@@ -144,7 +144,7 @@
                     <div class="tab-pane active" id="general">
                         {% set title %}{% trans "Name" %}{% endset %}
                         {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
-                        {{ forms.text("name", title, "", helpText) }}
+                        {{ forms.input("name", title, "", helpText) }}
 
                         {% set title %}{% trans "Duration" %}{% endset %}
                         {% set helpText %}{% trans "The duration in seconds this item should be displayed." %}{% endset %}
@@ -164,7 +164,7 @@
 
                         {% set title %}{% trans "Colour" %}{% endset %}
                         {% set helpText %}{% trans "Please select a colour for the foreground text." %}{% endset %}
-                        {{ forms.text("color", title, "#000", helpText, "", "required") }}
+                        {{ forms.input("color", title, "#000", helpText, "", "required") }}
                     </div>
 
                     <div class="tab-pane" id="advanced">
@@ -203,15 +203,15 @@
 
                         {% set title %}{% trans "Template for Current Forecast" %}{% endset %}
                         {% set helpText %}{% trans "Enter the template for the current forecast. For a list of substitutions click Request Forecast below." %}{% endset %}
-                        {{ forms.textarea("currentTemplate", title, "", helpText, "template-override-controls", "required", 10) }}
+                        {{ forms.inputarea("currentTemplate", title, "", helpText, "template-override-controls", "required", 10) }}
 
                         {% set title %}{% trans "Template for Daily Forecast" %}{% endset %}
                         {% set helpText %}{% trans "Enter the template for the daily forecast. Replaces [dailyForecast] in main template." %}{% endset %}
-                        {{ forms.textarea("dailyTemplate", title, "", helpText, "template-override-controls", "", 10) }}
+                        {{ forms.inputarea("dailyTemplate", title, "", helpText, "template-override-controls", "", 10) }}
 
                         {% set title %}{% trans "CSS Style Sheet" %}{% endset %}
                         {% set helpText %}{% trans "Enter a CSS style sheet to style the weather widget" %}{% endset %}
-                        {{ forms.textarea("styleSheet", title, "", helpText, "template-override-controls", "required", 10) }}
+                        {{ forms.inputarea("styleSheet", title, "", helpText, "template-override-controls", "required", 10) }}
                     </div>
                 </div>
             </form>

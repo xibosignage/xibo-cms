@@ -23,43 +23,57 @@ class Command implements \JsonSerializable
     use EntityTrait;
 
     /**
-     * Command Id
+     * @SWG\Property(
+     *  description="Command Id"
+     * )
      * @var int
      */
     public $commandId;
 
     /**
-     * Command Name
+     * @SWG\Property(
+     *  description="Command Name"
+     * )
      * @var string
      */
     public $command;
 
     /**
-     * Unique Code
+     * @SWG\Property(
+     *  description="Unique Code"
+     * )
      * @var string
      */
     public $code;
 
     /**
-     * Description
+     * @SWG\Property(
+     *  description="Description"
+     * )
      * @var string
      */
     public $description;
 
     /**
-     * User Id
+     * @SWG\Property(
+     *  description="User Id"
+     * )
      * @var int
      */
     public $userId;
 
     /**
-     * Command String - when child of a Display Profile
+     * @SWG\Property(
+     *  description="Command String - when child of a Display Profile"
+     * )
      * @var string
      */
     public $commandString;
 
     /**
-     * Validation String - when child of a Display Profile
+     * @SWG\Property(
+     *  description="Validation String - when child of a Display Profile"
+     * )
      * @var string
      */
     public $validationString;

@@ -35,10 +35,10 @@ Theme::Set('form_class', 'XiboManualSubmit');
             <form id="exportForm" class="XiboManualSubmit form-horizontal" method="get" action="{{ urlFor("auditLog.export") }}">
                         {# it is missing some stuff for sure, also audit trial is not working at the moment #}
                         {% set title %}{% trans "FromDate" %}{% endset %}
-                        {{ forms.text("filterFromDt", title, filterFromDt, helpText) }}
+                        {{ forms.input("filterFromDt", title, filterFromDt, helpText) }}
 
                         {% set title %}{% trans "To Date" %}{% endset %}
-                        {{ forms.text("filterToDt", title, filterToDt, helpText) }}
+                        {{ forms.input("filterToDt", title, filterToDt, helpText) }}
             </form>
         </div>
     </div>

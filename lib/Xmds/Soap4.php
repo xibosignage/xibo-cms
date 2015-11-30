@@ -85,8 +85,11 @@ class Soap4 extends Soap
 
             $this->logProcessor->setDisplay($display->displayId);
 
+            // Now
+            $dateNow = Date::parse();
+
             // Append the time
-            $displayElement->setAttribute('date', Date::getLocalDate());
+            $displayElement->setAttribute('date', Date::getLocalDate($dateNow));
             $displayElement->setAttribute('timezone', Config::GetSetting('defaultTimezone'));
 
             // Determine if we are licensed or not
@@ -108,6 +111,16 @@ class Soap4 extends Soap
 
                 // Create the XML nodes
                 foreach ($settings as $arrayItem) {
+
+                    // Append Local Time to the root element
+                    if (strtolower($arrayItem['name']) == 'displaytimezone' && $arrayItem['value'] != '') {
+                        // Calculate local time
+                        $dateNow->timezone($arrayItem['value']);
+
+                        // Append Local Time
+                        $displayElement->setAttribute('localDate', Date::getLocalDate($dateNow));
+                    }
+
                     $node = $return->createElement($arrayItem['name'], (isset($arrayItem['value']) ? $arrayItem['value'] : $arrayItem['default']));
                     $node->setAttribute('type', $arrayItem['type']);
                     $displayElement->appendChild($node);

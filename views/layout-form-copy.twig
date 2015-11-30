@@ -34,7 +34,7 @@
                         {% set title %}{% trans "Name" %}{% endset %}
                         {% set helpText %}{% trans "The Name of the Layout - (1 - 50 characters)" %}{% endset %}
                         {% set layoutName %}{{ layout.layout }} 2{% endset %}
-                        {{ forms.text("name", title, layoutName, helpText) }}
+                        {{ forms.input("name", title, layoutName, helpText) }}
 
                         {% set title %}{% trans "Make new copies of all media on this layout?" %}{% endset %}
                         {% set helpText %}{% trans "This will duplicate all media that is currently assigned to the Layout being copied." %}{% endset %}
@@ -48,7 +48,7 @@
                     <div class="tab-pane" id="description">
                         {% set title %}{% trans "Description" %}{% endset %}
                         {% set helpText %}{% trans "An optional description of the Layout. (1 - 250 characters)" %}{% endset %}
-                        {{ forms.textarea("description", title, layout.description, helpText) }}
+                        {{ forms.inputarea("description", title, layout.description, helpText) }}
                     </div>
                 </div>
             </form>

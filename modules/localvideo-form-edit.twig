@@ -26,7 +26,7 @@
                 {% set title %}{% trans "Video Path" %}{% endset %}
                 {% set helpText %}{% trans "A local file path or URL to the video. This can be a RTSP stream." %}{% endset %}
                 {% set uri = module.getOption("uri")|url_decode %}
-                {{ forms.text("uri", title, uri, helpText, "", "required") }}
+                {{ forms.input("uri", title, uri, helpText, "", "required") }}
 
                 {% set title %}{% trans "Duration" %}{% endset %}
                 {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}

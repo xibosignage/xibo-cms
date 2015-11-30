@@ -66,6 +66,35 @@ class UserGroup extends Base
 
     /**
      * Group Grid
+     * @SWG\Get(
+     *  path="/usergroup",
+     *  operationId="userGroupSearch",
+     *  tags={"usergroup"},
+     *  summary="UserGroup Search",
+     *  description="Search User Groups",
+     *  @SWG\Parameter(
+     *      name="userGroupId",
+     *      in="formData",
+     *      description="Filter by UserGroup Id",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="userGroup",
+     *      in="formData",
+     *      description="Filter by UserGroup Name",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(ref="#/definitions/UserGroup")
+     *      )
+     *  )
+     * )
      */
     function grid()
     {
@@ -74,7 +103,8 @@ class UserGroup extends Base
         $this->getSession()->set(get_class(), 'Filter', Sanitize::getCheckbox('XiboFilterPinned', 0));
 
         $filterBy = [
-            'group' => $this->getSession()->set(get_class(), 'filter_name', Sanitize::getString('filter_name'))
+            'groupId' => Sanitize::getInt('userGroupId'),
+            'group' => $this->getSession()->set(get_class(), 'filter_name', Sanitize::getString('userGroup'))
         ];
 
         $groups = UserGroupFactory::query($this->gridRenderSort(), $this->gridRenderFilter($filterBy));

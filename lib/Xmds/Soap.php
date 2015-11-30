@@ -435,12 +435,15 @@ class Soap
     /**
      * @param $serverKey
      * @param $hardwareKey
+     * @param array $options
      * @return mixed
      * @throws \SoapFault
      */
-    protected function doSchedule($serverKey, $hardwareKey)
+    protected function doSchedule($serverKey, $hardwareKey, $options = [])
     {
         $this->logProcessor->setRoute('Schedule');
+
+        $options = array_merge(['dependentsAsNodes' => false], $options);
 
         // Sanitize
         $serverKey = Sanitize::string($serverKey);
@@ -489,22 +492,39 @@ class Soap
             $rows = $sth->fetchAll();
             $moduleDependents = array();
 
-            foreach ($rows as $dependent)
+            foreach ($rows as $dependent) {
                 $moduleDependents[] = $dependent['StoredAs'];
+            }
 
             // Add file nodes to the $fileElements
             // Firstly get all the scheduled layouts
             $SQL = '
-                SELECT `schedule`.eventTypeId, layout.layoutId, `command`.code, schedule_detail.fromDt, schedule_detail.toDt, schedule.eventId, schedule.is_priority,
+                SELECT `schedule`.eventTypeId, layout.layoutId, `command`.code, schedule_detail.fromDt, schedule_detail.toDt, schedule.eventId, schedule.is_priority
+            ';
+
+            if (!$options['dependentsAsNodes']) {
+                // Pull in the dependents using GROUP_CONCAT
+                $SQL .= ' ,
                   (
                     SELECT GROUP_CONCAT(DISTINCT StoredAs)
-                      FROM media
-                        INNER JOIN lklayoutmedia ON lklayoutmedia.MediaID = media.MediaID
-                     WHERE lklayoutmedia.LayoutID = layout.LayoutID
-                      AND lklayoutmedia.regionID <> \'module\'
-                    GROUP BY lklayoutmedia.LayoutID
+                      FROM `media`
+                        INNER JOIN `lkwidgetmedia`
+                        ON `lkwidgetmedia`.MediaID = `media`.MediaID
+                        INNER JOIN `widget`
+                        ON `widget`.widgetId = `lkwidgetmedia`.widgetId
+                        INNER JOIN `lkregionplaylist`
+                        ON `lkregionplaylist`.playlistId = `widget`.playlistId
+                        INNER JOIN `region`
+                        ON `region`.regionId = `lkregionplaylist`.regionId
+                     WHERE `region`.layoutId = `layout`.layoutId
+                      AND media.type <> \'module\'
+                    GROUP BY `region`.layoutId
                   ) AS Dependents
-                  FROM `schedule`
+                ';
+            }
+
+            $SQL .= '
+                   FROM `schedule`
                     INNER JOIN schedule_detail
                     ON schedule_detail.eventID = `schedule`.eventID
                     INNER JOIN `lkscheduledisplaygroup`
@@ -538,8 +558,48 @@ class Soap
             $sth = $dbh->prepare($SQL);
             $sth->execute($params);
 
+            $events = $sth->fetchAll(\PDO::FETCH_ASSOC);
+
+            // If our dependents are nodes, then build a list of layouts we can use to query for nodes
+            $layoutDependents = [];
+
+            if ($options['dependentsAsNodes']) {
+
+                // Layouts (pop in the default)
+                $layoutIds = [$this->display->defaultLayoutId];
+
+                foreach ($events as $event) {
+                    if (!in_array($event['layoutId'], $layoutIds))
+                        $layoutIds[] = $event['layoutId'];
+                }
+
+                $SQL = '
+                    SELECT DISTINCT `region`.layoutId, `media`.storedAs
+                      FROM `media`
+                        INNER JOIN `lkwidgetmedia`
+                        ON `lkwidgetmedia`.MediaID = `media`.MediaID
+                        INNER JOIN `widget`
+                        ON `widget`.widgetId = `lkwidgetmedia`.widgetId
+                        INNER JOIN `lkregionplaylist`
+                        ON `lkregionplaylist`.playlistId = `widget`.playlistId
+                        INNER JOIN `region`
+                        ON `region`.regionId = `lkregionplaylist`.regionId
+                     WHERE `region`.layoutId IN (' . implode(',', $layoutIds) . ')
+                      AND media.type <> \'module\'
+                ';
+
+                foreach (PDOConnect::select($SQL, []) as $row) {
+                    if (!array_key_exists($row['layoutId'], $layoutDependents))
+                        $layoutDependents[$row['layoutId']] = [];
+
+                    $layoutDependents[$row['layoutId']][] = $row['storedAs'];
+                }
+
+                Log::debug('Resolved dependents for Schedule: %s.', json_encode($layoutDependents, JSON_PRETTY_PRINT));
+            }
+
             // We must have some results in here by this point
-            foreach ($sth->fetchAll() as $row) {
+            foreach ($events as $row) {
                 $eventTypeId = $row['eventTypeId'];
                 $layoutId = $row['layoutId'];
                 $commandCode = $row['code'];
@@ -547,7 +607,6 @@ class Soap
                 $toDt = date('Y-m-d H:i:s', $row['toDt']);
                 $scheduleId = $row['eventId'];
                 $is_priority = Sanitize::int($row['is_priority']);
-                $dependents = Sanitize::string($row['Dependents']);
 
                 if ($eventTypeId == Schedule::$LAYOUT_EVENT) {
                     // Add a layout node to the schedule
@@ -557,7 +616,23 @@ class Soap
                     $layout->setAttribute("todt", $toDt);
                     $layout->setAttribute("scheduleid", $scheduleId);
                     $layout->setAttribute("priority", $is_priority);
-                    $layout->setAttribute("dependents", $dependents);
+
+                    if (!$options['dependentsAsNodes']) {
+                        $dependents = Sanitize::string($row['Dependents']);
+                        $layout->setAttribute("dependents", $dependents);
+                    }
+                    else if (array_key_exists($layoutId, $layoutDependents)) {
+                        $dependentNode = $scheduleXml->createElement("dependents");
+
+                        foreach ($layoutDependents[$layoutId] as $storedAs) {
+                            $fileNode = $scheduleXml->createElement("file", $storedAs);
+
+                            $dependentNode->appendChild($fileNode);
+                        }
+
+                        $layout->appendChild($dependentNode);
+                    }
+
                     $layoutElements->appendChild($layout);
 
                 } else if ($eventTypeId == Schedule::$COMMAND_EVENT) {
@@ -585,12 +660,37 @@ class Soap
             $layout->setAttribute("scheduleid", 0);
             $layout->setAttribute("priority", 0);
 
+            if ($options['dependentsAsNodes'] && array_key_exists($this->display->defaultLayoutId, $layoutDependents)) {
+                $dependentNode = $scheduleXml->createElement("dependents");
+
+                foreach ($layoutDependents[$this->display->defaultLayoutId] as $storedAs) {
+                    $fileNode = $scheduleXml->createElement("file", $storedAs);
+
+                    $dependentNode->appendChild($fileNode);
+                }
+
+                $layout->appendChild($dependentNode);
+            }
+
             $layoutElements->appendChild($layout);
         }
 
         // Add on the default layout node
         $default = $scheduleXml->createElement("default");
         $default->setAttribute("file", $this->display->defaultLayoutId);
+
+        if ($options['dependentsAsNodes'] && array_key_exists($this->display->defaultLayoutId, $layoutDependents)) {
+            $dependentNode = $scheduleXml->createElement("dependents");
+
+            foreach ($layoutDependents[$this->display->defaultLayoutId] as $storedAs) {
+                $fileNode = $scheduleXml->createElement("file", $storedAs);
+
+                $dependentNode->appendChild($fileNode);
+            }
+
+            $default->appendChild($dependentNode);
+        }
+
         $layoutElements->appendChild($default);
 
         // Add on a list of global dependants

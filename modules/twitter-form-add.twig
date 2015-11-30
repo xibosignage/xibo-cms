@@ -117,7 +117,7 @@
 
                         {% set title %}{% trans "Name" %}{% endset %}
                         {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
-                        {{ forms.text("name", title, "", helpText) }}
+                        {{ forms.input("name", title, "", helpText) }}
 
                         {% set title %}{% trans "Duration" %}{% endset %}
                         {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
@@ -125,7 +125,7 @@
 
                         {% set title %}{% trans "Search Term" %}{% endset %}
                         {% set helpText %}{% trans "Search term. You can test your search term in the twitter.com search box first." %}{% endset %}
-                        {{ forms.text("searchTerm", title, "", helpText, "", "required") }}
+                        {{ forms.input("searchTerm", title, "", helpText, "", "required") }}
 
                         {% set title %}{% trans "Type" %}{% endset %}
                         {% set helpText %}{% trans "Recent shows only the most recent tweets, Popular the most popular and Mixed includes both popular and recent results." %}{% endset %}
@@ -159,10 +159,10 @@
                         {{ forms.checkbox("overrideTemplate", title, module.getOption("overrideTemplate", 0), helpText) }}
 
                         {% set helpText %}{% trans "Enter the template. Please note that the background colour has automatically coloured to your layout background colour." %}{% endset %}
-                        {{ forms.textarea("ta_text", "", "", helpText, "template-override-controls", "", 10) }}
+                        {{ forms.inputarea("ta_text", "", "", helpText, "template-override-controls", "", 10) }}
 
                         {% set title %}{% trans "Optional Stylesheet" %}{% endset %}
-                        {{ forms.textarea("ta_css", "", "", title, "template-override-controls", "", 10) }}
+                        {{ forms.inputarea("ta_css", "", "", title, "template-override-controls", "", 10) }}
 
 
                     </div>
@@ -212,15 +212,15 @@
 
                         {% set title %}{% trans "Background Colour" %}{% endset %}
                         {% set helpText %}{% trans "The selected effect works best with a background colour. Optionally add one here." %}{% endset %}
-                        {{ forms.text("backgroundColor", title, "", helpText, "background-color-group") }}
+                        {{ forms.input("backgroundColor", title, "", helpText, "background-color-group") }}
                         
                         {% set title %}{% trans "No tweets" %}{% endset %}
                         {% set helpText %}{% trans "A message to display when there are no tweets returned by the search query" %}{% endset %}
-                        {{ forms.text("noTweetsMessage", title, "", helpText) }}
+                        {{ forms.input("noTweetsMessage", title, "", helpText) }}
                         
                         {% set title %}{% trans "Date Format" %}{% endset %}
                         {% set helpText %}{% trans "The format to apply to all dates returned by the ticker. In PHP date format: http://uk3.php.net/manual/en/function.date.php" %}{% endset %}
-                        {{ forms.text("dateFormat", title, "d M", helpText) }}
+                        {{ forms.input("dateFormat", title, "d M", helpText) }}
 
                         {% set title %}{% trans "Remove URLs?" %}{% endset %}
                         {% set helpText %}{% trans "Should URLs be removed from the Tweet Text. Most URLs do not compliment digital signage." %}{% endset %}

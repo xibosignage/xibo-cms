@@ -51,15 +51,15 @@
 
                 {% set title %}{% trans "Hours" %}{% endset %}
                 {% set helpText %}{% trans "Hours this event should be scheduled for" %}{% endset %}
-                {{ forms.text("hours", title, "", helpText) }}
+                {{ forms.input("hours", title, "", helpText) }}
                 
                 {% set title %}{% trans "Minutes" %}{% endset %}
                 {% set helpText %}{% trans "Minutes this event should be scheduled for" %}{% endset %}
-                {{ forms.text("minutes", title, "", helpText) }}
+                {{ forms.input("minutes", title, "", helpText) }}
                 
                 {% set title %}{% trans "Seconds" %}{% endset %}
                 {% set helpText %}{% trans "Seconds this event should be scheduled for" %}{% endset %}
-                {{ forms.text("seconds", title, "", helpText) }}
+                {{ forms.input("seconds", title, "", helpText) }}
 
                 {% set title %}{% trans "Display" %}{% endset %}
                 {% set helpText %}{% trans "Please select one or more displays / groups for this event to be shown on." %}{% endset %}

@@ -25,12 +25,13 @@
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
 
-                            {{ inline.text("filter_display", "Name", defaults.display) }}
-                            {{ inline.text("filterMacAddress", "Mac Address", defaults.macAddress) }}
+                            {{ inline.input("display", "Name", defaults.display) }}
 
-                            {{ inline.dropdown("filter_displaygroup", "single", "Display Group", defaults.displayGroup, [{displayGroupId:null, displayGroup:""}]|merge(displayGroups), "displayGroupId", "displayGroup") }}
+                            {{ inline.input("macAddress", "Mac Address", defaults.macAddress) }}
 
-                            {{ inline.number("filter_autoRefresh", "Auto Refresh", defaults.filterAutoRefresh) }}
+                            {{ inline.dropdown("displayGroupId", "single", "Display Group", defaults.displayGroup, [{displayGroupId:null, displayGroup:""}]|merge(displayGroups), "displayGroupId", "displayGroup") }}
+
+                            {{ inline.number("autoRefresh", "Auto Refresh", defaults.filterAutoRefresh) }}
 
                             {{ inline.checkbox("XiboFilterPinned", "Keep Open", defaults.filterPinned) }}
                         </form>
@@ -75,7 +76,7 @@
 
 {% block javaScript %}
     <script type="text/javascript">
-        var table = $("#displays").DataTable({
+        var table = $("#displays").DataTable({ "language": dataTablesLanguage,
             serverSide: true,
             filter: false,
             searchDelay: 3000,

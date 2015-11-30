@@ -26,15 +26,15 @@
 
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "The Name for this Command" %}{% endset %}
-                {{ forms.text("command", title, "", helpText, "", "required") }}
+                {{ forms.input("command", title, "", helpText, "", "required") }}
 
                 {% set title %}{% trans "Code" %}{% endset %}
                 {% set helpText %}{% trans "The Code for this Command" %}{% endset %}
-                {{ forms.text("code", title, "", helpText, "", "required") }}
+                {{ forms.input("code", title, "", helpText, "", "required") }}
 
                 {% set title %}{% trans "Description" %}{% endset %}
                 {% set helpText %}{% trans "Description of Command" %}{% endset %}
-                {{ forms.textarea("description", title, "", helpText) }}
+                {{ forms.inputarea("description", title, "", helpText) }}
 
             </form>
         </div>

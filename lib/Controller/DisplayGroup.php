@@ -56,6 +56,20 @@ class DisplayGroup extends Base
      *  summary="Get Display Groups",
      *  tags={"displayGroup"},
      *  operationId="displayGroupSearch",
+     *  @SWG\Parameter(
+     *      name="displayGroupId",
+     *      in="formData",
+     *      description="Filter by DisplayGroup Id",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="displayGroup",
+     *      in="formData",
+     *      description="Filter by DisplayGroup Name",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="a successful response",
@@ -73,7 +87,12 @@ class DisplayGroup extends Base
      */
     public function grid()
     {
-        $displayGroups = DisplayGroupFactory::query();
+        $filter = [
+            'displayGroupId' => Sanitize::getInt('displayGroupId'),
+            'displayGroup' => Sanitize::getString('displayGroup')
+        ];
+
+        $displayGroups = DisplayGroupFactory::query($this->gridRenderSort(), $this->gridRenderFilter($filter));
 
         foreach ($displayGroups as $group) {
             /* @var \Xibo\Entity\DisplayGroup $group */

@@ -63,6 +63,7 @@ class State extends Middleware
                     'theme' => \Xibo\Helper\Theme::getInstance(),
                     'settings' => $settings,
                     'translate' => [
+                        'locale' => Translate::GetLocale(),
                         'jsLocale' => Translate::GetJsLocale(),
                         'jsShortLocale' => ((strlen(Translate::GetJsLocale()) > 2) ? substr(Translate::GetJsLocale(), 0, 2) : Translate::GetJsLocale()),
                         'calendarLanguage' => ((strlen(Translate::GetJsLocale()) <= 2) ? Translate::GetJsLocale() . '-' . strtoupper(Translate::GetJsLocale()) : Translate::GetJsLocale())

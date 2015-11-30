@@ -26,7 +26,7 @@
             <form id="userGroupEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("group.edit", {"id": group.groupId}) }}">
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "The Name for this User Group" %}{% endset %}
-                {{ forms.text("group", title, group.group, helpText, "", "required maxlength='50'") }}
+                {{ forms.input("group", title, group.group, helpText, "", "required maxlength='50'") }}
 
                 {% set title %}{% trans "Library Quota" %}{% endset %}
                 {% set helpText %}{% trans "The quota in Kb that should be applied. Enter 0 for no quota." %}{% endset %}
