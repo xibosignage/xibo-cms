@@ -298,9 +298,16 @@ class ModuleFactory extends BaseFactory
                    ImageUri,
                    PreviewEnabled,
                    assignable,
-                   SchemaVersion,
-                   viewPath,
-                   `class` ';
+                   SchemaVersion
+                ';
+
+            if (DBVERSION >= 120) {
+                $select .= '
+                    ,
+                    viewPath,
+                   `class`
+                ';
+            }
 
             $body = '
                   FROM `module`
@@ -375,9 +382,12 @@ class ModuleFactory extends BaseFactory
                 $module->schemaVersion = Sanitize::int($row['SchemaVersion']);
 
                 // Identification
-                $module->class = Sanitize::string($row['class']);
                 $module->type = strtolower(Sanitize::string($row['Module']));
-                $module->viewPath = Sanitize::string($row['viewPath']);
+
+                if (DBVERSION >= 120) {
+                    $module->class = Sanitize::string($row['class']);
+                    $module->viewPath = Sanitize::string($row['viewPath']);
+                }
 
                 $settings = $row['settings'];
                 $module->settings = ($settings == '') ? array() : json_decode($settings, true);

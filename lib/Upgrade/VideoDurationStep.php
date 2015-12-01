@@ -17,6 +17,9 @@ class VideoDurationStep implements Step
 {
     public static function doStep()
     {
+        // Force higher DB version for this call
+        DEFINE('DBVERSION', 120);
+
         $libraryLocation = Config::GetSetting('LIBRARY_LOCATION');
         $videos = MediaFactory::getByMediaType('video');
 
