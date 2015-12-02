@@ -80,7 +80,7 @@
                         </div>
 
                         {% set helpText %}{% trans "Enter the text to display. Please note that the background colour has automatically coloured to your layout background colour." %}{% endset %}
-                        {{ forms.inputarea("ta_text", "", module.getOption("text"), helpText, "", 10) }}
+                        {{ forms.textarea("ta_text", "", module.getOption("text"), helpText, "", 10) }}
                     </div>
 
                     <div class="tab-pane" id="options">

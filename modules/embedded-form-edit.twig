@@ -41,13 +41,13 @@
                 {{ forms.checkbox("scaleContent", title, module.getOption("scaleContent"), helpText) }}
 
                 {% set helpText %}{% trans "HTML to Embed" %}{% endset %}
-                {{ forms.inputarea("embedHtml", "", module.getRawNode('embedHtml'), helpText, "", "", 10) }}
+                {{ forms.textarea("embedHtml", "", module.getRawNode('embedHtml'), helpText, "", "", 10) }}
 
                 {% set helpText %}{% trans "Custom Style Sheets" %}{% endset %}
-                {{ forms.inputarea("embedStyle", "", module.getRawNode('embedStyle'), helpText, "", "", 10) }}
+                {{ forms.textarea("embedStyle", "", module.getRawNode('embedStyle'), helpText, "", "", 10) }}
 
                 {% set helpText %}{% trans "HEAD content to Embed (including script tags)" %}{% endset %}
-                {{ forms.inputarea("embedScript", "", module.getRawNode('embedScript'), helpText, "", "", 10) }}
+                {{ forms.textarea("embedScript", "", module.getRawNode('embedScript'), helpText, "", "", 10) }}
             </form>
         </div>
     </div>

@@ -139,7 +139,6 @@ class UserFactory extends BaseFactory
                 UserPassword AS password,
                 group.groupId,
                 group.group,
-                IFNULL(group.libraryQuota, 0) AS libraryQuota,
                 `user`.firstName,
                 `user`.lastName,
                 `user`.phone,
@@ -155,6 +154,13 @@ class UserFactory extends BaseFactory
                 ,
                 `pages`.pageId AS homePageId,
                 `pages`.title AS homePage
+            ';
+        }
+
+        if (DBVERSION >= 88) {
+            $select .= '
+                ,
+                IFNULL(group.libraryQuota, 0) AS libraryQuota
             ';
         }
 

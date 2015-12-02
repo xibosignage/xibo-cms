@@ -47,7 +47,7 @@
                     <div class="tab-pane" id="description">
                         {% set title %}{% trans "Description" %}{% endset %}
                         {% set helpText %}{% trans "An optional description of the Layout. (1 - 250 characters)" %}{% endset %}
-                        {{ forms.inputarea("description", title, layout.description, helpText) }}
+                        {{ forms.textarea("description", title, layout.description, helpText) }}
                     </div>
                     <div class="tab-pane" id="background">
                         {% set title %}{% trans "Background Colour" %}{% endset %}

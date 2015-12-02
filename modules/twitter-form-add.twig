@@ -159,10 +159,10 @@
                         {{ forms.checkbox("overrideTemplate", title, module.getOption("overrideTemplate", 0), helpText) }}
 
                         {% set helpText %}{% trans "Enter the template. Please note that the background colour has automatically coloured to your layout background colour." %}{% endset %}
-                        {{ forms.inputarea("ta_text", "", "", helpText, "template-override-controls", "", 10) }}
+                        {{ forms.textarea("ta_text", "", "", helpText, "template-override-controls", "", 10) }}
 
                         {% set title %}{% trans "Optional Stylesheet" %}{% endset %}
-                        {{ forms.inputarea("ta_css", "", "", title, "template-override-controls", "", 10) }}
+                        {{ forms.textarea("ta_css", "", "", title, "template-override-controls", "", 10) }}
 
 
                     </div>

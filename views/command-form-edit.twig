@@ -34,7 +34,7 @@
 
                 {% set title %}{% trans "Description" %}{% endset %}
                 {% set helpText %}{% trans "Description of Command" %}{% endset %}
-                {{ forms.inputarea("description", title, command.description, helpText) }}
+                {{ forms.textarea("description", title, command.description, helpText) }}
 
             </form>
         </div>

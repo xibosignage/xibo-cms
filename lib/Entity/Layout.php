@@ -566,6 +566,7 @@ class Layout implements \JsonSerializable
         $layoutNode->setAttribute('height', $this->height);
         $layoutNode->setAttribute('bgcolor', $this->backgroundColor);
         $layoutNode->setAttribute('schemaVersion', $this->schemaVersion);
+        $layoutNode->setAttribute('zindex', $this->backgroundzIndex);
 
         if ($this->backgroundImageId != 0) {
             // Get stored as

@@ -34,7 +34,7 @@
 
                 {% set title %}{% trans "Description" %}{% endset %}
                 {% set helpText %}{% trans "An optional description of the Template. (1 - 250 characters)" %}{% endset %}
-                {{ forms.inputarea("description", title, layout.description, helpText) }}
+                {{ forms.textarea("description", title, layout.description, helpText) }}
 
                 {% set title %}{% trans "Include Widgets?" %}{% endset %}
                 {% set helpText %}{% trans "Add all the widgets to the template?" %}{% endset %}
