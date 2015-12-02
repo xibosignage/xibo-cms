@@ -203,15 +203,15 @@
 
                         {% set title %}{% trans "Template for Current Forecast" %}{% endset %}
                         {% set helpText %}{% trans "Enter the template for the current forecast. For a list of substitutions click Request Forecast below." %}{% endset %}
-                        {{ forms.inputarea("currentTemplate", title, "", helpText, "template-override-controls", "required", 10) }}
+                        {{ forms.textarea("currentTemplate", title, "", helpText, "template-override-controls", "required", 10) }}
 
                         {% set title %}{% trans "Template for Daily Forecast" %}{% endset %}
                         {% set helpText %}{% trans "Enter the template for the daily forecast. Replaces [dailyForecast] in main template." %}{% endset %}
-                        {{ forms.inputarea("dailyTemplate", title, "", helpText, "template-override-controls", "", 10) }}
+                        {{ forms.textarea("dailyTemplate", title, "", helpText, "template-override-controls", "", 10) }}
 
                         {% set title %}{% trans "CSS Style Sheet" %}{% endset %}
                         {% set helpText %}{% trans "Enter a CSS style sheet to style the weather widget" %}{% endset %}
-                        {{ forms.inputarea("styleSheet", title, "", helpText, "template-override-controls", "required", 10) }}
+                        {{ forms.textarea("styleSheet", title, "", helpText, "template-override-controls", "required", 10) }}
                     </div>
                 </div>
             </form>

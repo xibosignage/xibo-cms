@@ -150,7 +150,7 @@
                 {{ forms.message(message, "digital-control-group", "[HH:mm]") }}
 
                 {% set helpText %}{% trans "Enter a format for the clock" %}{% endset %}
-                {{ forms.inputarea("ta_text", "", "", helpText, "digital-control-group") }}
+                {{ forms.textarea("ta_text", "", "", helpText, "digital-control-group") }}
             </form>
         </div>
     </div>

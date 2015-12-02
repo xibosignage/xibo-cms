@@ -291,7 +291,7 @@ class LayoutFactory extends BaseFactory
                 }
 
                 // Add the widget to the playlist
-                $playlist->widgets[] = $widget;
+                $playlist->assignWidget($widget);
             }
 
             $region->playlists[] = $playlist;

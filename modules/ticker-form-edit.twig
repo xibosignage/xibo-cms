@@ -145,10 +145,10 @@
                 {% set fieldItemsSideBySide %}{{ forms.checkbox("itemsSideBySide", title, module.getOption("itemsSideBySide"), helpText) }}{% endset %}
 
                 {% set helpText %}{% trans "Enter the template. Please note that the background colour has automatically coloured to your layout background colour." %}{% endset %}
-                {% set fieldTemplate %}{{ forms.inputarea("ta_text", "", module.getRawNode("template"), helpText, "template-override-controls", "", 10) }}{% endset %}
+                {% set fieldTemplate %}{{ forms.textarea("ta_text", "", module.getRawNode("template"), helpText, "template-override-controls", "", 10) }}{% endset %}
 
                 {% set title %}{% trans "Optional Stylesheet" %}{% endset %}
-                {% set fieldStyleSheet %}{{ forms.inputarea("ta_css", "", module.getRawNode("css"), title, "template-override-controls", "", 10) }}{% endset %}
+                {% set fieldStyleSheet %}{{ forms.textarea("ta_css", "", module.getRawNode("css"), title, "template-override-controls", "", 10) }}{% endset %}
 
                 {# Different fields for each type of Ticker #}
                 {% if module.getOption("sourceId") == 1 %}

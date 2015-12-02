@@ -71,7 +71,7 @@
                     <div class="tab-pane" id="description">
                         {% set title %}{% trans "Description" %}{% endset %}
                         {% set helpText %}{% trans "An optional description of the Layout. (1 - 250 characters)" %}{% endset %}
-                        {{ forms.inputarea("description", title, "", helpText) }}
+                        {{ forms.textarea("description", title, "", helpText) }}
                     </div>
                 </div>
             </form>
