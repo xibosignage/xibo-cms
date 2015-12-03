@@ -136,12 +136,11 @@ INSERT INTO `pages` (`pageID`, `name`, `title`, `asHome`) VALUES
   (28, 'preview', 'Preview', 0),
   (29, 'statusdashboard', 'Status Dashboard', 1),
   (30, 'displayprofile', 'Display Profiles', 1),
-  (31, 'auditlog', 'Audit Trail', 1),
+  (31, 'audit', 'Audit Trail', 0),
   (32, 'region', 'Regions', 0),
   (33, 'playlist', 'Playlist', 0),
-  (34, 'audit', 'Audit', 1),
-  (35, 'maintenance', 'Maintenance', 0),
-  (36, 'command', 'Commands', 1);
+  (34, 'maintenance', 'Maintenance', 0),
+  (35, 'command', 'Commands', 1);
 
 
 INSERT INTO `resolution` (`resolutionID`, `resolution`, `width`, `height`, `intended_width`, `intended_height`, `version`, `enabled`) VALUES

@@ -88,11 +88,15 @@
     },
     {
       "step": "Add New Pages",
-      "action": "INSERT INTO `pages` (`pageID`, `name`) VALUES (NULL, 'playlist'), (NULL, 'maintenance');"
+      "action": "INSERT INTO `pages` (`pageID`, `name`) VALUES (NULL, 'region'), (NULL, 'playlist'), (NULL, 'maintenance');"
     },
     {
       "step": "Set Page Names",
       "action": "UPDATE `pages` SET title = CONCAT(UCASE(LEFT(name, 1)), SUBSTRING(name, 2)), asHome = 1;"
+    },
+    {
+      "step": "Change audit log page name",
+      "action": "UPDATE `pages` SET `name` = 'audit' WHERE `name` = 'auditlog';"
     },
     {
       "step": "Set Page Home Flag",
