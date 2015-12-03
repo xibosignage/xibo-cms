@@ -91,8 +91,15 @@ class UserGroupFactory extends BaseFactory
             SELECT 	`group`.group,
 				`group`.groupId,
 				`group`.isUserSpecific,
-				`group`.isEveryone,
-				`group`.libraryQuota ';
+				`group`.isEveryone ';
+
+            if (DBVERSION >= 88) {
+
+				$select .= '
+				    ,
+				    `group`.libraryQuota
+				';
+            }
 
             $body = '
               FROM `group`
