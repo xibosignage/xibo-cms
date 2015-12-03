@@ -94,7 +94,6 @@ class UserGroupFactory extends BaseFactory
 				`group`.isEveryone ';
 
             if (DBVERSION >= 88) {
-
 				$select .= '
 				    ,
 				    `group`.libraryQuota

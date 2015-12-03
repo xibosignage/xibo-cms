@@ -337,6 +337,10 @@
     {
       "step": "Upgrade Finance Module",
       "action": "UPDATE `module` SET `class` = '\\\\Xibo\\\\Widget\\\\Finance' WHERE module = 'Finance';"
+    },
+    {
+      "step": "Set db version so that changes to Users are activated",
+      "action": "UPDATE `version` SET `DBVersion` = 120;"
     }
   ]
 }
