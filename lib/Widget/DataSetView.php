@@ -416,8 +416,8 @@ END;
 
                     // What if this column is an image column type?
                     if ($mapping['dataTypeId'] == 4) {
-                        // Grab the profile image
-                        $file = MediaFactory::createModuleFile(str_replace(' ', '%20', htmlspecialchars_decode($replace)), 'datasetview_' . md5($dataSetId . $mapping['dataSetColumnId'] . $replace));
+                        // Grab the external image
+                        $file = MediaFactory::createModuleFile('datasetview_' . md5($dataSetId . $mapping['dataSetColumnId'] . $replace), str_replace(' ', '%20', htmlspecialchars_decode($replace)));
                         $file->isRemote = true;
                         $file->expires = $expires;
                         $file->save();

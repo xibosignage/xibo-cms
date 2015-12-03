@@ -427,7 +427,7 @@ class Ticker extends ModuleWidget
             }
 
             // Enable logging if we need to
-            if (\Xibo\Helper\Log::resolveLogLevel(Config::GetSetting('audit', 'error')) == \Slim\Log::DEBUG) {
+            if (Log::resolveLogLevel(Config::GetSetting('audit', 'error')) == \Slim\Log::DEBUG) {
                 Logger::enable();
             }
 
@@ -565,7 +565,14 @@ class Ticker extends ModuleWidget
                                 break;
 
                             case '[Description]':
-                                $replace = $item->getContent();
+                                // Try to get the description tag
+                                if (!$desc = $item->getTag('description')) {
+                                    // use content with tags stripped
+                                    $replace = strip_tags($item->getContent());
+                                } else {
+                                    // use description
+                                    $replace = $desc[0];
+                                }
                                 break;
 
                             case '[Content]':
@@ -617,8 +624,8 @@ class Ticker extends ModuleWidget
             Log::debug($e->getTraceAsString());
         }
 
-        if (\Xibo\Helper\Log::resolveLogLevel(Config::GetSetting('audit', 'error')) == \Slim\Log::DEBUG) {
-            Log::debug(json_encode(Logger::getMessages()));
+        if (Log::resolveLogLevel(Config::GetSetting('audit', 'error')) == \Slim\Log::DEBUG) {
+            Log::debug(var_export(Logger::getMessages(), true));
         }
 
         // Return the formatted items

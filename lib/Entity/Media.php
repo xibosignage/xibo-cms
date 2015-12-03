@@ -580,10 +580,10 @@ class Media implements \JsonSerializable
         if (!$this->isRemote || $this->fileName == '')
             throw new \InvalidArgumentException(__('Not in a suitable state to download'));
 
-        Log::debug('Downloading %s', $this->fileName);
-
         // Open the temporary file
         $storedAs = Config::GetSetting('LIBRARY_LOCATION') . 'temp' . DIRECTORY_SEPARATOR . $this->name;
+
+        Log::debug('Downloading %s to %s', $this->fileName, $storedAs);
 
         if (!$fileHandle = fopen($storedAs, 'w'))
             throw new ConfigurationException(__('Temporary location not writable'));

@@ -281,6 +281,9 @@ class LayoutFactory extends BaseFactory
                     // Get children
                     foreach ($rawNode->childNodes as $mediaOption) {
                         /* @var \DOMElement $mediaOption */
+                        if ($mediaOption->textContent == null)
+                            continue;
+
                         $widgetOption = new WidgetOption();
                         $widgetOption->type = 'cdata';
                         $widgetOption->option = $mediaOption->nodeName;

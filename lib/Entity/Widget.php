@@ -186,7 +186,7 @@ class Widget implements \JsonSerializable
     {
         foreach ($this->widgetOptions as $widgetOption) {
             /* @var WidgetOption $widgetOption */
-            if ($widgetOption->option == $option)
+            if (strtolower($widgetOption->option) == strtolower($option))
                 return $widgetOption;
         }
 
