@@ -923,7 +923,7 @@ class DisplayGroup extends Base
         $displays = DisplayFactory::getByDisplayGroupId($displayGroupId);
 
         // Possible media files to assign
-        $media = LayoutFactory::query(['name'], ['type' => 'genericfile']);
+        $media = MediaFactory::query(['name'], ['type' => 'genericfile']);
 
         $this->getState()->template = 'displaygroup-form-version';
         $this->getState()->setData([
