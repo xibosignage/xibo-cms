@@ -535,8 +535,9 @@ class Ticker extends ModuleWidget
                                 // Tag this layout with this file
                                 $this->assignMedia($file->mediaId);
 
-                                $url = $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']);
-                                $replace = ($isPreview) ? '<img src="' . $url . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" ' . $attribute . '/>' : '<img src="' . $file->storedAs . '" ' . $attribute . ' />';
+                                $replace = ($isPreview)
+                                    ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" ' . $attribute . '/>'
+                                    : '<img src="' . $file->storedAs . '" ' . $attribute . ' />';
                             }
                         } else {
                             // Our namespace is not "image". Which means we are a normal text substitution using a namespace/attribute
@@ -726,8 +727,9 @@ class Ticker extends ModuleWidget
                         // Tag this layout with this file
                         $this->assignMedia($file->mediaId);
 
-                        $url = $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']);
-                        $replace = ($isPreview) ? '<img src="' . $url . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" />' : '<img src="' . $file->storedAs . '" />';
+                        $replace = ($isPreview)
+                            ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" />'
+                            : '<img src="' . $file->storedAs . '" />';
 
                     } else if ($mappings[$header]['dataTypeId'] == 5) {
                         // Library Image
@@ -737,8 +739,9 @@ class Ticker extends ModuleWidget
                         // Tag this layout with this file
                         $this->assignMedia($file->mediaId);
 
-                        $url = $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']);
-                        $replace = ($isPreview) ? '<img src="' . $url . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" />' : '<img src="' . $file->storedAs . '" />';
+                        $replace = ($isPreview)
+                            ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" />'
+                            : '<img src="' . $file->storedAs . '" />';
                     }
 
                     $rowString = str_replace('[' . $sub . ']', $replace, $rowString);

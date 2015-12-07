@@ -508,8 +508,9 @@ class Twitter extends ModuleWidget
                             // Tag this layout with this file
                             $this->assignMedia($file->mediaId);
 
-                            $url = $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']);
-                            $replace = ($isPreview) ? '<img src="' . $url . '?preview=1&width=170&height=150" />' : '<img src="' . $file->storedAs . '"  />';
+                            $replace = ($isPreview)
+                                ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1&width=170&height=150" />'
+                                : '<img src="' . $file->storedAs . '"  />';
                         }
                         break;
 
@@ -528,8 +529,9 @@ class Twitter extends ModuleWidget
                                 // Tag this layout with this file
                                 $this->assignMedia($file->mediaId);
 
-                                $url = $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']);
-                                $replace = ($isPreview) ? '<img src="' . $url . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" />' : '<img src="' . $file->storedAs . '"  />';
+                                $replace = ($isPreview)
+                                    ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" />'
+                                    : '<img src="' . $file->storedAs . '"  />';
                             }
                         }
 

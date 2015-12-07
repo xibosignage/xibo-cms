@@ -425,8 +425,9 @@ END;
                         // Tag this layout with this file
                         $this->assignMedia($file->mediaId);
 
-                        $url = $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']);
-                        $replace = ($isPreview) ? '<img src="' . $url . '?preview=1" />' : '<img src="' . $file->storedAs . '" />';
+                        $replace = ($isPreview)
+                            ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
+                            : '<img src="' . $file->storedAs . '" />';
 
                     } else if ($mapping['dataTypeId'] == 5) {
                         // Library Image
@@ -436,8 +437,9 @@ END;
                         // Tag this layout with this file
                         $this->assignMedia($file->mediaId);
 
-                        $url = $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']);
-                        $replace = ($isPreview) ? '<img src="' . $url . '?preview=1" />' : '<img src="' . $file->storedAs . '" />';
+                        $replace = ($isPreview)
+                            ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
+                            : '<img src="' . $file->storedAs . '" />';
                     }
 
                     $table .= '<td class="DataSetColumn" id="column_' . ($i + 1) . '"><span class="DataSetCellSpan" id="span_' . $rowCount . '_' . ($i + 1) . '">' . $replace . '</span></td>';
