@@ -91,6 +91,14 @@
       "action": "INSERT INTO `pages` (`pageID`, `name`) VALUES (NULL, 'region'), (NULL, 'playlist'), (NULL, 'maintenance');"
     },
     {
+      "step": "Link Region Page",
+      "action": "INSERT INTO `permission` (`groupId`, `entityId`, `objectId`, `view`, `edit`, `delete`) SELECT `groupId`, 1, (SELECT pageId FROM `pages` WHERE `name` = 'region'), `view`, `edit`, `delete` FROM `permission` WHERE `objectId` = (SELECT pageId FROM `pages` WHERE `name` = 'layout') AND `entityId` = 1;"
+    },
+    {
+      "step": "Link Playlist Page",
+      "action": "INSERT INTO `permission` (`groupId`, `entityId`, `objectId`, `view`, `edit`, `delete`) SELECT `groupId`, 1, (SELECT pageId FROM `pages` WHERE `name` = 'playlist'), `view`, `edit`, `delete` FROM `permission` WHERE `objectId` = (SELECT pageId FROM `pages` WHERE `name` = 'layout') AND `entityId` = 1;"
+    },
+    {
       "step": "Set Page Names",
       "action": "UPDATE `pages` SET title = CONCAT(UCASE(LEFT(name, 1)), SUBSTRING(name, 2)), asHome = 1;"
     },

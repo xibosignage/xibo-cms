@@ -242,7 +242,7 @@ class LayoutFactory extends BaseFactory
                 /* @var \DOMElement $mediaNode */
                 $widget = new Widget();
                 $widget->type = $mediaNode->getAttribute('type');
-                $widget->ownerId = $mediaNode->getAttribute('userid');
+                $widget->ownerId = $mediaNode->getAttribute('userId');
                 $widget->duration = $mediaNode->getAttribute('duration');
                 $widget->tempId = $mediaNode->getAttribute('id');
 
