@@ -631,6 +631,9 @@ class Layout implements \JsonSerializable
 
                     foreach ($widget->widgetOptions as $option) {
                         /* @var WidgetOption $option */
+                        if (trim($option->value) === '')
+                            continue;
+
                         if ($option->type == 'cdata') {
                             $optionNode = $document->createElement($option->option);
                             $cdata = $document->createCDATASection($option->value);
