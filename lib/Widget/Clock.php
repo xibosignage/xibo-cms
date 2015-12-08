@@ -225,8 +225,8 @@ class Clock extends ModuleWidget
         }
 
         // If we are a preview, then pass in the width and height
-        $data['previewWidth'] = Sanitize::getDouble('width');
-        $data['previewHeight'] = Sanitize::getDouble('height');
+        $data['previewWidth'] = Sanitize::getDouble('width', 0);
+        $data['previewHeight'] = Sanitize::getDouble('height', 0);
 
         // Replace the View Port Width?
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
