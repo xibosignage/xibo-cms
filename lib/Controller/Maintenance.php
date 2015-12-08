@@ -9,6 +9,7 @@
 namespace Xibo\Controller;
 
 
+use Xibo\Entity\Layout;
 use Xibo\Entity\Media;
 use Xibo\Entity\User;
 use Xibo\Exception\AccessDeniedException;
@@ -16,6 +17,7 @@ use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Exception\LibraryFullException;
 use Xibo\Factory\DisplayFactory;
+use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\UpgradeFactory;
 use Xibo\Factory\UserFactory;
@@ -325,6 +327,12 @@ class Maintenance extends Base
                 }
                 catch (\PDOException $e) {
                     Log::error($e->getMessage());
+                }
+
+                // Build Layouts
+                foreach (LayoutFactory::query(null, ['status' => 3]) as $layout) {
+                    /* @var Layout $layout */
+                    $layout->xlfToDisk();
                 }
 
                 // Keep tidy

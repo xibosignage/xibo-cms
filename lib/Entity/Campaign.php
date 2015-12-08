@@ -357,7 +357,7 @@ class Campaign implements \JsonSerializable
         foreach ($displays as $display) {
             /* @var \Xibo\Entity\Display $display */
             $display->setMediaIncomplete();
-            $display->setCollectRequired(false);
+            $display->setCollectRequired(true);
             $display->save(['validate' => false, 'audit' => false]);
         }
     }

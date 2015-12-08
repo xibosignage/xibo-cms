@@ -414,6 +414,8 @@ class Display
             Log::audit('Display', $this->displayId, 'Display Saved', $this->jsonSerialize());
 
         if ($this->collectRequired) {
+            Log::debug('Collect Now Action for Display %s', $this->display);
+
             try {
                 PlayerActionHelper::sendAction($this, new CollectNowAction());
             } catch (\Exception $e) {
