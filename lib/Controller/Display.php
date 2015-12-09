@@ -418,8 +418,6 @@ class Display extends Base
                     'url' => $this->urlFor('displayGroup.version.form', ['id' => $display->displayGroupId]),
                     'text' => __('Version Information')
                 );
-
-                $display->buttons[] = ['divider' => true];
             }
 
             if ($this->getUser()->checkEditable($display)) {
@@ -473,7 +471,7 @@ class Display extends Base
                         $profile[$i]['valueString'] = $option['value'];
                 }
             } else if ($profile[$i]['fieldType'] == 'timePicker') {
-                $profile[$i]['valueString'] = Date::parse($profile[$i]['value'], 'H:i')->format('H:i');
+                $profile[$i]['valueString'] = ($profile[$i]['value'] == null) ? '00:00' : Date::parse($profile[$i]['value'], 'H:i')->format('H:i');
             }
         }
 

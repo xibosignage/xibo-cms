@@ -697,7 +697,7 @@ class Library extends Base
         $media->save();
 
         // Generate a fonts.css file for use locally (in the CMS)
-        file_put_contents('modules/preview/fonts.css', $localCss);
+        file_put_contents('modules/fonts.css', $localCss);
 
         // Edit the CKEditor file
         $ckEditor = file_get_contents(Theme::uri('libraries/ckeditor/config.js', true));

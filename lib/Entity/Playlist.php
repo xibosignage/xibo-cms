@@ -27,6 +27,7 @@ use Xibo\Exception\NotFoundException;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\WidgetFactory;
+use Xibo\Helper\Date;
 use Xibo\Helper\Log;
 use Xibo\Storage\PDOConnect;
 
@@ -319,7 +320,7 @@ class Playlist implements \JsonSerializable
 
     /**
      * Notify all Layouts of a change to this playlist
-     *  This only sets the Layout Status to require a build
+     *  This only sets the Layout Status to require a build and to update the layout modified date
      *  once the build is triggered, either from the UI or maintenance it will assess the layout
      *  and call save() if required.
      *  Layout->save() will ultimately notify the interested display groups.
@@ -327,7 +328,7 @@ class Playlist implements \JsonSerializable
     public function notifyLayouts()
     {
         PDOConnect::update('
-            UPDATE `layout` SET `status` = 3 WHERE layoutId IN (
+            UPDATE `layout` SET `status` = 3, `modifiedDT` = :modifiedDt WHERE layoutId IN (
               SELECT `region`.layoutId
                 FROM `lkregionplaylist`
                   INNER JOIN `region`
@@ -335,7 +336,8 @@ class Playlist implements \JsonSerializable
                WHERE `lkregionplaylist`.playlistId = :playlistId
             )
         ', [
-           'playlistId' => $this->playlistId
+            'playlistId' => $this->playlistId,
+            'modifiedDt' => Date::getLocalDate()
         ]);
     }
 

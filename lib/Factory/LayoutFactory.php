@@ -242,7 +242,7 @@ class LayoutFactory extends BaseFactory
                 /* @var \DOMElement $mediaNode */
                 $widget = new Widget();
                 $widget->type = $mediaNode->getAttribute('type');
-                $widget->ownerId = $mediaNode->getAttribute('userid');
+                $widget->ownerId = $mediaNode->getAttribute('userId');
                 $widget->duration = $mediaNode->getAttribute('duration');
                 $widget->tempId = $mediaNode->getAttribute('id');
 
@@ -281,6 +281,9 @@ class LayoutFactory extends BaseFactory
                     // Get children
                     foreach ($rawNode->childNodes as $mediaOption) {
                         /* @var \DOMElement $mediaOption */
+                        if ($mediaOption->textContent == null)
+                            continue;
+
                         $widgetOption = new WidgetOption();
                         $widgetOption->type = 'cdata';
                         $widgetOption->option = $mediaOption->nodeName;
@@ -558,6 +561,12 @@ class LayoutFactory extends BaseFactory
         if (Sanitize::getInt('layoutId', 0, $filterBy) != 0) {
             $body .= " AND layout.layoutId = :layoutId ";
             $params['layoutId'] = Sanitize::getInt('layoutId', 0, $filterBy);
+        }
+
+        // Layout Status
+        if (Sanitize::getInt('status', $filterBy) !== null) {
+            $body .= " AND layout.status = :status ";
+            $params['status'] = Sanitize::getInt('status', $filterBy);
         }
 
         // Background Image

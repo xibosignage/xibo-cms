@@ -662,7 +662,7 @@ class User implements \JsonSerializable
                 return true;
         }
 
-        Log::error('Request for unknown route: %s', $route[0]);
+        Log::debug('Route %s not viewable', $route[0]);
         return false;
     }
 

@@ -388,7 +388,7 @@ class Layout implements \JsonSerializable
         if ($options['setBuildRequired'])
             $this->setBuildRequired();
 
-        Log::debug('Saving %s with options', $this, json_encode($options));
+        Log::debug('Saving %s with options %s', $this, json_encode($options, JSON_PRETTY_PRINT));
 
         // New or existing layout
         if ($this->layoutId == null || $this->layoutId == 0) {
@@ -631,6 +631,9 @@ class Layout implements \JsonSerializable
 
                     foreach ($widget->widgetOptions as $option) {
                         /* @var WidgetOption $option */
+                        if (trim($option->value) === '')
+                            continue;
+
                         if ($option->type == 'cdata') {
                             $optionNode = $document->createElement($option->option);
                             $cdata = $document->createCDATASection($option->value);
@@ -753,7 +756,7 @@ class Layout implements \JsonSerializable
             file_put_contents($path, $this->toXlf());
 
             $this->save([
-                'saveRegions' => true,
+                'saveRegions' => false,
                 'saveRegionOptions' => false,
                 'manageRegionAssignments' => false,
                 'saveTags' => false,

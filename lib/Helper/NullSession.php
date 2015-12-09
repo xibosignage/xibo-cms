@@ -54,7 +54,11 @@ class NullSession
      */
     public static function set($key, $secondKey, $value = null)
     {
-
+        if (func_num_args() == 2) {
+            return $secondKey;
+        } else {
+            return $value;
+        }
     }
 
     /**

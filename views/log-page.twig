@@ -48,7 +48,7 @@
                                     {{ inline.input("filter_page", "Page", defaults.page) }}
                                     {{ inline.input("filter_function", "Function", defaults.function) }}
 
-                                    {% set displays = options.displays|merge({displayId: null, display: ""}) %}
+                                    {% set displays = [{displayId: null, display: ""}]|merge(options.displays) %}
                                     {{ inline.dropdown("filter_display", "single", "Display", defaults.display, displays, "displayId", "display") }}
                                 </div>
                             </div>

@@ -416,8 +416,8 @@ END;
 
                     // What if this column is an image column type?
                     if ($mapping['dataTypeId'] == 4) {
-                        // Grab the profile image
-                        $file = MediaFactory::createModuleFile(str_replace(' ', '%20', htmlspecialchars_decode($replace)), 'datasetview_' . md5($dataSetId . $mapping['dataSetColumnId'] . $replace));
+                        // Grab the external image
+                        $file = MediaFactory::createModuleFile('datasetview_' . md5($dataSetId . $mapping['dataSetColumnId'] . $replace), str_replace(' ', '%20', htmlspecialchars_decode($replace)));
                         $file->isRemote = true;
                         $file->expires = $expires;
                         $file->save();
@@ -425,8 +425,9 @@ END;
                         // Tag this layout with this file
                         $this->assignMedia($file->mediaId);
 
-                        $url = $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']);
-                        $replace = ($isPreview) ? '<img src="' . $url . '?preview=1" />' : '<img src="' . $file->storedAs . '" />';
+                        $replace = ($isPreview)
+                            ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
+                            : '<img src="' . $file->storedAs . '" />';
 
                     } else if ($mapping['dataTypeId'] == 5) {
                         // Library Image
@@ -436,8 +437,9 @@ END;
                         // Tag this layout with this file
                         $this->assignMedia($file->mediaId);
 
-                        $url = $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']);
-                        $replace = ($isPreview) ? '<img src="' . $url . '?preview=1" />' : '<img src="' . $file->storedAs . '" />';
+                        $replace = ($isPreview)
+                            ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
+                            : '<img src="' . $file->storedAs . '" />';
                     }
 
                     $table .= '<td class="DataSetColumn" id="column_' . ($i + 1) . '"><span class="DataSetCellSpan" id="span_' . $rowCount . '_' . ($i + 1) . '">' . $replace . '</span></td>';

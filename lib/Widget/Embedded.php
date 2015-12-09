@@ -31,8 +31,8 @@ class Embedded extends ModuleWidget
      */
     public function InstallFiles()
     {
-        MediaFactory::createModuleSystemFile('modules/preview/vendor/jquery-1.11.1.min.js')->save();
-        MediaFactory::createModuleSystemFile('modules/preview/xibo-layout-scaler.js')->save();
+        MediaFactory::createModuleSystemFile('modules/vendor/jquery-1.11.1.min.js')->save();
+        MediaFactory::createModuleSystemFile('modules/xibo-layout-scaler.js')->save();
     }
 
     /**

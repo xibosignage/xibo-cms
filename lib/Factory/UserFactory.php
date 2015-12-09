@@ -138,7 +138,20 @@ class UserFactory extends BaseFactory
                 CSPRNG,
                 UserPassword AS password,
                 group.groupId,
-                group.group,
+                group.group
+        ';
+
+        if (DBVERSION >= 120) {
+            $select .= '
+                ,
+                `pages`.pageId AS homePageId,
+                `pages`.title AS homePage
+            ';
+        }
+
+        if (DBVERSION >= 121) {
+            $select .= '
+                ,
                 `user`.firstName,
                 `user`.lastName,
                 `user`.phone,
@@ -147,13 +160,6 @@ class UserFactory extends BaseFactory
                 `user`.ref3,
                 `user`.ref4,
                 `user`.ref5
-        ';
-
-        if (DBVERSION >= 120) {
-            $select .= '
-                ,
-                `pages`.pageId AS homePageId,
-                `pages`.title AS homePage
             ';
         }
 
