@@ -61,7 +61,7 @@ class Login extends Base
             // We are authenticated, so upgrade the user to the salted mechanism if necessary
             if (!$user->isSalted()) {
                 $user->setNewPassword($password);
-                $user->save(false);
+                $user->save(['validate' => false, 'passwordUpdate' => true]);
             }
 
             // We are logged in!
