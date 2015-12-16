@@ -13,6 +13,6 @@
 
     {% set title %}{% trans "Cache Period" %}{% endset %}
     {% set helpText %}{% trans "Finance uses the Yahoo API. Please enter the number of seconds you would like to cache results." %}{% endset %}
-    {{ forms.text("cachePeriod", title, module.getSetting("cachePeriod", 300), helpText, "", "required") }}
+    {{ forms.input("cachePeriod", title, module.getSetting("cachePeriod", 300), helpText, "", "required") }}
 
 {% endblock %}

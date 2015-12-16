@@ -135,6 +135,54 @@ class User implements \JsonSerializable
     public $libraryQuota;
 
     /**
+     * @SWG\Property(description="First Name")
+     * @var string
+     */
+    public $firstName;
+
+    /**
+     * @SWG\Property(description="Last Name")
+     * @var string
+     */
+    public $lastName;
+
+    /**
+     * @SWG\Property(description="Phone Number")
+     * @var string
+     */
+    public $phone;
+
+    /**
+     * @SWG\Property(description="Reference field 1")
+     * @var string
+     */
+    public $ref1;
+
+    /**
+     * @SWG\Property(description="Reference field 2")
+     * @var string
+     */
+    public $ref2;
+
+    /**
+     * @SWG\Property(description="Reference field 3")
+     * @var string
+     */
+    public $ref3;
+
+    /**
+     * @SWG\Property(description="Reference field 4")
+     * @var string
+     */
+    public $ref4;
+
+    /**
+     * @SWG\Property(description="Reference field 5")
+     * @var string
+     */
+    public $ref5;
+
+    /**
      * @SWG\Property(description="An array of user groups this user is assigned to")
      * @var UserGroup[]
      */
@@ -172,7 +220,7 @@ class User implements \JsonSerializable
 
     /**
      * Cached Permissions
-     * @var Permission[]
+     * @var array[Permission]
      */
     private $permissionCache = array();
 
@@ -465,8 +513,8 @@ class User implements \JsonSerializable
      */
     private function add()
     {
-        $sql = 'INSERT INTO `user` (UserName, UserPassword, usertypeid, email, homePageId, CSPRNG)
-                     VALUES (:userName, :password, :userTypeId, :email, :homePageId, :CSPRNG)';
+        $sql = 'INSERT INTO `user` (UserName, UserPassword, usertypeid, email, homePageId, CSPRNG, firstName, lastName, phone, ref1, ref2, ref3, ref4, ref5)
+                     VALUES (:userName, :password, :userTypeId, :email, :homePageId, :CSPRNG, :firstName, :lastName, :phone, :ref1, :ref2, :ref3, :ref4, :ref5)';
 
         // Get the ID of the record we just inserted
         $this->userId = PDOConnect::insert($sql, [
@@ -476,6 +524,14 @@ class User implements \JsonSerializable
             'email' => $this->email,
             'homePageId' => $this->homePageId,
             'CSPRNG' => $this->CSPRNG,
+            'firstName' => $this->firstName,
+            'lastName' => $this->lastName,
+            'phone' => $this->phone,
+            'ref1' => $this->ref1,
+            'ref2' => $this->ref2,
+            'ref3' => $this->ref3,
+            'ref4' => $this->ref4,
+            'ref5' => $this->ref5
         ]);
 
         // Add the user group
@@ -502,7 +558,15 @@ class User implements \JsonSerializable
                   lastAccessed = :lastAccessed,
                   newUserWizard = :newUserWizard,
                   CSPRNG = :CSPRNG,
-                  `UserPassword` = :password
+                  `UserPassword` = :password,
+                  `firstName` = :firstName,
+                  `lastName` = :lastName,
+                  `phone` = :phone,
+                  `ref1` = :ref1,
+                  `ref2` = :ref2,
+                  `ref3` = :ref3,
+                  `ref4` = :ref4,
+                  `ref5` = :ref5
                WHERE userId = :userId';
 
         $params = array(
@@ -516,6 +580,14 @@ class User implements \JsonSerializable
             'newUserWizard' => $this->newUserWizard,
             'CSPRNG' => $this->CSPRNG,
             'password' => $this->password,
+            'firstName' => $this->firstName,
+            'lastName' => $this->lastName,
+            'phone' => $this->phone,
+            'ref1' => $this->ref1,
+            'ref2' => $this->ref2,
+            'ref3' => $this->ref3,
+            'ref4' => $this->ref4,
+            'ref5' => $this->ref5,
             'userId' => $this->userId
         );
 
@@ -564,9 +636,17 @@ class User implements \JsonSerializable
         if ($this->userTypeId == 1)
             return true;
 
-        if ($this->pagePermissionCache == null) {
-            // Load all viewable pages into the permissions cache
-            $this->pagePermissionCache = PageFactory::query();
+        try {
+            if ($this->pagePermissionCache == null) {
+                // Load all viewable pages into the permissions cache
+                $this->pagePermissionCache = PageFactory::query();
+            }
+        }
+        catch (\PDOException $e) {
+            Log::error('SQL Error getting permissions.');
+            Log::error($e->getTraceAsString());
+
+            return false;
         }
 
         // Home route
@@ -582,7 +662,7 @@ class User implements \JsonSerializable
                 return true;
         }
 
-        Log::error('Request for unknown route: %s', $route[0]);
+        Log::debug('Route %s not viewable', $route[0]);
         return false;
     }
 

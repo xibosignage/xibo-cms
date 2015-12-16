@@ -26,7 +26,7 @@
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
                             {% set values = [{id: 1, value: "Yes"}, {id: 0, value: "No"}] %}
-                            {{ inline.dropdown("filterEnabled", "single", "Enabled", defaults.enabled, values, "id", "value") }}
+                            {{ inline.dropdown("enabled", "single", "Enabled", defaults.enabled, values, "id", "value") }}
                             {{ inline.checkbox("XiboFilterPinned", "Keep Open", defaults.filterPinned) }}
                         </form>
                     </div>
@@ -55,7 +55,7 @@
 
 {% block javaScript %}
     <script type="text/javascript">
-        var table = $("#resolutions").DataTable({
+        var table = $("#resolutions").DataTable({ "language": dataTablesLanguage,
             serverSide: true,
             filter: false,
             searchDelay: 3000,

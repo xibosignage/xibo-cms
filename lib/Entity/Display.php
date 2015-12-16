@@ -28,7 +28,9 @@ use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\DisplayProfileFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Log;
+use Xibo\Helper\PlayerActionHelper;
 use Xibo\Storage\PDOConnect;
+use Xibo\XMR\CollectNowAction;
 
 /**
  * Class Display
@@ -271,6 +273,36 @@ class Display
      */
     public $displayGroups = [];
 
+    /**
+     * @SWG\Property(description="The Player Subscription Channel")
+     * @var string
+     */
+    public $xmrChannel;
+
+    /**
+     * @SWG\Property(description="The Player Public Key")
+     * @var string
+     */
+    public $xmrPubKey;
+
+    /**
+     * @SWG\Property(description="The last command success, 0 = failure, 1 = success, 2 = unknown")
+     * @var int
+     */
+    public $lastCommandSuccess;
+
+    /**
+     * Collect required on save?
+     * @var bool
+     */
+    private $collectRequired = false;
+
+    /**
+     * Commands
+     * @var array[Command]
+     */
+    private $commands = null;
+
     public function __construct()
     {
         $this->excludeProperty('mediaInventoryXml');
@@ -292,6 +324,16 @@ class Display
     public function setMediaIncomplete()
     {
         $this->mediaInventoryStatus = 3;
+        $this->setCollectRequired(true);
+    }
+
+    /**
+     * Set Collect Required
+     * @param bool|true $collectRequired
+     */
+    public function setCollectRequired($collectRequired = true)
+    {
+        $this->collectRequired = $collectRequired;
     }
 
     /**
@@ -311,7 +353,7 @@ class Display
         if ($maxDisplays > 0 && $this->currentlyLicensed != $this->licensed && $this->licensed == 1) {
             $countLicensed = PDOConnect::select('SELECT COUNT(DisplayID) AS CountLicensed FROM display WHERE licensed = 1', []);
 
-            if ($countLicensed[0] + 1 > $maxDisplays)
+            if (intval($countLicensed[0]) + 1 > $maxDisplays)
                 throw new \InvalidArgumentException(sprintf(__('You have exceeded your maximum number of licensed displays. %d'), $maxDisplays));
         }
 
@@ -370,6 +412,16 @@ class Display
 
         if ($options['audit'])
             Log::audit('Display', $this->displayId, 'Display Saved', $this->jsonSerialize());
+
+        if ($this->collectRequired) {
+            Log::debug('Collect Now Action for Display %s', $this->display);
+
+            try {
+                PlayerActionHelper::sendAction($this, new CollectNowAction());
+            } catch (\Exception $e) {
+                Log::notice('Display Save would have triggered Player Action, but the action failed with message: %s', $e->getMessage());
+            }
+        }
     }
 
     /**
@@ -401,8 +453,8 @@ class Display
     private function add()
     {
         $this->displayId = PDOConnect::insert('
-            INSERT INTO display (display, isAuditing, defaultlayoutid, license, licensed, inc_schedule, email_alert, alert_timeout)
-              VALUES (:display, :isauditing, :defaultlayoutid, :license, :licensed, :inc_schedule, :email_alert, :alert_timeout)
+            INSERT INTO display (display, isAuditing, defaultlayoutid, license, licensed, inc_schedule, email_alert, alert_timeout, xmrChannel, xmrPubKey)
+              VALUES (:display, :isauditing, :defaultlayoutid, :license, :licensed, :inc_schedule, :email_alert, :alert_timeout, :xmrChannel, :xmrPubKey)
         ', [
             'display' => $this->display,
             'isauditing' => 0,
@@ -411,7 +463,9 @@ class Display
             'licensed' => 0,
             'inc_schedule' => 0,
             'email_alert' => 0,
-            'alert_timeout' => 0
+            'alert_timeout' => 0,
+            'xmrChannel' => $this->xmrChannel,
+            'xmrPubKey' => $this->xmrPubKey
         ]);
 
         $displayGroup = new DisplayGroup();
@@ -452,7 +506,10 @@ class Display
                     currentLayoutId = :currentLayoutId,
                     screenShotRequested = :screenShotRequested,
                     storageAvailableSpace = :storageAvailableSpace,
-                    storageTotalSpace = :storageTotalSpace
+                    storageTotalSpace = :storageTotalSpace,
+                    xmrChannel = :xmrChannel,
+                    xmrPubKey = :xmrPubKey,
+                    `lastCommandSuccess` = :lastCommandSuccess
              WHERE displayid = :displayId
         ', [
             'display' => $this->display,
@@ -485,6 +542,9 @@ class Display
             'screenShotRequested' => $this->screenShotRequested,
             'storageAvailableSpace' => $this->storageAvailableSpace,
             'storageTotalSpace' => $this->storageTotalSpace,
+            'xmrChannel' => $this->xmrChannel,
+            'xmrPubKey' => $this->xmrPubKey,
+            'lastCommandSuccess' => $this->lastCommandSuccess,
             'displayId' => $this->displayId
         ]);
 
@@ -502,6 +562,15 @@ class Display
     public function getSettings()
     {
         return $this->setConfig();
+    }
+
+    public function getCommands()
+    {
+        if ($this->commands == null) {
+            $this->setConfig();
+        }
+
+        return $this->commands;
     }
 
     /**
@@ -544,6 +613,7 @@ class Display
             }
 
             $this->_config = $displayProfile->getConfig();
+            $this->commands = $displayProfile->commands;
         }
 
         return $this->_config;

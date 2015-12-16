@@ -444,7 +444,7 @@ class ForecastIo extends ModuleWidget
             <style type="text/css">
                 .container { color: ' . $this->getOption('color', '000') . '; }
                 #content { zoom: ' . $this->getOption('size', 1) . '; }
-                ' . $this->getRawNode('styleSheet', null) . '
+                ' . $this->parseLibraryReferences($isPreview, $this->getRawNode('styleSheet', null)) . '
             </style>
         ';
 
@@ -456,8 +456,8 @@ class ForecastIo extends ModuleWidget
         $data['head'] = str_replace('[[ICONS]]', $this->getResourceUrl('forecastio/' . $this->getOption('icons')), $headContent);
 
         // Make some body content
-        $body = $this->getRawNode('currentTemplate', null);
-        $dailyTemplate = $this->getRawNode('dailyTemplate', null);
+        $body = $this->parseLibraryReferences($isPreview, $this->getRawNode('currentTemplate', null));
+        $dailyTemplate = $this->parseLibraryReferences($isPreview, $this->getRawNode('dailyTemplate', null));
 
         // Handle the daily template (if its here)
         if (stripos($body, '[dailyForecast]')) {
@@ -499,6 +499,10 @@ class ForecastIo extends ModuleWidget
         // Replace the After body Content
         $data['javaScript'] = $javaScriptContent;
 
+        // Update and save widget if we've changed our assignments.
+        if ($this->hasMediaChanged())
+            $this->widget->save(['saveWidgetOptions' => false]);
+
         // Return that content.
         return $this->renderTemplate($data);
     }
@@ -534,7 +538,7 @@ class ForecastIo extends ModuleWidget
         $client = new Client();
 
         try {
-            $response = $client->get($request_url, Config::getGuzzelProxy(['connect_timeout' => 20]));
+            $response = $client->get($request_url, Config::getGuzzleProxy(['connect_timeout' => 20]));
 
             // Success?
             if ($response->getStatusCode() != 200) {

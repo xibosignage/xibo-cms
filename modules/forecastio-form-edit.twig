@@ -144,7 +144,7 @@
                     <div class="tab-pane active" id="general">
                         {% set title %}{% trans "Name" %}{% endset %}
                         {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
-                        {{ forms.text("name", title, module.getOption("name"), helpText) }}
+                        {{ forms.input("name", title, module.getOption("name"), helpText) }}
 
                         {% set title %}{% trans "Duration" %}{% endset %}
                         {% set helpText %}{% trans "The duration in seconds this item should be displayed." %}{% endset %}
@@ -164,7 +164,7 @@
 
                         {% set title %}{% trans "Colour" %}{% endset %}
                         {% set helpText %}{% trans "Please select a colour for the foreground text." %}{% endset %}
-                        {{ forms.text("color", title, module.getOption("color"), helpText, "", "required") }}
+                        {{ forms.input("color", title, module.getOption("color"), helpText, "", "required") }}
                     </div>
 
                     <div class="tab-pane" id="advanced">

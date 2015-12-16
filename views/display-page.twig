@@ -25,12 +25,13 @@
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
 
-                            {{ inline.text("filter_display", "Name", defaults.display) }}
-                            {{ inline.text("filterMacAddress", "Mac Address", defaults.macAddress) }}
+                            {{ inline.input("display", "Name", defaults.display) }}
 
-                            {{ inline.dropdown("filter_displaygroup", "single", "Display Group", defaults.displayGroup, [{displayGroupId:null, displayGroup:""}]|merge(displayGroups), "displayGroupId", "displayGroup") }}
+                            {{ inline.input("macAddress", "Mac Address", defaults.macAddress) }}
 
-                            {{ inline.number("filter_autoRefresh", "Auto Refresh", defaults.filterAutoRefresh) }}
+                            {{ inline.dropdown("displayGroupId", "single", "Display Group", defaults.displayGroup, [{displayGroupId:null, displayGroup:""}]|merge(displayGroups), "displayGroupId", "displayGroup") }}
+
+                            {{ inline.number("autoRefresh", "Auto Refresh", defaults.filterAutoRefresh) }}
 
                             {{ inline.checkbox("XiboFilterPinned", "Keep Open", defaults.filterPinned) }}
                         </form>
@@ -59,6 +60,7 @@
                                 <th>{% trans "Mac Address" %}</th>
                                 <th>{% trans "Screen shot?" %}</th>
                                 <th>{% trans "Thumbnail" %}</th>
+                                <th>{% trans "Last Command" %}</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -74,7 +76,7 @@
 
 {% block javaScript %}
     <script type="text/javascript">
-        var table = $("#displays").DataTable({
+        var table = $("#displays").DataTable({ "language": dataTablesLanguage,
             serverSide: true,
             filter: false,
             searchDelay: 3000,
@@ -135,7 +137,7 @@
                         if (type != "display")
                             return data.clientVersion;
 
-                        return data.clientType + ' ' + data.clientVersion;
+                        return data.clientType + ' ' + data.clientVersion + '-' + data.clientCode;
                     },
                     "visible": false
                 },
@@ -154,6 +156,24 @@
                         else {
                             return "";
                         }
+                    },
+                    "visible": false
+                },
+                {
+                    "data": "lastCommandSuccess",
+                    "render": function (data, type, row) {
+                        if (type != "display")
+                            return data;
+
+                        var icon = "";
+                        if (data == 1)
+                            icon = "fa-check";
+                        else if (data == 0)
+                            icon = "fa-times";
+                        else
+                            icon = "fa-question";
+
+                        return "<span class='fa " + icon + "'></span>";
                     },
                     "visible": false
                 },

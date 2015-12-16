@@ -103,10 +103,16 @@ class Layout extends Base
         if (!$this->getUser()->checkEditable($layout))
             throw new AccessDeniedException();
 
+        // Work out our resolution
+        if ($layout->schemaVersion < 2)
+            $resolution = ResolutionFactory::getByDesignerDimensions($layout->width, $layout->height);
+        else
+            $resolution = ResolutionFactory::getByDimensions($layout->width, $layout->height);
+
         // Set up any JavaScript translations
         $data = [
             'layout' => $layout,
-            'resolution' => ResolutionFactory::getByDimensions($layout->width, $layout->height),
+            'resolution' => $resolution,
             'layouts' => LayoutFactory::query(),
             'zoom' => Sanitize::getDouble('zoom', 1)
         ];
@@ -479,6 +485,48 @@ class Layout extends Base
      *  tags={"layout"},
      *  summary="Search Layouts",
      *  description="Search for Layouts viewable by this user",
+     *  @SWG\Parameter(
+     *      name="layoutId",
+     *      in="formData",
+     *      description="Filter by Layout Id",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="layout",
+     *      in="formData",
+     *      description="Filter by partial Layout name",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="userId",
+     *      in="formData",
+     *      description="Filter by user Id",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="retired",
+     *      in="formData",
+     *      description="Filter by retired flag",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *   @SWG\Parameter(
+     *      name="tags",
+     *      in="formData",
+     *      description="Filter by Tags",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="embed",
+     *      in="formData",
+     *      description="Embed related data such as regions, playlists, tags, etc",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -493,47 +541,40 @@ class Layout extends Base
     {
         $this->getState()->template = 'grid';
 
-        // Filter by Name
-        $name = Sanitize::getString('filter_layout');
-        $this->getSession()->set('layout', 'filter_layout', $name);
-
-        // User ID
-        $filter_userid = Sanitize::getInt('filter_userid');
-        $this->getSession()->set('layout', 'filter_userid', $filter_userid);
-
-        // Show retired
-        $filter_retired = Sanitize::getInt('filter_retired');
-        $this->getSession()->set('layout', 'filter_retired', $filter_retired);
-
-        // Show filterLayoutStatusId
-        $filterLayoutStatusId = Sanitize::getInt('filterLayoutStatusId');
-        $this->getSession()->set('layout', 'filterLayoutStatusId', $filterLayoutStatusId);
-
-        // Show showDescriptionId
-        $showDescriptionId = Sanitize::getInt('showDescriptionId');
-        $this->getSession()->set('layout', 'showDescriptionId', $showDescriptionId);
-
-        // Tags list
-        $filter_tags = Sanitize::getString('filter_tags');
-        $this->getSession()->set('layout', 'filter_tags', $filter_tags);
+        // Should we parse the description into markdown
+        $showDescriptionId = $this->getSession()->set('layout', 'showDescriptionId', Sanitize::getInt('showDescriptionId'));
 
         // Pinned option?
         $this->getSession()->set('layout', 'LayoutFilter', Sanitize::getCheckbox('XiboFilterPinned'));
 
+        // Embed?
+        $embed = (Sanitize::getString('embed') != null) ? explode(',', Sanitize::getString('embed')) : [];
+
         // Get all layouts
         $layouts = LayoutFactory::query($this->gridRenderSort(), $this->gridRenderFilter([
-            'layout' => $name,
-            'userId' => $filter_userid,
-            'retired' => $filter_retired,
-            'tags' => $filter_tags,
-            'filterLayoutStatusId' => $filterLayoutStatusId
+            'layout' => $this->getSession()->set('layout', 'layout', Sanitize::getString('layout')),
+            'userId' => $this->getSession()->set('layout', 'userId', Sanitize::getInt('userId')),
+            'retired' => $this->getSession()->set('layout', 'retired', Sanitize::getInt('retired')),
+            'tags' => $this->getSession()->set('layout', 'tags', Sanitize::getString('tags')),
+            'filterLayoutStatusId' => $this->getSession()->set('layout', 'layoutStatusId', Sanitize::getInt('layoutStatusId')),
+            'layoutId' => Sanitize::getInt('layoutId')
         ]));
 
         foreach ($layouts as $layout) {
             /* @var \Xibo\Entity\Layout $layout */
 
+            if (in_array('regions', $embed)) {
+                $layout->load([
+                    'loadPlaylists' => in_array('playlists', $embed),
+                    'loadCampaigns' => in_array('campaigns', $embed),
+                    'loadPermissions' => in_array('permissions', $embed),
+                    'loadTags' => in_array('tags', $embed),
+                    'loadWidgets' => in_array('widgets', $embed)
+                ]);
+            }
+
             if ($this->isApi())
-                break;
+                continue;
 
             $layout->includeProperty('buttons');
 
@@ -992,5 +1033,112 @@ class Layout extends Base
         }
 
         $this->setNoOutput(true);
+    }
+
+    /**
+     * Upgrade Form
+     * @param int $layoutId
+     */
+    public function upgradeForm($layoutId)
+    {
+        $layout = LayoutFactory::getById($layoutId);
+
+        if (!$this->getUser()->checkEditable($layout))
+            throw new AccessDeniedException();
+
+        $this->getState()->template = 'layout-form-upgrade';
+        $this->getState()->setData([
+            'layout' => $layout,
+            'resolutions' => ResolutionFactory::query(null, ['enabled' => 1])
+        ]);
+    }
+
+    /**
+     * Upgrade Layout
+     * @param int $layoutId
+     * @throws \Xibo\Exception\NotFoundException
+     */
+    public function upgrade($layoutId)
+    {
+        $layout = LayoutFactory::loadById($layoutId);
+
+        if (!$this->getUser()->checkEditable($layout))
+            throw new AccessDeniedException();
+
+        // Resolution
+        $resolution = ResolutionFactory::getById(Sanitize::getInt('resolutionId'));
+        $scaleContent = (Sanitize::getCheckbox('scaleContent') == 1);
+
+        // Upgrade the Layout
+        $ratio = min($resolution->width / $layout->width, $resolution->height / $layout->height);
+
+        // Set the widget and height on layouts/regions
+        $layout->width = $layout->width * $ratio;
+        $layout->height = $layout->height * $ratio;
+
+        foreach ($layout->regions as $region) {
+            /* @var \Xibo\Entity\Region $region */
+            $region->width = $region->width * $ratio;
+            $region->height = $region->height * $ratio;
+            $region->top = $region->top * $ratio;
+            $region->left = $region->left * $ratio;
+
+            if ($scaleContent) {
+                // We need to get every widget that might have some date/time related stuff on it
+                // pull out the widget content
+                // run a regex over it to try and adjust its size
+                foreach ($region->playlists as $playlist) {
+                    $saveRequired = false;
+                    foreach ($playlist->widgets as $widget) {
+                        foreach ($widget->widgetOptions as $widgetOption) {
+
+                            if ($widgetOption->option == 'text' ||
+                                $widgetOption->option == 'styleSheet' ||
+                                $widgetOption->option == 'css' ||
+                                $widgetOption->option == 'embedHtml' ||
+                                $widgetOption->option == 'embedScript' ||
+                                $widgetOption->option == 'embedStyle'
+                            ) {
+
+                                // Replace widths
+                                $widgetOption->value = preg_replace_callback(
+                                    '/width:(.*?)/',
+                                    function ($matches) use ($ratio) {
+                                        return "width:" . $matches[1] * $ratio;
+                                    }, $widgetOption->value);
+
+                                // Replace heights
+                                $widgetOption->value = preg_replace_callback(
+                                    '/height:(.*?)/',
+                                    function ($matches) use ($ratio) {
+                                        return "height:" . $matches[1] * $ratio;
+                                    }, $widgetOption->value);
+
+                                // Replace fonts
+                                $widgetOption->value = preg_replace_callback(
+                                    '/font-size:(.*?)px;/',
+                                    function ($matches) use ($ratio) {
+                                        return "font-size:" . $matches[1] * $ratio . "px;";
+                                    }, $widgetOption->value);
+
+                                $saveRequired = true;
+                            }
+                        }
+                    }
+
+                    if ($saveRequired)
+                        $playlist->save();
+                }
+            }
+        }
+
+        $layout->schemaVersion = Config::Version('XlfVersion');
+        $layout->save(['validate' => false, 'notify' => $scaleContent]);
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('Upgraded %s'), $layout->layout)
+        ]);
     }
 }

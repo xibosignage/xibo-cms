@@ -117,21 +117,25 @@ class DisplayGroupFactory extends BaseFactory
             $params['displayId'] = Sanitize::getInt('displayId', $filterBy);
         }
 
-        /*if ($name != '') {
+        // Filter by DisplayGroup Name?
+        if (Sanitize::getString('displayGroup', $filterBy) != null) {
             // convert into a space delimited array
-            $names = explode(' ', $name);
+            $names = explode(' ', Sanitize::getString('displayGroup', $filterBy));
 
+            $i = 0;
             foreach ($names as $searchName) {
+                $i++;
                 // Not like, or like?
-                if (substr($searchName, 0, 1) == '-')
-                    $SQL .= " AND  (displaygroup.DisplayGroup NOT LIKE '%" . sprintf('%s', ltrim($db->escape_string($searchName), '-')) . "%') ";
-                else
-                    $SQL .= " AND  (displaygroup.DisplayGroup LIKE '%" . sprintf('%s', $db->escape_string($searchName)) . "%') ";
+                if (substr($searchName, 0, 1) == '-') {
+                    $body .= " AND  `displaygroup`.displayGroup NOT LIKE :search$i ";
+                    $params['search' . $i] = '%' . ltrim(($searchName), '-') . '%';
+                }
+                else {
+                    $body .= " AND  `displaygroup`.displayGroup LIKE :search$i ";
+                    $params['search' . $i] = '%' . $searchName . '%';
+                }
             }
-        }*/
-
-        //if ($isDisplaySpecific != -1)
-        //    $SQL .= sprintf(" AND displaygroup.IsDisplaySpecific = %d ", $isDisplaySpecific);
+        }
 
         // Sorting?
         $order = '';

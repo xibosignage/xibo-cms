@@ -22,7 +22,8 @@ namespace Xibo\Helper;
 
 use Xibo\Storage\PDOConnect;
 
-define('WEBSITE_VERSION', 120);
+define('WEBSITE_VERSION_NAME', '1.8.0-alpha2');
+define('WEBSITE_VERSION', 121);
 
 class Config
 {
@@ -189,6 +190,15 @@ class Config
     }
 
     /**
+     * Is an upgrade pending?
+     * @return bool
+     */
+    public static function isUpgradePending()
+    {
+        return DBVERSION != WEBSITE_VERSION;
+    }
+
+    /**
      * Should the host be considered a proxy exception
      * @param $host
      * @return bool
@@ -205,7 +215,7 @@ class Config
      * @param array $httpOptions
      * @return array
      */
-    public static function getGuzzelProxy($httpOptions = [])
+    public static function getGuzzleProxy($httpOptions = [])
     {
         // Proxy support
         if (Config::GetSetting('PROXY_HOST') != '') {
@@ -543,7 +553,7 @@ class Config
             $this->envWarning = true;
             $status = 2;
             $advice = __('You probably want to allow larger files to be uploaded than is currently available with your PHP configuration.');
-            $advice .= __('We suggest setting your PHP post_max_size and upload_max_size to at least 128M, and also increasing your max_execution_time to at least 120 seconds.');
+            $advice .= __('We suggest setting your PHP post_max_size and upload_max_filesize to at least 128M, and also increasing your max_execution_time to at least 120 seconds.');
         }
 
         $rows[] = array(
@@ -564,6 +574,22 @@ class Config
 
         $rows[] = array(
             'item' => __('cURL'),
+            'status' => $status,
+            'advice' => $advice
+        );
+
+        // Check to see if ZMQ is installed
+        $advice = __('ZeroMQ is used to send messages to XMR which allows push communications with player');
+        if ($this->checkZmq()) {
+            $status = 1;
+        } else {
+            $this->envWarning = true;
+            $status = 2;
+            $advice .= __(' and is recommended.');
+        }
+
+        $rows[] = array(
+            'item' => __('ZeroMQ'),
             'status' => $status,
             'advice' => $advice
         );
@@ -770,6 +796,15 @@ class Config
 
         // All passed
         return true;
+    }
+
+    /**
+     * Check ZeroMQ support
+     * @return bool
+     */
+    public static function checkZmq()
+    {
+        return class_exists('ZMQSocket');
     }
 
     /**

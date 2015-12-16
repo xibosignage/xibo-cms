@@ -22,6 +22,7 @@ namespace Xibo\Controller;
 use Xibo\Entity\DisplayGroup;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\CampaignFactory;
+use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Helper\Config;
@@ -144,7 +145,7 @@ class Schedule extends Base
             $editable = $this->isEventEditable($row->displayGroups);
 
             // Event Title
-            $title = sprintf(__('%s scheduled on %s'), $row->campaign, $displayGroupList);
+            $title = sprintf(__('%s scheduled on %s'), ($row->campaign == '') ? $row->command : $row->campaign, $displayGroupList);
 
             // Event URL
             $url = ($editable) ? $this->urlFor('schedule.edit.form', ['id' => $row->eventId]) : '#';
@@ -170,6 +171,10 @@ class Schedule extends Base
             if ($row->isPriority == 1) {
                 $class = 'event-important';
                 $extra = 'priority';
+            }
+
+            if ($row->eventTypeId == \Xibo\Entity\Schedule::$COMMAND_EVENT) {
+                $extra = 'command';
             }
 
             // Is this event editable?
@@ -240,6 +245,7 @@ class Schedule extends Base
             'displays' => $displays,
             'displayGroups' => $groups,
             'campaigns' => CampaignFactory::query(null, ['isLayoutSpecific' => -1]),
+            'commands' => CommandFactory::query(),
             'displayGroupIds' => $this->getSession()->get('displayGroupIds'),
             'help' => Help::Link('Schedule', 'Add')
         ]);
@@ -254,11 +260,25 @@ class Schedule extends Base
      *  summary="Add Schedule Event",
      *  description="Add a new scheduled event for a Campaign/Layout to be shown on a Display Group/Display.",
      *  @SWG\Parameter(
+     *      name="eventTypeId",
+     *      in="formData",
+     *      description="The Event Type Id to use for this Event. 1=Campaign, 2=Command",
+     *      type="integer",
+     *      required=true
+     *  ),
+     *  @SWG\Parameter(
      *      name="campaignId",
      *      in="formData",
      *      description="The Campaign ID to use for this Event. If a Layout is needed then the Campaign specific ID for that Layout should be used.",
      *      type="integer",
-     *      required=true
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="commandId",
+     *      in="formData",
+     *      description="The Command ID to use for this Event.",
+     *      type="integer",
+     *      required=false
      *  ),
      *  @SWG\Parameter(
      *      name="displayOrder",
@@ -296,7 +316,7 @@ class Schedule extends Base
      *      description="The to date for this event.",
      *      type="string",
      *      format="date-time",
-     *      required=true
+     *      required=false
      *   ),
      *   @SWG\Parameter(
      *      name="recurrenceType",
@@ -339,7 +359,9 @@ class Schedule extends Base
 
         $schedule = new \Xibo\Entity\Schedule();
         $schedule->userId = $this->getUser()->userId;
+        $schedule->eventTypeId = Sanitize::getInt('eventTypeId');
         $schedule->campaignId = Sanitize::getInt('campaignId');
+        $schedule->commandId = Sanitize::getInt('commandId');
         $schedule->displayOrder = Sanitize::getInt('displayOrder', 0);
         $schedule->isPriority = Sanitize::getCheckbox('isPriority');
         $schedule->recurrenceType = Sanitize::getString('recurrenceType');
@@ -354,11 +376,16 @@ class Schedule extends Base
         $toDt = Sanitize::getDate('toDt');
         $recurrenceRange = Sanitize::getDate('recurrenceRange');
 
+        if ($fromDt === null)
+            throw new \InvalidArgumentException(__('Please enter a from date'));
+
         Log::debug('Times received are: FromDt=' . Date::getLocalDate($fromDt) . '. ToDt=' . Date::getLocalDate($toDt) . '. recurrenceRange=' . Date::getLocalDate($recurrenceRange));
 
         // Set on schedule object
         $schedule->fromDt = $fromDt->setTime($fromDt->hour, $fromDt->minute, 0)->format('U');
-        $schedule->toDt = $toDt->setTime($toDt->hour, $toDt->minute, 0)->format('U');
+
+        if ($toDt !== null)
+            $schedule->toDt = $toDt->setTime($toDt->hour, $toDt->minute, 0)->format('U');
 
         if ($recurrenceRange != null)
             $schedule->recurrenceRange = $recurrenceRange->setTime($recurrenceRange->hour, $recurrenceRange->minute, 0)->format('U');
@@ -418,6 +445,7 @@ class Schedule extends Base
             'displays' => $displays,
             'displayGroups' => $groups,
             'campaigns' => CampaignFactory::query(null, ['isLayoutSpecific' => -1]),
+            'commands' => CommandFactory::query(),
             'displayGroupIds' => array_map(function($element) {
                 return $element->displayGroupId;
             }, $schedule->displayGroups),
@@ -443,11 +471,25 @@ class Schedule extends Base
      *      required=true
      *  ),
      *  @SWG\Parameter(
+     *      name="eventTypeId",
+     *      in="formData",
+     *      description="The Event Type Id to use for this Event. 1=Campaign, 2=Command",
+     *      type="integer",
+     *      required=true
+     *  ),
+     *  @SWG\Parameter(
      *      name="campaignId",
      *      in="formData",
      *      description="The Campaign ID to use for this Event. If a Layout is needed then the Campaign specific ID for that Layout should be used.",
      *      type="integer",
-     *      required=true
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="commandId",
+     *      in="formData",
+     *      description="The Command ID to use for this Event.",
+     *      type="integer",
+     *      required=false
      *  ),
      *  @SWG\Parameter(
      *      name="displayOrder",
@@ -485,7 +527,7 @@ class Schedule extends Base
      *      description="The to date for this event.",
      *      type="string",
      *      format="date-time",
-     *      required=true
+     *      required=false
      *   ),
      *   @SWG\Parameter(
      *      name="recurrenceType",
@@ -525,7 +567,9 @@ class Schedule extends Base
         if (!$this->isEventEditable($schedule->displayGroups))
             throw new AccessDeniedException();
 
+        $schedule->eventTypeId = Sanitize::getInt('eventTypeId');
         $schedule->campaignId = Sanitize::getInt('campaignId');
+        $schedule->commandId = Sanitize::getInt('commandId');
         $schedule->displayOrder = Sanitize::getInt('displayOrder');
         $schedule->isPriority = Sanitize::getCheckbox('isPriority');
         $schedule->recurrenceType = Sanitize::getString('recurrenceType');
@@ -541,11 +585,17 @@ class Schedule extends Base
         $toDt = Sanitize::getDate('toDt');
         $recurrenceRange = Sanitize::getDate('recurrenceRange');
 
+        if ($fromDt === null)
+            throw new \InvalidArgumentException(__('Please enter a from date'));
+
         Log::debug('Times received are: FromDt=' . Date::getLocalDate($fromDt) . '. ToDt=' . Date::getLocalDate($toDt) . '. recurrenceRange=' . Date::getLocalDate($recurrenceRange));
 
         // Set on schedule object
         $schedule->fromDt = $fromDt->setTime($fromDt->hour, $fromDt->minute, 0)->format('U');
-        $schedule->toDt = $toDt->setTime($toDt->hour, $toDt->minute, 0)->format('U');
+
+        // If we have a toDt
+        if ($toDt !== null)
+            $schedule->toDt = $toDt->setTime($toDt->hour, $toDt->minute, 0)->format('U');
 
         if ($recurrenceRange != null)
             $schedule->recurrenceRange = $recurrenceRange->setTime($recurrenceRange->hour, $recurrenceRange->minute, 0)->format('U');

@@ -60,6 +60,9 @@ class Tag implements \JsonSerializable
      */
     public $mediaIds = [];
 
+    private $originalLayoutIds = [];
+    private $originalMediaIds = [];
+
     public function __clone()
     {
         $this->tagId = null;
@@ -71,8 +74,7 @@ class Tag implements \JsonSerializable
      */
     public function assignLayout($layoutId)
     {
-        if (!$this->loaded)
-            $this->load();
+        $this->load();
 
         if (!in_array($layoutId, $this->layoutIds))
             $this->layoutIds[] = $layoutId;
@@ -84,8 +86,7 @@ class Tag implements \JsonSerializable
      */
     public function unassignLayout($layoutId)
     {
-        if (!$this->loaded)
-            $this->load();
+        $this->load();
 
         $this->layoutIds = array_diff($this->layoutIds, [$layoutId]);
     }
@@ -96,8 +97,7 @@ class Tag implements \JsonSerializable
      */
     public function assignMedia($mediaId)
     {
-        if (!$this->loaded)
-            $this->load();
+        $this->load();
 
         if (!in_array($mediaId, $this->mediaIds))
             $this->mediaIds[] = $mediaId;
@@ -109,8 +109,7 @@ class Tag implements \JsonSerializable
      */
     public function unassignMedia($mediaId)
     {
-        if (!$this->loaded)
-            $this->load();
+        $this->load();
 
         $this->mediaIds = array_diff($this->mediaIds, [$mediaId]);
     }
@@ -120,7 +119,7 @@ class Tag implements \JsonSerializable
      */
     public function load()
     {
-        if ($this->tagId == null)
+        if ($this->tagId == null || $this->loaded)
             return;
 
         $this->layoutIds = [];
@@ -132,6 +131,10 @@ class Tag implements \JsonSerializable
         foreach (PDOConnect::select('SELECT mediaId FROM `lktagmedia` WHERE tagId = :tagId', ['tagId' => $this->tagId]) as $row) {
             $this->mediaIds[] = $row['mediaId'];
         }
+
+        // Set the originals
+        $this->originalLayoutIds = $this->layoutIds;
+        $this->originalMediaIds = $this->mediaIds;
 
         $this->loaded = true;
     }
@@ -174,7 +177,12 @@ class Tag implements \JsonSerializable
      */
     private function linkLayouts()
     {
-        foreach ($this->layoutIds as $layoutId) {
+        $layoutsToLink = array_diff($this->layoutIds, $this->originalLayoutIds);
+
+        Log::debug('Linking %d layouts to Tag %s', count($layoutsToLink), $this->tag);
+
+        // Layouts that are in layoutIds but not in originalLayoutIds
+        foreach ($layoutsToLink as $layoutId) {
             PDOConnect::update('INSERT INTO `lktaglayout` (tagId, layoutId) VALUES (:tagId, :layoutId) ON DUPLICATE KEY UPDATE layoutId = layoutId', array(
                 'tagId' => $this->tagId,
                 'layoutId' => $layoutId
@@ -187,16 +195,21 @@ class Tag implements \JsonSerializable
      */
     private function unlinkLayouts()
     {
-        // Unlink any layouts that are NOT in the collection
-        if (count($this->layoutIds) <= 0)
-            $this->layoutIds = [0];
+        // Layouts that are in the originalLayoutIds but not in the current layoutIds
+        $layoutsToUnlink = array_diff($this->originalLayoutIds, $this->layoutIds);
 
+        Log::debug('Unlinking %d layouts from Tag %s', count($layoutsToUnlink), $this->tag);
+
+        if (count($layoutsToUnlink) <= 0)
+            return;
+
+        // Unlink any layouts that are NOT in the collection
         $params = ['tagId' => $this->tagId];
 
-        $sql = 'DELETE FROM `lktaglayout` WHERE tagId = :tagId AND layoutId NOT IN (0';
+        $sql = 'DELETE FROM `lktaglayout` WHERE tagId = :tagId AND layoutId IN (0';
 
         $i = 0;
-        foreach ($this->layoutIds as $layoutId) {
+        foreach ($layoutsToUnlink as $layoutId) {
             $i++;
             $sql .= ',:layoutId' . $i;
             $params['layoutId' . $i] = $layoutId;
@@ -214,7 +227,11 @@ class Tag implements \JsonSerializable
      */
     private function linkMedia()
     {
-        foreach ($this->mediaIds as $mediaId) {
+        $mediaToLink = array_diff($this->mediaIds, $this->originalMediaIds);
+
+        Log::debug('Linking %d media to Tag %s', count($mediaToLink), $this->tag);
+
+        foreach ($mediaToLink as $mediaId) {
             PDOConnect::update('INSERT INTO `lktagmedia` (tagId, mediaId) VALUES (:tagId, :mediaId) ON DUPLICATE KEY UPDATE mediaId = mediaId', array(
                 'tagId' => $this->tagId,
                 'mediaId' => $mediaId
@@ -227,16 +244,20 @@ class Tag implements \JsonSerializable
      */
     private function unlinkMedia()
     {
+        $mediaToUnlink = array_diff($this->originalMediaIds, $this->mediaIds);
+
+        Log::debug('Unlinking %d media from Tag %s', count($mediaToUnlink), $this->tag);
+
         // Unlink any layouts that are NOT in the collection
-        if (count($this->mediaIds) <= 0)
-            $this->mediaIds = [0];
+        if (count($mediaToUnlink) <= 0)
+            return;
 
         $params = ['tagId' => $this->tagId];
 
         $sql = 'DELETE FROM `lktagmedia` WHERE tagId = :tagId AND mediaId NOT IN (0';
 
         $i = 0;
-        foreach ($this->mediaIds as $mediaId) {
+        foreach ($mediaToUnlink as $mediaId) {
             $i++;
             $sql .= ',:mediaId' . $i;
             $params['mediaId' . $i] = $mediaId;

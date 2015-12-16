@@ -16,7 +16,6 @@ trait EntityTrait
 {
     private $hash = null;
     private $loaded = false;
-    private $deleting = false;
     private $permissionsClass = null;
 
     public $buttons = [];

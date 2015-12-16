@@ -130,11 +130,20 @@ class Campaign implements \JsonSerializable
             throw new \InvalidArgumentException(__('Name cannot be empty'));
     }
 
-    public function save($validate = true)
+    /**
+     * Save this Campaign
+     * @param array $options
+     */
+    public function save($options = [])
     {
+        $options = array_merge([
+            'validate' => true,
+            'notify' => true
+        ], $options);
+
         Log::debug('Saving %s', $this);
 
-        if ($validate)
+        if ($options['validate'])
             $this->validate();
 
         if ($this->campaignId == null || $this->campaignId == 0) {
@@ -150,7 +159,8 @@ class Campaign implements \JsonSerializable
         }
 
         // Notify anyone interested of the changes
-        $this->notify();
+        if ($options['notify'])
+            $this->notify();
     }
 
     public function delete()
@@ -342,9 +352,12 @@ class Campaign implements \JsonSerializable
     {
         Log::debug('Checking for Displays to refresh on Campaign %d', $this->campaignId);
 
-        foreach (DisplayFactory::getByActiveCampaignId($this->campaignId) as $display) {
+        $displays = array_merge(DisplayFactory::getByActiveCampaignId($this->campaignId), DisplayFactory::getByAssignedCampaignId($this->campaignId));
+
+        foreach ($displays as $display) {
             /* @var \Xibo\Entity\Display $display */
             $display->setMediaIncomplete();
+            $display->setCollectRequired(true);
             $display->save(['validate' => false, 'audit' => false]);
         }
     }

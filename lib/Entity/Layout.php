@@ -108,12 +108,6 @@ class Layout implements \JsonSerializable
     public $backgroundColor;
 
     /**
-     * Legacy XML
-     * @var string
-     */
-    public $legacyXml;
-
-    /**
      * @var string
      * @SWG\Property(
      *  description="The datetime the Layout was created"
@@ -344,7 +338,7 @@ class Layout implements \JsonSerializable
         $this->regions = RegionFactory::getByLayoutId($this->layoutId);
 
         if ($options['loadPlaylists'])
-            $this->loadPlaylists();
+            $this->loadPlaylists($options);
 
         // Load all tags
         if ($options['loadTags'])
@@ -364,11 +358,11 @@ class Layout implements \JsonSerializable
     /**
      * Load Playlists
      */
-    public function loadPlaylists()
+    public function loadPlaylists($options = [])
     {
         foreach ($this->regions as $region) {
             /* @var Region $region */
-            $region->load();
+            $region->load($options);
         }
     }
 
@@ -384,7 +378,8 @@ class Layout implements \JsonSerializable
             'saveRegions' => true,
             'saveTags' => true,
             'setBuildRequired' => true,
-            'validate' => true
+            'validate' => true,
+            'notify' => true
         ], $options);
 
         if ($options['validate'])
@@ -393,13 +388,13 @@ class Layout implements \JsonSerializable
         if ($options['setBuildRequired'])
             $this->setBuildRequired();
 
-        Log::debug('Saving %s with options', $this, json_encode($options));
+        Log::debug('Saving %s with options %s', $this, json_encode($options, JSON_PRETTY_PRINT));
 
         // New or existing layout
         if ($this->layoutId == null || $this->layoutId == 0) {
             $this->add();
         } else if ($this->hash() != $this->hash && $options['saveLayout']) {
-            $this->update();
+            $this->update($options);
         }
 
         if ($options['saveRegions']) {
@@ -423,6 +418,8 @@ class Layout implements \JsonSerializable
                 foreach ($this->tags as $tag) {
                     /* @var Tag $tag */
 
+                    Log::debug('Assigning tag %s', $tag->tag);
+
                     $tag->assignLayout($this->layoutId);
                     $tag->save();
                 }
@@ -432,6 +429,8 @@ class Layout implements \JsonSerializable
             if (is_array($this->unassignTags)) {
                 foreach ($this->unassignTags as $tag) {
                     /* @var Tag $tag */
+                    Log::debug('Unassigning tag %s', $tag->tag);
+
                     $tag->unassignLayout($this->layoutId);
                     $tag->save();
                 }
@@ -483,7 +482,7 @@ class Layout implements \JsonSerializable
         foreach ($this->campaigns as $campaign) {
             /* @var Campaign $campaign */
             $campaign->unassignLayout($this);
-            $campaign->save(false);
+            $campaign->save(['validate' => false]);
         }
 
         // Delete our own Campaign
@@ -567,6 +566,7 @@ class Layout implements \JsonSerializable
         $layoutNode->setAttribute('height', $this->height);
         $layoutNode->setAttribute('bgcolor', $this->backgroundColor);
         $layoutNode->setAttribute('schemaVersion', $this->schemaVersion);
+        $layoutNode->setAttribute('zindex', $this->backgroundzIndex);
 
         if ($this->backgroundImageId != 0) {
             // Get stored as
@@ -621,21 +621,30 @@ class Layout implements \JsonSerializable
                     $mediaNode->appendChild($rawNode);
 
                     // Inject the URI
+                    $uriInjected = false;
                     if ($module->getModule()->regionSpecific == 0) {
                         $media = MediaFactory::getById($widget->mediaIds[0]);
                         $optionNode = $document->createElement('uri', $media->storedAs);
                         $optionsNode->appendChild($optionNode);
+                        $uriInjected = true;
                     }
 
                     foreach ($widget->widgetOptions as $option) {
                         /* @var WidgetOption $option */
+                        if (trim($option->value) === '')
+                            continue;
+
                         if ($option->type == 'cdata') {
                             $optionNode = $document->createElement($option->option);
                             $cdata = $document->createCDATASection($option->value);
                             $optionNode->appendChild($cdata);
                             $rawNode->appendChild($optionNode);
                         }
-                        else if ($option->type == 'attrib') {
+                        else if ($option->type == 'attrib' || $option->type == 'attribute') {
+
+                            if ($uriInjected && $option->option == 'uri')
+                                continue;
+
                             $optionNode = $document->createElement($option->option, $option->value);
                             $optionsNode->appendChild($optionNode);
                         }
@@ -747,7 +756,7 @@ class Layout implements \JsonSerializable
             file_put_contents($path, $this->toXlf());
 
             $this->save([
-                'saveRegions' => true,
+                'saveRegions' => false,
                 'saveRegionOptions' => false,
                 'manageRegionAssignments' => false,
                 'saveTags' => false,
@@ -810,10 +819,15 @@ class Layout implements \JsonSerializable
 
     /**
      * Update
+     * @param array $options
      * NOTE: We set the XML to NULL during this operation as we will always convert old layouts to the new structure
      */
-    private function update()
+    private function update($options = [])
     {
+        $options = array_merge([
+            'notify' => true
+        ], $options);
+
         Log::debug('Editing Layout ' . $this->layout . '. Id = ' . $this->layoutId);
 
         $sql = '
@@ -828,9 +842,9 @@ class Layout implements \JsonSerializable
               backgroundImageId = :backgroundImageId,
               backgroundColor = :backgroundColor,
               backgroundzIndex = :backgroundzIndex,
-              `xml` = NULL,
               `status` = :status,
-              `userId` = :userId
+              `userId` = :userId,
+              `schemaVersion` = :schemaVersion
          WHERE layoutID = :layoutid
         ';
 
@@ -849,13 +863,14 @@ class Layout implements \JsonSerializable
             'backgroundColor' => $this->backgroundColor,
             'backgroundzIndex' => $this->backgroundzIndex,
             'status' => $this->status,
-            'userId' => $this->ownerId
+            'userId' => $this->ownerId,
+            'schemaVersion' => $this->schemaVersion
         ));
 
         // Update the Campaign
         $campaign = CampaignFactory::getById($this->campaignId);
         $campaign->campaign = $this->layout;
         $campaign->ownerId = $this->ownerId;
-        $campaign->save(false);
+        $campaign->save(['validate' => false, 'notify' => $options['notify']]);
     }
 }

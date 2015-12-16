@@ -21,13 +21,14 @@
 namespace Xibo\Widget;
 
 use InvalidArgumentException;
+use Xibo\Factory\CommandFactory;
 use Xibo\Helper\Sanitize;
 
 class ShellCommand extends ModuleWidget
 {
     public function validate()
     {
-        if ($this->getOption('windowsCommand') == '' && $this->getOption('linuxCommand') == '')
+        if ($this->getOption('windowsCommand') == '' && $this->getOption('linuxCommand') == '' && $this->getOption('commandCode') == '')
             throw new InvalidArgumentException(__('You must enter a command'));
     }
 
@@ -39,8 +40,14 @@ class ShellCommand extends ModuleWidget
         // Any Options (we need to encode shell commands, as they sit on the options rather than the raw
         $this->setOption('name', Sanitize::getString('name'));
         $this->setDuration(1);
-        $this->SetOption('windowsCommand', urlencode(Sanitize::getString('windowsCommand')));
-        $this->SetOption('linuxCommand', urlencode(Sanitize::getString('linuxCommand')));
+
+        // Commands
+        $windows = Sanitize::getString('windowsCommand');
+        $linux = Sanitize::getString('linuxCommand');
+
+        $this->setOption('commandCode', Sanitize::getString('commandCode'));
+        $this->setOption('windowsCommand', urlencode($windows));
+        $this->setOption('linuxCommand', urlencode($linux));
 
         // Save the widget
         $this->validate();
@@ -55,8 +62,14 @@ class ShellCommand extends ModuleWidget
         // Any Options (we need to encode shell commands, as they sit on the options rather than the raw
         $this->setDuration(1);
         $this->setOption('name', Sanitize::getString('name', $this->getOption('name')));
-        $this->SetOption('windowsCommand', urlencode(Sanitize::getString('windowsCommand')));
-        $this->SetOption('linuxCommand', urlencode(Sanitize::getString('linuxCommand')));
+
+        // Commands
+        $windows = Sanitize::getString('windowsCommand');
+        $linux = Sanitize::getString('linuxCommand');
+
+        $this->setOption('commandCode', Sanitize::getString('commandCode'));
+        $this->setOption('windowsCommand', urlencode($windows));
+        $this->setOption('linuxCommand', urlencode($linux));
 
         // Save the widget
         $this->validate();
@@ -68,14 +81,19 @@ class ShellCommand extends ModuleWidget
         if ($this->module->previewEnabled == 0)
             return parent::Preview($width, $height);
 
-        $msgWindows = __('Windows Command');
-        $msgLinux = __('Linux Command');
+        $windows = $this->getOption('windowsCommand');
+        $linux = $this->getOption('linuxCommand');
 
-        $preview = '';
-        $preview .= '<p>' . $msgWindows . ': ' . urldecode($this->GetOption('windowsCommand')) . '</p>';
-        $preview .= '<p>' . $msgLinux . ': ' . urldecode($this->GetOption('linuxCommand')) . '</p>';
+        if ($windows == '' && $linux == '') {
+            return __('Stored Command: %s', $this->getOption('commandCode'));
+        }
+        else {
 
-        return $preview;
+            $preview  = '<p>' . __('Windows Command') . ': ' . urldecode($windows) . '</p>';
+            $preview .= '<p>' . __('Linux Command') . ': ' . urldecode($linux) . '</p>';
+
+            return $preview;
+        }
     }
 
     public function hoverPreview()
@@ -87,5 +105,11 @@ class ShellCommand extends ModuleWidget
     {
         // Client dependant
         return 2;
+    }
+
+    public function setTemplateData($data)
+    {
+        $data['commands'] = CommandFactory::query();
+        return $data;
     }
 }

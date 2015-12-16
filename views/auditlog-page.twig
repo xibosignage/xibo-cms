@@ -27,8 +27,8 @@
                         <form class="form-inline">
                             {{ inline.date("filterFromDt", "From Date", defaults.fromDt) }}
                             {{ inline.date("filterToDt", "To Date", defaults.toDt) }}
-                            {{ inline.text("filterUser", "User", defaults.user) }}
-                            {{ inline.text("filterEntity", "Entity", defaults.entity) }}
+                            {{ inline.input("filterUser", "User", defaults.user) }}
+                            {{ inline.input("filterEntity", "Entity", defaults.entity) }}
 
                             {{ inline.checkbox("XiboFilterPinned", "Keep Open", defaults.filterPinned) }}
                         </form>
@@ -74,7 +74,7 @@
 
         var arrayViewer = Handlebars.compile($("#table-array-viewer").html());
 
-        var table = $("#logs").DataTable({
+        var table = $("#logs").DataTable({ "language": dataTablesLanguage,
             serverSide: true,
             filter: false,
             searchDelay: 3000,

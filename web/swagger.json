@@ -29,6 +29,43 @@
                 "summary": "Display Search",
                 "description": "Search Displays for this User",
                 "operationId": "displaySearch",
+                "parameters": [
+                    {
+                        "name": "displayId",
+                        "in": "formData",
+                        "description": "Filter by Display Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "displayGroupId",
+                        "in": "formData",
+                        "description": "Filter by DisplayGroup Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "display",
+                        "in": "formData",
+                        "description": "Filter by Display Name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "macAddress",
+                        "in": "formData",
+                        "description": "Filter by Mac Address",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "clientVersion",
+                        "in": "formData",
+                        "description": "Filter by Client Version",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "successful operation",
@@ -261,6 +298,165 @@
                 }
             }
         },
+        "/command": {
+            "get": {
+                "tags": [
+                    "command"
+                ],
+                "summary": "Command Search",
+                "description": "Search this users Commands",
+                "operationId": "commandSearch",
+                "parameters": [
+                    {
+                        "name": "commandId",
+                        "in": "formData",
+                        "description": "Filter by Command Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "command",
+                        "in": "formData",
+                        "description": "Filter by Command Name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "code",
+                        "in": "formData",
+                        "description": "Filter by Command Code",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Command"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "command"
+                ],
+                "summary": "Command Add",
+                "description": "Add a Command",
+                "operationId": "commandAdd",
+                "parameters": [
+                    {
+                        "name": "command",
+                        "in": "formData",
+                        "description": "The Command Name",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "description",
+                        "in": "formData",
+                        "description": "A description for the command",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "code",
+                        "in": "formData",
+                        "description": "A unique code for this command",
+                        "required": true,
+                        "type": "strgin"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Command"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new record",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/command/{commandId}": {
+            "put": {
+                "tags": [
+                    "command"
+                ],
+                "summary": "Edit Command",
+                "description": "Edit the provided command",
+                "operationId": "commandEdit",
+                "parameters": [
+                    {
+                        "name": "commandId",
+                        "in": "path",
+                        "description": "The Command Id to Edit",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "command",
+                        "in": "formData",
+                        "description": "The Command Name",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "description",
+                        "in": "formData",
+                        "description": "A description for the command",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "code",
+                        "in": "formData",
+                        "description": "A unique code for this command",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Command"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "command"
+                ],
+                "summary": "Delete Command",
+                "description": "Delete the provided command",
+                "operationId": "commandDelete",
+                "parameters": [
+                    {
+                        "name": "commandId",
+                        "in": "path",
+                        "description": "The Command Id to Delete",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
         "/library": {
             "get": {
                 "tags": [
@@ -269,6 +465,43 @@
                 "summary": "Library Search",
                 "description": "Search the Library for this user",
                 "operationId": "librarySearch",
+                "parameters": [
+                    {
+                        "name": "mediaId",
+                        "in": "formData",
+                        "description": "Filter by Media Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "media",
+                        "in": "formData",
+                        "description": "Filter by Media Name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "type",
+                        "in": "formData",
+                        "description": "Filter by Media Type",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "ownerId",
+                        "in": "formData",
+                        "description": "Filter by Owner Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "retired",
+                        "in": "formData",
+                        "description": "Filter by Retired",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "successful operation",
@@ -379,6 +612,13 @@
                         "description": "The Media ID to Delete",
                         "required": true,
                         "type": "integer"
+                    },
+                    {
+                        "name": "forceDelete",
+                        "in": "formData",
+                        "description": "If the media item has been used should it be force removed from items that uses it?",
+                        "required": true,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -411,6 +651,22 @@
                 "summary": "Search Campaigns",
                 "description": "Search all Campaigns this user has access to",
                 "operationId": "campaignSearch",
+                "parameters": [
+                    {
+                        "name": "campaignId",
+                        "in": "formData",
+                        "description": "Filter by Campaign Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Filter by Name",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "successful operation",
@@ -692,6 +948,50 @@
                 "summary": "Search Layouts",
                 "description": "Search for Layouts viewable by this user",
                 "operationId": "layoutSearch",
+                "parameters": [
+                    {
+                        "name": "layoutId",
+                        "in": "formData",
+                        "description": "Filter by Layout Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "layout",
+                        "in": "formData",
+                        "description": "Filter by partial Layout name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "userId",
+                        "in": "formData",
+                        "description": "Filter by user Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "retired",
+                        "in": "formData",
+                        "description": "Filter by retired flag",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "tags",
+                        "in": "formData",
+                        "description": "Filter by Tags",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "embed",
+                        "in": "formData",
+                        "description": "Embed related data such as regions, playlists, tags, etc",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "successful operation",
@@ -946,6 +1246,22 @@
                 ],
                 "summary": "Get Display Groups",
                 "operationId": "displayGroupSearch",
+                "parameters": [
+                    {
+                        "name": "displayGroupId",
+                        "in": "formData",
+                        "description": "Filter by DisplayGroup Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "displayGroup",
+                        "in": "formData",
+                        "description": "Filter by DisplayGroup Name",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "a successful response",
@@ -1222,6 +1538,84 @@
                 }
             }
         },
+        "/displaygroup/{displayGroupId}/layout/assign": {
+            "post": {
+                "tags": [
+                    "displayGroup"
+                ],
+                "summary": "Assign one or more Layouts items to a Display Group",
+                "description": "Adds the provided Layouts to the Display Group",
+                "operationId": "displayGroupLayoutsAssign",
+                "parameters": [
+                    {
+                        "name": "displayGroupId",
+                        "in": "path",
+                        "description": "The Display Group to assign to",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "layoutId",
+                        "in": "formData",
+                        "description": "The Layouts Ids to assign",
+                        "required": true,
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "unassignLayoutsId",
+                        "in": "formData",
+                        "description": "Optional array of Layouts Id to unassign",
+                        "required": false,
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/displaygroup/{displayGroupId}/layout/unassign": {
+            "post": {
+                "tags": [
+                    "displayGroup"
+                ],
+                "summary": "Unassign one or more Layout items from a Display Group",
+                "description": "Removes the provided from the Display Group",
+                "operationId": "displayGroupLayoutUnassign",
+                "parameters": [
+                    {
+                        "name": "displayGroupId",
+                        "in": "path",
+                        "description": "The Display Group to unassign from",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "layoutId",
+                        "in": "formData",
+                        "description": "The Layout Ids to unassign",
+                        "required": true,
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
         "/displaygroup/{displayGroupId}/version": {
             "post": {
                 "tags": [
@@ -1242,6 +1636,137 @@
                         "name": "mediaId",
                         "in": "formData",
                         "description": "The Media Id of the Installer File",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/displaygroup/{displayGroupId}/action/collectNow": {
+            "post": {
+                "tags": [
+                    "displayGroup"
+                ],
+                "summary": "Action: Collect Now",
+                "description": "Send the collect now action to this DisplayGroup",
+                "operationId": "displayGroupActionCollectNow",
+                "parameters": [
+                    {
+                        "name": "displayGroupId",
+                        "in": "path",
+                        "description": "The display group id",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/displaygroup/{displayGroupId}/action/changeLayout": {
+            "post": {
+                "tags": [
+                    "displayGroup"
+                ],
+                "summary": "Action: Change Layout",
+                "description": "Send the change layout action to this DisplayGroup",
+                "operationId": "displayGroupActionChangeLayout",
+                "parameters": [
+                    {
+                        "name": "displayGroupId",
+                        "in": "path",
+                        "description": "The Display Group Id",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "layoutId",
+                        "in": "formData",
+                        "description": "The Layout Id",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "duration",
+                        "in": "formData",
+                        "description": "The duration in seconds for this Layout change to remain in effect",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "downloadRequired",
+                        "in": "formData",
+                        "description": "Flag indicating whether the player should perform a collect before playing the Layout",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "changeMode",
+                        "in": "formData",
+                        "description": "Whether to queue or replace with this action",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/displaygroup/{displayGroupId}/action/revertToSchedule": {
+            "post": {
+                "tags": [
+                    "displayGroup"
+                ],
+                "summary": "Action: Revert to Schedule",
+                "description": "Send the revert to schedule action to this DisplayGroup",
+                "operationId": "displayGroupActionRevertToSchedule",
+                "parameters": [
+                    {
+                        "name": "displayGroupId",
+                        "in": "path",
+                        "description": "The display group id",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/displaygroup/{displayGroupId}/action/command": {
+            "post": {
+                "tags": [
+                    "displayGroup"
+                ],
+                "summary": "Send Command",
+                "description": "Send a predefined command to this Group of Displays",
+                "operationId": "displayGroupActionCommand",
+                "parameters": [
+                    {
+                        "name": "displayGroupId",
+                        "in": "path",
+                        "description": "The display group id",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "commandId",
+                        "in": "formData",
+                        "description": "The Command Id",
                         "required": true,
                         "type": "integer"
                     }
@@ -1469,6 +1994,22 @@
                 "summary": "DataSet Search",
                 "description": "Search this users DataSets",
                 "operationId": "dataSetSearch",
+                "parameters": [
+                    {
+                        "name": "dataSetId",
+                        "in": "formData",
+                        "description": "Filter by DataSet Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "dataSet",
+                        "in": "formData",
+                        "description": "Filter by DataSet Name",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "successful operation",
@@ -1882,10 +2423,24 @@
                 "operationId": "scheduleAdd",
                 "parameters": [
                     {
+                        "name": "eventTypeId",
+                        "in": "formData",
+                        "description": "The Event Type Id to use for this Event. 1=Campaign, 2=Command",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
                         "name": "campaignId",
                         "in": "formData",
                         "description": "The Campaign ID to use for this Event. If a Layout is needed then the Campaign specific ID for that Layout should be used.",
-                        "required": true,
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "commandId",
+                        "in": "formData",
+                        "description": "The Command ID to use for this Event.",
+                        "required": false,
                         "type": "integer"
                     },
                     {
@@ -1924,7 +2479,7 @@
                         "name": "toDt",
                         "in": "formData",
                         "description": "The to date for this event.",
-                        "required": true,
+                        "required": false,
                         "type": "string",
                         "format": "date-time"
                     },
@@ -1993,10 +2548,24 @@
                         "type": "integer"
                     },
                     {
+                        "name": "eventTypeId",
+                        "in": "formData",
+                        "description": "The Event Type Id to use for this Event. 1=Campaign, 2=Command",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
                         "name": "campaignId",
                         "in": "formData",
                         "description": "The Campaign ID to use for this Event. If a Layout is needed then the Campaign specific ID for that Layout should be used.",
-                        "required": true,
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "commandId",
+                        "in": "formData",
+                        "description": "The Command ID to use for this Event.",
+                        "required": false,
                         "type": "integer"
                     },
                     {
@@ -2035,7 +2604,7 @@
                         "name": "toDt",
                         "in": "formData",
                         "description": "The to date for this event.",
-                        "required": true,
+                        "required": false,
                         "type": "string",
                         "format": "date-time"
                     },
@@ -2182,6 +2751,29 @@
                 "summary": "Display Profile Search",
                 "description": "Search this users Display Profiles",
                 "operationId": "displayProfileSearch",
+                "parameters": [
+                    {
+                        "name": "displayProfileId",
+                        "in": "formData",
+                        "description": "Filter by DisplayProfile Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "displayProfile",
+                        "in": "formData",
+                        "description": "Filter by DisplayProfile Name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "type",
+                        "in": "formData",
+                        "description": "Filter by DisplayProfile Type (windows|android)",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "successful operation",
@@ -2338,6 +2930,43 @@
                 }
             }
         },
+        "/usergroup": {
+            "get": {
+                "tags": [
+                    "usergroup"
+                ],
+                "summary": "UserGroup Search",
+                "description": "Search User Groups",
+                "operationId": "userGroupSearch",
+                "parameters": [
+                    {
+                        "name": "userGroupId",
+                        "in": "formData",
+                        "description": "Filter by UserGroup Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "userGroup",
+                        "in": "formData",
+                        "description": "Filter by UserGroup Name",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/UserGroup"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/group/{userGroupId}/copy": {
             "post": {
                 "tags": [
@@ -2478,6 +3107,36 @@
                 "summary": "User Search",
                 "description": "Search users",
                 "operationId": "userSearch",
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "formData",
+                        "description": "Filter by User Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "userName",
+                        "in": "formData",
+                        "description": "Filter by User Name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "userTypeId",
+                        "in": "formData",
+                        "description": "Filter by UserType Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "retired",
+                        "in": "formData",
+                        "description": "Filter by Retired",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "successful operation",
@@ -2546,6 +3205,62 @@
                         "description": "The inital user group for this User",
                         "required": true,
                         "type": "integer"
+                    },
+                    {
+                        "name": "firstName",
+                        "in": "formData",
+                        "description": "The users first name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "lastName",
+                        "in": "formData",
+                        "description": "The users last name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "phone",
+                        "in": "formData",
+                        "description": "The users phone number",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "ref1",
+                        "in": "formData",
+                        "description": "Reference 1",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "ref2",
+                        "in": "formData",
+                        "description": "Reference 2",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "ref3",
+                        "in": "formData",
+                        "description": "Reference 3",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "ref4",
+                        "in": "formData",
+                        "description": "Reference 4",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "ref5",
+                        "in": "formData",
+                        "description": "Reference 5",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -2648,6 +3363,29 @@
                 "summary": "Resolution Search",
                 "description": "Search Resolutions this user has access to",
                 "operationId": "resolutionSearch",
+                "parameters": [
+                    {
+                        "name": "resolutionId",
+                        "in": "formData",
+                        "description": "Filter by Resolution Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "resolution",
+                        "in": "formData",
+                        "description": "Filter by Resolution Name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "enabled",
+                        "in": "formData",
+                        "description": "Filter by Enabled",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "successful operation",
@@ -3029,6 +3767,50 @@
                     "items": {
                         "$ref": "#/definitions/DisplayGroup"
                     }
+                },
+                "xmrChannel": {
+                    "description": "The Player Subscription Channel",
+                    "type": "string"
+                },
+                "xmrPubKey": {
+                    "description": "The Player Public Key",
+                    "type": "string"
+                },
+                "lastCommandSuccess": {
+                    "description": "The last command success, 0 = failure, 1 = success, 2 = unknown",
+                    "type": "integer"
+                }
+            }
+        },
+        "Command": {
+            "properties": {
+                "commandId": {
+                    "description": "Command Id",
+                    "type": "integer"
+                },
+                "command": {
+                    "description": "Command Name",
+                    "type": "string"
+                },
+                "code": {
+                    "description": "Unique Code",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "Description",
+                    "type": "string"
+                },
+                "userId": {
+                    "description": "User Id",
+                    "type": "integer"
+                },
+                "commandString": {
+                    "description": "Command String - when child of a Display Profile",
+                    "type": "string"
+                },
+                "validationString": {
+                    "description": "Validation String - when child of a Display Profile",
+                    "type": "string"
                 }
             }
         },
@@ -3600,8 +4382,16 @@
                     "description": "The ID of this Event",
                     "type": "integer"
                 },
+                "eventTypeId": {
+                    "description": "The Event Type ID",
+                    "type": "integer"
+                },
                 "campaignId": {
                     "description": "The CampaignID this event is for",
+                    "type": "integer"
+                },
+                "commandId": {
+                    "description": "The CommandId this event is for",
                     "type": "integer"
                 },
                 "displayGroups": {
@@ -3656,6 +4446,11 @@
                     "description": "The Campaign/Layout Name",
                     "type": "string",
                     "readOnly": true
+                },
+                "command": {
+                    "description": "The Command Name",
+                    "type": "string",
+                    "readOnly": true
                 }
             }
         },
@@ -3679,6 +4474,14 @@
                 },
                 "userId": {
                     "description": "The Owner of this Application",
+                    "type": "integer"
+                },
+                "authCode": {
+                    "description": "Flag indicating whether to allow the authorizationCode Grant Type",
+                    "type": "integer"
+                },
+                "clientCredentials": {
+                    "description": "Flag indicating whether to allow the clientCredentials Grant Type",
                     "type": "integer"
                 }
             }
@@ -3951,6 +4754,38 @@
                     "description": "The users library quota in bytes",
                     "type": "integer"
                 },
+                "firstName": {
+                    "description": "First Name",
+                    "type": "string"
+                },
+                "lastName": {
+                    "description": "Last Name",
+                    "type": "string"
+                },
+                "phone": {
+                    "description": "Phone Number",
+                    "type": "string"
+                },
+                "ref1": {
+                    "description": "Reference field 1",
+                    "type": "string"
+                },
+                "ref2": {
+                    "description": "Reference field 2",
+                    "type": "string"
+                },
+                "ref3": {
+                    "description": "Reference field 3",
+                    "type": "string"
+                },
+                "ref4": {
+                    "description": "Reference field 4",
+                    "type": "string"
+                },
+                "ref5": {
+                    "description": "Reference field 5",
+                    "type": "string"
+                },
                 "groups": {
                     "description": "An array of user groups this user is assigned to",
                     "type": "array",
@@ -4177,6 +5012,10 @@
         {
             "name": "module",
             "description": "Modules and Widgets"
+        },
+        {
+            "name": "command",
+            "description": "Commands"
         }
     ],
     "externalDocs": {

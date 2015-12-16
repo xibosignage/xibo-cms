@@ -17,6 +17,7 @@ use Xibo\Entity\Display;
 use Xibo\Entity\Playlist;
 use Xibo\Entity\Region;
 use Xibo\Entity\RequiredFile;
+use Xibo\Entity\Schedule;
 use Xibo\Entity\Stat;
 use Xibo\Entity\User;
 use Xibo\Entity\Widget;
@@ -91,9 +92,6 @@ class Soap
         if (!$this->authDisplay($hardwareKey))
             throw new \SoapFault('Sender', 'This display is not licensed.');
 
-        if ($this->display->isAuditing == 1)
-            Log::debug('[IN] with hardware key: ' . $hardwareKey);
-
         // Generate a new Request Key which we will sign our Required Files with
         $requestKey = Random::generateString(10);
 
@@ -117,9 +115,10 @@ class Soap
         try {
             $dbh = PDOConnect::init();
 
-            // Get a list of all layout ids in the schedule right now.
+            // Get a list of all layout ids in the schedule right now
+            // including any layouts that have been associated to our Display Group
             $SQL = '
-                SELECT DISTINCT layout.layoutID
+                SELECT layout.layoutID, schedule.DisplayOrder, lkcampaignlayout.DisplayOrder AS LayoutDisplayOrder, schedule_detail.eventId
                   FROM `campaign`
                     INNER JOIN `schedule`
                     ON `schedule`.CampaignID = campaign.CampaignID
@@ -137,7 +136,13 @@ class Soap
                     AND schedule_detail.FromDT < :fromdt
                     AND schedule_detail.ToDT > :todt
                     AND layout.retired = 0
-                ORDER BY schedule.DisplayOrder, lkcampaignlayout.DisplayOrder, schedule_detail.eventID
+                UNION
+                SELECT `lklayoutdisplaygroup`.layoutId, 0 AS DisplayOrder, 0 AS LayoutDisplayOrder, 0 AS eventId
+                  FROM `lklayoutdisplaygroup`
+                    INNER JOIN `lkdisplaydg`
+                    ON lkdisplaydg.DisplayGroupID = `lklayoutdisplaygroup`.displayGroupId
+                 WHERE lkdisplaydg.DisplayID = :displayId
+                ORDER BY DisplayOrder, LayoutDisplayOrder, eventId
             ';
 
             $sth = $dbh->prepare($SQL);
@@ -430,12 +435,15 @@ class Soap
     /**
      * @param $serverKey
      * @param $hardwareKey
+     * @param array $options
      * @return mixed
      * @throws \SoapFault
      */
-    protected function doSchedule($serverKey, $hardwareKey)
+    protected function doSchedule($serverKey, $hardwareKey, $options = [])
     {
         $this->logProcessor->setRoute('Schedule');
+
+        $options = array_merge(['dependentsAsNodes' => false], $options);
 
         // Sanitize
         $serverKey = Sanitize::string($serverKey);
@@ -484,68 +492,157 @@ class Soap
             $rows = $sth->fetchAll();
             $moduleDependents = array();
 
-            foreach ($rows as $dependent)
+            foreach ($rows as $dependent) {
                 $moduleDependents[] = $dependent['StoredAs'];
+            }
 
             // Add file nodes to the $fileElements
             // Firstly get all the scheduled layouts
             $SQL = '
-                SELECT layout.layoutID, schedule_detail.FromDT, schedule_detail.ToDT, schedule.eventID, schedule.is_priority,
+                SELECT `schedule`.eventTypeId, layout.layoutId, `command`.code, schedule_detail.fromDt, schedule_detail.toDt, schedule.eventId, schedule.is_priority
+            ';
+
+            if (!$options['dependentsAsNodes']) {
+                // Pull in the dependents using GROUP_CONCAT
+                $SQL .= ' ,
                   (
                     SELECT GROUP_CONCAT(DISTINCT StoredAs)
-                      FROM media
-                        INNER JOIN lklayoutmedia ON lklayoutmedia.MediaID = media.MediaID
-                     WHERE lklayoutmedia.LayoutID = layout.LayoutID
-                      AND lklayoutmedia.regionID <> \'module\'
-                    GROUP BY lklayoutmedia.LayoutID
+                      FROM `media`
+                        INNER JOIN `lkwidgetmedia`
+                        ON `lkwidgetmedia`.MediaID = `media`.MediaID
+                        INNER JOIN `widget`
+                        ON `widget`.widgetId = `lkwidgetmedia`.widgetId
+                        INNER JOIN `lkregionplaylist`
+                        ON `lkregionplaylist`.playlistId = `widget`.playlistId
+                        INNER JOIN `region`
+                        ON `region`.regionId = `lkregionplaylist`.regionId
+                     WHERE `region`.layoutId = `layout`.layoutId
+                      AND media.type <> \'module\'
+                    GROUP BY `region`.layoutId
                   ) AS Dependents
-                  FROM `campaign`
-                    INNER JOIN `schedule`
-                    ON `schedule`.CampaignID = campaign.CampaignID
+                ';
+            }
+
+            $SQL .= '
+                   FROM `schedule`
                     INNER JOIN schedule_detail
                     ON schedule_detail.eventID = `schedule`.eventID
                     INNER JOIN `lkscheduledisplaygroup`
                     ON `lkscheduledisplaygroup`.eventId = `schedule`.eventId
-                    INNER JOIN `lkcampaignlayout`
-                    ON lkcampaignlayout.CampaignID = campaign.CampaignID
-                    INNER JOIN `layout`
-                    ON lkcampaignlayout.LayoutID = layout.LayoutID
                     INNER JOIN lkdisplaydg
                     ON lkdisplaydg.DisplayGroupID = `lkscheduledisplaygroup`.displayGroupId
+                    LEFT OUTER JOIN `campaign`
+                    ON `schedule`.CampaignID = campaign.CampaignID
+                    LEFT OUTER JOIN `lkcampaignlayout`
+                    ON lkcampaignlayout.CampaignID = campaign.CampaignID
+                    LEFT OUTER JOIN `layout`
+                    ON lkcampaignlayout.LayoutID = layout.LayoutID
+                      AND layout.retired = 0
+                    LEFT OUTER JOIN `command`
+                    ON `command`.commandId = `schedule`.commandId
                  WHERE lkdisplaydg.DisplayID = :displayId
-                    AND schedule_detail.FromDT < :fromdt
-                    AND schedule_detail.ToDT > :todt
-                    AND layout.retired = 0
-                ORDER BY schedule.DisplayOrder, lkcampaignlayout.DisplayOrder, schedule_detail.eventID
+                    AND schedule_detail.FromDT < :todt
+                    AND IFNULL(schedule_detail.ToDT, schedule_detail.FromDT) > :fromdt
+                ORDER BY schedule.DisplayOrder, IFNULL(lkcampaignlayout.DisplayOrder, 0), schedule_detail.FromDT
             ';
 
-            $sth = $dbh->prepare($SQL);
-            $sth->execute(array(
+            $params = array(
                 'displayId' => $this->display->displayId,
-                'fromdt' => $toFilter,
-                'todt' => $fromFilter
-            ));
+                'todt' => $toFilter,
+                'fromdt' => $fromFilter
+            );
+
+            if ($this->display->isAuditing)
+                Log::sql($SQL, $params);
+
+            $sth = $dbh->prepare($SQL);
+            $sth->execute($params);
+
+            $events = $sth->fetchAll(\PDO::FETCH_ASSOC);
+
+            // If our dependents are nodes, then build a list of layouts we can use to query for nodes
+            $layoutDependents = [];
+
+            if ($options['dependentsAsNodes']) {
+
+                // Layouts (pop in the default)
+                $layoutIds = [$this->display->defaultLayoutId];
+
+                foreach ($events as $event) {
+                    if (!in_array($event['layoutId'], $layoutIds))
+                        $layoutIds[] = $event['layoutId'];
+                }
+
+                $SQL = '
+                    SELECT DISTINCT `region`.layoutId, `media`.storedAs
+                      FROM `media`
+                        INNER JOIN `lkwidgetmedia`
+                        ON `lkwidgetmedia`.MediaID = `media`.MediaID
+                        INNER JOIN `widget`
+                        ON `widget`.widgetId = `lkwidgetmedia`.widgetId
+                        INNER JOIN `lkregionplaylist`
+                        ON `lkregionplaylist`.playlistId = `widget`.playlistId
+                        INNER JOIN `region`
+                        ON `region`.regionId = `lkregionplaylist`.regionId
+                     WHERE `region`.layoutId IN (' . implode(',', $layoutIds) . ')
+                      AND media.type <> \'module\'
+                ';
+
+                foreach (PDOConnect::select($SQL, []) as $row) {
+                    if (!array_key_exists($row['layoutId'], $layoutDependents))
+                        $layoutDependents[$row['layoutId']] = [];
+
+                    $layoutDependents[$row['layoutId']][] = $row['storedAs'];
+                }
+
+                Log::debug('Resolved dependents for Schedule: %s.', json_encode($layoutDependents, JSON_PRETTY_PRINT));
+            }
 
             // We must have some results in here by this point
-            foreach ($sth->fetchAll() as $row) {
-                $layoutId = $row[0];
-                $fromDt = date('Y-m-d H:i:s', $row[1]);
-                $toDt = date('Y-m-d H:i:s', $row[2]);
-                $scheduleId = $row[3];
-                $is_priority = Sanitize::int($row[4]);
-                $dependents = Sanitize::string($row[5]);
+            foreach ($events as $row) {
+                $eventTypeId = $row['eventTypeId'];
+                $layoutId = $row['layoutId'];
+                $commandCode = $row['code'];
+                $fromDt = date('Y-m-d H:i:s', $row['fromDt']);
+                $toDt = date('Y-m-d H:i:s', $row['toDt']);
+                $scheduleId = $row['eventId'];
+                $is_priority = Sanitize::int($row['is_priority']);
 
-                // Add a layout node to the schedule
-                $layout = $scheduleXml->createElement("layout");
+                if ($eventTypeId == Schedule::$LAYOUT_EVENT) {
+                    // Add a layout node to the schedule
+                    $layout = $scheduleXml->createElement("layout");
+                    $layout->setAttribute("file", $layoutId);
+                    $layout->setAttribute("fromdt", $fromDt);
+                    $layout->setAttribute("todt", $toDt);
+                    $layout->setAttribute("scheduleid", $scheduleId);
+                    $layout->setAttribute("priority", $is_priority);
 
-                $layout->setAttribute("file", $layoutId);
-                $layout->setAttribute("fromdt", $fromDt);
-                $layout->setAttribute("todt", $toDt);
-                $layout->setAttribute("scheduleid", $scheduleId);
-                $layout->setAttribute("priority", $is_priority);
-                $layout->setAttribute("dependents", $dependents);
+                    if (!$options['dependentsAsNodes']) {
+                        $dependents = Sanitize::string($row['Dependents']);
+                        $layout->setAttribute("dependents", $dependents);
+                    }
+                    else if (array_key_exists($layoutId, $layoutDependents)) {
+                        $dependentNode = $scheduleXml->createElement("dependents");
 
-                $layoutElements->appendChild($layout);
+                        foreach ($layoutDependents[$layoutId] as $storedAs) {
+                            $fileNode = $scheduleXml->createElement("file", $storedAs);
+
+                            $dependentNode->appendChild($fileNode);
+                        }
+
+                        $layout->appendChild($dependentNode);
+                    }
+
+                    $layoutElements->appendChild($layout);
+
+                } else if ($eventTypeId == Schedule::$COMMAND_EVENT) {
+                    // Add a command node to the schedule
+                    $command = $scheduleXml->createElement("command");
+                    $command->setAttribute("date", $fromDt);
+                    $command->setAttribute("scheduleid", $scheduleId);
+                    $command->setAttribute('code', $commandCode);
+                    $layoutElements->appendChild($command);
+                }
             }
         } catch (\Exception $e) {
             Log::error('Error getting a list of layouts for the schedule. ' . $e->getMessage());
@@ -563,12 +660,37 @@ class Soap
             $layout->setAttribute("scheduleid", 0);
             $layout->setAttribute("priority", 0);
 
+            if ($options['dependentsAsNodes'] && array_key_exists($this->display->defaultLayoutId, $layoutDependents)) {
+                $dependentNode = $scheduleXml->createElement("dependents");
+
+                foreach ($layoutDependents[$this->display->defaultLayoutId] as $storedAs) {
+                    $fileNode = $scheduleXml->createElement("file", $storedAs);
+
+                    $dependentNode->appendChild($fileNode);
+                }
+
+                $layout->appendChild($dependentNode);
+            }
+
             $layoutElements->appendChild($layout);
         }
 
         // Add on the default layout node
         $default = $scheduleXml->createElement("default");
         $default->setAttribute("file", $this->display->defaultLayoutId);
+
+        if ($options['dependentsAsNodes'] && array_key_exists($this->display->defaultLayoutId, $layoutDependents)) {
+            $dependentNode = $scheduleXml->createElement("dependents");
+
+            foreach ($layoutDependents[$this->display->defaultLayoutId] as $storedAs) {
+                $fileNode = $scheduleXml->createElement("file", $storedAs);
+
+                $dependentNode->appendChild($fileNode);
+            }
+
+            $default->appendChild($dependentNode);
+        }
+
         $layoutElements->appendChild($default);
 
         // Add on a list of global dependants
@@ -1081,6 +1203,9 @@ class Soap
 
             // Configure our log processor
             $this->logProcessor->setDisplay($this->display->displayId);
+
+            if ($this->display->isAuditing == 1)
+                Log::info('IN');
 
             return true;
 

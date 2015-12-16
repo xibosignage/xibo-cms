@@ -268,11 +268,11 @@ class Module extends Base
 
         // Pass to view
         $this->getState()->template = $module->getModuleType() . '-form-add';
-        $this->getState()->setData([
+        $this->getState()->setData($module->setTemplateData([
             'playlist' => $playlist,
             'media' => MediaFactory::query(),
             'module' => $module
-        ]);
+        ]));
     }
 
     /**
@@ -338,11 +338,11 @@ class Module extends Base
 
         // Pass to view
         $this->getState()->template = $module->getModuleType() . '-form-edit';
-        $this->getState()->setData([
+        $this->getState()->setData($module->setTemplateData([
             'module' => $module,
             'media' => MediaFactory::query(),
             'validExtensions' => str_replace(',', '|', $module->getModule()->validExtensions)
-        ]);
+        ]));
     }
 
     /**

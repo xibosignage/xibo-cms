@@ -24,8 +24,8 @@
                 <div class="XiboFilter">
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
-                            {{ inline.text("filter_name", "Name", defaults.name) }}
-                            {{ inline.text("filter_tags", "Tags", defaults.tags) }}
+                            {{ inline.input("filter_name", "Name", defaults.name) }}
+                            {{ inline.input("filter_tags", "Tags", defaults.tags) }}
                             {{ inline.checkbox("XiboFilterPinned", "Keep Open", defaults.filterPinned) }}
                         </form>
                     </div>
@@ -55,7 +55,7 @@
 
 {% block javaScript %}
     <script type="text/javascript">
-        var table = $("#templates").DataTable({
+        var table = $("#templates").DataTable({ "language": dataTablesLanguage,
             serverSide: true,
             filter: false,
             searchDelay: 3000,

@@ -102,6 +102,7 @@ $app->get('/login/ping', '\Xibo\Controller\Login:PingPong')->name('ping');
 // upgrade
 //
 $app->get('/update', '\Xibo\Controller\Upgrade:displayPage')->name('upgrade.view');
+$app->post('/update/step/:id', '\Xibo\Controller\Upgrade:doStep')->name('upgrade.doStep');
 
 //
 // schedule
@@ -241,7 +242,9 @@ $app->get('/displaygroup/form/edit/:id', '\Xibo\Controller\DisplayGroup:editForm
 $app->get('/displaygroup/form/delete/:id', '\Xibo\Controller\DisplayGroup:deleteForm')->name('displayGroup.delete.form');
 $app->get('/displaygroup/form/members/:id', '\Xibo\Controller\DisplayGroup:membersForm')->name('displayGroup.members.form');
 $app->get('/displaygroup/form/media/:id', '\Xibo\Controller\DisplayGroup:mediaForm')->name('displayGroup.media.form');
+$app->get('/displaygroup/form/layout/:id', '\Xibo\Controller\DisplayGroup:layoutsForm')->name('displayGroup.layout.form');
 $app->get('/displaygroup/form/version/:id', '\Xibo\Controller\DisplayGroup:versionForm')->name('displayGroup.version.form');
+$app->get('/displaygroup/form/command/:id', '\Xibo\Controller\DisplayGroup:commandForm')->name('displayGroup.command.form');
 
 //
 // displayprofile
@@ -334,3 +337,11 @@ $app->get('/stats/form/export', '\Xibo\Controller\Stats:exportForm')->name('stat
 //
 $app->get('/audit/view', '\Xibo\Controller\AuditLog:displayPage')->name('auditLog.view');
 $app->get('/audit/form/export', '\Xibo\Controller\AuditLog:exportForm')->name('auditLog.export.form');
+
+//
+// Commands
+//
+$app->get('/command/view', '\Xibo\Controller\Command:displayPage')->name('command.view');
+$app->get('/command/form/add', '\Xibo\Controller\Command:addForm')->name('command.add.form');
+$app->get('/command/form/edit/:id', '\Xibo\Controller\Command:editForm')->name('command.edit.form');
+$app->get('/command/form/delete/:id', '\Xibo\Controller\Command:deleteForm')->name('command.delete.form');

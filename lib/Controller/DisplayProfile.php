@@ -19,7 +19,9 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
+use Xibo\Entity\Command;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DisplayProfileFactory;
 use Xibo\Helper\Date;
 use Xibo\Helper\Help;
@@ -43,6 +45,27 @@ class DisplayProfile extends Base
      *  tags={"displayprofile"},
      *  summary="Display Profile Search",
      *  description="Search this users Display Profiles",
+     *  @SWG\Parameter(
+     *      name="displayProfileId",
+     *      in="formData",
+     *      description="Filter by DisplayProfile Id",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="displayProfile",
+     *      in="formData",
+     *      description="Filter by DisplayProfile Name",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="type",
+     *      in="formData",
+     *      description="Filter by DisplayProfile Type (windows|android)",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -55,7 +78,13 @@ class DisplayProfile extends Base
      */
     function grid()
     {
-        $profiles = DisplayProfileFactory::query();
+        $filter = [
+            'displayProfileId' => Sanitize::getInt('displayProfileId'),
+            'displayProfile' => Sanitize::getString('displayProfile'),
+            'type' => Sanitize::getString('type')
+        ];
+
+        $profiles = DisplayProfileFactory::query($this->gridRenderSort(), $this->gridRenderFilter($filter));
 
         foreach ($profiles as $profile) {
             /* @var \Xibo\Entity\DisplayProfile $profile */
@@ -168,16 +197,29 @@ class DisplayProfile extends Base
         if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $displayProfile->userId)
             throw new AccessDeniedException(__('You do not have permission to edit this profile'));
 
+        // Get a list of unassigned Commands
+        $unassignedCommands = array_udiff(CommandFactory::query(), $displayProfile->commands, function($a, $b) {
+            return $a->getId() - $b->getId();
+        });
+
+        // Get a list of timezones
+        $timeZones = [];
+        foreach (Date::timezoneList() as $key => $value) {
+            $timeZones[] = ['id' => $key, 'value' => $value];
+        }
+
         $this->getState()->template = 'displayprofile-form-edit';
         $this->getState()->setData([
             'displayProfile' => $displayProfile,
             'tabs' => $displayProfile->configTabs,
-            'config' => $displayProfile->configDefault
+            'config' => $displayProfile->configDefault,
+            'commands' => array_merge($displayProfile->commands, $unassignedCommands),
+            'timeZones' => $timeZones
         ]);
     }
 
     /**
-     * Edit Form
+     * Edit
      * @param $displayProfileId
      * 
      * @SWG\Put(
@@ -265,20 +307,6 @@ class DisplayProfile extends Base
                     $value = Sanitize::getParam($setting['name'], $setting['default']);
             }
 
-            // If we are a time picker, then process the received time
-            if ($setting['fieldType'] == 'timePicker') {
-                $date = Sanitize::getDate($setting['name'], $setting['default']);
-
-                if ($date->hour == 0 && $date->minute == 0)
-                    $value = 0;
-                else {
-                    // Take only the hours and minutes and construct a new date
-                    $now = Date::parse();
-                    $now->setTime($date->hour, $date->minute, 0);
-                    $value = Date::getLocalDate($now, 'U') * 1000;
-                }
-            }
-
             // Add to the combined array
             $combined[] = array(
                 'name' => $setting['name'],
@@ -290,6 +318,20 @@ class DisplayProfile extends Base
         // Recursively merge the arrays and update
         $displayProfile->config = $combined;
 
+        // Capture and update commands
+        foreach (CommandFactory::query() as $command) {
+            /* @var Command $command */
+            if (Sanitize::getString('commandString_' . $command->commandId) != null) {
+                // Set and assign the command
+                $command->commandString = Sanitize::getString('commandString_' . $command->commandId);
+                $command->validationString = Sanitize::getString('validationString_' . $command->commandId);
+                $displayProfile->assignCommand($command);
+            } else {
+                $displayProfile->unassignCommand($command);
+            }
+        }
+
+        // Save the changes
         $displayProfile->save();
 
         // Return

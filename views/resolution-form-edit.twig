@@ -26,15 +26,15 @@
             <form id="resolutionEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("resolution.edit", {"id": resolution.resolutionId}) }}">
                         {% set title %}{% trans "Resolution" %}{% endset %}
                         {% set helpText %}{% trans "A name for this Resolution" %}{% endset %}
-                        {{ forms.text("resolution", title, resolution.resolution, helpText) }}
+                        {{ forms.input("resolution", title, resolution.resolution, helpText) }}
                         
                         {% set title %}{% trans "Width" %}{% endset %}
                         {% set helpText %}{% trans "The Width for this Resolution" %}{% endset %}
-                        {{ forms.text("width", title, resolution.width, helpText) }}
+                        {{ forms.input("width", title, resolution.width, helpText) }}
                        
                         {% set title %}{% trans "Height" %}{% endset %}
                         {% set helpText %}{% trans "The Height for this Resolution" %}{% endset %}
-                        {{ forms.text("height", title, resolution.height, helpText) }}
+                        {{ forms.input("height", title, resolution.height, helpText) }}
 
                         {% set title %}{% trans "Enable?" %}{% endset %}
                         {% set helpText %}{% trans "Is the Resolution enabled for use?" %}{% endset %}

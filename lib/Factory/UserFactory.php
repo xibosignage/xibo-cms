@@ -146,16 +146,43 @@ class UserFactory extends BaseFactory
                 userTypeId,
                 loggedIn,
                 email,
-                `user`.homePageId,
-                pages.title AS homePage,
                 lastAccessed,
                 newUserWizard,
                 retired,
                 CSPRNG,
                 UserPassword AS password,
                 group.groupId,
-                group.group,
-                IFNULL(group.libraryQuota, 0) AS libraryQuota ';
+                group.group
+        ';
+
+        if (DBVERSION >= 120) {
+            $select .= '
+                ,
+                `pages`.pageId AS homePageId,
+                `pages`.title AS homePage
+            ';
+        }
+
+        if (DBVERSION >= 121) {
+            $select .= '
+                ,
+                `user`.firstName,
+                `user`.lastName,
+                `user`.phone,
+                `user`.ref1,
+                `user`.ref2,
+                `user`.ref3,
+                `user`.ref4,
+                `user`.ref5
+            ';
+        }
+
+        if (DBVERSION >= 88) {
+            $select .= '
+                ,
+                IFNULL(group.libraryQuota, 0) AS libraryQuota
+            ';
+        }
 
         $body = '
               FROM `user`
@@ -164,8 +191,16 @@ class UserFactory extends BaseFactory
                 INNER JOIN `group`
                 ON `group`.groupId = lkusergroup.groupId
                   AND isUserSpecific = 1
+        ';
+
+        if (DBVERSION >= 120) {
+            $body .= '
                 LEFT OUTER JOIN `pages`
                 ON pages.pageId = `user`.homePageId
+            ';
+        }
+
+        $body .= '
              WHERE 1 = 1
          ';
 

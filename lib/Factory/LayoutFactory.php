@@ -164,16 +164,38 @@ class LayoutFactory extends BaseFactory
     }
 
     /**
+     * Get by Display Group Id
+     * @param int $displayGroupId
+     * @return array[Media]
+     */
+    public static function getByDisplayGroupId($displayGroupId)
+    {
+        return LayoutFactory::query(null, ['disableUserCheck' => 1, 'displayGroupId' => $displayGroupId]);
+    }
+
+    /**
+     * Get by Background Image Id
+     * @param int $backgroundImageId
+     * @return array[Media]
+     */
+    public static function getByBackgroundImageId($backgroundImageId)
+    {
+        return LayoutFactory::query(null, ['disableUserCheck' => 1, 'backgroundImageId' => $backgroundImageId]);
+    }
+
+    /**
      * Load a layout by its XLF
      * @param string $layoutXlf
+     * @param Layout[Optional] $layout
      * @return Layout
      */
-    public static function loadByXlf($layoutXlf)
+    public static function loadByXlf($layoutXlf, $layout = null)
     {
         Log::debug('Loading Layout by XLF');
 
         // New Layout
-        $layout = new Layout();
+        if ($layout == null)
+            $layout = new Layout();
 
         // Get a list of modules for us to use
         $modules = ModuleFactory::get();
@@ -206,7 +228,7 @@ class LayoutFactory extends BaseFactory
                 );
 
             // Use the regionId locally to parse the rest of the XLF
-            $regionId = $regionNode->getAttribute('id');
+            $region->tempId = $regionNode->getAttribute('id');
 
             // Set the region name if empty
             if ($region->name == '')
@@ -216,13 +238,13 @@ class LayoutFactory extends BaseFactory
             $playlist = $region->playlists[0];
 
             // Get all widgets
-            foreach ($xpath->query('//region[@id="' . $regionId . '"]/media') as $mediaNode) {
+            foreach ($xpath->query('//region[@id="' . $region->tempId . '"]/media') as $mediaNode) {
                 /* @var \DOMElement $mediaNode */
                 $widget = new Widget();
                 $widget->type = $mediaNode->getAttribute('type');
-                $widget->ownerId = $mediaNode->getAttribute('userid');
+                $widget->ownerId = $mediaNode->getAttribute('userId');
                 $widget->duration = $mediaNode->getAttribute('duration');
-                $xlfMediaId = $mediaNode->getAttribute('id');
+                $widget->tempId = $mediaNode->getAttribute('id');
 
                 Log::debug('Adding Widget to object model. %s', $widget);
 
@@ -236,16 +258,16 @@ class LayoutFactory extends BaseFactory
                 /* @var \Xibo\Entity\Module $module */
 
                 if ($module->regionSpecific == 0) {
-                    $widget->assignMedia($xlfMediaId);
+                    $widget->assignMedia($widget->tempId);
                 }
 
                 // Get all widget options
-                foreach ($xpath->query('//region[@id="' . $regionId . '"]/media[@id="' . $xlfMediaId . '"]/options') as $optionsNode) {
+                foreach ($xpath->query('//region[@id="' . $region->tempId . '"]/media[@id="' . $widget->tempId . '"]/options') as $optionsNode) {
                     /* @var \DOMElement $optionsNode */
                     foreach ($optionsNode->childNodes as $mediaOption) {
                         /* @var \DOMElement $mediaOption */
                         $widgetOption = new WidgetOption();
-                        $widgetOption->type = 'attribute';
+                        $widgetOption->type = 'attrib';
                         $widgetOption->option = $mediaOption->nodeName;
                         $widgetOption->value = $mediaOption->textContent;
 
@@ -254,11 +276,14 @@ class LayoutFactory extends BaseFactory
                 }
 
                 // Get all widget raw content
-                foreach ($xpath->query('//region[@id="' . $regionId . '"]/media[@id="' . $xlfMediaId . '"]/raw') as $rawNode) {
+                foreach ($xpath->query('//region[@id="' . $region->tempId . '"]/media[@id="' . $widget->tempId . '"]/raw') as $rawNode) {
                     /* @var \DOMElement $rawNode */
                     // Get children
                     foreach ($rawNode->childNodes as $mediaOption) {
                         /* @var \DOMElement $mediaOption */
+                        if ($mediaOption->textContent == null)
+                            continue;
+
                         $widgetOption = new WidgetOption();
                         $widgetOption->type = 'cdata';
                         $widgetOption->option = $mediaOption->nodeName;
@@ -269,7 +294,7 @@ class LayoutFactory extends BaseFactory
                 }
 
                 // Add the widget to the playlist
-                $playlist->widgets[] = $widget;
+                $playlist->assignWidget($widget);
             }
 
             $region->playlists[] = $playlist;
@@ -279,8 +304,17 @@ class LayoutFactory extends BaseFactory
 
         Log::debug('Finished loading layout - there are %d regions.', count($layout->regions));
 
-        // TODO: Load any existing tags
+        // Load any existing tags
+        if (!is_array($layout->tags))
+            $layout->tags = TagFactory::tagsFromString($layout->tags);
 
+        foreach ($xpath->query('//tags/tag') as $tagNode) {
+            /* @var \DOMElement $tagNode */
+            if (trim($tagNode->textContent) == '')
+                continue;
+
+            $layout->tags[] = TagFactory::tagFromString($tagNode->textContent);
+        }
 
         // The parsed, finished layout
         return $layout;
@@ -317,12 +351,15 @@ class LayoutFactory extends BaseFactory
         // Construct the Layout
         $layout = LayoutFactory::loadByXlf($zip->getFromName('layout.xml'));
 
+        Log::debug('Layout Loaded: %s.', $layout);
+
         // Override the name/description
         $layout->layout = (($layoutName != '') ? $layoutName : $layoutDetails['layout']);
         $layout->description = (isset($layoutDetails['description']) ? $layoutDetails['description'] : '');
 
         // Remove the tags if necessary
         if (!$importTags) {
+            Log::debug('Removing tags from imported layout');
             $layout->tags = [];
         }
 
@@ -481,11 +518,14 @@ class LayoutFactory extends BaseFactory
             $params['campaignId'] = Sanitize::getInt('campaignId', 0, $filterBy);
         }
 
-        // MediaID
-        if (Sanitize::getInt('mediaId', 0, $filterBy) != 0) {
-            $body .= " INNER JOIN `lklayoutmedia` ON lklayoutmedia.layoutid = layout.layoutid AND lklayoutmedia.mediaid = :mediaId";
-            $body .= " INNER JOIN `media` ON lklayoutmedia.mediaid = media.mediaid ";
-            $params['mediaId'] = Sanitize::getInt('mediaId', 0, $filterBy);
+        if (Sanitize::getInt('displayGroupId', $filterBy) !== null) {
+            $body .= '
+                INNER JOIN `lklayoutdisplaygroup`
+                ON lklayoutdisplaygroup.layoutId = `layout`.layoutId
+                    AND lklayoutdisplaygroup.displayGroupId = :displayGroupId
+            ';
+
+            $params['displayGroupId'] = Sanitize::getInt('displayGroupId', $filterBy);
         }
 
         $body .= " WHERE 1 = 1 ";
@@ -521,6 +561,12 @@ class LayoutFactory extends BaseFactory
         if (Sanitize::getInt('layoutId', 0, $filterBy) != 0) {
             $body .= " AND layout.layoutId = :layoutId ";
             $params['layoutId'] = Sanitize::getInt('layoutId', 0, $filterBy);
+        }
+
+        // Layout Status
+        if (Sanitize::getInt('status', $filterBy) !== null) {
+            $body .= " AND layout.status = :status ";
+            $params['status'] = Sanitize::getInt('status', $filterBy);
         }
 
         // Background Image
@@ -593,6 +639,24 @@ class LayoutFactory extends BaseFactory
                 $body .= ' AND campaign.CampaignID NOT IN (SELECT DISTINCT schedule.CampaignID FROM schedule) '
                     . ' AND layout.layoutID NOT IN (SELECT DISTINCT defaultlayoutid FROM display) ';
             }
+        }
+
+        // MediaID
+        if (Sanitize::getInt('mediaId', 0, $filterBy) != 0) {
+            $body .= ' AND layout.layoutId IN (
+                SELECT DISTINCT `region`.layoutId
+                  FROM `lkwidgetmedia`
+                    INNER JOIN `widget`
+                    ON `widget`.widgetId = `lkwidgetmedia`.widgetId
+                    INNER JOIN `lkregionplaylist`
+                    ON `lkregionplaylist`.playlistId = `widget`.playlistId
+                    INNER JOIN `region`
+                    ON `region`.regionId = `lkregionplaylist`.regionId
+                 WHERE `lkwidgetmedia`.mediaId = :mediaId
+                )
+            ';
+
+            $params['mediaId'] = Sanitize::getInt('mediaId', 0, $filterBy);
         }
 
         // Sorting?

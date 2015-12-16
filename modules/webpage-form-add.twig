@@ -106,11 +106,11 @@ Probably fine, missing:
             <form id="webpageAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("module.widget.add", {type: module.widget.type, id: playlist.playlistId}) }}">
                 {% set title %}{% trans "Link" %}{% endset %}
                 {% set helpText %}{% trans "The Location (URL) of the webpage" %}{% endset %}
-                {{ forms.text("uri", title, "", helpText, "", "required") }}
+                {{ forms.input("uri", title, "", helpText, "", "required") }}
 
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
-                {{ forms.text("name", title, "", helpText) }}
+                {{ forms.input("name", title, "", helpText) }}
 
                 {% set title %}{% trans "Duration" %}{% endset %}
                 {% set helpText %}{% trans "The duration in seconds this item should be displayed" %}{% endset %}

@@ -43,7 +43,6 @@
     "gettext/gettext": "~3.3",
     "slim/views": "0.1.*",
     "twig/twig": "~1.18",
-    "twig/extensions": "~1.2",
     "respect/validation": "0.9.*",
     "intervention/imagecache": "~2.3",
     "emojione/emojione": "^1.4",
@@ -53,7 +52,8 @@
     "league/oauth2-client": "~1.0",
     "james-heinrich/getid3": "^1.9",
     "onelogin/php-saml": "^2.6.1",
-    "fguillot/picofeed": "@stable"
+    "fguillot/picofeed": "@stable",
+    "xibosignage/xibo-xmr": "0.1"
   },
   "require-dev": {
     "phpunit/phpunit": "~4.0",

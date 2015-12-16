@@ -123,21 +123,6 @@ CREATE TABLE IF NOT EXISTS `datasetcolumntype` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `datasetdata`
---
-
-CREATE TABLE IF NOT EXISTS `datasetdata` (
-  `DataSetDataID` int(11) NOT NULL AUTO_INCREMENT,
-  `DataSetColumnID` int(11) NOT NULL,
-  `RowNumber` int(11) NOT NULL,
-  `Value` varchar(255) NOT NULL,
-  PRIMARY KEY (`DataSetDataID`),
-  KEY `DataColumnID` (`DataSetColumnID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
-
--- --------------------------------------------------------
-
---
 -- Table structure for table `datatype`
 --
 
@@ -185,6 +170,9 @@ CREATE TABLE IF NOT EXISTS `display` (
   `screenShotRequested` tinyint(4) NOT NULL DEFAULT '0',
   `storageAvailableSpace` int(11) DEFAULT NULL,
   `storageTotalSpace` int(11) DEFAULT NULL,
+  `xmrChannel` varchar(254) DEFAULT NULL,
+  `xmrPubKey` text,
+  `lastCommandSuccess` tinyint(4) NOT NULL DEFAULT '2',
   PRIMARY KEY (`displayid`),
   KEY `defaultplaylistid` (`defaultlayoutid`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
@@ -296,21 +284,6 @@ CREATE TABLE IF NOT EXISTS `lkcampaignlayout` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `lkdatasetlayout`
---
-
-CREATE TABLE IF NOT EXISTS `lkdatasetlayout` (
-  `LkDataSetLayoutID` int(11) NOT NULL AUTO_INCREMENT,
-  `DataSetID` int(11) NOT NULL,
-  `LayoutID` int(11) NOT NULL,
-  `RegionID` varchar(50) NOT NULL,
-  `MediaID` varchar(50) NOT NULL,
-  PRIMARY KEY (`LkDataSetLayoutID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
-
--- --------------------------------------------------------
-
---
 -- Table structure for table `lkdisplaydg`
 --
 
@@ -323,22 +296,6 @@ CREATE TABLE IF NOT EXISTS `lkdisplaydg` (
   KEY `DisplayGroupID` (`DisplayGroupID`),
   KEY `DisplayID` (`DisplayID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `lklayoutmedia`
---
-
-CREATE TABLE IF NOT EXISTS `lklayoutmedia` (
-  `lklayoutmediaID` int(11) NOT NULL AUTO_INCREMENT COMMENT 'The ID',
-  `mediaID` int(11) NOT NULL,
-  `layoutID` int(11) NOT NULL,
-  `regionID` varchar(50) NOT NULL COMMENT 'Region ID in the XML',
-  PRIMARY KEY (`lklayoutmediaID`),
-  KEY `mediaID` (`mediaID`),
-  KEY `layoutID` (`layoutID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Creates a reference between Layout and Media' AUTO_INCREMENT=1 ;
 
 -- --------------------------------------------------------
 
@@ -356,23 +313,14 @@ CREATE TABLE IF NOT EXISTS `lkmediadisplaygroup` (
 
 -- --------------------------------------------------------
 
---
--- Table structure for table `lkmediagroup`
---
+CREATE TABLE IF NOT EXISTS `lklayoutdisplaygroup` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `layoutId` int(11) NOT NULL,
+  `displayGroupId` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `layoutId` (`layoutId`,`displaygroupid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Layout associations directly to Display Groups' AUTO_INCREMENT=1 ;
 
-CREATE TABLE IF NOT EXISTS `lkmediagroup` (
-  `LkMediaGroupID` int(11) NOT NULL AUTO_INCREMENT,
-  `MediaID` int(11) NOT NULL,
-  `GroupID` int(11) NOT NULL,
-  `View` tinyint(4) NOT NULL DEFAULT '0',
-  `Edit` tinyint(4) NOT NULL DEFAULT '0',
-  `Del` tinyint(4) NOT NULL DEFAULT '0',
-  PRIMARY KEY (`LkMediaGroupID`),
-  KEY `MediaID` (`MediaID`),
-  KEY `GroupID` (`GroupID`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
-
--- --------------------------------------------------------
 
 --
 -- Table structure for table `lkregionplaylist`
@@ -785,13 +733,15 @@ CREATE TABLE IF NOT EXISTS `resolution` (
 
 CREATE TABLE IF NOT EXISTS `schedule` (
   `eventID` int(11) NOT NULL AUTO_INCREMENT,
-  `CampaignID` int(11) NOT NULL,
+  `eventTypeId` tinyint(4) NOT NULL,
+  `CampaignID` int(11) DEFAULT NULL,
+  `commandId` int(11) DEFAULT NULL,
   `recurrence_type` enum('Minute','Hour','Day','Week','Month','Year') DEFAULT NULL,
   `recurrence_detail` varchar(100) DEFAULT NULL,
   `userID` int(11) NOT NULL,
   `is_priority` tinyint(4) NOT NULL,
   `FromDT` bigint(20) NOT NULL DEFAULT '0',
-  `ToDT` bigint(20) NOT NULL DEFAULT '0',
+  `ToDT` bigint(20) DEFAULT NULL,
   `recurrence_range` bigint(20) DEFAULT NULL,
   `DisplayOrder` int(11) NOT NULL DEFAULT '0',
   PRIMARY KEY (`eventID`),
@@ -806,10 +756,9 @@ CREATE TABLE IF NOT EXISTS `schedule` (
 
 CREATE TABLE IF NOT EXISTS `schedule_detail` (
   `schedule_detailID` int(11) NOT NULL AUTO_INCREMENT,
-  `userID` int(8) NOT NULL DEFAULT '1' COMMENT 'Owner of the Event',
   `eventID` int(11) DEFAULT NULL,
   `FromDT` bigint(20) NOT NULL DEFAULT '0',
-  `ToDT` bigint(20) NOT NULL DEFAULT '0',
+  `ToDT` bigint(20) DEFAULT NULL,
   PRIMARY KEY (`schedule_detailID`),
   KEY `scheduleID` (`eventID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='Replicated schedule across displays and recurrence' AUTO_INCREMENT=1 ;
@@ -927,6 +876,14 @@ CREATE TABLE IF NOT EXISTS `user` (
   `Retired` tinyint(4) NOT NULL DEFAULT '0',
   `CSPRNG` tinyint(4) NOT NULL DEFAULT '0',
   `newUserWizard` tinyint(4) NOT NULL DEFAULT '0',
+  `firstName` varchar(254) DEFAULT NULL,
+  `lastName` varchar(254) DEFAULT NULL,
+  `phone` varchar(254) DEFAULT NULL,
+  `ref1` varchar(254) DEFAULT NULL,
+  `ref2` varchar(254) DEFAULT NULL,
+  `ref3` varchar(254) DEFAULT NULL,
+  `ref4` varchar(254) DEFAULT NULL,
+  `ref5` varchar(254) DEFAULT NULL,
   PRIMARY KEY (`UserID`),
   KEY `usertypeid` (`usertypeid`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=2 ;
@@ -1009,3 +966,20 @@ CREATE TABLE IF NOT EXISTS `requiredfile` (
   `complete` tinyint(4) NOT NULL,
   PRIMARY KEY (`rfId`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `command` (
+  `commandId` int(11) NOT NULL AUTO_INCREMENT,
+  `command` varchar(254) NOT NULL,
+  `code` varchar(50) NOT NULL,
+  `description` varchar(1000) DEFAULT NULL,
+  `userId` int(11) NOT NULL,
+  PRIMARY KEY (`commandId`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `lkcommanddisplayprofile` (
+  `commandId` int(11) NOT NULL,
+  `displayProfileId` int(11) NOT NULL,
+  `commandString` varchar(1000) NOT NULL,
+  `validationString` varchar(1000) DEFAULT NULL,
+  PRIMARY KEY (`commandId`,`displayProfileId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

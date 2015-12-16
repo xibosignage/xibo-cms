@@ -129,7 +129,7 @@ class DataSet implements \JsonSerializable
     {
         $start = Sanitize::getInt('start', 0, $filterBy);
         $size = Sanitize::getInt('size', 0, $filterBy);
-        $filter = Sanitize::getString('filter', $filterBy);
+        $filter = Sanitize::getParam('filter', $filterBy);
         $ordering = Sanitize::getString('order', $filterBy);
         $displayId = Sanitize::getInt('displayId', 0, $filterBy);
 
@@ -151,7 +151,8 @@ class DataSet implements \JsonSerializable
         // Build a SQL statement, based on the columns for this dataset
         $this->load();
 
-        $select = 'SELECT id';
+        $select  = 'SELECT * FROM ( ';
+        $body = 'SELECT id';
 
         // Keep track of the columns we are allowed to order by
         $allowedOrderCols = ['id'];
@@ -165,16 +166,16 @@ class DataSet implements \JsonSerializable
             if ($column->dataSetColumnTypeId == 2) {
                 $formula = str_replace($blackList, '', htmlspecialchars_decode($column->formula, ENT_QUOTES));
 
-                $heading = str_replace('[DisplayGeoLocation]', $displayGeoLocation, $formula) . ' AS \'' . $column->heading . '\'';
+                $heading = str_replace('[DisplayGeoLocation]', $displayGeoLocation, $formula) . ' AS `' . $column->heading . '`';
             }
             else {
                 $heading = '`' . $column->heading . '`';
             }
 
-            $select .= ', ' . $heading;
+            $body .= ', ' . $heading;
         }
 
-        $body = ' FROM `dataset_' . $this->dataSetId . '` WHERE 1 = 1 ';
+        $body .= ' FROM `dataset_' . $this->dataSetId . '`) dataset WHERE 1 = 1 ';
 
         // Filtering
         if ($filter != '') {
@@ -237,7 +238,7 @@ class DataSet implements \JsonSerializable
         $data = PDOConnect::select($sql, $params);
 
         // If there are limits run some SQL to work out the full payload of rows
-        $results = PDOConnect::select('SELECT COUNT(*) AS total ' . $body, $params);
+        $results = PDOConnect::select('SELECT COUNT(*) AS total FROM (' . $body, $params);
         $this->countLast = intval($results[0]['total']);
 
         return $data;
@@ -360,9 +361,12 @@ class DataSet implements \JsonSerializable
         PDOConnect::update('DELETE FROM `dataset` WHERE dataSetId = :dataSetId', ['dataSetId' => $this->dataSetId]);
 
         // The last thing we do is drop the dataSet table
-        PDOConnect::update('DROP TABLE dataset_' . $this->dataSetId, []);
+        $this->dropTable();
     }
 
+    /**
+     * Delete all data
+     */
     public function deleteData()
     {
         // The last thing we do is drop the dataSet table
@@ -384,13 +388,8 @@ class DataSet implements \JsonSerializable
             'userId' => $this->userId
         ]);
 
-        // Create the data table for this dataset
-        PDOConnect::update('
-          CREATE TABLE `dataset_' . $this->dataSetId . '` (
-            `id` int(11) NOT NULL AUTO_INCREMENT,
-            PRIMARY KEY (`id`)
-          ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1
-        ', []);
+        // Create the data table for this dataSet
+        $this->createTable();
     }
 
     /**
@@ -408,6 +407,42 @@ class DataSet implements \JsonSerializable
         ]);
     }
 
+    private function createTable()
+    {
+        // Create the data table for this dataset
+        PDOConnect::update('
+          CREATE TABLE `dataset_' . $this->dataSetId . '` (
+            `id` int(11) NOT NULL AUTO_INCREMENT,
+            PRIMARY KEY (`id`)
+          ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1
+        ', []);
+    }
+
+    private function dropTable()
+    {
+        PDOConnect::update('DROP TABLE IF EXISTS dataset_' . $this->dataSetId, []);
+    }
+
+    /**
+     * Rebuild the dataSet table
+     */
+    public function rebuild()
+    {
+        $this->load();
+
+        // Drop the data table
+        $this->dropTable();
+
+        // Add the data table
+        $this->createTable();
+
+        foreach ($this->columns as $column) {
+            /* @var \Xibo\Entity\DataSetColumn $column */
+            $column->dataSetId = $this->dataSetId;
+            $column->save(['rebuilding' => true]);
+        }
+    }
+
     /**
      * Notify displays of this campaign change
      */
@@ -415,9 +450,10 @@ class DataSet implements \JsonSerializable
     {
         Log::debug('Checking for Displays to refresh for DataSet %d', $this->dataSetId);
 
-        foreach (DisplayFactory::getByDataSetId($this->dataSetId) as $display) {
+        foreach (DisplayFactory::getByActiveDataSetId($this->dataSetId) as $display) {
             /* @var \Xibo\Entity\Display $display */
             $display->setMediaIncomplete();
+            $display->setCollectRequired(false);
             $display->save(['validate' => false, 'audit' => false]);
         }
     }
@@ -441,7 +477,7 @@ class DataSet implements \JsonSerializable
         $values = array_values($row);
         $values[] = 'NULL';
 
-        $sql = 'INSERT INTO `dataset_' . $this->dataSetId . '` (' . implode(',', $keys) . ') VALUES (' . implode(',', array_fill(0, count($values), '?')) . ')';
+        $sql = 'INSERT INTO `dataset_' . $this->dataSetId . '` (`' . implode('`, `', $keys) . '`) VALUES (' . implode(',', array_fill(0, count($values), '?')) . ')';
 
         Log::sql($sql, $values);
 

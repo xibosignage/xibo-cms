@@ -107,6 +107,18 @@ class Widget implements \JsonSerializable
      */
     private $mediaHash = null;
 
+    /**
+     * Temporary Id used during import/upgrade
+     * @var string read only string
+     */
+    public $tempId = null;
+
+    /**
+     * Flag to indicate whether the widget is newly added
+     * @var bool
+     */
+    public $isNew = false;
+
     public function __construct()
     {
         $this->excludeProperty('module');
@@ -174,7 +186,7 @@ class Widget implements \JsonSerializable
     {
         foreach ($this->widgetOptions as $widgetOption) {
             /* @var WidgetOption $widgetOption */
-            if ($widgetOption->option == $option)
+            if (strtolower($widgetOption->option) == strtolower($option))
                 return $widgetOption;
         }
 
@@ -305,6 +317,8 @@ class Widget implements \JsonSerializable
             'notify' => true
         ], $options);
 
+        Log::debug('Saving widgetId %d with options. %s', $this->getId(), json_encode($options, JSON_PRETTY_PRINT));
+
         // Add/Edit
         if ($this->widgetId == null || $this->widgetId == 0)
             $this->add();
@@ -327,6 +341,7 @@ class Widget implements \JsonSerializable
         $this->unlinkMedia();
 
         if ($options['notify']) {
+            Log::debug('Notify playlistId %d', $this->playlistId);
             // Notify the Layout
             $playlist = PlaylistFactory::getById($this->playlistId);
             $playlist->notifyLayouts();
@@ -379,6 +394,8 @@ class Widget implements \JsonSerializable
     private function add()
     {
         Log::debug('Adding Widget ' . $this->type . ' to PlaylistId ' . $this->playlistId);
+
+        $this->isNew = true;
 
         $sql = 'INSERT INTO `widget` (`playlistId`, `ownerId`, `type`, `duration`, `displayOrder`) VALUES (:playlistId, :ownerId, :type, :duration, :displayOrder)';
         $this->widgetId = PDOConnect::insert($sql, array(

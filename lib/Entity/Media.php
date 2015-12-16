@@ -37,7 +37,6 @@ use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Date;
 use Xibo\Helper\Log;
-use Xibo\Helper\Sanitize;
 use Xibo\Storage\PDOConnect;
 
 /**
@@ -98,10 +97,6 @@ class Media implements \JsonSerializable
      * @var Tag[]
      */
     public $tags = [];
-
-    private $widgets = [];
-    private $displayGroups = [];
-    private $permissions = [];
 
     /**
      * @SWG\Property(description="The file size in bytes")
@@ -169,12 +164,18 @@ class Media implements \JsonSerializable
     public $cloned = false;
     public $newExpiry;
 
+    private $widgets = [];
+    private $displayGroups = [];
+    private $layoutBackgroundImages = [];
+    private $permissions = [];
+
     public function __clone()
     {
         // Clear the ID's and all widget/displayGroup assignments
         $this->mediaId = null;
         $this->widgets = [];
         $this->displayGroups = [];
+        $this->layoutBackgroundImages = [];
         $this->permissions = [];
 
         // We need to do something with the name
@@ -211,6 +212,23 @@ class Media implements \JsonSerializable
     public function setOwner($ownerId)
     {
         $this->ownerId = $ownerId;
+    }
+
+    private function countUsages()
+    {
+        $this->load(['fullInfo' => true]);
+
+        return count($this->widgets) + count($this->displayGroups) + count($this->layoutBackgroundImages);
+    }
+
+    /**
+     * Is this media used
+     * @param int $usages threshold
+     * @return bool
+     */
+    public function isUsed($usages = 0)
+    {
+        return $this->countUsages() > $usages;
     }
 
     /**
@@ -250,19 +268,28 @@ class Media implements \JsonSerializable
 
     /**
      * Load
+     * @param array $options
      */
-    public function load()
+    public function load($options = [])
     {
+        $options = array_merge([
+            'deleting' => false,
+            'fullInfo' => false
+        ], $options);
+
         // Tags
         $this->tags = TagFactory::loadByMediaId($this->mediaId);
 
         // Are we loading for a delete? If so load the child models
-        if ($this->deleting) {
+        if ($options['deleting'] || $options['fullInfo']) {
             // Permissions
             $this->permissions = PermissionFactory::getByObjectId(get_class($this), $this->mediaId);
 
             // Widgets
             $this->widgets = WidgetFactory::getByMediaId($this->mediaId);
+
+            // Layout Background Images
+            $this->layoutBackgroundImages = LayoutFactory::getByBackgroundImageId($this->mediaId);
 
             // Display Groups
             $this->displayGroups = DisplayGroupFactory::getByMediaId($this->mediaId);
@@ -314,8 +341,7 @@ class Media implements \JsonSerializable
      */
     public function delete()
     {
-        $this->deleting = true;
-        $this->load();
+        $this->load(['deleting' => true]);
 
         // If there is a parent, bring it back
         try {
@@ -362,6 +388,12 @@ class Media implements \JsonSerializable
                 $displayGroup->assignMedia($parentMedia);
 
             $displayGroup->save(false);
+        }
+
+        foreach ($this->layoutBackgroundImages as $layout) {
+            /* @var Layout $layout */
+            $layout->backgroundImageId = null;
+            $layout->save(Layout::$saveOptionsMinimum);
         }
 
         PDOConnect::update('DELETE FROM media WHERE MediaID = :mediaId', ['mediaId' => $this->mediaId]);
@@ -503,9 +535,6 @@ class Media implements \JsonSerializable
         // Work out the MD5
         $this->md5 = md5_file($libraryFolder . $this->storedAs);
         $this->fileSize = filesize($libraryFolder . $this->storedAs);
-
-        // Set the duration
-        $this->duration = $this->determineDuration();
     }
 
     /**
@@ -551,17 +580,17 @@ class Media implements \JsonSerializable
         if (!$this->isRemote || $this->fileName == '')
             throw new \InvalidArgumentException(__('Not in a suitable state to download'));
 
-        Log::debug('Downloading %s', $this->fileName);
-
         // Open the temporary file
         $storedAs = Config::GetSetting('LIBRARY_LOCATION') . 'temp' . DIRECTORY_SEPARATOR . $this->name;
+
+        Log::debug('Downloading %s to %s', $this->fileName, $storedAs);
 
         if (!$fileHandle = fopen($storedAs, 'w'))
             throw new ConfigurationException(__('Temporary location not writable'));
 
         try {
             $client = new Client();
-            $client->get($this->fileName, Config::getGuzzelProxy(['save_to' => $fileHandle]));
+            $client->get($this->fileName, Config::getGuzzleProxy(['save_to' => $fileHandle]));
         }
         catch (RequestException $e) {
             Log::error('Unable to get %s, %s', $this->fileName, $e->getMessage());
@@ -569,38 +598,5 @@ class Media implements \JsonSerializable
 
         // Change the filename to our temporary file
         $this->fileName = $storedAs;
-    }
-
-    /**
-     * Determine the duration of this media based on its type
-     *  - perhaps we should instantiate a WidgetModule for this?
-     */
-    public function determineDuration()
-    {
-        switch ($this->mediaType) {
-
-            case 'image':
-                $duration = Config::GetSetting('jpg_length');
-                break;
-
-            case 'flash':
-                $duration = Config::GetSetting('swf_length');
-                break;
-
-            case 'powerpoint':
-                $duration = Config::GetSetting('ppt_length');
-                break;
-
-            case 'video':
-                $info = new \getID3();
-                $file = $info->analyze(Config::GetSetting('LIBRARY_LOCATION') . $this->storedAs);
-                $duration = intval(Sanitize::getDouble('playtime_seconds', 0, $file));
-                break;
-
-            default:
-                $duration = 0;
-        }
-
-        return $duration;
     }
 }
