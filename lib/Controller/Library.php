@@ -677,14 +677,14 @@ class Library extends Base
             /* @var Media $font */
 
             // Css for the client contains the actual stored as location of the font.
-            $css .= str_replace('[url]', $font['storedAs'], str_replace('[family]', $font['name'], $fontTemplate));
+            $css .= str_replace('[url]', $font->storedAs, str_replace('[family]', $font->name, $fontTemplate));
 
             // Css for the local CMS contains the full download path to the font
             $url = $this->urlFor('module.getResource', ['type' => 'font', 'id' => $font->mediaId]) . '?download=1&downloadFromLibrary=1';
-            $localCss .= str_replace('[url]', $url, str_replace('[family]', $font['name'], $fontTemplate));
+            $localCss .= str_replace('[url]', $url, str_replace('[family]', $font->name, $fontTemplate));
 
             // CKEditor string
-            $ckEditorString .= $font['name'] . '/' . $font['name'] . ';';
+            $ckEditorString .= $font->name . '/' . $font->name . ';';
         }
 
         file_put_contents(PROJECT_ROOT . '/web/modules/fonts.css', $css);
