@@ -633,7 +633,7 @@ $CLIENT_CONFIG = array(
                     ),
                     array(
                         'name' => 'webCacheEnabled',
-                        'tabId' => 'trouble',
+                        'tabId' => 'advanced',
                         'title' => __('Use a SurfaceView for Video Rendering?'),
                         'type' => _CHECKBOX,
                         'fieldType' => 'checkbox',
