@@ -623,22 +623,11 @@ $CLIENT_CONFIG = array(
                     array(
                         'name' => 'timeSyncFromCms',
                         'tabId' => 'advanced',
-                        'title' => __('Enable caching of Web Resources?'),
+                        'title' => __('Use CMS time?'),
                         'type' => _CHECKBOX,
                         'fieldType' => 'checkbox',
                         'default' => 0,
-                        'helpText' => __('The standard browser cache will be used - we recommend this is switched off unless specifically required. Effects Web Page and Embedded.'),
-                        'enabled' => true,
-                        'groupClass' => NULL
-                    ),
-                    array(
-                        'name' => 'webCacheEnabled',
-                        'tabId' => 'advanced',
-                        'title' => __('Use a SurfaceView for Video Rendering?'),
-                        'type' => _CHECKBOX,
-                        'fieldType' => 'checkbox',
-                        'default' => 0,
-                        'helpText' => __('If the device is having trouble playing video, it may be useful to switch to a Surface View for Video Rendering.'),
+                        'helpText' => __('Set the device time using the CMS. Only available on rooted devices or system signed players.'),
                         'enabled' => true,
                         'groupClass' => NULL
                     ),
