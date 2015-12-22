@@ -975,6 +975,17 @@ class DisplayProfile
                         'helpText' => __('Set the device time using the CMS. Only available on rooted devices or system signed players.'),
                         'enabled' => true,
                         'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'webCacheEnabled',
+                        'tabId' => 'advanced',
+                        'title' => __('Use a SurfaceView for Video Rendering?'),
+                        'type' => 'checkbox',
+                        'fieldType' => 'checkbox',
+                        'default' => 0,
+                        'helpText' => __('If the device is having trouble playing video, it may be useful to switch to a Surface View for Video Rendering.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
                     )
                 )
             )
