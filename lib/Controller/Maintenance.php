@@ -397,12 +397,15 @@ class Maintenance extends Base
         $sql = '
             SELECT media.mediaid, media.storedAs, media.type, media.isedited,
                 SUM(CASE WHEN IFNULL(lkwidgetmedia.widgetId, 0) = 0 THEN 0 ELSE 1 END) AS UsedInLayoutCount,
-                SUM(CASE WHEN IFNULL(lkmediadisplaygroup.id, 0) = 0 THEN 0 ELSE 1 END) AS UsedInDisplayCount
+                SUM(CASE WHEN IFNULL(lkmediadisplaygroup.id, 0) = 0 THEN 0 ELSE 1 END) AS UsedInDisplayCount,
+                SUM(CASE WHEN IFNULL(layout.layoutId, 0) = 0 THEN 0 ELSE 1 END) AS UsedInBackgroundImageCount
               FROM `media`
                 LEFT OUTER JOIN `lkwidgetmedia`
                 ON lkwidgetmedia.mediaid = media.mediaid
                 LEFT OUTER JOIN `lkmediadisplaygroup`
                 ON lkmediadisplaygroup.mediaid = media.mediaid
+                LEFT OUTER JOIN `layout`
+                ON `layout`.backgroundImageId = `media`.mediaId
             GROUP BY media.mediaid, media.storedAs, media.type, media.isedited
           ';
 
@@ -414,11 +417,11 @@ class Maintenance extends Base
                 continue;
 
             // Collect media revisions that aren't used
-            if ($tidyOldRevisions && $row['UsedInLayoutCount'] <= 0 && $row['UsedInDisplayCount'] <= 0 && $row['isedited'] > 0) {
+            if ($tidyOldRevisions && $row['UsedInLayoutCount'] <= 0 && $row['UsedInDisplayCount'] <= 0 && $row['UsedInBackgroundImageCount'] <= 0 && $row['isedited'] > 0) {
                 $unusedRevisions[$row['storedAs']] = $row;
             }
             // Collect any files that aren't used
-            else if ($cleanUnusedFiles && $row['UsedInLayoutCount'] <= 0 && $row['UsedInDisplayCount'] <= 0) {
+            else if ($cleanUnusedFiles && $row['UsedInLayoutCount'] <= 0 && $row['UsedInDisplayCount'] <= 0 && $row['UsedInBackgroundImageCount'] <= 0) {
                 $unusedMedia[$row['storedAs']] = $row;
             }
         }
