@@ -414,8 +414,13 @@ END;
                     // Pull out the cell for this row / column
                     $replace = $row[$mapping['heading']];
 
+                    // If the value is empty, then move on
+                    if ($replace == '')
+                        continue;
+
                     // What if this column is an image column type?
                     if ($mapping['dataTypeId'] == 4) {
+
                         // Grab the external image
                         $file = MediaFactory::createModuleFile('datasetview_' . md5($dataSetId . $mapping['dataSetColumnId'] . $replace), str_replace(' ', '%20', htmlspecialchars_decode($replace)));
                         $file->isRemote = true;

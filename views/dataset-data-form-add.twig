@@ -40,7 +40,7 @@
                             { name: "data-live-search", value: "true" },
                             { name: "data-selected-text-format", value: "count > 4" }
                             ] %}
-                            {{ forms.dropdown(fieldId, "single", col.heading, "", images, "mediaId", "name", "", "", "", "", "", attributes) }}
+                            {{ forms.dropdown(fieldId, "single", col.heading, "", [{mediaId: 0, name: ""}]|merge(images), "mediaId", "name", "", "", "", "", "", attributes) }}
                         {% else %}
                             {{ forms.input(fieldId, col.heading) }}
                         {% endif %}
