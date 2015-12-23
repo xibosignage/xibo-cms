@@ -680,7 +680,7 @@ class Library extends Base
             $css .= str_replace('[url]', $font->storedAs, str_replace('[family]', $font->name, $fontTemplate));
 
             // Css for the local CMS contains the full download path to the font
-            $url = $this->urlFor('module.getResource', ['type' => 'font', 'id' => $font->mediaId]) . '?download=1&downloadFromLibrary=1';
+            $url = $this->urlFor('library.download', ['type' => 'font', 'id' => $font->mediaId]) . '?download=1&downloadFromLibrary=1';
             $localCss .= str_replace('[url]', $url, str_replace('[family]', $font->name, $fontTemplate));
 
             // CKEditor string

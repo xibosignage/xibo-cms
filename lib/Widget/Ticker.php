@@ -356,7 +356,7 @@ class Ticker extends ModuleWidget
         }
 
         // Add our fonts.css file
-        $headContent .= '<link href="' . $this->getResourceUrl('fonts.css') . ' rel="stylesheet" media="screen">';
+        $headContent .= '<link href="' . $this->getResourceUrl('fonts.css') . '" rel="stylesheet" media="screen">';
         $headContent .= '<style type="text/css">' . file_get_contents(Theme::uri('css/client.css', true)) . '</style>';
 
         // Replace the Head Content with our generated javascript
