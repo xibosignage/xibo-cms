@@ -801,7 +801,7 @@ class DisplayProfile
                         'title' => __('Use a SurfaceView for Video Rendering?'),
                         'type' => 'checkbox',
                         'fieldType' => 'checkbox',
-                        'default' => 0,
+                        'default' => 1,
                         'helpText' => __('If the device is having trouble playing video, it may be useful to switch to a Surface View for Video Rendering.'),
                         'enabled' => true,
                         'groupClass' => NULL
