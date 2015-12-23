@@ -687,6 +687,7 @@ class Library extends Base
             $ckEditorString .= $font->name . '/' . $font->name . ';';
         }
 
+        // Put the player CSS into the modules font.css file so that we can copy it into the library
         file_put_contents(PROJECT_ROOT . '/web/modules/fonts.css', $css);
 
         // Install it (doesn't expire, isn't a system file, force update)
@@ -697,7 +698,7 @@ class Library extends Base
         $media->save();
 
         // Generate a fonts.css file for use locally (in the CMS)
-        file_put_contents('modules/fonts.css', $localCss);
+        file_put_contents(PROJECT_ROOT . '/web/modules/fonts.css', $localCss);
 
         // Edit the CKEditor file
         $ckEditor = file_get_contents(Theme::uri('libraries/ckeditor/config.js', true));
