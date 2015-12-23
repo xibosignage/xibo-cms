@@ -142,8 +142,13 @@
 
                 {% for option in tempOptions %}
 
-                    {% set itemOptionId = attribute(option, optionId) %}
-                    {% set itemOptionValue = attribute(option, optionValue) %}
+                    {% if optionId == "" %}
+                        {% set itemOptionId = option %}
+                        {% set itemOptionValue = option %}
+                    {% else %}
+                        {% set itemOptionId = attribute(option, optionId) %}
+                        {% set itemOptionValue = attribute(option, optionValue) %}
+                    {% endif %}
 
                     {% if type == "dropdownmulti" %}
                         {% set selected = (itemOptionId in value) %}
