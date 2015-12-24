@@ -336,6 +336,8 @@ var backGroundFormSetup = function() {
 
     var backgroundImageList = $('#backgroundImageId');
     var backgroundImage = $('#bg_image_image');
+    var initialBackgroundImageId = backgroundImageList.val();
+    var backgroundChanged = false;
 
     function backgroundImageChange() {
         // Want to attach an onchange event to the drop down for the bg-image
@@ -348,6 +350,9 @@ var backGroundFormSetup = function() {
             src = backgroundImage.data().url.replace(":id", id);
 
         backgroundImage.attr("src", src);
+
+        if (id != initialBackgroundImageId)
+            backgroundChanged = true;
     }
 
     backgroundImageList.change(backgroundImageChange);
@@ -371,9 +376,20 @@ var backGroundFormSetup = function() {
                 XiboSubmitResponse(xhr, form);
 
                 if (xhr.success) {
-                    var color = form.find("#backgroundColor").val();
-                    $("#layout").data().backgroundColor = color;
-                    $("#layout").css("background-color", color);
+                    var layout = $("div#layout");
+
+                    if (layout.length > 0) {
+                        var color = form.find("#backgroundColor").val();
+                        layout.data().backgroundColor = color;
+                        layout.css("background-color", color);
+
+                        if (backgroundChanged)
+                            window.location.reload();
+                    } else {
+                        // On the layout page - call render
+                        if (backgroundChanged && table != undefined)
+                            table.ajax.reload(null, false);
+                    }
                 }
             },
             error: function(xhr, textStatus, errorThrown) {
