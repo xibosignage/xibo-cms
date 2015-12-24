@@ -56,7 +56,7 @@
 {% block javaScript %}
     <script type="text/javascript">
         var table = $("#sessions").DataTable({ "language": dataTablesLanguage,
-            serverSide: true,
+            serverSide: true, stateSave: true,
             filter: false,
             searchDelay: 3000,
             "order": [[ 1, "asc"]],

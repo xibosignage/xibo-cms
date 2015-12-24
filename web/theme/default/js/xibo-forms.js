@@ -404,7 +404,7 @@ function permissionsFormOpen(dialog) {
     var grid = $("#permissionsTable").closest(".XiboGrid");
 
     var table = $("#permissionsTable").DataTable({ "language": dataTablesLanguage,
-        serverSide: true,
+        serverSide: true, stateSave: true,
         "filter": false,
         searchDelay: 3000,
         "order": [[ 0, "asc"]],
@@ -569,7 +569,7 @@ function mediaFormCallBack() {
         container.data().media = {};
 
     var mediaTable = $("#mediaAssignments").DataTable({ "language": dataTablesLanguage,
-            serverSide: true,
+            serverSide: true, stateSave: true,
             searchDelay: 3000,
             "order": [[ 0, "asc"]],
             "filter": false,
@@ -681,7 +681,7 @@ function layoutFormCallBack() {
         container.data().layout = {};
 
     var layoutTable = $("#layoutAssignments").DataTable({ "language": dataTablesLanguage,
-        serverSide: true,
+        serverSide: true, stateSave: true,
         searchDelay: 3000,
         "order": [[ 0, "asc"]],
         "filter": false,

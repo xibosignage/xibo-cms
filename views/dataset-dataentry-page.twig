@@ -77,7 +77,7 @@
         });
 
         var table = $("#datasets").DataTable({ "language": dataTablesLanguage,
-            serverSide: true,
+            serverSide: true, stateSave: true,
             filter: false,
             searchDelay: 3000,
             "order": [[ 0, "asc"]],
