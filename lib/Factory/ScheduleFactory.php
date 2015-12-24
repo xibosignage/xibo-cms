@@ -124,25 +124,43 @@ class ScheduleFactory extends BaseFactory
             $params['eventId'] = Sanitize::getInt('eventId', $filterBy);
         }
 
-        if (!$useDetail && Sanitize::getInt('fromDt', $filterBy) !== null) {
+        // Only 1 date
+        if (!$useDetail && Sanitize::getInt('fromDt', $filterBy) !== null && Sanitize::getInt('toDt', $filterBy) === null) {
             $sql .= ' AND schedule.fromDt > :fromDt ';
             $params['fromDt'] = Sanitize::getInt('fromDt', $filterBy);
         }
 
-        if (!$useDetail && Sanitize::getInt('toDt', $filterBy) !== null) {
+        if (!$useDetail && Sanitize::getInt('toDt', $filterBy) !== null && Sanitize::getInt('fromDt', $filterBy) === null) {
             $sql .= ' AND IFNULL(schedule.toDt, schedule.fromDt) <= :toDt ';
             $params['toDt'] = Sanitize::getInt('toDt', $filterBy);
         }
 
-        if ($useDetail && Sanitize::getInt('fromDt', $filterBy) !== null) {
+        if ($useDetail && Sanitize::getInt('fromDt', $filterBy) !== null && Sanitize::getInt('toDt', $filterBy) === null) {
             $sql .= ' AND schedule_detail.fromDt > :fromDt ';
             $params['fromDt'] = Sanitize::getInt('fromDt', $filterBy);
         }
 
-        if ($useDetail && Sanitize::getInt('toDt', $filterBy) !== null) {
+        if ($useDetail && Sanitize::getInt('toDt', $filterBy) !== null && Sanitize::getInt('fromDt', $filterBy) === null) {
             $sql .= ' AND IFNULL(schedule_detail.toDt, schedule_detail.fromDt) <= :toDt ';
             $params['toDt'] = Sanitize::getInt('toDt', $filterBy);
         }
+        // End only 1 date
+
+        // Both dates
+        if (!$useDetail && Sanitize::getInt('fromDt', $filterBy) !== null && Sanitize::getInt('toDt', $filterBy) !== null) {
+            $sql .= ' AND schedule.fromDt > :fromDt ';
+            $sql .= ' AND IFNULL(schedule.toDt, schedule.fromDt) <= :toDt ';
+            $params['fromDt'] = Sanitize::getInt('fromDt', $filterBy);
+            $params['toDt'] = Sanitize::getInt('toDt', $filterBy);
+        }
+
+        if ($useDetail && Sanitize::getInt('fromDt', $filterBy) !== null && Sanitize::getInt('toDt', $filterBy) !== null) {
+            $sql .= ' AND schedule_detail.fromDt < :toDt ';
+            $sql .= ' AND IFNULL(schedule_detail.toDt, schedule_detail.fromDt) >= :fromDt ';
+            $params['fromDt'] = Sanitize::getInt('fromDt', $filterBy);
+            $params['toDt'] = Sanitize::getInt('toDt', $filterBy);
+        }
+        // End both dates
 
         if (Sanitize::getIntArray('displayGroupIds', $filterBy) != null) {
             $sql .= ' AND `schedule`.eventId IN (SELECT `lkscheduledisplaygroup`.eventId FROM `lkscheduledisplaygroup` WHERE displayGroupId IN (' . implode(',', Sanitize::getIntArray('displayGroupIds', $filterBy)) . ')) ';
