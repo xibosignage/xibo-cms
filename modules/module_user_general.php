@@ -583,7 +583,8 @@ class User {
         $SQL .= "         menuitem.Text , ";
         $SQL .= "         menuitem.Class, ";
         $SQL .= "         menuitem.Img, ";
-        $SQL .= "         menuitem.External ";
+        $SQL .= "         menuitem.External, ";
+        $SQL .= "         menuitem.Sequence ";
         $SQL .= "FROM     menuitem ";
         $SQL .= "         INNER JOIN menu ";
         $SQL .= "         ON       menuitem.MenuID = menu.MenuID ";
