@@ -37,6 +37,7 @@ use Xibo\Helper\Date;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
+use Xibo\Storage\PDOConnect;
 
 class Ticker extends ModuleWidget
 {
