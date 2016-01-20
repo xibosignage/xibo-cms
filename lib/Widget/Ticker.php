@@ -695,6 +695,9 @@ class Ticker extends ModuleWidget
                 $filter['size'] = $upperLimit - $lowerLimit;
             }
 
+            // Set the timezone for SQL
+            PDOConnect::setTimeZone(Date::getLocalDate(null, 'P'));
+
             // Get the data (complete table, filtered)
             $dataSetResults = $dataSet->getData($filter);
 

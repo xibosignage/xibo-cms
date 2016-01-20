@@ -170,4 +170,16 @@ class PDOConnect
 
         return $sth->fetchAll(\PDO::FETCH_ASSOC);
 	}
+
+	/**
+	 * @param \PDO $connection
+	 * @param string $timeZone e.g. -8:00
+	 */
+	public static function setTimeZone($timeZone, $connection = null)
+	{
+        if ($connection == null)
+            $connection = PDOConnect::init();
+
+		$connection->query('SET time_zone = \'' . $timeZone . '\';');
+	}
 }

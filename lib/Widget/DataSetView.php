@@ -27,9 +27,11 @@ use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\MediaFactory;
+use Xibo\Helper\Date;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
+use Xibo\Storage\PDOConnect;
 
 class DataSetView extends ModuleWidget
 {
@@ -357,6 +359,9 @@ END;
                 $filter['start'] = $lowerLimit;
                 $filter['size'] = $upperLimit - $lowerLimit;
             }
+
+            // Set the timezone for SQL
+            PDOConnect::setTimeZone(Date::getLocalDate(null, 'P'));
 
             // Get the data (complete table, filtered)
             $dataSetResults = $dataSet->getData($filter);
