@@ -332,6 +332,7 @@ class DataSet extends Data
 
         try {
             $dbh = PDOConnect::init();
+            PDOConnect::setTimeZone($dbh, date('P'));
             $params = array('dataSetId' => $dataSetId);
             
             $selectSQL = '';
