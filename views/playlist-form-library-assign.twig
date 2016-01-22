@@ -45,6 +45,8 @@
 
                 {% set title %}{% trans "Type" %}{% endset %}
                 {{ inline.dropdown("filter_type", "single", title, "", modules|merge({type: null, name: ""}), "type", "name") }}
+
+                {{ inline.hidden("retired", 0) }}
                 </form>
             </div>
             <div class="XiboGrid" id="{{ random() }}">
