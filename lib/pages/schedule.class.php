@@ -83,6 +83,7 @@ class scheduleDAO extends baseDAO {
             $SQL.= "       schedule.is_priority, ";
             $SQL.= "       schedule.recurrence_type, ";
             $SQL.= "       campaign.Campaign, ";
+            $SQL.= "       schedule.DisplayOrder, ";
             $SQL.= "       GROUP_CONCAT(displaygroup.DisplayGroup) AS DisplayGroups ";
             $SQL.= "  FROM schedule_detail ";
             $SQL.= "  INNER JOIN schedule ON schedule_detail.EventID = schedule.EventID ";
@@ -118,7 +119,8 @@ class scheduleDAO extends baseDAO {
             $SQL.= "       schedule.DisplayGroupIDs, ";
             $SQL.= "       schedule.is_priority, ";
             $SQL.= "       schedule.recurrence_type, ";
-            $SQL.= "       campaign.Campaign ";
+            $SQL.= "       campaign.Campaign ,";
+            $SQL.= "       schedule.DisplayOrder ";
 
             // Ordering
             $SQL.= " ORDER BY schedule_detail.FromDT DESC";
@@ -143,7 +145,13 @@ class scheduleDAO extends baseDAO {
                 $editable = $this->IsEventEditable($eventDisplayGroupIds);
 
                 // Event Title
-                $title = sprintf(__('%s scheduled on %s'), Kit::ValidateParam($row['Campaign'], _STRING), Kit::ValidateParam($row['DisplayGroups'], _STRING));
+                $title = sprintf(__('[%s to %s] %s scheduled on %s (Order: %d)'),
+                    DateManager::getLocalDate(Kit::ValidateParam('FromDT', _INT)),
+                    DateManager::getLocalDate(Kit::ValidateParam('ToDT', _INT)),
+                    Kit::ValidateParam($row['Campaign'], _STRING),
+                    Kit::ValidateParam($row['DisplayGroups'], _STRING),
+                    Kit::ValidateParam($row['DisplayOrder'], _INT)
+                );
 
                 // Event URL
                 $url = ($editable) ? sprintf('index.php?p=schedule&q=EditEventForm&EventID=%d', $row['EventID']) : '#';
