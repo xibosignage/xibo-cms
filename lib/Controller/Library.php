@@ -676,15 +676,19 @@ class Library extends Base
         foreach ($fonts as $font) {
             /* @var Media $font */
 
+            // Separate out the display name and the referenced name (referenced name cannot contain any odd characters or numbers)
+            $displayName = $font->name;
+            $familyName = preg_replace('/\s+/', ' ', preg_replace('/\d+/u', '', $font->name));
+
             // Css for the client contains the actual stored as location of the font.
-            $css .= str_replace('[url]', $font->storedAs, str_replace('[family]', $font->name, $fontTemplate));
+            $css .= str_replace('[url]', $font->storedAs, str_replace('[family]', $familyName, $fontTemplate));
 
             // Css for the local CMS contains the full download path to the font
             $url = $this->urlFor('library.download', ['type' => 'font', 'id' => $font->mediaId]) . '?download=1&downloadFromLibrary=1';
-            $localCss .= str_replace('[url]', $url, str_replace('[family]', $font->name, $fontTemplate));
+            $localCss .= str_replace('[url]', $url, str_replace('[family]', $familyName, $fontTemplate));
 
             // CKEditor string
-            $ckEditorString .= $font->name . '/' . $font->name . ';';
+            $ckEditorString .= $displayName . '/' . $familyName . ';';
         }
 
         // Put the player CSS into the modules font.css file so that we can copy it into the library
