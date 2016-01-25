@@ -459,13 +459,17 @@ class Soap4 extends Soap
         Library::ensureLibraryExists();
         $location = Config::GetSetting('LIBRARY_LOCATION') . 'screenshots/' . $this->display->displayId . '_screenshot.' . $screenShotFmt;
 
-        Img::configure(array('driver' => array('gd', 'imagick')));
-
-        try {
-            $screenShotImg = Img::make($screenShot);
-        } catch (\Exception $e) {
-            if ($this->display->isAuditing == 1)
-                Log::debug($e->getMessage());
+        //Img::configure(array('driver' => array('gd', 'imagick')));
+        foreach(array('gd', 'imagick') as $imgDriver) {
+            Img::configure(array('driver' => $imgDriver));
+            try {
+                $screenShotImg = Img::make($screenShot);
+            } catch (\Exception $e) {
+                if ($this->display->isAuditing == 1)
+                    Log::debug($e->getMessage());
+            }
+            if($screenShotImg !== false)
+                break;
         }
 
         if($screenShotImg !== false) {
