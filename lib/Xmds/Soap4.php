@@ -466,10 +466,12 @@ class Soap4 extends Soap
                 $screenShotImg = Img::make($screenShot);
             } catch (\Exception $e) {
                 if ($this->display->isAuditing == 1)
-                    Log::debug($e->getMessage());
+                    Log::debug($imgDriver . " - " . $e->getMessage());
             }
-            if($screenShotImg !== false)
+            if($screenShotImg !== false) {
+                Log::debug("Use " . $imgDriver);
                 break;
+            }
         }
 
         if($screenShotImg !== false) {
