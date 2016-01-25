@@ -21,6 +21,8 @@
 
 namespace Xibo\Storage;
 
+use Xibo\Helper\Config;
+
 class PDOConnect
 {
     /**
@@ -48,25 +50,16 @@ class PDOConnect
 
 	public static function newConnection()
     {
-		global $dbhost;
-		global $dbuser;
-		global $dbpass;
-		global $dbname;
-
-		$dbport = '';
-
-		if (strstr($dbhost, ':')) {
-			$hostParts = explode(':', $dbhost);
-			$dsn = 'mysql:host=' . $hostParts[0] . ';port=' . $hostParts[1] . ';dbname=' . $dbname . ';';
+		if (strstr(Config::$dbConfig['host'], ':')) {
+			$hostParts = explode(':', Config::$dbConfig['host']);
+			$dsn = 'mysql:host=' . $hostParts[0] . ';port=' . $hostParts[1] . ';dbname=' . Config::$dbConfig['name'] . ';';
 		}
 		else {
-			$dsn = 'mysql:host=' . $dbhost . ';dbname=' . $dbname . ';';
+			$dsn = 'mysql:host=' . Config::$dbConfig['host'] . ';dbname=' . Config::$dbConfig['name'] . ';';
 		}
 
-		//echo 'init ' . $dsn , ' user ' . $dbuser . ' pass ' . $dbpass;
-
 		// Open the connection and set the error mode
-		$conn = new \PDO($dsn, $dbuser, $dbpass);
+		$conn = new \PDO($dsn, Config::$dbConfig['user'], Config::$dbConfig['password']);
 		$conn->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 
 		$conn->query("SET NAMES 'utf8'");
@@ -80,8 +73,6 @@ class PDOConnect
 			self::close();
 		}
 			
-		$dbport = '';
-
 		if (strstr($dbhost, ':')) {
 			$hostParts = explode(':', $dbhost);
 			$dsn = 'mysql:host=' . $hostParts[0] . ';port=' . $hostParts[1] . ';';

@@ -34,6 +34,7 @@ class Config
     public $envFault;
     public $envWarning;
 
+    public static $dbConfig = [];
     public static $logHandlers = null;
     public static $logProcessors = null;
     public static $middleware = null;
@@ -58,6 +59,13 @@ class Config
     static function Load($settings)
     {
         include ($settings);
+
+        Config::$dbConfig = [
+            'host' => $dbhost,
+            'user' => $dbuser,
+            'password' => $dbpass,
+            'name' => $dbname
+        ];
 
         Config::Version();
 

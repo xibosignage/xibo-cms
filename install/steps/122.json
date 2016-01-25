@@ -1,0 +1,11 @@
+{
+  "dbVersion": 122,
+  "appVersion": "1.8.0-alpha3",
+  "steps" : [
+    {
+      "step": "Update all Videos with their real duration",
+      "type": "php",
+      "action": "Xibo\\Upgrade\\MyIsamToInnoDbStep"
+    }
+  ]
+}
