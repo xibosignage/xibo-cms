@@ -6,7 +6,7 @@ var text_callback = function(dialog)
         var color = $c.complement($("#layout").data().backgroundColor);
         
         // Apply the complementary color and a not to small font-size to the first paragraph of the editor
-        $("#ta_text").val('<p style="color:' + color + '; font-size:48px;"></p>');
+        $("#ta_text").val('<p style="color:' + color + ';"></p>');
 
         // Get the current template selected
         var templateId = $("#templateId").val();
