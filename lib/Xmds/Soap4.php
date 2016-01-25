@@ -432,6 +432,11 @@ class Soap4 extends Soap
         $serverKey = Sanitize::string($serverKey);
         $hardwareKey = Sanitize::string($hardwareKey);
 
+        $screenShotFmt = "jpg";
+        $screenShotMime = "image/jpeg";
+        $converted = false;
+        $needConversion = false;
+
         // Check the serverKey matches
         if ($serverKey != Config::GetSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
@@ -449,7 +454,44 @@ class Soap4 extends Soap
 
         // Open this displays screen shot file and save this.
         Library::ensureLibraryExists();
-        $location = Config::GetSetting('LIBRARY_LOCATION') . 'screenshots/' . $this->display->displayId . '_screenshot.jpg';
+        $location = Config::GetSetting('LIBRARY_LOCATION') . 'screenshots/' . $this->display->displayId . '_screenshot.' . $screenShotFmt;
+
+        // Try gd first, check image format against $screenShotMime.
+        // TODO: consider using exif extension, if it's more/equals common to gd, eg. available for most PHP installation.
+        if (extension_loaded('gd')) {
+            $fmtSupported = getimagesizefromstring($screenShot);
+            if($fmtSupported !== FALSE) {
+                if($screenShotMime != $fmtSupported['mime']) {
+                    $needConversion = true;
+                }
+            } else {
+                $needConversion = true;
+            }
+        }
+
+        // Try imagick for conversion to $screenShotFmt
+        if (extension_loaded('imagick')) {
+            $shotImg = new \Imagick();
+            $shotImg->readImageBlob($screenShot);
+            if($screenShotFmt != strtolower($shotImg->getImageFormat())) {
+                $needConversion = true;
+                try {
+                    if($shotImg->setImageFormat($screenShotFmt)) {
+                        $screenShot = $shotImg->getImageBlob();
+                        $converted = true;
+                    }
+                } catch (\Exception $ex) {}
+            }
+        }
+
+        // return early with false, keep screenShotRequested intact, let the Player retry.
+        if($needConversion && !$converted) {
+            //$this->LogBandwidth($this->display->displayId, Bandwidth::$SCREENSHOT, filesize($location));
+
+            return false;
+        }
+
+
         $fp = fopen($location, 'wb');
         fwrite($fp, $screenShot);
         fclose($fp);
