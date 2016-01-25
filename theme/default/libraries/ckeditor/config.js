@@ -42,7 +42,7 @@ CKEDITOR.editorConfig = function( config ) {
 	config.extraPlugins = 'iframe';
 
 	config.contentsCss = [ CKEDITOR.getUrl('contents.css'), '../../../../modules/preview/fonts.css' ];
-	/*REPLACE*/  /*ENDREPLACE*/
+	/*REPLACE*/ config.font_names = 'Dancing 1 Queen/Dancing Queen;' + config.font_names; /*ENDREPLACE*/
 
 	// Change the allowed content behaviour
 	//config.extraAllowedContent = 'table[*]';
