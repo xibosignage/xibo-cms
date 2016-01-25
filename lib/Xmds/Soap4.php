@@ -20,6 +20,7 @@
  */
 namespace Xibo\Xmds;
 
+use Intervention\Image\ImageManagerStatic as Img;
 use Xibo\Controller\Library;
 use Xibo\Entity\Bandwidth;
 use Xibo\Entity\Display;
@@ -434,6 +435,8 @@ class Soap4 extends Soap
 
         $screenShotFmt = "jpg";
         $screenShotMime = "image/jpeg";
+        $screenShotImg = false;
+
         $converted = false;
         $needConversion = false;
 
@@ -456,31 +459,25 @@ class Soap4 extends Soap
         Library::ensureLibraryExists();
         $location = Config::GetSetting('LIBRARY_LOCATION') . 'screenshots/' . $this->display->displayId . '_screenshot.' . $screenShotFmt;
 
-        // Try gd first, check image format against $screenShotMime.
-        // TODO: consider using exif extension, if it's more/equals common to gd, eg. available for most PHP installation.
-        if (extension_loaded('gd')) {
-            $fmtSupported = getimagesizefromstring($screenShot);
-            if($fmtSupported !== FALSE) {
-                if($screenShotMime != $fmtSupported['mime']) {
-                    $needConversion = true;
-                }
-            } else {
-                $needConversion = true;
-            }
+        Img::configure(array('driver' => array('gd', 'imagick')));
+
+        try {
+            $screenShotImg = Img::make($screenShot);
+        } catch (\Exception $e) {
+            if ($this->display->isAuditing == 1)
+                Log::debug($e->getMessage());
         }
 
-        // Try imagick for conversion to $screenShotFmt
-        if (extension_loaded('imagick')) {
-            $shotImg = new \Imagick();
-            $shotImg->readImageBlob($screenShot);
-            if($screenShotFmt != strtolower($shotImg->getImageFormat())) {
+        if($screenShotImg !== false) {
+            if($screenShotImg->mime() != $screenShotMime) {
                 $needConversion = true;
                 try {
-                    if($shotImg->setImageFormat($screenShotFmt)) {
-                        $screenShot = $shotImg->getImageBlob();
-                        $converted = true;
-                    }
-                } catch (\Exception $ex) {}
+                    $screenShot = (string) $screenShotImg->encode($screenShotFmt);
+                    $converted = true;
+                } catch (\Exception $e) {
+                    if ($this->display->isAuditing == 1)
+                        Log::debug($e->getMessage());
+                }
             }
         }
 
