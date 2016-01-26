@@ -27,6 +27,26 @@ use Xibo\Helper\Sanitize;
 class Video extends ModuleWidget
 {
     /**
+     * Form for updating the module settings
+     */
+    public function settingsForm()
+    {
+        return 'video-form-settings';
+    }
+
+    /**
+     * Process any module settings
+     */
+    public function settings()
+    {
+        // Process any module settings you asked for.
+        $this->module->settings['defaultMute'] = Sanitize::getCheckbox('defaultMute');
+
+        // Return an array of the processed settings.
+        return $this->module->settings;
+    }
+
+    /**
      * Edit Media in the Database
      */
     public function edit()
@@ -69,10 +89,22 @@ class Video extends ModuleWidget
      */
     public function determineDuration($fileName = null)
     {
+        // If we don't have a file name, then we use the default duration of 0 (end-detect)
+        if ($fileName === null)
+            return 0;
+
         Log::debug('Determine Duration from %s', $fileName);
         $info = new \getID3();
         $file = $info->analyze($fileName);
         return intval(Sanitize::getDouble('playtime_seconds', 0, $file));
+    }
+
+    /**
+     * Set default widget options
+     */
+    public function setDefaultWidgetOptions()
+    {
+        $this->setOption('mute', $this->getSetting('defaultMute', 0));
     }
 
     /**
