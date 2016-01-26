@@ -4,13 +4,6 @@
  * Copyright (C) 2015 Spring Signage Ltd
  * (${FILE_NAME})
  */
-
-Fine, missing:
-
-        $response->AddFieldAction('duration', 'init', '0', array('.loop-fields' => array('display' => 'none')));
-        $response->AddFieldAction('duration', 'change', '0', array('.loop-fields' => array('display' => 'none')));
-        $response->AddFieldAction('duration', 'init', '0', array('.loop-fields' => array('display' => 'block')), 'not');
-        $response->AddFieldAction('duration', 'change', '0', array('.loop-fields' => array('display' => 'block')), 'not');
 #}
 
 {% extends "form-base.twig" %}
@@ -134,7 +127,7 @@ Fine, missing:
                 
                 {% set title %}{% trans "Mute?" %}{% endset %}
                 {% set helpText %}{% trans "Should the video be muted?" %}{% endset %}
-                {{ forms.checkbox("mute", title, module.getOption("mute", 1), helpText, "mute-fields") }}
+                {{ forms.checkbox("mute", title, module.getOption("mute", 0), helpText, "mute-fields") }}
 
                 {# dependencies #}
 
