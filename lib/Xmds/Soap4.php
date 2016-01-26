@@ -459,8 +459,7 @@ class Soap4 extends Soap
         Library::ensureLibraryExists();
         $location = Config::GetSetting('LIBRARY_LOCATION') . 'screenshots/' . $this->display->displayId . '_screenshot.' . $screenShotFmt;
 
-        //Img::configure(array('driver' => array('gd', 'imagick')));
-        foreach(array('gd', 'imagick') as $imgDriver) {
+        foreach(array('imagick', 'gd') as $imgDriver) {
             Img::configure(array('driver' => $imgDriver));
             try {
                 $screenShotImg = Img::make($screenShot);
@@ -469,15 +468,20 @@ class Soap4 extends Soap
                     Log::debug($imgDriver . " - " . $e->getMessage());
             }
             if($screenShotImg !== false) {
-                Log::debug("Use " . $imgDriver);
+                if ($this->display->isAuditing == 1)
+                    Log::debug("Use " . $imgDriver);
                 break;
             }
         }
 
         if($screenShotImg !== false) {
-            if($screenShotImg->mime() != $screenShotMime) {
+            $imgMime = $screenShotImg->mime(); 
+
+            if($imgMime != $screenShotMime) {
                 $needConversion = true;
                 try {
+                    if ($this->display->isAuditing == 1)
+                        Log::debug("converting: '" . $imgMime . "' to '" . $screenShotMime . "'");
                     $screenShot = (string) $screenShotImg->encode($screenShotFmt);
                     $converted = true;
                 } catch (\Exception $e) {
