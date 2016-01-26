@@ -993,7 +993,13 @@ class layoutDAO extends baseDAO
             $SQL = sprintf("SELECT intended_width, intended_height, width, height, version FROM `resolution` WHERE resolutionid = %d", $resolutionid);
         }
         else {
-            $SQL = sprintf("SELECT intended_width, intended_height, width, height, version FROM `resolution` WHERE width = %d AND height = %d", $width, $height);
+            // ResolutionId not present in the XLF.
+            if ($version == 1)
+                // Version 1 layouts should be based on the actual width and height
+                $SQL = sprintf("SELECT intended_width, intended_height, width, height, version FROM `resolution` WHERE width = %d AND height = %d", $width, $height);
+            else
+                // Version 2 layouts should be based on the intended width and height
+                $SQL = sprintf("SELECT intended_width, intended_height, width, height, version FROM `resolution` WHERE intended_width = %d AND intended_height = %d", $width, $height);
         }
 
         if (!$resolution = $db->GetSingleRow($SQL)) {
