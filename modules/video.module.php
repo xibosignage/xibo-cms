@@ -81,7 +81,7 @@ class video extends Module
                 'l', 'loop-fields');
 
             $formFields[] = FormManager::AddCheckbox('mute', __('Mute?'), 
-                $this->GetOption('mute', 1), __('Should the video be muted?'), 
+                $this->GetOption('mute', 0), __('Should the video be muted?'),
                 'm', 'mute-fields');
 
             $this->response->AddFieldAction('duration', 'init', '0', array('.loop-fields' => array('display' => 'none')));
