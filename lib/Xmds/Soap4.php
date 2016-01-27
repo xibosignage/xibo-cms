@@ -20,6 +20,7 @@
  */
 namespace Xibo\Xmds;
 
+use Intervention\Image\ImageManagerStatic as Img;
 use Xibo\Controller\Library;
 use Xibo\Entity\Bandwidth;
 use Xibo\Entity\Display;
@@ -432,6 +433,13 @@ class Soap4 extends Soap
         $serverKey = Sanitize::string($serverKey);
         $hardwareKey = Sanitize::string($hardwareKey);
 
+        $screenShotFmt = "jpg";
+        $screenShotMime = "image/jpeg";
+        $screenShotImg = false;
+
+        $converted = false;
+        $needConversion = false;
+
         // Check the serverKey matches
         if ($serverKey != Config::GetSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
@@ -449,7 +457,48 @@ class Soap4 extends Soap
 
         // Open this displays screen shot file and save this.
         Library::ensureLibraryExists();
-        $location = Config::GetSetting('LIBRARY_LOCATION') . 'screenshots/' . $this->display->displayId . '_screenshot.jpg';
+        $location = Config::GetSetting('LIBRARY_LOCATION') . 'screenshots/' . $this->display->displayId . '_screenshot.' . $screenShotFmt;
+
+        foreach(array('imagick', 'gd') as $imgDriver) {
+            Img::configure(array('driver' => $imgDriver));
+            try {
+                $screenShotImg = Img::make($screenShot);
+            } catch (\Exception $e) {
+                if ($this->display->isAuditing == 1)
+                    Log::debug($imgDriver . " - " . $e->getMessage());
+            }
+            if($screenShotImg !== false) {
+                if ($this->display->isAuditing == 1)
+                    Log::debug("Use " . $imgDriver);
+                break;
+            }
+        }
+
+        if($screenShotImg !== false) {
+            $imgMime = $screenShotImg->mime(); 
+
+            if($imgMime != $screenShotMime) {
+                $needConversion = true;
+                try {
+                    if ($this->display->isAuditing == 1)
+                        Log::debug("converting: '" . $imgMime . "' to '" . $screenShotMime . "'");
+                    $screenShot = (string) $screenShotImg->encode($screenShotFmt);
+                    $converted = true;
+                } catch (\Exception $e) {
+                    if ($this->display->isAuditing == 1)
+                        Log::debug($e->getMessage());
+                }
+            }
+        }
+
+        // return early with false, keep screenShotRequested intact, let the Player retry.
+        if($needConversion && !$converted) {
+            //$this->LogBandwidth($this->display->displayId, Bandwidth::$SCREENSHOT, filesize($location));
+
+            return false;
+        }
+
+
         $fp = fopen($location, 'wb');
         fwrite($fp, $screenShot);
         fclose($fp);
