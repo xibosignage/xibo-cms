@@ -62,12 +62,12 @@
         <div class="col-md-12">
             <form id="moduleTransitionEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.transition.edit", {type: type, id: module.widget.widgetId}) }}">
                 {% if type == "in" %}
-                    {% set transitionsWithEmpty = transitions.in|merge({transitionId: null, transition: ""}) %}
+                    {% set transitionsWithEmpty = [{transitionId: null, transition: ""}]|merge(transitions.in) %}
                     {% set trans = module.getOption("transIn") %}
                     {% set transDuration = module.getOption("transInDuration") %}
                     {% set transDirection = module.getOption("transInDirection") %}
                 {% elseif type == "out" %}
-                    {% set transitionsWithEmpty = transitions.out|merge({transitionId: null, transition: ""}) %}
+                    {% set transitionsWithEmpty = [{transitionId: null, transition: ""}]|merge(transitions.out) %}
                     {% set trans = module.getOption("transOut") %}
                     {% set transDuration = module.getOption("transOutDuration") %}
                     {% set transDirection = module.getOption("transOutDirection") %}
