@@ -42,7 +42,7 @@ class PlayerActionHelper
         foreach ($displays as $display) {
             /* @var Display $display */
             if ($display->xmrChannel == '' || $display->xmrPubKey == '')
-                throw new \InvalidArgumentException(__('This Player is not configured or ready to receive XMR commands'));
+                throw new \InvalidArgumentException(__('This Player is not configured or ready to receive push commands over XMR. Please contact your administrator.'));
 
             Log::debug('Sending %s to %s.', get_class($action), $display->display);
 
