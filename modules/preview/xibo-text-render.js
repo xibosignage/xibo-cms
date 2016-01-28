@@ -155,7 +155,7 @@ jQuery.fn.extend({
                 $(this).cycle({
                     fx: options.fx,
                     speed: options.speed,
-                    timeout: (duration * 1000),
+                    timeout: (duration * 1000) -  (options.speed * 0.7),
                     slides: "> " + slides
                 });
             }

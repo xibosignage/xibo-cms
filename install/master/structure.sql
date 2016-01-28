@@ -296,7 +296,7 @@ CREATE TABLE IF NOT EXISTS `log` (
   `mediaID` int(11) DEFAULT NULL,
   PRIMARY KEY (`logid`),
   KEY `logdate` (`logdate`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=372 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=372 ;
 
 CREATE TABLE IF NOT EXISTS `media` (
   `mediaID` int(11) NOT NULL AUTO_INCREMENT,
@@ -497,7 +497,7 @@ CREATE TABLE IF NOT EXISTS `session` (
   `SecurityToken` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`session_id`),
   KEY `userID` (`userID`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `setting` (
   `settingid` int(11) NOT NULL AUTO_INCREMENT,
@@ -541,7 +541,7 @@ CREATE TABLE IF NOT EXISTS `transition` (
   `AvailableAsIn` tinyint(4) NOT NULL,
   `AvailableAsOut` tinyint(4) NOT NULL,
   PRIMARY KEY (`TransitionID`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=4 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=4 ;
 
 CREATE TABLE IF NOT EXISTS `user` (
   `UserID` int(11) NOT NULL AUTO_INCREMENT,
@@ -570,7 +570,7 @@ CREATE TABLE IF NOT EXISTS `version` (
   `XmdsVersion` smallint(6) NOT NULL,
   `XlfVersion` smallint(6) NOT NULL,
   `DBVersion` int(11) NOT NULL DEFAULT '1'
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='Version information';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Version information';
 
 
 

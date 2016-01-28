@@ -145,15 +145,20 @@ class font extends Module
             $ckeditorString = '';
             foreach ($fonts as $font) {
 
+                // Separate out the display name and the referenced name (referenced name cannot contain any odd characters or numbers)
+                $displayName = $font['name'];
+                $familyName = preg_replace('/\s+/', ' ', preg_replace('/\d+/u', '', $font['name']));
+
                 // Css for the client contains the actual stored as location of the font.
-                $css .= str_replace('[url]', $font['storedAs'], str_replace('[family]', $font['name'], $fontTemplate));
+                $css .= str_replace('[url]', $font['storedAs'], str_replace('[family]', $displayName, $fontTemplate));
 
                 // Css for the local CMS contains the full download path to the font
-                $url = Kit::GetXiboRoot() . '?p=module&mod=font&q=Exec&method=GetResource&download=1&downloadFromLibrary=1&mediaid=' . $font['mediaID'];
-                $localCss .= str_replace('[url]', $url, str_replace('[family]', $font['name'], $fontTemplate));
+                $relativeRoot = explode('://', Kit::GetXiboRoot());
+                $url = '//' . $relativeRoot[1] . '?p=module&mod=font&q=Exec&method=GetResource&download=1&downloadFromLibrary=1&mediaid=' . $font['mediaID'];
+                $localCss .= str_replace('[url]', $url, str_replace('[family]', $familyName, $fontTemplate));
 
                 // CKEditor string
-                $ckeditorString .= $font['name'] . '/' . $font['name'] . ';';
+                $ckeditorString .= $displayName . '/' . $familyName . ';';
             }
 
             file_put_contents('modules/preview/fonts.css', $css);
