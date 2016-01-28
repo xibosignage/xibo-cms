@@ -70,7 +70,7 @@
                             {{ inline.dropdown("displayId", "single", "Display", "", displayFilterOptions, "displayId", "display") }}
 
                             {% set mediaFilterOptions = [{mediaId: null, name: ""}]|merge(media) %}
-                            {{ inline.dropdown("mediaId", "single", "Media", "", mediaFilterOptions, "mediaId", "name") }}
+                            {{ inline.dropdown("mediaId[]", "dropdownmulti", "Media", "", mediaFilterOptions, "mediaId", "name", "", "selectPicker", "", "m", "", [{name: "data-live-search", value:"true"}, {name: "data-selected-text-format", value: "count > 3"}]) }}
                         </form>
                     </div>
                 </div>

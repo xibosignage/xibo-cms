@@ -110,7 +110,7 @@
         <div class="">
             <select class="form-control" {% if type == "dropdownmulti" %}multiple{% endif %} name="{{ name }}" id="{{ name }}" {{ callBack }}
             {% if dataAttributes|length > 0 %}
-            {% for attritube in dataAttributes %}
+            {% for attribute in dataAttributes %}
                 {{ attribute.name }}="{{ attribute.value }}"
             {% endfor %}
             {% endif %}>

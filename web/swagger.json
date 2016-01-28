@@ -2365,9 +2365,12 @@
                     {
                         "name": "mediaId",
                         "in": "formData",
-                        "description": "An optional media Id to filter",
+                        "description": "An optional array of media Id to filter",
                         "required": false,
-                        "type": "integer"
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
                     }
                 ],
                 "responses": {
