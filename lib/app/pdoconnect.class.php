@@ -114,4 +114,13 @@ Class PDOConnect {
         else
             return false;
     }
+
+	/**
+	 * @param PDO $connection
+	 * @param string $timeZone e.g. -8:00
+	 */
+	public static function setTimeZone($connection, $timeZone)
+	{
+		$connection->query('SET time_zone = \'' . $timeZone . '\';');
+	}
 }

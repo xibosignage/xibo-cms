@@ -388,7 +388,7 @@ class contentDAO extends baseDAO {
         $name = Kit::GetParam('filter_name', _POST, _STRING);
 
         // Get a list of media
-        $mediaList = $user->MediaList(NULL, array('type' => $mediatype, 'name' => $name));
+        $mediaList = $user->MediaList(NULL, array('type' => $mediatype, 'name' => $name, 'retired' => 0));
 
         $rows = array();
 

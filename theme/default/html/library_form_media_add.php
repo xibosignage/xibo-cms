@@ -123,7 +123,7 @@ defined('XIBO') or die("Sorry, you are not allowed to directly access this page.
         </td>
         <td>
 			<?php if (Theme::Get('background_override_url') != '') { ?>
-            	<button class="btn XiboFormButton" href="#" onclick="XiboSwapDialog('<?php echo Theme::Get('background_override_url'); ?>{%=file.storedas%}')">
+            	<button class="btn XiboFormButton" href="#" onclick="XiboSwapDialog('<?php echo Theme::Get('background_override_url'); ?>{%=file.storedas%}');return false;">
                     <i class="glyphicon glyphicon-ban-circle glyphicon glyphicon-white"></i>
                     <span><?php echo Theme::Translate('Set Background'); ?></span>
                 </button>
