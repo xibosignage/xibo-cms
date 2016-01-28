@@ -86,7 +86,7 @@
 
                 {% set title %}{% trans "Direction" %}{% endset %}
                 {% set helpText %}{% trans "The direction for this transition. Only appropriate for transitions that move, such as Fly." %}{% endset %}
-                {{ forms.dropdown("transitionDirection", "single", title, transDirection, transitions.compassPoints, "code", "transition", helpText, "transition-group transition-direction") }}
+                {{ forms.dropdown("transitionDirection", "single", title, transDirection, transitions.compassPoints, "id", "name", helpText, "transition-group transition-direction") }}
             </form>
         </div>
     </div>
