@@ -154,7 +154,8 @@ class Schedule extends Base
             );
 
             // Event URL
-            $url = ($editable) ? $this->urlFor('schedule.edit.form', ['id' => $row->eventId]) : '#';
+            $editUrl = ($this->isApi()) ? 'schedule.edit' : 'schedule.edit.form';
+            $url = ($editable) ? $this->urlFor($editUrl, ['id' => $row->eventId]) : '#';
 
             // Classes used to distinguish between events
             //$class = 'event-warning';
