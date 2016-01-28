@@ -55,10 +55,10 @@
                         {{ forms.input("backgroundColor", title, layout.backgroundColor, helpText) }}
 
                         {% set title %}{% trans "Background Image" %}{% endset %}
-                        {% set helpText %}{% trans "Pick the background image from the library" %}{% endset %}
+                        {% set helpText %}{% trans "Pick the background image from the library. It is recommended to pick JPG images as Windows Players can only show JPG background images." %}{% endset %}
                         {% set noneMessage %}{% trans "None" %}{% endset %}
                         {% set backgrounds = [{mediaId: null, name: noneMessage}]|merge(backgrounds) %}
-                        {{ forms.dropdown("backgroundImageId", "single", title, backgroundId, backgrounds, "mediaId", "name", helpText) }}
+                        {{ forms.dropdown("backgroundImageId", "single", title, backgroundId, backgrounds, "mediaId", "name", helpText, "selectPicker", "", "b", "", [{name:"data-live-search", value:"true"}]) }}
 
                         {% set title %}{% trans "Resolution" %}{% endset %}
                         {% set helpText %}{% trans "Change the resolution" %}{% endset %}
