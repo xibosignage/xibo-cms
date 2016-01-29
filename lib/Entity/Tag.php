@@ -152,6 +152,8 @@ class Tag implements \JsonSerializable
         $this->linkLayouts();
         $this->linkMedia();
         $this->removeAssignments();
+
+        Log::debug('Saving Tag: %s, %d', $this->tag, $this->tagId);
     }
 
     /**
@@ -254,7 +256,7 @@ class Tag implements \JsonSerializable
 
         $params = ['tagId' => $this->tagId];
 
-        $sql = 'DELETE FROM `lktagmedia` WHERE tagId = :tagId AND mediaId NOT IN (0';
+        $sql = 'DELETE FROM `lktagmedia` WHERE tagId = :tagId AND mediaId IN (0';
 
         $i = 0;
         foreach ($mediaToUnlink as $mediaId) {

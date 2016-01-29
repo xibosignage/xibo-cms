@@ -537,19 +537,13 @@ class Layout implements \JsonSerializable
         if (!is_array($this->tags) || count($this->tags) <= 0)
             $this->tags = TagFactory::loadByLayoutId($this->layoutId);
 
-        $diff = array_udiff($this->tags, $tags, function($a, $b) {
+        $this->unassignTags = array_udiff($this->tags, $tags, function($a, $b) {
             /* @var Tag $a */
             /* @var Tag $b */
             return $a->tagId - $b->tagId;
         });
 
-        Log::debug('Tags removed: %s', json_encode($diff));
-
-        foreach ($diff as $tag) {
-            /* @var Tag $tag */
-            $tag->unassignLayout($this->layoutId);
-            $tag->save();
-        }
+        Log::debug('Tags to be removed: %s', json_encode($this->unassignTags));
 
         // Replace the arrays
         $this->tags = $tags;

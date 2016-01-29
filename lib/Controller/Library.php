@@ -459,7 +459,7 @@ class Library extends Base
         $media->name = Sanitize::getString('name');
         $media->duration = Sanitize::getInt('duration');
         $media->retired = Sanitize::getCheckbox('retired');
-        $media->tags = TagFactory::tagsFromString(Sanitize::getString('tags'));
+        $media->replaceTags(TagFactory::tagsFromString(Sanitize::getString('tags')));
 
         // Should we update the media in all layouts?
         if (Sanitize::getCheckbox('updateInLayouts') == 1) {
