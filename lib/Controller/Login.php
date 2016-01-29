@@ -75,6 +75,12 @@ class Login extends Base
             $session->setIsExpired(0);
             $session->regenerateSessionId(session_id());
             $session->setUser(session_id(), $user->userId, 'user');
+
+            // Audit Log
+            Log::audit('User', $user->userId, 'Login Granted', [
+                'IPAddress' => $this->getApp()->request()->getIp(),
+                'UserAgent' => $this->getApp()->request()->getUserAgent()
+            ]);
         }
         catch (NotFoundException $e) {
             Log::debug('User not found');
