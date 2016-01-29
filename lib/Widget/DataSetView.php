@@ -26,7 +26,9 @@ use Xibo\Entity\DataSetColumn;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
+use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\MediaFactory;
+use Xibo\Helper\Config;
 use Xibo\Helper\Date;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
@@ -361,7 +363,16 @@ END;
             }
 
             // Set the timezone for SQL
-            PDOConnect::setTimeZone(Date::getLocalDate(null, 'P'));
+            $dateNow = Date::parse();
+            if ($displayId != 0) {
+                $display = DisplayFactory::getById($displayId);
+                $timeZone = $display->getSetting('displayTimeZone', '');
+                $timeZone = ($timeZone == '') ? Config::GetSetting('defaultTimezone') : $timeZone;
+                $dateNow->timezone($timeZone);
+                Log::debug('Display Timezone Resolved: %s. Time: %s.', $timeZone, $dateNow->toDateTimeString());
+            }
+
+            PDOConnect::setTimeZone(Date::getLocalDate($dateNow, 'P'));
 
             // Get the data (complete table, filtered)
             $dataSetResults = $dataSet->getData($filter);
@@ -440,9 +451,16 @@ END;
                             : '<img src="' . $file->storedAs . '" />';
 
                     } else if ($mapping['dataTypeId'] == 5) {
+
                         // Library Image
                         // The content is the ID of the image
-                        $file = MediaFactory::getById($replace);
+                        try {
+                            $file = MediaFactory::getById($replace);
+                        }
+                        catch (NotFoundException $e) {
+                            Log::error('Library Image [%s] not found in DataSetId %d.', $replace, $dataSetId);
+                            continue;
+                        }
 
                         // Tag this layout with this file
                         $this->assignMedia($file->mediaId);
@@ -469,6 +487,7 @@ END;
         }
         catch (NotFoundException $e) {
             Log::error('Request failed for dataSet id=%d. Widget=%d. Due to %s', $dataSetId, $this->getWidgetId(), $e->getMessage());
+            Log::debug($e->getTraceAsString());
             return '';
         }
     }
