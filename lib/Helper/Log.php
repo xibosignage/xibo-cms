@@ -71,7 +71,7 @@ class Log
         if (strtolower($app->getMode()) == 'test') {
             $paramSql = '';
             foreach ($params as $key => $param) {
-                $paramSql .= 'SET @' . $key . '=' . $param . ';' . PHP_EOL;
+                $paramSql .= 'SET @' . $key . '=\'' . $param . '\';' . PHP_EOL;
             }
             $app->log->debug($paramSql . str_replace(':', '@', $sql));
         }

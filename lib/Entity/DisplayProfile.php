@@ -185,10 +185,23 @@ class DisplayProfile
             throw new \InvalidArgumentException(__('Missing type'));
 
         // Check there is only 1 default (including this one)
-        $count = PDOConnect::select('SELECT COUNT(*) AS cnt FROM `displayprofile` WHERE type = :type AND isdefault = 1 AND displayprofileid <> :displayProfileId', [
-            'type' => $this->type,
-            'displayProfileId' => $this->displayProfileId
-        ]);
+        $sql = '
+          SELECT COUNT(*) AS cnt
+            FROM `displayprofile`
+           WHERE `type` = :type
+            AND isdefault = 1
+        ';
+
+        $params = ['type' => $this->type];
+
+        if ($this->displayProfileId != 0) {
+            $sql .= ' AND displayprofileid <> :displayProfileId ';
+            $params['displayProfileId'] = $this->displayProfileId;
+        }
+
+        Log::sql($sql, $params);
+
+        $count = PDOConnect::select($sql, $params);
 
         if ($count[0]['cnt'] + $this->isDefault > 1)
             throw new \InvalidArgumentException(__('Only 1 default per display type is allowed.'));
