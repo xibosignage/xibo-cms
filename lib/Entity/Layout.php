@@ -204,7 +204,8 @@ class Layout implements \JsonSerializable
         'saveRegions' => false,
         'saveTags' => false,
         'setBuildRequired' => true,
-        'validate' => false
+        'validate' => false,
+        'audit' => false
     ];
 
     public function __construct()
@@ -379,7 +380,8 @@ class Layout implements \JsonSerializable
             'saveTags' => true,
             'setBuildRequired' => true,
             'validate' => true,
-            'notify' => true
+            'notify' => true,
+            'audit' => true
         ], $options);
 
         if ($options['validate'])
@@ -438,6 +440,9 @@ class Layout implements \JsonSerializable
         }
 
         Log::debug('Save finished for %s', $this);
+
+        if ($options['audit'])
+            Log::audit('Layout', $this->layoutId, 'Saved', $this);
     }
 
     /**
