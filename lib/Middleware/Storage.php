@@ -38,12 +38,13 @@ class Storage extends Middleware
 
         $this->next->call();
 
-        //Log::debug('Commit Required? %d', $this->app->commit);
-        if ($this->app->commit) {
-            PDOConnect::init()->commit();
-        }
-        else {
-            if (PDOConnect::init()->inTransaction()) {
+        // Are we in a transaction coming out of the stack?
+        if (PDOConnect::init()->inTransaction()) {
+            // We need to commit or rollback? Default is commit
+            if ($this->app->commit) {
+                PDOConnect::init()->commit();
+            } else {
+
                 Log::debug('Storage rollback.');
                 PDOConnect::init()->rollBack();
             }
