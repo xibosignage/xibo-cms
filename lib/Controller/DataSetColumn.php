@@ -209,7 +209,7 @@ class DataSetColumn extends Base
         $column->columnOrder = Sanitize::getInt('columnOrder');
         $column->dataTypeId = Sanitize::getInt('dataTypeId');
         $column->dataSetColumnTypeId = Sanitize::getInt('dataSetColumnTypeId');
-        $column->formula = Sanitize::getString('formula');
+        $column->formula = Sanitize::getParam('formula', null);
 
         $dataSet->assignColumn($column);
         $dataSet->save();
@@ -338,7 +338,7 @@ class DataSetColumn extends Base
         $column->columnOrder = Sanitize::getInt('columnOrder');
         $column->dataTypeId = Sanitize::getInt('dataTypeId');
         $column->dataSetColumnTypeId = Sanitize::getInt('dataSetColumnTypeId');
-        $column->formula = Sanitize::getString('formula');
+        $column->formula = Sanitize::getParam('formula', null);
         $column->save();
 
         $dataSet->notify();

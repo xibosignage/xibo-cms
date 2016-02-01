@@ -166,7 +166,7 @@ class Command extends Base
      *      name="code",
      *      in="formData",
      *      description="A unique code for this command",
-     *      type="strgin",
+     *      type="string",
      *      required=true
      *   ),
      *  @SWG\Response(

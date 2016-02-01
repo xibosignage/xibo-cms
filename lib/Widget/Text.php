@@ -32,11 +32,11 @@ class Text extends ModuleWidget
      */
     public function installFiles()
     {
-        MediaFactory::createModuleSystemFile('modules/vendor/jquery-1.11.1.min.js')->save();
-        MediaFactory::createModuleSystemFile('modules/vendor/moment.js')->save();
-        MediaFactory::createModuleSystemFile('modules/vendor/jquery.marquee.min.js')->save();
-        MediaFactory::createModuleSystemFile('modules/xibo-layout-scaler.js')->save();
-        MediaFactory::createModuleSystemFile('modules/xibo-text-render.js')->save();
+        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
+        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/moment.js')->save();
+        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery.marquee.min.js')->save();
+        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
+        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-text-render.js')->save();
     }
 
     public function validate()
@@ -209,7 +209,7 @@ class Text extends ModuleWidget
         $data['javaScript'] = $javaScriptContent;
 
         // Add our fonts.css file
-        $headContent = '<link href="' . $this->getResourceUrl('fonts.css') . ' rel="stylesheet" media="screen">';
+        $headContent = '<link href="' . $this->getResourceUrl('fonts.css') . '" rel="stylesheet" media="screen">';
         $headContent .= '<style type="text/css">' . file_get_contents(Theme::uri('css/client.css', true)) . '</style>';
 
         $data['head'] = $headContent;

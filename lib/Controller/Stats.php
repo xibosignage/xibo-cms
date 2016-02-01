@@ -117,13 +117,16 @@ class Stats extends Base
      *      type="integer",
      *      required=false
      *   ),
-     *  @SWG\Parameter(
+     *   @SWG\Parameter(
      *      name="mediaId",
+     *      description="An optional array of media Id to filter",
      *      in="formData",
-     *      description="An optional media Id to filter",
-     *      type="integer",
-     *      required=false
-     *   ),
+     *      required=false,
+     *      type="array",
+     *      @SWG\Items(
+     *          type="integer"
+     *      )
+     *  ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -141,7 +144,7 @@ class Stats extends Base
         $fromDt = Sanitize::getDate('fromDt', Sanitize::getDate('statsFromDt', Date::parse()->addDay(-1)));
         $toDt = Sanitize::getDate('toDt', Sanitize::getDate('statsToDt', Date::parse()));
         $displayId = Sanitize::getInt('displayId');
-        $mediaId = Sanitize::getInt('mediaId');
+        $mediaIds = Sanitize::getIntArray('mediaId');
 
         // What if the fromdt and todt are exactly the same?
         // in this case assume an entire day from midnight on the fromdt to midnight on the todt (i.e. add a day to the todt)
@@ -198,9 +201,17 @@ class Stats extends Base
             'toDt' => Date::getLocalDate($toDt)
         ];
 
-        if ($mediaId != 0) {
-            $sql .= '  AND widget.widgetId IN (SELECT widgetId FROM `lkwidgetmedia` WHERE mediaId =  :mediaId) ';
-            $params['mediaId'] = $mediaId;
+        if (count($mediaIds) != 0) {
+
+            $mediaSql = '';
+            $i = 0;
+            foreach ($mediaIds as $mediaId) {
+                $i++;
+                $mediaSql .= ':mediaId_' . $i . ',';
+                $params['mediaId_' . $i] = $mediaId;
+            }
+
+            $sql .= '  AND widget.widgetId IN (SELECT widgetId FROM `lkwidgetmedia` WHERE mediaId IN (' . trim($mediaSql, ',') . '))';
         }
 
         if ($displayId != 0) {

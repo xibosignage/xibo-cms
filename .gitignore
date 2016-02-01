@@ -4,7 +4,6 @@ settings.php
 .project/
 .vagrant/
 .idea/
-library/
 cache/
-modules/fonts.css
+web/modules/fonts.css
 web/swagger-ui/

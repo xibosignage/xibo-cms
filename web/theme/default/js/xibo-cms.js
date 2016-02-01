@@ -260,6 +260,8 @@ function XiboInitialise(scope) {
         if (preset != undefined && preset != "")
             $(this).datetimepicker('update', preset);
     });
+
+    $(scope + " .selectPicker select.form-control").selectpicker();
 }
 
 /**

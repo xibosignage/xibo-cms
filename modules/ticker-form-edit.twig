@@ -138,7 +138,7 @@
 
                 {% set title %}{% trans "Duration is per item" %}{% endset %}
                 {% set helpText %}{% trans "The duration specified is per item otherwise it is per feed." %}{% endset %}
-                {% set fieldDurationIsPerItem %}{{ forms.checkbox("durationIsPerItem", title, module.getDOption("durationIsPerItem"), helpText) }}{% endset %}
+                {% set fieldDurationIsPerItem %}{{ forms.checkbox("durationIsPerItem", title, module.getOption("durationIsPerItem"), helpText) }}{% endset %}
 
                 {% set title %}{% trans "Show itms side by side?" %}{% endset %}
                 {% set helpText %}{% trans "Should items be shown side by side?" %}{% endset %}

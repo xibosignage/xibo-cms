@@ -79,8 +79,8 @@ class ForecastIo extends ModuleWidget
 
     public function installFiles()
     {
-        MediaFactory::createModuleSystemFile('modules/vendor/jquery-1.11.1.min.js')->save();
-        MediaFactory::createModuleSystemFile('modules/xibo-layout-scaler.js')->save();
+        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
+        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
 
         foreach (MediaFactory::createModuleFileFromFolder($this->resourceFolder) as $media) {
             /* @var Media $media */
@@ -449,7 +449,7 @@ class ForecastIo extends ModuleWidget
         ';
 
         // Add our fonts.css file
-        $headContent .= '<link href="' . $this->getResourceUrl('fonts.css') . ' rel="stylesheet" media="screen">';
+        $headContent .= '<link href="' . $this->getResourceUrl('fonts.css') . '" rel="stylesheet" media="screen">';
         $headContent .= '<style type="text/css">' . file_get_contents(Theme::uri('css/client.css', true)) . '</style>';
 
         // Replace any icon sets

@@ -70,9 +70,9 @@ class Finance extends ModuleWidget
      */
     public function installFiles()
     {
-        MediaFactory::createModuleSystemFile('modules/vendor/jquery-1.11.1.min.js')->save();
-        MediaFactory::createModuleSystemFile('modules/xibo-text-render.js')->save();
-        MediaFactory::createModuleSystemFile('modules/xibo-layout-scaler.js')->save();
+        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
+        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-text-render.js')->save();
+        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
     }
 
     /**
@@ -388,7 +388,7 @@ class Finance extends ModuleWidget
         }
 
         // Add our fonts.css file
-        $headContent .= '<link href="' . $this->getResourceUrl('fonts.css') . ' rel="stylesheet" media="screen">';
+        $headContent .= '<link href="' . $this->getResourceUrl('fonts.css') . '" rel="stylesheet" media="screen">';
         $headContent .= '<style type="text/css">' . file_get_contents(Theme::uri('css/client.css', true)) . '</style>';
 
         // Replace the Head Content with our generated javascript

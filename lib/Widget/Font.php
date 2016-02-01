@@ -21,6 +21,9 @@
 namespace Xibo\Widget;
 
 
+use Xibo\Controller\Library;
+use Xibo\Helper\Sanitize;
+
 class Font extends ModuleWidget
 {
     /*
@@ -32,6 +35,24 @@ class Font extends ModuleWidget
 
         if (!file_exists($fontsCss)) {
             touch($fontsCss);
+        }
+    }
+
+    /**
+     * Form for updating the module settings
+     */
+    public function settingsForm()
+    {
+        return 'font-form-settings';
+    }
+
+    /**
+     * Process any module settings
+     */
+    public function settings()
+    {
+        if (Sanitize::getCheckbox('rebuildFonts', 0) == 1) {
+            (new Library())->installFonts();
         }
     }
 

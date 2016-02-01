@@ -145,10 +145,17 @@ class Schedule extends Base
             $editable = $this->isEventEditable($row->displayGroups);
 
             // Event Title
-            $title = sprintf(__('%s scheduled on %s'), ($row->campaign == '') ? $row->command : $row->campaign, $displayGroupList);
+            $title = sprintf(__('[%s to %s] %s scheduled on %s (Order: %d)'),
+                Date::getLocalDate($row->fromDt),
+                Date::getLocalDate($row->toDt),
+                ($row->campaign == '') ? $row->command : $row->campaign,
+                $displayGroupList,
+                $row->displayOrder
+            );
 
             // Event URL
-            $url = ($editable) ? $this->urlFor('schedule.edit.form', ['id' => $row->eventId]) : '#';
+            $editUrl = ($this->isApi()) ? 'schedule.edit' : 'schedule.edit.form';
+            $url = ($editable) ? $this->urlFor($editUrl, ['id' => $row->eventId]) : '#';
 
             // Classes used to distinguish between events
             //$class = 'event-warning';

@@ -26,10 +26,14 @@ use Xibo\Entity\DataSetColumn;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
+use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\MediaFactory;
+use Xibo\Helper\Config;
+use Xibo\Helper\Date;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
+use Xibo\Storage\PDOConnect;
 
 class DataSetView extends ModuleWidget
 {
@@ -38,10 +42,10 @@ class DataSetView extends ModuleWidget
      */
     public function installFiles()
     {
-        MediaFactory::createModuleSystemFile('modules/vendor/jquery-1.11.1.min.js')->save();
-        MediaFactory::createModuleSystemFile('modules/vendor/jquery-cycle-2.1.6.min.js')->save();
-        MediaFactory::createModuleSystemFile('modules/xibo-layout-scaler.js')->save();
-        MediaFactory::createModuleSystemFile('modules/xibo-dataset-render.js')->save();
+        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
+        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-cycle-2.1.6.min.js')->save();
+        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
+        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-dataset-render.js')->save();
     }
 
     /**
@@ -216,7 +220,7 @@ class DataSetView extends ModuleWidget
         );
 
         // Add our fonts.css file
-        $headContent = '<link href="' . $this->getResourceUrl('fonts.css') . ' rel="stylesheet" media="screen">';
+        $headContent = '<link href="' . $this->getResourceUrl('fonts.css') . '" rel="stylesheet" media="screen">';
         $headContent .= '<style type="text/css">' . file_get_contents(Theme::uri('css/client.css', true)) . '</style>';
         $headContent .= '<style type="text/css">' . $styleSheet . '</style>';
 
@@ -358,6 +362,18 @@ END;
                 $filter['size'] = $upperLimit - $lowerLimit;
             }
 
+            // Set the timezone for SQL
+            $dateNow = Date::parse();
+            if ($displayId != 0) {
+                $display = DisplayFactory::getById($displayId);
+                $timeZone = $display->getSetting('displayTimeZone', '');
+                $timeZone = ($timeZone == '') ? Config::GetSetting('defaultTimezone') : $timeZone;
+                $dateNow->timezone($timeZone);
+                Log::debug('Display Timezone Resolved: %s. Time: %s.', $timeZone, $dateNow->toDateTimeString());
+            }
+
+            PDOConnect::setTimeZone(Date::getLocalDate($dateNow, 'P'));
+
             // Get the data (complete table, filtered)
             $dataSetResults = $dataSet->getData($filter);
 
@@ -414,8 +430,13 @@ END;
                     // Pull out the cell for this row / column
                     $replace = $row[$mapping['heading']];
 
+                    // If the value is empty, then move on
+                    if ($replace == '')
+                        continue;
+
                     // What if this column is an image column type?
                     if ($mapping['dataTypeId'] == 4) {
+
                         // Grab the external image
                         $file = MediaFactory::createModuleFile('datasetview_' . md5($dataSetId . $mapping['dataSetColumnId'] . $replace), str_replace(' ', '%20', htmlspecialchars_decode($replace)));
                         $file->isRemote = true;
@@ -430,9 +451,16 @@ END;
                             : '<img src="' . $file->storedAs . '" />';
 
                     } else if ($mapping['dataTypeId'] == 5) {
+
                         // Library Image
                         // The content is the ID of the image
-                        $file = MediaFactory::getById($replace);
+                        try {
+                            $file = MediaFactory::getById($replace);
+                        }
+                        catch (NotFoundException $e) {
+                            Log::error('Library Image [%s] not found in DataSetId %d.', $replace, $dataSetId);
+                            continue;
+                        }
 
                         // Tag this layout with this file
                         $this->assignMedia($file->mediaId);
@@ -459,6 +487,7 @@ END;
         }
         catch (NotFoundException $e) {
             Log::error('Request failed for dataSet id=%d. Widget=%d. Due to %s', $dataSetId, $this->getWidgetId(), $e->getMessage());
+            Log::debug($e->getTraceAsString());
             return '';
         }
     }

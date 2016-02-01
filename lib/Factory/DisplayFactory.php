@@ -224,6 +224,11 @@ class DisplayFactory extends BaseFactory
             $params['macAddress'] = '%' . Sanitize::getString('macAddress', $filterBy) . '%';
         }
 
+        if (Sanitize::getString('clientVersion', $filterBy) != '') {
+            $body .= ' AND display.client_version LIKE :clientVersion ';
+            $params['clientVersion'] = '%' . Sanitize::getString('clientVersion', $filterBy) . '%';
+        }
+
         // Exclude a group?
         if (Sanitize::getInt('exclude_displaygroupid', $filterBy) !== null) {
             $body .= " AND display.DisplayID NOT IN ";

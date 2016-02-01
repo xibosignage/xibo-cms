@@ -176,7 +176,7 @@
         // Callback for the media form
         function mediaFormCallBack() {
             var mediaTable = $("#mediaAssignments").DataTable({ "language": dataTablesLanguage,
-                serverSide: true,
+                serverSide: true, stateSave: true,
                 searchDelay: 3000,
                 "order": [[ 0, "asc"]],
                 "filter": false,
@@ -403,7 +403,7 @@
             dialog.addClass("modal-big");
 
             var timelineWidgetTabel = $("#timelineWidgets").DataTable({ "language": dataTablesLanguage,
-                serverSide: true,
+                serverSide: true, stateSave: true,
                 filter: false,
                 searchDelay: 3000,
                 "order": [[ 0, "asc"]],

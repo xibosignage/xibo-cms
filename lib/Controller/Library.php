@@ -459,7 +459,7 @@ class Library extends Base
         $media->name = Sanitize::getString('name');
         $media->duration = Sanitize::getInt('duration');
         $media->retired = Sanitize::getCheckbox('retired');
-        $media->tags = TagFactory::tagsFromString(Sanitize::getString('tags'));
+        $media->replaceTags(TagFactory::tagsFromString(Sanitize::getString('tags')));
 
         // Should we update the media in all layouts?
         if (Sanitize::getCheckbox('updateInLayouts') == 1) {
@@ -676,17 +676,22 @@ class Library extends Base
         foreach ($fonts as $font) {
             /* @var Media $font */
 
+            // Separate out the display name and the referenced name (referenced name cannot contain any odd characters or numbers)
+            $displayName = $font->name;
+            $familyName = preg_replace('/\s+/', ' ', preg_replace('/\d+/u', '', $font->name));
+
             // Css for the client contains the actual stored as location of the font.
-            $css .= str_replace('[url]', $font['storedAs'], str_replace('[family]', $font['name'], $fontTemplate));
+            $css .= str_replace('[url]', $font->storedAs, str_replace('[family]', $familyName, $fontTemplate));
 
             // Css for the local CMS contains the full download path to the font
-            $url = $this->urlFor('module.getResource', ['type' => 'font', 'id' => $font->mediaId]) . '?download=1&downloadFromLibrary=1';
-            $localCss .= str_replace('[url]', $url, str_replace('[family]', $font['name'], $fontTemplate));
+            $url = $this->urlFor('library.download', ['type' => 'font', 'id' => $font->mediaId]) . '?download=1&downloadFromLibrary=1';
+            $localCss .= str_replace('[url]', $url, str_replace('[family]', $familyName, $fontTemplate));
 
             // CKEditor string
-            $ckEditorString .= $font['name'] . '/' . $font['name'] . ';';
+            $ckEditorString .= $displayName . '/' . $familyName . ';';
         }
 
+        // Put the player CSS into the modules font.css file so that we can copy it into the library
         file_put_contents(PROJECT_ROOT . '/web/modules/fonts.css', $css);
 
         // Install it (doesn't expire, isn't a system file, force update)
@@ -697,7 +702,7 @@ class Library extends Base
         $media->save();
 
         // Generate a fonts.css file for use locally (in the CMS)
-        file_put_contents('modules/fonts.css', $localCss);
+        file_put_contents(PROJECT_ROOT . '/web/modules/fonts.css', $localCss);
 
         // Edit the CKEditor file
         $ckEditor = file_get_contents(Theme::uri('libraries/ckeditor/config.js', true));

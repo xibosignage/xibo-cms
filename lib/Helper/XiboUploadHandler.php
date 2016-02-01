@@ -211,7 +211,15 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 $playlist = PlaylistFactory::getById($this->options['playlistId']);
 
                 // Create a Widget and add it to our region
-                $widget = WidgetFactory::create($this->options['userId'], $playlist->playlistId, $module->getModuleType(), 10);
+                $widget = WidgetFactory::create($this->options['userId'], $playlist->playlistId, $module->getModuleType(), $media->duration);
+
+                // Assign the widget to the module
+                $module->setWidget($widget);
+
+                // Set default options (this sets options on the widget)
+                $module->setDefaultWidgetOptions();
+
+                // Assign media
                 $widget->assignMedia($media->mediaId);
 
                 // Assign the new widget to the playlist

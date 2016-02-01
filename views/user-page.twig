@@ -75,7 +75,7 @@
 {% block javaScript %}
     <script type="text/javascript">
         var table = $("#users").DataTable({ "language": dataTablesLanguage,
-            serverSide: true,
+            serverSide: true, stateSave: true,
             searchDelay: 3000,
             "order": [[ 0, "asc"]],
             "filter": false,

@@ -185,10 +185,23 @@ class DisplayProfile
             throw new \InvalidArgumentException(__('Missing type'));
 
         // Check there is only 1 default (including this one)
-        $count = PDOConnect::select('SELECT COUNT(*) AS cnt FROM `displayprofile` WHERE type = :type AND isdefault = 1 AND displayprofileid <> :displayProfileId', [
-            'type' => $this->type,
-            'displayProfileId' => $this->displayProfileId
-        ]);
+        $sql = '
+          SELECT COUNT(*) AS cnt
+            FROM `displayprofile`
+           WHERE `type` = :type
+            AND isdefault = 1
+        ';
+
+        $params = ['type' => $this->type];
+
+        if ($this->displayProfileId != 0) {
+            $sql .= ' AND displayprofileid <> :displayProfileId ';
+            $params['displayProfileId'] = $this->displayProfileId;
+        }
+
+        Log::sql($sql, $params);
+
+        $count = PDOConnect::select($sql, $params);
 
         if ($count[0]['cnt'] + $this->isDefault > 1)
             throw new \InvalidArgumentException(__('Only 1 default per display type is allowed.'));
@@ -801,7 +814,7 @@ class DisplayProfile
                         'title' => __('Use a SurfaceView for Video Rendering?'),
                         'type' => 'checkbox',
                         'fieldType' => 'checkbox',
-                        'default' => 0,
+                        'default' => 1,
                         'helpText' => __('If the device is having trouble playing video, it may be useful to switch to a Surface View for Video Rendering.'),
                         'enabled' => true,
                         'groupClass' => NULL
@@ -973,6 +986,17 @@ class DisplayProfile
                         'fieldType' => 'checkbox',
                         'default' => 0,
                         'helpText' => __('Set the device time using the CMS. Only available on rooted devices or system signed players.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'webCacheEnabled',
+                        'tabId' => 'advanced',
+                        'title' => __('Enable caching of Web Resources?'),
+                        'type' => 'checkbox',
+                        'fieldType' => 'checkbox',
+                        'default' => 0,
+                        'helpText' => __('The standard browser cache will be used - we recommend this is switched off unless specifically required. Effects Web Page and Embedded.'),
                         'enabled' => true,
                         'groupClass' => NULL
                     )

@@ -158,6 +158,9 @@ class Media implements \JsonSerializable
      */
     public $groupsWithPermissions;
 
+    // Private
+    private $unassignTags = [];
+
     // New file revision
     public $force;
     public $isRemote;
@@ -232,6 +235,28 @@ class Media implements \JsonSerializable
     }
 
     /**
+     * @param array[Tag] $tags
+     */
+    public function replaceTags($tags = [])
+    {
+        if (!is_array($this->tags) || count($this->tags) <= 0)
+            $this->tags = TagFactory::loadByMediaId($this->mediaId);
+
+        $this->unassignTags = array_udiff($this->tags, $tags, function($a, $b) {
+            /* @var Tag $a */
+            /* @var Tag $b */
+            return $a->tagId - $b->tagId;
+        });
+
+        Log::debug('Tags to be removed: %s', json_encode($this->unassignTags));
+
+        // Replace the arrays
+        $this->tags = $tags;
+
+        Log::debug('Tags remaining: %s', json_encode($this->tags));
+    }
+
+    /**
      * Validate
      * @param array $options
      */
@@ -277,6 +302,8 @@ class Media implements \JsonSerializable
             'fullInfo' => false
         ], $options);
 
+        Log::debug('Loading Media. Options = %s', json_encode($options));
+
         // Tags
         $this->tags = TagFactory::loadByMediaId($this->mediaId);
 
@@ -309,9 +336,6 @@ class Media implements \JsonSerializable
             'oldMedia' => null
         ], $options);
 
-        if (!$this->loaded)
-            $this->load();
-
         if ($options['validate'] && $this->mediaType != 'module')
             $this->validate($options);
 
@@ -332,6 +356,17 @@ class Media implements \JsonSerializable
             /* @var Tag $tag */
             $tag->assignMedia($this->mediaId);
             $tag->save();
+        }
+
+        // Remove unwanted ones
+        if (is_array($this->unassignTags)) {
+            foreach ($this->unassignTags as $tag) {
+                /* @var Tag $tag */
+                Log::debug('Unassigning tag: %s', $tag->tag);
+
+                $tag->unassignMedia($this->mediaId);
+                $tag->save();
+            }
         }
     }
 

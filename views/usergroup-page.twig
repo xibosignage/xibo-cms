@@ -52,7 +52,7 @@
 {% block javaScript %}
     <script type="text/javascript">
         var table = $("#userGroups").DataTable({ "language": dataTablesLanguage,
-            serverSide: true,
+            serverSide: true, stateSave: true,
             searchDelay: 3000,
             filter: false,
             "order": [[ 0, "asc"]],

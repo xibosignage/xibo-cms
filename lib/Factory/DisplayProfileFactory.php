@@ -43,7 +43,7 @@ class DisplayProfileFactory extends BaseFactory
      */
     public static function getDefaultByType($type)
     {
-        $profiles = DisplayProfileFactory::query(null, ['disableUserCheck' => 1, 'type' => $type]);
+        $profiles = DisplayProfileFactory::query(null, ['disableUserCheck' => 1, 'type' => $type, 'isDefault' => 1]);
 
         if (count($profiles) <= 0)
             throw new NotFoundException();
@@ -85,6 +85,11 @@ class DisplayProfileFactory extends BaseFactory
             if (Sanitize::getInt('displayProfileId', $filterBy) !== null) {
                 $body .= ' AND displayProfileId = :displayProfileId ';
                 $params['displayProfileId'] = Sanitize::getInt('displayProfileId', $filterBy);
+            }
+
+            if (Sanitize::getInt('isDefault', $filterBy) !== null) {
+                $body .= ' AND isDefault = :isDefault ';
+                $params['isDefault'] = Sanitize::getInt('isDefault', $filterBy);
             }
 
             // Filter by DisplayProfile Name?

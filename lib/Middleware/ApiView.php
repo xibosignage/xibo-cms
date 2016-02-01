@@ -11,7 +11,6 @@ namespace Xibo\Middleware;
 
 use Slim\Slim;
 use Slim\View;
-use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 
 class ApiView extends View
@@ -80,14 +79,14 @@ class ApiView extends View
 
                     // Is there a next page?
                     if ($start + $size < $totalRows)
-                        $linkHeader .= '<' . $url . '?start' . ($start + $size * 2) . '&size=' . $size . '>; rel="next", ';
+                        $linkHeader .= '<' . $url . '?start' . ($start + $size * 2) . '&length=' . $size . '>; rel="next", ';
 
                     // Is there a previous page?
                     if ($start > 0)
-                        $linkHeader .= '<' . $url . '?start' . ($start - $size) . '&size=' . $size . '>; rel="prev", ';
+                        $linkHeader .= '<' . $url . '?start' . ($start - $size) . '&length=' . $size . '>; rel="prev", ';
 
                     // The first page
-                    $linkHeader .= '<' . $url . '?start=0&size=' . $size . '>; rel="first"';
+                    $linkHeader .= '<' . $url . '?start=0&length=' . $size . '>; rel="first"';
 
                     $app->response()->header('X-Total-Count', $totalRows);
                     $app->response()->header('Link', $linkHeader);

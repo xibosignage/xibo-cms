@@ -714,4 +714,12 @@ abstract class ModuleWidget implements ModuleInterface
     {
         Log::debug('No pre-processing rules for this module type');
     }
+
+    /**
+     * Set Default Widget Options
+     */
+    public function setDefaultWidgetOptions()
+    {
+        Log::debug('No default options for this module type');
+    }
 }

@@ -83,6 +83,15 @@ class DataSetColumn implements \JsonSerializable
     public $dataSetColumnType;
 
     /**
+     * List Content Array
+     * @return array
+     */
+    public function listContentArray()
+    {
+        return explode(',', $this->listContent);
+    }
+
+    /**
      * Validate
      */
     public function validate()
@@ -101,7 +110,7 @@ class DataSetColumn implements \JsonSerializable
 
         // Validation
         if ($this->dataSetColumnId != 0 && $this->listContent != '') {
-            $list = explode(',', $this->listContent);
+            $list = $this->listContentArray();
 
             // We can check this is valid by building up a NOT IN sql statement, if we get results.. we know its not good
             $select = '';
@@ -116,7 +125,7 @@ class DataSetColumn implements \JsonSerializable
             $select = rtrim($select, ',');
 
             // $select has been quoted in the for loop
-            $SQL = "SELECT DataSetDataID FROM `datasetdata` WHERE DataSetColumnID = :datasetcolumnid AND Value NOT IN (" . $select . ")";
+            $SQL = 'SELECT id FROM `dataset_' . $this->dataSetId . '` WHERE `' . $this->heading . '` NOT IN (' . $select . ')';
 
             $sth = $dbh->prepare($SQL);
             $sth->execute(array(
@@ -124,7 +133,7 @@ class DataSetColumn implements \JsonSerializable
             ));
 
             if ($row = $sth->fetch())
-                throw new \InvalidArgumentException(__('New list content value is invalid as it doesnt include values for existing data'));
+                throw new \InvalidArgumentException(__('New list content value is invalid as it does not include values for existing data'));
         }
     }
 

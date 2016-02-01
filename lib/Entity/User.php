@@ -443,17 +443,24 @@ class User implements \JsonSerializable
 
     /**
      * Save User
-     * @param bool $validate
+     * @param array $options
      */
-    public function save($validate = true)
+    public function save($options = [])
     {
-        if ($validate)
+        $options = array_merge([
+            'validate' => true,
+            'passwordUpdate' => false
+        ], $options);
+
+        if ($options['validate'])
             $this->validate();
 
         Log::debug('Saving user. %s', $this);
 
         if ($this->userId == 0)
             $this->add();
+        else if ($options['passwordUpdate'])
+            $this->updatePassword();
         else if ($this->hash() != $this->hash)
             $this->update();
     }
@@ -599,6 +606,26 @@ class User implements \JsonSerializable
         $group->libraryQuota = $this->libraryQuota;
         $group->assignUser($this);
         $group->save();
+    }
+
+    /**
+     * Update user
+     */
+    private function updatePassword()
+    {
+        Log::debug('Update user password. %d', $this->userId);
+
+        $sql = 'UPDATE `user` SET CSPRNG = :CSPRNG,
+                  `UserPassword` = :password
+               WHERE userId = :userId';
+
+        $params = array(
+            'CSPRNG' => $this->CSPRNG,
+            'password' => $this->password,
+            'userId' => $this->userId
+        );
+
+        PDOConnect::update($sql, $params);
     }
 
     /**

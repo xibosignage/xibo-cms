@@ -46,6 +46,9 @@ class CommandFactory extends BaseFactory
     {
         $entries = array();
 
+        if ($sortOrder == null)
+            $sortOrder = ['command'];
+
         $params = array();
         $select = 'SELECT `command`.commandId, `command`.command, `command`.code, `command`.description, `command`.userId ';
 

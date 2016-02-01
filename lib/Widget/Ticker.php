@@ -30,6 +30,7 @@ use Xibo\Entity\DataSetColumn;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
+use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Helper\Cache;
 use Xibo\Helper\Config;
@@ -37,6 +38,7 @@ use Xibo\Helper\Date;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
+use Xibo\Storage\PDOConnect;
 
 class Ticker extends ModuleWidget
 {
@@ -45,12 +47,12 @@ class Ticker extends ModuleWidget
      */
     public function installFiles()
     {
-        MediaFactory::createModuleSystemFile('modules/vendor/jquery-1.11.1.min.js')->save();
-        MediaFactory::createModuleSystemFile('modules/vendor/moment.js')->save();
-        MediaFactory::createModuleSystemFile('modules/vendor/jquery.marquee.min.js')->save();
-        MediaFactory::createModuleSystemFile('modules/vendor/jquery-cycle-2.1.6.min.js')->save();
-        MediaFactory::createModuleSystemFile('modules/xibo-layout-scaler.js')->save();
-        MediaFactory::createModuleSystemFile('modules/xibo-text-render.js')->save();
+        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-1.11.1.min.js')->save();
+        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/moment.js')->save();
+        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery.marquee.min.js')->save();
+        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/vendor/jquery-cycle-2.1.6.min.js')->save();
+        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-layout-scaler.js')->save();
+        MediaFactory::createModuleSystemFile(PROJECT_ROOT . '/web/modules/xibo-text-render.js')->save();
     }
 
     /**
@@ -356,7 +358,7 @@ class Ticker extends ModuleWidget
         }
 
         // Add our fonts.css file
-        $headContent .= '<link href="' . $this->getResourceUrl('fonts.css') . ' rel="stylesheet" media="screen">';
+        $headContent .= '<link href="' . $this->getResourceUrl('fonts.css') . '" rel="stylesheet" media="screen">';
         $headContent .= '<style type="text/css">' . file_get_contents(Theme::uri('css/client.css', true)) . '</style>';
 
         // Replace the Head Content with our generated javascript
@@ -695,6 +697,18 @@ class Ticker extends ModuleWidget
                 $filter['size'] = $upperLimit - $lowerLimit;
             }
 
+            // Set the timezone for SQL
+            $dateNow = Date::parse();
+            if ($displayId != 0) {
+                $display = DisplayFactory::getById($displayId);
+                $timeZone = $display->getSetting('displayTimeZone', '');
+                $timeZone = ($timeZone == '') ? Config::GetSetting('defaultTimezone') : $timeZone;
+                $dateNow->timezone($timeZone);
+                Log::debug('Display Timezone Resolved: %s. Time: %s.', $timeZone, $dateNow->toDateTimeString());
+            }
+
+            PDOConnect::setTimeZone(Date::getLocalDate($dateNow, 'P'));
+
             // Get the data (complete table, filtered)
             $dataSetResults = $dataSet->getData($filter);
 
@@ -715,33 +729,42 @@ class Ticker extends ModuleWidget
                     $header = $subs[0];
                     $replace = $row[$header];
 
-                    // Check in the columns array to see if this is a special one
-                    if ($mappings[$header]['dataTypeId'] == 4) {
-                        // External Image
-                        // Download the image, alter the replace to wrap in an image tag
-                        $file = MediaFactory::createModuleFile('ticker_dataset_' . md5($dataSetId . $mappings[$header]['dataSetColumnId'] . $replace), str_replace(' ', '%20', htmlspecialchars_decode($replace)));
-                        $file->isRemote = true;
-                        $file->expires = $expires;
-                        $file->save();
+                    // If the value is empty, then move on
+                    if ($replace != '') {
+                        // Check in the columns array to see if this is a special one
+                        if ($mappings[$header]['dataTypeId'] == 4) {
+                            // External Image
+                            // Download the image, alter the replace to wrap in an image tag
+                            $file = MediaFactory::createModuleFile('ticker_dataset_' . md5($dataSetId . $mappings[$header]['dataSetColumnId'] . $replace), str_replace(' ', '%20', htmlspecialchars_decode($replace)));
+                            $file->isRemote = true;
+                            $file->expires = $expires;
+                            $file->save();
 
-                        // Tag this layout with this file
-                        $this->assignMedia($file->mediaId);
+                            // Tag this layout with this file
+                            $this->assignMedia($file->mediaId);
 
-                        $replace = ($isPreview)
-                            ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" />'
-                            : '<img src="' . $file->storedAs . '" />';
+                            $replace = ($isPreview)
+                                ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" />'
+                                : '<img src="' . $file->storedAs . '" />';
 
-                    } else if ($mappings[$header]['dataTypeId'] == 5) {
-                        // Library Image
-                        // The content is the ID of the image
-                        $file = MediaFactory::getById($replace);
+                        } else if ($mappings[$header]['dataTypeId'] == 5) {
+                            // Library Image
+                            // The content is the ID of the image
+                            try {
+                                $file = MediaFactory::getById($replace);
+                            }
+                            catch (NotFoundException $e) {
+                                Log::error('Library Image [%s] not found in DataSetId %d.', $replace, $dataSetId);
+                                continue;
+                            }
 
-                        // Tag this layout with this file
-                        $this->assignMedia($file->mediaId);
+                            // Tag this layout with this file
+                            $this->assignMedia($file->mediaId);
 
-                        $replace = ($isPreview)
-                            ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" />'
-                            : '<img src="' . $file->storedAs . '" />';
+                            $replace = ($isPreview)
+                                ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" />'
+                                : '<img src="' . $file->storedAs . '" />';
+                        }
                     }
 
                     $rowString = str_replace('[' . $sub . ']', $replace, $rowString);
@@ -754,6 +777,7 @@ class Ticker extends ModuleWidget
         }
         catch (NotFoundException $e) {
             Log::error('Request failed for dataSet id=%d. Widget=%d. Due to %s', $dataSetId, $this->getWidgetId(), $e->getMessage());
+            Log::debug($e->getTraceAsString());
             return [];
         }
     }
