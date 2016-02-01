@@ -6,7 +6,7 @@
 CREATE TABLE IF NOT EXISTS `auditlog` (
   `logId` int(11) NOT NULL AUTO_INCREMENT,
   `logDate` int(11) NOT NULL,
-  `userId` int(11) NOT NULL,
+  `userId` int(11) NULL,
   `message` varchar(254) NOT NULL,
   `entity` varchar(50) NOT NULL,
   `entityId` int(11) NOT NULL,

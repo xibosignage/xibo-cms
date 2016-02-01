@@ -6,6 +6,10 @@
       "step": "Update all Videos with their real duration",
       "type": "php",
       "action": "Xibo\\Upgrade\\MyIsamToInnoDbStep"
+    },
+    {
+      "step": "Allow system actions to be recorded in the Audit Trail",
+      "action": "ALTER TABLE  `auditlog` CHANGE  `userId`  `userId` INT( 11 ) NULL;"
     }
   ]
 }
