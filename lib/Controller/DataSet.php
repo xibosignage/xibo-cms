@@ -133,16 +133,9 @@ class DataSet extends Base
                     'url' => $this->urlFor('dataSet.edit.form', ['id' => $dataSet->dataSetId]),
                     'text' => __('Edit')
                 );
-
-                // Import columns
-                foreach ($dataSet->getColumn() as $column) {
-                    /* @var DataSetColumn $column */
-                    if ($column->dataSetColumnTypeId == 1)
-                        $dataSet->importColumns[] = $column;
-                }
             }
 
-            if ($user->checkDeleteable($dataSet)) {
+            if ($user->checkDeleteable($dataSet) && $dataSet->isLookup == 0) {
                 // Delete DataSet
                 $dataSet->buttons[] = array(
                     'id' => 'dataset_button_delete',
@@ -331,6 +324,9 @@ class DataSet extends Base
 
         if (!$this->getUser()->checkDeleteable($dataSet))
             throw new AccessDeniedException();
+
+        if ($dataSet->isLookup)
+            throw new \InvalidArgumentException(__('Lookup Tables cannot be deleted'));
 
         // Set the form
         $this->getState()->template = 'dataset-form-delete';

@@ -32,6 +32,23 @@ class DataSetFactory extends BaseFactory
 
         return $dataSets[0];
     }
+
+    /**
+     * Get DataSets by Code
+     * @param $code
+     * @return DataSet
+     * @throws NotFoundException
+     */
+    public static function getByCode($code)
+    {
+        $dataSets = DataSetFactory::query(null, ['disableUserCheck' => 1, 'code' => $code]);
+
+        if (count($dataSets) <= 0)
+            throw new NotFoundException();
+
+        return $dataSets[0];
+    }
+
     /**
      * Get DataSets by Name
      * @param $dataSet
@@ -67,6 +84,8 @@ class DataSetFactory extends BaseFactory
                 dataset.description,
                 dataset.userId,
                 dataset.lastDataEdit,
+                dataset.`code`,
+                dataset.`isLookup`,
                 user.userName AS owner,
                 (
                   SELECT GROUP_CONCAT(DISTINCT `group`.group)
@@ -99,6 +118,11 @@ class DataSetFactory extends BaseFactory
             if (Sanitize::getString('dataSet', $filterBy) != null) {
                 $body .= ' AND dataset.dataSet = :dataSet ';
                 $params['dataSet'] = Sanitize::getString('dataSet', $filterBy);
+            }
+
+            if (Sanitize::getString('code', $filterBy) != null) {
+                $body .= ' AND `dataset`.`code` = :code ';
+                $params['code'] = Sanitize::getString('code', $filterBy);
             }
 
             // Sorting?

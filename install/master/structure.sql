@@ -86,6 +86,8 @@ CREATE TABLE IF NOT EXISTS `dataset` (
   `Description` varchar(254) DEFAULT NULL,
   `UserID` int(11) NOT NULL,
   `LastDataEdit` int(11) NOT NULL DEFAULT '0',
+  `code` year(4) DEFAULT NULL,
+  `isLookup` tinyint(4) NOT NULL DEFAULT '0',
   PRIMARY KEY (`DataSetID`),
   KEY `UserID` (`UserID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
