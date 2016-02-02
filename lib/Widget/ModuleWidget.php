@@ -569,6 +569,22 @@ abstract class ModuleWidget implements ModuleInterface
     }
 
     /**
+     * Default view for add form
+     */
+    public function addForm()
+    {
+        return $this->getModuleType() . '-form-add';
+    }
+
+    /**
+     * Default view for edit form
+     */
+    public function editForm()
+    {
+        return $this->getModuleType() . '-form-edit';
+    }
+
+    /**
      * Get Module Setting
      * @param string $setting
      * @param mixed $default

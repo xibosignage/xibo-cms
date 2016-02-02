@@ -272,7 +272,7 @@ class Module extends Base
         $module = ModuleFactory::createForWidget($type, null, $this->getUser()->userId, $playlistId);
 
         // Pass to view
-        $this->getState()->template = $module->getModuleType() . '-form-add';
+        $this->getState()->template = $module->addForm();
         $this->getState()->setData($module->setTemplateData([
             'playlist' => $playlist,
             'media' => MediaFactory::query(),
@@ -342,7 +342,7 @@ class Module extends Base
             throw new AccessDeniedException();
 
         // Pass to view
-        $this->getState()->template = $module->getModuleType() . '-form-edit';
+        $this->getState()->template = $module->editForm();
         $this->getState()->setData($module->setTemplateData([
             'module' => $module,
             'media' => MediaFactory::query(),
