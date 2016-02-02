@@ -585,6 +585,15 @@ abstract class ModuleWidget implements ModuleInterface
     }
 
     /**
+     * Layout Designer JavaScript template
+     * @return null
+     */
+    public function layoutDesignerJavaScript()
+    {
+        return null;
+    }
+
+    /**
      * Get Module Setting
      * @param string $setting
      * @param mixed $default
