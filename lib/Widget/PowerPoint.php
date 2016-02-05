@@ -21,12 +21,36 @@
 namespace Xibo\Widget;
 
 
+use Xibo\Helper\Config;
+
 class PowerPoint extends ModuleWidget
 {
     public function isValid()
     {
         // Client dependant
         return 2;
+    }
+
+    /**
+     * Override previewAsClient
+     * @param float $width
+     * @param float $height
+     * @param int $scaleOverride
+     * @return string
+     */
+    public function previewAsClient($width, $height, $scaleOverride = 0)
+    {
+        return $this->previewIcon();
+    }
+
+    /**
+     * Determine duration
+     * @param $fileName
+     * @return int
+     */
+    public function determineDuration($fileName = null)
+    {
+        return Config::GetSetting('ppt_length');
     }
 
     /**

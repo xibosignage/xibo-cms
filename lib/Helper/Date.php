@@ -53,27 +53,6 @@ class Date
     }
 
     /**
-     * Get a system date
-     * @param string|\Jenssegers\Date\Date $timestamp
-     * @param string $format
-     * @return string
-     */
-    public static function getSystemDate($timestamp = NULL, $format = NULL)
-    {
-        if ($format == NULL)
-            $format = Date::getSystemFormat();
-
-        if ($timestamp instanceof \Jenssegers\Date\Date)
-            return $timestamp->format($format);
-
-        if ($timestamp == NULL)
-            $timestamp = time();
-
-        // Always return ISO formatted dates
-        return gmdate($format, $timestamp);
-    }
-
-    /**
      * Get the Calendar Type
      * @return string
      */

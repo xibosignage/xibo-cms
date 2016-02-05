@@ -1,0 +1,274 @@
+<definitions xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:tns="urn:xmds"
+             xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns="http://schemas.xmlsoap.org/wsdl/"
+             targetNamespace="urn:xmds">
+    <types>
+        <xsd:schema targetNamespace="urn:xmds">
+            <xsd:import namespace="http://schemas.xmlsoap.org/soap/encoding/" />
+            <xsd:import namespace="http://schemas.xmlsoap.org/wsdl/" />
+        </xsd:schema>
+    </types>
+    <message name="RegisterDisplayRequest">
+        <part name="serverKey" type="xsd:string" />
+        <part name="hardwareKey" type="xsd:string" />
+        <part name="displayName" type="xsd:string" />
+        <part name="clientType" type="xsd:string" />
+        <part name="clientVersion" type="xsd:string" />
+        <part name="clientCode" type="xsd:int" />
+        <part name="operatingSystem" type="xsd:string" />
+        <part name="macAddress" type="xsd:string" />
+        <part name="xmrChannel" type="xsd:string" />
+        <part name="xmrPubKey" type="xsd:string" />
+    </message>
+    <message name="RegisterDisplayResponse">
+        <part name="ActivationMessage" type="xsd:string" />
+    </message>
+    <message name="RequiredFilesRequest">
+        <part name="serverKey" type="xsd:string" />
+        <part name="hardwareKey" type="xsd:string" />
+    </message>
+    <message name="RequiredFilesResponse">
+        <part name="RequiredFilesXml" type="xsd:string" />
+    </message>
+    <message name="GetFileRequest">
+        <part name="serverKey" type="xsd:string" />
+        <part name="hardwareKey" type="xsd:string" />
+        <part name="fileId" type="xsd:int" />
+        <part name="fileType" type="xsd:string" />
+        <part name="chunkOffset" type="xsd:double" />
+        <part name="chuckSize" type="xsd:double" />
+    </message>
+    <message name="GetFileResponse">
+        <part name="file" type="xsd:base64Binary" />
+    </message>
+    <message name="ScheduleRequest">
+        <part name="serverKey" type="xsd:string" />
+        <part name="hardwareKey" type="xsd:string" />
+    </message>
+    <message name="ScheduleResponse">
+        <part name="ScheduleXml" type="xsd:string" />
+    </message>
+    <message name="BlackListRequest">
+        <part name="serverKey" type="xsd:string" />
+        <part name="hardwareKey" type="xsd:string" />
+        <part name="mediaId" type="xsd:int" />
+        <part name="type" type="xsd:string" />
+        <part name="reason" type="xsd:string" />
+    </message>
+    <message name="BlackListResponse">
+        <part name="success" type="xsd:boolean" />
+    </message>
+    <message name="SubmitLogRequest">
+        <part name="serverKey" type="xsd:string" />
+        <part name="hardwareKey" type="xsd:string" />
+        <part name="logXml" type="xsd:string" />
+    </message>
+    <message name="SubmitLogResponse">
+        <part name="success" type="xsd:boolean" />
+    </message>
+    <message name="SubmitStatsRequest">
+        <part name="serverKey" type="xsd:string" />
+        <part name="hardwareKey" type="xsd:string" />
+        <part name="statXml" type="xsd:string" />
+    </message>
+    <message name="SubmitStatsResponse">
+        <part name="success" type="xsd:boolean" />
+    </message>
+    <message name="MediaInventoryRequest">
+        <part name="serverKey" type="xsd:string" />
+        <part name="hardwareKey" type="xsd:string" />
+        <part name="mediaInventory" type="xsd:string" />
+    </message>
+    <message name="MediaInventoryResponse">
+        <part name="success" type="xsd:boolean" />
+    </message>
+    <message name="GetResourceRequest">
+        <part name="serverKey" type="xsd:string" />
+        <part name="hardwareKey" type="xsd:string" />
+        <part name="layoutId" type="xsd:int" />
+        <part name="regionId" type="xsd:string" />
+        <part name="mediaId" type="xsd:string" />
+    </message>
+    <message name="GetResourceResponse">
+        <part name="resource" type="xsd:string" />
+    </message>
+    <message name="NotifyStatusRequest">
+        <part name="serverKey" type="xsd:string" />
+        <part name="hardwareKey" type="xsd:string" />
+        <part name="status" type="xsd:string" />
+    </message>
+    <message name="NotifyStatusResponse">
+        <part name="success" type="xsd:boolean" />
+    </message>
+    <message name="SubmitScreenShotRequest">
+        <part name="serverKey" type="xsd:string" />
+        <part name="hardwareKey" type="xsd:string" />
+        <part name="screenShot" type="xsd:base64Binary" />
+    </message>
+    <message name="SubmitScreenShotResponse">
+        <part name="success" type="xsd:boolean" />
+    </message>
+    <portType name="xmdsPortType">
+        <operation name="RegisterDisplay">
+            <documentation>Register the Display with the CMS</documentation>
+            <input message="tns:RegisterDisplayRequest"/>
+            <output message="tns:RegisterDisplayResponse"/>
+        </operation>
+        <operation name="RequiredFiles">
+            <documentation>The files required by the requesting display</documentation>
+            <input message="tns:RequiredFilesRequest"/>
+            <output message="tns:RequiredFilesResponse"/>
+        </operation>
+        <operation name="GetFile">
+            <documentation>Gets the file requested</documentation>
+            <input message="tns:GetFileRequest"/>
+            <output message="tns:GetFileResponse"/>
+        </operation>
+        <operation name="Schedule">
+            <documentation>Gets the schedule</documentation>
+            <input message="tns:ScheduleRequest"/>
+            <output message="tns:ScheduleResponse"/>
+        </operation>
+        <operation name="BlackList">
+            <documentation>Set media to be blacklisted</documentation>
+            <input message="tns:BlackListRequest"/>
+            <output message="tns:BlackListResponse"/>
+        </operation>
+        <operation name="SubmitLog">
+            <documentation>Submit Logging from the Client</documentation>
+            <input message="tns:SubmitLogRequest"/>
+            <output message="tns:SubmitLogResponse"/>
+        </operation>
+        <operation name="SubmitStats">
+            <documentation>Submit Display statistics from the Client</documentation>
+            <input message="tns:SubmitStatsRequest"/>
+            <output message="tns:SubmitStatsResponse"/>
+        </operation>
+        <operation name="MediaInventory">
+            <documentation>Report back the clients MediaInventory</documentation>
+            <input message="tns:MediaInventoryRequest" />
+            <output message="tns:MediaInventoryResponse" />
+        </operation>
+        <operation name="GetResource">
+            <documentation>Gets the file requested</documentation>
+            <input message="tns:GetResourceRequest"/>
+            <output message="tns:GetResourceResponse"/>
+        </operation>
+        <operation name="NotifyStatus">
+            <documentation>Report back the current status</documentation>
+            <input message="tns:NotifyStatusRequest"/>
+            <output message="tns:NotifyStatusResponse"/>
+        </operation>
+        <operation name="SubmitScreenShot">
+            <documentation>Submit a screen shot for a display</documentation>
+            <input message="tns:SubmitScreenShotRequest"/>
+            <output message="tns:SubmitScreenShotResponse"/>
+        </operation>
+    </portType>
+    <binding name="xmdsBinding" type="tns:xmdsPortType">
+        <soap:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
+        <operation name="RegisterDisplay">
+            <soap:operation soapAction="urn:xmds#RegisterDisplay" style="rpc"/>
+            <input>
+                <soap:body use="encoded" namespace="urn:xmds" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </input>
+            <output>
+                <soap:body use="encoded" namespace="urn:xmds" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </output>
+        </operation>
+        <operation name="RequiredFiles">
+            <soap:operation soapAction="urn:xmds#RequiredFiles" style="rpc"/>
+            <input>
+                <soap:body use="encoded" namespace="urn:xmds" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </input>
+            <output>
+                <soap:body use="encoded" namespace="urn:xmds" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </output>
+        </operation>
+        <operation name="GetFile">
+            <soap:operation soapAction="urn:xmds#GetFile" style="rpc"/>
+            <input>
+                <soap:body use="encoded" namespace="urn:xmds" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </input>
+            <output>
+                <soap:body use="encoded" namespace="urn:xmds" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </output>
+        </operation>
+        <operation name="Schedule">
+            <soap:operation soapAction="urn:xmds#Schedule" style="rpc"/>
+            <input>
+                <soap:body use="encoded" namespace="urn:xmds" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </input>
+            <output>
+                <soap:body use="encoded" namespace="urn:xmds" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </output>
+        </operation>
+        <operation name="BlackList">
+            <soap:operation soapAction="urn:xmds#BlackList" style="rpc"/>
+            <input>
+                <soap:body use="encoded" namespace="urn:xmds" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </input>
+            <output>
+                <soap:body use="encoded" namespace="urn:xmds" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </output>
+        </operation>
+        <operation name="SubmitLog">
+            <soap:operation soapAction="urn:xmds#SubmitLog" style="rpc"/>
+            <input>
+                <soap:body use="encoded" namespace="urn:xmds" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </input>
+            <output>
+                <soap:body use="encoded" namespace="urn:xmds" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </output>
+        </operation>
+        <operation name="SubmitStats">
+            <soap:operation soapAction="urn:xmds#SubmitLog" style="rpc"/>
+            <input>
+                <soap:body use="encoded" namespace="urn:xmds" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </input>
+            <output>
+                <soap:body use="encoded" namespace="urn:xmds" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </output>
+        </operation>
+        <operation name="MediaInventory">
+            <soap:operation soapAction="urn:xmds#MediaInventory" style="rpc"/>
+            <input>
+                <soap:body use="encoded" namespace="urn:xmds" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </input>
+            <output>
+                <soap:body use="encoded" namespace="urn:xmds" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </output>
+        </operation>
+        <operation name="GetResource">
+            <soap:operation soapAction="urn:xmds#GetResource" style="rpc"/>
+            <input>
+                <soap:body use="encoded" namespace="urn:xmds" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </input>
+            <output>
+                <soap:body use="encoded" namespace="urn:xmds" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </output>
+        </operation>
+        <operation name="NotifyStatus">
+            <soap:operation soapAction="urn:xmds#NotifyStatus" style="rpc"/>
+            <input>
+                <soap:body use="encoded" namespace="urn:xmds" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </input>
+            <output>
+                <soap:body use="encoded" namespace="urn:xmds" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </output>
+        </operation>
+        <operation name="SubmitScreenShot">
+            <soap:operation soapAction="urn:xmds#SubmitScreenShot" style="rpc"/>
+            <input>
+                <soap:body use="encoded" namespace="urn:xmds" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </input>
+            <output>
+                <soap:body use="encoded" namespace="urn:xmds" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </output>
+        </operation>
+    </binding>
+    <service name="xmds">
+        <port name="xmdsPort" binding="tns:xmdsBinding">
+            <soap:address location="{{XMDS_LOCATION}}"/>
+        </port>
+    </service>
+</definitions>

@@ -25,7 +25,7 @@
             <form id="campaignAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("campaign.add") }}">
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "The Name for this Campaign" %}{% endset %}
-                {{ forms.text("name", title, "", helpText) }}
+                {{ forms.input("name", title, "", helpText) }}
             </form>
         </div>
     </div>

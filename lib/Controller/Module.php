@@ -157,8 +157,8 @@ class Module extends Base
         $module = ModuleFactory::createById($moduleId);
         $module->getModule()->validExtensions = Sanitize::getString('validExtensions');
         $module->getModule()->imageUri = Sanitize::getString('imageUri');
-        $module->getModule()->enabled = Sanitize::getString('enabled');
-        $module->getModule()->previewEnabled = Sanitize::getString('previewEnabled');
+        $module->getModule()->enabled = Sanitize::getCheckbox('enabled');
+        $module->getModule()->previewEnabled = Sanitize::getCheckbox('previewEnabled');
 
         // Install Files for this module
         $module->installFiles();
@@ -268,11 +268,11 @@ class Module extends Base
 
         // Pass to view
         $this->getState()->template = $module->getModuleType() . '-form-add';
-        $this->getState()->setData([
+        $this->getState()->setData($module->setTemplateData([
             'playlist' => $playlist,
             'media' => MediaFactory::query(),
             'module' => $module
-        ]);
+        ]));
     }
 
     /**
@@ -338,11 +338,11 @@ class Module extends Base
 
         // Pass to view
         $this->getState()->template = $module->getModuleType() . '-form-edit';
-        $this->getState()->setData([
+        $this->getState()->setData($module->setTemplateData([
             'module' => $module,
             'media' => MediaFactory::query(),
             'validExtensions' => str_replace(',', '|', $module->getModule()->validExtensions)
-        ]);
+        ]));
     }
 
     /**

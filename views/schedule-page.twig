@@ -34,7 +34,7 @@
                 {% else %}
                     {% set allSelected = "" %}
                 {% endif %}
-                <select id="DisplayList" class="form-control" name="displayGroupIds[]" data-live-search="true" data-selected-text-format="count > 4" title="{% trans "Nothing Selected" %}" multiple>
+                <select id="DisplayList" class="form-control" name="displayGroupIds[]" data-live-search="true" data-selected-text-format="count > 4" multiple>
                     <option value="-1" {{ allSelected }}>{% trans "All" %}</option>
                     <optgroup label="{% trans "Groups" %}">
                         {% for group in groups %}
@@ -65,6 +65,7 @@
                     <li class="event-important"><span class="fa fa-bullseye"></span> {% trans "Priority" %}</li>
                     <li class="event-special"><span class="fa fa-repeat"></span> {% trans "Recurring" %}</li>
                     <li class="event-inverse"><span class="fa fa-lock"></span> {% trans "View Permission Only" %}</li>
+                    <li class="event-command"><span class="fa fa-wrench"></span> {% trans "Command" %}</li>
                 </ul>
             </div>
         </div>

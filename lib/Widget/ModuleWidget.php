@@ -356,7 +356,7 @@ abstract class ModuleWidget implements ModuleInterface
             $name = $this->module->name;
         }
 
-        return $this->getOption('name', $name);
+        return $name;
     }
 
     /**
@@ -684,5 +684,34 @@ abstract class ModuleWidget implements ModuleInterface
         }
 
         return $parsedContent;
+    }
+
+    /**
+     * Set template data
+     * @param array $data
+     * @return array
+     */
+    public function setTemplateData($data)
+    {
+        return $data;
+    }
+
+    /**
+     * Determine duration
+     * @param string|null $fileName
+     * @return int
+     */
+    public function determineDuration($fileName = null)
+    {
+        return 0;
+    }
+
+    /**
+     * Pre-processing
+     * @param string|null $fileName
+     */
+    public function preProcess($fileName = null)
+    {
+        Log::debug('No pre-processing rules for this module type');
     }
 }

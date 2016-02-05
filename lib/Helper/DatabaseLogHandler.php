@@ -54,6 +54,11 @@ class DatabaseLogHandler extends AbstractProcessingHandler
             'displayid' => isset($record['extra']['displayId']) ? $record['extra']['displayId'] : 0
         );
 
-        self::$statement->execute($params);
+        try {
+            self::$statement->execute($params);
+        }
+        catch (\PDOException $e) {
+            // Not sure what we can do here?
+        }
     }
 }

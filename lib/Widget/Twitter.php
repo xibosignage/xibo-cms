@@ -169,8 +169,8 @@ class Twitter extends ModuleWidget
         $this->setOption('updateInterval', Sanitize::getInt('updateInterval', 60));
         $this->setOption('templateId', Sanitize::getString('templateId'));
 
-        $this->setRawNode('template', Sanitize::getParam('ta_text', null));
-        $this->setRawNode('styleSheet', Sanitize::getParam('ta_css', null));
+        $this->setRawNode('template', Sanitize::getParam('ta_text', Sanitize::getParam('template', null)));
+        $this->setRawNode('styleSheet', Sanitize::getParam('ta_css', Sanitize::getParam('styleSheet', null)));
 
         // Save the widget
         $this->validate();
@@ -198,8 +198,8 @@ class Twitter extends ModuleWidget
         $this->setOption('updateInterval', Sanitize::getInt('updateInterval', 60));
         $this->setOption('templateId', Sanitize::getString('templateId'));
 
-        $this->setRawNode('template', Sanitize::getParam('ta_text', null));
-        $this->setRawNode('styleSheet', Sanitize::getParam('ta_css', null));
+        $this->setRawNode('template', Sanitize::getParam('ta_text', Sanitize::getParam('template', null)));
+        $this->setRawNode('styleSheet', Sanitize::getParam('ta_css', Sanitize::getParam('styleSheet', null)));
 
         // Save the widget
         $this->validate();
@@ -413,7 +413,7 @@ class Twitter extends ModuleWidget
         }
 
         // Get the template
-        $template = $this->getRawNode('template', null);
+        $template = $this->parseLibraryReferences($isPreview, $this->getRawNode('template', null));
 
         // Parse the text template
         $matches = '';
@@ -508,8 +508,9 @@ class Twitter extends ModuleWidget
                             // Tag this layout with this file
                             $this->assignMedia($file->mediaId);
 
-                            $url = $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']);
-                            $replace = ($isPreview) ? '<img src="' . $url . '?preview=1&width=170&height=150" />' : '<img src="' . $file->storedAs . '"  />';
+                            $replace = ($isPreview)
+                                ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1&width=170&height=150" />'
+                                : '<img src="' . $file->storedAs . '"  />';
                         }
                         break;
 
@@ -528,8 +529,9 @@ class Twitter extends ModuleWidget
                                 // Tag this layout with this file
                                 $this->assignMedia($file->mediaId);
 
-                                $url = $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']);
-                                $replace = ($isPreview) ? '<img src="' . $url . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" />' : '<img src="' . $file->storedAs . '"  />';
+                                $replace = ($isPreview)
+                                    ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1&width=' . $this->region->width . '&height=' . $this->region->height . '" />'
+                                    : '<img src="' . $file->storedAs . '"  />';
                             }
                         }
 
@@ -605,7 +607,7 @@ class Twitter extends ModuleWidget
         // Add the CSS if it isn't empty
         $css = $this->getRawNode('styleSheet', null);
         if ($css != '') {
-            $headContent .= '<style type="text/css">' . $css . '</style>';
+            $headContent .= '<style type="text/css">' . $this->parseLibraryReferences($isPreview, $css) . '</style>';
         }
 
         $backgroundColor = $this->getOption('backgroundColor');
@@ -644,6 +646,10 @@ class Twitter extends ModuleWidget
 
         // Replace the Head Content with our generated javascript
         $data['javaScript'] = $javaScriptContent;
+
+        // Update and save widget if we've changed our assignments.
+        if ($this->hasMediaChanged())
+            $this->widget->save(['saveWidgetOptions' => false]);
 
         return $this->renderTemplate($data);
     }

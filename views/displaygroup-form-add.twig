@@ -26,11 +26,11 @@
             <form id="displayGroupAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("displayGroup.add") }}">
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "The Name for this Display Group" %}{% endset %}
-                {{ forms.text("displayGroup", title, "", helpText) }}
+                {{ forms.input("displayGroup", title, "", helpText) }}
 
                 {% set title %}{% trans "Description" %}{% endset %}
                 {% set helpText %}{% trans "A short description of this Display Group" %}{% endset %}
-                {{ forms.text("description", title, "", helpText) }}
+                {{ forms.input("description", title, "", helpText) }}
             </form>
         </div>
     </div>

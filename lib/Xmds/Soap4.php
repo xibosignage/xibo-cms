@@ -61,7 +61,7 @@ class Soap4 extends Soap
         $clientVersion = Sanitize::string($clientVersion);
         $clientCode = Sanitize::int($clientCode);
         $macAddress = Sanitize::string($macAddress);
-        $clientAddress = Sanitize::getString('REMOTE_ADDR');
+        $clientAddress = $this->getIp();
 
         // Audit in
         Log::debug('serverKey: ' . $serverKey . ', hardwareKey: ' . $hardwareKey . ', displayName: ' . $displayName);
@@ -83,10 +83,13 @@ class Soap4 extends Soap
         try {
             $display = DisplayFactory::getByLicence($hardwareKey);
 
-            $this->logProcessor->setDisplay($this->display->displayId);
+            $this->logProcessor->setDisplay($display->displayId);
+
+            // Now
+            $dateNow = Date::parse();
 
             // Append the time
-            $displayElement->setAttribute('date', Date::getLocalDate());
+            $displayElement->setAttribute('date', Date::getLocalDate($dateNow));
             $displayElement->setAttribute('timezone', Config::GetSetting('defaultTimezone'));
 
             // Determine if we are licensed or not
@@ -108,6 +111,16 @@ class Soap4 extends Soap
 
                 // Create the XML nodes
                 foreach ($settings as $arrayItem) {
+
+                    // Append Local Time to the root element
+                    if (strtolower($arrayItem['name']) == 'displaytimezone' && $arrayItem['value'] != '') {
+                        // Calculate local time
+                        $dateNow->timezone($arrayItem['value']);
+
+                        // Append Local Time
+                        $displayElement->setAttribute('localDate', Date::getLocalDate($dateNow));
+                    }
+
                     $node = $return->createElement($arrayItem['name'], (isset($arrayItem['value']) ? $arrayItem['value'] : $arrayItem['default']));
                     $node->setAttribute('type', $arrayItem['type']);
                     $displayElement->appendChild($node);
@@ -125,7 +138,7 @@ class Soap4 extends Soap
                 $displayElement->appendChild($node);
 
                 // Send Notification if required
-                $this->AlertDisplayUp($display->displayId, $display->display, $display->loggedIn, $display->emailAlert);
+                $this->AlertDisplayUp();
             }
 
         } catch (NotFoundException $e) {
@@ -198,6 +211,8 @@ class Soap4 extends Soap
      */
     function GetFile($serverKey, $hardwareKey, $fileId, $fileType, $chunkOffset, $chunkSize)
     {
+        $this->logProcessor->setRoute('GetFile');
+
         // Sanitize
         $serverKey = Sanitize::string($serverKey);
         $hardwareKey = Sanitize::string($hardwareKey);
@@ -365,6 +380,8 @@ class Soap4 extends Soap
      */
     public function NotifyStatus($serverKey, $hardwareKey, $status)
     {
+        $this->logProcessor->setRoute('NotifyStatus');
+
         // Sanitize
         $serverKey = Sanitize::string($serverKey);
         $hardwareKey = Sanitize::string($hardwareKey);
@@ -391,6 +408,7 @@ class Soap4 extends Soap
         $this->display->currentLayoutId = Sanitize::getInt('currentLayoutId', $this->display->currentLayoutId, $status);
         $this->display->storageAvailableSpace = Sanitize::getInt('availableSpace', $this->display->storageAvailableSpace, $status);
         $this->display->storageTotalSpace = Sanitize::getInt('totalSpace', $this->display->storageTotalSpace, $status);
+        $this->display->lastCommandSuccess = Sanitize::getInt('lastCommandSuccess', $this->display->lastCommandSuccess, $status);
 
         // Touch the display record
         $this->display->save(['validate' => false, 'audit' => false]);
@@ -408,6 +426,8 @@ class Soap4 extends Soap
      */
     public function SubmitScreenShot($serverKey, $hardwareKey, $screenShot)
     {
+        $this->logProcessor->setRoute('SubmitScreenShot');
+
         // Sanitize
         $serverKey = Sanitize::string($serverKey);
         $hardwareKey = Sanitize::string($hardwareKey);

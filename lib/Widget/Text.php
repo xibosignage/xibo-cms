@@ -23,6 +23,7 @@ namespace Xibo\Widget;
 use Xibo\Factory\MediaFactory;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
+use Xibo\Helper\Translate;
 
 class Text extends ModuleWidget
 {
@@ -60,7 +61,7 @@ class Text extends ModuleWidget
         $this->setOption('backgroundColor', Sanitize::getString('backgroundColor'));
         $this->setOption('name', Sanitize::getString('name'));
         $this->setOption('marqueeInlineSelector', Sanitize::getString('marqueeInlineSelector'));
-        $this->setRawNode('text', Sanitize::getParam('ta_text', null));
+        $this->setRawNode('text', Sanitize::getParam('ta_text', Sanitize::getParam('text', null)));
 
         // Save the widget
         $this->validate();
@@ -79,7 +80,7 @@ class Text extends ModuleWidget
         $this->setOption('backgroundColor', Sanitize::getString('backgroundColor'));
         $this->setOption('name', Sanitize::getString('name'));
         $this->setOption('marqueeInlineSelector', Sanitize::getString('marqueeInlineSelector'));
-        $this->setRawNode('text', Sanitize::getParam('ta_text', null));
+        $this->setRawNode('text', Sanitize::getParam('ta_text', Sanitize::getParam('text', null)));
 
         // Save the widget
         $this->validate();
@@ -188,7 +189,7 @@ class Text extends ModuleWidget
         $javaScriptContent .= '       $("#content").xiboTextRender(options, items); $("body").xiboLayoutScaler(options);';
 
         if ($clock)
-            $javaScriptContent .= ' updateClock(); setInterval(updateClock, 1000); ';
+            $javaScriptContent .= ' updateClock(); setInterval(updateClock, 1000); moment.locale("' . Translate::GetJsLocale() . '"); ';
 
         $javaScriptContent .= '   }); ';
 

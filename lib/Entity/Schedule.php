@@ -10,6 +10,8 @@ namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
 use Xibo\Factory\DisplayGroupFactory;
+use Xibo\Helper\Config;
+use Xibo\Helper\Log;
 use Xibo\Storage\PDOConnect;
 
 /**
@@ -22,6 +24,9 @@ class Schedule implements \JsonSerializable
 {
     use EntityTrait;
 
+    public static $LAYOUT_EVENT = 1;
+    public static $COMMAND_EVENT = 2;
+
     /**
      * @SWG\Property(
      *  description="The ID of this Event"
@@ -32,11 +37,27 @@ class Schedule implements \JsonSerializable
 
     /**
      * @SWG\Property(
+     *  description="The Event Type ID"
+     * )
+     * @var int
+     */
+    public $eventTypeId;
+
+    /**
+     * @SWG\Property(
      *  description="The CampaignID this event is for"
      * )
      * @var int
      */
     public $campaignId;
+
+    /**
+     * @SWG\Property(
+     *  description="The CommandId this event is for"
+     * )
+     * @var int
+     */
+    public $commandId;
 
     /**
      * @SWG\Property(
@@ -122,6 +143,22 @@ class Schedule implements \JsonSerializable
      */
     public $campaign;
 
+    /**
+     * @SWG\Property(
+     *  description="The Command Name",
+     *  readOnly=true
+     * )
+     * @var string
+     */
+    public $command;
+
+    /**
+     * Is this event (as a whole) inside the schedule look ahead period?
+     * @var bool
+     */
+    private $isInScheduleLookAhead = false;
+
+
     public function getId()
     {
         return $this->eventId;
@@ -139,6 +176,24 @@ class Schedule implements \JsonSerializable
     public function setOwner($ownerId)
     {
         $this->userId = $ownerId;
+    }
+
+    /**
+     * Are the provided dates within the schedule look ahead
+     * @param $fromDt
+     * @param $toDt
+     * @return bool
+     */
+    private function datesInScheduleLookAhead($fromDt, $toDt)
+    {
+        // From Date and To Date are in UNIX format
+        $currentDate = time();
+        $rfLookAhead = intval($currentDate) + intval(Config::GetSetting('REQUIRED_FILES_LOOKAHEAD'));
+
+        if ($toDt == null)
+            $toDt = $fromDt;
+
+        return ($fromDt < $rfLookAhead && $toDt > $currentDate);
     }
 
     public function load()
@@ -190,13 +245,31 @@ class Schedule implements \JsonSerializable
         if (count($this->displayGroups) <= 0)
             throw new \InvalidArgumentException(__('No display groups selected'));
 
-        // Validate layout
-        if (!v::int()->notEmpty()->min(1)->validate($this->campaignId))
-            throw new \InvalidArgumentException(__('No layout selected'));
+        Log::debug('EventTypeId: %d. CampaignId: %d, CommandId: %d', $this->eventTypeId, $this->campaignId, $this->commandId);
 
-        // validate the dates
-        if ($this->toDt < $this->fromDt)
-            throw new \InvalidArgumentException(__('Can not have an end time earlier than your start time'));
+        if ($this->eventTypeId == Schedule::$LAYOUT_EVENT) {
+            // Validate layout
+            if (!v::int()->notEmpty()->validate($this->campaignId))
+                throw new \InvalidArgumentException(__('Please select a Campaign/Layout for this event.'));
+
+            // validate the dates
+            if ($this->toDt < $this->fromDt)
+                throw new \InvalidArgumentException(__('Can not have an end time earlier than your start time'));
+
+            $this->commandId = null;
+
+        } else if ($this->eventTypeId == Schedule::$COMMAND_EVENT) {
+            // Validate command
+            if (!v::int()->notEmpty()->validate($this->commandId))
+                throw new \InvalidArgumentException(__('Please select a Command for this event.'));
+
+            $this->campaignId = null;
+            $this->toDt = null;
+
+        } else {
+            // No event type selected
+            throw new \InvalidArgumentException(__('Please select the Event Type'));
+        }
     }
 
     /**
@@ -215,13 +288,27 @@ class Schedule implements \JsonSerializable
         else
             $this->edit();
 
+        // Manage display assignments
         if ($this->loaded) {
             // Manage assignments
             $this->manageAssignments();
         }
 
+        // Check the main event dates to see if we are in the schedule look ahead
+        $this->isInScheduleLookAhead = $this->datesInScheduleLookAhead($this->fromDt, $this->toDt);
+
         // Generate the event instances
         $this->generate();
+
+        // Notify
+        // Only if the schedule effects the immediate future - i.e. within the RF Look Ahead
+        if ($this->isInScheduleLookAhead) {
+            foreach ($this->displayGroups as $displayGroup) {
+                /* @var DisplayGroup $displayGroup */
+                $displayGroup->setCollectRequired();
+                $displayGroup->setMediaIncomplete();
+            }
+        }
     }
 
     /**
@@ -246,10 +333,12 @@ class Schedule implements \JsonSerializable
     private function add()
     {
         $this->eventId = PDOConnect::insert('
-          INSERT INTO `schedule` (CampaignId, userID, is_priority, FromDT, ToDT, DisplayOrder, recurrence_type, recurrence_detail, recurrence_range)
-            VALUES (:campaignId, :userId, :isPriority, :fromDt, :toDt, :displayOrder, :recurrenceType, :recurrenceDetail, :recurrenceRange)
+          INSERT INTO `schedule` (eventTypeId, CampaignId, commandId, userID, is_priority, FromDT, ToDT, DisplayOrder, recurrence_type, recurrence_detail, recurrence_range)
+            VALUES (:eventTypeId, :campaignId, :commandId, :userId, :isPriority, :fromDt, :toDt, :displayOrder, :recurrenceType, :recurrenceDetail, :recurrenceRange)
         ', [
+            'eventTypeId' => $this->eventTypeId,
             'campaignId' => $this->campaignId,
+            'commandId' => $this->commandId,
             'userId' => $this->userId,
             'isPriority' => $this->isPriority,
             'fromDt' => $this->fromDt,
@@ -268,7 +357,9 @@ class Schedule implements \JsonSerializable
     {
         PDOConnect::update('
           UPDATE `schedule` SET
+            eventTypeId = :eventTypeId,
             campaignId = :campaignId,
+            commandId = :commandId,
             is_priority = :isPriority,
             userId = :userId,
             fromDt = :fromDt,
@@ -279,7 +370,9 @@ class Schedule implements \JsonSerializable
             recurrence_range = :recurrenceRange
           WHERE eventId = :eventId
         ', [
+            'eventTypeId' => $this->eventTypeId,
             'campaignId' => $this->campaignId,
+            'commandId' => $this->commandId,
             'userId' => $this->userId,
             'isPriority' => $this->isPriority,
             'fromDt' => $this->fromDt,
@@ -355,7 +448,14 @@ class Schedule implements \JsonSerializable
             if ($t_start_temp > $this->recurrenceRange)
                 break;
 
-            $this->addDetail($t_start_temp, $t_end_temp);
+            if ($this->toDt == null)
+                $this->addDetail($t_start_temp, null);
+            else
+                $this->addDetail($t_start_temp, $t_end_temp);
+
+            // Check these dates
+            if (!$this->isInScheduleLookAhead)
+                $this->isInScheduleLookAhead = $this->datesInScheduleLookAhead($t_start_temp, $t_end_temp);
         }
     }
 
@@ -388,11 +488,6 @@ class Schedule implements \JsonSerializable
     {
         $this->linkDisplayGroups();
         $this->unlinkDisplayGroups();
-
-        foreach ($this->displayGroups as $displayGroup) {
-            /* @var DisplayGroup $displayGroup */
-            $displayGroup->setMediaIncomplete();
-        }
     }
 
     /**

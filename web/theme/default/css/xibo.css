@@ -142,10 +142,12 @@ span.error {
     position: absolute;
     left: 2px;
     bottom: -20px;
+    z-index: 91;
 }
 
 .previewNav .prevSeq, .previewNav .nextSeq {
     cursor: pointer;
+    font-size: 15px;
 }
 
 .preview-media-information {

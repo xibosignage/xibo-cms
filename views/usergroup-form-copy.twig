@@ -25,7 +25,7 @@
             <form id="userGroupCopyForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("group.copy", {id: group.groupId}) }}">
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "The Name for this User Group" %}{% endset %}
-                {{ forms.text("group", title, "", helpText, "", "required maxlength='50'") }}
+                {{ forms.input("group", title, "", helpText, "", "required maxlength='50'") }}
 
                 {% set title %}{% trans "Copy Members?" %}{% endset %}
                 {% set helpText %}{% trans "Assign the members to the new group" %}{% endset %}

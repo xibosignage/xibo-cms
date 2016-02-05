@@ -68,8 +68,13 @@ class Log
     public static function sql($sql, $params)
     {
         $app = Slim::getInstance();
-        if (strtolower($app->getMode()) == 'test')
-            $app->log->debug(sprintf('SQL = %s. Params = %s.', $sql, var_export($params, true)));
+        if (strtolower($app->getMode()) == 'test') {
+            $paramSql = '';
+            foreach ($params as $key => $param) {
+                $paramSql .= 'SET @' . $key . '=' . $param . ';' . PHP_EOL;
+            }
+            $app->log->debug($paramSql . str_replace(':', '@', $sql));
+        }
     }
 
     public static function debug($object)

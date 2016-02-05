@@ -47,6 +47,20 @@ class Campaign extends Base
      *  tags={"campaign"},
      *  summary="Search Campaigns",
      *  description="Search all Campaigns this user has access to",
+     *  @SWG\Parameter(
+     *      name="campaignId",
+     *      in="formData",
+     *      description="Filter by Campaign Id",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="Filter by Name",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -430,7 +444,7 @@ class Campaign extends Base
         }
 
         // Save the campaign
-        $campaign->save(false);
+        $campaign->save(['validate' => false]);
 
         // Return
         $this->getState()->hydrate([
@@ -500,7 +514,7 @@ class Campaign extends Base
             $campaign->unassignLayout($layout);
         }
 
-        $campaign->save(false);
+        $campaign->save(['validate' => false]);
 
         // Return
         $this->getState()->hydrate([

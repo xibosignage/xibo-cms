@@ -103,7 +103,7 @@ Fine, missing:
             <form id="videoEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}" data-widget-id="{{ module.widget.widgetId }}" data-media-id="{{ module.getMediaId() }}" data-media-editable="{{ currentUser.checkEditable(module.getMedia()) }}" data-valid-extensions="{{ validExtensions }}">
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
-                {{ forms.text("name", title, module.getOption("name"), helpText) }}
+                {{ forms.input("name", title, module.getOption("name"), helpText) }}
 
                 {% set title %}{% trans "Play until the end?" %}{% endset %}
                 {% set helpText %}{% trans "The video plays through once and then finishes," %}{% endset %}
@@ -117,6 +117,16 @@ Fine, missing:
                 {% set title %}{% trans "Duration" %}{% endset %}
                 {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
                 {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
+
+                {% set title %}{% trans "Scale type" %}{% endset %}
+                {% set helpText %}{% trans "How should this video be scaled?" %}{% endset %}
+                {% set aspect %}{% trans "Aspect" %}{% endset %}
+                {% set stretch %}{% trans "Stretch" %}{% endset %}
+                {% set options = [
+                { scaleTypeId: "aspect", scaleType: aspect },
+                { scaleTypeId: "stretch", scaleType: stretch }
+                ] %}
+                {{ forms.dropdown("scaleTypeId", "single", title, module.getOption("scaleType"), options, "scaleTypeId", "scaleType", helpText) }}
 
                 {% set title %}{% trans "Loop?" %}{% endset %}
                 {% set helpText %}{% trans "Should the video loop if it finishes before the provided duration?" %}{% endset %}

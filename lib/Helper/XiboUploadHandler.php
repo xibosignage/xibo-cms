@@ -22,19 +22,37 @@ class XiboUploadHandler extends BlueImpUploadHandler
         // Handle form data, e.g. $_REQUEST['description'][$index]
         // Link the file to the module
         $fileName = $file->name;
-        $name = $_REQUEST['name'][$index];
+        $filePath = Config::GetSetting('LIBRARY_LOCATION') . 'temp/' . $fileName;
 
-        Log::debug('Upload complete for name: ' . $fileName . '. Options [%s]', json_encode($this->options));
+        Log::debug('Upload complete for name: ' . $fileName . '. Index is %s.', $index);
 
         $controller = $this->options['controller'];
         /* @var \Xibo\Controller\Library $controller */
 
         // Upload and Save
         try {
+            // Get some parameters
+            if ($index === null) {
+                if (!isset($_REQUEST['name']))
+                    throw new \InvalidArgumentException(__('Missing Name Parameter'));
+
+                $name = $_REQUEST['name'];
+            }
+            else {
+                if (!isset($_REQUEST['name'][$index]))
+                    throw new \InvalidArgumentException(__('Missing Name Parameter'));
+
+                $name = $_REQUEST['name'][$index];
+            }
+
             // Guess the type
             $module = ModuleFactory::getByExtension(strtolower(substr(strrchr($fileName, '.'), 1)));
+            $module = ModuleFactory::create($module->type);
 
-            Log::debug('Module Type = %s', $module);
+            Log::debug('Module Type = %s', $module->getModuleType());
+
+            // Do we need to run any pre-processing on the file?
+            $module->preProcess($filePath);
 
             // Old Media Id or not?
             if ($this->options['oldMediaId'] != 0) {
@@ -59,7 +77,10 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 $name = ($name == '') ? $oldMedia->name : $name;
 
                 // Add the Media
-                $media = MediaFactory::create($name, $fileName, $module->type, $this->options['userId']);
+                $media = MediaFactory::create($name, $fileName, $module->getModuleType(), $this->options['userId']);
+
+                // Set the duration
+                $media->duration = $module->determineDuration($filePath);
 
                 // Save
                 $media->save(['oldMedia' => $oldMedia]);
@@ -155,7 +176,10 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 $name = ($name == '') ? $fileName : $name;
 
                 // Add the Media
-                $media = MediaFactory::create($name, $fileName, $module->type, $this->options['userId']);
+                $media = MediaFactory::create($name, $fileName, $module->getModuleType(), $this->options['userId']);
+
+                // Set the duration
+                $media->duration = $module->determineDuration($filePath);
 
                 // Save
                 $media->save();
@@ -174,7 +198,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
             $file->storedas = $media->storedAs;
 
             // Fonts, then install
-            if ($module->type == 'font') {
+            if ($module->getModuleType() == 'font') {
                 $controller->installFonts();
             }
 
@@ -187,7 +211,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 $playlist = PlaylistFactory::getById($this->options['playlistId']);
 
                 // Create a Widget and add it to our region
-                $widget = WidgetFactory::create($this->options['userId'], $playlist->playlistId, $module->type, 10);
+                $widget = WidgetFactory::create($this->options['userId'], $playlist->playlistId, $module->getModuleType(), 10);
                 $widget->assignMedia($media->mediaId);
 
                 // Assign the new widget to the playlist

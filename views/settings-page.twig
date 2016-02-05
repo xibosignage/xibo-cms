@@ -54,7 +54,7 @@
                                 {% if field.enabled != 1 %}
                                     {{ forms.disabled(field.name, field.title, field.value, field.helpText) }}
                                 {% elseif field.fieldType == "text" %}
-                                    {{ forms.text(field.name, field.title, field.value, field.helpText) }}
+                                    {{ forms.input(field.name, field.title, field.value, field.helpText) }}
                                 {% elseif field.fieldType == "number" %}
                                     {{ forms.number(field.name, field.title, field.value, field.helpText) }}
                                 {% elseif field.fieldType == "email" %}

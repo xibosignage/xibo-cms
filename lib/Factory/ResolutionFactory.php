@@ -64,8 +64,28 @@ class ResolutionFactory extends BaseFactory
         return $resolutions[0];
     }
 
+    /**
+     * Get Resolution by Dimensions
+     * @param double $width
+     * @param double $height
+     * @return Resolution
+     * @throws NotFoundException
+     */
+    public static function getByDesignerDimensions($width, $height)
+    {
+        $resolutions = ResolutionFactory::query(null, array('disableUserCheck' => 1, 'designerWidth' => $width, 'designerHeight' => $height));
+
+        if (count($resolutions) <= 0)
+            throw new NotFoundException('Resolution not found');
+
+        return $resolutions[0];
+    }
+
     public static function query($sortOrder = null, $filterBy = null)
     {
+        if ($sortOrder === null)
+            $sortOrder = ['resolution'];
+
         $entities = array();
 
         $params = array();
@@ -91,24 +111,39 @@ class ResolutionFactory extends BaseFactory
         }
 
         if (Sanitize::getInt('resolutionId', $filterBy) !== null) {
-            $body .= ' AND resolutionId = :resolutionId';
+            $body .= ' AND resolutionId = :resolutionId ';
             $params['resolutionId'] = Sanitize::getInt('resolutionId', $filterBy);
         }
 
+        if (Sanitize::getString('resolution', $filterBy) != null) {
+            $body .= ' AND resolution = :resolution ';
+            $params['resolution'] = Sanitize::getString('resolution', $filterBy);
+        }
+
         if (Sanitize::getInt('width', $filterBy) !== null) {
-            $body .= ' AND intended_width = :width';
+            $body .= ' AND intended_width = :width ';
             $params['width'] = Sanitize::getInt('width', $filterBy);
         }
 
         if (Sanitize::getInt('height', $filterBy) !== null) {
-            $body .= ' AND intended_height = :height';
+            $body .= ' AND intended_height = :height ';
             $params['height'] = Sanitize::getInt('height', $filterBy);
+        }
+
+        if (Sanitize::getInt('designerWidth', $filterBy) !== null) {
+            $body .= ' AND width = :designerWidth ';
+            $params['designerWidth'] = Sanitize::getInt('designerWidth', $filterBy);
+        }
+
+        if (Sanitize::getInt('designerHeight', $filterBy) !== null) {
+            $body .= ' AND height = :designerHeight ';
+            $params['designerHeight'] = Sanitize::getInt('designerHeight', $filterBy);
         }
 
         // Sorting?
         $order = '';
         if (is_array($sortOrder))
-            $order .= 'ORDER BY ' . implode(',', $sortOrder);
+            $order .= ' ORDER BY ' . implode(',', $sortOrder);
 
         $limit = '';
         // Paging

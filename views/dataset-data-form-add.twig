@@ -42,7 +42,7 @@
                             ] %}
                             {{ forms.dropdown(fieldId, "single", col.heading, "", images, "mediaId", "name", "", "", "", "", "", attributes) }}
                         {% else %}
-                            {{ forms.text(fieldId, col.heading) }}
+                            {{ forms.input(fieldId, col.heading) }}
                         {% endif %}
                     {% endif %}
                 {% endfor %}

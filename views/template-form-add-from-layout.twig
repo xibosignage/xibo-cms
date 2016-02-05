@@ -26,11 +26,11 @@
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "The Name of the Template - (1 - 50 characters)" %}{% endset %}
                 {% set templateName %}{{ layout.layout }} {% trans "Template" %}{% endset %}
-                {{ forms.text("name", title, templateName, helpText) }}
+                {{ forms.input("name", title, templateName, helpText) }}
 
                 {% set title %}{% trans "Tags" %}{% endset %}
                 {% set helpText %}{% trans "Tags for this Template - used when searching for it. Comma delimited. (1 - 250 characters)" %}{% endset %}
-                {{ forms.text("tags", title, layout.tags, helpText) }}
+                {{ forms.input("tags", title, layout.tags, helpText) }}
 
                 {% set title %}{% trans "Description" %}{% endset %}
                 {% set helpText %}{% trans "An optional description of the Template. (1 - 250 characters)" %}{% endset %}

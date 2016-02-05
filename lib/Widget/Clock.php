@@ -61,7 +61,9 @@ class Clock extends ModuleWidget
         $this->setOption('theme', Sanitize::getInt('themeId', 0));
         $this->setOption('clockTypeId', Sanitize::getInt('clockTypeId', 1));
         $this->setOption('offset', Sanitize::getInt('offset', 0));
-        $this->setRawNode('format', Sanitize::getParam('ta_text', ''));
+        $this->setRawNode('format', Sanitize::getParam('ta_text', Sanitize::getParam('format', '')));
+        $this->setOption('showSeconds', Sanitize::getCheckbox('showSeconds', 1));
+        $this->setOption('clockFace', Sanitize::getString('clockFace', 'TwentyFourHourClock'));
 
         $this->validate();
 
@@ -80,12 +82,28 @@ class Clock extends ModuleWidget
         $this->setOption('theme', Sanitize::getInt('themeId', 0));
         $this->setOption('clockTypeId', Sanitize::getInt('clockTypeId', 1));
         $this->setOption('offset', Sanitize::getInt('offset', 0));
-        $this->setRawNode('format', Sanitize::getParam('ta_text', ''));
+        $this->setRawNode('format', Sanitize::getParam('ta_text', Sanitize::getParam('format', '')));
+        $this->setOption('showSeconds', Sanitize::getCheckbox('showSeconds'));
+        $this->setOption('clockFace', Sanitize::getString('clockFace'));
 
         $this->validate();
 
         // Save the widget
         $this->saveWidget();
+    }
+
+    /**
+     * Supported Clock Faces
+     * @return array
+     */
+    public function clockFaces()
+    {
+        return [
+            ['id' => 'TwelveHourClock', 'value' => __('12h Clock')],
+            ['id' => 'TwentyFourHourClock', 'value' => __('24h Clock')],
+            ['id' => 'HourlyCounter', 'value' => __('Hourly Counter')],
+            ['id' => 'MinuteCounter', 'value' => __('Minute Counter')]
+        ];
     }
 
     /**
@@ -192,6 +210,9 @@ class Clock extends ModuleWidget
                 // Head Content (CSS for flip clock)
                 $data['head'] = '<style type="text/css">' . file_get_contents('modules/vendor/flipclock.css') . ' </style>';
                 $data['offset'] = $this->GetOption('offset', 0);
+                $data['duration'] = $this->getDuration();
+                $data['clockFace'] = $this->getOption('clockFace', 'TwentyFourHourClock');
+                $data['showSeconds'] = $this->getOption('showSeconds', 1);
 
                 // After body content
                 $javaScriptContent  = '<script type = "text/javascript" src = "' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '" ></script > ';
@@ -204,8 +225,8 @@ class Clock extends ModuleWidget
         }
 
         // If we are a preview, then pass in the width and height
-        $data['previewWidth'] = Sanitize::getDouble('width');
-        $data['previewHeight'] = Sanitize::getDouble('height');
+        $data['previewWidth'] = Sanitize::getDouble('width', 0);
+        $data['previewHeight'] = Sanitize::getDouble('height', 0);
 
         // Replace the View Port Width?
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';

@@ -160,7 +160,7 @@ class Install
         }
 
         // We should have a database that we can access and populate with our tables.
-        $sql_files = array('structure.sql', 'data.sql');
+        $sql_files = array('structure.sql', 'data.sql', 'constraints.sql');
         $sqlStatementCount = 0;
         $sql_file = '';
         $sql = '';

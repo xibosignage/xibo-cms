@@ -26,15 +26,15 @@
             <form id="resolutionAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("resolution.add") }}">
                         {% set title %}{% trans "Resolution" %}{% endset %}
                         {% set helpText %}{% trans "A name for this Resolution" %}{% endset %}
-                        {{ forms.text("resolution", title, "", helpText) }}
+                        {{ forms.input("resolution", title, "", helpText) }}
                         
                         {% set title %}{% trans "Width" %}{% endset %}
                         {% set helpText %}{% trans "The Width for this Resolution" %}{% endset %}
-                        {{ forms.text("width", title, "", helpText) }}
+                        {{ forms.input("width", title, "", helpText) }}
                        
                         {% set title %}{% trans "Height" %}{% endset %}
                         {% set helpText %}{% trans "The Height for this Resolution" %}{% endset %}
-                        {{ forms.text("height", title, "", helpText) }}
+                        {{ forms.input("height", title, "", helpText) }}
             </form>
         </div>
     </div>

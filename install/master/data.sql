@@ -1,5 +1,5 @@
 INSERT INTO `version` (`app_ver`, `XmdsVersion`, `XlfVersion`, `DBVersion`) VALUES
-('1.8.0-alpha', 4, 2, 120);
+('1.8.0-alpha2', 5, 2, 121);
 
 INSERT INTO `group` (`groupID`, `group`, `IsUserSpecific`, `IsEveryone`) VALUES
 (1, 'Users', 0, 0),
@@ -136,11 +136,11 @@ INSERT INTO `pages` (`pageID`, `name`, `title`, `asHome`) VALUES
   (28, 'preview', 'Preview', 0),
   (29, 'statusdashboard', 'Status Dashboard', 1),
   (30, 'displayprofile', 'Display Profiles', 1),
-  (31, 'auditlog', 'Audit Trail', 1),
+  (31, 'audit', 'Audit Trail', 0),
   (32, 'region', 'Regions', 0),
   (33, 'playlist', 'Playlist', 0),
-  (34, 'audit', 'Audit', 0),
-  (35, 'maintenance', 'Maintenance', 0);
+  (34, 'maintenance', 'Maintenance', 0),
+  (35, 'command', 'Commands', 1);
 
 
 INSERT INTO `resolution` (`resolutionID`, `resolution`, `width`, `height`, `intended_width`, `intended_height`, `version`, `enabled`) VALUES
@@ -216,7 +216,9 @@ INSERT INTO `setting` (`settingid`, `setting`, `value`, `fieldType`, `helptext`,
 (83, 'LIBRARY_MEDIA_DELETEOLDVER_CHECKB','Unchecked','dropdown','Default the checkbox for Deleting Old Version of media when a new file is being uploaded to the library.','Checked|Unchecked','defaults',1,'Default for "Delete old version of Media" checkbox. Shown when Editing Library Media.', '', 50, 'Unchecked', 1, 'dropdown'),
 (84, 'PROXY_EXCEPTIONS', '', 'text', 'Hosts and Keywords that should not be loaded via the Proxy Specified. These should be comma separated.', '', 'network', 1, 'Proxy Exceptions', '', 32, '', 1, 'text'),
 (85, 'INSTANCE_SUSPENDED', '0', 'checkbox', 'Is this instance suspended?', NULL, 'general', 0, 'Instance Suspended', '', 120, '0', 0, 'checkbox'),
-(86, 'INHERIT_PARENT_PERMISSIONS', '1', 'checkbox', 'Inherit permissions from Parent when adding a new item?', NULL, 'permissions', 1, 'Inherit permissions', '', 50, '1', 1, 'checkbox');
+(86, 'INHERIT_PARENT_PERMISSIONS', '1', 'checkbox', 'Inherit permissions from Parent when adding a new item?', NULL, 'permissions', 1, 'Inherit permissions', '', 50, '1', 1, 'checkbox'),
+(87, 'XMR_ADDRESS', 'tcp:://localhost:5555', 'text', 'Please enter the private address for XMR.', NULL, 'displays', 1, 'XMR Private Address', '', 5, 'tcp:://localhost:5555', 1, 'string'),
+(88, 'XMR_PUB_ADDRESS', '', 'text', 'Please enter the public address for XMR.', NULL, 'displays', 1, 'XMR Public Address', '', 6, '', 1, 'string');
 
 INSERT INTO `usertype` (`usertypeid`, `usertype`) VALUES
 (1, 'Super Admin'),
@@ -269,7 +271,6 @@ VALUES ('Windows', 'windows', '[]', '1', '1'), ('Android', 'android', '[]', '1',
 
 INSERT INTO `permissionentity` (`entityId`, `entity`) VALUES
 (1, 'Xibo\\Entity\\Page'),
-(2, 'Xibo\\Entity\\Menu'),
 (3, 'Xibo\\Entity\\DisplayGroup'),
 (4, 'Xibo\\Entity\\Media'),
 (5, 'Xibo\\Entity\\Campaign'),

@@ -48,8 +48,10 @@ class BaseFactory
     {
         $user = self::getUser();
 
+        $permissionSql = '';
+
         if (Sanitize::getCheckbox('disableUserCheck', 0, $filterBy) == 0 && $user->userTypeId != 1) {
-            $sql .= '
+            $permissionSql .= '
               AND (' . $idColumn . ' IN (
                 SELECT `permission`.objectId
                   FROM `permission`
@@ -72,11 +74,35 @@ class BaseFactory
             $params['currentUserId'] = $user->userId;
 
             if ($ownerColumn != null) {
-                $sql .= ' OR ' . $ownerColumn . ' = :currentUserId2';
+                $permissionSql .= ' OR ' . $ownerColumn . ' = :currentUserId2';
                 $params['currentUserId2'] = $user->userId;
             }
 
-            $sql .= ' )';
+            // Group Admin?
+            if ($user->userTypeId == 2 && $ownerColumn != null) {
+                // OR the group admin and the owner of the media are in the same group
+                $permissionSql .= '
+                    OR (
+                        SELECT COUNT(lkUserGroupId)
+                          FROM `lkusergroup`
+                         WHERE userId = ' . $ownerColumn . '
+                            AND groupId IN (
+                                SELECT groupId
+                                  FROM `lkusergroup`
+                                 WHERE userId = :currentUserId3
+                            )
+                    ) > 0
+                ';
+
+                $params['currentUserId3'] = $user->userId;
+            }
+
+            $permissionSql .= ' )';
+
+            //Log::debug('Permission SQL = %s', $permissionSql);
         }
+
+        // Set out params
+        $sql = $sql . $permissionSql;
     }
 }

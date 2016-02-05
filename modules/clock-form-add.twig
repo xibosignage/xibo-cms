@@ -42,8 +42,7 @@
         "actions": {
             ".analogue-control-group": { "display": "block" },
             ".digital-control-group": { "display": "none" },
-            ".flip-control-group": { "display": "none" },
-            ".offset-control-group": { "display": "block" }
+            ".flip-control-group": { "display": "none" }
         }
     },{
         "field": "clockTypeId",
@@ -53,8 +52,7 @@
         "actions": {
             ".analogue-control-group": { "display": "block" },
             ".digital-control-group": { "display": "none" },
-            ".flip-control-group": { "display": "none" },
-            ".offset-control-group": { "display": "block" }
+            ".flip-control-group": { "display": "none" }
         }
     },{
         "field": "clockTypeId",
@@ -64,8 +62,7 @@
         "actions": {
             ".analogue-control-group": { "display": "none" },
             ".digital-control-group": { "display": "block" },
-            ".flip-control-group": { "display": "none" },
-            ".offset-control-group": { "display": "block" }
+            ".flip-control-group": { "display": "none" }
         }
     },{
         "field": "clockTypeId",
@@ -75,8 +72,7 @@
         "actions": {
             ".analogue-control-group": { "display": "none" },
             ".digital-control-group": { "display": "block" },
-            ".flip-control-group": { "display": "none" },
-            ".offset-control-group": { "display": "block" }
+            ".flip-control-group": { "display": "none" }
         }
     },{
         "field": "clockTypeId",
@@ -86,8 +82,7 @@
         "actions": {
             ".analogue-control-group": { "display": "none" },
             ".digital-control-group": { "display": "none" },
-            ".flip-control-group": { "display": "block" },
-            ".offset-control-group": { "display": "none" }
+            ".flip-control-group": { "display": "block" }
         }
     },{
         "field": "clockTypeId",
@@ -97,8 +92,7 @@
         "actions": {
             ".analogue-control-group": { "display": "none" },
             ".digital-control-group": { "display": "none" },
-            ".flip-control-group": { "display": "block" },
-            ".offset-control-group": { "display": "none" }
+            ".flip-control-group": { "display": "block" }
         }
     }]
 {% endblock %}
@@ -112,7 +106,7 @@
 
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
-                {{ forms.text("name", title, "", helpText) }}
+                {{ forms.input("name", title, "", helpText) }}
 
                 {% set title %}{% trans "Clock Type" %}{% endset %}
                 {% set helpText %}{% trans "Please select the type of clock to display." %}{% endset %}
@@ -130,9 +124,17 @@
                 {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
                 {{ forms.number("duration", title, "", helpText, "", "required") }}
 
+                {% set title %}{% trans "Clock Face" %}{% endset %}
+                {% set helpText %}{% trans "Please select a clock face." %}{% endset %}
+                {{ forms.dropdown("clockFace", "single", title, "TwentyFourHourClock", module.clockFaces(), "id", "value", helpText, "flip-control-group") }}
+
                 {% set title %}{% trans "Offset" %}{% endset %}
                 {% set helpText %}{% trans "The offset in minutes that should be applied to the current time." %}{% endset %}
-                {{ forms.number("offset", title, "", helpText, "", "", "offset-control-group") }}
+                {{ forms.number("offset", title, "", helpText) }}
+
+                {% set title %}{% trans "Show Seconds?" %}{% endset %}
+                {% set helpText %}{% trans "Should the clock show seconds or not?" %}{% endset %}
+                {{ forms.checkbox("showSeconds", title, 1, helpText, "flip-control-group") }}
 
                 {% set title %}{% trans "Theme" %}{% endset %}
                 {% set helpText %}{% trans "Please select a theme for the clock." %}{% endset %}

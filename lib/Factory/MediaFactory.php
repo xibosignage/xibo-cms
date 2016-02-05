@@ -81,6 +81,9 @@ class MediaFactory extends BaseFactory
         try {
             $media = MediaFactory::getByName($name);
 
+            // Reassert the new file (which we might want to download)
+            $media->fileName = $file;
+
             if ($media->mediaType != 'module')
                 throw new NotFoundException();
         }

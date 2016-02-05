@@ -60,7 +60,8 @@ class Login extends Base
 
             // We are authenticated, so upgrade the user to the salted mechanism if necessary
             if (!$user->isSalted()) {
-                // TODO: Call User controller to change the password
+                $user->setNewPassword($password);
+                $user->save(false);
             }
 
             // We are logged in!

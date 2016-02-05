@@ -23,6 +23,7 @@ use finfo;
 use Xibo\Entity\DisplayGroup;
 use Xibo\Entity\Stat;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\ConfigurationException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\DisplayProfileFactory;
@@ -32,10 +33,12 @@ use Xibo\Helper\Config;
 use Xibo\Helper\Date;
 use Xibo\Helper\Help;
 use Xibo\Helper\Log;
+use Xibo\Helper\PlayerActionHelper;
 use Xibo\Helper\Sanitize;
 use Xibo\Helper\Theme;
 use Xibo\Helper\WakeOnLan;
 use Xibo\Storage\PDOConnect;
+use Xibo\XMR\ScreenShotAction;
 
 
 class Display extends Base
@@ -212,6 +215,41 @@ class Display extends Base
      *  tags={"display"},
      *  summary="Display Search",
      *  description="Search Displays for this User",
+     *  @SWG\Parameter(
+     *      name="displayId",
+     *      in="formData",
+     *      description="Filter by Display Id",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="displayGroupId",
+     *      in="formData",
+     *      description="Filter by DisplayGroup Id",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="display",
+     *      in="formData",
+     *      description="Filter by Display Name",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="macAddress",
+     *      in="formData",
+     *      description="Filter by Mac Address",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="clientVersion",
+     *      in="formData",
+     *      description="Filter by Client Version",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -224,39 +262,22 @@ class Display extends Base
      */
     function grid()
     {
-        // Filter by Name
-        $filter_display = Sanitize::getString('filter_display');
-        $this->getSession()->set('display', 'filter_display', $filter_display);
-
-        // Filter by Name
-        $filterMacAddress = Sanitize::getString('filterMacAddress');
-        $this->getSession()->set('display', 'filterMacAddress', $filterMacAddress);
-
-        // Display Group
-        $filter_displaygroupid = Sanitize::getInt('filter_displaygroup');
-        $this->getSession()->set('display', 'filter_displaygroup', $filter_displaygroupid);
-
-        // Thumbnail?
-        $filter_showView = Sanitize::getInt('filter_showView');
-        $this->getSession()->set('display', 'filter_showView', $filter_showView);
-
-        $filterVersion = Sanitize::getString('filterVersion');
-        $this->getSession()->set('display', 'filterVersion', $filterVersion);
-
-        // filter_autoRefresh?
-        $filter_autoRefresh = Sanitize::getCheckbox('filter_autoRefresh', 0);
-        $this->getSession()->set('display', 'filter_autoRefresh', $filter_autoRefresh);
+        // Does this grid auto refresh? Just store in session
+        $this->getSession()->set('display', 'filter_autoRefresh', Sanitize::getCheckbox('filter_autoRefresh', 0));
 
         // Pinned option?
         $this->getSession()->set('display', 'DisplayFilter', Sanitize::getCheckbox('XiboFilterPinned'));
 
+        $filter = [
+            'displayId' => Sanitize::getInt('displayId'),
+            'display' => $this->getSession()->set('display', 'filter_display', Sanitize::getString('display')),
+            'macAddress' => $this->getSession()->set('display', 'filterMacAddress', Sanitize::getString('macAddress')),
+            'displayGroupId' => $this->getSession()->set('display', 'filter_displaygroup', Sanitize::getInt('displayGroupId')),
+            'clientVersion' => Sanitize::getString('clientVersion')
+        ];
+
         // Get a list of displays
-        $displays = DisplayFactory::query($this->gridRenderSort(), $this->gridRenderFilter(array(
-            'displaygroupid' => $filter_displaygroupid,
-            'display' => $filter_display,
-            'macAddress' => $filterMacAddress,
-            'clientVersion' => $filterVersion))
-        );
+        $displays = DisplayFactory::query($this->gridRenderSort(), $this->gridRenderFilter($filter));
 
         // validate displays so we get a realistic view of the table
         $this->validateDisplays($displays);
@@ -292,7 +313,7 @@ class Display extends Base
             $display->thumbnail = '';
             // If we aren't logged in, and we are showThumbnail == 2, then show a circle
             if (file_exists(Config::GetSetting('LIBRARY_LOCATION') . 'screenshots/' . $display->displayId . '_screenshot.jpg')) {
-                $display->thumbnail = 'index.php?p=display&q=ScreenShot&DisplayId=' . $display->displayId;
+                $display->thumbnail = $this->urlFor('display.screenShot', ['id' => $display->displayId]);
             }
 
             // Format the storage available / total space
@@ -350,6 +371,13 @@ class Display extends Base
                     'text' => __('Assign Files')
                 );
 
+                // Layout Assignments
+                $display->buttons[] = array(
+                    'id' => 'displaygroup_button_layout_associations',
+                    'url' => $this->urlFor('displayGroup.layout.form', ['id' => $display->displayGroupId]),
+                    'text' => __('Assign Layouts')
+                );
+
                 // Screen Shot
                 $display->buttons[] = array(
                     'id' => 'display_button_requestScreenShot',
@@ -390,16 +418,23 @@ class Display extends Base
                     'url' => $this->urlFor('displayGroup.version.form', ['id' => $display->displayGroupId]),
                     'text' => __('Version Information')
                 );
-
-                $display->buttons[] = ['divider' => true];
             }
 
             if ($this->getUser()->checkEditable($display)) {
+
+                $display->buttons[] = ['divider' => true];
+
                 // Wake On LAN
                 $display->buttons[] = array(
                     'id' => 'display_button_wol',
                     'url' => $this->urlFor('display.wol.form', ['id' => $display->displayId]),
                     'text' => __('Wake on LAN')
+                );
+
+                $display->buttons[] = array(
+                    'id' => 'displaygroup_button_command',
+                    'url' => $this->urlFor('displayGroup.command.form', ['id' => $display->displayGroupId]),
+                    'text' => __('Send Command')
                 );
             }
         }
@@ -436,7 +471,7 @@ class Display extends Base
                         $profile[$i]['valueString'] = $option['value'];
                 }
             } else if ($profile[$i]['fieldType'] == 'timePicker') {
-                $profile[$i]['valueString'] = Date::getSystemDate($profile[$i]['value'] / 1000, 'H:i');
+                $profile[$i]['valueString'] = ($profile[$i]['value'] == null) ? '00:00' : Date::parse($profile[$i]['value'], 'H:i')->format('H:i');
             }
         }
 
@@ -835,6 +870,8 @@ class Display extends Base
     /**
      * Request ScreenShot
      * @param int $displayId
+     * @throws \InvalidArgumentException if XMR is not configured
+     * @throws ConfigurationException if XMR cannot be contacted
      *
      * @SWG\Put(
      *  path="/display/requestscreenshot/{displayId}",
@@ -864,7 +901,9 @@ class Display extends Base
             throw new AccessDeniedException();
 
         $display->screenShotRequested = 1;
-        $display->save(['validate' => false]);
+        $display->save(['validate' => false, 'audit' => false]);
+
+        PlayerActionHelper::sendAction($display, new ScreenShotAction());
 
         // Return
         $this->getState()->hydrate([
