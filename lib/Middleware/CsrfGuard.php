@@ -56,7 +56,7 @@ class CsrfGuard extends Middleware
     public function call()
     {
         // Attach as hook.
-        $this->app->hook('slim.before', array($this, 'check'));
+        $this->app->hook('slim.before.dispatch', array($this, 'check'));
 
         // Call next middleware.
         $this->next->call();
@@ -81,7 +81,9 @@ class CsrfGuard extends Middleware
         // Validate the CSRF token.
         if (in_array($this->app->request()->getMethod(), array('POST', 'PUT', 'DELETE'))) {
             // Validate the token unless we are on an excluded route
-            if ($this->app->excludedCsrfRoutes == null || !in_array($this->app->request()->getPath(), $this->app->excludedCsrfRoutes)) {
+            $route = $this->app->router()->getCurrentRoute()->getPattern();
+
+            if ($this->app->excludedCsrfRoutes == null || ($route != null && !in_array($route, $this->app->excludedCsrfRoutes))) {
 
                 $userToken = $this->app->request()->headers('X-XSRF-TOKEN');
                 if ($userToken == '') {

@@ -25,6 +25,7 @@ namespace Xibo\Middleware;
 
 use Slim\Middleware;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\NotFoundException;
 use Xibo\Factory\PageFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
@@ -163,7 +164,7 @@ class SAMLAuthentication extends Middleware
                     } else {
                         $user = UserFactory::getByEmail($userData[$identityField][0]);
                     }
-                } catch (AccessDeniedException $e) {
+                } catch (NotFoundException $e) {
                     $user = null;
                 }
 
