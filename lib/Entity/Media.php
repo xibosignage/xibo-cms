@@ -352,10 +352,12 @@ class Media implements \JsonSerializable
         }
 
         // Save the tags
-        foreach ($this->tags as $tag) {
-            /* @var Tag $tag */
-            $tag->assignMedia($this->mediaId);
-            $tag->save();
+        if (is_array($this->tags)) {
+            foreach ($this->tags as $tag) {
+                /* @var Tag $tag */
+                $tag->assignMedia($this->mediaId);
+                $tag->save();
+            }
         }
 
         // Remove unwanted ones
