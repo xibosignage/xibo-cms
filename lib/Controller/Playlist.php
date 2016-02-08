@@ -258,7 +258,7 @@ class Playlist extends Base
         $this->getState()->template = 'playlist-form-library-assign';
         $this->getState()->setData([
             'playlist' => $playlist,
-            'modules' => ModuleFactory::query(null, ['regionSpecific' => 0, 'enabled' => 1]),
+            'modules' => ModuleFactory::query(null, ['regionSpecific' => 0, 'enabled' => 1, 'assignable' => 1]),
             'help' => Help::Link('Library', 'Assign')
         ]);
     }

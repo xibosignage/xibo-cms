@@ -41,10 +41,10 @@
             <div id="libraryAssignFilterOptions">
                 <form onsubmit="false">
                 {% set title %}{% trans "Name" %}{% endset %}
-                {{ inline.input("filter_name", title) }}
+                {{ inline.input("media", title) }}
 
                 {% set title %}{% trans "Type" %}{% endset %}
-                {{ inline.dropdown("filter_type", "single", title, "", modules|merge({type: null, name: ""}), "type", "name") }}
+                {{ inline.dropdown("type", "single", title, "", [{type: null, name: ""}]|merge(modules), "type", "name") }}
 
                 {{ inline.hidden("retired", 0) }}
                 </form>
