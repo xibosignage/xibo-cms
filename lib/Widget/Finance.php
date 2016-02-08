@@ -307,6 +307,8 @@ class Finance extends ModuleWidget
                 // Match that in the array
                 if (isset($data[$replace]))
                     $source = str_replace($sub, $data[$replace], $source);
+                else
+                    $source = str_replace($sub, '', $source);
             }
         }
 
@@ -379,7 +381,7 @@ class Finance extends ModuleWidget
         // Add the CSS if it isn't empty
         $css = $this->getRawNode('styleSheet', null);
         if ($css != '') {
-            $headContent .= '<style type="text/css">' . $css . '</style>';
+            $headContent .= '<style type="text/css">' . $this->parseLibraryReferences($isPreview, $css ) . '</style>';
         }
 
         $backgroundColor = $this->getOption('backgroundColor');
