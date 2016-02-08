@@ -456,13 +456,11 @@ class Layout implements \JsonSerializable
             'deleteOrphanedPlaylists' => true
         ], $options);
 
-        Log::debug('Deleting %s', $this);
-
         // We must ensure everything is loaded before we delete
         if (!$this->loaded)
             $this->load();
 
-        Log::debug('Deleting ' . $this);
+        Log::debug('Deleting %s', $this);
 
         // Delete Permissions
         foreach ($this->permissions as $permission) {
