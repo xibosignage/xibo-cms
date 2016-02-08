@@ -38,6 +38,7 @@ class RequiredFile implements \JsonSerializable
 
         // Always update the nonce when we save
         if ($options['refreshNonce']) {
+            $this->lastUsed = 0;
             $this->expiry = time() + 86400;
             $this->nonce = md5(Random::generateString() . SECRET_KEY . time() . $this->layoutId . $this->regionId . $this->mediaId);
         }
@@ -51,7 +52,7 @@ class RequiredFile implements \JsonSerializable
 
     public function isValid()
     {
-        if ($this->lastUsed != 0 || $this->expiry < time())
+        if (($this->lastUsed != 0 && $this->bytesRequested > $this->size) || $this->expiry < time())
             throw new FormExpiredException();
 
         $this->markUsed();
