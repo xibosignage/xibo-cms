@@ -267,8 +267,17 @@ var XiboTimelineSaveOrder = function(timelineDiv) {
         data:{
             "widgets": widgets
         },
-        success: XiboSubmitResponse
+        success: [
+            XiboSubmitResponse,
+            afterTimeLineSaveOrder
+        ]
     });
+};
+
+var afterTimeLineSaveOrder = function() {
+        $('.regionPreview').each(function(idx, el) {
+            refreshPreview($(el).attr("regionid"));
+        });
 };
 
 var LibraryAssignSubmit = function() {
