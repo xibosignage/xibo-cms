@@ -753,7 +753,7 @@ class Layout implements \JsonSerializable
             file_put_contents($path, $this->toXlf());
 
             $this->save([
-                'saveRegions' => false,
+                'saveRegions' => true,
                 'saveRegionOptions' => false,
                 'manageRegionAssignments' => false,
                 'saveTags' => false,
