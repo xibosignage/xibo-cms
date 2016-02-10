@@ -670,8 +670,7 @@ class User implements \JsonSerializable
             }
         }
         catch (\PDOException $e) {
-            Log::error('SQL Error getting permissions.');
-            Log::error($e->getTraceAsString());
+            Log::info('SQL Error getting permissions: %s', $e->getMessage());
 
             return false;
         }
