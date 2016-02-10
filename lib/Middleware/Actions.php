@@ -42,7 +42,7 @@ class Actions extends Middleware
         $app->hook('slim.before.dispatch', function() use ($app) {
 
             // Process Actions
-            if (Config::GetSetting('DEFAULTS_IMPORTED') == 0) {
+            if (!Config::isUpgradePending() && Config::GetSetting('DEFAULTS_IMPORTED') == 0) {
 
                 $folder = Theme::uri('layouts', true);
 
