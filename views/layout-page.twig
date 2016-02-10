@@ -215,6 +215,7 @@
         function layoutAddFormOpen() {
             $("#layoutAddForm").submit(function(e) {
                 e.preventDefault();
+                var form = $(this);
 
                 var url = $(this).data().redirect;
 
@@ -226,7 +227,7 @@
                     dataType:"json",
                     success: function(xhr, textStatus, error) {
 
-                        XiboSubmitResponse(xhr);
+                        XiboSubmitResponse(xhr, form);
 
                         if (xhr.success) {
                             // Reload the designer
