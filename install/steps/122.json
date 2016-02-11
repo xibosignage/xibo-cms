@@ -38,6 +38,10 @@
     {
       "step": "Delete old settings durations",
       "action": "DELETE FROM `setting` WHERE setting IN ('ppt_length', 'jpg_length', 'swf_length');"
+    },
+    {
+      "step": "Set Duration on Widget",
+      "action": "ALTER TABLE `widget` ADD  `useDuration` TINYINT NOT NULL DEFAULT  '1';"
     }
   ]
 }

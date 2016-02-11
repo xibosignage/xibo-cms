@@ -115,7 +115,8 @@ class WidgetFactory extends BaseFactory
               widget.ownerId,
               widget.type,
               widget.duration,
-              widget.displayOrder
+              widget.displayOrder,
+              `widget`.useDuration
         ';
 
         $body = '

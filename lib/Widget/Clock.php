@@ -46,8 +46,8 @@ class Clock extends ModuleWidget
     public function validate()
     {
         // Validate
-        if (!v::int()->min(1)->validate($this->getDuration()))
-            throw new \InvalidArgumentException(__('You must enter a duration.'));
+        if ($this->getUseDuration() == 1 && !v::int()->min(1)->validate($this->getDuration()))
+            throw new \InvalidArgumentException(__('Please enter a duration.'));
     }
 
     /**
@@ -57,6 +57,7 @@ class Clock extends ModuleWidget
     {
         // You must also provide a duration (all media items must provide this field)
         $this->setOption('name', Sanitize::getString('name'));
+        $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
         $this->setDuration(Sanitize::getInt('duration'));
         $this->setOption('theme', Sanitize::getInt('themeId', 0));
         $this->setOption('clockTypeId', Sanitize::getInt('clockTypeId', 1));
@@ -78,6 +79,7 @@ class Clock extends ModuleWidget
     {
         // You must also provide a duration (all media items must provide this field)
         $this->setOption('name', Sanitize::getString('name', $this->getOption('name')));
+        $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
         $this->setDuration(Sanitize::getInt('duration'));
         $this->setOption('theme', Sanitize::getInt('themeId', 0));
         $this->setOption('clockTypeId', Sanitize::getInt('clockTypeId', 1));

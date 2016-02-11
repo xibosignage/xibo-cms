@@ -78,6 +78,12 @@ class Widget implements \JsonSerializable
     public $displayOrder;
 
     /**
+     * @SWG\Property(description="Flag indicating if this widget has a duration that should be used")
+     * @var int
+     */
+    public $useDuration;
+
+    /**
      * @SWG\Property(description="An array of Widget Options")
      * @var WidgetOption[]
      */
@@ -141,7 +147,7 @@ class Widget implements \JsonSerializable
 
     private function hash()
     {
-        return md5($this->widgetId . $this->playlistId . $this->ownerId . $this->type . $this->duration . $this->displayOrder);
+        return md5($this->widgetId . $this->playlistId . $this->ownerId . $this->type . $this->duration . $this->displayOrder . $this->useDuration);
     }
 
     private function mediaHash()
@@ -397,13 +403,14 @@ class Widget implements \JsonSerializable
 
         $this->isNew = true;
 
-        $sql = 'INSERT INTO `widget` (`playlistId`, `ownerId`, `type`, `duration`, `displayOrder`) VALUES (:playlistId, :ownerId, :type, :duration, :displayOrder)';
+        $sql = 'INSERT INTO `widget` (`playlistId`, `ownerId`, `type`, `duration`, `displayOrder`, `useDuration`) VALUES (:playlistId, :ownerId, :type, :duration, :displayOrder, :useDuration)';
         $this->widgetId = PDOConnect::insert($sql, array(
             'playlistId' => $this->playlistId,
             'ownerId' => $this->ownerId,
             'type' => $this->type,
             'duration' => $this->duration,
-            'displayOrder' => $this->displayOrder
+            'displayOrder' => $this->displayOrder,
+            'useDuration' => $this->useDuration
         ));
     }
 
@@ -411,14 +418,15 @@ class Widget implements \JsonSerializable
     {
         Log::debug('Saving Widget ' . $this->type . ' on PlaylistId ' . $this->playlistId . ' WidgetId: ' . $this->widgetId);
 
-        $sql = 'UPDATE `widget` SET `playlistId` = :playlistId, `ownerId` = :ownerId, `type` = :type, `duration` = :duration, `displayOrder` = :displayOrder WHERE `widgetId` = :widgetId';
+        $sql = 'UPDATE `widget` SET `playlistId` = :playlistId, `ownerId` = :ownerId, `type` = :type, `duration` = :duration, `displayOrder` = :displayOrder, `useDuration` = :useDuration WHERE `widgetId` = :widgetId';
         PDOConnect::update($sql, array(
             'playlistId' => $this->playlistId,
             'ownerId' => $this->ownerId,
             'type' => $this->type,
             'duration' => $this->duration,
             'widgetId' => $this->widgetId,
-            'displayOrder' => $this->displayOrder
+            'displayOrder' => $this->displayOrder,
+            'useDuration' => $this->useDuration
         ));
     }
 

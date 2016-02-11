@@ -142,6 +142,15 @@ abstract class ModuleWidget implements ModuleInterface
     }
 
     /**
+     * Set the duration
+     * @param int $useDuration
+     */
+    final protected function setUseDuration($useDuration)
+    {
+        $this->widget->useDuration = $useDuration;
+    }
+
+    /**
      * Save the Module
      */
     protected final function saveSettings()
@@ -306,6 +315,15 @@ abstract class ModuleWidget implements ModuleInterface
     }
 
     /**
+     * Gets the set duration option
+     * @return int
+     */
+    final public function getUseDuration()
+    {
+        return $this->widget->useDuration;
+    }
+
+    /**
      * Save the Widget
      */
     final protected function saveWidget()
@@ -413,7 +431,8 @@ abstract class ModuleWidget implements ModuleInterface
         $output .= '    <ul>';
         $output .= '    <li>' . __('Type') . ': ' . $this->module->name . '</li>';
         $output .= '    <li>' . __('Name') . ': ' . $this->getName() . '</li>';
-        $output .= '    <li>' . __('Duration') . ': ' . $this->widget->duration . ' ' . __('seconds') . '</li>';
+        if ($this->getUseDuration() == 1)
+            $output .= '    <li>' . __('Duration') . ': ' . $this->widget->duration . ' ' . __('seconds') . '</li>';
         $output .= '    </ul>';
         $output .= '</div>';
         $output .= '</div>';

@@ -84,7 +84,11 @@
                                             {% endif %}
                                         </ul>
                                         <div class="timelineMediaDetails {{ coloring }}">
+                                            {% if widget.useDuration %}
                                             <h3>{% trans %}{{ name }} ({{ duration }} seconds){% endtrans %}</h3>
+                                            {% else %}
+                                            <h3>{{ name }}</h3>
+                                            {% endif %}
                                         </div>
                                         <div class="timelineMediaPreview">
                                             {{ widget.module.hoverPreview()|raw }}
