@@ -25,6 +25,11 @@ use Xibo\Helper\Config;
 
 class Flash extends ModuleWidget
 {
+    public function editForm()
+    {
+        return 'generic-form-edit';
+    }
+
     /**
      * Preview code for a module
      * @param int $width

@@ -31,6 +31,11 @@ class PowerPoint extends ModuleWidget
         return 2;
     }
 
+    public function editForm()
+    {
+        return 'generic-form-edit';
+    }
+
     /**
      * Override previewAsClient
      * @param float $width
