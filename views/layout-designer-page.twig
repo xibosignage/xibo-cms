@@ -474,4 +474,11 @@
             });
         });
     </script>
+
+    {% for module in modules  %}
+        {% if module.layoutDesignerJavaScript() != "" %}
+            {% include module.layoutDesignerJavaScript() ~ ".twig" %}
+        {% endif %}
+    {% endfor %}
+
 {% endblock %}

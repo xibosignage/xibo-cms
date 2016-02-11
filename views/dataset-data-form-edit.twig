@@ -41,7 +41,7 @@
                             { name: "data-live-search", value: "true" },
                             { name: "data-selected-text-format", value: "count > 4" }
                             ] %}
-                            {{ forms.dropdown(fieldId, "single", col.heading, heading, [{mediaId: 0, name: ""}]|merge(images), "mediaId", "name", "", "", "", "", "", attributes) }}
+                            {{ forms.dropdown(fieldId, "single", col.heading, heading, [{mediaId: null, name: ""}]|merge(images), "mediaId", "name", "", "", "", "", "", attributes) }}
                         {% elseif col.listContent != "" %}
                             {{ forms.dropdown(fieldId, "single", col.heading, heading, [""]|merge(col.listContentArray())) }}
                         {% else %}

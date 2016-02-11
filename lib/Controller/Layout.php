@@ -29,6 +29,7 @@ use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\LibraryFullException;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
+use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\ResolutionFactory;
 use Xibo\Factory\TagFactory;
@@ -114,7 +115,8 @@ class Layout extends Base
             'layout' => $layout,
             'resolution' => $resolution,
             'layouts' => LayoutFactory::query(),
-            'zoom' => Sanitize::getDouble('zoom', 1)
+            'zoom' => Sanitize::getDouble('zoom', 1),
+            'modules' => array_map(function($element) { return ModuleFactory::createForInstall($element->class); }, ModuleFactory::getAssignableModules())
         ];
 
         // Call the render the template

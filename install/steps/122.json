@@ -6,6 +6,14 @@
       "step": "Convert MyISAM tables to InnoDB",
       "type": "php",
       "action": "Xibo\\Upgrade\\MyIsamToInnoDbStep"
+    },
+    {
+      "step": "Allow system actions to be recorded in the Audit Trail",
+      "action": "ALTER TABLE  `auditlog` CHANGE  `userId`  `userId` INT( 11 ) NULL;"
+    },
+    {
+      "step": "Flags for DataSets to be used as Lookup Tables for Module Settings",
+      "action": "ALTER TABLE  `dataset` ADD  `code` VARCHAR( 50 ) NULL , ADD  `isLookup` TINYINT( 4 ) NOT NULL DEFAULT  '0';"
     }
   ]
 }

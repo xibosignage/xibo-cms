@@ -569,6 +569,31 @@ abstract class ModuleWidget implements ModuleInterface
     }
 
     /**
+     * Default view for add form
+     */
+    public function addForm()
+    {
+        return $this->getModuleType() . '-form-add';
+    }
+
+    /**
+     * Default view for edit form
+     */
+    public function editForm()
+    {
+        return $this->getModuleType() . '-form-edit';
+    }
+
+    /**
+     * Layout Designer JavaScript template
+     * @return null
+     */
+    public function layoutDesignerJavaScript()
+    {
+        return null;
+    }
+
+    /**
      * Get Module Setting
      * @param string $setting
      * @param mixed $default

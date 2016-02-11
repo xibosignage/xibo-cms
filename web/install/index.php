@@ -88,7 +88,7 @@ $twig->appendData(['theme' => Theme::getInstance()]);
 $app->hook('slim.before.dispatch', function() use ($app) {
 
     if (file_exists(PROJECT_ROOT . '/web/settings.php')) {
-        include_once(PROJECT_ROOT . '/web/settings.php');
+        \Xibo\Helper\Config::Load(PROJECT_ROOT . '/web/settings.php');
         // Set-up the translations for get text
         Translate::InitLocale();
 

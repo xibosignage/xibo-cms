@@ -48,7 +48,7 @@ class Module extends Base
         // Do we have any modules to install?!
         if (Config::GetSetting('MODULE_CONFIG_LOCKED_CHECKB') != 'Checked') {
             // Get a list of matching files in the modules folder
-            $files = glob(PROJECT_ROOT . '/modules/*.json');
+            $files = array_merge(glob(PROJECT_ROOT . '/modules/*.json'), glob(PROJECT_ROOT . '/custom/*.json'));
 
             // Get a list of all currently installed modules
             $installed = [];
@@ -211,11 +211,14 @@ class Module extends Base
      */
     public function installForm($name)
     {
-        if (!file_exists('../modules/' . $name . '.json'))
+        // Use the name to get details about this module.
+        if (file_exists(PROJECT_ROOT . '/modules/' . $name . '.json'))
+            $module = json_decode(file_get_contents(PROJECT_ROOT . '/modules/' . $name . '.json'));
+        else if (file_exists(PROJECT_ROOT . '/custom/' . $name . '.json'))
+            $module = json_decode(file_get_contents(PROJECT_ROOT . '/custom/' . $name . '.json'));
+        else
             throw new \InvalidArgumentException(__('Invalid module'));
 
-        // Use the name to get details about this module.
-        $module = json_decode(file_get_contents('../modules/' . $name . '.json'));
 
         $this->getState()->template = 'module-form-install';
         $this->getState()->setData([
@@ -232,14 +235,16 @@ class Module extends Base
     {
         Log::notice('Request to install Module: ' . $name);
 
-        if (!file_exists('../modules/' . $name . '.json'))
+        if (file_exists(PROJECT_ROOT . '/modules/' . $name . '.json'))
+            $moduleDetails = json_decode(file_get_contents(PROJECT_ROOT . '/modules/' . $name . '.json'));
+        else if (file_exists(PROJECT_ROOT . '/custom/' . $name . '.json'))
+            $moduleDetails = json_decode(file_get_contents(PROJECT_ROOT . '/custom/' . $name . '.json'));
+        else
             throw new \InvalidArgumentException(__('Invalid module'));
-
-        // Use the name to get details about this module.
-        $moduleDetails = json_decode(file_get_contents('../modules/' . $name . '.json'));
 
         // All modules should be capable of autoload
         $module = ModuleFactory::createForInstall($moduleDetails->class);
+        $module->setUser($this->getUser());
         $module->installOrUpdate();
 
         Log::notice('Module Installed: ' . $module->getModuleType());
@@ -267,7 +272,7 @@ class Module extends Base
         $module = ModuleFactory::createForWidget($type, null, $this->getUser()->userId, $playlistId);
 
         // Pass to view
-        $this->getState()->template = $module->getModuleType() . '-form-add';
+        $this->getState()->template = $module->addForm();
         $this->getState()->setData($module->setTemplateData([
             'playlist' => $playlist,
             'media' => MediaFactory::query(),
@@ -337,7 +342,7 @@ class Module extends Base
             throw new AccessDeniedException();
 
         // Pass to view
-        $this->getState()->template = $module->getModuleType() . '-form-edit';
+        $this->getState()->template = $module->editForm();
         $this->getState()->setData($module->setTemplateData([
             'module' => $module,
             'media' => MediaFactory::query(),
