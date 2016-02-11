@@ -380,7 +380,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     public function previewIcon()
     {
-        return '<div style="text-align:center;"><img alt="' . $this->getModuleType() . ' thumbnail" src="' . Theme::uri('img/forms/' . $this->getModuleType() . '.gif') . '" /></div>';
+        return '<div style="text-align:center;"><img alt="' . $this->getModuleType() . ' thumbnail" src="' . Theme::uri('img/' . $this->getModule()->imageUri) . '" /></div>';
     }
 
     /**
