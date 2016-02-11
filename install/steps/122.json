@@ -14,6 +14,30 @@
     {
       "step": "Flags for DataSets to be used as Lookup Tables for Module Settings",
       "action": "ALTER TABLE  `dataset` ADD  `code` VARCHAR( 50 ) NULL , ADD  `isLookup` TINYINT( 4 ) NOT NULL DEFAULT  '0';"
+    },
+    {
+      "step": "Add Module Default Duration Column",
+      "action": "ALTER TABLE  `module` ADD  `defaultDuration` INT NOT NULL;"
+    },
+    {
+      "step": "Set Module Default Duration",
+      "action": "UPDATE `module` SET defaultDuration = 10;"
+    },
+    {
+      "step": "Set Image Module Duration",
+      "action": "UPDATE `module` SET defaultDuration = (SELECT MAX(value) FROM `setting` WHERE setting = 'jpg_length') WHERE `module` = 'image';"
+    },
+    {
+      "step": "Set Flash Module Duration",
+      "action": "UPDATE `module` SET defaultDuration = (SELECT MAX(value) FROM `setting` WHERE setting = 'swf_length') WHERE `module` = 'flash';"
+    },
+    {
+      "step": "Set PowerPoint Module Duration",
+      "action": "UPDATE `module` SET defaultDuration = (SELECT MAX(value) FROM `setting` WHERE setting = 'ppt_length') WHERE `module` = 'powerpoint';"
+    },
+    {
+      "step": "Delete old settings durations",
+      "action": "DELETE FROM `setting` WHERE setting IN ('ppt_length', 'jpg_length', 'swf_length');"
     }
   ]
 }

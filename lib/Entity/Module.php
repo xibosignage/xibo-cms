@@ -102,6 +102,12 @@ class Module implements \JsonSerializable
     public $renderAs;
 
     /**
+     * @SWG\Property(description="The default duration for Widgets of this Module when the user has elected to not set a specific duration.")
+     * @var int
+     */
+    public $defaultDuration;
+
+    /**
      * @SWG\Property(description="An array of additional module specific settings")
      * @var string[]
      */
@@ -134,6 +140,9 @@ class Module implements \JsonSerializable
     {
         if (!v::string()->notEmpty()->validate($this->imageUri))
             throw new \InvalidArgumentException(__('Image Uri is a required field.'));
+
+        if (!v::int()->notEmpty()->validate($this->defaultDuration))
+            throw new \InvalidArgumentException(__('Default Duration is a required field.'));
     }
 
     public function save()
@@ -151,9 +160,9 @@ class Module implements \JsonSerializable
     {
         $this->moduleId = PDOConnect::insert('
           INSERT INTO `module` (`Module`, `Name`, `Enabled`, `RegionSpecific`, `Description`,
-                `ImageUri`, `SchemaVersion`, `ValidExtensions`, `PreviewEnabled`, `assignable`, `render_as`, `settings`, `viewPath`, `class`)
+                `ImageUri`, `SchemaVersion`, `ValidExtensions`, `PreviewEnabled`, `assignable`, `render_as`, `settings`, `viewPath`, `class`, `defaultDuration`)
             VALUES (:module, :name, :enabled, :region_specific, :description,
-                :image_uri, :schema_version, :valid_extensions, :preview_enabled, :assignable, :render_as, :settings, :viewPath, :class)
+                :image_uri, :schema_version, :valid_extensions, :preview_enabled, :assignable, :render_as, :settings, :viewPath, :class, :defaultDuration)
         ', [
             'module' => $this->type,
             'name' => $this->name,
@@ -168,7 +177,8 @@ class Module implements \JsonSerializable
             'render_as' => $this->renderAs,
             'settings' => json_encode($this->settings),
             'viewPath' => $this->viewPath,
-            'class' => $this->class
+            'class' => $this->class,
+            'defaultDuration' => $this->defaultDuration
         ]);
     }
 
@@ -182,6 +192,7 @@ class Module implements \JsonSerializable
               previewEnabled = :previewEnabled,
               validExtensions = :validExtensions,
               imageUri = :imageUri,
+              defaultDuration = :defaultDuration,
               settings = :settings
            WHERE moduleid = :moduleId
         ');
@@ -192,6 +203,7 @@ class Module implements \JsonSerializable
             'previewEnabled' => $this->previewEnabled,
             'validExtensions' => $this->validExtensions,
             'imageUri' => $this->imageUri,
+            'defaultDuration' => $this->defaultDuration,
             'settings' => json_encode($this->settings)
         ));
     }

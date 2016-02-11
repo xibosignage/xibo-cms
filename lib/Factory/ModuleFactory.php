@@ -57,7 +57,7 @@ class ModuleFactory extends BaseFactory
      */
     public static function create($type)
     {
-        $modules = ModuleFactory::query(null, array('type' => $type));
+        $modules = ModuleFactory::query(['enabled'], array('type' => $type));
 
         if (count($modules) <= 0)
             throw new NotFoundException(sprintf(__('Unknown type %s'), $type));
@@ -309,6 +309,13 @@ class ModuleFactory extends BaseFactory
                 ';
             }
 
+            if (DBVERSION >= 122) {
+                $select .= '
+                    ,
+                    `defaultDuration`
+                ';
+            }
+
             $body = '
                   FROM `module`
                  WHERE 1 = 1
@@ -387,6 +394,10 @@ class ModuleFactory extends BaseFactory
                 if (DBVERSION >= 120) {
                     $module->class = Sanitize::string($row['class']);
                     $module->viewPath = Sanitize::string($row['viewPath']);
+                }
+
+                if (DBVERSION >= 122) {
+                    $module->defaultDuration = Sanitize::int($row['defaultDuration']);
                 }
 
                 $settings = $row['settings'];

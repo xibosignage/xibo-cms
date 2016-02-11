@@ -24,6 +24,10 @@
         <div class="col-md-12">
             <form id="moduleEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.settings", {id: module.module.moduleId}) }}">
 
+                {% set title %}{% trans "Default Duration" %}{% endset %}
+                {% set helpText %}{% trans "The default duration for Widgets of this Module when the user has elected to not set a specific duration." %}{% endset %}
+                {{ forms.input("defaultDuration", title, module.module.defaultDuration, helpText) }}
+
                 {% set title %}{% trans "Valid Extensions" %}{% endset %}
                 {% set helpText %}{% trans "The Extensions allowed on files uploaded using this module. Comma Separated." %}{% endset %}
                 {{ forms.input("validExtensions", title, module.module.validExtensions, helpText) }}
