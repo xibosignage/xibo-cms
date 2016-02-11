@@ -168,6 +168,7 @@ class Ticker extends ModuleWidget
         $this->setOption('sourceId', Sanitize::getInt('sourceId'));
         $this->setOption('uri', urlencode(Sanitize::getString('uri')));
         $this->setOption('dataSetId', Sanitize::getInt('dataSetId', 0));
+        $this->setOption('durationIsPerItem', 1);
         $this->setOption('updateInterval', 120);
         $this->setOption('speed', 2);
 
@@ -271,7 +272,7 @@ class Ticker extends ModuleWidget
         // Information from the Module
         $itemsSideBySide = $this->getOption('itemsSideBySide', 0);
         $duration = $this->getDuration();
-        $durationIsPerItem = $this->getOption('durationIsPerItem', 0);
+        $durationIsPerItem = $this->getOption('durationIsPerItem', 1);
         $numItems = $this->getOption('numItems', 0);
         $takeItemsFrom = $this->getOption('takeItemsFrom', 'start');
         $itemsPerPage = $this->getOption('itemsPerPage', 0);

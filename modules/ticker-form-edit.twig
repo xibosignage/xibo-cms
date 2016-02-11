@@ -140,7 +140,7 @@
                 {% set helpText %}{% trans "The duration specified is per item otherwise it is per feed." %}{% endset %}
                 {% set fieldDurationIsPerItem %}{{ forms.checkbox("durationIsPerItem", title, module.getOption("durationIsPerItem"), helpText) }}{% endset %}
 
-                {% set title %}{% trans "Show itms side by side?" %}{% endset %}
+                {% set title %}{% trans "Show items side by side?" %}{% endset %}
                 {% set helpText %}{% trans "Should items be shown side by side?" %}{% endset %}
                 {% set fieldItemsSideBySide %}{{ forms.checkbox("itemsSideBySide", title, module.getOption("itemsSideBySide"), helpText) }}{% endset %}
 
@@ -198,10 +198,10 @@
                         {% set leftToRight %}{% trans "Left to Right (LTR)" %}{% endset %}
                         {% set rightToLeft %}{% trans "Right to Left (RTL)" %}{% endset %}
                         {% set options = [
-                        { textdirectionid: ltr, textdirection: leftToRight },
-                        { textdirectionid: rtl, textdirection: rightToLeft }
+                        { textdirectionid: "ltr", textdirection: leftToRight },
+                        { textdirectionid: "rtl", textdirection: rightToLeft }
                         ] %}
-                        {{ forms.dropdown("textDirection", "single", title, module.getOption("textDirection"), options, "textdirectionid", "textdirection", helpText) }}
+                        {{ forms.dropdown("textDirection", "single", title, module.getOption("textDirection", "ltr"), options, "textdirectionid", "textdirection", helpText) }}
 
                         {% set title %}{% trans "Number of Items" %}{% endset %}
                         {% set helpText %}{% trans "The Number of RSS items you want to display" %}{% endset %}
