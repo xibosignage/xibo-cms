@@ -107,8 +107,8 @@ class Schedule extends Base
         $this->setNoOutput();
 
         $displayGroupIds = Sanitize::getIntArray('displayGroupIds');
-        $start = Sanitize::getInt('from', 1000) / 1000;
-        $end = Sanitize::getInt('to', 1000) / 1000;
+        $start = Sanitize::getString('from', 1000) / 1000;
+        $end = Sanitize::getString('to', 1000) / 1000;
 
         // if we have some displayGroupIds then add them to the session info so we can default everything else.
         $this->getSession()->set('displayGroupIds', $displayGroupIds);
