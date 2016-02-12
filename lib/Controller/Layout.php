@@ -908,19 +908,19 @@ class Layout extends Base
         switch ($layout->status) {
 
             case 1:
-                $status = '<span title="' . __('This Layout is ready to play') . '" class="glyphicon glyphicon-ok-circle"></span>';
+                $status = __('This Layout is ready to play');
                 break;
 
             case 2:
-                $status = '<span title="' . __('There are items on this Layout that can only be assessed by the client') . '" class="glyphicon glyphicon-question-sign"></span>';
+                $status = __('There are items on this Layout that can only be assessed by the client');
                 break;
 
             case 3:
-                $status = '<span title="' . __('This Layout has not been built yet') . '" class="fa fa-cogs"></span>';
+                $status = __('This Layout has not been built yet');
                 break;
 
             default:
-                $status = '<span title="' . __('This Layout is invalid and should not be scheduled') . '" class="glyphicon glyphicon-warning-sign"></span>';
+                $status = __('This Layout is invalid and should not be scheduled');
         }
 
         // Keep things tidy
@@ -928,6 +928,10 @@ class Layout extends Base
         Library::removeExpiredFiles();
 
         $this->getState()->html = $status;
+        $this->getState()->extra = [
+            'status' => $layout->status,
+            'duration' => $layout->duration
+        ];
         $this->getState()->success = true;
     }
 

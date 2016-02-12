@@ -676,14 +676,16 @@ class Layout implements \JsonSerializable
                     // Region duration
                     $region->duration = $region->duration + $widget->calculatedDuration;
 
-                        // Create media xml node for XLF.
+                    // Create media xml node for XLF.
+                    $renderAs = $module->getModule()->renderAs;
                     $mediaNode = $document->createElement('media');
                     $mediaNode->setAttribute('id', $widget->widgetId);
                     $mediaNode->setAttribute('type', $widget->type);
-                    $mediaNode->setAttribute('render', $module->getModule()->renderAs);
+                    $mediaNode->setAttribute('render', ($renderAs == '') ? 'native' : $renderAs);
 
                     // Set the duration according to whether we are using widget duration or not
                     $mediaNode->setAttribute('duration', $widgetDuration);
+                    $mediaNode->setAttribute('useDuration', $widget->useDuration);
 
                     // Create options nodes
                     $optionsNode = $document->createElement('options');

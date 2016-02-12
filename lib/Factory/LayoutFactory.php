@@ -244,6 +244,8 @@ class LayoutFactory extends BaseFactory
                 $widget->type = $mediaNode->getAttribute('type');
                 $widget->ownerId = $mediaNode->getAttribute('userId');
                 $widget->duration = $mediaNode->getAttribute('duration');
+                $widget->useDuration = $mediaNode->getAttribute('useDuration');
+                $widget->useDuration = ($widget->useDuration == '') ? 0 : 1;
                 $widget->tempId = $mediaNode->getAttribute('id');
 
                 Log::debug('Adding Widget to object model. %s', $widget);

@@ -362,3 +362,12 @@ div.dt-buttons {
     float: none;
     text-align: right;
 }
+
+#layout-status {
+    float: right;
+    font-size: 20px;
+}
+
+.ui-state-disabled {
+    opacity: 1;
+}

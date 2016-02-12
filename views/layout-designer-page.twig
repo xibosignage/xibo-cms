@@ -29,48 +29,13 @@
         {% set backgroundCss %}url('{{ urlFor("library.download", {id: layout.backgroundImageId}) }}?preview=1&width={{ width }}&height={{ height }}') top center no-repeat; background-color: {{ layout.backgroundColor }}{% endset %}
     {% endif %}
 
-    <div class="pull-right">
-        <select id="layoutJumpList" data-live-search="true">
-            {% for item in layouts %}
-            <option value="{{ urlFor("layout.designer", {id: item.layoutId}) }}"{% if item.layoutId == layout.layoutId %} selected{% endif %}>{{ item.layout }}</option>
-            {% endfor %}
-        </select>
-    </div>
     <div class="row">
-        <div class="col-md-2">
-            <div class="btn-group">
-                <button class="btn dropdown-toggle" data-toggle="dropdown">
-                    {% trans "Options" %}
-                    <span class="caret"></span>
-                </button>
-                <ul class="dropdown-menu">
-                    <li><a id="regionAddButton" href="{{ urlFor("region.add", {id: layout.layoutId}) }}"><span>{% trans "Add Region" %}</span></a></li>
-                    <li><a class="XiboFormButton" href="{{ urlFor("layout.edit.form", {id: layout.layoutId}) }}" title="{% trans "Edit the Layout Properties" %}"><span>{% trans "Properties" %}</span></a></li>
-                    <li class="divider"></li>
-                    <li><a href="{{ urlFor("layout.preview", {id: layout.layoutId}) }}" target="_blank"><span>{% trans "Preview Layout" %}</span></a></li>
-                    <li><a class="XiboFormButton" href="{{ urlFor("schedule.now.form", {id: layout.campaignId, from: "Campaign"}) }}"><span>{% trans "Schedule Now" %}</span></a></li>
-                    <li><a class="XiboFormButton" href="{{ urlFor("template.from.layout.form", {id: layout.layoutId}) }}"><span>{% trans "Save Template" %}</span></a></li>
-                    {% if layout.schemaVersion >= 2 %}
-                    <li class="divider"></li>
-                    <li><a href="{{ urlFor("layout.designer", {id: layout.layoutId}) }}?zoom={{ zoom - 0.3 }}"><span>{% trans "Shrink Designer" %}</span></a></li>
-                    <li><a href="{{ urlFor("layout.designer", {id: layout.layoutId}) }}?zoom={{ zoom + 0.3 }}"><span>{% trans "Enlarge Designer" %}</span></a></li>
-                    {% else %}
-                    <li class="divider"></li>
-                    <li><a class="XiboFormButton" href="{{ urlFor("layout.upgrade.form", {id: layout.layoutId}) }}"><span>{% trans "Upgrade Layout" %}</span></a></li>
-                    {% endif %}
-                </ul>
-            </div>
-        </div>
-        <div class="col-md-5">
+        <div class="col-md-12 text-center">
             <h4>{% trans "Layout Design" %} - {{ layout.layout }}</h4>
         </div>
-        <div class="col-md-1 layout-status">
-        </div>
-        <div class="col-md-2 layout-meta">
-        </div>
     </div>
     <div class="row">
-        <div class="col-md-12">
+        <div class="col-md-10">
             <div id="layout"
                  zoom="{{ zoom }}"
                  tip_scale="1"
@@ -145,6 +110,102 @@
                         </div>
                     </div>
                 {% endfor %}
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="row">
+                <div class="col-md-12">
+                    <span id="layout-status"></span>
+                    <h4>{% trans "Layout" %}</h4>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <p>{% trans "Layout Duration" %} <span id="layout-duration"></span></p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <select id="layoutJumpList" data-live-search="true">
+                        {% for item in layouts %}
+                            <option value="{{ urlFor("layout.designer", {id: item.layoutId}) }}"{% if item.layoutId == layout.layoutId %} selected{% endif %}>{{ item.layout }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <a class="XiboFormButton btn btn-default btn-block" href="{{ urlFor("layout.edit.form", {id: layout.layoutId}) }}" title="{% trans "Edit the Layout Properties" %}"><span>{% trans "Background / Properties" %}</span></a>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <a class="btn btn-default btn-block" href="{{ urlFor("layout.preview", {id: layout.layoutId}) }}" target="_blank"><span>{% trans "Preview Layout" %}</span></a>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <a class="XiboFormButton btn btn-default btn-block" href="{{ urlFor("schedule.now.form", {id: layout.campaignId, from: "Campaign"}) }}"><span>{% trans "Schedule Now" %}</span></a>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <a class="XiboFormButton btn btn-default btn-block" href="{{ urlFor("template.from.layout.form", {id: layout.layoutId}) }}"><span>{% trans "Save Template" %}</span></a>
+                </div>
+            </div>
+            {% if layout.schemaVersion < 2 %}
+            <div class="row">
+                <div class="col-md-12">
+                    <a class="XiboFormButton btn btn-default btn-block" href="{{ urlFor("layout.upgrade.form", {id: layout.layoutId}) }}"><span>{% trans "Upgrade Layout" %}</span></a>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="row">
+                <div class="col-md-12">
+                    <h4>{% trans "Regions" %}</h4>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <a class="btn btn-default btn-block" id="regionAddButton" href="{{ urlFor("region.add", {id: layout.layoutId}) }}"><span>{% trans "Add Region" %}</span></a>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-8">
+                    <button id="layout-save-all" class="btn btn-default btn-block disabled">{% trans "Save Positions" %}</button>
+                </div>
+                <div class="col-md-4">
+                    <button id="layout-revert" class="btn btn-default btn-block disabled">{% trans "Undo" %}</button>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <input type="checkbox" class="switch-check-box" name="lockPosition" data-on-text="{% trans "On" %}" data-off-text="{% trans "Off" %}" /> {% trans "Lock Positions" %}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <input type="checkbox" class="switch-check-box" name="hideControls" data-on-text="{% trans "On" %}" data-off-text="{% trans "Off" %}" /> {% trans "Hide Controls" %}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <h4>{% trans "Designer Size" %}</h4>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <a class="btn btn-default btn-block" href="{{ urlFor("layout.designer", {id: layout.layoutId}) }}?zoom={{ zoom + 0.3 }}"><span>{% trans "+" %}</span></a>
+                </div>
+                <div class="col-md-6">
+                    <a class="btn btn-default btn-block" href="{{ urlFor("layout.designer", {id: layout.layoutId}) }}?zoom={{ zoom - 0.3 }}"><span>{% trans "-" %}</span></a>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <button class="btn btn-default btn-block">{% trans "Save as Default Designer Size" %}</button>
+                </div>
             </div>
         </div>
     </div>
