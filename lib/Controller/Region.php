@@ -503,12 +503,17 @@ class Region extends Base
             if (count($region->playlists) <= 0)
                 throw new NotFoundException(__('No playlists to preview'));
 
+            // Region Loop
+            $regionLoop = $region->getOptionValue('loop', 0);
+
             // TODO: implement playlists
             $playlist = $region->playlists[0];
             /* @var \Xibo\Entity\Playlist $playlist */
 
+            $countWidgets = count($playlist->widgets);
+
             // We want to load the widget in the given sequence
-            if (count($playlist->widgets) <= 0) {
+            if ($countWidgets <= 0) {
                 // No media to preview
                 throw new NotFoundException(__('No widgets to preview'));
             }
@@ -523,10 +528,17 @@ class Region extends Base
             // Otherwise, output a preview
             $module = ModuleFactory::createWithWidget($widget, $region);
 
+            // Widget duration
+            $widgetDuration = 0;
+            if ($widget->useDuration == 1)
+                $widgetDuration = $module->getDuration(['real' => true]);
+            else if ($countWidgets > 1 || $regionLoop == 1)
+                $widgetDuration = $module->getModule()->defaultDuration;
+
             $this->getState()->html = $module->preview($width, $height, $scaleOverride);
             $this->getState()->extra['type'] = $widget->type;
-            $this->getState()->extra['duration'] = $widget->duration;
-            $this->getState()->extra['number_items'] = count($playlist->widgets);
+            $this->getState()->extra['duration'] = $widgetDuration;
+            $this->getState()->extra['number_items'] = $countWidgets;
             $this->getState()->extra['current_item'] = $seqGiven;
             $this->getState()->extra['moduleName'] = $module->getName();
             $this->getState()->extra['regionDuration'] = $region->duration;

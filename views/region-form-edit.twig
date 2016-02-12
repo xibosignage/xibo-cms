@@ -86,7 +86,7 @@
 
                 {% set title %}{% trans "Loop?" %}{% endset %}
                 {% set helpText %}{% trans "If there is only one item in this region should it loop? Not currently available for Windows Players" %}{% endset %}
-                {{ forms.checkbox("loop", title, region.loop, helpText) }}
+                {{ forms.checkbox("loop", title, region.getOptionValue("loop", 0), helpText) }}
 
                 {{ forms.number("zIndex", "Layer", region.zIndex, "The layering order of this region (z-index). Advanced use only.") }}
             </form>

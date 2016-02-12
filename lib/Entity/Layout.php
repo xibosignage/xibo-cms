@@ -577,6 +577,45 @@ class Layout implements \JsonSerializable
         // Track module status within the layout
         $status = 0;
 
+        // We need to make some assessment based on the duration
+        //  1. Find out whether any of the regions have more than 1 widget
+        //      If they do, then we will always have a region that controls duration.
+        //  2. If we don't, then find out if any of the single item regions have a duration specified
+        //      If they do, then we will always have a region that controls duration.
+        //  3. Go through each region and assess whether they are single widget regions or not.
+        //      If they are, then check to see if we have a region that governs duration and if we do set them
+        //      to expire after 1 second
+        //  4. If they are not single widget regions, then set their duration to be either the duration specified, or
+        //      the default duration if none has been specified.
+        //  5. In either case, add the duration from #4 to the region duration
+
+        $layoutHasRegionControllingDuration = false;
+
+        foreach ($this->regions as $region) {
+            /* @var Region $region */
+            // Get a count of widgets in this region
+            $countWidgets = 0;
+            $hasDuration = false;
+            foreach ($region->playlists as $playlist) {
+                $countWidgets = $countWidgets + count($playlist->widgets);
+
+                foreach ($playlist->widgets as $widget) {
+                    /* @var Widget $widget */
+                    if ($widget->useDuration == 1) {
+                        $hasDuration = true;
+                        break;
+                    }
+                }
+            }
+
+            // Any with more than one widget
+            // Any with duration specified?
+            if ($countWidgets > 1 || $hasDuration) {
+                $layoutHasRegionControllingDuration = true;
+                break;
+            }
+        }
+
         foreach ($this->regions as $region) {
             /* @var Region $region */
             $regionNode = $document->createElement('region');
@@ -585,11 +624,21 @@ class Layout implements \JsonSerializable
             $regionNode->setAttribute('height', $region->height);
             $regionNode->setAttribute('top', $region->top);
             $regionNode->setAttribute('left', $region->left);
+            $regionNode->setAttribute('zindex', $region->zIndex);
 
             $layoutNode->appendChild($regionNode);
 
             // Region Duration
             $region->duration = 0;
+
+            // Region Loop
+            $regionLoop = $region->getOptionValue('loop', 0);
+
+            // Get a count of widgets in this region
+            $countWidgets = 0;
+            foreach ($region->playlists as $playlist) {
+                $countWidgets = $countWidgets + count($playlist->widgets);
+            }
 
             foreach ($region->playlists as $playlist) {
                 /* @var Playlist $playlist */
@@ -600,15 +649,33 @@ class Layout implements \JsonSerializable
                     // Set the Layout Status
                     $status = ($module->isValid() > $status) ? $module->isValid() : $status;
 
-                    // Set the region duration
-                    $region->duration = $region->duration + $module->getDuration(['real' => true]);
+                    // Determine the duration of this widget
+                    if ($widget->useDuration == 1) {
+                        // Widget duration is as specified
+                        $widgetDuration = $widget->duration;
+
+                        // Region duration is the "real" duration (caters for 0 videos)
+                        $region->duration = $region->duration + $module->getDuration(['real' => true]);
+
+                    } else if (!$layoutHasRegionControllingDuration || $countWidgets > 1 || $regionLoop == 1) {
+                        // No specified duration, but we've detected that we need to use the default duration
+                        $widgetDuration = $module->getModule()->defaultDuration;
+
+                        // Our region duration needs to show that too
+                        $region->duration = $region->duration + $widgetDuration;
+                    } else {
+                        // No specified duration, add nothing to region duration and expire the widget in 1 second
+                        $widgetDuration = 1;
+                    }
 
                     // Create media xml node for XLF.
                     $mediaNode = $document->createElement('media');
                     $mediaNode->setAttribute('id', $widget->widgetId);
-                    $mediaNode->setAttribute('duration', $widget->duration);
                     $mediaNode->setAttribute('type', $widget->type);
                     $mediaNode->setAttribute('render', $module->getModule()->renderAs);
+
+                    // Set the duration according to whether we are using widget duration or not
+                    $mediaNode->setAttribute('duration', $widgetDuration);
 
                     // Create options nodes
                     $optionsNode = $document->createElement('options');
