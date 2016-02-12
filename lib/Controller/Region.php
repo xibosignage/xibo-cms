@@ -503,9 +503,6 @@ class Region extends Base
             if (count($region->playlists) <= 0)
                 throw new NotFoundException(__('No playlists to preview'));
 
-            // Region Loop
-            $regionLoop = $region->getOptionValue('loop', 0);
-
             // TODO: implement playlists
             $playlist = $region->playlists[0];
             /* @var \Xibo\Entity\Playlist $playlist */
@@ -528,6 +525,7 @@ class Region extends Base
             // Otherwise, output a preview
             $module = ModuleFactory::createWithWidget($widget, $region);
 
+            $this->getState()->extra['empty'] = false;
             $this->getState()->html = $module->preview($width, $height, $scaleOverride);
             $this->getState()->extra['type'] = $widget->type;
             $this->getState()->extra['duration'] = $widget->calculatedDuration;
@@ -538,10 +536,8 @@ class Region extends Base
             $this->getState()->extra['useDuration'] = $widget->useDuration;
 
         } catch (NotFoundException $e) {
-            // Log it
-            Log::info($e->getMessage());
-
             // No media to preview
+            $this->getState()->extra['empty'] = true;
             $this->getState()->extra['text'] = __('Empty Region');
         }
     }

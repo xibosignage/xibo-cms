@@ -353,7 +353,11 @@ abstract class ModuleWidget implements ModuleInterface
      */
     public function edit()
     {
-        // Nothing to do
+        $this->setDuration(Sanitize::getInt('duration'));
+        $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
+        $this->setOption('name', Sanitize::getString('name'));
+
+        $this->widget->save();
     }
 
     /**
@@ -756,7 +760,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     public function determineDuration($fileName = null)
     {
-        return 0;
+        return $this->getModule()->defaultDuration;
     }
 
     /**
@@ -773,6 +777,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     public function setDefaultWidgetOptions()
     {
-        Log::debug('No default options for this module type');
+        Log::debug('Default Widget Options: Setting use duration to 0');
+        $this->setUseDuration(0);
     }
 }

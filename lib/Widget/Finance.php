@@ -55,6 +55,7 @@ class Finance extends ModuleWidget
             $module->regionSpecific = 1;
             $module->renderAs = 'html';
             $module->schemaVersion = $this->codeSchemaVersion;
+            $module->defaultDuration = 10;
             $module->settings = [];
 
             $this->setModule($module);
@@ -124,7 +125,7 @@ class Finance extends ModuleWidget
 
     public function validate()
     {
-        if ($this->getDuration() == 0)
+        if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
             throw new \InvalidArgumentException(__('Please enter a duration'));
     }
 
@@ -133,7 +134,8 @@ class Finance extends ModuleWidget
      */
     public function add()
     {
-        $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
+        $this->setDuration(Sanitize::getInt('duration'));
+        $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
         $this->setOption('name', Sanitize::getString('name'));
         $this->setOption('yql', Sanitize::getString('yql'));
         $this->setOption('item', Sanitize::getString('item'));
@@ -161,6 +163,7 @@ class Finance extends ModuleWidget
     public function edit()
     {
         $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
+        $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
         $this->setOption('name', Sanitize::getString('name'));
         $this->setOption('yql', Sanitize::getString('yql'));
         $this->setOption('item', Sanitize::getString('item'));
@@ -340,7 +343,7 @@ class Finance extends ModuleWidget
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
 
         // Information from the Module
-        $duration = $this->getDuration();
+        $duration = $this->getCalculatedDuration();
 
         // Generate a JSON string of items.
         if (!$items = $this->getYql()) {

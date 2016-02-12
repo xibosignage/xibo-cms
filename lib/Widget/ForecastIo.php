@@ -68,6 +68,7 @@ class ForecastIo extends ModuleWidget
             $module->renderAs = 'html';
             $module->schemaVersion = $this->codeSchemaVersion;
             $module->settings = [];
+            $module->defaultDuration = 60;
 
             $this->setModule($module);
             $this->installModule();
@@ -139,7 +140,7 @@ class ForecastIo extends ModuleWidget
 
     public function validate()
     {
-        if ($this->getDuration() == 0)
+        if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
             throw new \InvalidArgumentException(__('Please enter a duration'));
     }
 
@@ -149,6 +150,7 @@ class ForecastIo extends ModuleWidget
     public function add()
     {
         $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
+        $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
         $this->setOption('name', Sanitize::getString('name'));
         $this->setOption('useDisplayLocation', Sanitize::getCheckbox('useDisplayLocation'));
         $this->setOption('color', Sanitize::getString('color'));
@@ -178,6 +180,7 @@ class ForecastIo extends ModuleWidget
     public function edit()
     {
         $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
+        $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
         $this->setOption('name', Sanitize::getString('name'));
         $this->setOption('useDisplayLocation', Sanitize::getCheckbox('useDisplayLocation'));
         $this->setOption('color', Sanitize::getString('color'));

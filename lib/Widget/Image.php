@@ -97,16 +97,6 @@ class Image extends ModuleWidget
     }
 
     /**
-     * Determine duration
-     * @param $fileName
-     * @return int
-     */
-    public function determineDuration($fileName = null)
-    {
-        return Config::GetSetting('jpg_length');
-    }
-
-    /**
      * Get Resource
      * @param int $displayId
      * @return mixed

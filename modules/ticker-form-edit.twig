@@ -61,7 +61,39 @@
     ".template-override-controls": { "display": "block" },
     ".template-selector-control": { "display": "none" }
     }
-    }]
+    },{
+        "field": "useDuration",
+        "trigger": "init",
+        "value": false,
+        "operation": "is:checked",
+        "actions": {
+        ".duration-fields": { "display": "none" }
+        }
+        },{
+        "field": "useDuration",
+        "trigger": "change",
+        "value": false,
+        "operation": "is:checked",
+        "actions": {
+        ".duration-fields": { "display": "none" }
+        }
+        },{
+        "field": "useDuration",
+        "trigger": "init",
+        "value": true,
+        "operation": "is:checked",
+        "actions": {
+        ".duration-fields": { "display": "block" }
+        }
+        },{
+        "field": "useDuration",
+        "trigger": "change",
+        "value": true,
+        "operation": "is:checked",
+        "actions": {
+        ".duration-fields": { "display": "block" }
+        }
+        }]
     {% endif %}
 {% endblock %}
 
@@ -82,9 +114,13 @@
                 {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
                 {% set fieldName %}{{ forms.input("name", title, module.getOption("name"), helpText) }}{% endset %}
 
+                {% set title %}{% trans "Set a duration?" %}{% endset %}
+                {% set helpText %}{% trans "Select to provide a specific duration for this Widget" %}{% endset %}
+                {% set fieldUseDuration %}{{ forms.checkbox("useDuration", title, module.getUseDuration(), helpText) }}{% endset %}
+
                 {% set title %}{% trans "Duration" %}{% endset %}
                 {% set helpText %}{% trans "The duration in seconds this item should be displayed" %}{% endset %}
-                {% set fieldDuration %}{{ forms.number("duration", title, module.getDuration(), helpText, "", "required") }}{% endset %}
+                {% set fieldDuration %}{{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}{% endset %}
 
                 {% set title %}{% trans "Effect" %}{% endset %}
                 {% set helpText %}{% trans "Please select the effect that will be used to transition between items. If all items should be output, select None. Marquee effects are CPU intensive and may not be suitable for lower power displays." %}{% endset %}
@@ -159,6 +195,7 @@
                         {{ forms.input("uri", title, module.getOption("uri")|url_decode, helpText, "feed-fields") }}
 
                         {{ fieldName }}
+                        {{ fieldUseDuration }}
                         {{ fieldDuration }}
                         {{ fieldEffect }}
                     </div>
@@ -252,6 +289,7 @@
                     {# Source = Dataset #}
                     <div class="tab-pane active" id="general">
                         {{ fieldName }}
+                        {{ fieldUseDuration }}
                         {{ fieldDuration }}
                         {{ fieldEffect }}
                         {{ fieldSpeed }}

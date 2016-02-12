@@ -732,6 +732,8 @@ class Layout implements \JsonSerializable
                 }
             }
 
+            Log::debug('Region duration on layout %d is %d. Comparing to %d.', $this->layoutId, $region->duration, $this->duration);
+
             // Track the max duration within the layout
             // Test this duration against the layout duration
             if ($this->duration < $region->duration)
@@ -739,6 +741,8 @@ class Layout implements \JsonSerializable
 
             // End of region loop.
         }
+
+        Log::debug('Setting Layout Duration to %d', $this->duration);
 
         $tagsNode = $document->createElement('tags');
 
@@ -829,6 +833,9 @@ class Layout implements \JsonSerializable
 
             // Assume error
             $this->status = 4;
+
+            // Reset duration
+            $this->duration = 0;
 
             // Save the resulting XLF
             file_put_contents($path, $this->toXlf());

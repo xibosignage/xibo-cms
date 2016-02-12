@@ -87,7 +87,7 @@ class Widget implements \JsonSerializable
      * @SWG\Property(description="Calculated Duration of this widget after taking into account the useDuration flag")
      * @var int
      */
-    public $calculatedDuration;
+    public $calculatedDuration = 0;
 
     /**
      * @SWG\Property(description="An array of Widget Options")

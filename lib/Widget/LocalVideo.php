@@ -35,7 +35,7 @@ class LocalVideo extends ModuleWidget
         if (!v::string()->notEmpty()->validate(urldecode($this->getOption('uri'))))
             throw new InvalidArgumentException(__('Please enter a full path name giving the location of this video on the client'));
 
-        if (!v::int()->min(1)->validate($this->getDuration()))
+        if ($this->getUseDuration() == 1 && !v::int()->min(1)->validate($this->getDuration()))
             throw new InvalidArgumentException(__('You must enter a duration.'));
     }
 
@@ -46,6 +46,7 @@ class LocalVideo extends ModuleWidget
     {
         // Set some options
         $this->setDuration(Sanitize::getInt('duration'));
+        $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
         $this->setOption('uri', urlencode(Sanitize::getString('uri')));
         $this->setOption('scaleType', Sanitize::getString('scaleTypeId', 'aspect'));
 
@@ -62,6 +63,7 @@ class LocalVideo extends ModuleWidget
     {
         // Set some options
         $this->setDuration(Sanitize::getInt('duration', $this->getDuration()));
+        $this->setUseDuration(Sanitize::getCheckbox('useDuration'));
         $this->setOption('uri', urlencode(Sanitize::getString('uri')));
         $this->setOption('scaleType', Sanitize::getString('scaleTypeId', 'aspect'));
 

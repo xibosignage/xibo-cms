@@ -100,6 +100,12 @@ Preview.prototype.SetSequence = function(seq)
 		success: function(response) {
 		
 			if (response.success) {
+
+                if (response.extra.empty) {
+                    $('.preview-media-information', previewElement).html(response.extra.text);
+                    return;
+                }
+
 				// Success - what do we do now?
 				$(previewContent).html("<div class=\"regionPreviewOverlay\"></div>" + ((response.html == null) ? "" : response.html));
 
