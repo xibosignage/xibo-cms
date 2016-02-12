@@ -329,7 +329,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     final public function getCalculatedDuration()
     {
-        return 0;
+        return $this->widget->calculatedDuration;
     }
 
     /**
