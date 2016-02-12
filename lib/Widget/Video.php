@@ -42,6 +42,9 @@ class Video extends ModuleWidget
         // Process any module settings you asked for.
         $this->module->settings['defaultMute'] = Sanitize::getCheckbox('defaultMute');
 
+        if ($this->getModule()->defaultDuration !== 0)
+            throw new \InvalidArgumentException(__('The Video Module must have a default duration of 0 to detect the end of videos.'));
+
         // Return an array of the processed settings.
         return $this->module->settings;
     }

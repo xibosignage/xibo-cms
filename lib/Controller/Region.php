@@ -528,20 +528,14 @@ class Region extends Base
             // Otherwise, output a preview
             $module = ModuleFactory::createWithWidget($widget, $region);
 
-            // Widget duration
-            $widgetDuration = 0;
-            if ($widget->useDuration == 1)
-                $widgetDuration = $module->getDuration(['real' => true]);
-            else if ($countWidgets > 1 || $regionLoop == 1)
-                $widgetDuration = $module->getModule()->defaultDuration;
-
             $this->getState()->html = $module->preview($width, $height, $scaleOverride);
             $this->getState()->extra['type'] = $widget->type;
-            $this->getState()->extra['duration'] = $widgetDuration;
+            $this->getState()->extra['duration'] = $widget->calculatedDuration;
             $this->getState()->extra['number_items'] = $countWidgets;
             $this->getState()->extra['current_item'] = $seqGiven;
             $this->getState()->extra['moduleName'] = $module->getName();
             $this->getState()->extra['regionDuration'] = $region->duration;
+            $this->getState()->extra['useDuration'] = $widget->useDuration;
 
         } catch (NotFoundException $e) {
             // Log it

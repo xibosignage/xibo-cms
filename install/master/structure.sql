@@ -930,6 +930,7 @@ CREATE TABLE IF NOT EXISTS `widget` (
   `duration` int(11) NOT NULL,
   `displayOrder` int(11) NOT NULL,
   `useDuration` int(4) NOT NULL DEFAULT '1',
+  `calculatedDuration` int(4) NOT NULL,
   PRIMARY KEY (`widgetId`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 

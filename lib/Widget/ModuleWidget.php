@@ -300,13 +300,13 @@ abstract class ModuleWidget implements ModuleInterface
             'real' => false
         ], $options);
 
-        if ($options['real'] && $this->widget->duration === 0) {
+        if ($options['real']) {
             try {
                 // Get the duration from the parent media record.
                 return $this->getMedia()->duration;
             }
             catch (NotFoundException $e) {
-                Log::debug('Tried to get real duration from a widget without media. widgetId: %d', $this->getWidgetId());
+                Log::error('Tried to get real duration from a widget without media. widgetId: %d', $this->getWidgetId());
                 // Do nothing - drop out
             }
         }
@@ -321,6 +321,15 @@ abstract class ModuleWidget implements ModuleInterface
     final public function getUseDuration()
     {
         return $this->widget->useDuration;
+    }
+
+    /**
+     * Gets the calculated duration of this widget
+     * @return int
+     */
+    final public function getCalculatedDuration()
+    {
+        return 0;
     }
 
     /**

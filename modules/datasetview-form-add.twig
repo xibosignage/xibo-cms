@@ -26,10 +26,6 @@
                 {% set title %}{% trans "DataSet" %}{% endset %}
                 {% set helpText %}{% trans "Please select the DataSet to use as a source of data for this view." %}{% endset %}
                 {{ forms.dropdown("dataSetId", "single", title, "", module.dataSets(), "dataSetId", "dataSet", helpText, "dataset-fields") }}
-
-                {% set title %}{% trans "Duration" %}{% endset %}
-                {% set helpText %}{% trans "The duration in seconds this item should be displayed" %}{% endset %}
-                {{ forms.number("duration", title, duration, helpText, "", "required") }}
             </form>
         </div>
     </div>

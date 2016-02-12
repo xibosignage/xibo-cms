@@ -654,21 +654,29 @@ class Layout implements \JsonSerializable
                         // Widget duration is as specified
                         $widgetDuration = $widget->duration;
 
-                        // Region duration is the "real" duration (caters for 0 videos)
-                        $region->duration = $region->duration + $module->getDuration(['real' => true]);
+                        // The calculated duration is the provided one
+                        $widget->calculatedDuration = $widgetDuration;
 
                     } else if (!$layoutHasRegionControllingDuration || $countWidgets > 1 || $regionLoop == 1) {
                         // No specified duration, but we've detected that we need to use the default duration
+                        // Edge case being video - we must ensure that the default duration for video is always 0.
                         $widgetDuration = $module->getModule()->defaultDuration;
 
-                        // Our region duration needs to show that too
-                        $region->duration = $region->duration + $widgetDuration;
+                        // The calculated duration is the "real" duration (caters for 0 videos)
+                        $widget->calculatedDuration = (($widgetDuration == 0) ? $module->getDuration(['real' => true]) : $widgetDuration);
+
                     } else {
                         // No specified duration, add nothing to region duration and expire the widget in 1 second
-                        $widgetDuration = 1;
+                        $widgetDuration = Widget::$widgetMinDuration;
+
+                        // The calculated duration is 0
+                        $widget->calculatedDuration = 0;
                     }
 
-                    // Create media xml node for XLF.
+                    // Region duration
+                    $region->duration = $region->duration + $widget->calculatedDuration;
+
+                        // Create media xml node for XLF.
                     $mediaNode = $document->createElement('media');
                     $mediaNode->setAttribute('id', $widget->widgetId);
                     $mediaNode->setAttribute('type', $widget->type);
@@ -713,6 +721,12 @@ class Layout implements \JsonSerializable
                             $optionsNode->appendChild($optionNode);
                         }
                     }
+
+                    // Save our widget
+                    $widget->save([
+                        'notify' => false,
+                        'saveWidgetOptions' => false
+                    ]);
 
                     $regionNode->appendChild($mediaNode);
                 }

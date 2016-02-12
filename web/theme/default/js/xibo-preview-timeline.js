@@ -106,7 +106,7 @@ Preview.prototype.SetSequence = function(seq)
 				var infoText = response.extra.current_item + " / " + response.extra.number_items + " "
                     + response.extra.moduleName;
 
-				if (response.extra.duration > 0)
+				if (response.extra.duration > 0 && response.extra.useDuration != 0)
                     infoText += " (" + moment().startOf("day").seconds(response.extra.duration).format("H:mm:ss") + " / " + moment().startOf("day").seconds(response.extra.regionDuration).format("H:mm:ss") + ")";
 
 				// Get the extra

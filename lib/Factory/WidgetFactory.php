@@ -116,7 +116,8 @@ class WidgetFactory extends BaseFactory
               widget.type,
               widget.duration,
               widget.displayOrder,
-              `widget`.useDuration
+              `widget`.useDuration,
+              `widget`.calculatedDuration
         ';
 
         $body = '

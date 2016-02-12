@@ -155,7 +155,7 @@ class Module extends Base
             throw new AccessDeniedException();
 
         $module = ModuleFactory::createById($moduleId);
-        $module->getModule()->defaultDuration = Sanitize::getString('defaultDuration');
+        $module->getModule()->defaultDuration = Sanitize::getInt('defaultDuration');
         $module->getModule()->validExtensions = Sanitize::getString('validExtensions');
         $module->getModule()->imageUri = Sanitize::getString('imageUri');
         $module->getModule()->enabled = Sanitize::getCheckbox('enabled');
