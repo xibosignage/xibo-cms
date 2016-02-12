@@ -36,6 +36,10 @@
       "action": "UPDATE `module` SET defaultDuration = (SELECT MAX(value) FROM `setting` WHERE setting = 'ppt_length') WHERE `module` = 'powerpoint';"
     },
     {
+      "step": "Set Video Module Duration",
+      "action": "UPDATE `module` SET defaultDuration = 0 WHERE `module` = 'video';"
+    },
+    {
       "step": "Delete old settings durations",
       "action": "DELETE FROM `setting` WHERE setting IN ('ppt_length', 'jpg_length', 'swf_length');"
     },
