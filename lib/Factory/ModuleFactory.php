@@ -37,10 +37,14 @@ class ModuleFactory extends BaseFactory
      * Instantiate
      * @param Module $module
      * @return \Xibo\Widget\ModuleWidget
+     * @throws NotFoundException if the class does not exist
      */
     private static function instantiate($module)
     {
         $className = $module->class;
+
+        if (!\class_exists($className))
+            throw new NotFoundException(__('Class %s not found', $className));
 
         /* @var \Xibo\Widget\ModuleWidget $object */
         $object = new $className();
