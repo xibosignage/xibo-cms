@@ -369,4 +369,13 @@ div.dt-buttons {
 
 .layoutJumpListContainer .bootstrap-select.btn-group .dropdown-toggle .filter-option {
     text-align: center;
+    overflow: hidden;
+}
+
+.designer-control-panel .btn {
+    overflow: hidden;
+}
+
+.designer-control-panel-checkbox {
+    padding-top: 5px;
 }

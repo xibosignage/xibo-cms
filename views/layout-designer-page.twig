@@ -30,12 +30,77 @@
     {% endif %}
 
     <div class="row">
-        <div class="col-md-12 text-center">
+        <div class="col-sm-12 text-center">
             <h4>{% trans "Layout Design" %} - {{ layout.layout }}</h4>
         </div>
     </div>
     <div class="row">
-        <div class="col-md-10">
+        <div class="col-sm-2">
+            <div class="row">
+                <div class="col-sm-12">
+                    <div id="layout-status" class="alert"></div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-12">
+                    <p data-toggle="tooltip" data-title="{% trans "Duration may changed depending on the exact number of items in ticker/twitter media items" %}">{% trans "Layout Duration" %} <span id="layout-duration"></span></p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-12 layoutJumpListContainer">
+                    <select id="layoutJumpList" data-live-search="true">
+                        {% for item in layouts %}
+                            <option value="{{ urlFor("layout.designer", {id: item.layoutId}) }}"{% if item.layoutId == layout.layoutId %} selected{% endif %}>{{ item.layout }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-12 designer-control-panel">
+                    <a class="XiboFormButton btn btn-default btn-block" href="{{ urlFor("layout.edit.form", {id: layout.layoutId}) }}" title="{% trans "Edit the Layout Properties" %}"><span>{% trans "Background / Properties" %}</span></a>
+                    <a class="btn btn-default btn-block" href="{{ urlFor("layout.preview", {id: layout.layoutId}) }}" target="_blank"><span>{% trans "Preview Layout" %}</span></a>
+                    <a class="XiboFormButton btn btn-default btn-block" href="{{ urlFor("schedule.now.form", {id: layout.campaignId, from: "Campaign"}) }}"><span>{% trans "Schedule Now" %}</span></a>
+                    <a class="XiboFormButton btn btn-default btn-block" href="{{ urlFor("template.from.layout.form", {id: layout.layoutId}) }}"><span>{% trans "Save Template" %}</span></a>
+                    {% if layout.schemaVersion < 2 %}
+                    <a class="XiboFormButton btn btn-default btn-block" href="{{ urlFor("layout.upgrade.form", {id: layout.layoutId}) }}"><span>{% trans "Upgrade Layout" %}</span></a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-12">
+                    <h4>{% trans "Regions" %}</h4>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-12 designer-control-panel">
+                    <a class="btn btn-default btn-block" id="regionAddButton" href="{{ urlFor("region.add", {id: layout.layoutId}) }}"><span>{% trans "Add Region" %}</span></a>
+                    <button id="layout-save-all" class="btn btn-default btn-block disabled">{% trans "Save Positions" %}</button>
+                    <button id="layout-revert" class="btn btn-default btn-block disabled">{% trans "Undo" %}</button>
+                    <div class="designer-control-panel-checkbox"><input type="checkbox" class="switch-check-box" name="lockPosition" {% if currentUser.getOptionValue("lockPosition", "false") == "true" %}checked="checked"{% endif %} data-on-text="{% trans "On" %}" data-off-text="{% trans "Off" %}" /> {% trans "Lock Positions" %}</div>
+                    <div class="designer-control-panel-checkbox"><input type="checkbox" class="switch-check-box" name="hideControls" {% if currentUser.getOptionValue("hideControls", "false") == "true" %}checked="checked"{% endif %} data-on-text="{% trans "On" %}" data-off-text="{% trans "Off" %}" /> {% trans "Hide Controls" %}</div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-12">
+                    <h4>{% trans "Designer Size" %}</h4>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-6 designer-control-panel">
+                    <a class="btn btn-default btn-block" href="{{ urlFor("layout.designer", {id: layout.layoutId}) }}?zoom={{ zoom + 0.3 }}"><span>{% trans "+" %}</span></a>
+                </div>
+                <div class="col-sm-6 designer-control-panel">
+                    <a class="btn btn-default btn-block" href="{{ urlFor("layout.designer", {id: layout.layoutId}) }}?zoom={{ zoom - 0.3 }}"><span>{% trans "-" %}</span></a>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-12 designer-control-panel">
+                    <button id="saveDesignerSize" class="btn btn-default btn-block" data-designer-size="{{ zoom }}">{% trans "Save as Default Size" %}</button>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-10">
             <div id="layout"
                  zoom="{{ zoom }}"
                  tip_scale="1"
@@ -69,19 +134,19 @@
                     {% endif %}
 
                     <div id="region_{{ region.regionId }}"
-                            regionEnabled="{{ currentUser.checkEditable(region) }}"
-                            regionid="{{ region.regionId }}"
-                            layoutid="{{ layout.layoutId }}"
-                            zindex="{{ region.zIndex }}"
-                            tip_scale="1"
-                            designer_scale="{{ designerScale }}"
-                            width="{{ region.width }}"
-                            height="{{ region.height }}"
-                            href="{{ urlFor("region.timeline.form", {id: region.regionId}) }}"
-                            {% if currentUser.checkEditable(region) %}ondblclick="XiboFormRender($(this).attr('href'))"{% endif %}
-                            class="{{ disabledCss }} {{ previewCss }}"
-                            data-preview-url="{{ urlFor("region.preview", {id: region.regionId}) }}"
-                            style="position:absolute; width:{{ regionWidth }}px; height:{{ regionHeight }}px; top: {{ regionTop }}px; left:{{ regionLeft }}px; z-index: {{ region.zIndex }};">
+                         regionEnabled="{{ currentUser.checkEditable(region) }}"
+                         regionid="{{ region.regionId }}"
+                         layoutid="{{ layout.layoutId }}"
+                         zindex="{{ region.zIndex }}"
+                         tip_scale="1"
+                         designer_scale="{{ designerScale }}"
+                         width="{{ region.width }}"
+                         height="{{ region.height }}"
+                         href="{{ urlFor("region.timeline.form", {id: region.regionId}) }}"
+                         {% if currentUser.checkEditable(region) %}ondblclick="XiboFormRender($(this).attr('href'))"{% endif %}
+                         class="{{ disabledCss }} {{ previewCss }}"
+                         data-preview-url="{{ urlFor("region.preview", {id: region.regionId}) }}"
+                         style="position:absolute; width:{{ regionWidth }}px; height:{{ regionHeight }}px; top: {{ regionTop }}px; left:{{ regionLeft }}px; z-index: {{ region.zIndex }};">
                         <div class="regionTransparency {{ transparencyCss }}" style="width:100%; height:100%;"></div>
 
                         {% if currentUser.checkEditable(region) %}
@@ -112,112 +177,17 @@
                 {% endfor %}
             </div>
         </div>
-        <div class="col-md-2">
-            <div class="row">
-                <div class="col-md-12">
-                    <div id="layout-status" class="alert"></div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12">
-                    <p data-toggle="tooltip" data-title="{% trans "Duration may changed depending on the exact number of items in ticker/twitter media items" %}">{% trans "Layout Duration" %} <span id="layout-duration"></span></p>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12 layoutJumpListContainer">
-                    <select id="layoutJumpList" data-live-search="true">
-                        {% for item in layouts %}
-                            <option value="{{ urlFor("layout.designer", {id: item.layoutId}) }}"{% if item.layoutId == layout.layoutId %} selected{% endif %}>{{ item.layout }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12">
-                    <a class="XiboFormButton btn btn-default btn-block" href="{{ urlFor("layout.edit.form", {id: layout.layoutId}) }}" title="{% trans "Edit the Layout Properties" %}"><span>{% trans "Background / Properties" %}</span></a>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12">
-                    <a class="btn btn-default btn-block" href="{{ urlFor("layout.preview", {id: layout.layoutId}) }}" target="_blank"><span>{% trans "Preview Layout" %}</span></a>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12">
-                    <a class="XiboFormButton btn btn-default btn-block" href="{{ urlFor("schedule.now.form", {id: layout.campaignId, from: "Campaign"}) }}"><span>{% trans "Schedule Now" %}</span></a>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12">
-                    <a class="XiboFormButton btn btn-default btn-block" href="{{ urlFor("template.from.layout.form", {id: layout.layoutId}) }}"><span>{% trans "Save Template" %}</span></a>
-                </div>
-            </div>
-            {% if layout.schemaVersion < 2 %}
-            <div class="row">
-                <div class="col-md-12">
-                    <a class="XiboFormButton btn btn-default btn-block" href="{{ urlFor("layout.upgrade.form", {id: layout.layoutId}) }}"><span>{% trans "Upgrade Layout" %}</span></a>
-                </div>
-            </div>
-            {% endif %}
-
-            <div class="row">
-                <div class="col-md-12">
-                    <h4>{% trans "Regions" %}</h4>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12">
-                    <a class="btn btn-default btn-block" id="regionAddButton" href="{{ urlFor("region.add", {id: layout.layoutId}) }}"><span>{% trans "Add Region" %}</span></a>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-8">
-                    <button id="layout-save-all" class="btn btn-default btn-block disabled">{% trans "Save Positions" %}</button>
-                </div>
-                <div class="col-md-4">
-                    <button id="layout-revert" class="btn btn-default btn-block disabled">{% trans "Undo" %}</button>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12">
-                    <input type="checkbox" class="switch-check-box" name="lockPosition" {% if currentUser.getOptionValue("lockPosition", "false") == "true" %}checked="checked"{% endif %} data-on-text="{% trans "On" %}" data-off-text="{% trans "Off" %}" /> {% trans "Lock Positions" %}
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12">
-                    <input type="checkbox" class="switch-check-box" name="hideControls" {% if currentUser.getOptionValue("hideControls", "false") == "true" %}checked="checked"{% endif %} data-on-text="{% trans "On" %}" data-off-text="{% trans "Off" %}" /> {% trans "Hide Controls" %}
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12">
-                    <h4>{% trans "Designer Size" %}</h4>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-6">
-                    <a class="btn btn-default btn-block" href="{{ urlFor("layout.designer", {id: layout.layoutId}) }}?zoom={{ zoom + 0.3 }}"><span>{% trans "+" %}</span></a>
-                </div>
-                <div class="col-md-6">
-                    <a class="btn btn-default btn-block" href="{{ urlFor("layout.designer", {id: layout.layoutId}) }}?zoom={{ zoom - 0.3 }}"><span>{% trans "-" %}</span></a>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12">
-                    <button id="saveDesignerSize" class="btn btn-default btn-block" data-designer-size="{{ zoom }}">{% trans "Save as Default Designer Size" %}</button>
-                </div>
-            </div>
-        </div>
     </div>
     {% if layout.schemaVersion < 2 %}
     <div class="row">
-        <div class="col-md-offset-1 col-md-5">
+        <div class="col-sm-offset-1 col-sm-5">
             <p class="alert alert-danger">{% trans "This is an old format layout, please consider upgrading using the options menu" %}</p>
         </div>
     </div>
     {% endif %}
     {% if designerScale < 0.41 %}
         <div class="row">
-        <div class="col-md-offset-1 col-md-5">
+        <div class="col-sm-offset-1 col-sm-5">
             <p class="alert alert-danger">{% trans "This Layout is very large, so we have disabled region drag and drop. You could enlarge the designer from the options menu or use Region Options to Manually Position your regions." %}</p>
         </div>
     </div>

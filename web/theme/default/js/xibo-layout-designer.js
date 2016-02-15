@@ -156,6 +156,10 @@ $(document).ready(function(){
 
     // Hook up toggle
     $('[data-toggle="tooltip"]').tooltip();
+
+    // Shrink the Dropdown list according to the container (HAX)
+    var jumpListContainer = $(".layoutJumpListContainer");
+    jumpListContainer.find(".bootstrap-select").width(jumpListContainer.width());
 });
 
 function configureDragAndDrop() {
