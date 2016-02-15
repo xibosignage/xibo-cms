@@ -176,11 +176,16 @@ class UserGroup
 
     /**
      * Save the group
-     * @param bool $validate
+     * @param array $options
      */
-    public function save($validate = true)
+    public function save($options = [])
     {
-        if ($validate)
+        $options = array_merge([
+            'validate' => true,
+            'linkUsers' => true
+        ], $options);
+
+        if ($options['validate'])
             $this->validate();
 
         if ($this->groupId == null || $this->groupId == 0)
@@ -188,8 +193,10 @@ class UserGroup
         else if ($this->hash() != $this->hash)
             $this->edit();
 
-        $this->linkUsers();
-        $this->unlinkUsers();
+        if ($options['linkUsers']) {
+            $this->linkUsers();
+            $this->unlinkUsers();
+        }
     }
 
     /**

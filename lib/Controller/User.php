@@ -360,7 +360,7 @@ class User extends Base
 
         // Assign the initial group
         $group->assignUser($user);
-        $group->save(false);
+        $group->save(['validate' => false]);
 
         // Return
         $this->getState()->hydrate([

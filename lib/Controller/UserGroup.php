@@ -513,7 +513,7 @@ class UserGroup extends Base
             $group->unassignUser($user);
         }
 
-        $group->save(false);
+        $group->save(['validate' => false]);
 
         // Return
         $this->getState()->hydrate([
@@ -539,7 +539,7 @@ class UserGroup extends Base
             $group->unassignUser(UserFactory::getById($userId));
         }
 
-        $group->save(false);
+        $group->save(['validate' => false]);
 
         // Return
         $this->getState()->hydrate([

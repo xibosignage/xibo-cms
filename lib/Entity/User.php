@@ -686,11 +686,11 @@ class User implements \JsonSerializable
         PDOConnect::update($sql, $params);
 
         // Update the group
+        // This is essentially a dirty edit (i.e. we don't touch the group assignments)
         $group = UserGroupFactory::getById($this->groupId);
         $group->group = $this->userName;
         $group->libraryQuota = $this->libraryQuota;
-        $group->assignUser($this);
-        $group->save();
+        $group->save(['linkUsers' => false]);
     }
 
     /**
