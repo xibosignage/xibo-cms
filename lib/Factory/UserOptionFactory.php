@@ -50,6 +50,9 @@ class UserOptionFactory
      */
     public static function query($sortOrder = null, $filterBy = null)
     {
+        if (DBVERSION > 122)
+            return [];
+
         $entries = array();
 
         $sql = 'SELECT * FROM `useroption` WHERE userId = :userId';
