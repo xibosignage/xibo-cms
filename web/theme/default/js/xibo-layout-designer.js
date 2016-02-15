@@ -115,7 +115,7 @@ $(document).ready(function(){
         e.preventDefault();
 
         // If any regions have been moved, then save them.
-        if ($("#layout-save-all").length > 0) {
+        if (!$("#layout-save-all").hasClass("disabled")) {
             SystemMessage(translation.savePositionsFirst, true);
             return;
         }
