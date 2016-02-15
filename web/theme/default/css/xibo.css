@@ -363,11 +363,10 @@ div.dt-buttons {
     text-align: right;
 }
 
-#layout-status {
-    float: right;
-    font-size: 20px;
-}
-
 .ui-state-disabled {
     opacity: 1;
+}
+
+.layoutJumpListContainer .bootstrap-select.btn-group .dropdown-toggle .filter-option {
+    text-align: center;
 }

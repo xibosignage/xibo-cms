@@ -910,7 +910,7 @@ class User extends Base
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 204,
-            'message' => ($i == 1) ? __('Updated %d Preference', $i) : __('Updated %d Preferences', $i)
+            'message' => ($i == 1) ? __('Updated Preference') : __('Updated Preferences')
         ]);
     }
 }

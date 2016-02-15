@@ -115,17 +115,16 @@
         <div class="col-md-2">
             <div class="row">
                 <div class="col-md-12">
-                    <span id="layout-status"></span>
-                    <h4>{% trans "Layout" %}</h4>
+                    <div id="layout-status" class="alert"></div>
                 </div>
             </div>
             <div class="row">
                 <div class="col-md-12">
-                    <p>{% trans "Layout Duration" %} <span id="layout-duration"></span></p>
+                    <p data-toggle="tooltip" data-title="{% trans "Duration may changed depending on the exact number of items in ticker/twitter media items" %}">{% trans "Layout Duration" %} <span id="layout-duration"></span></p>
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-12">
+                <div class="col-md-12 layoutJumpListContainer">
                     <select id="layoutJumpList" data-live-search="true">
                         {% for item in layouts %}
                             <option value="{{ urlFor("layout.designer", {id: item.layoutId}) }}"{% if item.layoutId == layout.layoutId %} selected{% endif %}>{{ item.layout }}</option>

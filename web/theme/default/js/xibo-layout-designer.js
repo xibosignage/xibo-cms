@@ -153,6 +153,9 @@ $(document).ready(function(){
             value: $(this).data().designerSize
         }]);
     });
+
+    // Hook up toggle
+    $('[data-toggle="tooltip"]').tooltip();
 });
 
 function configureDragAndDrop() {
@@ -352,23 +355,36 @@ function layoutStatus(url) {
         dataType: "json",
         success: function(response){
 
+            var status = $("#layout-status");
+
             // Was the Call successful
             if (response.success) {
+
                 // Expect the response to have a message (response.html)
                 //  a status (1 to 4)
                 //  a duration
                 var element = $("<span>").addClass("fa");
 
-                if (response.extra.status == 1)
+                if (response.extra.status == 1) {
+                    status.addClass("alert-success");
                     element.addClass("fa-check");
-                else if (response.extra.status == 2)
+                }
+                else if (response.extra.status == 2) {
+                    status.addClass("alert-warning");
                     element.addClass("fa-question");
-                else if (response.extra.status == 3)
+                }
+                else if (response.extra.status == 3) {
+                    status.addClass("alert-info");
                     element.addClass("fa-cogs");
-                else
+                }
+                else {
+                    status.addClass("alert-danger");
                     element.addClass("fa-times");
+                }
 
-                $("#layout-status").attr("title", response.html).html(element);
+                status.html(response.html).prepend(element);
+
+                // Duration
                 $("#layout-duration").html(moment().startOf("day").seconds(response.extra.duration).format("HH:mm:ss"));
             }
             else {

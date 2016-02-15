@@ -223,7 +223,7 @@ class User implements \JsonSerializable
      * @SWG\Property(description="The user options")
      * @var UserOption[]
      */
-    public $userOptions;
+    public $userOptions = [];
 
     /**
      * Cached Permissions
