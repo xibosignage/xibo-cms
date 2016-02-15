@@ -50,7 +50,7 @@ class UserOptionFactory
      */
     public static function query($sortOrder = null, $filterBy = null)
     {
-        if (DBVERSION > 122)
+        if (DBVERSION < 122)
             return [];
 
         $entries = array();
