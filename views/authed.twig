@@ -195,6 +195,12 @@
 
 {% block javaScriptTemplates %}
 
+    <script type="text/javascript">
+        {% set userPreferences = currentUser.userOptions %}
+        var userPreferences = {{ userPreferences|json_encode|raw }};
+        var userPreferencesUrl = "{{ urlFor("user.pref") }}";
+    </script>
+
     {% raw %}
     <script type="text/x-handlebars-template" id="buttons-template">
         <div class="btn-group pull-right">

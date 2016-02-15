@@ -181,12 +181,12 @@
             </div>
             <div class="row">
                 <div class="col-md-12">
-                    <input type="checkbox" class="switch-check-box" name="lockPosition" data-on-text="{% trans "On" %}" data-off-text="{% trans "Off" %}" /> {% trans "Lock Positions" %}
+                    <input type="checkbox" class="switch-check-box" name="lockPosition" {% if currentUser.getOptionValue("lockPosition", "false") == "true" %}checked="checked"{% endif %} data-on-text="{% trans "On" %}" data-off-text="{% trans "Off" %}" /> {% trans "Lock Positions" %}
                 </div>
             </div>
             <div class="row">
                 <div class="col-md-12">
-                    <input type="checkbox" class="switch-check-box" name="hideControls" data-on-text="{% trans "On" %}" data-off-text="{% trans "Off" %}" /> {% trans "Hide Controls" %}
+                    <input type="checkbox" class="switch-check-box" name="hideControls" {% if currentUser.getOptionValue("hideControls", "false") == "true" %}checked="checked"{% endif %} data-on-text="{% trans "On" %}" data-off-text="{% trans "Off" %}" /> {% trans "Hide Controls" %}
                 </div>
             </div>
             <div class="row">
@@ -204,7 +204,7 @@
             </div>
             <div class="row">
                 <div class="col-md-12">
-                    <button class="btn btn-default btn-block">{% trans "Save as Default Designer Size" %}</button>
+                    <button id="saveDesignerSize" class="btn btn-default btn-block" data-designer-size="{{ zoom }}">{% trans "Save as Default Designer Size" %}</button>
                 </div>
             </div>
         </div>

@@ -297,6 +297,9 @@ $app->delete('/user/:id', '\Xibo\Controller\User:delete')->name('user.delete');
 // permissions
 $app->get('/user/permissions/:entity/:id', '\Xibo\Controller\User:permissionsGrid')->name('user.permissions');
 $app->post('/user/permissions/:entity/:id', '\Xibo\Controller\User:permissions');
+// preferences
+$app->get('/user/pref', '\Xibo\Controller\User:pref')->name('user.pref');
+$app->post('/user/pref', '\Xibo\Controller\User:prefEdit');
 
 /**
  * User Group

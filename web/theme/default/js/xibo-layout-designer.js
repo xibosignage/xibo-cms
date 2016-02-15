@@ -32,8 +32,8 @@ $(document).ready(function(){
     layout = $("#layout");
 
     // Read in the values of lockPosition and hideControls
-    lockPosition = $("input[name=lockPosition]").is("is:checked");
-    hideControls = $("input[name=hideControls]").is("is:checked");
+    lockPosition = $("input[name=lockPosition]")[0].checked;
+    hideControls = $("input[name=hideControls]")[0].checked;
     lowDesignerScale = (layout.attr("designer_scale") < 0.41);
 
     if (lowDesignerScale)
@@ -96,6 +96,12 @@ $(document).ready(function(){
             }
         }
 
+        // Update the user preference
+        updateUserPref([{
+            option: propertyName,
+            value: state
+        }]);
+
     });
 
     // Hide region previews/info
@@ -137,6 +143,15 @@ $(document).ready(function(){
         // Reload
         location.reload();
         return false;
+    });
+
+    // Bind to the save size button
+    $("#saveDesignerSize").on("click", function () {
+        // Update the user preference
+        updateUserPref([{
+            option: "defaultDesignerZoom",
+            value: $(this).data().designerSize
+        }]);
     });
 });
 

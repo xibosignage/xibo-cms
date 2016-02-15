@@ -988,3 +988,10 @@ CREATE TABLE IF NOT EXISTS `lkcommanddisplayprofile` (
   `validationString` varchar(1000) DEFAULT NULL,
   PRIMARY KEY (`commandId`,`displayProfileId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `useroption` (
+  `userId` int(11) NOT NULL,
+  `option` varchar(50) NOT NULL,
+  `value` text NOT NULL,
+  UNIQUE KEY `userId` (`userId`,`option`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

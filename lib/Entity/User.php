@@ -32,6 +32,7 @@ use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
+use Xibo\Factory\UserOptionFactory;
 use Xibo\Helper\Config;
 use Xibo\Helper\Log;
 use Xibo\Helper\Sanitize;
@@ -219,6 +220,12 @@ class User implements \JsonSerializable
     public $homePage;
 
     /**
+     * @SWG\Property(description="The user options")
+     * @var UserOption[]
+     */
+    public $userOptions;
+
+    /**
      * Cached Permissions
      * @var array[Permission]
      */
@@ -248,6 +255,61 @@ class User implements \JsonSerializable
     public function getId()
     {
         return $this->userId;
+    }
+
+    /**
+     * Get Option
+     * @param string $option
+     * @return UserOption
+     * @throws NotFoundException
+     */
+    public function getOption($option)
+    {
+        $this->load();
+
+        foreach ($this->userOptions as $userOption) {
+            /* @var UserOption $userOption */
+            if ($userOption->option == $option)
+                return $userOption;
+        }
+
+        Log::debug('UserOption %s not found', $option);
+
+        throw new NotFoundException('User Option not found');
+    }
+
+    /**
+     * Get User Option Value
+     * @param string $option
+     * @param mixed $default
+     * @return mixed
+     */
+    public function getOptionValue($option, $default)
+    {
+        $this->load();
+
+        try {
+            $userOption = $this->getOption($option);
+            return $userOption->value;
+        }
+        catch (NotFoundException $e) {
+            return $default;
+        }
+    }
+
+    /**
+     * Set User Option Value
+     * @param string $option
+     * @param mixed $value
+     */
+    public function setOptionValue($option, $value)
+    {
+        try {
+            $this->getOption($option)->value = $value;
+        }
+        catch (NotFoundException $e) {
+            $this->userOptions[] = UserOptionFactory::create($this->userId, $option, $value);
+        }
     }
 
     /**
@@ -336,6 +398,9 @@ class User implements \JsonSerializable
      */
     public function load($all = false)
     {
+        if ($this->userId == null || $this->loaded)
+            return;
+
         Log::debug('Loading %d. All Objects = %d', $this->userId, $all);
 
         $this->groups = UserGroupFactory::getByUserId($this->userId);
@@ -347,8 +412,12 @@ class User implements \JsonSerializable
             $this->events = ScheduleFactory::getByOwnerId($this->userId);
         }
 
+        $this->userOptions = UserOptionFactory::getByUserId($this->userId);
+
         // Set the hash
         $this->hash = $this->hash();
+
+        $this->loaded = true;
     }
 
     /**
@@ -449,7 +518,8 @@ class User implements \JsonSerializable
     {
         $options = array_merge([
             'validate' => true,
-            'passwordUpdate' => false
+            'passwordUpdate' => false,
+            'saveUserOptions' => true
         ], $options);
 
         if ($options['validate'])
@@ -463,6 +533,15 @@ class User implements \JsonSerializable
             $this->updatePassword();
         else if ($this->hash() != $this->hash)
             $this->update();
+
+        // Save user options
+        if ($options['saveUserOptions']) {
+            // Save all Options
+            foreach ($this->userOptions as $userOption) {
+                /* @var RegionOption $userOption */
+                $userOption->save();
+            }
+        }
     }
 
     /**
@@ -479,6 +558,12 @@ class User implements \JsonSerializable
         // Remove the user specific group
         $group = UserGroupFactory::getById($this->groupId);
         $group->delete();
+
+        // Delete all user options
+        foreach ($this->userOptions as $userOption) {
+            /* @var RegionOption $userOption */
+            $userOption->delete();
+        }
 
         // Remove any assignments to groups
         foreach ($this->groups as $group) {

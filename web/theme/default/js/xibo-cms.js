@@ -1068,6 +1068,38 @@ function LoginBox(message) {
     location.reload(false);
 }
 
+function updateUserPref(prefs) {
+
+    // Call with AJAX
+    $.ajax({
+        type: "post",
+        url: userPreferencesUrl,
+        cache: false,
+        dataType: "json",
+        data: {preference: prefs},
+        success: function(response){
+
+            // Was the Call successful
+            if (response.success) {
+                SystemMessage(response.message, true);
+            }
+            else {
+                // Login Form needed?
+                if (response.login) {
+
+                    LoginBox(response.message);
+
+                    return false;
+                } else {
+                    SystemMessage(response.message, response.success);
+                }
+            }
+
+            return false;
+        }
+    });
+}
+
 /**
  * Displays the system message
  * @param {String} messageText
@@ -1088,7 +1120,7 @@ function SystemMessage(messageText, success) {
             buttons: [{
                 label: 'Close',
                 callback: function() {
-                    if (lastForm.indexOf("playlist/widget/form") > -1 && timelineForm != null) {
+                    if (lastForm != null && lastForm.indexOf("playlist/widget/form") > -1 && timelineForm != null) {
                         // Close button
                         // We might want to go back to the prior form
                         XiboFormRender(timelineForm.url, timelineForm.value);
