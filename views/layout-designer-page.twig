@@ -229,8 +229,6 @@
     <script src="{{ theme.uri("js/xibo-layout-designer.js") }}"></script>
     <script type="text/javascript">
         var translation = {
-            save_position_button: "{% trans "Save Position" %}",
-            revert_position_button: "{% trans "Undo" %}",
             savePositionsFirst: "{% trans "Please save the pending position changes first by clicking Save Positions or cancel by clicking Undo." %}"
         };
 
@@ -317,7 +315,9 @@
             bootbox.dialog({
                 message: template(templateOptions),
                 title: "{% trans "Upload media" %}",
-                buttons: buttons
+                buttons: buttons,
+                updateInAllChecked: {% if settings.LIBRARY_MEDIA_UPDATEINALL_CHECKB == "Checked" %}true{% else %}false{% endif %},
+                deleteOldRevisionsChecked: {% if settings.LIBRARY_MEDIA_DELETEOLDVER_CHECKB == "Checked" %}true{% else %}false{% endif %}
             }).on('shown.bs.modal', function() {
                 // Configure the upload form
                 var url = "{{ urlFor("library.add") }}";
