@@ -84,8 +84,16 @@ class DataSetFactory extends BaseFactory
                 dataset.description,
                 dataset.userId,
                 dataset.lastDataEdit,
-                dataset.`code`,
-                dataset.`isLookup`,
+            ';
+
+            if (DBVERSION > 122) {
+                $select .= '
+                    dataset.`code`,
+                    dataset.`isLookup`,
+                ';
+            }
+
+            $select .= '
                 user.userName AS owner,
                 (
                   SELECT GROUP_CONCAT(DISTINCT `group`.group)
