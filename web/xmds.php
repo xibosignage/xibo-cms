@@ -142,8 +142,6 @@ if (isset($_GET['file'])) {
 
 
 try {
-    \Xibo\Storage\PDOConnect::init()->beginTransaction();
-
     $wsdl = PROJECT_ROOT . '/lib/Xmds/service_v' . $version . '.wsdl';
 
     if (!file_exists($wsdl))

@@ -718,11 +718,12 @@ class User implements \JsonSerializable
      */
     public function touch()
     {
+        // This needs to happen on a separate connection
         PDOConnect::update('UPDATE `user` SET lastAccessed = :time, loggedIn = 1, newUserWizard = :newUserWizard WHERE userId = :userId', [
             'userId' => $this->userId,
             'newUserWizard' => $this->newUserWizard,
             'time' => date("Y-m-d H:i:s")
-        ]);
+        ], PDOConnect::newConnection());
     }
 
     /**

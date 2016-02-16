@@ -33,9 +33,6 @@ class Storage extends Middleware
     {
         $this->app->commit = true;
 
-        if (!PDOConnect::init()->inTransaction())
-            PDOConnect::init()->beginTransaction();
-
         $this->next->call();
 
         // Are we in a transaction coming out of the stack?
