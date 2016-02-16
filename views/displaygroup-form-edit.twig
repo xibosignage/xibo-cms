@@ -20,6 +20,44 @@
     {% trans "Save" %}, $("#displayGroupEditForm").submit()
 {% endblock %}
 
+{% block formFieldActions %}
+    [{
+    "field": "isDynamic",
+    "trigger": "init",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".dynamic-fields": { "display": "none" }
+    }
+    },{
+    "field": "isDynamic",
+    "trigger": "change",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".dynamic-fields": { "display": "none" }
+    }
+    },{
+    "field": "isDynamic",
+    "trigger": "init",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".dynamic-fields": { "display": "block" }
+    }
+    },{
+    "field": "isDynamic",
+    "trigger": "change",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".dynamic-fields": { "display": "block" }
+    }
+    }]
+{% endblock %}
+
+{% block callBack %}displayGroupFormOpen{% endblock %}
+
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
@@ -31,7 +69,35 @@
                 {% set title %}{% trans "Description" %}{% endset %}
                 {% set helpText %}{% trans "A short description of this Display Group" %}{% endset %}
                 {{ forms.input("description", title, displayGroup.description, helpText) }}
+
+                {% set title %}{% trans "Dynamic Group?" %}{% endset %}
+                {% set helpText %}{% trans "Are the members of this group dynamic?" %}{% endset %}
+                {{ forms.checkbox("isDynamic", title, displayGroup.isDynamic, helpText) }}
+
+                {% set title %}{% trans "Criteria" %}{% endset %}
+                {% set helpText %}{% trans "A comma separated set of regular expressions run against the Display name to determine membership." %}{% endset %}
+                {{ forms.input("dynamicCriteria", title, displayGroup.dynamicCriteria, helpText, "dynamic-fields") }}
             </form>
+        </div>
+    </div>
+    <div class="row dynamic-fields">
+        <div class="col-md-12">
+            <h4>Displays</h4>
+            <div id="displayGroupDisplayList" class="well">
+                <table id="displays" class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th>{% trans "ID" %}</th>
+                        <th>{% trans "Display" %}</th>
+                        <th>{% trans "Status" %}</th>
+                        <th>{% trans "Licence" %}</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 {% endblock %}

@@ -105,12 +105,16 @@ class DisplayGroup extends Base
             if ($this->getUser()->checkEditable($group)) {
                 // Show the edit button, members button
 
-                // Group Members
-                $group->buttons[] = array(
-                    'id' => 'displaygroup_button_group_members',
-                    'url' => $this->urlFor('displayGroup.members.form', ['id' => $group->displayGroupId]),
-                    'text' => __('Displays')
-                );
+                if ($group->isDynamic == 0) {
+                    // Group Members
+                    $group->buttons[] = array(
+                        'id' => 'displaygroup_button_group_members',
+                        'url' => $this->urlFor('displayGroup.members.form', ['id' => $group->displayGroupId]),
+                        'text' => __('Displays')
+                    );
+
+                    $group->buttons[] = ['divider' => true];
+                }
 
                 // Edit
                 $group->buttons[] = array(
@@ -299,6 +303,20 @@ class DisplayGroup extends Base
      *      type="string",
      *      required=false
      *  ),
+     *  @SWG\Parameter(
+     *      name="isDynamic",
+     *      in="formData",
+     *      description="Flag indicating whether this DisplayGroup is Dynamic",
+     *      type="int",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dynamicContent",
+     *      in="formData",
+     *      description="The filter criteria for this dynamic group. A command separated set of regular expressions to apply",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -316,6 +334,8 @@ class DisplayGroup extends Base
         $displayGroup = new \Xibo\Entity\DisplayGroup();
         $displayGroup->displayGroup = Sanitize::getString('displayGroup');
         $displayGroup->description = Sanitize::getString('description');
+        $displayGroup->isDynamic = Sanitize::getCheckbox('isDynamic');
+        $displayGroup->dynamicCriteria = Sanitize::getString('dynamicCriteria');
         $displayGroup->save();
 
         // Add full permissions for this user to this group
@@ -363,6 +383,20 @@ class DisplayGroup extends Base
      *      type="string",
      *      required=false
      *  ),
+     *  @SWG\Parameter(
+     *      name="isDynamic",
+     *      in="formData",
+     *      description="Flag indicating whether this DisplayGroup is Dynamic",
+     *      type="int",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dynamicContent",
+     *      in="formData",
+     *      description="The filter criteria for this dynamic group. A command separated set of regular expressions to apply",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -379,6 +413,8 @@ class DisplayGroup extends Base
 
         $displayGroup->displayGroup = Sanitize::getString('displayGroup');
         $displayGroup->description = Sanitize::getString('description');
+        $displayGroup->isDynamic = Sanitize::getCheckbox('isDynamic');
+        $displayGroup->dynamicCriteria = Sanitize::getString('dynamicCriteria');
         $displayGroup->save();
 
         // Return

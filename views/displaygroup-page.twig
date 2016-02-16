@@ -34,6 +34,8 @@
                             <tr>
                                 <th>{% trans "Name" %}</th>
                                 <th>{% trans "Description" %}</th>
+                                <th>{% trans "Is Dynamic?" %}</th>
+                                <th>{% trans "Criteria" %}</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -63,6 +65,8 @@
             "columns": [
                 { "data": "displayGroup" },
                 { "data": "description" },
+                { "data": "isDynamic", "render": dataTableTickCrossColumn },
+                { "data": "dynamicCriteria" },
                 {
                     "orderable": false,
                     "data": dataTableButtonsColumn
@@ -72,5 +76,80 @@
 
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
+
+        var displayTable;
+        var criteria;
+
+        function displayGroupFormOpen(dialog) {
+
+            $(dialog).find("input[name=dynamicCriteria]").on("keyup", $.debounce(500, function() {
+                displayGroupQueryDynamicMembers(dialog);
+            }));
+
+            // First time in there
+            displayGroupQueryDynamicMembers(dialog);
+        }
+
+        function displayGroupQueryDynamicMembers(dialog) {
+
+            if ($(dialog).find("input[name=isDynamic]")[0].checked) {
+
+                criteria = $(dialog).find("input[name=dynamicCriteria]").val();
+
+                if (criteria == "") {
+                    if (displayTable != null) {
+                        displayTable.destroy();
+                        displayTable = null;
+                        $("#displays tbody").empty();
+                    }
+
+                    return;
+                }
+
+                if (displayTable != null) {
+                    displayTable.ajax.reload();
+                } else {
+                    displayTable = $("#displays").DataTable({
+                        "language": dataTablesLanguage,
+                        serverSide: true,
+                        stateSave: true,
+                        filter: false,
+                        searchDelay: 3000,
+                        "order": [[1, "asc"]],
+                        ajax: {
+                            "url": "{{ urlFor("display.search") }}",
+                            "data": function (d) {
+                                console.log(criteria);
+                                $.extend(d, {display: criteria});
+                            }
+                        },
+                        "columns": [
+                            {"data": "displayId"},
+                            {"data": "display"},
+                            {
+                                "data": "mediaInventoryStatus",
+                                "render": function (data, type, row) {
+                                    if (type != "display")
+                                        return data;
+
+                                    var icon = "";
+                                    if (data == 1)
+                                        icon = "fa-check";
+                                    else if (data == 0)
+                                        icon = "fa-times";
+                                    else
+                                        icon = "fa-cloud-download";
+
+                                    return "<span class='fa " + icon + "'></span>";
+                                }
+                            },
+                            {"data": "licensed", "render": dataTableTickCrossColumn}
+                        ]
+                    });
+
+                    displayTable.on('processing.dt', dataTableProcessing);
+                }
+            }
+        }
     </script>
 {% endblock %}

@@ -54,6 +54,10 @@
     {
       "step": "Create user preferences table",
       "action": "CREATE TABLE IF NOT EXISTS `useroption` (`userId` int(11) NOT NULL,`option` varchar(50) NOT NULL,`value` text NOT NULL,UNIQUE KEY `userId` (`userId`,`option`)) ENGINE=InnoDB DEFAULT CHARSET=utf8;"
+    },
+    {
+      "step": "Dynamic DataSets Flag",
+      "action": "ALTER TABLE  `displaygroup` ADD  `isDynamic` TINYINT( 4 ) NOT NULL DEFAULT  '0', ADD  `dynamicCriteria` VARCHAR( 2000 ) NULL;"
     }
   ]
 }

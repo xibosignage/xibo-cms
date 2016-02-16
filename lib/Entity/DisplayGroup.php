@@ -60,6 +60,22 @@ class DisplayGroup implements \JsonSerializable
      */
     public $isDisplaySpecific = 0;
 
+    /**
+     * @SWG\Property(
+     *  description="A flag indicating whether this displayGroup is dynamic",
+     * )
+     * @var int
+     */
+    public $isDynamic = 0;
+
+    /**
+     * @SWG\Property(
+     *  description="A flag indicating whether this displayGroup is dynamic",
+     * )
+     * @var int
+     */
+    public $dynamicCriteria;
+
     // Child Items the Display Group is linked to
     private $displays = [];
     private $layouts = [];
@@ -260,6 +276,10 @@ class DisplayGroup implements \JsonSerializable
 
             if (count($result) > 0)
                 throw new \InvalidArgumentException(sprintf(__('You already own a display group called "%s". Please choose another name.'), $this->displayGroup));
+
+            // If we are dynamic, then make sure we have some criteria
+            if ($this->isDynamic == 1 && $this->dynamicCriteria == '')
+                throw new \InvalidArgumentException(__('Dynamic Display Groups must have at least one Criteria specified.'));
         }
     }
 
@@ -343,12 +363,14 @@ class DisplayGroup implements \JsonSerializable
     private function add()
     {
         $this->displayGroupId = PDOConnect::insert('
-          INSERT INTO displaygroup (DisplayGroup, IsDisplaySpecific, Description)
-            VALUES (:displayGroup, :isDisplaySpecific, :description)
+          INSERT INTO displaygroup (DisplayGroup, IsDisplaySpecific, Description, `isDynamic`, `dynamicCriteria`)
+            VALUES (:displayGroup, :isDisplaySpecific, :description, :isDynamic, :dynamicCriteria)
         ', [
             'displayGroup' => $this->displayGroup,
             'isDisplaySpecific' => $this->isDisplaySpecific,
-            'description' => $this->description
+            'description' => $this->description,
+            'isDynamic' => $this->isDynamic,
+            'dynamicCriteria' => $this->dynamicCriteria
         ]);
     }
 
@@ -356,10 +378,19 @@ class DisplayGroup implements \JsonSerializable
     {
         Log::debug('Updating Display Group. %s, %d', $this->displayGroup, $this->displayGroupId);
 
-        PDOConnect::update('UPDATE displaygroup SET DisplayGroup = :displayGroup, Description = :description WHERE DisplayGroupID = :displayGroupId', [
+        PDOConnect::update('
+          UPDATE displaygroup
+            SET DisplayGroup = :displayGroup,
+              Description = :description,
+              `isDynamic` = :isDynamic,
+              `dynamicCriteria` = :dynamicCriteria
+           WHERE DisplayGroupID = :displayGroupId
+          ', [
             'displayGroup' => $this->displayGroup,
             'description' => $this->description,
-            'displayGroupId' => $this->displayGroupId
+            'displayGroupId' => $this->displayGroupId,
+            'isDynamic' => $this->isDynamic,
+            'dynamicCriteria' => $this->dynamicCriteria
         ]);
     }
 

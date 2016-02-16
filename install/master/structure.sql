@@ -190,6 +190,8 @@ CREATE TABLE IF NOT EXISTS `displaygroup` (
   `DisplayGroup` varchar(50) NOT NULL,
   `Description` varchar(254) DEFAULT NULL,
   `IsDisplaySpecific` tinyint(4) NOT NULL DEFAULT '0',
+  `isDynamic` tinyint(4) NOT NULL DEFAULT '0',
+  `dynamicCriteria` varchar(2000) DEFAULT NULL,
   PRIMARY KEY (`DisplayGroupID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 

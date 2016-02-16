@@ -72,7 +72,12 @@ class DisplayGroupFactory extends BaseFactory
         $params = [];
 
         $select = '
-            SELECT displaygroup.displayGroupId, displaygroup.displayGroup, displaygroup.isDisplaySpecific, displaygroup.description
+            SELECT `displaygroup`.displayGroupId,
+                `displaygroup`.displayGroup,
+                `displaygroup`.isDisplaySpecific,
+                `displaygroup`.description,
+                `displaygroup`.isDynamic,
+                `displaygroup`.dynamicCriteria
         ';
 
         $body = '
