@@ -23,9 +23,7 @@
 namespace Xibo\Middleware;
 
 use Slim\Middleware;
-use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\TokenExpiredException;
-use Xibo\Helper\Theme;
 
 class CsrfGuard extends Middleware
 {
@@ -58,7 +56,7 @@ class CsrfGuard extends Middleware
     public function call()
     {
         // Attach as hook.
-        $this->app->hook('slim.before', array($this, 'check'));
+        $this->app->hook('slim.before.dispatch', array($this, 'check'));
 
         // Call next middleware.
         $this->next->call();
@@ -67,7 +65,8 @@ class CsrfGuard extends Middleware
     /**
      * Check CSRF token is valid.
      */
-    public function check() {
+    public function check()
+    {
         // Check sessions are enabled.
         if (session_id() === '') {
             throw new \Exception('Sessions are required to use the CSRF Guard middleware.');
@@ -81,13 +80,19 @@ class CsrfGuard extends Middleware
 
         // Validate the CSRF token.
         if (in_array($this->app->request()->getMethod(), array('POST', 'PUT', 'DELETE'))) {
-            $userToken = $this->app->request()->headers('X-XSRF-TOKEN');
-            if ($userToken == '') {
-                $userToken = $this->app->request()->params($this->key);
-            }
+            // Validate the token unless we are on an excluded route
+            $route = $this->app->router()->getCurrentRoute()->getPattern();
 
-            if ($token !== $userToken) {
-                throw new TokenExpiredException('Sorry the form has expired. Please refresh.');
+            if ($this->app->excludedCsrfRoutes == null || ($route != null && !in_array($route, $this->app->excludedCsrfRoutes))) {
+
+                $userToken = $this->app->request()->headers('X-XSRF-TOKEN');
+                if ($userToken == '') {
+                    $userToken = $this->app->request()->params($this->key);
+                }
+
+                if ($token !== $userToken) {
+                    throw new TokenExpiredException('Sorry the form has expired. Please refresh.');
+                }
             }
         }
 

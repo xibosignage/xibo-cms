@@ -14,6 +14,7 @@ use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\FormExpiredException;
 use Xibo\Exception\InstanceSuspendedException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Exception\TokenExpiredException;
 use Xibo\Exception\UpgradePendingException;
 use Xibo\Helper\Config;
 use Xibo\Helper\Log;
@@ -188,6 +189,7 @@ class Error extends Base
             || $e instanceof InstanceSuspendedException
             || $e instanceof ConfigurationException
             || $e instanceof UpgradePendingException
+            || $e instanceof TokenExpiredException
         );
     }
 }

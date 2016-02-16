@@ -39,6 +39,7 @@ class Config
     public static $logProcessors = null;
     public static $middleware = null;
     public static $authentication = null;
+    public static $samlSettings = null;
 
     public function __construct()
     {
@@ -78,6 +79,8 @@ class Config
             Config::$middleware = $middleware;
         if (isset($authentication))
             Config::$authentication = $authentication;
+        if (isset($samlSettings))
+            Config::$samlSettings = $samlSettings;
 
         // Configure the timezone information
         date_default_timezone_set(Config::GetSetting("defaultTimezone"));
