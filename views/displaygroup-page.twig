@@ -81,6 +81,7 @@
         var criteria;
 
         function displayGroupFormOpen(dialog) {
+            displayTable = null;
 
             $(dialog).find("input[name=dynamicCriteria]").on("keyup", $.debounce(500, function() {
                 displayGroupQueryDynamicMembers(dialog);

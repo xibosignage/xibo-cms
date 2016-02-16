@@ -135,7 +135,7 @@ class DisplayGroup implements \JsonSerializable
             /* @var Display $display */
             $display->setMediaIncomplete();
             $display->setCollectRequired($this->collectRequired);
-            $display->save(['validate' => false, 'audit' => false]);
+            $display->save(['validate' => false, 'audit' => false, 'triggerDynamicDisplayGroupAssessment' => false]);
         }
     }
 
@@ -285,26 +285,31 @@ class DisplayGroup implements \JsonSerializable
 
     /**
      * Save
-     * @param bool $validate
+     * @param array $options
      */
-    public function save($validate = true)
+    public function save($options = [])
     {
-        if ($validate)
+        $options = array_merge([
+            'validate' => true,
+            'saveGroup' => true,
+            'manageDisplayLinks' => true
+        ], $options);
+
+        if ($options['validate'])
             $this->validate();
 
         if ($this->displayGroupId == null || $this->displayGroupId == 0) {
             $this->add();
             $this->loaded = true;
         }
-        else
+        else if ($options['saveGroup'])
             $this->edit();
 
         Log::debug('Manage links to Display Group');
 
-        if ($this->loaded) {
+        if ($this->loaded && $options['manageDisplayLinks']) {
             // Handle any changes in the displays linked
-            $this->linkDisplays();
-            $this->unlinkDisplays();
+            $this->manageDisplayLinks();
 
             // Handle any changes in the media linked
             $this->linkMedia();
@@ -313,6 +318,9 @@ class DisplayGroup implements \JsonSerializable
             // Handle any changes in the layouts linked
             $this->linkLayouts();
             $this->unlinkLayouts();
+
+        } else if ($this->isDynamic && $options['manageDisplayLinks']) {
+            $this->manageDisplayLinks();
         }
 
         // Set media incomplete if necessary
@@ -392,6 +400,35 @@ class DisplayGroup implements \JsonSerializable
             'isDynamic' => $this->isDynamic,
             'dynamicCriteria' => $this->dynamicCriteria
         ]);
+    }
+
+    /**
+     * Manage the links to this display, dynamic or otherwise
+     */
+    private function manageDisplayLinks()
+    {
+        if ($this->isDynamic) {
+
+            Log::info('Managing Display Links for Dynamic Display Group %s', $this->displayGroup);
+
+            $originalDisplays = ($this->loaded) ? $this->displays : DisplayFactory::getByDisplayGroupId($this->displayGroupId);
+
+            // Update the linked displays based on the filter criteria
+            $this->displays = DisplayFactory::query(null, ['display' => $this->dynamicCriteria]);
+
+            $difference = array_udiff($originalDisplays, $this->displays, function ($a, $b) {
+                /**
+                 * @var Display $a
+                 * @var Display $b
+                 */
+                return $a->getId() - $b->getId();
+            });
+
+            $this->notifyRequired = (count($difference) >= 0);
+        }
+
+        $this->linkDisplays();
+        $this->unlinkDisplays();
     }
 
     private function linkDisplays()

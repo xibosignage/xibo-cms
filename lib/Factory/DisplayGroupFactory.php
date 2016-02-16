@@ -62,12 +62,25 @@ class DisplayGroupFactory extends BaseFactory
     }
 
     /**
+     * Get Display Groups by isDynamic
+     * @param int $isDynamic
+     * @return array[DisplayGroup]
+     */
+    public static function getByIsDynamic($isDynamic)
+    {
+        return DisplayGroupFactory::query(null, ['disableUserCheck' => 1, 'isDynamic' => $isDynamic]);
+    }
+
+    /**
      * @param array $sortOrder
      * @param array $filterBy
      * @return array[DisplayGroup]
      */
     public static function query($sortOrder = null, $filterBy = null)
     {
+        if ($sortOrder == null)
+            $sortOrder = ['displayGroup'];
+
         $entries = [];
         $params = [];
 
@@ -115,6 +128,11 @@ class DisplayGroupFactory extends BaseFactory
         if (Sanitize::getInt('isDisplaySpecific', 0, $filterBy) != -1) {
             $body .= ' AND displaygroup.isDisplaySpecific = :isDisplaySpecific ';
             $params['isDisplaySpecific'] = Sanitize::getInt('isDisplaySpecific', 0, $filterBy);
+        }
+
+        if (Sanitize::getInt('isDynamic', $filterBy) !== null) {
+            $body .= ' AND `displaygroup`.isDynamic = :isDynamic ';
+            $params['isDynamic'] = Sanitize::getInt('isDynamic', $filterBy);
         }
 
         if (Sanitize::getInt('displayId', $filterBy) !== null) {

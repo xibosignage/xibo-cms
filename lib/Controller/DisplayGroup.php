@@ -512,6 +512,9 @@ class DisplayGroup extends Base
         if (!$this->getUser()->checkEditable($displayGroup))
             throw new AccessDeniedException();
 
+        if ($displayGroup->isDynamic == 1)
+            throw new \InvalidArgumentException(__('Displays cannot be manually assigned to a Dynamic Group'));
+
         $displays = Sanitize::getIntArray('displayId');
 
         foreach ($displays as $displayId) {
@@ -536,7 +539,7 @@ class DisplayGroup extends Base
         }
 
         // Save the result
-        $displayGroup->save(false);
+        $displayGroup->save(['validate' => false]);
 
         // Return
         $this->getState()->hydrate([
@@ -586,13 +589,16 @@ class DisplayGroup extends Base
         if (!$this->getUser()->checkEditable($displayGroup))
             throw new AccessDeniedException();
 
+        if ($displayGroup->isDynamic == 1)
+            throw new \InvalidArgumentException(__('Displays cannot be manually unassigned to a Dynamic Group'));
+
         $displays = Sanitize::getIntArray('displayId');
 
         foreach ($displays as $displayId) {
             $displayGroup->unassignDisplay(DisplayFactory::getById($displayId));
         }
 
-        $displayGroup->save(false);
+        $displayGroup->save(['validate' => false]);
 
         // Return
         $this->getState()->hydrate([
@@ -702,7 +708,7 @@ class DisplayGroup extends Base
             $displayGroup->unassignMedia($media);
         }
 
-        $displayGroup->save(false);
+        $displayGroup->save(['validate' => false]);
 
         // Return
         $this->getState()->hydrate([
@@ -763,7 +769,7 @@ class DisplayGroup extends Base
             $displayGroup->unassignMedia(MediaFactory::getById($mediaId));
         }
 
-        $displayGroup->save(false);
+        $displayGroup->save(['validate' => false]);
 
         // Return
         $this->getState()->hydrate([
@@ -873,7 +879,7 @@ class DisplayGroup extends Base
             $displayGroup->unassignLayout($layout);
         }
 
-        $displayGroup->save(false);
+        $displayGroup->save(['validate' => false]);
 
         // Return
         $this->getState()->hydrate([
@@ -934,7 +940,7 @@ class DisplayGroup extends Base
             $displayGroup->unassignLayout(LayoutFactory::getById($layoutId));
         }
 
-        $displayGroup->save(false);
+        $displayGroup->save(['validate' => false]);
 
         // Return
         $this->getState()->hydrate([
@@ -1148,7 +1154,7 @@ class DisplayGroup extends Base
             $displayGroup->assignLayout($layout);
             // Don't notify, this player action will cause a download.
             $displayGroup->setCollectRequired(false);
-            $displayGroup->save(false);
+            $displayGroup->save(['validate' => false]);
 
             // Convert into a download required
             $downloadRequired = true;
