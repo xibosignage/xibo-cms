@@ -72,6 +72,16 @@ class DisplayGroupFactory extends BaseFactory
     }
 
     /**
+     * Get Display Groups by their ParentId
+     * @param int $parentId
+     * @return array[DisplayGroup]
+     */
+    public static function getByParentId($parentId)
+    {
+        return DisplayGroupFactory::query(null, ['disableUserCheck' => 1, 'parentId' => $parentId]);
+    }
+
+    /**
      * @param array $sortOrder
      * @param array $filterBy
      * @return array[DisplayGroup]
@@ -123,6 +133,11 @@ class DisplayGroupFactory extends BaseFactory
         if (Sanitize::getInt('displayGroupId', $filterBy) !== null) {
             $body .= ' AND displaygroup.displayGroupId = :displayGroupId ';
             $params['displayGroupId'] = Sanitize::getInt('displayGroupId', $filterBy);
+        }
+
+        if (Sanitize::getInt('parentId', $filterBy) !== null) {
+            $body .= ' AND `displaygroup`.displayGroupId IN (SELECT `childId` FROM `lkdgdg` WHERE `parentId` = :parentId AND `depth` = 1) ';
+            $params['parentId'] = Sanitize::getInt('parentId', $filterBy);
         }
 
         if (Sanitize::getInt('isDisplaySpecific', 0, $filterBy) != -1) {

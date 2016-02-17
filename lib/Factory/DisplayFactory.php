@@ -163,23 +163,27 @@ class DisplayFactory extends BaseFactory
                     ON lkdisplaydg.displayid = display.displayId
                     INNER JOIN `displaygroup`
                     ON displaygroup.displaygroupid = lkdisplaydg.displaygroupid
+                        AND `displaygroup`.isDisplaySpecific = 1
                     LEFT OUTER JOIN layout 
                     ON layout.layoutid = display.defaultlayoutid
                     LEFT OUTER JOIN layout currentLayout 
                     ON currentLayout.layoutId = display.currentLayoutId
-               WHERE 1 = 1
             ';
 
-        self::viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, 'display.displayId', null, $filterBy);
-
+        // Restrict to members of a specific display group
         if (Sanitize::getInt('displayGroupId', $filterBy) !== null) {
-            // Restrict to a specific display group
-            $body .= ' AND displaygroup.displaygroupid = :displayGroupId ';
+            $body .= '
+                INNER JOIN `lkdisplaydg` othergroups
+                ON othergroups.displayId = `display`.displayId
+                    AND othergroups.displayGroupId = :displayGroupId
+            ';
+
             $params['displayGroupId'] = Sanitize::getInt('displayGroupId', $filterBy);
-        } else {
-            // Restrict to display specific groups
-            $body .= ' AND displaygroup.isDisplaySpecific = 1 ';
         }
+
+        $body .= ' WHERE 1 = 1 ';
+
+        self::viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, 'display.displayId', null, $filterBy);
 
         // Filter by Display ID?
         if (Sanitize::getInt('displayId', $filterBy) !== null) {

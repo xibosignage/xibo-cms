@@ -152,5 +152,109 @@
                 }
             }
         }
+
+        function displayGroupMembersFormOpen(dialog) {
+
+            // Get our table
+            var table = $(dialog).find(".controlDiv");
+
+            if (table.data().members == undefined)
+                table.data().members = {
+                    displays: {},
+                    displayGroups: {}
+                };
+
+            // Bind to the checkboxes change event
+            table.find("input[type=checkbox]").change(function() {
+                // Update our global members data with this
+                var memberId = $(this).data().memberId;
+                var memberType = $(this).data().memberType;
+                var value = $(this).is(":checked");
+
+                //console.log("Setting memberId: " + memberId + ". Value: " + value);
+
+                if (memberType == "display")
+                    table.data().members.displays[memberId] = (value) ? 1 : 0;
+                else
+                    table.data().members.displayGroups[memberId] = (value) ? 1 : 0;
+            });
+        }
+
+        var members;
+        function displayGroupMembersFormSubmit(id) {
+
+            var form = $("#" + id);
+            members = form.data().members;
+
+            // There may not have been any changes
+            if (members == undefined) {
+                // No changes
+                XiboDialogClose();
+                return;
+            }
+
+            // Build an array of id's to assign and an array to unassign
+            var assign = [];
+            var unassign = [];
+
+            $.each(members.displays, function(name, value) {
+                if (value == 1)
+                    assign.push(name);
+                else
+                    unassign.push(name);
+            });
+
+            var data = {};
+            data[form.data().param] = assign;
+            data[form.data().paramUnassign] = unassign;
+
+            $.ajax({
+                type: "POST",
+                url: form.data().url,
+                cache: false,
+                dataType: "json",
+                data: $.param(data),
+                success: function(xhr, textStatus, error) {
+
+                    if (xhr.success) {
+                        // Do the next one
+                        // Build an array of id's to assign and an array to unassign
+                        var assign = [];
+                        var unassign = [];
+
+                        $.each(members.displayGroups, function(name, value) {
+                            if (value == 1)
+                                assign.push(name);
+                            else
+                                unassign.push(name);
+                        });
+
+                        var data = {};
+                        data[form.data().groupsParam] = assign;
+                        data[form.data().groupsParamUnassign] = unassign;
+
+                        $.ajax({
+                            type: "POST",
+                            url: form.data().groupsUrl,
+                            cache: false,
+                            dataType: "json",
+                            data: $.param(data),
+                            success: function(xhr, textStatus, error) {
+                                XiboSubmitResponse(xhr, form);
+                            },
+                            error: function(xhr, textStatus, errorThrown) {
+                                SystemMessage(xhr.responseText, false);
+                            }
+                        });
+
+                    } else {
+                        XiboSubmitResponse(xhr, form);
+                    }
+                },
+                error: function(xhr, textStatus, errorThrown) {
+                    SystemMessage(xhr.responseText, false);
+                }
+            });
+        }
     </script>
 {% endblock %}

@@ -11,6 +11,7 @@ namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
 use Xibo\Factory\DisplayFactory;
+use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PermissionFactory;
@@ -78,10 +79,14 @@ class DisplayGroup implements \JsonSerializable
 
     // Child Items the Display Group is linked to
     private $displays = [];
+    private $displayGroups = [];
     private $layouts = [];
     private $media = [];
     private $permissions = [];
     private $events = [];
+
+    // Track original assignments
+    private $originalDisplayGroups = [];
 
     /**
      * Is notify required during save?
@@ -169,6 +174,35 @@ class DisplayGroup implements \JsonSerializable
     }
 
     /**
+     * Assign DisplayGroup
+     * @param DisplayGroup $displayGroup
+     */
+    public function assignDisplayGroup($displayGroup)
+    {
+        $this->load();
+
+        if (!in_array($displayGroup, $this->displayGroups))
+            $this->displayGroups[] = $displayGroup;
+    }
+
+    /**
+     * Unassign DisplayGroup
+     * @param DisplayGroup $displayGroup
+     */
+    public function unassignDisplayGroup($displayGroup)
+    {
+        $this->load();
+
+        $this->displayGroups = array_udiff($this->displayGroups, [$displayGroup], function($a, $b) {
+            /**
+             * @var DisplayGroup $a
+             * @var DisplayGroup $b
+             */
+            return $a->getId() - $b->getId();
+        });
+    }
+
+    /**
      * Assign Media
      * @param Media $media
      */
@@ -246,11 +280,16 @@ class DisplayGroup implements \JsonSerializable
 
         $this->displays = DisplayFactory::getByDisplayGroupId($this->displayGroupId);
 
+        $this->displayGroups = DisplayGroupFactory::getByParentId($this->displayGroupId);
+
         $this->layouts = LayoutFactory::getByDisplayGroupId($this->displayGroupId);
 
         $this->media = MediaFactory::getByDisplayGroupId($this->displayGroupId);
 
         $this->events = ScheduleFactory::getByDisplayGroupId($this->displayGroupId);
+
+        // Set the originals
+        $this->originalDisplayGroups = $this->displayGroups;
 
         // We are loaded
         $this->loaded = true;
@@ -305,9 +344,9 @@ class DisplayGroup implements \JsonSerializable
         else if ($options['saveGroup'])
             $this->edit();
 
-        Log::debug('Manage links to Display Group');
-
         if ($this->loaded && $options['manageDisplayLinks']) {
+            Log::debug('Manage links to Display Group');
+
             // Handle any changes in the displays linked
             $this->manageDisplayLinks();
 
@@ -318,6 +357,10 @@ class DisplayGroup implements \JsonSerializable
             // Handle any changes in the layouts linked
             $this->linkLayouts();
             $this->unlinkLayouts();
+
+            // Handle any group links
+            $this->linkDisplayGroups();
+            $this->unlinkDisplayGroups();
 
         } else if ($this->isDynamic && $options['manageDisplayLinks']) {
             $this->manageDisplayLinks();
@@ -360,10 +403,12 @@ class DisplayGroup implements \JsonSerializable
     public function removeAssignments()
     {
         $this->displays = [];
+        $this->displayGroups = [];
         $this->layouts = [];
         $this->media = [];
 
         $this->unlinkDisplays();
+        $this->unlinkAllDisplayGroups();
         $this->unlinkLayouts();
         $this->unlinkMedia();
     }
@@ -379,6 +424,12 @@ class DisplayGroup implements \JsonSerializable
             'description' => $this->description,
             'isDynamic' => $this->isDynamic,
             'dynamicCriteria' => $this->dynamicCriteria
+        ]);
+
+        // Insert my self link
+        PDOConnect::insert('INSERT INTO `lkdgdg` (`parentId`, `childId`, `depth`) VALUES (:parentId, :childId, 0)', [
+            'parentId' => $this->displayGroupId,
+            'childId' => $this->displayGroupId
         ]);
     }
 
@@ -460,6 +511,85 @@ class DisplayGroup implements \JsonSerializable
         $sql .= ')';
 
         PDOConnect::update($sql, $params);
+    }
+
+    /**
+     * Links the display groups that have been added to the OM
+     * adding them to the closure table `lkdgdg`
+     */
+    private function linkDisplayGroups()
+    {
+        $links = array_udiff($this->displayGroups, $this->originalDisplayGroups, function($a, $b) {
+            /**
+             * @var DisplayGroup $a
+             * @var DisplayGroup $b
+             */
+            return $a->getId() - $b->getId();
+        });
+
+        Log::debug('Linking %d display groups to Display Group %s', count($links), $this->displayGroup);
+
+        foreach ($links as $displayGroup) {
+            /* @var DisplayGroup $displayGroup */
+            PDOConnect::insert('
+                INSERT INTO lkdgdg (parentId, childId, depth)
+                SELECT p.parentId, c.childId, p.depth + c.depth + 1
+                  FROM lkdgdg p, lkdgdg c
+                 WHERE p.childId = :parentId AND c.parentId = :childId
+            ', [
+                'parentId' => $this->displayGroupId,
+                'childId' => $displayGroup->displayGroupId
+            ]);
+        }
+    }
+
+    /**
+     * Unlinks the display groups that have been removed from the OM
+     * removing them from the closure table `lkdgdg`
+     */
+    private function unlinkDisplayGroups()
+    {
+        $links = array_udiff($this->originalDisplayGroups, $this->displayGroups, function($a, $b) {
+            /**
+             * @var DisplayGroup $a
+             * @var DisplayGroup $b
+             */
+            return $a->getId() - $b->getId();
+        });
+
+        Log::debug('Unlinking %d display groups to Display Group %s', count($links), $this->displayGroup);
+
+        foreach ($links as $displayGroup) {
+            /* @var DisplayGroup $displayGroup */
+            PDOConnect::update('
+                DELETE link
+                  FROM `lkdgdg` p, `lkdgdg` link, `lkdgdg` c
+                 WHERE p.parentId = link.parentId AND c.childId = link.childId
+                   AND p.childId = :parentId AND c.parentId = :childId
+            ', [
+                'parentId' => $this->displayGroupId,
+                'childId' => $displayGroup->displayGroupId
+            ]);
+        }
+    }
+
+    /**
+     * Unlinks all display groups
+     * usually in preparation for a delete
+     */
+    private function unlinkAllDisplayGroups()
+    {
+        PDOConnect::update('
+            DELETE link
+              FROM `lkdgdg` p, `lkdgdg` link, `lkdgdg` c, `lkdgdg` to_delete
+             WHERE p.parentId = link.parentId AND c.childId = link.childId
+               AND p.childId  = to_delete.parentId AND c.parentId = to_delete.childId
+               AND (to_delete.parentId = :parentId OR to_delete.childId = :childId)
+               AND to_delete.depth < 2
+        ', [
+            'parentId' => $this->displayGroupId,
+            'childId' => $this->displayGroupId
+        ]);
     }
 
     private function linkMedia()

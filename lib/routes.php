@@ -213,6 +213,8 @@ $app->post('/displaygroup/:id/version', '\Xibo\Controller\DisplayGroup:version')
 
 $app->post('/displaygroup/:id/display/assign', '\Xibo\Controller\DisplayGroup:assignDisplay')->name('displayGroup.assign.display');
 $app->post('/displaygroup/:id/display/unassign', '\Xibo\Controller\DisplayGroup:unassignDisplay')->name('displayGroup.unassign.display');
+$app->post('/displaygroup/:id/displayGroup/assign', '\Xibo\Controller\DisplayGroup:assignDisplayGroup')->name('displayGroup.assign.displayGroup');
+$app->post('/displaygroup/:id/displayGroup/unassign', '\Xibo\Controller\DisplayGroup:unassignDisplayGroup')->name('displayGroup.unassign.displayGroup');
 $app->post('/displaygroup/:id/media/assign', '\Xibo\Controller\DisplayGroup:assignMedia')->name('displayGroup.assign.media');
 $app->post('/displaygroup/:id/media/unassign', '\Xibo\Controller\DisplayGroup:unassignMedia')->name('displayGroup.unassign.media');
 $app->post('/displaygroup/:id/layout/assign', '\Xibo\Controller\DisplayGroup:assignLayouts')->name('displayGroup.assign.layout');
