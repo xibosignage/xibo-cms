@@ -92,22 +92,33 @@ class Session {
 
 	function close() 
 	{
-		// Commit
-		$this->commit();
+        try {
+            // Commit
+            $this->commit();
+        } catch (PDOException $e) {
+            Debug::LogEntry('error', 'Error Committing Session' . $e->getMessage());
+        }
 
-		$dbh = $this->getDb();
+        try {
+            $dbh = $this->getDb();
 
-		// Prune this session if necessary
-		if ($this->pruneKey) {
-			$sth = $dbh->prepare('DELETE FROM session WHERE session_id = :session_id');
-			$sth->execute(array('session_id' => $this->key));
-		}
+            // Prune this session if necessary
+            if ($this->pruneKey) {
+                $sth = $dbh->prepare('DELETE FROM session WHERE session_id = :session_id');
+                $sth->execute(array('session_id' => $this->key));
+            }
 
-		// Delete sessions older than 10 times the max lifetime
-		PDOConnect::update('DELETE FROM `session` WHERE IsExpired = 1 AND session_expiration < :expiration', array('expiration' => (time() - ($this->maxLifetime * 10))), $this->getDb());
+            if ($this->gcCalled) {
+                // Delete sessions older than 10 times the max lifetime
+                PDOConnect::update('DELETE FROM `session` WHERE IsExpired = 1 AND session_expiration < :expiration', array('expiration' => (time() - ($this->maxLifetime * 10))), $this->getDb());
 
-		// Update expired sessions as expired
-		PDOConnect::update('UPDATE `session` SET IsExpired = 1 WHERE session_expiration < :expiration', array('expiration' => time()), $this->getDb());
+                // Update expired sessions as expired
+                PDOConnect::update('UPDATE `session` SET IsExpired = 1 WHERE session_expiration < :expiration', array('expiration' => time()), $this->getDb());
+            }
+
+        } catch (PDOException $e) {
+            Debug::LogEntry('error', 'Error Committing Session' . $e->getMessage());
+        }
 
 		// Close
 		$this->pdo = null;
@@ -179,7 +190,7 @@ class Session {
 			return($row['session_data']);
 		}
 		catch (Exception $e) {
-			Debug::LogEntry('error', $e->getMessage());
+			Debug::LogEntry('error', 'Error reading session: ' . $e->getMessage());
 
 			return settype($empty, "string");
 		}
@@ -252,7 +263,7 @@ class Session {
 			$sth->execute(array('session_id', $key));
 		}
 		catch (Exception $e) {
-			Debug::LogEntry('error', $e->getMessage());
+			Debug::LogEntry('error', 'Session Destroy' . $e->getMessage());
 		}
 
 		return true;
@@ -289,7 +300,7 @@ class Session {
 			$sth->execute(array('session_id' => $oldSessionID, 'new_session_id' => $new_sess_id));
 		}
 		catch (Exception $e) {
-			Debug::LogEntry('error', $e->getMessage());
+			Debug::LogEntry('error', 'Session Regenerate' . $e->getMessage());
 			return false;
 		}
     }
