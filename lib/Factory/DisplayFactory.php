@@ -201,20 +201,23 @@ class DisplayFactory extends BaseFactory
 
         // Filter by Display Name?
         if (Sanitize::getString('display', $filterBy) != null) {
-            // convert into a space delimited array
-            $names = explode(' ', Sanitize::getString('display', $filterBy));
+            // Convert into commas
+            foreach (explode(',', Sanitize::getString('display', $filterBy)) as $term) {
 
-            $i = 0;
-            foreach ($names as $searchName) {
-                $i++;
-                // Not like, or like?
-                if (substr($searchName, 0, 1) == '-') {
-                    $body .= " AND  display.display NOT LIKE :search$i ";
-                    $params['search' . $i] = '%' . ltrim(($searchName), '-') . '%';
-                }
-                else {
-                    $body .= " AND  display.display LIKE :search$i ";
-                    $params['search' . $i] = '%' . $searchName . '%';
+                // convert into a space delimited array
+                $names = explode(' ', $term);
+
+                $i = 0;
+                foreach ($names as $searchName) {
+                    $i++;
+                    // Not like, or like?
+                    if (substr($searchName, 0, 1) == '-') {
+                        $body .= " AND  display.display NOT RLIKE (:search$i) ";
+                        $params['search' . $i] = ltrim(($searchName), '-');
+                    } else {
+                        $body .= " AND  display.display RLIKE (:search$i) ";
+                        $params['search' . $i] = $searchName;
+                    }
                 }
             }
         }
