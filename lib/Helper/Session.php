@@ -103,18 +103,30 @@ class Session implements \SessionHandlerInterface
      */
     public function close()
     {
-        // Commit
-        $this->commit();
+        try {
+            // Commit
+            $this->commit();
+        } catch (\PDOException $e) {
+            Log::error('Error closing session: %s', $e->getMessage());
+        }
 
-        // Prune this session if necessary
-        if ($this->pruneKey)
-            PDOConnect::update('DELETE FROM `session` WHERE session_id = :session_id', array('session_id' => $this->key), $this->getDb());
+        try {
 
-        // Delete sessions older than 10 times the max lifetime
-        PDOConnect::update('DELETE FROM `session` WHERE IsExpired = 1 AND session_expiration < :expiration', array('expiration' => (time() - ($this->maxLifetime * 10))), $this->getDb());
+            // Prune this session if necessary
+            if ($this->pruneKey)
+                PDOConnect::update('DELETE FROM `session` WHERE session_id = :session_id', array('session_id' => $this->key), $this->getDb());
 
-        // Update expired sessions as expired
-        PDOConnect::update('UPDATE `session` SET IsExpired = 1 WHERE session_expiration < :expiration', array('expiration' => time()), $this->getDb());
+            if ($this->gcCalled) {
+                // Delete sessions older than 10 times the max lifetime
+                PDOConnect::update('DELETE FROM `session` WHERE IsExpired = 1 AND session_expiration < :expiration', array('expiration' => (time() - ($this->maxLifetime * 10))), $this->getDb());
+
+                // Update expired sessions as expired
+                PDOConnect::update('UPDATE `session` SET IsExpired = 1 WHERE session_expiration < :expiration', array('expiration' => time()), $this->getDb());
+            }
+
+        } catch (\PDOException $e) {
+            Log::error('Error closing session: %s', $e->getMessage());
+        }
 
         // Close
         $this->pdo = null;
@@ -211,7 +223,7 @@ class Session implements \SessionHandlerInterface
                 'remoteaddr' => Sanitize::getString('REMOTE_ADDR')
             ];
 
-            Log::sql($sql, $params);
+            //Log::sql($sql, $params);
 
             PDOConnect::update($sql, $params, $this->getDb());
 
