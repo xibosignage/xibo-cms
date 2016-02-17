@@ -35,6 +35,9 @@ class Maintenance extends Base
 {
     public function run()
     {
+        // Always start a transaction
+        PDOConnect::init()->beginTransaction();
+
         // Output HTML Headers
         print '<html>';
         print '  <head>';

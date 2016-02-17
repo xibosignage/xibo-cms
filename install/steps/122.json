@@ -54,6 +54,10 @@
     {
       "step": "Create user preferences table",
       "action": "CREATE TABLE IF NOT EXISTS `useroption` (`userId` int(11) NOT NULL,`option` varchar(50) NOT NULL,`value` text NOT NULL,UNIQUE KEY `userId` (`userId`,`option`)) ENGINE=InnoDB DEFAULT CHARSET=utf8;"
+    },
+    {
+      "step": "Remove unnecessary columns from the Sessions Table",
+      "action": "ALTER TABLE `session`DROP `LastPage`,DROP `SecurityToken`;"
     }
   ]
 }

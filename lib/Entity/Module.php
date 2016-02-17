@@ -184,9 +184,7 @@ class Module implements \JsonSerializable
 
     private function edit()
     {
-        $dbh = PDOConnect::init();
-
-        $sth = $dbh->prepare('
+        PDOConnect::update('
           UPDATE module SET
               enabled = :enabled,
               previewEnabled = :previewEnabled,
@@ -195,9 +193,7 @@ class Module implements \JsonSerializable
               defaultDuration = :defaultDuration,
               settings = :settings
            WHERE moduleid = :moduleId
-        ');
-
-        $sth->execute(array(
+        ', [
             'moduleId' => $this->moduleId,
             'enabled' => $this->enabled,
             'previewEnabled' => $this->previewEnabled,
@@ -205,6 +201,6 @@ class Module implements \JsonSerializable
             'imageUri' => $this->imageUri,
             'defaultDuration' => $this->defaultDuration,
             'settings' => json_encode($this->settings)
-        ));
+        ]);
     }
 }

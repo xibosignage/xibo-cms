@@ -31,7 +31,7 @@ class SessionFactory extends BaseFactory
 
         try {
             $select = '
-            SELECT session.userId, user.userName, isExpired, lastPage, session.lastAccessed, remoteAddr AS remoteAddress, userAgent ';
+            SELECT session.userId, user.userName, isExpired, session.lastAccessed, remoteAddr AS remoteAddress, userAgent ';
 
             $body = '
               FROM `session`

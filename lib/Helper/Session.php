@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2013 Daniel Garner
+ * Copyright (C) 2006-2016 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -22,9 +22,9 @@ namespace Xibo\Helper;
 
 use Xibo\Storage\PDOConnect;
 
-class Session
+class Session implements \SessionHandlerInterface
 {
-    private $max_lifetime;
+    private $maxLifetime;
     private $key;
 
     /**
@@ -34,11 +34,43 @@ class Session
     public $refreshExpiry = true;
 
     /**
-     * Is the session expired?
+     * Expiry time
      * @var int
      */
-    public $isExpired = 1;
+    private $sessionExpiry = 0;
 
+    /**
+     * Is the session expired?
+     * @var bool
+     */
+    private $expired = true;
+
+    /**
+     * The UserId whom owns this session
+     * @var int
+     */
+    private $userId = 0;
+
+    /**
+     * @var bool Whether gc() has been called
+     */
+    private $gcCalled = false;
+
+    /**
+     * Prune this key?
+     * @var bool
+     */
+    private $pruneKey = false;
+
+    /**
+     * The database connection
+     * @var \PDO
+     */
+    private $pdo = null;
+
+    /**
+     * Session constructor.
+     */
     function __construct()
     {
         session_set_save_handler(
@@ -57,258 +89,200 @@ class Session
         session_start();
     }
 
-    function open($save_path, $session_name)
+    /**
+     * {@inheritdoc}
+     */
+    public function open($savePath, $sessionName)
     {
-        $this->max_lifetime = ini_get('session.gc_maxlifetime');
+        $this->maxLifetime = ini_get('session.gc_maxlifetime');
         return true;
     }
 
-    function close()
+    /**
+     * {@inheritdoc}
+     */
+    public function close()
     {
+        // Commit
+        $this->commit();
 
-        $this->gc($this->max_lifetime);
+        // Prune this session if necessary
+        if ($this->pruneKey)
+            PDOConnect::update('DELETE FROM `session` WHERE session_id = :session_id', array('session_id' => $this->key), $this->getDb());
+
+        // Delete sessions older than 10 times the max lifetime
+        PDOConnect::update('DELETE FROM `session` WHERE IsExpired = 1 AND session_expiration < :expiration', array('expiration' => (time() - ($this->maxLifetime * 10))), $this->getDb());
+
+        // Update expired sessions as expired
+        PDOConnect::update('UPDATE `session` SET IsExpired = 1 WHERE session_expiration < :expiration', array('expiration' => time()), $this->getDb());
+
+        // Close
+        $this->pdo = null;
+
         return true;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     function read($key)
     {
-        $userAgent = substr(Sanitize::string($_SERVER['HTTP_USER_AGENT']), 0, 253);
-        $remoteAddr = Sanitize::string($_SERVER['REMOTE_ADDR']);
-        $securityToken = Sanitize::getString('SecurityToken');
-
+        $empty = '';
         $this->key = $key;
-        $newExp = time() + $this->max_lifetime;
 
-        $this->gc($this->max_lifetime);
+        $userAgent = substr(Sanitize::string($_SERVER['HTTP_USER_AGENT']), 0, 253);
 
         try {
-            $dbh = PDOConnect::init();
+            $dbh = $this->getDb();
+
+            // Start a transaction
+            $this->beginTransaction();
 
             // Get this session
-            $sth = $dbh->prepare('SELECT session_data, isexpired, securitytoken, useragent FROM session WHERE session_id = :session_id');
+            $sth = $dbh->prepare('SELECT `session_data`, `isexpired`, `useragent`, `session_expiration`, `userId` FROM `session` WHERE `session_id` = :session_id');
             $sth->execute(array('session_id' => $key));
 
-            if (!$row = $sth->fetch())
+            if (!$row = $sth->fetch()) {
+                // Key doesn't exist yet
+                $this->expired = false;
                 return settype($empty, "string");
+            }
+
+            // Check the session hasn't expired
+            if ($row['session_expiration'] < time())
+                $this->expired = true;
 
             // What happens if the UserAgent has changed?
             if ($row['useragent'] != $userAgent) {
-                // Make sure we are logged out (delete all data)
-                $usth = $dbh->prepare('DELETE FROM session WHERE session_id = :session_id');
-                $usth->execute(array('session_id' => $key));
+                // Force delete this session
+                $this->expired = 1;
+                $this->pruneKey = true;
 
                 throw new \Exception('Different UserAgent');
             }
 
-            // We have the Key and the Remote Address.
-            if ($securityToken == null) {
-                // If there is no security token then obey the IsExpired
-                $this->isExpired = $row['isexpired'];
-            } elseif ($securityToken == $row['securitytoken']) {
-                // We have a security token, so dont require a login
-                $this->isExpired = 0;
-
-                $usth = $dbh->prepare('UPDATE session SET session_expiration = :expiry, isExpired = 0 WHERE session_id = :session_id');
-                $usth->execute(array('session_id' => $key, 'expiry' => $newExp));
-            } else {
-                // Its set - but its wrong - not good
-                Log::error('Incorrect SecurityToken from ' . $remoteAddr);
-
-                $this->isExpired = 1;
-            }
-
-            // Either way - update this SESSION so that the security token is NULL
-            $usth = $dbh->prepare('UPDATE `session` SET SecurityToken = NULL WHERE session_id = :session_id');
-            $usth->execute(array('session_id' => $key));
+            $this->userId = $row['userId'];
+            $this->expired = $row['isexpired'];
+            $this->sessionExpiry = $row['session_expiration'];
 
             return ($row['session_data']);
-        } catch (\Exception $e) {
-            Log::error($e->getMessage());
-            $empty = '';
+
+        } catch (\PDOException $e) {
+            Log::error('Error reading session: %s', $e->getMessage());
+
             return settype($empty, "string");
         }
     }
 
-    function write($key, $val)
+    /**
+     * {@inheritdoc}
+     */
+    public function write($key, $val)
     {
-        $newExp = time() + $this->max_lifetime;
-        $lastaccessed = date("Y-m-d H:i:s");
-
-        $userAgent = substr(Sanitize::getString('HTTP_USER_AGENT', 'No user agent', $_SERVER), 0, 253);
-        $remoteAddr = Sanitize::getString('REMOTE_ADDR');
+        $newExp = time() + $this->maxLifetime;
 
         try {
-            $dbh = PDOConnect::init();
+            $sql = '
+                  INSERT INTO `session` (session_id, session_data, session_expiration, lastaccessed, userid, isexpired, useragent, remoteaddr)
+                    VALUES (:session_id, :session_data, :session_expiration, :lastAccessed, :userId, :expired, :useragent, :remoteaddr)
+                    ON DUPLICATE KEY UPDATE
+                      `session_data` = :session_data2,
+                      `userId` = :userId2,
+                      `session_expiration` = :session_expiration2,
+                      `isExpired` = :expired2
+                ';
 
-            $sth = $dbh->prepare('SELECT session_id FROM session WHERE session_id = :session_id');
-            $sth->execute(array('session_id' => $key));
+            $params = [
+                'session_id' => $key,
+                'session_data' => $val,
+                'session_data2' => $val,
+                'session_expiration' => $newExp,
+                'session_expiration2' => ($this->refreshExpiry) ? $newExp : $this->sessionExpiry,
+                'lastAccessed' => date("Y-m-d H:i:s"),
+                'userId' => $this->userId,
+                'userId2' => $this->userId,
+                'expired' => ($this->expired) ? 1 : 0,
+                'expired2' => ($this->expired) ? 1 : 0,
+                'useragent' => substr(Sanitize::getString('HTTP_USER_AGENT', 'No user agent', $_SERVER), 0, 253),
+                'remoteaddr' => Sanitize::getString('REMOTE_ADDR')
+            ];
 
-            if (!$row = $sth->fetch()) {
-                // Insert a new session
-                $SQL = 'INSERT INTO `session` (session_id, session_data, session_expiration, lastaccessed, lastpage, userid, isexpired, useragent, remoteaddr)
-                          VALUES (:session_id, :session_data, :session_expiration, :lastaccessed, :lastpage, :userid, :isexpired, :useragent, :remoteaddr) ';
+            Log::sql($sql, $params);
 
-                $isth = $dbh->prepare($SQL);
+            PDOConnect::update($sql, $params, $this->getDb());
 
-                $isth->execute(
-                    array(
-                        'session_id' => $key,
-                        'session_data' => $val,
-                        'session_expiration' => $newExp,
-                        'lastaccessed' => $lastaccessed,
-                        'lastpage' => 'login',
-                        'userid' => NULL,
-                        'isexpired' => 0,
-                        'useragent' => $userAgent,
-                        'remoteaddr' => $remoteAddr
-                    )
-                );
-            } else {
-                // Punch a very small hole in the authentication system
-                // we do not want to update the expiry time of a session if it is the Clock Timer going off
-                $autoRefresh = (isset($_REQUEST['autoRefresh']) && Sanitize::bool($_REQUEST['autoRefresh']));
-
-                if (!$this->refreshExpiry || $autoRefresh) {
-
-                    // Update the existing session without the expiry
-                    $SQL = "UPDATE session SET session_data = :session_data WHERE session_id = :session_id ";
-
-                    $isth = $dbh->prepare($SQL);
-
-                    $isth->execute(
-                        array('session_id' => $key, 'session_data' => $val)
-                    );
-                } else {
-                    // Update the existing session
-                    $SQL = "UPDATE `session` SET
-                         	session_data = :session_data,
-                         	session_expiration = :session_expiration,
-                         	lastaccessed 	= :lastaccessed,
-                         	remoteaddr 	= :remoteaddr
-                         WHERE session_id = :session_id ";
-
-                    $isth = $dbh->prepare($SQL);
-
-                    $isth->execute(
-                        array(
-                            'session_id' => $key,
-                            'session_data' => $val,
-                            'session_expiration' => $newExp,
-                            'lastaccessed' => $lastaccessed,
-                            'remoteaddr' => $remoteAddr
-                        )
-                    );
-                }
-            }
-        } catch (\Exception $e) {
-            Log::error($e->getMessage());
+        } catch (\PDOException $e) {
+            Log::error('Error writing session data: %s', $e->getMessage());
             return false;
         }
 
         return true;
     }
 
-    function destroy($key)
+    /**
+     * {@inheritdoc}
+     */
+    public function destroy($key)
     {
         try {
-            $dbh = PDOConnect::init();
-
-            $sth = $dbh->prepare('UPDATE session SET IsExpired = 1 WHERE session_id = :session_id');
-            $sth->execute(array('session_id', $key));
-        } catch (\Exception $e) {
-            Log::error($e->getMessage());
+            PDOConnect::update('DELETE FROM `session` WHERE session_id = :session_id', array('session_id', $key), $this->getDb());
+        } catch (\PDOException $e) {
+            Log::error('Error destroying session: %s', $e->getMessage());
         }
 
         return true;
     }
 
-    function gc($max_lifetime)
+    /**
+     * {@inheritdoc}
+     */
+    public function gc($maxLifetime)
     {
-        try {
-            $dbh = PDOConnect::init();
-
-            // Delete sessions older than 10 times the max lifetime
-            $sth = $dbh->prepare('DELETE FROM `session` WHERE IsExpired = 1 AND session_expiration < :expiration');
-            $sth->execute(array('expiration' => (time() - ($max_lifetime * 10))));
-
-            // Update expired sessions as expired
-            $sth = $dbh->prepare('UPDATE `session` SET IsExpired = 1 WHERE session_expiration < :expiration');
-            $sth->execute(array('expiration' => time()));
-        } catch (\Exception $e) {
-            Log::error($e->getMessage());
-        }
+        $this->gcCalled = true;
+        return true;
     }
 
-    function setUser($key, $userid)
+    /**
+     * Sets the User Id
+     * @param $userId
+     */
+    public function setUser($userId)
     {
-        $_SESSION['userid'] = $userid;
-
-        try {
-            $dbh = PDOConnect::init();
-
-            // Delete sessions older than 10 times the max lifetime
-            $sth = $dbh->prepare('UPDATE `session` SET userid = :userid WHERE session_id = :session_id');
-            $sth->execute(array('session_id' => $key, 'userid' => $userid));
-        } catch (\Exception $e) {
-            Log::error($e->getMessage());
-            return false;
-        }
+        Log::debug('Setting user Id to %d', $userId);
+        $_SESSION['userid'] = $userId;
+        $this->userId = $userId;
     }
 
     /**
      * Updates the session ID with a new one
      */
-    public function regenerateSessionId($oldSessionID)
+    public function regenerateSessionId()
     {
-
         session_regenerate_id(false);
 
-        $new_sess_id = session_id();
-
-        $this->key = $new_sess_id;
+        $newKey = session_id();
 
         try {
-            $dbh = PDOConnect::init();
+            // Swap the ID's
+            PDOConnect::update('UPDATE `session` SET session_id = :new_session_id WHERE session_id = :session_id', array('session_id' => $this->key, 'new_session_id' => $newKey), $this->getDb());
 
-            // Delete sessions older than 10 times the max lifetime
-            $sth = $dbh->prepare('UPDATE session SET session_id = :new_session_id WHERE session_id = :session_id');
-            $sth->execute(array('session_id' => $oldSessionID, 'new_session_id' => $new_sess_id));
-        } catch (\Exception $e) {
-            Log::error($e->getMessage());
+            $this->key = $newKey;
+
+            return true;
+
+        } catch (\PDOException $e) {
+            Log::error('Error regenerating session: %s', $e->getMessage());
             return false;
         }
     }
 
-    function setPage($key, $lastpage)
+    /**
+     * Set this session to expired
+     * @param $isExpired
+     */
+    public function setIsExpired($isExpired)
     {
-        $_SESSION['pagename'] = $lastpage;
-
-        try {
-            $dbh = PDOConnect::init();
-
-            // Delete sessions older than 10 times the max lifetime
-            $sth = $dbh->prepare('UPDATE session SET lastpage = :lastpage WHERE session_id = :session_id');
-            $sth->execute(array('session_id' => $key, 'lastpage' => $lastpage));
-        } catch (\Exception $e) {
-            Log::error($e->getMessage());
-            return false;
-        }
-    }
-
-    function setIsExpired($isExpired)
-    {
-        $this->isExpired = $isExpired;
-
-        try {
-            $dbh = PDOConnect::init();
-
-            // Delete sessions older than 10 times the max lifetime
-            $sth = $dbh->prepare('UPDATE session SET isexpired = :isexpired WHERE session_id = :session_id');
-            $sth->execute(array('session_id' => $this->key, 'isexpired' => $isExpired));
-        } catch (\Exception $e) {
-            Log::error($e->getMessage());
-            return false;
-        }
+        $this->expired = $isExpired;
     }
 
     /**
@@ -349,6 +323,51 @@ class Session
         }
 
         return false;
+    }
+
+    /**
+     * Is the session expired?
+     * @return bool
+     */
+    public function isExpired()
+    {
+        return $this->expired;
+    }
+
+    /**
+     * Get a Database
+     * @return \PDO
+     */
+    private function getDb()
+    {
+        if ($this->pdo == null)
+            $this->pdo = PDOConnect::newConnection();
+
+        return $this->pdo;
+    }
+
+    /**
+     * Helper method to begin a transaction.
+     *
+     * MySQLs default isolation, REPEATABLE READ, causes deadlock for different sessions
+     * due to http://www.mysqlperformanceblog.com/2013/12/12/one-more-innodb-gap-lock-to-avoid/ .
+     * So we change it to READ COMMITTED.
+     */
+    private function beginTransaction()
+    {
+        if (!$this->getDb()->inTransaction()) {
+            $this->pdo->exec('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
+            $this->pdo->beginTransaction();
+        }
+    }
+
+    /**
+     * Commit
+     */
+    private function commit()
+    {
+        if ($this->getDb()->inTransaction())
+            $this->getDb()->commit();
     }
 }
 
