@@ -47,6 +47,8 @@ class Storage extends Middleware
             }
         }
 
+        Log::info('PDO stats: %s.', json_encode(PDOConnect::stats()));
+
         PDOConnect::close();
     }
 }

@@ -58,6 +58,10 @@
     {
       "step": "Dynamic DataSets Flag",
       "action": "ALTER TABLE  `displaygroup` ADD  `isDynamic` TINYINT( 4 ) NOT NULL DEFAULT  '0', ADD  `dynamicCriteria` VARCHAR( 2000 ) NULL;"
+    },
+    {
+      "step": "Remove unnecessary columns from the Sessions Table",
+      "action": "ALTER TABLE `session`DROP `LastPage`,DROP `SecurityToken`;"
     }
   ]
 }

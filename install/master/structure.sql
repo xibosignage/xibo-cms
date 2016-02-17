@@ -779,12 +779,10 @@ CREATE TABLE IF NOT EXISTS `session` (
   `session_data` longtext NOT NULL,
   `session_expiration` int(10) unsigned NOT NULL DEFAULT '0',
   `LastAccessed` datetime DEFAULT NULL,
-  `LastPage` varchar(25) DEFAULT NULL,
   `userID` int(11) DEFAULT NULL,
   `IsExpired` tinyint(4) NOT NULL DEFAULT '1',
   `UserAgent` varchar(254) DEFAULT NULL,
   `RemoteAddr` varchar(50) DEFAULT NULL,
-  `SecurityToken` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`session_id`),
   KEY `userID` (`userID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

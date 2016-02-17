@@ -12,14 +12,13 @@ namespace Xibo\Entity;
  * Class Session
  * @package Xibo\Entity
  */
-class Session
+class Session implements \JsonSerializable
 {
     use EntityTrait;
 
     public $userId;
     public $userName;
     public $isExpired;
-    public $lastPage;
     public $lastAccessed;
     public $remoteAddress;
     public $userAgent;
