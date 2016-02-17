@@ -78,7 +78,7 @@ class Actions extends Middleware
             $notifications = [];
 
             if ($app->user->userTypeId == 1 && file_exists(PROJECT_ROOT . '/web/install/index.php')) {
-                Log::info('Install.php exists and shouldn\'t');
+                Log::notice('Install.php exists and shouldn\'t');
 
                 $notifications[] = __('There is a problem with this installation. "install.php" should be deleted.');
             }
