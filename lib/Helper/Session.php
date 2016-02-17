@@ -181,6 +181,8 @@ class Session implements \SessionHandlerInterface
     {
         $newExp = time() + $this->maxLifetime;
 
+        $lastAccessed = date("Y-m-d H:i:s");
+
         try {
             $sql = '
                   INSERT INTO `session` (session_id, session_data, session_expiration, lastaccessed, userid, isexpired, useragent, remoteaddr)
@@ -189,7 +191,8 @@ class Session implements \SessionHandlerInterface
                       `session_data` = :session_data2,
                       `userId` = :userId2,
                       `session_expiration` = :session_expiration2,
-                      `isExpired` = :expired2
+                      `isExpired` = :expired2,
+                      `lastaccessed` = :lastAccessed2
                 ';
 
             $params = [
@@ -198,7 +201,8 @@ class Session implements \SessionHandlerInterface
                 'session_data2' => $val,
                 'session_expiration' => $newExp,
                 'session_expiration2' => ($this->refreshExpiry) ? $newExp : $this->sessionExpiry,
-                'lastAccessed' => date("Y-m-d H:i:s"),
+                'lastAccessed' => $lastAccessed,
+                'lastAccessed2' => $lastAccessed,
                 'userId' => $this->userId,
                 'userId2' => $this->userId,
                 'expired' => ($this->expired) ? 1 : 0,
