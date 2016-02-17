@@ -221,7 +221,7 @@ class Session {
             $query = Kit::GetParam('q', _REQUEST, _WORD);
             $autoRefresh = (isset($_REQUEST['autoRefresh']) && Kit::GetParam('autoRefresh', _REQUEST, _WORD, 'false') == 'true');
 
-            $refreshExpiry = ($autoRefresh || ($page == 'clock' && $query == 'GetClock') || ($page == 'index' && $query == 'PingPong') || ($page == 'layout' && $query == 'LayoutStatus'));
+            $refreshExpiry = !($autoRefresh || ($page == 'clock' && $query == 'GetClock') || ($page == 'index' && $query == 'PingPong') || ($page == 'layout' && $query == 'LayoutStatus'));
 
             $params = [
                 'session_id' => $key,
