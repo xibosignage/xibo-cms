@@ -723,7 +723,7 @@ class User implements \JsonSerializable
             'userId' => $this->userId,
             'newUserWizard' => $this->newUserWizard,
             'time' => date("Y-m-d H:i:s")
-        ], PDOConnect::newConnection());
+        ]);
     }
 
     /**
