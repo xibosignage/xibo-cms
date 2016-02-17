@@ -167,7 +167,7 @@ class Session implements \SessionHandlerInterface
 
             return ($row['session_data']);
 
-        } catch (\PDOException $e) {
+        } catch (\Exception $e) {
             Log::error('Error reading session: %s', $e->getMessage());
 
             return settype($empty, "string");
