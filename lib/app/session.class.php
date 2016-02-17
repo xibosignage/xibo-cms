@@ -26,6 +26,47 @@ class Session {
 	
 	public $isExpired = 1;
 
+	/**
+	 * Expiry time
+	 * @var int
+	 */
+	private $sessionExpiry = 0;
+
+    /**
+     * Security Token
+     * @var string
+     */
+    private $securityToken = null;
+
+    /**
+     * Last Page
+     * @var string
+     */
+    private $lastPage = null;
+
+	/**
+	 * The UserId whom owns this session
+	 * @var int
+	 */
+	private $userId = 0;
+
+	/**
+	 * @var bool Whether gc() has been called
+	 */
+	private $gcCalled = false;
+
+	/**
+	 * Prune this key?
+	 * @var bool
+	 */
+	private $pruneKey = false;
+
+	/**
+	 * The database connection
+	 * @var \PDO
+	 */
+	private $pdo = null;
+
 	function __construct() 
 	{
 		session_set_save_handler(
@@ -51,54 +92,74 @@ class Session {
 
 	function close() 
 	{
-		
-		$this->gc($this->max_lifetime);
+		// Commit
+		$this->commit();
+
+		$dbh = $this->getDb();
+
+		// Prune this session if necessary
+		if ($this->pruneKey) {
+			$sth = $dbh->prepare('DELETE FROM session WHERE session_id = :session_id');
+			$sth->execute(array('session_id' => $this->key));
+		}
+
+		// Delete sessions older than 10 times the max lifetime
+		PDOConnect::update('DELETE FROM `session` WHERE IsExpired = 1 AND session_expiration < :expiration', array('expiration' => (time() - ($this->maxLifetime * 10))), $this->getDb());
+
+		// Update expired sessions as expired
+		PDOConnect::update('UPDATE `session` SET IsExpired = 1 WHERE session_expiration < :expiration', array('expiration' => time()), $this->getDb());
+
+		// Close
+		$this->pdo = null;
+
 		return true;
 	}
 
 	function read($key) 
 	{
+		$empty = '';
+		$this->key = $key;
+
 		$userAgent	= substr(Kit::GetParam('HTTP_USER_AGENT', $_SERVER, _STRING, 'No user agent'), 0, 253);
 		$remoteAddr	= Kit::GetParam('REMOTE_ADDR', $_SERVER, _STRING);
 		$securityToken	= Kit::GetParam('SecurityToken', _POST, _STRING, null);
-		
-		$this->key = $key;
-		$newExp = time() + $this->max_lifetime;
-		
-		$this->gc($this->max_lifetime);
 
 		try {
-			$dbh = PDOConnect::init();
+			$dbh = $this->getDb();
+
+			// Start a transaction
+			$this->beginTransaction();
 		
 			// Get this session		
-			$sth = $dbh->prepare('SELECT session_data, isexpired, securitytoken, useragent FROM session WHERE session_id = :session_id');
+			$sth = $dbh->prepare('SELECT session_data, isexpired, securitytoken, useragent, `session_expiration`, `userId`, `lastPage` FROM `session` WHERE session_id = :session_id');
 			$sth->execute(array('session_id' => $key));
 
-			if (!$row = $sth->fetch())
+			if (!$row = $sth->fetch()) {
+				// Key doesn't exist yet
+				$this->isExpired = 0;
 				return settype($empty, "string");
+			}
 
 			// What happens if the UserAgent has changed?
 			if ($row['useragent'] != $userAgent) {
 				// Make sure we are logged out (delete all data)
-				$usth = $dbh->prepare('DELETE FROM session WHERE session_id = :session_id');
-				$usth->execute(array('session_id' => $key));
-
+				$this->pruneKey = true;
 				throw new Exception('Different UserAgent');
 			}
 			
 			// We have the Key and the Remote Address.
 			if ($securityToken == null)
-			{			
-				// If there is no security token then obey the IsExpired
-				$this->isExpired = $row['isexpired'];	
+			{
+                // Check the session hasn't expired
+                if ($row['session_expiration'] < time())
+                    $this->isExpired = 1;
+                else
+                    $this->isExpired = $row['isexpired'];
 			}
 			elseif ($securityToken == $row['securitytoken'])
 			{
-				// We have a security token, so dont require a login
+				// We have a security token, so don't require a login
 				$this->isExpired = 0;
-
-				$usth = $dbh->prepare('UPDATE session SET session_expiration = :expiry, isExpired = 0 WHERE session_id = :session_id');
-				$usth->execute(array('session_id' => $key, 'expiry' => $newExp));
 			}
 			else
 			{
@@ -107,16 +168,19 @@ class Session {
 				
 				$this->isExpired = 1;
 			}
-			
+
+            $this->userId = $row['userId'];
+            $this->lastPage = $row['lastPage'];
+            $this->sessionExpiry = $row['session_expiration'];
+
 			// Either way - update this SESSION so that the security token is NULL
-			$usth = $dbh->prepare('UPDATE session SET SecurityToken = NULL WHERE session_id = :session_id');
-			$usth->execute(array('session_id' => $key));
+			$this->securityToken = null;
 
 			return($row['session_data']);
 		}
 		catch (Exception $e) {
 			Debug::LogEntry('error', $e->getMessage());
-			$empty = '';
+
 			return settype($empty, "string");
 		}
 	}
@@ -124,80 +188,55 @@ class Session {
 	function write($key, $val) 
 	{
 		$newExp = time() + $this->max_lifetime;
-		$lastaccessed = date("Y-m-d H:i:s");
-		$userAgent	= substr(Kit::GetParam('HTTP_USER_AGENT', $_SERVER, _STRING, 'No user agent'), 0, 253);
-		$remoteAddr	= Kit::GetParam('REMOTE_ADDR', $_SERVER, _STRING);
-		
+		$lastAccessed = date("Y-m-d H:i:s");
+
 		try {
-			$dbh = PDOConnect::init();
+			$dbh = $this->getDb();
+
+            $sql = '
+                  INSERT INTO `session` (session_id, session_data, session_expiration, lastaccessed, lastpage, userid, isexpired, useragent, remoteaddr, `securityToken`)
+                    VALUES (:session_id, :session_data, :session_expiration, :lastAccessed, :lastpage, :userId, :expired, :useragent, :remoteaddr, :securityToken)
+                    ON DUPLICATE KEY UPDATE
+                      `session_data` = :session_data2,
+                      `userId` = :userId2,
+                      `session_expiration` = :session_expiration2,
+                      `isExpired` = :expired2,
+                      `lastaccessed` = :lastAccessed2,
+                      `lastpage` = :lastpage2,
+                      `securityToken` = :securityToken
+                ';
+
+            $page = Kit::GetParam('p', _REQUEST, _WORD);
+            $query = Kit::GetParam('q', _REQUEST, _WORD);
+            $autoRefresh = (isset($_REQUEST['autoRefresh']) && Kit::GetParam('autoRefresh', _REQUEST, _WORD, 'false') == 'true');
+
+            $refreshExpiry = ($autoRefresh || ($page == 'clock' && $query == 'GetClock') || ($page == 'index' && $query == 'PingPong') || ($page == 'layout' && $query == 'LayoutStatus'));
+
+            $params = [
+                'session_id' => $key,
+                'session_data' => $val,
+                'session_data2' => $val,
+                'session_expiration' => $newExp,
+                'session_expiration2' => ($refreshExpiry) ? $newExp : $this->sessionExpiry,
+                'lastAccessed' => $lastAccessed,
+                'lastAccessed2' => $lastAccessed,
+                'lastpage' => $this->lastPage,
+                'lastpage2' => $this->lastPage,
+                'securityToken' => $this->securityToken,
+                'securityToken2' => $this->securityToken,
+                'userId' => $this->userId,
+                'userId2' => $this->userId,
+                'expired' => $this->isExpired,
+                'expired2' => $this->isExpired,
+                'useragent' => substr(Kit::GetParam('HTTP_USER_AGENT', $_SERVER, _STRING, 'No user agent'), 0, 253),
+                'remoteaddr' => Kit::GetParam('REMOTE_ADDR', $_SERVER, _STRING)
+            ];
 			
-			$sth = $dbh->prepare('SELECT session_id FROM session WHERE session_id = :session_id');
-			$sth->execute(array('session_id' => $key));
-
-			if (!$row = $sth->fetch()) {
-				// Insert a new session
-				$SQL  = 'INSERT INTO session (session_id, session_data, session_expiration, lastaccessed, lastpage, userid, isexpired, useragent, remoteaddr) ';
-				$SQL .= ' VALUES (:session_id, :session_data, :session_expiration, :lastaccessed, :lastpage, :userid, :isexpired, :useragent, :remoteaddr) ';
-
-				$isth = $dbh->prepare($SQL);
-
-				$isth->execute(
-						array(
-							'session_id' => $key,
-							'session_data' => $val,
-							'session_expiration' => $newExp,
-							'lastaccessed' => $lastaccessed,
-							'lastpage' => 'login',
-							'userid' => NULL,
-							'isexpired' => 0,
-							'useragent' => $userAgent,
-							'remoteaddr' => $remoteAddr
-						)
-					);
-			}
-			else {
-				// Punch a very small hole in the authentication system
-				// we do not want to update the expiry time of a session if it is the Clock Timer going off
-				$page = Kit::GetParam('p', _REQUEST, _WORD);
-				$query = Kit::GetParam('q', _REQUEST, _WORD);
-				$autoRefresh = (isset($_REQUEST['autoRefresh']) && Kit::GetParam('autoRefresh', _REQUEST, _WORD, 'false') == 'true');
-
-				if ($autoRefresh || ($page == 'clock' && $query == 'GetClock') || ($page == 'index' && $query == 'PingPong') || ($page == 'layout' && $query == 'LayoutStatus')) {
-
-					// Update the existing session without the expiry
-					$SQL  = "UPDATE session SET session_data = :session_data WHERE session_id = :session_id ";
-
-					$isth = $dbh->prepare($SQL);
-
-					$isth->execute(
-							array('session_id' => $key, 'session_data' => $val)
-						);
-				}
-				else {
-					// Update the existing session
-					$SQL  = "UPDATE session SET ";
-					$SQL .= " 	session_data = :session_data, ";
-					$SQL .= " 	session_expiration = :session_expiration, ";
-					$SQL .= " 	lastaccessed 	= :lastaccessed, ";
-					$SQL .= " 	remoteaddr 	= :remoteaddr ";
-					$SQL .= " WHERE session_id = :session_id ";
-
-					$isth = $dbh->prepare($SQL);
-
-					$isth->execute(
-							array(
-								'session_id' => $key,
-								'session_data' => $val,
-								'session_expiration' => $newExp,
-								'lastaccessed' => $lastaccessed,
-								'remoteaddr' => $remoteAddr
-							)
-						);
-				}
-			}
+			$sth = $dbh->prepare($sql);
+			$sth->execute($params);
 		}
 		catch (Exception $e) {
-			Debug::LogEntry('error', $e->getMessage());
+			Debug::LogEntry('error', 'Error writing session: ' . $e->getMessage());
 			return false;
 		}
 		
@@ -207,9 +246,9 @@ class Session {
 	function destroy($key) 
 	{
 		try {
-			$dbh = PDOConnect::init();
+			$dbh = $this->getDb();
 
-			$sth->prepare('UPDATE session SET IsExpired = 1 WHERE session_id = :session_id');
+			$sth = $dbh->prepare('DELETE FROM `session` WHERE session_id = :session_id');
 			$sth->execute(array('session_id', $key));
 		}
 		catch (Exception $e) {
@@ -221,35 +260,13 @@ class Session {
 
 	function gc($max_lifetime)
 	{
-		try {
-			$dbh = PDOConnect::init();
-
-			// Delete sessions older than 10 times the max lifetime
-			$sth = $dbh->prepare('DELETE FROM session WHERE IsExpired = 1 AND session_expiration < :expiration');
-			$sth->execute(array('expiration' => (time() - ($max_lifetime * 10))));
-
-			// Update expired sessions as expired
-			$sth = $dbh->prepare('UPDATE session SET IsExpired = 1 WHERE session_expiration < :expiration');
-			$sth->execute(array('expiration' => time()));
-		}
-		catch (Exception $e) {
-			Debug::LogEntry('error', $e->getMessage());
-		}
+        $this->gcCalled = true;
+        return true;
 	}
 	
 	function set_user($key, $userid) 
 	{
-		try {
-			$dbh = PDOConnect::init();
-
-			// Delete sessions older than 10 times the max lifetime
-			$sth = $dbh->prepare('UPDATE session SET userid = :userid WHERE session_id = :session_id');
-			$sth->execute(array('session_id' => $key, 'userid' => $userid));
-		}
-		catch (Exception $e) {
-			Debug::LogEntry('error', $e->getMessage());
-			return false;
-		}
+        $this->userId = $userid;
 	}
 	
 	/**
@@ -265,10 +282,10 @@ class Session {
         $this->key = $new_sess_id;
 
         try {
-			$dbh = PDOConnect::init();
+			$dbh = $this->getDb();
 
 			// Delete sessions older than 10 times the max lifetime
-			$sth = $dbh->prepare('UPDATE session SET session_id = :new_session_id WHERE session_id = :session_id');
+			$sth = $dbh->prepare('UPDATE `session` SET session_id = :new_session_id WHERE session_id = :session_id');
 			$sth->execute(array('session_id' => $oldSessionID, 'new_session_id' => $new_sess_id));
 		}
 		catch (Exception $e) {
@@ -279,51 +296,16 @@ class Session {
 	
 	function set_page($key, $lastpage) {
 		$_SESSION['pagename'] = $lastpage;
-		
-		try {
-			$dbh = PDOConnect::init();
-
-			// Delete sessions older than 10 times the max lifetime
-			$sth = $dbh->prepare('UPDATE session SET lastpage = :lastpage WHERE session_id = :session_id');
-			$sth->execute(array('session_id' => $key, 'lastpage' => $lastpage));
-		}
-		catch (Exception $e) {
-			Debug::LogEntry('error', $e->getMessage());
-			return false;
-		}
+        $this->lastPage = $lastpage;
 	}
 	
 	function setIsExpired($isExpired) {
 		$this->isExpired = $isExpired;
-
-		try {
-			$dbh = PDOConnect::init();
-
-			// Delete sessions older than 10 times the max lifetime
-			$sth = $dbh->prepare('UPDATE session SET isexpired = :isexpired WHERE session_id = :session_id');
-			$sth->execute(array('session_id' => $this->key, 'isexpired' => $isExpired));
-		}
-		catch (Exception $e) {
-			Debug::LogEntry('error', $e->getMessage());
-			return false;
-		}
 	}
 	
 	public function setSecurityToken($token)
 	{
-		try {
-			$dbh = PDOConnect::init();
-
-			// Delete sessions older than 10 times the max lifetime
-			$sth = $dbh->prepare('UPDATE session SET securitytoken = :securitytoken WHERE session_id = :session_id');
-			$sth->execute(array('session_id' => $this->key, 'securitytoken' => $token));
-
-			return true;
-		}
-		catch (Exception $e) {
-			Debug::LogEntry('error', $e->getMessage());
-			return false;
-		}
+        $this->securityToken = $token;
 	}
 	
 	public static function Set($key, $value)
@@ -349,6 +331,41 @@ class Session {
 	    }
         
         return false;
-    }        
+    }
+
+	/**
+	 * Get a Database
+	 * @return \PDO
+	 */
+	private function getDb()
+	{
+		if ($this->pdo == null)
+			$this->pdo = PDOConnect::newConnection();
+
+		return $this->pdo;
+	}
+
+	/**
+	 * Helper method to begin a transaction.
+	 *
+	 * MySQLs default isolation, REPEATABLE READ, causes deadlock for different sessions
+	 * due to http://www.mysqlperformanceblog.com/2013/12/12/one-more-innodb-gap-lock-to-avoid/ .
+	 * So we change it to READ COMMITTED.
+	 */
+	private function beginTransaction()
+	{
+		if (!$this->getDb()->inTransaction()) {
+			$this->pdo->exec('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
+			$this->pdo->beginTransaction();
+		}
+	}
+
+	/**
+	 * Commit
+	 */
+	private function commit()
+	{
+		if ($this->getDb()->inTransaction())
+			$this->getDb()->commit();
+	}
 }
-?>
