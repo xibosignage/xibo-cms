@@ -130,8 +130,10 @@ class Soap
                     ON lkcampaignlayout.CampaignID = campaign.CampaignID
                     INNER JOIN `layout`
                     ON lkcampaignlayout.LayoutID = layout.LayoutID
-                    INNER JOIN lkdisplaydg
-                    ON lkdisplaydg.DisplayGroupID = `lkscheduledisplaygroup`.displayGroupId
+                    INNER JOIN `lkdgdg`
+                    ON `lkdgdg`.displayGroupId = `lkscheduledisplaygroup`.displayGroupId
+                    INNER JOIN `lkdisplaydg`
+                    ON lkdisplaydg.DisplayGroupID = `lkdgdg`.displayGroupId
                  WHERE lkdisplaydg.DisplayID = :displayId
                     AND schedule_detail.FromDT < :fromdt
                     AND schedule_detail.ToDT > :todt
@@ -139,8 +141,10 @@ class Soap
                 UNION
                 SELECT `lklayoutdisplaygroup`.layoutId, 0 AS DisplayOrder, 0 AS LayoutDisplayOrder, 0 AS eventId
                   FROM `lklayoutdisplaygroup`
+                    INNER JOIN `lkdgdg`
+                    ON `lkdgdg`.displayGroupId = `lklayoutdisplaygroup`.displayGroupId
                     INNER JOIN `lkdisplaydg`
-                    ON lkdisplaydg.DisplayGroupID = `lklayoutdisplaygroup`.displayGroupId
+                    ON lkdisplaydg.DisplayGroupID = `lkdgdg`.displayGroupId
                  WHERE lkdisplaydg.DisplayID = :displayId
                 ORDER BY DisplayOrder, LayoutDisplayOrder, eventId
             ';
@@ -188,8 +192,10 @@ class Soap
                    FROM `media`
                     INNER JOIN `lkmediadisplaygroup`
                     ON lkmediadisplaygroup.mediaid = media.MediaID
-                    INNER JOIN lkdisplaydg
-                    ON lkdisplaydg.DisplayGroupID = lkmediadisplaygroup.DisplayGroupID
+                    INNER JOIN `lkdgdg`
+                    ON `lkdgdg`.displayGroupId = `lkmediadisplaygroup`.displayGroupId
+                    INNER JOIN `lkdisplaydg`
+                    ON lkdisplaydg.DisplayGroupID = `lkdgdg`.displayGroupId
                  WHERE lkdisplaydg.DisplayID = :displayId
                 UNION ALL
                 SELECT 3 AS DownloadOrder, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize
@@ -529,8 +535,10 @@ class Soap
                     ON schedule_detail.eventID = `schedule`.eventID
                     INNER JOIN `lkscheduledisplaygroup`
                     ON `lkscheduledisplaygroup`.eventId = `schedule`.eventId
-                    INNER JOIN lkdisplaydg
-                    ON lkdisplaydg.DisplayGroupID = `lkscheduledisplaygroup`.displayGroupId
+                    INNER JOIN `lkdgdg`
+                    ON `lkdgdg`.displayGroupId = `lkscheduledisplaygroup`.displayGroupId
+                    INNER JOIN `lkdisplaydg`
+                    ON lkdisplaydg.DisplayGroupID = `lkdgdg`.displayGroupId
                     LEFT OUTER JOIN `campaign`
                     ON `schedule`.CampaignID = campaign.CampaignID
                     LEFT OUTER JOIN `lkcampaignlayout`

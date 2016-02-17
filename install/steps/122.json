@@ -62,6 +62,10 @@
     {
       "step": "Remove unnecessary columns from the Sessions Table",
       "action": "ALTER TABLE `session`DROP `LastPage`,DROP `SecurityToken`;"
+    },
+    {
+      "step": "Add Closure Links for existing Display Groups",
+      "action": "INSERT INTO `lkdgdg` (parentId, childId, depth) SELECT displayGroupId, displayGroupId, 0 FROM `displaygroup` WHERE `displayGroupID` NOT IN (SELECT `parentId` FROM `lkdgdg` WHERE depth = 0);"
     }
   ]
 }

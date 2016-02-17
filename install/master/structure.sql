@@ -995,3 +995,11 @@ CREATE TABLE IF NOT EXISTS `useroption` (
   `value` text NOT NULL,
   UNIQUE KEY `userId` (`userId`,`option`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `lkdgdg` (
+  `parentId` int(11) NOT NULL,
+  `childId` int(11) NOT NULL,
+  `depth` int(11) NOT NULL,
+  UNIQUE KEY `parentId` (`parentId`,`childId`,`depth`),
+  UNIQUE KEY `childId` (`childId`,`parentId`,`depth`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
