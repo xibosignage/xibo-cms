@@ -46,7 +46,7 @@ class BaseFactory
      */
     public static function viewPermissionSql($entity, &$sql, &$params, $idColumn, $ownerColumn = null, $filterBy = [])
     {
-        $user = self::getUser();
+        $user = (Sanitize::getInt('userCheckUserId', $filterBy) !== null) ? UserFactory::getById(Sanitize::getInt('userCheckUserId', $filterBy)) : self::getUser();
 
         $permissionSql = '';
 

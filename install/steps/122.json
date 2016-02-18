@@ -66,6 +66,14 @@
     {
       "step": "Add Closure Links for existing Display Groups",
       "action": "INSERT INTO `lkdgdg` (parentId, childId, depth) SELECT displayGroupId, displayGroupId, 0 FROM `displaygroup` WHERE `displayGroupID` NOT IN (SELECT `parentId` FROM `lkdgdg` WHERE depth = 0);"
+    },
+    {
+      "step": "Add Display Group Owner Column",
+      "action": "ALTER TABLE  `displaygroup` ADD  `userId` INT NOT NULL;"
+    },
+    {
+      "step": "Default owner to the first super admin",
+      "action": "UPDATE `displaygroup` SET userId = (SELECT userId FROM `user` WHERE usertypeid = 1 LIMIT 1) WHERE userId = 0;"
     }
   ]
 }

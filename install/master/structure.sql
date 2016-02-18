@@ -192,6 +192,7 @@ CREATE TABLE IF NOT EXISTS `displaygroup` (
   `IsDisplaySpecific` tinyint(4) NOT NULL DEFAULT '0',
   `isDynamic` tinyint(4) NOT NULL DEFAULT '0',
   `dynamicCriteria` varchar(2000) DEFAULT NULL,
+  `userId` int(11) NOT NULL,
   PRIMARY KEY (`DisplayGroupID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 

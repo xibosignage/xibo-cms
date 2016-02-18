@@ -21,7 +21,6 @@
 namespace Xibo\Controller;
 
 use Xibo\Entity\Display;
-use Xibo\Entity\Permission;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Factory\CommandFactory;
@@ -30,7 +29,6 @@ use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
-use Xibo\Factory\PermissionFactory;
 use Xibo\Helper\Help;
 use Xibo\Helper\PlayerActionHelper;
 use Xibo\Helper\Sanitize;
@@ -371,12 +369,8 @@ class DisplayGroup extends Base
         $displayGroup->description = Sanitize::getString('description');
         $displayGroup->isDynamic = Sanitize::getCheckbox('isDynamic');
         $displayGroup->dynamicCriteria = Sanitize::getString('dynamicCriteria');
+        $displayGroup->userId = $this->getUser()->userId;
         $displayGroup->save();
-
-        // Add full permissions for this user to this group
-        /* @var Permission $permission */
-        $permission = PermissionFactory::create($this->getUser()->groupId, get_class($displayGroup), $displayGroup->displayGroupId, 1, 1, 1);
-        $permission->save();
 
         // Return
         $this->getState()->hydrate([

@@ -99,7 +99,8 @@ class DisplayGroupFactory extends BaseFactory
                 `displaygroup`.isDisplaySpecific,
                 `displaygroup`.description,
                 `displaygroup`.isDynamic,
-                `displaygroup`.dynamicCriteria
+                `displaygroup`.dynamicCriteria,
+                `displaygroup`.userId
         ';
 
         $body = '
@@ -127,7 +128,7 @@ class DisplayGroupFactory extends BaseFactory
         $body .= ' WHERE 1 = 1 ';
 
         // View Permissions
-        self::viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, '`displaygroup`.displayGroupId', null, $filterBy);
+        self::viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, '`displaygroup`.displayGroupId', '`displaygroup`.userId', $filterBy);
 
         if (Sanitize::getInt('displayGroupId', $filterBy) !== null) {
             $body .= ' AND displaygroup.displayGroupId = :displayGroupId ';

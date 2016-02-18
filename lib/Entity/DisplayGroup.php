@@ -77,6 +77,14 @@ class DisplayGroup implements \JsonSerializable
      */
     public $dynamicCriteria;
 
+    /**
+     * @SWG\Property(
+     *  description="The UserId who owns this display group",
+     * )
+     * @var int
+     */
+    public $userId;
+
     // Child Items the Display Group is linked to
     private $displays = [];
     private $displayGroups = [];
@@ -107,7 +115,7 @@ class DisplayGroup implements \JsonSerializable
 
     public function getOwnerId()
     {
-        return 1;
+        return $this->userId;
     }
 
     /**
@@ -415,14 +423,15 @@ class DisplayGroup implements \JsonSerializable
     private function add()
     {
         $this->displayGroupId = PDOConnect::insert('
-          INSERT INTO displaygroup (DisplayGroup, IsDisplaySpecific, Description, `isDynamic`, `dynamicCriteria`)
-            VALUES (:displayGroup, :isDisplaySpecific, :description, :isDynamic, :dynamicCriteria)
+          INSERT INTO displaygroup (DisplayGroup, IsDisplaySpecific, Description, `isDynamic`, `dynamicCriteria`, `userId`)
+            VALUES (:displayGroup, :isDisplaySpecific, :description, :isDynamic, :dynamicCriteria, :userId)
         ', [
             'displayGroup' => $this->displayGroup,
             'isDisplaySpecific' => $this->isDisplaySpecific,
             'description' => $this->description,
             'isDynamic' => $this->isDynamic,
-            'dynamicCriteria' => $this->dynamicCriteria
+            'dynamicCriteria' => $this->dynamicCriteria,
+            'userId' => $this->userId
         ]);
 
         // Insert my self link
@@ -441,14 +450,16 @@ class DisplayGroup implements \JsonSerializable
             SET DisplayGroup = :displayGroup,
               Description = :description,
               `isDynamic` = :isDynamic,
-              `dynamicCriteria` = :dynamicCriteria
+              `dynamicCriteria` = :dynamicCriteria,
+              `userId` = :userId
            WHERE DisplayGroupID = :displayGroupId
           ', [
             'displayGroup' => $this->displayGroup,
             'description' => $this->description,
             'displayGroupId' => $this->displayGroupId,
             'isDynamic' => $this->isDynamic,
-            'dynamicCriteria' => $this->dynamicCriteria
+            'dynamicCriteria' => $this->dynamicCriteria,
+            'userId' => $this->userId
         ]);
     }
 
@@ -464,7 +475,10 @@ class DisplayGroup implements \JsonSerializable
             $originalDisplays = ($this->loaded) ? $this->displays : DisplayFactory::getByDisplayGroupId($this->displayGroupId);
 
             // Update the linked displays based on the filter criteria
-            $this->displays = DisplayFactory::query(null, ['display' => $this->dynamicCriteria]);
+            // these displays must be permission checked based on the owner of the group NOT the logged in user
+            $this->displays = DisplayFactory::query(null, ['display' => $this->dynamicCriteria, 'userCheckUserId' => $this->getOwnerId()]);
+
+            Log::debug('There are %d original displays and %d displays that match the filter criteria now.', count($originalDisplays), count($this->displays));
 
             $difference = array_udiff($originalDisplays, $this->displays, function ($a, $b) {
                 /**
