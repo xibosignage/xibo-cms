@@ -180,11 +180,10 @@
             });
         }
 
-        var members;
         function displayGroupMembersFormSubmit(id) {
 
             var form = $("#" + id);
-            members = form.data().members;
+            var members = form.data().members;
 
             // There may not have been any changes
             if (members == undefined) {
@@ -192,6 +191,71 @@
                 XiboDialogClose();
                 return;
             }
+
+            // Create a new queue.
+            window.queue = $.jqmq({
+
+                // Next item will be processed only when queue.next() is called in callback.
+                delay: -1,
+
+                // Process queue items one-at-a-time.
+                batch: 1,
+
+                // For each queue item, execute this function, making an AJAX request. Only
+                // continue processing the queue once the AJAX request's callback executes.
+                callback: function( data ) {
+
+                    // Make an AJAX call
+                    $.ajax({
+                        type: "POST",
+                        url: data.url,
+                        cache: false,
+                        dataType: "json",
+                        data: $.param(data.data),
+                        success: function(response, textStatus, error) {
+
+                            if (response.success) {
+
+                                // Success - what do we do now?
+                                if (response.message != '')
+                                    SystemMessage(response.message, true);
+
+                                // Process the next item
+                                queue.next();
+                            }
+                            else {
+                                // Why did we fail?
+                                if (response.login) {
+                                    // We were logged out
+                                    LoginBox(response.message);
+                                }
+                                else {
+                                    // Likely just an error that we want to report on
+                                    form.find(".saving").remove();
+                                    SystemMessageInline(response.message, form.closest(".modal"));
+                                }
+                            }
+                        },
+                        error: function(responseText) {
+                            SystemMessage(responseText, false);
+                        }
+                    });
+                },
+                // When the queue completes naturally, execute this function.
+                complete: function() {
+                    // Remove the save button
+                    form.find(".saving").parent().remove();
+
+                    // Refresh the grids
+                    // (this is a global refresh)
+                    XiboRefreshAllGrids();
+
+                    // Close the dialog
+                    XiboDialogClose();
+                }
+            });
+
+            var addedToQueue = false;
 
             // Build an array of id's to assign and an array to unassign
             var assign = [];
@@ -204,57 +268,52 @@
                     unassign.push(name);
             });
 
-            var data = {};
-            data[form.data().param] = assign;
-            data[form.data().paramUnassign] = unassign;
+            if (assign.length > 0 || unassign.length > 0) {
 
-            $.ajax({
-                type: "POST",
-                url: form.data().url,
-                cache: false,
-                dataType: "json",
-                data: $.param(data),
-                success: function(xhr, textStatus, error) {
+                var data = {
+                    data: {},
+                    url: form.data().url
+                };
+                data.data[form.data().param] = assign;
+                data.data[form.data().paramUnassign] = unassign;
 
-                    if (xhr.success) {
-                        // Do the next one
-                        // Build an array of id's to assign and an array to unassign
-                        var assign = [];
-                        var unassign = [];
+                // Queue
+                queue.add(data);
 
-                        $.each(members.displayGroups, function(name, value) {
-                            if (value == 1)
-                                assign.push(name);
-                            else
-                                unassign.push(name);
-                        });
+                addedToQueue = true;
+            }
 
-                        var data = {};
-                        data[form.data().groupsParam] = assign;
-                        data[form.data().groupsParamUnassign] = unassign;
+            // Build an array of id's to assign and an array to unassign
+            var assignGroup = [];
+            var unassignGroup = [];
 
-                        $.ajax({
-                            type: "POST",
-                            url: form.data().groupsUrl,
-                            cache: false,
-                            dataType: "json",
-                            data: $.param(data),
-                            success: function(xhr, textStatus, error) {
-                                XiboSubmitResponse(xhr, form);
-                            },
-                            error: function(xhr, textStatus, errorThrown) {
-                                SystemMessage(xhr.responseText, false);
-                            }
-                        });
-
-                    } else {
-                        XiboSubmitResponse(xhr, form);
-                    }
-                },
-                error: function(xhr, textStatus, errorThrown) {
-                    SystemMessage(xhr.responseText, false);
-                }
+            $.each(members.displayGroups, function(name, value) {
+                if (value == 1)
+                    assignGroup.push(name);
+                else
+                    unassignGroup.push(name);
             });
+
+            if (assignGroup.length > 0 || unassignGroup.length > 0) {
+                var dataGroup = {
+                    data: {},
+                    url: form.data().groupsUrl
+                };
+                dataGroup.data[form.data().groupsParam] = assignGroup;
+                dataGroup.data[form.data().groupsParamUnassign] = unassignGroup;
+
+                // Queue
+                queue.add(dataGroup);
+
+                addedToQueue = true;
+            }
+
+            if (!addedToQueue) {
+                XiboDialogClose();
+            } else {
+                // Start the queue
+                queue.start();
+            }
         }
     </script>
 {% endblock %}
